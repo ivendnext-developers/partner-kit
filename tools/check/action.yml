@@ -1,0 +1,24 @@
+# The kit's checks as a step any GitHub workflow can use (to publish to the App library, use tools/publish instead):
+#   - uses: ivendnext-developers/partner-kit/tools/check@main
+#     with:
+#       path: library
+# The same commands as on your laptop: python3 tools/check/check.py <path>, then python3 tools/check/licence.py <path>
+# (a licence file and a third-party list in the folder or above it, up to the repository's root). Read-only; it never runs your code.
+name: The kit's checks
+description: Runs tools/check/check.py and tools/check/licence.py over a folder of your repository.
+inputs:
+  path:
+    description: The folder to check
+    required: false
+    default: "."
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: python3 "$GITHUB_ACTION_PATH/check.py" "$CHECK_PATH"
+      env:
+        CHECK_PATH: ${{ inputs.path }}
+    - shell: bash
+      run: python3 "$GITHUB_ACTION_PATH/licence.py" "$CHECK_PATH"
+      env:
+        CHECK_PATH: ${{ inputs.path }}

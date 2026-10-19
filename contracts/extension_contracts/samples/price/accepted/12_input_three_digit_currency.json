@@ -1,0 +1,34 @@
+{
+ "extension_point": "price",
+ "contract": "input",
+ "about": "A three-digit currency: minor units by its own exponent, never x100.",
+ "payload": {
+  "v": 1,
+  "customer_group": "Select",
+  "currency": "KWD",
+  "currency_exponent": 3,
+  "lines": [
+   {
+    "luid": "0@1.234",
+    "item": "K",
+    "item_group": "Products",
+    "qty_milli": 3000,
+    "unit_price_minor": 1234,
+    "line_total_minor": 4500,
+    "promotion_discount_minor": 798
+   }
+  ],
+  "config": {
+   "rules": [
+    {
+     "id": "Select 5%",
+     "item_group": "*",
+     "customer_group": "Select",
+     "percent_bp": 500,
+     "cap_minor": null,
+     "min_qty_milli": 0
+    }
+   ]
+  }
+ }
+}

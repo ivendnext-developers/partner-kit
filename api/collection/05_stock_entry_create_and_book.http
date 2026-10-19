@@ -1,0 +1,13 @@
+# Receive two serialised units in ONE call: docstatus 1 creates AND books (submits) the stock movement.
+# Send `purpose` too: over the API it is NOT derived from stock_entry_type (measured on our test bench: without it the line is
+# validated as an issue — "Source warehouse is mandatory").
+# expect: 200 .data.docstatus == 1 and (.data.items[0].serial_and_batch_bundle | length) > 0
+# capture: SE1=.data.name
+POST {{BASE}}/api/resource/Stock Entry
+Authorization: token {{KEY}}:{{SECRET}}
+Content-Type: application/json
+Accept: application/json
+
+{"stock_entry_type": "Material Receipt", "purpose": "Material Receipt", "company": "{{COMPANY}}", "docstatus": 1,
+ "items": [{"item_code": "PP-WRC-PHONE", "qty": 2, "t_warehouse": "{{WH}}", "basic_rate": 10000,
+            "use_serial_batch_fields": 1, "serial_no": "PPC-{{RUN}}-A\nPPC-{{RUN}}-B"}]}

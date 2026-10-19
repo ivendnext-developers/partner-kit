@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/fiscal_reader.v1.schema.json",
+  "title": "Fiscal reader, version 1",
+  "description": "A Retail Fiscal Reader record: which POS Invoice fields hold a country's fiscal result and what each status value means. Checked at save by the record's controller and business_logic/fiscal_app_reader.py writer_rule_problem (an enabled reader only); what the schema cannot see (the fields exist, their permission level, the company's clearance row) is checked there. Page: docs/extending/fiscal_reader.md.",
+  "$defs": {
+    "declaration": {
+      "type": "object",
+      "required": [
+        "doctype",
+        "source",
+        "companies",
+        "status_field",
+        "ref_field",
+        "status_map"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "doctype": {
+          "const": "Retail Fiscal Reader"
+        },
+        "source": {
+          "description": "An installed fiscal app, or Outside service. The record's name: one reader per source.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "enabled": {
+          "description": "1 when left out.",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "companies": {
+          "description": "Each with a clearance-required Retail Fiscal Regime Config row for its country.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "company"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "company": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "status_field": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "ref_field": {
+          "description": "The tax receipt number's field.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "qr_field": {
+          "description": "Optional: the authority's QR payload's field. A cleared or reported sale's receipt prints it exactly as stored.",
+          "type": "string",
+          "maxLength": 140
+        },
+        "signature_field": {
+          "description": "Optional: the authority's seal or digital signature's field. A cleared or reported sale's receipt prints it exactly as stored.",
+          "type": "string",
+          "maxLength": 140
+        },
+        "writer_role": {
+          "description": "Outside service only: the one role that may write the result fields. Never an automatic role.",
+          "type": "string",
+          "minLength": 1,
+          "not": {
+            "enum": [
+              "Guest",
+              "All",
+              "Desk User",
+              "Administrator"
+            ]
+          }
+        },
+        "writer_users": {
+          "description": "Outside service only: the only users who hold the writer role.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "user"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "user": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "status_map": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/status_row"
+          }
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "source": {
+              "not": {
+                "const": "Outside service"
+              }
+            }
+          }
+        },
+        {
+          "required": [
+            "writer_role",
+            "writer_users"
+          ],
+          "properties": {
+            "writer_users": {
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "status_row": {
+      "description": "What one value the source writes means. Each value appears once.",
+      "type": "object",
+      "required": [
+        "source_value",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140,
+          "pattern": "\\S"
+        },
+        "status": {
+          "description": "Never NOT-FISCAL: that is the POS's own classification, and it releases the receipt.",
+          "enum": [
+            "CLEARED",
+            "REPORTED",
+            "PENDING"
+          ]
+        }
+      }
+    }
+  }
+}

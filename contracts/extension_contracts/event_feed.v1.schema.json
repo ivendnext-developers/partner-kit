@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/event_feed.v1.schema.json",
+  "title": "Event feed, version 1",
+  "description": "The three calls an outside app's API key makes to collect its own events: events, done and failed (api/feed.py, rules in business_logic/feed.py). Each is a POST to /api/method/ivendnext_mpos.api.feed.<call>; the framework wraps each answer as {\"message\": <answer>}. A request schema here may be stricter than the code, never looser. Page: docs/extending/event_feed.md.",
+  "$defs": {
+    "events_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "description": "100 when left out.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "page": {
+          "description": "The page value of the previous answer, to read the rest of that backlog. Left out (or null), the call starts from the oldest event not done.",
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[^|]+\\|.+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "events_answer": {
+      "type": "object",
+      "required": [
+        "events",
+        "page",
+        "backlog"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "events": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "$ref": "#/$defs/event"
+          }
+        },
+        "page": {
+          "description": "null when this answer holds the last of the backlog.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "backlog": {
+          "description": "How many of the caller's events are not done.",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "id",
+        "event",
+        "doc_type",
+        "doc_name",
+        "raw_event",
+        "at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event": {
+          "description": "The business label (the label table on the page); otherwise <record type in lower case, spaces as _>.<raw event>, or <the same>.deleted for a record deleted since.",
+          "type": "string",
+          "pattern": "^[^.]+\\.[^.]+$"
+        },
+        "doc_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "doc_name": {
+          "type": "string"
+        },
+        "raw_event": {
+          "type": "string",
+          "minLength": 1
+        },
+        "at": {
+          "description": "When the change committed, ISO 8601 to the second, server time.",
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+        }
+      }
+    },
+    "done_request": {
+      "type": "object",
+      "required": [
+        "ids"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 500,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "done_answer": {
+      "type": "object",
+      "required": [
+        "done"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "done": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      }
+    },
+    "failed_request": {
+      "type": "object",
+      "required": [
+        "id",
+        "error"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "error": {
+          "description": "The partner's note, kept on the event for a support call.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "failed_answer": {
+      "type": "object",
+      "required": [
+        "ok"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ok": {
+          "const": true
+        }
+      }
+    }
+  }
+}

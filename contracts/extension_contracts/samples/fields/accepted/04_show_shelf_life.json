@@ -1,0 +1,20 @@
+{
+  "extension_point": "fields",
+  "contract": "declaration",
+  "about": "S3's shape on a standard field: each cart line shows the item's shelf life.",
+  "payload": {
+    "doctype": "Retail POS Theme",
+    "theme_name": "LIB1 Fields A4",
+    "layout": "Summer Breeze",
+    "palette": "Standard",
+    "field_rules": [
+      {
+        "surface": "cart_line",
+        "field": "shelf_life_in_days",
+        "action": "show",
+        "label": "Shelf life (days)",
+        "sequence": 1
+      }
+    ]
+  }
+}

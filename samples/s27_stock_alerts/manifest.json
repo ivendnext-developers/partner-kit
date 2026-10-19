@@ -1,0 +1,261 @@
+{
+ "manifest_version": 2,
+ "app": "pp_stk",
+ "prefix": "PP STK",
+ "title": "Stock alerts and a draft transfer request",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "Alerts when a store's stock falls below its reorder level or a batch is near its expiry date, and one draft transfer request per store and day made from them, for a person to edit and submit. The app's service, outside the shop, runs on a schedule: it reads the stock, the items' reorder rows and the batches, writes a PP STK Alert for each alert (the shop's bell tells the role PP STK Alerts and the user named in the settings) and makes the draft request. It never submits anything, and never changes a request it did not make. After install: give the role PP STK Integration read on Warehouse, Item, Bin, Batch and Serial and Batch Bundle, and read, create and write on Material Request; make the integration user with that role and its API key; fill PP STK Settings Default (the source warehouse, the days before expiry) and tick Enabled; give PP STK Alerts to the people who act on the alerts. What leaves the shop: the service reads the stock, the reorder rows and the batches, and writes alerts and draft transfer requests; with these rights its key can change any draft transfer request in the shop.",
+ "allowed_urls": [],
+ "doctypes": [
+  {
+   "name": "PP STK Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Name (the service reads the one named Default)",
+     "reqd": 1,
+     "unique": 1,
+     "default": "Default"
+    },
+    {
+     "fieldname": "enabled",
+     "fieldtype": "Check",
+     "label": "Enabled"
+    },
+    {
+     "fieldname": "source_warehouse",
+     "fieldtype": "Link",
+     "label": "Source warehouse (low stock is moved from here to the store)",
+     "options": "Warehouse",
+     "reqd": 1
+    },
+    {
+     "fieldname": "clearance_warehouse",
+     "fieldtype": "Link",
+     "label": "Clearance warehouse (optional: a near-expiry batch is moved here)",
+     "options": "Warehouse"
+    },
+    {
+     "fieldname": "expiry_days",
+     "fieldtype": "Int",
+     "label": "Days before expiry",
+     "default": "30"
+    },
+    {
+     "fieldname": "notify_user",
+     "fieldtype": "Link",
+     "label": "Also tell this user",
+     "options": "User"
+    },
+    {
+     "fieldname": "stores",
+     "fieldtype": "Table",
+     "label": "Stores watched (empty: every store but the source and the clearance)",
+     "options": "PP STK Store"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP STK Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP STK Store",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "warehouse",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "reqd": 1,
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP STK Alert",
+   "autoname": "field:alert_key",
+   "track_changes": 1,
+   "sort_field": "creation",
+   "sort_order": "DESC",
+   "fields": [
+    {
+     "fieldname": "alert_key",
+     "fieldtype": "Data",
+     "label": "Key (day, kind and a hash of store, item and batch)",
+     "reqd": 1,
+     "unique": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "label": "Kind",
+     "options": "Low stock\nNear expiry",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "item",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "batch",
+     "fieldtype": "Link",
+     "label": "Batch",
+     "options": "Batch"
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Quantity (the store's projected stock; for a batch, its quantity in the store, or its total when that is not known)"
+    },
+    {
+     "fieldname": "store_qty_known",
+     "fieldtype": "Check",
+     "label": "Quantity is the store's own"
+    },
+    {
+     "fieldname": "level",
+     "fieldtype": "Float",
+     "label": "Reorder level"
+    },
+    {
+     "fieldname": "expiry_date",
+     "fieldtype": "Date",
+     "label": "Expiry date"
+    },
+    {
+     "fieldname": "alert_day",
+     "fieldtype": "Date",
+     "label": "Day",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "request",
+     "fieldtype": "Link",
+     "label": "Transfer request it is on",
+     "options": "Material Request"
+    },
+    {
+     "fieldname": "notify_user",
+     "fieldtype": "Link",
+     "label": "Also told",
+     "options": "User"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP STK Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP STK Alerts",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP STK Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/stock_alerts.html#the-settings"
+  },
+  {
+   "doc_type": "PP STK Alert",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/stock_alerts.html#the-alert"
+  }
+ ],
+ "notifications": [
+  {
+   "name": "PP STK New Alert",
+   "document_type": "PP STK Alert",
+   "event": "New",
+   "channel": "System Notification",
+   "subject": "{{ doc.kind }}: {{ doc.item }} at {{ doc.store or 'a store not known' }}",
+   "message": "<p>{{ doc.kind }} for {{ doc.item }}{% if doc.batch %}, batch {{ doc.batch }} expiring {{ doc.expiry_date }}{% endif %}: quantity {{ doc.qty }}.</p><p>{% if doc.request %}It is on the transfer request {{ doc.request }} (the service's draft for the day, ready to edit and submit, or one already submitted).{% else %}No request line: act on it by hand.{% endif %}</p>",
+   "recipients": [
+    {
+     "receiver_by_role": "PP STK Alerts"
+    },
+    {
+     "receiver_by_document_field": "notify_user"
+    }
+   ]
+  }
+ ]
+}

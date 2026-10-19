@@ -1,0 +1,14 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A tax id of exactly 15 digits on a Customer.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Customer tax id is 15 digits",
+    "record_type": "Customer",
+    "kind": "pattern",
+    "field": "tax_id",
+    "pattern": "^[0-9]{15}$",
+    "message": "The tax id is 15 digits."
+  }
+}

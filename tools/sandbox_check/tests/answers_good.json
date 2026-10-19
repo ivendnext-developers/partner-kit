@@ -1,0 +1,27 @@
+{
+ "_what": "A good sandbox site's answers, by path (the query is ignored), in the shapes the site's API answers with. Written by hand from the template's names on 2026-10-08; replace the entries the check reads with a real recording (check.py --record) once a site made from the template has answered. The Item entries serve the request collection's files 01 and 02, which the check does not record.",
+ "/api/method/ping": [200, {"message": "pong"}],
+ "/api/method/ivendnext_mpos.api.extension_package.holders": [200, {"message": ["System Manager"]}],
+ "/api/method/ivendnext_mpos.api.v1.get_logged_user": [200, {"message": "admin@demo-retail.example"}],
+ "/api/method/ivendnext_mpos.api.v1.get_versions": [200, {"message": {
+   "frappe": {"title": "Framework", "version": "15.0.0"}, "erpnext": {"title": "ERP", "version": "15.0.0"},
+   "ivendnext_pos": {"title": "POS", "version": "0.0.1"}, "ivendnext_mpos": {"title": "mPOS", "version": "0.0.1"}}}],
+ "/api/resource/Company/Demo%20Retail": [200, {"data": {"name": "Demo Retail", "abbr": "DR"}}],
+ "/api/resource/Warehouse": [200, {"data": [
+   {"name": "Demo Retail — Store 1 - DR", "warehouse_name": "Demo Retail — Store 1", "company": "Demo Retail"},
+   {"name": "Demo Retail — Store 2 - DR", "warehouse_name": "Demo Retail — Store 2", "company": "Demo Retail"},
+   {"name": "Demo Retail — Store 3 - DR", "warehouse_name": "Demo Retail — Store 3", "company": "Demo Retail"},
+   {"name": "Stores - DR", "warehouse_name": "Stores", "company": "Demo Retail"}]}],
+ "/api/resource/POS%20Profile": [200, {"data": [
+   {"name": "Store 1 — R1", "warehouse": "Demo Retail — Store 1 - DR"},
+   {"name": "Store 2 — R1", "warehouse": "Demo Retail — Store 2 - DR"},
+   {"name": "Store 3 — R1", "warehouse": "Demo Retail — Store 3 - DR"}]}],
+ "/api/resource/User/integration%40demo-retail.example": [200, {"data": {
+   "name": "integration@demo-retail.example", "enabled": 1, "user_type": "System User",
+   "roles": [{"role": "Demo Integration"}]}}],
+ "/api/resource/DocType": [200, {"data": [
+   {"name": "Retail Desk Action"}, {"name": "Retail Extension Log"}, {"name": "Retail Extension Subscription"},
+   {"name": "Retail Fiscal Reader"}, {"name": "Retail Save Rule"}]}],
+ "/api/resource/Item": [200, {"data": [{"name": "Demo Phone-BLK-128", "item_group": "Phones"}]}],
+ "/api/resource/Item/Demo%20Phone-BLK-128": [200, {"data": {"name": "Demo Phone-BLK-128", "item_group": "Phones"}}]
+}

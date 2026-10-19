@@ -1,0 +1,11 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "settings",
+  "about": "Ask about every item in the store's top item group.",
+  "payload": {
+    "event": "scan",
+    "item_groups": [
+      "All Item Groups"
+    ]
+  }
+}

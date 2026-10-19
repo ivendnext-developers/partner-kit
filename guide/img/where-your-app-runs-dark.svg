@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 684" width="640" height="684" role="img" aria-labelledby="t d" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title id="t">Where your app runs</title><desc id="d">Three choices for where your app's code runs: your own server, iVendNext App Hosting, or nowhere when the app is only settings and records. Every one reaches the customer's iVendNext cloud only through the retail chain's front door, behind which sit the customer's Desk, tills, iVendNext's own apps and the store data. No app connects to the store data directly.</desc>
+<rect width="640" height="684" rx="16" fill="#0d1120"/>
+<text x="24" y="38" font-size="22" font-weight="800" fill="#eef1f8" text-anchor="start">Where your app runs</text>
+<text x="24" y="60" font-size="14" font-weight="500" fill="#a3abc0" text-anchor="start">Your code stays on your side. The retail chain's data stays in its own cloud.</text>
+<rect x="16" y="76" width="608" height="216" rx="14" fill="#1b2136" stroke="#2f3752" stroke-width="1.5"/>
+<text x="32" y="102" font-size="12.5" font-weight="800" fill="#eef1f8" text-anchor="start" letter-spacing="1.2">YOU CHOOSE WHERE YOUR APP'S CODE RUNS</text>
+<rect x="32" y="118" width="176" height="134" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="44" y="144" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Your own server</text>
+<text x="44" y="168.0" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">Any HTTPS server you</text><text x="44" y="186.8" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">run. You connect each</text><text x="44" y="205.5" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">retail chain to it.</text>
+<rect x="228" y="118" width="176" height="134" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="240" y="142" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">iVendNext</text>
+<text x="240" y="161" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">App Hosting</text>
+<text x="240" y="184.0" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">We run it in its own</text><text x="240" y="202.8" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">isolated box, at</text><text x="240" y="221.5" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">yourapp.ivendnext.app</text>
+<rect x="424" y="118" width="176" height="134" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="436" y="144" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Nowhere</text>
+<text x="436" y="168.0" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">Settings and records</text><text x="436" y="186.8" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">ship as data. A rule</text><text x="436" y="205.5" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">runs inside the tills,</text><text x="436" y="224.3" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">offline too.</text>
+<text x="32" y="276" font-size="12.2" font-weight="500" fill="#a3abc0" text-anchor="start">Every box runs on its own. No app shares a database or a path with another app or another customer.</text>
+<path d="M120,292 V330" stroke="#5fd39a" stroke-width="3" fill="none"/><path d="M113,328 L120,338 L127,328 z" fill="#5fd39a"/>
+<path d="M316,292 V330" stroke="#5fd39a" stroke-width="3" fill="none"/><path d="M309,328 L316,338 L323,328 z" fill="#5fd39a"/>
+<path d="M512,292 V330" stroke="#5fd39a" stroke-width="3" fill="none"/><path d="M505,328 L512,338 L519,328 z" fill="#5fd39a"/>
+<rect x="16" y="338" width="608" height="62" rx="12" fill="#eef1f8"/>
+<text x="32" y="364" font-size="14.5" font-weight="800" fill="#151a2c" text-anchor="start" letter-spacing="1.6">THE RETAIL CHAIN'S FRONT DOOR</text>
+<text x="32" y="386" font-size="13.2" font-weight="500" fill="#151a2c" text-anchor="start">The only way in: a key, a connect, a till-key press, API calls, the event feed.</text>
+<rect x="16" y="400" width="608" height="268" rx="14" fill="#16294a" stroke="#4aa6ff" stroke-width="1.5"/>
+<text x="32" y="430" font-size="12.5" font-weight="800" fill="#4aa6ff" text-anchor="start" letter-spacing="1.2">THE RETAIL CHAIN'S OWN iVENDNEXT CLOUD</text>
+<text x="32" y="450" font-size="13.2" font-weight="500" fill="#a3abc0" text-anchor="start">Their subscription, their business only</text>
+<rect x="32" y="466" width="176" height="76" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="44" y="492" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Desk</text>
+<text x="44" y="512.0" font-size="13" font-weight="500" fill="#c3c9d8" text-anchor="start">Where they run the</text><text x="44" y="529.9" font-size="13" font-weight="500" fill="#c3c9d8" text-anchor="start">business</text>
+<rect x="228" y="466" width="176" height="76" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="240" y="492" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Tills</text>
+<text x="240" y="512.0" font-size="13" font-weight="500" fill="#c3c9d8" text-anchor="start">Counter, tablet,</text><text x="240" y="529.9" font-size="13" font-weight="500" fill="#c3c9d8" text-anchor="start">phone</text>
+<rect x="424" y="466" width="176" height="76" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="436" y="492" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Apps by iVendNext</text>
+<text x="436" y="512.0" font-size="13" font-weight="500" fill="#c3c9d8" text-anchor="start">Payments, tax,</text><text x="436" y="529.9" font-size="13" font-weight="500" fill="#c3c9d8" text-anchor="start">connectors</text>
+<rect x="32" y="560" width="568" height="92" rx="12" fill="#050812"/>
+<g transform="translate(62 586)"><rect x="-13" y="0" width="26" height="21" rx="4" fill="none" stroke="#e8ecf6" stroke-width="2.4"/><path d="M-7,0 v-7 a7,7 0 0 1 14,0 v7" fill="none" stroke="#e8ecf6" stroke-width="2.4"/></g>
+<text x="94" y="590" font-size="17" font-weight="800" fill="#e8ecf6" text-anchor="start">Store data</text>
+<text x="94" y="611" font-size="13.5" font-weight="500" fill="#e8ecf6" text-anchor="start">Sales · stock · customers · money</text>
+<text x="94" y="634" font-size="13" font-weight="500" fill="#e8ecf6" text-anchor="start" opacity="0.85">No app connects to it directly. Apps ask through the front door.</text>
+</svg>

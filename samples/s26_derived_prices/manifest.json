@@ -1,0 +1,126 @@
+{
+ "manifest_version": 2,
+ "app": "pp_dpl",
+ "prefix": "PP DPL",
+ "title": "Derived price lists",
+ "version": "0.1.1",
+ "publisher": "Partner Programme sample",
+ "description": "A price list worked out from another: each rule says the target list's price is the source list's price times a factor, plus an offset, rounded to a step at the shop's decimal places and never below a floor. The app's service, outside the shop, follows price changes on the event feed and writes the target list's item prices; a price a person set at the target is never overwritten. After install: give the role PP DPL Integration read on Price List, and read, create and write on Item Price; make the integration user with that role and its API key; choose the user on the feed registration PP DPL Prices and tick Item Price; add a PP DPL Rule and tick Enabled. What leaves the shop: the service reads the rules, the price lists and the item prices, and writes item prices; with these rights its key can change any item price in the shop.",
+ "allowed_urls": [],
+ "doctypes": [
+  {
+   "name": "PP DPL Rule",
+   "autoname": "field:rule_name",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "rule_name",
+     "fieldtype": "Data",
+     "label": "Rule name (short: it is written in each price it makes)",
+     "reqd": 1,
+     "unique": 1
+    },
+    {
+     "fieldname": "enabled",
+     "fieldtype": "Check",
+     "label": "Enabled"
+    },
+    {
+     "fieldname": "source_price_list",
+     "fieldtype": "Link",
+     "label": "Source price list (worked out from)",
+     "options": "Price List",
+     "reqd": 1
+    },
+    {
+     "fieldname": "target_price_list",
+     "fieldtype": "Link",
+     "label": "Target price list (written by the app)",
+     "options": "Price List",
+     "reqd": 1
+    },
+    {
+     "fieldname": "factor",
+     "fieldtype": "Float",
+     "label": "Factor (1.5 = half as much again; 0.9 = ten per cent less)",
+     "reqd": 1,
+     "precision": "6",
+     "default": "1"
+    },
+    {
+     "fieldname": "offset",
+     "fieldtype": "Currency",
+     "label": "Then add (may be below 0)"
+    },
+    {
+     "fieldname": "rounding_step",
+     "fieldtype": "Select",
+     "label": "Round to",
+     "options": "0.01\n0.05\n0.5\n1",
+     "default": "0.01"
+    },
+    {
+     "fieldname": "rounding",
+     "fieldtype": "Select",
+     "label": "Rounding",
+     "options": "Nearest\nUp\nDown",
+     "default": "Nearest"
+    },
+    {
+     "fieldname": "floor",
+     "fieldtype": "Currency",
+     "label": "Never below"
+    },
+    {
+     "fieldname": "decimal_places",
+     "fieldtype": "Int",
+     "label": "Decimal places (the shop's currency precision: 2 for most currencies, 0 for a currency with no cents)",
+     "default": "2"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP DPL Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP DPL Rule",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/derived_price_lists.html#the-rule"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP DPL Prices",
+   "description": "the derived price list service reads item price changes",
+   "events": [
+    "Item Price"
+   ]
+  }
+ ]
+}

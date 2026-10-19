@@ -1,0 +1,16 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A derived value into a field a price is computed from.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Discount from shelf life",
+    "record_type": "Item",
+    "kind": "derived",
+    "field": "max_discount",
+    "formula": "scale",
+    "source": "shelf_life_in_days",
+    "factor": 0.1
+  },
+  "expect_refusal": "A derived value cannot write max_discount: a money field, or one a total is computed from."
+}

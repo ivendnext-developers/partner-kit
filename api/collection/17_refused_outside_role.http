@@ -1,0 +1,7 @@
+# NEGATIVE: the integration user's role holds no right on Journal Entry — the API refuses it
+# (⚠ measured: it is NOT refused Sales Invoice, POS Invoice, File or the User list — the engine grants those to
+#  every signed-in user)
+# expect: 403
+GET {{BASE}}/api/resource/Journal Entry?limit_page_length=1
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

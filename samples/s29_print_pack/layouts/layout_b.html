@@ -1,0 +1,38 @@
+{#- Layout B — the detailed one. Header: centred, a shaded band with the number. Columns: #, Code, Description, Unit, Qty, Rate,
+    Disc %, Amount. Footer: the terms the invoice carries and two signature boxes. Invoice fields only. -#}
+<div style="font-family: Georgia, serif; font-size: 11px; color:#222;">
+  <div style="text-align:center;"><img src="data:image/png;base64,@@LOGO@@" alt="" width="40" height="40">
+    <div style="font-size:15px; font-weight:bold;">{{ doc.company }}</div>
+    <div>{{ doc.company_address_display or "" }}</div>
+    {%- if doc.company_tax_id %}<div>Tax no. {{ doc.company_tax_id }}</div>{% endif %}</div>
+  <div style="background:#e8eef7; text-align:center; font-size:14px; padding:4px; margin:6px 0;">
+    COMMERCIAL INVOICE &nbsp;&middot;&nbsp; {{ doc.name }} &nbsp;&middot;&nbsp; {{ doc.get_formatted("posting_date") }}</div>
+  <table style="width:100%; margin-bottom:6px;"><tr>
+    <td style="width:50%; vertical-align:top;"><b>Invoiced to</b><br>{{ doc.customer_name }}<br>{{ doc.address_display or "" }}</td>
+    <td style="vertical-align:top;"><b>Ship to</b><br>{{ doc.shipping_address or doc.address_display or "" }}
+      {%- if doc.territory %}<br>Territory: {{ doc.territory }}{% endif %}</td>
+  </tr></table>
+  <table style="width:100%; border-collapse:collapse;" border="1" cellpadding="3">
+    <thead><tr style="background:#f2f2f2;"><th>#</th><th>Code</th><th>Description</th><th>Unit</th><th>Qty</th>
+      <th>Rate</th><th>Disc %</th><th>Amount</th></tr></thead>
+    <tbody>
+    {%- for item in doc.items %}
+      <tr><td>{{ loop.index }}</td><td>{{ item.item_code }}</td><td>{{ item.item_name }}</td><td>{{ item.uom }}</td>
+        <td style="text-align:right;">{{ item.get_formatted("qty") }}</td>
+        <td style="text-align:right;">{{ item.get_formatted("rate") }}</td>
+        <td style="text-align:right;">{{ item.get_formatted("discount_percentage") }}</td>
+        <td style="text-align:right;">{{ item.get_formatted("amount") }}</td></tr>
+    {%- endfor %}
+    </tbody>
+    <tfoot><tr><td colspan="7" style="text-align:right;">Net total</td><td style="text-align:right;">{{ doc.get_formatted("net_total") }}</td></tr>
+      {%- for t in doc.taxes %}
+      <tr><td colspan="7" style="text-align:right;">{{ t.description }}</td><td style="text-align:right;">{{ t.get_formatted("tax_amount") }}</td></tr>
+      {%- endfor %}
+      <tr style="font-weight:bold;"><td colspan="7" style="text-align:right;">Grand total</td>
+      <td style="text-align:right;">{{ doc.get_formatted("grand_total") }}</td></tr></tfoot>
+  </table>
+  {%- if doc.terms %}<div style="margin-top:6px;"><b>Terms</b><br>{{ doc.terms }}</div>{% endif %}
+  <table style="width:100%; margin-top:30px;"><tr>
+    <td style="border-top:1px solid #222; width:40%; text-align:center;">Received by</td><td></td>
+    <td style="border-top:1px solid #222; width:40%; text-align:center;">Authorised signature</td></tr></table>
+</div>

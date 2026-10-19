@@ -1,0 +1,11 @@
+{
+ "extension_point": "wallet",
+ "contract": "answer",
+ "about": "S4 — the same reference again returns the first answer unchanged: no second debit.",
+ "payload": {
+  "reference": "MPOS-REF-0A1B2C3D4E5F",
+  "outcome": "approved",
+  "amount_minor": 8000,
+  "auth_ref": "HK-77"
+ }
+}

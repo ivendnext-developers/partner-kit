@@ -1,0 +1,35 @@
+{
+ "manifest_version": 1,
+ "app": "pp_tst",
+ "prefix": "PP TST",
+ "title": "Every allowed kind, once",
+ "version": "0.0.1",
+ "description": "A test manifest carrying one of each allowed kind, installed and removed by the bench cycle.",
+ "allowed_urls": ["http://host.docker.internal:8129/never-called"],
+ "doctypes": [
+  {"name": "PP TST Line", "istable": 1, "fields": [{"fieldname": "note", "fieldtype": "Data", "label": "Note", "in_list_view": 1}]},
+  {"name": "PP TST Record", "autoname": "hash", "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Customer"},
+    {"fieldname": "lines", "fieldtype": "Table", "label": "Lines", "options": "PP TST Line"}
+  ]}
+ ],
+ "custom_fields": [
+  {"dt": "Customer", "fieldname": "pp_tst_flag", "fieldtype": "Check", "label": "PP TST flag", "insert_after": "customer_name"},
+  {"dt": "PP TST Record", "fieldname": "extra", "fieldtype": "Small Text", "label": "Extra"}
+ ],
+ "property_setters": [
+  {"doc_type": "PP TST Record", "field_name": "title", "property": "bold", "value": "1", "property_type": "Check"},
+  {"doc_type": "Customer", "field_name": "pp_tst_flag", "property": "in_standard_filter", "value": "1", "property_type": "Check"}
+ ],
+ "print_formats": [{"name": "PP TST Card", "doc_type": "PP TST Record", "html": "<h3>{{ doc.title }}</h3>"}],
+ "notifications": [{"name": "PP TST New Record", "document_type": "PP TST Record", "event": "New", "channel": "System Notification",
+                    "subject": "New PP TST record {{ doc.title }}", "message": "A record was added.",
+                    "recipients": [{"receiver_by_role": "System Manager"}]}],
+ "workspaces": [{"name": "PP TST Space", "blocks": [{"type": "header", "data": {"text": "PP TST", "col": 12}},
+                                                    {"type": "shortcut", "data": {"shortcut_name": "Records", "col": 3}}],
+                 "shortcuts": [{"type": "DocType", "link_to": "PP TST Record", "label": "Records"}]}],
+ "sale_attributes": [{"name": "PP TST Reference", "sequence": 950}],
+ "webhooks": [{"name": "PP TST Record on_update", "doctype": "PP TST Record", "event": "on_update",
+               "url": "http://host.docker.internal:8129/never-called", "condition": "doc.title == 'never'"}]
+}

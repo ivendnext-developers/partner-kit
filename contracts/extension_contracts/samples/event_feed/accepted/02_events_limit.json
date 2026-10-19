@@ -1,0 +1,8 @@
+{
+  "extension_point": "event_feed",
+  "contract": "events_request",
+  "about": "At most 50 events.",
+  "payload": {
+    "limit": 50
+  }
+}

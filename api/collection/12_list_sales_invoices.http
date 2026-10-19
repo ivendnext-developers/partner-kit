@@ -1,0 +1,6 @@
+# The reconciliation pull's call: booked sales modified since a watermark, oldest first
+# expect: 200 (.data | length) > 0 and (.data[0] | has("modified"))
+# capture: SI=.data[0].name
+GET {{BASE}}/api/resource/Sales Invoice?fields=["name","modified"]&filters=[["docstatus","=",1],["modified",">=","2026-01-01 00:00:00"]]&order_by=modified asc&limit_page_length=200
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

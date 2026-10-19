@@ -1,0 +1,17 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "A manager approves a large sale; the subscription may ask for one.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": true
+  },
+  "payload": {
+    "verdict": "approve",
+    "reason": "Sales over 5,000 need a manager."
+  }
+}

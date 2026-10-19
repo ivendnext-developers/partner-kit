@@ -1,0 +1,14 @@
+{
+  "extension_point": "partner_page",
+  "contract": "submit",
+  "about": "A kind no page can answer.",
+  "payload": {
+    "ctx_nonce": "0123456789abcdef0123456789abcdef",
+    "result": {
+      "discount": {
+        "percent": 10
+      }
+    }
+  },
+  "expect_refusal": "This answer cannot be used: the result kind 'discount' is not one this button declared"
+}

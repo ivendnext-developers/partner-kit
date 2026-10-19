@@ -1,0 +1,56 @@
+{
+  "extension_point": "partner_check",
+  "contract": "context",
+  "about": "Non-ASCII text: Arabic, an accented name, an emoji outside the BMP, a tab and a quote in a captured detail, a slash and U+2028 — each written raw, a control character escaped.",
+  "payload": {
+    "v": 1,
+    "point": "check",
+    "stage": "sale",
+    "currency_exponent": 2,
+    "sale_ref": "sale-7f3a",
+    "store": "Sandton City - IS",
+    "pos_profile": "Sandton Till 1",
+    "company": "iStore SA",
+    "currency": "ZAR",
+    "lang": "ar",
+    "operator": "josé@istore.example",
+    "customer": "CUST-عائشة",
+    "customer_group": "Clientèle VIP",
+    "price_list": "Standard Selling",
+    "coupon_codes": [],
+    "sale_attributes": [
+      {
+        "name": "Gift note",
+        "value": "Für \"Lena\"\t🎁 1/2 done"
+      }
+    ],
+    "lines": [
+      {
+        "line_no": 1,
+        "item_code": "CASE-IP15",
+        "item_group": "Accessoires — étuis",
+        "qty_milli": 1000,
+        "uom": "Nos",
+        "rate_minor": 49900,
+        "amount_minor": 49900,
+        "discount_minor": 0,
+        "line_attributes": [
+          {
+            "name": "Engraving",
+            "value": "عائشة ✓"
+          }
+        ]
+      }
+    ],
+    "totals": {
+      "net_minor": 49900,
+      "tax_minor": 7485,
+      "discount_minor": 0,
+      "grand_minor": 57385
+    },
+    "offered_tenders": [
+      "Cash",
+      "Credit Card"
+    ]
+  }
+}

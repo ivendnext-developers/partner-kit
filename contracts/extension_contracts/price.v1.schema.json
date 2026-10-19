@@ -1,0 +1,133 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://ivendnext.com/extending/contracts/price.v1.schema.json",
+ "title": "Pricing extension point, version 1",
+ "description": "Extension point price: what a partner's sandboxed pricing module reads on every sale (input, price/1) and what it answers (answer). The module runs inside the shop — on the server at the preview and the booking, on the till offline, and again at the drain — after every promotion, and may only take money off a line. The answer is judged whole by business_logic/partner_price.py validate_answer (the till's twin: mpos_partner_price.js validatePriceAnswer): one bad entry refuses the whole answer and the engine's own price stands. Page: docs/extending/price.md.",
+ "$defs": {
+  "input": {
+   "description": "price/1, canonical JSON (sorted keys, no spaces, raw UTF-8): money in the currency's own minor units, quantity in thousandths, no negative number. One module line is every row of ONE cart line at ONE price, luid \"<cart line>@<price>\". line_total_minor − promotion_discount_minor is the line's current amount, after every promotion and every earlier cut.",
+   "type": "object",
+   "required": [
+    "v",
+    "customer_group",
+    "currency",
+    "currency_exponent",
+    "lines",
+    "config"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "customer_group": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "currency": {
+     "type": "string",
+     "maxLength": 140
+    },
+    "currency_exponent": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4
+    },
+    "lines": {
+     "type": "array",
+     "maxItems": 500,
+     "items": {
+      "type": "object",
+      "required": [
+       "luid",
+       "item",
+       "item_group",
+       "qty_milli",
+       "unit_price_minor",
+       "line_total_minor",
+       "promotion_discount_minor"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "luid": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80
+       },
+       "item": {
+        "type": "string",
+        "maxLength": 140
+       },
+       "item_group": {
+        "type": "string",
+        "maxLength": 140
+       },
+       "qty_milli": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "unit_price_minor": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       },
+       "line_total_minor": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       },
+       "promotion_discount_minor": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+       }
+      }
+     }
+    },
+    "config": {
+     "description": "The subscription's own settings object — the partner's configuration, set by the shop.",
+     "type": "object"
+    }
+   }
+  },
+  "answer": {
+   "description": "A JSON array: at most one entry per line the module was shown, the money it takes off that line. A line not named keeps its price. Beyond the schema, judged against the input and the shop's limit: each luid must be one the module was shown, discount_minor no more than the line's current amount and no more than the subscription's max_discount_percent of it.",
+   "type": "array",
+   "maxItems": 500,
+   "items": {
+    "type": "object",
+    "required": [
+     "luid",
+     "discount_minor",
+     "reason"
+    ],
+    "additionalProperties": false,
+    "properties": {
+     "luid": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+     },
+     "discount_minor": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+     },
+     "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "pattern": "^[^<>]*\\S[^<>]*$"
+     }
+    }
+   }
+  }
+ }
+}

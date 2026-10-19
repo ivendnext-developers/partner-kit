@@ -1,0 +1,17 @@
+{
+  "_what": "The manager's READ-ONLY profile of our MCP server: what a store or area manager's AI assistant may look at. Start the server with --profile profile_read.json and WITHOUT --writes.",
+  "name": "manager-read",
+  "instructions": "You help a retail manager read their iVendNext shop: sales, stock, the day's closing, prices and promotions. You can only read. Quote a figure exactly as the shop returns it and say which store and which day it is for. If the manager asks you to change something, say you can only look and nothing was changed.",
+  "tools": {
+    "listPOSProfiles": "List the stores' till profiles. Each has a name and the warehouse the store sells from; the store's name is in the profile's name ('Store 1 — R1') or in the warehouse name ('Demo Retail — Store 1 - DR'). Use it first to turn a store name ('the Store 1 store') into a till profile.",
+    "listPOSInvoices": "Read till sales. NEVER list every sale: ask the shop to add them up. Set fields to [\"sum(grand_total) as total\", \"count(name) as sales\"] and filters to the store's till profile (pos_profile), the day (posting_date) and docstatus = 1 (booked sales; returns count against them). Say the day and the store with the figure.",
+    "listStockBalances": "Stock on hand now: actual_qty per item and warehouse. Filter by item_code and the store's warehouse (from the till profile).",
+    "listItems": "Look up an item by name or code. Fields item_code, item_name, item_group.",
+    "listPartnerRecords": "Read other records by type. Allowed types here: 'POS Closing Entry' (a till day's end-of-day figures: pos_profile, posting_date, grand_total, status), 'Promotion Bonus Buys Master' (the promotions: name, description, active) and 'Item Price' (item_code, price_list, price_list_rate, selling).",
+    "getPartnerRecord": "Read one record of the allowed types, with its child rows."
+  },
+  "record_types": {
+    "read": ["POS Closing Entry", "Promotion Bonus Buys Master", "Item Price"],
+    "write": {}
+  }
+}

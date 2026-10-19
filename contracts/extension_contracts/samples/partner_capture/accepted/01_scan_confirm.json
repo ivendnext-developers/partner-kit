@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "scan_answer",
+  "about": "An age check on a scanned bottle: a beep and a yes / no.",
+  "payload": {
+    "verdict": "confirm",
+    "question": "Age-restricted. Has the customer shown ID?"
+  }
+}

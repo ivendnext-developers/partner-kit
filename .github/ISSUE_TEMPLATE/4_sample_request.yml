@@ -1,0 +1,31 @@
+# Generated from feedback/sample_request.md by .github/scripts/issue_forms.py: edit that form, then re-run the script.
+name: "Sample request"
+description: "ask for a worked example, or a manifest installed"
+title: "Sample request: "
+body:
+  - type: markdown
+    attributes:
+      value: "**Every member of the programme can read this issue**, other partners' and other customers' teams too. Never put a secret in it (no key, password, signing secret or token), no shoppers' personal data, and no customer's name unless the customer has agreed. What we may ask you next, and what happens after you send it: [`feedback/sample_request.md`](https://github.com/ivendnext-developers/partner-kit/blob/main/feedback/sample_request.md)."
+  - type: dropdown
+    id: what_you_need
+    attributes:
+      label: "What you need"
+      options:
+        - "A worked example"
+        - "An installed manifest"
+    validations:
+      required: true
+  - type: textarea
+    id: s1
+    attributes:
+      label: "1. The pattern or the manifest"
+      placeholder: "What the sample should show, in one or two lines. For a manifest: the manifest to install on your sandbox (attach it)."
+    validations:
+      required: true
+  - type: textarea
+    id: s2
+    attributes:
+      label: "2. The closest sample today"
+      placeholder: "Which sample you looked at, and why it does not do."
+    validations:
+      required: false

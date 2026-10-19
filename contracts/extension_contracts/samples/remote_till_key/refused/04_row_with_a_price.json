@@ -1,0 +1,20 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "A row that carries anything but its two keys.",
+  "given": {
+    "returns": [
+      "sale_attributes"
+    ]
+  },
+  "payload": {
+    "sale_attributes": [
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold",
+        "price": 10
+      }
+    ]
+  },
+  "expect_refusal": "each row must be exactly {sale_attribute, attribute_value}"
+}

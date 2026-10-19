@@ -1,0 +1,10 @@
+{
+ "_what": "A customer's baskets with NO recorded answers yet: the gate rings them and checks preview = booking only. Run it once on a clean staging shop, then fill in the answers with record_expect.py (the result is baskets.json). The items are the bench's; replace them with the customer's own.",
+ "baskets": [
+  {"name": "two leather cases", "lines": [["CASE-LEATHER", 2, null]], "sale_discount": null},
+  {"name": "two leather cases, 10% markdown", "lines": [["CASE-LEATHER", 2, 10]], "sale_discount": null},
+  {"name": "three lines, 7% off the sale", "lines": [["MAGSAFE-CHARGER", 1, null], ["CASE-SILICONE-MAGSAFE", 1, null], ["AIRPODS-3", 1, null]], "sale_discount": {"type": "percent", "value": 7}},
+  {"name": "three cables and AirPods", "lines": [["CABLE-USBC-1M", 3, null], ["AIRPODS-3", 1, null]], "sale_discount": null},
+  {"name": "one AirPods, 5% off the sale", "lines": [["AIRPODS-3", 1, null]], "sale_discount": {"type": "percent", "value": 5}}
+ ]
+}

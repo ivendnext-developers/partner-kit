@@ -1,0 +1,1024 @@
+{
+ "api_version": "0.2.0-p2a",
+ "source": "api/openapi.yaml",
+ "tools": [
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Sales%20Invoice",
+    "path_params": [],
+    "query": [
+     "fields",
+     "filters",
+     "order_by",
+     "limit_page_length",
+     "limit_start"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "List booked sales \u2014 the reconciliation pull filters on `modified` after a waterm"
+   },
+   "description": "List booked sales \u2014 the reconciliation pull filters on `modified` after a watermark\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     },
+     "limit_start": {
+      "minimum": 0,
+      "type": "integer"
+     },
+     "order_by": {
+      "type": "string"
+     }
+    },
+    "required": [],
+    "type": "object"
+   },
+   "name": "listSalesInvoices"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Sales%20Invoice/{name}",
+    "path_params": [
+     "name"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Read one sale with its lines"
+   },
+   "description": "Read one sale with its lines\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "description": "The record's name (URL-encoded).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "type": "object"
+   },
+   "name": "getSalesInvoice"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/POS%20Invoice",
+    "path_params": [],
+    "query": [
+     "fields",
+     "filters",
+     "order_by",
+     "limit_page_length"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "List till sales (POS Invoices)"
+   },
+   "description": "List till sales (POS Invoices)\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     },
+     "order_by": {
+      "type": "string"
+     }
+    },
+    "required": [],
+    "type": "object"
+   },
+   "name": "listPOSInvoices"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/POS%20Invoice/{name}",
+    "path_params": [
+     "name"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Read one till sale with its lines"
+   },
+   "description": "Read one till sale with its lines\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "description": "The record's name (URL-encoded).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "type": "object"
+   },
+   "name": "getPOSInvoice"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Item",
+    "path_params": [],
+    "query": [
+     "fields",
+     "filters",
+     "order_by",
+     "limit_page_length"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "List items \u2014 e.g. `fields=[\"name\",\"item_group\"]` and a `name in [...]` filter"
+   },
+   "description": "List items \u2014 e.g. `fields=[\"name\",\"item_group\"]` and a `name in [...]` filter\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     },
+     "order_by": {
+      "type": "string"
+     }
+    },
+    "required": [],
+    "type": "object"
+   },
+   "name": "listItems"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Item/{name}",
+    "path_params": [
+     "name"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Read one item"
+   },
+   "description": "Read one item\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "description": "The record's name (URL-encoded).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "type": "object"
+   },
+   "name": "getItem"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Customer",
+    "path_params": [],
+    "query": [
+     "fields",
+     "filters",
+     "limit_page_length"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "List customers"
+   },
+   "description": "List customers\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     }
+    },
+    "required": [],
+    "type": "object"
+   },
+   "name": "listCustomers"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Warehouse",
+    "path_params": [],
+    "query": [
+     "fields",
+     "filters",
+     "limit_page_length"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "List stores and stock locations (warehouses)"
+   },
+   "description": "List stores and stock locations (warehouses)\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     }
+    },
+    "required": [],
+    "type": "object"
+   },
+   "name": "listWarehouses"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Serial%20No",
+    "path_params": [],
+    "query": [
+     "fields",
+     "filters",
+     "limit_page_length"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "List serial numbers \u2014 e.g. by `item_code` or `status`"
+   },
+   "description": "List serial numbers \u2014 e.g. by `item_code` or `status`\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     }
+    },
+    "required": [],
+    "type": "object"
+   },
+   "name": "listSerialNos"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Serial%20No/{name}",
+    "path_params": [
+     "name"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Read one serial number"
+   },
+   "description": "Read one serial number\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "description": "The record's name (URL-encoded).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "type": "object"
+   },
+   "name": "getSerialNo"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Serial%20and%20Batch%20Bundle/{name}",
+    "path_params": [
+     "name"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Read the serial numbers a sale or stock line moved (its `entries`)"
+   },
+   "description": "Read the serial numbers a sale or stock line moved (its `entries`)\n\nA sale line names its bundle in `serial_and_batch_bundle`; its `entries[].serial_no` are the line's serial numbers.\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "description": "The record's name (URL-encoded).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "type": "object"
+   },
+   "name": "getSerialAndBatchBundle"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Stock%20Entry",
+    "path_params": [],
+    "query": [
+     "fields",
+     "filters",
+     "limit_page_length"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "List stock movements"
+   },
+   "description": "List stock movements\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     }
+    },
+    "required": [],
+    "type": "object"
+   },
+   "name": "listStockEntries"
+  },
+  {
+   "_http": {
+    "method": "POST",
+    "path": "/api/resource/Stock%20Entry",
+    "path_params": [],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": false,
+    "readOnlyHint": false,
+    "title": "Create a stock movement \u2014 with `docstatus` 1 it is created AND booked in one cal"
+   },
+   "description": "Create a stock movement \u2014 with `docstatus` 1 it is created AND booked in one call\n\nWRITES to the shop (needs confirm: true, and a server started with --writes).",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "body": {
+      "additionalProperties": true,
+      "description": "The record to send (JSON).",
+      "properties": {
+       "company": {
+        "type": "string"
+       },
+       "docstatus": {
+        "description": "1 = create and book in one call",
+        "enum": [
+         0,
+         1
+        ],
+        "type": "integer"
+       },
+       "items": {
+        "items": {
+         "properties": {
+          "basic_rate": {
+           "description": "Valuation for a receipt",
+           "type": "number"
+          },
+          "item_code": {
+           "type": "string"
+          },
+          "qty": {
+           "exclusiveMinimum": 0,
+           "type": "number"
+          },
+          "s_warehouse": {
+           "description": "From (transfer, issue)",
+           "type": "string"
+          },
+          "serial_no": {
+           "description": "Newline-separated serial numbers (with use_serial_batch_fields 1)",
+           "type": "string"
+          },
+          "t_warehouse": {
+           "description": "To (receipt, transfer)",
+           "type": "string"
+          },
+          "use_serial_batch_fields": {
+           "enum": [
+            0,
+            1
+           ],
+           "type": "integer"
+          }
+         },
+         "required": [
+          "item_code",
+          "qty"
+         ],
+         "type": "object"
+        },
+        "minItems": 1,
+        "type": "array"
+       },
+       "stock_entry_type": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "stock_entry_type",
+       "items"
+      ],
+      "type": "object"
+     },
+     "confirm": {
+      "description": "Set true only after the person has approved this exact write. Without it nothing is written and the call answers with a preview.",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "body"
+    ],
+    "type": "object"
+   },
+   "name": "createStockEntry"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Stock%20Entry/{name}",
+    "path_params": [
+     "name"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Read one stock movement \u2014 its lines name the Serial and Batch Bundle that holds "
+   },
+   "description": "Read one stock movement \u2014 its lines name the Serial and Batch Bundle that holds their serials\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "description": "The record's name (URL-encoded).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "type": "object"
+   },
+   "name": "getStockEntry"
+  },
+  {
+   "_http": {
+    "method": "POST",
+    "path": "/api/v2/document/Stock%20Entry/{name}/method/submit/",
+    "path_params": [
+     "name"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": false,
+    "readOnlyHint": false,
+    "title": "Book (submit) a draft stock movement \u2014 the two-step alternative"
+   },
+   "description": "Book (submit) a draft stock movement \u2014 the two-step alternative\n\nWRITES to the shop (needs confirm: true, and a server started with --writes).",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "confirm": {
+      "description": "Set true only after the person has approved this exact write. Without it nothing is written and the call answers with a preview.",
+      "type": "boolean"
+     },
+     "name": {
+      "description": "The record's name (URL-encoded).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "type": "object"
+   },
+   "name": "submitStockEntry"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Comment",
+    "path_params": [],
+    "query": [
+     "fields",
+     "filters",
+     "limit_page_length"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "List comments on a record \u2014 how a service finds its own earlier comment"
+   },
+   "description": "List comments on a record \u2014 how a service finds its own earlier comment\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     }
+    },
+    "required": [],
+    "type": "object"
+   },
+   "name": "listComments"
+  },
+  {
+   "_http": {
+    "method": "POST",
+    "path": "/api/resource/Comment",
+    "path_params": [],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": false,
+    "readOnlyHint": false,
+    "title": "Write a comment on a record \u2014 visible to staff on that record in iVendNext Desk"
+   },
+   "description": "Write a comment on a record \u2014 visible to staff on that record in iVendNext Desk\n\nWRITES to the shop (needs confirm: true, and a server started with --writes).",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "body": {
+      "description": "The record to send (JSON).",
+      "properties": {
+       "comment_type": {
+        "const": "Comment",
+        "type": "string"
+       },
+       "content": {
+        "description": "HTML; escape `<` and `&`",
+        "type": "string"
+       },
+       "reference_doctype": {
+        "type": "string"
+       },
+       "reference_name": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "comment_type",
+       "reference_doctype",
+       "reference_name",
+       "content"
+      ],
+      "type": "object"
+     },
+     "confirm": {
+      "description": "Set true only after the person has approved this exact write. Without it nothing is written and the call answers with a preview.",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "body"
+    ],
+    "type": "object"
+   },
+   "name": "createComment"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/POS%20Profile",
+    "path_params": [],
+    "query": [
+     "fields",
+     "filters",
+     "limit_page_length"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "List till profiles and the selling warehouse each sells from"
+   },
+   "description": "List till profiles and the selling warehouse each sells from\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     }
+    },
+    "required": [],
+    "type": "object"
+   },
+   "name": "listPOSProfiles"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/POS%20Profile/{name}",
+    "path_params": [
+     "name"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Read one till profile \u2014 its `warehouse` is where a till sale takes stock from"
+   },
+   "description": "Read one till profile \u2014 its `warehouse` is where a till sale takes stock from\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "description": "The record's name (URL-encoded).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "type": "object"
+   },
+   "name": "getPOSProfile"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/Bin",
+    "path_params": [],
+    "query": [
+     "fields",
+     "filters",
+     "limit_page_length"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Read stock balances (the engine's own figures) \u2014 `actual_qty` per item and wareh"
+   },
+   "description": "Read stock balances (the engine's own figures) \u2014 `actual_qty` per item and warehouse\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     }
+    },
+    "required": [],
+    "type": "object"
+   },
+   "name": "listStockBalances"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/{record_type}",
+    "path_params": [
+     "record_type"
+    ],
+    "query": [
+     "fields",
+     "filters",
+     "limit_page_length"
+    ]
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "List records of a type the partner's manifest installed (e.g. `PP BLN Item In Bi"
+   },
+   "description": "List records of a type the partner's manifest installed (e.g. `PP BLN Item In Bin`)\n\nThe same record API as every other type. Only types whose permissions grant the integration role may be read.\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "fields": {
+      "description": "JSON array of field names, e.g. `[\"name\",\"modified\"]`. Default: `[\"name\"]`.",
+      "type": "string"
+     },
+     "filters": {
+      "description": "JSON array of `[field, operator, value]`, e.g. `[[\"docstatus\",\"=\",1],[\"modified\",\">=\",\"2026-10-01 00:00:00\"]]`.",
+      "type": "string"
+     },
+     "limit_page_length": {
+      "description": "Page size (default 20; 0 = all).",
+      "minimum": 0,
+      "type": "integer"
+     },
+     "record_type": {
+      "description": "A record type the partner's manifest installed, URL-encoded (e.g. `PP%20BLN%20Item%20In%20Bin`).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "record_type"
+    ],
+    "type": "object"
+   },
+   "name": "listPartnerRecords"
+  },
+  {
+   "_http": {
+    "method": "POST",
+    "path": "/api/resource/{record_type}",
+    "path_params": [
+     "record_type"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": false,
+    "openWorldHint": false,
+    "readOnlyHint": false,
+    "title": "Create a record of a manifest-installed type"
+   },
+   "description": "Create a record of a manifest-installed type\n\nWRITES to the shop (needs confirm: true, and a server started with --writes).",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "body": {
+      "additionalProperties": true,
+      "description": "The record to send (JSON).",
+      "type": "object"
+     },
+     "confirm": {
+      "description": "Set true only after the person has approved this exact write. Without it nothing is written and the call answers with a preview.",
+      "type": "boolean"
+     },
+     "record_type": {
+      "description": "A record type the partner's manifest installed, URL-encoded (e.g. `PP%20BLN%20Item%20In%20Bin`).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "record_type",
+     "body"
+    ],
+    "type": "object"
+   },
+   "name": "createPartnerRecord"
+  },
+  {
+   "_http": {
+    "method": "GET",
+    "path": "/api/resource/{record_type}/{name}",
+    "path_params": [
+     "record_type",
+     "name"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Read one record of a manifest-installed type, with its child rows"
+   },
+   "description": "Read one record of a manifest-installed type, with its child rows\n\nRead-only.",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "name": {
+      "description": "The record's name (URL-encoded).",
+      "type": "string"
+     },
+     "record_type": {
+      "description": "A record type the partner's manifest installed, URL-encoded (e.g. `PP%20BLN%20Item%20In%20Bin`).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "record_type",
+     "name"
+    ],
+    "type": "object"
+   },
+   "name": "getPartnerRecord"
+  },
+  {
+   "_http": {
+    "method": "PUT",
+    "path": "/api/resource/{record_type}/{name}",
+    "path_params": [
+     "record_type",
+     "name"
+    ],
+    "query": []
+   },
+   "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": false,
+    "title": "Change fields on that record \u2014 a child table sent here REPLACES its rows, so sen"
+   },
+   "description": "Change fields on that record \u2014 a child table sent here REPLACES its rows, so send the existing rows too\n\nWRITES to the shop (needs confirm: true, and a server started with --writes).",
+   "inputSchema": {
+    "additionalProperties": false,
+    "properties": {
+     "body": {
+      "additionalProperties": true,
+      "description": "The record to send (JSON).",
+      "type": "object"
+     },
+     "confirm": {
+      "description": "Set true only after the person has approved this exact write. Without it nothing is written and the call answers with a preview.",
+      "type": "boolean"
+     },
+     "name": {
+      "description": "The record's name (URL-encoded).",
+      "type": "string"
+     },
+     "record_type": {
+      "description": "A record type the partner's manifest installed, URL-encoded (e.g. `PP%20BLN%20Item%20In%20Bin`).",
+      "type": "string"
+     }
+    },
+    "required": [
+     "record_type",
+     "name",
+     "body"
+    ],
+    "type": "object"
+   },
+   "name": "updatePartnerRecord"
+  }
+ ]
+}

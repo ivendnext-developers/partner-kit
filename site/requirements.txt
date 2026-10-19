@@ -1,0 +1,12 @@
+# The site's build tools. They run in the build only; nothing here is shipped to a visitor.
+# Install with:  python3 -m pip install --require-hashes -r site/requirements.txt
+markdown-it-py==3.0.0 \
+    --hash=sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1
+mdurl==0.1.2 \
+    --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8
+# The API reference page (api.html) reads api/openapi.yaml. The hashes: the build runner's wheel (Linux, Python 3.12),
+# a Mac's (Python 3.14) and the source, so any other machine builds it.
+PyYAML==6.0.3 \
+    --hash=sha256:ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc \
+    --hash=sha256:34d5fcd24b8445fadc33f9cf348c1047101756fd760b4dacb5c3e99755703310 \
+    --hash=sha256:d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f

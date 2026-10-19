@@ -1,0 +1,20 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "Tenders excluded with no reason for the dimmed row.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false
+  },
+  "payload": {
+    "verdict": "allow",
+    "exclude_tenders": [
+      "Cash"
+    ]
+  },
+  "expect_refusal": "exclude_tenders needs a reason"
+}

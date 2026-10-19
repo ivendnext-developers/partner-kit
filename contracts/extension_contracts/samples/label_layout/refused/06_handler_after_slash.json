@@ -1,0 +1,13 @@
+{
+  "extension_point": "label_layout",
+  "contract": "declaration",
+  "about": "An event handler written straight after the tag name.",
+  "payload": {
+    "doctype": "Retail Label Layout",
+    "label_name": "LIB1 Onload",
+    "width_mm": 50,
+    "height_mm": 25,
+    "template": "{barcode_svg}<svg/onload=\"alert(1)\">"
+  },
+  "expect_refusal": "cannot hold scripts"
+}

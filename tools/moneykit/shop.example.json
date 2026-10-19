@@ -1,0 +1,7 @@
+{
+ "_what": "The shop the money kit rings at, on YOUR staging shop. Copy to shop.json beside till.py, or name the file with the kit's step shop:<file>. cashier: a user who sells at the till; device: a device enrolled for that user; profile: the POS profile they sell on (its store's stock is topped up); terminal: a POS Terminal name (made on the profile's store if it does not exist).",
+ "cashier": "cashier@your-staging-shop.example",
+ "device": "your-enrolled-device-id",
+ "profile": "Your POS Profile",
+ "terminal": "MONEY-KIT-TERM"
+}

@@ -1,0 +1,35 @@
+{#- Layout A — the compact one. Header: logo and company on the left, number and dates on the right. Columns: Item, Qty, Rate,
+    Amount. Footer: the three totals and the amount in words. Every figure is the invoice's own, printed with the document's
+    own formatting (get_formatted); nothing is worked out here and nothing is read from anywhere but the invoice. -#}
+<div style="font-family: Arial, sans-serif; font-size: 12px; color:#222;">
+  <table style="width:100%; border-bottom:2px solid #1F3864; margin-bottom:8px;"><tr>
+    <td style="width:60px;"><img src="data:image/png;base64,@@LOGO@@" alt="" width="48" height="48"></td>
+    <td><div style="font-size:16px; font-weight:bold; color:#1F3864;">{{ doc.company }}</div>
+      <div>{{ doc.company_address_display or "" }}</div>
+      {%- if doc.company_tax_id %}<div>Tax no. {{ doc.company_tax_id }}</div>{% endif %}</td>
+    <td style="text-align:right;"><div style="font-size:18px; font-weight:bold;">Tax Invoice</div>
+      <div>No. {{ doc.name }}</div><div>Date {{ doc.get_formatted("posting_date") }}</div>
+      {%- if doc.due_date %}<div>Due {{ doc.get_formatted("due_date") }}</div>{% endif %}</td>
+  </tr></table>
+  <div style="margin-bottom:8px;"><b>Bill to</b><br>{{ doc.customer_name }}<br>{{ doc.address_display or "" }}
+    {%- if doc.tax_id %}<br>Tax no. {{ doc.tax_id }}{% endif %}</div>
+  <table style="width:100%; border-collapse:collapse;">
+    <thead><tr style="background:#1F3864; color:#fff;">
+      <th style="text-align:left; padding:4px;">Item</th><th style="text-align:right;">Qty</th>
+      <th style="text-align:right;">Rate</th><th style="text-align:right; padding-right:4px;">Amount</th></tr></thead>
+    <tbody>
+    {%- for item in doc.items %}
+      <tr style="border-bottom:1px solid #ccc;"><td style="padding:4px;">{{ item.item_name }}</td>
+        <td style="text-align:right;">{{ item.get_formatted("qty") }} {{ item.uom }}</td>
+        <td style="text-align:right;">{{ item.get_formatted("rate") }}</td>
+        <td style="text-align:right; padding-right:4px;">{{ item.get_formatted("amount") }}</td></tr>
+    {%- endfor %}
+    </tbody>
+  </table>
+  <table style="width:50%; margin-left:50%; margin-top:8px;">
+    <tr><td>Net total</td><td style="text-align:right;">{{ doc.get_formatted("net_total") }}</td></tr>
+    <tr><td>Tax</td><td style="text-align:right;">{{ doc.get_formatted("total_taxes_and_charges") }}</td></tr>
+    <tr style="font-weight:bold; border-top:1px solid #222;"><td>Total</td><td style="text-align:right;">{{ doc.get_formatted("grand_total") }}</td></tr>
+  </table>
+  <div style="margin-top:8px; font-style:italic;">{{ doc.in_words or "" }}</div>
+</div>

@@ -1,0 +1,20 @@
+{
+  "extension_point": "fields",
+  "contract": "declaration",
+  "about": "A label of 41 characters.",
+  "payload": {
+    "doctype": "Retail POS Theme",
+    "theme_name": "LIB1 Fields R2",
+    "layout": "Summer Breeze",
+    "palette": "Standard",
+    "field_rules": [
+      {
+        "surface": "customer_card",
+        "field": "points",
+        "action": "relabel",
+        "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    ]
+  },
+  "expect_refusal": "A label is at most 40 characters."
+}

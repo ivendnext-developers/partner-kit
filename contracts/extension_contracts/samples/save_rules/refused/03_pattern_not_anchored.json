@@ -1,0 +1,14 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A written pattern without ^ and $.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Unanchored",
+    "record_type": "Customer",
+    "kind": "pattern",
+    "field": "tax_id",
+    "pattern": "[0-9]+"
+  },
+  "expect_refusal": "A pattern must start with ^ and end with $."
+}

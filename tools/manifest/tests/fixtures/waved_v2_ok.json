@@ -1,0 +1,13 @@
+{
+ "manifest_version": 2,
+ "app": "pp_wvd",
+ "prefix": "PP WVD",
+ "title": "Every Wave D kind that installs, once (label layouts)",
+ "version": "0.0.1",
+ "publisher": "PP WVD",
+ "description": "A test manifest carrying a shelf label layout, installed switched off and removed by our test bench's install cycle.",
+ "label_layouts": [
+  {"label_name": "PP WVD Shelf 50x25", "kind": "html", "width_mm": 50, "height_mm": 25, "per_row": 2,
+   "template": "<div class=\"n\">{item_name}</div>{barcode_svg}<div class=\"p\">{currency} {price}</div><div>{batch_no} {expiry_date}</div>"}
+ ]
+}

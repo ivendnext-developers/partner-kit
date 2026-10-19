@@ -1,0 +1,398 @@
+{
+ "_what": "S8: an estate as code. Regions carry a price list, prices and one promotion; each store gets a warehouse, a till profile (cloned from the reference profile), a receipt format and a cashier; each region has a manager.",
+ "company": "Demo Retail",
+ "abbr": "DR",
+ "parent_warehouse": "All Warehouses - DR",
+ "reference_profile": "Store 1 \u2014 R1",
+ "currency": "USD",
+ "prefix": "PP EST",
+ "promotion_prefix": "PP-EST-",
+ "user_prefix": "pp-est-",
+ "warehouse_defaults": {
+  "custom_cash_customer": "Walk-in \u2014 Demo Retail",
+  "custom_item_tax_template": "United States Sales Tax - DR",
+  "custom_company_currency": "USD"
+ },
+ "settings": {
+  "Retail Setting": {
+   "reason_sale_discount": 1
+  }
+ },
+ "reasons": [
+  {
+   "id": "PP EST Sale Discount",
+   "type": "Sale Discount"
+  }
+ ],
+ "items": {
+  "CABLE-USBC-1M": 15.0,
+  "CASE-PHONE": 29.0,
+  "EARBUDS": 129.0
+ },
+ "roles": {
+  "store": [
+   "Retail Cashier"
+  ],
+  "region": [
+   "Retail Manager"
+  ]
+ },
+ "regions": [
+  {
+   "code": "N",
+   "name": "North",
+   "price_list": "PP EST North",
+   "prices": {
+    "CABLE-USBC-1M": 15.0,
+    "CASE-PHONE": 29.0,
+    "EARBUDS": 129.0
+   },
+   "promotion": {
+    "id": "PP-EST-N",
+    "description": "10% off the sale in North stores",
+    "discount_percent": 10
+   },
+   "manager": "pp-est-mgr-n@demo-retail.example"
+  },
+  {
+   "code": "S",
+   "name": "South",
+   "price_list": "PP EST South",
+   "prices": {
+    "CABLE-USBC-1M": 14.55,
+    "CASE-PHONE": 28.13,
+    "EARBUDS": 125.13
+   },
+   "promotion": {
+    "id": "PP-EST-S",
+    "description": "10% off the sale in South stores",
+    "discount_percent": 10
+   },
+   "manager": "pp-est-mgr-s@demo-retail.example"
+  },
+  {
+   "code": "W",
+   "name": "West",
+   "price_list": "PP EST West",
+   "prices": {
+    "CABLE-USBC-1M": 15.45,
+    "CASE-PHONE": 29.87,
+    "EARBUDS": 132.87
+   },
+   "promotion": {
+    "id": "PP-EST-W",
+    "description": "10% off the sale in West stores",
+    "discount_percent": 10
+   },
+   "manager": "pp-est-mgr-w@demo-retail.example"
+  }
+ ],
+ "stores": [
+  {
+   "code": "N001",
+   "region": "N",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-n001@demo-retail.example"
+  },
+  {
+   "code": "S001",
+   "region": "S",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-s001@demo-retail.example"
+  },
+  {
+   "code": "W001",
+   "region": "W",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-w001@demo-retail.example"
+  },
+  {
+   "code": "N002",
+   "region": "N",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-n002@demo-retail.example"
+  },
+  {
+   "code": "S002",
+   "region": "S",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-s002@demo-retail.example"
+  },
+  {
+   "code": "W002",
+   "region": "W",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-w002@demo-retail.example"
+  },
+  {
+   "code": "N003",
+   "region": "N",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-n003@demo-retail.example"
+  },
+  {
+   "code": "S003",
+   "region": "S",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-s003@demo-retail.example"
+  },
+  {
+   "code": "W003",
+   "region": "W",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-w003@demo-retail.example"
+  },
+  {
+   "code": "N004",
+   "region": "N",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-n004@demo-retail.example"
+  },
+  {
+   "code": "S004",
+   "region": "S",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-s004@demo-retail.example"
+  },
+  {
+   "code": "W004",
+   "region": "W",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-w004@demo-retail.example"
+  },
+  {
+   "code": "N005",
+   "region": "N",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-n005@demo-retail.example"
+  },
+  {
+   "code": "S005",
+   "region": "S",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-s005@demo-retail.example"
+  },
+  {
+   "code": "W005",
+   "region": "W",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-w005@demo-retail.example"
+  },
+  {
+   "code": "N006",
+   "region": "N",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-n006@demo-retail.example"
+  },
+  {
+   "code": "S006",
+   "region": "S",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-s006@demo-retail.example"
+  },
+  {
+   "code": "W006",
+   "region": "W",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-w006@demo-retail.example"
+  },
+  {
+   "code": "N007",
+   "region": "N",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-n007@demo-retail.example"
+  },
+  {
+   "code": "S007",
+   "region": "S",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-s007@demo-retail.example"
+  },
+  {
+   "code": "W007",
+   "region": "W",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-w007@demo-retail.example"
+  },
+  {
+   "code": "N008",
+   "region": "N",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-n008@demo-retail.example"
+  },
+  {
+   "code": "S008",
+   "region": "S",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-s008@demo-retail.example"
+  },
+  {
+   "code": "W008",
+   "region": "W",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-w008@demo-retail.example"
+  },
+  {
+   "code": "N009",
+   "region": "N",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-n009@demo-retail.example"
+  },
+  {
+   "code": "S009",
+   "region": "S",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-s009@demo-retail.example"
+  },
+  {
+   "code": "W009",
+   "region": "W",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-w009@demo-retail.example"
+  },
+  {
+   "code": "N010",
+   "region": "N",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-n010@demo-retail.example"
+  },
+  {
+   "code": "S010",
+   "region": "S",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-s010@demo-retail.example"
+  },
+  {
+   "code": "W010",
+   "region": "W",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-w010@demo-retail.example"
+  },
+  {
+   "code": "N011",
+   "region": "N",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-n011@demo-retail.example"
+  },
+  {
+   "code": "S011",
+   "region": "S",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-s011@demo-retail.example"
+  },
+  {
+   "code": "W011",
+   "region": "W",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-w011@demo-retail.example"
+  },
+  {
+   "code": "N012",
+   "region": "N",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-n012@demo-retail.example"
+  },
+  {
+   "code": "S012",
+   "region": "S",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-s012@demo-retail.example"
+  },
+  {
+   "code": "W012",
+   "region": "W",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-w012@demo-retail.example"
+  },
+  {
+   "code": "N013",
+   "region": "N",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-n013@demo-retail.example"
+  },
+  {
+   "code": "S013",
+   "region": "S",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-s013@demo-retail.example"
+  },
+  {
+   "code": "W013",
+   "region": "W",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-w013@demo-retail.example"
+  },
+  {
+   "code": "N014",
+   "region": "N",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-n014@demo-retail.example"
+  },
+  {
+   "code": "S014",
+   "region": "S",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-s014@demo-retail.example"
+  },
+  {
+   "code": "W014",
+   "region": "W",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-w014@demo-retail.example"
+  },
+  {
+   "code": "N015",
+   "region": "N",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-n015@demo-retail.example"
+  },
+  {
+   "code": "S015",
+   "region": "S",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-s015@demo-retail.example"
+  },
+  {
+   "code": "W015",
+   "region": "W",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-w015@demo-retail.example"
+  },
+  {
+   "code": "N016",
+   "region": "N",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-n016@demo-retail.example"
+  },
+  {
+   "code": "S016",
+   "region": "S",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-s016@demo-retail.example"
+  },
+  {
+   "code": "W016",
+   "region": "W",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-w016@demo-retail.example"
+  },
+  {
+   "code": "N017",
+   "region": "N",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-n017@demo-retail.example"
+  },
+  {
+   "code": "S017",
+   "region": "S",
+   "print_format": "mPOS Receipt",
+   "cashier": "pp-est-s017@demo-retail.example"
+  },
+  {
+   "code": "W017",
+   "region": "W",
+   "print_format": "Print Format Receipt 3\"",
+   "cashier": "pp-est-w017@demo-retail.example"
+  }
+ ]
+}

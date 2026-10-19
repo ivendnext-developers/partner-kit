@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "scan_answer",
+  "about": "A confirm with nothing to ask.",
+  "payload": {
+    "verdict": "confirm"
+  },
+  "expect_refusal": "confirm needs a question"
+}

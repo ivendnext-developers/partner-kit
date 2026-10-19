@@ -1,0 +1,9 @@
+{
+  "extension_point": "desk_action",
+  "contract": "answer",
+  "about": "refresh is true or left out.",
+  "payload": {
+    "refresh": false
+  },
+  "expect_refusal": "refresh must be true"
+}

@@ -1,0 +1,10 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "scan_answer",
+  "about": "Markup in a sentence the till shows as written.",
+  "payload": {
+    "verdict": "refuse",
+    "reason": "<b>No</b>"
+  },
+  "expect_refusal": "reason must be plain text of 1 to 140 characters"
+}

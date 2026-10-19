@@ -1,0 +1,12 @@
+{
+  "extension_point": "scan_source",
+  "contract": "declaration",
+  "about": "A table with no item field.",
+  "payload": {
+    "doctype": "Retail Scan Source",
+    "source_name": "LIB1 Units",
+    "record_type": "Serial No",
+    "barcode_field": "name"
+  },
+  "expect_refusal": "Mandatory"
+}

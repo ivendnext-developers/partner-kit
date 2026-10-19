@@ -1,0 +1,24 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A version that is not major.minor.patch.",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_wrc",
+    "prefix": "PP WRC",
+    "version": "1.0",
+    "doctypes": [
+      {
+        "name": "PP WRC Claim",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "the version is required"
+}

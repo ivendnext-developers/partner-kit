@@ -1,0 +1,55 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "scan_answer",
+  "about": "Eleven line values; at most 10.",
+  "payload": {
+    "verdict": "allow",
+    "line_attributes": [
+      {
+        "name": "Warranty ID",
+        "value": "W-0"
+      },
+      {
+        "name": "Warranty ID",
+        "value": "W-1"
+      },
+      {
+        "name": "Warranty ID",
+        "value": "W-2"
+      },
+      {
+        "name": "Warranty ID",
+        "value": "W-3"
+      },
+      {
+        "name": "Warranty ID",
+        "value": "W-4"
+      },
+      {
+        "name": "Warranty ID",
+        "value": "W-5"
+      },
+      {
+        "name": "Warranty ID",
+        "value": "W-6"
+      },
+      {
+        "name": "Warranty ID",
+        "value": "W-7"
+      },
+      {
+        "name": "Warranty ID",
+        "value": "W-8"
+      },
+      {
+        "name": "Warranty ID",
+        "value": "W-9"
+      },
+      {
+        "name": "Warranty ID",
+        "value": "W-10"
+      }
+    ]
+  },
+  "expect_refusal": "line_attributes must be a list of 1 to 10 rows"
+}

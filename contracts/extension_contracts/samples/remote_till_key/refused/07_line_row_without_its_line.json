@@ -1,0 +1,33 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "A line value that does not say which line it is for.",
+  "given": {
+    "returns": [
+      "line_attributes"
+    ],
+    "lines": [
+      {
+        "item_code": "PHONE-X",
+        "qty": 1,
+        "uom": "Nos",
+        "luid": ""
+      },
+      {
+        "item_code": "CASE-1",
+        "qty": 1,
+        "uom": "Nos",
+        "luid": ""
+      }
+    ]
+  },
+  "payload": {
+    "line_attributes": [
+      {
+        "name": "Warranty ID",
+        "value": "W-88213"
+      }
+    ]
+  },
+  "expect_refusal": "each line attribute row must be exactly {line_no, name, value}"
+}

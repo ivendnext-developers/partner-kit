@@ -1,0 +1,174 @@
+{
+ "manifest_version": 2,
+ "app": "pp_apr",
+ "prefix": "PP APR",
+ "title": "Price change approvals",
+ "version": "0.2.0",
+ "publisher": "Partner Programme sample",
+ "description": "A request to change a selling price moves Requested -> Approved -> Applied by a native workflow on this record type. Each step is the right role's, a request cannot be approved through the Approve action by the person who made it, every change to its fields is tracked, and nothing here changes a price: an outside service applies an Approved request through the record API, once. The shop's per-state edit rule is a screen rule only, so anyone with write can edit a request in any state: the service refuses a request whose price changed after it was raised. The administrator's role can read and report, not change the trail through this row. Every right a role has is written out (read, write, create, delete, report, export, share, print, email): a permission row that leaves one out gets it ON. The shop must have the three roles named below before this is installed, and no one may hold both the requester's and the approver's role.",
+ "doctypes": [
+  {
+   "name": "PP APR Price Change Request",
+   "autoname": "hash",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "item",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "price_list",
+     "fieldtype": "Link",
+     "label": "Price list",
+     "options": "Price List",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "new_rate",
+     "fieldtype": "Currency",
+     "label": "New price",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "reason",
+     "fieldtype": "Small Text",
+     "label": "Reason"
+    },
+    {
+     "fieldname": "rejection_reason",
+     "fieldtype": "Small Text",
+     "label": "Why it was rejected"
+    },
+    {
+     "fieldname": "rejected_by",
+     "fieldtype": "Data",
+     "label": "Rejected by",
+     "read_only": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP APR Requester",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP APR Approver",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP APR Applier",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "naming_rules": [
+  {
+   "document_type": "PP APR Price Change Request",
+   "prefix": "PP-APR-.YYYY.-",
+   "prefix_digits": 5
+  }
+ ],
+ "workflows": [
+  {
+   "name": "PP APR Price Change Approval",
+   "document_type": "PP APR Price Change Request",
+   "states": [
+    {
+     "state": "PP APR Requested",
+     "allow_edit": "PP APR Requester"
+    },
+    {
+     "state": "PP APR Approved",
+     "allow_edit": "PP APR Approver"
+    },
+    {
+     "state": "PP APR Rejected",
+     "allow_edit": "PP APR Approver"
+    },
+    {
+     "state": "PP APR Applied",
+     "allow_edit": "PP APR Applier"
+    }
+   ],
+   "transitions": [
+    {
+     "state": "PP APR Requested",
+     "action": "PP APR Approve",
+     "next_state": "PP APR Approved",
+     "allowed": "PP APR Approver"
+    },
+    {
+     "state": "PP APR Requested",
+     "action": "PP APR Reject",
+     "next_state": "PP APR Rejected",
+     "allowed": "PP APR Approver"
+    },
+    {
+     "state": "PP APR Approved",
+     "action": "PP APR Reject",
+     "next_state": "PP APR Rejected",
+     "allowed": "PP APR Approver"
+    },
+    {
+     "state": "PP APR Approved",
+     "action": "PP APR Apply",
+     "next_state": "PP APR Applied",
+     "allowed": "PP APR Applier"
+    }
+   ]
+  }
+ ],
+ "list_settings": [
+  {
+   "doctype": "PP APR Price Change Request",
+   "fields": [
+    "item",
+    "price_list",
+    "new_rate"
+   ]
+  }
+ ]
+}

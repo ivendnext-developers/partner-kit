@@ -1,0 +1,33 @@
+{
+  "extension_point": "fiscal_reader",
+  "contract": "declaration",
+  "about": "A real-time reporting service that writes a status, a tax receipt number and a QR.",
+  "payload": {
+    "doctype": "Retail Fiscal Reader",
+    "source": "Outside service",
+    "companies": [
+      {
+        "company": "MPOS Test Co"
+      }
+    ],
+    "status_field": "pp_fbr_status",
+    "ref_field": "pp_fbr_invoice_no",
+    "writer_role": "PFiscal Test Integration",
+    "writer_users": [
+      {
+        "user": "pfiscal.service@test.example"
+      }
+    ],
+    "qr_field": "pp_fbr_qr",
+    "status_map": [
+      {
+        "source_value": "Accepted",
+        "status": "CLEARED"
+      },
+      {
+        "source_value": "Queued",
+        "status": "PENDING"
+      }
+    ]
+  }
+}

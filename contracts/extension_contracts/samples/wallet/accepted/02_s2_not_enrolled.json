@@ -1,0 +1,9 @@
+{
+ "extension_point": "wallet",
+ "contract": "preview_answer",
+ "about": "S2 — a customer with no enrolment: the tile is dimmed with the reason.",
+ "payload": {
+  "eligible": false,
+  "reason": "No active membership."
+ }
+}

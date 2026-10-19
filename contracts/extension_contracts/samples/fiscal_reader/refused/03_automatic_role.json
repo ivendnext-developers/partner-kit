@@ -1,0 +1,29 @@
+{
+  "extension_point": "fiscal_reader",
+  "contract": "declaration",
+  "about": "Every user holds All, so it cannot be the writer role.",
+  "payload": {
+    "doctype": "Retail Fiscal Reader",
+    "source": "Outside service",
+    "companies": [
+      {
+        "company": "MPOS Test Co"
+      }
+    ],
+    "status_field": "pp_fbr_status",
+    "ref_field": "pp_fbr_invoice_no",
+    "writer_role": "All",
+    "writer_users": [
+      {
+        "user": "pfiscal.service@test.example"
+      }
+    ],
+    "status_map": [
+      {
+        "source_value": "Accepted",
+        "status": "CLEARED"
+      }
+    ]
+  },
+  "expect_refusal": "An outside service needs its own writer role, never All."
+}

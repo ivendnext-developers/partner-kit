@@ -1,0 +1,43 @@
+{
+ "manifest_version": 2,
+ "app": "pp_cpn",
+ "prefix": "PP CPN",
+ "title": "Coupon rules",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "Rules the shop adds to its own coupons, checked at Pay. A check before payment: when the cashier presses Pay on a sale carrying a coupon the shop wrote a rule for, the shop's server sends its priced basket and the service refuses the coupon if the rule says only for one customer group and the sale's customer is not in it, or first purchase only and the sale has no customer or the customer already has a submitted sale (counted with the shop's own count over POS Invoice and Sales Invoice, never a return). The cashier removes the coupon and presses Pay again. One record of PP CPN Rule per coupon; a coupon with no rule is never refused, and a sale with no coupon is allowed without reading the shop. The service reads the rules and the count with the app's integration user and writes nothing. The install makes the role PP CPN Integration; the shop gives it to the app's integration user, with read on POS Invoice and Sales Invoice. The check installs switched off; the shop reads what it is sent, ticks the consent and switches it on. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": ["https://host.docker.internal:8125/cpn/check"],
+ "doctypes": [
+  {
+   "name": "PP CPN Rule",
+   "autoname": "field:coupon",
+   "track_changes": 1,
+   "fields": [
+    {"fieldname": "coupon", "fieldtype": "Link", "label": "Coupon", "options": "Coupon", "reqd": 1, "unique": 1, "in_list_view": 1,
+     "description": "One rule per coupon. The rule is named by the coupon."},
+    {"fieldname": "enabled", "fieldtype": "Check", "label": "Enabled", "default": "1", "in_list_view": 1,
+     "description": "Off: the coupon is checked by the product's own rules only."},
+    {"fieldname": "first_purchase_only", "fieldtype": "Check", "label": "First purchase only", "in_list_view": 1,
+     "description": "Refused when the sale has no customer, or when the customer already has a submitted sale that is not a return (at the till or in the back office)."},
+    {"fieldname": "customer_group", "fieldtype": "Link", "label": "Only for customers in this group", "options": "Customer Group",
+     "in_list_view": 1,
+     "description": "Blank: any customer. Exactly this group: a customer in a group under it is refused."}
+   ],
+   "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 0, "print": 1, "email": 0},
+    {"role": "PP CPN Integration", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0}
+   ]
+  }
+ ],
+ "property_setters": [
+  {"doc_type": "PP CPN Rule", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/coupon_rules.html#rules"}
+ ],
+ "registered_applications": [
+  {"name": "PP CPN Rules", "description": "the coupon rules service reads the shop's rule records and counts a customer's sales", "events": ["PP CPN Rule"]}
+ ],
+ "extension_subscriptions": [
+  {"key": "coupons", "point": "check", "label": "Coupon rules", "endpoint_url": "https://host.docker.internal:8125/cpn/check",
+   "timeout_seconds": 3, "down_answer": "allow_and_flag"}
+ ]
+}

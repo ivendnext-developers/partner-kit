@@ -1,0 +1,21 @@
+# Secrets scan configuration (gitleaks). The default rules apply; the literals below are made-up or published values
+# that appear in examples and tools, named exactly so nothing else is let through.
+title = "partner-kit"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "made-up values in examples and unit tests"
+regexTarget = "match"
+regexes = [
+  '''a1b2c3d4e5f6a7b8''',            # an idempotency key in the Desk action page's example
+  '''test-point-secret-ABC123''',    # a signing secret in S6's unit test
+]
+
+[[allowlists]]
+description = "the payments sandbox signing key: published on purpose; accepted only on a CitiXsys sandbox; every production site refuses it"
+regexTarget = "match"
+regexes = [
+  '''PgljfQXjS4PprEn4F\+5JXa0Htv6e5tpsPIdCBQ0xuuw=''',
+]

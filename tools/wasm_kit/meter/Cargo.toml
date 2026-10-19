@@ -1,0 +1,12 @@
+# Source: ivendnext/partner-programme spikes/wasm/tools/meter/Cargo.toml @ 2799842dca46, vendored: its one home is there. A defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository).
+[package]
+name = "pp_meter"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+walrus = "0.27"
+
+[profile.release]
+opt-level = 2

@@ -1,0 +1,20 @@
+{
+ "app": "rule-guard",
+ "version": "1.1.1",
+ "port": 8141,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s18_rule_guard/service/app.lambda_handler",
+ "package": ["tools/app_template/service", "samples/s18_rule_guard/rule.py", "samples/s18_rule_guard/service"],
+ "env": [
+  {"name": "IVN_LIBRARY_APP", "required": true},
+  {"name": "RGD_PREFIX", "required": true},
+  {"name": "PP_MEMBERS_ONLY_ITEMS", "required": false},
+  {"name": "PP_MEMBERS_ONLY_GROUPS", "required": false},
+  {"name": "PP_MEMBER_GROUPS", "required": false},
+  {"name": "PP_ASK_ABOVE", "required": false}
+ ]
+}

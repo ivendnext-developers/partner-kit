@@ -1,0 +1,33 @@
+iVendNext partner kit
+Copyright 2026 CitiXsys
+
+This repository is licensed under the Apache License, Version 2.0 (see LICENSE).
+Legal information: https://legal.ivend.com
+
+What the licence covers. It covers the files in this repository only. Some of them, such as the
+money kit (tools/moneykit/), call iVendNext code when they run inside a site; the licence grants
+nothing in the code they call.
+
+Copies of CitiXsys code. Some files here are copies of files in CitiXsys's own product and
+programme repositories: the manifest checker and its copied tests (tools/manifest/), the contracts
+(contracts/), three lints (tools/selfcheck/lint_*.py), the design-token values
+(kit/design/ivn-kit.css), shapes in the money kit, the sandbox certificate tool and its format
+(tools/sandbox_cert/), the receipt rows in sample S4 (samples/s4_receipt_pack/), the pure core of
+sample S3 (samples/s3_price_audit/outside/core.py), and the WebAssembly host and meter files and one
+scale measurement (tools/wasm_kit/, tools/scale_profile/; listed in EXPORT_SOURCES.md). Each names
+its source in its header or in EXPORT_SOURCES.md. CitiXsys licenses these copies here under the Apache
+License, Version 2.0, on purpose. The products they come from keep their own licence. Where a
+copied file's own lines point at a "license.txt", they refer to its source repository; in this
+repository the file is under the Apache License, Version 2.0.
+
+Not under the Apache licence:
+- The iVendNext name and logo (site/assets-src/logo*.svg) are trademarks of CitiXsys and are not
+  licensed for reuse. The partner terms (at https://legal.ivend.com, once published) say how partners may refer to
+  iVendNext.
+- The fonts in site/assets-src/fonts/ are under the SIL Open Font License 1.1
+  (site/assets-src/fonts/OFL.txt).
+
+Third-party code:
+- tools/app_template/service/ed25519.py is adapted from the reference code of RFC 8032,
+  Copyright (c) 2017 IETF Trust and the persons identified as authors of the code, under the
+  IETF Trust's BSD licence, whose text is in that file's header.

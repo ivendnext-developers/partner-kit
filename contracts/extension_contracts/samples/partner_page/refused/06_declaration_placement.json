@@ -1,0 +1,16 @@
+{
+  "extension_point": "partner_page",
+  "contract": "declaration",
+  "about": "A place the page cannot open.",
+  "payload": {
+    "doctype": "Retail Extension Subscription",
+    "point": "page",
+    "partner_name": "Acme Deliveries",
+    "transport": "remote",
+    "label": "Deliveries",
+    "endpoint_url": "https://partner.example/board",
+    "page_placement": "Kitchen screen",
+    "page_returns_message": 1
+  },
+  "expect_refusal": "Choose where the page opens."
+}

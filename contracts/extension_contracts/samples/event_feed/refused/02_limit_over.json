@@ -1,0 +1,9 @@
+{
+  "extension_point": "event_feed",
+  "contract": "events_request",
+  "about": "A limit over 500.",
+  "payload": {
+    "limit": 501
+  },
+  "expect_refusal": "limit must be a whole number from 1 to 500."
+}

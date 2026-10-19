@@ -1,0 +1,15 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "An item's maximum discount is at most 30, unless a Sales Manager saves it.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Item discount ceiling",
+    "record_type": "Item",
+    "kind": "threshold",
+    "field": "max_discount",
+    "operator": "<=",
+    "value": "30",
+    "bypass_roles": "Sales Manager"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "customer_answer",
+  "about": "A 3-character code; 4 to 8.",
+  "payload": {
+    "verdict": "challenge",
+    "prompt": "Code?",
+    "length": 3
+  },
+  "expect_refusal": "length must be 4 to 8"
+}

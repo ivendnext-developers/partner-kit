@@ -1,0 +1,16 @@
+{
+ "manifest_version": 2,
+ "app": "pp_cap",
+ "prefix": "PP CAP",
+ "title": "Warranty capture and a member code",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "Two capture services, each at its own partner address. On scan of an item in the named item groups, before its line goes on the sale, the service answers with a warranty reference for the line, as a value of a line attribute the shop keeps (the shop names it in the service's settings). On customer add, before the customer is created, the service refuses a customer without a mobile number or with a barred one, and otherwise sends the customer a one-time code: the till shows a code field, and the customer is created only after the right code (three wrong codes end it; an offline sale's customer and the receipt's contact after payment are created and flagged instead). No answer writes a customer field or moves money. Both install switched off; the shop reads what each is sent, ticks the consent and switches them on. When the service is down a scan goes on, flagged, and a new customer waits. The item groups and allowed_urls are the programme bench's; a partner writes its own.",
+ "allowed_urls": ["https://host.docker.internal:8125/cap/scan", "https://host.docker.internal:8125/cap/customer"],
+ "extension_subscriptions": [
+  {"key": "on_scan", "point": "capture", "label": "Warranty capture", "endpoint_url": "https://host.docker.internal:8125/cap/scan",
+   "timeout_seconds": 1.5, "down_answer": "allow_and_flag", "settings": {"event": "scan", "item_groups": ["iPhone", "iPad"]}},
+  {"key": "on_customer", "point": "capture", "label": "Member code", "endpoint_url": "https://host.docker.internal:8125/cap/customer",
+   "timeout_seconds": 3, "down_answer": "refuse", "settings": {"event": "customer_add"}}
+ ]
+}

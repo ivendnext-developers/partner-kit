@@ -1,0 +1,17 @@
+{
+ "app": "bins",
+ "version": "1.1.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s2_bins/service/where.lambda_handler",
+ "package": ["tools/app_template/service/function.py", "tools/app_template/service/shops.py", "tools/app_template/service/dynamo.py",
+             "tools/app_template/service/ed25519.py", "samples/s2_bins/core.py", "samples/s2_bins/service/where.py"],
+ "env": [
+  {"name": "IVN_LIBRARY_APP", "required": true},
+  {"name": "BLN_PREFIX", "required": true}
+ ]
+}

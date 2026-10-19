@@ -1,0 +1,13 @@
+{
+  "extension_point": "partner_page",
+  "contract": "declaration",
+  "about": "A till page that may answer nothing: Till key is the placement when left out.",
+  "payload": {
+    "doctype": "Retail Extension Subscription",
+    "point": "page",
+    "partner_name": "Acme Deliveries",
+    "label": "Deliveries",
+    "endpoint_url": "https://partner.example/board"
+  },
+  "expect_refusal": "Choose at least one thing the page may answer on the till."
+}

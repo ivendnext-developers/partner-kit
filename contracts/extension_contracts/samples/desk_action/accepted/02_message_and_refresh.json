@@ -1,0 +1,12 @@
+{
+  "extension_point": "desk_action",
+  "contract": "answer",
+  "about": "A message, then the form reloads.",
+  "payload": {
+    "message": {
+      "title": "Route assigned",
+      "body": "14 lines across 3 aisles."
+    },
+    "refresh": true
+  }
+}

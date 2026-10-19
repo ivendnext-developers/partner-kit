@@ -1,0 +1,19 @@
+{
+  "extension_point": "fields",
+  "contract": "declaration",
+  "about": "The receipt takes show only: its total cannot be hidden.",
+  "payload": {
+    "doctype": "Retail POS Theme",
+    "theme_name": "LIB1 Fields R5",
+    "layout": "Summer Breeze",
+    "palette": "Standard",
+    "field_rules": [
+      {
+        "surface": "receipt_preview",
+        "field": "total",
+        "action": "hide"
+      }
+    ]
+  },
+  "expect_refusal": "On the receipt a rule can only show an item field."
+}

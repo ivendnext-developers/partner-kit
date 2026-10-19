@@ -1,0 +1,20 @@
+# The partner extension-point template (the Wasm kit). NO dependencies: the JSON reader and writer are the kit's own
+# (src/json.rs), integer-only, so the module carries no floating-point instruction (P-WASM §4 refuses them for any
+# point that touches a price or a decision; measured: serde_json put 26 float instructions into the first spike's adjuster).
+[package]
+name = "pp_point"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

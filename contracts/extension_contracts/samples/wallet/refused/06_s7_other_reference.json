@@ -1,0 +1,16 @@
+{
+ "extension_point": "wallet",
+ "contract": "answer",
+ "about": "S7 — status for MPOS-REF-A answered about another reference: refused whole, read as unknown.",
+ "payload": {
+  "reference": "MPOS-REF-BBBBBBBBBBBB",
+  "outcome": "approved",
+  "amount_minor": 8000,
+  "auth_ref": "HK-79"
+ },
+ "given": {
+  "asked_reference": "MPOS-REF-AAAAAAAAAAAA"
+ },
+ "beyond_schema": true,
+ "expect_refusal": "another reference"
+}

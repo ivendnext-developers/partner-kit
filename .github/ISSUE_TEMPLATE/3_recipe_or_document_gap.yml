@@ -1,0 +1,29 @@
+# Generated from feedback/recipe_or_document_gap.md by .github/scripts/issue_forms.py: edit that form, then re-run the script.
+name: "Recipe or document gap"
+description: "tell us what a page is missing, or has wrong"
+title: "Document gap: "
+body:
+  - type: markdown
+    attributes:
+      value: "**Every member of the programme can read this issue**, other partners' and other customers' teams too. Never put a secret in it (no key, password, signing secret or token), no shoppers' personal data, and no customer's name unless the customer has agreed. What we may ask you next, and what happens after you send it: [`feedback/recipe_or_document_gap.md`](https://github.com/ivendnext-developers/partner-kit/blob/main/feedback/recipe_or_document_gap.md)."
+  - type: textarea
+    id: s1
+    attributes:
+      label: "1. The page"
+      placeholder: "The guide chapter or recipe file, and the heading or step number."
+    validations:
+      required: true
+  - type: textarea
+    id: s2
+    attributes:
+      label: "2. What is wrong"
+      placeholder: "Missing, wrong, out of date, unclear, a broken link, or two pages that disagree. Quote the line, then say what you saw instead. Remove any secret."
+    validations:
+      required: true
+  - type: textarea
+    id: s3
+    attributes:
+      label: "3. What would have helped"
+      placeholder: "The sentence, step, table or example you would have wanted."
+    validations:
+      required: false

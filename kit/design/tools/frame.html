@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- ivn-kit 0.1.0 · render harness: shows one template inside a fixed-size frame, the way the
+     POS sheet frames a partner page. Headless Chrome cannot make a window narrower than 500px,
+     so the till sheet is rendered through this. Usage: frame.html?t=till_sheet&w=420&h=800&theme=dark&dir=rtl -->
+<html><head><meta charset="utf-8"><title>Frame</title>
+<style>html, body { margin: 0; overflow: hidden; } iframe { border: 0; display: block; }</style></head>
+<body><script>
+  var q = new URLSearchParams(location.search);
+  var t = /^[a-z_]+$/.test(q.get("t") || "") ? q.get("t") : "till_sheet";
+  var f = document.createElement("iframe");
+  f.width = parseInt(q.get("w"), 10) || 420; f.height = parseInt(q.get("h"), 10) || 800;
+  var pass = new URLSearchParams();
+  ["theme", "dir", "open"].forEach(function (k) { if (q.get(k)) pass.set(k, q.get(k)); });
+  f.src = "../templates/" + t + ".html?" + pass.toString();
+  document.body.appendChild(f);
+</script></body></html>

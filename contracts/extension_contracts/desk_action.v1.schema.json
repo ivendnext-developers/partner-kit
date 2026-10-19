@@ -1,0 +1,447 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/desk_action.v1.schema.json",
+  "title": "Desk action, version 1",
+  "description": "A partner's button on a Desk record: the Retail Desk Action record a System Manager declares (declaration, checked by business_logic/desk_action.py validate_declaration), the signed body sent to the partner's service at each press (request) and its answer (answer, judged whole by validate_answer). Page: docs/extending/desk_action.md.",
+  "$defs": {
+    "declaration": {
+      "type": "object",
+      "required": [
+        "doctype",
+        "record_type",
+        "label",
+        "placement",
+        "service",
+        "roles",
+        "send_fields"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "doctype": {
+          "const": "Retail Desk Action"
+        },
+        "record_type": {
+          "description": "Not a table, a single or a virtual record type, and not the partner records themselves.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "\\S"
+        },
+        "group": {
+          "description": "The menu the button sits in.",
+          "type": "string",
+          "maxLength": 40
+        },
+        "enabled": {
+          "description": "0 when left out.",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "placement": {
+          "enum": [
+            "form",
+            "list",
+            "both"
+          ]
+        },
+        "service": {
+          "description": "The name of a Retail Extension Subscription of extension point desk_action.",
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "role"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "role": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "on_draft": {
+          "description": "1 when left out.",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "on_submitted": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "on_cancelled": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "states": {
+          "description": "Workflow states (or statuses), one per line, each at most 140 characters.",
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "$ref": "save_rules.v1.schema.json#/$defs/condition"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/input"
+          }
+        },
+        "confirm_text": {
+          "type": "string",
+          "maxLength": 140
+        },
+        "send_fields": {
+          "description": "The fields that leave the shop: name, customer, items(item_code, qty). At most 40 fields in 5 tables.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "[a-z]"
+        }
+      },
+      "anyOf": [
+        {
+          "description": "At least one of on_draft (1 when left out), on_submitted, on_cancelled.",
+          "not": {
+            "required": [
+              "on_draft"
+            ]
+          }
+        },
+        {
+          "properties": {
+            "on_draft": {
+              "const": 1
+            }
+          }
+        },
+        {
+          "required": [
+            "on_submitted"
+          ],
+          "properties": {
+            "on_submitted": {
+              "const": 1
+            }
+          }
+        },
+        {
+          "required": [
+            "on_cancelled"
+          ],
+          "properties": {
+            "on_cancelled": {
+              "const": 1
+            }
+          }
+        }
+      ]
+    },
+    "input": {
+      "type": "object",
+      "required": [
+        "fieldname",
+        "label",
+        "fieldtype"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fieldname": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,39}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "pattern": "\\S"
+        },
+        "fieldtype": {
+          "enum": [
+            "Data",
+            "Int",
+            "Float",
+            "Date",
+            "Select",
+            "Link",
+            "Check",
+            "Small Text"
+          ]
+        },
+        "options": {
+          "description": "Select: 1 to 50 choices, one per line. Link: the record type.",
+          "type": "string"
+        },
+        "reqd": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "default": {
+          "type": "string",
+          "maxLength": 140
+        }
+      }
+    },
+    "request": {
+      "description": "The body of the signed POST (sorted keys, no spaces, ASCII). Headers: X-iVendNext-Point: desk_action/1, plus the timestamp, signature and request id every extension point sends.",
+      "type": "object",
+      "required": [
+        "point",
+        "context"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "point": {
+          "const": "desk_action/1"
+        },
+        "context": {
+          "type": "object",
+          "required": [
+            "v",
+            "action",
+            "label",
+            "user",
+            "lang",
+            "records",
+            "inputs",
+            "idempotency_key"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "v": {
+              "const": 1
+            },
+            "action": {
+              "description": "The declaration's name.",
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "user": {
+              "description": "The user's login, usually an email address. Personal data.",
+              "type": "string"
+            },
+            "lang": {
+              "type": "string"
+            },
+            "records": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "$ref": "#/$defs/record"
+              }
+            },
+            "inputs": {
+              "description": "Each declared input by its fieldname, null when left empty. A number input named qty or quantity is sent in thousandths.",
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "idempotency_key": {
+              "description": "The same on a retry from the same dialog.",
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,64}$"
+            }
+          }
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "required": [
+        "doctype",
+        "name",
+        "fields"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "doctype": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "fields": {
+          "description": "Exactly the declared send_fields, read from the record as saved.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/value"
+          }
+        }
+      }
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "$ref": "#/$defs/money"
+        },
+        {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "#/$defs/money"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "money": {
+      "description": "A money value: a whole number of minor units with its currency and that currency's digits.",
+      "type": "object",
+      "required": [
+        "minor",
+        "currency",
+        "currency_exponent"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "minor": {
+          "type": "integer"
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 1
+        },
+        "currency_exponent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        }
+      }
+    },
+    "answer": {
+      "description": "HTTP 2xx, a JSON object of at most 64 KB: a message, and at most one next step.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "$ref": "remote_till_key.v1.schema.json#/$defs/message"
+        },
+        "open_record": {
+          "description": "A record that exists and the user may read.",
+          "type": "object",
+          "required": [
+            "doctype",
+            "name"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "doctype": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "pattern": "\\S"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "pattern": "\\S"
+            }
+          }
+        },
+        "open_page": {
+          "description": "An address at or below a partner page placed on Desk.",
+          "type": "object",
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "url": {
+              "type": "string",
+              "pattern": "^\\s*https://"
+            }
+          }
+        },
+        "refresh": {
+          "const": true
+        }
+      },
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "open_record",
+              "open_page"
+            ]
+          },
+          {
+            "required": [
+              "open_record",
+              "refresh"
+            ]
+          },
+          {
+            "required": [
+              "open_page",
+              "refresh"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

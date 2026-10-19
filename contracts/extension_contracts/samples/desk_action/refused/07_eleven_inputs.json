@@ -1,0 +1,76 @@
+{
+  "extension_point": "desk_action",
+  "contract": "declaration",
+  "about": "Eleven inputs; at most ten.",
+  "payload": {
+    "doctype": "Retail Desk Action",
+    "service": "lib1-desk-service",
+    "record_type": "Sales Order",
+    "label": "Assign pick route",
+    "placement": "form",
+    "roles": [
+      {
+        "role": "Stock User"
+      }
+    ],
+    "inputs": [
+      {
+        "fieldname": "note_0",
+        "label": "Note 0",
+        "fieldtype": "Data"
+      },
+      {
+        "fieldname": "note_1",
+        "label": "Note 1",
+        "fieldtype": "Data"
+      },
+      {
+        "fieldname": "note_2",
+        "label": "Note 2",
+        "fieldtype": "Data"
+      },
+      {
+        "fieldname": "note_3",
+        "label": "Note 3",
+        "fieldtype": "Data"
+      },
+      {
+        "fieldname": "note_4",
+        "label": "Note 4",
+        "fieldtype": "Data"
+      },
+      {
+        "fieldname": "note_5",
+        "label": "Note 5",
+        "fieldtype": "Data"
+      },
+      {
+        "fieldname": "note_6",
+        "label": "Note 6",
+        "fieldtype": "Data"
+      },
+      {
+        "fieldname": "note_7",
+        "label": "Note 7",
+        "fieldtype": "Data"
+      },
+      {
+        "fieldname": "note_8",
+        "label": "Note 8",
+        "fieldtype": "Data"
+      },
+      {
+        "fieldname": "note_9",
+        "label": "Note 9",
+        "fieldtype": "Data"
+      },
+      {
+        "fieldname": "note_10",
+        "label": "Note 10",
+        "fieldtype": "Data"
+      }
+    ],
+    "send_fields": "name"
+  },
+  "expect_refusal": "A dialog asks at most 10 inputs."
+}

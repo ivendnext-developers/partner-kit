@@ -1,0 +1,16 @@
+{
+  "extension_point": "partner_page",
+  "contract": "submit",
+  "about": "The partner's server puts a Sale Attribute on the sale.",
+  "payload": {
+    "ctx_nonce": "0123456789abcdef0123456789abcdef",
+    "result": {
+      "sale_attributes": [
+        {
+          "sale_attribute": "Delivery Order",
+          "attribute_value": "TB-88123"
+        }
+      ]
+    }
+  }
+}

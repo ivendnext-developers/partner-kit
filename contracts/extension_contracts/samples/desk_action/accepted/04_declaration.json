@@ -1,0 +1,29 @@
+{
+  "extension_point": "desk_action",
+  "contract": "declaration",
+  "about": "Assign pick route on a submitted Sales Order, for Stock Users.",
+  "payload": {
+    "doctype": "Retail Desk Action",
+    "service": "lib1-desk-service",
+    "record_type": "Sales Order",
+    "label": "Assign pick route",
+    "placement": "form",
+    "roles": [
+      {
+        "role": "Stock User"
+      }
+    ],
+    "on_draft": 0,
+    "on_submitted": 1,
+    "inputs": [
+      {
+        "fieldname": "wave",
+        "label": "Pick wave",
+        "fieldtype": "Select",
+        "options": "Morning\nAfternoon",
+        "reqd": 1
+      }
+    ],
+    "send_fields": "name, customer, delivery_date, items(item_code, qty)"
+  }
+}

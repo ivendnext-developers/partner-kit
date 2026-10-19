@@ -1,0 +1,29 @@
+{
+  "extension_point": "fiscal_reader",
+  "contract": "declaration",
+  "about": "NOT-FISCAL is the POS's own classification.",
+  "payload": {
+    "doctype": "Retail Fiscal Reader",
+    "source": "Outside service",
+    "companies": [
+      {
+        "company": "MPOS Test Co"
+      }
+    ],
+    "status_field": "pp_fbr_status",
+    "ref_field": "pp_fbr_invoice_no",
+    "writer_role": "PFiscal Test Integration",
+    "writer_users": [
+      {
+        "user": "pfiscal.service@test.example"
+      }
+    ],
+    "status_map": [
+      {
+        "source_value": "Exempt",
+        "status": "NOT-FISCAL"
+      }
+    ]
+  },
+  "expect_refusal": "cannot be a result. Use CLEARED, REPORTED or PENDING."
+}

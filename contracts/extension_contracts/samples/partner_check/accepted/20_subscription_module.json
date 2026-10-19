@@ -1,0 +1,16 @@
+{
+  "extension_point": "partner_check",
+  "contract": "subscription",
+  "about": "A check answered by the partner's module: it names the admitted module, and carries no address and no secret.",
+  "payload": {
+    "doctype": "Retail Extension Subscription",
+    "point": "check",
+    "partner_name": "A partner",
+    "label": "Line limits",
+    "transport": "wasm",
+    "module": "the admitted module",
+    "down_answer": "allow_and_flag",
+    "enabled": 1,
+    "consent_given": 1
+  }
+}

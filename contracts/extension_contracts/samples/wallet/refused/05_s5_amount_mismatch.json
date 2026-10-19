@@ -1,0 +1,16 @@
+{
+ "extension_point": "wallet",
+ "contract": "answer",
+ "about": "S5 — 80.00 asked, 70.00 taken: a Mismatch the core reverses (\"The wallet answered a different amount. Nothing was taken.\"). The schema reads it; the comparison with the ask is the core's.",
+ "payload": {
+  "reference": "MPOS-REF-0A1B2C3D4E5F",
+  "outcome": "approved",
+  "amount_minor": 7000,
+  "auth_ref": "HK-78"
+ },
+ "given": {
+  "asked_amount_minor": 8000
+ },
+ "beyond_schema": true,
+ "expect_refusal": "a different amount"
+}

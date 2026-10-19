@@ -1,0 +1,8 @@
+# List stock locations (not groups) and their company; WH and COMPANY are captured from the same row, so they always
+# agree (no company is named, so the file runs on any shop)
+# expect: 200 (.data | length) > 0
+# capture: WH=.data[0].name
+# capture: COMPANY=.data[0].company
+GET {{BASE}}/api/resource/Warehouse?fields=["name","company"]&filters=[["is_group","=",0]]&order_by=name asc&limit_page_length=50
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

@@ -1,0 +1,6 @@
+# Generated from feedback/README.md by .github/scripts/issue_forms.py: edit that form, then re-run the script.
+blank_issues_enabled: false
+contact_links:
+  - name: "Not yet a member? Become an iVendNext Partner"
+    url: "https://www.ivendnext.com/partner/#be-a-partner"
+    about: "These forms are for onboarded members. Everyone else starts with the iVendNext Partner form."

@@ -1,0 +1,19 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A company customer needs a tax id.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Company customers need a tax id",
+    "record_type": "Customer",
+    "kind": "required_when",
+    "field": "tax_id",
+    "conditions": [
+      {
+        "field": "customer_type",
+        "operator": "=",
+        "value": "Company"
+      }
+    ]
+  }
+}

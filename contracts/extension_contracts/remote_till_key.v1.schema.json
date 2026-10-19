@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/remote_till_key.v1.schema.json",
+  "title": "Remote till key, version 1",
+  "description": "What iVendNext POS sends a partner's HTTPS service when a cashier presses a remote till key (request), and what the service answers (answer). The answer is judged by business_logic/app_button.py validate_result: one bad kind, row or value refuses the whole answer. Page: docs/extending/remote_till_key.md.",
+  "$defs": {
+    "request": {
+      "description": "The body of the signed POST, sent at each press. ASCII JSON; the headers carry X-iVendNext-Timestamp, X-iVendNext-Signature and X-iVendNext-Request-Id.",
+      "type": "object",
+      "required": [
+        "app",
+        "key",
+        "returns",
+        "context"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "app": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]{1,80}$"
+        },
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]{1,40}$"
+        },
+        "returns": {
+          "description": "The answer kinds the key's record allows, in this order.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "message",
+              "sale_attributes",
+              "line_attributes"
+            ]
+          }
+        },
+        "context": {
+          "$ref": "#/$defs/context"
+        }
+      }
+    },
+    "context": {
+      "description": "The read-only picture of the sale (app_button.build_context). No price, total, payment, serial or batch. store, pos_profile, company, currency and operator are the server's; sale_ref, customer and lines are what the till sent.",
+      "type": "object",
+      "required": [
+        "sale_ref",
+        "store",
+        "pos_profile",
+        "company",
+        "currency",
+        "operator",
+        "customer",
+        "lines"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sale_ref": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "store": {
+          "type": "string"
+        },
+        "pos_profile": {
+          "type": "string"
+        },
+        "company": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "operator": {
+          "description": "The signed-in cashier's user id. Personal data.",
+          "type": "string"
+        },
+        "customer": {
+          "description": "The customer's id, or null when the sale has none or names one this site does not have. Personal data.",
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 140
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lines": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "required": [
+              "item_code",
+              "qty",
+              "uom",
+              "luid"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "item_code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 140
+              },
+              "qty": {
+                "type": "number"
+              },
+              "uom": {
+                "type": "string",
+                "maxLength": 140
+              },
+              "luid": {
+                "description": "The line's own id on the till.",
+                "type": "string",
+                "maxLength": 80
+              }
+            }
+          }
+        }
+      }
+    },
+    "answer": {
+      "description": "HTTP 2xx, a JSON object of at most 64 KB. Only the kinds the key's record allows (the request's returns).",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "$ref": "#/$defs/message"
+        },
+        "sale_attributes": {
+          "$ref": "#/$defs/sale_attributes"
+        },
+        "line_attributes": {
+          "$ref": "#/$defs/line_attributes"
+        }
+      }
+    },
+    "message": {
+      "type": "object",
+      "required": [
+        "title",
+        "body"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "pattern": "\\S"
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280,
+          "pattern": "\\S"
+        },
+        "level": {
+          "description": "info when left out.",
+          "enum": [
+            "info",
+            "success",
+            "warning"
+          ]
+        }
+      }
+    },
+    "sale_attributes": {
+      "description": "Each name must be an active Sale Attribute on the site and appear once.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": [
+          "sale_attribute",
+          "attribute_value"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "sale_attribute": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140,
+            "pattern": "\\S"
+          },
+          "attribute_value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140,
+            "pattern": "\\S"
+          }
+        }
+      }
+    },
+    "line_attributes": {
+      "description": "Values for lines of the sale, each naming its line by line_no: the line's position in the request's context.lines, from 1. Each name must be an active Transaction Item Attribute on the site, its value matching that attribute's own pattern when it has one, and a name appears once per line. The till writes a row only onto the line it names while that line is still the item it was at the press.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": [
+          "line_no",
+          "name",
+          "value"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "line_no": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140,
+            "pattern": "\\S"
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140,
+            "pattern": "\\S"
+          }
+        }
+      }
+    }
+  }
+}

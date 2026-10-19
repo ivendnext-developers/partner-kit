@@ -1,0 +1,43 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "Manifest version 2: a Desk button on its own record type and the service it calls, installed switched off.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_wrc",
+    "prefix": "PP WRC",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "PP WRC Claim",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ],
+    "allowed_urls": [
+      "https://partner.example/wrc"
+    ],
+    "extension_subscriptions": [
+      {
+        "key": "svc",
+        "point": "desk_action",
+        "label": "Claim service",
+        "endpoint_url": "https://partner.example/wrc"
+      }
+    ],
+    "desk_actions": [
+      {
+        "record_type": "PP WRC Claim",
+        "label": "Ask",
+        "placement": "both",
+        "service": "svc",
+        "on_draft": 1
+      }
+    ]
+  }
+}

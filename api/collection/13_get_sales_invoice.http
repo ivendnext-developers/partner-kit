@@ -1,0 +1,5 @@
+# Read one sale with its lines
+# expect: 200 .data.name == $ENV.SI and (.data.items | length) > 0
+GET {{BASE}}/api/resource/Sales Invoice/{{SI}}
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

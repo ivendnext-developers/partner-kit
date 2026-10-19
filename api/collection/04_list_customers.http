@@ -1,0 +1,5 @@
+# List customers
+# expect: 200 (.data | length) > 0
+GET {{BASE}}/api/resource/Customer?fields=["name","customer_group"]&limit_page_length=5
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

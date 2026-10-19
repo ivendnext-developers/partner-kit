@@ -1,0 +1,17 @@
+{
+  "extension_point": "partner_check",
+  "contract": "subscription",
+  "about": "A transport the site does not know.",
+  "payload": {
+    "doctype": "Retail Extension Subscription",
+    "point": "check",
+    "partner_name": "A partner",
+    "label": "Line limits",
+    "transport": "local",
+    "module": "the admitted module",
+    "down_answer": "allow_and_flag",
+    "enabled": 1,
+    "consent_given": 1
+  },
+  "expect_refusal": "Only a partner service address can answer an extension point on this site."
+}

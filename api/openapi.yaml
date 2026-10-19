@@ -1,0 +1,458 @@
+openapi: 3.1.0
+info:
+  title: iVendNext record API — the calls the Partner Programme samples make
+  version: "0.2.0-p2a"
+  summary: Read sales, items, serial numbers and stock; write a comment; post stock movements.
+  description: |
+    A hand-written description of the iVendNext record API, limited to the calls the Partner Programme
+    samples make (S1 warranty, S2 bin locations). Every path is the platform's own record API: no new
+    endpoint was built for partners. Any language works — `api/collection/run.sh` drives every call with
+    `curl` alone.
+
+    **Records.** `GET /api/resource/{Record Type}` lists records; `GET /api/resource/{Record Type}/{name}`
+    reads one, with its child rows (for a sale: its `items`). A list returns only `name` unless `fields` is
+    given. `filters` is a JSON array of `[field, operator, value]` triples, URL-encoded.
+
+    **Permissions.** Every call runs as the integration user and sees only what its role allows. A
+    record the role cannot read answers `403`; a missing record answers `404`.
+
+    **Submitting.** A stock movement (Stock Entry) is booked by creating it with `docstatus: 1` — one call
+    inserts and submits it (measured on our test bench). The two-step form — create a
+    draft, then `POST /api/v2/document/Stock Entry/{name}/method/submit/` — is also described.
+
+    **Webhooks** (outgoing, signed) are described in `recipes/webhook_receiver.md`, not here.
+servers:
+  - url: https://{site}
+    description: Your sandbox site, or a customer's staging site
+    variables:
+      site:
+        default: your-sandbox.example.com
+        description: The site's host name, as given to you with your API key
+security:
+  - tokenAuth: []
+tags:
+  - name: Sales
+  - name: Catalogue
+  - name: Stock
+  - name: Comments
+paths:
+  /api/resource/Sales%20Invoice:
+    get:
+      tags: [Sales]
+      operationId: listSalesInvoices
+      summary: List booked sales — the reconciliation pull filters on `modified` after a watermark
+      parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
+                   { $ref: "#/components/parameters/order_by" }, { $ref: "#/components/parameters/limit_page_length" },
+                   { $ref: "#/components/parameters/limit_start" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/resource/Sales%20Invoice/{name}:
+    get:
+      tags: [Sales]
+      operationId: getSalesInvoice
+      summary: Read one sale with its lines
+      parameters: [{ $ref: "#/components/parameters/name" }]
+      responses:
+        "200":
+          description: The sale.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: "#/components/schemas/Sale" } }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/resource/POS%20Invoice:
+    get:
+      tags: [Sales]
+      operationId: listPOSInvoices
+      summary: List till sales (POS Invoices)
+      parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
+                   { $ref: "#/components/parameters/order_by" }, { $ref: "#/components/parameters/limit_page_length" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/resource/POS%20Invoice/{name}:
+    get:
+      tags: [Sales]
+      operationId: getPOSInvoice
+      summary: Read one till sale with its lines
+      parameters: [{ $ref: "#/components/parameters/name" }]
+      responses:
+        "200":
+          description: The till sale.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: "#/components/schemas/Sale" } }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/resource/Item:
+    get:
+      tags: [Catalogue]
+      operationId: listItems
+      summary: List items — e.g. `fields=["name","item_group"]` and a `name in [...]` filter
+      parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
+                   { $ref: "#/components/parameters/order_by" }, { $ref: "#/components/parameters/limit_page_length" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/resource/Item/{name}:
+    get:
+      tags: [Catalogue]
+      operationId: getItem
+      summary: Read one item
+      parameters: [{ $ref: "#/components/parameters/name" }]
+      responses:
+        "200": { $ref: "#/components/responses/Record" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/resource/Customer:
+    get:
+      tags: [Catalogue]
+      operationId: listCustomers
+      summary: List customers
+      parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
+                   { $ref: "#/components/parameters/limit_page_length" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/resource/Warehouse:
+    get:
+      tags: [Stock]
+      operationId: listWarehouses
+      summary: List stores and stock locations (warehouses)
+      parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
+                   { $ref: "#/components/parameters/limit_page_length" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/resource/Serial%20No:
+    get:
+      tags: [Stock]
+      operationId: listSerialNos
+      summary: List serial numbers — e.g. by `item_code` or `status`
+      parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
+                   { $ref: "#/components/parameters/limit_page_length" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/resource/Serial%20No/{name}:
+    get:
+      tags: [Stock]
+      operationId: getSerialNo
+      summary: Read one serial number
+      parameters: [{ $ref: "#/components/parameters/name" }]
+      responses:
+        "200": { $ref: "#/components/responses/Record" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/resource/Serial%20and%20Batch%20Bundle/{name}:
+    get:
+      tags: [Stock]
+      operationId: getSerialAndBatchBundle
+      summary: Read the serial numbers a sale or stock line moved (its `entries`)
+      description: A sale line names its bundle in `serial_and_batch_bundle`; its `entries[].serial_no` are the line's serial numbers.
+      parameters: [{ $ref: "#/components/parameters/name" }]
+      responses:
+        "200":
+          description: The bundle.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: "#/components/schemas/SerialAndBatchBundle" } }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/resource/Stock%20Entry:
+    get:
+      tags: [Stock]
+      operationId: listStockEntries
+      summary: List stock movements
+      parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
+                   { $ref: "#/components/parameters/limit_page_length" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+    post:
+      tags: [Stock]
+      operationId: createStockEntry
+      summary: Create a stock movement — with `docstatus` 1 it is created AND booked in one call
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StockEntryIn" }
+      responses:
+        "200": { $ref: "#/components/responses/Record" }
+        "403": { $ref: "#/components/responses/Error" }
+        "417": { $ref: "#/components/responses/Error" }
+  /api/resource/Stock%20Entry/{name}:
+    get:
+      tags: [Stock]
+      operationId: getStockEntry
+      summary: Read one stock movement — its lines name the Serial and Batch Bundle that holds their serials
+      parameters: [{ $ref: "#/components/parameters/name" }]
+      responses:
+        "200": { $ref: "#/components/responses/Record" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v2/document/Stock%20Entry/{name}/method/submit/:
+    post:
+      tags: [Stock]
+      operationId: submitStockEntry
+      summary: Book (submit) a draft stock movement — the two-step alternative
+      parameters: [{ $ref: "#/components/parameters/name" }]
+      responses:
+        "200": { $ref: "#/components/responses/Record" }
+        "403": { $ref: "#/components/responses/Error" }
+        "417": { $ref: "#/components/responses/Error" }
+  /api/resource/Comment:
+    get:
+      tags: [Comments]
+      operationId: listComments
+      summary: List comments on a record — how a service finds its own earlier comment
+      parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
+                   { $ref: "#/components/parameters/limit_page_length" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+    post:
+      tags: [Comments]
+      operationId: createComment
+      summary: Write a comment on a record — visible to staff on that record in iVendNext Desk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommentIn" }
+      responses:
+        "200": { $ref: "#/components/responses/Record" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/resource/POS%20Profile:
+    get:
+      tags: [Stock]
+      operationId: listPOSProfiles
+      summary: List till profiles and the selling warehouse each sells from
+      parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
+                   { $ref: "#/components/parameters/limit_page_length" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+  /api/resource/POS%20Profile/{name}:
+    get:
+      tags: [Stock]
+      operationId: getPOSProfile
+      summary: Read one till profile — its `warehouse` is where a till sale takes stock from
+      parameters: [{ $ref: "#/components/parameters/name" }]
+      responses:
+        "200": { $ref: "#/components/responses/Record" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/resource/Bin:
+    get:
+      tags: [Stock]
+      operationId: listStockBalances
+      summary: Read stock balances (the engine's own figures) — `actual_qty` per item and warehouse
+      parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
+                   { $ref: "#/components/parameters/limit_page_length" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/resource/{record_type}:
+    get:
+      tags: [Partner records]
+      operationId: listPartnerRecords
+      summary: List records of a type the partner's manifest installed (e.g. `PP BLN Item In Bin`)
+      description: The same record API as every other type. Only types whose permissions grant the integration role may be read.
+      parameters: [{ $ref: "#/components/parameters/record_type" }, { $ref: "#/components/parameters/fields" },
+                   { $ref: "#/components/parameters/filters" }, { $ref: "#/components/parameters/limit_page_length" }]
+      responses:
+        "200": { $ref: "#/components/responses/List" }
+        "403": { $ref: "#/components/responses/Error" }
+    post:
+      tags: [Partner records]
+      operationId: createPartnerRecord
+      summary: Create a record of a manifest-installed type
+      parameters: [{ $ref: "#/components/parameters/record_type" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200": { $ref: "#/components/responses/Record" }
+        "403": { $ref: "#/components/responses/Error" }
+        "417": { $ref: "#/components/responses/Error" }
+  /api/resource/{record_type}/{name}:
+    get:
+      tags: [Partner records]
+      operationId: getPartnerRecord
+      summary: Read one record of a manifest-installed type, with its child rows
+      parameters: [{ $ref: "#/components/parameters/record_type" }, { $ref: "#/components/parameters/name" }]
+      responses:
+        "200": { $ref: "#/components/responses/Record" }
+        "404": { $ref: "#/components/responses/Error" }
+    put:
+      tags: [Partner records]
+      operationId: updatePartnerRecord
+      summary: Change fields on that record — a child table sent here REPLACES its rows, so send the existing rows too
+      parameters: [{ $ref: "#/components/parameters/record_type" }, { $ref: "#/components/parameters/name" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200": { $ref: "#/components/responses/Record" }
+        "403": { $ref: "#/components/responses/Error" }
+        "417": { $ref: "#/components/responses/Error" }
+components:
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "`Authorization: token <api_key>:<api_secret>` — the integration user's key pair."
+  parameters:
+    record_type:
+      name: record_type
+      in: path
+      required: true
+      description: A record type the partner's manifest installed, URL-encoded (e.g. `PP%20BLN%20Item%20In%20Bin`).
+      schema: { type: string }
+    name:
+      name: name
+      in: path
+      required: true
+      description: The record's name (URL-encoded).
+      schema: { type: string }
+    fields:
+      name: fields
+      in: query
+      description: 'JSON array of field names, e.g. `["name","modified"]`. Default: `["name"]`.'
+      schema: { type: string }
+      example: '["name","modified"]'
+    filters:
+      name: filters
+      in: query
+      description: 'JSON array of `[field, operator, value]`, e.g. `[["docstatus","=",1],["modified",">=","2026-10-01 00:00:00"]]`.'
+      schema: { type: string }
+    order_by:
+      name: order_by
+      in: query
+      schema: { type: string }
+      example: modified asc
+    limit_page_length:
+      name: limit_page_length
+      in: query
+      description: Page size (default 20; 0 = all).
+      schema: { type: integer, minimum: 0 }
+    limit_start:
+      name: limit_start
+      in: query
+      schema: { type: integer, minimum: 0 }
+  responses:
+    List:
+      description: The matching records — only the requested fields.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items: { type: object, additionalProperties: true }
+    Record:
+      description: One record, with its child rows.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data: { $ref: "#/components/schemas/Record" }
+    Error:
+      description: An error. `exc_type` names it (e.g. `PermissionError`, `DoesNotExistError`, `ValidationError`).
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              exc_type: { type: string }
+              exception: { type: string }
+              _server_messages: { type: string, description: JSON-encoded list of messages for a person }
+  schemas:
+    Record:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        doctype: { type: string }
+        docstatus: { type: integer, enum: [0, 1, 2], description: "0 draft · 1 booked · 2 cancelled" }
+        modified: { type: string, description: "Last change, `YYYY-MM-DD HH:MM:SS.ffffff` (site time zone)" }
+      additionalProperties: true
+    Sale:
+      allOf:
+        - $ref: "#/components/schemas/Record"
+        - type: object
+          properties:
+            customer: { type: string }
+            company: { type: string }
+            posting_date: { type: string, format: date }
+            currency: { type: string }
+            is_return: { type: integer, enum: [0, 1] }
+            is_consolidated: { type: integer, enum: [0, 1], description: Sales Invoice only — a roll-up of till sales }
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/SaleLine" }
+    SaleLine:
+      type: object
+      properties:
+        item_code: { type: string }
+        qty: { type: number }
+        uom: { type: string }
+        warehouse: { type: [string, "null"] }
+        serial_no: { type: [string, "null"], description: "Newline-separated serial numbers, when the line carries them as text" }
+        serial_and_batch_bundle: { type: [string, "null"], description: "The line's Serial and Batch Bundle, when it has one" }
+      additionalProperties: true
+    SerialAndBatchBundle:
+      allOf:
+        - $ref: "#/components/schemas/Record"
+        - type: object
+          properties:
+            item_code: { type: string }
+            entries:
+              type: array
+              items:
+                type: object
+                properties:
+                  serial_no: { type: [string, "null"] }
+                  batch_no: { type: [string, "null"] }
+                  qty: { type: number }
+                additionalProperties: true
+    StockEntryIn:
+      type: object
+      required: [stock_entry_type, items]
+      properties:
+        stock_entry_type: { type: string, examples: ["Material Receipt", "Material Transfer", "Material Issue"] }
+        company: { type: string }
+        docstatus: { type: integer, enum: [0, 1], description: "1 = create and book in one call" }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [item_code, qty]
+            properties:
+              item_code: { type: string }
+              qty: { type: number, exclusiveMinimum: 0 }
+              s_warehouse: { type: string, description: "From (transfer, issue)" }
+              t_warehouse: { type: string, description: "To (receipt, transfer)" }
+              basic_rate: { type: number, description: Valuation for a receipt }
+              use_serial_batch_fields: { type: integer, enum: [0, 1] }
+              serial_no: { type: string, description: Newline-separated serial numbers (with use_serial_batch_fields 1) }
+      additionalProperties: true
+    CommentIn:
+      type: object
+      required: [comment_type, reference_doctype, reference_name, content]
+      properties:
+        comment_type: { type: string, const: Comment }
+        reference_doctype: { type: string, examples: ["Sales Invoice"] }
+        reference_name: { type: string }
+        content: { type: string, description: HTML; escape `<` and `&` }

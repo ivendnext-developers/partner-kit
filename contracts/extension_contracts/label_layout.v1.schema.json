@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/label_layout.v1.schema.json",
+  "title": "Label layout, version 1",
+  "description": "A Retail Label Layout record: a label stock and its HTML template, filled by the till on the server (placeholders from a closed list, never code) and printed through the device's own print dialog (kind html), or Zebra printer commands sent to a counter till's own label printer (kind zpl). Judged by business_logic/label_print.py validate_layout when the record is saved. Page: docs/extending/label_layout.md.",
+  "$defs": {
+    "declaration": {
+      "description": "Sizes in millimetres. The template holds only the listed placeholders, and the markup the template.allOf/1 pattern refuses never.",
+      "type": "object",
+      "required": [
+        "doctype",
+        "label_name",
+        "width_mm",
+        "height_mm",
+        "template"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "doctype": {
+          "const": "Retail Label Layout"
+        },
+        "label_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "kind": {
+          "enum": [
+            "html",
+            "zpl"
+          ]
+        },
+        "enabled": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "width_mm": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 150
+        },
+        "height_mm": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 150
+        },
+        "per_row": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "template": {
+          "description": "HTML. Placeholders: {item_code} {item_name} {barcode} {barcode_svg} {price} {currency} {uom} {batch_no} {expiry_date} {manufacturing_date} {weight} {unit_price} {store}. No script, frame, form, object, embed, link, meta or base tag, no javascript: and no on…= handler (the product also reads the template with HTML entities decoded and tab / CR / LF removed). A zpl template starts with ^XA and ends with ^XZ, and draws its barcode with the printer's own barcode command over {barcode}, never {barcode_svg} (the record checks it; the schema cannot say it).",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000,
+          "pattern": "\\S",
+          "allOf": [
+            {
+              "not": {
+                "pattern": "\\{(?!(?:item_code|item_name|barcode|barcode_svg|price|currency|uom|batch_no|expiry_date|manufacturing_date|weight|unit_price|store)\\})[^{}]*\\}"
+              }
+            },
+            {
+              "not": {
+                "pattern": "<\\s*/?\\s*(?:[Ss][Cc][Rr][Ii][Pp][Tt]|[Ii][Ff][Rr][Aa][Mm][Ee]|[Ff][Rr][Aa][Mm][Ee][Ss][Ee][Tt]|[Ff][Rr][Aa][Mm][Ee]|[Oo][Bb][Jj][Ee][Cc][Tt]|[Ee][Mm][Bb][Ee][Dd]|[Ll][Ii][Nn][Kk]|[Mm][Ee][Tt][Aa]|[Bb][Aa][Ss][Ee]|[Ff][Oo][Rr][Mm])\\b|[Jj][Aa][Vv][Aa][Ss][Cc][Rr][Ii][Pp][Tt]\\s*:|(?<![A-Za-z0-9_-])[Oo][Nn][A-Za-z]+\\s*="
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

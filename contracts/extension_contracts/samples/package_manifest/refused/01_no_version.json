@@ -1,0 +1,23 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A manifest without its version.",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_wrc",
+    "prefix": "PP WRC",
+    "doctypes": [
+      {
+        "name": "PP WRC Claim",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "the version is required"
+}

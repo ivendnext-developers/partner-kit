@@ -1,0 +1,13 @@
+{
+  "extension_point": "label_layout",
+  "contract": "declaration",
+  "about": "A pharmacy label with both batch dates and the store, sized to fit its 60 x 30 mm stock above the 16.4 mm Code-128.",
+  "payload": {
+    "doctype": "Retail Label Layout",
+    "label_name": "LIB1 Pharmacy",
+    "width_mm": 60,
+    "height_mm": 30,
+    "enabled": 1,
+    "template": "<div style=\"font:8pt sans-serif;white-space:nowrap;overflow:hidden\">{item_name} ({store})</div><div style=\"font:8pt sans-serif\">Mfd {manufacturing_date} · Exp {expiry_date}</div>{barcode_svg}"
+  }
+}

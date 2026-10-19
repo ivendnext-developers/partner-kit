@@ -1,0 +1,516 @@
+{
+ "manifest_version": 2,
+ "app": "pp_lyl",
+ "prefix": "PP LYL",
+ "title": "Customer-owned loyalty",
+ "version": "0.3.0",
+ "publisher": "Partner Programme sample",
+ "description": "A customer's own loyalty programme, run by the partner's service OUTSIDE the shop, with its records kept INSIDE the shop: plans, settings, members and a cash-back ledger whose every row is named by its unique key, so the shop itself refuses a duplicate. Tiers are customer groups (each priced by a promotion, set by configuration). The service reads the event feed with one integration user (role PP LYL Integration, which the shop makes first), answers the member till key and, once the shop registers it as a remote wallet, lets a member spend the cash back at the till (Member cash). The feed registration and the till key install switched off. Every right a role has is written out (read, write, create, delete, report, export, share, print, email). allowed_urls is an example address; a partner writes its own.",
+ "allowed_urls": [
+  "https://loyalty.partner.example/lyl/member"
+ ],
+ "doctypes": [
+  {
+   "name": "PP LYL Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Title",
+     "reqd": 1,
+     "unique": 1
+    },
+    {
+     "fieldname": "default_plan",
+     "fieldtype": "Link",
+     "label": "Plan a new customer joins",
+     "options": "PP LYL Plan"
+    },
+    {
+     "fieldname": "return_days",
+     "fieldtype": "Int",
+     "label": "Return window (days)"
+    },
+    {
+     "fieldname": "tier_window_days",
+     "fieldtype": "Int",
+     "label": "Spend counted over the last (days)"
+    },
+    {
+     "fieldname": "currency",
+     "fieldtype": "Link",
+     "label": "Currency",
+     "options": "Currency"
+    },
+    {
+     "fieldname": "currency_precision",
+     "fieldtype": "Int",
+     "label": "Decimal places"
+    },
+    {
+     "fieldname": "walk_in_customers",
+     "fieldtype": "Small Text",
+     "label": "Walk-in customers (never enrolled), one per line"
+    },
+    {
+     "fieldname": "wallet_mode_of_payment",
+     "fieldtype": "Link",
+     "label": "Member cash payment method at the till",
+     "options": "Mode of Payment"
+    },
+    {
+     "fieldname": "max_redemption_percent",
+     "fieldtype": "Percent",
+     "label": "Most of a sale Member cash may pay (0 = no limit)"
+    },
+    {
+     "fieldname": "earn_on_redemption",
+     "fieldtype": "Check",
+     "label": "Earn cash back on a sale paid with Member cash"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP LYL Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP LYL Plan",
+   "autoname": "field:plan_name",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "plan_name",
+     "fieldtype": "Data",
+     "label": "Plan",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "active",
+     "fieldtype": "Check",
+     "label": "Active",
+     "default": "1"
+    },
+    {
+     "fieldname": "rank",
+     "fieldtype": "Int",
+     "label": "Rank (higher is better)",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "customer_group",
+     "fieldtype": "Link",
+     "label": "Customer group",
+     "options": "Customer Group",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "spend_threshold",
+     "fieldtype": "Currency",
+     "label": "Spend that reaches it",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "discount_percent",
+     "fieldtype": "Percent",
+     "label": "Member discount (its promotion)"
+    },
+    {
+     "fieldname": "cash_back_percent",
+     "fieldtype": "Percent",
+     "label": "Cash back earned"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP LYL Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP LYL Member",
+   "autoname": "field:customer",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "plan",
+     "fieldtype": "Link",
+     "label": "Plan",
+     "options": "PP LYL Plan",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Active\nInactive",
+     "default": "Active",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "enrolled_on",
+     "fieldtype": "Date",
+     "label": "Enrolled on"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP LYL Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP LYL Ledger",
+   "autoname": "field:source_key",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "source_key",
+     "fieldtype": "Data",
+     "label": "Key (document and event)",
+     "reqd": 1,
+     "unique": 1
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "entry_type",
+     "fieldtype": "Select",
+     "label": "Entry",
+     "options": "Earn\nReturn\nCancel\nRedeem\nRedeem refund\nRedeem reversal",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Pending\nCredited\nNetted\nCancelled",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "amount",
+     "fieldtype": "Currency",
+     "label": "Amount",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "earned_amount",
+     "fieldtype": "Currency",
+     "label": "Earned (before returns)"
+    },
+    {
+     "fieldname": "sale_base",
+     "fieldtype": "Currency",
+     "label": "Sale value it counts"
+    },
+    {
+     "fieldname": "against_sale",
+     "fieldtype": "Data",
+     "label": "Sale it belongs to",
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "posting_date",
+     "fieldtype": "Date",
+     "label": "Date"
+    },
+    {
+     "fieldname": "credit_on",
+     "fieldtype": "Date",
+     "label": "Credited on"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP LYL Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP LYL Balance",
+   "autoname": "field:balance_key",
+   "fields": [
+    {
+     "fieldname": "balance_key",
+     "fieldtype": "Data",
+     "label": "Key (customer and day)",
+     "reqd": 1,
+     "unique": 1
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "balance_date",
+     "fieldtype": "Date",
+     "label": "Day",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "opening",
+     "fieldtype": "Currency",
+     "label": "Opening",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "change",
+     "fieldtype": "Currency",
+     "label": "Change in the day"
+    },
+    {
+     "fieldname": "closing",
+     "fieldtype": "Currency",
+     "label": "Closing",
+     "in_list_view": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP LYL Integration",
+     "read": 1,
+     "write": 0,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "links": [
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP LYL Member",
+   "link_fieldname": "customer",
+   "group": "Loyalty"
+  },
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP LYL Ledger",
+   "link_fieldname": "customer",
+   "group": "Loyalty"
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP LYL Cash Back",
+   "ref_doctype": "PP LYL Ledger",
+   "columns": [
+    "name",
+    "customer",
+    "entry_type",
+    "status",
+    "amount",
+    "posting_date"
+   ],
+   "order_by": "posting_date desc",
+   "add_total_row": 1,
+   "roles": [
+    "Sales Manager"
+   ]
+  },
+  {
+   "name": "PP LYL Member cash by day",
+   "ref_doctype": "PP LYL Balance",
+   "columns": [
+    "customer",
+    "balance_date",
+    "opening",
+    "change",
+    "closing"
+   ],
+   "order_by": "balance_date asc",
+   "roles": [
+    "Sales Manager"
+   ]
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP LYL Loyalty",
+   "description": "the partner's loyalty service reads these events",
+   "events": [
+    "Customer",
+    "POS Invoice",
+    "Purchase Receipt"
+   ]
+  }
+ ],
+ "remote_keys": [
+  {
+   "key": "pp_lyl_member",
+   "label": "Member",
+   "partner_name": "Partner Programme sample",
+   "endpoint_url": "https://loyalty.partner.example/lyl/member",
+   "returns_message": 1,
+   "returns_sale_attributes": 0,
+   "timeout_seconds": 3
+  }
+ ]
+}

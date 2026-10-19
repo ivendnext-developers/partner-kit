@@ -1,0 +1,31 @@
+{
+ "manifest_version": 2,
+ "app": "pp_unc",
+ "prefix": "PP UNC",
+ "title": "Unit codes at the scan",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "The shop's own unit codes, read by the till's scan: one record per unit (its unique code, its item, its batch and whether it is still Available or Sold) and a scan source over that table. Scanning a unit's code lands its item with its batch; a Sold unit is refused. Data only: no service, nothing leaves the shop. The scan source installs switched off; the shop switches it on, and may set Record the code as to one of its own active line attributes so the code rides the sale's line. The partner's own service writes a unit back to Available after a return and to Sold after a sale (from the event feed). Every right a role has is written out (read, write, create, delete, report, export, share, print, email).",
+ "doctypes": [
+  {
+   "name": "PP UNC Unit",
+   "autoname": "field:unit_code",
+   "track_changes": 1,
+   "fields": [
+    {"fieldname": "unit_code", "fieldtype": "Data", "label": "Unit code", "unique": 1, "reqd": 1, "in_list_view": 1},
+    {"fieldname": "item", "fieldtype": "Link", "label": "Item", "options": "Item", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+    {"fieldname": "batch", "fieldtype": "Link", "label": "Batch", "options": "Batch", "in_list_view": 1},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Available\nSold", "default": "Available", "in_list_view": 1, "in_standard_filter": 1}
+   ],
+   "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 0, "print": 0, "email": 0},
+    {"role": "Stock Manager", "read": 1, "write": 1, "create": 1, "delete": 0, "report": 1, "export": 1, "share": 0, "print": 0, "email": 0},
+    {"role": "Stock User", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 1, "export": 0, "share": 0, "print": 0, "email": 0}
+   ]
+  }
+ ],
+ "scan_sources": [
+  {"source_name": "PP UNC Units", "record_type": "PP UNC Unit", "barcode_field": "unit_code", "item_from": "item",
+   "batch_from": "batch", "status_field": "status", "available_values": ["Available"], "sequence": 10}
+ ]
+}

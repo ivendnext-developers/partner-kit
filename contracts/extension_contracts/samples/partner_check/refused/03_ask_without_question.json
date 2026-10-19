@@ -1,0 +1,17 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "An ask with nothing to ask.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false
+  },
+  "payload": {
+    "verdict": "ask"
+  },
+  "expect_refusal": "ask needs a question"
+}

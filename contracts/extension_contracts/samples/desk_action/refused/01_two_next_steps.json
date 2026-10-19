@@ -1,0 +1,13 @@
+{
+  "extension_point": "desk_action",
+  "contract": "answer",
+  "about": "Open a record and refresh: at most one next step.",
+  "payload": {
+    "open_record": {
+      "doctype": "Item",
+      "name": "MPOS-PLAIN-A"
+    },
+    "refresh": true
+  },
+  "expect_refusal": "the answer asks for more than one next step"
+}

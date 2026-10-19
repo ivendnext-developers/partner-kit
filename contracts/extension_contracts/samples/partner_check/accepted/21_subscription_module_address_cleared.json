@@ -1,0 +1,17 @@
+{
+  "extension_point": "partner_check",
+  "contract": "subscription",
+  "about": "A module subscription with an address typed in saves, and the address is cleared: a module is never called over the network.",
+  "payload": {
+    "doctype": "Retail Extension Subscription",
+    "point": "check",
+    "partner_name": "A partner",
+    "label": "Line limits",
+    "transport": "wasm",
+    "module": "the admitted module",
+    "endpoint_url": "https://partner.example/check",
+    "down_answer": "refuse",
+    "enabled": 1,
+    "consent_given": 1
+  }
+}

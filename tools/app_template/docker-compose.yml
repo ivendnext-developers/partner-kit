@@ -1,0 +1,9 @@
+# Run the app on your laptop:   IVN_POINT_SECRET=any-long-random-string docker compose up --build
+# Never write a real secret into this file.
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      IVN_POINT_SECRET: ${IVN_POINT_SECRET:?set IVN_POINT_SECRET}

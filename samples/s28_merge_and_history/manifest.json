@@ -1,0 +1,53 @@
+{
+ "manifest_version": 2,
+ "app": "pp_mhs",
+ "prefix": "PP MHS",
+ "title": "Merge counts, and a customer's history",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "One app, two doors. (1) A Desk button, Merge counts, on the Stock Reconciliation list: the ticked draft counts are merged into one new draft (quantities added, or the last count's kept, as the settings say); each source gets a comment and is never changed. (2) A partner page, Customer history, on a till key and in Desk for a Customer: the customer's last sales with the store, who served and each discount. The app's service, outside the shop, reads and writes through the record API with its own key. After install: give PP MHS Integration read, create and write on Stock Reconciliation, read and create on Comment, read on POS Invoice, Sales Invoice and User; make the integration user with that role and its API key; fill PP MHS Settings Default; give PP MHS Counts to the people who merge and PP MHS History to the people who open the page; tick each service's consent and switch them on; place the page's key in POS Studio. allowed_urls is a placeholder; a partner writes its own.",
+ "allowed_urls": ["https://s28.partner.example/mhs/merge", "https://s28.partner.example/mhs/history/"],
+ "doctypes": [
+  {
+   "name": "PP MHS Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Name (the service reads the one named Default)", "reqd": 1, "unique": 1, "default": "Default"},
+    {"fieldname": "merge_rule", "fieldtype": "Select", "label": "Same item in the same warehouse", "options": "Sum\nLast", "default": "Sum",
+     "description": "Sum: add the counted quantities. Last: keep the quantity of the latest count (by posting date and time)."},
+    {"fieldname": "history_count", "fieldtype": "Int", "label": "Sales shown on the customer history page", "default": "10",
+     "description": "At most 50."}
+   ],
+   "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0, "report": 1, "export": 1, "share": 0, "print": 1, "email": 0},
+    {"role": "PP MHS Integration", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0},
+    {"role": "PP MHS Counts", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0},
+    {"role": "PP MHS History", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0}
+   ]
+  }
+ ],
+ "custom_fields": [
+  {"dt": "Stock Reconciliation", "fieldname": "pp_mhs_press_key", "fieldtype": "Data", "label": "Merged by press (PP MHS)",
+   "insert_after": "amended_from", "description": "Written by the Merge counts service on the draft it makes, so a retry finds it."}
+ ],
+ "extension_subscriptions": [
+  {"key": "merge", "point": "desk_action", "label": "Merge counts service", "endpoint_url": "https://s28.partner.example/mhs/merge", "timeout_seconds": 10},
+  {"key": "history", "point": "page", "label": "Customer history", "endpoint_url": "https://s28.partner.example/mhs/history/",
+   "page_placement": "Till key and Desk page", "page_roles": ["PP MHS History"], "page_send_user": 0, "page_send_sale": 1,
+   "page_returns_message": 1, "page_returns_sale_attributes": 0, "page_height": 70}
+ ],
+ "desk_actions": [
+  {
+   "record_type": "Stock Reconciliation",
+   "label": "Merge counts",
+   "placement": "list",
+   "service": "merge",
+   "roles": ["PP MHS Counts"],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Merge the ticked draft counts into one new draft? The ticked counts are not changed; each gets a comment."
+  }
+ ]
+}

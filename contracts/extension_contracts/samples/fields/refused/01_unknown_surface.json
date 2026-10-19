@@ -1,0 +1,19 @@
+{
+  "extension_point": "fields",
+  "contract": "declaration",
+  "about": "A rule on a screen field rules do not apply to.",
+  "payload": {
+    "doctype": "Retail POS Theme",
+    "theme_name": "LIB1 Fields R1",
+    "layout": "Summer Breeze",
+    "palette": "Standard",
+    "field_rules": [
+      {
+        "surface": "till_footer",
+        "field": "total",
+        "action": "hide"
+      }
+    ]
+  },
+  "expect_refusal": "is not a till screen field rules apply to."
+}

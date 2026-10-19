@@ -1,0 +1,18 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "A reason on a plain allow.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false
+  },
+  "payload": {
+    "verdict": "allow",
+    "reason": "Fine."
+  },
+  "expect_refusal": "allow carries a reason only with exclude_tenders"
+}

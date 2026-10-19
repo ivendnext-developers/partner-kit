@@ -1,0 +1,15 @@
+{
+  "extension_point": "label_layout",
+  "contract": "declaration",
+  "about": "A zpl template that does not open with ^XA and close with ^XZ. Only the record's own check sees it, so the schema lets it through.",
+  "beyond_schema": true,
+  "payload": {
+    "doctype": "Retail Label Layout",
+    "width_mm": 50,
+    "height_mm": 25,
+    "label_name": "LIB1 Zebra Unframed",
+    "kind": "zpl",
+    "template": "^FO20,20^FD{item_name}^FS"
+  },
+  "expect_refusal": "starts with ^XA and ends with ^XZ"
+}

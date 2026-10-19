@@ -1,0 +1,35 @@
+# Generated from feedback/app_listing.md by .github/scripts/issue_forms.py: edit that form, then re-run the script.
+name: "App listing request"
+description: "ask us to list your app in the App library, for every shop"
+title: "App listing request: "
+body:
+  - type: markdown
+    attributes:
+      value: "**Every member of the programme can read this issue**, other partners' and other customers' teams too. Never put a secret in it (no key, password, signing secret or token), no shoppers' personal data, and no customer's name unless the customer has agreed. What we may ask you next, and what happens after you send it: [`feedback/app_listing.md`](https://github.com/ivendnext-developers/partner-kit/blob/main/feedback/app_listing.md)."
+  - type: input
+    id: app_name
+    attributes:
+      label: "App name"
+      placeholder: "its name under your company's first word, as in the manifest, for example acme_bins"
+    validations:
+      required: true
+  - type: textarea
+    id: s1
+    attributes:
+      label: "1. What it does, who uses it and what a shop sets up first"
+      placeholder: "The card's one line, the roles that use it, and whether it should be free or need a key. Then the steps a shop takes after it installs the app, in the order the shop meets them: the Desk screen to open, what to choose or fill in, who does it."
+    validations:
+      required: true
+  - type: textarea
+    id: s2
+    attributes:
+      label: "2. The manifest, its guide page and its changelog"
+      placeholder: "Attach the manifest (version 1.0.0 or later), the text of its guide page in the five headings of the guide template, and one line on what is new in this version."
+    validations:
+      required: true
+  - type: checkboxes
+    id: tick_4
+    attributes:
+      label: "The listing bar"
+      options:
+        - label: "It meets the listing bar: its name is under your company's first word, it uninstalls cleanly on a sandbox with developer mode off, the kit's checks pass, the card says how a shop sets the app up and links its guide, and someone answers for it."

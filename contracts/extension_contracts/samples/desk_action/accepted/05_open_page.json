@@ -1,0 +1,10 @@
+{
+  "extension_point": "desk_action",
+  "contract": "answer",
+  "about": "Open the partner's console, placed on Desk at https://partner.example/console/.",
+  "payload": {
+    "open_page": {
+      "url": "https://partner.example/console/batches?run=8812"
+    }
+  }
+}

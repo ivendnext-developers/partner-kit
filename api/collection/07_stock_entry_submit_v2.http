@@ -1,0 +1,5 @@
+# The two-step form, step 2: book (submit) the draft through the document method route
+# expect: 200 .data.docstatus == 1
+POST {{BASE}}/api/v2/document/Stock Entry/{{SE2}}/method/submit/
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

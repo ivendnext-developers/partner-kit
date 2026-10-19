@@ -1,0 +1,24 @@
+{
+ "_what": "S30 — each pack's printed code is a serial number of an item that has both batches and serial numbers. apply_config.py sets Stock Settings, a Defective store and the items; migrate.py moves a unit table onto those items; units_report.py says what became of each unit. Change the names to the shop's. Names start with 'PP USN' / 'PP-USN' so they are easy to tell from the shop's own; --remove undoes only what apply_config.py recorded making.",
+ "company": "Demo Retail",
+ "stock_settings": {
+  "allow_existing_serial_no": 1,
+  "disable_serial_no_and_batch_selector": 0,
+  "pick_serial_and_batch_based_on": "Expiry"
+ },
+ "defective_warehouses": [
+  {"warehouse_name": "PP USN Defective", "parent_warehouse": "All Warehouses - DR"}
+ ],
+ "items": [
+  {"item_code": "PP-USN-PACK", "item_name": "Example supplement pack (each pack coded)", "item_group": "Accessories",
+   "stock_uom": "Nos", "price_list": "Demo Retail Price List", "price": 25, "replaces": null, "barcodes": []}
+ ],
+ "migration": {
+  "record_type": "PP UNC Unit",
+  "fields": {"code": "unit_code", "item": "item", "batch": "batch", "warehouse": null, "status": "status"},
+  "available_values": ["Available"],
+  "default_warehouse": "Demo Retail — Store 1 - DR",
+  "item_map": {"PP-UNC-OLD-PACK": "PP-USN-PACK"},
+  "batch_name": "{batch}-U"
+ }
+}

@@ -1,0 +1,16 @@
+{
+  "extension_point": "partner_check",
+  "contract": "subscription",
+  "about": "A module subscription that names no module.",
+  "payload": {
+    "doctype": "Retail Extension Subscription",
+    "point": "check",
+    "partner_name": "A partner",
+    "label": "Line limits",
+    "transport": "wasm",
+    "down_answer": "allow_and_flag",
+    "enabled": 1,
+    "consent_given": 1
+  },
+  "expect_refusal": "Choose the partner module that answers this extension point."
+}

@@ -1,0 +1,19 @@
+{
+  "extension_point": "desk_action",
+  "contract": "declaration",
+  "about": "A label of 41 characters.",
+  "payload": {
+    "doctype": "Retail Desk Action",
+    "service": "lib1-desk-service",
+    "record_type": "Sales Order",
+    "label": "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+    "placement": "form",
+    "roles": [
+      {
+        "role": "Stock User"
+      }
+    ],
+    "send_fields": "name"
+  },
+  "expect_refusal": "The label must be 1 to 40 characters."
+}

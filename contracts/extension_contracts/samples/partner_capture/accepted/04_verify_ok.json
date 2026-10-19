@@ -1,0 +1,8 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "verify_answer",
+  "about": "The code the customer read out is right.",
+  "payload": {
+    "verdict": "ok"
+  }
+}

@@ -1,0 +1,12 @@
+{
+ "name": "Example mid-size retailer (generic)",
+ "stores": 40,
+ "tills_per_store": 4,
+ "products": 25000,
+ "sales_per_till_per_day": 180,
+ "lines_per_sale": 3,
+ "trading_hours": 12,
+ "peak_hour_share": 0.18,
+ "offline_hours_expected": 2,
+ "feed_applications": 2
+}

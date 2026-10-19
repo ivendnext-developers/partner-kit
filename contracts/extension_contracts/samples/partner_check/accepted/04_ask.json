@@ -1,0 +1,17 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "A yes / no for the cashier.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false
+  },
+  "payload": {
+    "verdict": "ask",
+    "question": "Has the customer shown the prescription?"
+  }
+}

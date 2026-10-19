@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "scan_answer",
+  "about": "The item is not sold here.",
+  "payload": {
+    "verdict": "refuse",
+    "reason": "Not sold to under-18s."
+  }
+}

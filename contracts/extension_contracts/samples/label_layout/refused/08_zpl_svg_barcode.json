@@ -1,0 +1,15 @@
+{
+  "extension_point": "label_layout",
+  "contract": "declaration",
+  "about": "A zpl template asking for the HTML barcode picture. Only the record's own check sees it, so the schema lets it through.",
+  "beyond_schema": true,
+  "payload": {
+    "doctype": "Retail Label Layout",
+    "width_mm": 50,
+    "height_mm": 25,
+    "label_name": "LIB1 Zebra SVG",
+    "kind": "zpl",
+    "template": "^XA{barcode_svg}^XZ"
+  },
+  "expect_refusal": "not {barcode_svg}"
+}

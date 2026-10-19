@@ -1,0 +1,16 @@
+{
+  "extension_point": "partner_page",
+  "contract": "submit",
+  "about": "Anything beside ctx_nonce and result.",
+  "payload": {
+    "ctx_nonce": "0123456789abcdef0123456789abcdef",
+    "result": {
+      "message": {
+        "title": "Booked",
+        "body": "Courier collects at 4 pm."
+      }
+    },
+    "page": "Deliveries"
+  },
+  "expect_refusal": "The answer must be a JSON object of exactly ctx_nonce and result."
+}

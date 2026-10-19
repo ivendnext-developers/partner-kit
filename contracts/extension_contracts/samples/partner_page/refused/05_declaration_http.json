@@ -1,0 +1,16 @@
+{
+  "extension_point": "partner_page",
+  "contract": "declaration",
+  "about": "An address that is not HTTPS.",
+  "payload": {
+    "doctype": "Retail Extension Subscription",
+    "point": "page",
+    "partner_name": "Acme Deliveries",
+    "transport": "remote",
+    "label": "Deliveries",
+    "endpoint_url": "http://partner.example/board",
+    "page_placement": "Till key",
+    "page_returns_message": 1
+  },
+  "expect_refusal": "It must start with https:// and name a host."
+}

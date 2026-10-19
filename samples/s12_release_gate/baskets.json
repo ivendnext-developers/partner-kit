@@ -1,0 +1,101 @@
+{
+ "_what": "A customer's recorded baskets with the answers they expect (grand total and tax), recorded by record_expect.py from a clean gate run on our test bench \u2014 never by hand arithmetic. Replace the items with the customer's own.",
+ "baskets": [
+  {
+   "name": "two leather cases",
+   "lines": [
+    [
+     "CASE-LEATHER",
+     2,
+     null
+    ]
+   ],
+   "sale_discount": null,
+   "expect": {
+    "grand_total": 2598.0,
+    "tax": 338.87
+   }
+  },
+  {
+   "name": "two leather cases, 10% markdown",
+   "lines": [
+    [
+     "CASE-LEATHER",
+     2,
+     10
+    ]
+   ],
+   "sale_discount": null,
+   "expect": {
+    "grand_total": 2338.2,
+    "tax": 304.98
+   }
+  },
+  {
+   "name": "three lines, 7% off the sale",
+   "lines": [
+    [
+     "MAGSAFE-CHARGER",
+     1,
+     null
+    ],
+    [
+     "CASE-SILICONE-MAGSAFE",
+     1,
+     null
+    ],
+    [
+     "AIRPODS-3",
+     1,
+     null
+    ]
+   ],
+   "sale_discount": {
+    "type": "percent",
+    "value": 7
+   },
+   "expect": {
+    "grand_total": 5298.21,
+    "tax": 691.07
+   }
+  },
+  {
+   "name": "three cables and AirPods",
+   "lines": [
+    [
+     "CABLE-USBC-1M",
+     3,
+     null
+    ],
+    [
+     "AIRPODS-3",
+     1,
+     null
+    ]
+   ],
+   "sale_discount": null,
+   "expect": {
+    "grand_total": 5496.0,
+    "tax": 716.87
+   }
+  },
+  {
+   "name": "one AirPods, 5% off the sale",
+   "lines": [
+    [
+     "AIRPODS-3",
+     1,
+     null
+    ]
+   ],
+   "sale_discount": {
+    "type": "percent",
+    "value": 5
+   },
+   "expect": {
+    "grand_total": 3799.05,
+    "tax": 495.53
+   }
+  }
+ ]
+}

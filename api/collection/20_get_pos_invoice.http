@@ -1,0 +1,6 @@
+# Read one till sale (POS Invoice). A fresh sandbox may have none, so this proves the route and the
+# permission with a name that does not exist: 404 Not Found — not 403 — means the integration user may read POS Invoices
+# expect: 404 .exc_type == "DoesNotExistError"
+GET {{BASE}}/api/resource/POS Invoice/PP-NO-SUCH-POS-INVOICE
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

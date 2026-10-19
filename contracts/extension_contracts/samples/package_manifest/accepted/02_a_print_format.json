@@ -1,0 +1,30 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A record type and its print format (a template that runs when printed).",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_wrc",
+    "prefix": "PP WRC",
+    "version": "1.2.10",
+    "doctypes": [
+      {
+        "name": "PP WRC Claim",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ],
+    "print_formats": [
+      {
+        "name": "PP WRC Card",
+        "doc_type": "PP WRC Claim",
+        "html": "<b>{{ doc.title }}</b>"
+      }
+    ]
+  }
+}

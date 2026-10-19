@@ -1,0 +1,98 @@
+/* site/pdf/print.css — the PDFs' look (iVendNext brand guidelines §2 palette, §3 Inter and the print type scale, §9 A4 with
+   20 mm margins, a header with the logo and the title, page numbers bottom-right, the URL in the footer).
+   A plain stylesheet, not wrapped in @media print, so build_pdfs.py's screen-mode measure sees the same rules as the print.
+   The header and footer are @page margin boxes (Chrome 131 and later; probed on the runner's Chrome and the laptop's, 2026-10-16),
+   so body text can never run into them: it flows on to the next page. Tables have fixed column widths and wrap long words,
+   and nothing has a fixed height that could hide what overflows. The words of the margin boxes come from build_pdfs.py. */
+@font-face { font-family: "Inter"; font-weight: 400; src: url("fonts/inter-400.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 600; src: url("fonts/inter-600.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 700; src: url("fonts/inter-700.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 800; src: url("fonts/inter-800.woff2") format("woff2"); }
+
+:root { --blue: #0089FF; --cobalt: #0A57E9; --ink: #1A1A1A; --slate: #606C85; --line: #D0D4DC; --surface: #F7F9FC; --dark: #060D1F; }
+
+@page {
+  size: A4; margin: 20mm;
+  @top-left { vertical-align: bottom; padding-bottom: 3mm; }
+  @bottom-left { font: 400 7.5pt "Inter"; color: #606C85; vertical-align: top; padding-top: 3mm; }
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 600 7.5pt "Inter"; color: #1A1A1A; vertical-align: top; padding-top: 3mm; }
+  @top-right { font: 600 8pt "Inter"; color: #1A1A1A; vertical-align: bottom; padding-bottom: 3mm; }
+}
+@page wide { size: A4 landscape; }
+.wide { page: wide; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: "Inter"; font-size: 10pt; line-height: 1.4; color: var(--ink); background: #fff;
+       -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow-wrap: anywhere; }
+a { color: var(--cobalt); text-decoration: none; }
+p { margin: 0 0 2mm; }
+strong { font-weight: 600; }
+.warm { height: 0; margin: 0; overflow: hidden; }
+
+/* the first page's band: the logo top-left on iVendNext blue */
+.band { background: var(--blue); color: #fff; padding: 6mm 7mm 6mm; margin-bottom: 5mm; }
+.band img { height: 6.5mm; width: auto; display: block; margin-bottom: 4mm; }
+.band h1 { font-size: 22pt; font-weight: 800; line-height: 1.1; margin: 0 0 1.5mm; letter-spacing: -0.01em; }
+.band p { margin: 0; font-size: 9.5pt; color: #fff; }
+.band a { color: #fff; text-decoration: underline; }
+
+h2 { font-size: 18pt; font-weight: 700; line-height: 1.15; color: #000; margin: 6mm 0 2.5mm; break-after: avoid; }
+h3 { font-size: 11pt; font-weight: 600; color: #000; margin: 4mm 0 1.5mm; break-after: avoid; }
+.hint { color: var(--slate); font-size: 8.5pt; margin: 0 0 2mm; }
+
+/* tables: header on Dark, rules in Divider, fixed widths, words wrap */
+table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 8.5pt; line-height: 1.3; }
+th { background: var(--dark); color: #fff; font-weight: 600; text-align: left; vertical-align: bottom; padding: 1.6mm 1.8mm; }
+td { border-bottom: 0.75pt solid var(--line); vertical-align: top; padding: 1.4mm 1.8mm; }
+td + td, th + th { border-left: 0.75pt solid var(--line); }
+tr { break-inside: avoid; }
+.form td { color: var(--ink); }
+.form td.num { color: var(--slate); }
+.form td.fixed { font-weight: 600; }
+.form td.id { overflow-wrap: break-word; }
+
+/* a tick box: a bordered square (the font has no ☐), then its word; boxes wrap as whole words */
+.opt { display: inline-block; white-space: nowrap; margin: 0 2.4mm 0.6mm 0; font-size: 7.5pt; color: var(--ink); }
+.tick { display: inline-block; width: 2.7mm; height: 2.7mm; border: 0.75pt solid var(--dark); margin-right: 1mm; vertical-align: -0.5mm; background: #fff; }
+
+/* fill-in fields and lines */
+.fields { width: 100%; border-collapse: collapse; margin-bottom: 2mm; }
+.fields th { background: none; color: #000; font-size: 8.5pt; width: 42mm; padding: 2.4mm 2mm 1mm 0; vertical-align: bottom; }
+.fields td { border-bottom: 0.75pt solid var(--line); padding: 2.4mm 0 1mm; border-left: 0; }
+.fields .sub { display: block; font-weight: 400; color: var(--slate); font-size: 7pt; }
+.lines div { border-bottom: 0.75pt solid var(--line); height: 8mm; }
+
+/* the guide: one compact page */
+.guide { font-size: 8.5pt; line-height: 1.32; }
+.guide .band { padding: 4mm 6mm; margin-bottom: 2.5mm; }
+.guide .band img { height: 5.5mm; margin-bottom: 2.5mm; }
+.guide .band h1 { font-size: 17pt; }
+.guide .band p { font-size: 8.5pt; }
+.guide h2 { font-size: 12pt; margin: 3mm 0 1.2mm; }
+.guide ol { margin: 0 0 1.5mm; padding-left: 4.5mm; }
+.guide li { margin: 0 0 0.8mm; }
+.guide code { font-family: "Inter"; font-weight: 600; font-size: 8pt; }
+.guide table { font-size: 7.5pt; line-height: 1.28; margin-bottom: 1.5mm; }
+.guide td, .guide th { padding: 0.8mm 1.5mm; }
+.guide p { margin: 0 0 1.2mm; }
+
+/* four or more choices in a cell: two to a line */
+.opts { display: grid; grid-template-columns: max-content max-content; column-gap: 1.5mm; }
+.opts .opt { margin-right: 0; }
+
+/* a filled form (the blueprint example): the chosen box filled in, the rest of the cell after the boxes */
+.tick.on { background: var(--dark); }
+.opt.on { font-weight: 600; }
+.note { display: block; font-size: 7.5pt; color: var(--slate); margin-top: 0.4mm; }
+.answer { margin: 0 0 2mm; } table + .answer { margin-top: 3mm; }
+
+/* the ladder and the four rules: one section to a page */
+.sheet + .sheet { break-before: page; }
+
+/* needs at a glance: an area's heading, its table */
+h2.area { font-size: 13pt; margin: 4.5mm 0 1.5mm; }
+.glance td { padding: 0.9mm 1.8mm; }
+.ladder th:nth-child(1) { width: 12mm; } .ladder th:nth-child(2) { width: 24mm; } .ladder th:nth-child(3) { width: 68mm; }
+.ladder th:nth-child(4) { width: 30mm; } .ladder th:nth-child(5) { width: 36mm; }
+.rules th:nth-child(1) { width: 58mm; } .rules th:nth-child(2) { width: 60mm; } .rules th:nth-child(3) { width: 52mm; }

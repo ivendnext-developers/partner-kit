@@ -1,0 +1,24 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "The app name must be the prefix in lower case.",
+  "payload": {
+    "manifest_version": 1,
+    "app": "WRC",
+    "prefix": "PP WRC",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "PP WRC Claim",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "the app name is the prefix in lower case"
+}

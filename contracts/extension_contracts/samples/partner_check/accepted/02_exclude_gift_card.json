@@ -1,0 +1,20 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "Gift cards off for this sale, with the reason on the dimmed row.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false
+  },
+  "payload": {
+    "verdict": "allow",
+    "exclude_tenders": [
+      "Gift Certificate"
+    ],
+    "reason": "Gift cards are not refunded on this sale."
+  }
+}

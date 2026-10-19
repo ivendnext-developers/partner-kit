@@ -1,0 +1,13 @@
+{
+  "extension_point": "label_layout",
+  "contract": "declaration",
+  "about": "A Zebra shelf label: printer commands, the price and the item's own barcode drawn by the printer.",
+  "payload": {
+    "doctype": "Retail Label Layout",
+    "width_mm": 50,
+    "height_mm": 25,
+    "label_name": "LIB1 Zebra Shelf",
+    "kind": "zpl",
+    "template": "^XA^CI28^FO20,20^A0N,30,30^FD{item_name}^FS^FO20,60^A0N,40,40^FD{currency} {price}^FS^FO20,110^BCN,60,Y,N,N^FD{barcode}^FS^XZ"
+  }
+}

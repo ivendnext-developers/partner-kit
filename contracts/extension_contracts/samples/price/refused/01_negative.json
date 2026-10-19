@@ -1,0 +1,54 @@
+{
+ "extension_point": "price",
+ "contract": "answer",
+ "about": "Money added to a line.",
+ "given": {
+  "input": {
+   "v": 1,
+   "customer_group": "Select",
+   "currency": "AED",
+   "currency_exponent": 2,
+   "lines": [
+    {
+     "luid": "0@90.00",
+     "item": "X",
+     "item_group": "Products",
+     "qty_milli": 1000,
+     "unit_price_minor": 9000,
+     "line_total_minor": 10000,
+     "promotion_discount_minor": 1000
+    },
+    {
+     "luid": "1@45.00",
+     "item": "Y",
+     "item_group": "Products",
+     "qty_milli": 2000,
+     "unit_price_minor": 4500,
+     "line_total_minor": 9000,
+     "promotion_discount_minor": 0
+    }
+   ],
+   "config": {
+    "rules": [
+     {
+      "id": "Select 5%",
+      "item_group": "*",
+      "customer_group": "Select",
+      "percent_bp": 500,
+      "cap_minor": null,
+      "min_qty_milli": 0
+     }
+    ]
+   }
+  },
+  "cap_bp": 1000
+ },
+ "payload": [
+  {
+   "luid": "0@90.00",
+   "discount_minor": -100,
+   "reason": "Surcharge"
+  }
+ ],
+ "expect_refusal": "a discount is not a whole number of at least 0"
+}

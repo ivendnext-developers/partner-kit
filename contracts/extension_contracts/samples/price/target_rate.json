@@ -1,0 +1,77 @@
+{
+ "about": "A line's new unit price after the module's cut, ROUNDED UP at the rate's grain so the booked cut is never more than asked: partner_price.target_rate and mpos_partner_price.js targetRate.",
+ "cases": [
+  {
+   "about": "S1",
+   "rate": 90.0,
+   "qty": 1,
+   "discount_minor": 450,
+   "exponent": 2,
+   "precision": 2,
+   "want": 85.5
+  },
+  {
+   "about": "rounded UP: 3 x 31.67 = 95.01, the cut 4.98 within 4.99",
+   "rate": 33.33,
+   "qty": 3,
+   "discount_minor": 499,
+   "exponent": 2,
+   "precision": 2,
+   "want": 31.67
+  },
+  {
+   "about": "a weighed line",
+   "rate": 100.0,
+   "qty": 1.25,
+   "discount_minor": 625,
+   "exponent": 2,
+   "precision": 2,
+   "want": 95.0
+  },
+  {
+   "about": "the whole line",
+   "rate": 10.0,
+   "qty": 1,
+   "discount_minor": 1000,
+   "exponent": 2,
+   "precision": 2,
+   "want": 0.0
+  },
+  {
+   "about": "a three-digit currency, never x100",
+   "rate": 1.234,
+   "qty": 1,
+   "discount_minor": 5,
+   "exponent": 3,
+   "precision": 3,
+   "want": 1.229
+  },
+  {
+   "about": "a zero-digit currency at a two-digit rate grain",
+   "rate": 500.0,
+   "qty": 2,
+   "discount_minor": 100,
+   "exponent": 0,
+   "precision": 2,
+   "want": 450.0
+  },
+  {
+   "about": "a cut finer than the rate grain is floored away",
+   "rate": 1.0,
+   "qty": 1,
+   "discount_minor": 7,
+   "exponent": 3,
+   "precision": 2,
+   "want": 1.0
+  },
+  {
+   "about": "nothing off",
+   "rate": 90.0,
+   "qty": 1,
+   "discount_minor": 0,
+   "exponent": 2,
+   "precision": 2,
+   "want": 90.0
+  }
+ ]
+}

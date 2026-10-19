@@ -1,0 +1,13 @@
+{
+  "extension_point": "label_layout",
+  "contract": "declaration",
+  "about": "Spec S1: a 50 x 30 mm shelf label with the name, a Code-128, the price and the batch. The Code-128 draws 16.4 mm tall, so all four fit on 30 mm stock, not on 25 mm.",
+  "payload": {
+    "doctype": "Retail Label Layout",
+    "label_name": "LIB1 Shelf 50x30",
+    "kind": "html",
+    "width_mm": 50,
+    "height_mm": 30,
+    "template": "<div style=\"font:bold 9pt sans-serif;white-space:nowrap;overflow:hidden\">{item_name}</div>{barcode_svg}<div style=\"font:bold 12pt sans-serif\">{currency} {price}</div><div style=\"font:7pt sans-serif\">Batch {batch_no} · Exp {expiry_date}</div>"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "extension_point": "event_feed",
+  "contract": "failed_request",
+  "about": "One event left undone, with a note for a support call.",
+  "payload": {
+    "id": "lib1-feed-0001",
+    "error": "The customer has no tax id in our system yet."
+  }
+}

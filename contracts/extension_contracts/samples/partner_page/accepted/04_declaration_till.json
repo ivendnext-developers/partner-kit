@@ -1,0 +1,19 @@
+{
+  "extension_point": "partner_page",
+  "contract": "declaration",
+  "about": "A delivery board on the till that may answer a message or a Sale Attribute.",
+  "payload": {
+    "doctype": "Retail Extension Subscription",
+    "point": "page",
+    "partner_name": "Acme Deliveries",
+    "transport": "remote",
+    "label": "Deliveries",
+    "endpoint_url": "https://partner.example/board",
+    "secret": "a-long-shared-secret",
+    "page_placement": "Till key",
+    "page_send_sale": 1,
+    "page_returns_message": 1,
+    "page_returns_sale_attributes": 1,
+    "page_height": 70
+  }
+}

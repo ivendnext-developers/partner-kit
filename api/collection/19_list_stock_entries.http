@@ -1,0 +1,5 @@
+# List stock movements — this run's two receipts, both booked
+# expect: 200 ([.data[].name] | sort) == ([$ENV.SE1, $ENV.SE2] | sort) and all(.data[]; .docstatus == 1)
+GET {{BASE}}/api/resource/Stock Entry?fields=["name","docstatus","stock_entry_type"]&filters=[["name","in",["{{SE1}}","{{SE2}}"]]]&limit_page_length=5
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

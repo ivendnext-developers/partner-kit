@@ -1,0 +1,19 @@
+{
+  "extension_point": "fields",
+  "contract": "declaration",
+  "about": "Require on a cart line: only a new customer's phone or email can be required.",
+  "payload": {
+    "doctype": "Retail POS Theme",
+    "theme_name": "LIB1 Fields R3",
+    "layout": "Summer Breeze",
+    "palette": "Standard",
+    "field_rules": [
+      {
+        "surface": "cart_line",
+        "field": "qty",
+        "action": "require"
+      }
+    ]
+  },
+  "expect_refusal": "can't take this rule."
+}

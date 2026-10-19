@@ -1,0 +1,17 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "A kind no key can return; a discount is an engine promotion, never an answer.",
+  "given": {
+    "returns": [
+      "message",
+      "sale_attributes"
+    ]
+  },
+  "payload": {
+    "discount": {
+      "percent": 10
+    }
+  },
+  "expect_refusal": "is not one this button declared"
+}

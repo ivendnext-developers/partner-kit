@@ -1,0 +1,18 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "A key that puts a Sale Attribute on the sale; the cashier confirms it.",
+  "given": {
+    "returns": [
+      "sale_attributes"
+    ]
+  },
+  "payload": {
+    "sale_attributes": [
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold"
+      }
+    ]
+  }
+}

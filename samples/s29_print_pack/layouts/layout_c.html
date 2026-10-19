@@ -1,0 +1,32 @@
+{#- Layout C — the one that follows the customer's own order. Header: left-aligned, the customer's order number and date in a
+    box. Columns: Item, the customer's own item code, Qty, Net rate, Net amount. Footer: remarks and the tax lines, then the
+    total. Invoice fields only. -#}
+<div style="font-family: Verdana, sans-serif; font-size: 11px; color:#222;">
+  <table style="width:100%;"><tr>
+    <td><img src="data:image/png;base64,@@LOGO@@" alt="" width="36" height="36">
+      <b style="font-size:14px;"> {{ doc.company }}</b><br>{{ doc.company_address_display or "" }}</td>
+    <td style="border:1px solid #222; padding:4px; width:35%;">
+      <b>Invoice</b> {{ doc.name }}<br>Date {{ doc.get_formatted("posting_date") }}<br>
+      Your order {{ doc.po_no or "-" }}{% if doc.po_date %} of {{ doc.get_formatted("po_date") }}{% endif %}</td>
+  </tr></table>
+  <p><b>{{ doc.customer_name }}</b><br>{{ doc.address_display or "" }}</p>
+  <table style="width:100%; border-collapse:collapse;">
+    <thead><tr style="border-bottom:2px solid #222;"><th style="text-align:left;">Item</th><th style="text-align:left;">Your code</th>
+      <th style="text-align:right;">Qty</th><th style="text-align:right;">Net rate</th><th style="text-align:right;">Net amount</th></tr></thead>
+    <tbody>
+    {%- for item in doc.items %}
+      <tr><td>{{ item.item_name }}</td><td>{{ item.customer_item_code or "-" }}</td>
+        <td style="text-align:right;">{{ item.get_formatted("qty") }}</td>
+        <td style="text-align:right;">{{ item.get_formatted("net_rate") }}</td>
+        <td style="text-align:right;">{{ item.get_formatted("net_amount") }}</td></tr>
+    {%- endfor %}
+    </tbody>
+  </table>
+  {%- if doc.remarks and doc.remarks != "No Remarks" %}<p><b>Remarks</b> {{ doc.remarks }}</p>{% endif %}
+  <table style="width:40%; margin-left:60%;">
+    {%- for t in doc.taxes %}
+    <tr><td>{{ t.description }}</td><td style="text-align:right;">{{ t.get_formatted("tax_amount") }}</td></tr>
+    {%- endfor %}
+    <tr style="font-weight:bold;"><td>Total due</td><td style="text-align:right;">{{ doc.get_formatted("grand_total") }}</td></tr>
+  </table>
+</div>

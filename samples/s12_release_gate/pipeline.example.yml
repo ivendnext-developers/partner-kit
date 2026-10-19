@@ -1,0 +1,30 @@
+# pipeline.example.yml — how a customer's team puts the release gate in their pipeline. An EXAMPLE: it was not run by a CI service
+# (the gate script itself was, on our test bench — see recipes/release_gate.md). Shown as a GitHub Actions job; any CI that can
+# run a shell command on the staging box and read its exit code works the same way.
+name: release-gate
+on:
+  pull_request:
+    branches: [main]
+concurrency:
+  group: release-gate-staging          # one gate at a time on the staging box
+  cancel-in-progress: false
+jobs:
+  gate:
+    # a runner that lives ON the staging box, so it can reach the staging shop's bench console
+    runs-on: [self-hosted, staging]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Put the change on the staging shop            # your own step: install your app or apply your manifest on STAGING
+        run: ./deploy_to_staging.sh
+      - name: Release gate
+        env:
+          GATE_CONSOLE: bash /srv/staging/console.sh       # your staging box (the HERE block in release_gate.sh)
+          GATE_RUNS: /srv/staging/runs
+          GATE_CONTAINER: staging-shop-1
+        run: |
+          bash partner-kit/samples/s12_release_gate/release_gate.sh \
+            --baskets ci/recorded_baskets.json \
+            --app ./your_app \
+            --manifest ./manifest.json
+      # exit 0 -> the job is green and the pull request may merge; exit 1 -> red, with one line per basket above; exit 2 -> the gate
+      # could not run, which is NOT a pass.

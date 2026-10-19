@@ -1,0 +1,16 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "An item's safety stock worked out as twice its minimum order quantity.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Safety stock from minimum order",
+    "record_type": "Item",
+    "kind": "derived",
+    "field": "safety_stock",
+    "formula": "scale",
+    "source": "min_order_qty",
+    "factor": 2,
+    "decimals": 0
+  }
+}

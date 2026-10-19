@@ -1,0 +1,26 @@
+[logo]
+Demo Shop
+1 Main Street, Dubai
+Tax Registration No. | TAX-1 |
+رقم التسجيل الضريبي |
+Tax Invoice | فاتورة ضريبية |
+Invoice No. | POS-0001 | رقم الفاتورة |
+Date | 2026-10-16 10:00:00 | التاريخ |
+Customer | Walk-in | العميل |
+Item / الصنف |
+VAT % / الضريبة |
+Amount / المبلغ |
+Phone case
+2 × $ 50.00 |
+5% |
+$ 100.00 |
+Cable |
+5% |
+$ 20.00 |
+Subtotal (excl. VAT) | $ 120.00 | المجموع قبل الضريبة |
+Taxable value @ 5% | $ 120.00 | القيمة الخاضعة 5% |
+VAT | $ 6.00 | ضريبة القيمة المضافة |
+Charges | $ 30.00 | رسوم |
+Total | $ 156.00 | الإجمالي |
+Cash | $ 156.00 | المدفوع |
+Thank you | شكراً لزيارتكم |

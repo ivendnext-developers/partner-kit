@@ -1,0 +1,18 @@
+{
+ "manifest_version": 2,
+ "app": "pp_pge",
+ "prefix": "PP PGE",
+ "title": "Order board (a partner page)",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "The partner's order board, framed by the shop: a Deliveries key on the till opens it as a sheet over the sale, and in Desk it opens as a page for a record. The shop opens it with a signed, one-time context; on the till the board answers once, server to server, with the sale's delivery order number (a sale detail this app installs). Who may open it in Desk: Stock User and Stock Manager. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": ["https://host.docker.internal:8125/board/"],
+ "sale_attributes": [
+  {"name": "PP PGE Delivery Order"}
+ ],
+ "extension_subscriptions": [
+  {"key": "board", "point": "page", "label": "Deliveries", "endpoint_url": "https://host.docker.internal:8125/board/",
+   "page_placement": "Till key and Desk page", "page_roles": ["Stock User", "Stock Manager"], "page_send_user": 0,
+   "page_send_sale": 1, "page_returns_message": 1, "page_returns_sale_attributes": 1, "page_height": 45}
+ ]
+}

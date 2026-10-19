@@ -1,0 +1,11 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "scan_answer",
+  "about": "A code check on a scan; only a customer add takes one.",
+  "payload": {
+    "verdict": "challenge",
+    "prompt": "Code?",
+    "length": 6
+  },
+  "expect_refusal": "the verdict is not one scan allows"
+}

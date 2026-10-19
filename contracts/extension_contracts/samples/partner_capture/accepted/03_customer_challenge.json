@@ -1,0 +1,10 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "customer_answer",
+  "about": "A one-time code sent to the new customer's phone.",
+  "payload": {
+    "verdict": "challenge",
+    "prompt": "Ask the customer for the 6-digit code we just sent.",
+    "length": 6
+  }
+}

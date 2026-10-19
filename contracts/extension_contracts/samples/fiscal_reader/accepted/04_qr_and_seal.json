@@ -1,0 +1,34 @@
+{
+  "extension_point": "fiscal_reader",
+  "contract": "declaration",
+  "about": "A clearance service that writes a status, a tax receipt number, a QR and a seal (the Mexico shape: the SAT seal and the verification QR).",
+  "payload": {
+    "doctype": "Retail Fiscal Reader",
+    "source": "Outside service",
+    "companies": [
+      {
+        "company": "MPOS Test Co"
+      }
+    ],
+    "status_field": "pp_fbr_status",
+    "ref_field": "pp_fbr_invoice_no",
+    "writer_role": "PFiscal Test Integration",
+    "writer_users": [
+      {
+        "user": "pfiscal.service@test.example"
+      }
+    ],
+    "qr_field": "pp_fbr_qr",
+    "status_map": [
+      {
+        "source_value": "Accepted",
+        "status": "CLEARED"
+      },
+      {
+        "source_value": "Queued",
+        "status": "PENDING"
+      }
+    ],
+    "signature_field": "pp_fbr_seal"
+  }
+}

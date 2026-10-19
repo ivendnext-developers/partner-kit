@@ -1,0 +1,12 @@
+{
+  "extension_point": "desk_action",
+  "contract": "answer",
+  "about": "An answer cannot write.",
+  "payload": {
+    "set_value": {
+      "field": "status",
+      "value": "Closed"
+    }
+  },
+  "expect_refusal": "the answer has a kind Desk does not know"
+}

@@ -1,0 +1,9 @@
+# Write a comment on a sale — visible on that sale in iVendNext Desk
+# expect: 200 .data.reference_name == $ENV.SI and .data.comment_type == "Comment"
+POST {{BASE}}/api/resource/Comment
+Authorization: token {{KEY}}:{{SECRET}}
+Content-Type: application/json
+Accept: application/json
+
+{"comment_type": "Comment", "reference_doctype": "Sales Invoice", "reference_name": "{{SI}}",
+ "content": "Request collection run {{RUN}} — pp collection check"}

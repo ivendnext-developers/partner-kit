@@ -1,0 +1,34 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "line_no counts from 1.",
+  "given": {
+    "returns": [
+      "line_attributes"
+    ],
+    "lines": [
+      {
+        "item_code": "PHONE-X",
+        "qty": 1,
+        "uom": "Nos",
+        "luid": ""
+      },
+      {
+        "item_code": "CASE-1",
+        "qty": 1,
+        "uom": "Nos",
+        "luid": ""
+      }
+    ]
+  },
+  "payload": {
+    "line_attributes": [
+      {
+        "line_no": 0,
+        "name": "Warranty ID",
+        "value": "W-88213"
+      }
+    ]
+  },
+  "expect_refusal": "line_no must name a line of this sale"
+}

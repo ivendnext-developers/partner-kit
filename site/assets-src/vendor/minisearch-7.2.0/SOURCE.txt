@@ -1,0 +1,6 @@
+MiniSearch 7.2.0 (MIT, LICENSE.txt beside this file), by Luca Ongaro: https://github.com/lucaong/minisearch
+Copied unchanged on 2026-10-16 from the npm package minisearch@7.2.0 (dist/umd/index.js, dist/umd/index.js.map, LICENSE.txt).
+The package's npm integrity: sha512-dqT2XBYUOZOiC5t2HRnwADjhNS2cecp9u+TJRiJ1Qp/f5qjkeT5APcGPjHw+bz89Ms8Jp+cG4AlE+QZ/QnDglg==
+site/test_site.py holds each file's sha256 and fails if one changes; to upgrade, copy a new version into a new folder,
+update the path in site/assets-src/search.js and the hashes in the test.
+A defect in this library is the library's: report it at https://github.com/lucaong/minisearch/issues.

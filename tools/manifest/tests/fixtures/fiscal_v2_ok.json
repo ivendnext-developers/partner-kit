@@ -1,0 +1,20 @@
+{
+ "manifest_version": 2,
+ "app": "pp_fbr",
+ "prefix": "PP FBR",
+ "title": "An outside fiscal service's reader, FBR-shaped (P-FISCAL spec section 10, row KINDS)",
+ "version": "0.0.1",
+ "publisher": "PP FBR",
+ "description": "The result fields on the sale, at their own permission level; the writer role and its integration user; the reader, installed switched off. Our test bench's install cycle proves it at insert and at enable.",
+ "custom_fields": [
+  {"dt": "POS Invoice", "fieldname": "pp_fbr_status", "fieldtype": "Data", "label": "FBR status",
+   "insert_after": "remarks", "permlevel": 2, "no_copy": 1, "allow_on_submit": 1, "read_only": 1},
+  {"dt": "POS Invoice", "fieldname": "pp_fbr_invoice_no", "fieldtype": "Data", "label": "FBR invoice number",
+   "insert_after": "pp_fbr_status", "permlevel": 2, "no_copy": 1, "allow_on_submit": 1, "read_only": 1}
+ ],
+ "fiscal_readers": [
+  {"source": "Outside service", "status_field": "pp_fbr_status", "ref_field": "pp_fbr_invoice_no",
+   "status_map": [{"source_value": "Accepted", "status": "CLEARED"}, {"source_value": "Queued", "status": "PENDING"}],
+   "writer_role": "PP FBR Writer", "writer_level": 2, "writer_users": ["fbr_service"]}
+ ]
+}

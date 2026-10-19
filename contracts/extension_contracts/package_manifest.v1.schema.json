@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/package_manifest.v1.schema.json",
+  "title": "Package manifest, version 1",
+  "description": "A partner's manifest as the shop's administrator installs it from the Retail Extension Package screen or a sandbox's API (lane pkginstall). The schema holds the manifest's own shape: its name, prefix and version (required, major.minor.patch) and the kinds it may carry. Every element inside a kind is judged by the checker itself, inside the site, at the check and again at the install (business_logic/manifest_check.py validate). Page: docs/extending/package_install.md.",
+  "$defs": {
+    "manifest": {
+      "type": "object",
+      "required": [
+        "manifest_version",
+        "app",
+        "prefix",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "manifest_version": {
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "app": {
+          "description": "The prefix in lower case with underscores.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{1,39}$"
+        },
+        "prefix": {
+          "description": "One to three upper-case words; every name the manifest creates starts with it.",
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$"
+        },
+        "version": {
+          "description": "major.minor.patch, compared as numbers: an update must be higher.",
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,5})\\.(0|[1-9][0-9]{0,5})\\.(0|[1-9][0-9]{0,5})$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "allowed_urls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^https?://[A-Za-z0-9.\\-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~/\\-]*)?$"
+          }
+        },
+        "doctypes": {
+          "description": "The doctypes the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "custom_fields": {
+          "description": "The custom fields the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "property_setters": {
+          "description": "The property setters the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "print_formats": {
+          "description": "The print formats the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "notifications": {
+          "description": "The notifications the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "workspaces": {
+          "description": "The workspaces the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "sale_attributes": {
+          "description": "The sale attributes the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "webhooks": {
+          "description": "The webhooks the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reports": {
+          "description": "The reports the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "number_cards": {
+          "description": "The number cards the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "dashboard_charts": {
+          "description": "The dashboard charts the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "dashboards": {
+          "description": "The dashboards the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "list_settings": {
+          "description": "The list settings the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "workflows": {
+          "description": "The workflows the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "naming_rules": {
+          "description": "The naming rules the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "links": {
+          "description": "The links the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "registered_applications": {
+          "description": "The registered applications the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "remote_keys": {
+          "description": "The remote keys the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "extension_subscriptions": {
+          "description": "The extension subscriptions the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "desk_actions": {
+          "description": "The desk actions the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py), which also refuses an input type the product refuses.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "inputs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "fieldtype": {
+                      "enum": ["Data", "Int", "Float", "Date", "Select", "Link", "Check", "Small Text"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "save_rules": {
+          "description": "The save rules the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "fiscal_readers": {
+          "description": "The fiscal readers the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

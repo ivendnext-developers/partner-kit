@@ -1,0 +1,87 @@
+{
+  "_about": "ONE table of GS1 codes graded on the server decoder (business_logic/gs1.py, tests/test_scan_source.py) and its till twin (public/js/mpos_gs1.js, js_tests/pscan.test.js): both must give exactly `out` for every `in` (lane pscan, P-SCAN spec section 11). \u001d is the group separator (FNC1).",
+  "cases": [
+    {
+      "why": "Data Matrix with the product only",
+      "in": "]d20105012345678900" ,
+      "out": {"gtin": "05012345678900", "batch": null, "expiry": null, "serial": null, "bare": false}
+    },
+    {
+      "why": "S3 in full: product, batch, expiry, serial",
+      "in": "]d2010501234567890010LOT7\u001d17271231" ,
+      "out": {"gtin": "05012345678900", "batch": "LOT7", "expiry": "2027-12-31", "serial": null, "bare": false}
+    },
+    {
+      "why": "S3 with the serial after the expiry",
+      "in": "]d2010501234567890010LOT7\u001d172712312154321",
+      "out": {"gtin": "05012345678900", "batch": "LOT7", "expiry": "2027-12-31", "serial": "54321", "bare": false}
+    },
+    {
+      "why": "bracketed human form, AIs in any order",
+      "in": "(01)05012345678900(17)250131(10)B1",
+      "out": {"gtin": "05012345678900", "batch": "B1", "expiry": "2025-01-31", "serial": null, "bare": false}
+    },
+    {
+      "why": "a leading FNC1 instead of a prefix",
+      "in": "\u001d010950110153000321SER9",
+      "out": {"gtin": "09501101530003", "batch": null, "expiry": null, "serial": "SER9", "bare": false}
+    },
+    {
+      "why": "GS1-128 prefix",
+      "in": "]C1010950110153000310L9",
+      "out": {"gtin": "09501101530003", "batch": "L9", "expiry": null, "serial": null, "bare": false}
+    },
+    {
+      "why": "bare form; day 00 is the month's last day",
+      "in": "010950110153000317260600",
+      "out": {"gtin": "09501101530003", "batch": null, "expiry": "2026-06-30", "serial": null, "bare": true}
+    },
+    {
+      "why": "bare form, the batch runs to the end",
+      "in": "010950110153000310ABC",
+      "out": {"gtin": "09501101530003", "batch": "ABC", "expiry": null, "serial": null, "bare": true}
+    },
+    {
+      "why": "a known fixed AI (11, production date) is stepped over",
+      "in": "]d20109501101530003112501011OL2",
+      "out": {"gtin": "09501101530003", "batch": null, "expiry": null, "serial": null, "bare": false}
+    },
+    {
+      "why": "a known fixed AI at the end is stepped over",
+      "in": "]d2010950110153000311250101" ,
+      "out": {"gtin": "09501101530003", "batch": null, "expiry": null, "serial": null, "bare": false}
+    },
+    {
+      "why": "fixed AI 11 then the batch",
+      "in": "]d201095011015300031125010110L2",
+      "out": {"gtin": "09501101530003", "batch": "L2", "expiry": null, "serial": null, "bare": false}
+    },
+    {
+      "why": "an AI the reader cannot size ends the read; what came before stays",
+      "in": "]C10109501101530003901234\u001d10X",
+      "out": {"gtin": "09501101530003", "batch": null, "expiry": null, "serial": null, "bare": false}
+    },
+    {
+      "why": "month 13 is not a date: the expiry is dropped, nothing refused",
+      "in": "]d2010950110153000317251301",
+      "out": {"gtin": "09501101530003", "batch": null, "expiry": null, "serial": null, "bare": false}
+    },
+    {
+      "why": "a batch longer than 20 characters ends the read",
+      "in": "]d2010950110153000310AAAAAAAAAAAAAAAAAAAAA",
+      "out": {"gtin": "09501101530003", "batch": null, "expiry": null, "serial": null, "bare": false}
+    },
+    {
+      "why": "a packaging-level GTIN (indicator 1) keeps its 14 digits",
+      "in": "]d20119501101530000",
+      "out": {"gtin": "19501101530000", "batch": null, "expiry": null, "serial": null, "bare": false}
+    },
+    {"why": "a plain EAN-13 is not GS1", "in": "5012345678900", "out": null},
+    {"why": "the spec's S3 GTIN has a wrong check digit, so it is not taken", "in": "]d20105012345678903", "out": null},
+    {"why": "15 characters is too short for the bare form", "in": "010950110153000", "out": null},
+    {"why": "an item code that starts with 01 and holds letters", "in": "01ABCDEFGHIJKLMNOP", "out": null},
+    {"why": "empty", "in": "", "out": null},
+    {"why": "brackets with a bad GTIN", "in": "(01)12345678901234", "out": null},
+    {"why": "a unit barcode (S1) is not GS1", "in": "HK00012345", "out": null}
+  ]
+}

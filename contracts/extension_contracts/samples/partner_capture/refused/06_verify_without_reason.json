@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "verify_answer",
+  "about": "A refusal of a code with no sentence for the cashier.",
+  "payload": {
+    "verdict": "refuse"
+  },
+  "expect_refusal": "verify answers ok, or refuse with a reason"
+}

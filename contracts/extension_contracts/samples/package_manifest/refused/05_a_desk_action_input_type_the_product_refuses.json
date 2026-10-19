@@ -1,0 +1,37 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A Desk button asks for a file, an input type the product refuses when it installs the button, after the shop consented.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_knd",
+    "prefix": "PP KND",
+    "version": "0.1.0",
+    "allowed_urls": ["https://partner.example/route"],
+    "extension_subscriptions": [
+      {
+        "key": "route",
+        "point": "desk_action",
+        "label": "Route service",
+        "endpoint_url": "https://partner.example/route"
+      }
+    ],
+    "desk_actions": [
+      {
+        "record_type": "Customer",
+        "label": "Send a file",
+        "placement": "form",
+        "service": "route",
+        "roles": ["System Manager"],
+        "inputs": [
+          {
+            "fieldname": "proof",
+            "label": "Proof",
+            "fieldtype": "Attach"
+          }
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "an input's fieldtype is one of Data, Int, Float, Date, Select, Link, Check, Small Text"
+}

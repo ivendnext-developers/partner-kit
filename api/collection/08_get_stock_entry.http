@@ -1,0 +1,6 @@
+# Read a booked stock movement back — its line names the Serial and Batch Bundle that holds the serials
+# expect: 200 .data.docstatus == 1 and (.data.items[0].serial_and_batch_bundle | length) > 0
+# capture: BUNDLE=.data.items[0].serial_and_batch_bundle
+GET {{BASE}}/api/resource/Stock Entry/{{SE1}}
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

@@ -1,0 +1,41 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "21 tenders excluded; at most 20.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false
+  },
+  "payload": {
+    "verdict": "allow",
+    "exclude_tenders": [
+      "T0",
+      "T1",
+      "T2",
+      "T3",
+      "T4",
+      "T5",
+      "T6",
+      "T7",
+      "T8",
+      "T9",
+      "T10",
+      "T11",
+      "T12",
+      "T13",
+      "T14",
+      "T15",
+      "T16",
+      "T17",
+      "T18",
+      "T19",
+      "T20"
+    ],
+    "reason": "No."
+  },
+  "expect_refusal": "exclude_tenders must be 1 to 20 different names"
+}

@@ -1,0 +1,14 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "scan_answer",
+  "about": "A warranty number for the scanned handset, on its line.",
+  "payload": {
+    "verdict": "allow",
+    "line_attributes": [
+      {
+        "name": "Warranty ID",
+        "value": "W-88213"
+      }
+    ]
+  }
+}

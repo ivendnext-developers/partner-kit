@@ -1,0 +1,20 @@
+{
+  "extension_point": "desk_action",
+  "contract": "declaration",
+  "about": "A button that shows on no record: on_draft untick, nothing else ticked.",
+  "payload": {
+    "doctype": "Retail Desk Action",
+    "service": "lib1-desk-service",
+    "record_type": "Sales Order",
+    "label": "Assign pick route",
+    "placement": "form",
+    "roles": [
+      {
+        "role": "Stock User"
+      }
+    ],
+    "on_draft": 0,
+    "send_fields": "name"
+  },
+  "expect_refusal": "Tick at least one of: on a draft, on a submitted or on a cancelled record."
+}

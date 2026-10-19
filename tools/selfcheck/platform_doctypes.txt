@@ -1,0 +1,947 @@
+# Record-type names in the platform at the bench's pins (make_platform_names.py)
+# iVendFramework @ 88a4d37a3976a0ecf231bf2aefb3da96256c9ea9: 263
+# iVendNext @ 1c9cba4df8db8d3d770c1552b6507f6b025598af: 497
+# iVend-POS @ dc65d8324fad10fc9fa090811702fe1dd3d7a296: 118
+# iVendNext_PWA @ 8418534430573f72f7a768a94cae39365a6e33b5: 37
+# iVendNext_Payments @ 36385b31a5d05fe032589fe7ab58d44550282d84: 10
+# ivend_loyality @ e45186737c88b3a1bbfe6acd842a915d041abcd7: 12
+# hw_integration @ dd3041763783b2d64cd0edb659ea3448e4d3fb5b: 3
+AR Payment
+About Us Settings
+About Us Team Member
+Access Log
+Account
+Account Closing Balance
+Accounting Dimension
+Accounting Dimension Detail
+Accounting Dimension Filter
+Accounting Period
+Accounts Settings
+Activity Cost
+Activity Log
+Activity Type
+Address
+Address Template
+Advance Payment Ledger Entry
+Advance Tax
+Advance Taxes and Charges
+Allowed Dimension
+Allowed To Transact With
+Amended Document Naming Settings
+Applicable On Account
+Appointment
+Appointment Booking Settings
+Appointment Booking Slots
+Apriori Algo Configuration
+Apriori Recommendation Data
+Asset
+Asset Activity
+Asset Capitalization
+Asset Capitalization Asset Item
+Asset Capitalization Service Item
+Asset Capitalization Stock Item
+Asset Category
+Asset Category Account
+Asset Depreciation Schedule
+Asset Finance Book
+Asset Maintenance
+Asset Maintenance Log
+Asset Maintenance Task
+Asset Maintenance Team
+Asset Movement
+Asset Movement Item
+Asset Repair
+Asset Repair Consumed Item
+Asset Shift Allocation
+Asset Shift Factor
+Asset Value Adjustment
+Assignment Rule
+Assignment Rule Day
+Assignment Rule User
+Audit Trail
+Authorization Control
+Authorization Rule
+Auto Email Report
+Auto Repeat
+Auto Repeat Day
+Availability Of Slots
+BOM
+BOM Creator
+BOM Creator Item
+BOM Explosion Item
+BOM Item
+BOM Operation
+BOM Scrap Item
+BOM Update Batch
+BOM Update Log
+BOM Update Tool
+BOM Website Item
+BOM Website Operation
+Balance Stock
+Bank
+Bank Account
+Bank Account Subtype
+Bank Account Type
+Bank Clearance
+Bank Clearance Detail
+Bank Guarantee
+Bank Reconciliation Tool
+Bank Statement Import
+Bank Transaction
+Bank Transaction Mapping
+Bank Transaction Payments
+Barcode Mask
+Barcode Mask Detail
+Batch
+Bin
+Bisect Accounting Statements
+Bisect Nodes
+Blanket Order
+Blanket Order Item
+Block Module
+Blog Category
+Blog Post
+Blog Settings
+Blogger
+Branch
+Brand
+Budget
+Budget Account
+Bulk Transaction Log
+Bulk Transaction Log Detail
+Bulk Update
+Button Group Panel
+Button Group Panel Child
+Button Panel Control
+Button Panel Control Properties
+Buying Settings
+CRM Note
+CRM Settings
+Calendar View
+Call Log
+Campaign
+Campaign Email Schedule
+Campaign Item
+Card View Control
+Card View Control Properties
+Card View Group Control
+Card View Group Control Properties
+Cash Drawer Log
+Cash In Out
+Cashier Closing
+Cashier Closing Payments
+Changelog Feed
+Chart of Accounts Importer
+Cheque Print Template
+Client Script
+Closed Document
+Closing Stock Balance
+Code List
+Color
+Comment
+Common Code
+Communication
+Communication Link
+Communication Medium
+Communication Medium Timeslot
+Company
+Company History
+Competitor
+Competitor Detail
+Connected App
+Console Log
+Contact
+Contact Email
+Contact Phone
+Contact Us Settings
+Contract
+Contract Fulfilment Checklist
+Contract Template
+Contract Template Fulfilment Terms
+Control Panel Settings
+Cost Center
+Cost Center Allocation
+Cost Center Allocation Percentage
+Country
+Coupon
+Coupon Applicability
+Coupon Applicability Detail
+Coupon Buy Side
+Coupon Code
+Coupon Customer Special Days
+Coupon Detail
+Coupon Exclude Item
+Coupon Get Side
+Coupon Ledger
+Cross Selling Product Detail
+Currency
+Currency Denomination
+Currency Denomination Count
+Currency Exchange
+Currency Exchange Settings
+Currency Exchange Settings Details
+Currency Exchange Settings Result
+Custom Display Control
+Custom DocPerm
+Custom Field
+Custom HTML Block
+Custom Role
+Customer
+Customer Credit Limit
+Customer Feedback Question
+Customer Group
+Customer Group Item
+Customer Item
+Customize Form
+Customize Form Field
+Customs Tariff Number
+Dashboard
+Dashboard Chart
+Dashboard Chart Field
+Dashboard Chart Link
+Dashboard Chart Source
+Dashboard Settings
+Data Export
+Data Grid Control
+Data Grid Properties
+Data Import
+Data Import Log
+DefaultValue
+Deleted Document
+Delivery Note
+Delivery Note Item
+Delivery Settings
+Delivery Stop
+Delivery Trip
+Department
+Dependent Task
+Depreciation Schedule
+Designation
+Desktop Icon
+Discounted Invoice
+Discussion Reply
+Discussion Topic
+DocField
+DocPerm
+DocShare
+DocType
+DocType Action
+DocType Layout
+DocType Layout Field
+DocType Link
+DocType State
+Document Follow
+Document Naming Rule
+Document Naming Rule Condition
+Document Naming Settings
+Document Share Key
+Domain
+Domain Settings
+Downtime Entry
+Driver
+Driving License Category
+Dropbox Settings
+Dunning
+Dunning Letter Text
+Dunning Type
+Dynamic Link
+Email Account
+Email Campaign
+Email Digest
+Email Digest Recipient
+Email Domain
+Email Flag Queue
+Email Group
+Email Group Member
+Email Queue
+Email Queue Recipient
+Email Rule
+Email Template
+Email Unsubscribe
+Employee
+Employee Education
+Employee External Work History
+Employee Group
+Employee Group Table
+Employee Internal Work History
+Energy Point Log
+Energy Point Rule
+Energy Point Settings
+Error Log
+Event
+Event Participants
+Exchange Rate Revaluation
+Exchange Rate Revaluation Account
+Feedback Submission
+File
+Finance Book
+Fiscal Year
+Fiscal Year Company
+Form Number Card
+Form Tour
+Form Tour Step
+Fulfillment Charges
+Fulfillment Plan
+Fulfillment Plan Details
+GL Entry
+Gender
+Gift Card
+Gift Card Balance
+Gift Card Master
+Global Defaults
+Global Search DocType
+Global Search Settings
+Google Calendar
+Google Contacts
+Google Drive
+Google Settings
+Hardware Profile
+Hardware Testing
+Has Domain
+Has Role
+Help Article
+Help Category
+Holiday
+Holiday List
+Homepage
+Homepage Section
+Homepage Section Card
+IMAP Folder
+Import Supplier Invoice
+Incoming Call Handling Schedule
+Incoming Call Settings
+Incoterm
+Industry Type
+Information Control
+Information Control Properties
+Input Control
+Installation Note
+Installation Note Item
+Installed Application
+Installed Applications
+Integration Request
+Integration Sync Log
+Interface Controls
+Interface Profile
+Inventory Dimension
+Invoice Discounting
+Issue
+Issue Priority
+Issue Type
+Item
+Item Alternative
+Item Attribute
+Item Attribute Value
+Item Barcode
+Item Customer Detail
+Item Default
+Item Group
+Item Label Printing
+Item Label Printing Detail
+Item Manufacturer
+Item Price
+Item Quality Inspection Parameter
+Item Reason Code
+Item Reorder
+Item Supplier
+Item Surcharge
+Item Tax
+Item Tax Template
+Item Tax Template Detail
+Item Variant
+Item Variant Attribute
+Item Variant Settings
+Item Website Specification
+Ivend Font
+Job Card
+Job Card Item
+Job Card Operation
+Job Card Scheduled Time
+Job Card Scrap Item
+Job Card Time Log
+Journal Entry
+Journal Entry Account
+Journal Entry Template
+Journal Entry Template Account
+Kanban Board
+Kanban Board Column
+LDAP Group Mapping
+LDAP Settings
+Landed Cost Item
+Landed Cost Purchase Receipt
+Landed Cost Taxes and Charges
+Landed Cost Voucher
+Language
+Lead
+Lead Source
+Ledger Health
+Ledger Health Monitor
+Ledger Health Monitor Company
+Ledger Merge
+Ledger Merge Accounts
+Letter Head
+Linked Location
+List Filter
+List View Settings
+Location
+Log Setting User
+Log Settings
+Logs To Clear
+Look Up Control
+Look Up Type Properties
+Lost Reason Detail
+Lost Sale
+Lower Deduction Certificate
+Loyalty Journal
+Loyalty Level
+Loyalty Plan
+Loyalty Plan Applicability
+Loyalty Plan Applicable Stores
+Loyalty Plan Details
+Loyalty Plan Exception Rule
+Loyalty Plan Special Days
+Loyalty Point Entry
+Loyalty Point Entry Redemption
+Loyalty Point Expiry Setup
+Loyalty Program
+Loyalty Program Collection
+Loyalty Referal Setup
+Loyalty Setup
+Loyalty Special Days
+Maintenance Schedule
+Maintenance Schedule Detail
+Maintenance Schedule Item
+Maintenance Team Member
+Maintenance Visit
+Maintenance Visit Purpose
+Manager Override Log
+Manufacturer
+Manufacturing Settings
+Market Segment
+Marketing Campaign
+Material Request
+Material Request Item
+Material Request Plan Item
+Media Control
+Media Image
+Milestone
+Milestone Tracker
+Mode of Payment
+Mode of Payment Account
+Module Def
+Module Onboarding
+Module Profile
+Monthly Distribution
+Monthly Distribution Percentage
+Navbar Item
+Navbar Settings
+Network Printer Settings
+Newsletter
+Newsletter Attachment
+Newsletter Email Group
+Non Conformance
+Note
+Note Seen By
+Notification
+Notification Log
+Notification Recipient
+Notification Settings
+Notification Subscribed Document
+Number Card
+Number Card Link
+OAuth Authorization Code
+OAuth Bearer Token
+OAuth Client
+OAuth Client Role
+OAuth Provider Settings
+OAuth Scope
+Onboarding Permission
+Onboarding Step
+Onboarding Step Map
+Opening Invoice Creation Tool
+Opening Invoice Creation Tool Item
+Operation
+Opportunity
+Opportunity Item
+Opportunity Lost Reason
+Opportunity Lost Reason Detail
+Opportunity Type
+Overdue Payment
+POS Closing Entry
+POS Closing Entry Detail
+POS Closing Entry Taxes
+POS Command
+POS Customer Group
+POS Field
+POS Interface Custom Theme
+POS Invoice
+POS Invoice Item
+POS Invoice Merge Log
+POS Invoice Reference
+POS Invoice Sale Attribute
+POS Invoice Transaction Item Attribute
+POS Item Group
+POS Opening Entry
+POS Opening Entry Detail
+POS Payment Method
+POS Profile
+POS Profile Team
+POS Profile User
+POS Search Fields
+POS Settings
+POS Shift Profile
+POS Terminal
+POS Transaction Mode
+PSOA Cost Center
+PSOA Project
+Package
+Package Import
+Package Release
+Packed Item
+Packing Slip
+Packing Slip Item
+Page
+Page Config
+Page Config Column
+Page Config Filter
+Party Account
+Party Link
+Party Specific Item
+Party Type
+Patch Log
+Pause SLA On Status
+Payment Account
+Payment Account Credential
+Payment Connection
+Payment Connection Test
+Payment Device
+Payment Device Field
+Payment Entry
+Payment Entry Deduction
+Payment Entry Reference
+Payment Gateway Account
+Payment Ledger Entry
+Payment Order
+Payment Order Reference
+Payment Reconciliation
+Payment Reconciliation Allocation
+Payment Reconciliation Invoice
+Payment Reconciliation Payment
+Payment Refund
+Payment Request
+Payment Schedule
+Payment Template
+Payment Template Detail
+Payment Term
+Payment Terms Template
+Payment Terms Template Detail
+Period Closing Voucher
+Permission Inspector
+Personal Data Deletion Request
+Personal Data Deletion Step
+Personal Data Download Request
+Pick List
+Pick List Item
+Plaid Settings
+Plant Floor
+Portal Menu Item
+Portal Settings
+Portal User
+Prepared Report
+Price List
+Price List Country
+Pricing Rule
+Pricing Rule Brand
+Pricing Rule Detail
+Pricing Rule Item Code
+Pricing Rule Item Group
+Print Format
+Print Format Field Template
+Print Heading
+Print Settings
+Print Style
+Process Deferred Accounting
+Process Payment Reconciliation
+Process Payment Reconciliation Log
+Process Payment Reconciliation Log Allocations
+Process Statement Of Accounts
+Process Statement Of Accounts CC
+Process Statement Of Accounts Customer
+Process Subscription
+Product Bundle
+Product Bundle Item
+Production Plan
+Production Plan Item
+Production Plan Item Reference
+Production Plan Material Request
+Production Plan Material Request Warehouse
+Production Plan Sales Order
+Production Plan Sub Assembly Item
+Project
+Project Template
+Project Template Task
+Project Type
+Project Update
+Project User
+Projects Settings
+Promotion Applicability
+Promotion Applicability Detail
+Promotion Bonus Buys Hierarchy
+Promotion Bonus Buys Hierarchy Detail
+Promotion Bonus Buys Master
+Promotion Buy Side
+Promotion Customer Special Days
+Promotion Exclude Item
+Promotion Get Side
+Promotion Log
+Promotion Product Details
+Promotional Scheme
+Promotional Scheme Price Discount
+Promotional Scheme Product Discount
+Property Setter
+Prospect
+Prospect Lead
+Prospect Opportunity
+Purchase Invoice
+Purchase Invoice Advance
+Purchase Invoice Item
+Purchase Order
+Purchase Order Item
+Purchase Order Item Supplied
+Purchase Receipt
+Purchase Receipt Item
+Purchase Receipt Item Supplied
+Purchase Taxes and Charges
+Purchase Taxes and Charges Template
+Push Notification Settings
+Putaway Rule
+QZ Settings
+Quality Action
+Quality Action Resolution
+Quality Feedback
+Quality Feedback Parameter
+Quality Feedback Template
+Quality Feedback Template Parameter
+Quality Goal
+Quality Goal Objective
+Quality Inspection
+Quality Inspection Parameter
+Quality Inspection Parameter Group
+Quality Inspection Reading
+Quality Inspection Template
+Quality Meeting
+Quality Meeting Agenda
+Quality Meeting Minutes
+Quality Procedure
+Quality Procedure Process
+Quality Review
+Quality Review Objective
+Query Parameters
+Question Data
+Question List
+Question Options
+Quick Stock Balance
+Quotation
+Quotation Item
+Quotation Lost Reason
+Quotation Lost Reason Detail
+RQ Job
+RQ Worker
+Reason Code Master
+Recorder
+Recorder Query
+Recorder Suggested Index
+Registered Application
+Registered Application Events
+Reminder
+Remote Connector
+Remote Connector Kit Report
+Rename Tool
+Report
+Report Column
+Report Filter
+Repost Accounting Ledger
+Repost Accounting Ledger Items
+Repost Accounting Ledger Settings
+Repost Allowed Types
+Repost Item Valuation
+Repost Payment Ledger
+Repost Payment Ledger Items
+Reprint Transaction Log
+Request for Quotation
+Request for Quotation Item
+Request for Quotation Supplier
+Retail App Library
+Retail App Library Shelf
+Retail Badge Credential
+Retail Badge Event
+Retail Card Terminal Txn
+Retail Desk Action
+Retail Desk Action Input
+Retail Device Trust
+Retail Extension Install
+Retail Extension Log
+Retail Extension Module
+Retail Extension Package
+Retail Extension Subscription
+Retail Extension Subscription Profile
+Retail Fiscal Reader
+Retail Fiscal Reader Status
+Retail Fiscal Regime Config
+Retail Label Layout
+Retail Layaway Plan
+Retail Layaway Schedule
+Retail License Settings
+Retail List Mark
+Retail Override Request
+Retail PIN Event
+Retail POS Profile Store
+Retail POS Theme
+Retail POS Theme Caption
+Retail POS Theme Field
+Retail POS Theme Key Colour
+Retail Partner Code
+Retail Permission
+Retail Provisional Series
+Retail Provisional Series Row
+Retail Remote App Key
+Retail Save Rule
+Retail Save Rule Condition
+Retail Save Rule Count
+Retail Scan Source
+Retail Setting
+Retail UX Metric
+Review Level
+Role
+Role Permission for Page and Report
+Role Profile
+Route History
+Routing
+S3 Backup Settings
+S3 File Attachment
+SLA Fulfilled On Status
+SMS Center
+SMS Log
+SMS Parameter
+SMS Settings
+Sale Attribute
+Sales Invoice
+Sales Invoice Advance
+Sales Invoice Item
+Sales Invoice Payment
+Sales Invoice Timesheet
+Sales Order
+Sales Order Item
+Sales Partner
+Sales Partner Item
+Sales Partner Type
+Sales Person
+Sales Stage
+Sales Taxes and Charges
+Sales Taxes and Charges Template
+Sales Team
+Salutation
+Scheduled Job Log
+Scheduled Job Type
+Scheduler Event
+Search Sequence
+Selling Settings
+Serial No
+Serial and Batch Bundle
+Serial and Batch Entry
+Server Script
+Service Day
+Service Level Agreement
+Service Level Priority
+Session Default
+Session Default Settings
+Session Lock
+Share Balance
+Share Transfer
+Share Type
+Shareholder
+Shell Settings
+Shipment
+Shipment Delivery Note
+Shipment Parcel
+Shipment Parcel Template
+Shipping Rule
+Shipping Rule Condition
+Shipping Rule Country
+Slack Webhook URL
+Slideshow Photos
+Social Link Settings
+Social Login Key
+South Africa VAT Account
+South Africa VAT Settings
+Status Bar Control
+Status Bar Controls Properties
+Stock Entry
+Stock Entry Detail
+Stock Entry Type
+Stock Ledger Entry
+Stock Reconciliation
+Stock Reconciliation Item
+Stock Reposting Settings
+Stock Reservation Entry
+Stock Settings
+Store Detail
+Store Expense
+Store Expense Account
+Store Expense Detail
+Store Expense Type
+Sub Operation
+Subcontracting BOM
+Subcontracting Order
+Subcontracting Order Item
+Subcontracting Order Service Item
+Subcontracting Order Supplied Item
+Subcontracting Receipt
+Subcontracting Receipt Item
+Subcontracting Receipt Supplied Item
+Submission Queue
+Subscription
+Subscription Invoice
+Subscription Plan
+Subscription Plan Detail
+Subscription Settings
+Success Action
+Supplier
+Supplier Group
+Supplier Group Item
+Supplier Item
+Supplier Quotation
+Supplier Quotation Item
+Supplier Scorecard
+Supplier Scorecard Criteria
+Supplier Scorecard Period
+Supplier Scorecard Scoring Criteria
+Supplier Scorecard Scoring Standing
+Supplier Scorecard Scoring Variable
+Supplier Scorecard Standing
+Supplier Scorecard Variable
+Support Search Source
+Support Settings
+Surcharge
+Surcharge Account
+Surcharge List
+System Console
+System Health Report
+System Health Report Errors
+System Health Report Failing Jobs
+System Health Report Queue
+System Health Report Tables
+System Health Report Workers
+System Settings
+Tag
+Tag Link
+Target Detail
+Task
+Task Depends On
+Task Type
+Tax Category
+Tax Rule
+Tax Withheld Vouchers
+Tax Withholding Account
+Tax Withholding Category
+Tax Withholding Rate
+Team
+Telephony Call Type
+Tender Count Detail
+Terms and Conditions
+Territory
+Territory Item
+Theme Settings Hide Layout Pages
+Theme Settings Languages
+Thermal Label
+Timesheet
+Timesheet Detail
+ToDo
+Token Cache
+Top Bar Item
+Transaction Coupon
+Transaction Deletion Record
+Transaction Deletion Record Details
+Transaction Deletion Record Item
+Transaction Item Attribute
+Transaction Log
+Transaction Promotion Bonus Buys Detail
+Transaction Promotion Detail
+Translation
+UAE VAT Account
+UAE VAT Settings
+UOM
+UOM Category
+UOM Conversion Detail
+UOM Conversion Factor
+Unhandled Email
+Unreconcile Payment
+Unreconcile Payment Entries
+User
+User Detail
+User Document Type
+User Email
+User Face Maps
+User Group
+User Group Member
+User Permission
+User Select Document Type
+User Social Login
+User Type
+User Type Module
+Variant Field
+Vehicle
+Version
+Video
+Video Settings
+View Log
+Voice Call Settings
+Warehouse
+Warehouse Type
+Warranty Claim
+Web Form
+Web Form Field
+Web Form List Column
+Web Page
+Web Page Block
+Web Page View
+Web Template
+Web Template Field
+Webhook
+Webhook Data
+Webhook Header
+Webhook Request Log
+Website Attribute
+Website Filter Field
+Website Item Group
+Website Meta Tag
+Website Route Meta
+Website Route Redirect
+Website Script
+Website Settings
+Website Sidebar
+Website Sidebar Item
+Website Slideshow
+Website Slideshow Item
+Website Theme
+Website Theme Ignore App
+Work Order
+Work Order Item
+Work Order Operation
+Workflow
+Workflow Action
+Workflow Action Master
+Workflow Action Permitted Role
+Workflow Document State
+Workflow State
+Workflow Transition
+Workspace
+Workspace Chart
+Workspace Custom Block
+Workspace Link
+Workspace Number Card
+Workspace Quick List
+Workspace Shortcut
+Workstation
+Workstation Type
+Workstation Working Hour

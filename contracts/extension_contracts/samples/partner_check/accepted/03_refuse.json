@@ -1,0 +1,17 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "No prescription number for a Pharmacy item.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false
+  },
+  "payload": {
+    "verdict": "refuse",
+    "reason": "A prescription number is needed for Pharmacy items."
+  }
+}

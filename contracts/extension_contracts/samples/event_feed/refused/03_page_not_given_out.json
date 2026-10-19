@@ -1,0 +1,9 @@
+{
+  "extension_point": "event_feed",
+  "contract": "events_request",
+  "about": "A page value the feed never gave out.",
+  "payload": {
+    "page": "yesterday"
+  },
+  "expect_refusal": "page is not one this feed gave out."
+}

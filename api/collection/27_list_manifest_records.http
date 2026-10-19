@@ -1,0 +1,5 @@
+# List what is in each bin at a store — the remote "Where is it?" binding reads exactly this
+# expect: 200 (.data | type) == "array"
+GET {{BASE}}/api/resource/PP BLN Item In Bin?fields=["name","item","bin","qty","kind"]&filters=[["store","=","{{STORE}}"]]&limit_page_length=50
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

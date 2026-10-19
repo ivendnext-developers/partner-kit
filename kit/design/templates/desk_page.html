@@ -1,0 +1,171 @@
+<!doctype html>
+<!-- ivn-kit 0.1.0 template · a Desk page (framed under the normal Desk header).
+     Open with ?theme=dark and/or ?dir=rtl (or ?open=dialog) to see the other looks. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warranty claim</title>
+<link rel="stylesheet" href="../ivn-kit.css">
+<script src="../ivn-kit.js"></script>
+<script>
+  // Demo only: a real page takes these from its signed context (theme, lang) — see README.
+  var q = new URLSearchParams(location.search);
+  if (q.get("theme")) ivnKit.applyTheme({ mode: q.get("theme") });
+  if (q.get("dir") === "rtl") ivnKit.applyDir("ar");
+</script>
+</head>
+<body class="ivn">
+<main class="ivn-container">
+
+  <header class="ivn-page-head">
+    <div>
+      <div class="ivn-crumb">Service <svg class="ivn-icon ivn-flip-rtl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg> Warranty claims</div>
+      <div class="ivn-row">
+        <h1 class="ivn-title">WC-2026-0042</h1>
+        <span class="ivn-pill ivn-pill-orange">Awaiting parts</span>
+      </div>
+    </div>
+    <div class="ivn-actions">
+      <button class="ivn-btn ivn-btn-icon" type="button" aria-label="More actions">
+        <svg class="ivn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+      </button>
+      <button class="ivn-btn" type="button" data-ivn-open="reject-dialog">Reject</button>
+      <button class="ivn-btn ivn-btn-primary" type="button" id="save">Save</button>
+    </div>
+  </header>
+
+  <div class="ivn-stack">
+    <form class="ivn-card" novalidate>
+      <section class="ivn-section">
+        <h2 class="ivn-section-title">Claim details</h2>
+        <div class="ivn-grid">
+          <div class="ivn-field">
+            <label class="ivn-label" for="customer">Customer<span class="ivn-req" aria-hidden="true">*</span></label>
+            <div class="ivn-link-search"><input class="ivn-input" id="customer" required value="Northside Hardware" placeholder="Search customers"></div>
+          </div>
+          <div class="ivn-field">
+            <label class="ivn-label" for="item">Item</label>
+            <div class="ivn-link-search"><input class="ivn-input" id="item" value="Cordless drill 18V" placeholder="Search items"></div>
+          </div>
+          <div class="ivn-field">
+            <label class="ivn-label" for="serial">Serial number</label>
+            <input class="ivn-input ivn-mono" id="serial" value="CD18-5530-0917">
+          </div>
+          <div class="ivn-field">
+            <label class="ivn-label" for="bought">Purchase date</label>
+            <input class="ivn-input" id="bought" type="date" value="2026-03-14">
+            <span class="ivn-help">Covered until 2027-03-14</span>
+          </div>
+          <div class="ivn-field">
+            <label class="ivn-label" for="fault">Fault type</label>
+            <select class="ivn-select" id="fault"><option>Will not charge</option><option>Motor noise</option><option>Physical damage</option></select>
+          </div>
+          <div class="ivn-field">
+            <label class="ivn-label" for="prio">Priority</label>
+            <select class="ivn-select" id="prio"><option>Normal</option><option>High</option></select>
+          </div>
+        </div>
+      </section>
+      <section class="ivn-section">
+        <h2 class="ivn-section-title">Description</h2>
+        <div class="ivn-field is-invalid">
+          <label class="ivn-label" for="desc">What happened<span class="ivn-req" aria-hidden="true">*</span></label>
+          <textarea class="ivn-textarea" id="desc" required aria-invalid="true" aria-describedby="desc-err" placeholder="Describe the fault as the customer reported it"></textarea>
+          <span class="ivn-error-text" id="desc-err">Describe the fault before saving.</span>
+        </div>
+      </section>
+      <section class="ivn-section">
+        <h2 class="ivn-section-title">Handling</h2>
+        <div class="ivn-grid">
+          <label class="ivn-toggle"><input type="checkbox" role="switch" checked><span class="ivn-toggle-track"></span>Notify the customer by email</label>
+          <div class="ivn-field">
+            <label class="ivn-check"><input type="checkbox">Replacement approved</label>
+            <span class="ivn-help">Only a store manager can approve a replacement.</span>
+          </div>
+        </div>
+      </section>
+    </form>
+
+    <section class="ivn-card" aria-labelledby="parts-h">
+      <div class="ivn-section"><h2 class="ivn-section-title" id="parts-h">Parts on this claim</h2>
+        <div class="ivn-table-wrap">
+          <table class="ivn-table">
+            <thead><tr><th>Part</th><th>Bin location</th><th>Status</th><th class="ivn-num">Qty</th><th class="ivn-num">Cost</th></tr></thead>
+            <tbody>
+              <tr><td>Battery pack 18V</td><td>A-03-2</td><td><span class="ivn-pill ivn-pill-green">In stock</span></td><td class="ivn-num">1</td><td class="ivn-num">42.00</td></tr>
+              <tr><td>Charger board</td><td>B-11-4</td><td><span class="ivn-pill ivn-pill-orange">On order</span></td><td class="ivn-num">1</td><td class="ivn-num">18.50</td></tr>
+              <tr><td>Chuck assembly</td><td>—</td><td><span class="ivn-pill ivn-pill-red">Discontinued</span></td><td class="ivn-num">0</td><td class="ivn-num">0.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="ivn-card" aria-labelledby="list-h">
+      <div class="ivn-section" style="padding-block-end:0"><h2 class="ivn-section-title" id="list-h">Recent claims</h2></div>
+      <div class="ivn-filter-bar" role="search">
+        <input class="ivn-input" type="search" placeholder="Search by claim or serial" aria-label="Search claims">
+        <select class="ivn-select" aria-label="Status"><option>Any status</option><option>Open</option><option>Closed</option></select>
+        <button class="ivn-chip" type="button" aria-pressed="true">Open</button>
+        <button class="ivn-chip" type="button" aria-pressed="false">Assigned to me</button>
+      </div>
+      <ul class="ivn-list">
+        <li class="ivn-list-row"><div class="ivn-list-main"><div class="ivn-list-title">WC-2026-0041 · Angle grinder 115mm</div><div class="ivn-list-sub">Hillcrest Builders</div></div><span class="ivn-pill ivn-pill-blue">In repair</span><span class="ivn-list-meta">2 h ago</span></li>
+        <li class="ivn-list-row"><div class="ivn-list-main"><div class="ivn-list-title">WC-2026-0040 · Pressure washer 2000</div><div class="ivn-list-sub">Walk-in customer</div></div><span class="ivn-pill ivn-pill-green">Resolved</span><span class="ivn-list-meta">Yesterday</span></li>
+        <li class="ivn-list-row"><div class="ivn-list-main"><div class="ivn-list-title">WC-2026-0038 · Cordless drill 18V</div><div class="ivn-list-sub">Northside Hardware</div></div><span class="ivn-pill">Draft</span><span class="ivn-list-meta">3 days ago</span></li>
+      </ul>
+      <div class="ivn-list-foot">3 of 41 <span class="ivn-spacer"></span><button class="ivn-btn ivn-btn-sm" type="button">Load more</button></div>
+    </section>
+
+    <div class="ivn-grid">
+      <section class="ivn-card ivn-empty">
+        <svg class="ivn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21.4 11.1l-9.2 9.2a6 6 0 01-8.5-8.5l9.2-9.2a4 4 0 015.7 5.7l-9.2 9.2a2 2 0 01-2.8-2.8l8.5-8.5"/></svg>
+        <div class="ivn-empty-title">No attachments yet</div>
+        <p>Add a photo of the fault or the customer's receipt.</p>
+        <button class="ivn-btn ivn-btn-sm" type="button">Add attachment</button>
+      </section>
+      <section class="ivn-error-state" role="alert">
+        <svg class="ivn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>
+        <div class="ivn-error-title">Couldn't load the service history</div>
+        <p>The service partner isn't answering. Nothing was changed.</p>
+        <button class="ivn-btn ivn-btn-sm" type="button">Try again</button>
+      </section>
+    </div>
+  </div>
+</main>
+
+<dialog class="ivn-dialog" id="reject-dialog" aria-labelledby="reject-title">
+  <div class="ivn-dialog-head">
+    <h2 class="ivn-dialog-title" id="reject-title">Reject this claim?</h2>
+    <button class="ivn-btn ivn-btn-icon ivn-btn-sm" type="button" data-ivn-close="x" aria-label="Close">
+      <svg class="ivn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="ivn-dialog-body ivn-stack">
+    <div class="ivn-field"><label class="ivn-label" for="rj-reason">Reason<span class="ivn-req" aria-hidden="true">*</span></label>
+      <select class="ivn-select" id="rj-reason"><option>Out of warranty</option><option>Damage not covered</option><option>Serial number not found</option></select></div>
+    <div class="ivn-field"><label class="ivn-label" for="rj-note">Note to the customer</label><textarea class="ivn-textarea" id="rj-note"></textarea></div>
+  </div>
+  <div class="ivn-dialog-foot">
+    <button class="ivn-btn" type="button" data-ivn-close="cancel">Cancel</button>
+    <button class="ivn-btn ivn-btn-danger" type="button" data-ivn-close="reject">Reject claim</button>
+  </div>
+</dialog>
+
+<script>
+  // Demo data: a real page's search function asks ITS OWN backend. The kit never calls the network.
+  var CUSTOMERS = [
+    { value: "CUST-0007", label: "Northside Hardware", description: "Trade account" },
+    { value: "CUST-0012", label: "Hillcrest Builders", description: "Trade account" },
+    { value: "CUST-0031", label: "Walk-in customer", description: "Retail" }];
+  ivnKit.linkSearch(document.getElementById("customer"), {
+    search: function (text) {
+      return Promise.resolve(CUSTOMERS.filter(function (c) { return c.label.toLowerCase().indexOf(text.toLowerCase()) >= 0; }));
+    }
+  });
+  document.getElementById("save").addEventListener("click", function () { ivnKit.toast("Claim saved", { kind: "success" }); });
+  if (q.get("open") === "dialog") ivnKit.openDialog(document.getElementById("reject-dialog"));
+</script>
+</body>
+</html>

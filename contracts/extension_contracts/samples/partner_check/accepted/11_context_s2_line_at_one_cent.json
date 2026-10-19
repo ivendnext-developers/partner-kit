@@ -1,0 +1,57 @@
+{
+  "extension_point": "partner_check",
+  "contract": "context",
+  "about": "S2 — a line priced at the currency's smallest unit (row 35).",
+  "payload": {
+    "v": 1,
+    "point": "check",
+    "stage": "sale",
+    "currency_exponent": 2,
+    "sale_ref": "sale-7f3a",
+    "store": "Sandton City - IS",
+    "pos_profile": "Sandton Till 1",
+    "company": "iStore SA",
+    "currency": "ZAR",
+    "lang": "en",
+    "operator": "cashier@istore.example",
+    "customer": "CUST-00041",
+    "customer_group": "Retail",
+    "price_list": "Standard Selling",
+    "coupon_codes": [],
+    "sale_attributes": [],
+    "lines": [
+      {
+        "line_no": 1,
+        "item_code": "CABLE-USBC",
+        "item_group": "Accessories",
+        "qty_milli": 2000,
+        "uom": "Nos",
+        "rate_minor": 1,
+        "amount_minor": 2,
+        "discount_minor": 0,
+        "line_attributes": []
+      },
+      {
+        "line_no": 2,
+        "item_code": "CASE-IP15",
+        "item_group": "Accessories",
+        "qty_milli": 1000,
+        "uom": "Nos",
+        "rate_minor": 49900,
+        "amount_minor": 49900,
+        "discount_minor": 0,
+        "line_attributes": []
+      }
+    ],
+    "totals": {
+      "net_minor": 49902,
+      "tax_minor": 7485,
+      "discount_minor": 0,
+      "grand_minor": 57387
+    },
+    "offered_tenders": [
+      "Cash",
+      "Credit Card"
+    ]
+  }
+}

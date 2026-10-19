@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Customer history</title>
+<link rel="stylesheet" href="ivn-kit.css">
+<script src="ivn-kit.js"></script>
+<style>
+  body { margin:0; }
+  .visit .ivn-list-title { white-space:normal; }
+  .lines { margin: var(--ivn-s1) 0 0; font-size:.86rem; }
+  .lines span + span::before { content:" · "; color:var(--ivn-text-muted); }
+</style>
+</head>
+<body class="ivn">
+<main class="ivn-container ivn-stack">
+  <div><p class="ivn-crumb">Customer history</p><h1 class="ivn-title" id="title">Opening…</h1></div>
+  <div class="ivn-card" id="card" hidden><ul class="ivn-list" id="visits"></ul><div class="ivn-list-foot" id="foot"></div></div>
+  <div class="ivn-empty" id="empty" hidden><p class="ivn-empty-title" id="empty-title"></p><p class="ivn-muted" id="empty-text"></p></div>
+</main>
+<script>
+// The context rides the address's fragment: read it once, take it out of the address bar, and send it to our server,
+// which checks it. Nothing from the context or the shop is ever read as markup: textContent only.
+const ctx = new URLSearchParams(location.hash.slice(1)).get("ctx");
+history.replaceState(null, "", location.pathname);
+const $ = (id) => document.getElementById(id);
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function empty(title, text) { $("title").textContent = "Customer history"; $("empty-title").textContent = title; $("empty-text").textContent = text || ""; $("empty").hidden = false; }
+function money(cur, v) { return (cur ? cur + " " : "") + v; }
+
+function show(out) {
+  if (window.ivnKit && out.theme) { ivnKit.applyTheme(out.theme); ivnKit.applyDir(out.lang || "en"); }
+  if (out.state === "no_customer") {
+    return empty("No customer on this sale", out.on === "till" ? "Add the customer to the sale, then press the key again." : "Open this page from a customer.");
+  }
+  $("title").textContent = out.customer;
+  if (!out.visits.length) return empty("No sales yet", "This customer has no submitted sale in this shop.");
+  for (const v of out.visits) {
+    const row = el("li", "ivn-list-row visit"), main = el("div", "ivn-list-main");
+    main.append(el("div", "ivn-list-title", `${v.date} · ${v.store}`));
+    main.append(el("div", "ivn-muted", `Served by ${v.served} · ${v.name}${v.is_return ? " · a return" : ""}`));
+    const off = [];
+    if (Number(v.sale_discount)) off.push(`Sale discount ${money(v.currency, v.sale_discount)}${Number(v.sale_discount_pct) ? ` (${v.sale_discount_pct}%)` : ""}`);
+    const lines = el("div", "lines");
+    for (const ln of v.lines) {
+      lines.append(el("span", "", Number(ln.discount) ? `${ln.item} ×${ln.qty}: −${money(v.currency, ln.discount)}${Number(ln.discount_pct) ? ` (${ln.discount_pct}%)` : ""}` : `${ln.item} ×${ln.qty}: no discount`));
+    }
+    if (off.length) main.append(el("div", "", off.join(" · ")));
+    main.append(lines);
+    const meta = el("div", "ivn-list-meta", money(v.currency, v.total));
+    row.append(main, meta);
+    $("visits").append(row);
+  }
+  $("foot").textContent = `The last ${out.visits.length} sale${out.visits.length === 1 ? "" : "s"} (at most ${out.count}).`;
+  $("card").hidden = false;
+}
+
+if (!ctx) { empty("Open this page from the shop", ""); } else {
+  fetch("api/open", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ctx})})
+    .then((r) => r.json().then((j) => [r.status, j]))
+    .catch(() => [0, {error: "Could not reach the page's server. Close it and open it again."}])
+    .then(([code, out]) => code === 200 ? show(out) : empty("This page cannot open", out.error));
+}
+</script>
+</body>
+</html>

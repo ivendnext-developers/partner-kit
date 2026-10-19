@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Price check</title>
+<link rel="stylesheet" href="kiosk.css">
+<script src="kiosk.js" defer></script>
+</head>
+<body>
+<main id="kiosk">
+  <h1>Price check</h1>
+  <label for="scan" class="prompt" id="prompt">Scan an item to check its price</label>
+  <input id="scan" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="none" maxlength="64">
+  <section id="result" hidden aria-live="polite">
+    <img id="picture" alt="" hidden>
+    <p id="item" class="item"></p>
+    <p id="unit" class="unit"></p>
+    <p id="price" class="price"></p>
+    <p class="note">Any offer is worked out at the till.</p>
+  </section>
+  <p id="message" class="message" hidden role="status"></p>
+</main>
+</body>
+</html>

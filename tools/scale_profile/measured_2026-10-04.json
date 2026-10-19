@@ -1,0 +1,57 @@
+{
+ "stock_top_up": {
+  "stock_entry": "MAT-STE-2026-00085",
+  "items": 60
+ },
+ "catalogue": {
+  "items": 81,
+  "item_prices": 69,
+  "items_used": 60
+ },
+ "run": {
+  "sales_attempted": 120,
+  "sales_booked": 120,
+  "refused": 0,
+  "refusals": [],
+  "lines_per_sale": 3,
+  "days": 3,
+  "wall_seconds": 83.5
+ },
+ "per_sale_ms": {
+  "preview_p50": 81.4,
+  "preview_p95": 92.6,
+  "book_p50": 568.4,
+  "book_p95": 606.1,
+  "book_max": 868.6,
+  "preview_plus_book_mean": 656.7
+ },
+ "day_close_ms": {
+  "per_day": [
+   1441,
+   1466,
+   1587
+  ],
+  "per_sale_mean": 37.5
+ },
+ "sequential_capacity": {
+  "sales_per_hour_one_till_stream": 5177
+ },
+ "growth_per_sale": {
+  "POS Invoice": 1.0,
+  "POS Invoice Item": 3.0,
+  "Sales Invoice": 1.0,
+  "GL Entry": 7.41,
+  "Stock Ledger Entry": 2.98,
+  "Payment Ledger Entry": 2.0,
+  "Integration Sync Log": 0.0,
+  "Version": 3.1,
+  "POS Opening Entry": 0.03,
+  "POS Closing Entry": 0.03
+ },
+ "db_bytes_per_sale": 63215,
+ "open_days": [],
+ "box": {
+  "note": "A shared test machine (7 CPU / 12 GiB, a container runtime, other teams' idle stacks beside it); one bench container, one web worker process; sales driven in-process from the console, one after another \u2014 no HTTP, no concurrency"
+ },
+ "ok": true
+}

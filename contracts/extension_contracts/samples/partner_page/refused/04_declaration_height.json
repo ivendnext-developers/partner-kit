@@ -1,0 +1,17 @@
+{
+  "extension_point": "partner_page",
+  "contract": "declaration",
+  "about": "A height of 30 on the counter; 40 to 100.",
+  "payload": {
+    "doctype": "Retail Extension Subscription",
+    "point": "page",
+    "partner_name": "Acme Deliveries",
+    "transport": "remote",
+    "label": "Deliveries",
+    "endpoint_url": "https://partner.example/board",
+    "page_placement": "Till key",
+    "page_returns_message": 1,
+    "page_height": 30
+  },
+  "expect_refusal": "The height on the till must be from 40 to 100."
+}

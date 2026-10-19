@@ -1,0 +1,5 @@
+# Read one serial number
+# expect: 200 .data.item_code == "PP-WRC-PHONE"
+GET {{BASE}}/api/resource/Serial No/PPC-{{RUN}}-A
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

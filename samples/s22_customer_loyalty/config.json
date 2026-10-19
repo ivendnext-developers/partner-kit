@@ -1,0 +1,104 @@
+{
+ "_what": "S22's configuration as data: what the shop's administrator sets over the record API that a manifest may not carry on the shop's own record types. apply_config.py reads this file (or PP_CONFIG). The names and amounts are the sandbox template's (Demo Retail, USD); change them to the shop's. Every name starts with PP LYL so --remove finds what it made.",
+ "company": "Demo Retail",
+ "currency": "USD",
+ "currency_precision": 2,
+ "integration_user": {
+  "email": "pp-lyl-service@demo-retail.example",
+  "first_name": "PP LYL Loyalty Service",
+  "role": "PP LYL Integration"
+ },
+ "plans": [
+  {
+   "plan_name": "Bronze",
+   "rank": 1,
+   "customer_group": "PP LYL Bronze",
+   "spend_threshold": 0,
+   "discount_percent": 0,
+   "cash_back_percent": 2
+  },
+  {
+   "plan_name": "Silver",
+   "rank": 2,
+   "customer_group": "PP LYL Silver",
+   "spend_threshold": 1000,
+   "discount_percent": 3,
+   "cash_back_percent": 2
+  },
+  {
+   "plan_name": "Gold",
+   "rank": 3,
+   "customer_group": "PP LYL Gold",
+   "spend_threshold": 2500,
+   "discount_percent": 5,
+   "cash_back_percent": 2
+  }
+ ],
+ "settings": {
+  "default_plan": "Bronze",
+  "return_days": 14,
+  "tier_window_days": 365,
+  "walk_in_customers": [
+   "Walk-in — Demo Retail"
+  ],
+  "wallet_mode_of_payment": "Member cash",
+  "max_redemption_percent": 50,
+  "earn_on_redemption": 0
+ },
+ "integration_rights": [
+  {
+   "doctype": "Customer",
+   "rights": [
+    "read",
+    "write"
+   ],
+   "why": "enrol: move the customer into their tier's group"
+  },
+  {
+   "doctype": "POS Invoice",
+   "rights": [
+    "read"
+   ],
+   "why": "read a booked sale and its return"
+  },
+  {
+   "doctype": "Purchase Order",
+   "rights": [
+    "read"
+   ],
+   "why": "the receipt check reads what the order still waits for"
+  },
+  {
+   "doctype": "Supplier",
+   "rights": [
+    "read"
+   ],
+   "why": "reading a goods receipt also reads the supplier it names (the shop refuses the receipt otherwise)"
+  },
+  {
+   "doctype": "Purchase Receipt",
+   "rights": [
+    "read",
+    "write",
+    "submit"
+   ],
+   "why": "take the Verify step, which submits the receipt"
+  },
+  {
+   "doctype": "Serial and Batch Bundle",
+   "rights": [
+    "read",
+    "create",
+    "write",
+    "submit"
+   ],
+   "why": "the Verify step submits the receipt; for a batch-tracked item that makes and submits its batch bundle as the integration user"
+  }
+ ],
+ "receipt_workflow": {
+  "keep_submit": [
+   "Stock Manager",
+   "PP LYL Integration"
+  ]
+ }
+}

@@ -1,0 +1,35 @@
+# Generated from feedback/kit_defect.md by .github/scripts/issue_forms.py: edit that form, then re-run the script.
+name: "Kit defect"
+description: "tell us a piece of the kit does not do what its recipe says"
+title: "Kit defect: "
+body:
+  - type: markdown
+    attributes:
+      value: "**Every member of the programme can read this issue**, other partners' and other customers' teams too. Never put a secret in it (no key, password, signing secret or token), no shoppers' personal data, and no customer's name unless the customer has agreed. What we may ask you next, and what happens after you send it: [`feedback/kit_defect.md`](https://github.com/ivendnext-developers/partner-kit/blob/main/feedback/kit_defect.md)."
+  - type: input
+    id: kit_piece_and_version
+    attributes:
+      label: "Kit piece and version"
+      placeholder: "The kit piece, and the version it prints or the date you downloaded it."
+    validations:
+      required: true
+  - type: textarea
+    id: s1
+    attributes:
+      label: "1. What you did"
+      placeholder: "The steps from a clean start, as you typed them."
+    validations:
+      required: true
+  - type: textarea
+    id: s2
+    attributes:
+      label: "2. What you expected, and what happened"
+      placeholder: "What you expected, and where it says so (the recipe step, or the kit's own output). Then what you saw. Paste the output, with secrets removed."
+    validations:
+      required: true
+  - type: checkboxes
+    id: tick_4
+    attributes:
+      label: "Money or the till"
+      options:
+        - label: "It touches a sale, a price or a payment"

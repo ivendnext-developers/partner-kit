@@ -1,0 +1,13 @@
+{
+  "extension_point": "label_layout",
+  "contract": "declaration",
+  "about": "The weight placeholder is {weight}, in the singular; {weights} is not on the list.",
+  "payload": {
+    "doctype": "Retail Label Layout",
+    "label_name": "LIB1 Weights",
+    "width_mm": 50,
+    "height_mm": 25,
+    "template": "{item_name} {weights}"
+  },
+  "expect_refusal": "{weights} is not a label placeholder"
+}

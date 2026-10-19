@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Order board</title>
+<style>
+  /* The shop's own design tokens arrive in the context (theme.vars, --ivn-*): the till's background, card, ink, muted
+     text, lines, accent, corner radius and text scale. The page follows the till's own sheets: the till's type, a bold
+     title, muted detail rows, one full-width button. The fall-backs below are the till's light values, copied from the
+     iVendNext POS app's mpos.scss at 8dc36aab8: if they drift from the till, the till is right. */
+  :root { --ivn-bg:#fbfbfc; --ivn-card:#ffffff; --ivn-ink:#1f272e; --ivn-muted:#8d959d; --ivn-line:#dce0e3;
+          --ivn-accent:rgb(11,77,105); --ivn-radius:4px; --ivn-font-scale:1; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px 18px; background:var(--ivn-card); color:var(--ivn-ink);
+         font-family:"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         font-size:calc(13px * var(--ivn-font-scale)); line-height:1.35; }
+  .eyebrow { font-size:calc(11px * var(--ivn-font-scale)); font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+             color:var(--ivn-muted); margin:0 0 4px; }
+  h1 { font-size:calc(20px * var(--ivn-font-scale)); font-weight:800; margin:0 0 14px; }
+  .rows { border-top:1px solid var(--ivn-line); margin:0 0 16px; }
+  .row { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--ivn-line); }
+  .row span:first-child { color:var(--ivn-muted); }
+  .row span:last-child { font-weight:700; text-align:right; }
+  .row.big span:last-child { font-size:calc(18px * var(--ivn-font-scale)); font-weight:800; letter-spacing:.02em; }
+  button { width:100%; padding:13px; border:0; border-radius:var(--ivn-radius); background:var(--ivn-accent); color:#fff;
+           font:inherit; font-size:calc(14px * var(--ivn-font-scale)); font-weight:800; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:default; }
+  #status { margin:0 0 10px; color:var(--ivn-muted); }
+  #status:empty { display:none; }   /* above the button, so a short sheet never hides it */
+  #status.ok { color:var(--ivn-ink); font-weight:700; }
+</style>
+</head>
+<body>
+<div id="board"><p class="eyebrow">Order board</p><p id="status">Opening…</p></div>
+<script>
+// The context is in the address's fragment: read it once, then take it out of the address bar and history.
+const ctx = new URLSearchParams(location.hash.slice(1)).get("ctx");
+history.replaceState(null, "", location.pathname);
+const $ = (id) => document.getElementById(id);
+const say = (text, ok) => { $("status").textContent = text; $("status").className = ok ? "ok" : ""; };
+const post = (path, body) => fetch(path, {method: "POST", headers: {"Content-Type": "application/json"},
+                                          body: JSON.stringify(body)}).then((r) => r.json().then((j) => [r.status, j]));
+// one detail row; textContent only: nothing from the context is ever read as markup
+function row(label, value, big) {
+  const r = document.createElement("div"), a = document.createElement("span"), b = document.createElement("span");
+  r.className = big ? "row big" : "row";
+  a.textContent = label;
+  b.textContent = value;
+  r.append(a, b);
+  return r;
+}
+
+function paint(theme) {
+  if (!theme) return;
+  for (const [k, v] of Object.entries(theme.vars || {})) document.documentElement.style.setProperty(k, v);
+  document.documentElement.dataset.mode = theme.mode;
+}
+
+if (!ctx) { say("Open this page from the shop."); } else {
+  post("api/open", {ctx}).catch(() => [0, {error: "Could not reach the board. Close it and open it again."}]).then(([code, out]) => {
+    if (code !== 200) { say(out.error); return; }
+    paint(out.theme);
+    const w = out.where, b = $("board"), rows = document.createElement("div");
+    rows.className = "rows";
+    if (w.on === "desk") {
+      b.innerHTML = "<p class='eyebrow'>Order board</p><h1>Deliveries for this record</h1>";
+      rows.append(row("Record", w.doctype || ""), row("Number", w.name || "", true));
+      b.append(rows);
+      return;
+    }
+    b.innerHTML = "<p class='eyebrow'>Order board</p><h1>Book a delivery</h1>";
+    rows.append(row("From", w.store || ""), row("Items on the sale", String(w.lines)),
+                row("Delivery number", out.delivery_order, true));
+    const attach = document.createElement("button"), status = document.createElement("p");
+    attach.id = "attach";
+    attach.textContent = "Attach to sale";
+    status.id = "status";
+    b.append(rows, status, attach);
+    attach.onclick = () => {
+      attach.disabled = true;
+      say("Sending to the till…");
+      post("api/answer", {ctx, note: `Order ${out.delivery_order} is on this sale.`})
+        .catch(() => [0, {error: "Could not reach the board. Press again."}]).then(([c, r]) => {
+        if (c !== 200) { say(r.error); attach.disabled = false; return; }
+        say("Sent to the till.", true);
+        // Tell the till we are done; it checks this message's origin and reads nothing else from it.
+        window.parent.postMessage({type: "ivendnext:done"}, "*");
+      });
+    };
+  });
+}
+</script>
+</body>
+</html>

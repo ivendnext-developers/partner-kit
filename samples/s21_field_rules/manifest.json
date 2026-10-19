@@ -1,0 +1,15 @@
+{
+ "manifest_version": 2,
+ "app": "pp_fld",
+ "prefix": "PP FLD",
+ "title": "Field rules for one till theme",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "The shop's own words and fields on one till theme, with no code: the sale's line reads Product instead of the item name, the customer's card says Stars for points, the new-customer sheet has no email field, and a new customer needs a phone. The rules are rows of the named theme (PP Partner Till is the programme bench's; a partner names the shop's own). They have no switch: the phone rule is enforced by the server as soon as the manifest installs, the others reach each till that wears the theme at its next start. Uninstalling removes exactly these rows and leaves the theme as it was.",
+ "field_rules": [
+  {"theme": "PP Partner Till", "surface": "cart_line", "field": "item_name", "action": "relabel", "label": "Product"},
+  {"theme": "PP Partner Till", "surface": "customer_card", "field": "points", "action": "relabel", "label": "Stars"},
+  {"theme": "PP Partner Till", "surface": "customer_create", "field": "email", "action": "hide"},
+  {"theme": "PP Partner Till", "surface": "customer_create", "field": "phone", "action": "require"}
+ ]
+}

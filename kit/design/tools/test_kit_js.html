@@ -1,0 +1,121 @@
+<!doctype html>
+<!-- ivn-kit 0.1.0 · behaviour test for ivn-kit.js. check_kit.sh opens this in headless Chrome
+     (--dump-dom) and reads the RESULT line; you can also open it in any browser. -->
+<html lang="en"><head><meta charset="utf-8"><title>ivn-kit.js test</title>
+<script>
+  // Count any network attempt the kit might make: it must make none.
+  window.__net = 0;
+  window.fetch = function () { window.__net++; return Promise.reject(new Error("no network")); };
+  var RealXHR = window.XMLHttpRequest;
+  window.XMLHttpRequest = function () { window.__net++; return new RealXHR(); };
+</script>
+<script src="../ivn-kit.js"></script>
+</head>
+<body class="ivn">
+<button id="opener" type="button">Open</button>
+<dialog class="ivn-dialog" id="dlg"><div class="ivn-dialog-body"><input id="first"></div>
+  <div class="ivn-dialog-foot"><button type="button" id="x" data-ivn-close="cancel">Cancel</button></div></dialog>
+<div class="ivn-link-search"><input id="ls"></div>
+<pre id="out"></pre>
+<script>
+(async function () {
+  var out = [], pass = 0, fail = 0;
+  function check(name, ok) { ok ? pass++ : fail++; out.push((ok ? "PASS " : "FAIL ") + name); }
+  var root = document.documentElement, css = function (n) { return root.style.getPropertyValue(n); };
+  var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+
+  // applyTheme — allow-list and value checks
+  var r = ivnKit.applyTheme({ mode: "dark", vars: {
+    "--ivn-primary": "#0b4d69", "--ivn-primary-strong": "rgb(11, 77, 105)", "--ivn-radius": "4px", "--ivn-font-scale": "1.2",
+    "--ivn-text": "#fff;}body{display:none", "--ivn-bg": "url(x.png)", "--ivn-surface": "expression(alert(1))",
+    "--ivn-border": "red", "--ivn-radius-lg": "4px; color: red", "--ivn-focus": "rgb(1,2,3)}", "--evil": "#000000",
+    "--ivn-text-muted": { toString: function () { return "#000"; } }, "--ivn-on-primary": "#12345" } });
+  check("mode dark sets data-theme", root.getAttribute("data-theme") === "dark");
+  check("hex colour applied", css("--ivn-primary") === "#0b4d69");
+  check("rgb() colour applied", css("--ivn-primary-strong") === "rgb(11, 77, 105)");
+  check("length applied", css("--ivn-radius") === "4px");
+  check("font scale applied", css("--ivn-font-scale") === "1.2");
+  check("rejects ; } injection", css("--ivn-text") === "");
+  check("rejects url(", css("--ivn-bg") === "");
+  check("rejects expression", css("--ivn-surface") === "");
+  check("rejects named colour", css("--ivn-border") === "");
+  check("rejects length with ;", css("--ivn-radius-lg") === "");
+  check("rejects rgb() with }", css("--ivn-focus") === "");
+  check("rejects unknown variable", css("--evil") === "");
+  check("rejects non-string object", css("--ivn-text-muted") === "");
+  check("rejects 5-digit hex", css("--ivn-on-primary") === "");
+  check("reports applied + rejected", r.applied.length === 4 && r.rejected.length === 9);
+  ivnKit.applyTheme({ vars: { "--ivn-font-scale": "3" } });
+  check("rejects font scale out of range", css("--ivn-font-scale") === "1.2");
+  check("ignores a non-object theme", ivnKit.applyTheme("x").applied.length === 0);
+  // the product's page-context names (partner page theme.vars) map onto the kit's
+  var rc = ivnKit.applyTheme({ vars: { "--ivn-card": "#fafafa", "--ivn-ink": "#111111", "--ivn-muted": "#666666",
+    "--ivn-line": "#dddddd", "--ivn-accent": "#0b6bcb", "--ivn-bg": "#ffffff" } });
+  check("context card → surface", css("--ivn-surface") === "#fafafa");
+  check("context ink → text", css("--ivn-text") === "#111111");
+  check("context muted → text-muted", css("--ivn-text-muted") === "#666666");
+  check("context line → border", css("--ivn-border") === "#dddddd");
+  check("context accent → primary and primary-strong", css("--ivn-primary") === "#0b6bcb" && css("--ivn-primary-strong") === "#0b6bcb");
+  check("context names reported applied", rc.applied.length === 6 && rc.rejected.length === 0);
+  ivnKit.applyTheme({ vars: { "--ivn-accent": "#222222", "--ivn-primary-strong": "#333333" } });
+  check("a kit name beside its context name wins", css("--ivn-primary") === "#222222" && css("--ivn-primary-strong") === "#333333");
+  check("context name with a bad value rejected", ivnKit.applyTheme({ vars: { "--ivn-ink": "url(x)" } }).rejected[0] === "--ivn-ink" && css("--ivn-text") === "#111111");
+  ivnKit.applyTheme({ mode: "light" });
+  check("mode light sets data-theme", root.getAttribute("data-theme") === "light");
+
+  // applyDir
+  check("ar-SA is rtl", ivnKit.applyDir("ar-SA") === "rtl" && root.dir === "rtl");
+  check("he is rtl", ivnKit.applyDir("he") === "rtl");
+  check("fa_IR is rtl", ivnKit.applyDir("fa_IR") === "rtl");
+  check("ur is rtl", ivnKit.applyDir("ur") === "rtl");
+  check("en is ltr", ivnKit.applyDir("en-GB") === "ltr" && root.dir === "ltr");
+  check("empty is ltr", ivnKit.applyDir("") === "ltr");
+
+  // toast — text only
+  var t = ivnKit.toast("<b>Saved</b>", { kind: "success", timeout: 0 });
+  check("toast shows text, not HTML", t.textContent === "<b>Saved</b>" && !t.querySelector("b"));
+  check("toast region is a polite live region", document.querySelector(".ivn-toasts").getAttribute("aria-live") === "polite");
+  ivnKit.hideToast(t);
+  check("toast hides", !document.contains(t));
+
+  // dialog
+  var opener = document.getElementById("opener"), dlg = document.getElementById("dlg");
+  opener.focus(); ivnKit.openDialog(dlg);
+  check("dialog opens modally", dlg.open && dlg.matches(":modal"));
+  check("focus moves into the dialog", document.activeElement === document.getElementById("first"));
+  document.getElementById("x").click();
+  check("data-ivn-close closes", !dlg.open && dlg.returnValue === "cancel");
+  await wait(0);
+  check("focus returns to the opener", document.activeElement === opener);
+
+  // link search — calls the page's function, keyboard works, out-of-order answers dropped
+  var asked = [], picked = null, input = document.getElementById("ls");
+  ivnKit.linkSearch(input, {
+    search: function (text) {
+      asked.push(text);
+      var rows = [{ value: "A", label: "Alpha bin" }, { value: "B", label: "Beta bin", description: "Aisle 2" }];
+      return new Promise(function (res) { setTimeout(function () { res(text === "slow" ? [{ value: "S", label: "Stale" }] : rows); }, text === "slow" ? 400 : 10); });
+    },
+    onPick: function (it) { picked = it; }
+  });
+  input.focus();
+  input.value = "slow"; input.dispatchEvent(new Event("input"));
+  await wait(250);
+  input.value = "b"; input.dispatchEvent(new Event("input"));
+  await wait(600);
+  var list = document.getElementById(input.getAttribute("aria-controls"));
+  check("search function was called with the text", asked.indexOf("b") >= 0);
+  check("late answer for an older search is dropped", list.textContent.indexOf("Stale") < 0 && list.children.length === 2);
+  check("list is open and announced", !list.hidden && input.getAttribute("aria-expanded") === "true");
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+  check("ArrowDown moves the selection", list.children[1].getAttribute("aria-selected") === "true");
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  check("Enter picks the row", picked && picked.value === "B" && input.value === "Beta bin" && list.hidden);
+  check("result text is not HTML", !list.querySelector("b"));
+
+  check("the kit made no network call", window.__net === 0);
+  out.push("RESULT: " + (fail ? "FAIL" : "PASS") + " " + pass + "/" + (pass + fail));
+  document.getElementById("out").textContent = out.join("\n");
+})();
+</script>
+</body></html>

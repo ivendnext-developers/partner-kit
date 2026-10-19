@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "settings",
+  "about": "A scan capture that names no item.",
+  "payload": {
+    "event": "scan"
+  },
+  "expect_refusal": "Say which items a scan capture asks about"
+}

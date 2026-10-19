@@ -1,0 +1,32 @@
+{
+ "manifest_version": 2,
+ "app": "pp_knd",
+ "prefix": "PP KND",
+ "title": "Every extension-point kind that installs, once (row KINDS)",
+ "version": "0.0.1",
+ "publisher": "PP KND",
+ "description": "A test manifest carrying a Desk action, the two kinds of extension subscription (Desk action and page) and two save rules, installed switched off and removed by our test bench's install cycle.",
+ "allowed_urls": ["https://partner.example/knd/press", "https://partner.example/knd/page/"],
+ "extension_subscriptions": [
+  {"key": "route", "point": "desk_action", "label": "Pick route service",
+   "endpoint_url": "https://partner.example/knd/press", "timeout_seconds": 5},
+  {"key": "bins", "point": "page", "label": "Bin finder",
+   "endpoint_url": "https://partner.example/knd/page/", "page_placement": "Till key and Desk page",
+   "page_roles": ["System Manager"], "page_send_sale": 1, "page_returns_message": 1, "page_height": 80}
+ ],
+ "desk_actions": [
+  {"record_type": "Customer", "label": "Check credit route", "placement": "both", "service": "route",
+   "roles": ["System Manager"], "on_draft": 1, "send_fields": "name, customer_name",
+   "conditions": [{"field": "customer_name", "operator": "is set", "value": ""}],
+   "inputs": [{"fieldname": "note", "label": "Note", "fieldtype": "Data"}],
+   "confirm_text": "Ask the route service?"}
+ ],
+ "save_rules": [
+  {"rule_name": "PP KND Customer name length", "record_type": "Customer", "kind": "length",
+   "field": "customer_name", "min_length": 2, "max_length": 140, "mode": "refuse",
+   "message": "A customer name is 2 to 140 characters."},
+  {"rule_name": "PP KND Credit limit", "record_type": "Customer", "kind": "threshold", "child_table": "credit_limits",
+   "field": "credit_limit", "operator": "<=", "value": "100000", "mode": "flag",
+   "bypass_roles": ["System Manager"]}
+ ]
+}

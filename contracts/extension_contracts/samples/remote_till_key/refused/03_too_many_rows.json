@@ -1,0 +1,99 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "21 Sale Attribute rows; at most 20.",
+  "given": {
+    "returns": [
+      "sale_attributes"
+    ]
+  },
+  "payload": {
+    "sale_attributes": [
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 0"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 1"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 2"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 3"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 4"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 5"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 6"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 7"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 8"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 9"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 10"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 11"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 12"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 13"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 14"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 15"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 16"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 17"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 18"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 19"
+      },
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold 20"
+      }
+    ]
+  },
+  "expect_refusal": "sale_attributes must be a list of 1 to 20 rows"
+}

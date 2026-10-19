@@ -1,0 +1,18 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "A level the till does not draw.",
+  "given": {
+    "returns": [
+      "message"
+    ]
+  },
+  "payload": {
+    "message": {
+      "title": "Gold member",
+      "body": "120 points on this sale.",
+      "level": "error"
+    }
+  },
+  "expect_refusal": "message needs a title, a body within the caps, and a known level"
+}

@@ -1,0 +1,298 @@
+{
+ "manifest_version": 2,
+ "app": "pp_aps",
+ "prefix": "PP APS",
+ "title": "Price change approvals across stores",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A request to change a selling price names its STORE and moves Requested -> Store Approved -> Head Office Approved -> Applied by a native workflow. A store manager sees and approves only their own store's requests (a User Permission on the store, set per person); head office sees all. The workflow cannot hold a limit (a manifest carries no condition) and the shop accepts a state written straight in when the writer's roles allow that move, so the limit and the right to approve are decided by an outside service from the approval-rule table in this manifest: a store manager approves up to a percentage of the price, above it the change waits for head office. Nothing here changes a price: the service applies an approved request through the record API, once, and refuses one whose item, price list, price or store changed after it was raised, one approved by the person who raised it at any step, one approved by a person with no rule for it, and one with ten or more recorded changes. Every right a role has is written out (read, write, create, delete, report, export, share, print, email): a permission row that leaves one out gets it ON. The shop must have the four roles named below before this is installed; no one may hold a raising role and an approving role, or both approving roles.",
+ "doctypes": [
+  {
+   "name": "PP APS Price Change Request",
+   "autoname": "hash",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "item",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "price_list",
+     "fieldtype": "Link",
+     "label": "Price list",
+     "options": "Price List",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "currency",
+     "fieldtype": "Link",
+     "label": "Currency",
+     "options": "Currency",
+     "fetch_from": "price_list.currency",
+     "read_only": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "POS Profile",
+     "reqd": 1,
+     "set_only_once": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "new_rate",
+     "fieldtype": "Currency",
+     "label": "New price",
+     "options": "currency",
+     "reqd": 1,
+     "in_list_view": 1,
+     "non_negative": 1
+    },
+    {
+     "fieldname": "reason",
+     "fieldtype": "Small Text",
+     "label": "Reason"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP APS Requester",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP APS Store Manager",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP APS Head Office",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP APS Applier",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP APS Approval Rule",
+   "autoname": "field:user",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "user",
+     "fieldtype": "Link",
+     "label": "Person",
+     "options": "User",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "level",
+     "fieldtype": "Select",
+     "label": "Level",
+     "options": "Store\nHead Office",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store (for a Store level)",
+     "options": "POS Profile",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "limit_pct",
+     "fieldtype": "Float",
+     "label": "Limit, percent of the price now (for a Store level)",
+     "in_list_view": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP APS Applier",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "naming_rules": [
+  {
+   "document_type": "PP APS Price Change Request",
+   "prefix": "PP-APS-.YYYY.-",
+   "prefix_digits": 5
+  }
+ ],
+ "workflows": [
+  {
+   "name": "PP APS Price Change Approval",
+   "document_type": "PP APS Price Change Request",
+   "states": [
+    {
+     "state": "PP APS Requested",
+     "allow_edit": "PP APS Requester"
+    },
+    {
+     "state": "PP APS Store Approved",
+     "allow_edit": "PP APS Store Manager"
+    },
+    {
+     "state": "PP APS Head Office Approved",
+     "allow_edit": "PP APS Head Office"
+    },
+    {
+     "state": "PP APS Rejected",
+     "allow_edit": "PP APS Head Office"
+    },
+    {
+     "state": "PP APS Applied",
+     "allow_edit": "PP APS Applier"
+    }
+   ],
+   "transitions": [
+    {
+     "state": "PP APS Requested",
+     "action": "PP APS Store Approve",
+     "next_state": "PP APS Store Approved",
+     "allowed": "PP APS Store Manager"
+    },
+    {
+     "state": "PP APS Requested",
+     "action": "PP APS Head Office Approve",
+     "next_state": "PP APS Head Office Approved",
+     "allowed": "PP APS Head Office"
+    },
+    {
+     "state": "PP APS Store Approved",
+     "action": "PP APS Head Office Approve",
+     "next_state": "PP APS Head Office Approved",
+     "allowed": "PP APS Head Office"
+    },
+    {
+     "state": "PP APS Requested",
+     "action": "PP APS Reject",
+     "next_state": "PP APS Rejected",
+     "allowed": "PP APS Store Manager"
+    },
+    {
+     "state": "PP APS Store Approved",
+     "action": "PP APS Reject",
+     "next_state": "PP APS Rejected",
+     "allowed": "PP APS Store Manager"
+    },
+    {
+     "state": "PP APS Requested",
+     "action": "PP APS Head Office Reject",
+     "next_state": "PP APS Rejected",
+     "allowed": "PP APS Head Office"
+    },
+    {
+     "state": "PP APS Store Approved",
+     "action": "PP APS Head Office Reject",
+     "next_state": "PP APS Rejected",
+     "allowed": "PP APS Head Office"
+    },
+    {
+     "state": "PP APS Head Office Approved",
+     "action": "PP APS Head Office Reject",
+     "next_state": "PP APS Rejected",
+     "allowed": "PP APS Head Office"
+    },
+    {
+     "state": "PP APS Store Approved",
+     "action": "PP APS Apply",
+     "next_state": "PP APS Applied",
+     "allowed": "PP APS Applier"
+    },
+    {
+     "state": "PP APS Head Office Approved",
+     "action": "PP APS Apply",
+     "next_state": "PP APS Applied",
+     "allowed": "PP APS Applier"
+    }
+   ]
+  }
+ ],
+ "list_settings": [
+  {
+   "doctype": "PP APS Price Change Request",
+   "fields": [
+    "item",
+    "price_list",
+    "store",
+    "new_rate"
+   ]
+  }
+ ]
+}

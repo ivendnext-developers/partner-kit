@@ -1,0 +1,18 @@
+{
+  "extension_point": "fields",
+  "contract": "declaration",
+  "about": "S2: a new customer needs a phone; the server refuses without one.",
+  "payload": {
+    "doctype": "Retail POS Theme",
+    "theme_name": "LIB1 Fields A2",
+    "layout": "Summer Breeze",
+    "palette": "Standard",
+    "field_rules": [
+      {
+        "surface": "customer_create",
+        "field": "phone",
+        "action": "require"
+      }
+    ]
+  }
+}

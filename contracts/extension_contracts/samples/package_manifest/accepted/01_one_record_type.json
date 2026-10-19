@@ -1,0 +1,23 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "One record type of the partner's own.",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_wrc",
+    "prefix": "PP WRC",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "PP WRC Claim",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ]
+  }
+}

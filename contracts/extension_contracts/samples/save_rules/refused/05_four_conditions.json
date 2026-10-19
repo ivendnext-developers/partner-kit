@@ -1,0 +1,35 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "Four conditions; at most three.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Four conditions",
+    "record_type": "Customer",
+    "kind": "required_when",
+    "field": "tax_id",
+    "conditions": [
+      {
+        "field": "customer_type",
+        "operator": "=",
+        "value": "Company"
+      },
+      {
+        "field": "customer_type",
+        "operator": "=",
+        "value": "Company"
+      },
+      {
+        "field": "customer_type",
+        "operator": "=",
+        "value": "Company"
+      },
+      {
+        "field": "customer_type",
+        "operator": "=",
+        "value": "Company"
+      }
+    ]
+  },
+  "expect_refusal": "Give 1 to 3 conditions."
+}

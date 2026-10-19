@@ -1,0 +1,5 @@
+{
+  "_what": "The partner's own warranty terms (months). An item's own term wins over its group's. Seeded into the service's SQLite store on first start; the tenant holds none of this.",
+  "items": {"PP-WRC-PHONE": 24},
+  "groups": {"iPhone": 12, "iPad": 12, "Mac": 12, "Watch": 12, "Audio": 12}
+}

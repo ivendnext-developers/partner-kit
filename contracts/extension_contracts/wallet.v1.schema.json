@@ -1,0 +1,297 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://ivendnext.com/extending/contracts/wallet.v1.schema.json",
+ "title": "Wallet extension point, version 1",
+ "description": "Extension point wallet (wallet/1): the wire format a partner's wallet service answers for the remote-wallet gateway app on Payments Core (the paygw/1 contract's wallet profile). The till never calls it directly: the server sends its own amount due, checks every cap before any money moves, and keeps the record (business_logic/wallet_tender.py; the core half: Payments' remotewallet). Money in the currency's own minor units. Needs the Payments remote-wallet app. Page: docs/extending/wallet.md.",
+ "$defs": {
+  "preview_request": {
+   "description": "What the server sends to ask what this customer may use on this sale. amount_due_minor is the server's own figure, never the till's.",
+   "type": "object",
+   "required": [
+    "v",
+    "customer",
+    "customer_name",
+    "amount_due_minor",
+    "currency",
+    "currency_exponent",
+    "store",
+    "sale_ref",
+    "lang"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "customer": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "customer_name": {
+     "type": "string",
+     "maxLength": 140
+    },
+    "amount_due_minor": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "currency": {
+     "type": "string",
+     "minLength": 3,
+     "maxLength": 3
+    },
+    "currency_exponent": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4
+    },
+    "store": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "sale_ref": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "lang": {
+     "type": "string",
+     "minLength": 2,
+     "maxLength": 10
+    }
+   }
+  },
+  "preview_answer": {
+   "description": "Refused whole when it does not read. Eligible: the balance, the most this sale may use (never above the balance — checked against the pair, beyond this schema), the label the till shows (1–40 characters) and whether a one-time code is needed. Not eligible: a reason the till shows (1–140).",
+   "oneOf": [
+    {
+     "type": "object",
+     "required": [
+      "eligible",
+      "balance_minor",
+      "max_redeemable_minor",
+      "label",
+      "currency",
+      "otp_required"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "eligible": {
+       "const": true
+      },
+      "balance_minor": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "max_redeemable_minor": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "label": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 40
+      },
+      "currency": {
+       "type": "string",
+       "minLength": 3,
+       "maxLength": 3
+      },
+      "otp_required": {
+       "type": "boolean"
+      },
+      "reason": {
+       "type": "null"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "required": [
+      "eligible",
+      "reason"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "eligible": {
+       "const": false
+      },
+      "reason": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      }
+     }
+    }
+   ]
+  },
+  "authorise_request": {
+   "description": "Our reference travels with the payment and comes back; authorise twice with one reference is one debit. payer_code is the customer's one-time code, never stored or logged.",
+   "type": "object",
+   "required": [
+    "v",
+    "reference",
+    "customer",
+    "amount_minor",
+    "currency",
+    "currency_exponent",
+    "sale_ref"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "reference": {
+     "type": "string",
+     "pattern": "^MPOS-REF-[0-9A-F]{12}$"
+    },
+    "customer": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "amount_minor": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "currency": {
+     "type": "string",
+     "minLength": 3,
+     "maxLength": 3
+    },
+    "currency_exponent": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4
+    },
+    "payer_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 12
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "sale_ref": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    }
+   }
+  },
+  "answer": {
+   "description": "The answer to authorise and status. Echoes the reference it answers for (another reference is refused whole and read as unknown — beyond this schema). approved carries the amount actually taken and its auth_ref; a different amount is a Mismatch the core reverses (beyond this schema). declined and unknown carry a standard reason.",
+   "oneOf": [
+    {
+     "type": "object",
+     "required": [
+      "reference",
+      "outcome",
+      "amount_minor",
+      "auth_ref"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "reference": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      "outcome": {
+       "const": "approved"
+      },
+      "amount_minor": {
+       "type": "integer",
+       "minimum": 1
+      },
+      "auth_ref": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      "correlation_id": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      "reason": {
+       "type": "null"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "required": [
+      "reference",
+      "outcome",
+      "correlation_id"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "reference": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      "outcome": {
+       "const": "pending"
+      },
+      "correlation_id": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      }
+     }
+    },
+    {
+     "type": "object",
+     "required": [
+      "reference",
+      "outcome",
+      "reason"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "reference": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      "outcome": {
+       "enum": [
+        "declined",
+        "unknown"
+       ]
+      },
+      "reason": {
+       "enum": [
+        "declined_by_issuer",
+        "insufficient_funds",
+        "payer_cancelled",
+        "payer_timeout",
+        "device_unreachable",
+        "device_busy",
+        "config_invalid",
+        "network_timeout",
+        "gateway_error",
+        "invalid_code"
+       ]
+      },
+      "correlation_id": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      }
+     }
+    }
+   ]
+  }
+ }
+}

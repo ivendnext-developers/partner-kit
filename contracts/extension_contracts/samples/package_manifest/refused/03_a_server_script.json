@@ -1,0 +1,30 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A server script runs partner code inside the shop's own saves.",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_wrc",
+    "prefix": "PP WRC",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "PP WRC Claim",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ],
+    "server_scripts": [
+      {
+        "name": "PP WRC Hook",
+        "script": "pass"
+      }
+    ]
+  },
+  "expect_refusal": "a server script runs partner code"
+}

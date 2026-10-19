@@ -1,0 +1,15 @@
+{
+  "extension_point": "partner_page",
+  "contract": "submit",
+  "about": "The partner's server answers a message. ctx_nonce stands for the nonce of the context the page received.",
+  "payload": {
+    "ctx_nonce": "0123456789abcdef0123456789abcdef",
+    "result": {
+      "message": {
+        "title": "Booked",
+        "body": "Courier collects at 4 pm.",
+        "level": "success"
+      }
+    }
+  }
+}

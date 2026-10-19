@@ -1,0 +1,50 @@
+{
+ "manifest_version": 2,
+ "app": "pp_tgr",
+ "prefix": "PP TGR",
+ "title": "Till guard rules",
+ "version": "0.2.0",
+ "publisher": "Partner Programme sample",
+ "description": "The common checks before payment, in one app. A check before payment: when the cashier presses Pay, the shop's server sends its priced basket and the service refuses a line priced at or below the shop's placeholder price (a free line is never refused) or a line holding more of one item than the shop allows, and asks the cashier (or calls a manager) for a sale at or above the shop's approval amount. A return is judged only for the items it sells (an exchange), by the line rules; the approval amount reads the total the customer pays. A capture on scan: an item whose 'Confirm at the till when scanned' is ticked beeps and asks a yes/no question before its line goes on the sale. The rules are the shop's own, in the record 'Default' of PP TGR Settings, each off until set; the service reads that record with the app's integration user and writes nothing. The install makes the role PP TGR Integration; the shop gives it to the app's integration user. Both services install switched off; the shop reads what each is sent, ticks the consent and switches them on (to use approve, it first gives its managers May Approve a Partner's Check, then ticks 'May ask for a manager's approval' on the check). When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": ["https://host.docker.internal:8125/tgr/check", "https://host.docker.internal:8125/tgr/scan"],
+ "doctypes": [
+  {
+   "name": "PP TGR Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1, "unique": 1, "default": "Default",
+     "description": "The service reads the record named Default."},
+    {"fieldname": "lowest_unit_price", "fieldtype": "Float", "label": "A line priced at or below this is refused (0 = off)",
+     "description": "For a placeholder price such as 0.01, in the sale's own currency (one number for every currency; a value smaller than the currency's smallest unit switches the rule off). A free line, priced 0, is never refused."},
+    {"fieldname": "max_qty_per_line", "fieldtype": "Float", "label": "Most of one item on a line (0 = no limit)", "description": "Counted line by line: a promotion may split one item across two lines."},
+    {"fieldname": "approval_from", "fieldtype": "Float", "label": "Sales of this amount or more need a manager (0 = off)", "description": "In the sale's own currency; one number for every currency."},
+    {"fieldname": "approval_answer", "fieldtype": "Select", "label": "How a large sale is checked", "options": "ask\napprove",
+     "description": "ask (the default): the cashier answers yes or no. approve: a manager who is not the cashier signs in on the till; it needs 'May ask for a manager's approval' ticked on the check service, else the answer is not used and the sale goes on, flagged."},
+    {"fieldname": "confirm_question", "fieldtype": "Data", "label": "The question on a flagged item",
+     "description": "Asked when an item whose 'Confirm at the till when scanned' is ticked is scanned. Blank: 'Check this item before it goes on the sale. Add it?'"}
+   ],
+   "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 0, "print": 1, "email": 0},
+    {"role": "PP TGR Integration", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0}
+   ]
+  }
+ ],
+ "custom_fields": [
+  {"dt": "Item", "fieldname": "pp_tgr_confirm_at_scan", "fieldtype": "Check", "label": "Confirm at the till when scanned",
+   "insert_after": "stock_uom"}
+ ],
+ "property_setters": [
+  {"doc_type": "PP TGR Settings", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/till_guard.html#settings"}
+ ],
+ "registered_applications": [
+  {"name": "PP TGR Guard", "description": "the till guard service reads the shop's settings record", "events": ["PP TGR Settings"]}
+ ],
+ "extension_subscriptions": [
+  {"key": "guard", "point": "check", "label": "Till guard rules", "endpoint_url": "https://host.docker.internal:8125/tgr/check",
+   "timeout_seconds": 3, "down_answer": "allow_and_flag"},
+  {"key": "on_scan", "point": "capture", "label": "Till guard: confirm item", "endpoint_url": "https://host.docker.internal:8125/tgr/scan",
+   "timeout_seconds": 1.5, "down_answer": "allow_and_flag", "settings": {"event": "scan", "item_field": "pp_tgr_confirm_at_scan"}}
+ ]
+}

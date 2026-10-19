@@ -1,0 +1,20 @@
+{
+  "extension_point": "partner_page",
+  "contract": "submit",
+  "about": "Both kinds at once.",
+  "payload": {
+    "ctx_nonce": "0123456789abcdef0123456789abcdef",
+    "result": {
+      "message": {
+        "title": "Booked",
+        "body": "Courier collects at 4 pm."
+      },
+      "sale_attributes": [
+        {
+          "sale_attribute": "Delivery Order",
+          "attribute_value": "TB-88123"
+        }
+      ]
+    }
+  }
+}

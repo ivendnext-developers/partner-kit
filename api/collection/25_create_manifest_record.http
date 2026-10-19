@@ -1,0 +1,9 @@
+# Create a record of a manifest-installed type (S2's bin locations) — the same record API as any other type
+# expect: 200 .data.location_name == ("PP Collection " + $ENV.RUN) and .data.kind == "Back room"
+# capture: LOC=.data.name
+POST {{BASE}}/api/resource/PP BLN Location
+Authorization: token {{KEY}}:{{SECRET}}
+Content-Type: application/json
+Accept: application/json
+
+{"location_name": "PP Collection {{RUN}}", "kind": "Back room", "warehouse": "{{WH}}", "store": "{{STORE}}"}

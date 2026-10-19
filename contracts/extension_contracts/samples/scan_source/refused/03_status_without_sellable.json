@@ -1,0 +1,14 @@
+{
+  "extension_point": "scan_source",
+  "contract": "declaration",
+  "about": "A status field with no sellable status.",
+  "payload": {
+    "doctype": "Retail Scan Source",
+    "source_name": "LIB1 Units",
+    "record_type": "Serial No",
+    "barcode_field": "name",
+    "item_from": "item_code",
+    "status_field": "status"
+  },
+  "expect_refusal": "Name at least one status a unit can be sold in"
+}

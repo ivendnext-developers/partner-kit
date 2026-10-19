@@ -1,0 +1,55 @@
+{
+  "_about": "The three plans of CitiXsys partner app hosting, as data. 'enforced' is what the platform sets for every app on the plan; 'includes' is what the plan promises, each with whether it is live today. 'price_usd_month' is CitiXsys's price per app per month, in US dollars, set by CitiXsys; 'billing' says how it is billed and what carries no charge.",
+  "billing": "Per app per month; the price covers the copies the plan runs (sandbox, staging). Monthly, in whole months from the month the app goes live; no minimum term, and either side can stop at any month end. Whoever orders the hosting pays: the partner, or the customer the app is built for when that customer orders it; it is a line on the payer's iVendNext invoice, never part of an iVendNext subscription. An app that only answers presses and is listed in the App library carries no hosting charge. The managed database is priced separately, when it is offered.",
+  "domain": "ivendnext.app",
+  "regions": {"us": "us-east-1"},
+  "regions_on_request": "Other countries' AWS regions are added when a customer needs its data there.",
+  "sizes": {
+    "small":  {"vcpu": 0.25, "cpu": 256,  "memory_mb": 512},
+    "medium": {"vcpu": 0.5,  "cpu": 512,  "memory_mb": 1024},
+    "large":  {"vcpu": 1,    "cpu": 1024, "memory_mb": 2048}
+  },
+  "envs": ["prod", "staging", "sandbox"],
+  "reserved_names": ["account", "accounts", "admin", "api", "app", "apps", "auth", "billing", "cdn", "citixsys", "cloud", "console", "dashboard", "developer", "developers", "docs", "help", "ivendnext", "library", "login", "mail", "partner", "partners", "pos", "portal", "sandbox", "secure", "shop", "smtp", "sso", "staging", "static", "status", "store", "support", "test", "www"],
+  "plans": {
+    "starter": {
+      "price_usd_month": 49,
+      "for": "a till-key or check handler, low volume",
+      "enforced": {"sizes": ["small"], "envs": ["prod", "sandbox"], "instances": 1, "log_days": 14},
+      "includes": [
+        {"what": "one always-on service with an HTTPS address", "live": true},
+        {"what": "secrets from the platform's secret store", "live": true},
+        {"what": "logs", "live": true},
+        {"what": "automatic restart on a failed health check", "live": true},
+        {"what": "a notice before each iVendNext upgrade", "live": true},
+        {"what": "a sandbox copy for your sandbox shop, run as a second app", "live": true},
+        {"what": "daily backup of the app's data", "live": false}
+      ]
+    },
+    "standard": {
+      "price_usd_month": 129,
+      "for": "a connected app with its own database",
+      "enforced": {"sizes": ["small", "medium"], "envs": ["prod", "staging", "sandbox"], "instances": 1, "log_days": 30},
+      "includes": [
+        {"what": "everything in Starter", "live": true},
+        {"what": "a larger service", "live": true},
+        {"what": "a staging copy of the app", "live": true},
+        {"what": "a managed database with backups", "live": false},
+        {"what": "alerts when the app is down", "live": false}
+      ]
+    },
+    "managed": {
+      "price_usd_month": 399,
+      "for": "apps built by the CitiXsys Consulting Team, and any customer who wants someone to run it",
+      "enforced": {"sizes": ["small", "medium", "large"], "envs": ["prod", "staging", "sandbox"], "instances": 2, "log_days": 90},
+      "includes": [
+        {"what": "everything in Standard", "live": true},
+        {"what": "two instances, so one can fail or update while the other answers", "live": true},
+        {"what": "CitiXsys checks the app before it is connected to a shop", "live": true},
+        {"what": "patching of the app's dependencies, for apps whose source CitiXsys holds", "live": true},
+        {"what": "monitoring and on-call", "live": false},
+        {"what": "a test run before each iVendNext upgrade reaches the customer", "live": true}
+      ]
+    }
+  }
+}

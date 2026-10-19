@@ -1,0 +1,13 @@
+{
+ "extension_point": "wallet",
+ "contract": "preview_answer",
+ "about": "S1 — a member with 150.00, of which this 200.00 sale may use 100.00: the amount sheet offers at most 100.00.",
+ "payload": {
+  "eligible": true,
+  "balance_minor": 15000,
+  "max_redeemable_minor": 10000,
+  "label": "HK Cash",
+  "currency": "AED",
+  "otp_required": false
+ }
+}

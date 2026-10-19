@@ -1,0 +1,17 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "A key that returns a message for the cashier.",
+  "given": {
+    "returns": [
+      "message"
+    ]
+  },
+  "payload": {
+    "message": {
+      "title": "Gold member",
+      "body": "120 points on this sale.",
+      "level": "success"
+    }
+  }
+}

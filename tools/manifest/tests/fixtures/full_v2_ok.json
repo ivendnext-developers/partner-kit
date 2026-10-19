@@ -1,0 +1,47 @@
+{
+ "manifest_version": 2,
+ "app": "pp_tsv",
+ "prefix": "PP TSV",
+ "title": "Every v2 kind, once",
+ "version": "0.0.1",
+ "description": "A test manifest carrying one of each kind manifest v2 adds (the remote till key apart: its record type is not on the bench), installed and removed by the bench cycle.",
+ "allowed_urls": ["https://partner.example/tsv"],
+ "doctypes": [
+  {"name": "PP TSV Claim", "autoname": "hash", "track_changes": 1, "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "customer", "fieldtype": "Link", "label": "Customer", "options": "Customer"},
+    {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount"},
+    {"fieldname": "claim_date", "fieldtype": "Date", "label": "Claim date"},
+    {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Open\nApproved\nRejected", "default": "Open"}
+  ], "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 1, "print": 1, "email": 1},
+                     {"role": "Retail Manager", "read": 1, "write": 1, "create": 1, "delete": 0, "report": 1, "export": 0, "share": 0, "print": 0, "email": 0}]}
+ ],
+ "reports": [
+  {"name": "PP TSV Open Claims", "ref_doctype": "PP TSV Claim", "columns": ["name", "title", "customer", "amount", "status"],
+   "filters": [["status", "=", "Open"]], "order_by": "amount desc", "add_total_row": 1, "roles": ["System Manager", "Retail Manager"]},
+  {"name": "PP TSV Customers", "ref_doctype": "Customer", "columns": ["name", "customer_name", "customer_group"]}
+ ],
+ "number_cards": [
+  {"name": "PP TSV Open Claims Count", "document_type": "PP TSV Claim", "function": "Count", "filters": [["status", "=", "Open"]]},
+  {"name": "PP TSV Claimed Total", "document_type": "PP TSV Claim", "function": "Sum", "aggregate_function_based_on": "amount"}
+ ],
+ "dashboard_charts": [
+  {"name": "PP TSV Claims by Status", "document_type": "PP TSV Claim", "chart_type": "Group By", "group_by_based_on": "status", "type": "Donut"},
+  {"name": "PP TSV Claims per Day", "document_type": "PP TSV Claim", "chart_type": "Count", "based_on": "claim_date", "timespan": "Last Month", "time_interval": "Daily", "type": "Line"}
+ ],
+ "dashboards": [{"name": "PP TSV Claims", "charts": ["PP TSV Claims by Status", "PP TSV Claims per Day"],
+                 "cards": ["PP TSV Open Claims Count", "PP TSV Claimed Total"]}],
+ "list_settings": [{"doctype": "PP TSV Claim", "fields": ["title", "status", "amount"], "disable_comment_count": 1}],
+ "workflows": [{"name": "PP TSV Claim Approval", "document_type": "PP TSV Claim",
+   "states": [{"state": "Open", "allow_edit": "Retail Manager"},
+              {"state": "PP TSV Escalated", "allow_edit": "System Manager"},
+              {"state": "Approved", "allow_edit": "System Manager", "update_field": "status", "update_value": "Approved"},
+              {"state": "Rejected", "allow_edit": "System Manager", "update_field": "status", "update_value": "Rejected"}],
+   "transitions": [{"state": "Open", "action": "PP TSV Escalate", "next_state": "PP TSV Escalated", "allowed": "Retail Manager"},
+                   {"state": "PP TSV Escalated", "action": "Approve", "next_state": "Approved", "allowed": "System Manager"},
+                   {"state": "PP TSV Escalated", "action": "Reject", "next_state": "Rejected", "allowed": "System Manager"}]}],
+ "naming_rules": [{"document_type": "PP TSV Claim", "prefix": "TSV-CLM-.YYYY.-", "prefix_digits": 5}],
+ "links": [{"doctype": "Customer", "link_doctype": "PP TSV Claim", "link_fieldname": "customer", "group": "Partner"}],
+ "registered_applications": [{"name": "PP TSV Feed", "description": "the partner's service reads claims and customers",
+                              "events": ["PP TSV Claim", "Customer"]}]
+}

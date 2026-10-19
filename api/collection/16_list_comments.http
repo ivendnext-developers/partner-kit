@@ -1,0 +1,5 @@
+# Find a comment again — how a service checks for its own earlier comment before writing a second
+# expect: 200 (.data | length) == 1
+GET {{BASE}}/api/resource/Comment?fields=["name","content"]&filters=[["reference_doctype","=","Sales Invoice"],["reference_name","=","{{SI}}"],["content","like","%run {{RUN}} %"]]&limit_page_length=5
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

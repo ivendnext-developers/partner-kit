@@ -1,0 +1,46 @@
+{
+  "extension_point": "partner_check",
+  "contract": "context",
+  "about": "S6's context — a weighed line in a three-digit currency (KWD); the service never answers.",
+  "payload": {
+    "v": 1,
+    "point": "check",
+    "stage": "sale",
+    "currency_exponent": 3,
+    "sale_ref": "sale-7f3a",
+    "store": "Avenues - IS",
+    "pos_profile": "Avenues Till 2",
+    "company": "iStore KW",
+    "currency": "KWD",
+    "lang": "en",
+    "operator": "cashier@istore.example",
+    "customer": "CUST-00041",
+    "customer_group": "Retail",
+    "price_list": "Standard Selling",
+    "coupon_codes": [],
+    "sale_attributes": [],
+    "lines": [
+      {
+        "line_no": 1,
+        "item_code": "DATES-MEDJOOL",
+        "item_group": "Food",
+        "qty_milli": 1250,
+        "uom": "Kg",
+        "rate_minor": 4500,
+        "amount_minor": 5625,
+        "discount_minor": 0,
+        "line_attributes": []
+      }
+    ],
+    "totals": {
+      "net_minor": 5625,
+      "tax_minor": 843,
+      "discount_minor": 0,
+      "grand_minor": 6468
+    },
+    "offered_tenders": [
+      "Cash",
+      "Credit Card"
+    ]
+  }
+}

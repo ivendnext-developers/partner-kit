@@ -1,0 +1,23 @@
+{#- The plain layout — what an invoice for any customer the branch does not name prints. Keep it: without it, a customer the
+    template does not name gets an empty page. -#}
+<div style="font-family: Arial, sans-serif; font-size: 12px; color:#222;">
+  <div style="font-size:15px; font-weight:bold;">{{ doc.company }}</div>
+  <div>{{ doc.company_address_display or "" }}</div>
+  {%- if doc.company_tax_id %}<div>Tax no. {{ doc.company_tax_id }}</div>{% endif %}
+  <h3>Invoice {{ doc.name }} &mdash; {{ doc.get_formatted("posting_date") }}</h3>
+  <p>{{ doc.customer_name }}<br>{{ doc.address_display or "" }}{% if doc.tax_id %}<br>Tax no. {{ doc.tax_id }}{% endif %}</p>
+  <table style="width:100%; border-collapse:collapse;" border="1" cellpadding="3">
+    <tr><th style="text-align:left;">Description</th><th>Quantity</th><th>Price</th><th>Total</th></tr>
+    {%- for item in doc.items %}
+    <tr><td>{{ item.item_name }}</td><td style="text-align:right;">{{ item.get_formatted("qty") }}</td>
+      <td style="text-align:right;">{{ item.get_formatted("rate") }}</td>
+      <td style="text-align:right;">{{ item.get_formatted("amount") }}</td></tr>
+    {%- endfor %}
+    <tr><td colspan="3" style="text-align:right;">Net total</td><td style="text-align:right;">{{ doc.get_formatted("net_total") }}</td></tr>
+    {%- for t in doc.taxes %}
+    <tr><td colspan="3" style="text-align:right;">{{ t.description }}</td><td style="text-align:right;">{{ t.get_formatted("tax_amount") }}</td></tr>
+    {%- endfor %}
+    <tr style="font-weight:bold;"><td colspan="3" style="text-align:right;">Total</td>
+      <td style="text-align:right;">{{ doc.get_formatted("grand_total") }}</td></tr>
+  </table>
+</div>

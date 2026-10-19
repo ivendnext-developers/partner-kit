@@ -1,0 +1,33 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "A key that puts a warranty number on the sale's first line; the cashier confirms it.",
+  "given": {
+    "returns": [
+      "line_attributes"
+    ],
+    "lines": [
+      {
+        "item_code": "PHONE-X",
+        "qty": 1,
+        "uom": "Nos",
+        "luid": ""
+      },
+      {
+        "item_code": "CASE-1",
+        "qty": 1,
+        "uom": "Nos",
+        "luid": ""
+      }
+    ]
+  },
+  "payload": {
+    "line_attributes": [
+      {
+        "line_no": 1,
+        "name": "Warranty ID",
+        "value": "W-88213"
+      }
+    ]
+  }
+}

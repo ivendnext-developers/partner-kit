@@ -1,0 +1,13 @@
+{
+  "extension_point": "label_layout",
+  "contract": "declaration",
+  "about": "A label narrower than 10 mm.",
+  "payload": {
+    "doctype": "Retail Label Layout",
+    "label_name": "LIB1 Narrow",
+    "width_mm": 9,
+    "height_mm": 25,
+    "template": "{item_name}"
+  },
+  "expect_refusal": "Width must be between 10 and 150 mm"
+}

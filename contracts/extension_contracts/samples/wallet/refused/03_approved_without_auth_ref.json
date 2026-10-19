@@ -1,0 +1,11 @@
+{
+ "extension_point": "wallet",
+ "contract": "answer",
+ "about": "approved with nothing a reversal can address.",
+ "payload": {
+  "reference": "MPOS-REF-0A1B2C3D4E5F",
+  "outcome": "approved",
+  "amount_minor": 8000
+ },
+ "expect_refusal": "auth_ref"
+}

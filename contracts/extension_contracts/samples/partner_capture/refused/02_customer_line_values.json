@@ -1,0 +1,15 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "customer_answer",
+  "about": "Line values when a customer is added; there is no line.",
+  "payload": {
+    "verdict": "allow",
+    "line_attributes": [
+      {
+        "name": "Warranty ID",
+        "value": "W-1"
+      }
+    ]
+  },
+  "expect_refusal": "the answer carries a key allow does not allow here"
+}

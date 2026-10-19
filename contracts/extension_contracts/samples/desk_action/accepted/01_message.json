@@ -1,0 +1,12 @@
+{
+  "extension_point": "desk_action",
+  "contract": "answer",
+  "about": "A message for the user.",
+  "payload": {
+    "message": {
+      "title": "Route assigned",
+      "body": "14 lines across 3 aisles.",
+      "level": "success"
+    }
+  }
+}

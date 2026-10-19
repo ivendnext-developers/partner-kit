@@ -1,0 +1,4 @@
+# NEGATIVE: no key, no data
+# expect: 403
+GET {{BASE}}/api/resource/Sales Invoice?limit_page_length=1
+Accept: application/json

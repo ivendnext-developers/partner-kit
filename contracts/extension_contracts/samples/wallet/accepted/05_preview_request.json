@@ -1,0 +1,16 @@
+{
+ "extension_point": "wallet",
+ "contract": "preview_request",
+ "about": "The server asks with its own amount due.",
+ "payload": {
+  "v": 1,
+  "customer": "CUST-0001",
+  "customer_name": "A. Member",
+  "amount_due_minor": 20000,
+  "currency": "AED",
+  "currency_exponent": 2,
+  "store": "Dubai Mall",
+  "sale_ref": "pos-key-0001",
+  "lang": "en"
+ }
+}

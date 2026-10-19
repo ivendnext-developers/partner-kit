@@ -1,0 +1,15 @@
+{
+  "extension_point": "scan_source",
+  "contract": "declaration",
+  "about": "A till finds only its own store's units.",
+  "payload": {
+    "doctype": "Retail Scan Source",
+    "source_name": "LIB1 Units",
+    "record_type": "Serial No",
+    "barcode_field": "name",
+    "item_from": "item_code",
+    "status_field": "status",
+    "available_values": "Active\nInactive",
+    "warehouse_field": "warehouse"
+  }
+}

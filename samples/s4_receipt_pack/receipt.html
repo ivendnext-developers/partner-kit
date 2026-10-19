@@ -1,0 +1,140 @@
+{#- A COPY owes a source: the VAT figure and the charge rows below are the seeded 'mPOS Receipt' (ivendnext/iVendNext_PWA ·
+    apps/ivendnext_mpos/ivendnext_mpos/install.py · RECEIPT_FORMAT_HTML @ 05bb4dab9). A defect here is a defect there:
+    report it with a Kit defect issue. -#}
+{#- The totals (0.1.1): the Discount row prints AFTER the Total, as "Discount included in the total", outside the sum.
+    net_total already has the discount inside it, so as a step in the sum the printed lines did not add up; and no field
+    holds the discount's untaxed share, so it cannot go before the subtotal either. A Rounding row prints the sale's own
+    rounding_adjustment when it rounds, so Subtotal + VAT + Charges + Rounding = Total. Bound: on a discount applied to
+    the net total, discount_amount is the amount before VAT, so the included figure is smaller than the drop in the total. -#}
+{#- S4 — UAE tax invoice on the till sale (a POS Invoice print format), English beside Arabic.
+    It PRINTS money the shop has already worked out; it never computes any: every amount is a figure on the
+    sale itself. The only sums it makes are of the sale's own net amounts, to show the taxable value at each rate.
+    Rates come from the sale's own lines (the item_tax_rate each line was booked with), never from this file.
+    Everything is read from the sale itself (0.1.2): the company is its own company, the address is the formatted company
+    address the sale already holds (the shop puts it there when the sale is saved: the POS Profile's Company Address, or
+    else the Company's own address; a sale with neither prints none), and the tax
+    registration number is a field on the sale that copies the Company's tax ID when the sale is saved (company_trn where
+    the shop's UAE setup has added it, else the pp_rcp_company_tax_id field this package adds). A sale saved before the
+    install has no copy, so it reprints without the number. Nothing is read from any other record. -#}
+{#- Money text for a figure this template works out itself (a taxable value, the VAT, a charge): a figure has no field, and
+    get_formatted takes a field, so the figure is put on write_off_amount, a currency field this layout never prints,
+    formatted with the shop's own currency and number format, and the field's own value put back. The print view loads
+    the sale afresh for every print and never saves it. Do not print write_off_amount in this layout. -#}
+{%- macro money(v) -%}
+  {%- set keep = doc.write_off_amount -%}
+  {%- set _ = doc.update({"write_off_amount": v}) -%}
+  {{- doc.get_formatted("write_off_amount") -}}
+  {%- set _ = doc.update({"write_off_amount": keep}) -%}
+{%- endmacro -%}
+{%- set tax_no = doc.get("company_trn") or doc.get("pp_rcp_company_tax_id") -%}
+{%- set taxrows = [] -%}
+{%- for t in doc.taxes or [] -%}{%- if not t.get("custom_surcharge") -%}{%- set _ = taxrows.append(t) -%}{%- endif -%}{%- endfor -%}
+{%- set default_rate = (taxrows | map(attribute="rate") | map("float") | sum) if taxrows else 0 -%}
+{#- The VAT rate of one line, as BOOKED: for each tax row, the rate the line's own item_tax_rate (a stored text such as
+    {"VAT - ICG": 15.0}) holds for that tax account, else the row's own rate. Read as text: a print template has no JSON reader. -#}
+{%- macro rate_of(item) -%}
+  {%- set r = namespace(v=0.0) -%}
+  {%- for t in taxrows -%}
+    {%- set k = '"' ~ t.account_head ~ '": ' -%}
+    {%- set raw = item.item_tax_rate or "" -%}
+    {%- set own = raw.split(k)[1].split(",")[0].split("}")[0] if k in raw else None -%}
+    {%- set r.v = r.v + (own if own is not none else (t.rate or 0)) | float -%}
+  {%- endfor -%}
+  {{ r.v }}
+{%- endmacro -%}
+{%- set ns = namespace(taxable={}, order=[]) -%}
+{%- for item in doc.items -%}
+  {%- set rate = rate_of(item) | float -%}
+  {%- set key = "%g" | format(rate) -%}
+  {%- if key not in ns.taxable -%}{%- set _ = ns.order.append(key) -%}{%- endif -%}
+  {%- set _ = ns.taxable.update({key: (ns.taxable.get(key, 0) + (item.net_amount or 0))}) -%}
+{%- endfor -%}
+{#- The VAT figure, as the seeded receipt and the till screen print it: item-charge money (Item Surcharge rows) and the delivery
+    charge ride total_taxes_and_charges but are NOT tax, so they come off and print as their own "Charges" row. -#}
+{%- set charge_rows = doc.get("custom_item_surcharges") or [] -%}
+{%- set dlv = namespace(v=0.0) -%}
+{%- for t in doc.taxes or [] -%}{%- if t.get("custom_surcharge") and t.description in ("Fulfillment Charges", "Fulfillment Tax") -%}{%- set dlv.v = dlv.v + (t.tax_amount or 0) -%}{%- endif -%}{%- endfor -%}
+{%- set tax_figure = ((doc.custom_tax_before_surcharge or 0) if charge_rows else (doc.total_taxes_and_charges or 0)) - dlv.v -%}
+{%- set charges = (doc.total_taxes_and_charges or 0) - tax_figure -%}
+{%- set tx = receipt_tax_detail(doc, tax_figure) if receipt_tax_detail is defined else {"lines": []} -%}
+<div class="pp-rcp" style="font-family: Arial, sans-serif; font-size: 11px; width: 72mm; margin: 0 auto;">
+  <div style="text-align:center;"><img src="data:image/png;base64,@@LOGO@@" alt="" width="48" height="48"></div>
+  <div style="text-align:center; font-weight:bold; font-size:13px;">{{ doc.company }}</div>
+  {%- if doc.company_address_display %}
+  <div style="text-align:center;">{{ doc.company_address_display }}</div>
+  {%- endif %}
+  <table style="width:100%;"><tr>
+    <td>Tax Registration No.</td><td style="text-align:center; font-weight:bold;">{{ tax_no or "—" }}</td>
+    <td dir="rtl" lang="ar" style="text-align:right;">رقم التسجيل الضريبي</td>
+  </tr></table>
+  <table style="width:100%; margin:4px 0; font-weight:bold; font-size:12px;"><tr>
+    {%- if doc.is_return %}
+    <td>Tax Credit Note</td><td dir="rtl" lang="ar" style="text-align:right;">إشعار دائن ضريبي</td>
+    {%- else %}
+    <td>Tax Invoice</td><td dir="rtl" lang="ar" style="text-align:right;">فاتورة ضريبية</td>
+    {%- endif %}
+  </tr></table>
+  {%- if doc.custom_printed %}
+  <div style="text-align:center; font-weight:bold; letter-spacing:2px;">** DUPLICATE ** &nbsp; ** نسخة **</div>
+  {%- endif %}
+  <table style="width:100%;">
+    <tr><td>Invoice No.</td><td style="text-align:center;">{{ doc.name }}</td><td dir="rtl" lang="ar" style="text-align:right;">رقم الفاتورة</td></tr>
+    <tr><td>Date</td><td style="text-align:center;">{{ doc.get_formatted("posting_date") }} {{ doc.get_formatted("posting_time") }}</td><td dir="rtl" lang="ar" style="text-align:right;">التاريخ</td></tr>
+    {%- if doc.customer_name %}
+    <tr><td>Customer</td><td style="text-align:center;">{{ doc.customer_name }}</td><td dir="rtl" lang="ar" style="text-align:right;">العميل</td></tr>
+    {%- endif %}
+    {%- if doc.get("custom_buyer_tax_id") or doc.tax_id %}
+    <tr><td>Customer TRN</td><td style="text-align:center;">{{ doc.get("custom_buyer_tax_id") or doc.tax_id }}</td><td dir="rtl" lang="ar" style="text-align:right;">الرقم الضريبي للعميل</td></tr>
+    {%- endif %}
+  </table>
+  <hr>
+  <table style="width:100%;">
+    <tr style="font-weight:bold;">
+      <td>Item / <span dir="rtl" lang="ar">الصنف</span></td>
+      <td style="text-align:center;">VAT % / <span dir="rtl" lang="ar">الضريبة</span></td>
+      <td style="text-align:right;">Amount / <span dir="rtl" lang="ar">المبلغ</span></td>
+    </tr>
+    {%- for item in doc.items %}
+    {%- set rate = rate_of(item) | float %}
+    <tr>
+      <td>{{ item.item_name or item.item_code }}{% if item.qty != 1 %}<br>{{ item.get_formatted("qty") }} × {{ item.get_formatted("rate") }}{% endif %}{% if item.serial_no %}<br>S/N {{ item.serial_no | e }}{% endif %}</td>
+      <td style="text-align:center;">{{ "%g" | format(rate) }}%</td>
+      <td style="text-align:right;">{{ item.get_formatted("amount") }}</td>
+    </tr>
+    {%- endfor %}
+  </table>
+  <hr>
+  <table style="width:100%;">
+    <tr><td>Subtotal (excl. VAT)</td><td style="text-align:right;">{{ doc.get_formatted("net_total") }}</td><td dir="rtl" lang="ar" style="text-align:right;">المجموع قبل الضريبة</td></tr>
+    {%- for key in ns.order | sort(reverse=True) %}
+    <tr><td>Taxable value @ {{ key }}%</td><td style="text-align:right;">{{ money(ns.taxable[key]) }}</td><td dir="rtl" lang="ar" style="text-align:right;">القيمة الخاضعة {{ key }}%</td></tr>
+    {%- endfor %}
+    {%- if tx.lines %}
+    {%- for t in tx.lines %}
+    <tr><td>{{ t.label | e }}</td><td style="text-align:right;">{{ money(t.amount) }}</td><td dir="rtl" lang="ar" style="text-align:right;">ضريبة القيمة المضافة</td></tr>
+    {%- endfor %}
+    {%- else %}
+    <tr><td>VAT</td><td style="text-align:right;">{{ money(tax_figure) }}</td><td dir="rtl" lang="ar" style="text-align:right;">ضريبة القيمة المضافة</td></tr>
+    {%- endif %}
+    {%- if charges | round(2) %}
+    <tr><td>Charges</td><td style="text-align:right;">{{ money(charges) }}</td><td dir="rtl" lang="ar" style="text-align:right;">رسوم</td></tr>
+    {%- endif %}
+    {%- if doc.rounded_total and doc.rounding_adjustment %}
+    <tr><td>Rounding</td><td style="text-align:right;">{{ doc.get_formatted("rounding_adjustment") }}</td><td dir="rtl" lang="ar" style="text-align:right;">التقريب</td></tr>
+    {%- endif %}
+    <tr style="font-weight:bold; font-size:12px;"><td>Total</td><td style="text-align:right;">{% if doc.rounded_total %}{{ doc.get_formatted("rounded_total") }}{% else %}{{ doc.get_formatted("grand_total") }}{% endif %}</td><td dir="rtl" lang="ar" style="text-align:right;">الإجمالي</td></tr>
+    {%- if doc.discount_amount %}
+    <tr><td>Discount included in the total</td><td style="text-align:right;">{{ doc.get_formatted("discount_amount") }}</td><td dir="rtl" lang="ar" style="text-align:right;">الخصم المشمول في الإجمالي</td></tr>
+    {%- endif %}
+    {%- for p in doc.payments %}
+    {%- if p.amount %}
+    <tr><td>{{ p.mode_of_payment }}</td><td style="text-align:right;">{{ p.get_formatted("amount") }}</td><td dir="rtl" lang="ar" style="text-align:right;">المدفوع</td></tr>
+    {%- endif %}
+    {%- endfor %}
+    {%- if doc.change_amount %}
+    <tr><td>Change</td><td style="text-align:right;">{{ doc.get_formatted("change_amount") }}</td><td dir="rtl" lang="ar" style="text-align:right;">الباقي</td></tr>
+    {%- endif %}
+  </table>
+  <hr>
+  <table style="width:100%;"><tr><td>Thank you</td><td dir="rtl" lang="ar" style="text-align:right;">شكراً لزيارتكم</td></tr></table>
+</div>

@@ -1,0 +1,275 @@
+/* The partner site's own layout. Two layers:
+ *  - the FRAME (header, footer, home hero, headings, buttons, cards) takes ivendnext.com's look: its font, ink, accent, pill
+ *    buttons, round cards and night-blue footer, measured from the corporate site on 2026-10-08 and kept here as --site-*;
+ *  - the BODY (text, links, tables, code, notes) keeps the kit's own tokens (assets/ivn-kit.css, copied from kit/design/), so
+ *    the pages read like our product, in light and dark.
+ * Logical properties only (right-to-left safe). The font and the logo are served from our own host (copied into assets/ from
+ * site/assets-src/); the site's script rules are in build.py's header. Every text colour pair is at least 4.5:1 in light and dark. */
+
+/* Plus Jakarta Sans, ivendnext.com's typeface: SIL Open Font License 1.1 (assets/fonts/OFL.txt), latin subset, four weights,
+ * copied from the Google Fonts release of 2026-10-08 (v12). */
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/plus-jakarta-sans-400.woff2") format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/plus-jakarta-sans-600.woff2") format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/plus-jakarta-sans-700.woff2") format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 800; font-display: swap; src: url("fonts/plus-jakarta-sans-800.woff2") format("woff2"); }
+
+:root {
+  --ivn-font-scale: 1.143;                 /* the kit's 14px base, read at 16px for long pages */
+  --site-display: "Plus Jakarta Sans", var(--ivn-font);
+  --site-ink: #0b1029;                     /* ivendnext.com headings */
+  --site-accent: #0089ff;                  /* ivendnext.com accent: rules and marks only (white on it is 3.5:1) */
+  --site-btn: #0070d1;                     /* the same blue, deep enough for white button text (4.95:1) */
+  --site-btn-hover: #005fb3;
+  --site-accent-ink: #0068cc;              /* accent text: 4.8:1 on the hero tint */
+  --site-tint: #e5f3ff;                    /* ivendnext.com's pale blue */
+  --site-line: #e5e7eb;                    /* ivendnext.com hairlines */
+  --site-night: #04101f;                   /* ivendnext.com band and footer ground */
+  --site-night-ink: #e5e7eb;               /* footer links: 15:1 */
+  --site-night-muted: #9ca3af;             /* footer prose: 7.5:1 */
+  --site-focus: #0070d1;                   /* the focus ring: >= 4.4:1 on white, the page and the pale blue (the kit's is 2.95:1 on it) */
+  --site-radius-card: 20px;
+  --site-radius-pill: 100px;
+}
+:root[data-theme="dark"] {
+  --site-ink: #e7eef0; --site-accent-ink: #8fc6f7; --site-tint: #12324a; --site-line: #21434f; --site-focus: #6ab0f3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --site-ink: #e7eef0; --site-accent-ink: #8fc6f7; --site-tint: #12324a; --site-line: #21434f; --site-focus: #6ab0f3; }
+}
+
+body.ivn { line-height: 1.6; --ivn-focus: var(--site-focus); }   /* the kit draws every focus ring from this token */
+.skip { position: absolute; inset-inline-start: var(--ivn-s3); inset-block-start: -4rem; z-index: 30; padding: var(--ivn-s2) var(--ivn-s3);
+  background: var(--site-btn); color: #fff; border-radius: var(--ivn-radius); }
+.skip:focus { inset-block-start: var(--ivn-s2); }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--site-focus); outline-offset: 2px; border-radius: 2px; }
+.bottom a:focus-visible, .band a:focus-visible { outline-color: #6ab0f3; }
+
+/* ── buttons: ivendnext.com's pill ─────────────────────────────────────────────────────────────────────────────────── */
+.site-btn { display: inline-flex; align-items: center; justify-content: center; min-block-size: 2.75rem; padding: 0 1.5rem;
+  border-radius: var(--site-radius-pill); background: var(--site-btn); color: #fff; border: 1px solid var(--site-btn);
+  font: 600 .9rem/1.2 var(--site-display); text-decoration: none; white-space: nowrap; }
+.site-btn:hover { background: var(--site-btn-hover); border-color: var(--site-btn-hover); }
+.site-btn-ghost { background: var(--ivn-surface); color: var(--site-ink); border-color: var(--site-line); }
+.site-btn-ghost:hover { background: var(--ivn-surface); border-color: var(--site-accent); }
+
+/* ── header: the dark band of ivendnext.com, then the white bar ────────────────────────────────────────────────────── */
+.top { position: relative; z-index: 20; background: var(--ivn-surface); border-block-end: 1px solid var(--site-line); font-family: var(--site-display); }
+.band { background: var(--site-night); }
+.band-in { max-inline-size: 76rem; margin-inline: auto; padding: .35rem var(--ivn-s4); display: flex; justify-content: space-between; gap: var(--ivn-s4); font-size: .8rem; line-height: 1.4; }
+.band a { color: #fff; text-decoration: none; }
+.band a:hover { text-decoration: underline; }
+.bar { position: relative; max-inline-size: 76rem; margin-inline: auto; padding: var(--ivn-s3) var(--ivn-s4); display: flex; align-items: center; gap: var(--ivn-s3) var(--ivn-s4); }
+.brand { display: inline-flex; align-items: center; gap: var(--ivn-s3); text-decoration: none; color: var(--site-ink); flex: none; }
+.brand img { display: block; inline-size: 132px; block-size: auto; }
+.brand-sub { font-weight: 700; font-size: .95rem; padding-inline-start: var(--ivn-s3); border-inline-start: 1px solid var(--site-line); line-height: 1.5; }
+.top nav ul { list-style: none; margin: 0; padding: 0; }
+.nav-wide { flex: 1 1 auto; }
+.nav-wide ul { display: flex; justify-content: center; }
+.top nav a { display: block; white-space: nowrap; padding: .45rem .55rem; border-radius: var(--site-radius-pill); color: var(--site-ink); text-decoration: none; font-size: .92rem; letter-spacing: .015em; }
+.top nav a:hover { background: var(--ivn-surface-2); }
+.top nav a[aria-current="page"] { background: var(--site-tint); font-weight: 600; }
+.cta { margin-inline-start: auto; }
+.menu { display: none; }
+.menu summary { list-style: none; cursor: pointer; padding: .5rem .9rem; border: 1px solid var(--site-line); border-radius: var(--site-radius-pill);
+  font-weight: 600; font-size: .9rem; color: var(--site-ink); }
+.menu summary::-webkit-details-marker { display: none; }
+.menu summary::after { content: " ▾"; }
+.menu[open] summary::after { content: " ▴"; }
+.menu nav { position: absolute; inset-inline: 0; inset-block-start: 100%; padding: var(--ivn-s2) var(--ivn-s4) var(--ivn-s4);
+  background: var(--ivn-surface); border-block-end: 1px solid var(--site-line); box-shadow: var(--ivn-shadow-lg); }
+.menu nav a { border-radius: var(--ivn-radius); padding: .6rem .8rem; }
+.bar { max-inline-size: 90rem; }             /* logo, search box, eight links and the button: about 1430px on one line */
+@media (max-width: 1499px) {                 /* the eight links and the button no longer fit beside the search box: they fold into Menu */
+  .nav-wide { display: none; }
+  .menu { display: block; }
+}
+@media (max-width: 599px) {                  /* a phone: logo and Menu on one line; the button is in the menu and the hero */
+  .cta { display: none; }
+  .menu { margin-inline-start: auto; }
+  .brand img { inline-size: 112px; }
+  .brand-sub { font-size: .88rem; padding-inline-start: var(--ivn-s2); }
+  .brand { gap: var(--ivn-s2); }
+}
+
+/* ── home hero: ivendnext.com's centred title on a pale-blue wash ───────────────────────────────────────────────────── */
+main.home { max-inline-size: none; }
+.hero { background: linear-gradient(180deg, var(--site-tint) 0%, var(--ivn-bg) 100%); border-block-end: 1px solid var(--site-line); text-align: center; }
+.hero-in { max-inline-size: 52rem; margin-inline: auto; padding: 4.5rem var(--ivn-s4) 3.5rem; }
+.eyebrow { margin: 0 0 var(--ivn-s3); color: var(--site-accent-ink); font: 700 .8rem/1.4 var(--site-display); letter-spacing: .08em; text-transform: uppercase; }
+main .hero h1 { font-size: clamp(2.2rem, 1.4rem + 3.2vw, 3.6rem); line-height: 1.12; margin-block: 0 var(--ivn-s4); }
+.hero .lede { font-size: 1.12rem; color: var(--ivn-text); max-inline-size: 44rem; margin: 0 auto var(--ivn-s5); }
+.hero-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--ivn-s3); margin: 0; }
+@media (max-width: 599px) { .hero-in { padding-block: 2.5rem 2rem; } .hero .lede { font-size: 1rem; } }
+
+/* ── page layout ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+.wrap { max-inline-size: 76rem; margin-inline: auto; padding: var(--ivn-s5) var(--ivn-s4) var(--ivn-s6);
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ivn-s5); }
+.wrap.has-side { grid-template-columns: 15rem minmax(0, 1fr); }
+.wrap > .toc { display: none; }
+@media (min-width: 1200px) {
+  .wrap > .toc { display: block; position: sticky; inset-block-start: var(--ivn-s4); align-self: start; max-block-size: 90vh; overflow: auto; inline-size: 14rem; }
+  .wrap:has(> .toc) { grid-template-columns: minmax(0, 1fr) 14rem; }
+  .wrap.has-side:has(> .toc) { grid-template-columns: 15rem minmax(0, 1fr) 14rem; }
+}
+@media (min-width: 801px) and (max-width: 1199px) {   /* no room for a third column: "On this page" sits above the text */
+  .wrap > .toc { display: block; grid-column: -2; grid-row: 1; max-inline-size: 50rem; padding: var(--ivn-s3) var(--ivn-s4);
+    border: 1px solid var(--site-line); border-radius: var(--site-radius-card); background: var(--ivn-surface); }
+  .wrap > .toc ul { columns: 2; column-gap: var(--ivn-s4); }
+  .wrap > .toc li { break-inside: avoid; }
+  .wrap > main, .wrap > .content { grid-column: -2; grid-row: 2; }
+  .wrap > .side { grid-column: 1; grid-row: 1 / span 2; }
+}
+@media (max-width: 800px) { .wrap.has-side { grid-template-columns: minmax(0, 1fr); gap: var(--ivn-s4); } }
+
+.side ul, .toc ul { list-style: none; margin: 0; padding: 0; }
+.side a, .toc a { display: block; padding: var(--ivn-s1) var(--ivn-s2); color: var(--ivn-text); text-decoration: none; border-radius: var(--ivn-radius); font-size: .93rem; }
+.side a:hover, .toc a:hover { background: var(--ivn-surface-2); }
+.side a[aria-current="page"] { background: var(--site-tint); color: var(--site-ink); font-weight: 600; border-inline-start: 3px solid var(--site-accent); padding-inline-start: calc(var(--ivn-s2) - 3px); }
+.toc h2 { font: 700 .78rem/1.4 var(--site-display); text-transform: uppercase; letter-spacing: .08em; color: var(--ivn-text-muted); margin: 0 0 var(--ivn-s2); }
+@media (max-width: 800px) { .wrap.has-side > .side { order: 2; border-block-start: 1px solid var(--ivn-border); padding-block-start: var(--ivn-s3); } }   /* the page first, the list of its neighbours after */
+
+/* ── the text: kit tokens, corporate headings ─────────────────────────────────────────────────────────────────────── */
+main, .content { min-inline-size: 0; max-inline-size: 50rem; }
+main h1, main h2, main h3, main h4 { font-family: var(--site-display); color: var(--site-ink); }
+main h1 { font-size: clamp(1.9rem, 1.5rem + 1.2vw, 2.5rem); font-weight: 800; line-height: 1.18; margin-block: 0 var(--ivn-s4); }
+main h2 { font-size: 1.5rem; font-weight: 700; line-height: 1.3; margin-block: var(--ivn-s6) var(--ivn-s3); padding-block-start: var(--ivn-s4); border-block-start: 1px solid var(--ivn-border); }
+main h3 { font-size: 1.18rem; font-weight: 700; margin-block: var(--ivn-s5) var(--ivn-s2); }
+main h4 { font-size: 1rem; font-weight: 700; margin-block: var(--ivn-s4) var(--ivn-s2); }
+main p, main ul, main ol { margin-block: 0 var(--ivn-s3); }
+main li { margin-block: var(--ivn-s1); }
+main :target { scroll-margin-block-start: var(--ivn-s4); }
+main a { color: var(--ivn-link); text-underline-offset: .15em; }
+main a.site-btn { color: #fff; }
+main a.site-btn-ghost { color: var(--site-ink); }
+main img { max-inline-size: 100%; block-size: auto; border: 1px solid var(--ivn-border); border-radius: var(--ivn-radius-lg); }
+main hr { border: 0; border-block-start: 1px solid var(--ivn-border); margin-block: var(--ivn-s5); }
+main blockquote { margin: 0 0 var(--ivn-s4); padding: var(--ivn-s3) var(--ivn-s4); background: var(--ivn-primary-tint); border-inline-start: 4px solid var(--ivn-primary); border-radius: var(--ivn-radius); }
+main blockquote > :last-child { margin-block-end: 0; }
+code { font-family: var(--ivn-font-mono); font-size: .9em; background: var(--ivn-surface-2); padding: .1em .35em; border-radius: 4px; overflow-wrap: anywhere; }
+pre { direction: ltr; text-align: start; overflow-x: auto; margin-block: 0 var(--ivn-s4); padding: var(--ivn-s3) var(--ivn-s4); background: var(--ivn-surface-2);
+  border: 1px solid var(--ivn-border); border-radius: var(--ivn-radius-lg); line-height: 1.45; }
+pre code { background: none; padding: 0; font-size: .88rem; overflow-wrap: normal; }
+.tw { overflow-x: auto; margin-block: 0 var(--ivn-s4); border: 1px solid var(--ivn-border); border-radius: var(--ivn-radius-lg); }
+table { border-collapse: collapse; inline-size: 100%; font-size: .93rem; }
+th, td { text-align: start; vertical-align: top; padding: var(--ivn-s2) var(--ivn-s3); border-block-end: 1px solid var(--ivn-border); }
+th { background: var(--ivn-surface-2); font-weight: 600; white-space: nowrap; }
+tr:last-child td { border-block-end: 0; }
+
+/* ── cards: ivendnext.com's round, hairline cards ─────────────────────────────────────────────────────────────────── */
+.cards, .plain { list-style: none; padding: 0; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: var(--ivn-s4); }
+.card { margin: 0; padding: var(--ivn-s5); background: var(--ivn-surface); border: 1px solid var(--site-line); border-radius: var(--site-radius-card); }
+.card:hover { border-color: var(--site-accent); }
+.card h2, .card h3, .card h4 { font-size: 1.05rem; font-weight: 700; margin: 0 0 var(--ivn-s2); padding: 0; border: 0; }
+.card h2 a, .card h3 a, .card h4 a { color: var(--site-ink); text-decoration: none; }
+.card h2 a:hover, .card h3 a:hover, .card h4 a:hover { text-decoration: underline; }
+/* the gallery's cards (site/gallery.py): a thumbnail, the door, the first commands and the links */
+.card .thumb { display: block; margin: calc(var(--ivn-s5) * -1) calc(var(--ivn-s5) * -1) var(--ivn-s3); overflow: hidden;
+  border-start-start-radius: var(--site-radius-card); border-start-end-radius: var(--site-radius-card); border-block-end: 1px solid var(--site-line); }
+.card .thumb img { display: block; inline-size: 100%; block-size: 9rem; object-fit: cover; object-position: top; }
+.card p + p, .card .run { margin-block-start: var(--ivn-s2); }
+.card .door, .card .status { font-size: .85rem; font-weight: 600; color: var(--site-ink); }
+.card .run { margin-inline: 0; padding: var(--ivn-s2) var(--ivn-s3); font-size: .8rem; overflow-x: auto; }
+.card .links { font-size: .85rem; }
+.anchors { display: flex; flex-wrap: wrap; gap: var(--ivn-s2) var(--ivn-s4); }
+.card p { margin: 0; color: var(--ivn-text-muted); font-size: .93rem; }
+.pn { display: flex; justify-content: space-between; gap: var(--ivn-s4); margin-block: var(--ivn-s6) var(--ivn-s3); padding-block-start: var(--ivn-s4); border-block-start: 1px solid var(--ivn-border); font-family: var(--site-display); font-weight: 600; }
+.src { color: var(--ivn-text-muted); font-size: .88rem; }
+
+/* ── footer: ivendnext.com's night-blue columns ───────────────────────────────────────────────────────────────────── */
+.bottom { background: var(--site-night); color: var(--site-night-muted); font: .9rem/1.6 var(--site-display); margin-block-start: var(--ivn-s6); }
+.foot-in { max-inline-size: 76rem; margin-inline: auto; padding: var(--ivn-s6) var(--ivn-s4) var(--ivn-s5);
+  display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: var(--ivn-s5); }
+.foot-brand img { display: block; inline-size: 132px; block-size: auto; margin-block-end: var(--ivn-s3); }
+.foot-brand p { margin: 0; max-inline-size: 22rem; }
+.bottom h2 { margin: 0 0 var(--ivn-s3); color: #fff; font-size: .95rem; font-weight: 700; }
+.bottom ul { list-style: none; margin: 0; padding: 0; }
+.bottom li { margin-block: 0 var(--ivn-s2); }
+.bottom a { color: var(--site-night-ink); text-decoration: none; }
+.bottom a:hover { color: #fff; text-decoration: underline; }
+.foot-base { max-inline-size: 76rem; margin-inline: auto; padding: var(--ivn-s4); border-block-start: 1px solid #1f2a3a; }
+.foot-base ul { display: flex; flex-wrap: wrap; gap: var(--ivn-s2) var(--ivn-s5); justify-content: flex-end; }
+.foot-base li { margin: 0; }
+.foot-note { margin: var(--ivn-s3) 0 0; text-align: end; font-size: .85rem; color: var(--site-night-muted); }
+.foot-note a { text-decoration: underline; }
+@media (max-width: 900px) { .foot-in { grid-template-columns: repeat(2, minmax(0, 1fr)); } .foot-brand { grid-column: 1 / -1; } }
+@media (max-width: 599px) { .foot-base ul { justify-content: flex-start; } .foot-note { text-align: start; } }
+
+/* ── search (site/assets-src/search.js): the header box, its list, and search.html ───────────────────────────────── */
+.vh { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.site-search { position: relative; flex: 0 1 16rem; min-inline-size: 9rem; margin: 0; }
+.site-search input, .search-page input, .search-page select { inline-size: 100%; min-block-size: 2.5rem; padding: .4rem .9rem;
+  font: 400 .92rem/1.3 var(--site-display); color: var(--ivn-text); background: var(--ivn-surface);
+  border: 1px solid var(--ivn-text-muted); border-radius: var(--site-radius-pill); }     /* the outline: 4.9:1 light, 6:1 dark */
+.search-page select { border-radius: var(--ivn-radius-lg); }
+.site-search input::placeholder, .search-page input::placeholder { color: var(--ivn-text-muted); opacity: 1; }
+.site-search input:focus-visible, .search-page input:focus-visible, .search-page select:focus-visible, .search-page button:focus-visible {
+  outline: 2px solid var(--site-focus); outline-offset: 2px; }
+.search-pop { position: absolute; z-index: 40; inset-block-start: calc(100% + 6px); inset-inline-start: 0; inline-size: min(30rem, 92vw);
+  margin: 0; padding: var(--ivn-s1); list-style: none; background: var(--ivn-surface); border: 1px solid var(--site-line);
+  border-radius: var(--ivn-radius-lg); box-shadow: var(--ivn-shadow-lg); }                /* over the page: nothing below it moves */
+.search-pop a { display: block; padding: var(--ivn-s2) var(--ivn-s3); border-radius: var(--ivn-radius); color: var(--ivn-text); text-decoration: none; }
+.search-pop a:hover, .search-pop .is-active a { background: var(--site-tint); color: var(--site-ink); }
+.search-pop .is-active a { outline: 2px solid var(--site-focus); outline-offset: -2px; }
+.pop-main { display: block; font-weight: 600; font-size: .92rem; line-height: 1.35; }
+.pop-sub { display: block; font-size: .8rem; color: var(--ivn-text-muted); }
+.search-pop .is-active .pop-sub, .search-pop a:hover .pop-sub { color: var(--site-ink); }
+@media (max-width: 1499px) { .site-search { flex: 1 1 auto; max-inline-size: 26rem; } }
+@media (max-width: 599px) {                  /* a phone: the box takes its own full-width line under the logo and Menu */
+  .bar { flex-wrap: wrap; }
+  .site-search { order: 3; flex: 1 1 100%; max-inline-size: none; }
+  .search-pop { inline-size: 100%; }
+}
+.search-page { margin-block: 0 var(--ivn-s5); }
+.search-q { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ivn-s2) var(--ivn-s3); }
+.search-q label { flex: 1 1 100%; font-weight: 600; }
+.search-q input { flex: 1 1 14rem; inline-size: auto; }
+.search-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: var(--ivn-s1) var(--ivn-s3);
+  margin: 0; padding: var(--ivn-s3) 0 0; border: 0; }
+.search-filters legend { padding: 0; font-weight: 600; }
+.search-filters .filter { margin: 0; }
+.search-filters label { display: block; font-size: .88rem; color: var(--ivn-text-muted); }
+.res-count { color: var(--ivn-text-muted); }
+.res-list { list-style: none; padding: 0; }
+.res-list li { margin: 0; padding-block: var(--ivn-s2); border-block-end: 1px solid var(--ivn-border); }
+.res-list a { font-weight: 600; }
+.res-asks, .res-meta { display: block; font-size: .9rem; }
+.res-meta { color: var(--ivn-text-muted); }
+
+/* ── Plan a project (site/assets-src/plan.js): the shortlist builder, and its print ───────────────────────────────── */
+.plan-tool { margin-block: var(--ivn-s5); padding: var(--ivn-s4); border: 1px solid var(--site-line); border-radius: var(--site-radius-card);
+  background: var(--ivn-surface); }
+.plan-tool > h2:first-child { margin-block-start: 0; padding-block-start: 0; border: 0; }
+.plan-q label { display: block; font-weight: 600; }
+.plan-q input { inline-size: 100%; max-inline-size: 32rem; min-block-size: 2.5rem; padding: .4rem .9rem; font: 400 .95rem/1.3 var(--site-display);
+  color: var(--ivn-text); background: var(--ivn-surface); border: 1px solid var(--ivn-text-muted); border-radius: var(--site-radius-pill); }
+.plan-q input:focus-visible, .plan-tool button:focus-visible, .plan-tool input[type=checkbox]:focus-visible { outline: 2px solid var(--site-focus); outline-offset: 2px; }
+.plan-list, .plan-limits { list-style: none; padding: 0; }
+.plan-list > li, .plan-limits > li { padding-block: var(--ivn-s2); border-block-end: 1px solid var(--ivn-border); overflow-wrap: anywhere; }
+#plan-found li { display: flex; gap: var(--ivn-s2); align-items: baseline; }
+#plan-found input { flex: none; inline-size: 1.1rem; block-size: 1.1rem; }
+.plan-meta, .plan-for { color: var(--ivn-text-muted); font-size: .9rem; }
+.plan-limits ul { margin-block: var(--ivn-s1) 0; }
+.plan-steps > li { margin-block-end: var(--ivn-s3); }
+.plan-why { margin: 0; font-weight: 600; }
+.plan-rm { margin-inline-start: var(--ivn-s2); padding: .1rem .6rem; font: inherit; font-size: .85rem; color: var(--ivn-text);
+  background: transparent; border: 1px solid var(--site-line); border-radius: var(--site-radius-pill); cursor: pointer; }
+.plan-btns { display: flex; flex-wrap: wrap; gap: var(--ivn-s2); }
+.plan-note { padding: var(--ivn-s2) var(--ivn-s3); border-inline-start: 3px solid var(--site-accent); background: var(--site-tint); }
+.plan-copy { display: block; inline-size: 100%; margin-block-start: var(--ivn-s2); font: .85rem/1.4 var(--ivn-font-mono, monospace); }
+.plan-rows pre { overflow-x: auto; }
+.plan-print-only { display: none; }
+@media print {                                  /* the plan page prints its shortlist only */
+  .top, .bottom, .skip, .toc, .plan-q, #plan-found, .plan-btns, .plan-status, .plan-rm, .plan-tool > p:not(.plan-print-only) { display: none !important; }
+  main:has(> .plan-tool:not([hidden])) > :not(.plan-tool):not(h1) { display: none !important; }
+  .plan-tool { border: 0; padding: 0; }
+  .plan-print-only { display: block; font-size: .85rem; }
+  .plan-rows { display: none; }
+  a { color: inherit; text-decoration: none; }
+}
+
+/* ── breadcrumbs: the visible line that the page's BreadcrumbList states ── */
+.crumbs { margin-block-end: var(--ivn-s3); font-size: .875rem; }
+.crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .25rem .5rem; }
+.crumbs li + li::before { content: "›"; margin-inline-end: .5rem; color: var(--ivn-text-muted, #5b6b78); }
+.crumbs [aria-current="page"] { color: var(--ivn-text); }

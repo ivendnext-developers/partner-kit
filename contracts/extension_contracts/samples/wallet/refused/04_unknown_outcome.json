@@ -1,0 +1,11 @@
+{
+ "extension_point": "wallet",
+ "contract": "answer",
+ "about": "An outcome outside the four.",
+ "payload": {
+  "reference": "MPOS-REF-0A1B2C3D4E5F",
+  "outcome": "maybe",
+  "reason": "gateway_error"
+ },
+ "expect_refusal": "outcome"
+}

@@ -1,0 +1,14 @@
+{
+ "extension_point": "wallet",
+ "contract": "preview_answer",
+ "about": "An eligible answer with no label to show.",
+ "payload": {
+  "eligible": true,
+  "balance_minor": 15000,
+  "max_redeemable_minor": 10000,
+  "label": "",
+  "currency": "AED",
+  "otp_required": false
+ },
+ "expect_refusal": "label"
+}

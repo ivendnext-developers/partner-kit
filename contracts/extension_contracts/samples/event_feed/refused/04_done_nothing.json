@@ -1,0 +1,9 @@
+{
+  "extension_point": "event_feed",
+  "contract": "done_request",
+  "about": "No ids.",
+  "payload": {
+    "ids": []
+  },
+  "expect_refusal": "ids must name 1 to 500 events."
+}

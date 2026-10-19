@@ -1,0 +1,11 @@
+# The two-step form, step 1: create a DRAFT stock movement (docstatus 0)
+# expect: 200 .data.docstatus == 0
+# capture: SE2=.data.name
+POST {{BASE}}/api/resource/Stock Entry
+Authorization: token {{KEY}}:{{SECRET}}
+Content-Type: application/json
+Accept: application/json
+
+{"stock_entry_type": "Material Receipt", "purpose": "Material Receipt", "company": "{{COMPANY}}",
+ "items": [{"item_code": "PP-WRC-PHONE", "qty": 1, "t_warehouse": "{{WH}}", "basic_rate": 10000,
+            "use_serial_batch_fields": 1, "serial_no": "PPC-{{RUN}}-C"}]}

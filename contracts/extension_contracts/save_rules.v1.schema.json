@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/save_rules.v1.schema.json",
+  "title": "Save rules, version 1",
+  "description": "A Retail Save Rule record, as a System Manager declares it (Desk, the REST API or an import). Checked at save by business_logic/save_rules.py validate_rule; what the schema cannot see (that a field exists on the record type, a workflow is active, a role exists) is checked there too. Page: docs/extending/save_rules.md.",
+  "$defs": {
+    "declaration": {
+      "type": "object",
+      "required": [
+        "doctype",
+        "rule_name",
+        "record_type",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "doctype": {
+          "const": "Retail Save Rule"
+        },
+        "rule_name": {
+          "description": "The record's name.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "record_type": {
+          "description": "The record type the rule checks: not a table, a single, a ledger or our own partner records.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "child_table": {
+          "description": "The table field whose rows the rule checks; left out, the record itself.",
+          "type": "string",
+          "maxLength": 80
+        },
+        "kind": {
+          "enum": [
+            "pattern",
+            "length",
+            "derived",
+            "unique_in_rows",
+            "threshold",
+            "required_when",
+            "locked_in_state"
+          ]
+        },
+        "field": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "enabled": {
+          "description": "1 when left out.",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "mode": {
+          "description": "refuse when left out. A rule on POS Invoice, POS Closing Entry or POS Invoice Merge Log may only flag.",
+          "enum": [
+            "refuse",
+            "flag"
+          ]
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "message": {
+          "description": "The sentence shown instead of the kind's own.",
+          "type": "string",
+          "maxLength": 140
+        },
+        "pattern_class": {
+          "enum": [
+            "alphanumeric",
+            "upper_alphanumeric",
+            "digits",
+            "letters",
+            "phone_e164"
+          ]
+        },
+        "pattern": {
+          "description": "Anchored with ^ and $, no back-reference or look-around, no repeat inside a repeat, at most two repeats or choices.",
+          "type": "string",
+          "maxLength": 100,
+          "pattern": "^\\^.*[^\\\\]\\$$"
+        },
+        "min_length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "formula": {
+          "enum": [
+            "scale",
+            "days_until",
+            "percent"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "source_b": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "factor": {
+          "description": "1 when left out.",
+          "type": "number"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "operator": {
+          "enum": [
+            "=",
+            "!=",
+            ">",
+            ">=",
+            "<",
+            "<="
+          ]
+        },
+        "value": {
+          "description": "The limit, a number written as text.",
+          "type": "string",
+          "maxLength": 40
+        },
+        "bypass_roles": {
+          "description": "Roles that may pass a threshold, one per line.",
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        },
+        "states": {
+          "description": "Workflow states, one per line.",
+          "type": "string"
+        },
+        "locked_fields": {
+          "description": "Fields of the record, one per line.",
+          "type": "string"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "pattern"
+            }
+          },
+          "required": [
+            "field"
+          ],
+          "oneOf": [
+            {
+              "required": [
+                "pattern_class"
+              ]
+            },
+            {
+              "required": [
+                "pattern"
+              ]
+            }
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "length"
+            }
+          },
+          "required": [
+            "field"
+          ],
+          "anyOf": [
+            {
+              "required": [
+                "min_length"
+              ],
+              "properties": {
+                "min_length": {
+                  "minimum": 1
+                }
+              }
+            },
+            {
+              "required": [
+                "max_length"
+              ],
+              "properties": {
+                "max_length": {
+                  "minimum": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "derived"
+            },
+            "field": {
+              "description": "Never a money field, nor one a total is computed from: no name holding one of these words.",
+              "not": {
+                "pattern": "amount|rate|total|price|discount|tax|qty|margin|conversion|paid|outstanding|commission|exchange|incentive|allocated|change|opening"
+              }
+            }
+          },
+          "required": [
+            "field",
+            "formula",
+            "source"
+          ],
+          "anyOf": [
+            {
+              "properties": {
+                "formula": {
+                  "enum": [
+                    "scale",
+                    "days_until"
+                  ]
+                }
+              }
+            },
+            {
+              "required": [
+                "source_b"
+              ]
+            }
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "unique_in_rows"
+            }
+          },
+          "required": [
+            "field",
+            "child_table"
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "threshold"
+            },
+            "value": {
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+            }
+          },
+          "required": [
+            "field",
+            "operator",
+            "value"
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "required_when"
+            },
+            "conditions": {
+              "minItems": 1
+            }
+          },
+          "required": [
+            "field",
+            "conditions"
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "locked_in_state"
+            }
+          },
+          "required": [
+            "states",
+            "locked_fields"
+          ],
+          "not": {
+            "required": [
+              "child_table"
+            ]
+          }
+        }
+      ]
+    },
+    "condition": {
+      "type": "object",
+      "required": [
+        "field",
+        "operator"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "operator": {
+          "enum": [
+            "=",
+            "!=",
+            ">",
+            ">=",
+            "<",
+            "<=",
+            "is set",
+            "is not set"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 140
+        }
+      }
+    }
+  }
+}

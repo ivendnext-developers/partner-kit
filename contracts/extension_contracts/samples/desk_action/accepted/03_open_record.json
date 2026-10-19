@@ -1,0 +1,11 @@
+{
+  "extension_point": "desk_action",
+  "contract": "answer",
+  "about": "Open a record the user may read (an item of the test bench).",
+  "payload": {
+    "open_record": {
+      "doctype": "Item",
+      "name": "MPOS-PLAIN-A"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+ "extension_point": "wallet",
+ "contract": "preview_answer",
+ "about": "Not eligible, and no reason for the cashier.",
+ "payload": {
+  "eligible": false
+ },
+ "expect_refusal": "reason"
+}

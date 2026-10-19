@@ -1,0 +1,9 @@
+# Change a field on that record. A PUT sends only the fields to change — but a child table sent in a PUT REPLACES
+# the record's rows, so S2 always sends the existing rows plus the new one (its bin movements)
+# expect: 200 .data.name == $ENV.LOC and .data.kind == "Shop floor"
+PUT {{BASE}}/api/resource/PP BLN Location/{{LOC}}
+Authorization: token {{KEY}}:{{SECRET}}
+Content-Type: application/json
+Accept: application/json
+
+{"kind": "Shop floor"}

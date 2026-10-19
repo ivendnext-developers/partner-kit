@@ -1,0 +1,53 @@
+{
+ "manifest_version": 2,
+ "app": "pp_prc",
+ "prefix": "PP PRC",
+ "title": "Price-checker kiosk",
+ "version": "0.1.1",
+ "publisher": "Partner Programme sample",
+ "description": "A price checker for the shop floor. A tablet opens the app's kiosk page; a customer scans an item and the page shows its name, picture and price: the store's price list price for one unit, in the scanned unit. Offers are worked out at the till, and the page says so. The service, outside the shop, asks the shop for each scan with the app's integration user: its barcode lookup, then its own line pricer for one unit on the store's price list, for the store's walk-in customer. It reads the shop and writes nothing. allowed_urls is the service's own address, for the hosted handshake (the site connects to it after install, update, Finish and Connect again, and says goodbye at uninstall); a partner writes its own. Each screen is a PP PRC Kiosk record, named by a random code the kiosk's address carries; the record takes its company, price list, currency, walk-in customer and store from the till profile chosen on it, and switching it off stops that kiosk within a minute. The shop must have the role PP Integration before this is installed; after install it makes the integration user with that role and chooses it on the feed registration PP PRC Kiosk feed.",
+ "allowed_urls": [
+  "https://prc.partner.example"
+ ],
+ "doctypes": [
+  {
+   "name": "PP PRC Kiosk",
+   "autoname": "hash",
+   "title_field": "title",
+   "show_title_field_in_link": 1,
+   "search_fields": "title,pos_profile",
+   "track_changes": 1,
+   "description": "One record per price-checker screen. Its name is the kiosk's code: the tablet opens the app's kiosk address followed by #shop= and this site's address, then &kiosk= and this record's name.",
+   "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Where it stands", "reqd": 1, "in_list_view": 1,
+     "description": "For example: Aisle 4, by the door."},
+    {"fieldname": "enabled", "fieldtype": "Check", "label": "Switched on", "default": "1", "in_list_view": 1,
+     "description": "Off: the kiosk shows 'This kiosk is not set up' within a minute."},
+    {"fieldname": "pos_profile", "fieldtype": "Link", "options": "POS Profile", "label": "Till profile", "reqd": 1,
+     "in_list_view": 1, "description": "The store's till profile: the kiosk shows the price on its price list, for one unit."},
+    {"fieldname": "company", "fieldtype": "Link", "options": "Company", "label": "Company", "read_only": 1,
+     "fetch_from": "pos_profile.company"},
+    {"fieldname": "selling_price_list", "fieldtype": "Link", "options": "Price List", "label": "Price list",
+     "read_only": 1, "fetch_from": "pos_profile.selling_price_list",
+     "description": "Taken from the till profile when you save. Changed the profile's price list? Save the kiosk again."},
+    {"fieldname": "currency", "fieldtype": "Link", "options": "Currency", "label": "Currency", "read_only": 1,
+     "fetch_from": "pos_profile.currency"},
+    {"fieldname": "customer", "fieldtype": "Link", "options": "Customer", "label": "Walk-in customer", "read_only": 1,
+     "fetch_from": "pos_profile.customer"},
+    {"fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "label": "Store", "read_only": 1,
+     "fetch_from": "pos_profile.warehouse"}
+   ],
+   "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 0, "print": 1, "email": 0},
+    {"role": "PP Integration", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0}
+   ]
+  }
+ ],
+ "property_setters": [
+  {"doc_type": "PP PRC Kiosk", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/price_checker.html#the-kiosk-record"}
+ ],
+ "registered_applications": [
+  {"name": "PP PRC Kiosk feed", "description": "the price checker's service reads the shop's kiosk records", "events": ["PP PRC Kiosk"]}
+ ]
+}

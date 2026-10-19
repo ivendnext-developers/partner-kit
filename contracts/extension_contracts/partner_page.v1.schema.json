@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/partner_page.v1.schema.json",
+  "title": "Partner page, version 1",
+  "description": "A partner's own page framed on the till or in Desk: the Retail Extension Subscription a System Manager declares (declaration, checked by business_logic/partner_point.py validate_subscription and partner_page.validate_declaration), the signed context the page receives in its address (context), and the answer the partner's server posts to api/page.submit (submit, judged by partner_page.submit and app_button.validate_result). Page: docs/extending/partner_page.md.",
+  "$defs": {
+    "declaration": {
+      "type": "object",
+      "required": [
+        "doctype",
+        "point",
+        "partner_name",
+        "label",
+        "endpoint_url"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "doctype": {
+          "const": "Retail Extension Subscription"
+        },
+        "point": {
+          "const": "page"
+        },
+        "partner_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "\\S"
+        },
+        "enabled": {
+          "description": "0 when left out.",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "scope": {
+          "description": "The POS Profiles whose tills may open it; left out, every till.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "pos_profile"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "pos_profile": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "transport": {
+          "const": "remote"
+        },
+        "endpoint_url": {
+          "description": "The page's address, or the folder its pages live under. HTTPS, at most 500 characters, a host in plain letters, never the shop's own host.",
+          "type": "string",
+          "maxLength": 500,
+          "pattern": "^https://[a-z0-9.-]+(:[0-9]+)?(/[^\\s#]*)?$"
+        },
+        "secret": {
+          "description": "The shared signing secret.",
+          "type": "string",
+          "minLength": 1
+        },
+        "timeout_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "down_answer": {
+          "const": "refuse"
+        },
+        "settings": {
+          "description": "A JSON object, as text.",
+          "type": "string"
+        },
+        "page_placement": {
+          "description": "Till key when left out.",
+          "enum": [
+            "Till key",
+            "Desk page",
+            "Till key and Desk page"
+          ]
+        },
+        "page_roles": {
+          "description": "Who may open the Desk page; needed when it is placed on Desk.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "role"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "role": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "page_send_user": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "page_send_sale": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "page_returns_message": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "page_returns_sale_attributes": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "page_height": {
+          "description": "Its height on the counter, in percent; 100 when left out.",
+          "type": "integer",
+          "minimum": 40,
+          "maximum": 100
+        },
+        "consent_given": {
+          "enum": [
+            0,
+            1
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "description": "On the till the page answers something: placed on Desk only, or at least one answer kind ticked.",
+          "anyOf": [
+            {
+              "required": [
+                "page_placement"
+              ],
+              "properties": {
+                "page_placement": {
+                  "const": "Desk page"
+                }
+              }
+            },
+            {
+              "required": [
+                "page_returns_message"
+              ],
+              "properties": {
+                "page_returns_message": {
+                  "const": 1
+                }
+              }
+            },
+            {
+              "required": [
+                "page_returns_sale_attributes"
+              ],
+              "properties": {
+                "page_returns_sale_attributes": {
+                  "const": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "description": "A page placed on Desk names who may open it.",
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "page_placement"
+                ]
+              }
+            },
+            {
+              "properties": {
+                "page_placement": {
+                  "const": "Till key"
+                }
+              }
+            },
+            {
+              "required": [
+                "page_roles"
+              ],
+              "properties": {
+                "page_roles": {
+                  "minItems": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "context": {
+      "description": "The payload of the #ctx=<payload>.<signature> fragment, both parts base64url without padding; the signature is HMAC-SHA256 of the payload bytes with the secret. Usable once, for 5 minutes.",
+      "type": "object",
+      "required": [
+        "v",
+        "page",
+        "nonce",
+        "iat",
+        "exp",
+        "lang",
+        "theme"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "page": {
+          "description": "The subscription's name.",
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "iat": {
+          "description": "Unix seconds.",
+          "type": "integer"
+        },
+        "exp": {
+          "description": "iat plus 300.",
+          "type": "integer"
+        },
+        "lang": {
+          "type": "string",
+          "minLength": 1
+        },
+        "theme": {
+          "type": "object",
+          "required": [
+            "mode",
+            "vars"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "enum": [
+                "light",
+                "dark"
+              ]
+            },
+            "vars": {
+              "description": "The screen's colours as --ivn-* CSS variables.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "store": {
+          "description": "On the till.",
+          "type": "string"
+        },
+        "pos_profile": {
+          "description": "On the till.",
+          "type": "string"
+        },
+        "sale": {
+          "description": "On the till, when the declaration sends the sale: the remote till key's moneyless picture.",
+          "$ref": "remote_till_key.v1.schema.json#/$defs/context"
+        },
+        "doctype": {
+          "description": "In Desk, when opened for a record.",
+          "type": "string"
+        },
+        "name": {
+          "description": "In Desk, when opened for a record.",
+          "type": "string"
+        },
+        "user": {
+          "description": "When the declaration sends it. Personal data.",
+          "type": "string"
+        }
+      }
+    },
+    "submit": {
+      "description": "The body the partner's server posts to /api/method/ivendnext_mpos.api.page.submit, signed with X-iVendNext-Timestamp and X-iVendNext-Signature (base64 HMAC-SHA256 of <timestamp>.<raw body>). Till only; one answer per nonce.",
+      "type": "object",
+      "required": [
+        "ctx_nonce",
+        "result"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ctx_nonce": {
+          "description": "The context's nonce.",
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "result": {
+          "$ref": "remote_till_key.v1.schema.json#/$defs/answer"
+        }
+      }
+    }
+  }
+}

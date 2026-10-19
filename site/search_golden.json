@@ -1,0 +1,250 @@
+{
+ "about": "The search's golden set (site/test_search.mjs): each query in a customer's words, and the card ids that must all be in the top three needs it returns; an empty list means the query must return nothing at all. Classes: distributor (the eleven needs of a distributor's demo, as the distributor wrote them), scoper (seven older needs, word for word from guide chapters 15 and 16), typo (at least one query is only misspelt words, letters swapped), synonym (the query's key word is on no card: site/synonyms.txt finds it), none.",
+ "queries": [
+  {
+   "class": "distributor",
+   "q": "Stock Reconciliation list: in-stock qty, difference, total value",
+   "top3": [
+    "count-list-totals"
+   ]
+  },
+  {
+   "class": "distributor",
+   "q": "Cap manager discount overrides per branch per day",
+   "top3": [
+    "manager-approval-cap-per-day"
+   ]
+  },
+  {
+   "class": "distributor",
+   "q": "Branch sees only own + HQ stock",
+   "top3": [
+    "branch-sees-own-stock"
+   ]
+  },
+  {
+   "class": "distributor",
+   "q": "Item price list with photos",
+   "top3": [
+    "price-list-with-photos"
+   ]
+  },
+  {
+   "class": "distributor",
+   "q": "Price list derived from another (×1.5, ×0.9), auto-updating",
+   "top3": [
+    "derived-price-list"
+   ]
+  },
+  {
+   "class": "distributor",
+   "q": "Mark or filter products on promotion",
+   "top3": [
+    "products-on-promotion-filter",
+    "products-on-promotion-colour"
+   ]
+  },
+  {
+   "class": "distributor",
+   "q": "Expiry and low-stock alerts, draft transfer request",
+   "top3": [
+    "stock-and-expiry-alerts"
+   ]
+  },
+  {
+   "class": "distributor",
+   "q": "Customer shopping-trend dashboard on the POS",
+   "top3": [
+    "customer-history-on-till"
+   ]
+  },
+  {
+   "class": "distributor",
+   "q": "Merge several Stock Reconciliations",
+   "top3": [
+    "merge-count-documents"
+   ]
+  },
+  {
+   "class": "distributor",
+   "q": "Debtors statement, printed and scheduled",
+   "top3": [
+    "debtors-statement"
+   ]
+  },
+  {
+   "class": "distributor",
+   "q": "Per-distributor invoice templates (4–5)",
+   "top3": [
+    "invoice-layout-per-customer"
+   ]
+  },
+  {
+   "class": "scoper",
+   "q": "A member's status at the till",
+   "top3": [
+    "member-status-at-till"
+   ]
+  },
+  {
+   "class": "scoper",
+   "q": "Prices, promotions, member tiers by customer group",
+   "top3": [
+    "member-price-by-tier"
+   ]
+  },
+  {
+   "class": "scoper",
+   "q": "Your own fiscal or e-invoicing country",
+   "top3": [
+    "country-tax-rules"
+   ]
+  },
+  {
+   "class": "scoper",
+   "q": "A unit's own code (a pack barcode, a handset tag) or a pharmacy 2D code recognised at scan; a sold unit refused",
+   "top3": [
+    "unit-code-at-scan",
+    "pharmacy-pack-code-at-scan"
+   ]
+  },
+  {
+   "class": "scoper",
+   "q": "Buttons on Desk forms and lists answered by your service",
+   "top3": [
+    "button-on-desk-record"
+   ]
+  },
+  {
+   "class": "scoper",
+   "q": "Its own loyalty — redeeming at the till",
+   "top3": [
+    "store-wallet-at-till"
+   ]
+  },
+  {
+   "class": "scoper",
+   "q": "insurance co-payment",
+   "top3": [
+    "insurance-co-payment"
+   ]
+  },
+  {
+   "class": "typo",
+   "q": "expiry alret",
+   "top3": [
+    "stock-and-expiry-alerts"
+   ]
+  },
+  {
+   "class": "typo",
+   "q": "low stok reminder",
+   "top3": [
+    "low-stock-reminder"
+   ]
+  },
+  {
+   "class": "typo",
+   "q": "reciept by whatsapp",
+   "top3": [
+    "receipt-by-whatsapp"
+   ]
+  },
+  {
+   "class": "typo",
+   "q": "discout above limit",
+   "top3": [
+    "discount-above-limit-approval"
+   ]
+  },
+  {
+   "class": "typo",
+   "q": "prescripton number",
+   "top3": [
+    "prescription-before-payment"
+   ]
+  },
+  {
+   "class": "typo",
+   "q": "alret",
+   "top3": [
+    "expiry-alert-before-date"
+   ]
+  },
+  {
+   "class": "typo",
+   "q": "stcok count",
+   "top3": [
+    "count-list-totals"
+   ]
+  },
+  {
+   "class": "typo",
+   "q": "reaosn codes",
+   "top3": [
+    "reason-codes"
+   ]
+  },
+  {
+   "class": "synonym",
+   "q": "bnpl",
+   "top3": [
+    "buy-now-pay-later"
+   ]
+  },
+  {
+   "class": "synonym",
+   "q": "stocktake",
+   "top3": [
+    "count-list-totals",
+    "merge-count-documents"
+   ]
+  },
+  {
+   "class": "synonym",
+   "q": "supervisor approval for a big sale",
+   "top3": [
+    "manager-for-large-sale"
+   ]
+  },
+  {
+   "class": "synonym",
+   "q": "notify before a batch expires",
+   "top3": [
+    "expiry-alert-before-date"
+   ]
+  },
+  {
+   "class": "synonym",
+   "q": "price tags printed from the pos",
+   "top3": [
+    "shelf-labels-from-till"
+   ]
+  },
+  {
+   "class": "none",
+   "q": "payroll",
+   "top3": []
+  },
+  {
+   "class": "none",
+   "q": "helicopter",
+   "top3": []
+  },
+  {
+   "class": "none",
+   "q": "blockchain",
+   "top3": []
+  },
+  {
+   "class": "none",
+   "q": "horoscope",
+   "top3": []
+  },
+  {
+   "class": "none",
+   "q": "mortgage",
+   "top3": []
+  }
+ ]
+}

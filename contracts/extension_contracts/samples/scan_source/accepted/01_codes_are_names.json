@@ -1,0 +1,12 @@
+{
+  "extension_point": "scan_source",
+  "contract": "declaration",
+  "about": "Serial numbers as unit codes: the item from the row.",
+  "payload": {
+    "doctype": "Retail Scan Source",
+    "source_name": "LIB1 Units",
+    "record_type": "Serial No",
+    "barcode_field": "name",
+    "item_from": "item_code"
+  }
+}

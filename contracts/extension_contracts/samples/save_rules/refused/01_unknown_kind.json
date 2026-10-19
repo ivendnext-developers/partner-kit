@@ -1,0 +1,13 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A kind that does not exist.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Email shape",
+    "record_type": "Customer",
+    "kind": "regex",
+    "field": "email_id"
+  },
+  "expect_refusal": "Choose the rule's kind."
+}

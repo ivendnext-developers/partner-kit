@@ -1,0 +1,27 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "Both kinds at once, level left out (it reads info).",
+  "given": {
+    "returns": [
+      "message",
+      "sale_attributes"
+    ]
+  },
+  "payload": {
+    "message": {
+      "title": "Gold member",
+      "body": "120 points on this sale."
+    },
+    "sale_attributes": [
+      {
+        "sale_attribute": "Loyalty Tier",
+        "attribute_value": "Gold"
+      },
+      {
+        "sale_attribute": "Delivery Order",
+        "attribute_value": "TB-88123"
+      }
+    ]
+  }
+}

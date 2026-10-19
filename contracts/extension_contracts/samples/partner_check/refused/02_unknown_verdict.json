@@ -1,0 +1,17 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "A verdict that is not one of the five.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false
+  },
+  "payload": {
+    "verdict": "maybe"
+  },
+  "expect_refusal": "the verdict is not one of the five"
+}

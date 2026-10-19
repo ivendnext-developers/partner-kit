@@ -1,0 +1,75 @@
+# site/synonyms.txt — the words customers use for the same thing, one group per line, comma-separated.
+# The site's search (site/build.py, search-index.json) gives a card every word of a group one of whose words is in the card's
+# own words (its asks line, title and topic), so a customer typing "branch" finds a card that says "store". Hand-written from
+# the cards and from a distributor's list of needs. A word belongs to one group only; a group holds two or more words.
+# A plural "s" or "es" is matched on its own: write the singular.
+store, branch, shop, outlet, location, showroom
+head office, hq, headquarters, central office
+warehouse, depot, distribution centre, distribution center, dc
+alert, notification, reminder, notify, warning, heads-up
+till, pos, register, checkout, cash register, point of sale, counter
+stock count, stocktake, stock take, stock reconciliation, reconciliation, inventory count, cycle count, physical count
+stock, inventory, stock level, on hand
+item, product, article, sku, goods
+price list, price book, pricelist, tariff, rate card
+promotion, promo, offer, deal, campaign, special offer
+discount, markdown, reduction, rebate, price cut
+approval, approve, authorisation, authorization, authorise, authorize, override, sign-off
+manager, supervisor, team leader, store manager
+customer, client, shopper, buyer, consumer, patron
+loyalty, points, rewards, reward, loyalty programme, loyalty program
+gift card, gift voucher, gift certificate
+store credit, wallet, cashback, cash back, e-wallet
+receipt, till slip, sales slip, proof of purchase
+invoice, bill, tax invoice
+purchase order, po, purchasing, buying, procurement
+supplier, vendor, manufacturer
+transfer, stock transfer, inter-store transfer, move stock, material request
+reorder, replenish, restock, minimum stock, reorder level, par level, low stock, out of stock
+expiry, expiration, expire, best before, use by, shelf life
+batch, lot, lot number, batch number
+barcode, ean, upc, qr code, 2d code, gs1, datamatrix
+serial number, imei, serial
+handheld, scanner, pda, mobile computer, scan gun
+label, shelf label, price tag, shelf edge label, sticker
+print format, template, layout, print layout, design
+report, dashboard, analytics, bi, insights, kpi
+erp, accounting system, sap, sage, netsuite, dynamics, back office system
+online shop, e-commerce, ecommerce, webshop, web shop, online store, shopify, woocommerce, website orders
+payment, tender, pay, payment method
+card terminal, pin pad, eft, payment terminal, card machine
+mobile money, mpesa, m-pesa, upi
+buy now pay later, bnpl, instalments, installments, pay later, klarna, afterpay, tabby, tamara
+tax, vat, gst, sales tax
+e-invoicing, e-invoice, fiscal, fiscalisation, fiscalization, tax authority, zatca
+role, permission, access rights, user rights, user role
+field, custom field, extra field, attribute
+column, list column, list view
+void, cancel line, delete line, remove line
+return, refund, exchange
+reason code, reason, cause
+cash drawer, drawer, float, cash count, cash up, end of day, z report, blind count
+prescription, rx, script
+pharmacy, chemist, drugstore, dispensary
+warranty, guarantee, extended warranty, protection plan, after-sales
+history, purchase history, shopping history, trend, past purchases, previous purchases
+crm, customer relationship, customer 360, clienteling
+schedule, scheduled, nightly, every night, every morning, cron, automatic
+email, e-mail, mail
+whatsapp, sms, text message
+statement, debtors, accounts receivable, receivables, ageing, aging, outstanding balance
+photo, image, picture, photograph
+surcharge, fee, service charge, card fee
+member, membership, tier, vip
+coupon, promo code, discount code, voucher code
+quantity, qty, number of units
+company, legal entity, subsidiary
+currency, multi-currency, fx, exchange rate
+offline, no internet, network down, connection lost
+event, events feed, event feed, webhook
+phone, telephone, mobile number, cell
+price checker, price check, kiosk, self-service
+colour, color, highlight, coloured, colored
+merge, combine, consolidate
+duplicate, twice, unique, repeated
+redeem, redemption, spend, burn

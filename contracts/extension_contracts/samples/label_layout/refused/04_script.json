@@ -1,0 +1,13 @@
+{
+  "extension_point": "label_layout",
+  "contract": "declaration",
+  "about": "A script in the template.",
+  "payload": {
+    "doctype": "Retail Label Layout",
+    "label_name": "LIB1 Script",
+    "width_mm": 50,
+    "height_mm": 25,
+    "template": "{item_name}<script>alert(1)</script>"
+  },
+  "expect_refusal": "cannot hold scripts"
+}

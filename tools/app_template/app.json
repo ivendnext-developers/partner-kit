@@ -1,0 +1,12 @@
+{
+ "app": "my-till-key",
+ "version": "1.0.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "env": [
+  {"name": "IVN_POINT_SECRET", "secret": true, "required": true},
+  {"name": "IVN_POINT_SECRET_PREVIOUS", "secret": true, "required": false}
+ ]
+}

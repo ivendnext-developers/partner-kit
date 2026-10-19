@@ -1,0 +1,21 @@
+{
+ "_what": "S5 — what a retail shop switches on with NO code: coded reasons, an IMEI per line, a line detail with a pattern, member pricing. apply_config.py reads this file and applies it over the record API; change the names, codes and numbers to the shop's. Names start with 'PP CFG' only so the sample can find and remove what it made.",
+ "reasons": [
+  {"id": "PP CFG Void: scanned in error", "type": "Void Sale"},
+  {"id": "PP CFG Return: faulty", "type": "Item Return"},
+  {"id": "PP CFG Return: changed mind", "type": "Sale Return"},
+  {"id": "PP CFG Discount: damaged box", "type": "Sale Discount"},
+  {"id": "PP CFG Discount: price match", "type": "Item Discount", "comment_required": 1}
+ ],
+ "reason_flags": ["reason_void_sale", "save_voided_transaction", "reason_item_return", "reason_sale_return", "reason_sale_discount", "reason_item_discount"],
+ "imei_item": {
+  "item_code": "PP-CFG-IMEI-PHONE", "item_name": "Example smartphone (IMEI tracked)", "item_group": "Accessories",
+  "price_list": "Demo Retail Price List", "price": 1000, "warehouse": "Demo Retail — Store 1 - DR", "company": "Demo Retail",
+  "imeis": ["990000862471854", "990000862471862", "990000862471870"]
+ },
+ "line_attribute": {"name": "PP CFG Warranty card", "regex": "^WC-[0-9]{8}$", "sequence": 900},
+ "member_tiers": {
+  "groups": ["PP CFG Member Gold"], "discount_percent": 10, "promotion_id": "PP CFG Member Gold 10%",
+  "warehouse_scope": "all leaf warehouses of the company", "member_example": "PP CFG Gold Member"
+ }
+}

@@ -1,0 +1,297 @@
+{
+ "manifest_version": 2,
+ "app": "pp_gcs",
+ "prefix": "PP GCS",
+ "title": "Gift card on spend",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A sale over the shop's threshold earns the customer the shop's own gift card, spendable after a hold (24 hours by default). The app's service, outside the shop, reads the sales from the event feed, makes the engine's Gift Card from the shop's gift card item at a balance of 0, and raises it to its value with a Gift Card Balance when the hold has passed; a cancelled sale, or a return that takes the spend below what earned a card, voids the cards it no longer earns, unless they have been used. After install: give the role PP GCS Integration (the install makes it) read on POS Invoice, Customer and Item, read and create on Gift Card, and read, create and submit on Gift Card Balance; make the integration user with that role and its API key; fill in PP GCS Settings, record Default, and tick Enabled; then choose the user on the feed registration PP GCS Sales and tick POS Invoice. What leaves the shop: the service reads sales, returns, customers and the gift card item, and writes gift cards and their balances; with these rights its key can set the balance of any gift card in the shop.",
+ "allowed_urls": [
+  "https://gcs.partner.example"
+ ],
+ "doctypes": [
+  {
+   "name": "PP GCS Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Title",
+     "reqd": 1,
+     "unique": 1,
+     "default": "Default"
+    },
+    {
+     "fieldname": "enabled",
+     "fieldtype": "Check",
+     "label": "Enabled (sales earn cards)"
+    },
+    {
+     "fieldname": "currency",
+     "fieldtype": "Link",
+     "label": "Currency (a sale in another currency earns nothing)",
+     "options": "Currency"
+    },
+    {
+     "fieldname": "currency_precision",
+     "fieldtype": "Int",
+     "label": "Decimal places",
+     "default": "2"
+    },
+    {
+     "fieldname": "threshold",
+     "fieldtype": "Currency",
+     "label": "Spend that earns a card"
+    },
+    {
+     "fieldname": "card_value",
+     "fieldtype": "Currency",
+     "label": "Value of each card"
+    },
+    {
+     "fieldname": "card_item",
+     "fieldtype": "Link",
+     "label": "Gift card item (a gift card item that is not store credit and not rechargeable)",
+     "options": "Item"
+    },
+    {
+     "fieldname": "max_cards_per_sale",
+     "fieldtype": "Int",
+     "label": "Cards per sale (1 = one card; more = one for each full threshold, up to this)",
+     "default": "1"
+    },
+    {
+     "fieldname": "hold_hours",
+     "fieldtype": "Int",
+     "label": "Hold before the card can be spent (hours)",
+     "default": "24"
+    },
+    {
+     "fieldname": "walk_in_customers",
+     "fieldtype": "Small Text",
+     "label": "Walk-in customers (never earn), one per line"
+    },
+    {
+     "fieldname": "excluded_customer_groups",
+     "fieldtype": "Small Text",
+     "label": "Customer groups that never earn, one per line"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP GCS Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP GCS Card",
+   "autoname": "field:card_key",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "card_key",
+     "fieldtype": "Data",
+     "label": "Key (the sale and the card's position)",
+     "reqd": 1,
+     "unique": 1
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Issuing\nHeld\nReleased\nVoided\nReview",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "sale",
+     "fieldtype": "Link",
+     "label": "Sale that earned it",
+     "options": "POS Invoice",
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "position",
+     "fieldtype": "Int",
+     "label": "Card on the sale (1, 2, …)"
+    },
+    {
+     "fieldname": "gift_card",
+     "fieldtype": "Link",
+     "label": "Gift card",
+     "options": "Gift Card",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "card_number",
+     "fieldtype": "Data",
+     "label": "Card number"
+    },
+    {
+     "fieldname": "currency",
+     "fieldtype": "Link",
+     "label": "Currency",
+     "options": "Currency"
+    },
+    {
+     "fieldname": "card_value",
+     "fieldtype": "Currency",
+     "label": "Value",
+     "options": "currency",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "card_item",
+     "fieldtype": "Link",
+     "label": "Gift card item",
+     "options": "Item"
+    },
+    {
+     "fieldname": "threshold",
+     "fieldtype": "Currency",
+     "label": "Threshold it was earned under",
+     "options": "currency"
+    },
+    {
+     "fieldname": "hold_hours",
+     "fieldtype": "Int",
+     "label": "Hold (hours)"
+    },
+    {
+     "fieldname": "release_after",
+     "fieldtype": "Datetime",
+     "label": "Spendable from, about (the shop's time)",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "release_after_utc",
+     "fieldtype": "Data",
+     "label": "Released after (UTC, the service's clock)"
+    },
+    {
+     "fieldname": "balance_entry",
+     "fieldtype": "Link",
+     "label": "Released by",
+     "options": "Gift Card Balance"
+    },
+    {
+     "fieldname": "void_entry",
+     "fieldtype": "Link",
+     "label": "Set to 0 by",
+     "options": "Gift Card Balance"
+    },
+    {
+     "fieldname": "note",
+     "fieldtype": "Small Text",
+     "label": "Note"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP GCS Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "links": [
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP GCS Card",
+   "link_fieldname": "customer",
+   "group": "Gift cards"
+  },
+  {
+   "doctype": "POS Invoice",
+   "link_doctype": "PP GCS Card",
+   "link_fieldname": "sale",
+   "group": "Gift cards"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP GCS Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/gift_card_on_spend.html#settings"
+  },
+  {
+   "doc_type": "PP GCS Card",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/gift_card_on_spend.html#earned-gift-cards"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP GCS Sales",
+   "description": "the gift card service reads booked, returned and cancelled sales",
+   "events": [
+    "POS Invoice"
+   ]
+  }
+ ]
+}

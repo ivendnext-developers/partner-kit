@@ -1,0 +1,441 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/partner_check.v1.schema.json",
+  "title": "Partner check, version 1",
+  "description": "Extension point check: what iVendNext POS sends a partner's HTTPS service before a sale or a refund is paid (request), what the service answers (answer), and the subscription a System Manager saves for it (subscription), whose transport is an HTTPS address or a partner module. The answer is judged by business_logic/partner_check.py validate_answer: one bad key or value refuses the whole answer, and the declared down answer applies. Page: docs/extending/partner_check.md.",
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": [
+        "point",
+        "context"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "point": {
+          "const": "check/1"
+        },
+        "context": {
+          "$ref": "#/$defs/context"
+        }
+      }
+    },
+    "context": {
+      "description": "The server's own numbers (business_logic/partner_check.py build_context). Money is a whole number of minor units with the currency's digits; quantity is in thousandths. No card data, serial or batch.",
+      "type": "object",
+      "required": [
+        "v",
+        "point",
+        "stage",
+        "currency_exponent",
+        "sale_ref",
+        "store",
+        "pos_profile",
+        "company",
+        "currency",
+        "lang",
+        "operator",
+        "customer",
+        "customer_group",
+        "price_list",
+        "coupon_codes",
+        "sale_attributes",
+        "lines",
+        "totals",
+        "offered_tenders"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "point": {
+          "const": "check"
+        },
+        "stage": {
+          "enum": [
+            "sale",
+            "return"
+          ]
+        },
+        "currency_exponent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "sale_ref": {
+          "type": "string",
+          "maxLength": 140
+        },
+        "store": {
+          "type": "string"
+        },
+        "pos_profile": {
+          "type": "string"
+        },
+        "company": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "lang": {
+          "type": "string"
+        },
+        "operator": {
+          "description": "The signed-in cashier's user id. Personal data.",
+          "type": "string"
+        },
+        "customer": {
+          "description": "Personal data.",
+          "type": "string"
+        },
+        "customer_group": {
+          "type": "string"
+        },
+        "price_list": {
+          "type": "string"
+        },
+        "coupon_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sale_attributes": {
+          "description": "The details the cashier captured, which may hold health data such as a prescription.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "lines": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "required": [
+              "line_no",
+              "item_code",
+              "item_group",
+              "qty_milli",
+              "uom",
+              "rate_minor",
+              "amount_minor",
+              "discount_minor",
+              "line_attributes"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "line_no": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "item_code": {
+                "type": "string"
+              },
+              "item_group": {
+                "type": "string"
+              },
+              "qty_milli": {
+                "type": "integer"
+              },
+              "uom": {
+                "type": "string"
+              },
+              "rate_minor": {
+                "type": "integer"
+              },
+              "amount_minor": {
+                "type": "integer"
+              },
+              "discount_minor": {
+                "type": "integer"
+              },
+              "line_attributes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "totals": {
+          "type": "object",
+          "required": [
+            "net_minor",
+            "tax_minor",
+            "discount_minor",
+            "grand_minor"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "net_minor": {
+              "type": "integer"
+            },
+            "tax_minor": {
+              "type": "integer"
+            },
+            "discount_minor": {
+              "type": "integer"
+            },
+            "grand_minor": {
+              "type": "integer"
+            }
+          }
+        },
+        "offered_tenders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "return_of": {
+          "type": "object",
+          "required": [
+            "invoice",
+            "channel",
+            "paid_by"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "invoice": {
+              "type": "string"
+            },
+            "channel": {
+              "enum": [
+                "pos",
+                "order",
+                "layaway",
+                "none"
+              ]
+            },
+            "paid_by": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "answer": {
+      "description": "HTTP 2xx, a JSON object of at most 64 KB, one of five.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "verdict"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "const": "allow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "verdict",
+            "exclude_tenders",
+            "reason"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "const": "allow"
+            },
+            "exclude_tenders": {
+              "description": "1 to 20 different names, each one of offered_tenders.",
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "pattern": "^[^<>]*\\S[^<>]*$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "verdict",
+            "reason"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "const": "refuse"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "pattern": "^[^<>]*\\S[^<>]*$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "verdict",
+            "question"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "const": "ask"
+            },
+            "question": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "pattern": "^[^<>]*\\S[^<>]*$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "verdict",
+            "reason"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "const": "approve"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "pattern": "^[^<>]*\\S[^<>]*$"
+            }
+          }
+        }
+      ]
+    },
+    "subscription": {
+      "description": "The Retail Extension Subscription a System Manager saves in iVendNext Desk for this point: the fields its transport decides (the record has more). Judged by business_logic/partner_point.py validate_subscription. A remote check names an HTTPS address and a secret; a wasm check names an admitted Retail Extension Module of this point and partner, its newest version, and an address typed in is cleared on save.",
+      "type": "object",
+      "required": [
+        "doctype",
+        "point",
+        "partner_name",
+        "label",
+        "transport"
+      ],
+      "properties": {
+        "doctype": {
+          "const": "Retail Extension Subscription"
+        },
+        "point": {
+          "const": "check"
+        },
+        "partner_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "transport": {
+          "enum": [
+            "remote",
+            "wasm"
+          ]
+        },
+        "endpoint_url": {
+          "type": "string"
+        },
+        "secret": {
+          "type": "string"
+        },
+        "module": {
+          "type": "string",
+          "minLength": 1
+        },
+        "down_answer": {
+          "enum": [
+            "allow_and_flag",
+            "refuse",
+            "ask"
+          ]
+        },
+        "enabled": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "consent_given": {
+          "enum": [
+            0,
+            1
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "transport": {
+              "const": "remote"
+            }
+          },
+          "required": [
+            "endpoint_url",
+            "secret"
+          ]
+        },
+        {
+          "properties": {
+            "transport": {
+              "const": "wasm"
+            }
+          },
+          "required": [
+            "module"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "extension_point": "fields",
+  "contract": "declaration",
+  "about": "S1: the new-customer sheet has no email field.",
+  "payload": {
+    "doctype": "Retail POS Theme",
+    "theme_name": "LIB1 Fields A1",
+    "layout": "Summer Breeze",
+    "palette": "Standard",
+    "field_rules": [
+      {
+        "surface": "customer_create",
+        "field": "email",
+        "action": "hide"
+      }
+    ]
+  }
+}

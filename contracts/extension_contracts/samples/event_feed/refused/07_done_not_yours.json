@@ -1,0 +1,12 @@
+{
+  "extension_point": "event_feed",
+  "contract": "done_request",
+  "about": "An id that is not one of the caller's events. Only the stored events can tell, so the schema lets it through.",
+  "beyond_schema": true,
+  "payload": {
+    "ids": [
+      "lib1-feed-9999"
+    ]
+  },
+  "expect_refusal": "One of these events is not yours."
+}

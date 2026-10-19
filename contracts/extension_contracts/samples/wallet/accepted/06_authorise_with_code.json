@@ -1,0 +1,15 @@
+{
+ "extension_point": "wallet",
+ "contract": "authorise_request",
+ "about": "A one-time code rides the authorise call only.",
+ "payload": {
+  "v": 1,
+  "reference": "MPOS-REF-0A1B2C3D4E5F",
+  "customer": "CUST-0001",
+  "amount_minor": 8000,
+  "currency": "AED",
+  "currency_exponent": 2,
+  "payer_code": "482913",
+  "sale_ref": "pos-key-0001"
+ }
+}

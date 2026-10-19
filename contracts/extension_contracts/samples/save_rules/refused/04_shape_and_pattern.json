@@ -1,0 +1,15 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A named shape and a written pattern together.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Both shapes",
+    "record_type": "Customer",
+    "kind": "pattern",
+    "field": "tax_id",
+    "pattern_class": "digits",
+    "pattern": "^[0-9]{15}$"
+  },
+  "expect_refusal": "Choose a named shape or write a pattern, not both."
+}

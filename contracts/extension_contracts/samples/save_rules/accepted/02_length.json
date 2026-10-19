@@ -1,0 +1,14 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "An item code of 4 to 20 characters.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Item code length",
+    "record_type": "Item",
+    "kind": "length",
+    "field": "item_code",
+    "min_length": 4,
+    "max_length": 20
+  }
+}

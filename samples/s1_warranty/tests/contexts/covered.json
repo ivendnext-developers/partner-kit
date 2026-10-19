@@ -1,0 +1,24 @@
+{
+ "_recorded": "build_context() on a test shop @ mPOS 05bb4dab, 2026-10-02",
+ "sale_ref": "pp-rec-covered",
+ "store": "Demo Retail \u2014 Store 1 - DR",
+ "pos_profile": "Store 1 \u2014 R1",
+ "company": "Demo Retail",
+ "currency": "ZAR",
+ "operator": "Administrator",
+ "customer": "Walk-in \u2014 Demo Retail",
+ "lines": [
+  {
+   "item_code": "PP-WRC-PHONE",
+   "qty": 1.0,
+   "uom": "Nos",
+   "luid": "l0"
+  },
+  {
+   "item_code": "AIRPODS-3",
+   "qty": 1.0,
+   "uom": "Nos",
+   "luid": "l1"
+  }
+ ]
+}

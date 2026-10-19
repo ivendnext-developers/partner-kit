@@ -1,0 +1,5 @@
+# Read the serial numbers a line moved: the bundle's entries
+# expect: 200 ([.data.entries[].serial_no] | sort) == ["PPC-\($ENV.RUN)-A", "PPC-\($ENV.RUN)-B"]
+GET {{BASE}}/api/resource/Serial and Batch Bundle/{{BUNDLE}}
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

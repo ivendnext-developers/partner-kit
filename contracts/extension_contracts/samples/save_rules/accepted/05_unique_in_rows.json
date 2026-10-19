@@ -1,0 +1,14 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "No item twice on a Sales Order, flagged rather than refused.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "One row per item",
+    "record_type": "Sales Order",
+    "child_table": "items",
+    "kind": "unique_in_rows",
+    "field": "item_code",
+    "mode": "flag"
+  }
+}

@@ -1,0 +1,36 @@
+{
+ "manifest_version": 2,
+ "app": "pp_wvb",
+ "prefix": "PP WVB",
+ "title": "Every Wave B kind that installs, once (row WAVEB)",
+ "version": "0.0.1",
+ "publisher": "PP WVB",
+ "description": "A test manifest carrying a check before payment, a capture on scan and one on customer add, a scan source over its own unit table, and field rules on a named till theme, installed switched off (field rules have no switch) and removed by our test bench's install cycle.",
+ "allowed_urls": ["https://partner.example/wvb/check", "https://partner.example/wvb/capture"],
+ "doctypes": [
+  {"name": "PP WVB Unit", "fields": [
+   {"fieldname": "unit_code", "fieldtype": "Data", "label": "Unit code", "unique": 1, "reqd": 1},
+   {"fieldname": "item", "fieldtype": "Link", "label": "Item", "options": "Item", "reqd": 1},
+   {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "In stock\nSold"}],
+   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1,
+                    "export": 1, "share": 0, "print": 0, "email": 0}]}
+ ],
+ "extension_subscriptions": [
+  {"key": "guard", "point": "check", "label": "Coupon guard", "endpoint_url": "https://partner.example/wvb/check",
+   "timeout_seconds": 3, "down_answer": "refuse"},
+  {"key": "on_scan", "point": "capture", "label": "Unit capture", "endpoint_url": "https://partner.example/wvb/capture",
+   "timeout_seconds": 1.5, "settings": {"event": "scan", "item_groups": ["All Item Groups"]}},
+  {"key": "on_customer", "point": "capture", "label": "Customer capture",
+   "endpoint_url": "https://partner.example/wvb/capture", "down_answer": "allow_and_flag",
+   "settings": {"event": "customer_add"}}
+ ],
+ "scan_sources": [
+  {"source_name": "PP WVB Units", "record_type": "PP WVB Unit", "barcode_field": "unit_code", "item_from": "item",
+   "status_field": "status", "available_values": ["In stock"], "sequence": 10}
+ ],
+ "field_rules": [
+  {"theme": "PP Partner Till", "surface": "cart_line", "field": "item_name", "action": "relabel", "label": "Product"},
+  {"theme": "PP Partner Till", "surface": "customer_card", "field": "points", "action": "hide"},
+  {"theme": "PP Partner Till", "surface": "customer_create", "field": "phone", "action": "require"}
+ ]
+}

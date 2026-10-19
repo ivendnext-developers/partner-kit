@@ -1,0 +1,18 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "Markup in a sentence the till shows as written.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false
+  },
+  "payload": {
+    "verdict": "refuse",
+    "reason": "<b>No</b>"
+  },
+  "expect_refusal": "reason must be plain text of 1 to 140 characters"
+}

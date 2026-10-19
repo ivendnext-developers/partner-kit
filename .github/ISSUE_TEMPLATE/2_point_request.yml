@@ -1,0 +1,35 @@
+# Generated from feedback/point_request.md by .github/scripts/issue_forms.py: edit that form, then re-run the script.
+name: "Extension-point request"
+description: "ask for a new extension point, or for more from a published one"
+title: "Extension-point request: "
+body:
+  - type: markdown
+    attributes:
+      value: "**Every member of the programme can read this issue**, other partners' and other customers' teams too. Never put a secret in it (no key, password, signing secret or token), no shoppers' personal data, and no customer's name unless the customer has agreed. What we may ask you next, and what happens after you send it: [`feedback/point_request.md`](https://github.com/ivendnext-developers/partner-kit/blob/main/feedback/point_request.md)."
+  - type: textarea
+    id: s1
+    attributes:
+      label: "1. What you need to do"
+      placeholder: "The need in the customer's business terms, and the step it concerns: sale, return, scan, customer add or back office. No names, no shoppers' data."
+    validations:
+      required: true
+  - type: textarea
+    id: s2
+    attributes:
+      label: "2. The closest extension point"
+      placeholder: "Its name as guide chapter 9 gives it and what is missing, or \"none\"."
+    validations:
+      required: true
+  - type: textarea
+    id: s3
+    attributes:
+      label: "3. If it is never built"
+      placeholder: "What you do instead, and what it costs the customer."
+    validations:
+      required: true
+  - type: checkboxes
+    id: tick_4
+    attributes:
+      label: "Money or the till"
+      options:
+        - label: "It touches a sale, a price or a payment"

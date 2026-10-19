@@ -1,0 +1,20 @@
+/* S24's kiosk: read from a step away, on a tablet or a screen on the shop floor. */
+:root { --bg: #f6f7f9; --card: #ffffff; --ink: #111827; --muted: #4b5563; --accent: #1f6feb; --line: #d1d5db; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0b0f14; --card: #151b23; --ink: #f3f4f6; --muted: #9ca3af; --accent: #58a6ff; --line: #30363d; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 32px 24px; text-align: center; }
+h1 { font-size: 1.4rem; font-weight: 600; color: var(--muted); margin: 0 0 24px; }
+.prompt { display: block; font-size: 2rem; font-weight: 600; margin: 48px 0; }
+#scan { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+#result { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px; }
+#picture { max-width: 220px; max-height: 220px; object-fit: contain; margin-bottom: 12px; }
+.item { font-size: 2rem; font-weight: 700; margin: 0 0 4px; overflow-wrap: anywhere; }
+.unit { color: var(--muted); margin: 0 0 20px; }
+.price { font-size: 3rem; font-weight: 800; color: var(--accent); margin: 0; font-variant-numeric: tabular-nums; }
+.note { color: var(--muted); font-size: 0.95rem; margin: 20px 0 0; }
+.message { font-size: 1.8rem; font-weight: 600; margin: 48px 0; }
+[hidden] { display: none !important; }

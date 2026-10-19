@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/scan_source.v1.schema.json",
+  "title": "Scan source, version 1",
+  "description": "A Retail Scan Source record: a table of the shop's unit codes the till's scan reads on a miss. Judged by business_logic/scan_source.py validate_source when the record is saved. Page: docs/extending/scan_source.md.",
+  "$defs": {
+    "declaration": {
+      "description": "Nothing leaves the shop. The code field must be unique on its table (or name); the item field links to Item, or is parent on a child table of Batch.",
+      "type": "object",
+      "required": [
+        "doctype",
+        "source_name",
+        "record_type",
+        "barcode_field",
+        "item_from"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "doctype": {
+          "const": "Retail Scan Source"
+        },
+        "source_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "record_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "barcode_field": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "item_from": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "batch_from": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "serial_from": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "status_field": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "available_values": {
+          "description": "The sellable statuses, one per line.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "warehouse_field": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "capture_as": {
+          "description": "An active Transaction Item Attribute; needs a status field.",
+          "type": "string",
+          "minLength": 1
+        },
+        "enabled": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "capture_as"
+                ]
+              }
+            },
+            {
+              "required": [
+                "status_field"
+              ]
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "required": [
+                  "status_field"
+                ]
+              }
+            },
+            {
+              "required": [
+                "available_values"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

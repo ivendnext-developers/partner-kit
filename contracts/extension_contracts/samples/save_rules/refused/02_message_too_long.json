@@ -1,0 +1,15 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A message of 141 characters.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Long message",
+    "record_type": "Customer",
+    "kind": "pattern",
+    "field": "tax_id",
+    "pattern_class": "digits",
+    "message": "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"
+  },
+  "expect_refusal": "The message can be at most 140 characters."
+}

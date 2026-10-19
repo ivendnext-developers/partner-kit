@@ -1,0 +1,5 @@
+# Read one item
+# expect: 200 .data.name == $ENV.ITEM
+GET {{BASE}}/api/resource/Item/{{ITEM}}
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

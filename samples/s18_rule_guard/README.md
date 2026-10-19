@@ -1,0 +1,67 @@
+# S18 — Members-only rule guard (a check before payment)
+
+![A sale of a members-only item refused at Pay, then a member's sale above the ID limit asking for ID, then paid](screenshots/s18_flow.gif)
+
+*The till's Pay on a members-only item: refused in the service's own words for a walk-in, a question for a member's larger sale, then the sale paid and booked.*
+
+When the cashier presses **Pay**, the shop's server prices the basket and asks this service. It **refuses** a sale that holds a members-only item for a customer who is not a member, in its own words, and **asks** the cashier for ID when the sale is at or above the shop's limit. Everything else is allowed. A refused sale books nothing.
+
+The recipe: [`recipes/rule_guard.md`](../../recipes/rule_guard.md).
+
+## What the shop does
+
+1. **Install the app** (the shop's administrator). It comes in switched off, and it is set to refuse the sale when the service is down, so an outage never sells a members-only item. The install adds the record type **PP RGD Rule**, the role **PP RGD Integration** and the feed registration **PP RGD Rule feed**.
+2. **Write your rule, in Desk.** One **PP RGD Rule** record per rule: a *Members-only item*, a *Members-only item group*, a *Member customer group*, or *Ask for ID at or above* an amount in the sale's currency (several limits: the lowest applies; none: never ask). Switch a record off to stop using it. The service reads the switched-on records and keeps them a minute, so a change applies within a minute. A line's own item group and the customer's own customer group count; a group above them does not.
+3. **Hand the service its user.** Make a user with **Is Desk User** ticked and the role **PP RGD Integration** alone, generate its API key, choose it as the *Application User* of **PP RGD Rule feed**, then press **Connect again** on the app (many shops), or give the service its key (one shop). Until then, once the check is on, every sale is refused with *"Member rule guard is not set up yet…"* (and with *"…your shop refused its key…"* if the shop later refuses that key). With no *Member customer group* record nobody is a member. Give that user no User Permissions: a rule naming a record outside them is not read.
+4. **Switch the check on** (the System Manager). Open **Retail Extension Subscription**, the record *Member rule guard*, read what it is sent, tick the consent, choose the POS Profiles it answers (none chosen = all) and switch it on.
+5. **Nothing more for the cashier to set.** On Pay the till shows the service's own sentences.
+
+**Where it shows.** On the till, at **Pay**, on the counter frame and on the phone: *"This sale can't be paid"* with the service's sentence for a members-only item sold to a customer who is not a member (nothing is booked), or a Yes / No question asking whether the customer has shown ID. If the service does not answer, the cashier reads *"Member rule guard did not answer. This sale can't be paid until it does. Try again, or get a manager."* Offline the till cannot ask the service, so it applies the check's down answer, *refuse*: the sale cannot be paid until the till is back online. A return is judged only for the items it sells (an exchange rung without its sale), by the members-only rule; the ID question is asked on a sale only, and what a return takes back is never guarded. Desk gains the **PP RGD Rule** list; nothing is added to a print layout or a report.
+
+**What leaves the shop.** One address: the partner's service (the manifest ships a test address; the partner writes its own, and the shop's server must trust its certificate). At each **Pay** the shop's server sends it, signed, the priced basket: each line's item code, item group, quantity and amounts, the sale's totals, the customer and their customer group, the coupon codes, the sale details the cashier captured and the payment methods offered. Never a card. The consent in step 4 lists these fields. The service also reads the shop's **PP RGD Rule** records, with the app's integration user (its role reads that record type and nothing else), and writes nothing: it has no webhook and no till key.
+
+## What is in the folder
+
+| File | What it is |
+|---|---|
+| `manifest.json` | one `check` service, installed switched off, `refuse` when the service is down; the **PP RGD Rule** record type and its feed |
+| `rule.py` | the pure core: the signature check (`verify`), the shape check (`context_of`), the shop's rule from its records (`rules_of`), the answer (`decide`) |
+| `service/app.py` | the service, standard library only: `POST /rgd/check`, `GET /health`; for one shop, or for many through the app template's handshake (`POST /ivendnext/connect`, `/disconnect`) |
+| `app.json` | how CitiXsys hosts it: as a **function**, paid per call, since it only answers a press (guide chapter 14b, *A function or a container*), at `https://rule-guard.ivendnext.app` |
+| `tests/` | the rule, the service over the wire with signed calls, every answer against the published contract, two shops each judged by its own records (`test_shop_rules.py`) |
+
+**Many shops** (the App library's `ivendnext_rgd`): set `IVN_LIBRARY_APP=ivendnext_rgd`, `RGD_PREFIX=IVENDNEXT RGD` and a store (`IVN_SHOPS_FILE`, or the hosting's table) instead of `PP_POINT_SECRET`. Each shop connects itself after its install; each check is verified with that shop's own secret, `ivendnext_rgd:sub:guard`, and judged by that shop's own Rule records, read with the user key it handed over on *Connect again*.
+
+**Settings** (`service/.env.local`, never committed): `PP_POINT_SECRET` (handed back at install as `pp_rgd:sub:guard`), `PP_PORT`, `RGD_PREFIX` (default `PP RGD`), and the shop to read the rule from: `IVN_SHOP_URL` and `IVN_SHOP_KEY` (the integration user's `<api key>:<api secret>`). A laptop run with no shop: `PP_MEMBERS_ONLY_ITEMS` and `PP_MEMBERS_ONLY_GROUPS` (comma lists), `PP_MEMBER_GROUPS`, `PP_ASK_ABOVE` (whole currency units; blank = never ask) instead.
+
+The service reads the shop's rule records and nothing else, and writes nothing. A return that sells nothing reads nothing and is allowed.
+
+## Run it
+
+From the kit's root (the folder that holds `samples/`):
+
+```bash
+python3 -m unittest discover -s samples/s18_rule_guard/tests -p 'test_*.py'
+python3 samples/s18_rule_guard/tests/canaries.py
+```
+
+To start the service, run this from the sample's own folder, `samples/s18_rule_guard/`, with the settings above in `service/.env.local`:
+
+```bash
+python3 service/app.py service/.env.local
+```
+
+## What it looks like
+
+Taken on our test bench on 2026-10-10 (product pin: the iVendNext POS app `87812e141`), on iVendNext POS's counter frame (the till, `/pos?frame=terminal`) in a 1440 px wide browser window, light mode, and on its phone frame (`/pos` in a 390 × 844 phone viewport) for the rows marked *the phone*. The cashier is shown as *Thabo Nkosi*, at the kit's demo shop *Demo Retail*, store *Store 1 — R1*. The counter frame's basket screens stop above the till's key row (other samples' keys); the GIF's frames are all cut by that one box, and the phone stills are the whole screen. The member is the bench's placeholder customer *PP SET5 Member*; the item is the bench's probe item (`PP-KIT-ITEM`). The card is the bench's simulated terminal (the demo button *demo: verified* was pressed; the screen then reads *✓ verified*), and the sale was booked on the bench (`ACC-PSINV-2026-08670`). On the phone the member's sale was answered *No* and voided.
+
+| Step | Frame | Screenshot |
+|---|---|---|
+| 1. A walk-in's basket holds the members-only item | the till | ![](screenshots/01_walk_in_basket.png) |
+| 2. Pay: *This sale can't be paid*, with the service's own sentence; nothing is booked | the till | ![](screenshots/02_this_sale_cant_be_paid.png) |
+| 3. The same item for a member, three of it (R 300.00) | the till | ![](screenshots/03_member_basket.png) |
+| 4. Pay: the till asks the cashier the service's question, *Yes* or *No* (the Checkout header still reads *Walk-in* on this screen, on both frames; the next screens name the member) | the till | ![](screenshots/04_asks_for_id.png) |
+| 5. After *Yes* the card terminal is asked, and answers *Authorized* | the till | ![](screenshots/05_authorized_after_yes.png) |
+| 6. The sale is booked: tendered R 300.00 | the till | ![](screenshots/06_paid_and_booked.png) |
+| 7. The phone: the walk-in's sale refused at Checkout | the phone | ![](screenshots/07_phone_this_sale_cant_be_paid.png) |
+| 8. The phone: the member's sale asks the same question | the phone | ![](screenshots/08_phone_asks_for_id.png) |

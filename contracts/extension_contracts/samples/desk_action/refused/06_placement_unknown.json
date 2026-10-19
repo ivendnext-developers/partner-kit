@@ -1,0 +1,19 @@
+{
+  "extension_point": "desk_action",
+  "contract": "declaration",
+  "about": "A placement Desk does not have.",
+  "payload": {
+    "doctype": "Retail Desk Action",
+    "service": "lib1-desk-service",
+    "record_type": "Sales Order",
+    "label": "Assign pick route",
+    "placement": "toolbar",
+    "roles": [
+      {
+        "role": "Stock User"
+      }
+    ],
+    "send_fields": "name"
+  },
+  "expect_refusal": "Choose where the button is shown."
+}

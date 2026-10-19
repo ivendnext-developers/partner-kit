@@ -1,0 +1,14 @@
+{
+ "app": "loyalty",
+ "version": "1.1.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "env": [
+  {"name": "IVN_LIBRARY_APP", "required": true},
+  {"name": "LYL_PREFIX", "required": true},
+  {"name": "PP_STATE", "required": true}
+ ]
+}

@@ -1,0 +1,5 @@
+# List this run's serial numbers (all three are in stock now)
+# expect: 200 (.data | length) == 3 and all(.data[]; .status == "Active")
+GET {{BASE}}/api/resource/Serial No?fields=["name","item_code","status","warehouse"]&filters=[["name","like","PPC-{{RUN}}-%"]]&limit_page_length=10
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

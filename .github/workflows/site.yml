@@ -1,0 +1,81 @@
+# The partner site (developer.ivendnext.com), built from the kit's own guide by site/build.py, and its branded PDFs
+# (downloads/*.pdf) by site/pdf/build_pdfs.py with the runner's headless Chrome; nothing built is committed.
+#   - every pull request: build, test, link-check, and keep the built site as a run artifact;
+#   - every push to main (a merged pull request): the same, then DEPLOY to GitHub Pages (ruled 2026-10-14: "make it automatic");
+#   - a manual run (Actions -> Site -> Run workflow) on main with "deploy" ticked redeploys without a new commit.
+name: Site
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy the built site to GitHub Pages (main only)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    concurrency:                 # a push never cancels a manual run; only a newer pull-request run replaces an older one
+      group: site-${{ github.event_name }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0               # the sitemap's lastmod is each page's last commit date, which needs the whole history
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the build tools (pinned, hash-checked)
+        run: python3 -m pip install --require-hashes -r site/requirements.txt
+      - name: Test the build and the link check (each shown able to fail)
+        run: python3 site/test_site.py
+        env:
+          CHROME: /usr/bin/google-chrome     # its setUpClass builds the PDFs too, so the download addresses can be checked
+      - name: Test the PDFs and each of their checks (each planted fault red)
+        run: python3 site/test_pdfs.py
+        env:
+          CHROME: /usr/bin/google-chrome
+      - name: Build the site
+        run: python3 site/build.py site/_out
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          SITE_REQUIRE_OPTIONAL: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy)) }}   # a deploy needs every optional include
+      - name: Build the PDFs (the blueprint form and how to fill it, from the kit's files; refused if one breaks a rule)
+        run: python3 site/pdf/build_pdfs.py site/_out
+        env:
+          CHROME: /usr/bin/google-chrome
+          GITHUB_SHA: ${{ github.sha }}
+      - name: Check every internal link, image and fragment of the built site
+        run: python3 site/check_links.py site/_out
+      - name: Test the search against the built index (the golden queries, each planted fault red)
+        run: node site/test_search.mjs site/_out
+      - name: Test the visit counter's script (a page view, every guard, each event, a counter that is down; each fault planted red)
+        run: node site/test_analytics.mjs site/_out
+      - name: Test Plan a project's shortlist against the built catalogue (order, each recipe once, the blueprint equal to needs.py's)
+        run: node site/test_plan.mjs site/_out
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/_out
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy))
+    needs: build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

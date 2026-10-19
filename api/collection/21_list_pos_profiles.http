@@ -1,0 +1,6 @@
+# List the till profiles and the selling warehouse each one sells from — S2's pick moves stock to it
+# expect: 200 (.data | length) > 0 and (.data[0] | has("warehouse"))
+# capture: PROFILE=.data[0].name
+GET {{BASE}}/api/resource/POS Profile?fields=["name","warehouse"]&order_by=name asc&limit_page_length=5
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

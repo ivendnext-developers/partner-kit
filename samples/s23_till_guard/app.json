@@ -1,0 +1,16 @@
+{
+ "app": "till-guard",
+ "version": "1.1.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s23_till_guard/service/app.lambda_handler",
+ "package": ["tools/app_template/service", "samples/s23_till_guard/guard.py", "samples/s23_till_guard/service"],
+ "env": [
+  {"name": "IVN_LIBRARY_APP", "required": true},
+  {"name": "TGR_PREFIX", "required": true}
+ ]
+}

@@ -1,0 +1,47 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A help address on the app's own record type (its form and list open the page at the heading) and on the field it adds to the shop's Customer (the help icon beside the label).",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_hlp",
+    "prefix": "PP HLP",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "PP HLP Visit",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ],
+    "custom_fields": [
+      {
+        "dt": "Customer",
+        "fieldname": "pp_hlp_visits",
+        "fieldtype": "Int",
+        "label": "Visits",
+        "insert_after": "customer_name"
+      }
+    ],
+    "property_setters": [
+      {
+        "doc_type": "PP HLP Visit",
+        "property": "documentation",
+        "value": "https://docs.ivendnext.com/docs/retail-extensions/visits#the-visit-record",
+        "property_type": "Data"
+      },
+      {
+        "doc_type": "Customer",
+        "field_name": "pp_hlp_visits",
+        "property": "documentation_url",
+        "value": "https://docs.ivendnext.com/docs/retail-extensions/visits#visits-on-a-customer",
+        "property_type": "Data"
+      }
+    ]
+  }
+}

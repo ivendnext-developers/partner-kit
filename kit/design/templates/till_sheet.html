@@ -1,0 +1,74 @@
+<!doctype html>
+<!-- ivn-kit 0.1.0 template · a till sheet: a page opened from an app key on the POS, framed
+     in a bottom sheet (≤ 480px). It applies a SAMPLE tenant theme (sample-theme.js) the way a
+     real page applies the `theme` field of its signed context. Try ?theme=dark and ?dir=rtl. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warranty check</title>
+<link rel="stylesheet" href="../ivn-kit.css">
+<script src="../ivn-kit.js"></script>
+<script src="sample-theme.js"></script>
+<script>
+  var q = new URLSearchParams(location.search);
+  ivnKit.applyTheme(window.IVN_SAMPLE_THEMES[q.get("theme") === "dark" ? "dark" : "light"]);
+  if (q.get("dir") === "rtl") ivnKit.applyDir("ar");
+</script>
+</head>
+<body class="ivn">
+<div class="ivn-sheet" role="document">
+  <div class="ivn-sheet-grab" aria-hidden="true"></div>
+  <header class="ivn-sheet-head">
+    <h1 class="ivn-title" style="font-size:1.15rem;flex:1">Warranty check</h1>
+    <button class="ivn-btn ivn-btn-icon" type="button" aria-label="Close" id="close">
+      <svg class="ivn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </header>
+
+  <main class="ivn-sheet-body">
+    <div class="ivn-field">
+      <label class="ivn-label" for="serial">Serial number<span class="ivn-req" aria-hidden="true">*</span></label>
+      <div class="ivn-link-search"><input class="ivn-input ivn-mono" id="serial" value="CD18-5530-0917" placeholder="Scan or type a serial"></div>
+      <span class="ivn-help">Scan the label under the battery.</span>
+    </div>
+
+    <section class="ivn-card" aria-labelledby="res-h">
+      <ul class="ivn-list">
+        <li class="ivn-list-row">
+          <div class="ivn-list-main"><div class="ivn-list-title" id="res-h">Cordless drill 18V</div><div class="ivn-list-sub">Bought 2026-03-14 · Store 04</div></div>
+          <span class="ivn-pill ivn-pill-green">Covered</span>
+        </li>
+        <li class="ivn-list-row">
+          <div class="ivn-list-main"><div class="ivn-list-title">Battery pack 18V</div><div class="ivn-list-sub">Accessory · 6 months</div></div>
+          <span class="ivn-pill ivn-pill-red">Expired</span>
+        </li>
+      </ul>
+    </section>
+
+    <div class="ivn-field">
+      <label class="ivn-label" for="reason">Claim reason</label>
+      <select class="ivn-select" id="reason"><option>Will not charge</option><option>Motor noise</option><option>Physical damage</option></select>
+    </div>
+    <label class="ivn-check"><input type="checkbox" checked>Customer has the receipt</label>
+    <label class="ivn-toggle"><input type="checkbox" role="switch"><span class="ivn-toggle-track"></span>Lend a replacement now</label>
+
+    <div class="ivn-banner" role="alert">
+      <svg class="ivn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>
+      <span>The receipt photo didn't upload. You can add the claim without it.</span>
+    </div>
+  </main>
+
+  <footer class="ivn-sheet-foot">
+    <button class="ivn-btn" type="button">Cancel</button>
+    <button class="ivn-btn ivn-btn-primary" type="button" id="add">Add claim to sale</button>
+  </footer>
+</div>
+<script>
+  ivnKit.linkSearch(document.getElementById("serial"), {
+    search: function () { return Promise.resolve([{ value: "CD18-5530-0917", label: "CD18-5530-0917", description: "Cordless drill 18V" }]); }
+  });
+  document.getElementById("add").addEventListener("click", function () { ivnKit.toast("Claim added to the sale", { kind: "success" }); });
+</script>
+</body>
+</html>

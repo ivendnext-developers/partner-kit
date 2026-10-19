@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/fields.v1.schema.json",
+  "title": "Field rules, version 1",
+  "description": "A POS Studio theme's field rules (Retail POS Theme, table field_rules), as a shop or a partner declares them in Desk, the REST API or an import. Checked at save by business_logic/pos_fields.py validate_field_rules; what the schema cannot see (that a shown field exists and is Data, Select, Int or Check; that a sale attribute is active and not required; at most three more Item and three more Customer fields) is checked there too. Page: docs/extending/fields.md.",
+  "$defs": {
+    "declaration": {
+      "type": "object",
+      "required": [
+        "doctype",
+        "theme_name",
+        "field_rules"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "doctype": {
+          "const": "Retail POS Theme"
+        },
+        "theme_name": {
+          "description": "The theme's name.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "layout": {
+          "description": "The theme's layout (POS Studio).",
+          "type": "string"
+        },
+        "palette": {
+          "description": "The theme's palette (POS Studio).",
+          "type": "string"
+        },
+        "field_rules": {
+          "description": "The rules. A theme with none draws every screen as it ships.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          }
+        }
+      }
+    },
+    "rule": {
+      "description": "One rule: on this screen, do this to this field. One action per screen and field; a relabel or show may repeat per language.",
+      "type": "object",
+      "required": [
+        "surface",
+        "field",
+        "action"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {
+          "description": "The till screen, or receipt_preview: the receipt (screen, paper and offline slip), which takes show only.",
+          "enum": [
+            "customer_create",
+            "customer_card",
+            "cart_line",
+            "item_result",
+            "sale_details",
+            "receipt_preview"
+          ]
+        },
+        "field": {
+          "description": "A field the screen names (hide, relabel, require), an Item or Customer field (show; an Item field on receipt_preview), or a sale attribute's name (sale_details).",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "action": {
+          "enum": [
+            "hide",
+            "relabel",
+            "require",
+            "show"
+          ]
+        },
+        "label": {
+          "description": "The shop's word (relabel) or an extra line's heading (show), shown verbatim.",
+          "type": "string",
+          "maxLength": 40
+        },
+        "language": {
+          "description": "Blank for everyone, or the language this label is for.",
+          "type": "string",
+          "maxLength": 10
+        },
+        "sequence": {
+          "description": "The order of extra lines; lower first.",
+          "minimum": 0
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "action": {
+              "enum": [
+                "hide",
+                "relabel"
+              ]
+            },
+            "surface": {
+              "enum": [
+                "customer_create",
+                "customer_card",
+                "cart_line",
+                "item_result",
+                "sale_details"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "action": {
+              "const": "show"
+            },
+            "surface": {
+              "enum": [
+                "customer_card",
+                "cart_line",
+                "item_result",
+                "receipt_preview"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "action": {
+              "const": "require"
+            },
+            "surface": {
+              "const": "customer_create"
+            },
+            "field": {
+              "enum": [
+                "phone",
+                "email"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "show_limit": {
+      "description": "At most this many MORE fields of each DocType a theme may show, counted once however many screens show them.",
+      "type": "object",
+      "properties": {
+        "Item": {
+          "maximum": 3
+        },
+        "Customer": {
+          "maximum": 3
+        }
+      }
+    }
+  }
+}

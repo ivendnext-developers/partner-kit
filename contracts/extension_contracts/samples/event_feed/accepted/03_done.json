@@ -1,0 +1,11 @@
+{
+  "extension_point": "event_feed",
+  "contract": "done_request",
+  "about": "Two events handled.",
+  "payload": {
+    "ids": [
+      "lib1-feed-0001",
+      "lib1-feed-0002"
+    ]
+  }
+}

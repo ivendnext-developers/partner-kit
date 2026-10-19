@@ -1,0 +1,12 @@
+{
+  "extension_point": "remote_till_key",
+  "contract": "answer",
+  "about": "An empty object.",
+  "given": {
+    "returns": [
+      "message"
+    ]
+  },
+  "payload": {},
+  "expect_refusal": "the result is not a non-empty dict"
+}

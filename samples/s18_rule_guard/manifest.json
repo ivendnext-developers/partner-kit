@@ -1,0 +1,132 @@
+{
+ "manifest_version": 2,
+ "app": "pp_rgd",
+ "prefix": "PP RGD",
+ "title": "Members-only rule guard",
+ "version": "0.2.0",
+ "publisher": "Partner Programme sample",
+ "description": "A check before payment: when the cashier presses Pay, the partner's service receives the priced basket and refuses a sale that holds a members-only item for a customer who is not a member, in its own words, or asks the cashier a yes/no question when the sale is at or above the shop's ID limit. The shop keeps its own rule in PP RGD Rule records (members-only items and item groups, member customer groups, the ID limit); the service reads the switched-on ones with the app's integration user, within a minute of a change, and writes nothing. It installs switched off; after install the shop makes the integration user with the role PP RGD Integration (the install makes the role), chooses it on the feed registration PP RGD Rule feed, reads what the service is sent, ticks the consent, chooses the stores it answers and switches it on. When the service is down the sale is refused, so an outage never sells a members-only item. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/rgd/check"
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "guard",
+   "point": "check",
+   "label": "Member rule guard",
+   "endpoint_url": "https://host.docker.internal:8125/rgd/check",
+   "timeout_seconds": 3,
+   "down_answer": "refuse"
+  }
+ ],
+ "doctypes": [
+  {
+   "name": "PP RGD Rule",
+   "autoname": "hash",
+   "track_changes": 1,
+   "description": "Your members-only rule, one rule per record: an item or an item group only members may buy, a customer group that counts as members, or the sale amount at or above which the cashier is asked for ID. The check reads the switched-on records within a minute of a change.",
+   "fields": [
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "label": "Rule",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "options": "Members-only item\nMembers-only item group\nMember customer group\nAsk for ID at or above",
+     "description": "Members-only item or item group: refused at Pay for a customer who is not in a member customer group (with no member customer group, nobody is a member). Ask for ID: the cashier is asked on a sale at or above the amount (several: the lowest applies)."
+    },
+    {
+     "fieldname": "item",
+     "fieldtype": "Link",
+     "options": "Item",
+     "label": "Item",
+     "in_list_view": 1,
+     "depends_on": "eval:doc.kind=='Members-only item'",
+     "mandatory_depends_on": "eval:doc.kind=='Members-only item'"
+    },
+    {
+     "fieldname": "item_group",
+     "fieldtype": "Link",
+     "options": "Item Group",
+     "label": "Item group",
+     "in_list_view": 1,
+     "depends_on": "eval:doc.kind=='Members-only item group'",
+     "mandatory_depends_on": "eval:doc.kind=='Members-only item group'",
+     "description": "The item group a line carries itself; a group above it does not count."
+    },
+    {
+     "fieldname": "customer_group",
+     "fieldtype": "Link",
+     "options": "Customer Group",
+     "label": "Customer group",
+     "in_list_view": 1,
+     "depends_on": "eval:doc.kind=='Member customer group'",
+     "mandatory_depends_on": "eval:doc.kind=='Member customer group'",
+     "description": "The sale's customer is a member when the customer is in this group itself; a group above it does not count."
+    },
+    {
+     "fieldname": "amount",
+     "fieldtype": "Float",
+     "label": "Amount",
+     "non_negative": 1,
+     "in_list_view": 1,
+     "depends_on": "eval:doc.kind=='Ask for ID at or above'",
+     "mandatory_depends_on": "eval:doc.kind=='Ask for ID at or above'",
+     "description": "One number, used in the sale's own currency whatever currency the sale is in. 0 asks on every sale."
+    },
+    {
+     "fieldname": "enabled",
+     "fieldtype": "Check",
+     "label": "Switched on",
+     "default": "1",
+     "in_list_view": 1,
+     "description": "Off: the check stops using this rule within a minute."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RGD Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP RGD Rule",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/rule_guard.html"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP RGD Rule feed",
+   "description": "the rule guard's service reads the shop's rule records",
+   "events": [
+    "PP RGD Rule"
+   ]
+  }
+ ]
+}

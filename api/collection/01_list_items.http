@@ -1,0 +1,7 @@
+# List stocked items with their group — S1 asks this for the items on a sale (an item missing from the answer is unknown).
+# No group or company is named, so the file runs on any shop: our test bench and every sandbox site alike
+# expect: 200 (.data | length) > 0 and (.data[0] | has("item_group"))
+# capture: ITEM=.data[0].name
+GET {{BASE}}/api/resource/Item?fields=["name","item_group"]&filters=[["is_stock_item","=",1],["has_variants","=",0]]&limit_page_length=5
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

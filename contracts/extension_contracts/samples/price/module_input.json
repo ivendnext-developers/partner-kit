@@ -1,0 +1,245 @@
+{
+ "about": "The bytes a price module reads (price/1), built from the same composed rows by the server (partner_price.groups_of + module_input) and the till (mpos_partner_price.js groupsOf + priceInput + moduleInput). `expect` is the server's text, pinned on both hosts.",
+ "cases": {
+  "s1_promotion_then_member": {
+   "currency": "AED",
+   "precision": 2,
+   "customer_group": "Select",
+   "config": {
+    "rules": [
+     {
+      "id": "Select 5%",
+      "item_group": "*",
+      "customer_group": "Select",
+      "percent_bp": 500,
+      "cap_minor": null,
+      "min_qty_milli": 0
+     }
+    ]
+   },
+   "rows": [
+    {
+     "line": 0,
+     "item_code": "X",
+     "item_group": "Products",
+     "rate": 90.0,
+     "qty": 1,
+     "list_rate": 100.0
+    }
+   ],
+   "expect": "{\"config\":{\"rules\":[{\"cap_minor\":null,\"customer_group\":\"Select\",\"id\":\"Select 5%\",\"item_group\":\"*\",\"min_qty_milli\":0,\"percent_bp\":500}]},\"currency\":\"AED\",\"currency_exponent\":2,\"customer_group\":\"Select\",\"lines\":[{\"item\":\"X\",\"item_group\":\"Products\",\"line_total_minor\":10000,\"luid\":\"0@90.00\",\"promotion_discount_minor\":1000,\"qty_milli\":1000,\"unit_price_minor\":9000}],\"v\":1}"
+  },
+  "two_lots_of_one_line_are_one_module_line": {
+   "currency": "AED",
+   "precision": 2,
+   "customer_group": "Select",
+   "config": {
+    "rules": [
+     {
+      "id": "Select 5%",
+      "item_group": "*",
+      "customer_group": "Select",
+      "percent_bp": 500,
+      "cap_minor": null,
+      "min_qty_milli": 0
+     }
+    ]
+   },
+   "rows": [
+    {
+     "line": 0,
+     "item_code": "LOT",
+     "item_group": "Products",
+     "rate": 12.5,
+     "qty": 2,
+     "list_rate": 12.5
+    },
+    {
+     "line": 0,
+     "item_code": "LOT",
+     "item_group": "Products",
+     "rate": 12.5,
+     "qty": 3,
+     "list_rate": 12.5
+    }
+   ],
+   "expect": "{\"config\":{\"rules\":[{\"cap_minor\":null,\"customer_group\":\"Select\",\"id\":\"Select 5%\",\"item_group\":\"*\",\"min_qty_milli\":0,\"percent_bp\":500}]},\"currency\":\"AED\",\"currency_exponent\":2,\"customer_group\":\"Select\",\"lines\":[{\"item\":\"LOT\",\"item_group\":\"Products\",\"line_total_minor\":6250,\"luid\":\"0@12.50\",\"promotion_discount_minor\":0,\"qty_milli\":5000,\"unit_price_minor\":1250}],\"v\":1}"
+  },
+  "a_promotion_split_is_two_module_lines": {
+   "currency": "AED",
+   "precision": 2,
+   "customer_group": null,
+   "config": {
+    "rules": [
+     {
+      "id": "Select 5%",
+      "item_group": "*",
+      "customer_group": "Select",
+      "percent_bp": 500,
+      "cap_minor": null,
+      "min_qty_milli": 0
+     }
+    ]
+   },
+   "rows": [
+    {
+     "line": 1,
+     "item_code": "SPLIT",
+     "item_group": "Products",
+     "rate": 90.0,
+     "qty": 2,
+     "list_rate": 100.0
+    },
+    {
+     "line": 1,
+     "item_code": "SPLIT",
+     "item_group": "Products",
+     "rate": 100.0,
+     "qty": 2,
+     "list_rate": 100.0
+    }
+   ],
+   "expect": "{\"config\":{\"rules\":[{\"cap_minor\":null,\"customer_group\":\"Select\",\"id\":\"Select 5%\",\"item_group\":\"*\",\"min_qty_milli\":0,\"percent_bp\":500}]},\"currency\":\"AED\",\"currency_exponent\":2,\"customer_group\":null,\"lines\":[{\"item\":\"SPLIT\",\"item_group\":\"Products\",\"line_total_minor\":20000,\"luid\":\"1@90.00\",\"promotion_discount_minor\":2000,\"qty_milli\":2000,\"unit_price_minor\":9000},{\"item\":\"SPLIT\",\"item_group\":\"Products\",\"line_total_minor\":20000,\"luid\":\"1@100.00\",\"promotion_discount_minor\":0,\"qty_milli\":2000,\"unit_price_minor\":10000}],\"v\":1}"
+  },
+  "a_weighed_line": {
+   "currency": "ZAR",
+   "precision": 2,
+   "customer_group": "Select",
+   "config": {
+    "rules": [
+     {
+      "id": "Select 5%",
+      "item_group": "*",
+      "customer_group": "Select",
+      "percent_bp": 500,
+      "cap_minor": null,
+      "min_qty_milli": 0
+     }
+    ]
+   },
+   "rows": [
+    {
+     "line": 0,
+     "item_code": "DELI",
+     "item_group": "Deli",
+     "rate": 80.0,
+     "qty": 1.245,
+     "list_rate": 80.0
+    }
+   ],
+   "expect": "{\"config\":{\"rules\":[{\"cap_minor\":null,\"customer_group\":\"Select\",\"id\":\"Select 5%\",\"item_group\":\"*\",\"min_qty_milli\":0,\"percent_bp\":500}]},\"currency\":\"ZAR\",\"currency_exponent\":2,\"customer_group\":\"Select\",\"lines\":[{\"item\":\"DELI\",\"item_group\":\"Deli\",\"line_total_minor\":9960,\"luid\":\"0@80.00\",\"promotion_discount_minor\":0,\"qty_milli\":1245,\"unit_price_minor\":8000}],\"v\":1}"
+  },
+  "a_three_digit_currency": {
+   "currency": "KWD",
+   "precision": 3,
+   "customer_group": "Select",
+   "config": {
+    "rules": [
+     {
+      "id": "Select 5%",
+      "item_group": "*",
+      "customer_group": "Select",
+      "percent_bp": 500,
+      "cap_minor": null,
+      "min_qty_milli": 0
+     }
+    ]
+   },
+   "rows": [
+    {
+     "line": 0,
+     "item_code": "K",
+     "item_group": "Products",
+     "rate": 1.234,
+     "qty": 3,
+     "list_rate": 1.5
+    }
+   ],
+   "expect": "{\"config\":{\"rules\":[{\"cap_minor\":null,\"customer_group\":\"Select\",\"id\":\"Select 5%\",\"item_group\":\"*\",\"min_qty_milli\":0,\"percent_bp\":500}]},\"currency\":\"KWD\",\"currency_exponent\":3,\"customer_group\":\"Select\",\"lines\":[{\"item\":\"K\",\"item_group\":\"Products\",\"line_total_minor\":4500,\"luid\":\"0@1.234\",\"promotion_discount_minor\":798,\"qty_milli\":3000,\"unit_price_minor\":1234}],\"v\":1}"
+  },
+  "a_zero_digit_currency": {
+   "currency": "JPY",
+   "precision": 2,
+   "customer_group": "Select",
+   "config": {
+    "rules": [
+     {
+      "id": "Select 5%",
+      "item_group": "*",
+      "customer_group": "Select",
+      "percent_bp": 500,
+      "cap_minor": null,
+      "min_qty_milli": 0
+     }
+    ]
+   },
+   "rows": [
+    {
+     "line": 0,
+     "item_code": "J",
+     "item_group": "Products",
+     "rate": 500.0,
+     "qty": 2,
+     "list_rate": 500.0
+    }
+   ],
+   "expect": "{\"config\":{\"rules\":[{\"cap_minor\":null,\"customer_group\":\"Select\",\"id\":\"Select 5%\",\"item_group\":\"*\",\"min_qty_milli\":0,\"percent_bp\":500}]},\"currency\":\"JPY\",\"currency_exponent\":0,\"customer_group\":\"Select\",\"lines\":[{\"item\":\"J\",\"item_group\":\"Products\",\"line_total_minor\":1000,\"luid\":\"0@500.00\",\"promotion_discount_minor\":0,\"qty_milli\":2000,\"unit_price_minor\":500}],\"v\":1}"
+  },
+  "a_line_priced_above_its_list": {
+   "currency": "AED",
+   "precision": 2,
+   "customer_group": "Select",
+   "config": {
+    "rules": [
+     {
+      "id": "Select 5%",
+      "item_group": "*",
+      "customer_group": "Select",
+      "percent_bp": 500,
+      "cap_minor": null,
+      "min_qty_milli": 0
+     }
+    ]
+   },
+   "rows": [
+    {
+     "line": 0,
+     "item_code": "M",
+     "item_group": "Products",
+     "rate": 120.0,
+     "qty": 1,
+     "list_rate": 100.0
+    }
+   ],
+   "expect": "{\"config\":{\"rules\":[{\"cap_minor\":null,\"customer_group\":\"Select\",\"id\":\"Select 5%\",\"item_group\":\"*\",\"min_qty_milli\":0,\"percent_bp\":500}]},\"currency\":\"AED\",\"currency_exponent\":2,\"customer_group\":\"Select\",\"lines\":[{\"item\":\"M\",\"item_group\":\"Products\",\"line_total_minor\":12000,\"luid\":\"0@120.00\",\"promotion_discount_minor\":0,\"qty_milli\":1000,\"unit_price_minor\":12000}],\"v\":1}"
+  },
+  "non_ascii_names": {
+   "currency": "AED",
+   "precision": 2,
+   "customer_group": "عملاء مختارون",
+   "config": {
+    "rules": [
+     {
+      "id": "Select 5%",
+      "item_group": "*",
+      "customer_group": "Select",
+      "percent_bp": 500,
+      "cap_minor": null,
+      "min_qty_milli": 0
+     }
+    ]
+   },
+   "rows": [
+    {
+     "line": 0,
+     "item_code": "قهوة 🎁",
+     "item_group": "مشروبات",
+     "rate": 15.0,
+     "qty": 1,
+     "list_rate": 15.0
+    }
+   ],
+   "expect": "{\"config\":{\"rules\":[{\"cap_minor\":null,\"customer_group\":\"Select\",\"id\":\"Select 5%\",\"item_group\":\"*\",\"min_qty_milli\":0,\"percent_bp\":500}]},\"currency\":\"AED\",\"currency_exponent\":2,\"customer_group\":\"عملاء مختارون\",\"lines\":[{\"item\":\"قهوة 🎁\",\"item_group\":\"مشروبات\",\"line_total_minor\":1500,\"luid\":\"0@15.00\",\"promotion_discount_minor\":0,\"qty_milli\":1000,\"unit_price_minor\":1500}],\"v\":1}"
+  }
+ }
+}

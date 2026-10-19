@@ -1,0 +1,5 @@
+# Read a stock balance (the engine's own figure) — S2's putaway checks how much is received and not yet in a bin
+# expect: 200 (.data | length) == 1 and .data[0].actual_qty > 0
+GET {{BASE}}/api/resource/Bin?fields=["item_code","warehouse","actual_qty"]&filters=[["item_code","=","AIRPODS-3"],["warehouse","=","{{STORE}}"]]
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "settings",
+  "about": "An event the extension point does not have.",
+  "payload": {
+    "event": "checkout"
+  },
+  "expect_refusal": "Name the event in the settings"
+}

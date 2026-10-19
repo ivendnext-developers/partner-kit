@@ -1,0 +1,6 @@
+# Read one till profile — its warehouse is where a till sale takes stock from
+# expect: 200 .data.name == $ENV.PROFILE and (.data.warehouse | length) > 0
+# capture: STORE=.data.warehouse
+GET {{BASE}}/api/resource/POS Profile/{{PROFILE}}
+Authorization: token {{KEY}}:{{SECRET}}
+Accept: application/json

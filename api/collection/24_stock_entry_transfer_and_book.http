@@ -1,0 +1,10 @@
+# Move one unit between two warehouses and book it in ONE call — S2's pick. Send `purpose` as well as the type
+# (over the API it is not derived). Valuation and the ledger stay the engine's.
+# expect: 200 .data.docstatus == 1 and .data.purpose == "Material Transfer" and .data.items[0].s_warehouse == $ENV.STORE
+POST {{BASE}}/api/resource/Stock Entry
+Authorization: token {{KEY}}:{{SECRET}}
+Content-Type: application/json
+Accept: application/json
+
+{"stock_entry_type": "Material Transfer", "purpose": "Material Transfer", "company": "{{COMPANY}}", "docstatus": 1,
+ "items": [{"item_code": "AIRPODS-3", "qty": 1, "s_warehouse": "{{STORE}}", "t_warehouse": "{{WH}}"}]}

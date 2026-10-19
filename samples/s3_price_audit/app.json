@@ -1,0 +1,14 @@
+{
+ "app": "price-audit",
+ "version": "1.0.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "env": [
+  {"name": "IVN_LIBRARY_APP", "required": true},
+  {"name": "PDO_PREFIX", "required": true},
+  {"name": "PP_STATE", "required": true}
+ ]
+}
