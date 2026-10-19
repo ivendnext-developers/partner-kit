@@ -3,7 +3,7 @@
 **What this changes, in a sentence:**
 
 - **Anyone** may propose a fix to a text or a link. A code owner reviews it.
-- **Code and samples** come from members (an iVendNext Partner, a licensed customer's IT team, the CitiXsys Consulting Team), after the shape is agreed in a feedback issue. Say which one here: 
+- **Code and samples** come from members (an iVendNext Partner, a licensed customer's IT team, the CitiXsys Consulting Team), after the shape is agreed in a feedback issue in the private `partner-feedback` repository. Say which one here: 
 - Other proposals are closed politely, with a link to the partner form: https://www.ivendnext.com/partner/#be-a-partner
 
 - [ ] Every commit is signed off (`git commit -s`; [CONTRIBUTING.md](../CONTRIBUTING.md)).
