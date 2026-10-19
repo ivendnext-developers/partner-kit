@@ -7,7 +7,7 @@ Thank you for helping. Proposed changes are welcome on the guide, the recipes, t
 Anyone may read this kit, clone it and fork it. To get a sandbox or build for an iVendNext customer, [become an iVendNext Partner](https://www.ivendnext.com/partner/#be-a-partner).
 
 - **Anyone** may propose a fix to a text or a link: a typo, a broken link, a sentence that is wrong. Sign it off (below); the code owners review it.
-- **Members** (an iVendNext Partner, a licensed customer's IT team, the CitiXsys Consulting Team, once onboarded) may also propose code and samples, after agreeing the shape in a feedback issue.
+- **Members** (an iVendNext Partner, a licensed customer's IT team, the CitiXsys Consulting Team, once onboarded) may also propose code and samples, after agreeing the shape in a feedback issue in the private `partner-feedback` repository ([how](feedback/README.md)).
   A new sample's README has a `## Run it` section with a code block, and its door comes from the needs cards that cite it (or a `**Door:**` line, see `needs/README.md`); the site build fails without them.
 - Any other proposal is closed politely, with a pointer to the partner form above.
 - **A security problem** is never a proposal or an issue: use [SECURITY.md](SECURITY.md).
@@ -17,7 +17,7 @@ Anyone may read this kit, clone it and fork it. To get a sandbox or build for an
 - **One subject per change.** A fix and a new feature are two proposals.
 - **Keep the four rules** ([guide ch. 3](guide/03_ladder_and_never_list.md)). A change that needs one of them set aside is read as a request for an extension point; open a *Point request* issue instead.
 - **Never commit a secret** (an API key, a signing secret, a password, a token) or a shopper's personal data. Use made-up customers and sales.
-- **A new need, not a fix?** Members open a feedback issue with the matching form first, so we can agree the shape before you build.
+- **A new need, not a fix?** Members open a feedback issue with the matching form first, in the private `partner-feedback` repository (this repository has no Issues tab), so we can agree the shape before you build.
 
 ## Sign-off — the Developer Certificate of Origin
 
