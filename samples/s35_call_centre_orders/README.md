@@ -1,4 +1,4 @@
-# S35 — *Call-centre orders by district* (`pp_cco`): a Desk action that writes the record it was pressed on
+# S35 — Call-centre orders by district (`pp_cco`): a button that routes a phone order
 
 A customer phones the call centre; the agent enters the order once, in Desk, and presses **Send to store**. The order then ships from the store that serves the customer's district, and appears on that store's own list. This sample is for a developer who wants a button on a Desk record whose service **changes that same record**: here, the warehouse of a draft Sales Order and of every line on it.
 
