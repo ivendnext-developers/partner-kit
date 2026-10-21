@@ -1,0 +1,34 @@
+{
+ "manifest_version": 2,
+ "app": "pp_cco",
+ "prefix": "PP CCO",
+ "title": "Call-centre orders by district",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "Phone orders sent to the store that serves the customer's district. A Serving store field on Territory (the shop's own district tree): the store that ships call-centre orders for that territory, or, left empty, the store of the territory above it. A button on a draft Sales Order, Send to store, that a Sales User or Sales Manager presses in Desk: the service reads the order with the app's own user, walks its territory up the tree to the first Serving store, and writes that store's warehouse on the order and on every line; the form reloads; a store's own tax or prices may change the total, and the answer says so. Pressed again, it changes nothing. A bundle's parts take the store too. Each store finds its orders in the Sales Order list filtered on its own Set Source Warehouse; a User Permission on a store's warehouse hides orders sent to other stores, not an order whose Set Source Warehouse is empty. Removing the app removes the Serving stores (its export keeps a copy). Each press sends the order's name and territory, the pressing user and the language; the service then reads the whole order (its customer, addresses, lines and prices) and writes it back with the new warehouse, keeping none of it. The install makes no role: give the app's user a role of the shop's own with read and write on Sales Order and read on Territory, Customer and Warehouse (it reaches every sales order and customer: give it to no one else), choose it on the feed PP CCO Routing feed (leave the feed off: switched on, it would record every sales order's saves), which a service serving many shops receives on Connect again. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": ["https://host.docker.internal:8125/press/route"],
+ "custom_fields": [
+  {"dt": "Territory", "fieldname": "pp_cco_store", "fieldtype": "Link", "options": "Warehouse", "label": "Serving store",
+   "insert_after": "parent_territory", "in_list_view": 1, "in_standard_filter": 1,
+   "description": "The store whose warehouse ships call-centre orders for customers in this territory. Leave it empty to use the store of the territory above."}
+ ],
+ "registered_applications": [
+  {"name": "PP CCO Routing feed", "description": "the call-centre routing service reads and writes sales orders as this feed's user; leave the feed switched off", "events": ["Sales Order"]}
+ ],
+ "extension_subscriptions": [
+  {"key": "route", "point": "desk_action", "label": "Send to store service", "endpoint_url": "https://host.docker.internal:8125/press/route", "timeout_seconds": 5}
+ ],
+ "desk_actions": [
+  {
+   "record_type": "Sales Order",
+   "label": "Send to store",
+   "placement": "form",
+   "service": "route",
+   "roles": ["Sales User", "Sales Manager"],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name, territory",
+   "confirm_text": "Send this order to the store that serves its territory? Its warehouse changes on every line."
+  }
+ ]
+}

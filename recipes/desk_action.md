@@ -120,6 +120,8 @@ Limits to tell the customer:
 | `send_fields`, as small as the work allows | the consent text is built from it, and a change clears the consent |
 | roles that may press | re-checked on the server at every press, with the record's state and every condition |
 
+**A service that writes the pressed record** (S35, [call-centre orders](call_centre_orders.md)) meets the shop's own save: a table is replaced whole, so send every row back as read; a sales order's save reads its customer with a rights check, so the app's user needs read on Customer; and the shop saves a draft whose lines name a group warehouse and refuses it only at submit, so check a warehouse before you write it; and a bundle's parts (`packed_items`) keep their warehouse unless you write them too.
+
 ## Technical notes
 
 ### What was proven where
