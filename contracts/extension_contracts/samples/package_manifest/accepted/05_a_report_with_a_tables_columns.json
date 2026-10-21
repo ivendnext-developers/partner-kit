@@ -1,0 +1,32 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A report over the shop's stock count with one line per item row: the count's date beside each row's item, counted quantity and value difference, a filter on the rows, and a totals row.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_rpc",
+    "prefix": "PP RPC",
+    "version": "0.1.0",
+    "reports": [
+      {
+        "name": "PP RPC Count Lines",
+        "ref_doctype": "Stock Reconciliation",
+        "columns": [
+          "posting_date",
+          "items.item_code",
+          "items.qty",
+          "items.amount_difference"
+        ],
+        "filters": [
+          [
+            "items.warehouse",
+            "is",
+            "set"
+          ]
+        ],
+        "order_by": "posting_date desc",
+        "add_total_row": 1
+      }
+    ]
+  }
+}

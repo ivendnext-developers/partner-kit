@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "void_answer",
+  "about": "A refused cancel says why.",
+  "payload": {
+    "verdict": "refuse"
+  },
+  "expect_refusal": "the answer's keys are not the ones refuse takes"
+}

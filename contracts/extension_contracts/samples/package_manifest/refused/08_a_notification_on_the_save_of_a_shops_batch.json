@@ -1,0 +1,30 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A notification on every save of the shop's batch: it would run inside each save, and an error in it would stop the save.",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_exp",
+    "prefix": "PP EXP",
+    "version": "0.1.0",
+    "notifications": [
+      {
+        "name": "PP EXP Batch Expiry",
+        "document_type": "Batch",
+        "event": "Save",
+        "days_in_advance": 30,
+        "date_changed": "expiry_date",
+        "channel": "Email",
+        "subject": "Batch {{ doc.name }} expires on {{ doc.expiry_date }}",
+        "message": "Batch {{ doc.name }} of {{ doc.item }} expires on {{ doc.expiry_date }}. Check the shelf and the batch's quantity.",
+        "recipients": [
+          {
+            "receiver_by_role": "Stock Manager"
+          }
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "may only be Days Before or Days After a date",
+  "beyond_schema": true
+}

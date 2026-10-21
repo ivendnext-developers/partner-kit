@@ -53,9 +53,9 @@ class Refused(unittest.TestCase):
         errs = planted(lambda m: m["extension_subscriptions"][0].update(scope=["Mall"]))
         self.assertIn("(scope)", reasons(errs))
 
-    def test_an_unknown_capture_event_names_the_three(self):
+    def test_an_unknown_capture_event_names_the_four(self):
         errs = planted(lambda m: m["extension_subscriptions"][1]["settings"].update(event="customer_pick"))
-        self.assertIn("scan, customer_add or customer_select", reasons(errs))
+        self.assertIn("scan, customer_add, customer_select or qty_change", reasons(errs))
 
     def test_a_save_rule_key_the_product_does_not_know_is_refused(self):
         errs = planted(lambda m: m["save_rules"][1].update(actions=["submit"]))

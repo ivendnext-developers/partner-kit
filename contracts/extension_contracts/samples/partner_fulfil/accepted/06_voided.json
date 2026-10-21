@@ -1,0 +1,8 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "void_answer",
+  "about": "Cancelled; never issued again on this key.",
+  "payload": {
+    "verdict": "voided"
+  }
+}

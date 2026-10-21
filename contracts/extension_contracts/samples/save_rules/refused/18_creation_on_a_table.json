@@ -1,0 +1,18 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "beyond_schema": true,
+  "about": "A row's creation as a source: a row keeps the creation it was sent with.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Row age",
+    "record_type": "Material Request",
+    "child_table": "items",
+    "kind": "derived",
+    "field": "custom_row_days",
+    "formula": "days_between",
+    "source": "creation",
+    "source_b": "schedule_date"
+  },
+  "expect_refusal": "creation can be the first source of days_between only, on a rule without a table."
+}

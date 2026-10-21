@@ -1,0 +1,20 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "On a stock entry whose purpose is Material Transfer, every row names its material request.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Transfers name their request",
+    "record_type": "Stock Entry",
+    "child_table": "items",
+    "kind": "required_when",
+    "field": "material_request",
+    "conditions": [
+      {
+        "field": "parent.purpose",
+        "operator": "=",
+        "value": "Material Transfer"
+      }
+    ]
+  }
+}

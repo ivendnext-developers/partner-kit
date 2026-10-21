@@ -653,6 +653,7 @@ DOOR_NEXT = {
     "till-key": "Test it with your service answering, and again with it stopped: the till must say so in words, never wait.",
     "check-before-payment": "Test it with your service stopped: the till applies the answer you declared for when it is down.",
     "capture-on-event": "Test it with your service stopped: the till applies the answer you declared for when it is down.",
+    "fulfil-at-sale": "Test it with your service stopped: the sale stands, the receipt waits, and a refund of the line waits for the cancel.",
     "manifest": "Install it on your sandbox the way the shop's administrator will; the checker refuses a manifest that declares code.",
     "sandboxed-function": "Run it on the till offline as well as online: it must give the same answer.",
 }
@@ -660,7 +661,8 @@ DOOR_NEXT = {
 # records (a manifest) come straight after configuration, because the services and screens built after them read and
 # write those records. Every door is in exactly one step (build() refuses a door that is not).
 EXTENSION_DOORS = {"check-before-payment", "document-check", "capture-on-event", "field-rules", "save-rules", "desk-action",
-                   "partner-page", "scan-source", "label-layout", "wallet", "fiscal-reader", "payment-connector"}
+                   "partner-page", "scan-source", "label-layout", "wallet", "fiscal-reader", "payment-connector",
+                   "fulfil-at-sale"}
 BUILD_ORDER = [
     ({"configure", "receipt"}, "Configure first: the settings in iVendNext Desk that everything after them relies on."),
     ({"manifest"}, "Then your own records and fields: the services and screens built after them read and write them."),

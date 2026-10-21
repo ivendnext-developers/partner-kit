@@ -5,9 +5,10 @@
 
 Chapter 16's "Possible today" list is built by the site from the cards in needs/ (tools/needs/needs.py), so this check reads
 the cards' `door`, not the chapter. A page in `contracts/pages/` is an extension point; its title (the first heading) is
-mapped to a door in TITLE_DOOR below, held as data so that no card can satisfy it by accident. Each mapped door must be the
+mapped to a door in TITLE_DOOR below, held as data so that no card can satisfy it by accident (a page whose door is `manifest`, a
+manifest kind, is satisfied by any ready manifest card). Each mapped door must be the
 door of at least one card whose verdict is Ready or Ready, with limits. A contract page whose title is not in the map fails
-too: adding a contract, its door and its first card is one change. Reads local files only; no network, no secret.
+too: adding a contract, its door and its first card is one change (for a `manifest` page, any ready manifest card is enough). Reads local files only; no network, no secret.
 """
 from __future__ import annotations
 
@@ -23,9 +24,12 @@ TITLE_DOOR = {
     "Field rules": "field-rules",
     "Fiscal reader": "fiscal-reader",
     "Label layout": "label-layout",
+    "List mark": "manifest",           # a manifest kind (list_marks): any ready manifest card satisfies this door
+    "Partner fulfil — a code your service makes for a paid sale line": "fulfil-at-sale",
     "Partner page": "partner-page",
     "The iVendNext Remote Gateway Contract — `paygw/1` (Payment Gateway Interface 1)": "payment-connector",
     "Pricing extension point": "sandboxed-function",
+    "Print template readers — `ivn_rows` and `ivn_value`": "manifest",   # read by a manifest's print format: as above
     "Receipt: the shop's own lines, WhatsApp, a checked layout": "receipt",
     "Remote till key": "till-key",
     "Save rules": "save-rules",

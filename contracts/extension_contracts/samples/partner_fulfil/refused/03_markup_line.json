@@ -1,0 +1,13 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "issue_answer",
+  "about": "Markup in a printed line.",
+  "payload": {
+    "verdict": "issued",
+    "ref": "GZ-1",
+    "lines": [
+      "<b>PIN</b> 1"
+    ]
+  },
+  "expect_refusal": "each line must be plain text of 1 to 48 characters"
+}

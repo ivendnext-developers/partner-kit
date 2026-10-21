@@ -50,18 +50,19 @@
       "additionalProperties": false,
       "properties": {
         "surface": {
-          "description": "The till screen, or receipt_preview: the receipt (screen, paper and offline slip), which takes show only.",
+          "description": "The till screen, or receipt_preview: the receipt (screen, paper and offline slip), which takes show only, or totals: the online basket's totals words, which take relabel only.",
           "enum": [
             "customer_create",
             "customer_card",
             "cart_line",
             "item_result",
             "sale_details",
-            "receipt_preview"
+            "receipt_preview",
+            "totals"
           ]
         },
         "field": {
-          "description": "A field the screen names (hide, relabel, require), an Item or Customer field (show; an Item field on receipt_preview), or a sale attribute's name (sale_details).",
+          "description": "A field the screen names (hide, relabel, require), an Item or Customer field (show; an Item field on receipt_preview), a sale attribute's name (sale_details), or a money figure: price, discount, amount (relabel) and list_price (show) on cart_line; discount, charges, delivery, tax, grand_total (relabel) on totals.",
           "type": "string",
           "minLength": 1,
           "maxLength": 140
@@ -75,7 +76,7 @@
           ]
         },
         "label": {
-          "description": "The shop's word (relabel) or an extra line's heading (show), shown verbatim.",
+          "description": "The shop's word (relabel) or an extra line's heading (show), shown verbatim. A money figure's label carries no digit, no % and no currency sign (checked at save).",
           "type": "string",
           "maxLength": 40
         },
@@ -104,7 +105,8 @@
                 "customer_card",
                 "cart_line",
                 "item_result",
-                "sale_details"
+                "sale_details",
+                "totals"
               ]
             }
           }

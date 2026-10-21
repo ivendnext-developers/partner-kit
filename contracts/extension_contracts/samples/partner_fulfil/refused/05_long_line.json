@@ -1,0 +1,13 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "issue_answer",
+  "about": "A line over 48 characters.",
+  "payload": {
+    "verdict": "issued",
+    "ref": "GZ-1",
+    "lines": [
+      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    ]
+  },
+  "expect_refusal": "each line must be plain text of 1 to 48 characters"
+}

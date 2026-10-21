@@ -30,19 +30,20 @@ defect in one is a defect in its source: report it through the feedback forms ([
 
 ## The contracts: copies of the product's published files
 
-The folder [`contracts/`](contracts/README.md) holds 228 files copied from the iVendNext POS app's repository
+The folder [`contracts/`](contracts/README.md) holds 312 files copied from the iVendNext POS app's repository
 (`ivendnext/iVendNext_PWA`) at one commit, so a check runs with this repository alone. POS app commit
-`4c3f11b550f19a30b00f66f2c18a7b56c96e4aba` (the merge of the POS app's train T11 into `development`, 2026-10-16; against the earlier pin (train T10's merge) the copies take what that train added: the new *document check* extension point (its page, its schema and eleven samples); two new save-rule kinds, a value unique across records and submit or cancel kept for a role (the schema, the page and four samples); a capture when an existing customer is put on a sale (the schema, the page and five samples); and the POS day and terminal in the check before payment (the schema, the page and eight samples). The checker copy `tools/manifest/validate.py` is taken at the same commit; it now takes a document check's subscription and the two new save-rule keys. Of the 206 files copied at the earlier pin, fourteen changed and twenty-two are new (196 samples now).
+`7d47d331a203fd8b2794f83270a4190b3c1908e8` (the merge of the POS app's train T12 into `development`, 2026-10-18, build 2.0.0.654; against the earlier pin (train T11's merge) the copies take what that train added: two new extension points, *fulfil at sale* (a partner's voucher or PIN issued at payment: its page, its schema, fifteen samples and a stand-in voucher service) and the *list mark* (a coloured label on a list row: its page, its schema and ten samples); a page on the *print template readers* (`ivn_rows`, `ivn_value`); a capture when a line's quantity changes and a capture *notice* that warns without stopping the sale (the schema, the page and eleven samples); money columns and totals in field rules (the schema, the page and three samples); four more save-rule forms, a count per day, a total of a document's rows, days between two dates and a limit judged on change or read from a settings record (the schema, the page and twenty-three samples); and a package's report columns from a table, date reminders, print formats that read other records, a settings record of its own and a multi-select field (the manifest schema and fifteen samples). The checker copy `tools/manifest/validate.py` is taken at the same commit. Of the 228 files copied at the earlier pin, nine changed in content (every page's first line names the new commit) and eighty-four are new (273 samples now).
 Our kit check
-compares every file below with its source at that commit on each change; the only edits are the links inside the fifteen
-pages, which point at the files here, and three calls the product's pages name by the framework's own name, which the copies name by what they do (the save rules page's submit and cancel, the fiscal reader page's direct write). A defect in one is a defect there: report it through the feedback forms ([feedback/README.md](feedback/README.md)).
+compares every file below with its source at that commit on each change; the only edits are the links inside the eighteen
+pages, which point at the files here, four calls the product's pages name by the framework's own name, which the copies name by what they do (the save rules page's submit and cancel, the fiscal reader page's direct write, the template readers page's raw SQL), one customer's name and one reference to our own board on the save rules page, which the copy leaves out, and, in the samples, the product's lane id at the end of a sample's `about` line and the framework's name in one refused print format (its raw query stays, and is refused for the same reason). A defect in one is a defect there: report it through the feedback forms ([feedback/README.md](feedback/README.md)).
 
 | Kit path | Source path in the POS app's repository | Files | Header |
 |---|---|---|---|
-| `contracts/pages/<point>.md` | `docs/extending/<point>.md` | 15 | yes (first line) |
+| `contracts/pages/<point>.md` | `docs/extending/<point>.md` | 18 | yes (first line) |
 | `contracts/extension_contract_check.py` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contract_check.py` | 1 | yes (first line) |
-| `contracts/extension_contracts/<point>.v1.schema.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/<point>.v1.schema.json` | 15 | no header (JSON) |
-| `contracts/extension_contracts/samples/<point>/**/*.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/samples/<point>/**/*.json` | 196 | no header (JSON) |
+| `contracts/extension_contracts/<point>.v1.schema.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/<point>.v1.schema.json` | 17 | no header (JSON) |
+| `contracts/extension_contracts/samples/<point>/**/*.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/samples/<point>/**/*.json` | 273 | no header (JSON) |
+| `contracts/extension_contracts/standins/*.py` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/standins/*.py` | 2 | yes (first line) |
 | `contracts/gs1_codes.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/gs1_codes.json` | 1 | no header (JSON) |
 
 `contracts/README.md` is ours, not a copy.

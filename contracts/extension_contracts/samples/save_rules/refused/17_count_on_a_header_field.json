@@ -1,0 +1,23 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "beyond_schema": true,
+  "about": "A count whose condition names a field of the header, not of the rows.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "kind": "derived",
+    "rule_name": "Count on the header",
+    "record_type": "Stock Reconciliation",
+    "field": "custom_line_count",
+    "formula": "count_rows",
+    "source_table": "items",
+    "conditions": [
+      {
+        "field": "purpose",
+        "operator": "=",
+        "value": "Stock Reconciliation"
+      }
+    ]
+  },
+  "expect_refusal": "Condition: items's rows have no field named purpose."
+}

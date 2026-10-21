@@ -1,0 +1,16 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "customer_answer",
+  "about": "A customer's notice carries no values.",
+  "payload": {
+    "verdict": "notice",
+    "message": "Points expire this week.",
+    "line_attributes": [
+      {
+        "name": "Warranty",
+        "value": "W-1"
+      }
+    ]
+  },
+  "expect_refusal": "the answer carries a key notice does not allow here"
+}

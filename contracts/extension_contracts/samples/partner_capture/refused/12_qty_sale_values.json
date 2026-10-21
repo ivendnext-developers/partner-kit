@@ -1,0 +1,15 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "qty_answer",
+  "about": "A quantity's answer puts values on its line, never on the sale.",
+  "payload": {
+    "verdict": "allow",
+    "sale_attributes": [
+      {
+        "sale_attribute": "Ref",
+        "attribute_value": "1"
+      }
+    ]
+  },
+  "expect_refusal": "the answer carries a key allow does not allow here"
+}

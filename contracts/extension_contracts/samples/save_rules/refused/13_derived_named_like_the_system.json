@@ -1,0 +1,16 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A derived value into a shop field named without custom_ or a package's prefix: a name the system may read.",
+  "beyond_schema": true,
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Counted flag without the prefix",
+    "record_type": "Stock Reconciliation",
+    "kind": "derived",
+    "field": "is_counted",
+    "formula": "count_rows",
+    "source_table": "items"
+  },
+  "expect_refusal": "A derived value writes a field named custom_… or with your package's prefix: other names are ones the system may read."
+}

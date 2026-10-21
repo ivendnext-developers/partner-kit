@@ -95,13 +95,14 @@ FORBIDDEN = [
      "other channels send to an outside service"),
     ("a notification on an engine record type", lambda m: m["notifications"][0].update(document_type="Sales Invoice"),
      "runs inside every save of it"),
-    ("a notification key it may not set", lambda m: m["notifications"][0].update(attach_print=1),
+    # POS train T12: attach_print is now allowed with its bounds, and a settings record (issingle) is a kind of its own;
+    # both are held by test_manifest_check_pmanifest4.py, the product's own test of them
+    ("a notification key it may not set", lambda m: m["notifications"][0].update(method="send"),
      "keys a manifest notification may not set"),
     ("a webhook condition on an engine record type", lambda m: m["webhooks"].append(
         {"name": "PP TST Sale hook", "doctype": "POS Invoice", "event": "on_submit",
          "url": "http://host.docker.internal:8129/never-called", "condition": "doc.loyalty_program.startswith('G')"}),
      "evaluated inside every save"),
-    ("a single-record type", lambda m: m["doctypes"][1].update(issingle=1), "single-record type"),
     ("a tree record type", lambda m: m["doctypes"][1].update(is_tree=1), "tree record type"),
     ("a default on a field added to an engine record type", lambda m: m["custom_fields"][0].update(default="1"),
      "'default' is enforced on every save"),
@@ -169,7 +170,7 @@ HELP_REFUSED = [
     ("a markup bracket", _setter(_OWN, "documentation", "https://docs.ivendnext.com/a<b>"), HELP),
     ("an unsafe documentation_url on its own field on a shop's record type",
      _setter("Customer", "documentation_url", "javascript:alert(1)", "pp_tst_flag"), HELP),
-    ("issingle on its own record type", _setter(_OWN, "issingle", "1"), "single-record type"),
+    ("issingle on its own record type", _setter(_OWN, "issingle", "1"), "may not change 'issingle'"),
     ("is_submittable on its own record type", _setter(_OWN, "is_submittable", "1"), "submittable"),
     ("permissions on its own record type", _setter(_OWN, "permissions", "[]"), "may not change 'permissions'"),
     ("autoname on its own record type", _setter(_OWN, "autoname", "hash"), "may not change 'autoname'"),

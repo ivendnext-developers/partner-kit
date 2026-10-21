@@ -1,0 +1,320 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://ivendnext.com/extending/contracts/partner_fulfil.v1.schema.json",
+ "title": "Partner fulfil, version 1",
+ "description": "Extension point fulfil: what iVendNext POS sends a partner's HTTPS service to make a code (a voucher, a PIN) for a PAID sale line an item filter names (issue_request), and to cancel it before that line is refunded or when the sale is cancelled (void_request), and what the service answers. Answers are judged by business_logic/partner_fulfil.py validate_answer: one bad key or value refuses the whole answer, which then reads as no answer (the receipt keeps waiting; a cancel changes nothing). The key rule: the same idempotency_key always returns the same code, and a void on a key wins over any later issue on it. iVendNext holds no lock across the call; it writes an answer only while the line is still waiting, and cancels at once a code that arrives for a line already settled.",
+ "$defs": {
+  "settings": {
+   "description": "The subscription's settings field (a JSON object, stored as text on the Retail Extension Subscription of extension point fulfil): the items the service makes a code for — item groups (and below), an Item field that is set, or both. The scan capture's filter.",
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "item_groups": {
+     "type": "array",
+     "maxItems": 50,
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140
+     }
+    },
+    "item_field": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140,
+     "pattern": "^[a-z][a-z0-9_]*$"
+    }
+   },
+   "anyOf": [
+    {
+     "required": [
+      "item_groups"
+     ],
+     "properties": {
+      "item_groups": {
+       "minItems": 1
+      }
+     }
+    },
+    {
+     "required": [
+      "item_field"
+     ]
+    }
+   ]
+  },
+  "issue_request": {
+   "type": "object",
+   "required": [
+    "point",
+    "context"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "point": {
+     "const": "fulfil/1"
+    },
+    "context": {
+     "$ref": "#/$defs/issue_context"
+    }
+   }
+  },
+  "issue_context": {
+   "description": "Sent after the sale's booking commits, once per line, and again on a retry (1 and 5 minutes, or the cashier's Try again) with the SAME idempotency_key. face_minor is the line's list price (its rate where there is none) in the sale's currency — the voucher's value; amount_minor is what the line was sold for, the same field and meaning as check/1's. No card data, serial, batch or other line.",
+   "type": "object",
+   "required": [
+    "v",
+    "point",
+    "call",
+    "idempotency_key",
+    "invoice",
+    "store",
+    "pos_profile",
+    "company",
+    "lang",
+    "currency",
+    "currency_exponent",
+    "customer",
+    "line"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "point": {
+     "const": "fulfil"
+    },
+    "call": {
+     "const": "issue"
+    },
+    "idempotency_key": {
+     "type": "string",
+     "minLength": 3,
+     "maxLength": 200
+    },
+    "invoice": {
+     "type": "string",
+     "minLength": 1
+    },
+    "store": {
+     "type": "string"
+    },
+    "pos_profile": {
+     "type": "string"
+    },
+    "company": {
+     "type": "string"
+    },
+    "lang": {
+     "type": "string"
+    },
+    "currency": {
+     "type": "string",
+     "minLength": 3,
+     "maxLength": 3
+    },
+    "currency_exponent": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4
+    },
+    "customer": {
+     "description": "The customer's id. Personal data.",
+     "type": "string"
+    },
+    "line": {
+     "type": "object",
+     "required": [
+      "item_code",
+      "item_group",
+      "uom",
+      "face_minor",
+      "amount_minor"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "item_code": {
+       "type": "string",
+       "minLength": 1
+      },
+      "item_group": {
+       "type": "string"
+      },
+      "uom": {
+       "type": "string"
+      },
+      "face_minor": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "amount_minor": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    }
+   }
+  },
+  "void_request": {
+   "type": "object",
+   "required": [
+    "point",
+    "context"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "point": {
+     "const": "fulfil/1"
+    },
+    "context": {
+     "$ref": "#/$defs/void_context"
+    }
+   }
+  },
+  "void_context": {
+   "description": "Sent before a return of the line is booked (the till's return screen or the Desk's Cancel code), when the sale is cancelled, and at once for a code that arrived for a line already settled. ref is the code to cancel; empty while the code is still on its way — cancel whatever the key holds, and never issue on it after.",
+   "type": "object",
+   "required": [
+    "v",
+    "point",
+    "call",
+    "idempotency_key",
+    "invoice",
+    "store",
+    "pos_profile",
+    "company",
+    "lang",
+    "ref"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "v": {
+     "const": 1
+    },
+    "point": {
+     "const": "fulfil"
+    },
+    "call": {
+     "const": "void"
+    },
+    "idempotency_key": {
+     "type": "string",
+     "minLength": 3,
+     "maxLength": 200
+    },
+    "invoice": {
+     "type": "string",
+     "minLength": 1
+    },
+    "store": {
+     "type": "string"
+    },
+    "pos_profile": {
+     "type": "string"
+    },
+    "company": {
+     "type": "string"
+    },
+    "lang": {
+     "type": "string"
+    },
+    "ref": {
+     "type": "string",
+     "maxLength": 80
+    }
+   }
+  },
+  "issue_answer": {
+   "description": "HTTP 2xx, a JSON object of at most 64 KB. issued: ref is your own id of the code (1-80 plain characters); lines print under the item (1-6 lines of at most 48 plain characters). refuse: the receipt prints that the code could not be issued and the cashier refunds the line. No amount, price, quantity or other key.",
+   "oneOf": [
+    {
+     "type": "object",
+     "required": [
+      "verdict",
+      "ref",
+      "lines"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "verdict": {
+       "const": "issued"
+      },
+      "ref": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 80,
+       "pattern": "^[^<>]*\\S[^<>]*$"
+      },
+      "lines": {
+       "type": "array",
+       "minItems": 1,
+       "maxItems": 6,
+       "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 48,
+        "pattern": "^[^<>]*\\S[^<>]*$"
+       }
+      }
+     }
+    },
+    {
+     "type": "object",
+     "required": [
+      "verdict",
+      "reason"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "verdict": {
+       "const": "refuse"
+      },
+      "reason": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140,
+       "pattern": "^[^<>]*\\S[^<>]*$"
+      }
+     }
+    }
+   ]
+  },
+  "void_answer": {
+   "description": "HTTP 2xx, a JSON object of at most 64 KB. voided: the code is cancelled (and stays so: a later issue on the key is refused). refuse: the code stays (it was used, say), so the line cannot be refunded; the sentence is shown to the cashier.",
+   "oneOf": [
+    {
+     "type": "object",
+     "required": [
+      "verdict"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "verdict": {
+       "const": "voided"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "required": [
+      "verdict",
+      "reason"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "verdict": {
+       "const": "refuse"
+      },
+      "reason": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140,
+       "pattern": "^[^<>]*\\S[^<>]*$"
+      }
+     }
+    }
+   ]
+  }
+ }
+}

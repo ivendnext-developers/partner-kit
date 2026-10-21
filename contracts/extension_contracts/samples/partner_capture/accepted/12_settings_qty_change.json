@@ -1,0 +1,11 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "settings",
+  "about": "Ask when the quantity of any line in the store's top item group changes.",
+  "payload": {
+    "event": "qty_change",
+    "item_groups": [
+      "All Item Groups"
+    ]
+  }
+}

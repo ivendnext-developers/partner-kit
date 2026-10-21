@@ -1,0 +1,17 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "beyond_schema": true,
+  "about": "A sum over a text field of the rows.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "kind": "derived",
+    "rule_name": "Sum of text",
+    "record_type": "Stock Reconciliation",
+    "field": "custom_counted_units",
+    "formula": "sum_rows",
+    "source_table": "items",
+    "source": "item_name"
+  },
+  "expect_refusal": "Sum: item_name must be a number field of the table's rows."
+}

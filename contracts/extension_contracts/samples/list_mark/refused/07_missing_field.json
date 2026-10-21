@@ -1,0 +1,20 @@
+{
+  "extension_point": "list_mark",
+  "contract": "declaration",
+  "about": "A field Item does not have.",
+  "payload": {
+    "doctype": "Retail List Mark",
+    "record_type": "Item",
+    "label": "Promo",
+    "colour": "green",
+    "conditions": [
+      {
+        "field": "pp_nothing_here",
+        "operator": "=",
+        "value": "1"
+      }
+    ]
+  },
+  "expect_refusal": "Item has no field pp_nothing_here",
+  "beyond_schema": true
+}

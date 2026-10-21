@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "scan_answer",
+  "about": "A shorter-dated batch of this item is in stock: the cashier is told, the item is added with no tap.",
+  "payload": {
+    "verdict": "notice",
+    "message": "Item VIT-C with batch B-0412 is available with less shelf life."
+  }
+}

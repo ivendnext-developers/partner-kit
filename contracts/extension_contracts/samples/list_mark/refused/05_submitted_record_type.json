@@ -1,0 +1,20 @@
+{
+  "extension_point": "list_mark",
+  "contract": "declaration",
+  "about": "Sales Invoice is submitted: its label says what can be done with it.",
+  "payload": {
+    "doctype": "Retail List Mark",
+    "record_type": "Sales Invoice",
+    "label": "Returned",
+    "colour": "red",
+    "conditions": [
+      {
+        "field": "is_return",
+        "operator": "=",
+        "value": "1"
+      }
+    ]
+  },
+  "expect_refusal": "a mark goes on a record type without one",
+  "beyond_schema": true
+}

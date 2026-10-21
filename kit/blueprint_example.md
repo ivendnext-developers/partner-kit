@@ -10,8 +10,8 @@ A chain of nine phone and electronics stores in one country, with a web shop, on
 |---|---|
 | **Prepared by** (one of: iVendNext Partner · Licensed customer · CitiXsys Consulting Team) | iVendNext Partner, for Corvane Mobile's IT and store operations teams |
 | **Date** | 2026-10-16 |
-| **Version** | 1 |
-| **Kit version** (the version of the kit you worked from) | the kit of 2026-10-16 |
+| **Version** | 2 |
+| **Kit version** (the version of the kit you worked from) | the kit of 2026-10-21 |
 | **Sandbox / staging site** (the site you tried it on) | the partner's own sandbox site |
 
 ## (a) The project in two lines
@@ -32,7 +32,7 @@ Corvane Mobile wants its nine stores and its web shop on iVendNext, with every h
 | 4 | When a customer brings a phone back, the cashier sees whether it is still under the maker's warranty | warranty-check-at-till | Ready, with limits | Till key | Online only: the key is dimmed on an offline till; when the service is down the sale goes on; the key's request carries no serial numbers (risk 3). |
 | 5 | A manager approves any sale over 1,500 before it is paid | manager-for-large-sale | Ready, with limits | Check before payment | Answered at Pay, not when the line is entered; the manager signs in on the till (no approval by e-mail). |
 | 6 | No more than two of a new launch phone in one sale | line-quantity-cap | Ready, with limits | Check before payment | Answered at Pay, not when the quantity is typed; the card's check is per line (risk 5). |
-| 7 | Prepaid airtime top-ups: the PIN is made when the sale is paid and printed on the receipt | voucher-at-payment | Not yet | Request | Ask for P-FULFIL. Until it ships (not run): the service reads the booked sale from the event feed and sends the PIN by text message. |
+| 7 | Prepaid airtime top-ups: the PIN is made when the sale is paid and printed on the receipt | voucher-at-payment | Ready, with limits | Fulfil at sale | The PIN is made after the sale is paid, one per line, and prints on the receipt; a top-up is sold online only, and its refund waits until the PIN is cancelled with the provider. |
 | 8 | Customers can pay for a phone in instalments with a pay-later provider | buy-now-pay-later | Not yet | Request | Ask us: a buy-now-pay-later tender in our payment connectors. |
 | 9 | Take the customer's old phone as a trade-in, valued at the till and taken off the new one | none | Not yet | Request | No card. Nearest request class: payment / tender (the trade-in as a tender, so the new phone's price never changes after the cashier has seen it, rule 1). An extension-point request to send. |
 | 10 | Every sale, stock move and purchase goes to our Acumatica | erp-acumatica | Ready, with limits | Our connector | About 2.75 complete sales a minute per connection (165 an hour): the launch-day peak is above it (risk 1); one ERP per company. |
@@ -68,7 +68,7 @@ Corvane Mobile wants its nine stores and its web shop on iVendNext, with every h
 |---|---|---|---|---|---|---|---|---|
 | Acumatica | out | event feed | the stores' sales, stock moves, purchases and transfers | about 2,800 a day; 154 sales at the peak hour, 462 on a launch day (web orders: risk 1) | the customer's finance team and its Acumatica partner | our Acumatica connector | the connector | not covered by the kit: ask us how the connector catches up (risk 1) |
 | WooCommerce web shop | out and in | API | orders in; stock and prices out | about 140 orders a day; 420 on a launch day | the customer's e-commerce agency | our WooCommerce connector | the connector | orders wait on the shop's side; stock is not reserved meanwhile |
-| Airtime top-up provider | out and in | event feed (P-FULFIL once it ships) | the top-up sale out; the PIN in | about 200 a day (one sale in five carries a top-up) | the airtime provider | the partner's outside app | the outside app | the PIN is sent when the provider returns; the customer is told at the till |
+| Airtime top-up provider | out and in | fulfil at sale | the paid top-up line out; the PIN in | about 200 a day (one sale in five carries a top-up) | the airtime provider | the partner's outside service | the outside service | the sale stands and the receipt waits; the cashier prints without the PIN and reprints it once the provider answers |
 | Phone makers' warranty services | in | till key | the warranty of a phone brought back | about 30 a day (returns and repairs, about 3% of sales) | each phone maker | the partner's outside service | — | the key says it could not finish, nothing is added, and the sale goes on |
 
 ## (e) What this blueprint switches on
@@ -77,7 +77,7 @@ Corvane Mobile wants its nine stores and its web shop on iVendNext, with every h
 
 | Module | On / off | Because (row or figure) |
 |---|---|---|
-| Joint extension-point lane | On | row 7 waits on P-FULFIL and the customer wants top-ups at go-live; row 9 needs an extension-point request |
+| Joint extension-point lane | On | row 9 needs an extension-point request |
 | Scale proof | On | the launch-day peak (462 sales an hour) is 2.8 times one Acumatica connection, and 45 devices is above the largest live estate of 18 terminals |
 | Release gate in the customer's CI | On | rows 5 and 6 reach the sale through a check before payment, and row 4 through a till key |
 | Dedicated bench (CitiXsys Consulting Team only) | Off | no need requires embedded Python, and an iVendNext Partner builds the project |
@@ -89,7 +89,7 @@ Corvane Mobile wants its nine stores and its web shop on iVendNext, with every h
 | # | Risk or question | Touches | What would settle it | Who can answer |
 |---|---|---|---|---|
 | 1 | The launch-day peak (462 sales an hour) is 2.8 times one Acumatica connection; whether the 140 web orders a day count against the same connection, and what the connector does while Acumatica is down, are not in the kit | row 10, (c), (d) | the scale proof on the sandbox; how many connections the customer's release carries, and how the connector catches up | us; the builder |
-| 2 | Top-ups at go-live wait on P-FULFIL; until it ships the PIN goes by text message, not on the receipt | row 7 | the extension point's release, or the customer accepting the text message for the first months | us; the customer |
+| 2 | A top-up cannot be sold offline, and a store's sale waits on the provider's PIN for its receipt | row 7, (d) | the outage rehearsal on the sandbox (risk 4), and the provider's answer time measured against the till's 5 seconds | the builder; the airtime provider |
 | 3 | The maker's warranty is held per IMEI, but the till key's request carries no serial numbers | row 4 | answer by model and the original sale's date at the till, or by IMEI once the return is booked; try both on the sandbox | the builder; the customer |
 | 4 | A five-hour outage at a mall store: Handhelds cannot receive or count, and the warranty key is dimmed | rows 4 and 12, (c) | a rehearsal on the sandbox with the till offline, and a paper fallback for deliveries | the builder; the customer's store operations team |
 | 5 | The two-per-sale limit is checked per line, so a cashier could put the launch phone on two lines | row 6 | a basket test on the sandbox: the service adds up the phone's lines before it answers | the builder |

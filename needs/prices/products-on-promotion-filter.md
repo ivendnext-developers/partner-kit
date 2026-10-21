@@ -18,7 +18,7 @@ A check field of your own on the item, kept current by an outside app that reads
 ## Limits
 - The flag lags a promotion's start and end by the app's schedule.
 - On the till a field rule can show the flag, within the three more item fields it allows.
-- A coloured row in the Desk list has no door today (the card products-on-promotion-colour).
+- A coloured label on the product's Desk list row is a list mark (the card products-on-promotion-colour).
 
 ## Tell the customer
 The product list filters to what is on promotion, updated each time our app runs.

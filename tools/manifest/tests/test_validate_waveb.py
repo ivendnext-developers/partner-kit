@@ -81,9 +81,9 @@ FORBIDDEN = [
     ("a check with settings", sub(settings={"event": "scan"}), "a check takes no settings"),
     # P-CAPTURE — partner_capture.validate_subscription's sentences
     ("a capture naming no event", sub(1, settings={"item_groups": ["All Item Groups"]}),
-     "Name the event in the settings: scan, customer_add or customer_select."),
+     "Name the event in the settings: scan, customer_add, customer_select or qty_change."),
     ("a capture with no settings", lambda m: m["extension_subscriptions"][1].pop("settings"),
-     "Name the event in the settings: scan, customer_add or customer_select."),
+     "Name the event in the settings: scan, customer_add, customer_select or qty_change."),
     ("a customer capture with a filter", sub(2, settings={"event": "customer_add", "item_groups": ["x"]}),
      "The settings of a customer_add capture may only carry: event."),
     ("a scan capture with an unknown setting", sub(1, settings={"event": "scan", "item_groups": ["x"], "price": 1}),

@@ -1,0 +1,25 @@
+{
+  "extension_point": "fields",
+  "contract": "declaration",
+  "about": "P-FIELDS v3: the list price shown beside the charged price, and Grand Total in the shop's own words.",
+  "payload": {
+    "doctype": "Retail POS Theme",
+    "theme_name": "LIB1 Fields A6",
+    "layout": "Summer Breeze",
+    "palette": "Standard",
+    "field_rules": [
+      {
+        "surface": "cart_line",
+        "field": "list_price",
+        "action": "show",
+        "label": "List price"
+      },
+      {
+        "surface": "totals",
+        "field": "grand_total",
+        "action": "relabel",
+        "label": "Total incl. VAT"
+      }
+    ]
+  }
+}

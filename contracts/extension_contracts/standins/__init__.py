@@ -1,0 +1,1 @@
+# Source: ivendnext/iVendNext_PWA apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/standins/__init__.py @ 7d47d331a203, copied unchanged: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board.

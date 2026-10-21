@@ -1,0 +1,20 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "void_request",
+  "about": "A code still on its way is cancelled by its key.",
+  "payload": {
+    "point": "fulfil/1",
+    "context": {
+      "v": 1,
+      "point": "fulfil",
+      "call": "void",
+      "idempotency_key": "POS-INV-00042:a1b2c3d4e5",
+      "invoice": "POS-INV-00042",
+      "store": "Mall Branch - NM",
+      "pos_profile": "Mall Till 1",
+      "company": "Northgate Market",
+      "lang": "en",
+      "ref": ""
+    }
+  }
+}

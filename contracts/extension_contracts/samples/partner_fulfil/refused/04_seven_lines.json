@@ -1,0 +1,19 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "issue_answer",
+  "about": "Seven lines: at most six print.",
+  "payload": {
+    "verdict": "issued",
+    "ref": "GZ-1",
+    "lines": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ]
+  },
+  "expect_refusal": "lines must be 1 to 6 lines"
+}

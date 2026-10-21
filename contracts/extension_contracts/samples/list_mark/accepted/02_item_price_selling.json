@@ -1,0 +1,19 @@
+{
+  "extension_point": "list_mark",
+  "contract": "declaration",
+  "about": "A selling price, on a list that has no label column of its own.",
+  "payload": {
+    "doctype": "Retail List Mark",
+    "record_type": "Item Price",
+    "label": "Selling",
+    "colour": "green",
+    "sequence": 5,
+    "conditions": [
+      {
+        "field": "selling",
+        "operator": "=",
+        "value": "1"
+      }
+    ]
+  }
+}

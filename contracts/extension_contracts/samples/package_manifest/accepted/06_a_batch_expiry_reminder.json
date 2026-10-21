@@ -1,0 +1,28 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A reminder 30 days before a batch of the shop's expires, by e-mail to the Stock Manager role, showing the batch's own fields. The daily scheduler sends it; no save of the batch runs it.",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_exp",
+    "prefix": "PP EXP",
+    "version": "0.1.0",
+    "notifications": [
+      {
+        "name": "PP EXP Batch Expiry",
+        "document_type": "Batch",
+        "event": "Days Before",
+        "days_in_advance": 30,
+        "date_changed": "expiry_date",
+        "channel": "Email",
+        "subject": "Batch {{ doc.name }} expires on {{ doc.expiry_date }}",
+        "message": "Batch {{ doc.name }} of {{ doc.item }} expires on {{ doc.expiry_date }}. Check the shelf and the batch's quantity.",
+        "recipients": [
+          {
+            "receiver_by_role": "Stock Manager"
+          }
+        ]
+      }
+    ]
+  }
+}

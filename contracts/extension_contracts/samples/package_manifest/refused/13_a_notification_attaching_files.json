@@ -1,0 +1,53 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A notification attaching files by their address: any private file on the site.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_hkd",
+    "prefix": "PP HKD",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "PP HKD Complaint",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ],
+    "print_formats": [
+      {
+        "name": "PP HKD Complaint Slip",
+        "doc_type": "PP HKD Complaint",
+        "html": "<h3>{{ doc.title }}</h3>"
+      }
+    ],
+    "notifications": [
+      {
+        "name": "PP HKD Complaint Mail",
+        "document_type": "PP HKD Complaint",
+        "event": "New",
+        "channel": "Email",
+        "subject": "Complaint {{ doc.title }}",
+        "message": "A complaint was raised.",
+        "recipients": [
+          {
+            "receiver_by_role": "System Manager"
+          }
+        ],
+        "attach_print": 1,
+        "print_format": "PP HKD Complaint Slip",
+        "attach_files": [
+          {
+            "file": "/private/files/contract.pdf"
+          }
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "a file named by a field can be any private file on the site"
+}

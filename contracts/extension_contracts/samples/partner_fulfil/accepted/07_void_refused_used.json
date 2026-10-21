@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "void_answer",
+  "about": "The code was used: the line cannot be refunded.",
+  "payload": {
+    "verdict": "refuse",
+    "reason": "This code has been used."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "scan_answer",
+  "about": "A notice never carries money: a price refuses the whole answer.",
+  "payload": {
+    "verdict": "notice",
+    "message": "A shorter-dated batch is in stock.",
+    "price": 9.5
+  },
+  "expect_refusal": "the answer carries a key notice does not allow here"
+}

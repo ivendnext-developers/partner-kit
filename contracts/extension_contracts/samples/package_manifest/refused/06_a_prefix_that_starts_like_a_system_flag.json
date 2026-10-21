@@ -1,0 +1,24 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A prefix that starts like a flag the system reads: its fields would be named is_…",
+  "payload": {
+    "manifest_version": 1,
+    "app": "is_wrc",
+    "prefix": "IS WRC",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "IS WRC Claim",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "a prefix cannot start with IS"
+}

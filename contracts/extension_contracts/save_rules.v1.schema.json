@@ -44,7 +44,8 @@
             "required_when",
             "locked_in_state",
             "unique_across",
-            "role_for_action"
+            "role_for_action",
+            "count_per_day"
           ]
         },
         "field": {
@@ -100,16 +101,26 @@
           "enum": [
             "scale",
             "days_until",
-            "percent"
+            "percent",
+            "sum_rows",
+            "count_rows",
+            "days_between"
           ]
         },
         "source": {
           "type": "string",
-          "maxLength": 80
+          "maxLength": 80,
+          "description": "The first source: the number (scale, sum_rows), the part (percent), the date (days_until) or the earlier date (days_between, where creation may name when the record was made, on a rule without a table)."
         },
         "source_b": {
           "type": "string",
-          "maxLength": 80
+          "maxLength": 80,
+          "description": "percent: the whole. days_between: the later date. Either source empty (or a percent's base 0): the figure is cleared."
+        },
+        "source_table": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "sum_rows and count_rows: the table of the record whose rows are added up or counted. The figure is written on the record's own header."
         },
         "factor": {
           "description": "1 when left out.",
@@ -167,6 +178,49 @@
         "scope_fields": {
           "description": "unique_across: fields of the record, one per line, at most three; the value may repeat where they differ.",
           "type": "string"
+        },
+        "scope_field": {
+          "description": "count_per_day: the one field of the record each value of which has its own count, such as store.",
+          "type": "string",
+          "maxLength": 80
+        },
+        "day_field": {
+          "description": "count_per_day: a Date or Datetime field; a record counts on its calendar day in the site's time zone (today when it is empty).",
+          "type": "string",
+          "maxLength": 80
+        },
+        "cap": {
+          "description": "count_per_day: a record that newly meets every condition is refused once this many have been counted for its scope value that day.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "judge_on_change": {
+          "description": "threshold: judge the limit only when the record is new, is submitted, or the field's value changed (a table's row when it is new or its value changed). 0 when left out.",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "value_from_type": {
+          "description": "threshold: read the limit from a settings record \u2014 a record type the package installed, or Stock Settings, Selling Settings or Buying Settings (a single). The rule's own value stays required: it is used when the settings value is 0 or the record is missing.",
+          "type": "string",
+          "maxLength": 140
+        },
+        "value_from_name": {
+          "description": "The settings record's name; a single's name is its record type.",
+          "type": "string",
+          "maxLength": 140
+        },
+        "value_field": {
+          "description": "The settings record's Int, Float or Percent field holding the limit.",
+          "type": "string",
+          "maxLength": 80
+        },
+        "roles_field": {
+          "description": "Optional: the settings record's text or Role-link field naming one role that may pass the limit, used instead of bypass_roles (empty: bypass_roles). All, Guest, Desk User and Administrator are ignored.",
+          "type": "string",
+          "maxLength": 80
         }
       },
       "oneOf": [
@@ -230,7 +284,7 @@
               "const": "derived"
             },
             "field": {
-              "description": "Never a money field, nor one a total is computed from: no name holding one of these words.",
+              "description": "Never a money field, nor one a total is computed from: no name holding one of these words. A field the shop added is named custom_\u2026 or with an installed package's prefix (checked at save); sum_rows, count_rows and days_between write only a field the shop added.",
               "not": {
                 "pattern": "amount|rate|total|price|discount|tax|qty|margin|conversion|paid|outstanding|commission|exchange|incentive|allocated|change|opening"
               }
@@ -238,8 +292,7 @@
           },
           "required": [
             "field",
-            "formula",
-            "source"
+            "formula"
           ],
           "anyOf": [
             {
@@ -250,10 +303,61 @@
                     "days_until"
                   ]
                 }
+              },
+              "required": [
+                "source"
+              ]
+            },
+            {
+              "properties": {
+                "formula": {
+                  "const": "percent"
+                }
+              },
+              "required": [
+                "source",
+                "source_b"
+              ]
+            },
+            {
+              "properties": {
+                "formula": {
+                  "const": "sum_rows"
+                }
+              },
+              "required": [
+                "source_table",
+                "source"
+              ],
+              "not": {
+                "required": [
+                  "child_table"
+                ]
               }
             },
             {
+              "properties": {
+                "formula": {
+                  "const": "count_rows"
+                }
+              },
               "required": [
+                "source_table"
+              ],
+              "not": {
+                "required": [
+                  "child_table"
+                ]
+              }
+            },
+            {
+              "properties": {
+                "formula": {
+                  "const": "days_between"
+                }
+              },
+              "required": [
+                "source",
                 "source_b"
               ]
             }
@@ -348,6 +452,23 @@
               "child_table"
             ]
           }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "count_per_day"
+            }
+          },
+          "required": [
+            "scope_field",
+            "day_field",
+            "cap"
+          ],
+          "not": {
+            "required": [
+              "child_table"
+            ]
+          }
         }
       ]
     },
@@ -362,7 +483,8 @@
         "field": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 80
+          "maxLength": 80,
+          "description": "A field of the rows the rule checks (of the record, for a rule without a table). On a rule with a table, parent.\u27e8field\u27e9 reads the record's own header field instead (required_when; a count of rows reads its rows only)."
         },
         "operator": {
           "enum": [
@@ -373,8 +495,10 @@
             "<",
             "<=",
             "is set",
-            "is not set"
-          ]
+            "is not set",
+            "in"
+          ],
+          "description": "in (count_per_day rules only): the value is one of up to 10 values, separated by commas."
         },
         "value": {
           "type": "string",

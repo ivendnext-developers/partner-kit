@@ -1,0 +1,21 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "beyond_schema": true,
+  "about": "A header condition on a rule that checks the record itself.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Remarks on transfers",
+    "record_type": "Stock Entry",
+    "kind": "required_when",
+    "field": "remarks",
+    "conditions": [
+      {
+        "field": "parent.purpose",
+        "operator": "=",
+        "value": "Material Transfer"
+      }
+    ]
+  },
+  "expect_refusal": "parent.purpose reads the record's header: it is for a rule on a table's rows."
+}

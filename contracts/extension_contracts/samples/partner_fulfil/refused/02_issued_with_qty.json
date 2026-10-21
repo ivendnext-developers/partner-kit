@@ -1,0 +1,14 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "issue_answer",
+  "about": "A quantity: one line is one code.",
+  "payload": {
+    "verdict": "issued",
+    "ref": "GZ-1",
+    "lines": [
+      "PIN 1"
+    ],
+    "qty": 2
+  },
+  "expect_refusal": "the answer's keys are not the ones issued takes"
+}

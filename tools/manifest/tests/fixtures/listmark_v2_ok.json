@@ -1,0 +1,13 @@
+{
+ "manifest_version": 2,
+ "app": "pp_lmk",
+ "prefix": "PP LMK",
+ "title": "A list mark, once",
+ "version": "0.0.1",
+ "publisher": "PP LMK",
+ "description": "A test manifest carrying a list mark on the shop's Item list, installed switched off and removed by our test bench's install cycle.",
+ "list_marks": [
+  {"record_type": "Item", "label": "Stock kept", "colour": "blue", "sequence": 10,
+   "conditions": [{"field": "is_stock_item", "operator": "=", "value": "1"}, {"field": "disabled", "operator": "=", "value": "0"}]}
+ ]
+}

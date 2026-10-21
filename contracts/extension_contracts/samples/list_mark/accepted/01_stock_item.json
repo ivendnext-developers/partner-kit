@@ -1,0 +1,23 @@
+{
+  "extension_point": "list_mark",
+  "contract": "declaration",
+  "about": "Stock items that are not disabled, blue.",
+  "payload": {
+    "doctype": "Retail List Mark",
+    "record_type": "Item",
+    "label": "Stock kept",
+    "colour": "blue",
+    "conditions": [
+      {
+        "field": "is_stock_item",
+        "operator": "=",
+        "value": "1"
+      },
+      {
+        "field": "disabled",
+        "operator": "=",
+        "value": "0"
+      }
+    ]
+  }
+}

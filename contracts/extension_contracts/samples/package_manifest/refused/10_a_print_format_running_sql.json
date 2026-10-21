@@ -1,0 +1,20 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A print format running a raw database query: other records are read through ivn_rows and ivn_value (P-TEMPLATEHELPERS).",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_plp",
+    "prefix": "PP PLP",
+    "version": "1.0.0",
+    "print_formats": [
+      {
+        "name": "PP PLP Price List",
+        "doc_type": "Price List",
+        "html": "{% for u in db.sql('select name from tabUser') %}{{ u }}{% endfor %}"
+      }
+    ]
+  },
+  "expect_refusal": "may not run raw database queries",
+  "beyond_schema": true
+}
