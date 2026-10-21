@@ -269,7 +269,7 @@ def render(text: str, ctx: Ctx, seen: dict, toc: list | None, depth: int = 0) ->
     text = re.sub(r"^\{\{samples: cards\}\}\s*$", lambda m: raw(gallery.grouped(
         ctx.samples, here, REPO_URL, catalogue.DOORS, ctx.door_pages, slug)), text, flags=re.M)
     text = re.sub(r"(?:^\{\{reference-app: .+\}\}\s*$\n?)+", lambda m: raw('<ul class="cards">' + "".join(
-        gallery.reference_app(spec, ORG_URL, catalogue.DOORS, ctx.errors, ctx.src) for spec in re.findall(r"\{\{reference-app: (.+)\}\}", m.group()))
+        gallery.reference_app(spec, ORG_URL, catalogue.DOORS, ctx.errors, ctx.src, NOT_OPEN_YET) for spec in re.findall(r"\{\{reference-app: (.+)\}\}", m.group()))
         + "</ul>"), text, flags=re.M)
     tokens = MD.parse(text)
     for i, t in enumerate(tokens):
@@ -637,6 +637,14 @@ def api_reference(ctx: "Ctx", spec_path: str = API_SPEC) -> str:
 # the link check hold them), except the request form, which lives in a private repository: test_site.py holds that address
 # equal to the one on the feedback page.
 POINT_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=2_point_request.yml"
+# The words beside every link to a private repository of the org. MEMBERS_ONLY: the request form (partner-feedback, which
+# onboarded members can read), on the needs pages and, through catalogue.json, on Plan a project. NOT_OPEN_YET: the reference
+# apps (gallery.py), whose repositories only the kit's maintainers can open. Both carry "page not found", the clause
+# check_links.py looks for on a page that links a private repository.
+MEMBERS_ONLY = ("members only: the form is in a private repository on GitHub, so anyone not signed in as an onboarded member "
+                "sees GitHub's \"page not found\"")
+NOT_OPEN_YET = ("not open yet: the repository is private to the kit's maintainers, so anyone else, members included, sees "
+                "GitHub's \"page not found\"")
 NEXT_STEPS = {"ready": ("recipe", "sample", "sandbox", "checks", "release", "more"),
               "ready-with-limits": ("tell", "recipe", "sample", "sandbox", "checks", "release", "more"),
               "not-yet/extension-point": ("ask", "until"),
@@ -741,9 +749,9 @@ def step_lines(c, titles: dict, src: str, by_id: dict | None = None) -> list[str
         "release-settings": lambda: ["**Make the same settings on the customer's site**, from the list you wrote down, through "
                                      "the customer's own change process."],
         "more": lambda: ([f"**To lift a limit, ask for** " + " · ".join(f"[{h}]({request_url(h, c)})" for h in c.requests)
-                          + " (the extension-point request; members only)."] if c.requests else []),
+                          + f" (the extension-point request; {MEMBERS_ONLY})."] if c.requests else []),
         "ask": lambda: [f"**Ask for it:** " + " · ".join(f"[the extension-point request for {h}]({request_url(h, c)})" for h in c.requests)
-                        + f" (members only; [how requests work]({rel('guide/09_points_and_requests.md', src)}#asking-for-a-new-extension-point-or-for-more-from-one))."],
+                        + f" ({MEMBERS_ONLY}; [how requests work]({rel('guide/09_points_and_requests.md', src)}#asking-for-a-new-extension-point-or-for-more-from-one))."],
         "ask-us": lambda: [l for l in c.limits if l.startswith("**Ask us:**")],
         "until": lambda: ([f"**Until then, today:** {named(' '.join(TODAY.sub('', unbold(l)) for l in today))}"] if today else [])
                          + ([f"**Today's way round it:** {' · '.join(link(p) for p in c.paths('recipe') + c.paths('sample'))}."]
@@ -934,7 +942,7 @@ def catalogue_json(cards: list, titles: dict | None = None, pages: dict | None =
                         "door_name": door_name(c.door), "topic_name": topic_name(c),
                         "build_step": build_step(c.door), "build_why": build_why(c.door),
                         "recipes": proofs(c, "recipe"), "samples": proofs(c, "sample"),
-                        "request_forms": [{"handle": h, "url": request_url(h, c)} for h in c.requests],
+                        "request_forms": [{"handle": h, "url": request_url(h, c), "note": MEMBERS_ONLY} for h in c.requests],
                         "related": [o.id for o in related.get(c.id, [])],
                         "blueprint_row": catalogue.blueprint_rows([c], [c.id])[0][0].removeprefix("| 1 ")}
                        for c in by_asks(cards)], indent=1, ensure_ascii=False) + "\n"

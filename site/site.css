@@ -169,6 +169,7 @@ tr:last-child td { border-block-end: 0; }
 .card .thumb img { display: block; inline-size: 100%; block-size: 9rem; object-fit: cover; object-position: top; }
 .card p + p, .card .run { margin-block-start: var(--ivn-s2); }
 .card .door, .card .status { font-size: .85rem; font-weight: 600; color: var(--site-ink); }
+.card .note { font-size: .85rem; color: var(--ivn-text-muted); }
 .card .run { margin-inline: 0; padding: var(--ivn-s2) var(--ivn-s3); font-size: .8rem; overflow-x: auto; }
 .card .links { font-size: .85rem; }
 .anchors { display: flex; flex-wrap: wrap; gap: var(--ivn-s2) var(--ivn-s4); }

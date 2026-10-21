@@ -7,7 +7,8 @@ Fails on: an internal link, image or stylesheet that does not resolve to a file 
 an id on its target page · the same id twice on one page · a script, stylesheet, font or image from a host that is not in
 ALLOWED_HOSTS (a script is our own file or comes from a listed host) · an inline script, an inline event handler (on…=) or a
 javascript: address (a data block such as application/ld+json is not a script) · in an SVG file, a script (any prefix), an entity
-declaration or an xml-stylesheet instruction · a page-like file that is not .html. Every way a page can fetch a file is read: href and
+declaration or an xml-stylesheet instruction · a page-like file that is not .html · a link to a repository of the org on neither
+of its two lists, or to a private one from a page that does not say so (PRIVATE_REPOS). Every way a page can fetch a file is read: href and
 src, each candidate of a srcset or imagesrcset, a ping, a url() in a style attribute or a <style> block, an SVG href, and every url() and @import of every
 stylesheet and SVG file in the site (comments stripped, any case); a local one must resolve to a file in the built site (a
 font named by the stylesheet included). Links to other hosts are not followed. Not read (the site writes none of them): a
@@ -33,6 +34,15 @@ from urllib.parse import urlsplit
 #   build.py writes from ANALYTICS_HOST. Google Analytics, if marketing adds it, is one more line here, with its reason.
 ANALYTICS_HOST = "stats.ivendnext.com"
 ALLOWED_HOSTS: tuple[str, ...] = (ANALYTICS_HOST,)
+# The org's repositories a page may link to. A private one answers GitHub's "page not found" to anyone who may not read it,
+# so a page that links one must say so: it carries PRIVATE_CLAUSE, which build.py's MEMBERS_ONLY and NOT_OPEN_YET and the
+# feedback page's own sentence share. A link to an org repository on neither list fails. This check follows no outside link,
+# so whether each repository is in fact private is read by the live crawl after a deploy. Limit: it reads github.com
+# addresses only (the site writes no raw.githubusercontent.com or api.github.com link), and the clause once per page.
+ORG_PATH = "/ivendnext-developers/"
+PRIVATE_REPOS = ("partner-feedback", "quick-commerce-hub", "3pl-shipping")
+PUBLIC_REPOS = ("partner-kit", ".github")
+PRIVATE_CLAUSE = "page not found"
 DATA_SCRIPT_TYPES = {"application/ld+json", "application/json"}      # a data block is read, never run
 URL_ATTRS = ("href", "src", "data", "poster", "action", "formaction")   # matched on the name after any xlink:-style prefix
 FETCHES = {"script", "link", "img", "source", "iframe", "image", "use", "feimage", "srcset", "style", "embed", "object", "video", "audio", "track", "input", "ping"}
@@ -73,6 +83,18 @@ def host_of(url: str) -> str:
         return urlsplit(norm(url)).hostname or url[:40]
     except ValueError:
         return url[:40]
+
+
+def org_repo(url: str) -> str | None:
+    """The org repository a GitHub address points into, lower case and without .git, or None."""
+    try:
+        parts = urlsplit(norm(url))
+    except ValueError:
+        return None
+    if (parts.hostname or "").lower() not in ("github.com", "www.github.com") or not parts.path.lower().startswith(ORG_PATH):
+        return None
+    repo = parts.path[len(ORG_PATH):].split("/")[0].lower().removesuffix(".git")
+    return repo or None
 
 
 def css_urls(text: str) -> list[str]:            # every url() and @import target in a piece of CSS, comments ignored
@@ -118,6 +140,7 @@ class Page(Hazards):
         super().__init__()
         self.ids: list[str] = []
         self.refs: list[tuple[str, str]] = []                 # (kind, url)
+        self.text: list[str] = []                             # the page's words, for PRIVATE_CLAUSE
         self.in_style = False
 
     def handle_starttag(self, tag, attrs):
@@ -140,6 +163,7 @@ class Page(Hazards):
 
     def handle_data(self, data):
         super().handle_data(data)
+        self.text.append(data)
         if self.in_style:
             self.refs += [("style", u) for u in css_urls(data)]
 
@@ -191,7 +215,15 @@ def check(root: pathlib.Path) -> list[str]:
         dup = {i for i in p.ids if p.ids.count(i) > 1}
         bad += [f"{name}: the id #{i} appears twice" for i in sorted(dup)]
         bad += [f"{name}: {h}" for h in p.hazards]
+        says_private = PRIVATE_CLAUSE in re.sub(r"\s+", " ", " ".join(p.text)).lower()
         for kind, url in p.refs:
+            repo = org_repo(url) if is_external(url) else None
+            if repo in PRIVATE_REPOS and not says_private:
+                bad.append(f"{name}: links the private repository {repo} but does not say so (build.py MEMBERS_ONLY or NOT_OPEN_YET: "
+                           f"\"{PRIVATE_CLAUSE}\" beside it)")
+            elif repo and repo not in PRIVATE_REPOS + PUBLIC_REPOS:
+                bad.append(f"{name}: links ivendnext-developers/{repo}, which is on neither list in check_links.py "
+                           f"(PRIVATE_REPOS, PUBLIC_REPOS)")
             if is_external(url):
                 if kind == "base":                              # a <base> from elsewhere re-aims every relative script and file
                     bad.append(f"{name}: <base href={url[:60]}> points the page at another host")

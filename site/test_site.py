@@ -698,8 +698,34 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(self.build_in(kit), 0)
         ask = (self.tmp / "not_yet_out" / "needs/till/a-planted-need.html").read_text("utf-8")
         self.assertIn(build.POINT_FORM + "&amp;title=Extension-point%20request%3A%20P-PLANTED", ask)
+        self.assertIn(f"({build.MEMBERS_ONLY}; ", html_unescape(ask))         # the request form is members-only: it says so
         self.assertIn("Until then, today:</strong> the check before payment", ask)
         self.assertNotIn("Copy the sample", ask[ask.index('id="what-next"'):])
+
+    def test_every_private_link_says_so_where_it_is_rendered(self):
+        # the request steps (build.py; the ask step: the Not yet test above), the reference apps (gallery.py) and Plan a
+        # project's requests (catalogue.json; plan.js: test_plan.mjs)
+        note = build.MEMBERS_ONLY
+        lift = html_unescape((self.out / "needs/documents/invoice-layout-per-customer.html").read_text("utf-8"))
+        self.assertIn(f"(the extension-point request; {note}).", lift.split('id="what-next"')[1])
+        apps = html_unescape((self.out / "reference_apps.html").read_text("utf-8"))
+        cards = re.findall(r'<li class="card"><h3>.*?</li>', apps)
+        self.assertGreaterEqual(len(cards), 2)
+        self.assertTrue(all(f'<p class="note">N{build.NOT_OPEN_YET[1:]}.</p>' in c for c in cards), cards)
+        forms = [f for d in json.loads((self.out / "catalogue.json").read_text("utf-8")) for f in d["request_forms"]]
+        self.assertTrue(forms and all(f["note"] == note for f in forms))
+        self.assertTrue(all(check_links.PRIVATE_CLAUSE in n for n in (note, build.NOT_OPEN_YET)))
+
+    def test_a_private_link_on_a_page_that_does_not_say_so_is_red_and_an_unlisted_repository_too(self):
+        repo = "https://github.com/ivendnext-developers/"
+        bad = self.planted("members", lambda h: h.replace("</main>", f'<a href="{repo}3pl-shipping">x</a></main>'))
+        self.assertTrue(any("01_welcome.html: links the private repository 3pl-shipping" in b for b in bad), bad)
+        said = self.planted("members_said", lambda h: h.replace("</main>", f'<a href="{repo}3pl-shipping">x</a> (GitHub shows '
+                                                                            f'&quot;page not\n found&quot; to others)</main>'))
+        self.assertEqual(said, [])
+        self.assertEqual(self.planted("public_repo", lambda h: h.replace("</main>", f'<a href="{repo}.github">x</a></main>')), [])
+        bad = self.planted("unlisted", lambda h: h.replace("</main>", f'<a href="{repo.upper()}New-Repo.git">x</a></main>'))
+        self.assertTrue(any("links ivendnext-developers/new-repo, which is on neither list" in b for b in bad), bad)
 
     def test_the_request_form_is_the_feedback_pages_own_address(self):
         # the form lives in a private repository the link check does not follow: hold it to the feedback page's address
