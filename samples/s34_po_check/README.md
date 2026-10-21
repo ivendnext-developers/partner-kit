@@ -16,7 +16,7 @@ It uses the **document check** extension point (`doccheck/1`, POS app from train
 2. **Give the role *Purchase Manager*** to the people who may approve an order over the monthly budget.
 3. **Switch the check on:** open it (*Retail Extension Subscription*, *ERP purchase order check*), read what is sent, tick the consent and switch it on.
 
-**Where it shows.** In Desk, when a buyer presses **Submit** on a purchase order: a refusal in the ERP's words, or the approval by a purchase manager. An import or an API call that submits is answered the same way, with one difference: a submit that runs in the background (an import, a large bulk submit) cannot show an approval, so an over-budget order is refused there; submit it from the form. The till never meets it: a document check is back office only.
+**Where it shows.** In Desk, when a buyer presses **Submit** on a purchase order: a refusal in the ERP's words, or the approval by a purchase manager. An import or an API call that submits is answered the same way, with one difference: a submit that runs in the background (an import, a large bulk submit) cannot show an approval, so an over-budget order is refused there; a purchase manager submits it from the form. The till never meets it: a document check is back office only.
 
 **What leaves the shop.** When a purchase order is submitted: its name, its supplier, its total, each line's item and quantity, the company and the user submitting. Nothing on a draft's save. The manifest names one address; the shop sees it and the consent on the install screen and on the check before it is switched on.
 

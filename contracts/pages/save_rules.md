@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/save_rules.md @ 4c3f11b550f1, copied unchanged except the links and one framework call named by what it does: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/save_rules.md @ 4c3f11b550f1, copied unchanged except the links and the framework's own calls, named by what they do: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Save rules
 
 **Contract:** [`save_rules.v1.schema.json`](../extension_contracts/save_rules.v1.schema.json)
@@ -20,7 +20,7 @@ when a row of a ruled table is saved on its own (a row deleted on its own is che
 check returns after one cached read and no query.
 
 A `role_for_action` rule fires at the **submit** or the **cancel** it names — on every door: the Desk's
-Submit and Cancel, an import that submits, the API's submit (`ivendnext_mpos.api.v1.submit`) and cancel and the REST API — and
+Submit and Cancel, an import that submits, the API's submit (`ivendnext_mpos.api.v1.submit`), a cancel through the API, and the REST API — and
 nowhere else; a draft's save never asks it. Every other kind fires at the save, as above, and not again
 at the submit or the cancel, so a flag rule writes one row for one submit — ⚠ except where a partner's
 document check fills fields at the submit ([doccheck](doccheck.md)): every kind but `role_for_action` then
