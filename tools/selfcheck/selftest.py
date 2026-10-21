@@ -396,7 +396,7 @@ def main() -> int:
           f"miss — if this fires, update the bound in lint_engine_patch.py")
     quiet = not lint_engine_patch.find_patches(lint_engine_patch.CLEAN, "clean.py")
     bad += not quiet
-    print(f"  {'silent' if quiet else 'NOISY '} runtime_patches clean sample (incl. frappe.flags)")
+    print(f"  {'silent' if quiet else 'NOISY '} runtime_patches clean sample (incl. the framework's flags)")
     # 4. the manifest arm, and the default path reading a real app
     with tempfile.TemporaryDirectory() as td:
         m = pathlib.Path(td) / "m.json"
