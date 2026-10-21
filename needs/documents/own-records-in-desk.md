@@ -16,7 +16,7 @@ verified: carried 2026-10-15 · not re-run
 A manifest declares your record types, fields, print formats, notifications and workspaces, with native screens; they can be listed under ours.
 
 ## Limits
-- A multi-value field (a table of choices) and a settings record of your own type wait for P-MANIFEST4; today a settings record is an ordinary record type read by name (the record named `Default`, sample S22).
+- From POS build 2.0.0.654 a manifest may carry a multi-select field and a settings record of its own (one record, no list) (`guide/07_manifests.md`). Before that build, a settings record is an ordinary record type read by name (the record named `Default`, sample S22).
 
 ## Tell the customer
 Your records live in iVendNext Desk, with their own screens, lists and reports.

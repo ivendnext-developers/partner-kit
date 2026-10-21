@@ -5,20 +5,22 @@ area: till
 topic: manager-approvals
 asks: No more than so many manager discount approvals per store per day
 status: ready-with-limits
-door: check-before-payment
+door: save-rules
 blocked-by: -
-recipe: recipes/till_guard.md
-sample: samples/s23_till_guard
-request: P-OVERRIDECAP
-verified: carried 2026-10-16 · not re-run; the count itself is not built or run
+recipe: recipes/save_rules.md
+sample: samples/s18_rule_guard
+request: -
+verified: run by the product 2026-10-18 (POS train T12: the eleventh approval refused at the manager's Approve, walked on three frames); not run by a kit sample on a sandbox
 ---
 ## What you build
-Your service counts approvals for each store and day in the check before payment: it answers approve until the limit is reached, then refuse. Count a sale once, not each time it is asked.
+One save rule of kind `count_per_day` on the approval request, from POS build 2.0.0.654: the store's managers may give so many discount approvals a day, and the next is refused when the manager presses **Approve**, in the shop's words (`contracts/pages/save_rules.md` §8, the worked example; `recipes/save_rules.md`). Sample S18's README carries it.
 
 ## Limits
-- Answered when the cashier presses Pay, not when the discount is typed. The check is asked again for the same sale when the basket changed or Pay is pressed again, so count approvals per sale, and a sale abandoned after an approval still used one.
-- It counts the approvals your own check asked for. The till's own approval inbox is a separate path that this check does not count (not run): ask which path the shop's managers use (P-OVERRIDECAP would count the inbox).
-- Offline the till uses your declared down answer.
+- It counts approvals **given**: one given and never used still counts; one that ran out and was given again counts twice. A sale using an approval never counts it again.
+- Approvals given offline are not counted.
+- An *Action* request, the record an action approved in person leaves after it ran, is only flagged, never refused. A count rule never sits on a sale or the day close.
+- The request's store is the register's POS Profile's warehouse, so a store with several registers has one count.
+- A partner's own count of the approvals its check before payment asks for stays a route (sample S23), and is answered at Pay.
 
 ## Tell the customer
-After the day's limit of manager approvals for a store, a further discount is refused at Pay; we count only the approvals our check is asked about.
+After the day's limit, a manager's further discount approval for that store is refused at Approve with our sentence, and the cashier sells at the normal price; approvals given offline are not counted.

@@ -16,6 +16,7 @@ This recipe makes the till **ask for and keep** a coded reason, **track a phone 
 | The IMEI of every phone sold, once | the item's **serial numbers** (Item → *Has Serial No*); the IMEI **is** the serial number, received with the stock | one tracked item, three IMEIs in stock |
 | One more detail on a line, for goods with no serial number | **Transaction Item Attribute** (a name, a pattern, an order) | "Warranty card", pattern `^WC-[0-9]{8}$` |
 | A member price | a **Customer Group** per tier, and one **promotion** per tier that applies to the sale and **excludes every other customer group** | group *Member Gold*, a 10% promotion, a member in the group |
+| A branch's till sees its own store's stock and the head office's, no other branch's (POS build 2.0.0.654 on) | the till's **POS Profile** → *Stores this till may see*: list the stores. The *Other stores* panel and a cross-store order's store list then show the listed stores only, and the item card the listed stores and the till's own (a head office that is not a retail store shows in the card only); an order to a store not listed is refused. Empty: every store marked a retail store, as before. It narrows stock and orders, not sales: a return's sale from another store and a held sale are found anywhere (the card *branch-sees-own-stock*) | not set by the sample |
 
 ## Steps
 
@@ -73,7 +74,7 @@ A notification on the document, set up in Desk (or over the record API) by the s
 Limits:
 - An uploaded file (a CSV) goes as a **link** in the message, not an attachment. The installed version has no attach-from-field, and a manifest refuses one (it could mail any private file).
 - *Allow Print for Draft* is site-wide.
-- P-MANIFEST4 lets a package attach its **own** print format to a notification on its **own** record types. The shop's own documents stay configuration.
+- From POS build 2.0.0.654 a package may attach its **own** print format to a notification on its **own** record types ([chapter 7](../guide/07_manifests.md), *A notification's own print*). The shop's own documents stay configuration.
 
 ### A member rate after the promotions: the certified pricing module
 

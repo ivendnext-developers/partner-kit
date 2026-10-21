@@ -17,7 +17,8 @@ A save rule of kind *derived*, held on every save.
 
 ## Limits
 - On a till sale and the till close a save rule only flags, never refuses.
-- P-RULES4 adds days between two dates to the derived rule, and to the limit rule a value judged when it changes, a row rule that reads its header and a limit read from a settings record, when it ships.
+- From POS build 2.0.0.654 the derived rule also works out a total or a count of a table's rows and the days between two dates; a limit can be judged when its value changes, a row rule can read its record (`parent.`), and a limit can be read from a settings record (`contracts/pages/save_rules.md`).
+- A worked-out figure is shown as a number, never money.
 
 ## Tell the customer
 The field is worked out from the others each time the record is saved.

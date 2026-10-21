@@ -1,0 +1,17 @@
+{
+ "manifest_version": 1,
+ "app": "pp_plr",
+ "prefix": "PP PLR",
+ "title": "A price list with photos",
+ "version": "0.1.1",
+ "publisher": "Partner Programme sample",
+ "description": "One print format on the Price List: each general price of the list with the item's photo, read through ivn_rows and ivn_value with the rights of the person printing (POS build 2.0.0.654 on). A print sent from the e-mail queue shows no rows.",
+ "print_formats": [
+  {
+   "name": "PP PLR Price List with Photos",
+   "doc_type": "Price List",
+   "print_format_type": "Jinja",
+   "html": "{#- The price list with photos — a print format on the Price List itself (POS build 2.0.0.654 on). It lists the list's own\n    prices through ivn_rows and each item's photo through ivn_value, with the rights of the person printing: a person who\n    may not read a price or an item sees fewer rows, and a print sent from the e-mail queue shows none. General prices only\n    (no customer's or batch's own price). Up to 1,000 prices, read 200 at a time, in item code order. -#}\n<div style=\"font-family: Arial, sans-serif; font-size: 11px; color:#222;\">\n  <div style=\"font-size:16px; font-weight:bold; color:#1F3864;\">{{ doc.price_list_name }}</div>\n  <div>{{ doc.currency }}{% if doc.selling %} &middot; selling{% endif %}{% if doc.buying %} &middot; buying{% endif %}</div>\n  <table style=\"width:100%; border-collapse:collapse; margin-top:8px;\">\n    <thead><tr style=\"background:#1F3864; color:#fff;\">\n      <th style=\"width:70px;\">Photo</th><th style=\"text-align:left;\">Code</th><th style=\"text-align:left;\">Item</th>\n      <th style=\"text-align:right; padding-right:4px;\">Price</th></tr></thead>\n    <tbody>\n    {%- for start in [0, 200, 400, 600, 800] %}\n    {%- for r in ivn_rows(\"Item Price\", filters={\"price_list\": doc.name, \"customer\": [\"is\", \"not set\"], \"batch_no\": [\"is\", \"not set\"]},\n                          fields=[\"item_code\", \"item_name\", \"price_list_rate\", \"uom\"], order_by=\"item_code asc\", limit=200, start=start) %}\n      {%- set photo = ivn_value(\"Item\", name=r.item_code, field=\"image\") %}\n      <tr style=\"border-bottom:1px solid #ccc;\">\n        <td style=\"height:64px;\">{% if photo %}<img src=\"{{ photo }}\" style=\"max-height:60px; max-width:66px;\">{% endif %}</td>\n        <td>{{ r.item_code }}</td><td>{{ r.item_name }}</td>\n        <td style=\"text-align:right; padding-right:4px;\">{{ r.price_list_rate }} / {{ r.uom }}</td></tr>\n    {%- endfor %}\n    {%- endfor %}\n    </tbody>\n  </table>\n</div>\n"
+  }
+ ]
+}

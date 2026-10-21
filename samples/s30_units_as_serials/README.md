@@ -6,7 +6,7 @@ It is for an iVendNext Partner or a shop's administrator. **No code runs in the 
 
 **When to use it.** Each unit carries a code the shop must check on every stock document, not only at the till. When the codes live in a table of the shop's own and only the till needs to read them, a scan source is lighter: [S19](../s19_unit_codes/README.md).
 
-**The doors it combines** (the kit's rule: compose doors before asking for an extension point): configuration (the item, Stock Settings, a Defective store), the record API (a migration script), and a read-only outside script (the units report). **The limit of the combination:** today the till sells a unit reliably only from the lot iVendNext picks first. Units from other lots sell only with a setting that changes every Desk delivery (see *Before you build on it*). P-SERIALUNITS removes that limit.
+**The doors it combines** (the kit's rule: compose doors before asking for an extension point): configuration (the item, Stock Settings, a Defective store), the record API (a migration script), and a read-only outside script (the units report). **The limit of the combination, before POS build 2.0.0.654:** the till sold a unit reliably only from the lot iVendNext picks first, and units from other lots only with a setting that changes every Desk delivery (see *Before you build on it*). From that build the till books each unit with the batch its own serial number carries, and that limit is gone.
 
 ## What the shop does
 
@@ -114,7 +114,8 @@ python3 samples/s30_units_as_serials/tests/canaries.py
 
 ## Before you build on it
 
-- ⚠ **Batch and serial at the till: after P-SERIALUNITS.** Until P-SERIALUNITS (*one row per serial with its own batch at the till*) ships, a batch+serial till sale is not reliable:
+- **Batch and serial at the till, from POS build 2.0.0.654:** the sale books one row per unit, each with the batch its own Serial No carries, whichever lot the automatic pick would choose; a unit whose Serial No has no batch is refused (*"Serial ⟨serial⟩ has no batch. A manager sets its batch on the Serial No in iVendNext Desk."*). A unit from an expired batch is refused at payment on its own line, not inside a set; a promotion on named units names their batches too ([scan source page](../../contracts/pages/scan_source.md) §10). Walked by the product (POS train T12: a line's unit and a set's unit each booked with its own lot); not re-walked by this sample.
+- ⚠ **Before POS build 2.0.0.654,** a batch+serial till sale is not reliable:
   - With *Auto Create Serial and Batch Bundle For Outward* **on** (the default), iVendNext picks a lot for the row by *Pick Serial / Batch Based On* and refuses a serial from any other lot. Walked: a unit from the second lot was refused; two units from the picked lot booked, one row each.
   - Switched **off**, a unit from the other lot booked with its own lot. But the switch is global: Desk deliveries and invoices then need their lots picked by hand.
   - Neither setting fixes a line of several units from different lots.

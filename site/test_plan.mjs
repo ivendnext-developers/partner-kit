@@ -60,20 +60,27 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   check("mixed: every step says why", plan.steps(cards).every((s) => s.why.length > 20));
 }
 
+// A Not yet card waiting on an extension point, built here: since POS train T12 no card in the kit waits on one. It is a
+// Not yet card of the kit's (waiting on our product work) given an extension point's request and its form.
+const FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=2_point_request.yml";
+const [productWork] = pick(["till-step-order"]);
+const waiting = { ...productWork, id: "a-planted-need-waiting-on-an-extension-point", blocked_by: "extension-point",
+  request: ["P-PLANTED"], request_forms: [{ handle: "P-PLANTED", url: FORM + "&title=Extension-point%20request%3A%20P-PLANTED" }] };
+
 // 3. a set with a Not yet card and a Not possible one: they come last; the request is filed once, the Instead line kept
 {
-  const cards = pick(["question-on-quantity-change", "fee-or-surcharge", "line-quantity-cap"]);
+  const cards = [waiting, ...pick(["fee-or-surcharge", "line-quantity-cap"])];
   check("not yet: the ready need first, then the request, then the not possible one",
-        same(idsOf(plan.order(cards)), ["line-quantity-cap", "question-on-quantity-change", "fee-or-surcharge"]), idsOf(plan.order(cards)).join(", "));
+        same(idsOf(plan.order(cards)), ["line-quantity-cap", waiting.id, "fee-or-surcharge"]), idsOf(plan.order(cards)).join(", "));
   const rq = plan.requests(cards);
-  check("not yet: one request to file, P-CAPTURE3, with its form",
-        rq.forms.length === 1 && rq.forms[0].handle === "P-CAPTURE3" && rq.forms[0].url.includes("template=2_point_request.yml"), JSON.stringify(rq.forms));
+  check("not yet: one request to file, P-PLANTED, with its form",
+        rq.forms.length === 1 && rq.forms[0].handle === "P-PLANTED" && rq.forms[0].url.includes("template=2_point_request.yml"), JSON.stringify(rq.forms));
   check("not possible: its Instead line is in the requests", rq.instead.length === 1 && rq.instead[0].line.startsWith("Instead:"));
 }
 
 // two needs that wait on the same extension point: one request to file, naming both
 {
-  const [one] = pick(["question-on-quantity-change"]);
+  const one = waiting;
   const rq = plan.requests([one, { ...one, id: "a-second-need-on-the-same-request" }]);
   check("one handle for two needs: filed once, for both", rq.forms.length === 1 && rq.forms[0].needs.length === 2, JSON.stringify(rq.forms.map((f) => f.handle)));
 }

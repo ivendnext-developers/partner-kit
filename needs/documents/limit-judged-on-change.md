@@ -17,7 +17,7 @@ Your service reads the record's events and judges the value only when it is new 
 
 ## Limits
 - The save is not refused: the value is judged seconds later and flagged.
-- P-RULES4 gives the save rule's limit an *on change* switch, so the save itself is refused, when it ships.
+- From POS build 2.0.0.654 a save rule's limit can be judged only when its value changes (`judge_on_change`), so the save itself is refused (`contracts/pages/save_rules.md`): use it where a refusal at the save is wanted.
 - A value edited twice between two reads of the feed is judged once.
 
 ## Tell the customer

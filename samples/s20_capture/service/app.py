@@ -1,9 +1,10 @@
-"""S20 — *Warranty capture and a member code*: the partner's service behind the shop's two capture subscriptions
+"""S20 — *Warranty capture and a member code*: the partner's service behind the shop's three capture subscriptions
 (standard library only). Each subscription has its own address, so the address picks the secret the signature is checked
 with before the body is read.
 
     POST /cap/scan      the shop's signed scan call (``capture/1``, event scan)
     POST /cap/customer  the shop's signed customer calls (event customer_add, then verify)
+    POST /cap/qty       the shop's signed quantity calls (event qty_change; POS build 2.0.0.654 on)
     GET  /health        200 {"ok": 1}
 
 The message gateway here is a STAND-IN: it appends ``{"phone", "code", "at"}`` to the file ``PP_OUTBOX`` (chmod 600),
@@ -11,8 +12,9 @@ where a partner calls its SMS or WhatsApp provider instead (``Outbox.send``). No
 logged.
 
     python3 service/app.py service/.env.local
-    env: PP_POINT_SECRET_SCAN, PP_POINT_SECRET_CUSTOMER (handed back at install as pp_cap:sub:on_scan and
-         pp_cap:sub:on_customer), PP_LINE_ATTRIBUTE (the shop's active line attribute for the reference),
+    env: PP_POINT_SECRET_SCAN, PP_POINT_SECRET_CUSTOMER, PP_POINT_SECRET_QTY (handed back at install as
+         pp_cap:sub:on_scan, pp_cap:sub:on_customer and pp_cap:sub:on_qty), PP_LINE_ATTRIBUTE (the shop's active line
+         attribute for the reference), PP_QTY_ASK_ABOVE (3) and PP_QTY_MOST (5) (handsets on a line),
          PP_BARRED_PHONES (comma list), PP_OUTBOX (the stand-in gateway's file), PP_PORT (8142)
 """
 
@@ -49,13 +51,17 @@ class Service:
     # each subscription has its own address here and its own secret: the path picks the secret, and the body is read
     # only after its signature holds
     PATHS = {"/cap/scan": ("PP_POINT_SECRET_SCAN", ("scan",)),
-             "/cap/customer": ("PP_POINT_SECRET_CUSTOMER", ("customer_add", "verify"))}
+             "/cap/customer": ("PP_POINT_SECRET_CUSTOMER", ("customer_add", "verify")),
+             "/cap/qty": ("PP_POINT_SECRET_QTY", ("qty_change",))}
 
     def __init__(self, conf: dict, send):
-        self.secrets = {path: conf[key] for path, (key, _events) in self.PATHS.items()}
+        self.secrets = {path: conf[key] for path, (key, _events) in self.PATHS.items()     # a missing scan or customer secret stops the
+                        if key != "PP_POINT_SECRET_QTY" or conf.get(key)}           # start; the quantity one is optional (0.1.0's)
         self.conf, self.send, self.codes = capture.settings_from(conf), send, capture.Codes()
 
     def call(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
+        if path not in self.secrets:                    # a subscription this shop has not handed a secret for
+            return 401, {"error": "the signature does not match"}
         why = capture.verify(headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature"), raw,
                              self.secrets[path])
         if why:
@@ -68,6 +74,8 @@ class Service:
             return 400, {"error": "this address does not answer that event"}
         if ctx["event"] == "scan":
             return 200, capture.on_scan(ctx, self.conf)
+        if ctx["event"] == "qty_change":
+            return 200, capture.on_qty(ctx, self.conf)
         if ctx["event"] == "customer_add":
             return 200, capture.on_customer(ctx, self.conf, self.codes, self.send)
         return 200, capture.on_verify(ctx, self.codes)

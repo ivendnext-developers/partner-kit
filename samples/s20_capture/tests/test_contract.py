@@ -13,9 +13,10 @@ ROOT = HERE.parents[2]
 sys.path[:0] = [str(HERE.parent), str(HERE), str(ROOT / "tools" / "contracts")]
 import capture  # noqa: E402
 import check  # noqa: E402
-from test_service import CONF, customer_ctx, scan_ctx, verify_ctx  # noqa: E402
+from test_service import CONF, customer_ctx, qty_ctx, scan_ctx, verify_ctx  # noqa: E402
 
-REQUESTS = {"scan": "scan_request", "customer_add": "customer_request", "verify": "verify_request"}
+REQUESTS = {"scan": "scan_request", "customer_add": "customer_request", "verify": "verify_request",
+            "qty_change": "qty_request"}
 
 
 def wrap(ctx):
@@ -25,13 +26,15 @@ def wrap(ctx):
 @unittest.skipUnless(check.available(), "the contracts folder is missing from this copy of the kit")
 class ContractTest(unittest.TestCase):
     def test_the_test_calls_are_valid_requests(self):
-        for ctx in (scan_ctx(), customer_ctx(), verify_ctx("123456")):
+        for ctx in (scan_ctx(), customer_ctx(), verify_ctx("123456"), qty_ctx(4)):
             self.assertEqual(check.errors("partner_capture", REQUESTS[ctx["event"]], wrap(ctx)), [], ctx["event"])
 
     def test_every_answer_the_service_gives_holds(self):
         conf = capture.settings_from(CONF)
         codes, sent = capture.Codes(), []
         self.assertEqual(check.errors("partner_capture", "scan_answer", capture.on_scan(scan_ctx(), conf)), [])
+        for q in (2, 4, 9):
+            self.assertEqual(check.errors("partner_capture", "qty_answer", capture.on_qty(qty_ctx(q, answered=1), conf)), [], q)
         for phone in ("", "+971500000000", "+971501234567"):
             out = capture.on_customer(customer_ctx(phone=phone), conf, codes, lambda p, c: sent.append(c))
             self.assertEqual(check.errors("partner_capture", "customer_answer", out), [], phone)

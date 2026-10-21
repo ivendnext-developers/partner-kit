@@ -2,11 +2,14 @@
 
 ![A warranty reference captured at the scan, and a one-time code before a new customer](../samples/s20_capture/screenshots/s20_flow.gif)
 
-A capture asks your HTTPS service at a moment the cashier did not choose, at one of three events:
+A capture asks your HTTPS service at a moment the cashier did not choose, at one of four events:
 
 - **On scan** of an item your filter names (its item group, or an item field that is set), **before** its line goes on the sale: you can let it on, put a value on the line (a warranty reference, a registration number), ask a yes/no question, or refuse it.
 - **On customer add**, **before** a new customer is created: you can allow it, refuse it, or **challenge** — you send the customer a one-time code and the till shows a code field. The customer is created only after you say the code is right.
 - **On customer select** (POS app from train T11, 2026-10-16), when the cashier puts an **existing** customer on the sale: allow, refuse (the customer is taken off the sale), or challenge with a one-time code, as on customer add (step 5b).
+- **On a quantity change** (POS build 2.0.0.654 on), when the quantity of a line your filter names changes: allow, confirm, refuse (the last allowed quantity goes back), or put a value on the line (step 5c).
+
+From POS build 2.0.0.654 any of them may also answer with a **notice**: the sale goes on with no tap, and your sentence shows (step 6b).
 
 This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, building one.
 
@@ -55,6 +58,14 @@ This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, buildi
 
 5b. **On customer select: the same three answers, and the server holds the payment.** Declare a third service with `"settings": {"event": "customer_select"}` (3 seconds unless raised, 10 at most). You are sent the cashier, the store and POS Profile, and the customer's id, name, phone, email and customer group; no price, total or tender. `{"verdict": "refuse", "reason": "This customer buys at the Sandton store only."}` shows your sentence and takes the customer off the sale, which goes on without one or with another. While a select service is switched on, **every door that charges or books the sale refuses until the server has recorded your *allow*, or a checked code, for that cashier, that customer, that POS Profile and your service**; the booking spends it, so one check pays one sale. You are never asked about the store's walk-in customer, nor about a customer this cashier added in the last ten minutes while a customer-add service is on. A payment pressed before your answer arrives is refused with *"This customer has not been checked. Pick them again, or sell without a customer."* Offline you are not asked: the declared down answer applies, and a sale paid offline with a customer you were not asked about is flagged when it syncs. One cashier sends you at most 60 select rounds in ten minutes. The product's [capture page](../contracts/pages/partner_capture.md) has the request, the answers and every sentence.
 
+5c. **On a quantity change: judge the new quantity** (POS build 2.0.0.654 on). Declare a service with `"settings": {"event": "qty_change", "item_groups": ["iPad"]}` (the scan's filter and rules, and a group sold without serial numbers or lots: those lines are never asked; 1.5 seconds unless raised, 3 at most). A burst of presses is asked **once, 600 ms after the last**, with the final quantity. You are sent the till's own id for the line (`line.line_ref`, stable while the sale stays on the till), its last allowed quantity (`qty_milli_answered`) and the new one (`qty_milli`), in thousandths; judge the new one:
+
+   ```json
+   {"verdict": "confirm", "question": "4 of iPad Air 64GB on one line. Has a manager agreed to more than 3?"}
+   ```
+
+   *allow* keeps the new quantity (values may go on the line, never on the sale); *confirm* beeps and asks; *refuse* shows your sentence. A refusal or a *No* puts back the **last allowed** quantity, never the one just before the change. Pay, Hold, Save as quote, a layaway plan, an order and an exchange's settle each ask any line not yet allowed first, and wait. **Never asked (version 1):** a serial- or lot-tracked line, a return's quantities, an order's change, an offer's companion item, a weighed line, a set, a gift card. A held, parked or converted sale comes back rebuilt, each line at the quantity it arrives with. Offline, or when your answer never comes, the declared down answer applies; with `allow_and_flag` the change is flagged when the sale is paid online or synced. S20's *Handset count* is a worked service (`capture.on_qty`, on *iPad*): up to three on a line allowed, four or five asked about, more refused.
+
 6. **What the cashier sees.**
 
    | Your answer | The till |
@@ -65,8 +76,13 @@ This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, buildi
    | customer · `refuse` + `reason` | *"This customer can't be added"* and your sentence |
    | customer · `challenge` | a code field with your prompt; a wrong code: your reason and *"⟨n⟩ tries left."* |
    | a create without your recorded answer | refused by the server: *"Check the customer's code first."* — the till then asks you |
+   | quantity change · `confirm` + `question` | a beep and the question; *No* puts back the last allowed quantity |
+   | quantity change · `refuse` + `reason` | your sentence, and the last allowed quantity back on the line |
+   | scan · `notice` + `message` | the item goes on; *"⟨label⟩: your sentence"* shows for 8 s (POS build 2.0.0.654 on) |
 
    On the till: the scan's confirmation ![warranty capture](../samples/s20_capture/screenshots/01_warranty_capture_sheet.png) and the line carrying the reference ![the line](../samples/s20_capture/screenshots/02_the_line_carries_the_reference.png); the code sheet for a new customer ![member code](../samples/s20_capture/screenshots/03_member_code_sheet.png), a wrong code ![wrong code](../samples/s20_capture/screenshots/04_a_wrong_code.png), and the customer created after the right one ![customer created](../samples/s20_capture/screenshots/05_customer_created_and_attached.png). On the phone: the capture sheet ![phone: warranty capture](../samples/s20_capture/screenshots/06_phone_warranty_capture_sheet.png) and the customer attached ![phone: customer attached](../samples/s20_capture/screenshots/07_phone_customer_attached.png).
+
+6b. **Warn without stopping: `notice`** (POS build 2.0.0.654 on). `{"verdict": "notice", "message": "MILK-1: sell batch B-1102 first. It expires 2026-11-02."}` is *allow* plus a sentence: the item goes on (or the customer is created, or stays on the sale, or the quantity stands) with no tap, and the till shows *"⟨label⟩: your sentence"* below its own warnings for 8 seconds; under the camera, in the run's pause with *Got it*. Use it for what the cashier should know but need not answer: a shorter-dated batch in stock, points about to expire, a promotion one unit away. Something that must stop the cashier, such as a recall, is a *confirm* or a *refuse*. Bounds: the till's own warning wins over your notice, in either order; a second notice replaces the first; the camera's pause names your label, not the item, so name the item in your sentence; the sentence is never logged. A notice is never a down answer, and offline you are not asked. **An older build refuses `notice`** as an unknown answer and applies your down answer (with `refuse` declared, the item is blocked): don't send it to a shop before build 2.0.0.654. S23's *Warn of a shorter-dated batch* is a worked service ([`samples/s23_till_guard`](../samples/s23_till_guard/README.md)).
 
 7. **When your service is down or slow.** On scan, `allow_and_flag` lets the line on and flags it; `refuse` keeps the item off. On customer add, `refuse` reads *"⟨label⟩ did not answer. The customer can't be added until it does."* The scan never fails because of you: a capture that cannot run applies your declared answer.
 
@@ -98,4 +114,4 @@ Proven on our test bench on 2026-10-08 (iVendNext POS app at `577a8d41`), **16 o
 
 The captured reference on a **booked** sale: the money kit's label for this sample. Results: **GREEN** on 2026-10-08: the booked line carries the service's reference; every other sale as the baseline. With S20 left off, the line carries none and the label goes RED.
 
-Not run here: a customer added offline (created at sync, flagged) and the receipt's contact after payment; a *confirm* or *refuse* on scan; the camera's pause.
+Not run here: a quantity change or a notice on a till (both walked by the product at POS train T12, counter, phone and tablet frames; S20's quantity service and S23's notice run in their laptop tests); a customer added offline (created at sync, flagged) and the receipt's contact after payment; a *confirm* or *refuse* on scan; the camera's pause.

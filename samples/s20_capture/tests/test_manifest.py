@@ -1,4 +1,4 @@
-"""S20's manifest passes the kit's checker: two capture services, one per event, installed switched off."""
+"""S20's manifest passes the kit's checker: three capture services, one per event, installed switched off."""
 import json
 import sys
 import unittest
@@ -18,9 +18,12 @@ class ManifestTest(unittest.TestCase):
 
     def test_one_service_per_event_none_switched_on(self):
         subs = MANIFEST["extension_subscriptions"]
-        self.assertEqual(sorted(s["settings"]["event"] for s in subs), ["customer_add", "scan"])
+        self.assertEqual(sorted(s["settings"]["event"] for s in subs), ["customer_add", "qty_change", "scan"])
         self.assertFalse(any(k in s for s in subs for k in ("enabled", "consent_given", "scope", "secret")))
-        self.assertLessEqual(next(s for s in subs if s["settings"]["event"] == "scan")["timeout_seconds"], 3)
+        by = {s["settings"]["event"]: s for s in subs}
+        self.assertLessEqual(by["scan"]["timeout_seconds"], 3)
+        self.assertLessEqual(by["qty_change"]["timeout_seconds"], 3)
+        self.assertLessEqual(set(by["qty_change"]["settings"]["item_groups"]), set(by["scan"]["settings"]["item_groups"]))
 
 
 if __name__ == "__main__":

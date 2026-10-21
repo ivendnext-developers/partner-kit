@@ -18,7 +18,7 @@ A notification set up in Desk by the shop's administrator on the approval step, 
 ## Limits
 - An uploaded CSV goes as a **link** in the message: the installed framework has no attach-from-field, and a manifest cannot carry it (it could mail any private file). The link opens with the reader's own rights.
 - *Allow Print for Draft* is a site-wide setting, and a notification that fails (no print, no recipient mail) can hold the document's save: send the first one to a test document.
-- A package's own record types will carry a notification with the package's own print format when P-MANIFEST4 (multi-select, a settings record, notification attachments) ships. The shop's own documents stay configuration.
+- From POS build 2.0.0.654 a package's own record types may carry a notification with the package's own print format attached (`guide/07_manifests.md`, *A notification's own print*); that print reads only its own record's fields. The shop's own documents stay configuration.
 - Not run: a mail sent with the print attached.
 
 ## Tell the customer

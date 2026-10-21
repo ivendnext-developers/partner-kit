@@ -30,7 +30,7 @@ class RepoCards(unittest.TestCase):
         tmp = pathlib.Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, tmp)
         shutil.copytree(ROOT / "needs", tmp / "needs")
-        for folder in ("recipes", "samples", "tools", "guide", "contracts"):
+        for folder in ("recipes", "samples", "tools", "guide", "contracts", "api"):
             os.symlink(ROOT / folder, tmp / folder)
         self.assertEqual(needs.check(tmp), [])
         bad = (tmp / "needs" / "till" / "line-quantity-cap.md")

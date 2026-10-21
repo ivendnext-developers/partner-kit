@@ -35,6 +35,18 @@ A **save rule** is the shop's own rule on a record type, held on every save from
 3. **Install it** on your sandbox (`tools/deploy/deploy.py manifest.json`, then `--consent`). Each rule arrives switched off: the shop opens *Retail Save Rule* and switches it on.
 4. **Test it** as the shop will meet it: a second customer with the same tax id in the same group is refused, in another group it is saved; a submit by someone without the role is refused, and by someone with it goes through.
 
+5. **A cap per store per day, and a minimum shelf life** (POS build 2.0.0.654 on). A `count_per_day` rule counts records a day per value of a field: no more than ten discount approvals a store a day is
+
+   ```json
+   {"rule_name": "PP SVR Ten approvals a store a day", "record_type": "Retail Override Request", "kind": "count_per_day",
+    "scope_field": "store", "day_field": "resolved_on", "cap": 10,
+    "message": "This store has given its 10 discount approvals today. Deny this one; the cashier can sell at the normal price.",
+    "conditions": [{"field": "request_type", "operator": "in", "value": "Markdown, Discount Stack, Open Price, Sale Discount"},
+                   {"field": "status", "operator": "in", "value": "Approved, Consumed"}]}
+   ```
+
+   The eleventh approval a store's managers give that day is refused at the manager's **Approve**, in the shop's words; one given offline is not counted, and an *Action* request (an action approved in person, written after it ran) is only flagged. A count rule never sits on a till sale or the day close (refused when the rule is saved). The same train added `sum_rows`, `count_rows` and `days_between` to the derived rule, a limit judged only on change (`judge_on_change`), a limit and role read from a settings record (`value_from_type`), and `parent.⟨field⟩` in a row rule's conditions: the [save rules page](../contracts/pages/save_rules.md) §8 has a minimum shelf life on a batch built from them (the card *minimum-shelf-life-at-receipt*). Walked by the product (POS train T12); not run by this recipe's sample.
+
 ## What the user sees
 
 - *"Tax ID PP-T11-TAX-0001 is already on another Customer."* when the second customer is saved.

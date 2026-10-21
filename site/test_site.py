@@ -678,21 +678,28 @@ class SiteTests(unittest.TestCase):
                       'href="../../samples/s23_till_guard/index.html"', 'href="../../sandbox.html"', "Run the checks", "Release"):
             self.assertIn(words, part)
         self.assertIn('href="../../plan.html?needs=line-quantity-cap"', part)
-        ask = (self.out / "needs/till/question-on-quantity-change.html").read_text("utf-8")
-        self.assertIn(build.POINT_FORM + "&amp;title=Extension-point%20request%3A%20P-CAPTURE3", ask)
-        self.assertIn("Until then, today:</strong> the check before payment", ask)
-        self.assertNotIn("Copy the sample", ask[ask.index('id="what-next"'):])
         self.assertIn("Instead:", (self.out / "needs/prices/fee-or-surcharge.html").read_text("utf-8").split('id="what-next"')[1])
         settings = (self.out / "needs/stock/branch-sees-own-stock.html").read_text("utf-8").split('id="what-next"')[1]
         self.assertNotIn("the kit's checks", settings)                      # nothing to code: checked and released as settings
         self.assertIn("Make the same settings on the customer's site", settings)
-        self.assertIn("To lift a limit, ask for", settings)                 # a Ready card with a request handle
-        self.assertIn("P-STORESCOPE", settings)
+        self.assertNotIn("To lift a limit", settings)                       # its extension point shipped: no request left
+        lift = (self.out / "needs/documents/invoice-layout-per-customer.html").read_text("utf-8").split('id="what-next"')[1]
+        self.assertIn("To lift a limit, ask for", lift)                     # a Ready card with a request handle
+        self.assertIn("P-PRINTBYPARTY", lift)
         self.assertNotIn("Until then", (self.out / "needs/till/money-columns-on-till.html").read_text("utf-8"))   # a restriction is no stop-gap
         self.assertIn("Start from:</strong> <a", (self.out / "needs/documents/receipt-own-lines.html").read_text("utf-8"))
         self.assertNotIn(">contracts/pages/receipt.md<", (self.out / "needs/documents/receipt-own-lines.html").read_text("utf-8"))
         named = (self.out / "needs/setup/country-tax-rules.html").read_text("utf-8")
         self.assertIn('(the card <a href="../integrations/outside-fiscal-result.html">', named)    # the card a limit names, linked
+
+    def test_a_not_yet_card_waiting_on_an_extension_point_asks_for_it(self):
+        # since POS train T12 no card in the kit waits on an extension point: the test plants one in a copy of the kit
+        kit = self.plant_not_yet(self.planted_kit("not_yet"))
+        self.assertEqual(self.build_in(kit), 0)
+        ask = (self.tmp / "not_yet_out" / "needs/till/a-planted-need.html").read_text("utf-8")
+        self.assertIn(build.POINT_FORM + "&amp;title=Extension-point%20request%3A%20P-PLANTED", ask)
+        self.assertIn("Until then, today:</strong> the check before payment", ask)
+        self.assertNotIn("Copy the sample", ask[ask.index('id="what-next"'):])
 
     def test_the_request_form_is_the_feedback_pages_own_address(self):
         # the form lives in a private repository the link check does not follow: hold it to the feedback page's address
@@ -771,6 +778,35 @@ class SiteTests(unittest.TestCase):
         shutil.copytree(build.ROOT / "samples", kit / "samples", ignore=shutil.ignore_patterns("__pycache__"),
                         copy_function=lambda src, dst: (shutil.copy2 if src.endswith("README.md") else
                                                        lambda s, d: pathlib.Path(d).symlink_to(s))(src, dst))
+        return kit
+
+    PLANTED_NOT_YET = """---
+id: a-planted-need
+title: A planted need that waits on an extension point
+area: till
+topic: questions-during-the-sale
+asks: A planted need that waits on an extension point
+status: not-yet
+door: request
+blocked-by: extension-point
+recipe: none
+sample: none
+request: P-PLANTED
+verified: planted by the site's tests
+---
+## What you build
+Nothing yet: it waits on the extension point P-PLANTED.
+
+## Limits
+- Today the check before payment can refuse the sale at Pay (the card *line-quantity-cap*).
+
+## Tell the customer
+The till cannot do this yet; it can stop the sale at Pay.
+"""
+
+    def plant_not_yet(self, kit: pathlib.Path) -> pathlib.Path:
+        """Plant a Not yet card waiting on an extension point (`needs/till/a-planted-need.md`) in a planted kit."""
+        (kit / "needs" / "till" / "a-planted-need.md").write_text(self.PLANTED_NOT_YET, "utf-8")
         return kit
 
     def build_in(self, kit: pathlib.Path) -> int:
@@ -883,7 +919,7 @@ class SiteTests(unittest.TestCase):
         folder.mkdir()
         (folder / "README.md").write_text("# S99 — a planted sample\n\nIt only exists in this test of the site build, and this first paragraph is long enough to be its description.\n\n**When to use it:** never.\n\n"
                                           "## Run it\n\n```bash\npython3 -m unittest\n```\n", "utf-8")
-        card = kit / "needs" / "till" / "question-on-quantity-change.md"                # a not-yet card: its door is Request
+        card = self.plant_not_yet(kit) / "needs" / "till" / "a-planted-need.md"         # a not-yet card: its door is Request
         card.write_text(card.read_text("utf-8").replace("sample: none", "sample: samples/s99_planted"), "utf-8")
         self.assertEqual(self.build_in(kit), 1)                                          # no door from the card, none in the README
         self.edit_readme(kit, "s99_planted", lambda t: t.replace("## Run it", "**Door:** Manifest\n\n## Run it", 1))

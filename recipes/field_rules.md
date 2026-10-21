@@ -8,7 +8,7 @@ Field rules give a shop its own say over the fields the till shows, per till the
 
 **When to use it.** It is step 1 of the screen ladder — configuration. Reach for it before any screen of your own. A shop's manager can do the same in POS Studio's **Fields** tab; a manifest is for an iVendNext Partner who ships the same rules to many shops.
 
-**The four rules, here.** Nothing is called and nothing leaves the shop. No price, amount, tax or tender field is on any list: a rule changes what the till **shows and asks for**, never what it charges.
+**The four rules, here.** Nothing is called and nothing leaves the shop. A rule changes what the till **shows and asks for**, never what it charges: from POS build 2.0.0.654 a money column may be shown or called by the shop's word (step 3b), and no rule moves, rounds, hides or replaces a figure.
 
 ## Steps
 
@@ -29,6 +29,18 @@ Field rules give a shop its own say over the fields the till shows, per till the
 3. **What the cashier sees.** The till's start reads the rules with its theme; each screen asks them as it draws, online and offline. A new customer without a required phone is refused by the till **and by the server**: *"Phone is required here."* — an older till cannot get round it. A customer added offline without it is created when the sale syncs and flagged on the *Sales to review* report, never refused (the customer has paid). (A customer made in iVendNext Desk or by an import is not a till's, and is not checked.)
 
    On the till: the line heading ![Product](../samples/s21_field_rules/screenshots/01_the_line_heading_reads_product.png), the card ![Stars](../samples/s21_field_rules/screenshots/02_stars_on_the_customers_card.png), the new-customer sheet ![no email](../samples/s21_field_rules/screenshots/03_new_customer_without_an_email_field.png), and the phone rule ![phone required](../samples/s21_field_rules/screenshots/04_phone_is_required_here.png). On the phone: the heading ![phone: Product](../samples/s21_field_rules/screenshots/05_phone_the_line_heading_reads_product.png) and the phone rule ![phone: phone required](../samples/s21_field_rules/screenshots/06_phone_phone_is_required_here.png).
+
+3b. **The money words** (POS build 2.0.0.654 on). Two rows show a line's price before any cut and give the total the shop's word:
+
+   ```json
+   {"theme": "PP Partner Till", "surface": "cart_line", "field": "list_price", "action": "show", "label": "List price"},
+   {"theme": "PP Partner Till", "surface": "totals", "field": "grand_total", "action": "relabel", "label": "Total incl. VAT"}
+   ```
+
+   - `cart_line`: `price`, `discount` and `amount` take `relabel` only; `list_price` takes `show` only. The counter grows a *List price* column; on the phone and the tablet it leads each line's sub-line, struck through only when the charged price is below it.
+   - `totals`: `discount`, `charges`, `delivery`, `tax` and `grand_total` take `relabel` only. `hide` is refused on every money figure.
+   - **Tell the shop:** the paper keeps its own words (*Total*, *Tax (incl.)*), so a shop that wants its word on the receipt names its own print format. A label may not hold digits or signs, but a claim in words passes: *Price incl. VAT* is false on a profile whose prices exclude tax, so word a money label for every POS profile the theme serves. A line sold at a cross-sell offer's price shows no struck price. The customer display, POS Studio's previews, the screens of a sale already made and the charges sheet's heading keep the shipped words.
+   - They joined version 1 at POS build 2.0.0.654: an older build's lists do not hold them, so check the shop's build before you ship them. The rules page: [`contracts/pages/fields.md`](../contracts/pages/fields.md), *The money words*.
 
 4. **Uninstalling** removes exactly your rows and leaves the theme as the shop had it, even if the shop renamed the theme meanwhile.
 

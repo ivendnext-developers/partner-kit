@@ -17,7 +17,7 @@ Your service is asked when an item your filter names is scanned; it answers with
 
 ## Limits
 - Online, your service answers. Offline, the answer you declared applies to the items ticked at the start of the day.
-- P-CAPTURE4 (a notice at the scan) adds an answer that shows your sentence and adds the item with no question; today the cashier answers once.
+- From POS build 2.0.0.654 your service may answer a notice instead: the item goes on with no tap and your sentence shows for 8 seconds (`recipes/capture.md`, step 6b). Something that must stop the cashier stays a question.
 
 ## Tell the customer
 Scanning a flagged item makes the till beep and ask the cashier your question before the line is added.

@@ -36,6 +36,17 @@ The recipe: [`recipes/rule_guard.md`](../../recipes/rule_guard.md).
 
 The service reads the shop's rule records and nothing else, and writes nothing. A return that sells nothing reads nothing and is allowed.
 
+**A cap on manager approvals, with no service (POS build 2.0.0.654 on).** A rule this guard cannot make: no more than ten discount approvals a store a day. It is one save rule, data only, of kind `count_per_day` on the approval request (`contracts/pages/save_rules.md` §8, the worked example; the product's accepted sample `contracts/extension_contracts/samples/save_rules/accepted/09_count_per_day.json`):
+
+```json
+{"record_type": "Retail Override Request", "kind": "count_per_day", "scope_field": "store", "day_field": "resolved_on", "cap": 10,
+ "message": "This store has given its 10 discount approvals today. Deny this one; the cashier can sell at the normal price.",
+ "conditions": [{"field": "request_type", "operator": "in", "value": "Markdown, Discount Stack, Open Price, Sale Discount"},
+                {"field": "status", "operator": "in", "value": "Approved, Consumed"}]}
+```
+
+The eleventh approval a store's managers give that day is refused when the manager presses **Approve**, in the approvals inbox or in person on the cashier's device; the request stays *Pending*, and the cashier sells at the normal price. An approval given and never used still counts; a sale using one never counts it again; approvals given offline are not counted; an *Action* request (an action approved in person, written after it ran) is only flagged. A check before payment like this guard still answers at **Pay**, for a rule of the partner's own. The card: `needs/till/manager-approval-cap-per-day.md`. Walked by the product (POS train T12, three frames); not run by this sample.
+
 ## Run it
 
 From the kit's root (the folder that holds `samples/`):

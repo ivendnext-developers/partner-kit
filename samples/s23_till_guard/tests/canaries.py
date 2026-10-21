@@ -73,8 +73,15 @@ CANARIES = [
      "test_manifest.ManifestTest.test_the_integration_role_only_reads_the_settings"),
     ("a sale with no sold line reads the shop", "service/app.py", 'and ctx["stage"] != "sale" and not guard.sold_lines(ctx):',
      'and not guard.sold_lines(ctx):', "test_service.OneShop.test_a_sale_with_no_sold_line_still_reads_the_shop"),
-    ("a redirect is not followed", "service/app.py", "urllib.request.build_opener(_NoRedirect)",
-     "urllib.request.build_opener()", "test_service.ShopApi.test_a_redirect_is_not_followed"),
+    ("a redirect is not followed", "service/app.py",
+     "urllib.request.build_opener(_NoRedirect).open(req, timeout=timeout) as r:\n            return (json",
+     "urllib.request.build_opener().open(req, timeout=timeout) as r:\n            return (json", "test_service.ShopApi.test_a_redirect_is_not_followed"),
+    ("the shelf warning answers inside 1 s", "service/app.py", "return SCAN_BUDGET - (self.clock() - t0)", "return SCAN_BUDGET",
+     "test_service.OneShop.test_a_shelf_answer_that_would_come_after_one_second_is_a_plain_allow"),
+    ("the shelf warning names the sooner batch", "guard.py", "if not mine or expiry >= mine:", "if not mine:",
+     "test_guard.ShelfWarning.test_the_soonest_batch_scanned_is_not_warned"),
+    ("the shelf warning is off until set", "guard.py", '"shelf_warning": str(doc.get("warn_shorter_shelf_life") or "0")',
+     '"shelf_warning": str(doc.get("warn_shorter_shelf_life") or "1")', "test_guard.ShelfWarning.test_off_until_the_shop_sets_it"),
 ]
 
 

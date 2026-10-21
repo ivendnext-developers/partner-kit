@@ -9,7 +9,9 @@ Two extension points, one app:
   sale at or above the shop's approval amount. Otherwise it allows.
 - **a capture on scan** (``capture/1``): the product calls it only for an item whose *Confirm at the till when scanned*
   field is ticked (the manifest's filter), before its line goes on the sale. ``on_scan`` answers ``confirm`` with the
-  shop's question: a beep and a yes/no.
+  shop's question: a beep and a yes/no. If the shop switched on *Warn of a shorter-dated batch* instead,
+  ``on_scan_shelf`` answers ``notice`` when the store holds a batch of the item that expires sooner: the item goes on
+  with no tap and the till shows the sentence (from POS build 2.0.0.654; an older build refuses ``notice``).
 
 The rules come from the shop's own settings record (``settings_of``), each off until the shop sets it. The rules are
 about selling: what a sale or a return takes back (a negative quantity) is never judged, and what a return sells (an
@@ -31,7 +33,8 @@ SKEW_S = 300          # a request stamped further than this from our clock is re
 BODY_MAX = 256 * 1024
 TEXT_MAX = 140        # every sentence the till shows: plain text, 1 to 140 characters (the extension points' rule)
 QUESTION = "Check this item before it goes on the sale. Add it?"
-NO_RULES = {"max_qty": 0.0, "lowest_price": 0.0, "approval_from": 0.0, "approval_answer": "ask", "question": QUESTION}
+NO_RULES = {"max_qty": 0.0, "lowest_price": 0.0, "approval_from": 0.0, "approval_answer": "ask", "question": QUESTION,
+            "shelf_warning": False}
 
 
 def verify(timestamp: str | None, signature: str | None, raw: bytes, secret: str, now: float | None = None) -> str:
@@ -92,7 +95,8 @@ def settings_of(doc: dict | None) -> dict:
     return {"max_qty": _number(doc.get("max_qty_per_line")), "lowest_price": _number(doc.get("lowest_unit_price")),
             "approval_from": _number(doc.get("approval_from")),
             "approval_answer": answer if answer in ("approve", "ask") else "ask",
-            "question": plain(doc.get("confirm_question") or "") or QUESTION}
+            "question": plain(doc.get("confirm_question") or "") or QUESTION,
+            "shelf_warning": str(doc.get("warn_shorter_shelf_life") or "0").strip() in ("1", "True", "true")}
 
 
 def plain(text, n: int = TEXT_MAX) -> str:
@@ -146,3 +150,22 @@ def on_scan(ctx: dict, rules: dict) -> dict:
     """A flagged item (the product filtered by the item's own tick): a beep and the shop's question."""
     item = plain(ctx["line"].get("item_code") or "", 40)
     return {"verdict": "confirm", "question": plain(f"{item}: {rules['question']}")}
+
+
+def on_scan_shelf(ctx: dict, dated: list) -> dict:
+    """*Warn of a shorter-dated batch*: ``dated`` is the store's batches of the item with stock and an expiry date, as
+    ``(expiry ISO date, batch)``. A scan that names its batch is warned when another batch expires sooner; a scan that
+    names none (an ordinary item barcode) is warned when the store's batches expire on different days, naming the one
+    to sell first. Otherwise allow: nothing is shown, and the item goes on either way."""
+    if not dated:
+        return {"verdict": "allow"}
+    expiry, first = min(dated)
+    item, scanned = plain(ctx["line"].get("item_code") or "", 40), ctx["line"].get("batch_no") or ""
+    if scanned:
+        mine = dict((b, e) for e, b in dated).get(scanned)
+        if not mine or expiry >= mine:
+            return {"verdict": "allow"}
+        return {"verdict": "notice", "message": plain(f"{item}: batch {first} expires sooner ({expiry}). Sell it first.")}
+    if len({e for e, _ in dated}) < 2:
+        return {"verdict": "allow"}
+    return {"verdict": "notice", "message": plain(f"{item}: sell batch {first} first. It expires {expiry}.")}

@@ -22,8 +22,8 @@ sys.path[:0] = [str(HERE.parent), str(HERE.parent / "service")]
 import app  # noqa: E402
 import capture  # noqa: E402
 
-SCAN_SECRET, CUSTOMER_SECRET = "s20-scan-secret", "s20-customer-secret"
-CONF = {"PP_POINT_SECRET_SCAN": SCAN_SECRET, "PP_POINT_SECRET_CUSTOMER": CUSTOMER_SECRET,
+SCAN_SECRET, CUSTOMER_SECRET, QTY_SECRET = "s20-scan-secret", "s20-customer-secret", "s20-qty-secret"
+CONF = {"PP_POINT_SECRET_SCAN": SCAN_SECRET, "PP_POINT_SECRET_CUSTOMER": CUSTOMER_SECRET, "PP_POINT_SECRET_QTY": QTY_SECRET,
         "PP_LINE_ATTRIBUTE": "Warranty ref", "PP_BARRED_PHONES": "+971 50 000 0000"}
 CID = "9f2c" * 8
 
@@ -39,6 +39,13 @@ def customer_ctx(phone="+971501234567", cid=CID, name="Ana Diaz"):
     return {"v": 1, "point": "capture", "event": "customer_add", "challenge_id": cid, "store": "Main - S",
             "pos_profile": "Mall", "operator": "c@shop.example", "lang": "en",
             "customer": {"customer_name": name, "phone": phone, "email": "", "customer_group": ""}}
+
+
+def qty_ctx(qty, answered=1, seq=1):
+    return {"v": 1, "point": "capture", "event": "qty_change", "seq": seq, "sale_ref": "sale-3f9c", "store": "Main - S",
+            "pos_profile": "Mall", "operator": "c@shop.example", "customer": None, "lang": "en",
+            "line": {"line_ref": "q8k2v0d1mz", "item_code": "PHONE-X", "item_group": "Handsets", "uom": "Nos",
+                     "qty_milli_answered": answered * 1000, "qty_milli": round(qty * 1000)}}
 
 
 def verify_ctx(code, cid=CID):
@@ -131,6 +138,22 @@ class CoreTest(unittest.TestCase):
         self.assertEqual(self.add(cid="b" * 32)["verdict"], "challenge")
         self.assertEqual(len(self.sent), 2)
 
+    def test_a_quantity_up_to_three_is_allowed_four_or_five_asked_more_refused(self):
+        conf = capture.settings_from(CONF)
+        self.assertEqual([capture.on_qty(qty_ctx(q), conf)["verdict"] for q in (2, 3, 4, 5, 6, 12)],
+                         ["allow", "allow", "confirm", "confirm", "refuse", "refuse"])
+        self.assertEqual(capture.on_qty(qty_ctx(6), conf)["reason"], "At most 5 of PHONE-X on one line.")
+
+    def test_the_new_quantity_is_judged_never_the_last_allowed_one(self):
+        conf = capture.settings_from(CONF)
+        self.assertEqual(capture.on_qty(qty_ctx(2, answered=9), conf), {"verdict": "allow"})    # a cut back is allowed
+        self.assertEqual(capture.on_qty(qty_ctx(9, answered=2), conf)["verdict"], "refuse")
+
+    def test_the_shop_sets_its_own_limits(self):
+        conf = capture.settings_from(dict(CONF, PP_QTY_ASK_ABOVE="1", PP_QTY_MOST="2"))
+        self.assertEqual([capture.on_qty(qty_ctx(q), conf)["verdict"] for q in (1, 2, 3)], ["allow", "confirm", "refuse"])
+        self.assertEqual(capture.settings_from(dict(CONF, PP_QTY_MOST="x"))["most"], 5)
+
     def test_every_answer_is_plain_and_fits(self):
         for out in (self.add(phone=""), self.add(phone="+971500000000"), self.add(),
                     capture.on_verify(verify_ctx("999999", cid="d" * 32), self.codes)):
@@ -153,7 +176,7 @@ class ServiceTest(unittest.TestCase):
 
     def post(self, ctx, secret, raw=None, ts=None, path=None):
         raw = raw if raw is not None else body(ctx)
-        path = path or ("/cap/scan" if secret == SCAN_SECRET else "/cap/customer")
+        path = path or {SCAN_SECRET: "/cap/scan", QTY_SECRET: "/cap/qty"}.get(secret, "/cap/customer")
         req = urllib.request.Request(self.base + path, data=raw, headers=signed(raw, secret, ts), method="POST")
         try:
             with urllib.request.urlopen(req, timeout=5) as r:
@@ -168,6 +191,22 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((code, out["verdict"]), (200, "challenge"))
         code, out = self.post(verify_ctx(self.sent[0][1]), CUSTOMER_SECRET)
         self.assertEqual((code, out), (200, {"verdict": "ok"}))
+
+    def test_a_quantity_change_over_the_wire(self):
+        self.assertEqual(self.post(qty_ctx(6), QTY_SECRET), (200, {"verdict": "refuse",
+                                                                  "reason": "At most 5 of PHONE-X on one line."}))
+        self.assertEqual(self.post(qty_ctx(6), SCAN_SECRET, path="/cap/qty")[0], 401)
+        self.assertEqual(self.post(qty_ctx(6), QTY_SECRET, path="/cap/scan")[0], 401)
+        self.assertEqual(self.post(scan_ctx(), QTY_SECRET, path="/cap/qty")[0], 400)   # signed, but not this address's event
+
+    def test_a_shop_without_the_quantity_secret_still_runs_the_other_two(self):
+        svc = app.Service({k: v for k, v in CONF.items() if k != "PP_POINT_SECRET_QTY"}, lambda p, c: None)
+        raw = body(qty_ctx(6))
+        self.assertEqual(svc.call("/cap/qty", signed(raw, QTY_SECRET), raw)[0], 401)
+        raw = body(scan_ctx())
+        self.assertEqual(svc.call("/cap/scan", signed(raw, SCAN_SECRET), raw)[0], 200)
+        with self.assertRaises(KeyError):                                  # a scan or customer secret is never optional
+            app.Service({k: v for k, v in CONF.items() if k != "PP_POINT_SECRET_SCAN"}, lambda p, c: None)
 
     def test_each_subscription_signs_with_its_own_secret(self):
         self.assertEqual(self.post(scan_ctx(), CUSTOMER_SECRET, path="/cap/scan")[0], 401)

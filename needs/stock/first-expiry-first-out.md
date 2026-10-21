@@ -19,7 +19,7 @@ Nothing of yours: switch batch tracking on for the item (card batches-and-expiry
 - The cashier confirms the pick: a proposal, not an assignment. The server checks the pick again at checkout and refuses one that does not add up to the quantity.
 - A line sold in a pack unit takes one lot for the whole line: the earliest lot that holds it, or none.
 - The order is by expiry date alone. It does not follow the shop's Stock Settings choice of first-in or first-expiry; a till that assigns lots by itself in that order is a product decision, not a door (ask us if the customer needs it).
-- For an item that has both batches and serial numbers, the core's automatic pick of the first-in lot can override the proposal until P-SERIALUNITS ships; test that shape first.
+- For an item that has both batches and serial numbers, the till books each unit with the batch its serial number carries from POS build 2.0.0.654; before that build the core's automatic pick of the first-in lot could override the proposal.
 - Offline, a batch line is added without a pick (read in the till's code, not walked).
 
 ## Tell the customer

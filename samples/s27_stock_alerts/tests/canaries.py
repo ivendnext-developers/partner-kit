@@ -77,6 +77,9 @@ CANARIES = [
     ("switched off does nothing", R, "if not st or not st.get(\"enabled\"):", "if not st:", "test_s27.Settings.test_switched_off_does_nothing"),
     ("the manifest names an alert by its key", "manifest.json", '"autoname": "field:alert_key"', '"autoname": "hash"',
      "test_manifest.Manifest.test_an_alert_is_named_by_its_key"),
+    ("the batch reminder is a Days Before reminder on a batch's expiry", "batch_expiry_package.json",
+     '"event": "Days Before"', '"event": "Days After"',
+     "test_batch_expiry_package.BatchExpiryPackage.test_a_separate_app_with_one_reminder_before_a_batchs_expiry_to_a_role"),
 ]
 
 def run(name, path, anchor, mutant, test) -> tuple[str, str]:

@@ -1,0 +1,25 @@
+{#- The price list with photos — a print format on the Price List itself (POS build 2.0.0.654 on). It lists the list's own
+    prices through ivn_rows and each item's photo through ivn_value, with the rights of the person printing: a person who
+    may not read a price or an item sees fewer rows, and a print sent from the e-mail queue shows none. General prices only
+    (no customer's or batch's own price). Up to 1,000 prices, read 200 at a time, in item code order. -#}
+<div style="font-family: Arial, sans-serif; font-size: 11px; color:#222;">
+  <div style="font-size:16px; font-weight:bold; color:#1F3864;">{{ doc.price_list_name }}</div>
+  <div>{{ doc.currency }}{% if doc.selling %} &middot; selling{% endif %}{% if doc.buying %} &middot; buying{% endif %}</div>
+  <table style="width:100%; border-collapse:collapse; margin-top:8px;">
+    <thead><tr style="background:#1F3864; color:#fff;">
+      <th style="width:70px;">Photo</th><th style="text-align:left;">Code</th><th style="text-align:left;">Item</th>
+      <th style="text-align:right; padding-right:4px;">Price</th></tr></thead>
+    <tbody>
+    {%- for start in [0, 200, 400, 600, 800] %}
+    {%- for r in ivn_rows("Item Price", filters={"price_list": doc.name, "customer": ["is", "not set"], "batch_no": ["is", "not set"]},
+                          fields=["item_code", "item_name", "price_list_rate", "uom"], order_by="item_code asc", limit=200, start=start) %}
+      {%- set photo = ivn_value("Item", name=r.item_code, field="image") %}
+      <tr style="border-bottom:1px solid #ccc;">
+        <td style="height:64px;">{% if photo %}<img src="{{ photo }}" style="max-height:60px; max-width:66px;">{% endif %}</td>
+        <td>{{ r.item_code }}</td><td>{{ r.item_name }}</td>
+        <td style="text-align:right; padding-right:4px;">{{ r.price_list_rate }} / {{ r.uom }}</td></tr>
+    {%- endfor %}
+    {%- endfor %}
+    </tbody>
+  </table>
+</div>

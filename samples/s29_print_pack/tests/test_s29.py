@@ -112,6 +112,49 @@ class Templates(unittest.TestCase):
                 self.assertNotRegex(p["html"], r"https?://|\bsrc=\"/", p["name"])
 
 
+
+class PriceListFormat(unittest.TestCase):
+    """The print format on the Price List (POS build 2.0.0.654 on): its rows through ivn_rows, each photo through ivn_value."""
+    html = build.build_price_list()["print_formats"][0]["html"]
+
+    def test_the_manifest_is_the_build_of_the_file_and_passes_the_checker_with_no_warning(self):
+        built = build.build_price_list()
+        self.assertEqual(json.loads((SAMPLE / "price_list_manifest.json").read_text(encoding="utf-8")), built)
+        self.assertEqual((validate.validate(built), validate.warnings(built)), ([], []))
+        self.assertEqual([(p["name"], p["doc_type"]) for p in built["print_formats"]],
+                         [("PP PLR Price List with Photos", "Price List")])
+
+    def test_it_reads_other_records_only_through_the_two_readers(self):
+        txt = re.sub(r"\{#.*?#\}", "", self.html, flags=re.S)
+        for expr in re.findall(r"\{[{%]-?(.*?)-?[}%]\}", txt, flags=re.S):
+            roots = set(re.findall(r"(?<![\w.\"'])([A-Za-z_]\w*)", re.sub(r"\"[^\"]*\"|'[^']*'", "", expr)))
+            roots -= {"if", "endif", "for", "endfor", "in", "set", "asc"}
+            self.assertLessEqual(roots, {"doc", "r", "photo", "start", "ivn_rows", "ivn_value", "filters", "fields",
+                                         "order_by", "limit", "name", "field"}, expr.strip())
+        self.assertNotRegex(txt, r"get_all|get_value|get_doc|\.db\.|fr" r"appe|erp" r"next")
+
+    @NEED_JINJA
+    def test_every_general_price_prints_with_its_photo_page_by_page(self):
+        prices = [{"item_code": f"IT-{i:04d}", "item_name": f"Item {i}", "price_list_rate": i, "uom": "Nos"} for i in range(450)]
+        calls = []
+
+        def ivn_rows(dt, filters=None, fields=None, order_by=None, limit=50, start=0):
+            calls.append((dt, dict(filters), start, limit))
+            return [type("R", (), p) for p in prices[start:start + limit]]
+
+        def ivn_value(dt, name=None, field=None):
+            return "/files/it-0001.png" if (dt, name, field) == ("Item", "IT-0001", "image") else None
+
+        doc = {"name": "Distributor A", "price_list_name": "Distributor A", "currency": "ZAR", "selling": 1, "buying": 0}
+        out = jinja2.Environment(autoescape=True).from_string(self.html).render(doc=doc, ivn_rows=ivn_rows, ivn_value=ivn_value)
+        self.assertEqual(out.count("<tr style=\"border-bottom"), 450)
+        self.assertEqual(out.count("<img "), 1)
+        self.assertIn('src="/files/it-0001.png"', out)
+        self.assertEqual([c[2] for c in calls], [0, 200, 400, 600, 800])
+        self.assertEqual({c[3] for c in calls}, {200})
+        self.assertEqual(calls[0][1], {"price_list": "Distributor A", "customer": ["is", "not set"], "batch_no": ["is", "not set"]})
+
+
 @NEED_JINJA
 class Branch(unittest.TestCase):
     html = None
