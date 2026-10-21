@@ -59,7 +59,7 @@ BANNED_FRAPPE_ATTRS = (
     "frappe.utils.has_gravatar",
 )
 #: partner change: mail through the shop's own account is REVIEW, not FAIL
-REVIEW_FRAPPE_ATTRS = ("frappe.sendmail",)
+REVIEW_MAIL_ATTRS = ("frappe.sendmail",)
 
 URL_RE = re.compile(r"""https?://[^\s"'<>]+""")
 
@@ -93,7 +93,7 @@ def scan_source(source: str, path: str) -> list[tuple[str, int, str]]:
                 dotted = f"{node.module}.{alias.name}" if node.module else alias.name
                 if dotted in BANNED_FRAPPE_ATTRS:
                     findings.append(("egress", node.lineno, f"imports frappe egress {dotted!r}"))
-                elif dotted in REVIEW_FRAPPE_ATTRS:
+                elif dotted in REVIEW_MAIL_ATTRS:
                     findings.append(("mail", node.lineno, f"imports {dotted!r}"))
             if node.level == 0 and node.module:
                 root = node.module.split(".")[0]
@@ -103,7 +103,7 @@ def scan_source(source: str, path: str) -> list[tuple[str, int, str]]:
             dotted = _dotted(node)
             if dotted in BANNED_FRAPPE_ATTRS:
                 findings.append(("egress", node.lineno, f"calls frappe egress {dotted!r}"))
-            elif dotted in REVIEW_FRAPPE_ATTRS:
+            elif dotted in REVIEW_MAIL_ATTRS:
                 findings.append(("mail", node.lineno, f"calls {dotted!r} (mail through the shop's own account)"))
         elif isinstance(node, ast.Constant) and isinstance(node.value, str):
             for url in URL_RE.findall(node.value):

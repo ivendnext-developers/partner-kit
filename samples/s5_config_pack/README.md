@@ -55,7 +55,7 @@ Run it twice and nothing doubles. Add `--remove` to undo it.
 ## Before you build on it
 
 - **The member discount is a promotion,** not a pricing rule: this version of iVendNext refuses selling pricing rules.
-- **What it cannot do yet.** It cannot hide or require a till field, refuse a wrong detail when the record is saved, or add a wallet or a card check. Each needs an extension point that has not shipped.
+- **What it does not show.** It hides or requires no till field, refuses no wrong detail when the record is saved, and adds no wallet. Each has shipped as its own extension point: field rules ([S21](../s21_field_rules/README.md)), save rules ([the recipe](../../recipes/save_rules.md)), a partner wallet ([S22](../s22_customer_loyalty/README.md)). A card check has not shipped.
 
 ## Technical notes
 
@@ -75,6 +75,6 @@ The cashier is the bench's *Thabo Nkosi*; the customer, the item and the reasons
 
 *A script over the record API reading one JSON file* (picked: ~170 lines; any shop's administrator reads it; the same file is the documentation) · *clicking it through in Desk* (rejected: nothing to test, nothing to repeat on the next shop) · *a manifest* (rejected: a manifest may not touch the shop's own settings or its stock).
 
-### Not used, because it would need an extension point that has not shipped
+### Not used here
 
-Hiding or requiring a till field (P-FIELDS), a rule that refuses a wrong detail on save (P-RULES), a wallet or a card check (P-WALLET, P-CARDSET). The member discount is the promotion engine's, not a pricing rule (selling pricing rules are refused at this pin).
+Shipped, and left out because this pack is settings only: hiding or requiring a till field (P-FIELDS, [S21](../s21_field_rules/README.md)), a rule that refuses a wrong detail on save (P-RULES, [the save rules recipe](../../recipes/save_rules.md)), a wallet (P-WALLET, [S22](../s22_customer_loyalty/README.md)). Not shipped: a card check (P-CARDSET). The member discount is the promotion engine's, not a pricing rule (selling pricing rules are refused at this pin).

@@ -9,7 +9,7 @@ door: check-before-payment
 blocked-by: -
 recipe: recipes/rule_guard.md
 sample: samples/s18_rule_guard
-request: P-CAPTURE2
+request: -
 verified: run by the product 2026-10-16 · POS train T11's walk sent the day and the terminal with each check (pos_opening, pos_terminal); not run with a kit sample
 ---
 ## What you build

@@ -8,7 +8,7 @@ CHANGED FOR PARTNERS:
 - the ALLOW-LIST is EMPTY: no partner app patches platform code, ever;
 - ``ENGINE_ROOT`` (one package, ``ivendnext_pos``) becomes every platform package — the framework, the ERP, the
   engine, mPOS, payments, loyalty and the framework's alias;
-- because the framework is now a root, ONE assignment shape is exempt: ``<frappe>.<state>.<name> = …`` — exactly one
+- because the framework is now a root, ONE assignment shape is exempt: ``<framework>.<state>.<name> = …`` — exactly one
   attribute below the framework's per-request state (``flags``, ``local``, ``response``, ``form_dict``, ``session``),
   on a name bound to the framework module itself. ``frappe.flags.x = True`` is state; ``frappe.local.db.sql = f``
   (deeper) and ``erp_module.session = …`` (not the framework) are patches and are flagged (review fold R8).

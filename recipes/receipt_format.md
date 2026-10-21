@@ -8,7 +8,7 @@ This recipe makes the till's receipt look the way a country's tax rules or a ret
 
 **When to use it:** you want a different **layout** of figures the shop has already worked out. It is Rung 4 of the guide's build ladder: a manifest with one print format.
 
-A receipt prints money; it never decides money. If you need a QR code or a government mark on the receipt, this recipe does not do it: that needs an extension point that has not shipped (**P-RECEIPT**).
+A receipt prints money; it never decides money. If you need the tax authority's QR code or seal on the receipt, this recipe does not do it: the [fiscal reader](../contracts/pages/fiscal_reader.md) records them and the shipped `mPOS Receipt` prints them (**P-RECEIPT**; no kit sample yet). A format of your own prints them on paper only if its template calls `receipt_fiscal_marks(doc)` (the fiscal reader page, *What the receipt prints*); this recipe's template does not.
 
 ## Steps
 
@@ -33,7 +33,7 @@ A receipt prints money; it never decides money. If you need a QR code or a gover
 
 4. **Install** the manifest (`recipes/manifest.md` step 4: `deploy` on your sandbox, the install screen on a customer's site).
 
-5. **Set the format on the till's POS Profile.** This is configuration: iVendNext Desk → **POS Profile** → open the profile → the **Print Format** field → pick your format → **Save**. ⚠ A manifest cannot do this step yet. It may not change a POS Profile until the P-RECEIPT extension point ships. The till reads the profile's format each time it prints, so the change is live on the next receipt, with no restart.
+5. **Set the format on the till's POS Profile.** This is configuration: iVendNext Desk → **POS Profile** → open the profile → the **Print Format** field → pick your format → **Save**. ⚠ A manifest cannot do this step yet. It may not change a POS Profile: the manifest key for a register's format, the last part of P-RECEIPT, has not shipped. The till reads the profile's format each time it prints, so the change is live on the next receipt, with no restart.
 
 6. **Look at a real sale.** Book a sale on the till. Here, one item at 15% VAT and one zero-rated:
 
@@ -72,7 +72,7 @@ There is **no offline final receipt.** An offline sale prints a provisional slip
 
 ## Limits
 
-- **No QR or fiscal mark** (P-RECEIPT). No hiding or requiring a field (P-FIELDS), and no label layout (P-LABEL). A market that needs one of these cannot use this recipe alone.
+- **No QR or fiscal mark, no hidden or required field, no label layout here.** Each has shipped as its own extension point: the tax authority's QR and seal through the [fiscal reader](../contracts/pages/fiscal_reader.md) (P-RECEIPT, no kit sample yet; a format of your own prints them only if its template calls `receipt_fiscal_marks(doc)`, which this one does not), field rules (P-FIELDS, [their recipe](field_rules.md)), labels through the [label layout](../contracts/pages/label_layout.md) (P-LABEL, no kit sample yet). A market that needs one of these adds it beside this recipe.
 - **A shop with several tax heads** (two or more tax rows on a sale) takes the template's other branch. That branch prints the per-head lines from the till's own reader. It has not been tried yet, and the kit's print check expects one `VAT` row, so it would report a difference there. Verify it before use.
 - Some parts of the template have not been tried on a real sale yet (listed in Technical notes). Check any you rely on.
 - The taxable value shown at each rate is the sum of the sale's net line amounts at that rate. The VAT line is the sale's own tax figure. So a sale with two **different non-zero rates under one tax account** shows each taxable value but a single VAT total.

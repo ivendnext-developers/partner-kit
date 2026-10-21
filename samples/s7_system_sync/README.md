@@ -46,7 +46,7 @@ SYNC_KEY=… SYNC_SECRET=… python3 samples/s7_system_sync/sync.py run --base h
 
 - **Run one instance per ERP per shop.** The sync takes no lock.
 - **Stock and prices are never set by hand.** A stock figure is a Stock Entry the shop books, never a number the sample sets. A price is written to the price list, never onto a sale.
-- **What it cannot do yet.** It cannot read the feed with a key limited to one application: it uses today's integration-user grant, which cannot be scoped that way. It has no check at payment time. Both need something that has not shipped.
+- **What it does not use.** It reads the feed through the engine transport with today's integration-user grant, which reaches every application's queue; the feed scoped to one application has shipped (the client's `--transport door`, `recipes/event_feed.md` §3) and is not used here. It has no check at payment time; that door has shipped too (`samples/s23_till_guard/`).
 
 ## When the sync stops halfway
 
@@ -84,4 +84,4 @@ PASS T6 canary: a total that is one unit off is named with both figures
 
 ### Bounds
 
-**One instance per ERP per shop** — the sync takes no lock (recipe, Bounds). **Not used, because it has not shipped:** a feed key scoped to one application (P-FEED) — the sync uses today's integration-user grant, which the recipe says cannot be scoped; a payment-time check (P-CHECK). **Never done:** a stock figure is a Stock Entry the engine books, never a number the sample sets; a price is written to the price list, never onto a sale.
+**One instance per ERP per shop** — the sync takes no lock (recipe, Bounds). **Not used here, though shipped:** the feed scoped to one application (P-FEED, the client's `--transport door`, `recipes/event_feed.md` §3) — the sync uses the engine transport and the integration user's grant, which reaches every application's queue; a payment-time check (P-CHECK, `samples/s23_till_guard/`). **Never done:** a stock figure is a Stock Entry the engine books, never a number the sample sets; a price is written to the price list, never onto a sale.

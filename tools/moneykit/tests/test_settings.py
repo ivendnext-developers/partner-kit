@@ -1,4 +1,4 @@
-"""Laptop tests of the money kit's SETTINGS, no shop: a stub ``frappe`` stands in for the console, so what is tested is how the
+"""Laptop tests of the money kit's SETTINGS, no shop: a stub of the framework's module stands in for the console, so what is tested is how the
 kit finds its folder, its shop and its record — never what it rings (that needs a real staging shop).
 
     python3 -m unittest discover -s tools/moneykit/tests -p 'test_*.py'
@@ -14,7 +14,7 @@ KIT = pathlib.Path(__file__).resolve().parents[1]
 SHOP = {"cashier": "c@shop.example", "device": "dev-1", "profile": "My Profile", "terminal": "T-1"}
 
 
-def stub_frappe():
+def stub_framework():
     f = types.ModuleType("frappe")
     f.get_all = lambda *a, **k: []                      # no POS days on the stub shop
     f.set_user = lambda *a, **k: None
@@ -28,7 +28,7 @@ def stub_frappe():
 
 class T(unittest.TestCase):
     def setUp(self):
-        stub_frappe()
+        stub_framework()
         for m in ("till", "baskets"):
             sys.modules.pop(m, None)
         while str(KIT) in sys.path:

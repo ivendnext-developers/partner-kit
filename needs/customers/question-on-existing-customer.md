@@ -9,7 +9,7 @@ door: capture-on-event
 blocked-by: -
 recipe: recipes/capture.md
 sample: none
-request: P-CAPTURE2
+request: -
 verified: run by the product 2026-10-16 · POS train T11's walk on three till frames (allow, refuse, a one-time code, the service down, offline); not run with a kit sample
 ---
 ## What you build

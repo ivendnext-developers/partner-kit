@@ -1,4 +1,4 @@
-"""Laptop tests of ``till.check_round`` (row SET5), no shop: a stub ``frappe`` and a stub of the POS app's tender door stand in
+"""Laptop tests of ``till.check_round`` (row SET5), no shop: a stub of the framework's module and a stub of the POS app's tender door stand in
 for the console, so what is tested is the till's order — check, the cashier's Yes, a refusal books nothing — never the
 product's answer (the bench proves that).
 

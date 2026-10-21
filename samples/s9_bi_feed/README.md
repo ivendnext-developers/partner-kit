@@ -42,7 +42,7 @@ The result is a warehouse file and CSV, not a screen.
 
 ## Before you copy it
 
-- **The feed key reaches every application's queue.** A key that sees only one application's events has not shipped yet, so this sample does not use one.
+- **The feed key reaches every application's queue.** The sample reads the feed through the engine transport, whose key sees every application's events. The feed scoped to one application has shipped (the client's `--transport door`, `recipes/event_feed.md` §3); this sample does not use it.
 
 ## Technical notes
 
@@ -50,7 +50,7 @@ The result is a warehouse file and CSV, not a screen.
 
 **Why this way (R6).** *A nightly full dump* — rejected: slow at volume and it cannot say what changed. *Poll by `modified` only* — rejected as the main path: a record committed late behind the cursor is skipped; kept as `backfill`, the second way in. *The feed + one SQLite file for both the warehouse and the seen-set* (picked, ~250 lines): one transaction, so a kill leaves each invoice extracted once or not at all.
 
-**Not used, because it has not shipped:** a feed key scoped to one application (P-FEED) — the grant today reaches every application's queue (`recipes/event_feed.md` §3).
+**Not used here, though shipped:** the feed scoped to one application (P-FEED, the client's `--transport door`, `recipes/event_feed.md` §3) — this sample uses the engine transport, whose grant reaches every application's queue.
 
 ### What was tested
 

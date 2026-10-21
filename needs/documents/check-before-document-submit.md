@@ -9,7 +9,7 @@ door: document-check
 blocked-by: -
 recipe: recipes/document_check.md, recipes/check_by_workflow.md
 sample: samples/s34_po_check
-request: P-DOCCHECK
+request: -
 verified: run on a sandbox 2026-10-21 · POS 2.0.0.656 (install, the down answer, a standard fill field refused at save); the service's own answers proven on the laptop against the product's contract
 ---
 ## What you build

@@ -146,8 +146,8 @@ class T(unittest.TestCase):
         self.assertFalse(HITS)
 
     def test_a_path_value_cannot_escape_its_segment(self):
-        self.call(self.srv(), "getItem", {"name": "../../method/frappe.client.get_list?x="})
-        self.assertEqual(HITS[0][1], "/api/resource/Item/..%2F..%2Fmethod%2Ffrappe.client.get_list%3Fx%3D")
+        self.call(self.srv(), "getItem", {"name": "../../method/ivendnext_mpos.api.v1.submit?x="})
+        self.assertEqual(HITS[0][1], "/api/resource/Item/..%2F..%2Fmethod%2Fivendnext_mpos.api.v1.submit%3Fx%3D")
         for dots in (".", ".."):
             r = self.call(self.srv(), "getPartnerRecord", {"record_type": dots, "name": ".."})
             self.assertTrue(r["isError"])

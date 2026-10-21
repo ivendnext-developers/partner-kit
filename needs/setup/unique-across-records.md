@@ -9,7 +9,7 @@ door: save-rules
 blocked-by: -
 recipe: recipes/save_rules.md
 sample: none
-request: P-RULES2
+request: -
 verified: run on a sandbox 2026-10-21 · POS 2.0.0.656 (a second customer with the same tax id refused in its group, saved in another)
 ---
 ## What you build

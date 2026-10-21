@@ -312,7 +312,7 @@ RETOTAL_CALLS = ("calculate_taxes_and_totals", "set_missing_values", "apply_pric
 
 def _bindings(tree: ast.AST, mod: str, is_pkg: bool) -> tuple[dict, set[str], set[str]]:
     """(name -> dotted target) for imports, relative ones resolved against ``mod``; names bound to a throw function;
-    aliases bound to frappe/ivendframework."""
+    aliases bound to the framework module under either of its names."""
     names, throw_names, throw_roots = {}, set(), set()
     for n in ast.walk(tree):
         if isinstance(n, ast.Import):
