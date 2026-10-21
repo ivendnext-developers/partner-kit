@@ -30,7 +30,7 @@ For each need in a project's blueprint. Start at rung 1 and go down only when th
 3. **Does the cashier need an answer during the sale?** A till key. If your service must have the last word before money is taken (allow, refuse, ask, call a manager), that is the check before payment; if it must be asked when an item is scanned or a customer is added, the capture (both extension points, chapter 9).
 4. **Do you need your own records in iVendNext?** A manifest. Their screens are the native ones (chapter 13a).
 5. **Must logic run inside the sale, the same online and offline?** A sandboxed function, at an extension point that offers one.
-6. **None of these?** Check chapter 9. An extension point may already do it: a scan source for a unit's own barcode, field rules for what the till shows, a check before payment, a capture. If no single one does, combine them (rung 6): state the limit of the combination to the person, and request an extension point only if no combination meets the customer's outcome.
+6. **None of these?** Check chapter 9. An extension point may already do it: a scan source for a unit's own barcode, field rules for what the till shows, a check before payment, a capture, a document check before a back-office document is submitted. If no single one does, combine them (rung 6): state the limit of the combination to the person, and request an extension point only if no combination meets the customer's outcome.
 
 ## The four rules — what every build keeps, and why
 

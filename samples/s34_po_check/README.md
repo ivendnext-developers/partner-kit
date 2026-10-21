@@ -16,7 +16,7 @@ It uses the **document check** extension point (`doccheck/1`, POS app from train
 2. **Give the role *Purchase Manager*** to the people who may approve an order over the monthly budget.
 3. **Switch the check on:** open it (*Retail Extension Subscription*, *ERP purchase order check*), read what is sent, tick the consent and switch it on.
 
-**Where it shows.** In Desk, when a buyer presses **Submit** on a purchase order: a refusal in the ERP's words, or the approval by a purchase manager. An import or an API call that submits is answered the same way. The till never meets it: a document check is back office only.
+**Where it shows.** In Desk, when a buyer presses **Submit** on a purchase order: a refusal in the ERP's words, or the approval by a purchase manager. An import or an API call that submits is answered the same way, with one difference: a submit that runs in the background (an import, a large bulk submit) cannot show an approval, so an over-budget order is refused there; submit it from the form. The till never meets it: a document check is back office only.
 
 **What leaves the shop.** When a purchase order is submitted: its name, its supplier, its total, each line's item and quantity, the company and the user submitting. Nothing on a draft's save. The manifest names one address; the shop sees it and the consent on the install screen and on the check before it is switched on.
 
@@ -53,7 +53,7 @@ python3 samples/s34_po_check/service/app.py samples/s34_po_check/service/.env.lo
 - **The order waits for you.** The purchase order's save, its record locked, waits for your answer: at most your time to answer (3 seconds here), and at most 10 seconds for every check on one submit together. Your ERP's three questions must fit inside it.
 - **Asked once.** The same order, fields, user and moment within 5 minutes gets your earlier answer, so a buyer pressing Submit again after a refusal does not reach the ERP again. The stand-in also gives one order the same number each time it asks.
 - **Approve** names a role of the shop's site (*Purchase Manager*, standard in iVendNext). A user holding it is asked to approve and a yes submits; anyone else is refused.
-- **The budget is the company's,** read from the request's `company`, never the submitting user's: whoever submits an order over it meets the approval.
+- **The budget is the company's,** read from the request's `company`, never the submitting user's: whoever submits an order over it meets the approval. (The product's worked example speaks of the buyer's budget; the request names only the user who submits, and a budget keyed on that user would let a colleague with budget left, or a purchase manager, submit without the approval.)
 - **Money** arrives as whole minor units with its currency; the budget is compared in the order's own currency. A currency with no budget set is not held by budget.
 - **A copied order** carries the ERP number of the order it was copied from until its own submit fills a new one (a manifest cannot mark a field on a shop's record type *No Copy*). With the declared down answer `refuse` it is never submitted with the old number; a shop that switches to `allow_and_flag` should clear the field on a copy, or check the flagged rows.
 - **Logs:** one line per call, the route, the status and the milliseconds, never the order.

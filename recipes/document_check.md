@@ -6,7 +6,7 @@ Some back-office documents must not become final until an outside system agrees:
 
 **When to use it.** The check reads data your system holds, and the person submitting can wait a few seconds. **Back office only:** never a till sale, and never a record the till's own booking writes (a layaway's order, a delivery's invoice, the backing records of the till's quote edit and quote cancel, an offline sale reaching the server); those are logged *not asked*. For the till's sale use a check before payment ([recipe](rule_guard.md)); for a format or a limit on one record's own fields, a save rule ([recipe](save_rules.md)). On a POS app from before train T11 (2026-10-16), which has no document check, a workflow step only your service can take does the same job ([recipe](check_by_workflow.md)).
 
-**The four rules, here.** Your code never runs inside the shop's site: our code asks your service and applies your answer from a closed list. **No answer writes money,** and `fill` writes only the fields the subscription names, each one the shop added.
+**The four rules, here.** Your service's code never runs inside the shop's site: our code asks your service and applies your answer from a closed list. **No answer writes money,** and `fill` writes only the fields the subscription names, each one the shop added.
 
 ## Steps
 

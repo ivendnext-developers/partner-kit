@@ -44,6 +44,6 @@ errors("desk_action", "answer", {"message": "Route assigned"})                  
 They are **copies** of files in the product's repository (`ivendnext/iVendNext_PWA`), taken at one commit (the payment connector's two files come from the payments app's repository, `ivendnext/iVendNext_Payments`, at one commit of its own); the commit
 and every file's source path are in [EXPORT_SOURCES.md](../EXPORT_SOURCES.md). Each page and the checker carries a
 header naming its source; the schemas and samples are JSON and cannot, so they are listed there. Only the links inside
-the pages were changed, so they point at the files here. Our own kit check compares every file with its source on each
+the pages were changed, so they point at the files here, and two calls are named by what they do rather than by the framework's own name. Our own kit check compares every file with its source on each
 change, so a copy cannot drift. **A defect in one is a defect in the product's file:** report it with a *Kit defect*
 issue (members) or the partner form, and we take it to the product's board.
