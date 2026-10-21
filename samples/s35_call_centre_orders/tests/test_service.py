@@ -55,10 +55,11 @@ class FakeTenant:
     """The shop's record API: orders, territories, and the shop's refusal of a write whose ``modified`` is stale."""
 
     def __init__(self, orders=None, tree=None, refuse=None, refuse_write=None, edit_before_write=0, warehouses=None,
-                 reprice=None):
+                 reprice=None, routed_before_write=None):
         self.orders = {o["name"]: o for o in (orders or [order()])}
         self.warehouses = warehouses if warehouses is not None else WAREHOUSES
         self.reprice = reprice      # {store: new grand total}: the store's own item tax re-rates the order on save
+        self.routed_before_write = routed_before_write  # a store: another press routes the order between read and write
         self.tree, self.refuse, self.refuse_write = tree or territories(), refuse, refuse_write
         self.edit_before_write, self.writes, self.reads = edit_before_write, [], []
         self.clock = 0
@@ -82,6 +83,13 @@ class FakeTenant:
         return dict(self.warehouses[name], name=name)
 
     def write(self, name, body):
+        if self.routed_before_write:            # a double click: the other press's write lands first
+            o = self.orders[name]
+            o["set_warehouse"] = self.routed_before_write
+            for ln in o["items"]:
+                ln["warehouse"] = self.routed_before_write
+            self.routed_before_write = None
+            self._touch(name)
         if self.edit_before_write:              # someone saves the order between the service's read and its write
             self.edit_before_write -= 1
             self._touch(name)
@@ -214,9 +222,15 @@ class ServiceTest(unittest.TestCase):
         code, out = self.press()
         self.assertEqual(out["message"]["body"], app.CHANGED)
         self.assertEqual(self.tenant.writes, [])
-        self.assertEqual(self.tenant.reads, ["SO-0001"])
+        self.assertEqual(self.tenant.reads, ["SO-0001", "SO-0001"])   # the stale write re-read once, never written again
         code, out = self.press()                      # the agent reloads and presses again: routed from what was saved
         self.assertEqual(out["message"]["title"], "Sent to store")
+
+    def test_s7b_a_double_click_answers_already_never_changed(self):
+        self.use(FakeTenant(routed_before_write="Maadi Store - S"))
+        code, out = self.press()
+        self.assertEqual(out["message"]["title"], "Already with its store")
+        self.assertEqual(self.tenant.writes, [])          # the stale write was refused; nothing written over
 
     def test_s8_an_order_the_shop_will_not_save_is_said_in_the_services_own_words(self):
         self.use(FakeTenant(refuse_write=(417, "ValidationError")))

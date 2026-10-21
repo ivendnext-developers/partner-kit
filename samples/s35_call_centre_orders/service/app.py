@@ -10,8 +10,8 @@ answers presses.
 For the one draft Sales Order in the press it reads the order with the app's own integration user's key (that user's
 rights, never the pressing user's), walks the order's territory up the tree to the first Serving store, and writes that
 warehouse on the order and on every line, then answers. The write carries the order's ``modified`` as read, so the
-shop refuses it if the order changed meanwhile; the service then asks the agent to reload, and never writes over
-someone's edit. A press repeated (a retry, a second click, two copies of the function) finds the order already routed
+shop refuses it if the order changed meanwhile; the service reads it once more without writing, answers Already if a
+second press routed it meanwhile, and otherwise asks the agent to reload: it never writes over someone's edit. A press repeated (a retry, a second click, two copies of the function) finds the order already routed
 and writes nothing: the routing is the same every time, so no press needs remembering. The shop's save may change the
 total (a store's own item tax, a price limited to a warehouse): the answer then says so.
 
@@ -210,7 +210,9 @@ class Service:
         try:
             saved = door.write(name, route.plan(order, store))
         except TenantError as e:
-            if e.kind == STALE:                 # someone saved it meanwhile: never write over their edit, nor retry
+            if e.kind == STALE:                 # someone saved it meanwhile: never write over their edit, nor retry;
+                if route.routed(door.order(name), store):   # a second press (a double click, another copy) just routed it
+                    return route.already(store, named_by)
                 return _warning(CHANGED)
             if e.code == 417:                   # the order's own fault (a field the shop now requires): never its text
                 return _warning(NOT_SAVED)

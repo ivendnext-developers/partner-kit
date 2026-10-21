@@ -1,6 +1,6 @@
 """S35's manifest: the one field it adds is the Serving store on Territory (a link to Warehouse), the button is on a
 draft Sales Order's form only and sends no more than the order's name and territory, and the feed whose user a service
-serving many shops receives on Connect again follows sales orders and records nothing (it installs switched off).
+serving many shops receives on Connect again follows sales orders and installs switched off (the shop leaves it off).
 
     python3 -m unittest discover -s samples/s35_call_centre_orders/tests -p 'test_*.py'
 """
@@ -31,7 +31,7 @@ class ManifestTest(unittest.TestCase):
 
     def test_the_feed_follows_sales_orders_and_the_one_address_is_the_services(self):
         feed, = self.m["registered_applications"]
-        self.assertEqual(feed["events"], ["Sales Order"])       # the checker refuses a feed with none; it records nothing
+        self.assertEqual(feed["events"], ["Sales Order"])       # the checker refuses a feed with none; left off, it records nothing
         self.assertEqual(self.m["allowed_urls"], [self.m["extension_subscriptions"][0]["endpoint_url"]])
 
 

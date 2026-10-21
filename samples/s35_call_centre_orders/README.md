@@ -22,7 +22,7 @@ Pressed again, the button changes nothing and says where the order already is.
 3. **Switch the service on** (the System Manager). Open **Retail Extension Subscription**, the record *Send to store service*, read what it is sent, tick the consent and switch it on.
 4. **Switch the button on** (the System Manager). Open **Retail Desk Action**, the record *Send to store*, and switch it on.
 5. **Set a Serving store on each district** (a Sales Master Manager, in the Territory tree): the store's warehouse, of the same company as the orders, and never a group warehouse.
-6. **Each store saves its list once:** the Sales Order list filtered on its own *Set Source Warehouse* and the status *To Deliver and Bill*. With a User Permission on its own warehouse, a store's staff see the orders sent to their store and not those sent to another; an order not yet sent (its Set Source Warehouse empty) is seen by every store.
+6. **Each store saves its list once:** the Sales Order list filtered on its own *Set Source Warehouse* and the status *To Deliver and Bill*. With a User Permission on its own warehouse, a store's staff see the orders sent to their store and not those sent to another; an order whose Set Source Warehouse is empty (none set, or lines on different warehouses) is seen by every store.
 
 **Where it shows.** In Desk only: the Serving store on the Territory form and list, and the button on a **draft** Sales Order's form (Sales User, Sales Manager). Nothing on the till, on a print layout or in a report.
 
@@ -66,7 +66,7 @@ The App library's *Call-centre orders by district* runs this same `service/app.p
 ## Before you copy it
 
 - **The whole order goes back.** The record API replaces a table whole, and the shop never copies the header's warehouse down to the lines, so the service sends every line back as it read it, with only its warehouse changed. Our test bench compared every field of the order and its lines before and after the press: only the warehouses and what the shop works out from them moved, and on that untaxed order the totals were equal. The service sets no price, but the shop's own save works the order out again at the new warehouse: a store's own item tax, or a price limited to a warehouse, can change the total, and the answer then says so (*Its total is now … (was …)*).
-- **An edit is never overwritten.** The write carries the order's `modified` as read. If anyone saved the order since, the shop refuses the write (`TimestampMismatchError`, HTTP 417); the service asks the agent to reload and press again, and never writes over the edit (a warehouse a person chose included).
+- **An edit is never overwritten.** The write carries the order's `modified` as read. If anyone saved the order since, the shop refuses the write (`TimestampMismatchError`, HTTP 417); the service reads it once more without writing: *Already with its store* if a second press routed it meanwhile, otherwise it asks the agent to reload. It never writes over the edit (a warehouse a person chose included).
 - **Only a draft.** The button shows on drafts, and the service reads the order again and refuses a submitted one. To move a submitted order, cancel and amend it.
 - **The shop's own words never reach the agent raw.** The service reads the shop's error type (`exc_type`), never its message, and answers in its own sentences.
 - **The territory is the customer's.** An order for another district (a gift, a second address) needs its territory changed on the order before the press.

@@ -38,6 +38,8 @@ CANARIES = [
      '    return {"set_warehouse": store, "items": lines}', T + "test_s1_an_order_goes_to_its_districts_own_store_on_the_header_and_every_line"),
     ("a stale write is answered in words, never written over", S, "            if e.kind == STALE:", "            if False:",
      T + "test_s7_an_edit_saved_between_the_read_and_the_write_is_never_written_over"),
+    ("a double click answers Already", S, "                if route.routed(door.order(name), store):", "                if False:",
+     T + "test_s7b_a_double_click_answers_already_never_changed"),
     ("a total the store changes is told", R, "    if moved:", "    if False:", T + "test_s3b_a_total_the_store_changes_is_told_to_the_agent"),
     ("a record name is one path segment", S, 'urllib.parse.quote(p, safe="")', "urllib.parse.quote(p)",
      M + "ShopApi.test_a_record_name_is_one_path_segment"),
