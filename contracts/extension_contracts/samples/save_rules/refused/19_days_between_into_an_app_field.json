@@ -1,0 +1,17 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "beyond_schema": true,
+  "about": "Days between into a field an app made (the engine's return days on an item).",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Return days from dates",
+    "record_type": "Item",
+    "kind": "derived",
+    "field": "custom_return_days",
+    "formula": "days_between",
+    "source": "creation",
+    "source_b": "end_of_life"
+  },
+  "expect_refusal": "custom_return_days is a field an app added, not the shop: a derived value cannot write it."
+}

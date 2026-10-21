@@ -1,0 +1,15 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "Days between with one date only.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Days from one date",
+    "record_type": "Batch",
+    "kind": "derived",
+    "field": "custom_shelf_days",
+    "formula": "days_between",
+    "source": "manufacturing_date"
+  },
+  "expect_refusal": "Second source: choose a field."
+}

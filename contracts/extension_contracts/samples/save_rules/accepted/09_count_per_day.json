@@ -1,0 +1,27 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A store's managers give at most 10 discount approvals a day.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Ten discount approvals a store a day",
+    "record_type": "Retail Override Request",
+    "kind": "count_per_day",
+    "scope_field": "store",
+    "day_field": "resolved_on",
+    "cap": 10,
+    "message": "This store has given its 10 discount approvals today. Deny this one; the cashier can sell at the normal price.",
+    "conditions": [
+      {
+        "field": "request_type",
+        "operator": "in",
+        "value": "Markdown, Discount Stack, Open Price, Sale Discount"
+      },
+      {
+        "field": "status",
+        "operator": "in",
+        "value": "Approved, Consumed"
+      }
+    ]
+  }
+}

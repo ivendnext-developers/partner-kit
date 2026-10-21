@@ -1,0 +1,16 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A batch's shelf life in days: from its manufacturing date to its expiry date.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Shelf days on a batch",
+    "record_type": "Batch",
+    "kind": "derived",
+    "field": "custom_shelf_days",
+    "formula": "days_between",
+    "source": "manufacturing_date",
+    "source_b": "expiry_date",
+    "sequence": 20
+  }
+}

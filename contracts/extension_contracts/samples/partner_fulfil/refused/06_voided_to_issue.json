@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "issue_answer",
+  "about": "A void's verdict to an issue.",
+  "payload": {
+    "verdict": "voided"
+  },
+  "expect_refusal": "the verdict is not one issue allows"
+}

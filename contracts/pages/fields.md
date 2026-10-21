@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/fields.md @ 4c3f11b550f1, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/fields.md @ 7d47d331a203, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Field rules
 
 **Contract:** [`fields.v1.schema.json`](../extension_contracts/fields.v1.schema.json)
@@ -25,8 +25,9 @@ app's own create call, a session with no bound outlet) is not checked. A theme w
 
 ## 2. Version
 
-Version 1: four actions on six screens. `receipt_preview` (the receipt) joined on 2026-10-09 (lane
-`pfields2`), `show` only. A new screen or a new field on a screen's list is added in version 1; an action
+Version 1: four actions on seven screens. `receipt_preview` (the receipt) joined on 2026-10-09 (lane
+`pfields2`), `show` only. The money words joined on 2026-10-16 (lane `pfields3`): four figures on
+`cart_line` and the `totals` screen, relabel only, with the list price shown (§7d). A new screen or a new field on a screen's list is added in version 1; an action
 never changes what it does.
 
 ## 3. What you declare
@@ -38,10 +39,11 @@ REST API or an import — the theme is one Desk record):
 |---|---|---|---|---|
 | `customer_create` — the new-customer sheet | `phone` · `email` · `more_details` (type and group) | `customer_name` · `phone` · `email` | `phone` · `email` | — |
 | `customer_card` — the customer's card | `phone` · `member_since` · `lifetime` · `visits` · `points` | `member_since` · `lifetime` · `visits` · `points` | — | Customer fields |
-| `cart_line` — a line of the sale | — | `item_name` · `qty` (the column headings) | — | Item fields |
+| `cart_line` — a line of the sale | — | `item_name` · `qty` (the column headings) · the money figures `price` · `discount` · `amount` (§7d) | — | Item fields · the figure `list_price` (§7d) |
 | `item_result` — an item in search and browse | `item_code` | `item_code` (the word *SKU*) | — | Item fields |
 | `sale_details` — the sale-details sheet | an optional Sale Attribute (by its name) | a Sale Attribute | — | — |
 | `receipt_preview` — the receipt: on screen, on paper and on the offline slip | — | — | — | Item fields |
+| `totals` — the basket's totals words, online (§7d) | — | `discount` · `charges` · `delivery` · `tax` · `grand_total` | — | — |
 
 Each row: `surface`, `field`, `action`, and for `relabel` / `show` a `label` (the shop's text, shown
 exactly as typed, up to 40 characters; for `show`, the line's heading) with an optional `language` (blank =
@@ -66,6 +68,10 @@ counts once).
 - *"⟨field⟩ on ⟨screen⟩ has two different rules. Keep one."* · *"⟨field⟩ on ⟨screen⟩ has the same rule
   twice."*
 - *"A label is at most 40 characters."* · *"Give ⟨field⟩ its new label."*
+- *"A money label can't carry a digit, a % or a currency sign: the figure beside it is the till's."* — a
+  label on a money figure or a `totals` field with a digit of any script, a `%`, a currency symbol, or one of
+  the site's own currency signs as a word, in any case (the rand's *R* or *r*). This one binds a saved row too: its label is
+  checked again at every save unless it is saved word for word as before.
 - a theme that came with the till: *"⟨theme⟩ came with the till and stays as it ships. Use Save as a new
   theme."* — a shipped theme carries no field rules
 
@@ -102,10 +108,12 @@ report lists it.
 
 ## 7. Money and limits
 
-No price, amount, tax or tender field is on any screen's list, and a shown field cannot be Currency,
-Float or Percent. A rule changes what the till shows and asks for, never what it charges.
+No price, amount, tax or tender FIELD is on any screen's list, and a shown field cannot be Currency,
+Float or Percent. The money words of §7d name four FIGURES the till already prices, never a field, and
+take a new word only. A rule changes what the till shows and asks for, never what it charges.
 
-Limits: label 40 characters · 3 more Item fields and 3 more Customer fields per theme · six screens.
+Limits: label 40 characters · 3 more Item fields and 3 more Customer fields per theme (the list price
+takes no place) · seven screens.
 
 ## 7a. The receipt (`receipt_preview`)
 
@@ -152,6 +160,43 @@ the payment screen's redeem controls, nor the finished sale's *points redeemed* 
 loyalty programme's own points as an amount the sale spent. A `relabel` on the card's loyalty row also
 drops its *redeem at payment* hint.
 
+## 7d. The money words (`cart_line` figures, `totals`)
+
+A shop can call the basket's money by its own words, and show what a line's price was before any cut.
+
+- **The line's figures** (`cart_line`): `price` is the charged unit price (the *Price* column), `discount`
+  the cut (*Discount*), `amount` the line total (*Total*; *Line total* in the till's item panel, *Total* in
+  the quote-to-sale basket). Each takes `relabel` only. `list_price` is the unit price before any cut —
+  the price list's price online, the till's own price basis offline — and takes `show` only, its `label` the
+  heading (*List price* when blank). On the counter it is a sixth column after *Price*; on the phone and the
+  tablet it leads each line's sub-line, struck through only when the charged price is below it (a markup
+  is never drawn as a reduction), and the till's item panel shows it too. A line with no list price shows
+  *—*.
+- **The totals** (`totals`): `discount`, `charges`, `delivery`, `tax` and `grand_total` take `relabel`
+  only. The word reaches the basket's totals box, the till drawn behind other screens (*Grand Total*) and
+  the payment screen's sale panel on the counter and tablet (*Discount*, *Charges*, *Delivery*, *Tax*).
+  *Item Qty* is not money and keeps its word.
+- **What never changes:** a figure — no rule moves, rounds, hides or replaces one, and no money cell
+  becomes an input. ⛔ `hide` is refused on every money figure and every `totals` field; `show` on
+  `totals`.
+- **Left alone on purpose:** offline, the basket's and the payment sheet's *provisional* words (*Total.
+  Includes tax*), which keep a provisional figure from being read as ex-tax; the payment screen's *Due*,
+  a different figure once redeems are taken off; the receipt on screen, on paper and on the offline slip,
+  whose money words are its print format's. These keep the shipped words too: the customer display (the
+  shopper's own screen), POS Studio's preview pictures, the screens of a sale already made (held sales,
+  Find a sale, fulfilment, returns), the charges sheet's heading (*Charges on this sale*) and the total a
+  screen reader speaks.
+- **Stated bound — the paper:** the till's screen can say *Total incl. VAT* while the receipt says
+  *Total* (and *Tax (incl.)*). A shop that wants its word on paper names its own print format.
+- **Stated bound — the quote-to-sale basket:** its line figure is the line total without any charge on
+  the line, so on a converted quote whose line carries a charge the shop's word for *Total* heads that
+  figure, not the charged one the basket grid shows.
+- **Stated bound — claims:** the money rule blocks digits and signs, not number words or claims. *Total
+  incl. fifteen percent VAT* passes, and so does *Price incl. VAT*, which is false on a profile whose prices
+  exclude tax. One theme can serve several tills: word a money label for every POS profile the theme serves.
+- **Stated bound — offer lines:** on an item sold at a cross-sell offer's special price, the list price is
+  the offer's own base price, as the back office prices it, so that line shows no struck price.
+
 ## 8. Worked examples
 
 **A shop that never takes emails, but always takes a phone.** Two rows: `customer_create · email · hide`
@@ -164,6 +209,11 @@ checked.)
 custom_pack_size · show · Pack`. Each line reads *Pack: 12 × 500 ml* under the item, online and offline;
 add `item_result · custom_pack_size · show · Pack` to show it in search too (still one of the three).
 
+**A list price and a gross total.** `cart_line · list_price · show · List price` and `totals ·
+grand_total · relabel · Total incl. VAT`. The counter grows a *List price* column; on the phone a
+discounted line reads *List price ~~12.00~~ · 9.60*. A label *Total incl. 5% VAT* is refused: on a store
+whose rate is not 5 % it would print a false number on every sale.
+
 **The shop's own word.** `customer_card · points · relabel · Stars` (blank language) and a second row
 with `Estrellas` for `es`: an English cashier sees *Stars*, a Spanish one *Estrellas*.
 
@@ -174,5 +224,8 @@ with `Estrellas` for `es`: an English cashier sees *Stars*, a Spanish one *Estre
 > refused themes. Use only the screens and fields this page's table lists, one action per screen and field,
 > `require` only for a new customer's phone or email, labels of at most 40 characters, and `show` only for
 > an Item or Customer field of type Data, Select, Int or Check — at most three of each. On
-> `receipt_preview` use `show` only, with an Item field. Never a price, amount, tax or tender field. Name
-> only fields that exist.
+> `receipt_preview` use `show` only, with an Item field. Never a price, amount, tax or tender field. The
+> money words take `relabel` only (`cart_line` `price` · `discount` · `amount`; `totals` `discount` ·
+> `charges` · `delivery` · `tax` · `grand_total`), `list_price` takes `show` only, and a money label has no
+> digit, no `%` and no currency sign (a site's letter sign such as *R* counts, in any case). Name only
+> fields that exist.

@@ -1,0 +1,17 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "beyond_schema": true,
+  "about": "A total over a field that is not a table.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "kind": "derived",
+    "rule_name": "Rows of no table",
+    "record_type": "Stock Reconciliation",
+    "field": "custom_counted_units",
+    "formula": "sum_rows",
+    "source_table": "company",
+    "source": "qty"
+  },
+  "expect_refusal": "Stock Reconciliation has no table named company."
+}

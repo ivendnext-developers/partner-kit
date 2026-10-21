@@ -28,7 +28,7 @@ It is Rung 4 of the guide's build ladder: a manifest with print formats on *Sale
 
 ### What a template cannot do
 
-A print template cannot read other records: it may not list a document's rows, look up a price or call a helper. The shop gives no reader a kit template may call: ask for **P-TEMPLATEHELPERS** (row and value readers under an iVendNext name). The consequence for part 2 is below.
+A print template cannot read other records on a site before POS build 2.0.0.654: it may not list a document's rows, look up a price or call a helper. From that build a print format may read them through `ivn_rows` and `ivn_value`, with the viewer's rights (chapter 7, *Print formats that read other records*). The consequence for part 2 is below.
 
 ## Part 2 — the price list with photos
 
@@ -44,7 +44,7 @@ A print template cannot read other records: it may not list a document's rows, l
 4. **Open the page in a browser and print it to PDF** (A4 is set by the page). The spreadsheet file holds the same rows (group, code, name, unit, currency, rate, photo yes or no).
 5. **Read the lines the program prints at the end:** each item that got a grey *No photo* box and why (no photo, a photo the shop would not give, too big, not a picture, kept outside), and each disabled item left out.
 
-A print format on the price list would be the shop's own way, but it cannot list the price rows without the reader above, so the program is the route today. **P-TEMPLATEHELPERS** is the request that would change that.
+A print format on the price list is the shop's own way from POS build 2.0.0.654: it lists the price rows through `ivn_rows` (the card *price-list-with-photos* shows one). The program stays the route for a spreadsheet, a file per distributor, or a site before that build.
 
 ## Limits
 

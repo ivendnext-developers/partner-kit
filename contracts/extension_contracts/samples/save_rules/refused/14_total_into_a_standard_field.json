@@ -1,0 +1,17 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "beyond_schema": true,
+  "about": "A total of rows into a bill of materials' own quantity, which its costs are worked from.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "kind": "derived",
+    "rule_name": "Total into a standard field",
+    "record_type": "BOM",
+    "field": "quantity",
+    "formula": "sum_rows",
+    "source_table": "items",
+    "source": "qty"
+  },
+  "expect_refusal": "A total of rows can only write a field the shop added."
+}

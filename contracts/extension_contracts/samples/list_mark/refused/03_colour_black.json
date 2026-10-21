@@ -1,0 +1,24 @@
+{
+  "extension_point": "list_mark",
+  "contract": "declaration",
+  "about": "A colour off the list.",
+  "payload": {
+    "doctype": "Retail List Mark",
+    "record_type": "Item",
+    "label": "Promo",
+    "colour": "black",
+    "conditions": [
+      {
+        "field": "is_stock_item",
+        "operator": "=",
+        "value": "1"
+      },
+      {
+        "field": "disabled",
+        "operator": "=",
+        "value": "0"
+      }
+    ]
+  },
+  "expect_refusal": "Choose one of the colours"
+}

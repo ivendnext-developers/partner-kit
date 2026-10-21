@@ -1,0 +1,18 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A price list print format listing its item prices through ivn_rows and each item's photo through ivn_value, with the viewer's rights; an image address is one whole {{ photo }} reference (P-TEMPLATEHELPERS).",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_plp",
+    "prefix": "PP PLP",
+    "version": "1.0.0",
+    "print_formats": [
+      {
+        "name": "PP PLP Price List",
+        "doc_type": "Price List",
+        "html": "{% for r in ivn_rows(\"Item Price\", filters={\"price_list\": doc.name}, fields=[\"item_code\", \"price_list_rate\", \"uom\"]) %}{% set photo = ivn_value(\"Item\", name=r.item_code, field=\"image\") %}<p><img src=\"{{ photo }}\"> {{ r.item_code }} {{ r.price_list_rate }} / {{ r.uom }}</p>{% endfor %}"
+      }
+    ]
+  }
+}

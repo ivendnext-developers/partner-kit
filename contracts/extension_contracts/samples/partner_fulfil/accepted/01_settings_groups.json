@@ -1,0 +1,10 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "settings",
+  "about": "A game-card service makes codes for one item group and below.",
+  "payload": {
+    "item_groups": [
+      "Game Cards"
+    ]
+  }
+}

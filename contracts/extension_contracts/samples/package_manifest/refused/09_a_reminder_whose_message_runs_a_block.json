@@ -1,0 +1,30 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A batch reminder whose message runs a template block: on the shop's records the text is plain text and the record's own fields only.",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_exp",
+    "prefix": "PP EXP",
+    "version": "0.1.0",
+    "notifications": [
+      {
+        "name": "PP EXP Batch Expiry",
+        "document_type": "Batch",
+        "event": "Days Before",
+        "days_in_advance": 30,
+        "date_changed": "expiry_date",
+        "channel": "Email",
+        "subject": "Batch {{ doc.name }} expires on {{ doc.expiry_date }}",
+        "message": "{% if doc.batch_qty %}{{ doc.batch_qty }} left{% endif %}",
+        "recipients": [
+          {
+            "receiver_by_role": "Stock Manager"
+          }
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "plain text and {{ doc.<field> }} only",
+  "beyond_schema": true
+}

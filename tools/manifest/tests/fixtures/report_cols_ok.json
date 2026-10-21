@@ -1,0 +1,29 @@
+{
+ "manifest_version": 2,
+ "app": "pp_rpc",
+ "prefix": "PP RPC",
+ "title": "Reports with columns from one table",
+ "version": "0.1.0",
+ "description": "P-REPORTCOLS: a report over the shop's stock count with its item rows and a totals row, a report over the package's own record and its rows, and a plain report.",
+ "doctypes": [
+  {"name": "PP RPC Line", "istable": 1, "fields": [
+    {"fieldname": "note", "fieldtype": "Data", "label": "Note", "in_list_view": 1},
+    {"fieldname": "qty", "fieldtype": "Float", "label": "Quantity", "in_list_view": 1}
+  ]},
+  {"name": "PP RPC Count", "autoname": "hash", "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "in_list_view": 1},
+    {"fieldname": "total", "fieldtype": "Float", "label": "Total"},
+    {"fieldname": "lines", "fieldtype": "Table", "label": "Lines", "options": "PP RPC Line"}
+  ],
+   "permissions": [{"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 0, "share": 0, "print": 0, "email": 0}]}
+ ],
+ "reports": [
+  {"name": "PP RPC Count Lines", "ref_doctype": "Stock Reconciliation",
+   "columns": ["posting_date", "items.item_code", "items.qty", "items.quantity_difference", "items.amount_difference"],
+   "filters": [["items.warehouse", "is", "set"]], "order_by": "posting_date desc", "add_total_row": 1,
+   "roles": ["System Manager"]},
+  {"name": "PP RPC Own Lines", "ref_doctype": "PP RPC Count", "columns": ["title", "lines.note", "lines.qty"],
+   "filters": [["lines.qty", ">", 0]], "add_total_row": 1},
+  {"name": "PP RPC Customers", "ref_doctype": "Customer", "columns": ["customer_name", "customer_group"]}
+ ]
+}

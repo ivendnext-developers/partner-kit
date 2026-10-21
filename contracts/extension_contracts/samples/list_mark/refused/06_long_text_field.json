@@ -1,0 +1,19 @@
+{
+  "extension_point": "list_mark",
+  "contract": "declaration",
+  "about": "Item's description is long text.",
+  "payload": {
+    "doctype": "Retail List Mark",
+    "record_type": "Item",
+    "label": "Described",
+    "colour": "green",
+    "conditions": [
+      {
+        "field": "description",
+        "operator": "is set"
+      }
+    ]
+  },
+  "expect_refusal": "it is a Text Editor field",
+  "beyond_schema": true
+}

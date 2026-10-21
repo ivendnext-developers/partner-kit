@@ -1,0 +1,18 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "The same limit, read from a field the shop added to Stock Settings, so whoever may edit Stock Settings tunes it; 60 when that field is 0.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Minimum shelf life from settings",
+    "record_type": "Batch",
+    "kind": "threshold",
+    "field": "custom_shelf_pct",
+    "operator": ">=",
+    "value": "60",
+    "judge_on_change": 1,
+    "value_from_type": "Stock Settings",
+    "value_from_name": "Stock Settings",
+    "value_field": "custom_min_shelf_pct"
+  }
+}

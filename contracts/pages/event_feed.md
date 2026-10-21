@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/event_feed.md @ 4c3f11b550f1, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/event_feed.md @ 7d47d331a203, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Event feed
 
 **Contract:** [`event_feed.v1.schema.json`](../extension_contracts/event_feed.v1.schema.json)
@@ -23,6 +23,11 @@ writes no event for you: you never receive an echo of your own writes.
 **Setting it up.** In iVendNext Desk a **Registered Application** record names your application, the
 user whose API key you call with (`application_user`), and the record types you follow (its event rows).
 One user, one registration: a key registered to two applications is answered *"not registered"*.
+
+Any record type can be followed, the till's own included: a registration that follows **Retail Override
+Request** receives each manager approval as `retail_override_request.on_update` (requested, approved,
+denied, used by a sale), with no code — for a partner that reports on approvals. The application's user
+needs read access on Retail Override Request, which the shop grants.
 
 ## 2. Version
 

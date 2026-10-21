@@ -28,7 +28,11 @@
         "prefix": {
           "description": "One to three upper-case words; every name the manifest creates starts with it.",
           "type": "string",
-          "pattern": "^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$"
+          "pattern": "^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$",
+          "not": {
+            "pattern": "^(IS|IGNORE|FOR|REDEEM|HAS|UPDATE|SKIP|ALLOW|APPLY|SET|DONT|BASE|INCLUDE|NO|DO|POST|REMOVE|PRICING|PRICE|FREE|RECALLED|NOT)( |$)",
+            "description": "Never a first word the system starts the names of flags it reads with (lane prules3; the checker's RESERVED_PREFIX_WORDS)."
+          }
         },
         "version": {
           "description": "major.minor.patch, compared as numbers: an update must be higher.",
@@ -52,10 +56,24 @@
           }
         },
         "doctypes": {
-          "description": "The doctypes the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "description": "The doctypes the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py). A settings record (issingle) is never also a table of rows (istable).",
           "type": "array",
           "items": {
-            "type": "object"
+            "type": "object",
+            "not": {
+              "required": [
+                "issingle",
+                "istable"
+              ],
+              "properties": {
+                "issingle": {
+                  "const": 1
+                },
+                "istable": {
+                  "const": 1
+                }
+              }
+            }
           }
         },
         "custom_fields": {
@@ -80,10 +98,24 @@
           }
         },
         "notifications": {
-          "description": "The notifications the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "description": "The notifications the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py). A notification never attaches a file a field names (attach_files, from_attach_field): it can be any private file on the site.",
           "type": "array",
           "items": {
-            "type": "object"
+            "type": "object",
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "attach_files"
+                  ]
+                },
+                {
+                  "required": [
+                    "from_attach_field"
+                  ]
+                }
+              ]
+            }
           }
         },
         "workspaces": {
@@ -196,7 +228,16 @@
                   "type": "object",
                   "properties": {
                     "fieldtype": {
-                      "enum": ["Data", "Int", "Float", "Date", "Select", "Link", "Check", "Small Text"]
+                      "enum": [
+                        "Data",
+                        "Int",
+                        "Float",
+                        "Date",
+                        "Select",
+                        "Link",
+                        "Check",
+                        "Small Text"
+                      ]
                     }
                   }
                 }
@@ -216,6 +257,34 @@
           "type": "array",
           "items": {
             "type": "object"
+          }
+        },
+        "list_marks": {
+          "description": "The list marks the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py), and again by the record's own validate at install.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "colour": {
+                "enum": [
+                  "green",
+                  "blue",
+                  "orange",
+                  "red",
+                  "gray",
+                  "purple"
+                ]
+              },
+              "label": {
+                "type": "string",
+                "maxLength": 24
+              },
+              "conditions": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 3
+              }
+            }
           }
         }
       }

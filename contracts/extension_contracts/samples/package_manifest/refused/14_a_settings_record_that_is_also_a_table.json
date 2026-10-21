@@ -1,0 +1,73 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A settings record that is also a table of rows.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_hkd",
+    "prefix": "PP HKD",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "PP HKD Brand Pick",
+        "istable": 1,
+        "fields": [
+          {
+            "fieldname": "brand",
+            "fieldtype": "Link",
+            "label": "Brand",
+            "options": "Brand"
+          }
+        ]
+      },
+      {
+        "name": "PP HKD Settings",
+        "issingle": 1,
+        "fields": [
+          {
+            "fieldname": "shelf_life_days",
+            "fieldtype": "Int",
+            "label": "Shelf life (days)"
+          }
+        ],
+        "permissions": [
+          {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1,
+            "report": 0,
+            "export": 0,
+            "share": 1,
+            "print": 1,
+            "email": 1
+          }
+        ],
+        "istable": 1
+      }
+    ],
+    "custom_fields": [
+      {
+        "dt": "Supplier",
+        "fieldname": "pp_hkd_brands",
+        "fieldtype": "Table MultiSelect",
+        "label": "Brands",
+        "options": "PP HKD Brand Pick"
+      }
+    ],
+    "workspaces": [
+      {
+        "name": "PP HKD Space",
+        "shortcuts": [
+          {
+            "type": "DocType",
+            "link_to": "PP HKD Settings",
+            "label": "Settings"
+          }
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "a settings record carries only"
+}

@@ -1,0 +1,22 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A report column that reaches through a table into another record (one table, one dot).",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_rpc",
+    "prefix": "PP RPC",
+    "version": "0.1.0",
+    "reports": [
+      {
+        "name": "PP RPC Count Lines",
+        "ref_doctype": "Stock Reconciliation",
+        "columns": [
+          "items.item_code.item_name"
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "columns is a list of field names",
+  "beyond_schema": true
+}

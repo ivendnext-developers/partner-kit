@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "qty_answer",
+  "about": "The new quantity stands, and the cashier is told the next promotion tier is near.",
+  "payload": {
+    "verdict": "notice",
+    "message": "Six or more of these earns the next promotion tier."
+  }
+}

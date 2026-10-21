@@ -1,0 +1,23 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A report whose columns read two tables of the record: the rows of one would repeat for every row of the other.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_rpc",
+    "prefix": "PP RPC",
+    "version": "0.1.0",
+    "reports": [
+      {
+        "name": "PP RPC Count Lines",
+        "ref_doctype": "Stock Reconciliation",
+        "columns": [
+          "items.qty",
+          "taxes.rate"
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "a column from a table is table.field, one table per report: two tables multiply each other's rows",
+  "beyond_schema": true
+}

@@ -12,7 +12,10 @@ can check an answer against these before it reaches a shop. They are what the [s
 | Event feed | [pages/event_feed.md](pages/event_feed.md) | [event_feed.v1.schema.json](extension_contracts/event_feed.v1.schema.json) |
 | Field rules (fields) | [pages/fields.md](pages/fields.md) | [fields.v1.schema.json](extension_contracts/fields.v1.schema.json) |
 | Fiscal reader | [pages/fiscal_reader.md](pages/fiscal_reader.md) | [fiscal_reader.v1.schema.json](extension_contracts/fiscal_reader.v1.schema.json) |
+| Fulfil at sale (`fulfil/1`: a code your service makes for a paid sale line) | [pages/partner_fulfil.md](pages/partner_fulfil.md) | [partner_fulfil.v1.schema.json](extension_contracts/partner_fulfil.v1.schema.json); a stand-in voucher service, [standins/voucher_service.py](extension_contracts/standins/voucher_service.py) (its conformance test, which the page names, lives in the product and comes to the kit in the next change) |
 | Label layout | [pages/label_layout.md](pages/label_layout.md) | [label_layout.v1.schema.json](extension_contracts/label_layout.v1.schema.json) |
+| List mark (a coloured label on a Desk list row, a manifest kind) | [pages/list_mark.md](pages/list_mark.md) | [list_mark.v1.schema.json](extension_contracts/list_mark.v1.schema.json) |
+| Print template readers (`ivn_rows`, `ivn_value`: what a manifest's print format may read) | [pages/print_template_readers.md](pages/print_template_readers.md) | none: the manifest's schema and its samples |
 | Receipt (store settings: the shop's own lines, WhatsApp, a checked layout) | [pages/receipt.md](pages/receipt.md) | none: store settings, not a declaration |
 | Capture at the till | [pages/partner_capture.md](pages/partner_capture.md) | [partner_capture.v1.schema.json](extension_contracts/partner_capture.v1.schema.json) |
 | Check at the till | [pages/partner_check.md](pages/partner_check.md) | [partner_check.v1.schema.json](extension_contracts/partner_check.v1.schema.json) |
@@ -44,6 +47,6 @@ errors("desk_action", "answer", {"message": "Route assigned"})                  
 They are **copies** of files in the product's repository (`ivendnext/iVendNext_PWA`), taken at one commit (the payment connector's two files come from the payments app's repository, `ivendnext/iVendNext_Payments`, at one commit of its own); the commit
 and every file's source path are in [EXPORT_SOURCES.md](../EXPORT_SOURCES.md). Each page and the checker carries a
 header naming its source; the schemas and samples are JSON and cannot, so they are listed there. Only the links inside
-the pages were changed, so they point at the files here, and three calls are named by what they do rather than by the framework's own name. Our own kit check compares every file with its source on each
+the pages were changed, so they point at the files here; four calls are named by what they do rather than by the framework's own name, one customer's name and one reference to our own board are left out, and the samples' lane ids and one refused sample's framework name are dropped. Our own kit check compares every file with its source on each
 change, so a copy cannot drift. **A defect in one is a defect in the product's file:** report it with a *Kit defect*
 issue (members) or the partner form, and we take it to the product's board.

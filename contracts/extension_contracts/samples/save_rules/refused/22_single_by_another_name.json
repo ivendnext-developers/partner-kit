@@ -1,0 +1,19 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "beyond_schema": true,
+  "about": "A single record named by another name: the cache keeps a single under its own name.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Limit from a renamed single",
+    "record_type": "Batch",
+    "kind": "threshold",
+    "field": "custom_shelf_pct",
+    "operator": ">=",
+    "value": "60",
+    "value_from_type": "Stock Settings",
+    "value_from_name": "Shelf settings",
+    "value_field": "custom_min_shelf_pct"
+  },
+  "expect_refusal": "Stock Settings is a single record: its name is Stock Settings."
+}

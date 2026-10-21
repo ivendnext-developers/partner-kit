@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "issue_answer",
+  "about": "None left: the cashier refunds the line.",
+  "payload": {
+    "verdict": "refuse",
+    "reason": "None left in this denomination."
+  }
+}

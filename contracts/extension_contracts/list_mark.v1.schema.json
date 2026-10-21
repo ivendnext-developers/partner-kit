@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/list_mark.v1.schema.json",
+  "title": "List mark, version 1",
+  "description": "A Retail List Mark record: a coloured label on a Desk list row, drawn by the POS app's own Desk script when every condition holds on the row. Judged by business_logic/list_mark.py validate_mark when the record is saved; the record type (not submitted, no workflow, not a table or single) and its fields (present, not a password or long text) are judged there, beyond what a schema can read. Page: docs/extending/list_mark.md.",
+  "$defs": {
+    "declaration": {
+      "description": "At most five marks per record type (the record counts them). The first enabled mark whose conditions all hold, lowest sequence first, is the row's label.",
+      "type": "object",
+      "required": [
+        "doctype",
+        "record_type",
+        "label",
+        "colour",
+        "conditions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "doctype": {
+          "const": "Retail List Mark"
+        },
+        "record_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "label": {
+          "description": "Plain text, translated when drawn.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "\\S",
+          "not": {
+            "pattern": "[<>&\"'`]"
+          }
+        },
+        "colour": {
+          "enum": [
+            "green",
+            "blue",
+            "orange",
+            "red",
+            "gray",
+            "purple"
+          ]
+        },
+        "enabled": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "conditions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": [
+              "field",
+              "operator"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "field": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "operator": {
+                "enum": [
+                  "=",
+                  "!=",
+                  ">",
+                  ">=",
+                  "<",
+                  "<=",
+                  "is set",
+                  "is not set"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "maxLength": 140
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

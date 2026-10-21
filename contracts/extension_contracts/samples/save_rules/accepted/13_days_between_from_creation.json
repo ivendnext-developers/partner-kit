@@ -1,0 +1,16 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "The days a batch had left when it was made: from the record's creation to its expiry date.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Days left when made",
+    "record_type": "Batch",
+    "kind": "derived",
+    "field": "custom_days_left",
+    "formula": "days_between",
+    "source": "creation",
+    "source_b": "expiry_date",
+    "sequence": 10
+  }
+}

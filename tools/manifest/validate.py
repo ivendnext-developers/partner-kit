@@ -1,8 +1,8 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/business_logic/manifest_check.py,
-# at development 4c3f11b550f19a30b00f66f2c18a7b56c96e4aba. The shop's own checker (the install screen runs it) is the source;
+# at development 7d47d331a203fd8b2794f83270a4190b3c1908e8. The shop's own checker (the install screen runs it) is the source;
 # this copy lets you check a manifest before you send it, and refuses the same manifests in the same words. Everything
-# below this header equals the source, except ten comments reworded in plain words (they named the product's
-# internal lane ids). A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
+# below this header equals the source, except forty-four comments reworded in plain words (they named the product's
+# internal lane ids and review steps, or the framework's own files). A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """The companion manifest — the VALIDATOR. Pure Python: no framework import, no network.
 
 A partner's own data (record types, fields, print formats, notifications, workspaces, sale details, webhooks)
@@ -25,7 +25,7 @@ Shape (every key optional except ``manifest_version``, ``app``, ``prefix`` and `
      #              "fiscal_readers"
      # v2 (2026-10-08): "scan_sources", "field_rules"; the check and capture extension points are two more
      #              `point`s of "extension_subscriptions"
-     # v2: "label_layouts"
+     # v2: "label_layouts", "list_marks"
     }
 
 The rules, in plain words, are in ``recipes/manifest.md``.
@@ -37,6 +37,17 @@ the installer writes (``extension_package.summary``), where every print format i
 when printed; this validator catches the honest mistakes and the obvious attempts. It reads text, not
 entities (`java&#115;cript:` in a link passes), and its inline-handler arm also refuses a plain word such as
 `Online=1` in a label or description (dated 2026-10-15: a bound, never loosened — that widens the sink).
+
+⚠ The print-format rules are a TRIPWIRE too. A print format may not name the framework's raw
+SQL (``db.sql``), its query builder or its outside fetchers (``make_*_request``), and an address it loads (``src``,
+``href``, ``srcset``, ``poster``, ``background``, ``action``, ``formaction``, ``url(``, ``@import``) may hold
+template syntax only as one whole ``{{ a.b }}`` reference. Name matching
+cannot stop the raw SQL reached by indexing (``db["sql"]``), the ``attr`` filter with a built name, ``render_template`` on a built string, a
+whole tag printed from a string, a ``<meta http-equiv=refresh>``, or an address set with ``{% set %}`` and printed as
+``{{ u }}`` — six known evasions, each a known-pass canary in ``test_template_readers.py``. The framework's other
+template helpers (``get_all``, ``get_doc``, ``db.get_value``) read without the viewer's rights and are only WARNED
+(``PRINT_READER_WARNING``); from version 2.1.0 a read of a record type ``ivn_rows`` serves is refused (the framework's
+own types, such as Address, have no replacement and stay warned). ``ivn_rows`` and ``ivn_value`` apply the rights.
 """
 
 from __future__ import annotations
@@ -44,6 +55,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+import unicodedata
 
 MANIFEST_VERSION = 2  # v2 reads every v1 manifest unchanged
 VERSIONS = (1, 2)
@@ -79,6 +91,8 @@ KINDS_V2 = (
     "field_rules",
     # P-LABEL's layout record
     "label_layouts",
+    # P-LISTMARK's list mark
+    "list_marks",
 )
 KINDS = KINDS_V1 + KINDS_V2
 # The declaration records of extension points that have NOT shipped: kind -> (the extension point, its spec). Each is
@@ -140,6 +154,7 @@ FIELD_TYPES = {
     "Long Text",
     "Text Editor",
     "Table",
+    "Table MultiSelect",  # each choice is a row of the manifest's own child type holding one link
     "Section Break",
     "Column Break",
     "Tab Break",
@@ -155,10 +170,10 @@ REFUSED_FIELD_TYPES = {
     "HTML": "an HTML field shows its own markup in Desk, which can carry script",
     "Button": "a button does nothing without a script, and a manifest carries none",
 }
-# The nine rights the framework's permission record switches ON by default (frappe/core/doctype/docperm/docperm.json; every other
+# The nine rights the framework's permission record switches ON by default (its permission record type's definition; every other
 # right defaults 0). Re-read that file on a framework update: a new default-ON right must join this list.
 RIGHTS = ("read", "write", "create", "delete", "report", "export", "share", "print", "email")
-# Roles the framework gives users by itself (frappe/permissions.py AUTOMATIC_ROLES; `Guest` is refused on its own, below): `All` goes to every
+# Roles the framework gives users by itself (the framework's own AUTOMATIC_ROLES; `Guest` is refused on its own, below): `All` goes to every
 # signed-in user, website customers included, `Desk User` to every staff user, `Administrator` is the superuser. A manifest names none of them.
 AUTOMATIC_ROLES = ("All", "Desk User", "Administrator")
 AUTOMATIC_REASON = (
@@ -198,6 +213,7 @@ def _automatic(role) -> bool:
 DOCTYPE_KEYS = {
     "name",
     "istable",
+    "issingle",
     "fields",
     "permissions",
     "autoname",
@@ -218,8 +234,6 @@ REFUSED_DOCTYPE_KEYS = {
     "is_virtual": "a virtual record type needs partner code to read its data",
     "module": "the installer chooses the module, so the uninstall can find everything",
     "custom": "the installer marks every record type as custom",
-    "issingle": "a single-record type has no table of its own; this installer installs and removes ordinary "
-    "record types only",
     "is_tree": "a tree record type is not supported by this installer yet",
 }
 REFUSED_DOCTYPE_KEYS["issubmittable"] = REFUSED_DOCTYPE_KEYS["is_submittable"]
@@ -301,7 +315,38 @@ NOTIFY_KEYS = {
     "value_changed",
     "set_property_after_alert",
     "property_value",
+    "attach_print",  # the manifest's own print format, on its own record types only
+    "print_format",
 }
+# P-MANIFEST4: the framework's two other attachment keys (on its later versions) mail a file a field names
+ATTACH_FILE_KEYS = ("attach_files", "from_attach_field")
+ATTACH_FILE_REASON = "a file named by a field can be any private file on the site, and it is mailed with no rights check"
+ATTACH_PRINT_REASON = (
+    "a notification attaches a print only on the manifest's own record types, and only one of the manifest's own "
+    "print formats for that record type, named in print_format"
+)
+ATTACH_READER_REASON = (
+    "an attached print is rendered with no rights applied, so its print format may not use the framework, "
+    "its reading helpers or another template (it would mail whatever they read); show the record's own "
+    "fields, formatted with doc.get_formatted"
+)
+# a template another app ships runs with this print's context (and may read through the framework)
+_TEMPLATE_LOAD_RE = re.compile(r"\{%[-+]?\s*(include|import|from|extends)\b")
+# A settings record (issingle) of the manifest's own — one record, no list, its values in the shared Singles
+# table. What it may carry, and the only places that may name it (anything else that names a record type would
+# read a table it does not have: a list, a report, a date notification's daily read, a webhook, a link).
+SINGLE_KEYS = {"name", "issingle", "fields", "permissions", "description", "track_changes"}
+SINGLE_SETTER_PROPS = {"description", "track_changes"}
+SINGLE_FIELD_KEYS = {"unique", "search_index"}  # the framework clears both on a single's fields
+SINGLE_RIGHTS = ("report", "export")  # the framework strips both from a single's permission rows
+# kind -> the keys of its elements that may name a single; None: the whole element (a setter's value never names a
+# record type). A save rule's value_from reads a single by its own name; its
+# record type, field and conditions still may not name one.
+SINGLE_NAMERS = {"property_setters": None, "save_rules": ("value_from_type", "value_from_name")}
+SINGLE_REASON = (
+    "is a settings record (one record, no list): only a property setter, a workspace shortcut "
+    "or a save rule's value_from may name it"
+)
 NOTIFY_CHANNELS = {"Email", "System Notification"}
 NOTIFY_EVENTS = {"New", "Save", "Submit", "Cancel", "Days Before", "Days After", "Value Change"}
 WORKSPACE_BLOCKS = {"header", "paragraph", "spacer", "shortcut", "card"}
@@ -309,6 +354,35 @@ SHORTCUT_TYPES = {"DocType", "Report", "URL"}
 
 _APP_RE = re.compile(r"^[a-z][a-z0-9_]{1,39}$")
 _PREFIX_RE = re.compile(r"^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$")
+# a prefix's first word becomes the start of its fields' names (``field_prefix``): never a word
+# the engine starts the names of flags it reads with — some are no field anywhere (``ignore_party``,
+# ``for_shopping_cart``, ``include_expired_batches``), so a field named so acts on the line pricer
+RESERVED_PREFIX_WORDS = frozenset(
+    {
+        "IS",
+        "IGNORE",
+        "FOR",
+        "REDEEM",
+        "HAS",
+        "UPDATE",
+        "SKIP",
+        "ALLOW",
+        "APPLY",
+        "SET",
+        "DONT",
+        "BASE",
+        "INCLUDE",
+        "NO",
+        "DO",
+        "POST",
+        "REMOVE",
+        "PRICING",
+        "PRICE",
+        "FREE",
+        "RECALLED",  # the engine's recalled_invoice (discount_limits.py)
+        "NOT",  # ivend_loyality's not_valid_for_loyalty on a sale's line
+    }
+)
 _NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 _\-]{0,60}$")
 _FIELD_RE = re.compile(r"^[a-z][a-z0-9_]{0,62}$")
 _URL_RE = re.compile(r"^https?://[A-Za-z0-9.\-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~/\-]*)?$")
@@ -336,7 +410,8 @@ def help_address_ok(value) -> bool:
 # REFUSED_FIELD_TYPES) — change those in the record type itself. A setter's value never meets the
 # framework's own record-type save, so its shape is checked here.
 OWN_DOCTYPE_SETTER_PROPS = (
-    DOCTYPE_KEYS - {"name", "istable", "fields", "permissions", "autoname", "naming_rule"}
+    DOCTYPE_KEYS
+    - {"name", "istable", "issingle", "fields", "permissions", "autoname", "naming_rule"}
 ) | {"documentation"}
 OWN_FIELD_SETTER_PROPS = (FIELD_KEYS - {"fieldname", "fieldtype", "options", "insert_after"}) | {
     "documentation_url"
@@ -353,12 +428,39 @@ OWN_DOCTYPE_SETTER_VALUES = {
 }
 # Script in markup: a script, frame or object element, an inline event handler, or a javascript: address.
 # What leaves the shop. A manifest may hold templates that read the shop's data (the framework gives every template
-# frappe.get_all / get_doc / db.get_value — verified); that is fine where the output stays with the shop's
+# get_all / get_doc / db.get_value — verified); that is fine where the output stays with the shop's
 # staff, and a leak wherever it leaves: a webhook body sent to the partner, an address a print format loads (an image
 # URL can carry data out), a notification sent to an address the manifest names.
 _OUTSIDE_URL_RE = re.compile(r"(https?:)?//[A-Za-z0-9]", re.I)
-# the framework is reachable by its other names too (iVendFramework, FrappeClient)
+# the framework is reachable by its other names too (iVendFramework and its client library)
 _SHOP_DATA_RE = re.compile(r"\b(frappe|ivendframework|frappeclient)\b", re.I)
+# In a print format, the framework's raw SQL, its query builder and its outside fetchers are
+# refused (a TRIPWIRE: the six known evasions in the module's opening note pass)
+_PRINT_RAW_RE = re.compile(
+    r"\bdb\s*\.\s*(sql\w*|multisql)\b|\bqb\s*[.\[]|\bmake_\w*request\b", re.I
+)
+# an address a print loads (an attribute that names one, url(...), @import "...") and its value
+_ADDRESS_RE = re.compile(
+    r"""\b(?:src|href|srcset|poster|background|action|formaction)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]*))"""
+    r"""|url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\)|@import\s*(?:"([^"]*)"|'([^']*)')""",
+    re.I,
+)
+# the framework's template helpers that READ records without the viewer's rights (a print using one
+# is warned, naming ivn_rows; formatting helpers such as format_value are not readers) — and
+# this app's receipt_partner_code, which prints a partner's code with no rights check
+_PRINT_READER_RE = re.compile(
+    r"\b(get_all|get_list|get_doc|get_cached_doc|get_last_doc|get_mapped_doc|get_value"
+    r"|get_single_value|get_cached_value|get_print|attach_print|get_fullname|get_system_settings"
+    r"|run_script|db\.\w+|frappe\s*\.\s*call|frappeclient|receipt_partner_code)\b",
+    re.I,
+)
+# the one template form an address may be: a whole plain dotted reference, `{{ row.image }}`
+_PLAIN_REFERENCE_RE = re.compile(r"\s*\{\{\s*[A-Za-z_]\w*(\.[A-Za-z_]\w*)*\s*\}\}\s*\Z")
+PRINT_READER_WARNING = (
+    "this print format reads through the framework's own helpers, which skip the viewer's rights (a share-key "
+    "visitor sees what they return): read other records through ivn_rows and ivn_value. From version 2.1.0 "
+    "of the POS app the checker refuses it for the record types ivn_rows serves"
+)
 # on this framework a notification's condition is evaluated on the server WITH
 # its database (notification get_context), as a workflow transition's would be, so a manifest carries none
 NOTIFY_CONDITION_REASON = (
@@ -369,6 +471,67 @@ NOTIFY_FIELD_REASON = (
     "a notification sent to a field of the record goes to a user of the shop: that field is a Link to "
     "User on the manifest's own record type (any other field can be given an address the manifest chose)"
 )
+# P-NOTIFYDATE: the two date events match no save event (the framework's save runs only the notifications
+# whose event is the save's own); the daily scheduler sends them. So on a shop's own record type a manifest may ship
+# those two, and nothing that would read more than the record or write back into it from the scheduler.
+DATE_EVENTS = {"Days Before", "Days After"}
+NOTIFY_SHOP_EVENT_REASON = (
+    "on a shop's own record type a notification may only be Days Before or Days After a date: any other event "
+    "runs inside every save of it, and an error in it stops that save (a till sale included)"
+)
+# every template helper a shop's apps register is a template global in a notification too, so a list of refused
+# names fails by omission: on a shop's type the text allows only plain text and {{ doc.<field> }}
+_DOC_PLACEHOLDER_RE = re.compile(r"\{\{\s*doc\.([a-z][a-z0-9_]*)\s*\}\}")
+_TEMPLATE_RE = re.compile(r"\{[{%#]|[}%#]\}")
+# the framework renders a one-line text ending in one of these as a template FILE of any installed app
+# (its template loader's file-path test), so such a message would run that file with the notification's context
+_TEMPLATE_PATH_EXTS = ("html", "css", "scss", "py", "md", "json", "js", "xml", "txt")
+
+
+def _template_path(text: str) -> bool:
+    return "\n" not in text and "." in text and text.rsplit(".")[-1] in _TEMPLATE_PATH_EXTS
+
+
+def doc_placeholders(text) -> list:
+    """The fields a subject or message names as {{ doc.<field> }} (the installer checks each is the record type's)."""
+    return _DOC_PLACEHOLDER_RE.findall(text) if isinstance(text, str) else []
+
+
+def _date_notification(v, w: str, name, n: dict):
+    """A Days Before / Days After notification on a shop's own record type (the installer checks the record type
+    itself: a table or single-record type, and date_changed a Date or Datetime field of it)."""
+    days = n.get("days_in_advance")
+    if isinstance(days, bool) or not isinstance(days, int) or not 1 <= days <= 365:
+        v.refuse(w, name, "days_in_advance is a whole number of days from 1 to 365")
+    if not (isinstance(n.get("date_changed"), str) and _FIELD_RE.match(n["date_changed"])):
+        v.refuse(w, name, "date_changed names the record's date field")
+    if n.get("set_property_after_alert") or "property_value" in n:
+        v.refuse(
+            w,
+            name,
+            "on a shop's own record type a notification may not set a field after it is sent: that saves the "
+            "shop's record from the scheduler, running every rule of that save",
+        )
+    for k in ("subject", "message"):
+        text = n.get(k)
+        if isinstance(text, str) and (
+            _TEMPLATE_RE.search(_DOC_PLACEHOLDER_RE.sub("", text)) or _template_path(text)
+        ):
+            v.refuse(
+                f"{w}.{k}",
+                name,
+                "on a shop's own record type a notification's subject and message are plain text and "
+                "{{ doc.<field> }} only: no call, no filter, no {% %} block, and no one-line text ending "
+                "in a file name (it would be read as a template file)",
+            )
+    for j, rcp in enumerate(n.get("recipients") or []):
+        if isinstance(rcp, dict) and rcp.get("receiver_by_document_field"):
+            v.refuse(
+                f"{w}.recipients[{j}]",
+                name,
+                "on a shop's own record type a notification goes to a role: the manifest cannot know who the "
+                "shop writes into a field of its record",
+            )
 
 
 def _recipient_field_is_user(v, doctype, value) -> bool:
@@ -519,6 +682,21 @@ def _fields(v: _V, where: str, owner: str, fields: list, engine: bool, single: b
             v.refuse(
                 w, fn, "a table field must point at one of the manifest's own child record types"
             )
+        if ft == "Table MultiSelect" and not (
+            f.get("options") in v.tables
+            and any(
+                x.get("fieldtype") == "Link" and x.get("in_list_view")
+                for x in _own_doctype(v, f.get("options"))
+            )
+        ):  # the framework's own rule, refused first in our words, and Desk's: a form
+            # save drops every row none of whose fields is shown in the list (form/save.js remove_empty_rows)
+            v.refuse(
+                w,
+                fn,
+                "a multi-select field points at one of the manifest's own child record types that has a "
+                "Link field shown in the list (in_list_view: 1): each choice is a row holding one link, and "
+                "Desk drops, when it saves, a row with no field shown in the list",
+            )
         if engine and f.get("reqd"):
             v.refuse(w, fn, ENGINE_GUARDED_PROPS["reqd"])
         if engine:
@@ -543,6 +721,8 @@ def _doctypes(v: _V):
         extra = set(d) - DOCTYPE_KEYS - set(REFUSED_DOCTYPE_KEYS)
         if extra:
             v.refuse(w, name, f"keys a record type may not carry here: {sorted(extra)}")
+        if d.get("issingle"):
+            _single(v, w, name, d)
         fields = d.get("fields")
         if not isinstance(fields, list) or not fields:
             v.refuse(w, name, "a record type needs at least one field")
@@ -576,6 +756,92 @@ def _doctypes(v: _V):
                     v.refuse(
                         f"{w}.permissions[{j}]", name, "every right in a permission row is 0 or 1"
                     )
+
+
+def _single(v: _V, w: str, name, d: dict):
+    """A settings record of the manifest's own (``issingle: 1``)."""
+    if d["issingle"] != 1:
+        v.refuse(f"{w}.issingle", name, "issingle is 0 or 1")
+    extra = set(d) - SINGLE_KEYS
+    if extra:
+        v.refuse(
+            w,
+            name,
+            f"a settings record carries only {', '.join(sorted(SINGLE_KEYS))}, not {sorted(extra)} "
+            "(it is one record: not a table of rows, with no list, naming or search)",
+        )
+    for j, f in enumerate(d.get("fields") if isinstance(d.get("fields"), list) else []):
+        for k in sorted(set(f) & SINGLE_FIELD_KEYS if isinstance(f, dict) else ()):
+            v.refuse(
+                f"{w}.fields[{j}]",
+                name,
+                f"a settings record's field carries no '{k}': it has one record",
+            )
+    for j, p in enumerate(d.get("permissions") if isinstance(d.get("permissions"), list) else []):
+        if isinstance(p, dict) and any(p.get(r) for r in SINGLE_RIGHTS):
+            v.refuse(
+                f"{w}.permissions[{j}]",
+                name,
+                "a settings record has no list to report on or export: report and export are 0",
+            )
+
+
+def _fold(name: str) -> str:
+    return " ".join(name.split()).casefold()
+
+
+def _singles(v: _V):
+    """A settings record is named only where SINGLE_NAMERS allows (and by a workspace shortcut that opens its
+    form). Every other kind is read whole, so a kind or a key added later is covered without a list to keep.
+    """
+    declared = sorted(
+        d["name"]
+        for d in v.m.get("doctypes") or []
+        if isinstance(d, dict) and isinstance(d.get("name"), str) and d.get("issingle")
+    )
+    singles = {_fold(n) for n in declared}
+    if not singles:
+        return
+
+    def names(x) -> bool:
+        if isinstance(x, dict):
+            return any(names(y) for y in x.values())
+        if isinstance(x, list):
+            return any(names(y) for y in x)
+        return isinstance(x, str) and _fold(x) in singles  # the database finds a name in any case
+
+    for kind in KINDS:
+        items = v.m.get(kind)
+        for i, el in enumerate(items if isinstance(items, list) else []):
+            w = f"{kind}[{i}]"
+            if not isinstance(el, dict) or SINGLE_NAMERS.get(kind, ()) is None:
+                continue
+            if (
+                kind == "doctypes"
+            ):  # the single's own declaration names itself; a field's options may not
+                hits = [
+                    f
+                    for f in el.get("fields") or []
+                    if isinstance(f, dict) and names(f.get("options"))
+                ]
+            elif (
+                kind == "workspaces"
+            ):  # a shortcut opens the form; any other view is a list it has not got
+                hits = [
+                    s
+                    for s in el.get("shortcuts") or []
+                    if isinstance(s, dict)
+                    and names(s.get("link_to"))
+                    and (s.get("type") != "DocType" or s.get("doc_view"))
+                ]
+            else:
+                hits = (
+                    [el]
+                    if names({k: x for k, x in el.items() if k not in SINGLE_NAMERS.get(kind, ())})
+                    else []
+                )
+            if hits:
+                v.refuse(w, el.get("name"), f"'{', '.join(declared)}' {SINGLE_REASON}")
 
 
 def _custom_fields(v: _V):
@@ -636,8 +902,13 @@ def _property_setters(v: _V):
 
 def _own_setter(v: _V, w: str, label: str, dt: str, fn, prop: str, value):
     """A property setter on the manifest's own record type: no more than the manifest could set there."""
+    single = dt in {
+        d.get("name")
+        for d in v.m.get("doctypes") or []
+        if isinstance(d, dict) and d.get("issingle")
+    }
     if fn:
-        if prop not in OWN_FIELD_SETTER_PROPS:
+        if prop not in OWN_FIELD_SETTER_PROPS or single and prop in SINGLE_FIELD_KEYS:
             v.refuse(
                 w,
                 label,
@@ -647,6 +918,14 @@ def _own_setter(v: _V, w: str, label: str, dt: str, fn, prop: str, value):
         return
     if prop in REFUSED_DOCTYPE_KEYS:
         v.refuse(w, label, REFUSED_DOCTYPE_KEYS[prop])
+    elif (
+        single and prop not in SINGLE_SETTER_PROPS
+    ):  # no more than the settings record may carry
+        v.refuse(
+            w,
+            label,
+            f"on a settings record a property setter may set only {', '.join(sorted(SINGLE_SETTER_PROPS))}",
+        )
     elif prop not in OWN_DOCTYPE_SETTER_PROPS:
         v.refuse(
             w,
@@ -682,13 +961,55 @@ def _print_formats(v: _V):
             )
         for k in ("html", "css"):
             v.no_script(f"{w}.{k}", name, p.get(k))
-            if isinstance(p.get(k), str) and _OUTSIDE_URL_RE.search(p[k]):
+            outside = isinstance(p.get(k), str) and _OUTSIDE_URL_RE.search(p[k])
+            if outside:
                 v.refuse(
                     f"{w}.{k}",
                     name,
                     "a print format may not load anything from outside the shop: an address in a "
                     "receipt can carry the shop's data out; embed images as files or data: URIs",
                 )
+            if isinstance(p.get(k), str) and _PRINT_RAW_RE.search(p[k]):
+                v.refuse(
+                    f"{w}.{k}",
+                    name,
+                    "a print format may not run raw database queries or fetch from outside: read other "
+                    "records through ivn_rows and ivn_value, with the viewer's rights",
+                )
+            if (
+                not outside and isinstance(p.get(k), str) and _templated_address(p[k])
+            ):  # one reason an address
+                v.refuse(
+                    f"{w}.{k}",
+                    name,
+                    "an address a print format loads may hold only a whole {{ a.b }} reference, never a "
+                    "template built around it: a built address can carry the viewer's data out",
+                )
+
+
+def _templated_address(text: str) -> bool:
+    for m in _ADDRESS_RE.finditer(text):
+        value = next((g for g in m.groups() if g is not None), "")
+        templated = "{{" in value or "{%" in value or "{#" in value
+        if templated and not _PLAIN_REFERENCE_RE.match(value):
+            return True
+    return False
+
+
+def _print_format_warnings(m: dict) -> list[dict]:
+    pfs = m.get("print_formats")
+    out = []
+    for i, p in enumerate(pfs if isinstance(pfs, list) else []):
+        for k in ("html", "css"):
+            if isinstance(p, dict) and isinstance(p.get(k), str) and _PRINT_READER_RE.search(p[k]):
+                out.append(
+                    {
+                        "what": "framework_reader",
+                        "where": f"print_formats[{i}].{k}",
+                        "text": PRINT_READER_WARNING,
+                    }
+                )
+    return out
 
 
 def _notifications(v: _V):
@@ -706,16 +1027,19 @@ def _notifications(v: _V):
             v.refuse(
                 w, name, f"'{n.get('event')}' is not an event a manifest notification may use"
             )
-        if n.get("document_type") not in v.own:
-            v.refuse(
-                w,
-                name,
-                "a notification on a shop's own record type runs inside every save of it, and an "
-                "error in it stops that save (a till sale included); notify on your own types only",
-            )
-        extra = set(n) - NOTIFY_KEYS
+        shop = n.get("document_type") not in v.own
+        if shop and n.get("event") not in DATE_EVENTS:
+            v.refuse(w, name, NOTIFY_SHOP_EVENT_REASON)
+        elif shop:
+            _date_notification(v, w, name, n)
+        for k in ATTACH_FILE_KEYS:
+            if k in n:
+                v.refuse(f"{w}.{k}", name, ATTACH_FILE_REASON)
+        extra = set(n) - NOTIFY_KEYS - set(ATTACH_FILE_KEYS)
         if extra:
             v.refuse(w, name, f"keys a manifest notification may not set: {sorted(extra)}")
+        if "attach_print" in n or "print_format" in n:
+            _attach_print(v, w, name, n, shop)
         v.no_script(f"{w}.message", name, n.get("message"))
         for k in ("subject", "message"):
             if isinstance(n.get(k), str) and _SHOP_DATA_RE.search(n[k]):
@@ -731,7 +1055,7 @@ def _notifications(v: _V):
             if isinstance(rcp, dict) and "condition" in rcp:
                 v.refuse(f"{w}.recipients[{j}]", name, NOTIFY_CONDITION_REASON)
                 continue
-            if isinstance(rcp, dict) and rcp.get("receiver_by_document_field"):
+            if isinstance(rcp, dict) and rcp.get("receiver_by_document_field") and not shop:
                 if not _recipient_field_is_user(
                     v, n.get("document_type"), rcp["receiver_by_document_field"]
                 ):
@@ -750,6 +1074,36 @@ def _notifications(v: _V):
                 _roles(
                     v, f"{w}.recipients[{j}]", name, [rcp["receiver_by_role"]]
                 )  # the sixth place a role is named
+
+
+def _attach_print(v: _V, w: str, name, n: dict, shop: bool):
+    """A notification on the manifest's own record type may attach one of its own print formats for
+    that record type; the format reads no framework helper, because the attached print is rendered with no rights.
+    """
+    if n.get("attach_print") not in (0, 1, None):
+        v.refuse(f"{w}.attach_print", name, "attach_print is 0 or 1")
+    pf = next(
+        (
+            p
+            for p in v.m.get("print_formats") or []
+            if isinstance(p, dict)
+            and p.get("name") == n.get("print_format")
+            and p.get("doc_type") == n.get("document_type")
+        ),
+        None,
+    )
+    if shop or pf is None and (n.get("attach_print") or "print_format" in n):
+        v.refuse(f"{w}.print_format", name, ATTACH_PRINT_REASON)
+    elif pf and any(
+        isinstance(pf.get(k), str)
+        and (
+            _SHOP_DATA_RE.search(pf[k])
+            or _PRINT_READER_RE.search(pf[k])
+            or _TEMPLATE_LOAD_RE.search(pf[k])
+        )
+        for k in ("html", "css")
+    ):
+        v.refuse(f"{w}.print_format", name, ATTACH_READER_REASON)
 
 
 _ICON_RE = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
@@ -885,16 +1239,19 @@ def _keys(v: _V, w: str, name, obj: dict, allowed: set):
         v.refuse(w, name, f"keys this kind may not carry: {sorted(extra)}")
 
 
-def _own_fields(v: _V, dt: str) -> set:
+def _own_doctype(v: _V, dt: str) -> list:
+    """The fields a manifest gives its own record type ``dt``."""
     d = next(
         (d for d in v.m.get("doctypes") or [] if isinstance(d, dict) and d.get("name") == dt), None
     )
-    return {
-        f.get("fieldname") for f in (d or {}).get("fields") or [] if isinstance(f, dict)
-    } | STD_FIELDS
+    return [f for f in (d or {}).get("fields") or [] if isinstance(f, dict)]
 
 
-def _filters(v: _V, w: str, name, filters):
+def _own_fields(v: _V, dt: str) -> set:
+    return {f.get("fieldname") for f in _own_doctype(v, dt)} | STD_FIELDS
+
+
+def _filters(v: _V, w: str, name, filters, field_re=_FIELD_RE):
     """Filters are data: [[field, operator, value], …]. Operators from a fixed list; values plain scalars."""
     ops = {"=", "!=", ">", "<", ">=", "<=", "like", "not like", "in", "not in", "is", "between"}
     if filters is None:
@@ -904,12 +1261,89 @@ def _filters(v: _V, w: str, name, filters):
         or len(f) != 3
         or f[1] not in ops
         or not isinstance(f[0], str)
-        or not _FIELD_RE.match(f[0])
+        or not field_re.match(f[0])
         or isinstance(f[2], (dict, list))
         and f[1] not in ("in", "not in", "between")
         for f in filters
     ):
         v.refuse(w, name, "filters are a list of [field, operator, value] with a plain operator")
+
+
+# P-REPORTCOLS: a report's column or filter is `field` or `table.field` — one table of the record type
+_COLUMN_RE = re.compile(r"^[a-z][a-z0-9_]{0,62}(\.[a-z][a-z0-9_]{0,62})?$")
+NUMBER_TYPES = {
+    "Int",
+    "Float",
+    "Currency",
+    "Percent",
+    "Duration",
+}  # what Desk's totals row adds (model.js)
+ONE_TABLE_REASON = "a column from a table is table.field, one table per report: two tables multiply each other's rows"
+
+
+def report_names(r: dict) -> list:
+    """The field names a report's columns and filters read, as written."""
+    filters = r.get("filters") if isinstance(r.get("filters"), list) else []
+    return [
+        c
+        for c in (r.get("columns") if isinstance(r.get("columns"), list) else [])
+        + [f[0] for f in filters if isinstance(f, list) and f]
+        if isinstance(c, str)
+    ]
+
+
+def report_tables(r: dict) -> set:
+    """The tables a report reads rows from (more than one is refused)."""
+    return {c.split(".")[0] for c in report_names(r) if "." in c}
+
+
+def report_table_refusals(r: dict, dt: str, fields: list, rows) -> list:
+    """What a report reading one table owes, one rule for both homes: the checker passes a package's
+    own record type, the installer the shop's. ``fields`` are the record type's fields (fieldname, fieldtype,
+    options, permlevel); ``rows`` the names of the table's row fields, or None when they are checked elsewhere.
+    Desk's report screen names a row column by its record type alone (report_view.js get_fields), so it joins
+    rows by parent and record type: rows two tables share would mix, a record type with a - is not read as a
+    row column, and the table field's own permission level is not checked."""
+    if len(report_tables(r)) != 1:
+        return []
+    (t,) = report_tables(r)
+    by = {f.get("fieldname"): f for f in fields if isinstance(f, dict)}
+    if (by.get(t) or {}).get("fieldtype") != "Table":
+        return [f"{t} is not a table of {dt}"]
+    rows_dt, out = by[t].get("options") or "", []
+    if any(
+        f.get("fieldtype") == "Table" and f.get("options") == rows_dt and n != t
+        for n, f in by.items()
+    ):
+        out.append(
+            f"{t}'s rows share their record type with another table of {dt}: Desk's report screen "
+            "joins rows by their record type, so it would mix them"
+        )
+    if "-" in rows_dt:
+        out.append(
+            f"Desk's report screen cannot show a column from {rows_dt}: a record type with a - in its name"
+        )
+    if by[t].get("permlevel") not in (
+        None,
+        0,
+        "0",
+        "",
+    ):  # a malformed level is refused by its own rule
+        out.append(
+            f"{t} of {dt} sits behind a permission level, which Desk's report screen does not check "
+            "for a table's rows: leave its rows out"
+        )
+    if rows is not None:
+        missing = {c.split(".")[1] for c in report_names(r) if "." in c} - set(rows) - STD_FIELDS
+        out += [f"{f} is not a field of {t}'s rows" for f in sorted(missing)]
+    if r.get("add_total_row"):
+        out += [
+            f"with a table's rows and a totals row, {c} of the document would be added once per line: "
+            "leave it out or drop the totals row"
+            for c in report_names({"columns": r.get("columns")})
+            if "." not in c and (by.get(c) or {}).get("fieldtype") in NUMBER_TYPES
+        ]
+    return out
 
 
 REPORT_KEYS = {
@@ -946,16 +1380,30 @@ def _reports(v: _V):
         if (
             not isinstance(cols, list)
             or not cols
-            or any(not isinstance(c, str) or not _FIELD_RE.match(c) for c in cols)
+            or any(not isinstance(c, str) or not _COLUMN_RE.match(c) for c in cols)
         ):
-            v.refuse(w, name, "columns is a list of field names")
-        elif r.get("ref_doctype") in v.own and set(cols) - _own_fields(v, r["ref_doctype"]):
+            v.refuse(w, name, "columns is a list of field names (a table's column is table.field)")
+        elif r.get("ref_doctype") in v.own and {c for c in cols if "." not in c} - _own_fields(
+            v, r["ref_doctype"]
+        ):
+            plain = {c for c in cols if "." not in c}
             v.refuse(
                 w,
                 name,
-                f"columns not on {r['ref_doctype']}: {sorted(set(cols) - _own_fields(v, r['ref_doctype']))}",
+                f"columns not on {r['ref_doctype']}: {sorted(plain - _own_fields(v, r['ref_doctype']))}",
             )
-        _filters(v, w, name, r.get("filters"))
+        _filters(v, w, name, r.get("filters"), _COLUMN_RE)
+        if len(report_tables(r)) > 1:
+            v.refuse(w, name, ONE_TABLE_REASON)
+        elif (
+            r.get("ref_doctype") in v.own
+        ):  # the shop's record types: at install (manifest_install)
+            fields = _own_doctype(v, r["ref_doctype"])
+            t = next(iter(report_tables(r)), None)
+            rows_dt = next((f.get("options") for f in fields if f.get("fieldname") == t), None)
+            rows = _own_fields(v, rows_dt) if rows_dt in v.own else None
+            for why in report_table_refusals(r, r["ref_doctype"], fields, rows):
+                v.refuse(w, name, why)
         ob = r.get("order_by")
         if ob is not None and not (
             isinstance(ob, str) and re.match(r"^[a-z][a-z0-9_]{0,62}( (asc|desc))?$", ob)
@@ -1408,7 +1856,14 @@ def _remote_keys(v: _V):
 
 # Each extension point on this product and its own time-to-answer maximum (ivendnext_mpos partner_point.POINTS
 # `timeout_max`). An extension point the product adds needs a row here before a manifest names it.
-SUB_POINTS = {"desk_action": 10, "page": 10, "check": 10, "capture": 10, "doccheck": 10}
+SUB_POINTS = {
+    "desk_action": 10,
+    "page": 10,
+    "check": 10,
+    "capture": 10,
+    "doccheck": 10,
+    "fulfil": 10,
+}
 # each extension point's answers when its service is down (`Point.down_answers`, the first the product's default)
 DOWN_ANSWERS = {
     "desk_action": ("refuse",),
@@ -1416,16 +1871,20 @@ DOWN_ANSWERS = {
     "check": ("allow_and_flag", "refuse", "ask"),
     "capture": ("allow_and_flag", "refuse"),
     "doccheck": ("allow_and_flag", "refuse", "ask"),
+    # P-FULFIL: fixed — a paid sale is never undone, the receipt waits
+    "fulfil": ("wait",),
 }
 # P-CHECK (partner_check.PER_SCOPE_MAX, SCOPE_SECONDS_MAX): a manifest's checks answer every POS Profile (a
 # manifest names no scope), so they all share each one; the product checks it again, with the site's other checks, when
 # the shop switches one on
 CHECKS_MAX, CHECK_SECONDS_MAX = 3, 10
-# P-CAPTURE (partner_capture.EVENTS, TIMEOUTS, GROUPS_MAX): one service per event; a scan answers in at most 3 seconds
+# P-CAPTURE (partner_capture.EVENTS, TIMEOUTS, GROUPS_MAX): one service per event; a scan or a quantity change answers in
+# at most 3 seconds
 CAPTURE_EVENTS = {
     "scan": ({"event", "item_groups", "item_field"}, 3),
     "customer_add": ({"event"}, 10),
     "customer_select": ({"event"}, 10),
+    "qty_change": ({"event", "item_groups", "item_field"}, 3),
 }
 CAPTURE_GROUPS_MAX = 50
 SUB_KEYS = {
@@ -1501,7 +1960,7 @@ def _extension_subscriptions(v: _V):
             | SHOP_CONSENT
             | {"secret", "scope", "module", "may_approve"}
             # a document check names its record type and fields there (the product checks them)
-            | ({"settings"} if point in ("check", "capture", "doccheck") else set()),
+            | ({"settings"} if point in ("check", "capture", "doccheck", "fulfil") else set()),
         )
         if not isinstance(key, str) or not re.match(r"^[a-z][a-z0-9_]{0,39}$", key):
             v.refuse(
@@ -1530,6 +1989,8 @@ def _extension_subscriptions(v: _V):
             )
         if point == "capture":
             top = _capture_settings(v, w, key, s.get("settings"))
+        if point == "fulfil":
+            _fulfil_settings(v, w, key, s.get("settings"))
         if not _seconds(s.get("timeout_seconds", min(3, top)), top):
             v.refuse(
                 w,
@@ -1588,7 +2049,11 @@ def _capture_settings(v: _V, w, key, settings) -> int:
     """
     event = settings.get("event") if isinstance(settings, dict) else None
     if event not in CAPTURE_EVENTS:
-        v.refuse(w, key, "Name the event in the settings: scan, customer_add or customer_select.")
+        v.refuse(
+            w,
+            key,
+            "Name the event in the settings: scan, customer_add, customer_select or qty_change.",
+        )
         return 10
     known, top = CAPTURE_EVENTS[event]
     if set(settings) - known:
@@ -1597,21 +2062,44 @@ def _capture_settings(v: _V, w, key, settings) -> int:
             key,
             f"The settings of a {event} capture may only carry: {', '.join(sorted(known))}.",
         )
-    elif event == "scan":
+    elif event in ("scan", "qty_change"):
         groups, field = settings.get("item_groups") or [], settings.get("item_field") or ""
         if not isinstance(groups, list) or any(not isinstance(g, str) for g in groups):
             v.refuse(w, key, "item_groups must be a list of item group names.")
         elif len(groups) > CAPTURE_GROUPS_MAX:
-            v.refuse(w, key, f"A scan capture names at most {CAPTURE_GROUPS_MAX} item groups.")
+            v.refuse(w, key, f"A {event} capture names at most {CAPTURE_GROUPS_MAX} item groups.")
         elif not isinstance(field, str):
             v.refuse(w, key, "item_field must be the name of one field on Item.")
         elif not groups and not field:
             v.refuse(
                 w,
                 key,
-                "Say which items a scan capture asks about: item groups, an item field, or both.",
+                f"Say which items a {event} capture asks about: item groups, an item field, or both.",
             )
     return top
+
+
+def _fulfil_settings(v: _V, w, key, settings) -> None:
+    """P-FULFIL's settings: the scan capture's filter, in the product's own sentences
+    (``partner_fulfil.validate_subscription``); the site's item groups and fields are
+    checked by the product at insert."""
+    if not isinstance(settings, dict):
+        settings = {}
+    groups, field = settings.get("item_groups") or [], settings.get("item_field") or ""
+    if set(settings) - {"item_groups", "item_field"}:
+        v.refuse(
+            w, key, "The settings of a fulfil service may only carry: item_field, item_groups."
+        )
+    elif not isinstance(groups, list) or any(not isinstance(g, str) for g in groups):
+        v.refuse(w, key, "item_groups must be a list of item group names.")
+    elif len(groups) > CAPTURE_GROUPS_MAX:
+        v.refuse(w, key, f"A fulfil service names at most {CAPTURE_GROUPS_MAX} item groups.")
+    elif not isinstance(field, str):
+        v.refuse(w, key, "item_field must be the name of one field on Item.")
+    elif not groups and not field:
+        v.refuse(
+            w, key, "Say which items a fulfil service makes: item groups, an item field, or both."
+        )
 
 
 # a Desk action's input types: the product's own list (ivendnext_mpos desk_action.INPUT_TYPES, pinned equal by a POS
@@ -1687,6 +2175,7 @@ RULE_KEYS = {
     "formula",
     "source",
     "source_b",
+    "source_table",  # sum_rows / count_rows
     "factor",
     "offset",
     "decimals",
@@ -1698,6 +2187,17 @@ RULE_KEYS = {
     "locked_fields",
     "action",
     "scope_fields",
+    # count_per_day: the field counted per, the day field, the cap
+    "scope_field",
+    "day_field",
+    "cap",
+    # threshold: judged only when new or changed; the limit and one role that may
+    # pass it read from a settings record
+    "judge_on_change",
+    "value_from_type",
+    "value_from_name",
+    "value_field",
+    "roles_field",
 }
 
 
@@ -1823,7 +2323,17 @@ FIELD_SURFACES = {
             "points": ("hide", "relabel"),
         },
     ),
-    "cart_line": ("Item", {"item_name": ("relabel",), "qty": ("relabel",)}),
+    "cart_line": (
+        "Item",
+        {
+            "item_name": ("relabel",),
+            "qty": ("relabel",),
+            # v3 (pfields3): the line's money figures, relabel only (list_price: shown)
+            "price": ("relabel",),
+            "discount": ("relabel",),
+            "amount": ("relabel",),
+        },
+    ),
     "item_result": ("Item", {"item_code": ("hide", "relabel")}),
     "sale_details": (
         None,
@@ -1831,7 +2341,36 @@ FIELD_SURFACES = {
     ),  # its fields are the shop's active sale details: hide or relabel (the product checks)
     # the receipt, show only — up to three Item fields under each line
     "receipt_preview": ("Item", {}),
+    # v3 (pfields3): the online basket's totals words, relabel only
+    "totals": (
+        None,
+        {
+            "discount": ("relabel",),
+            "charges": ("relabel",),
+            "delivery": ("relabel",),
+            "tax": ("relabel",),
+            "grand_total": ("relabel",),
+        },
+    ),
 }
+# v3 (pfields3): the figure `show` draws beside the line (no Item field, no cap), and every
+# rule whose label sits beside money — its label carries no digit, % or currency sign. ⚠ The
+# checker runs without the site, so it reads the symbol characters only; the product also
+# refuses the site's own letter signs (the rand's R) at save.
+FIELD_SHOWN_FIGURES = {("cart_line", "list_price")}
+FIELD_MONEY = {("cart_line", f) for f in ("price", "discount", "amount", "list_price")} | {
+    ("totals", f) for f in FIELD_SURFACES["totals"][1]
+}
+FIELD_MONEY_LABEL = "A money label can't carry a digit, a % or a currency sign: the figure beside it is the till's."
+
+
+def _money_label(label: str) -> bool:
+    return any(
+        c == "%" or unicodedata.category(c) == "Sc" or unicodedata.category(c).startswith("N")
+        for c in label
+    )
+
+
 # the product's words for a receipt rule other than show (pos_fields.validate_field_rules)
 FIELD_RECEIPT_ONLY_SHOW = (
     "On the receipt a rule can only show an item field. Money, tax and the receipt's own "
@@ -1883,7 +2422,14 @@ def _field_rules(v: _V):
             v.refuse(w, field, f"A label is at most {FIELD_LABEL_MAX} characters.")
         elif action == "relabel" and not (isinstance(label, str) and label.strip()):
             v.refuse(w, field, f"Give {field} its new label.")
+        elif isinstance(label, str) and (surface, field) in FIELD_MONEY and _money_label(label):
+            v.refuse(w, field, FIELD_MONEY_LABEL)
         doctype, named = FIELD_SURFACES[surface]
+        if action == "show" and (surface, field) in FIELD_SHOWN_FIGURES:
+            continue
+        if action == "show" and doctype and (surface, field) in FIELD_MONEY:
+            v.refuse(w, field, f"{field} on {surface} can't take this rule.")
+            continue
         if action == "show":
             if not doctype:
                 v.refuse(w, field, f"Nothing more can be shown on {surface}.")
@@ -2135,13 +2681,97 @@ def _label_layouts(v: _V):
             v.refuse(w, name, f"Labels per row must be between 1 and {LABEL_PER_ROW_MAX}.")
 
 
+# ── P-LISTMARK's list mark ──────────────────────────────────────────────────
+# A Retail List Mark is data the POS app's Desk script draws as a list row's label (ivendnext_mpos
+# business_logic/list_mark.py validate_mark). ⚠ A copy of the product's rules that need no site — a defect here is a
+# defect there: report it with a Kit defect issue. The rules that read the site (the record type is not submitted and
+# has no workflow; it has each field, none a password or long text) are the product's own, refused at install word
+# for word.
+LIST_MARK_COLOURS = ("green", "blue", "orange", "red", "gray", "purple")
+LIST_MARK_OPERATORS = ("=", "!=", ">", ">=", "<", "<=", "is set", "is not set")
+LIST_MARK_LABEL_MAX, LIST_MARK_CONDITIONS_MAX, LIST_MARKS_MAX = 24, 3, 5
+LIST_MARK_KEYS = {"record_type", "label", "colour", "sequence", "conditions"}
+_LIST_MARK_MARKUP_RE = re.compile("[<>&\"'`]")
+
+
+def _list_mark_conditions(v: _V, w: str, label, conds):
+    if not isinstance(conds, list) or not 1 <= len(conds) <= LIST_MARK_CONDITIONS_MAX:
+        v.refuse(w, label, f"Give one to {LIST_MARK_CONDITIONS_MAX} conditions.")
+        return
+    for j, c in enumerate(conds):
+        cw = f"{w}.conditions[{j}]"
+        if not isinstance(c, dict):
+            v.refuse(cw, label, "a condition is an object: field, operator, value")
+            continue
+        _keys(v, cw, label, c, {"field", "operator", "value"})
+        if not isinstance(c.get("field"), str) or not c["field"]:
+            v.refuse(cw, label, "a condition names its field")
+        if c.get("operator") not in LIST_MARK_OPERATORS:
+            v.refuse(
+                cw, label, f"a condition's operator is one of {', '.join(LIST_MARK_OPERATORS)}"
+            )
+        value = c.get("value")
+        if value is not None and (
+            not isinstance(value, (str, int, float)) or isinstance(value, bool)
+        ):
+            v.refuse(cw, label, "a condition's value is a plain value")
+        elif c.get("operator") in (">", ">=", "<", "<="):
+            try:
+                float(value)
+            except (TypeError, ValueError):
+                v.refuse(cw, label, f"A condition with {c['operator']} needs a number.")
+
+
+def _list_marks(v: _V):
+    per: dict[str, int] = {}
+    seen: set = set()
+    for i, mk in enumerate(v.list_of("list_marks")):
+        w, label = f"list_marks[{i}]", mk.get("label")
+        if "enabled" in mk:
+            v.refuse(w, label, SWITCHED_OFF)
+        _keys(v, w, label, mk, LIST_MARK_KEYS | {"enabled"})
+        dt = mk.get("record_type")
+        if not isinstance(dt, str) or not dt:
+            v.refuse(w, label, "a list mark names its record type")
+        elif dt != dt.strip():
+            # the record stores it trimmed; the uninstall matches it as written
+            v.refuse(w, label, "The record type has no space before or after it.")
+        else:
+            per[dt] = per.get(dt, 0) + 1
+        if isinstance(dt, str) and isinstance(label, str):
+            if (dt, label) in seen:
+                # an update matches a mark by its record type and label: one OR is one label
+                v.refuse(w, label, "two marks on one record type need two labels")
+            seen.add((dt, label))
+        if isinstance(label, str) and label != label.strip():
+            # the record stores it trimmed; the uninstall matches the label as written
+            v.refuse(w, label, "The label has no space before or after it.")
+        elif not isinstance(label, str) or not 1 <= len(label.strip()) <= LIST_MARK_LABEL_MAX:
+            v.refuse(w, label, f"The label must be 1 to {LIST_MARK_LABEL_MAX} characters.")
+        elif _LIST_MARK_MARKUP_RE.search(label):
+            v.refuse(w, label, "The label is plain text: it cannot hold < > & \" ' or `.")
+        if mk.get("colour") not in LIST_MARK_COLOURS:
+            v.refuse(w, label, f"Choose one of the colours: {', '.join(LIST_MARK_COLOURS)}.")
+        seq = mk.get("sequence", 10)
+        if not isinstance(seq, int) or isinstance(seq, bool):
+            v.refuse(w, label, "sequence is a whole number")
+        _list_mark_conditions(v, w, label, mk.get("conditions"))
+    for dt, n in per.items():
+        if n > LIST_MARKS_MAX:
+            v.refuse("list_marks", dt, f"{dt} holds at most {LIST_MARKS_MAX} marks.")
+
+
 def warnings(m) -> list[dict]:
     """What installs but needs the shop before it works, each ``{what, where, text}``. The product refuses a fiscal
     reader at ENABLE, not at insert (its writer rule runs only on an enabled reader), so the kit names it here.
     """
     out = []
-    if not isinstance(m, dict) or not isinstance(m.get("fiscal_readers"), list):
+    if not isinstance(m, dict):
         return out
+    # Print formats warn with or without fiscal readers
+    pf = _print_format_warnings(m)
+    if not isinstance(m.get("fiscal_readers"), list):
+        return pf
     own = {
         c.get("fieldname"): c
         for c in m.get("custom_fields") or []
@@ -2190,7 +2820,7 @@ def warnings(m) -> list[dict]:
             "read, write and submit at level 0 (with them it can change any level-0 field a submitted "
             "sale still allows and submit a draft sale) and generates each user's API key",
         )
-    return out
+    return out + pf
 
 
 def validate(m) -> list[dict]:
@@ -2207,6 +2837,13 @@ def validate(m) -> list[dict]:
     if not isinstance(m.get("prefix"), str) or not _PREFIX_RE.match(m["prefix"]):
         v.refuse(
             "prefix", m.get("prefix"), "the prefix is one to three upper-case words, e.g. 'PP BLN'"
+        )
+    elif m["prefix"].split()[0] in RESERVED_PREFIX_WORDS:
+        v.refuse(
+            "prefix",
+            m["prefix"],
+            f"a prefix cannot start with {m['prefix'].split()[0]}: the system reads fields whose "
+            "names start that way",
         )
     if (
         not isinstance(m.get("app"), str)
@@ -2265,6 +2902,7 @@ def validate(m) -> list[dict]:
             _scan_sources,
             _field_rules,
             _label_layouts,
+            _list_marks,
         )
         if m.get("manifest_version") == 2
         else ()
@@ -2279,6 +2917,7 @@ def validate(m) -> list[dict]:
         _sale_attributes,
         _webhooks,
         *v2,
+        _singles,
     ):
         check(v)
     return v.out

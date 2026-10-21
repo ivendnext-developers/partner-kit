@@ -1,0 +1,17 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A batch with less than 60 % of its shelf life left is refused when it is new or its percentage changes; an unrelated edit is not judged.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Minimum shelf life",
+    "record_type": "Batch",
+    "kind": "threshold",
+    "field": "custom_shelf_pct",
+    "operator": ">=",
+    "value": "60",
+    "judge_on_change": 1,
+    "bypass_roles": "Quality Manager",
+    "sequence": 50
+  }
+}

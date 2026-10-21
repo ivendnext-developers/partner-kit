@@ -1,0 +1,13 @@
+{
+  "extension_point": "partner_fulfil",
+  "contract": "issue_answer",
+  "about": "A PIN and its expiry print under the item.",
+  "payload": {
+    "verdict": "issued",
+    "ref": "GZ-77120",
+    "lines": [
+      "PIN 4821 0937 5521",
+      "Valid until 16 Oct 2027"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A stock count's header shows how many of its lines were counted above zero.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Counted lines on the count",
+    "record_type": "Stock Reconciliation",
+    "kind": "derived",
+    "field": "custom_line_count",
+    "formula": "count_rows",
+    "source_table": "items",
+    "conditions": [
+      {
+        "field": "qty",
+        "operator": ">",
+        "value": "0"
+      }
+    ]
+  }
+}

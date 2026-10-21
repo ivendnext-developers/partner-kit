@@ -1,0 +1,21 @@
+{
+  "extension_point": "fields",
+  "contract": "declaration",
+  "about": "A money label that states a rate the till did not compute.",
+  "payload": {
+    "doctype": "Retail POS Theme",
+    "theme_name": "LIB1 Fields R7",
+    "layout": "Summer Breeze",
+    "palette": "Standard",
+    "field_rules": [
+      {
+        "surface": "totals",
+        "field": "grand_total",
+        "action": "relabel",
+        "label": "Total incl. 5% VAT"
+      }
+    ]
+  },
+  "expect_refusal": "A money label can't carry a digit, a % or a currency sign: the figure beside it is the till's.",
+  "beyond_schema": true
+}

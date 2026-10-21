@@ -1,0 +1,13 @@
+{
+  "extension_point": "list_mark",
+  "contract": "declaration",
+  "about": "No condition.",
+  "payload": {
+    "doctype": "Retail List Mark",
+    "record_type": "Item",
+    "label": "Promo",
+    "colour": "green",
+    "conditions": []
+  },
+  "expect_refusal": "Give one to 3 conditions"
+}

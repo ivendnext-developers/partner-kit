@@ -1,0 +1,28 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A count with a cap of 0; 1 to 10,000.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "No cap",
+    "record_type": "Retail Override Request",
+    "kind": "count_per_day",
+    "scope_field": "store",
+    "day_field": "resolved_on",
+    "cap": 0,
+    "message": "This store has given its 10 discount approvals today. Deny this one; the cashier can sell at the normal price.",
+    "conditions": [
+      {
+        "field": "request_type",
+        "operator": "in",
+        "value": "Markdown, Discount Stack, Open Price, Sale Discount"
+      },
+      {
+        "field": "status",
+        "operator": "in",
+        "value": "Approved, Consumed"
+      }
+    ]
+  },
+  "expect_refusal": "At most per day must be 1 to 10,000."
+}

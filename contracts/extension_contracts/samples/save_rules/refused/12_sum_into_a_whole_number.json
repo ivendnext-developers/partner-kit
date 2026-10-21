@@ -1,0 +1,17 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A sum written into a whole-number field, which a large sum overflows.",
+  "beyond_schema": true,
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Sum into a whole number",
+    "record_type": "Stock Reconciliation",
+    "kind": "derived",
+    "field": "custom_line_count",
+    "formula": "sum_rows",
+    "source_table": "items",
+    "source": "qty"
+  },
+  "expect_refusal": "Sum: write a Float or Percent field."
+}

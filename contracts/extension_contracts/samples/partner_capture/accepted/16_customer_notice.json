@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "customer_answer",
+  "about": "The customer may be added, and the cashier is told a fact about them.",
+  "payload": {
+    "verdict": "notice",
+    "message": "This number already holds a loyalty card at another store."
+  }
+}

@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/scan_source.md @ 4c3f11b550f1, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/scan_source.md @ 7d47d331a203, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Scan source
 
 **Contract:** [`scan_source.v1.schema.json`](../extension_contracts/scan_source.v1.schema.json)
@@ -118,3 +118,43 @@ whose Item Barcode is `09501101530003` and puts batch `LOT7` on the line when th
 > are known-good and known-bad records. The code field must be unique on its table, the item field must
 > link to Item (or be `parent` on a child table of Batch), and Record the code as needs a status field.
 > Write a unit's status back to sellable after a return, from your own service.
+
+## 10. Units as serial numbers — the route with no table
+
+If every unit already carries its own code, a shop can skip the scan source: each code becomes a **Serial
+No** of an item that has both *Has Batch No* and *Has Serial No*. iVendNext then keeps each unit's status,
+store and batch itself, every iVendNext Desk stock and sales form scans the code, and the till sells it.
+Nothing is declared and no code is installed.
+
+**Setting it up**
+- The item: *Has Batch No* and *Has Serial No* on, and no *Serial No Series* (the codes are the shop's own).
+- Receiving: paste the codes, or load them from a file, in the serial picker of the receipt, against their
+  batch. Each Serial No then carries its batch.
+- Set the site's default company and each cashier's default company: the stock record a till sale builds
+  takes its company from the user.
+
+**At the till**
+- Scanning a code finds the item and the unit; each unit is its own line.
+- The sale books one row per unit, each with the batch its own Serial No carries, whichever batch the
+  store's automatic pick would have chosen. A markdown or an open price stays as the cashier set it.
+- A unit whose Serial No has no batch is refused: *"Serial ⟨serial⟩ has no batch. A manager sets its batch
+  on the Serial No in iVendNext Desk."*
+- The usual unit checks apply at the scan: already sold, on an open sale, at another store, past the unit's
+  own expiry date. A unit whose batch has expired scans; sold on its own line, the sale is refused at
+  payment for its batch.
+- The same rows are booked when an offline sale syncs, when a held sale is rung up again (the cashier scans
+  the units again) and when a quote is converted.
+
+**Limits**
+- A set (a product bundle) with a batch-and-serial component books its unit with its batch. Inside a set
+  a unit from an expired batch is not refused (iVendNext checks a batch's expiry on the sale's own lines,
+  not on a set's components, at the till and in iVendNext Desk alike): keep expired stock off the shelf.
+- A promotion restricted to named units of a batch-and-serial item must name both the units' serials and
+  their batches: the promotion checks each, and the till books every unit with its batch.
+- Delivering an order, or handing over a layaway, that holds serial or batch stock is refused at the till,
+  as for every serial or batch item.
+- A code sold at the till and then received again on a purchase receipt, instead of coming back as a
+  return, stays refused.
+- A stock count that removes units marks them *Delivered*, the same status as sold, and there is no
+  *Defective* status: move faulty units to a separate warehouse, and the till refuses them as another
+  store's.

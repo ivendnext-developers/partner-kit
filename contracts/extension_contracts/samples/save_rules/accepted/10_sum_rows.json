@@ -1,0 +1,16 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A stock count's header shows its counted units: the rows' quantities added up.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Counted units on the count",
+    "record_type": "Stock Reconciliation",
+    "kind": "derived",
+    "field": "custom_counted_units",
+    "formula": "sum_rows",
+    "source_table": "items",
+    "source": "qty",
+    "decimals": 2
+  }
+}

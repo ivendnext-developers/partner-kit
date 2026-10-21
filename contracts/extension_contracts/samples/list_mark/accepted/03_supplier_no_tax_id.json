@@ -1,0 +1,18 @@
+{
+  "extension_point": "list_mark",
+  "contract": "declaration",
+  "about": "A supplier with no tax id, before On Hold.",
+  "payload": {
+    "doctype": "Retail List Mark",
+    "record_type": "Supplier",
+    "label": "Tax id due",
+    "colour": "gray",
+    "enabled": 0,
+    "conditions": [
+      {
+        "field": "tax_id",
+        "operator": "is not set"
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A total of rows aimed at a field of the rows themselves.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Row total into the rows",
+    "record_type": "Stock Reconciliation",
+    "child_table": "items",
+    "kind": "derived",
+    "field": "custom_counted_units",
+    "formula": "sum_rows",
+    "source_table": "items",
+    "source": "qty"
+  },
+  "expect_refusal": "A total of rows writes a field of the record itself, not of a table."
+}

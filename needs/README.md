@@ -20,7 +20,7 @@ python3 tools/needs/needs.py check                              # every card aga
 | `not-yet` | **Not yet** | needs a new extension point (the card names the request) or product work on our side (the card says what to ask us) |
 | `not-possible` | **Not possible** | it breaks one of the four rules (guide chapter 3); the card says what to do instead |
 
-*How* it is built is the card's **door**, a separate tag: `configure`, `outside-app`, `event-feed`, `till-key`, `manifest`, `sandboxed-function`, `check-before-payment`, `document-check`, `capture-on-event`, `field-rules`, `save-rules`, `desk-action`, `partner-page`, `scan-source`, `label-layout`, `wallet`, `fiscal-reader`, `payment-connector`, `our-connector` (an iVendNext connector), `receipt` (the store's receipt settings), `request` (every *Not yet* card) and `none` (every *Not possible* card).
+*How* it is built is the card's **door**, a separate tag: `configure`, `outside-app`, `event-feed`, `till-key`, `manifest`, `sandboxed-function`, `check-before-payment`, `document-check`, `capture-on-event`, `field-rules`, `save-rules`, `desk-action`, `partner-page`, `scan-source`, `label-layout`, `wallet`, `fiscal-reader`, `fulfil-at-sale` (a code your service makes for a paid sale line), `payment-connector`, `our-connector` (an iVendNext connector), `receipt` (the store's receipt settings), `request` (every *Not yet* card) and `none` (every *Not possible* card).
 
 ## The layout
 

@@ -1,0 +1,20 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A print format whose image address is built around a value: a built address can carry the viewer's data out (P-TEMPLATEHELPERS).",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_plp",
+    "prefix": "PP PLP",
+    "version": "1.0.0",
+    "print_formats": [
+      {
+        "name": "PP PLP Price List",
+        "doc_type": "Price List",
+        "html": "<img src=\"/files/{{ doc.name }}.png\">"
+      }
+    ]
+  },
+  "expect_refusal": "may hold only a whole {{ a.b }} reference",
+  "beyond_schema": true
+}
