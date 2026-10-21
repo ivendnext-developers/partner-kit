@@ -10,7 +10,7 @@ A customer phones the call centre; the agent enters the order once, in Desk, and
 2. A call-centre agent (a Sales User) enters a Sales Order as today. The order's **Territory** comes from the customer, and the agent can change it for this order. The agent saves it.
 3. The agent presses **Send to store** on the draft order and confirms.
 4. The shop sends your service, signed, the order's name and territory.
-5. Your service reads the order **with its own key**, walks the territory up the tree to the first Serving store, and writes that warehouse on the order (*Set Source Warehouse*) and on every line. A line the supplier delivers keeps its own warehouse. Then it answers.
+5. Your service reads the order **with its own key**, walks the territory up the tree to the first Serving store, and writes that warehouse on the order (*Set Source Warehouse*) and on every line. Every line, a supplier-delivered one too, as Desk's own *Set Source Warehouse* does. Then it answers.
 6. The form reloads with the store in place: *"This order and its 2 lines now ship from Maadi Store, the store for Maadi."* The agent submits it. The store sees it in its own list, and its delivery note ships from the store's warehouse.
 
 Pressed again, the button changes nothing and says where the order already is.
@@ -18,15 +18,15 @@ Pressed again, the button changes nothing and says where the order already is.
 ## What the shop does
 
 1. **Install the app** (the shop's administrator). It comes in switched off: the service has no consent and is off, and the button is off. The install adds the **Serving store** field to Territory. It makes no role and no record type of its own.
-2. **Give the app a user** (the shop's administrator, as in the [integration user recipe](../../recipes/integration_user.md)): tick **Is Desk User**, set no password, give it **no User Permissions**, and generate its API key. In **Role Permissions**, give a role of the shop's own **read and write on Sales Order** and **read on Territory, Customer and Warehouse** (the order's own save reads its customer with a rights check; the service checks the store's warehouse before it writes), and give the user that role alone. *Sales User* also works, but it reaches further than the app uses: it creates and submits orders. A service for one shop takes the key in its settings. A service for many shops receives it from the shop: choose the user as the *Application User* of the feed **PP CCO Routing feed**, then press **Connect again** on the app (*Many shops, hosted* below).
+2. **Give the app a user** (the shop's administrator, as in the [integration user recipe](../../recipes/integration_user.md)): tick **Is Desk User**, set no password, give it **no User Permissions**, and generate its API key. In **Role Permissions**, give a role of the shop's own **read and write on Sales Order** and **read on Territory, Customer and Warehouse** (the order's own save reads its customer with a rights check; the service checks the store's warehouse before it writes), and give the user that role alone. The role reaches every sales order (read and write) and every customer, territory and warehouse (read): give it to the app's user and no one else. *Sales User* also works, but it reaches further than the app uses: it creates and submits orders. A service for one shop takes the key in its settings. A service for many shops receives it from the shop: choose the user as the *Application User* of the feed **PP CCO Routing feed**, then press **Connect again** on the app (*Many shops, hosted* below).
 3. **Switch the service on** (the System Manager). Open **Retail Extension Subscription**, the record *Send to store service*, read what it is sent, tick the consent and switch it on.
 4. **Switch the button on** (the System Manager). Open **Retail Desk Action**, the record *Send to store*, and switch it on.
 5. **Set a Serving store on each district** (a Sales Master Manager, in the Territory tree): the store's warehouse, of the same company as the orders, and never a group warehouse.
-6. **Each store saves its list once:** the Sales Order list filtered on its own *Set Source Warehouse* and the status *To Deliver and Bill*. With a User Permission on its own warehouse, a store's staff see only their own orders.
+6. **Each store saves its list once:** the Sales Order list filtered on its own *Set Source Warehouse* and the status *To Deliver and Bill*. With a User Permission on its own warehouse, a store's staff see the orders sent to their store and not those sent to another; an order not yet sent (its Set Source Warehouse empty) is seen by every store.
 
 **Where it shows.** In Desk only: the Serving store on the Territory form and list, and the button on a **draft** Sales Order's form (Sales User, Sales Manager). Nothing on the till, on a print layout or in a report.
 
-**What leaves the shop.** One address: your service (the manifest ships a test address; you write your own). Each press sends the order's **name** and **territory**, the pressing user (an e-mail address) and the language. Your service then **reads the whole order** (its customer, its addresses, its lines, quantities and prices) and the territories above it, and **writes the order back** with the new warehouse. Say so on your card. The feed *PP CCO Routing feed* sends nothing: it is how the shop chooses the app's user, and it installs switched off.
+**What leaves the shop.** One address: your service (the manifest ships a test address; you write your own). Each press sends the order's **name** and **territory**, the pressing user (an e-mail address) and the language. Your service then **reads the whole order** (its customer, its addresses, its lines, quantities and prices) and the territories above it, and **writes the order back** with the new warehouse. Say so on your card. The feed *PP CCO Routing feed* is how the shop chooses the app's user: leave it switched off (it installs off): switched on, it would record every sales order's saves for the app's user.
 
 ## The files
 
@@ -65,8 +65,8 @@ The App library's *Call-centre orders by district* runs this same `service/app.p
 
 ## Before you copy it
 
-- **The whole order goes back.** The record API replaces a table whole, and the shop never copies the header's warehouse down to the lines, so the service sends every line back as it read it, with only its warehouse changed. Our test bench compared every field of the order and its lines before and after the press: only the warehouses and what the shop works out from them moved; the totals are equal.
-- **An edit is never overwritten.** The write carries the order's `modified` as read. If anyone saved the order since, the shop refuses the write (`TimestampMismatchError`, HTTP 417); the service reads the order again and writes from what was saved, at most twice, then asks the agent to reload.
+- **The whole order goes back.** The record API replaces a table whole, and the shop never copies the header's warehouse down to the lines, so the service sends every line back as it read it, with only its warehouse changed. Our test bench compared every field of the order and its lines before and after the press: only the warehouses and what the shop works out from them moved, and on that untaxed order the totals were equal. The service sets no price, but the shop's own save works the order out again at the new warehouse: a store's own item tax, or a price limited to a warehouse, can change the total, and the answer then says so (*Its total is now … (was …)*).
+- **An edit is never overwritten.** The write carries the order's `modified` as read. If anyone saved the order since, the shop refuses the write (`TimestampMismatchError`, HTTP 417); the service asks the agent to reload and press again, and never writes over the edit (a warehouse a person chose included).
 - **Only a draft.** The button shows on drafts, and the service reads the order again and refuses a submitted one. To move a submitted order, cancel and amend it.
 - **The shop's own words never reach the agent raw.** The service reads the shop's error type (`exc_type`), never its message, and answers in its own sentences.
 - **The territory is the customer's.** An order for another district (a gift, a second address) needs its territory changed on the order before the press.
@@ -90,6 +90,7 @@ A manifest cannot write the order itself: `fetch_from` goes only on a field the 
 
 - **One order a press:** the button is on the form only.
 - **The store's company:** a Serving store of another company, a group warehouse or a disabled one is refused by the service before it writes (the shop would save it on a draft and refuse it only at submit); the agent is told to ask the manager to check it.
+- **Any other refusal by the shop** (a field the order now requires, say): *The shop would not save this order. Open it and press Save to see why.*
 - **No notice to the store.** The store's filtered list is its inbox; a manifest notification on submit, mailed to the store's warehouse e-mail, is the next step.
 - **The tree walk stops** after 12 territories or at a loop, and says no store serves the district.
 - **What was proven where:** see the recipe's *What was proven where*.

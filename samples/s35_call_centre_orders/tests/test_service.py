@@ -44,7 +44,7 @@ WAREHOUSES = {"Maadi Store - S": {"company": "Shop"}, "Cairo Store - S": {"compa
 def order(name="SO-0001", territory="Maadi", modified="2026-10-21 10:00:00.000001", docstatus=0):
     return {"name": name, "doctype": "Sales Order", "docstatus": docstatus, "territory": territory, "customer": "C1",
             "company": "Shop",
-            "modified": modified, "set_warehouse": "Call Centre - S", "grand_total": 230.46,
+            "modified": modified, "set_warehouse": "Call Centre - S", "grand_total": 230.46, "rounded_total": 230.0,
             "items": [{"name": "row-1", "item_code": "A", "qty": 2.0, "rate": 100.0, "amount": 200.0, "warehouse": "Call Centre - S"},
                       {"name": "row-2", "item_code": "B", "qty": 1.0, "rate": 30.46, "amount": 30.46, "warehouse": "Call Centre - S"},
                       {"name": "row-3", "item_code": "D", "qty": 1.0, "rate": 0.0, "amount": 0.0, "warehouse": "Supplier - S",
@@ -54,9 +54,11 @@ def order(name="SO-0001", territory="Maadi", modified="2026-10-21 10:00:00.00000
 class FakeTenant:
     """The shop's record API: orders, territories, and the shop's refusal of a write whose ``modified`` is stale."""
 
-    def __init__(self, orders=None, tree=None, refuse=None, refuse_write=None, edit_before_write=0, warehouses=None):
+    def __init__(self, orders=None, tree=None, refuse=None, refuse_write=None, edit_before_write=0, warehouses=None,
+                 reprice=None):
         self.orders = {o["name"]: o for o in (orders or [order()])}
         self.warehouses = warehouses if warehouses is not None else WAREHOUSES
+        self.reprice = reprice      # {store: new grand total}: the store's own item tax re-rates the order on save
         self.tree, self.refuse, self.refuse_write = tree or territories(), refuse, refuse_write
         self.edit_before_write, self.writes, self.reads = edit_before_write, [], []
         self.clock = 0
@@ -90,8 +92,12 @@ class FakeTenant:
             raise app.TenantError("PUT -> HTTP 417", 417, "TimestampMismatchError")
         self.writes.append((name, copy.deepcopy(body)))
         o.update({k: v for k, v in body.items() if k != "modified"})
+        if len({ln.get("warehouse") for ln in o["items"]}) > 1:     # the shop's own rule on save: lines that differ
+            o["set_warehouse"] = None                                # clear the header (reset_default_field_value)
+        if self.reprice and o["set_warehouse"] in self.reprice:
+            o["grand_total"] = o["rounded_total"] = self.reprice[o["set_warehouse"]]
         self._touch(name)
-        return o
+        return copy.deepcopy(o)
 
     def _touch(self, name):
         self.clock += 1
@@ -151,11 +157,14 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(out["message"]["title"], "Sent to store")
         self.assertIs(out["refresh"], True)
         self.assertIn("Maadi Store - S", out["message"]["body"])
-        self.assertIn("2 lines", out["message"]["body"])         # the supplier's line does not ship from the store
+        self.assertIn("3 lines", out["message"]["body"])
+        self.assertEqual(out["message"]["level"], "success")    # the total did not move
         (name, sent), = self.tenant.writes
         self.assertEqual(sent["set_warehouse"], "Maadi Store - S")
         self.assertEqual(sent["modified"], before["modified"])  # the write names the order as it was read
-        self.assertEqual([ln["warehouse"] for ln in sent["items"]], ["Maadi Store - S", "Maadi Store - S", "Supplier - S"])
+        # every line, the supplier's too (as Desk's Set Source Warehouse does): lines that differ would empty the header
+        self.assertEqual([ln["warehouse"] for ln in sent["items"]], ["Maadi Store - S"] * 3)
+        self.assertEqual(self.tenant.orders["SO-0001"]["set_warehouse"], "Maadi Store - S")
         for was, now in zip(before["items"], sent["items"]):    # every line goes back whole: only its warehouse changed
             self.assertEqual({k: v for k, v in now.items() if k != "warehouse"}, {k: v for k, v in was.items() if k != "warehouse"})
         self.assertEqual(set(sent), {"set_warehouse", "items", "modified"})   # nothing else on the order is written
@@ -165,6 +174,13 @@ class ServiceTest(unittest.TestCase):
         code, out = self.press()
         self.assertEqual(self.tenant.writes[0][1]["set_warehouse"], "Cairo Store - S")
         self.assertIn("the store for Cairo, which Heliopolis is part of", out["message"]["body"])
+
+    def test_s3b_a_total_the_store_changes_is_told_to_the_agent(self):
+        self.use(FakeTenant(reprice={"Maadi Store - S": 251.04}))
+        code, out = self.press()
+        self.assertEqual(out["message"]["level"], "warning")
+        self.assertTrue(out["message"]["body"].startswith("Its total is now 251.04 (was 230.46)"), out["message"]["body"])
+        self.assertIs(out["refresh"], True)
 
     def test_s3_a_second_press_changes_nothing_and_says_where_the_order_is(self):
         self.press()
@@ -194,24 +210,18 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(self.tenant.writes, [])
 
     def test_s7_an_edit_saved_between_the_read_and_the_write_is_never_written_over(self):
-        self.use(FakeTenant(edit_before_write=1))    # the first write is stale; the service reads the order again
-        code, out = self.press()
-        self.assertEqual(out["message"]["title"], "Sent to store")
-        self.assertEqual(len(self.tenant.writes), 1)
-        self.assertEqual(self.tenant.reads, ["SO-0001", "SO-0001"])   # written from the SECOND read, never the first
-
-    def test_s7b_an_order_that_keeps_changing_is_left_alone_after_two_tries(self):
-        self.use(FakeTenant(edit_before_write=5))
+        self.use(FakeTenant(edit_before_write=1))    # the write is stale: answered in words, never retried
         code, out = self.press()
         self.assertEqual(out["message"]["body"], app.CHANGED)
         self.assertEqual(self.tenant.writes, [])
-        self.assertEqual(len(self.tenant.reads), 2)
+        self.assertEqual(self.tenant.reads, ["SO-0001"])
+        code, out = self.press()                      # the agent reloads and presses again: routed from what was saved
+        self.assertEqual(out["message"]["title"], "Sent to store")
 
-    def test_s8_a_store_the_shop_refuses_is_named_in_the_services_own_words(self):
+    def test_s8_an_order_the_shop_will_not_save_is_said_in_the_services_own_words(self):
         self.use(FakeTenant(refuse_write=(417, "ValidationError")))
         code, out = self.press()
-        self.assertEqual((code, out["message"]["level"]), (200, "warning"))
-        self.assertIn("Maadi Store - S cannot ship this order", out["message"]["body"])
+        self.assertEqual((code, out["message"]["body"]), (200, app.NOT_SAVED))
 
     def test_s8b_a_group_a_disabled_or_another_companys_store_is_never_written(self):
         for wh in ("All Warehouses - S", "Old Store - S", "Other Co Store - O", "Gone Store - S"):
@@ -261,6 +271,14 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(len(out["message"]["body"]), 280)
         self.assertTrue(out["message"]["body"].endswith("…"))
         self.assertEqual(self.tenant.writes[0][1]["set_warehouse"], long)    # the store itself is never cut
+
+    def test_a_territory_gone_from_the_tree_names_no_store(self):
+        tree = territories()
+        tree["Maadi"] = {"parent_territory": "Vanished"}
+        self.use(FakeTenant(tree=tree))
+        code, out = self.press()
+        self.assertIn("No store serves Maadi", out["message"]["body"])
+        self.assertEqual(self.tenant.writes, [])
 
     def test_a_looping_tree_ends(self):
         tree = {"A": {"parent_territory": "B"}, "B": {"parent_territory": "A"}}

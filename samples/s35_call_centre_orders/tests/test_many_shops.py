@@ -171,6 +171,10 @@ class ShopApi(unittest.TestCase):
         self.assertEqual(self.t.order("SO-1"), {"name": "SO-1"})
         self.assertEqual(self.seen, [("GET", "/api/resource/Sales%20Order/SO-1", "token k:s")])
 
+    def test_a_record_name_is_one_path_segment(self):
+        self.t.order("SO/../../User/Administrator")       # a name a person typed never reaches another record's address
+        self.assertEqual(self.seen[-1][1], "/api/resource/Sales%20Order/SO%2F..%2F..%2FUser%2FAdministrator")
+
     def test_a_redirect_is_not_followed_and_the_key_goes_nowhere_else(self):
         with self.assertRaises(app.TenantError) as e:
             self.t.territory("Cairo")

@@ -9,7 +9,7 @@ The shop's Desk button on a draft Sales Order sends one signed POST per press (t
 
 ``verify`` checks the signature the shop puts on every call; ``store_for`` walks the order's territory up the tree to
 the first territory with a Serving store; ``plan`` decides what changes on the order (the header's warehouse and every
-line's, a line the supplier delivers aside); ``answer`` builds the reply in the extension point's closed vocabulary
+line's, as Desk's own Set Source Warehouse does); ``sent`` and ``already`` build the reply in the extension point's closed vocabulary
 (a ``message``, and ``refresh`` once the order changed). ⛔ The answer never writes anything: the service writes the
 order itself, with its own API key and its own rights, BEFORE it answers.
 """
@@ -75,15 +75,11 @@ def store_for(territory: str, read) -> tuple[str, str] | tuple[None, None]:
     return None, None
 
 
-def _ships(line: dict) -> bool:
-    """A line that ships from the store: not one the supplier delivers (its warehouse is not the store's)."""
-    return not line.get("delivered_by_supplier")
-
-
 def routed(order: dict, store: str) -> bool:
-    """The order already ships from ``store``: its header and every line that ships from a store."""
-    return order.get("set_warehouse") == store and all(
-        ln.get("warehouse") == store for ln in order.get("items") or [] if _ships(ln))
+    """The order already ships from ``store``: its header and every line. Every line, a supplier's too, as Desk's own Set
+    Source Warehouse does: the shop clears the header on save when the lines' warehouses differ, so a line left on another
+    warehouse would empty the header, drop the order from the store's list and make every press write it again."""
+    return order.get("set_warehouse") == store and all(ln.get("warehouse") == store for ln in order.get("items") or [])
 
 
 def can_ship(warehouse: dict, order: dict) -> bool:
@@ -95,9 +91,9 @@ def can_ship(warehouse: dict, order: dict) -> bool:
 
 def plan(order: dict, store: str) -> dict:
     """The write that sends ``order`` to ``store``: the header's warehouse, and every line as it was read with its
-    warehouse changed. A table is written whole (a row left out is deleted), so EVERY line goes back, a supplier's
-    line unchanged. ``modified`` as read makes the shop refuse the write if the order changed since."""
-    lines = [dict(ln, warehouse=store) if _ships(ln) else dict(ln) for ln in order.get("items") or []]
+    warehouse changed. A table is written whole (a row left out is deleted), so EVERY line goes back. ``modified`` as
+    read makes the shop refuse the write if the order changed since."""
+    lines = [dict(ln, warehouse=store) for ln in order.get("items") or []]
     return {"set_warehouse": store, "items": lines, "modified": order["modified"]}
 
 
@@ -110,14 +106,30 @@ def _lines(n: int) -> str:
     return f"{n} line{'s' if n != 1 else ''}"
 
 
-def sent(order: dict, store: str, named_by: str) -> dict:
-    """The reply once the order was written: the form reloads and shows the store."""
-    n = sum(1 for ln in order.get("items") or [] if _ships(ln))
+TOTALS = ("grand_total", "rounded_total")
+
+
+def total_moved(before: dict, after: dict) -> tuple | None:
+    """(was, now) when the shop's save changed what the customer pays: a store's own item tax or a price limited to a
+    warehouse applies when the warehouse changes. None when the totals are as they were (or the shop did not say)."""
+    for k in TOTALS:
+        if k in after and before.get(k) != after.get(k):
+            return before.get(k), after.get(k)
+    return None
+
+
+def sent(order: dict, store: str, named_by: str, saved: dict | None = None) -> dict:
+    """The reply once the order was written: the form reloads and shows the store. If the save changed the total (the
+    store's own tax or prices), the agent is told before the customer hangs up."""
+    n = len(order.get("items") or [])
     why = (f"the store for {named_by}" if named_by == order.get("territory")
            else f"the store for {named_by}, which {order.get('territory')} is part of")
-    return {"refresh": True, "message": {"title": "Sent to store",
-                                         "body": _fit(f"This order and its {_lines(n)} now ship from {store}, {why}."),
-                                         "level": "success"}}
+    body = f"This order and its {_lines(n)} now ship from {store}, {why}."
+    moved = total_moved(order, saved or {})
+    if moved:
+        body = f"Its total is now {moved[1]} (was {moved[0]}): the store's own tax or prices apply. " + body
+    return {"refresh": True, "message": {"title": "Sent to store", "body": _fit(body),
+                                         "level": "warning" if moved else "success"}}
 
 
 def already(store: str, named_by: str) -> dict:

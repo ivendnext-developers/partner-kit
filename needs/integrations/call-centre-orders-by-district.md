@@ -19,7 +19,9 @@ A Serving store field on the shop's own Territory tree (a district's store, or t
 - An agent presses the button: an order is not routed on its own when it is saved.
 - The territory is the customer's: an order for another district needs its territory changed before the press.
 - Drafts only, one order at a time; a submitted order is cancelled and amended to move it.
-- The service reads the whole order and writes it back: the app's user needs read and write on sales orders and read on territories, customers and warehouses.
+- The service reads the whole order and writes it back: the app's user needs read and write on every sales order and read on every customer, territory and warehouse.
+- A store's own tax or prices can change the total when the warehouse changes; the agent is told.
+- A store with a User Permission on its warehouse still sees orders not yet sent.
 - No notice to the store: its filtered list is its inbox.
 
 ## Tell the customer

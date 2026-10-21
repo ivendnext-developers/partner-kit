@@ -9,11 +9,11 @@ answers presses.
 
 For the one draft Sales Order in the press it reads the order with the app's own integration user's key (that user's
 rights, never the pressing user's), walks the order's territory up the tree to the first Serving store, and writes that
-warehouse on the order and on every line that ships from a store, then answers. The write carries the order's
-``modified`` as read, so the shop refuses it if the order changed meanwhile; the service then reads the order once more
-and answers from what it finds, never writing over someone's edit. A press repeated (a retry, a second click, two
-copies of the function) finds the order already routed and writes nothing: the routing is the same every time, so no
-press needs remembering.
+warehouse on the order and on every line, then answers. The write carries the order's ``modified`` as read, so the
+shop refuses it if the order changed meanwhile; the service then asks the agent to reload, and never writes over
+someone's edit. A press repeated (a retry, a second click, two copies of the function) finds the order already routed
+and writes nothing: the routing is the same every time, so no press needs remembering. The shop's save may change the
+total (a store's own item tax, a price limited to a warehouse): the answer then says so.
 
 Test-only routes, ON ONLY when the process starts with ``PP_TEST_MODES=1`` in its environment and the caller sends
 the ``X-PP-Admin`` token: ``GET /test/received`` returns the last presses as received. A partner's copy deletes them.
@@ -65,6 +65,7 @@ SUBMITTED = ("This order is already submitted, so it was not changed. To send it
              "then press Send to store on the draft.")
 GONE = "This order is no longer there. Reload the page."
 CHANGED = "This order changed while it was being sent. Reload it and press Send to store again."
+NOT_SAVED = "The shop would not save this order. Open it and press Save to see why, then press Send to store again."
 
 
 def no_store(territory: str) -> str:
@@ -105,7 +106,7 @@ class Tenant:
         self.base, self.timeout, self._auth = base.rstrip("/"), timeout, f"token {key}:{secret}"
 
     def _call(self, method: str, path: str, body: dict | None = None) -> dict:
-        url = f"{self.base}/api/resource/{urllib.parse.quote(path)}"
+        url = f"{self.base}/api/resource/" + "/".join(urllib.parse.quote(p, safe="") for p in path.split("/", 1))
         req = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None, method=method,
                                      headers={"Authorization": self._auth, "Accept": "application/json",
                                               "Content-Type": "application/json"})
@@ -166,7 +167,7 @@ class Service:
         self.admin = conf.get("PP_ADMIN_TOKEN") or ""
         self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
         self.received = []
-        self._lock = threading.Lock()
+        self._lock = threading.Lock()    # one shop: one press at a time
 
     def caller(self, headers) -> tuple[str, list[str], object | None]:
         """(the shop's name, the secrets its press may be signed with, its door: None until it handed over a user's key)."""
@@ -181,39 +182,40 @@ class Service:
         return site or "", secrets, door
 
     def route_order(self, door, name: str) -> dict:
-        """Read the order, find its store, write it once; on a stale write read it once more and answer from that."""
-        for attempt in (1, 2):
-            order = door.order(name)
-            if order.get("docstatus") != 0:
-                return _warning(SUBMITTED)
-            territory = order.get("territory")
-            if not territory:
-                return _warning(NO_TERRITORY)
+        """Read the order, find its store, check it, write once; a stale write is answered in words, never retried."""
+        order = door.order(name)
+        if order.get("docstatus") != 0:
+            return _warning(SUBMITTED)
+        territory = order.get("territory")
+        if not territory:
+            return _warning(NO_TERRITORY)
+        try:
             store, named_by = route.store_for(territory, door.territory)
-            if not store:
+        except TenantError as e:
+            if e.code == 404:                   # a territory up the tree is gone: no store can be named
                 return _warning(no_store(territory))
-            if route.routed(order, store):
-                return route.already(store, named_by)
-            try:            # the shop takes a group or another company's warehouse on a DRAFT and refuses it only at submit
-                wh = door.warehouse(store)
-            except TenantError as e:
-                if e.code == 404:
-                    return _warning(not_taken(store))
-                raise
-            if not route.can_ship(wh, order):
+            raise
+        if not store:
+            return _warning(no_store(territory))
+        if route.routed(order, store):
+            return route.already(store, named_by)
+        try:            # the shop takes a group or another company's warehouse on a DRAFT and refuses it only at submit
+            wh = door.warehouse(store)
+        except TenantError as e:
+            if e.code == 404:
                 return _warning(not_taken(store))
-            try:
-                door.write(name, route.plan(order, store))
-            except TenantError as e:
-                if e.kind == STALE and attempt == 1:    # someone saved it meanwhile: never write over their edit
-                    continue
-                if e.kind == STALE:
-                    return _warning(CHANGED)
-                if e.code == 417:                       # the shop refused the warehouse (another company's, a group)
-                    return _warning(not_taken(store))
-                raise
-            return route.sent(order, store, named_by)
-        return _warning(CHANGED)                        # not reached: the loop answers on its second pass
+            raise
+        if not route.can_ship(wh, order):
+            return _warning(not_taken(store))
+        try:
+            saved = door.write(name, route.plan(order, store))
+        except TenantError as e:
+            if e.kind == STALE:                 # someone saved it meanwhile: never write over their edit, nor retry
+                return _warning(CHANGED)
+            if e.code == 417:                   # the order's own fault (a field the shop now requires): never its text
+                return _warning(NOT_SAVED)
+            raise
+        return route.sent(order, store, named_by, saved)
 
     def press(self, headers, raw: bytes) -> tuple[int, dict]:
         try:
