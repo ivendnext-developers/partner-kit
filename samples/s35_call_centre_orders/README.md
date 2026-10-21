@@ -18,7 +18,7 @@ Pressed again, the button changes nothing and says where the order already is.
 ## What the shop does
 
 1. **Install the app** (the shop's administrator). It comes in switched off: the service has no consent and is off, and the button is off. The install adds the **Serving store** field to Territory. It makes no role and no record type of its own.
-2. **Give the app a user** (the shop's administrator, as in the [integration user recipe](../../recipes/integration_user.md)): tick **Is Desk User**, set no password, give it **no User Permissions**, and generate its API key. In **Role Permissions**, give a role of the shop's own **read and write on Sales Order** and **read on Territory and Customer** (the order's own save reads its customer with a rights check), and give the user that role alone. *Sales User* also works, but it reaches further than the app uses: it creates and submits orders. A service for one shop takes the key in its settings. A service for many shops receives it from the shop: choose the user as the *Application User* of the feed **PP CCO Routing feed**, then press **Connect again** on the app (*Many shops, hosted* below).
+2. **Give the app a user** (the shop's administrator, as in the [integration user recipe](../../recipes/integration_user.md)): tick **Is Desk User**, set no password, give it **no User Permissions**, and generate its API key. In **Role Permissions**, give a role of the shop's own **read and write on Sales Order** and **read on Territory, Customer and Warehouse** (the order's own save reads its customer with a rights check; the service checks the store's warehouse before it writes), and give the user that role alone. *Sales User* also works, but it reaches further than the app uses: it creates and submits orders. A service for one shop takes the key in its settings. A service for many shops receives it from the shop: choose the user as the *Application User* of the feed **PP CCO Routing feed**, then press **Connect again** on the app (*Many shops, hosted* below).
 3. **Switch the service on** (the System Manager). Open **Retail Extension Subscription**, the record *Send to store service*, read what it is sent, tick the consent and switch it on.
 4. **Switch the button on** (the System Manager). Open **Retail Desk Action**, the record *Send to store*, and switch it on.
 5. **Set a Serving store on each district** (a Sales Master Manager, in the Territory tree): the store's warehouse, of the same company as the orders, and never a group warehouse.
@@ -89,7 +89,7 @@ A manifest cannot write the order itself: `fetch_from` goes only on a field the 
 ### Bounds, stated
 
 - **One order a press:** the button is on the form only.
-- **The store's company:** a Serving store of another company, or a group warehouse, is refused by the shop; the service names the store and asks the agent to check it.
+- **The store's company:** a Serving store of another company, a group warehouse or a disabled one is refused by the service before it writes (the shop would save it on a draft and refuse it only at submit); the agent is told to ask the manager to check it.
 - **No notice to the store.** The store's filtered list is its inbox; a manifest notification on submit, mailed to the store's warehouse e-mail, is the next step.
 - **The tree walk stops** after 12 territories or at a loop, and says no store serves the district.
 - **What was proven where:** see the recipe's *What was proven where*.
