@@ -105,8 +105,9 @@ def grouped(samples: list[dict], here: str, repo: str, doors: dict, door_pages: 
     return f'<nav aria-label="Samples by door"><ul class="plain anchors">{nav}</ul></nav>{body}'
 
 
-def reference_app(spec: str, org_url: str, doors: dict, errors: list, src: str) -> str:
-    """A hand-written reference-app card: `name | one line | doors | status | repository`. Its repository holds BRIEF.md."""
+def reference_app(spec: str, org_url: str, doors: dict, errors: list, src: str, note: str) -> str:
+    """A hand-written reference-app card: `name | one line | doors | status | repository`. Its repository holds BRIEF.md and
+    is private for now, so `note` (build.py's NOT_OPEN_YET) sits under its links."""
     parts = [x.strip() for x in spec.split("|")]
     names = {n.lower() for k, n in doors.items() if k not in NO_DOOR}
     if len(parts) != 5 or parts[3] not in STATUSES or not re.fullmatch(r"[a-z0-9][a-z0-9-]*", parts[4]) \
@@ -118,4 +119,4 @@ def reference_app(spec: str, org_url: str, doors: dict, errors: list, src: str) 
     base = f"{org_url}/{repo}"
     return (f'<li class="card"><h3>{html.escape(name)}</h3><p>{html.escape(line)}</p><p class="door">Doors: {html.escape(door_text)}</p>'
             f'<p class="status">{html.escape(status)}</p><p class="links"><a href="{base}">The repository</a> · '
-            f'<a href="{base}/blob/main/BRIEF.md">BRIEF.md</a></p></li>')
+            f'<a href="{base}/blob/main/BRIEF.md">BRIEF.md</a></p><p class="note">{html.escape(note[:1].upper() + note[1:])}.</p></li>')

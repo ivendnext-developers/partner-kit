@@ -8,7 +8,7 @@ Start here when you want working code to begin from. A sample shows one way into
 |---|---|---|
 | Home | a folder in the kit, `samples/` | its own repository in the `ivendnext-developers` organisation |
 | Size | shows one door (sometimes two), once, with its tests | a complete product that combines several doors, with a brief, a manifest, a service, a stand-in for the far side, tests and docs |
-| You use it to | copy a piece into your own app | start a product: fork the whole repository |
+| You use it to | copy a piece into your own app | start a product: fork the whole repository, once it is open |
 | It counts as one when | its change is merged into the kit | its repository exists; it is called *Ready to copy* once it is delivered through the kit only |
 
 ## Reference apps

@@ -63,9 +63,13 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 // A Not yet card waiting on an extension point, built here: since POS train T12 no card in the kit waits on one. It is a
 // Not yet card of the kit's (waiting on our product work) given an extension point's request and its form.
 const FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=2_point_request.yml";
+const forms = catalogue.flatMap((c) => c.request_forms);
+const NOTE = forms.length ? forms[0].note : "";                // build.py's MEMBERS_ONLY, as every request form carries it
 const [productWork] = pick(["till-step-order"]);
 const waiting = { ...productWork, id: "a-planted-need-waiting-on-an-extension-point", blocked_by: "extension-point",
-  request: ["P-PLANTED"], request_forms: [{ handle: "P-PLANTED", url: FORM + "&title=Extension-point%20request%3A%20P-PLANTED" }] };
+  request: ["P-PLANTED"], request_forms: [{ handle: "P-PLANTED", url: FORM + "&title=Extension-point%20request%3A%20P-PLANTED", note: NOTE }] };
+check("every request form in the catalogue says it is members-only, with GitHub's \"page not found\"",
+      forms.length > 0 && NOTE.includes("page not found") && forms.every((f) => f.note === NOTE), JSON.stringify(forms[0]));
 
 // 3. a set with a Not yet card and a Not possible one: they come last; the request is filed once, the Instead line kept
 {
@@ -75,6 +79,7 @@ const waiting = { ...productWork, id: "a-planted-need-waiting-on-an-extension-po
   const rq = plan.requests(cards);
   check("not yet: one request to file, P-PLANTED, with its form",
         rq.forms.length === 1 && rq.forms[0].handle === "P-PLANTED" && rq.forms[0].url.includes("template=2_point_request.yml"), JSON.stringify(rq.forms));
+  check("not yet: the request to file carries the members-only note beside its link", rq.forms[0].note === NOTE, JSON.stringify(rq.forms[0]));
   check("not possible: its Instead line is in the requests", rq.instead.length === 1 && rq.instead[0].line.startsWith("Instead:"));
 }
 

@@ -83,7 +83,7 @@
     var forms = [], at = {}, askUs = [], instead = [];
     order(cards).forEach(function (c) {
       (c.request_forms || []).forEach(function (f) {
-        if (!(f.handle in at)) { at[f.handle] = forms.length; forms.push({ handle: f.handle, url: f.url, needs: [] }); }
+        if (!(f.handle in at)) { at[f.handle] = forms.length; forms.push({ handle: f.handle, url: f.url, note: f.note, needs: [] }); }
         forms[at[f.handle]].needs.push(c);
       });
       c.limits.forEach(function (l) {
@@ -260,6 +260,7 @@
         var li = el("li"), a = el("a", null, "Ask for the extension point " + f.handle);
         a.href = f.url;
         li.appendChild(a);
+        if (f.note) li.appendChild(doc.createTextNode(" (" + f.note + ")"));   // build.py's MEMBERS_ONLY, carried by catalogue.json
         li.appendChild(forList(f.needs));
         rl.appendChild(li);
       });
@@ -267,7 +268,7 @@
       rq.instead.forEach(function (x) { var li = el("li", null, "Not possible. " + x.line); li.appendChild(forList([x.card])); rl.appendChild(li); });
       if (rl.childNodes.length) {
         out.appendChild(rl);
-        if (rq.forms.length) out.appendChild(el("p", "plan-meta", "The request form is for onboarded members; it opens on GitHub with the extension point named in its title."));
+        if (rq.forms.length) out.appendChild(el("p", "plan-meta", "Each request form opens on GitHub with the extension point named in its title."));
       }
 
       // (f) the blueprint, to copy or print
