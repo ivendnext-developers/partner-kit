@@ -30,19 +30,19 @@ defect in one is a defect in its source: report it through the feedback forms ([
 
 ## The contracts: copies of the product's published files
 
-The folder [`contracts/`](contracts/README.md) holds 206 files copied from the iVendNext POS app's repository
+The folder [`contracts/`](contracts/README.md) holds 228 files copied from the iVendNext POS app's repository
 (`ivendnext/iVendNext_PWA`) at one commit, so a check runs with this repository alone. POS app commit
-`8c955ffd9fcf9ca0f35fc9610a06d526bcfdbf69` (the merge of the POS app's train T10 into `development`, 2026-10-15; against the earlier pin (train T9's merge) the copies take what that train changed in the files we copy: the label layout's accepted sample, which no longer names an internal bug id; a new accepted sample of a manifest with help addresses; the check page's line on a unit's scanned code; the remote till key page's line on a key an app's package brings; and the checker, which now refuses an unsafe help address). The checker copy `tools/manifest/validate.py` is taken at the same commit. Of the 205 files copied at the earlier pin, five changed and one is new (176 samples now).
+`4c3f11b550f19a30b00f66f2c18a7b56c96e4aba` (the merge of the POS app's train T11 into `development`, 2026-10-16; against the earlier pin (train T10's merge) the copies take what that train added: the new *document check* extension point (its page, its schema and eleven samples); two new save-rule kinds, a value unique across records and submit or cancel kept for a role (the schema, the page and four samples); a capture when an existing customer is put on a sale (the schema, the page and five samples); and the POS day and terminal in the check before payment (the schema, the page and eight samples). The checker copy `tools/manifest/validate.py` is taken at the same commit; it now takes a document check's subscription and the two new save-rule keys. Of the 206 files copied at the earlier pin, fourteen changed and twenty-two are new (196 samples now).
 Our kit check
-compares every file below with its source at that commit on each change; the only edit is to the links inside the fourteen
+compares every file below with its source at that commit on each change; the only edit is to the links inside the fifteen
 pages, which point at the files here. A defect in one is a defect there: report it through the feedback forms ([feedback/README.md](feedback/README.md)).
 
 | Kit path | Source path in the POS app's repository | Files | Header |
 |---|---|---|---|
-| `contracts/pages/<point>.md` | `docs/extending/<point>.md` | 14 | yes (first line) |
+| `contracts/pages/<point>.md` | `docs/extending/<point>.md` | 15 | yes (first line) |
 | `contracts/extension_contract_check.py` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contract_check.py` | 1 | yes (first line) |
-| `contracts/extension_contracts/<point>.v1.schema.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/<point>.v1.schema.json` | 14 | no header (JSON) |
-| `contracts/extension_contracts/samples/<point>/**/*.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/samples/<point>/**/*.json` | 176 | no header (JSON) |
+| `contracts/extension_contracts/<point>.v1.schema.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/<point>.v1.schema.json` | 15 | no header (JSON) |
+| `contracts/extension_contracts/samples/<point>/**/*.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/samples/<point>/**/*.json` | 196 | no header (JSON) |
 | `contracts/gs1_codes.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/gs1_codes.json` | 1 | no header (JSON) |
 
 `contracts/README.md` is ours, not a copy.

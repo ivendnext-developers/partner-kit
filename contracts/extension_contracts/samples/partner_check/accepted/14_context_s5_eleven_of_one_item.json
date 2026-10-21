@@ -41,6 +41,8 @@
     "offered_tenders": [
       "Cash",
       "Credit Card"
-    ]
+    ],
+    "pos_opening": "POS-OPE-2026-00071",
+    "pos_terminal": "Sandton Counter 1"
   }
 }

@@ -1,0 +1,19 @@
+{
+ "about": "S34's stand-in ERP. Suppliers on hold, each company's monthly purchasing budget in minor units by currency ('*' for every company not named), what each has ordered this month, and how the ERP numbers an order. Replace it with your ERP.",
+ "held_suppliers": {
+  "Acme Supplies": "invoice 4471 is unpaid."
+ },
+ "monthly_budgets": {
+  "*": {
+   "USD": 1000000,
+   "AED": 3500000
+  }
+ },
+ "ordered_this_month": {
+  "Demo Retail": {
+   "USD": 250000
+  }
+ },
+ "number_prefix": "ERP-PO-",
+ "first_number": 9912
+}

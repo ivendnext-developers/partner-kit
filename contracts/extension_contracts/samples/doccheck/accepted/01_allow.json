@@ -1,0 +1,18 @@
+{
+  "extension_point": "doccheck",
+  "contract": "answer",
+  "about": "Nothing to say: the submit goes on.",
+  "given": {
+    "record_type": "Material Request",
+    "settings": {
+      "record_type": "Material Request",
+      "send_fields": "name",
+      "fill_fields": [
+        "schedule_date"
+      ]
+    }
+  },
+  "payload": {
+    "verdict": "allow"
+  }
+}

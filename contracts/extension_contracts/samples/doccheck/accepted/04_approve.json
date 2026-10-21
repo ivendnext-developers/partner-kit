@@ -1,0 +1,20 @@
+{
+  "extension_point": "doccheck",
+  "contract": "answer",
+  "about": "A stock manager confirms.",
+  "given": {
+    "record_type": "Material Request",
+    "settings": {
+      "record_type": "Material Request",
+      "send_fields": "name",
+      "fill_fields": [
+        "schedule_date"
+      ]
+    }
+  },
+  "payload": {
+    "verdict": "approve",
+    "role": "Stock Manager",
+    "reason": "Over 10 units."
+  }
+}

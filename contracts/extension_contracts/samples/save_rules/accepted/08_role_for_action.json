@@ -1,0 +1,20 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "Only a Stock Manager submits a purchase request.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Stock Manager submits purchase requests",
+    "record_type": "Material Request",
+    "kind": "role_for_action",
+    "action": "submit",
+    "bypass_roles": "Stock Manager",
+    "conditions": [
+      {
+        "field": "material_request_type",
+        "operator": "=",
+        "value": "Purchase"
+      }
+    ]
+  }
+}

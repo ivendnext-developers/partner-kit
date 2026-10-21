@@ -1,0 +1,8 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "settings",
+  "about": "Ask when a cashier puts an existing customer on a sale.",
+  "payload": {
+    "event": "customer_select"
+  }
+}

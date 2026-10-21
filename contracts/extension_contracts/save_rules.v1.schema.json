@@ -42,7 +42,9 @@
             "unique_in_rows",
             "threshold",
             "required_when",
-            "locked_in_state"
+            "locked_in_state",
+            "unique_across",
+            "role_for_action"
           ]
         },
         "field": {
@@ -137,7 +139,7 @@
           "maxLength": 40
         },
         "bypass_roles": {
-          "description": "Roles that may pass a threshold, one per line.",
+          "description": "Roles that may pass a threshold, or the roles that may take a role_for_action rule's action; one per line.",
           "type": "string"
         },
         "conditions": {
@@ -153,6 +155,17 @@
         },
         "locked_fields": {
           "description": "Fields of the record, one per line.",
+          "type": "string"
+        },
+        "action": {
+          "description": "role_for_action: the action only its roles may take.",
+          "enum": [
+            "submit",
+            "cancel"
+          ]
+        },
+        "scope_fields": {
+          "description": "unique_across: fields of the record, one per line, at most three; the value may repeat where they differ.",
           "type": "string"
         }
       },
@@ -295,6 +308,40 @@
           "required": [
             "states",
             "locked_fields"
+          ],
+          "not": {
+            "required": [
+              "child_table"
+            ]
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "unique_across"
+            }
+          },
+          "required": [
+            "field"
+          ],
+          "not": {
+            "required": [
+              "child_table"
+            ]
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "role_for_action"
+            },
+            "bypass_roles": {
+              "minLength": 1
+            }
+          },
+          "required": [
+            "action",
+            "bypass_roles"
           ],
           "not": {
             "required": [

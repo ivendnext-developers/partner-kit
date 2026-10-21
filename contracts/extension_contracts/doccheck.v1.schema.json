@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/doccheck.v1.schema.json",
+  "title": "Document check, version 1",
+  "description": "Extension point doccheck: what iVendNext sends a partner's HTTPS service before a back-office document a shop named is submitted, or saved as a draft where the subscription asks (request), what the service answers (answer, judged whole by business_logic/partner_doccheck.py validate_answer: one bad key or value refuses the whole answer, and the declared down answer applies), and the settings a System Manager saves on the subscription (settings). Never a till sale, its day's opening, the day close or its merge. Page: docs/extending/doccheck.md.",
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": [
+        "point",
+        "context"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "point": {
+          "const": "doccheck/1"
+        },
+        "context": {
+          "$ref": "#/$defs/context"
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": [
+        "v",
+        "event",
+        "doctype",
+        "name",
+        "company",
+        "user",
+        "lang",
+        "fields"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "event": {
+          "description": "submit: the document is being submitted. validate: a draft is being saved (only where the settings ask).",
+          "enum": [
+            "submit",
+            "validate"
+          ]
+        },
+        "doctype": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "company": {
+          "description": "The record's company, or null on a record type that has none.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "user": {
+          "description": "The login of the user submitting (usually an email address).",
+          "type": "string",
+          "minLength": 1
+        },
+        "lang": {
+          "type": "string"
+        },
+        "fields": {
+          "description": "Exactly the settings' send_fields: money as {minor, currency, currency_exponent}, a quantity in thousandths, a table as a list of rows. null when a field could no longer be sent (the service is then not asked).",
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "answer": {
+      "description": "HTTP 2xx, a JSON object of at most 64 KB, one of five.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "verdict"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "const": "allow"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "verdict",
+            "reason"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "const": "refuse"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "pattern": "^[^<>]*\\S[^<>]*$",
+              "description": "Shown to the user as the reason the document is not submitted."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "verdict",
+            "question"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "const": "ask"
+            },
+            "question": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "pattern": "^[^<>]*\\S[^<>]*$",
+              "description": "Shown to the user; a yes submits. An import or API call with no yes is refused with it."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "verdict",
+            "role"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "const": "approve"
+            },
+            "role": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "pattern": "^[^<>]*\\S[^<>]*$",
+              "description": "A role on this site (never Guest, All or Administrator). A user holding it confirms; anyone else is refused."
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "pattern": "^[^<>]*\\S[^<>]*$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "verdict",
+            "fields"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "const": "fill"
+            },
+            "fields": {
+              "description": "1 to 10 of the settings' fill_fields, each a value of its field's type.",
+              "type": "object",
+              "minProperties": 1
+            }
+          }
+        }
+      ]
+    },
+    "settings": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "send_fields"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "record_type": {
+          "description": "One submittable record type: not a table, a single or a virtual one, and not POS Invoice, POS Opening Entry, POS Closing Entry or POS Invoice Merge Log.",
+          "type": "string",
+          "minLength": 1
+        },
+        "send_fields": {
+          "description": "The Desk action's grammar: name, customer, items(item_code, qty) — at most 40 fields and 5 tables.",
+          "type": "string",
+          "minLength": 1
+        },
+        "on_validate": {
+          "description": "true: a draft's save is checked too. Not on Sales Order, Sales Invoice, Delivery Note, Payment Entry or Journal Entry (the till's booking inserts them).",
+          "type": "boolean"
+        },
+        "fill_fields": {
+          "description": "Fields an answer may fill: only fields the shop added itself (a custom field), each one a user fills in, never Currency or a name a total is computed from.",
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

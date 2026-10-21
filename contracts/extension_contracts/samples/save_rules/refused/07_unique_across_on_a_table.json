@@ -1,0 +1,14 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A value unique across records names a field of the record itself, not a table.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Unique item across orders",
+    "record_type": "Material Request",
+    "child_table": "items",
+    "kind": "unique_across",
+    "field": "item_code"
+  },
+  "expect_refusal": "A unique_across rule checks the record itself, not a table."
+}

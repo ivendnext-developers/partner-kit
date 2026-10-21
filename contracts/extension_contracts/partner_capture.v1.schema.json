@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ivendnext.com/extending/contracts/partner_capture.v1.schema.json",
   "title": "Partner capture, version 1",
-  "description": "Extension point capture: what iVendNext POS sends a partner's HTTPS service when an item the service's filter names is scanned (scan_request), when a new customer is added (customer_request) and to check a code the customer gives (verify_request), and what the service answers. Answers are judged by business_logic/partner_capture.py validate_answer and validate_verify: one bad key or value refuses the whole answer, and the declared down answer applies. Page: docs/extending/partner_capture.md.",
+  "description": "Extension point capture: what iVendNext POS sends a partner's HTTPS service when an item the service's filter names is scanned (scan_request), when a new customer is added (customer_request), when a cashier puts an existing customer on a sale (select_request) and to check a code the customer gives (verify_request), and what the service answers. Answers are judged by business_logic/partner_capture.py validate_answer and validate_verify: one bad key or value refuses the whole answer, and the declared down answer applies. Page: docs/extending/partner_capture.md.",
   "$defs": {
     "settings": {
       "description": "The subscription's settings field (a JSON object, stored as text on the Retail Extension Subscription of extension point capture): the event, and for a scan its filter. One service answers each event for a POS Profile.",
@@ -60,6 +60,18 @@
           "properties": {
             "event": {
               "const": "customer_add"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "event"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "event": {
+              "const": "customer_select"
             }
           }
         }
@@ -270,6 +282,111 @@
         }
       }
     },
+    "select_request": {
+      "type": "object",
+      "required": [
+        "point",
+        "context"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "point": {
+          "const": "capture/1"
+        },
+        "context": {
+          "$ref": "#/$defs/select_context"
+        }
+      }
+    },
+    "select_context": {
+      "description": "An existing customer put on a sale (not the store's walk-in, and not a customer this cashier just created). Keep challenge_id if you answer challenge: verify sends it back with the code. The sale cannot be paid until your answer lets the customer on.",
+      "type": "object",
+      "required": [
+        "v",
+        "point",
+        "event",
+        "challenge_id",
+        "sale_ref",
+        "store",
+        "pos_profile",
+        "operator",
+        "lang",
+        "customer"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "point": {
+          "const": "capture"
+        },
+        "event": {
+          "const": "customer_select"
+        },
+        "challenge_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "sale_ref": {
+          "description": "The till's own id for the sale; empty before its first line.",
+          "type": "string",
+          "maxLength": 80
+        },
+        "store": {
+          "type": "string"
+        },
+        "pos_profile": {
+          "type": "string"
+        },
+        "operator": {
+          "description": "Personal data.",
+          "type": "string"
+        },
+        "lang": {
+          "type": "string"
+        },
+        "customer": {
+          "type": "object",
+          "required": [
+            "customer",
+            "customer_name",
+            "phone",
+            "email",
+            "customer_group"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "customer": {
+              "description": "The customer's id. Personal data.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140
+            },
+            "customer_name": {
+              "description": "Personal data.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140
+            },
+            "phone": {
+              "description": "Personal data.",
+              "type": "string",
+              "maxLength": 40
+            },
+            "email": {
+              "description": "Personal data.",
+              "type": "string",
+              "maxLength": 140
+            },
+            "customer_group": {
+              "type": "string",
+              "maxLength": 140
+            }
+          }
+        }
+      }
+    },
     "verify_request": {
       "type": "object",
       "required": [
@@ -437,6 +554,10 @@
           }
         }
       ]
+    },
+    "select_answer": {
+      "description": "The same answers as customer_answer: allow lets the customer on the sale, refuse takes them off it (the sale goes on without a customer), challenge asks for a code first.",
+      "$ref": "#/$defs/customer_answer"
     },
     "verify_answer": {
       "oneOf": [

@@ -2,10 +2,11 @@
 
 ![A warranty reference captured at the scan, and a one-time code before a new customer](../samples/s20_capture/screenshots/s20_flow.gif)
 
-A capture asks your HTTPS service at a moment the cashier did not choose, at one of two events:
+A capture asks your HTTPS service at a moment the cashier did not choose, at one of three events:
 
 - **On scan** of an item your filter names (its item group, or an item field that is set), **before** its line goes on the sale: you can let it on, put a value on the line (a warranty reference, a registration number), ask a yes/no question, or refuse it.
 - **On customer add**, **before** a new customer is created: you can allow it, refuse it, or **challenge** — you send the customer a one-time code and the till shows a code field. The customer is created only after you say the code is right.
+- **On customer select** (POS app from train T11, 2026-10-16), when the cashier puts an **existing** customer on the sale: allow, refuse (the customer is taken off the sale), or challenge with a one-time code, as on customer add (step 5b).
 
 This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, building one.
 
@@ -51,6 +52,8 @@ This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, buildi
    ```
 
    Keep the code against `context.challenge_id` and send it to the customer through your own gateway (S20's sample writes it to a file; your service calls its SMS or WhatsApp provider). The till sends what the customer reads out as `{"event": "verify", "challenge_id": …, "code": …}`; you answer `{"verdict": "ok"}` or `{"verdict": "refuse", "reason": "That code is not right."}`. **The product counts the tries**: three wrong codes end the check, and a challenge lives ten minutes. Keep your codes for at most ten minutes too.
+
+5b. **On customer select: the same three answers, and the server holds the payment.** Declare a third service with `"settings": {"event": "customer_select"}` (3 seconds unless raised, 10 at most). You are sent the cashier, the store and POS Profile, and the customer's id, name, phone, email and customer group; no price, total or tender. `{"verdict": "refuse", "reason": "This customer buys at the Sandton store only."}` shows your sentence and takes the customer off the sale, which goes on without one or with another. While a select service is switched on, **every door that charges or books the sale refuses until the server has recorded your *allow*, or a checked code, for that cashier, that customer, that POS Profile and your service**; the booking spends it, so one check pays one sale. You are never asked about the store's walk-in customer, nor about a customer this cashier added in the last ten minutes while a customer-add service is on. A payment pressed before your answer arrives is refused with *"This customer has not been checked. Pick them again, or sell without a customer."* Offline you are not asked: the declared down answer applies, and a sale paid offline with a customer you were not asked about is flagged when it syncs. One cashier sends you at most 60 select rounds in ten minutes. The product's [capture page](../contracts/pages/partner_capture.md) has the request, the answers and every sentence.
 
 6. **What the cashier sees.**
 

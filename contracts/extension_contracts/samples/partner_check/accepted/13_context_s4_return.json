@@ -42,6 +42,8 @@
       "Cash",
       "Online Refund"
     ],
+    "pos_opening": "POS-OPE-2026-00072",
+    "pos_terminal": "Sandton Counter 2",
     "return_of": {
       "invoice": "ACC-PSINV-2026-00412",
       "channel": "pos",

@@ -21,8 +21,8 @@ import validate  # noqa: E402
 PAGES = HERE.parents[2] / "contracts" / "pages"
 
 # The longest time to answer, in seconds, as each page says it (the figures are read from the pages' own sentences below).
-LONGEST = {"desk_action": 10, "page": 10, "check": 10, "capture": 10}
-CAPTURE = {"scan": 3, "customer_add": 10}
+LONGEST = {"desk_action": 10, "page": 10, "check": 10, "capture": 10, "doccheck": 10}
+CAPTURE = {"scan": 3, "customer_add": 10, "customer_select": 10}
 
 
 def page(name):
@@ -41,6 +41,8 @@ class TimeLimits(unittest.TestCase):
         capture = page("partner_capture")
         self.assertIn("On scan (1.5 seconds unless raised, 3 at most)", capture)
         self.assertIn("On customer add (3 seconds unless raised, 10 at most)", capture)
+        self.assertIn("On customer select (3 seconds unless raised, 10 at most)", capture)
+        self.assertIn("the time to answer (3 seconds unless raised, at most 10)", page("doccheck"))
 
 
 if __name__ == "__main__":

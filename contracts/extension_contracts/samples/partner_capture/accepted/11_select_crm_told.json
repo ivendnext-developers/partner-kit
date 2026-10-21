@@ -1,0 +1,8 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "select_answer",
+  "about": "A CRM told who is at the counter (AF11): nothing for the cashier to do.",
+  "payload": {
+    "verdict": "allow"
+  }
+}

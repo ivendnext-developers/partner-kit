@@ -8,6 +8,7 @@ can check an answer against these before it reaches a shop. They are what the [s
 | Point | Page | Schema |
 |---|---|---|
 | Desk action | [pages/desk_action.md](pages/desk_action.md) | [desk_action.v1.schema.json](extension_contracts/desk_action.v1.schema.json) |
+| Document check (`doccheck/1`: your answer before a back-office document is submitted) | [pages/doccheck.md](pages/doccheck.md) | [doccheck.v1.schema.json](extension_contracts/doccheck.v1.schema.json) |
 | Event feed | [pages/event_feed.md](pages/event_feed.md) | [event_feed.v1.schema.json](extension_contracts/event_feed.v1.schema.json) |
 | Field rules (fields) | [pages/fields.md](pages/fields.md) | [fields.v1.schema.json](extension_contracts/fields.v1.schema.json) |
 | Fiscal reader | [pages/fiscal_reader.md](pages/fiscal_reader.md) | [fiscal_reader.v1.schema.json](extension_contracts/fiscal_reader.v1.schema.json) |
