@@ -90,6 +90,48 @@ class OneShop(unittest.TestCase):
         self.assertEqual(self.scan(scan()), (200, {"verdict": "confirm",
                                                    "question": "PEN-01: Check this item before it goes on the sale. Add it?"}))
 
+    def shelf_service(self, slow=0.0, down=False):
+        """A shop with the shelf-life warning on: two batches of MILK-1 in Main - S, the reads counted. ``slow`` moves the
+        clock that far forward during the batch read (a shop slow to answer); ``down`` makes the read fail."""
+        self.reader.by_url = {"https://shop.example": dict(SETTINGS, warn_shorter_shelf_life=1)}
+        self.reads = []
+
+        def batches(url, key, item, store, timeout):
+            self.reads.append(("batches", item, store, round(timeout, 3)))
+            self.clock.t += slow
+            if down:
+                raise app.ShopUnreadable("down")
+            return [("B-LATE", 4.0), ("B-SOON", 2.0), ("B-EMPTY", 0.0)]
+
+        def expiry(url, key, batch, timeout):
+            self.reads.append(("expiry", batch))
+            return {"B-LATE": "2026-12-01", "B-SOON": "2026-11-02"}[batch]
+
+        self.svc = app.Service(ONE, reader=self.reader, clock=self.clock, batches=batches, expiry=expiry)
+
+    def test_the_shelf_warning_is_a_notice_and_the_expiry_dates_are_kept(self):
+        self.shelf_service()
+        ctx = scan("MILK-1")
+        self.assertEqual(self.scan(ctx), (200, {"verdict": "notice",
+                                               "message": "MILK-1: sell batch B-SOON first. It expires 2026-11-02."}))
+        self.assertEqual(self.reads, [("batches", "MILK-1", "Main - S", 1.0), ("expiry", "B-LATE"), ("expiry", "B-SOON")])
+        self.scan(ctx)                                  # a warm scan reads the batches again, never an expiry date
+        self.assertEqual(self.reads[3:], [("batches", "MILK-1", "Main - S", 1.0)])
+
+    def test_a_shelf_answer_that_would_come_after_one_second_is_a_plain_allow(self):
+        self.shelf_service(slow=1.2)
+        self.assertEqual(self.scan(scan("MILK-1")), (200, {"verdict": "allow"}))
+
+    def test_a_shop_that_cannot_be_read_lets_the_item_on_with_nothing_shown(self):
+        self.shelf_service(down=True)
+        self.assertEqual(self.scan(scan("MILK-1")), (200, {"verdict": "allow"}))
+
+    def test_with_the_warning_off_the_scan_still_asks(self):
+        self.shelf_service()
+        self.reader.by_url = {"https://shop.example": SETTINGS}
+        self.assertEqual(self.scan(scan())[1]["verdict"], "confirm")
+        self.assertEqual(self.reads, [])
+
     def test_each_route_takes_only_its_own_secret(self):
         self.assertEqual(self.check(context(), secret=SCAN)[0], 401)
         self.assertEqual(self.scan(scan(), secret=CHECK)[0], 401)

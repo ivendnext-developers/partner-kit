@@ -1,0 +1,22 @@
+{
+ "manifest_version": 1,
+ "app": "pp_exp",
+ "prefix": "PP EXP",
+ "title": "A reminder before a batch expires",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "One notification on the shop's Batch record: 30 days before a batch's expiry date, an e-mail to every holder of the Stock Manager role, in every store, showing the batch's own fields. The shop's daily scheduler sends it; no save of a batch runs it. One message per batch on the day, with no cap and no filter by store. Needs POS build 2.0.0.654 or later; a separate package from S27's alerts, so that S27 still installs on an older shop.",
+ "notifications": [
+  {
+   "name": "PP EXP Batch Expiry",
+   "document_type": "Batch",
+   "event": "Days Before",
+   "days_in_advance": 30,
+   "date_changed": "expiry_date",
+   "channel": "Email",
+   "subject": "Batch {{ doc.name }} expires on {{ doc.expiry_date }}",
+   "message": "Batch {{ doc.name }} of {{ doc.item }} expires on {{ doc.expiry_date }}. Check the shelf and the batch's quantity.",
+   "recipients": [{"receiver_by_role": "Stock Manager"}]
+  }
+ ]
+}

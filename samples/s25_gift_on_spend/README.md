@@ -31,6 +31,8 @@ A customer's sale reaches the shop's threshold. Within the next half a minute th
 
 ## What the shop does to set it up
 
+⚠ **The shop's site needs iVendNext POS build 2.0.0.654 or later** (the void reads the card's status by a name that build added; see *Technical notes*).
+
 1. Install `manifest.json` (the shop's administrator, on the install screen; on your sandbox, `tools/deploy/deploy.py`). It adds `PP GCS Settings`, `PP GCS Card`, the *Gift cards* links under Customer and POS Invoice, the feed registration *PP GCS Sales* (switched off) and the role **PP GCS Integration** (empty).
 2. In **Role Permissions**, give PP GCS Integration **read** on POS Invoice, Customer and Item; **read and create** on Gift Card; **read, create and submit** on Gift Card Balance. A manifest can grant rights only on its own record types ([the integration user recipe](../../recipes/integration_user.md)). ⚠ With these rights the key can make a gift card and set the balance of **any** gift card in the shop, not only this app's: give the role to this app's user alone.
 3. Make the app's integration user with that role and generate its API key.
@@ -68,7 +70,8 @@ docker build --platform linux/arm64 -f samples/s25_gift_on_spend/Dockerfile -t g
 - **Never twice.** Each Card record is named by the sale and the card's position (`S1:1`): the shop refuses a second, so a replayed event or a crash never earns a second card. The record is written first, holding the card's number, value, item and hold; the gift card is made from it.
 - **The card number** is 16 digits from `secrets` (a gift card number is a bearer credential), never one a gift card in the shop already holds.
 - **Net spend, read now.** Every decision (issue, release, return) reads the sale and every return booked against it at that moment, never the order the events came in: a sale handled after its own return (a failed event retried) earns only what its net earns, and a release just before which the sale was cancelled voids instead.
-- **Used at the till** is the till's own test (`ivendnext_pos.api.pos_invoice.get_gift_card_status`, *redeemed*: a payment row names the card); a void sets to 0 only a card at its full value that was never used.
+- **POS build 2.0.0.654 or later** (since the kit's change of 2026-10-21): the void reads the card's status by its iVendNext name, which older builds do not have; on an older shop, set `CARD_STATUS` back to the engine's path below.
+- **Used at the till** is the till's own test (`/api/method/ivendnext_mpos.api.v1.get_gift_card_status`, *redeemed*: a payment row names the card; the name exists from POS build 2.0.0.654, and before it the call is the engine's own path, `ivendnext_pos.api.pos_invoice.get_gift_card_status`); a void sets to 0 only a card at its full value that was never used.
 - **Many shops and /health:** a pass counts only when the shops store answered and no shop was still stuck in an earlier pass; a shop is stuck when its pass has taken up no event and no release for 15 minutes (a slow shop catching up is not stuck); /health turns 503 after three minutes without a healthy pass and the platform restarts the service.
 
 ### What was proven where

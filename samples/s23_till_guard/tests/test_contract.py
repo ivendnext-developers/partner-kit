@@ -34,6 +34,10 @@ class ContractTest(unittest.TestCase):
             self.assertEqual(check.errors("partner_check", "answer", guard.on_check(ctx, r)), [], name)
         for code in ("PEN-01", long):
             self.assertEqual(check.errors("partner_capture", "scan_answer", guard.on_scan(scan(code), rules)), [], code)
+        later, sooner = ("2026-12-01", "B-" + long), ("2026-11-02", "B-SOON")
+        for ctx in (scan(long), dict(scan(long), line=dict(scan(long)["line"], batch_no="B-" + long))):
+            out = guard.on_scan_shelf(ctx, [later, sooner])
+            self.assertEqual((out["verdict"], check.errors("partner_capture", "scan_answer", out)), ("notice", []))
 
     def test_a_bad_answer_is_caught_by_the_contract(self):        # the checker is live
         self.assertTrue(check.errors("partner_check", "answer", {"verdict": "approve"}))

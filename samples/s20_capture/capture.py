@@ -1,6 +1,6 @@
 """S20 — *Warranty capture and a member code*: the pure core (no framework, no network), shared by the service and tests.
 
-The till asks at two moments the cashier did not choose (the capture extension point, ``capture/1``), one signed POST each:
+The till asks at three moments the cashier did not choose (the capture extension point, ``capture/1``), one signed POST each:
 
 - **on scan** of an item in the shop's named item groups, before its line goes on the sale. This service answers *allow*
   with a warranty reference on the line (``line_attributes``: one row of an active line attribute the shop keeps; the
@@ -12,6 +12,9 @@ The till asks at two moments the cashier did not choose (the capture extension p
   The product counts the tries (three wrong codes end it) and is the gate on the till: no customer is created there
   without an answer it recorded (an offline sale's customer, and the receipt's contact after payment, are created and
   flagged instead — the customer has paid).
+- **on a quantity change** of a line in the named item groups (POS build 2.0.0.654 on): the till sends the line's last
+  allowed quantity and the new one, once the presses settle. Up to ``PP_QTY_ASK_ABOVE`` on a line (3) are allowed, up
+  to ``PP_QTY_MOST`` (5) asked about, more refused (a serial- or lot-tracked line is never asked): a refusal or a *No* puts the last allowed quantity back.
 
 ⛔ No answer writes a customer field, and none moves money: no price, no total, no tender.
 """
@@ -58,6 +61,8 @@ def context_of(body: dict) -> dict:
         return ctx
     if event == "verify" and _id(ctx.get("challenge_id")) and isinstance(ctx.get("code"), str):
         return ctx
+    if event == "qty_change" and isinstance(ctx.get("line"), dict) and isinstance(ctx["line"].get("qty_milli"), int):
+        return ctx
     raise ValueError("not an event this service answers")
 
 
@@ -67,7 +72,16 @@ def _id(x) -> bool:
 
 def settings_from(env: dict) -> dict:
     return {"attribute": (env.get("PP_LINE_ATTRIBUTE") or "").strip(),
-            "barred": {phone(x) for x in (env.get("PP_BARRED_PHONES") or "").split(",") if phone(x)}}
+            "barred": {phone(x) for x in (env.get("PP_BARRED_PHONES") or "").split(",") if phone(x)},
+            "ask_above": _whole(env.get("PP_QTY_ASK_ABOVE"), 3), "most": _whole(env.get("PP_QTY_MOST"), 5)}
+
+
+def _whole(raw, default: int) -> int:
+    try:
+        n = int(str(raw).strip())
+    except (TypeError, ValueError):
+        return default
+    return n if n > 0 else default
 
 
 def phone(raw) -> str:
@@ -85,6 +99,18 @@ def on_scan(ctx: dict, conf: dict) -> dict:
     if not conf["attribute"]:
         return {"verdict": "allow"}             # nothing to record: the line goes on untouched
     return {"verdict": "allow", "line_attributes": [{"name": conf["attribute"], "value": warranty_ref()}]}
+
+
+def on_qty(ctx: dict, conf: dict) -> dict:
+    """A quantity change of a line in the named group: the product already filtered by item group and sends the NEW quantity,
+    ``qty_milli`` (thousandths), beside the last allowed one. Judge the new one only; never set a quantity."""
+    qty, item = ctx["line"]["qty_milli"] / 1000, str(ctx["line"].get("item_code") or "")[:40]
+    if qty <= conf["ask_above"]:
+        return {"verdict": "allow"}
+    if qty <= conf["most"]:
+        return {"verdict": "confirm",
+                "question": f"{qty:g} of {item} on one line. Has a manager agreed to more than {conf['ask_above']}?"}
+    return {"verdict": "refuse", "reason": f"At most {conf['most']} of {item} on one line."}
 
 
 class Codes:

@@ -55,7 +55,8 @@ CANARIES = [
      T + "Manifests.test_the_checker_refuses_a_script_a_frame_and_an_outside_address"),
     ("the checker refuses a frame", V, "(script|iframe|object|embed)", "(script|object|embed)",
      T + "Manifests.test_the_checker_refuses_a_script_a_frame_and_an_outside_address"),
-    ("the checker refuses an outside address", V, "if isinstance(p.get(k), str) and _OUTSIDE_URL_RE.search(p[k]):", "if False:",
+    ("the checker refuses an outside address", V, "outside = isinstance(p.get(k), str) and _OUTSIDE_URL_RE.search(p[k])",
+     "outside = False",
      T + "Manifests.test_the_checker_refuses_a_script_a_frame_and_an_outside_address"),
     # the price list
     ("a picture kept outside the shop is not fetched", C, 'if not path.startswith("/") or path.startswith("//"):', "if False:",
@@ -110,6 +111,12 @@ CANARIES = [
      T + "Redirects.test_a_scheme_change_is_refused_and_a_plain_http_shop_is_not_accepted"),
     ("an empty list says so", C, '"<p>No prices on this list.</p></body></html>\\n"', '"</body></html>\\n"',
      T + "Catalogue.test_an_empty_list_says_so"),
+    # the price list's own print format (POS build 2.0.0.654 on)
+    ("the price list prints general prices only", "price_list/price_list.html",
+     ', "customer": ["is", "not set"], "batch_no": ["is", "not set"]}', '}',
+     T + "PriceListFormat.test_every_general_price_prints_with_its_photo_page_by_page"),
+    ("the price list reads every page", "price_list/price_list.html", "{%- for start in [0, 200, 400, 600, 800] %}",
+     "{%- for start in [0] %}", T + "PriceListFormat.test_every_general_price_prints_with_its_photo_page_by_page"),
 ]
 
 

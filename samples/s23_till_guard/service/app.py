@@ -3,7 +3,8 @@
 library only).
 
     POST /tgr/check   the shop's signed check (``check/1``)   →  200 {"verdict": "allow" | "refuse" | "approve" | "ask", ...}
-    POST /tgr/scan    the shop's signed scan (``capture/1``)  →  200 {"verdict": "confirm", "question": ...}
+    POST /tgr/scan    the shop's signed scan (``capture/1``)  →  200 {"verdict": "confirm", "question": ...}, or, with the
+                      shop's *Warn of a shorter-dated batch* on, {"verdict": "notice" | "allow", ...}
     GET  /health      200 {"status": "ok"}
     POST /ivendnext/connect · /ivendnext/disconnect   many shops: the app template's handshake (shops.py)
 
@@ -16,6 +17,13 @@ read with the app's integration key and kept one minute (``SETTINGS_TTL``). When
 rules read are used for up to ten minutes (``SETTINGS_STALE``); after that the service answers 503 and the till applies
 the subscription's down answer (``allow_and_flag`` in this manifest: the sale goes on and is flagged). No record yet =
 every rule off. The service writes nothing to the shop.
+
+*Warn of a shorter-dated batch* reads the shop at each scan: one call to ``ivendnext_mpos.api.v1.get_batch_qty`` for the
+store's batches of the item with stock, and each batch's expiry date from its Batch record, kept a day (a batch's expiry
+does not change). The answer aims at SCAN_BUDGET (1 s, inside the scan's 1.5 s): each read is given only the time left, a
+read is not started once it has run out, and then the answer is a plain allow — a warning missed, never a late one. Bound:
+a timeout limits each step of a read (the connection, each piece of the answer), not the read as a whole, so a shop that
+answers a byte at a time can hold one read past it; past 1.5 s the till applies the down answer (the item goes on, flagged).
 
 ONE SHOP (env or an env file):
     IVN_CHECK_SECRET   the check's secret (handed back at install as pp_tgr:sub:guard)
@@ -53,7 +61,8 @@ import function  # noqa: E402
 import guard  # noqa: E402
 import shops  # noqa: E402
 
-SETTINGS_TTL, SETTINGS_STALE, READ_TIMEOUT = 60, 600, 1.0   # the read fits inside the scan's 1.5 s
+SETTINGS_TTL, SETTINGS_STALE, READ_TIMEOUT = 60, 600, 1.0   # each step of the read inside the scan's 1.5 s (per step, not a wall clock)
+SCAN_BUDGET, EXPIRY_TTL, EXPIRY_MAX = 1.0, 86400, 5000       # the shelf-life answer's whole time; a batch's expiry, kept a day
 #        route          (secret key, read the context,     answer)
 ROUTES = {"/tgr/check": ("guard", guard.check_context, guard.on_check),
           "/tgr/scan": ("on_scan", guard.scan_context, guard.on_scan)}
@@ -86,11 +95,39 @@ def read_settings(url: str, key: str, prefix: str, timeout: float = READ_TIMEOUT
         raise ShopUnreadable(type(e).__name__) from None
 
 
+def _get(url: str, key: str, path: str, timeout: float):
+    req = urllib.request.Request(url.rstrip("/") + path, headers={"Authorization": f"token {key}", "Accept": "application/json"})
+    try:
+        with urllib.request.build_opener(_NoRedirect).open(req, timeout=timeout) as r:
+            return json.loads(r.read() or b"{}") or {}
+    except urllib.error.HTTPError as e:
+        e.close()
+        raise ShopUnreadable(f"the shop answered {e.code}") from None
+    except (urllib.error.URLError, TimeoutError, ConnectionError, ValueError) as e:
+        raise ShopUnreadable(type(e).__name__) from None
+
+
+def read_batches(url: str, key: str, item: str, store: str, timeout: float) -> list[tuple[str, float]]:
+    """The store's batches of the item with stock, as the shop computes them: ``[(batch, quantity)]``. The integration
+    user needs read on Batch (the shop gives it in Role Permissions: a manifest grants rights on its own record types only)."""
+    q = urllib.parse.urlencode({"item_code": item, "warehouse": store})
+    rows = _get(url, key, "/api/method/ivendnext_mpos.api.v1.get_batch_qty?" + q, timeout).get("message") or []
+    return [(str(r.get("batch_no")), float(r.get("qty") or 0)) for r in rows if isinstance(r, dict) and r.get("batch_no")]
+
+
+def read_expiry(url: str, key: str, batch: str, timeout: float) -> str:
+    """A batch's expiry date (``YYYY-MM-DD``), or ``""`` when it has none."""
+    data = _get(url, key, "/api/resource/Batch/" + urllib.parse.quote(batch, safe=""), timeout).get("data") or {}
+    return str(data.get("expiry_date") or "")[:10]
+
+
 class Service:
-    def __init__(self, conf: dict, store=None, reader=read_settings, clock=time.monotonic):
+    def __init__(self, conf: dict, store=None, reader=read_settings, clock=time.monotonic,
+                 batches=read_batches, expiry=read_expiry):
         self.prefix = (conf.get("TGR_PREFIX") or "PP TGR").strip()
         self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
         self.reader, self.clock, self.cache, self.lock = reader, clock, {}, threading.Lock()
+        self.batches, self.expiry, self.expiries = batches, expiry, {}
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
@@ -127,7 +164,39 @@ class Service:
             self.cache[name] = (now, rules)
         return rules
 
+    def shelf(self, name: str, shop: dict, ctx: dict, t0: float) -> dict:
+        """*Warn of a shorter-dated batch*: read the store's batches and their expiry dates inside SCAN_BUDGET, counted
+        from ``t0``; when the shop cannot be read in time the answer is allow (the item goes on, nothing is shown)."""
+        def left():
+            return SCAN_BUDGET - (self.clock() - t0)
+        try:
+            if left() <= 0:
+                return {"verdict": "allow"}
+            line = ctx["line"]
+            stock = self.batches(shop["url"], shop["key"], line["item_code"], ctx.get("store") or "", left())
+            dated = []
+            for batch, qty in stock:
+                if qty <= 0:
+                    continue
+                hit = self.expiries.get((name, batch))
+                if not hit or self.clock() - hit[0] >= EXPIRY_TTL:
+                    if left() <= 0:
+                        return {"verdict": "allow"}
+                    hit = (self.clock(), self.expiry(shop["url"], shop["key"], batch, left()))
+                    with self.lock:
+                        if len(self.expiries) >= EXPIRY_MAX:
+                            self.expiries.clear()
+                        self.expiries[(name, batch)] = hit
+                if hit[1]:
+                    dated.append((hit[1], batch))
+            if left() <= 0:                         # the answer would come too late to show: never a late warning
+                return {"verdict": "allow"}
+            return guard.on_scan_shelf(ctx, dated)
+        except ShopUnreadable:
+            return {"verdict": "allow"}
+
     def answer(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
+        t0 = self.clock()
         if path not in ROUTES:
             return 404, {"error": "not found"}
         route_key, read, decide = ROUTES[path]
@@ -148,6 +217,8 @@ class Service:
             rules = self.rules(name, shop)
         except ShopUnreadable:
             return 503, {"error": "the shop's settings cannot be read"}
+        if path == "/tgr/scan" and rules["shelf_warning"]:
+            return 200, self.shelf(name, shop, ctx, t0)
         return 200, decide(ctx, rules)
 
     def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, dict]:

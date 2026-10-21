@@ -84,7 +84,7 @@ class FakeShop:
 
     def method(self, dotted, body=None):
         self.calls.append(("method", dotted))
-        if dotted == "ivendnext_pos.api.pos_invoice.get_gift_card_status":
+        if dotted == "ivendnext_mpos.api.v1.get_gift_card_status":
             n = body["gift_card_no"]
             gc = self.db.get("Gift Card", {}).get(n) or {}
             return {"name": gc.get("name"), "balance": gc.get("balance"), "redeemed": n in self.redeemed}

@@ -17,11 +17,13 @@ The recipe: [`recipes/field_rules.md`](../../recipes/field_rules.md).
 
 A shop's manager can make the same rules by hand in POS Studio's **Fields** tab; shipping them in an app is for a partner who sets the same rules for many shops.
 
-**Where it shows.** On the till, on the counter frame and on the phone: the line heading, the customer's card, the new-customer sheet and the *"Phone is required here."* refusal (the phone's customer chip still says *points*: the rule relabels the customer's card). The phone rule is also enforced by the server. A customer added offline without a phone is created when the sale syncs and flagged on the *Sales to review* report, never refused. A customer made in Desk or by an import is not checked. No price, amount, tax or payment field is on any rule: a rule changes what the till shows and asks for, never what it charges.
+**Where it shows.** On the till, on the counter frame and on the phone: the line heading, the customer's card, the new-customer sheet and the *"Phone is required here."* refusal (the phone's customer chip still says *points*: the rule relabels the customer's card). The phone rule is also enforced by the server. A customer added offline without a phone is created when the sale syncs and flagged on the *Sales to review* report, never refused. A customer made in Desk or by an import is not checked. No price, amount, tax or payment field is on any of these four rules: a rule changes what the till shows and asks for, never what it charges.
 
 **What leaves the shop.** Nothing. The app is data only: four rules on a till theme, with no address, no service, no webhook, no event feed and no till key.
 
 Uninstalling removes exactly these rows and leaves the theme as the shop had it.
+
+**The money words (POS build 2.0.0.654 on; not in this sample's manifest).** Two more rows show a line's price before any cut and call the total by the shop's word: `cart_line · list_price · show · "List price"` and `totals · grand_total · relabel · "Total incl. VAT"`, the product's own accepted sample (`contracts/extension_contracts/samples/fields/accepted/06_list_price_and_a_gross_total.json`). The counter grows a *List price* column; on the phone a discounted line reads *List price ~~12.00~~ · 9.60*; the total reads *Total incl. VAT*. No figure changes and none is hidden. What the shop accepts: the receipt keeps its own words (*Total*, *Tax (incl.)*) unless it has a print format of its own; a label may not hold digits or signs, but a claim in words passes, so word it for every POS profile the theme serves; a line sold at a cross-sell offer's price shows no struck price; the customer display, POS Studio's previews, the screens of a sale already made and the charges sheet's heading keep the shipped words. Walked by the product (POS train T12, counter, phone and tablet frames); not run by this sample. The rules page: `contracts/pages/fields.md`, *The money words*.
 
 ## What is in the folder
 

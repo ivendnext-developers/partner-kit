@@ -168,5 +168,39 @@ class Shapes(unittest.TestCase):
             guard.scan_context({"point": "check/1", "context": scan()})
 
 
+
+def batch_scan(code="MILK-1", batch=""):
+    ctx = scan(code)
+    ctx["line"]["batch_no"] = batch
+    return ctx
+
+
+class ShelfWarning(unittest.TestCase):
+    """*Warn of a shorter-dated batch*: a notice naming the batch to sell first, else allow."""
+
+    def test_off_until_the_shop_sets_it(self):
+        self.assertFalse(guard.settings_of(SETTINGS)["shelf_warning"])
+        self.assertTrue(guard.settings_of(dict(SETTINGS, warn_shorter_shelf_life=1))["shelf_warning"])
+
+    def test_a_scanned_batch_with_a_sooner_one_in_the_store_is_warned(self):
+        dated = [("2026-12-01", "B-LATE"), ("2026-11-02", "B-SOON")]
+        self.assertEqual(guard.on_scan_shelf(batch_scan(batch="B-LATE"), dated),
+                         {"verdict": "notice", "message": "MILK-1: batch B-SOON expires sooner (2026-11-02). Sell it first."})
+
+    def test_the_soonest_batch_scanned_is_not_warned(self):
+        dated = [("2026-12-01", "B-LATE"), ("2026-11-02", "B-SOON")]
+        self.assertEqual(guard.on_scan_shelf(batch_scan(batch="B-SOON"), dated), {"verdict": "allow"})
+
+    def test_a_scan_naming_no_batch_names_the_one_to_sell_first(self):
+        dated = [("2026-12-01", "B-LATE"), ("2026-11-02", "B-SOON")]
+        self.assertEqual(guard.on_scan_shelf(batch_scan(), dated),
+                         {"verdict": "notice", "message": "MILK-1: sell batch B-SOON first. It expires 2026-11-02."})
+
+    def test_one_expiry_date_or_no_batch_is_not_warned(self):
+        self.assertEqual(guard.on_scan_shelf(batch_scan(), [("2026-11-02", "B-1"), ("2026-11-02", "B-2")]), {"verdict": "allow"})
+        self.assertEqual(guard.on_scan_shelf(batch_scan(), []), {"verdict": "allow"})
+        self.assertEqual(guard.on_scan_shelf(batch_scan(batch="B-GONE"), [("2026-11-02", "B-1")]), {"verdict": "allow"})
+
+
 if __name__ == "__main__":
     unittest.main()

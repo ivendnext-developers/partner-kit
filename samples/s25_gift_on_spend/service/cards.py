@@ -33,7 +33,7 @@ from shop import Duplicate, ShopError
 
 CARD, SETTINGS = "PP GCS Card", "PP GCS Settings"      # use_prefix() renames them for the library's app
 GIFT_CARD, BALANCE, SALE = "Gift Card", "Gift Card Balance", "POS Invoice"
-CARD_STATUS = "ivendnext_pos.api.pos_invoice.get_gift_card_status"   # the till's own: balance, expired, redeemed
+CARD_STATUS = "ivendnext_mpos.api.v1.get_gift_card_status"   # the till's own (its iVendNext name): balance, expired, redeemed
 CARD_FIELDS = ["name", "sale", "position", "status", "card_number", "card_value", "card_item", "threshold", "gift_card",
                "creation", "release_after_utc"]
 

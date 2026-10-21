@@ -263,7 +263,8 @@ class CommandTests(unittest.TestCase):
 
     def test_search_finds_a_two_letter_word_and_blueprint_prints_the_request_handle(self):
         self.assertIn("head-office-bi", self.run_tool("search", "BI").stdout)
-        self.assertIn("ask for P-CAPTURE3", self.run_tool("blueprint", "question-on-quantity-change").stdout)
+        self.assertTrue(self.run_tool("blueprint", "invoice-layout-per-customer").stdout.rstrip().endswith("ask for P-PRINTBYPARTY |"))
+        self.assertNotIn("ask for", self.run_tool("blueprint", "question-on-quantity-change").stdout)   # its extension point shipped
 
 
 if __name__ == "__main__":

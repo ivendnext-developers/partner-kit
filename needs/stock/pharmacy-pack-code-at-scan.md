@@ -17,7 +17,7 @@ The till reads the pack's GS1 code (item, batch, expiry, serial) at the scan. It
 
 ## Limits
 - GS1 codes: not run in the kit (the product's own tests cover them).
-- A pack's own serial checked on Desk documents too (receipt, transfer, count): the card units-as-serial-numbers, sample S30; at the till only from the lot iVendNext picks first until P-SERIALUNITS (one row per serial with its own batch at the till) ships.
+- A pack's own serial checked on Desk documents too (receipt, transfer, count): the card units-as-serial-numbers, sample S30; at the till each pack is booked with its own batch from POS build 2.0.0.654 (before it, only from the lot iVendNext picks first).
 
 ## Tell the customer
 The till reads the pack's code, finds the batch, and refuses an expired pack.

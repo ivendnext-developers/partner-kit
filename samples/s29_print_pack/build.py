@@ -1,12 +1,15 @@
-"""Build the two manifests of S29 from the layout files, the logo and customers.json.
+"""Build the three manifests of S29 from the layout files, the logo and customers.json.
 
-    python3 build.py        # writes branch_manifest.json and each_manifest.json, then check them:
+    python3 build.py        # writes branch_manifest.json, each_manifest.json and price_list_manifest.json, then check them:
                             # python3 ../../tools/manifest/validate.py branch_manifest.json
 
   branch_manifest.json   ONE sales-invoice print format whose body picks a layout by the customer on the invoice
                          (customers.json says which customer gets which layout); any other customer gets the plain layout.
   each_manifest.json     ONE print format per layout, and nobody picks by customer: the person printing or e-mailing an
                          invoice chooses the format in the print dialog.
+  price_list_manifest.json ONE print format on the Price List itself (price_list/price_list.html), POS build 2.0.0.654 on:
+                         its prices through ivn_rows and each item's photo through ivn_value, as the person printing may
+                         read them. Its own app (pp_plr): it installs beside either invoice package.
 
 Install ONE of them on a site, not both: they carry the same app name and prefix (their versions differ so that
 switching from one to the other is an update). To use your own customers, edit
@@ -82,8 +85,21 @@ def build_each():
                      "the format; nothing picks it by customer.", [(n, _layout(k)) for k, n in names.items()], "0.1.4")
 
 
+def build_price_list():
+    return {
+        "manifest_version": 1, "app": "pp_plr", "prefix": "PP PLR", "title": "A price list with photos",
+        "version": "0.1.1", "publisher": "Partner Programme sample",
+        "description": "One print format on the Price List: each general price of the list with the item's photo, read "
+                       "through ivn_rows and ivn_value with the rights of the person printing (POS build 2.0.0.654 on). A "
+                       "print sent from the e-mail queue shows no rows.",
+        "print_formats": [{"name": "PP PLR Price List with Photos", "doc_type": "Price List", "print_format_type": "Jinja",
+                           "html": _read("price_list/price_list.html")}],
+    }
+
+
 if __name__ == "__main__":
-    for fname, m in (("branch_manifest.json", build_branch()), ("each_manifest.json", build_each())):
+    for fname, m in (("branch_manifest.json", build_branch()), ("each_manifest.json", build_each()),
+                     ("price_list_manifest.json", build_price_list())):
         with open(os.path.join(HERE, fname), "w", encoding="utf-8") as f:
             json.dump(m, f, ensure_ascii=False, indent=1)
         print(fname, "written:", ", ".join(f"{p['name']} ({len(p['html'])} characters)" for p in m["print_formats"]))

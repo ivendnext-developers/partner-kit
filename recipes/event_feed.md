@@ -102,7 +102,7 @@ The outside service reads the sale from the feed and records the one line priced
 
 ### A value judged only when it changes
 
-A limit that should hold for a **new or changed** value only, such as an item's *Max Discount* (`max_discount`) set over the shop's ceiling. A save rule of kind `threshold` judges the value on **every** save, so an old record already over the limit is refused at its next unrelated edit. Until P-RULES4 gives the threshold rule an *on change* switch, **your service judges it on the feed**. The client's `changed` remembers the last value it saw, in the same transaction as the event (`tools/feed_client/feed_client.py`, two tests):
+A limit that should hold for a **new or changed** value only, such as an item's *Max Discount* (`max_discount`) set over the shop's ceiling. A save rule of kind `threshold` judges the value on **every** save, so an old record already over the limit is refused at its next unrelated edit. From POS build 2.0.0.654 the threshold rule takes `judge_on_change` and refuses only a new or changed value at the save itself ([save rules page](../contracts/pages/save_rules.md)): use it. Before that build, or to flag rather than refuse, **your service judges it on the feed**. The client's `changed` remembers the last value it saw, in the same transaction as the event (`tools/feed_client/feed_client.py`, two tests):
 
 ```python
 def handle(ev, db):
@@ -119,7 +119,7 @@ The first time the service sees an existing record it only remembers the value: 
 
 ### A settings record that drives rules
 
-The shop's people change one settings record (a record type of your own named `Default`, as S22's `PP LYL Settings`). Its values reach the records that enforce them: a save rule's limit (**Retail Save Rule**, its `value`) and a notification's recipients (**Notification**, its `recipients` rows). Until P-RULES4 lets a rule read a settings value itself, **your service copies them** when the settings record's event arrives (tick your settings record type on the feed registration). S22's `service/settings_sync.py` is the function, standalone and tested (two tests); S22's own settings hold no limit or recipients, so S22 does not call it:
+The shop's people change one settings record (a record type of your own named `Default`, as S22's `PP LYL Settings`). Its values reach the records that enforce them: a save rule's limit (**Retail Save Rule**, its `value`) and a notification's recipients (**Notification**, its `recipients` rows). From POS build 2.0.0.654 a save rule reads its limit and role from a settings record itself (`value_from_type`, [save rules page](../contracts/pages/save_rules.md)), with nothing to copy; a notification's recipients still are not. Before that build, and for recipients, **your service copies them** when the settings record's event arrives (tick your settings record type on the feed registration). S22's `service/settings_sync.py` is the function, standalone and tested (two tests); S22's own settings hold no limit or recipients, so S22 does not call it:
 
 ```python
 LINKS = [{"from": "max_redemption_percent", "record_type": "Retail Save Rule", "record": "PP LYL Redemption cap", "field": "value"},

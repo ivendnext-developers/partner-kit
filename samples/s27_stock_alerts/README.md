@@ -41,6 +41,16 @@ The shop is told when a store's stock falls below its reorder level, or when a b
 6. Put reorder rows on the items (the store, the level, the quantity, the type *Transfer*), as for the standard reorder. Leave the shop's automatic reorder **off**, or both will ask for the same stock.
 7. Run the service on a schedule with the user's key (below).
 
+## A reminder before a batch expires (a second package, POS build 2.0.0.654 on)
+
+`batch_expiry_package.json` is a package of its own (`pp_exp`), with one notification on the shop's **Batch**: 30 days before a batch's expiry date, an e-mail to every holder of the **Stock Manager** role. No service runs: the shop's daily scheduler sends it ([chapter 7](../../guide/07_manifests.md), *A reminder before or after a date on a shop's record*). It is the product's own accepted shape. It is separate from S27's alerts so that S27 still installs on an older shop; install it beside them, or on its own, with `tools/deploy/deploy.py`. Change the days, the role or the channel (`Email` or the bell, `System Notification`) before you install.
+
+What the shop accepts with it:
+- **no cap:** one message per batch on the day; **no filter:** every holder of the role, in every store, receives every batch;
+- **to a role only**, by e-mail or the bell, its subject and message plain text and the batch's own fields (`{{ doc.⟨field⟩ }}`);
+- a template error skips one message; an error outside it (a batch deleted mid-run, a date field removed later) stops that day's run of every date reminder on the site after it;
+- a batch with no expiry date raises nothing; the reminder reads every batch, not only those with stock (S27's alerts are the route for stock in a store).
+
 **What leaves the shop.** The shop calls nothing outside. The service **reads** the warehouses, the items' reorder rows, the stock of the watched stores, the batches and their records, and the open transfer requests. It **writes** alerts and draft transfer requests, and adds lines to its own drafts.
 
 ## Run it
@@ -48,6 +58,7 @@ The shop is told when a store's stock falls below its reorder level, or when a b
 ```bash
 python3 -m unittest discover -s samples/s27_stock_alerts/tests -p 'test_*.py'
 python3 samples/s27_stock_alerts/tests/canaries.py
+python3 tools/manifest/validate.py samples/s27_stock_alerts/batch_expiry_package.json
 ```
 
 On a sandbox, with the integration user's key in the environment (never on the command line, never committed):
@@ -72,8 +83,10 @@ Each run prints one line: the alerts written, the requests made, the lines added
 | `run.py` | the service: the shop over the record API, one run (read, alerts, the draft per store and day, then the alert records) |
 | `manifest.json` | the settings, the alert, the stores table, the two roles, the bell notification |
 | `tests/test_s27.py` | 32 laptop tests: low stock and its quantity, a row with no level, a store not watched, a run twice, the next day, a run that stopped half-way, the stamp, a person's draft, a submitted request, the expiry window's edges, a batch per store, two batches of one item, one item for two moves, no clearance warehouse, a batch quantity that cannot be read, the per-store sum with an outward row, what an update sends, settings switched off |
+| `batch_expiry_package.json` | the second package: the reminder before a batch expires (POS build 2.0.0.654 on) |
 | `tests/test_manifest.py` | the manifest: valid, every field the service reads and writes declared, the rights, the notification on the app's own record |
-| `tests/canaries.py` | each guard removed in turn: its test must go RED (27 of 27) |
+| `tests/test_batch_expiry_package.py` | the second package: valid with no warning, the product's own accepted shape, and the checker refusing a save event, a recipient by a field, a reader in the message and 400 days |
+| `tests/canaries.py` | each guard removed in turn: its test must go RED (28 of 28) |
 
 ## Technical notes
 
@@ -86,5 +99,6 @@ Each run prints one line: the alerts written, the requests made, the lines added
 
 ### What was proven where
 
+- **The reminder package** (2026-10-21, a sandbox site at POS 2.0.0.658): installed with `tools/deploy`; the site's summary read *Notification PP EXP Batch Expiry on Batch (Days Before, by Email) to everyone with the role Stock Manager*, and the notification read back as written (30 days, `expiry_date`, one recipient by role); uninstalled, nothing left. Not run: a message sent (the daily scheduler cannot be run on demand on a sandbox; the product's own tests send it).
 - **The laptop tests** (`tests/`): everything above against a stand-in shop; `canaries.py` turns each guard off in turn and its test goes RED.
 - **A sandbox site** (2026-10-16, POS 2.0.0.648, manifest 0.1.0, the service on a laptop with the site's integration user): installed with `tools/deploy`; a reorder row (level 25, quantity 10, *Transfer*) on an item with 20 in a store, and a batch of 12 expiring in 20 days received into that store. Run 1: **2 alerts and 1 draft request with 2 lines** (10 from the source warehouse to the store; 12 from the store to the clearance warehouse), the batch's quantity per store read from its records. Run 2: nothing new, the draft unchanged. A run for the next day: 2 new alerts, both joined the open draft, no second request, and the bell reached the role's holder and the user named in the settings. A person changed the quantity to 8 and submitted the draft by hand; the next run wrote nothing and the submitted request was unchanged; a run two days on wrote no low-stock alert (the projected stock now counts the request) and one near-expiry alert that joined the submitted request, with no new draft. The uninstall exported and removed the app's records; users, roles, permission rows and stock were as found. A second run the same day, after the review's changes: two batches of the item (12 received and 5 issued of one, 9 of the other) read **7 and 9** in the store, the outward row taken off; the request held **one row of 16 naming both batches**; a second run wrote nothing, and the next day both alerts joined that draft. The site refuses a second row of the same item on a request (its default), which the first build had not met. Not run on a sandbox: a *Purchase* row, a batch in two stores, no clearance warehouse, an item low and near expiry in one store, a key that cannot read the batch records, a person's own draft beside the service's, a run that stops between the lines and the alerts, a new line added to an existing draft (the person's edit, the same call, kept both rows), the submitted-request case after the review's changes (laptop only); not run at all: a till's unmerged sale, more than 100 expiring batches, the e-mail channel, two copies at once, a reorder row with a warehouse group, a scheduler.

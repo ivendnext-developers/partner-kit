@@ -17,7 +17,7 @@ A settings record of your own (named `Default`); when it is saved, your service 
 
 ## Limits
 - For the seconds between the settings save and the copy, the rules hold the old values.
-- P-RULES4 lets a save rule read its limit from a settings record itself, when it ships.
+- From POS build 2.0.0.654 a save rule can read its limit and its role from a settings record itself (`value_from_type`, `contracts/pages/save_rules.md`), with no copy and no delay; this route remains for a notification's recipients and for an older build.
 - Not run on a shop.
 
 ## Tell the customer

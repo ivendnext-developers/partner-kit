@@ -18,7 +18,7 @@ The shop declares a table of its units' own codes; the till's scan finds the uni
 ## Limits
 - A unit sold on another till a moment before: not run in the kit (the product's own tests cover it).
 - When the code must be checked on Desk documents too (receipts, transfers, counts), make it a serial number instead: the card units-as-serial-numbers, sample S30. This card's scan source stays for codes a shop keeps in its own table.
-- P-SERIALUNITS (one row per serial with its own batch at the till) makes a batch-and-serial unit reliable at the till; until it ships, a unit sells reliably only from the lot iVendNext picks first.
+- A batch-and-serial unit is booked at the till with the batch its serial number carries from POS build 2.0.0.654; before it, a unit sold reliably only from the lot iVendNext picks first.
 
 ## Tell the customer
 Scanning a unit's own code finds that exact unit, and a unit already sold is refused.
