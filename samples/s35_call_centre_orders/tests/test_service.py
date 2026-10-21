@@ -177,6 +177,18 @@ class ServiceTest(unittest.TestCase):
             self.assertEqual({k: v for k, v in now.items() if k != "warehouse"}, {k: v for k, v in was.items() if k != "warehouse"})
         self.assertEqual(set(sent), {"set_warehouse", "items", "modified"})   # nothing else on the order is written
 
+    def test_s1c_a_bundles_parts_ship_from_the_store_too(self):
+        o = order()
+        o["packed_items"] = [{"name": "pk-1", "parent_item": "B", "item_code": "B1", "qty": 2.0, "warehouse": "Call Centre - S"}]
+        self.use(FakeTenant([o]))
+        self.press()
+        (name, sent), = self.tenant.writes
+        self.assertEqual([p["warehouse"] for p in sent["packed_items"]], ["Maadi Store - S"])
+        self.assertEqual({k: v for k, v in sent["packed_items"][0].items() if k != "warehouse"},
+                         {k: v for k, v in o["packed_items"][0].items() if k != "warehouse"})
+        code, out = self.press()
+        self.assertEqual(out["message"]["title"], "Already with its store")   # routed counts the parts too
+
     def test_s2_a_district_without_a_store_takes_the_store_above_it(self):
         self.use(FakeTenant([order(territory="Heliopolis")]))
         code, out = self.press()

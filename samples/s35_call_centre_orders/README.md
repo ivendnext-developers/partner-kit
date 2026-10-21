@@ -10,7 +10,7 @@ A customer phones the call centre; the agent enters the order once, in Desk, and
 2. A call-centre agent (a Sales User) enters a Sales Order as today. The order's **Territory** comes from the customer, and the agent can change it for this order. The agent saves it.
 3. The agent presses **Send to store** on the draft order and confirms.
 4. The shop sends your service, signed, the order's name and territory.
-5. Your service reads the order **with its own key**, walks the territory up the tree to the first Serving store, and writes that warehouse on the order (*Set Source Warehouse*) and on every line. Every line, a supplier-delivered one too, as Desk's own *Set Source Warehouse* does. Then it answers.
+5. Your service reads the order **with its own key**, walks the territory up the tree to the first Serving store, and writes that warehouse on the order (*Set Source Warehouse*), on every line and on a bundle's parts (the shop fills a part's warehouse only when it is empty). Every line, a supplier-delivered one too, as Desk's own *Set Source Warehouse* does. Then it answers.
 6. The form reloads with the store in place: *"This order and its 2 lines now ship from Maadi Store, the store for Maadi."* The agent submits it. The store sees it in its own list, and its delivery note ships from the store's warehouse.
 
 Pressed again, the button changes nothing and says where the order already is.
@@ -89,6 +89,7 @@ A manifest cannot write the order itself: `fetch_from` goes only on a field the 
 ### Bounds, stated
 
 - **One order a press:** the button is on the form only.
+- **Removing the app removes the Serving store field and its values** (the uninstall's export keeps a copy): the district → store table is set again after a reinstall.
 - **The store's company:** a Serving store of another company, a group warehouse or a disabled one is refused by the service before it writes (the shop would save it on a draft and refuse it only at submit); the agent is told to ask the manager to check it.
 - **Any other refusal by the shop** (a field the order now requires, say): *The shop would not save this order. Open it and press Save to see why.*
 - **No notice to the store.** The store's filtered list is its inbox; a manifest notification on submit, mailed to the store's warehouse e-mail, is the next step.

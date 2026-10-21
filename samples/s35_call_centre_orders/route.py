@@ -79,7 +79,8 @@ def routed(order: dict, store: str) -> bool:
     """The order already ships from ``store``: its header and every line. Every line, a supplier's too, as Desk's own Set
     Source Warehouse does: the shop clears the header on save when the lines' warehouses differ, so a line left on another
     warehouse would empty the header, drop the order from the store's list and make every press write it again."""
-    return order.get("set_warehouse") == store and all(ln.get("warehouse") == store for ln in order.get("items") or [])
+    return order.get("set_warehouse") == store and all(
+        ln.get("warehouse") == store for t in ("items", "packed_items") for ln in order.get(t) or [])
 
 
 def can_ship(warehouse: dict, order: dict) -> bool:
@@ -94,7 +95,10 @@ def plan(order: dict, store: str) -> dict:
     warehouse changed. A table is written whole (a row left out is deleted), so EVERY line goes back. ``modified`` as
     read makes the shop refuse the write if the order changed since."""
     lines = [dict(ln, warehouse=store) for ln in order.get("items") or []]
-    return {"set_warehouse": store, "items": lines, "modified": order["modified"]}
+    out = {"set_warehouse": store, "items": lines, "modified": order["modified"]}
+    if order.get("packed_items"):   # a bundle's parts: the shop fills a packed row's warehouse only when it is empty,
+        out["packed_items"] = [dict(p, warehouse=store) for p in order["packed_items"]]   # so they would stay behind
+    return out
 
 
 def _fit(text: str, most: int = 280) -> str:
