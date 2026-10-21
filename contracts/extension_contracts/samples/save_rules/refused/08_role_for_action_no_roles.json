@@ -1,0 +1,13 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A submit held by role names at least one role.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "Nobody submits",
+    "record_type": "Material Request",
+    "kind": "role_for_action",
+    "action": "submit"
+  },
+  "expect_refusal": "Name at least one role that may submit."
+}

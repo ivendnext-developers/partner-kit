@@ -8,6 +8,7 @@ can check an answer against these before it reaches a shop. They are what the [s
 | Point | Page | Schema |
 |---|---|---|
 | Desk action | [pages/desk_action.md](pages/desk_action.md) | [desk_action.v1.schema.json](extension_contracts/desk_action.v1.schema.json) |
+| Document check (`doccheck/1`: your answer before a back-office document is submitted) | [pages/doccheck.md](pages/doccheck.md) | [doccheck.v1.schema.json](extension_contracts/doccheck.v1.schema.json) |
 | Event feed | [pages/event_feed.md](pages/event_feed.md) | [event_feed.v1.schema.json](extension_contracts/event_feed.v1.schema.json) |
 | Field rules (fields) | [pages/fields.md](pages/fields.md) | [fields.v1.schema.json](extension_contracts/fields.v1.schema.json) |
 | Fiscal reader | [pages/fiscal_reader.md](pages/fiscal_reader.md) | [fiscal_reader.v1.schema.json](extension_contracts/fiscal_reader.v1.schema.json) |
@@ -43,6 +44,6 @@ errors("desk_action", "answer", {"message": "Route assigned"})                  
 They are **copies** of files in the product's repository (`ivendnext/iVendNext_PWA`), taken at one commit (the payment connector's two files come from the payments app's repository, `ivendnext/iVendNext_Payments`, at one commit of its own); the commit
 and every file's source path are in [EXPORT_SOURCES.md](../EXPORT_SOURCES.md). Each page and the checker carries a
 header naming its source; the schemas and samples are JSON and cannot, so they are listed there. Only the links inside
-the pages were changed, so they point at the files here. Our own kit check compares every file with its source on each
+the pages were changed, so they point at the files here, and three calls are named by what they do rather than by the framework's own name. Our own kit check compares every file with its source on each
 change, so a copy cannot drift. **A defect in one is a defect in the product's file:** report it with a *Kit defect*
 issue (members) or the partner form, and we take it to the product's board.

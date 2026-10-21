@@ -1,0 +1,23 @@
+{
+  "extension_point": "doccheck",
+  "contract": "answer",
+  "about": "A standard field is never filled, even one the settings name (the answer arrives after the record's own checks).",
+  "given": {
+    "record_type": "Material Request",
+    "settings": {
+      "record_type": "Material Request",
+      "send_fields": "name",
+      "fill_fields": [
+        "schedule_date"
+      ]
+    }
+  },
+  "payload": {
+    "verdict": "fill",
+    "fields": {
+      "schedule_date": "2026-12-01"
+    }
+  },
+  "expect_refusal": "schedule_date can no longer be filled",
+  "beyond_schema": true
+}

@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ 8c955ffd9fcf, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ 4c3f11b550f1, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner check
 
 **Contract:** [`partner_check.v1.schema.json`](../extension_contracts/partner_check.v1.schema.json)
@@ -55,13 +55,24 @@ checks of each POS Profile). Then they tick the consent (section 5).
  "lines":[{"line_no":1,"item_code":"PARA-500","item_group":"Pharmacy","qty_milli":2000,"uom":"Nos",
            "rate_minor":1250,"amount_minor":2500,"discount_minor":0,"line_attributes":[]}],
  "totals":{"net_minor":2500,"tax_minor":125,"discount_minor":0,"grand_minor":2625},
- "offered_tenders":["Cash","Credit Card"]}}
+ "offered_tenders":["Cash","Credit Card"],"pos_opening":"POS-OPE-2026-00071",
+ "pos_terminal":"Mall Counter 2"}}
 ```
 
 - The numbers are the **server's**, never the till's echo. Money is a whole number of minor units with the
   currency's own digits (`currency_exponent`: 2 for AED, 3 for KWD, 0 for JPY); quantity is in thousandths.
 - A line carries its row number (`line_no`), not the till's line id: one till line can become several priced
   rows. At most 500 lines are sent; past that, only the first 500, while `totals` are the whole sale's.
+- `pos_opening` names the POS day the sale or refund is taken under, and `pos_terminal` that day's POS
+  Terminal, so one rule can hold per terminal without one POS Profile per terminal; each is `""` when there
+  is none. A sale synced from offline names the day it was taken under (a sale a manager posts again after
+  its sync failed names that manager's open day instead). They **are part of the
+  fingerprint**: a day suspended at one terminal and resumed at another moves its terminal mid-sale, so
+  an answer you gave for one terminal is not used at another before money moves — the till asks you
+  again; a sale whose card was already charged, or one synced from offline, is booked and flagged for
+  review instead.
+  ⚠ Added after version 1 first shipped: a service that validates the request against an older copy of
+  this contract (`additionalProperties: false`) refuses them until it takes this copy.
 - On a return, `sale_ref` is the refund attempt's own key, not a sale id.
 - On a return, `return_of`: `{"invoice", "channel", "paid_by": [tender types]}`. `channel` is `"pos"` for
   a return against a sale · `"order"` for an order's refund (`invoice` is the order; `paid_by` every tender
@@ -147,7 +158,8 @@ extension point's subscription carries.
 The System Manager's tick records who ticked it, when, for which address and for this list, word for word:
 
 > What the till sends to this address at each check, before a sale or a refund is paid: stage (sale or
-> return) · sale_ref (the till's own id for the sale) · store · pos_profile · company ·
+> return) · sale_ref (the till's own id for the sale) · store · pos_profile · pos_opening (the POS day)
+> and its pos_terminal · company ·
 > currency and its currency_exponent · lang (the till's language) · operator (the signed-in cashier's user
 > id, personal data) · customer and customer_group (personal data) · price_list · coupon_codes ·
 > sale_attributes (the details the cashier captured, which may hold health data such as a prescription) ·
@@ -156,6 +168,9 @@ The System Manager's tick records who ticked it, when, for which address and for
 > sale (none for a return without its sale; the plan's order for a layaway plan's refund), whether it was
 > an order or a layaway plan, and its tender types. No card data, and no serial or batch from the item's own
 > fields; a unit's code a scan source records as a line value is among the captured values.
+
+Adding `pos_opening` and `pos_terminal` changed this list, so a consent ticked before it lapses: a check
+asks nobody until a System Manager ticks it again.
 
 **Down, slow, or an answer refused whole:** the declared down answer — `allow_and_flag` (the sale goes on;
 the round is flagged), `refuse` or `ask` — and one log row (no body, no secret).

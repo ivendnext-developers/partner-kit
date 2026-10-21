@@ -1,0 +1,19 @@
+{
+  "extension_point": "doccheck",
+  "contract": "answer",
+  "about": "A question the user confirms.",
+  "given": {
+    "record_type": "Material Request",
+    "settings": {
+      "record_type": "Material Request",
+      "send_fields": "name",
+      "fill_fields": [
+        "schedule_date"
+      ]
+    }
+  },
+  "payload": {
+    "verdict": "ask",
+    "question": "The ERP shows 40 on order already. Go on?"
+  }
+}

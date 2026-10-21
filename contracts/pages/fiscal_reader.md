@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/fiscal_reader.md @ 8c955ffd9fcf, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/fiscal_reader.md @ 4c3f11b550f1, copied unchanged except the links and the framework's own calls, named by what they do: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Fiscal reader
 
 **Contract:** [`fiscal_reader.v1.schema.json`](../extension_contracts/fiscal_reader.v1.schema.json)
@@ -48,7 +48,7 @@ write there either. The service's role also needs write
 **and submit** at level 0, so it can submit a draft sale and change every level-0 field a submitted sale
 may still change — the record names them when it is saved. ⚠ The level check binds a
 permission-checked save by a user who is not Administrator: Administrator, an `ignore_permissions` save
-and `frappe.db.set_value` bypass it, so code running on the site can always write the fields.
+and a direct write to the database bypass it, so code running on the site can always write the fields.
 
 **What an outside service writes.** Its integration user saves the submitted sale through the API with
 the result fields filled, **every result field each time**:

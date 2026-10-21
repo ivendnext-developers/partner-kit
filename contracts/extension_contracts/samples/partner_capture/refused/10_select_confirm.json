@@ -1,0 +1,10 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "select_answer",
+  "about": "confirm is a scan answer; a select answers allow, challenge or refuse.",
+  "payload": {
+    "verdict": "confirm",
+    "question": "Is this the right customer?"
+  },
+  "expect_refusal": "the verdict is not one customer_select allows"
+}

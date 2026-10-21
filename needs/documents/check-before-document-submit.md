@@ -4,20 +4,24 @@ title: Your system's answer before a back-office document is submitted
 area: documents
 topic: checks-on-save
 asks: A purchase order blocked by data our ERP holds; a goods receipt checked against the supplier's terms
-status: not-yet
-door: request
-blocked-by: extension-point
-recipe: recipes/check_by_workflow.md
-sample: none
+status: ready-with-limits
+door: document-check
+blocked-by: -
+recipe: recipes/document_check.md, recipes/check_by_workflow.md
+sample: samples/s34_po_check
 request: P-DOCCHECK
-verified: carried 2026-10-16 · not re-run
+verified: run on a sandbox 2026-10-21 · POS 2.0.0.656 (install, the down answer, a standard fill field refused at save); the service's own answers proven on the laptop against the product's contract
 ---
 ## What you build
-Not yet as its own extension point. Today: a workflow step only your service can take, after its check passes (the recipe), or a Desk action a user presses.
+A document check on the record type: when it is submitted, from Desk, an import or the API, your service allows it, refuses it with your reason, asks the user, asks for approval by a role, or fills fields the shop added. S34 checks purchase orders against an ERP.
 
 ## Limits
-- Today, with a workflow: the user waits a few seconds, and your service must be up for back-office submits.
-- Today, an outside app finds a problem only after the save.
+- Back office only: never a till sale, and never a record the till's own booking writes.
+- The user waits for your answer: at most 10 seconds for all of one submit's checks.
+- `fill` writes only a field the shop added (a field your app adds counts), never a standard field or money.
+- An import or bulk submit that runs in the background cannot show a question: answer allow or refuse there.
+- On a POS app from before train T11 (2026-10-16), use a workflow step only your service can take (the second recipe).
+- Not run on a sandbox: your service's own refuse, approve and fill answers; the laptop tests prove them against the product's contract.
 
 ## Tell the customer
-A back-office document can be held for your system's check today through a workflow step; a direct check is coming.
+Each purchase order is checked by your ERP before it is submitted: a held supplier is refused, an order over budget needs a manager's approval, and a clear order carries the ERP's number.

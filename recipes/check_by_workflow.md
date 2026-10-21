@@ -1,5 +1,7 @@
 # A back-office check that blocks a document (check by workflow) — the recipe
 
+**Since the POS app's train T11 (2026-10-16) there is a direct door for this:** the document check asks your service when the document is submitted and applies its answer ([recipe](document_check.md), sample S34). Use this workflow recipe on a site from before that release, or when the check must run after the save, from the event feed.
+
 Some checks must **stop** a document until they pass: a goods receipt that must match what was ordered, or carry a code for every unit, before it is booked. Inside the shop that would be code run at submit, which partners do not ship. This recipe gets the same result with **configuration and your own service**: the document's workflow books it only at a *Verified* step that only your service can take. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
 **Reference implementation:** `samples/s22_customer_loyalty/` — `apply_config.py` (`receipt_workflow`) and `service/receipts.py`: a Purchase Receipt is verified only when no row receives more than its purchase order still waits for.

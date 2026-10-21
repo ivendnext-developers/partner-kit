@@ -1,0 +1,17 @@
+{
+ "app": "po-check",
+ "version": "0.1.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s34_po_check/service/app.lambda_handler",
+ "package": ["tools/app_template/service", "samples/s34_po_check/po_check.py", "samples/s34_po_check/erp.py",
+             "samples/s34_po_check/erp_standin.json", "samples/s34_po_check/service"],
+ "env": [
+  {"name": "IVN_LIBRARY_APP", "required": true},
+  {"name": "POC_PREFIX", "required": true}
+ ]
+}

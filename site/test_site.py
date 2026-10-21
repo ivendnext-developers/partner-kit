@@ -678,8 +678,8 @@ class SiteTests(unittest.TestCase):
                       'href="../../samples/s23_till_guard/index.html"', 'href="../../sandbox.html"', "Run the checks", "Release"):
             self.assertIn(words, part)
         self.assertIn('href="../../plan.html?needs=line-quantity-cap"', part)
-        ask = (self.out / "needs/customers/question-on-existing-customer.html").read_text("utf-8")
-        self.assertIn(build.POINT_FORM + "&amp;title=Extension-point%20request%3A%20P-CAPTURE2", ask)
+        ask = (self.out / "needs/till/question-on-quantity-change.html").read_text("utf-8")
+        self.assertIn(build.POINT_FORM + "&amp;title=Extension-point%20request%3A%20P-CAPTURE3", ask)
         self.assertIn("Until then, today:</strong> the check before payment", ask)
         self.assertNotIn("Copy the sample", ask[ask.index('id="what-next"'):])
         self.assertIn("Instead:", (self.out / "needs/prices/fee-or-surcharge.html").read_text("utf-8").split('id="what-next"')[1])
@@ -883,7 +883,7 @@ class SiteTests(unittest.TestCase):
         folder.mkdir()
         (folder / "README.md").write_text("# S99 — a planted sample\n\nIt only exists in this test of the site build, and this first paragraph is long enough to be its description.\n\n**When to use it:** never.\n\n"
                                           "## Run it\n\n```bash\npython3 -m unittest\n```\n", "utf-8")
-        card = kit / "needs" / "customers" / "question-on-existing-customer.md"        # a not-yet card: its door is Request
+        card = kit / "needs" / "till" / "question-on-quantity-change.md"                # a not-yet card: its door is Request
         card.write_text(card.read_text("utf-8").replace("sample: none", "sample: samples/s99_planted"), "utf-8")
         self.assertEqual(self.build_in(kit), 1)                                          # no door from the card, none in the README
         self.edit_readme(kit, "s99_planted", lambda t: t.replace("## Run it", "**Door:** Manifest\n\n## Run it", 1))

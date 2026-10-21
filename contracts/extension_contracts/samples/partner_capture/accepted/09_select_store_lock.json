@@ -1,0 +1,9 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "select_answer",
+  "about": "A customer locked to another store (CL1): the sale goes on without them.",
+  "payload": {
+    "verdict": "refuse",
+    "reason": "This customer buys at the Sandton store only."
+  }
+}

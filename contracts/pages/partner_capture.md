@@ -1,15 +1,16 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_capture.md @ 8c955ffd9fcf, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_capture.md @ 4c3f11b550f1, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner capture
 
 **Contract:** [`partner_capture.v1.schema.json`](../extension_contracts/partner_capture.v1.schema.json)
 · samples: [`samples/partner_capture/`](../extension_contracts/samples/partner_capture/)
-· code: `business_logic/partner_capture.py` (`on_scan`, `customer_round`, `verify`, `gate_customer`,
+· code: `business_logic/partner_capture.py` (`on_scan`, `customer_round`, `select_round`, `verify`,
+`gate_customer`, `assert_customer_checked`,
 `validate_answer`, `validate_verify`, `validate_subscription`), `business_logic/partner_point.py` (`call`),
 the till's sheets in `public/js/mpos_partner_capture.js`.
 
 ## 1. What it is and when it fires
 
-Your HTTPS service is asked at a moment the cashier did not choose, at one of two events:
+Your HTTPS service is asked at a moment the cashier did not choose, at one of three events:
 
 - **On scan** — when the cashier scans an item your filter names (its item group, a group below it, or an
   item field that is set), after the item is found and **before** its line goes on the sale. You answer
@@ -25,6 +26,13 @@ Your HTTPS service is asked at a moment the cashier did not choose, at one of tw
   answer *allow*, *refuse*, or *challenge*: you have sent the customer a one-time code, and the till shows
   a code field. The cashier types what the customer reads out; the till sends it to you with the
   `challenge_id` (the `verify` step), and you answer *ok* or *refuse*. Three wrong codes end the check.
+- **On customer select** — when the cashier puts an EXISTING customer on the sale (picked from the list,
+  found by a scan of their card or code, matched by the phone typed into quick-create, or brought by a
+  resumed sale, a quote turned into a sale or an order, or an exchange). Never for the
+  store's walk-in, and never for a customer this cashier created in the last ten minutes while a customer
+  add service is switched on (the add already asked). You answer as on customer add: *allow* (a CRM told who is at the counter), *refuse* (a customer
+  locked to another store: the till shows your sentence and takes them off the sale — the sale goes on
+  without a customer, or with another), or *challenge* (a one-time code, checked through `verify`).
 
 **On scan you shape the cashier's flow; you are not a booking gate.** The basket lives on the device, so a
 rule that must hold when the sale is booked is a partner check (extension point `check`), which the server
@@ -35,6 +43,23 @@ create a customer until it has recorded your answer for that cashier, that name 
 makes no customer. A phone that already belongs to a customer attaches that customer, and you are not
 asked. ⚠ The gate holds on iVendNext POS's own doors; a customer made in iVendNext Desk or through another
 API is outside it.
+
+**On customer select the server holds the payment.** With a select service switched on, every door that
+charges or books the sale — the card push, a split's card leg, a wallet, the payment itself, the cash park a
+till settles, a layaway plan and its deposit, a cross-store order and its deposit, a basket where items come
+back and new ones go out for a refund or an even swap — refuses until the server
+has recorded your *allow* or a checked code for **that cashier and that customer, at that POS Profile, from
+your service**: an answer at one store never pays at another. A code checked for one customer never passes
+another, and a customer picked again is asked again. The booking — or a cash sale sent to a till — uses the
+record up, so one check pays one sale. A customer that arrives without a pick is asked when it arrives — a resumed
+sale, a quote turned into a sale or an order, an exchange's replacement sale; anything else (a quote
+opened to edit it, an answer lost, a sale paid twelve hours later) is refused at payment with *"This
+customer has not been checked. Pick them again, or sell without a customer."* — picking them again asks
+you. A payment on something the customer already holds — a layaway plan's later payment, an order's
+balance, their account — is not a new pick and is not held. A payment pressed before your answer arrives
+is refused with those same words, and picking the customer again asks you again. One cashier sends you at most 60 select rounds in ten
+minutes, counted from the first; past that the till shows *"Too many attempts. Try again in a few
+minutes."* without asking you, and a customer you already let on stays on.
 
 ## 2. Version
 
@@ -52,7 +77,8 @@ and `settings`, a JSON object:
 - on scan: `{"event": "scan", "item_groups": ["Restricted"], "item_field": "is_age_restricted"}` — item
   groups (at most 50; a group names every group below it too), an item field that holds a value (`Check`,
   `Data`, `Select`, `Link`, `Int` or `Small Text`, at permission level 0), or both; at least one;
-- on customer add: `{"event": "customer_add"}`.
+- on customer add: `{"event": "customer_add"}`;
+- on customer select: `{"event": "customer_select"}`.
 
 One service answers each event for a POS Profile. The form shows the time to answer for the event the
 settings name (section 5's table) and stops a longer one before the save. Then the System Manager ticks the
@@ -85,6 +111,16 @@ On customer add:
  "customer":{"customer_name":"Ana Diaz","phone":"+971501234567","email":"","customer_group":""}}}
 ```
 
+On customer select — `sale_ref` is empty before the sale's first line, and `customer` names the record:
+
+```json
+{"point":"capture/1","context":{"v":1,"point":"capture","event":"customer_select",
+ "challenge_id":"7a1e…32 hex…","sale_ref":"sale-3f9c","store":"Stores - DXB","pos_profile":"Mall Branch",
+ "operator":"cashier@shop.example","lang":"en",
+ "customer":{"customer":"CUST-00041","customer_name":"Ana Diaz","phone":"+971501234567",
+ "email":"ana@example.com","customer_group":"Retail"}}}
+```
+
 Keep `challenge_id` if you answer *challenge*: the code comes back with it. **Verify:**
 
 ```json
@@ -96,10 +132,10 @@ Keep `challenge_id` if you answer *challenge*: the code comes back with it. **Ve
 
 | Answer | Shape | Event | The till |
 |---|---|---|---|
-| allow | `{"verdict":"allow"}` | both | goes on, nothing shown |
+| allow | `{"verdict":"allow"}` | all | goes on, nothing shown |
 | confirm | `{"verdict":"confirm","question":"…"}` | scan | a beep and the question, Yes / No; *No* leaves the item off |
-| refuse | `{"verdict":"refuse","reason":"…"}` | both | the item is not added, or the customer not created; your sentence is shown |
-| challenge | `{"verdict":"challenge","prompt":"…","length":4–8}` | customer add | the code field, with your prompt |
+| refuse | `{"verdict":"refuse","reason":"…"}` | all | the item is not added, the customer not created, or the customer taken off the sale; your sentence is shown |
+| challenge | `{"verdict":"challenge","prompt":"…","length":4–8}` | customer add, customer select | the code field, with your prompt |
 | capture | `{"verdict":"allow","line_attributes":[{"name","value"}],"sale_attributes":[{"sale_attribute","attribute_value"}]}` | scan | a confirm sheet; on *Add with these details* the values land on this line and the sale |
 
 **Verify** answers `{"verdict":"ok"}` or `{"verdict":"refuse","reason":"…"}`.
@@ -127,6 +163,10 @@ attribute.
 | You refused a customer | *"This customer can't be added"* and your `reason`, then *Back* |
 | A wrong code, tries left | your `reason` and *"⟨n⟩ tries left."* |
 | The third wrong code | *"This customer can't be added"* and your `reason` |
+| You refused a customer put on a sale | *"This customer can't be on this sale"*, your `reason` and *"Sell without a customer, or pick another one."*, then *Back to the basket*; the customer is off the sale |
+| A select's code check is over (three wrong codes, or down and declared `refuse`) | *"This customer can't be on this sale"* and the reason; the customer is off the sale. A *Cancel* at the code field takes them off too |
+| Payment for a customer you have not let on | *"This customer has not been checked. Pick them again, or sell without a customer."* |
+| Down on customer select, declared `refuse` | *"⟨label⟩ did not answer. The customer can't be on this sale until it does."* |
 | A code of the wrong length | *"Enter the ⟨length⟩-character code."* |
 | The code check is over (ten minutes passed, it ended, or another cashier's) | *"This code check has ended. Add the customer again."* |
 | A create without your recorded answer — the till's own first step: it tries the create, the server refuses, and the till then asks you and sends the create again with the server's token | *"Check the customer's code first."* (the cashier does not see it: the round starts) |
@@ -146,7 +186,7 @@ does not match its master's pattern"* · the sale attribute refusals of the remo
 answers ok, or refuse with a reason"* · *"the answer is empty or over 64 KB"* · *"the answer is not JSON"* ·
 *"the answer is not a non-empty object"*.
 
-**When the subscription is saved:** *"Name the event in the settings: scan or customer_add."* · *"The
+**When the subscription is saved:** *"Name the event in the settings: scan, customer_add or customer_select."* · *"The
 settings of a ⟨event⟩ capture may only carry: ⟨keys⟩."* · *"item_groups must be a list of item group names."*
 · *"A scan capture names at most 50 item groups."* · *"No item group named ⟨group⟩."* · *"item_field must be
 the name of one field on Item."* · *"Item has no field ⟨field⟩ that holds a value."* · *"⟨field⟩ is set on ⟨n⟩
@@ -174,6 +214,14 @@ On customer add:
 > cashier's user id, personal data) · the customer's name, phone, email and customer group (personal data).
 > To check a code the customer gives: the challenge_id and the code. No price, total or tender is sent.
 
+On customer select:
+
+> What the till sends to this address when a cashier puts an existing customer on a sale, before the sale
+> can be paid: event · challenge_id · sale_ref (the till's own id for the sale) · store · pos_profile · lang
+> (the till's language) · operator (the signed-in cashier's user id, personal data) · the customer's id,
+> name, phone, email and customer group (personal data). To check a code the customer gives: the
+> challenge_id and the code. No price, total or tender is sent.
+
 Changing the address, or the event, clears the consent until someone ticks it again.
 
 **Down, slow, or an answer refused whole** — your declared down answer:
@@ -182,6 +230,7 @@ Changing the address, or the event, clears the consent until someone ticks it ag
 |---|---|---|
 | On scan (1.5 seconds unless raised, 3 at most) | the line goes on; the log row is flagged | the item is not added (section 4) |
 | On customer add (3 seconds unless raised, 10 at most) | the customer may be created; the log row is flagged | the customer is not created (section 4) |
+| On customer select (3 seconds unless raised, 10 at most) | the customer stays on and the sale may be paid; the log row is flagged | the customer is taken off the sale (section 4) |
 | At `verify` | the code counts as checked; flagged | the check ends |
 
 Every call leaves one *Retail Extension Log* row (outcome, the verdict, flagged or not), listed on the
@@ -195,7 +244,10 @@ You are not called. The till carries each service's declared down answer, and th
 groups and the items whose field is set), in its boot snapshot. On scan: an item the filter names goes on
 (`allow_and_flag`, marked on the line, and the sale's sync writes one flagged row naming it) or is refused
 (`refuse`). On customer add: `allow_and_flag` lets the cashier take the name and phone for the sale;
-`refuse` stops it on the till. If the till could not read its declared answers, every scanned item goes on
+`refuse` stops it on the till. On customer select: `allow_and_flag` keeps the customer on the sale; `refuse`
+takes them off. A sale paid offline with a customer you were not asked about books when it syncs, flagged
+once (*"customer on the sale offline, not asked"*); paid after the connection returns, it is refused until
+the customer is picked again. If the till could not read its declared answers, every scanned item goes on
 and is flagged (the scan's answer is advisory), and a new customer waits for a connection.
 **At sync a customer is never refused:** the sale was paid hours ago, so a customer created through the
 sync without your recorded answer is created and flagged. The receipt's *add a contact* after a walk-in sale
@@ -213,9 +265,12 @@ on a line is annotation: it moves no money.
 
 Limits: texts 1 to 140 · `length` 4 to 8 · 1 to 10 line rows · line value 140 · 1 to 20 sale rows · item
 groups 50 · an item field set on at most 2000 items · three tries per code, counted before you are called ·
-60 customer rounds per 10 minutes from one address · a challenge, and the token it earns, live ten minutes
-(the token is spent by the create) · answer 64 KB ·
-on scan 1.5 seconds unless raised, 3 at most · on customer add 3 seconds unless raised, 10 at most · one
+60 customer adds and 3000 customer selects per 10 minutes from one address (a till asks on every pick while
+online), and 60 select rounds per cashier · a challenge, and the token it earns,
+live ten minutes (the token is spent by the create) · a select's recorded answer lives twelve hours and is
+spent by the sale it pays · answer 64 KB ·
+on scan 1.5 seconds unless raised, 3 at most · on customer add or select 3 seconds unless raised, 10 at
+most · one
 service per event per POS Profile. HTTPS only, the certificate checked against your host name; a host that
 resolves to a private, loopback or link-local address is refused unless the site allows it (a test bench).
 
@@ -234,14 +289,22 @@ reads out *482913*; the till sends `verify` with it and you answer `{"verdict":"
 created. Had she given a wrong code three times, you would answer
 `{"verdict":"refuse","reason":"Wrong code."}` each time and the third would end the check: no customer.
 
+**A customer locked to a store, and a code for a known customer.** A select service with
+`{"event": "customer_select"}`. The cashier at the Mall picks *CUST-00041*, whose account belongs to the
+Sandton store: you answer `{"verdict":"refuse","reason":"This customer buys at the Sandton store only."}`;
+the till shows it and takes her off the sale, which carries on without a customer. Another customer holds a
+loyalty account that needs a code: you send it and answer `challenge`; until `verify` answers *ok*, the card
+push and the payment are refused on the server.
+
 ## 9. Telling an AI assistant
 
 > Build an HTTPS endpoint that answers iVendNext POS extension point `capture`, version 1. The contract is
-> `partner_capture.v1.schema.json`: `$defs/scan_request`, `$defs/customer_request` and
-> `$defs/verify_request` in; `$defs/scan_answer`, `$defs/customer_answer` and `$defs/verify_answer` out.
+> `partner_capture.v1.schema.json`: `$defs/scan_request`, `$defs/customer_request`,
+> `$defs/select_request` and `$defs/verify_request` in; `$defs/scan_answer`, `$defs/customer_answer`,
+> `$defs/select_answer` and `$defs/verify_answer` out.
 > The samples under `samples/partner_capture/` are known-good and known-bad answers. Verify
 > `X-iVendNext-Signature` (base64 HMAC-SHA256 of `<timestamp>.<raw body>`) before parsing and refuse a
 > timestamp more than 300 seconds off. Dispatch on `context.event`. On `scan`, answer within 1.5 seconds;
-> on `customer_add` within 3: to send a code, store it against `context.challenge_id`, answer `challenge`
+> on `customer_add` or `customer_select` within 3: to send a code, store it against `context.challenge_id`, answer `challenge`
 > with its length, and answer `verify` for that id with `ok` or `refuse`. Texts are plain, 1 to 140
 > characters. Never return a price.

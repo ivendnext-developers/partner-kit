@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/business_logic/manifest_check.py,
-# at development 8c955ffd9fcf9ca0f35fc9610a06d526bcfdbf69. The shop's own checker (the install screen runs it) is the source;
+# at development 4c3f11b550f19a30b00f66f2c18a7b56c96e4aba. The shop's own checker (the install screen runs it) is the source;
 # this copy lets you check a manifest before you send it, and refuses the same manifests in the same words. Everything
 # below this header equals the source, except ten comments reworded in plain words (they named the product's
 # internal lane ids). A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
@@ -1408,13 +1408,14 @@ def _remote_keys(v: _V):
 
 # Each extension point on this product and its own time-to-answer maximum (ivendnext_mpos partner_point.POINTS
 # `timeout_max`). An extension point the product adds needs a row here before a manifest names it.
-SUB_POINTS = {"desk_action": 10, "page": 10, "check": 10, "capture": 10}
+SUB_POINTS = {"desk_action": 10, "page": 10, "check": 10, "capture": 10, "doccheck": 10}
 # each extension point's answers when its service is down (`Point.down_answers`, the first the product's default)
 DOWN_ANSWERS = {
     "desk_action": ("refuse",),
     "page": ("refuse",),
     "check": ("allow_and_flag", "refuse", "ask"),
     "capture": ("allow_and_flag", "refuse"),
+    "doccheck": ("allow_and_flag", "refuse", "ask"),
 }
 # P-CHECK (partner_check.PER_SCOPE_MAX, SCOPE_SECONDS_MAX): a manifest's checks answer every POS Profile (a
 # manifest names no scope), so they all share each one; the product checks it again, with the site's other checks, when
@@ -1424,6 +1425,7 @@ CHECKS_MAX, CHECK_SECONDS_MAX = 3, 10
 CAPTURE_EVENTS = {
     "scan": ({"event", "item_groups", "item_field"}, 3),
     "customer_add": ({"event"}, 10),
+    "customer_select": ({"event"}, 10),
 }
 CAPTURE_GROUPS_MAX = 50
 SUB_KEYS = {
@@ -1498,7 +1500,8 @@ def _extension_subscriptions(v: _V):
             | SHOP_SWITCHES
             | SHOP_CONSENT
             | {"secret", "scope", "module", "may_approve"}
-            | ({"settings"} if point in ("check", "capture") else set()),
+            # a document check names its record type and fields there (the product checks them)
+            | ({"settings"} if point in ("check", "capture", "doccheck") else set()),
         )
         if not isinstance(key, str) or not re.match(r"^[a-z][a-z0-9_]{0,39}$", key):
             v.refuse(
@@ -1585,7 +1588,7 @@ def _capture_settings(v: _V, w, key, settings) -> int:
     """
     event = settings.get("event") if isinstance(settings, dict) else None
     if event not in CAPTURE_EVENTS:
-        v.refuse(w, key, "Name the event in the settings: scan or customer_add.")
+        v.refuse(w, key, "Name the event in the settings: scan, customer_add or customer_select.")
         return 10
     known, top = CAPTURE_EVENTS[event]
     if set(settings) - known:
@@ -1693,6 +1696,8 @@ RULE_KEYS = {
     "conditions",
     "states",
     "locked_fields",
+    "action",
+    "scope_fields",
 }
 
 
@@ -1711,6 +1716,7 @@ def _save_rules(v: _V):
         )  # the product shows it as the refusal, unescaped
         _strings(v, w, name, r, "states")
         _strings(v, w, name, r, "locked_fields")
+        _strings(v, w, name, r, "scope_fields")
         _objects(v, w, name, r, "conditions")
 
 

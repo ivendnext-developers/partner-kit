@@ -1,0 +1,23 @@
+{
+  "extension_point": "doccheck",
+  "contract": "answer",
+  "about": "Only the settings' fill_fields.",
+  "given": {
+    "record_type": "Material Request",
+    "settings": {
+      "record_type": "Material Request",
+      "send_fields": "name",
+      "fill_fields": [
+        "schedule_date"
+      ]
+    }
+  },
+  "payload": {
+    "verdict": "fill",
+    "fields": {
+      "title": "x"
+    }
+  },
+  "expect_refusal": "fields names a field the subscription does not let it fill",
+  "beyond_schema": true
+}

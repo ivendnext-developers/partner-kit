@@ -1,0 +1,19 @@
+{
+  "extension_point": "doccheck",
+  "contract": "answer",
+  "about": "The ERP holds the supplier.",
+  "given": {
+    "record_type": "Material Request",
+    "settings": {
+      "record_type": "Material Request",
+      "send_fields": "name",
+      "fill_fields": [
+        "schedule_date"
+      ]
+    }
+  },
+  "payload": {
+    "verdict": "refuse",
+    "reason": "The ERP holds this supplier: invoice 4471 is unpaid."
+  }
+}

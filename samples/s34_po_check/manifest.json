@@ -1,0 +1,21 @@
+{
+ "manifest_version": 2,
+ "app": "pp_poc",
+ "prefix": "PP POC",
+ "title": "Purchase orders checked by your ERP",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A document check on Purchase Order. When a buyer submits a purchase order, from Desk, an import or the API, the shop's server sends the order's name, supplier, total and lines to the service, which asks the shop's ERP: a supplier the ERP holds is refused with the ERP's reason; an order over what the company has left of its monthly purchasing budget needs a Purchase Manager's approval, whoever submits it; a clear order is submitted carrying the ERP's own order number, which the service fills into the field 'ERP order number' this app adds to Purchase Order. The service writes nothing else and never money. The check installs switched off; the shop reads what is sent, ticks the consent and switches it on. When the service does not answer in 3 seconds the order is not submitted (the declared down answer is refuse), so nothing reaches the ERP unchecked. allowed_urls is the programme's test address; a partner writes its own.",
+ "allowed_urls": ["https://host.docker.internal:8126/poc/check"],
+ "custom_fields": [
+  {"dt": "Purchase Order", "fieldname": "pp_poc_erp_number", "fieldtype": "Data", "label": "ERP order number",
+   "insert_after": "supplier",
+   "description": "Filled by the ERP check when the order is submitted. A copied order carries the copied number until its own submit fills a new one."}
+ ],
+ "extension_subscriptions": [
+  {"key": "po_check", "point": "doccheck", "label": "ERP purchase order check", "endpoint_url": "https://host.docker.internal:8126/poc/check",
+   "timeout_seconds": 3, "down_answer": "refuse",
+   "settings": {"record_type": "Purchase Order", "send_fields": "name, supplier, grand_total, items(item_code, qty)",
+                "on_validate": false, "fill_fields": ["pp_poc_erp_number"]}}
+ ]
+}

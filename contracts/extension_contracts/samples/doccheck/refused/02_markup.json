@@ -1,0 +1,20 @@
+{
+  "extension_point": "doccheck",
+  "contract": "answer",
+  "about": "Plain text only.",
+  "given": {
+    "record_type": "Material Request",
+    "settings": {
+      "record_type": "Material Request",
+      "send_fields": "name",
+      "fill_fields": [
+        "schedule_date"
+      ]
+    }
+  },
+  "payload": {
+    "verdict": "ask",
+    "question": "<b>Go on?</b>"
+  },
+  "expect_refusal": "question must be plain text"
+}

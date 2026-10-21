@@ -217,6 +217,16 @@
             "type": "string"
           }
         },
+        "pos_opening": {
+          "description": "The POS day (opening entry) the sale or refund is taken under; empty when none is open. Part of the fingerprint: a verdict for one day never pays under another.",
+          "type": "string",
+          "maxLength": 140
+        },
+        "pos_terminal": {
+          "description": "That day's POS Terminal, so a rule can hold per terminal; empty when the day names none. Part of the fingerprint: a day resumed at another terminal is asked again.",
+          "type": "string",
+          "maxLength": 140
+        },
         "return_of": {
           "type": "object",
           "required": [

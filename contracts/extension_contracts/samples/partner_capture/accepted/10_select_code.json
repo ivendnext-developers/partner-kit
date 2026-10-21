@@ -1,0 +1,10 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "select_answer",
+  "about": "A one-time code for an existing customer (AF8); the sale cannot be paid until it is checked.",
+  "payload": {
+    "verdict": "challenge",
+    "prompt": "Ask the customer for the 6-digit code we just sent.",
+    "length": 6
+  }
+}

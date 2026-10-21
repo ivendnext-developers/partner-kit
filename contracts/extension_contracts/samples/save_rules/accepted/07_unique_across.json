@@ -1,0 +1,12 @@
+{
+  "extension_point": "save_rules",
+  "contract": "declaration",
+  "about": "A customer's tax id on one active customer only.",
+  "payload": {
+    "doctype": "Retail Save Rule",
+    "rule_name": "One customer per tax id",
+    "record_type": "Customer",
+    "kind": "unique_across",
+    "field": "tax_id"
+  }
+}

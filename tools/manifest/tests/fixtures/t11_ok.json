@@ -1,0 +1,28 @@
+{
+ "manifest_version": 2,
+ "app": "pp_wvt",
+ "prefix": "PP WVT",
+ "title": "Every train T11 declaration, once",
+ "version": "0.0.1",
+ "publisher": "PP WVT",
+ "description": "A test manifest carrying the two save-rule kinds and the two subscriptions POS train T11 added: a value unique across records in a scope, submit kept for a role when a condition holds, a document check on purchase orders that may fill a field the manifest adds, and a capture when an existing customer is put on a sale.",
+ "allowed_urls": ["https://partner.example/check", "https://partner.example/select"],
+ "custom_fields": [
+  {"dt": "Purchase Order", "fieldname": "pp_wvt_erp_number", "fieldtype": "Data", "label": "ERP order number", "insert_after": "supplier"}
+ ],
+ "save_rules": [
+  {"rule_name": "PP WVT One tax id per group", "record_type": "Customer", "kind": "unique_across", "field": "tax_id",
+   "scope_fields": ["customer_group"], "mode": "refuse"},
+  {"rule_name": "PP WVT Store X receives", "record_type": "Stock Entry", "kind": "role_for_action", "action": "submit",
+   "bypass_roles": ["Stock Manager"], "mode": "refuse",
+   "conditions": [{"field": "purpose", "operator": "=", "value": "Material Transfer"}]}
+ ],
+ "extension_subscriptions": [
+  {"key": "po_check", "point": "doccheck", "label": "Purchase order check", "endpoint_url": "https://partner.example/check",
+   "timeout_seconds": 3, "down_answer": "refuse",
+   "settings": {"record_type": "Purchase Order", "send_fields": "name, supplier, grand_total", "on_validate": false,
+                "fill_fields": ["pp_wvt_erp_number"]}},
+  {"key": "on_select", "point": "capture", "label": "Customer check", "endpoint_url": "https://partner.example/select",
+   "timeout_seconds": 3, "down_answer": "allow_and_flag", "settings": {"event": "customer_select"}}
+ ]
+}

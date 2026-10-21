@@ -18,6 +18,7 @@ TITLE_DOOR = {
     "Partner check": "check-before-payment",
     "Partner capture": "capture-on-event",
     "Desk action": "desk-action",
+    "Document check": "document-check",
     "Event feed": "event-feed",
     "Field rules": "field-rules",
     "Fiscal reader": "fiscal-reader",
