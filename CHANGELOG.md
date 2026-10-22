@@ -4,6 +4,8 @@ Versions will follow our product releases once the kit is versioned; until then 
 
 ## Unreleased
 
+- **2026-10-22 — the README opens with a one-minute try, and the sample count is right.** The README's first lines now say what the kit is for and show a command that runs a worked sample's tests with Python 3 alone. The opening sentence said thirty-two worked samples; there are thirty-four (S1–S35; there is no S15), as the folder table already said.
+
 - **2026-10-22 — the general release: iVendNext POS 2.0.0.652, of 18 October 2026.** From it, each version of an extension point's contract, of an API call the kit describes and of the manifest format is served for 12 months after its successor ships ([guide ch. 18](guide/18_versioning_and_support.md)). The README's preview banner is gone, chapters 1, 2 and 17, the feedback pages and chapter 15 say how access and publishing work today, and chapter 17 points to [*Publish your app*](site/pages/publish.md).
 
 - **2026-10-22 — Call-centre orders by district, live.** The App library lists it free, hosted by CitiXsys at `call-centre-orders.ivendnext.app`. Eight pictures from a demo shop are in S35's README and four in [the recipe](recipes/call_centre_orders.md): the App library card, the install, the service's consent, a Serving store, *Send to store* and its answer, the reloaded order and a store's list.

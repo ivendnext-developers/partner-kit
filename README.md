@@ -1,8 +1,19 @@
 # The iVendNext partner kit
 
-Everything you need to build for an iVendNext customer without changing iVendNext itself: the guide, the recipes, the API description, the extension points' contracts, the tools, thirty-two worked samples, the design kit, the blueprint template and the feedback forms.
+Build the app a retail chain needs — a rule at the till, a record of its own, a link to its systems — without changing iVendNext itself. This kit holds the guide, the recipes, the API description, the extension points' contracts, the tools, thirty-four worked samples, the design kit, the blueprint template and the feedback forms.
 
 **Who it is for:** iVendNext Partners, licensed customers' IT teams, and the CitiXsys Consulting Team.
+
+## Try it in a minute
+
+You need Python 3 and nothing else: no install, no account, no network. Clone the kit and run the tests of a worked sample, a coupon rule that is checked when the cashier presses **Pay**:
+
+```bash
+git clone https://github.com/ivendnext-developers/partner-kit.git && cd partner-kit
+python3 -m unittest discover -s samples/s32_coupon_rules/tests -p 'test_*.py'
+```
+
+Then read [that sample's README](samples/s32_coupon_rules/README.md): what the shop does, what the cashier sees, what leaves the shop, and the limits. Most samples come with tests you run the same way.
 
 **Building with an AI assistant?** Point it at [AGENTS.md](AGENTS.md) first: it holds the rules, the commands and a prompt recipe for each way in, in [`ai/`](ai/README.md).
 
