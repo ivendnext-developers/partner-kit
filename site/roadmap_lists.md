@@ -4,7 +4,7 @@ Generated from iVendNext's own boards by our roadmap generator, for the page *Wh
 
 ## Listed
 
-In the App library now, 32 apps, free or with a key:
+In the App library now, 33 apps, free or with a key:
 
 - **AI:** [AI Gateway](https://library.ivendnext.app/apps/ivendnext_ai_gateway) · [CoPilot](https://library.ivendnext.app/apps/ivendnext_copilot) · [Foresight](https://library.ivendnext.app/apps/ivendnext_foresight)
 - **Approvals:** [Price change approvals](https://library.ivendnext.app/apps/ivendnext_apr) · [Price change approvals across stores](https://library.ivendnext.app/apps/ivendnext_aps)
@@ -13,7 +13,7 @@ In the App library now, 32 apps, free or with a key:
 - **Integrations:** [SAP Business One](https://library.ivendnext.app/apps/sap_business_one_integration) · [WooCommerce](https://library.ivendnext.app/apps/ivendnext_woocommerce) · [Acumatica](https://library.ivendnext.app/apps/ivendnext_acumatica)
 - **Payments:** [Card payments on Stripe Terminal](https://library.ivendnext.app/apps/ivendnext_pay_stripe_terminal) · [Partner payment gateways](https://library.ivendnext.app/apps/ivendnext_pay_remote)
 - **Reports:** [Price-deviation audit](https://library.ivendnext.app/apps/ivendnext_pda)
-- **Selling:** [Warranty terms](https://library.ivendnext.app/apps/ivendnext_wrc) · [Till field rules](https://library.ivendnext.app/apps/ivendnext_fld) · [iVendNext POS](https://library.ivendnext.app/apps/ivendnext_mpos) · [Counter hardware](https://library.ivendnext.app/apps/hw_integration) · [Price-checker kiosk](https://library.ivendnext.app/apps/ivendnext_prc) · [Members-only check before payment](https://library.ivendnext.app/apps/ivendnext_rgd) · [Till guard rules](https://library.ivendnext.app/apps/ivendnext_tgr) · [Coupon rules](https://library.ivendnext.app/apps/ivendnext_cpn) · [Click and collect](https://library.ivendnext.app/apps/ivendnext_ccb) · [Call-centre orders by district](https://library.ivendnext.app/apps/ivendnext_cco) · [Duty-free allowance and boarding pass](https://library.ivendnext.app/apps/ivendnext_dfa) · [Age-restricted sale check](https://library.ivendnext.app/apps/ivendnext_age)
+- **Selling:** [Warranty terms](https://library.ivendnext.app/apps/ivendnext_wrc) · [Till field rules](https://library.ivendnext.app/apps/ivendnext_fld) · [iVendNext POS](https://library.ivendnext.app/apps/ivendnext_mpos) · [Counter hardware](https://library.ivendnext.app/apps/hw_integration) · [Price-checker kiosk](https://library.ivendnext.app/apps/ivendnext_prc) · [Members-only check before payment](https://library.ivendnext.app/apps/ivendnext_rgd) · [Till guard rules](https://library.ivendnext.app/apps/ivendnext_tgr) · [Coupon rules](https://library.ivendnext.app/apps/ivendnext_cpn) · [Click and collect](https://library.ivendnext.app/apps/ivendnext_ccb) · [Call-centre orders by district](https://library.ivendnext.app/apps/ivendnext_cco) · [Duty-free allowance and boarding pass](https://library.ivendnext.app/apps/ivendnext_dfa) · [Age-restricted sale check](https://library.ivendnext.app/apps/ivendnext_age) · [Expiry markdown](https://library.ivendnext.app/apps/ivendnext_exm)
 - **Stock:** [Unit codes at the scan](https://library.ivendnext.app/apps/ivendnext_unc) · [Bin locations](https://library.ivendnext.app/apps/ivendnext_bln) · [iVendNext Handheld](https://library.ivendnext.app/apps/ivendnext_handheld) · [Pick route](https://library.ivendnext.app/apps/ivendnext_pck)
 
 ## Being built
@@ -32,11 +32,9 @@ In the App library now, 32 apps, free or with a key:
 
 ## Next
 
-- The receipt sent to the customer's phone by a rule, after the sale (the country's messaging gateway is yours)
 - Staff time clock
-- Expiry markdown: a lower price as the sell-by date nears
 - Optical prescriptions and lab orders
-- Pharmacy, the standard version: Pharmacy counter rules · Expiry and recall · Controlled-drug register pack · Insurance co-payment
+- Pharmacy, the standard version: Pharmacy counter rules · Expiry and recall · Regulated stock register · Insurance co-payment
 - Hospitality, the standard version: Kitchen display · Front of house · Guest ordering · Restaurant back office · Room charge
 
 ## Starters
