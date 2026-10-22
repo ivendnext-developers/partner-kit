@@ -52,6 +52,14 @@ The App library's *Bin locations* (1.1.0) is S2's records with only its till key
 
 Tests: `tests/test_where.py`; their canaries: `python3 samples/s2_bins/tests/canaries.py` (each must be RED).
 
+## Make it your own
+
+The App library's *Bin locations* is this sample. To give a customer its own version, a partner copies it, renames it to their company's prefix and changes what the customer needs. The recipe [Make one of our apps your own](../../recipes/make_it_your_own.md) does it end to end, with this sample as its worked example: a *Zone* on each bin, named by *Where is it?*.
+
+- **The setting that carries the prefix:** `BLN_PREFIX` (the till key's service). The sales service (`service/bins.py`) names its record types in code: change them by hand (the rename lists each line).
+- **What a partner usually changes:** a field on a bin or a location, what *Where is it?* says (`core.where_answer`), which records the key reads (`service/where.py`, `bin_rows`).
+- **How a customer's records move** from *Bin locations* to your version: `tools/deploy/copy_records.py ivendnext_bln <your app>`.
+
 ## Its form (outsiders never write Python inside a customer's site)
 
 | Piece | What |
