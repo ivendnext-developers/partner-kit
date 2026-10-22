@@ -12,7 +12,7 @@ its own priced basket, and ``judge`` answers:
   carries the day its flight leaves and a long flight can arrive two days later), by the airport's own day;
 - **over an allowance:** an item group with a *Duty-free allowance per passenger* holds more, counting this sale and the
   passenger's earlier sales on the same pass (returns take theirs back), than its allowance. Each line counts its
-  quantity in the item's stock unit times the item's *Counts toward the allowance as* (blank: 1), so a group can be
+  quantity in the item's stock unit times the item's *Counts toward the duty-free allowance as* (blank: 1), so a group can be
   limited in litres or in cigarettes. A group's allowance covers every group below it.
 
 A sale that sells nothing (a refund) is allowed without reading the shop. ⛔ No answer moves money: no price, no line,

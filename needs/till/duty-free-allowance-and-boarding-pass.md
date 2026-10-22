@@ -22,6 +22,7 @@ A sale detail for the boarding pass, which the cashier scans in, and a service t
 - A departing flight delayed past midnight is refused after midnight as another day's.
 - Offline, the till does not ask the service: the sale goes on and is flagged when it syncs.
 - Earlier sales are counted at the check: two sales on one pass checked at the same moment at two tills each miss the other. Sales at another shop are not seen.
+- The app's user needs a plain read on the shop's sales and no User Permissions, or earlier sales are only partly seen and a passenger can buy past the allowance.
 - Passenger categories (transit, crew, airport staff) and their tax are not judged.
 - The check does not run on a park to a till, a layaway deposit, an account collection or the Desk's own POS screen.
 
