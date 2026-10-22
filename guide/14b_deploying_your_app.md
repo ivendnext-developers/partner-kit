@@ -93,7 +93,7 @@ If you would rather not run a server, CitiXsys runs your app for you on our own 
 python3 tools/deploy_app/deploy_app.py <your app folder> --image <registry>/<repository>:1.0.0 --plan starter --partner <your name>
 ```
 
-**Order it** from your CitiXsys partner manager. A licensed customer's IT team and CitiXsys's own teams, such as the CitiXsys Consulting Team, order hosting the same way. Ordering and paying online is coming. Not an iVendNext Partner yet? Start with the [iVendNext Partner form](https://www.ivendnext.com/partner/#be-a-partner).
+**Order it** from your CitiXsys partner manager. A licensed customer's IT team and CitiXsys's own teams, such as the CitiXsys Consulting Team, order hosting the same way. Not an iVendNext Partner yet? Start with the [iVendNext Partner form](https://www.ivendnext.com/partner/#be-a-partner).
 
 **What it costs:** a price per app per month, in US dollars (below), covering the copies the plan runs (sandbox, staging). It is billed monthly, in whole months from the month the app goes live, with no minimum term: either side can stop at any month end. Whoever orders the hosting pays: you, or the customer the app is built for when that customer orders it. App Hosting is billed on its own, never as a line on an iVendNext subscription invoice. An app that only answers presses and is listed in the App library carries no hosting charge. The managed database, when it is offered, is priced separately.
 
@@ -105,11 +105,11 @@ python3 tools/deploy_app/deploy_app.py <your app folder> --image <registry>/<rep
 | **Standard** | $129 | a connected app | small or medium · one instance · logs kept 30 days · a staging copy |
 | **Managed** | $399 | apps built by the CitiXsys Consulting Team, and anyone who wants us to run it | any size · two instances · logs kept 90 days · we check the app before it is connected and test it before each iVendNext upgrade, and patch the apps whose source we hold |
 
-**Not offered yet:** a database for your app, backups of its data, and alerts when it is down. A hosted app has no disk of its own to keep data on, so an app that keeps data waits for the managed database, which is priced separately: ask us when it will be offered.
+**What hosting runs:** your app's service. A hosted app has no database or disk of its own: keep its data in the shop's own records (your manifest's record types), or in a store of your own.
 
 **An app that only answers presses runs as a function**, paid per call, not as an always-on container: see [A function or a container](14b_deploying_your_app.md#a-function-or-a-container) in this chapter.
 
-**A new version:** send the new version's tag on the same order. Shipping updates from your own GitHub, with a permission limited to your one app, is coming.
+**A new version:** send the new version's tag on the same order.
 
 **The part inside the shop is separate.** Your manifest reaches each customer's site through its administrator's install screen, with the customer's consent (chapter 14a); `tools/deploy` puts it on your own sandbox. Hosting runs only your outside service. An app that is not a container in this template's shape is a Managed job: ask us.
 

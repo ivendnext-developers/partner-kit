@@ -64,6 +64,8 @@ Run all of these from the repository root. Nothing below needs a network except 
 | Send the example API calls to your sandbox | `BASE=… KEY=… SECRET=… bash api/collection/run.sh` (it **writes** test records: sandbox only) |
 | Let an assistant read a shop's records | `IVN_BASE=… IVN_KEY=… IVN_SECRET=… python3 tools/mcp_server/server.py` (read-only; the person's own key; `tools/mcp_server/README.md`) |
 | Read the events a shop produces | `tools/feed_client/README.md` |
+| Make a copy of one of our apps the person's own (their company's prefix; the shop's checker runs on the result) | `python3 tools/manifest/rename.py <copy>/manifest.json --prefix "<THEIR PREFIX>" --write` ([recipe](recipes/make_it_your_own.md)) |
+| Move a shop's records from our app to the person's version of it (only after the person has said yes: it **writes** to that site) | `BASE=… KEY=… SECRET=… python3 tools/deploy/copy_records.py <our app> <their app> --write` |
 | Publish to the App library (only after the person has said yes: it lists the app or sends it to a customer's shelf) | `python3 tools/publish/publish.py publish <project> --partner <code>` (`tools/publish/README.md`) |
 | Run a sample's tests (samples that have a `tests` folder) | `python3 -m unittest discover -s samples/<name>/tests` |
 

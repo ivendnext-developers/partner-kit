@@ -8,9 +8,11 @@ Your app's outside service, the part a shop calls, has to run on a server the sh
 |---|---|---|
 | **Where it runs** | Its own box at `https://<app>.ivendnext.app`, with its own logs and its own store for secrets | Any server you run, with a public HTTPS address |
 | **Who runs the server** | CitiXsys; you own the code | You |
-| **How a shop connects** | By itself, when it installs your app from the App library's public list. An app delivered on one customer's *Made for you* shelf is connected by hand, for now | By hand, for each shop |
+| **How a shop connects** | By itself, when it installs your app from the App library's public list. An app delivered on one customer's *Made for you* shelf runs for that one shop, with its secrets set by hand | By hand, for each shop |
 | **What it costs** | A price per app per month ([the plans](#host-with-citixsys)) | Your own hosting bill |
-| **A new version** | You send us its tag. Shipping it from your own GitHub is coming | You deploy it |
+| **A new version** | You send us its tag | You deploy it |
+
+Either way, you bill your customer what you choose, and nothing is shared with us ([Build your business on iVendNext's apps](business.md)).
 
 The checks are the same on both: your app checks every call's signature, and a shop's site checks only that your app is at a public HTTPS address, then your answer's time and shape ([Security and the handshake](security.md)).
 
@@ -24,7 +26,7 @@ Anyone who builds for iVendNext, on one path: an iVendNext Partner, a licensed c
 2. **Build and check.** The kit's `check` tells you, before anyone else sees your app, whether it is allowed. Installing it on your sandbox with `tools/deploy` shows the exact words a shop's administrator will be asked to agree to.
 3. **Name it.** Under your company's own first word, given once when we register your company: `ACME LOYALTY` → `acme_loyalty`. Every app you name under it is yours, with no wait on us ([Publish your app](publish.md)).
 4. **Publish.** Publishing signs your app onto your preview shelf at once. A customer's shelf follows when your publish names that customer.
-5. **Order hosting.** Build the service's image, or a function's package, and send a hosting order. We create its box and its address and switch it on. Ordering and paying online, and shipping each update from your own GitHub, are coming.
+5. **Order hosting.** Build the service's image, or a function's package, and send a hosting order. We create its box and its address and switch it on.
 6. **List it for every shop.** Optional. One approval by us for its first listing, and again when a version sends data to a new address, adds an outside service with its own user or needs more Desk users, puts it on the public list with its card and its guide page.
 
 ## Host with CitiXsys
@@ -37,4 +39,3 @@ Anyone who builds for iVendNext, on one path: an iVendNext Partner, a licensed c
 
 Every deployable app does the same eight things wherever it runs: [What every deployable app does](../../guide/14b_deploying_your_app.md#what-every-deployable-app-does). The template your app starts from: [`tools/app_template`](../../tools/app_template/README.md).
 
-A blueprint of our own hosting set-up, to run in your own cloud account, is coming.

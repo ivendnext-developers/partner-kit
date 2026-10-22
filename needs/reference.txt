@@ -8,6 +8,7 @@ recipes/estate_rollout.md — rolling a set-up out to many stores (chapter 14a)
 recipes/hosted_sandbox.md — the builder's own sandbox (chapter 2)
 recipes/integration_user.md — the app's user and key (chapter 2)
 recipes/money_kit.md — testing money on recorded baskets (chapter 14)
+recipes/make_it_your_own.md — a partner's own version of one of our apps, for any need an app of ours answers
 recipes/portal.md — a standalone portal for the customer's users (chapter 13a)
 recipes/release_gate.md — the release gate in the customer's CI (chapter 14)
 recipes/sign_in.md — sign in with iVendNext
