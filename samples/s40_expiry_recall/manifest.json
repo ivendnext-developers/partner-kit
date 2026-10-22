@@ -1,0 +1,1370 @@
+{
+ "manifest_version": 2,
+ "app": "pp_rcl",
+ "prefix": "PP RCL",
+ "title": "Expiry and recall",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "Expiry and recall for a pharmacy, a grocery or any shop that sells lots with an expiry date. A recall notice (the regulator's reference, its class, depth and clock) lists the lots; Block these batches, pressed by a Recall Officer, switches each lot off at every till and store at once (Batch disabled), reads the stock ledger to find each store's stock, and, at consumer depth, the customers already supplied from the sales that moved the lot, writes both onto the notice and makes a Store Progress record per store for its staff. A lot with no expiry date is never saved by the app (the shop would write a guessed date into it): it is listed instead. Recalled and expired stock moves to a quarantine store by the shop's own transfer; a stock entry that disposes of a scheduled item (an issue, or stock leaving quarantine, or a blocked or expired lot, for anywhere but quarantine) is refused unless it names a Disposal Record for that store with the regulator's visit recorded (officer, authority, date, signed form) and locked, whose lines still cover it; a stock count may not dispose of such stock. An Expiry Worklist lists lots expiring within the shop's window, per store, and medicine lots with no expiry date. A goods receipt is refused when a lot has fewer days left (from today, or the posting date if later) than the shop's minimum, unless its line has a Letter of Undertaking with its days; an expired lot always; a lot of an item with a shelf life until the pack's expiry is typed on the line; and a receipt with no supplier's invoice number when the settings ask for one. Receipts and stock entries posted by the ERP connector's own user are not refused for what they hold (SAP brings its receipts and disposals as stock entries): the problems are written into the receipt's Receiving check field or the entry's ERP check field. While the service does not answer, receipts, stock entries and stock counts wait (they are refused), the ERP connector's included: its sync stops until the service answers again. Not yet: a Desk document that names a blocked lot by hand is not refused until the POS app refuses disabled lots on every stock document; an offline till keeps a blocked lot until it syncs. Sent to the service: a notice's name, class, depth, dates and lots; a worklist's name, store and window; a receipt's name, supplier, date, return flag, supplier's note and its lines' item, quantities, lot, bundle, pack expiry and Letter of Undertaking; a stock entry's name, purpose, date, disposal record and its lines' item, quantities, stores, lot and bundle; a stock count's name, purpose, date and its lines' item, store, quantities, lot and bundles. The install makes the roles PP RCL Integration and PP RCL Recall Officer; the shop gives the integration role read on Item, Serial and Batch Bundle, POS Invoice, Sales Invoice, Delivery Note, Stock Entry and Retail Save Rule, and read and write on Batch, switches on the five save rules, chooses the app's user on the feed PP RCL Recall feed (leave the feed off) and presses Connect again. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8137/press/block",
+  "https://host.docker.internal:8137/press/worklist",
+  "https://host.docker.internal:8137/check/receipt",
+  "https://host.docker.internal:8137/check/disposal",
+  "https://host.docker.internal:8137/check/count"
+ ],
+ "doctypes": [
+  {
+   "name": "PP RCL Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Title",
+     "reqd": 1,
+     "unique": 1,
+     "default": "Default",
+     "description": "The service reads the record named Default."
+    },
+    {
+     "fieldname": "hours_from_utc",
+     "fieldtype": "Float",
+     "label": "Hours from UTC at the shop",
+     "description": "Your site's own time zone (System Settings), so the app's dates and times read as the shop's: 3 for Nairobi or Riyadh, 4 for Dubai, 1 for Lagos, 2 for Cairo, -6 for Mexico City. Blank: UTC."
+    },
+    {
+     "fieldname": "receiving_section",
+     "fieldtype": "Section Break",
+     "label": "Goods receipts"
+    },
+    {
+     "fieldname": "min_shelf_days",
+     "fieldtype": "Int",
+     "label": "Minimum shelf life at receipt (days)",
+     "description": "A lot received with fewer days left is refused unless its line has a Letter of Undertaking. An item may set its own. Blank or 0: no minimum (an expired lot is still refused)."
+    },
+    {
+     "fieldname": "supplier_note_required",
+     "fieldtype": "Check",
+     "label": "Supplier's invoice or credit-note number required",
+     "default": "1",
+     "description": "Supplier Delivery Note must be filled on every receipt and return. Untick it if you receive on Handheld, whose receipt cannot send it."
+    },
+    {
+     "fieldname": "erp_users",
+     "fieldtype": "Small Text",
+     "label": "ERP users (one per line)",
+     "description": "The users your ERP connector posts receipts as, and nobody's own login: their receipts are not refused for what they hold, the problems are written in the receipt's Receiving check field instead."
+    },
+    {
+     "fieldname": "pack_expiry_required",
+     "fieldtype": "Check",
+     "label": "Pack expiry required where the item has a shelf life",
+     "default": "1",
+     "description": "With a shelf life set, the shop can work a lot's expiry out from its manufacturing date, so the line must carry the date printed on the pack. Untick it if you receive on Handheld, which cannot send it: then only an expiry that equals manufacturing date plus shelf life is asked for."
+    },
+    {
+     "fieldname": "expiry_section",
+     "fieldtype": "Section Break",
+     "label": "Expiry"
+    },
+    {
+     "fieldname": "near_expiry_days",
+     "fieldtype": "Int",
+     "label": "Near-expiry window (days)",
+     "default": "90",
+     "description": "An Expiry Worklist lists lots that expire within these days. A worklist may set its own."
+    },
+    {
+     "fieldname": "quarantine_stores",
+     "fieldtype": "Small Text",
+     "label": "Quarantine stores (one per line)",
+     "description": "Recalled and expired stock is moved into one of these with a stock transfer. Stock leaving one, other than into another, is a disposal."
+    },
+    {
+     "fieldname": "clock_section",
+     "fieldtype": "Section Break",
+     "label": "Recall clocks (from when the notice is received)"
+    },
+    {
+     "fieldname": "class_1_start_hours",
+     "fieldtype": "Int",
+     "label": "Class I: start within (hours)",
+     "default": "24"
+    },
+    {
+     "fieldname": "class_1_days",
+     "fieldtype": "Int",
+     "label": "Class I: complete within (days)",
+     "default": "14"
+    },
+    {
+     "fieldname": "class_1_depth",
+     "fieldtype": "Select",
+     "label": "Class I: depth",
+     "options": "Consumer\nRetail\nWholesale",
+     "default": "Consumer"
+    },
+    {
+     "fieldname": "clock_col_2",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "class_2_start_hours",
+     "fieldtype": "Int",
+     "label": "Class II: start within (hours)",
+     "default": "72"
+    },
+    {
+     "fieldname": "class_2_days",
+     "fieldtype": "Int",
+     "label": "Class II: complete within (days)",
+     "default": "21"
+    },
+    {
+     "fieldname": "class_2_depth",
+     "fieldtype": "Select",
+     "label": "Class II: depth",
+     "options": "Consumer\nRetail\nWholesale",
+     "default": "Retail"
+    },
+    {
+     "fieldname": "clock_col_3",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "class_3_start_hours",
+     "fieldtype": "Int",
+     "label": "Class III: start within (hours)",
+     "default": "120"
+    },
+    {
+     "fieldname": "class_3_days",
+     "fieldtype": "Int",
+     "label": "Class III: complete within (days)",
+     "default": "28"
+    },
+    {
+     "fieldname": "class_3_depth",
+     "fieldtype": "Select",
+     "label": "Class III: depth",
+     "options": "Consumer\nRetail\nWholesale",
+     "default": "Wholesale"
+    },
+    {
+     "fieldname": "witness_section",
+     "fieldtype": "Section Break",
+     "label": "Disposal"
+    },
+    {
+     "fieldname": "witness_rule",
+     "fieldtype": "Select",
+     "label": "The regulator's visit is needed for",
+     "options": "Items with a listed schedule\nEvery disposal\nNo disposal",
+     "default": "Items with a listed schedule",
+     "description": "Items with a listed schedule reads each item's schedules (Pharmacy counter rules). A disposal is refused, never let through, when the item has no such field."
+    },
+    {
+     "fieldname": "witness_schedules",
+     "fieldtype": "Small Text",
+     "label": "Schedules that need the visit (one per line)",
+     "description": "Blank: any schedule."
+    },
+    {
+     "fieldname": "schedule_field",
+     "fieldtype": "Data",
+     "label": "Item field holding the schedules",
+     "default": "pp_rxc_schedules",
+     "description": "The field Pharmacy counter rules adds to Item: a table of schedules, or a field naming one."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RCL Recall Officer",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP RCL Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RCL Recall Lot",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "batch",
+     "fieldtype": "Link",
+     "label": "Lot",
+     "options": "Batch",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "item",
+     "fieldtype": "Data",
+     "label": "Item",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "outcome",
+     "fieldtype": "Data",
+     "label": "What the app did",
+     "read_only": 1,
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RCL Recall Stock",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "batch",
+     "fieldtype": "Link",
+     "label": "Lot",
+     "options": "Batch",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Quantity found",
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RCL Recall Customer",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer"
+    },
+    {
+     "fieldname": "customer_name",
+     "fieldtype": "Data",
+     "label": "Customer name",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "document_type",
+     "fieldtype": "Data",
+     "label": "Document type"
+    },
+    {
+     "fieldname": "document",
+     "fieldtype": "Data",
+     "label": "Document",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "posting_date",
+     "fieldtype": "Date",
+     "label": "Date",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "batch",
+     "fieldtype": "Link",
+     "label": "Lot",
+     "options": "Batch",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Quantity supplied",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse"
+    }
+   ]
+  },
+  {
+   "name": "PP RCL Recall Notice",
+   "autoname": "format:RCL-{#####}",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "notice_ref",
+     "fieldtype": "Data",
+     "label": "The regulator's reference",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "regulator",
+     "fieldtype": "Data",
+     "label": "Issued by",
+     "description": "Such as PPB, NAFDAC, the FDA (Ghana), EDA."
+    },
+    {
+     "fieldname": "recall_class",
+     "fieldtype": "Select",
+     "label": "Class",
+     "options": "Class I\nClass II\nClass III",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "depth",
+     "fieldtype": "Select",
+     "label": "Depth",
+     "options": "\nConsumer\nRetail\nWholesale",
+     "description": "Blank: the class's depth in the settings. Customers are traced at consumer depth only."
+    },
+    {
+     "fieldname": "notice_col",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "received_on",
+     "fieldtype": "Datetime",
+     "label": "Received",
+     "reqd": 1
+    },
+    {
+     "fieldname": "start_by",
+     "fieldtype": "Datetime",
+     "label": "Start by",
+     "description": "Blank: worked out from the class's clock in the settings at the first press."
+    },
+    {
+     "fieldname": "complete_by",
+     "fieldtype": "Datetime",
+     "label": "Complete by"
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Open\nBlocked\nClosed",
+     "default": "Open",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "reason",
+     "fieldtype": "Small Text",
+     "label": "Reason given by the regulator"
+    },
+    {
+     "fieldname": "lots_section",
+     "fieldtype": "Section Break",
+     "label": "Lots"
+    },
+    {
+     "fieldname": "lots",
+     "fieldtype": "Table",
+     "label": "Lots",
+     "options": "PP RCL Recall Lot"
+    },
+    {
+     "fieldname": "blocked_on",
+     "fieldtype": "Datetime",
+     "label": "Blocked on",
+     "read_only": 1
+    },
+    {
+     "fieldname": "traced_on",
+     "fieldtype": "Datetime",
+     "label": "Last traced",
+     "read_only": 1
+    },
+    {
+     "fieldname": "stock_section",
+     "fieldtype": "Section Break",
+     "label": "Stock found"
+    },
+    {
+     "fieldname": "stock",
+     "fieldtype": "Table",
+     "label": "Stock found per store",
+     "options": "PP RCL Recall Stock"
+    },
+    {
+     "fieldname": "customers_section",
+     "fieldtype": "Section Break",
+     "label": "Customers supplied"
+    },
+    {
+     "fieldname": "customers",
+     "fieldtype": "Table",
+     "label": "Customers supplied",
+     "options": "PP RCL Recall Customer"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RCL Recall Officer",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RCL Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RCL Recall Store Progress",
+   "autoname": "format:{notice}--{store}",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "notice",
+     "fieldtype": "Link",
+     "label": "Recall notice",
+     "options": "PP RCL Recall Notice",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "qty_found",
+     "fieldtype": "Float",
+     "label": "Quantity found",
+     "read_only": 1,
+     "in_list_view": 1,
+     "description": "Set by the app at each press of Block these batches, from the stock ledger."
+    },
+    {
+     "fieldname": "qty_quarantined",
+     "fieldtype": "Float",
+     "label": "Quantity moved to quarantine"
+    },
+    {
+     "fieldname": "progress_col",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "assigned_to",
+     "fieldtype": "Link",
+     "label": "Assigned to",
+     "options": "User"
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "To do\nIn progress\nDone\nNothing to do",
+     "default": "To do",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "done_on",
+     "fieldtype": "Date",
+     "label": "Done on"
+    },
+    {
+     "fieldname": "note",
+     "fieldtype": "Small Text",
+     "label": "Note"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RCL Recall Officer",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock Manager",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock User",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RCL Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RCL Disposal Line",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "item",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "batch",
+     "fieldtype": "Link",
+     "label": "Lot",
+     "options": "Batch",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Quantity (stock unit)",
+     "reqd": 1,
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RCL Disposal Record",
+   "autoname": "format:DSP-{#####}",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "notice",
+     "fieldtype": "Link",
+     "label": "Recall notice",
+     "options": "PP RCL Recall Notice"
+    },
+    {
+     "fieldname": "reason",
+     "fieldtype": "Select",
+     "label": "Reason",
+     "options": "Expired\nRecalled\nDamaged\nPatient return\nOther",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "prior_notice_on",
+     "fieldtype": "Date",
+     "label": "Regulator notified on",
+     "description": "Where the regulator must be told before the destruction (Jordan: expired narcotics), the day it was."
+    },
+    {
+     "fieldname": "lines",
+     "fieldtype": "Table",
+     "label": "What is disposed of",
+     "options": "PP RCL Disposal Line",
+     "reqd": 1
+    },
+    {
+     "fieldname": "visit_section",
+     "fieldtype": "Section Break",
+     "label": "The regulator's visit"
+    },
+    {
+     "fieldname": "officer_name",
+     "fieldtype": "Data",
+     "label": "Officer"
+    },
+    {
+     "fieldname": "authority",
+     "fieldtype": "Data",
+     "label": "Authority",
+     "description": "Such as PPB, the Dubai Health Authority's inspection team, JFDA, COFEPRIS."
+    },
+    {
+     "fieldname": "officer_id",
+     "fieldtype": "Data",
+     "label": "Officer's identification"
+    },
+    {
+     "fieldname": "visit_col",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "visit_date",
+     "fieldtype": "Date",
+     "label": "Date of the visit"
+    },
+    {
+     "fieldname": "signed_form",
+     "fieldtype": "Attach",
+     "label": "Signed form"
+    },
+    {
+     "fieldname": "attested_by",
+     "fieldtype": "Link",
+     "label": "Attested for the pharmacy by",
+     "options": "User"
+    },
+    {
+     "fieldname": "method",
+     "fieldtype": "Data",
+     "label": "How it was destroyed or returned",
+     "description": "Such as returned to the central medical stores, incinerated by a licensed contractor."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RCL Recall Officer",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RCL Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RCL Worklist Lot",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "batch",
+     "fieldtype": "Link",
+     "label": "Lot",
+     "options": "Batch",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "item",
+     "fieldtype": "Data",
+     "label": "Item"
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Quantity",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "expiry_date",
+     "fieldtype": "Date",
+     "label": "Expires"
+    },
+    {
+     "fieldname": "days_left",
+     "fieldtype": "Int",
+     "label": "Days left",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "action",
+     "fieldtype": "Select",
+     "label": "Action",
+     "options": "\nTo check\nMarked down\nReturned to supplier\nMoved to quarantine",
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RCL Worklist Gap",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "batch",
+     "fieldtype": "Link",
+     "label": "Lot",
+     "options": "Batch",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "item",
+     "fieldtype": "Data",
+     "label": "Item",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Quantity",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "disabled",
+     "fieldtype": "Check",
+     "label": "Disabled",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "recalled",
+     "fieldtype": "Check",
+     "label": "On a recall notice",
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RCL Expiry Worklist",
+   "autoname": "format:EXW-{#####}",
+   "fields": [
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "in_list_view": 1,
+     "description": "Blank: every store."
+    },
+    {
+     "fieldname": "window_days",
+     "fieldtype": "Int",
+     "label": "Window (days)",
+     "description": "Blank: the settings' near-expiry window."
+    },
+    {
+     "fieldname": "refreshed_on",
+     "fieldtype": "Datetime",
+     "label": "Refreshed",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "near_section",
+     "fieldtype": "Section Break",
+     "label": "Lots near their expiry date"
+    },
+    {
+     "fieldname": "near",
+     "fieldtype": "Table",
+     "label": "Near expiry",
+     "options": "PP RCL Worklist Lot"
+    },
+    {
+     "fieldname": "gap_section",
+     "fieldtype": "Section Break",
+     "label": "Medicine lots with no expiry date"
+    },
+    {
+     "fieldname": "no_expiry",
+     "fieldtype": "Table",
+     "label": "No expiry date",
+     "options": "PP RCL Worklist Gap",
+     "description": "Enter the date printed on the pack, then enable the lot, unless it is on a recall notice: that lot stays blocked."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RCL Recall Officer",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock User",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RCL Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "Item",
+   "fieldname": "pp_rcl_min_shelf_days",
+   "fieldtype": "Int",
+   "label": "Minimum shelf life at receipt (days)",
+   "insert_after": "shelf_life_in_days",
+   "description": "Blank: the shop's minimum in Expiry and recall's settings."
+  },
+  {
+   "dt": "Item",
+   "fieldname": "pp_rcl_shelf_life_exempt",
+   "fieldtype": "Check",
+   "label": "Shelf-life check exempt",
+   "insert_after": "pp_rcl_min_shelf_days",
+   "description": "A receipt of this item is not held to a minimum shelf life. An expired lot is still refused."
+  },
+  {
+   "dt": "Purchase Receipt Item",
+   "fieldname": "pp_rcl_pack_expiry",
+   "fieldtype": "Date",
+   "label": "Pack expiry",
+   "insert_after": "batch_no",
+   "description": "The expiry date printed on the pack. Needed when the lot's expiry could have been worked out from its manufacturing date and shelf life."
+  },
+  {
+   "dt": "Purchase Receipt Item",
+   "fieldname": "pp_rcl_lou",
+   "fieldtype": "Check",
+   "label": "Letter of Undertaking",
+   "insert_after": "pp_rcl_pack_expiry",
+   "description": "The supplier undertakes for short-dated stock: the lot is accepted if it has at least the days below left."
+  },
+  {
+   "dt": "Purchase Receipt Item",
+   "fieldname": "pp_rcl_lou_days",
+   "fieldtype": "Int",
+   "label": "Letter of Undertaking: days",
+   "insert_after": "pp_rcl_lou",
+   "depends_on": "pp_rcl_lou"
+  },
+  {
+   "dt": "Purchase Receipt",
+   "fieldname": "pp_rcl_short_dated",
+   "fieldtype": "Data",
+   "label": "Receiving check (ERP receipts)",
+   "insert_after": "supplier_delivery_note",
+   "description": "Filled by Expiry and recall on a receipt your ERP posted: what a Desk receipt would have been refused for."
+  },
+  {
+   "dt": "Stock Entry",
+   "fieldname": "pp_rcl_erp_check",
+   "fieldtype": "Data",
+   "label": "ERP check",
+   "insert_after": "pp_rcl_disposal_record",
+   "description": "Filled by Expiry and recall on a stock entry your ERP connector posted (SAP's receipts and disposals arrive as stock entries): what it would have refused on the Desk."
+  },
+  {
+   "dt": "Stock Entry",
+   "fieldname": "pp_rcl_disposal_record",
+   "fieldtype": "Link",
+   "options": "PP RCL Disposal Record",
+   "label": "Disposal record",
+   "insert_after": "stock_entry_type",
+   "description": "An issue that disposes of controlled stock names its disposal record, with the regulator's visit recorded."
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP RCL Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/expiry_recall.html#settings"
+  },
+  {
+   "doc_type": "PP RCL Recall Notice",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/expiry_recall.html#recall"
+  },
+  {
+   "doc_type": "PP RCL Recall Store Progress",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/expiry_recall.html#recall"
+  },
+  {
+   "doc_type": "PP RCL Disposal Record",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/expiry_recall.html#disposal"
+  },
+  {
+   "doc_type": "PP RCL Expiry Worklist",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/expiry_recall.html#worklist"
+  }
+ ],
+ "workflows": [
+  {
+   "name": "PP RCL Disposal",
+   "document_type": "PP RCL Disposal Record",
+   "send_email_alert": 0,
+   "states": [
+    {
+     "state": "PP RCL Draft",
+     "allow_edit": "PP RCL Recall Officer"
+    },
+    {
+     "state": "PP RCL Visit recorded",
+     "allow_edit": "System Manager"
+    }
+   ],
+   "transitions": [
+    {
+     "state": "PP RCL Draft",
+     "action": "PP RCL Record the visit",
+     "next_state": "PP RCL Visit recorded",
+     "allowed": "PP RCL Recall Officer",
+     "allow_self_approval": 1
+    }
+   ]
+  }
+ ],
+ "save_rules": [
+  {
+   "rule_name": "PP RCL visit needs officer_name",
+   "record_type": "PP RCL Disposal Record",
+   "kind": "required_when",
+   "field": "officer_name",
+   "mode": "refuse",
+   "conditions": [
+    {
+     "field": "workflow_state",
+     "operator": "=",
+     "value": "PP RCL Visit recorded"
+    }
+   ]
+  },
+  {
+   "rule_name": "PP RCL visit needs authority",
+   "record_type": "PP RCL Disposal Record",
+   "kind": "required_when",
+   "field": "authority",
+   "mode": "refuse",
+   "conditions": [
+    {
+     "field": "workflow_state",
+     "operator": "=",
+     "value": "PP RCL Visit recorded"
+    }
+   ]
+  },
+  {
+   "rule_name": "PP RCL visit needs visit_date",
+   "record_type": "PP RCL Disposal Record",
+   "kind": "required_when",
+   "field": "visit_date",
+   "mode": "refuse",
+   "conditions": [
+    {
+     "field": "workflow_state",
+     "operator": "=",
+     "value": "PP RCL Visit recorded"
+    }
+   ]
+  },
+  {
+   "rule_name": "PP RCL visit needs signed_form",
+   "record_type": "PP RCL Disposal Record",
+   "kind": "required_when",
+   "field": "signed_form",
+   "mode": "refuse",
+   "conditions": [
+    {
+     "field": "workflow_state",
+     "operator": "=",
+     "value": "PP RCL Visit recorded"
+    }
+   ]
+  },
+  {
+   "rule_name": "PP RCL disposal locked once the visit is recorded",
+   "record_type": "PP RCL Disposal Record",
+   "kind": "locked_in_state",
+   "mode": "refuse",
+   "states": [
+    "PP RCL Visit recorded"
+   ],
+   "locked_fields": [
+    "store",
+    "notice",
+    "reason",
+    "lines",
+    "officer_name",
+    "authority",
+    "officer_id",
+    "visit_date",
+    "signed_form",
+    "attested_by",
+    "method",
+    "prior_notice_on"
+   ]
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP RCL Recall progress",
+   "ref_doctype": "PP RCL Recall Store Progress",
+   "report_type": "Report Builder",
+   "columns": [
+    "notice",
+    "store",
+    "qty_found",
+    "qty_quarantined",
+    "status",
+    "assigned_to",
+    "done_on"
+   ],
+   "filters": [],
+   "order_by": "notice desc"
+  },
+  {
+   "name": "PP RCL Lots with no expiry date",
+   "ref_doctype": "Batch",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "item",
+    "item_name",
+    "batch_qty",
+    "disabled",
+    "creation"
+   ],
+   "filters": [
+    [
+     "expiry_date",
+     "is",
+     "not set"
+    ]
+   ],
+   "order_by": "creation desc"
+  }
+ ],
+ "print_formats": [
+  {
+   "name": "PP RCL Recall Report",
+   "doc_type": "PP RCL Recall Notice",
+   "html": "<div class=\"pp-rcl\"><h2>Recall {{ doc.name }}</h2>\n<p><b>{{ doc.regulator or \"\" }}</b> reference {{ doc.notice_ref }} · {{ doc.recall_class }} · depth {{ doc.depth or \"\" }}</p>\n<p>Received {{ doc.get_formatted(\"received_on\") }} · start by {{ doc.get_formatted(\"start_by\") }} · complete by {{ doc.get_formatted(\"complete_by\") }} · status {{ doc.status }}</p>\n<p>Blocked {{ doc.get_formatted(\"blocked_on\") }} · last traced {{ doc.get_formatted(\"traced_on\") }}</p>\n<h3>Lots</h3><table><tr><th>Lot</th><th>Item</th><th>Done</th></tr>{% for r in doc.lots %}<tr><td>{{ r.batch }}</td><td>{{ r.item }}</td><td>{{ r.outcome }}</td></tr>{% endfor %}</table>\n<h3>Stock found</h3><table><tr><th>Store</th><th>Lot</th><th>Quantity</th></tr>{% for r in doc.stock %}<tr><td>{{ r.store }}</td><td>{{ r.batch }}</td><td>{{ r.get_formatted(\"qty\") }}</td></tr>{% endfor %}</table>\n<h3>Customers supplied</h3><table><tr><th>Customer</th><th>Document</th><th>Date</th><th>Lot</th><th>Quantity</th></tr>{% for r in doc.customers %}<tr><td>{{ r.customer_name or r.customer }}</td><td>{{ r.document }}</td><td>{{ r.get_formatted(\"posting_date\") }}</td><td>{{ r.batch }}</td><td>{{ r.get_formatted(\"qty\") }}</td></tr>{% endfor %}</table></div>",
+   "css": ".pp-rcl table { width: 100%; border-collapse: collapse; } .pp-rcl th, .pp-rcl td { border: 1px solid #ccc; padding: 4px; text-align: left; }"
+  },
+  {
+   "name": "PP RCL Disposal Record Print",
+   "doc_type": "PP RCL Disposal Record",
+   "html": "<div class=\"pp-rcl\"><h2>Disposal {{ doc.name }}</h2>\n<p>Store {{ doc.store }} · reason {{ doc.reason }}{% if doc.notice %} · recall {{ doc.notice }}{% endif %} · {{ doc.workflow_state or \"\" }}</p>\n<table><tr><th>Item</th><th>Lot</th><th>Quantity</th></tr>{% for r in doc.lines %}<tr><td>{{ r.item }}</td><td>{{ r.batch or \"\" }}</td><td>{{ r.get_formatted(\"qty\") }}</td></tr>{% endfor %}</table>\n<h3>The regulator's visit</h3><p>Officer {{ doc.officer_name or \"\" }} ({{ doc.officer_id or \"\" }}), {{ doc.authority or \"\" }}, on {{ doc.get_formatted(\"visit_date\") }}</p>\n<p>Attested for the pharmacy by {{ doc.attested_by or \"\" }} · {{ doc.method or \"\" }}</p></div>",
+   "css": ".pp-rcl table { width: 100%; border-collapse: collapse; } .pp-rcl th, .pp-rcl td { border: 1px solid #ccc; padding: 4px; text-align: left; }"
+  }
+ ],
+ "notifications": [
+  {
+   "name": "PP RCL Recall due tomorrow",
+   "document_type": "PP RCL Recall Notice",
+   "event": "Days Before",
+   "date_changed": "complete_by",
+   "days_in_advance": 1,
+   "channel": "System Notification",
+   "subject": "Recall {{ doc.name }} ({{ doc.notice_ref }}) is due tomorrow",
+   "message": "Recall {{ doc.name }} ({{ doc.notice_ref }}, {{ doc.recall_class }}) must be complete by {{ doc.complete_by }}. Its status is {{ doc.status }}.",
+   "recipients": [
+    {
+     "receiver_by_role": "PP RCL Recall Officer"
+    }
+   ]
+  }
+ ],
+ "links": [
+  {
+   "doctype": "PP RCL Recall Notice",
+   "link_doctype": "PP RCL Recall Store Progress",
+   "link_fieldname": "notice",
+   "group": "Stores"
+  },
+  {
+   "doctype": "PP RCL Recall Notice",
+   "link_doctype": "PP RCL Disposal Record",
+   "link_fieldname": "notice",
+   "group": "Disposal"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP RCL Recall feed",
+   "description": "the recall service reads and writes lots, items, sales and its own records as this feed's user; leave the feed switched off",
+   "events": [
+    "PP RCL Settings"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "block",
+   "point": "desk_action",
+   "label": "Recall service",
+   "endpoint_url": "https://host.docker.internal:8137/press/block",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "worklist",
+   "point": "desk_action",
+   "label": "Expiry worklist service",
+   "endpoint_url": "https://host.docker.internal:8137/press/worklist",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "receipt",
+   "point": "doccheck",
+   "label": "Shelf life at receipt",
+   "endpoint_url": "https://host.docker.internal:8137/check/receipt",
+   "timeout_seconds": 6,
+   "down_answer": "refuse",
+   "settings": {
+    "record_type": "Purchase Receipt",
+    "send_fields": "name, supplier, posting_date, is_return, supplier_delivery_note, items(item_code, qty, stock_qty, rejected_qty, batch_no, serial_and_batch_bundle, pp_rcl_pack_expiry, pp_rcl_lou, pp_rcl_lou_days)",
+    "on_validate": false,
+    "fill_fields": [
+     "pp_rcl_short_dated"
+    ]
+   }
+  },
+  {
+   "key": "disposal",
+   "point": "doccheck",
+   "label": "Disposal with the regulator's visit",
+   "endpoint_url": "https://host.docker.internal:8137/check/disposal",
+   "timeout_seconds": 6,
+   "down_answer": "refuse",
+   "settings": {
+    "record_type": "Stock Entry",
+    "send_fields": "name, purpose, posting_date, pp_rcl_disposal_record, items(item_code, qty, transfer_qty, s_warehouse, t_warehouse, batch_no, serial_and_batch_bundle)",
+    "on_validate": false,
+    "fill_fields": [
+     "pp_rcl_erp_check"
+    ]
+   }
+  },
+  {
+   "key": "count",
+   "point": "doccheck",
+   "label": "No disposal by a stock count",
+   "endpoint_url": "https://host.docker.internal:8137/check/count",
+   "timeout_seconds": 6,
+   "down_answer": "refuse",
+   "settings": {
+    "record_type": "Stock Reconciliation",
+    "send_fields": "name, purpose, posting_date, items(item_code, warehouse, qty, current_qty, batch_no, serial_and_batch_bundle, current_serial_and_batch_bundle)",
+    "on_validate": false,
+    "fill_fields": []
+   }
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP RCL Recall Notice",
+   "label": "Block these batches",
+   "placement": "form",
+   "service": "block",
+   "roles": [
+    "PP RCL Recall Officer"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name, recall_class, depth, received_on, start_by, complete_by, lots(batch)",
+   "confirm_text": "Block every lot on this notice at every till and store, and trace its stock and customers?"
+  },
+  {
+   "record_type": "PP RCL Expiry Worklist",
+   "label": "Refresh",
+   "placement": "form",
+   "service": "worklist",
+   "roles": [
+    "PP RCL Recall Officer",
+    "Stock Manager",
+    "Stock User"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name, store, window_days"
+  }
+ ]
+}
