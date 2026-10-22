@@ -1,0 +1,344 @@
+{
+  "format": 1,
+  "id": "ke_pharmacy",
+  "title": "Kenya: pharmacy registers",
+  "jurisdiction": "KE",
+  "vertical": "pharmacy",
+  "certified": 0,
+  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it.",
+  "sources": [
+    "Pharmacy and Poisons Act, Cap. 244, ss. 30, 31 (FAOLEX ken64184)",
+    "Pharmacy and Poisons Rules [Rev. 2012], Schedule VIII Form 16 and r. 21 (FAOLEX ken64188)",
+    "Pharmacy and Poisons Board, Guidelines for Management of Narcotics, Psychotropics and Precursor Chemical Substances, CEO/LCU/GUD/089, Oct 2024: s. 8.1 and Annex II"
+  ],
+  "details": {
+    "occupation": {
+      "label": "Business, trade or occupation",
+      "type": "Data",
+      "own": 1
+    },
+    "purpose": {
+      "label": "Purpose for which required",
+      "type": "Data",
+      "own": 1
+    },
+    "certificate_date": {
+      "label": "Date of certificate",
+      "type": "Date",
+      "own": 1,
+      "till": 0
+    },
+    "certificate_by": {
+      "label": "Certificate given by (name and address)",
+      "type": "Data",
+      "own": 1,
+      "till": 0
+    },
+    "signed_order_date": {
+      "label": "Date of signed order",
+      "type": "Date",
+      "own": 1,
+      "till": 0
+    },
+    "prescriber_address": {
+      "label": "Prescriber's address",
+      "type": "Data",
+      "own": 1
+    }
+  },
+  "authority": {
+    "pos_sale_details": {
+      "authority_no": "PP RXC Rx Number",
+      "authority_issuer": "PP RXC Prescriber",
+      "authority_issuer_licence": "PP RXC Prescriber Licence"
+    },
+    "desk_fields": {
+      "authority_no": "pp_rxc_rx_number",
+      "authority_issuer": "pp_rxc_prescriber",
+      "authority_issuer_licence": "pp_rxc_prescriber_licence"
+    },
+    "dispenser_licence": {
+      "doctype": "PP RXC Pharmacist",
+      "match": "user",
+      "field": "licence_number"
+    }
+  },
+  "books": [
+    {
+      "id": "poisons_book",
+      "title": "Poisons Book",
+      "form": "Form 16",
+      "cite": "Act s. 30; Rules Schedule VIII Form 16. Not for a supply on prescription (s. 31(2))",
+      "classes": [
+        "KE Part I Poison"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "KE Poisons"
+      },
+      "conditions": [
+        {
+          "field": "kind",
+          "operator": "=",
+          "value": "Sale"
+        },
+        {
+          "field": "authority_no",
+          "operator": "is not set"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "signed_strike_through",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "Electronic records are cited for NPP records only (Guidelines s. 8.1): keep this book's printed pages, signed, as the book.",
+      "required": [
+        "counterparty",
+        "counterparty_address",
+        "detail:occupation",
+        "detail:purpose"
+      ],
+      "columns": [
+        {
+          "label": "Date of sale",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name and quantity of poison supplied",
+          "value": [
+            "item_name",
+            "qty",
+            "uom"
+          ]
+        },
+        {
+          "label": "Purchaser's name",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Business, trade or occupation",
+          "value": [
+            "detail:occupation"
+          ]
+        },
+        {
+          "label": "Purpose for which stated to be required",
+          "value": [
+            "detail:purpose"
+          ]
+        },
+        {
+          "label": "Date of certificate (if any)",
+          "value": [
+            "detail:certificate_date"
+          ]
+        },
+        {
+          "label": "Name and address of person giving certificate (if any)",
+          "value": [
+            "detail:certificate_by"
+          ]
+        },
+        {
+          "label": "Signature of purchaser, or the date of a permitted signed order",
+          "value": [
+            "detail:signed_order_date"
+          ],
+          "mark": 1
+        }
+      ]
+    },
+    {
+      "id": "prescription_book",
+      "title": "Prescription Book",
+      "form": "no form prescribed",
+      "cite": "Act s. 31(1)(b): entered within 24 hours; s. 31(2): no Poisons Book entry is then required",
+      "classes": [
+        "KE Part I Poison"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "KE Poisons"
+      },
+      "conditions": [
+        {
+          "field": "kind",
+          "operator": "=",
+          "value": "Sale"
+        },
+        {
+          "field": "authority_no",
+          "operator": "is set"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "signed_strike_through",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "Electronic records are cited for NPP records only (Guidelines s. 8.1): keep this book's printed pages, signed, as the book.",
+      "required": [
+        "counterparty",
+        "counterparty_address",
+        "authority_issuer",
+        "detail:prescriber_address"
+      ],
+      "columns": [
+        {
+          "label": "Date",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Ingredients and quantity",
+          "value": [
+            "item_name",
+            "qty",
+            "uom"
+          ]
+        },
+        {
+          "label": "Name and address of person supplied",
+          "value": [
+            "counterparty",
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Name and address of prescriber",
+          "value": [
+            "authority_issuer",
+            "detail:prescriber_address",
+            "authority_no"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npp_ledger",
+      "title": "NPP Ledger Book",
+      "form": "Annex II",
+      "cite": "PPB NPP Guidelines s. 8.1(h), Annex II; received in red ink, issued in blue or black (s. 8.1(i))",
+      "classes": [
+        "KE NPP"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "KE Controlled"
+      },
+      "conditions": [],
+      "numbering": "book_store_item",
+      "balance": 1,
+      "per_item_pages": 1,
+      "correction": "signed_strike_through",
+      "retention_years": 5,
+      "loss_count_hours": 48,
+      "medium": "system_of_record",
+      "medium_note": "Records may be kept electronically, manually or both (Guidelines s. 8.1).",
+      "in_colour": "#b00020",
+      "required": [],
+      "columns": [
+        {
+          "label": "Date",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Received from",
+          "value": [
+            "counterparty"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "Quantity received",
+          "value": [
+            "qty"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "Invoice no.",
+          "value": [
+            "reference_no"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "Issued to",
+          "value": [
+            "counterparty"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Quantity issued",
+          "value": [
+            "qty"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Requisition no.",
+          "value": [
+            "authority_no",
+            "reference_no"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Balance",
+          "value": [
+            "balance"
+          ]
+        },
+        {
+          "label": "Name and sign. of receiving officer",
+          "value": [
+            "dispenser_name"
+          ],
+          "mark": 1
+        },
+        {
+          "label": "Remarks",
+          "value": [
+            "remarks"
+          ]
+        }
+      ]
+    }
+  ],
+  "columns_from": {
+    "Purchase Receipt": {
+      "reference_no": "supplier_delivery_note"
+    },
+    "Purchase Invoice": {
+      "reference_no": "bill_no"
+    },
+    "Stock Entry": {
+      "reference_no": "custom_external_reference_no"
+    }
+  }
+}
