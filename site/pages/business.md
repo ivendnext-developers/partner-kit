@@ -25,6 +25,7 @@ The next retailer with the same need can buy the same version from you. When it 
 ## How we work with you
 
 - **We build the standard version; the customer's own version is yours.** We add to our apps what every shop with a need shares. A customer's particular way of working is your business, not ours.
+- **Local systems are yours to connect.** A local ERP or accounting system, a local payment gateway or wallet, a loyalty provider, a messaging gateway, a local delivery app: we give you a starting point for most of them ([Starters for local work](starters.md)).
 - **The partner leads the customer.** Our own development team works for you as your subcontractor when you want it. It works directly with a retailer only where no partner covers the country, or on an account named in advance as one we serve ourselves.
 - **A registered deal is protected** for 90 days, and the protection renews while the deal moves.
 
