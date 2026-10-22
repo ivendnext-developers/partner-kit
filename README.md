@@ -1,6 +1,6 @@
 # The iVendNext partner kit
 
-Build the app a retail chain needs — a rule at the till, a record of its own, a link to its systems — without changing iVendNext itself. This kit holds the guide, the recipes, the API description, the extension points' contracts, the tools, thirty-four worked samples, the design kit, the blueprint template and the feedback forms.
+Build the app a retail chain needs — a rule at the till, a record of its own, a link to its systems — without changing iVendNext itself. This kit holds the guide, the recipes, the API description, the extension points' contracts, the tools, thirty-five worked samples, the design kit, the blueprint template and the feedback forms.
 
 **Who it is for:** iVendNext Partners, licensed customers' IT teams, and the CitiXsys Consulting Team.
 
