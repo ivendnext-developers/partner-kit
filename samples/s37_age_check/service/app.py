@@ -15,7 +15,8 @@ Each route is checked with ITS OWN secret, the one the install made for that ser
 ``<app>:sub:check`` for the check. A sale that sells nothing (a refund) is allowed at once, without reading the shop.
 Otherwise the shop's settings (``<prefix> Settings``, the record ``Default``) and its item groups (with their
 ``<prefix>_min_age``) are read with the app's integration key and kept one minute (``KEPT_TTL``), and the items' own ages
-are read for the codes not already kept (one call, kept one minute). The service writes nothing to the shop.
+are read for the codes not already kept (one call, kept one minute), then the templates of variants with no age of their
+own (a variant does not inherit a field its template gained later). The service writes nothing to the shop.
 
 When the shop cannot be read, refuses the key, or has not handed over its integration user's key yet, the service
 answers 503 and the till applies each subscription's down answer (``allow_and_flag`` in this manifest: the item goes on,
@@ -113,10 +114,10 @@ class ShopApi:
             "fields": json.dumps(["name", "lft", "rgt", f"{p}_min_age"]), "limit_page_length": 0}), list)
 
     def items(self, url: str, key: str, prefix: str, codes: list) -> list:
-        """The named items' own ages."""
+        """The named items' own ages, and the template each variant is made from."""
         p = prefix.lower().replace(" ", "_")
         return self._data(self._get(url, key, "/api/resource/Item", {
-            "fields": json.dumps(["name", f"{p}_min_age"]), "filters": json.dumps([["name", "in", codes]]),
+            "fields": json.dumps(["name", f"{p}_min_age", "variant_of"]), "filters": json.dumps([["name", "in", codes]]),
             "limit_page_length": 0}), list)
 
 
@@ -144,15 +145,16 @@ class Service:
         return site or "", secrets, shop
 
     def ages(self, name: str, shop: dict | None, codes: list) -> tuple[dict, dict, dict]:
-        """(the shop's settings, its item groups, the named items' own ages), each kept KEPT_TTL seconds for that shop and
-        that key: one step for the settings and the groups, one for the items not already kept."""
+        """(the shop's settings, its item groups, the named items' own ages and templates), each kept KEPT_TTL seconds for
+        that shop and that key: one step for the settings and the groups, one for the items not already kept, and one for
+        the templates of variants with no age of their own."""
         if not shop:
             raise ShopUnreadable("the shop has not handed over its integration user's key")
         url, key, now = shop["url"], shop["key"], self.clock()
         mine = (name, key)                              # an item's age is kept for this shop and this key only
+        items = {}
         with self.lock:
             hit = self.kept.get(name)
-            items = {c: v[1] for c in codes if (v := self.item_ages.get((*mine, c))) and now - v[0] < KEPT_TTL}
         if not (hit and hit[1] == key and now - hit[0] < KEPT_TTL):
             with ThreadPoolExecutor(max_workers=2) as pool:
                 s = pool.submit(self.api.settings, url, key, self.prefix)
@@ -160,16 +162,20 @@ class Service:
                 hit = (now, key, (agecheck.settings_of(s.result()), agecheck.groups_of(g.result(), self.prefix)))
             with self.lock:
                 self.kept[name] = hit
-        missing = sorted(set(codes) - set(items))
-        if missing:
-            read = agecheck.items_of(self.api.items(url, key, self.prefix, missing), self.prefix)
-            if set(missing) - set(read):
-                raise ShopUnreadable("an item could not be read")
+        for _step in range(2):                          # the items, then the templates of those with no age of their own
             with self.lock:
-                if len(self.item_ages) >= ITEMS_MAX:
-                    self.item_ages.clear()
-                self.item_ages.update({(*mine, c): (now, read[c]) for c in missing})
-            items.update(read)
+                items.update({c: v[1] for c in codes if (v := self.item_ages.get((*mine, c))) and now - v[0] < KEPT_TTL})
+            missing = sorted(set(codes) - set(items))
+            if missing:
+                read = agecheck.items_of(self.api.items(url, key, self.prefix, missing), self.prefix)
+                if set(missing) - set(read):
+                    raise ShopUnreadable("an item could not be read")
+                with self.lock:
+                    if len(self.item_ages) >= ITEMS_MAX:
+                        self.item_ages.clear()
+                    self.item_ages.update({(*mine, c): (now, read[c]) for c in missing})
+                items.update(read)
+            codes = sorted({t for age, t in items.values() if t and not age})
         return hit[2][0], hit[2][1], items
 
     def scan(self, name: str, shop: dict | None, ctx: dict) -> dict:

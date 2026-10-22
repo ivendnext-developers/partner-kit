@@ -16,7 +16,7 @@
     {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1, "unique": 1, "default": "Default",
      "description": "The service reads the record named Default."},
     {"fieldname": "hours_from_utc", "fieldtype": "Float", "label": "Hours from UTC at the shop",
-     "description": "The shop's own day decides the date of birth the till shows: 4 for Dubai, 3 for Nairobi or Riyadh, 2 for Johannesburg, -6 for Mexico City. Blank: UTC."},
+     "description": "The shop's own day decides the date of birth the till shows: 4 for Dubai, 3 for Nairobi or Riyadh, 2 for Johannesburg, -6 for Mexico City. Blank: UTC. Change it when your clocks change."},
     {"fieldname": "look_under", "fieldtype": "Int", "label": "Ask for ID from anyone who looks under",
      "description": "Your policy, such as 25: the till adds 'Ask for ID if they look under 25.' to an item whose age is lower. 0 or blank: 'See their ID.'"}
    ],
@@ -29,10 +29,10 @@
  "custom_fields": [
   {"dt": "Item Group", "fieldname": "pp_age_min_age", "fieldtype": "Int", "label": "Customers must be at least this old",
    "insert_after": "parent_item_group",
-   "description": "Such as 18 for alcohol or 21 for vapes, where the law says so. It covers every group below this one, unless a group below sets its own. 0: no age."},
+   "description": "Such as 18 for alcohol or 21 for vapes, where the law says so. It covers every group below this one, unless a group below sets its own. 0: none of its own, so the group above applies (a group below a restricted one cannot be made free of age)."},
   {"dt": "Item", "fieldname": "pp_age_min_age", "fieldtype": "Int", "label": "Customers must be at least this old",
    "insert_after": "stock_uom",
-   "description": "This item's own age, when it differs from its group's. 0: its item group's age applies."}
+   "description": "This item's own age, when it differs from its group's. On an item with variants, set it on each variant, or on their item group. 0: its template's, else its item group's age applies."}
  ],
  "sale_attributes": [
   {"name": "PP AGE ID Checked"}

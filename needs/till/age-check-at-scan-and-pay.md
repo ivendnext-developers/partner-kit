@@ -22,7 +22,8 @@ An age on each restricted item group (or item), and a service that answers two e
 - Offline, or with the service down, the item goes on and the sale is paid, flagged; a shop can make the scan refuse restricted items instead.
 - A notice reaches POS build 2.0.0.654 and later; on an older build the scan's sheet does not show, and the check at Pay still holds.
 - No manager's override, no restricted selling hours, no ID scanner.
+- A group under a restricted group cannot be made free of age; an age set on a template reaches its variants at Pay, but the scan asks about a variant by its own age or its group.
 - The check does not run on a park to a till, a layaway deposit, an account collection or the Desk's own POS screen.
 
 ## Tell the customer
-The cashier sees the date of birth to check at the scan of a restricted item, and a restricted item is never paid without a recorded ID check.
+The cashier sees the date of birth to check at the scan of a restricted item, and while the app's service answers, a restricted item is not paid without a recorded ID check; otherwise the sale is flagged for review.

@@ -21,7 +21,7 @@ Alcohol, tobacco, vapes, knives and some medicines may be sold only to customers
 
 3. **Check every call with its own route's secret** (`<app>:sub:<key>`; the sample's keys are `scan` and `check`), and refuse a timestamp more than five minutes from yours.
 
-4. **Work out each item's age.** Read the item groups once a minute (`GET /api/resource/Item Group`, `fields` `name`, `lft`, `rgt` and your field, `limit_page_length` 0) and the items' own ages (`GET /api/resource/Item`, `filters` `[["name", "in", [...]]]`). An item's age is its own when above 0; else the nearest group above it (itself first) with one: the group whose `lft`/`rgt` contains the item's group, with the largest `lft`. The shop gives your role a plain **read on Item Group and Item**.
+4. **Work out each item's age.** Read the item groups once a minute (`GET /api/resource/Item Group`, `fields` `name`, `lft`, `rgt` and your field, `limit_page_length` 0) and the items' own ages with `variant_of` (`GET /api/resource/Item`, `filters` `[["name", "in", [...]]]`). An item's age is its own when above 0; else its template's (⚠ a variant does not inherit a field its template gained later: the shop copies only the fields its *Item Variant Settings* list, so read the template in a second step); else the nearest group above it (itself first) with one: the group whose `lft`/`rgt` contains the item's group, with the largest `lft`. The shop gives your role a plain **read on Item Group and Item**.
 
 5. **Answer the scan** (`capture/1`, event `scan`), within the scan's 1.5 seconds:
 
@@ -35,7 +35,7 @@ Alcohol, tobacco, vapes, knives and some medicines may be sold only to customers
 
 6. **Ask once a sale.** Remember, per shop and per the scan's `sale_ref`, the highest age you asked about, and answer `allow` to a later scan of that sale needing that age or less. The till does not tell you what the cashier answered, so a check you remember may have been refused at the sheet: the check at Pay catches that. The reference is empty on a sale's first scan; remember nothing for it.
 
-7. **Answer the check** (`check/1`) at Pay. A sale with no line of a positive quantity is a refund: allow, reading nothing. Otherwise read the first whole number of the sale detail `<PREFIX> ID Checked` in `sale_attributes` (0 when there is none), and find the lines the sale sells whose age is above it. None: allow. Else refuse, naming the highest age needed and its first line:
+7. **Answer the check** (`check/1`) at Pay. A sale with no line of a positive quantity is a refund: allow, reading nothing. Otherwise read the sale detail `<PREFIX> ID Checked` in `sale_attributes` as a whole age alone (*18 or over*, *18*, *18+*; anything else, a date of birth typed in included, is 0), and find the lines the sale sells whose age is above it. None: allow. Else refuse, naming the highest age needed and its first line:
 
    | The sale | Answer |
    |---|---|
@@ -48,7 +48,7 @@ Alcohol, tobacco, vapes, knives and some medicines may be sold only to customers
 
 ### Settings
 
-The shop's record `Default` of `<PREFIX> Settings`: *Hours from UTC at the shop* (4 for Dubai, 3 for Nairobi or Riyadh, 2 for Johannesburg, −6 for Mexico City; a value past ±14 reads 0) and *Ask for ID from anyone who looks under* (such as 25; 0 or blank: *See their ID.*; shown only on an item whose age is lower). On each restricted Item Group, *Customers must be at least this old* (0: no age; it covers every group below unless a group below sets its own); on an Item whose age differs from its group's, the same field. A change reaches the service within a minute. On the scan service (*Age check*), add the restricted groups to its settings as `item_groups`.
+The shop's record `Default` of `<PREFIX> Settings`: *Hours from UTC at the shop* (4 for Dubai, 3 for Nairobi or Riyadh, 2 for Johannesburg, −6 for Mexico City; a value past ±14 reads 0) and *Ask for ID from anyone who looks under* (such as 25; 0 or blank: *See their ID.*; shown only on an item whose age is lower). On each restricted Item Group, *Customers must be at least this old* (it covers every group below unless a group below sets its own; 0 is none of its own, so the group above applies: a group under a restricted one cannot be made free of age); on an Item whose age differs from its group's, the same field (on an item with variants, on each variant or on their group). A change reaches the service within a minute. On the scan service (*Age check*), add the restricted groups to its settings as `item_groups`.
 
 **What the cashier does.** The cashier scans a restricted item, reads the date of birth on the sheet, checks the customer's ID, and taps **Add with these details**, or **Don't add it** when the customer is too young or has no ID. At Pay, a refusal shows *"This sale can't be paid"* and the app's sentence: the cashier checks the ID and types the age in the basket's **🗒 Sale details**, or takes the item off, and presses Pay again.
 
@@ -65,6 +65,7 @@ The shop's record `Default` of `<PREFIX> Settings`: *Hours from UTC at the shop*
 
 - **No personal data is collected:** no date of birth, no ID number. The record is the age band the cashier confirmed. A shop that must log more needs a partner's version, and a data-protection reading of its own.
 - **A notice** reaches POS build 2.0.0.654 and later. An older build refuses it as an unknown answer and applies the scan's down answer: the item goes on, flagged, and the check at Pay still holds.
+- **A group under a restricted group cannot be exempted** (0 means *the group above applies*); move it out of the group.
 - **Two ages on one sale:** the till keeps one value per sale detail, merged by name, so a later, lower ask replaces a higher one. That happens when the higher item was the sale's first (no reference to remember) or another running copy of your service answered the second scan. Pay then names the higher age to enter.
 - **Offline,** the till does not call you: each down answer applies. The scan's filter travels with the till's start of day.
 - **Where the check never runs:** a park to a till, a layaway deposit, an account collection (the check page, *Not in this version*), nor a sale rung in the Desk's own POS screen.

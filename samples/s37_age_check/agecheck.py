@@ -125,17 +125,21 @@ def groups_of(records, prefix: str) -> dict:
 
 
 def items_of(records, prefix: str) -> dict:
-    """The items' own ages: ``{item_code: age}`` (0: the group's age applies)."""
+    """The items' own ages and templates: ``{item_code: (age, template or "")}`` (age 0: the group's age applies). A variant
+    does not inherit a field its template gained later (the shop copies only the fields its Item Variant Settings list),
+    so ``age_of`` falls back to the template's own age."""
     field = prefix.lower().replace(" ", "_") + "_min_age"
     if not isinstance(records, list) or not all(isinstance(r, dict) and isinstance(r.get("name"), str) for r in records):
         raise ValueError("the shop's items are not a list of records")
-    return {r["name"]: _age(r.get(field)) for r in records}
+    return {r["name"]: (_age(r.get(field)), r.get("variant_of") if isinstance(r.get("variant_of"), str) else "")
+            for r in records}
 
 
 def age_of(item_code: str, item_group: str, items: dict, groups: dict) -> int:
-    """The age a customer must be to buy this item: its own when above 0, else the nearest group with one (the group
-    itself, then each group above it), else 0."""
-    own = items.get(item_code) or 0
+    """The age a customer must be to buy this item: its own when above 0, else its template's own (a variant), else the
+    nearest group with one (the group itself, then each group above it), else 0."""
+    own, template = items.get(item_code) or (0, "")
+    own = own or (items.get(template) or (0, ""))[0]
     if own:
         return own
     g = groups.get(item_group)
@@ -164,12 +168,12 @@ def checked_value(age: int) -> str:
 
 
 def checked_age(ctx: dict, prefix: str) -> int:
-    """The age the sale's *ID Checked* detail records: its first whole number (*"18 or over"*, or *18* typed in Sale
-    details), else 0."""
+    """The age the sale's *ID Checked* detail records: a whole age alone, as the scan writes it (*"18 or over"*) or the
+    cashier types it (*18*, *18+*), else 0. Anything else, such as a date of birth typed in, is no check."""
     want = f"{prefix} {CHECKED}"
     value = next((a["value"] for a in ctx["sale_attributes"] if a["name"] == want), "")
-    m = re.search(r"\d+", value)
-    return _age(int(m.group())) if m else 0
+    m = re.fullmatch(r"\s*(\d{1,3})\s*(\+|or over)?\s*", value, re.IGNORECASE)
+    return _age(int(m.group(1))) if m else 0
 
 
 def on_scan(ctx: dict, age: int, settings: dict, today: datetime.date, prefix: str) -> dict:
@@ -194,7 +198,7 @@ def on_check(ctx: dict, ages: list, checked: int) -> dict:
     age = max(a for a, _ in short)
     i = next(i for a, i in short if a == age)
     line = ctx["lines"][i]
-    n, item = line.get("line_no") or i + 1, plain(line["item_code"], 40)
+    n, item = line.get("line_no") or i + 1, plain(line["item_code"], 24)   # 24: the whole sentence fits the till's 140
     if checked:
         text = (f"Line {n}: {item} is for customers {age} or over; the sale's ID check says {checked}. "
                 f"See their ID, then enter {age} in Sale details.")

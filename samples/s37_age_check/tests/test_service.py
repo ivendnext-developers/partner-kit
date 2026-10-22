@@ -116,6 +116,13 @@ class OneShop(unittest.TestCase):
         self.assertEqual(self.scan(scan(sale_ref="sale-9"))[1]["verdict"], "notice")
         self.assertEqual(self.scan(scan(sale_ref="sale-9"))[1], {"verdict": "allow"})
 
+    def test_a_variant_is_judged_by_its_templates_age_read_in_a_second_step(self):
+        out = self.check(context([line("POD-MINT", "Food", n=1)]))[1]
+        self.assertTrue(out["reason"].startswith("Line 1: POD-MINT is for customers 21 or over."), out)
+        self.assertEqual([c[3] for c in self.api.calls if c[0] == "items"], [("POD-MINT",), ("POD",)])
+        self.assertEqual(self.check(context([line("POD-MINT", "Food")], checked="21"))[1], {"verdict": "allow"})
+        self.assertEqual(len([c for c in self.api.calls if c[0] == "items"]), 2)          # both kept a minute
+
     def test_an_item_with_no_age_is_allowed_with_nothing_shown(self):
         self.assertEqual(self.scan(scan("BREAD", "Food"))[1], {"verdict": "allow"})
 
@@ -330,7 +337,7 @@ class ShopApi(unittest.TestCase):
         self.api.items(self.url, "k:s", "PP AGE", ["WHISKY"])
         a = self.args()
         self.assertEqual((json.loads(a["fields"]), json.loads(a["filters"]), a["limit_page_length"]),
-                         (["name", "pp_age_min_age"], [["name", "in", ["WHISKY"]]], "0"))
+                         (["name", "pp_age_min_age", "variant_of"], [["name", "in", ["WHISKY"]]], "0"))
 
     def test_a_refusal_or_an_answer_that_is_not_records_is_unreadable(self):
         for prefix in ("LOCKED", "LIST"):

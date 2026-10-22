@@ -27,7 +27,10 @@ GROUPS = [   # the tree: All > Drinks > Alcohol > Spirits; Alcohol > Beer (its o
 ]
 ITEMS = [{"name": "WHISKY", "pp_age_min_age": 0}, {"name": "KNIFE", "pp_age_min_age": 18},
          {"name": "BREAD", "pp_age_min_age": None}, {"name": "VAPE", "pp_age_min_age": 0}, {"name": "LAGER", "pp_age_min_age": 0},
-         {"name": "COLA", "pp_age_min_age": 0}]
+         {"name": "COLA", "pp_age_min_age": 0},
+         {"name": "POD", "pp_age_min_age": 21, "variant_of": None},             # a template in a group of no age
+         {"name": "POD-MINT", "pp_age_min_age": 0, "variant_of": "POD"},        # its variant: the field was not copied
+         {"name": "POD-MILD", "pp_age_min_age": 18, "variant_of": "POD"}]       # a variant with its own age
 SETTINGS = {"hours_from_utc": 4, "look_under": 25}
 G, I = agecheck.groups_of(GROUPS, "PP AGE"), agecheck.items_of(ITEMS, "PP AGE")
 
@@ -69,6 +72,11 @@ class Ages(unittest.TestCase):
 
     def test_an_items_own_age_wins_over_its_group(self):
         self.assertEqual(agecheck.age_of("KNIFE", "Food", I, G), 18)
+
+    def test_a_variant_with_no_age_of_its_own_takes_its_templates(self):
+        self.assertEqual(agecheck.age_of("POD-MINT", "Food", I, G), 21)
+        self.assertEqual(agecheck.age_of("POD-MILD", "Food", I, G), 18)
+        self.assertEqual(I["POD-MINT"], (0, "POD"))
 
     def test_no_age_anywhere_is_zero(self):
         self.assertEqual(agecheck.age_of("BREAD", "Food", I, G), 0)
@@ -142,6 +150,11 @@ class Check(unittest.TestCase):
         self.assertEqual(agecheck.on_check(ctx, ages(ctx), agecheck.checked_age(ctx, "PP AGE"))["reason"],
                          "Line 3: VAPE is for customers 21 or over; the sale's ID check says 16. See their ID, then enter 21 in Sale details.")
 
+    def test_only_a_whole_age_alone_is_a_check(self):
+        for checked, age in (("18 or over", 18), ("18", 18), (" 21+ ", 21), ("21 OR OVER", 21), ("18/03/2010", 0),
+                             ("DOB 25.11.2009", 0), ("1999", 0), ("2010-03-18", 0), ("over 18", 0), ("121", 0)):
+            self.assertEqual(agecheck.checked_age(context(checked=checked), "PP AGE"), age, checked)
+
     def test_a_check_that_is_not_a_number_counts_as_none(self):
         for checked in ("yes", "", "ok seen"):
             ctx = context(checked=checked)
@@ -171,7 +184,9 @@ class Check(unittest.TestCase):
         long = "W" * 200
         for checked in (0, 18):
             ctx = context([line(long, "Vapes", n=123)])
-            self.assertLessEqual(len(agecheck.on_check(ctx, [21], checked)["reason"]), 140)
+            reason = agecheck.on_check(ctx, [21], checked)["reason"]
+            self.assertLessEqual(len(reason), 140)
+            self.assertTrue(reason.endswith("in Sale details.") or reason.endswith("or take it off."), reason)   # never cut
 
 
 class Asked(unittest.TestCase):
