@@ -196,6 +196,12 @@ class Prescriptions(unittest.TestCase):
         c = ctx([line("AMOX", 21)], details={"Rx Number": "RX1"})
         self.assertIn("walk-in", decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21)], walk_in=True))["reason"])
 
+    def test_a_scheduled_line_in_a_unit_with_no_conversion_is_refused(self):
+        c = ctx([dict(line("AMOX", 2), uom="Box")], details={"Rx Number": "RX1"})
+        s = shop(c, [rule("POM")], [rx("RX1", "AMOX", 21)])
+        s["qty"] = [None]
+        self.assertIn("its unit Box has no conversion", decide(c, s)["reason"])
+
     def test_an_item_not_on_the_prescription_is_refused(self):
         c = ctx([line("AMOX", 21)], details={"Rx Number": "RX1"})
         self.assertIn("not on the prescription", decide(c, shop(c, [rule("POM")], [rx("RX1", "TRAM", 10)]))["reason"])
@@ -361,7 +367,16 @@ class Returns(unittest.TestCase):
         c = ctx([line("PARA", -2)], stage="return")
         took = disp("Ann~0001", [{"item": "PARA", "qty": 2, "rx": "", "schedules": ["PMED"]}], R.DISPENSED)
         out = decide(c, shop(c, [rule("PMED")], returned_from=[took]))
-        self.assertEqual(out["record"]["lines"], [{"item": "PARA", "qty": -2, "rx": "", "schedules": ["PMED"]}])
+        self.assertEqual(out["record"]["lines"], [{"item": "PARA", "qty": -2, "rx": "", "schedules": ["PMED"], "from": "Ann~0001"}])
+
+    def test_a_quantity_is_given_back_once_and_only_by_a_return_that_moves_stock(self):
+        took = disp("Ann~0001", [{"item": "PARA", "qty": 2, "rx": "", "schedules": ["PMED"]}], R.DISPENSED)
+        back = disp("Ann~0002", [{"item": "PARA", "qty": -2, "rx": "", "schedules": ["PMED"], "from": "Ann~0001"}],
+                    R.RETURNED, seq=2, sale_ref="ret-1")
+        c = ctx([line("PARA", -2)], stage="return", sale_ref="ret-2")
+        self.assertIsNone(decide(c, shop(c, [rule("PMED")], dispensings=[took, back], returned_from=[took]))["record"])
+        c = dict(ctx([line("PARA", -2)], stage="return", source="desk"), moves_stock=False)   # a money-only credit note
+        self.assertIsNone(decide(c, shop(c, [rule("PMED")], returned_from=[took]), route="desk")["record"])
 
     def test_no_give_back_where_a_schedule_says_so(self):
         c = ctx([line("X", -2)], stage="return")
@@ -405,6 +420,17 @@ class Counting(unittest.TestCase):
         self.assertEqual(R.resolve(dict(d, source="desk", sale_ref="Sales Order:SO-9"), states), R.RESERVED)
         # its name taken by another customer's document: the original was never submitted
         self.assertEqual(R.resolve(dict(d, source="desk", sale_ref="Sales Order:SO-8", customer="Ann"), states), R.RELEASED)
+
+    def test_a_status_set_by_hand_never_outlives_what_the_shop_shows(self):
+        d = disp("k~2", [{"item": "A", "qty": 1}], R.RELEASED, seq=2, sale_ref="s-booked")
+        states = dict(self.STATES, newest={"s-booked": "k~2"})
+        self.assertEqual(R.resolve(d, states), R.DISPENSED)          # released by hand, but its sale is booked
+        unbooked = disp("k~3", [{"item": "A", "qty": 1}], R.RELEASED, seq=3, sale_ref="s-new")
+        self.assertEqual(R.resolve(unbooked, dict(states, newest={"s-new": "k~3"})), R.RELEASED)   # the stuck one stays released
+
+    def test_only_the_newest_dispensing_of_a_sale_is_its_booking(self):
+        old = disp("k~1", [{"item": "A", "qty": 1}], R.RESERVED, seq=1, sale_ref="s-booked")
+        self.assertEqual(R.resolve(old, dict(self.STATES, newest={"s-booked": "k~2"})), R.RELEASED)
 
     def test_a_desk_dispensing_follows_its_document(self):
         self.assertEqual(self.resolve(source="desk", sale_ref="Sales Order:SO-1"), R.DISPENSED)
@@ -455,6 +481,11 @@ class Shapes(unittest.TestCase):
         c = R.desk_context(body, P)
         self.assertEqual((c["sale_ref"], c["lines"][0]["qty"], c["lines"][0]["linked"], c["details"][f"{P} Rx Number"]),
                          ("Delivery Note:DN-1", 21, True, "RX1"))
+        body["context"]["fields"]["items"][0].update(against_sales_order="", so_detail="", against_sales_invoice="SI-1",
+                                                     si_detail="row-9")                 # a delivery made from an invoice
+        self.assertTrue(R.desk_context(body, P)["lines"][0]["linked"])
+        body["context"]["fields"]["items"][0].update(against_sales_order="SO-1", so_detail="", si_detail="",
+                                                     against_sales_invoice="")
         body["context"]["fields"]["items"][0]["so_detail"] = ""     # a parent's name typed on a line, no row: not linked
         self.assertFalse(R.desk_context(body, P)["lines"][0]["linked"])
         body["context"]["doctype"] = "Purchase Order"

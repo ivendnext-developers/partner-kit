@@ -53,9 +53,14 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
   invoice or delivery) is checked and reserves. A delivery or invoice line made from it, carrying its parent's row
   reference, is allowed unchecked, so a clerk can deliver what the pharmacist ordered. A parent's name typed on a line
   without its row is checked like any line. *Pharmacist only* is met by the pharmacist who submitted the first document.
-- **A stuck reservation can be released by hand.** A sale the till gave up on holds its fill until its day closes.
-  The pharmacist-in-charge may set that Dispensing to *Released*, and the service never reserves after 4 s of a check
-  (the till's limit is 5 s).
+- **A stuck reservation can be released by hand.** A sale the till gave up on holds its fill until its day closes, and
+  a sales order closed but never delivered holds its fill until it is cancelled.
+  - The pharmacist-in-charge may set that Dispensing to *Released*.
+  - The status is worked out from the shop at every check, so a release set by hand on a sale that did book reads
+    *Dispensed* again.
+  - The service never reserves after 4 s of a check (the till's limit is 5 s).
+- **A return gives back** only what moved back into stock (a till return, a delivery's return, or a credit note that
+  updates stock), and never twice for the same dispensed quantity.
 - **A prescription edited after its first dispense is not dispensed again.** Each dispensing stores a fingerprint of
   the prescription: patient, date, fills and quantities. An edit makes the till refuse it (*"was changed after it was
   dispensed. Enter a new one."*). The record keeps its change history.
@@ -137,6 +142,19 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
   *Sales to review*.
 - **The till holds a check's answer for the basket, not for the cashier who asked.** A pharmacist's answer stays valid
   for that basket under that sale's key. We have asked for it to be bound to the operator too.
+- **The front of the shop sells offline unchecked.** Keep prescription and controlled stock only in the dispensary's
+  store, so the front cannot sell it online either, or turn offline selling off on every profile that sells medicine
+  until the till can keep chosen items online only.
+- **Whoever may write an Item may change its *Drug schedules* rows.** Removing a row removes that drug's rules. Keep
+  Item writing to your item managers; every change is in the item's history.
+- **The pharmacist-in-charge's write on a Dispensing reaches its whole record.** Only the status is meant to be set,
+  and every change is kept in the record's history.
+- **A customer renamed or merged after a dispensing:** their dispensed prescriptions are refused as *changed*. Enter
+  new ones.
+- **A reclassification** (a new schedule row on its date) starts the new schedule's frequency count from that day.
+- **Hosting:** CitiXsys hosting runs services in the United States. This app reads prescriptions and dispensing
+  history, so run it in your shop's own region: the service is a container or a function you deploy yourself, from this
+  folder.
 - **A POS day left open holds its reservations,** so close every day. A Desk draft left after an allowed submit failed
   holds its fill until it is submitted or deleted.
 - **The engine's own *Returnable* tick on Item** (off by default) already refuses a till return of the item before any
@@ -196,8 +214,9 @@ details (default `PP RXC`).
 - **Validity:** the written day counts as day 1, so a 3-day class sells on the written day and the next two days. A
   prescription dated after today is refused.
 - **The frequency cap** counts the patient's dispensings of that schedule in the last *n* days, this sale included.
-- **What the shop says** is re-read for every reserved fill, and for dispensings of the last 30 days (a sale cancelled
-  since). An older cancellation is not looked for, so its fill stays spent, which is the safe side.
+- **What the shop says** is re-read for every reserved fill and every dispensing of the last 400 days, whatever its
+  status: a sale cancelled since, or a status set by hand. Only the newest dispensing of a sale or document is matched
+  to its booking; an older one, from an earlier press of Pay, is released.
 - **The shop cannot be read** (no answer, an error, a refused key, not records, a check with no sale reference): 503,
   and the subscription's down answer applies. Each read waits at most 2 s, and nothing is reserved after 4 s. The till
   cuts the whole check at its own 5 s.
@@ -205,8 +224,8 @@ details (default `PP RXC`).
 
 ### What was proven where
 
-- **On the laptop:** the tests and canaries above (94 tests, one of them replaying a recorded bench run when one is
-  given; 47 canaries, each RED with its baseline passing).
+- **On the laptop:** the tests and canaries above (113 tests, one of them replaying a recorded bench run when one is
+  given; 72 canaries, each RED with its baseline passing).
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344`, the engine at `dc65d832`):
   - **The setup.** The app was installed through the shop's own installer: five services, switched off, with the
     declared down answers. The service's user held only the app's role and the card's reads, and every read and write

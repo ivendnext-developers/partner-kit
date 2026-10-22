@@ -74,7 +74,8 @@ READ_TIMEOUT = 2.0     # each read waits at most this (1.0 timed out once on the
                        # its parallel siblings); the till cuts the whole check at its 5 s and applies the down answer
 WRITE_BACK_MAX = 5     # statuses written back per call (the Desk list's words; every decision reads them back anyway)
 TRIES = 3              # decide again after another till took the patient's next number first
-RECHECK_DAYS = 30      # a booked dispensing is re-read for a cancellation this many days
+RECHECK_DAYS = 400     # a dispensing is re-read from the shop this many days (a prescription's life): a cancellation, a
+                       # status set by hand
 ROWS_MAX = 2000        # a patient's dispensings read per decision (the newest first)
 #        route                   (secret key, point)
 ROUTES = {"/rxc/dispensary": ("dispensary", "check"),
@@ -294,20 +295,24 @@ class Service:
     def shop_states(self, shop: dict, dispensings: list, return_of: str, today) -> tuple[dict, list]:
         """What the shop says about the patient's open dispensings (``rxrules.resolve``'s ``shop``), and the dispensings a
         till return takes back (those of its original sale)."""
-        # every reservation, and the dispensings of the last RECHECK_DAYS days (a sale cancelled since): an older
-        # cancellation is not looked for, so its fill stays spent (the safe side)
+        # every reservation, and every dispensing of the last RECHECK_DAYS days whatever its status (a sale cancelled
+        # since, a status set by hand): an older one is not looked for, so it stays as it was
         since = today - datetime.timedelta(days=RECHECK_DAYS)
-        open_ = [d for d in dispensings if d["status"] == rxrules.RESERVED
-                 or (d["status"] == rxrules.DISPENSED and d["day"] >= since)]
+        open_ = [d for d in dispensings if d["status"] == rxrules.RESERVED or d["day"] >= since]
         till = [d for d in open_ if d["source"] != "desk"]
         sale_refs = sorted({d["sale_ref"].strip().lower() for d in till if not any(x["qty"] < 0 for x in d["lines"])})
         return_keys = sorted({d["sale_ref"] for d in till if any(x["qty"] < 0 for x in d["lines"])})
-        days = sorted({d["pos_opening"] for d in till if d["pos_opening"] and d["status"] == rxrules.RESERVED})
+        days = sorted({d["pos_opening"] for d in till if d["pos_opening"]})
         desk: dict = {}
         for d in open_:
             if d["source"] == "desk":
                 desk.setdefault(d["document_type"], set()).add(d["document"])
-        out = {"sales": {}, "returns": {}, "closed_days": set(), "documents": {}}
+        newest: dict = {}
+        for d in dispensings:            # the newest dispensing of each sale or document is the one its booking matches
+            if d["sale_ref"] and d["seq"] >= newest.get(d["sale_ref"], (0, ""))[0]:
+                newest[d["sale_ref"]] = (d["seq"], d["name"])
+        out = {"sales": {}, "returns": {}, "closed_days": set(), "documents": {},
+               "newest": {k: v[1] for k, v in newest.items()}}
         jobs = []
         with ThreadPoolExecutor(max_workers=6) as pool:
             if sale_refs:
@@ -344,12 +349,8 @@ class Service:
                     doctype = kind[4:]
                     out["documents"].update({f"{doctype}:{k}": v for k, v in rows.items()})
             orig_rows = orig.result() if orig else []
-        returned_from = []
-        if orig_rows:
-            ref = (orig_rows[0].get("custom_mpos_sale_ref") or "").strip().lower()
-            returned_from = [d for d in dispensings if d["source"] != "desk" and d["sale_ref"].strip().lower() == ref
-                             and d["status"] in (rxrules.RESERVED, rxrules.DISPENSED)]
-        return out, returned_from
+        out["return_of_ref"] = (orig_rows[0].get("custom_mpos_sale_ref") or "").strip().lower() if orig_rows else ""
+        return out, []
 
     def _documents(self, shop, doctype, names) -> dict:
         """``{name: (docstatus, customer)}`` for the Desk documents a patient's dispensings name. One the list does not
@@ -396,18 +397,23 @@ class Service:
             else:
                 pat = self.patient(shop, ctx, refs, ids)
             dispensings = rxrules.dispensings_of(pat["dispensings"])
-            states, returned_from = self.shop_states(shop, dispensings, ctx["return_of"], today) if dispensings else (
-                {"sales": {}, "returns": {}, "closed_days": set(), "documents": {}}, [])
-            if ctx["source"] == "desk" and ctx["stage"] == "return":
-                parents = {ctx["return_of"]} | {x.get("parent", "") for x in ctx["lines"]}
-                returned_from = [d for d in dispensings if d["source"] == "desk" and d["document"] in parents
-                                 and d["status"] in (rxrules.RESERVED, rxrules.DISPENSED)]
+            states, _ = self.shop_states(shop, dispensings, ctx["return_of"], today) if dispensings else (
+                {"sales": {}, "returns": {}, "closed_days": set(), "documents": {}, "newest": {}, "return_of_ref": ""}, [])
             changed = {}
             for d in dispensings:
                 new = rxrules.resolve(d, states)
                 if new != d["status"]:
                     changed[d["name"]] = new
                     d["status"] = new
+            # the dispensings a return takes back: its original sale's (till) or its chain's (Desk), as resolved now
+            positive = [d for d in dispensings if d["status"] in (rxrules.RESERVED, rxrules.DISPENSED)
+                        and any(x["qty"] > 0 for x in d["lines"])]
+            if ctx["source"] == "desk":
+                parents = {ctx["return_of"]} | {x.get("parent", "") for x in ctx["lines"]}
+                returned_from = [d for d in positive if d["source"] == "desk" and d["document"] in parents]
+            else:
+                ref = states.get("return_of_ref") or ""
+                returned_from = [d for d in positive if d["source"] != "desk" and ref and d["sale_ref"].strip().lower() == ref]
             rx_items = self._list(shop, self.dt("Prescription Item"), ["parent", "item_code", "qty", "directions"],
                                   [["parent", "in", [r["name"] for r in pat["rx_headers"]]]],
                                   parent=self.dt("Prescription")) if pat["rx_headers"] else []

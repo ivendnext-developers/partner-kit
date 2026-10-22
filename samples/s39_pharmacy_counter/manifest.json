@@ -1108,7 +1108,7 @@
    "down_answer": "refuse",
    "settings": {
     "record_type": "Delivery Note",
-    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, is_return, return_against, items(item_code, item_group, stock_qty, against_sales_order, so_detail)",
+    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, is_return, return_against, items(item_code, item_group, stock_qty, against_sales_order, so_detail, against_sales_invoice, si_detail)",
     "on_validate": false
    }
   },
@@ -1121,7 +1121,7 @@
    "down_answer": "refuse",
    "settings": {
     "record_type": "Sales Invoice",
-    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, is_return, return_against, items(item_code, item_group, stock_qty, sales_order, so_detail, delivery_note, dn_detail)",
+    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, is_return, return_against, update_stock, items(item_code, item_group, stock_qty, sales_order, so_detail, delivery_note, dn_detail)",
     "on_validate": false
    }
   }

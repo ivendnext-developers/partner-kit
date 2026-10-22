@@ -54,7 +54,8 @@ IDENTITY = (("needs_id_number", "id_number", "national or residence ID"),
 DESK_TYPES = ("Sales Order", "Delivery Note", "Sales Invoice")
 # a Desk line made from a linked parent: (the parent's name, its ROW reference). A line is linked only when the row
 # reference is set: the engine then holds the line to that row's item; a parent name alone could be typed onto any line
-PARENT_FIELDS = (("against_sales_order", "so_detail"), ("sales_order", "so_detail"), ("delivery_note", "dn_detail"))
+PARENT_FIELDS = (("against_sales_order", "so_detail"), ("against_sales_invoice", "si_detail"), ("sales_order", "so_detail"),
+                 ("delivery_note", "dn_detail"))
 
 RESERVED, DISPENSED, RELEASED, RETURNED = "Reserved", "Dispensed", "Released", "Returned"
 
@@ -112,7 +113,7 @@ def sale_context(body: dict) -> dict:
         raise ValueError("return_of names the original sale")
     if not _text(ctx.get("sale_ref")):
         raise ValueError("no sale_ref: a reservation could never be matched to its booking")
-    return {"source": "till", "stage": ctx["stage"], "sale_ref": _text(ctx.get("sale_ref")),
+    return {"source": "till", "stage": ctx["stage"], "moves_stock": True, "sale_ref": _text(ctx.get("sale_ref")),
             "operator": _text(ctx.get("operator")), "customer": _text(ctx.get("customer")),
             "pos_profile": _text(ctx.get("pos_profile")), "pos_opening": _text(ctx.get("pos_opening")),
             "return_of": _text((ret or {}).get("invoice")), "doctype": "", "name": "",
@@ -148,7 +149,8 @@ def desk_context(body: dict, prefix: str) -> dict:
                       "qty": x["stock_qty"] / 1000, "uom": "", "linked": bool(parent), "parent": parent})
     is_return = bool(f.get("is_return"))
     details = {suffix: _text(f.get(f"{p}_{field}")) for suffix, field in DESK_FIELDS.items()}
-    return {"source": "desk", "stage": "return" if is_return else "sale", "event": ctx["event"],
+    moves = ctx["doctype"] == "Delivery Note" or bool(f.get("update_stock"))
+    return {"source": "desk", "stage": "return" if is_return else "sale", "event": ctx["event"], "moves_stock": moves,
             "sale_ref": f"{ctx['doctype']}:{ctx['name']}", "operator": _text(ctx.get("user")),
             "customer": f["customer"].strip(), "pos_profile": "", "pos_opening": "",
             "return_of": _text(f.get("return_against")), "doctype": ctx["doctype"], "name": ctx["name"],
@@ -419,11 +421,17 @@ def resolve(d: dict, shop: dict) -> str:
     - ``closed_days``: the POS days that are closed;
     - ``documents``: ``{"<doctype>:<name>": docstatus}`` — the Desk documents that still exist.
 
-    A dispensing whose sale or document the shop cannot place yet stays as it is: it keeps counting (a dispensing) or
-    keeps not counting (a give-back)."""
+    - ``newest``: ``{sale_ref: dispensing name}`` — the newest dispensing of each sale or document; an older one was
+      replaced on a later press of Pay or submit and is released, whatever its sale did.
+
+    The status is worked out from the shop every time, so one set by hand (the pharmacist-in-charge may release a stuck
+    reservation) never outlives what the shop shows: a released dispensing whose sale is booked reads *Dispensed* again.
+    A dispensing whose sale or document the shop cannot place yet stays as it is: it keeps counting (a dispensing), keeps
+    not counting (a give-back), or stays released by hand."""
     give_back = any(x["qty"] < 0 for x in d["lines"])
-    if d["status"] == RELEASED:
-        return RELEASED
+    newest = shop.get("newest")
+    if newest is not None and newest.get(d["sale_ref"], d["name"]) != d["name"]:
+        return RELEASED                                         # replaced by a later press of Pay or a later submit
     if d["source"] == "desk":
         found = shop["documents"].get(d["sale_ref"])
         status, owner = found if isinstance(found, tuple) else (found, None)
@@ -624,8 +632,15 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
             record_lines.append({"item": lines[i]["item"], "qty": qty[i], "rx": "", "schedules": r["schedules"]})
             recorded.add(i)
 
-    # 10 · a return gives back what its dispensing took, where its schedule says so (FR-K1-08)
-    for i in back:
+    # 10 · a return gives back what its dispensing took, where its schedule says so (FR-K1-08): only a return that moves
+    # stock back (a money-only credit note returns no medicine), and never twice for one dispensed quantity
+    given: dict = {}
+    for d in shop["dispensings"]:
+        if d["sale_ref"] != ctx["sale_ref"] and d["status"] in (RESERVED, RETURNED):
+            for x in d["lines"]:
+                if x["qty"] < 0 and x.get("from"):
+                    given[(x["from"], x.get("item"))] = given.get((x["from"], x.get("item")), 0.0) - x["qty"]
+    for i in back if ctx.get("moves_stock", True) else ():
         r = rules[i]
         if not r or not r["gives_back"]:
             continue
@@ -633,9 +648,12 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
         for d in shop["returned_from"]:
             for x in d["lines"]:
                 if x.get("item") == lines[i]["item"] and x["qty"] > 0 and left > 1e-9:
-                    take = min(left, x["qty"])
+                    take = min(left, x["qty"] - given.get((d["name"], x["item"]), 0.0))
+                    if take <= 1e-9:
+                        continue
                     record_lines.append({"item": x["item"], "qty": -take, "rx": x.get("rx", ""),
-                                         "schedules": x.get("schedules") or []})
+                                         "schedules": x.get("schedules") or [], "from": d["name"]})
+                    given[(d["name"], x["item"])] = given.get((d["name"], x["item"]), 0.0) + take
                     left -= take
 
     return {"verdict": "allow", "record": {"lines": record_lines, "fingerprints": fps} if record_lines else None}
