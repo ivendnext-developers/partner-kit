@@ -1,0 +1,63 @@
+{
+ "manifest_version": 2,
+ "app": "pp_exm",
+ "prefix": "PP EXM",
+ "title": "Expiry markdown",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "Stock near its expiry date marked down by the shop's own steps. Each item group may hold two steps: a first markdown from so many days before expiry (25% from 5 days, say) and a last one (50% from 2 days); a group without steps takes the nearest group above it that has some. A button on the Batch list and on a lot's form, Mark down, that an Item Manager presses on the ticked lots (the role that reads Batch; a shop adds roles on the button and gives them read on Batch): the service reads the lots with the app's own user and writes each lot's own price on the shop's selling price list (the price list in the record Default of PP EXM Settings): the item's price less the step's percent, rounded down to the currency's smallest unit, valid until the lot's expiry date, its note naming the app. A lot that reached its last step is changed; a lot past its date, with no stock or outside every step has the app's price taken off; a price the shop typed for a lot is never changed; each press also removes up to 20 of the app's prices whose date has passed. The till already rings a lot at its own price and prints its lot label. While any lot has a price of its own, the shop's tills do not sell a lot-tracked item offline. Each press sends the ticked lots' names, items and expiry dates, the pressing user and the language. The install makes the role PP EXM Integration; the shop gives it to the app's user with read on Batch, Item Group, Price List and Currency, and read, write, create and delete on Item Price, chooses that user on the feed PP EXM Markdown feed (leave the feed off) and presses Connect again. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": ["https://host.docker.internal:8125/press/markdown"],
+ "doctypes": [
+  {
+   "name": "PP EXM Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1, "unique": 1, "default": "Default",
+     "description": "The service reads the record named Default."},
+    {"fieldname": "price_list", "fieldtype": "Link", "options": "Price List", "label": "Price list to mark down", "reqd": 1,
+     "description": "The selling price list your tills sell from. Each lot's markdown is written on it, from the item's own price there."},
+    {"fieldname": "hours_from_utc", "fieldtype": "Float", "label": "Hours from UTC at the shop",
+     "description": "The shop's own day decides how many days a lot has left: 4 for Dubai, 3 for Nairobi or Riyadh, 2 for Johannesburg, -6 for Mexico City. Blank: UTC."}
+   ],
+   "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 0, "print": 1, "email": 0},
+    {"role": "PP EXM Integration", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0}
+   ]
+  }
+ ],
+ "custom_fields": [
+  {"dt": "Item Group", "fieldname": "pp_exm_days_1", "fieldtype": "Int", "label": "First markdown: days before expiry",
+   "insert_after": "parent_item_group",
+   "description": "Such as 5: from 5 days before a lot's expiry date, its price is marked down by the percent below. It covers every group below this one, unless a group below sets its own steps. Blank: no first step."},
+  {"dt": "Item Group", "fieldname": "pp_exm_pct_1", "fieldtype": "Percent", "label": "First markdown (% off)",
+   "insert_after": "pp_exm_days_1", "description": "Such as 25. Above 0 and below 100."},
+  {"dt": "Item Group", "fieldname": "pp_exm_days_2", "fieldtype": "Int", "label": "Last markdown: days before expiry",
+   "insert_after": "pp_exm_pct_1", "description": "Such as 2: fewer days than the first step. 0: on the expiry date itself. Blank: no last step."},
+  {"dt": "Item Group", "fieldname": "pp_exm_pct_2", "fieldtype": "Percent", "label": "Last markdown (% off)",
+   "insert_after": "pp_exm_days_2", "description": "Such as 50. Above 0 and below 100."}
+ ],
+ "property_setters": [
+  {"doc_type": "PP EXM Settings", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/expiry_markdown.html#settings"}
+ ],
+ "registered_applications": [
+  {"name": "PP EXM Markdown feed", "description": "the markdown service reads lots, items and item groups and writes lots' prices as this feed's user; leave the feed switched off", "events": ["PP EXM Settings"]}
+ ],
+ "extension_subscriptions": [
+  {"key": "markdown", "point": "desk_action", "label": "Mark down service", "endpoint_url": "https://host.docker.internal:8125/press/markdown", "timeout_seconds": 10}
+ ],
+ "desk_actions": [
+  {
+   "record_type": "Batch",
+   "label": "Mark down",
+   "placement": "both",
+   "service": "markdown",
+   "roles": ["Item Manager"],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name, item, expiry_date",
+   "confirm_text": "Mark down these lots by your item groups' steps? Each lot's own price changes until its expiry date."
+  }
+ ]
+}
