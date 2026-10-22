@@ -12,6 +12,20 @@ An airport shop sells only to passengers with a valid boarding pass, and only up
 
 Everything else is allowed. A refund is never judged; an exchange is judged for what it sells. The recipe: [`recipes/duty_free_allowance.md`](../../recipes/duty_free_allowance.md).
 
+| What the shop sees (on a demo shop, 2026-10-22) | |
+|---|---|
+| The app's card in the App library | ![](screenshots/01_app_library_card.png) |
+| What the install will change, read before you consent | ![](screenshots/02_install.png) |
+| The settings record *Default* for a store at JFK | ![](screenshots/03_settings.png) |
+| A duty-free allowance on the item group *Spirits*: 4 litres | ![](screenshots/04_item_group_allowance.png) |
+| A 75 cl bottle counts as 0.75 | ![](screenshots/05_item_counts_as.png) |
+| The check switched on, with the shop's consent and the details it sends | ![](screenshots/06_check_consent.png) |
+| The boarding pass in **Sale details** on the till | ![](screenshots/07_till_sale_details.png) |
+| No pass: the till refuses the sale | ![](screenshots/08_till_no_pass.png) |
+| 4.5 litres of spirits on one pass: refused | ![](screenshots/09_till_over_allowance.png) |
+| A flight from another airport: refused | ![](screenshots/10_till_other_airport.png) |
+| Within the allowance: the payment screen opens | ![](screenshots/11_till_payment_screen.png) |
+
 ## What the shop does
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP DFA Settings*, two fields on Item Group, one on Item, the sale detail *PP DFA Boarding Pass*, the role `PP DFA Integration`, the check and the feed registration, the check switched off. Nothing changes at the till yet.
@@ -64,4 +78,5 @@ python3 samples/s36_duty_free/service/app.py samples/s36_duty_free/service/.env.
 ### What was proven where
 
 - **On the laptop:** the tests and canaries above.
+- **On a demo shop** (2026-10-22, iVendNext POS 2.0.0.658): installed from the App library with a free key and set up in the card's order; at the till, a sale with no pass, over the allowance and from another airport refused in the app's words, and one within the allowance opened the payment screen, against the service hosted by CitiXsys (the pictures above). Then uninstalled, the walk's data removed and its key withdrawn.
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344` (the programme's own clone the bench mounts), the engine at `dc65d832`; the service in its one-shop form, reading the shop with a user holding only the app's role and a read on Item Group, Item and POS Invoice; the shop's settings DXB, departing, UTC+4; a group *Spirits* allowed 4 litres, with a 1-litre whisky in a group below it and a 75 cl vodka), **12 of 12, twice**, through the till's own calls inside one day that was closed after: a sale with no pass refused in the app's words, the card push refused, no sale booked · a pass for a flight from London refused, naming LHR and DXB · a pass dated three days ago refused as another day · a passenger's 2 whiskies and 2 vodkas (3.5 litres) allowed and booked with the pass on the sale · that passenger's next sale of 1 whisky refused at 4.5 litres (the booked sale found by its pass and counted live) · an item of no limited group allowed and booked · another passenger's 3.75 litres allowed · the service received the pass whole, as the sale detail, with each line's item group. Before the scenario, each read the service makes was made as the app's user and none was refused. The install, the uninstall (the schema as found; the sale detail kept, switched off) and the rights put back were checked too, and no POS day was left open. **In a browser** on that bench, as a System Manager with Item Manager: the settings record and the allowance on the item group opened as set, and an item's measure changed and saved; at the till as a cashier: 5 bottles of the whisky and no pass refused, the pass typed into *Sale details*, 5 litres refused, 4 litres allowed to the payment screen (the sale voided, nothing paid). **The library copy rehearsed** on a new site with developer mode off: check, install, update, export and uninstall, reinstall, each without error; the site as found after the uninstall; the reinstall made the app's role. **Not run on the bench:** an arrivals shop, a pass with two legs, an earlier return taking its amount back, a line in another unit, many shops (each in the laptop tests), offline.
