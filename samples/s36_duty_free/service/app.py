@@ -60,8 +60,9 @@ import function  # noqa: E402
 import shops  # noqa: E402
 
 KEY, ROUTE = "allowance", "/dfa/check"   # the subscription's key in the manifest; its secret is "<app>:sub:<key>"
-KEPT_TTL, READ_TIMEOUT = 60, 0.9         # at most four steps of reads (settings and groups; items and earlier sales; each
-                                         # earlier sale; the rest of the items) inside the check's 5 s
+KEPT_TTL, READ_TIMEOUT = 60, 0.9         # four steps of reads at most (settings and groups; items and earlier sales; every
+                                         # earlier sale at once; the rest of the items), each read 0.9 s per wait on its
+                                         # connection, inside the check's 5 s; a slower shop gets the down answer
 EARLIER_MAX = 20                         # a passenger's earlier sales on one pass read at most
 KEY_REFUSED = ("Duty-free allowance cannot read your shop: it refused the app's user. "
                "Ask your administrator to check the app's setup.")
@@ -203,7 +204,7 @@ class Service:
         if not touched:
             return [], touched
         codes = sorted({x["item_code"] for x in mine})
-        with ThreadPoolExecutor(max_workers=8) as pool:
+        with ThreadPoolExecutor(max_workers=EARLIER_MAX + 2) as pool:   # every earlier sale in one step
             items_f = pool.submit(self.api.items, url, key, self.prefix, codes)
             names_f = pool.submit(self.api.earlier, url, key, f"{self.prefix} {dutyfree.PASS}", pass_text) \
                 if settings["earlier"] else None

@@ -104,14 +104,17 @@ class Judge(unittest.TestCase):
     def test_the_day_crosses_the_new_year(self):
         self.assertEqual(dutyfree.pass_problem(bcbp(leg(day=1)), self.S, datetime.date(2026, 12, 31)), "")
         arriving = dutyfree.settings_of(dict(SETTINGS, direction="arriving"))
-        self.assertEqual(dutyfree.pass_problem(bcbp(leg("LHR", "DXB", day=365)), arriving, datetime.date(2027, 1, 1)), "")
+        for day in (364, 365):
+            self.assertEqual(dutyfree.pass_problem(bcbp(leg("LHR", "DXB", day=day)), arriving, datetime.date(2027, 1, 1)), "")
 
-    def test_an_arrivals_shop_takes_a_flight_landing_here_today_or_yesterday(self):
+    def test_an_arrivals_shop_takes_a_flight_arriving_here_dated_today_or_the_two_days_before(self):
         arriving = dutyfree.settings_of(dict(SETTINGS, direction="arriving"))
-        for day in (294, 295):
-            self.assertEqual(dutyfree.pass_problem(bcbp(leg("LHR", "DXB", day=day)), arriving, TODAY), "", day)
-        self.assertEqual(dutyfree.pass_problem(bcbp(leg("LHR", "DXB", day=296)), arriving, TODAY), dutyfree.OTHER_DAY)
-        self.assertEqual(dutyfree.pass_problem(bcbp(leg("DXB", "LHR")), arriving, TODAY),
+        for day in (293, 294, 295):          # a pass carries the day its flight leaves: a long flight arrives two days on
+            self.assertEqual(dutyfree.pass_problem(bcbp(leg("LAX", "DXB", day=day)), arriving, TODAY), "", day)
+        for day in (292, 296):
+            self.assertEqual(dutyfree.pass_problem(bcbp(leg("LHR", "DXB", day=day)), arriving, TODAY),
+                             dutyfree.OTHER_DAY_ARRIVING, day)
+        self.assertEqual(dutyfree.pass_problem(bcbp(leg("DXB", "LHR", day=294)), arriving, TODAY),
                          "This boarding pass is for a flight to LHR. This shop sells to passengers arriving at DWC, DXB.")
 
     def test_no_airports_set_takes_any_airport(self):
@@ -174,8 +177,14 @@ class Settings(unittest.TestCase):
         self.assertEqual(dutyfree.settings_of(None), {"airports": [], "arriving": False, "hours": 0.0, "earlier": True})
 
     def test_odd_values_read_safely(self):
-        s = dutyfree.settings_of({"airports": "DXB1, D, dubai, JED", "hours_from_utc": 30, "count_earlier_sales": 0})
-        self.assertEqual((s["airports"], s["hours"], s["earlier"]), (["JED"], 0.0, False))
+        s = dutyfree.settings_of({"airports": "DXB;dwc", "hours_from_utc": 30, "count_earlier_sales": 0})
+        self.assertEqual((s["airports"], s["hours"], s["earlier"]), (["DWC", "DXB"], 0.0, False))
+
+    def test_a_mistyped_airport_is_kept_so_it_refuses_by_name_never_reads_as_any(self):
+        s = dutyfree.settings_of({"airports": "OMDB"})
+        self.assertEqual(s["airports"], ["OMDB"])
+        self.assertEqual(dutyfree.pass_problem(bcbp(leg("DXB", "LHR")), s, TODAY),
+                         "This boarding pass is for a flight from DXB. This shop sells to passengers departing OMDB.")
 
 
 class Context(unittest.TestCase):
@@ -207,7 +216,7 @@ class Context(unittest.TestCase):
         out = dutyfree.over_allowance([("<b>" + "S" * 200, 9.0)], g, set(g))
         s = dutyfree.settings_of({"airports": " ".join(a + b + "X" for a in "ABCDEFGH" for b in "ABCDEFGH")})
         for text in (out, dutyfree.pass_problem(bcbp(leg("LHR")), s, TODAY), dutyfree.NO_PASS, dutyfree.UNREADABLE,
-                     dutyfree.OTHER_DAY):
+                     dutyfree.OTHER_DAY, dutyfree.OTHER_DAY_ARRIVING):
             self.assertTrue(0 < len(text) <= 140 and "<" not in text and ">" not in text, text)
 
 

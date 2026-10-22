@@ -27,7 +27,7 @@ class ContractTest(unittest.TestCase):
         import app
         s, g = dutyfree.settings_of(SETTINGS), dutyfree.groups_of(GROUPS, "PP DFA")
         long = dutyfree.groups_of([{"name": "S" * 200, "lft": 1, "rgt": 2, "pp_dfa_allowance": 1, "pp_dfa_unit": "u" * 90}], "PP DFA")
-        reasons = [dutyfree.NO_PASS, dutyfree.UNREADABLE, dutyfree.OTHER_DAY, app.KEY_REFUSED,
+        reasons = [dutyfree.NO_PASS, dutyfree.UNREADABLE, dutyfree.OTHER_DAY, dutyfree.OTHER_DAY_ARRIVING, app.KEY_REFUSED,
                    dutyfree.pass_problem(bcbp(leg("LHR", "JFK")), s, TODAY),
                    dutyfree.pass_problem(bcbp(leg("LHR", "JFK")), dutyfree.settings_of(dict(SETTINGS, direction="arriving")), TODAY),
                    dutyfree.over_allowance([("Whisky", 9.0)], g, {"Spirits"}),

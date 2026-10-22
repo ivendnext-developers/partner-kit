@@ -8,7 +8,8 @@ its own priced basket, and ``judge`` answers:
 - **no pass** on the sale: refused, *scan it into Sale details*;
 - **not a boarding pass** (IATA's bar-coded boarding pass, format ``M``: ``legs``): refused, *scan it again*;
 - **another airport:** no leg of the pass leaves from (an arrivals shop: lands at) one of the shop's airports;
-- **another day:** no such leg flies today or tomorrow (an arrivals shop: today or yesterday), by the airport's own day;
+- **another day:** no such leg is dated today or tomorrow (an arrivals shop: today or the two days before, since a pass
+  carries the day its flight leaves and a long flight can arrive two days later), by the airport's own day;
 - **over an allowance:** an item group with a *Duty-free allowance per passenger* holds more, counting this sale and the
   passenger's earlier sales on the same pass (returns take theirs back), than its allowance. Each line counts its
   quantity in the item's stock unit times the item's *Counts toward the allowance as* (blank: 1), so a group can be
@@ -29,6 +30,7 @@ import base64
 import datetime
 import hashlib
 import hmac
+import re
 import time
 
 SKEW_S = 300          # a request stamped further than this from our clock is refused (a replay window, not a clock)
@@ -43,6 +45,7 @@ SETTINGS_FIELDS = ("airports", "direction", "hours_from_utc", "count_earlier_sal
 NO_PASS = "Scan the customer's boarding pass into Sale details, then press Pay again."
 UNREADABLE = "The boarding pass could not be read. Scan it again into Sale details."
 OTHER_DAY = "This boarding pass is for a flight on another day. Ask for the pass for today's flight."
+OTHER_DAY_ARRIVING = "This boarding pass is for a flight on another day. Ask for the pass of the flight the customer just arrived on."
 
 
 def verify(timestamp: str | None, signature: str | None, raw: bytes, secret: str, now: float | None = None) -> str:
@@ -98,13 +101,15 @@ def pass_of(ctx: dict, prefix: str) -> str:
 
 def settings_of(record) -> dict:
     """The shop's settings, from its record *Default* (``None``: not made yet, so any airport, departures, UTC, earlier
-    sales counted). Airports are three-letter codes, separated by commas or spaces; hours from UTC past ±14 read 0."""
+    sales counted). Airports are words of letters (three-letter codes), separated by anything else; a mistyped one is
+    kept, so it matches no pass and the cashier sees it named, never read as any airport. Hours from UTC past ±14
+    read 0."""
     r = record if isinstance(record, dict) else {}
-    codes = str(r.get("airports") or "").replace(",", " ").upper().split()
+    codes = re.findall(r"[A-Za-z]+", str(r.get("airports") or ""))
     hours = r.get("hours_from_utc")
     hours = float(hours) if _number(hours) and -14 <= hours <= 14 else 0.0
     earlier = r.get("count_earlier_sales")
-    return {"airports": sorted({c for c in codes if len(c) == 3 and c.isalpha()}),
+    return {"airports": sorted({c.upper() for c in codes}),
             "arriving": r.get("direction") == "arriving", "hours": hours,
             "earlier": True if earlier is None else bool(earlier)}
 
@@ -168,9 +173,11 @@ def pass_problem(text: str, settings: dict, today: datetime.date) -> str:
         return plain(f"This boarding pass is for a flight to {found[-1]['to']}. This shop sells to passengers arriving at {where}."
                      if settings["arriving"] else
                      f"This boarding pass is for a flight from {found[0]['from']}. This shop sells to passengers departing {where}.")
-    step = -1 if settings["arriving"] else 1
-    days = {d.timetuple().tm_yday for d in (today, today + datetime.timedelta(days=step))}
-    return "" if any(x["day"] in days for x in here) else OTHER_DAY
+    steps = (0, -1, -2) if settings["arriving"] else (0, 1)
+    days = {(today + datetime.timedelta(days=n)).timetuple().tm_yday for n in steps}
+    if any(x["day"] in days for x in here):
+        return ""
+    return OTHER_DAY_ARRIVING if settings["arriving"] else OTHER_DAY
 
 
 def limited_groups(item_group: str, groups: dict) -> list[str]:
