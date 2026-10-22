@@ -60,8 +60,8 @@ import agecheck  # noqa: E402
 import function  # noqa: E402
 import shops  # noqa: E402
 
-KEPT_TTL, READ_TIMEOUT = 60, 0.6     # two steps of reads at most (settings and groups; the items), each 0.6 s per wait on
-                                     # its connection, inside the scan's 1.5 s; a slower shop gets the down answer
+KEPT_TTL, READ_TIMEOUT = 60, 0.45    # three steps of reads at most (settings and groups; the items; their templates), each
+                                     # 0.45 s per wait on its connection, inside the scan's 1.5 s; a slower shop gets the down answer
 ITEMS_MAX = 20000                    # item ages kept per running copy; past it the copy forgets them all and reads again
 #        route        (secret key, read the context)
 ROUTES = {"/age/scan": ("scan", agecheck.scan_context),

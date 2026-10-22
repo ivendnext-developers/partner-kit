@@ -17,7 +17,7 @@ Alcohol, tobacco, vapes, knives and some medicines may be sold only to customers
    - a feed registration naming your one integration user, so the shop's *Connect again* hands that user's key to your service;
    - a help address on the settings record type (a `documentation` property setter).
 
-2. **Choose what happens when your service is down.** The sample declares `allow_and_flag` on both: an outage never stops a shop selling, and each scan or sale it could not check is flagged on *Sales to review*. A shop that must never sell unchecked changes the **scan** service to `refuse`: a restricted item cannot be added while the service is down or the till is offline. The check's `refuse` would stop every sale on its POS Profiles, restricted or not.
+2. **Choose what happens when your service is down.** The sample declares `allow_and_flag` on both: an outage never stops a shop selling, and each scan or sale it could not check is flagged on *Sales to review*. A shop can change the **scan** service to `refuse`: a restricted item **scanned** while the service is down or the till is offline then cannot be added, but an item picked from a list still goes on, flagged. Only the check's `refuse` stops every unchecked sale, and it stops every sale on its POS Profiles, restricted or not, while the service is down (offline the check is not called).
 
 3. **Check every call with its own route's secret** (`<app>:sub:<key>`; the sample's keys are `scan` and `check`), and refuse a timestamp more than five minutes from yours.
 
@@ -67,6 +67,9 @@ The shop's record `Default` of `<PREFIX> Settings`: *Hours from UTC at the shop*
 - **A notice** reaches POS build 2.0.0.654 and later. An older build refuses it as an unknown answer and applies the scan's down answer: the item goes on, flagged, and the check at Pay still holds.
 - **A group under a restricted group cannot be exempted** (0 means *the group above applies*); move it out of the group.
 - **Two ages on one sale:** the till keeps one value per sale detail, merged by name, so a later, lower ask replaces a higher one. That happens when the higher item was the sale's first (no reference to remember) or another running copy of your service answered the second scan. Pay then names the higher age to enter.
+- **One scan service per POS Profile:** where another app already answers the scan (*Till guard rules*, *Warranty capture*), *Age check* cannot be switched on for that profile; switch on *Age check at Pay* alone there, and the cashier enters the age in Sale details when Pay asks. A POS Profile also holds at most three checks before payment, 10 seconds together (this one takes 3 s; 4 s on CitiXsys hosting).
+- **One time zone and one age per group for the whole site;** a per-store value is a partner's version (the calls carry the store).
+- **After an update of the app,** the shop checks that the scan service's settings still name its groups.
 - **Offline,** the till does not call you: each down answer applies. The scan's filter travels with the till's start of day.
 - **Where the check never runs:** a park to a till, a layaway deposit, an account collection (the check page, *Not in this version*), nor a sale rung in the Desk's own POS screen.
 - **Not in this version:** a manager's override of a refusal, restricted selling hours, an ID scanner, and a verified age kept on the customer. Each is a partner's version ([Make one of our apps your own](make_it_your_own.md)).
