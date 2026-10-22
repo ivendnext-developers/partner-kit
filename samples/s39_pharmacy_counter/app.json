@@ -1,0 +1,16 @@
+{
+ "app": "pharmacy-counter-rules",
+ "version": "1.0.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s39_pharmacy_counter/service/app.lambda_handler",
+ "package": ["tools/app_template/service", "samples/s39_pharmacy_counter/rxrules.py", "samples/s39_pharmacy_counter/service"],
+ "env": [
+  {"name": "IVN_LIBRARY_APP", "required": true},
+  {"name": "RXC_PREFIX", "required": true}
+ ]
+}
