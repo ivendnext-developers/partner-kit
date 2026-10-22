@@ -1,0 +1,57 @@
+{
+ "manifest_version": 2,
+ "app": "pp_dfa",
+ "prefix": "PP DFA",
+ "title": "Duty-free allowance and boarding pass",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A check before payment for an airport shop. The cashier scans the customer's boarding pass into the sale detail PP DFA Boarding Pass (the basket's Sale details row). When the cashier presses Pay, the shop's server sends its priced basket and the service refuses a sale with no boarding pass, a pass it cannot read, a pass with no flight leaving from one of the shop's airports (an arrivals shop: landing at one), or one whose flight is on another day (by the airport's own day: departures today or tomorrow, arrivals today or yesterday). It also refuses a sale that takes an item group past its duty-free allowance per passenger, counting this sale and the passenger's earlier sales on the same pass. Each line counts its quantity times the item's Counts toward the allowance as (blank: 1), so an allowance can be in litres or cigarettes. A refund is never judged. The settings are the shop's own, in the record Default of PP DFA Settings, and the allowances are on its Item Groups; the service reads them, the basket's items and the earlier sales with the app's integration user, and writes nothing. The install makes the role PP DFA Integration; the shop gives it to the app's integration user, with read on Item Group, Item and POS Invoice. The check installs switched off; the shop reads what it is sent, ticks the consent, chooses the airport stores' POS Profiles and switches it on. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": ["https://host.docker.internal:8125/dfa/check"],
+ "doctypes": [
+  {
+   "name": "PP DFA Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1, "unique": 1, "default": "Default",
+     "description": "The service reads the record named Default."},
+    {"fieldname": "airports", "fieldtype": "Data", "label": "This shop's airports",
+     "description": "Three-letter airport codes, such as DXB, or DXB DWC. A boarding pass needs a flight leaving from one of them (an arrivals shop: landing at one). Blank: any airport."},
+    {"fieldname": "direction", "fieldtype": "Select", "label": "The shop sells to passengers", "options": "departing\narriving",
+     "default": "departing", "description": "departing: the pass's flight leaves today or tomorrow. arriving: it landed today or yesterday."},
+    {"fieldname": "hours_from_utc", "fieldtype": "Float", "label": "Hours from UTC at the airport",
+     "description": "The airport's own day decides which flights are today's: 4 for Dubai, 3 for Riyadh, 0 for London in winter."},
+    {"fieldname": "count_earlier_sales", "fieldtype": "Check", "label": "Count the passenger's earlier sales on the same boarding pass",
+     "default": "1", "description": "On: the allowance is per passenger, so a second sale on the same pass counts the first. Returns take theirs back."}
+   ],
+   "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 0, "print": 1, "email": 0},
+    {"role": "PP DFA Integration", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0}
+   ]
+  }
+ ],
+ "custom_fields": [
+  {"dt": "Item Group", "fieldname": "pp_dfa_allowance", "fieldtype": "Float", "label": "Duty-free allowance per passenger",
+   "insert_after": "parent_item_group",
+   "description": "The most a passenger may buy of this group and every group below it, on one boarding pass. 0: no limit."},
+  {"dt": "Item Group", "fieldname": "pp_dfa_unit", "fieldtype": "Data", "label": "Allowance counted in",
+   "insert_after": "pp_dfa_allowance", "description": "The word the cashier reads, such as litres or cigarettes. Blank: units."},
+  {"dt": "Item", "fieldname": "pp_dfa_counts_as", "fieldtype": "Float", "label": "Counts toward the duty-free allowance as",
+   "insert_after": "stock_uom",
+   "description": "How much one stock unit counts, such as 0.75 for a 75 cl bottle or 200 for a carton of cigarettes. Blank: 1."}
+ ],
+ "sale_attributes": [
+  {"name": "PP DFA Boarding Pass"}
+ ],
+ "property_setters": [
+  {"doc_type": "PP DFA Settings", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/duty_free_allowance.html#settings"}
+ ],
+ "registered_applications": [
+  {"name": "PP DFA Allowance", "description": "the duty-free allowance service reads the shop's settings, item groups, items and earlier sales on a boarding pass", "events": ["PP DFA Settings"]}
+ ],
+ "extension_subscriptions": [
+  {"key": "allowance", "point": "check", "label": "Duty-free allowance", "endpoint_url": "https://host.docker.internal:8125/dfa/check",
+   "timeout_seconds": 5, "down_answer": "allow_and_flag"}
+ ]
+}
