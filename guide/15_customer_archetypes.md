@@ -50,10 +50,10 @@ A customer's size describes it; it never decides the path. A large project's blu
 
 **Limits to plan for.**
 - **ERP throughput.** Our Acumatica connector books about 2.75 complete sales a minute per connection — about 165 an hour. Size the customer's busiest hour against it before you promise.
-- **One ERP per company.** Acumatica now and Sage X3 later cannot both be one company's ERP. Our Sage X3 connector is not built yet.
-- **Scale.** No load test has been run yet, and the largest live customer runs 18 terminals. Run the customer's scale profile on a sandbox before go-live (the scale-profile kit).
+- **One ERP per company.** A company books to one ERP connection.
+- **Scale.** Run the customer's scale profile on a sandbox before go-live (the scale-profile kit), and size the busiest hour from its result.
 - **Handheld** books online only in its first release, so receiving needs a connection.
-- **Counter printers** are wired to counter tills. We have not yet tried that route on the customer's own hardware, so test it in the pilot store. A phone prints through the network printer or the device's own dialog.
+- **Counter printers** are wired to counter tills. Test that route on the customer's own hardware in the first store. A phone prints through the network printer or the device's own dialog.
 
 ## 15.3 Mid — with its own systems
 

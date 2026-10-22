@@ -16,7 +16,7 @@ Fill in the iVendNext Partner form on ivendnext.com: <https://www.ivendnext.com/
 
 ### When access comes
 
-Access means the kit's GitHub organisation and a sandbox site. It comes when the kit opens to partners, and we give no date. Until then, access is given only to the CitiXsys Consulting Team.
+Access means the kit's GitHub organisation and a sandbox site. It comes with onboarding, once our team has talked to you.
 
 ### What you receive
 

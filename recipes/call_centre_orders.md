@@ -12,7 +12,11 @@ A retailer with a call centre takes orders by phone and ships each one from the 
 
 1. The agent enters the order as today. Its **Territory** comes from the customer and can be changed for this order (a gift, a second address). The agent saves it.
 2. The agent presses **Send to store** and confirms: *"Send this order to the store that serves its territory? Its warehouse changes on every line."*
+
+   ![Send to store on a draft sales order on a demo shop, and its question](../samples/s35_call_centre_orders/screenshots/05_send_to_store.png)
 3. *Sent to store — This order and its 2 lines now ship from Maadi Store, the store for Maadi.* The form reloads with the store in *Set Source Warehouse* and on every line. A district with no store of its own says which territory's store it took: *"…the store for Cairo, which Heliopolis is part of."*
+
+   ![Sent to store on a demo shop: This order and its 2 lines now ship from Store 2, the store for Sandton](../samples/s35_call_centre_orders/screenshots/06_sent_to_store.png)
 4. The agent submits the order. The store's staff find it in their Sales Order list, filtered on their own *Set Source Warehouse*. Its delivery note ships from their warehouse.
 
 Pressed again, the button says *Already with its store* and changes nothing.
@@ -75,7 +79,13 @@ Pressed again, the button says *Already with its store* and changes nothing.
 3. **Choose the user** as the *Application User* of the feed *PP CCO Routing feed*. A hosted service: press **Connect again** on the app.
 4. **Switch the service on** in **Retail Extension Subscription** (*Send to store service*: read what it is sent, tick the consent), then the button in **Retail Desk Action** (*Send to store*).
 5. **Set a Serving store on the districts** (a Sales Master Manager): a store warehouse of the same company, never a group. A governorate's store serves its districts that have none.
-6. **Each store saves its list once**: the Sales Order list filtered on its own *Set Source Warehouse*. With a User Permission on its own warehouse, a store's staff see the orders sent to their store and not those sent to another; an order whose Set Source Warehouse is empty (none set, or lines on different warehouses) is seen by every store.
+
+   ![The district Sandton on a demo shop, with Store 2 as its Serving store](../samples/s35_call_centre_orders/screenshots/04_serving_store.png)
+6. **Each store saves its list once**: the Sales Order list filtered on its own *Set Source Warehouse*.
+
+   ![The Sales Order list filtered on Store 2's Set Source Warehouse, on a demo shop](../samples/s35_call_centre_orders/screenshots/08_store_list.png)
+
+   With a User Permission on its own warehouse, a store's staff see the orders sent to their store and not those sent to another; an order whose Set Source Warehouse is empty (none set, or lines on different warehouses) is seen by every store.
 
 ## Limits
 
@@ -101,4 +111,5 @@ Pressed again, the button says *Already with its store* and changes nothing.
 
 - **Laptop:** `samples/s35_call_centre_orders/tests/` (45 tests: the store, the store above, a second press, no store, no territory, a submitted order, an edit in between, a group, disabled or other company's store, a bundle's parts, a changed total, a double press, an order the shop will not save, a refused user, many shops, the function entry, the contract) and `tests/canaries.py` (28 mutations, each turns its test RED).
 - **Our test bench** (2026-10-21, iVendNext POS app at beta's build): the manifest installed switched off. The app's user held a shop role with exactly the rights above. A Sales User's presses went through the button's own call: the Maadi order went to Maadi's store, a Heliopolis order to Cairo's, and an order with a supplier-delivered line to Maadi's on every line (a second press: *Already with its store*). A product bundle's part moved to Maadi's warehouse with its line. A draft stored with a wrong total came back *Its total is now 250.46 (was 999.0)*: the shop's save works the order out again and the service says so. Every field of the order and its lines was compared before and after, and only the fields above moved; the totals were equal. A second press wrote nothing. A district with no store, and a group warehouse, were refused in words. A submitted order and a user without a Sales role were refused before the service was called. A stale write was refused by the shop, and the press after the edit kept it. Maadi's Stock User saw the Maadi order and not Cairo's, and saw an order whose Set Source Warehouse was empty too; the routed order's delivery note took Maadi's warehouse. An order the shop would not save was answered in the service's own words. The feed recorded nothing. In a real browser, the agent pressed the button and the form reloaded with Cairo's store; the manager set a Serving store on Territory; the store user opened the filtered list. The uninstall left the site as found.
+- **A demo shop, from its App library** (2026-10-22, the hosted service at `call-centre-orders.ivendnext.app`): *Get a free key*, the install, the app's user with the four rights above, *Connect again* (the service received the user's key), the service's consent, the button switched on, a Serving store set on a district in a browser. As a Sales User, *Send to store* sent a Sandton order to Sandton's store on both lines (1.5 s), a second press said *Already with its store*, and a Soweto order took the store of Gauteng, *"which Soweto is part of"*. The store's filtered list showed its order.
 - **Measured, not assumed:** with read on Sales Order and Territory alone the shop refused the write (*"does not have doctype access via role permission for document Customer"*); with read on Customer it passed. The shop saved a draft whose lines named a group warehouse, which is why the service checks the store first.

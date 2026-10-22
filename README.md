@@ -6,7 +6,7 @@ Everything you need to build for an iVendNext customer without changing iVendNex
 
 **Building with an AI assistant?** Point it at [AGENTS.md](AGENTS.md) first: it holds the rules, the commands and a prompt recipe for each way in, in [`ai/`](ai/README.md).
 
-> **A developer preview.** The kit is public and free to read. Until iVendNext POS's general release, an extension point's contract, an API call the kit describes or the manifest format may change; every change is a dated entry in [the changelog](CHANGELOG.md), and [guide ch. 18](guide/18_versioning_and_support.md) says how long a version is served after that.
+> **Generally released.** iVendNext POS 2.0.0.652 (18 October 2026) is the general release of the extension points, the API calls the kit describes and the manifest format. From it, each version is served for 12 months after its successor ships ([guide ch. 18](guide/18_versioning_and_support.md)), and every change is a dated entry in [the changelog](CHANGELOG.md).
 
 **Anyone may read the kit. To get a sandbox or build for an iVendNext customer, [become an iVendNext Partner](https://www.ivendnext.com/partner/#be-a-partner).**
 
