@@ -4,7 +4,7 @@ If you build for an iVendNext customer and find something missing or broken, the
 
 ## Who can file
 
-The forms are for **onboarded members**: an iVendNext Partner, a licensed customer's IT team, and the CitiXsys Consulting Team. Onboarding invites your GitHub account to one of three teams, and the team can then open the forms in a private repository, `ivendnext-developers/partner-feedback`. Anyone else sees "page not found" there. Access comes with onboarding, when the kit opens to partners, and we give no date; until then the repository is open to the CitiXsys Consulting Team only. **Not yet a member?** Become an iVendNext Partner through the partner form at <https://www.ivendnext.com/partner/#be-a-partner>. A licensed customer's IT team may use that form or ask its account manager.
+The forms are for **onboarded members**: an iVendNext Partner, a licensed customer's IT team, and the CitiXsys Consulting Team. Onboarding invites your GitHub account to one of three teams, and the team can then open the forms in a private repository, `ivendnext-developers/partner-feedback`. Anyone else sees "page not found" there. Access comes with onboarding. **Not yet a member?** Become an iVendNext Partner through the partner form at <https://www.ivendnext.com/partner/#be-a-partner>. A licensed customer's IT team may use that form or ask its account manager.
 
 **Every member can read every issue**, other partners' and other customers' teams too. See "Before you fill one in" below.
 

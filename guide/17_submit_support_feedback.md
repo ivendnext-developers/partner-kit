@@ -6,7 +6,7 @@ You will need [the feedback channel and its four forms](../feedback/README.md) a
 
 ## Read this first
 
-Where a **submission** would arrive, and how it is checked and installed, **does not exist yet**. So most of "submitting" is *not covered by the kit yet*. This chapter says so, rather than describe a process nobody has built. What does exist today: the blueprint, the checks you run yourself, and the four feedback forms. The forms are GitHub issue forms in a private repository, `ivendnext-developers/partner-feedback`, for onboarded members only: an iVendNext Partner, a licensed customer's IT team and the CitiXsys Consulting Team. Partners and customers' IT teams are onboarded when the kit opens to partners; until then the repository is open to the CitiXsys Consulting Team only.
+A finished app reaches customers through the iVendNext App library: you publish it with `tools/publish/publish.py` from any computer, its first listing waits for one approval by us, and each customer's site installs it from its App library with the checks of chapter 7 ([*Publish your app*](../site/pages/publish.md)). A manifest for one customer goes to that customer's site, whose administrator installs it. Tell us about anything missing or wrong with the four feedback forms, GitHub issue forms in a private repository, `ivendnext-developers/partner-feedback`, for onboarded members: an iVendNext Partner, a licensed customer's IT team and the CitiXsys Consulting Team.
 
 ## When to use it
 
@@ -22,7 +22,7 @@ When your work has passed the checks in chapter 14 and you want it in front of a
    ```
 
    Also: the local admission check for a sandboxed function (chapter 8), and the customer's release gate in the customer's own pipeline (chapter 14).
-3. **Submit.** A manifest is **not** submitted to us: it goes to the shop, whose administrator installs it from the install screen, checked by our code (chapter 7); on your sandbox you install it yourself with `deploy`. Submitting other work to us is not covered by the kit yet, and belongs to the marketplace, when it opens (a sandboxed module among it: we certify one by hand today, and a route for submitting one is planned). Of the two checks planned for a submission, the screen check against the design kit is built as a script you can run yourself (chapter 13a); running it on a submission waits on this step. The check of a remote endpoint is not built.
+3. **Submit.** A manifest is **not** submitted to us: it goes to the shop, whose administrator installs it from the install screen, checked by our code (chapter 7); on your sandbox you install it yourself with `deploy`. An app for many customers is published to the App library with `tools/publish/publish.py` ([*Publish your app*](../site/pages/publish.md)). A sandboxed module is certified by us by hand today. Of the two checks planned for a submission, the screen check against the design kit is built as a script you can run yourself (chapter 13a); running it on a submission waits on this step. The check of a remote endpoint is not built.
 4. **Choose one of the four feedback forms.** Go down this list and send the first that fits:
 
    | If… | Send |

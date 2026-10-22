@@ -15,6 +15,17 @@ A customer phones the call centre; the agent enters the order once, in Desk, and
 
 Pressed again, the button changes nothing and says where the order already is.
 
+| What the shop sees (on a demo shop, 2026-10-22) | |
+|---|---|
+| The app's card in the App library | ![](screenshots/01_app_library_card.png) |
+| What the install will change, read before you agree | ![](screenshots/02_install.png) |
+| The service switched on, with the shop's consent and the details it sends | ![](screenshots/03_service_consent.png) |
+| A **Serving store** on a district of the Territory tree | ![](screenshots/04_serving_store.png) |
+| **Send to store** on a draft order, and its question | ![](screenshots/05_send_to_store.png) |
+| The answer: the store, and the district it serves | ![](screenshots/06_sent_to_store.png) |
+| The reloaded order, the store in *Set Source Warehouse* | ![](screenshots/07_order_after.png) |
+| The store's own list: Sales Order filtered on its *Set Source Warehouse* | ![](screenshots/08_store_list.png) |
+
 ## What the shop does
 
 1. **Install the app** (the shop's administrator). It comes in switched off: the service has no consent and is off, and the button is off. The install adds the **Serving store** field to Territory. It makes no role and no record type of its own.

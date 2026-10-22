@@ -20,7 +20,7 @@ Your work keeps working when we upgrade iVendNext, because it uses only publishe
 ## The path, in nine steps
 
 1. Ask to become a builder, through the iVendNext Partner form (chapter 2).
-2. Get a sandbox site. We talk to you first, then host one for you, with demo stores, tills and users and an admin login. You make your own API key. Nothing to install. Access comes when the kit opens to partners (chapter 2).
+2. Get a sandbox site. We talk to you first, then host one for you, with demo stores, tills and users and an admin login. You make your own API key. Nothing to install. Access comes with onboarding (chapter 2).
 3. Learn the ladder: the six ways in, in order, and what is never allowed (chapter 3).
 4. Blueprint the project. For each need, write down its rung on the ladder. Add a scale profile (stores × tills × products × sales a day) and a map of the systems it connects.
 5. Build with the recipes and samples, and run the checks locally (chapter 14).

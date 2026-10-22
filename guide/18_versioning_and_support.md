@@ -10,10 +10,10 @@ Before you build on an extension point, on an API call the kit describes or on t
 
 ## The policy
 
-- **Until iVendNext POS's general release, a contract may change:** an extension point's contract, an API call the kit describes, or the manifest format. The notice is a dated entry in the kit's changelog.
+- **The general release is iVendNext POS 2.0.0.652, of 18 October 2026.**
 - **From the general release, each version is served for 12 months after its successor ships.** That holds for a version of an extension point's contract, of an API call the kit describes, and of the manifest format.
 
-**The general release** is the iVendNext POS build we announce as generally released, in the kit's changelog. It is not a version number: every POS build is numbered `2.MINOR.PATCH.BUILD` (for example `2.0.0.622`), and a build keeps its number when it is released. We give no date for the general release.
+**The general release** is iVendNext POS 2.0.0.652, released on 18 October 2026 and announced in the kit's changelog. Every POS build is numbered `2.MINOR.PATCH.BUILD`, and a build keeps its number when it is released.
 
 ## What counts as breaking
 
@@ -25,7 +25,7 @@ A change is breaking when something that worked against a version stops working,
 | **An API call the kit describes** | a call that stops answering as described: a path, a field, a status or a meaning changes | a description that gains a call |
 | **The manifest format** | a manifest that installed before, and now does not, or installs something different | a new kind of record a manifest may carry |
 
-A change that would break a version-1 service is a new version, published beside the old one; the library says so for the remote till key and for the capture. Until the general release, we may instead change it in place and announce it in the changelog.
+A change that would break a version-1 service is a new version, published beside the old one; the library says so for the remote till key and for the capture.
 
 *An example:* manifest version 2 reads every version-1 manifest, but only once each of its permission rows writes all nine rights (chapter 7).
 
@@ -34,18 +34,18 @@ A change that would break a version-1 service is a new version, published beside
 - **`manifest_version`** in your manifest. The checker reads versions 1 and 2; write 2 (chapter 7).
 - **The version line of the contract's page.** Every extension point's library page says *Version 1*.
 - **A header on the call.** A call to your service for a Desk action, a check, a capture or a fulfil at sale (POS build 2.0.0.654 on) carries `X-iVendNext-Point: <point>/<version>` — for example `check/1`, `capture/1`, `desk_action/1`, `fulfil/1`. The body repeats it where the page says so (`"point": "check/1"`, and a `"v": 1` in the context). The remote till key's call carries `User-Agent: iVendNext-POS-AppKey/1` instead. A payment connector's calls (card, push or wallet) carry `X-iVendNext-Point: paygw/1` (the payments core's wire contract). Pricing sends your server no call: the certified module runs inside the shop. A partner page is framed by the till, which sends your server no call: its version is the `"v": 1` in the signed context. The event feed, the save rules, the scan source, the field rules, the fiscal reader, the label layout, the receipt settings and the list marks send no call to you either: the shop declares them, and their page's version line is the version.
-- **The changelog** for a change before the general release.
+- **The changelog**, a dated entry for every change.
 
 ## Steps
 
 1. **Read the version line** of each page you build on, and write the version into your service's tests and logs.
 2. **Read the header** on each call and answer the version you were built for. A call that names a version you do not know is not one to answer in the old way.
-3. **Until the general release,** read the kit's changelog before each build and before each release of your own.
-4. **From the general release,** when a successor ships, the version you built on is served for another 12 months: move to the successor inside that time.
+3. **Read the kit's changelog** before each build and before each release of your own.
+4. **When a successor ships,** the version you built on is served for another 12 months: move to the successor inside that time.
 
 ## What is refused, and why
 
-- **A promise beyond the policy.** We give no date for the general release, no notice period for a change before the general release beyond its changelog entry, and no period for a version after the 12 months.
+- **A promise beyond the policy.** We give no period for a version after the 12 months.
 - **A promise about anything but the three.** The samples, the recipes and the tools are examples, and change with the kit.
 
 ## When your service is down, and when the till is offline
