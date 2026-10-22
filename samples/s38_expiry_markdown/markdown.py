@@ -130,13 +130,15 @@ def date_of(v) -> datetime.date | None:
         return None
 
 
-def exponent_of(fraction_units) -> int:
-    """A currency's digits from its fraction units (100 → 2, 1000 → 3, 1 or blank → 0 when 1, else 2)."""
-    n = _whole(fraction_units)
-    if n is None or n < 1:
-        return 2
-    e = len(str(n)) - 1
-    return e if 10 ** e == n else 2
+# the framework's own number formats and their digits (``get_number_format_info``): a currency's digits are its number
+# format's, never its fraction units (the yen counts 100 sen and shows none, the rial none and no units at all)
+DIGITS = {"#,###.##": 2, "#.###,##": 2, "# ###.##": 2, "# ###,##": 2, "#'###.##": 2, "#, ###.##": 2, "#,##,###.##": 2,
+          "#,###.###": 3, "#.###": 0, "#,###": 0, "#.########": 8}
+
+
+def exponent_of(number_format) -> int:
+    """A currency's digits from its number format, as the shop shows and rounds it (unknown or blank: 2, the framework's)."""
+    return DIGITS.get(number_format, 2) if isinstance(number_format, str) else 2
 
 
 def marked(rate, pct: float, exponent: int) -> float:
@@ -166,8 +168,8 @@ def _key(row: dict) -> tuple:
 
 
 def base_rows(rows: list[dict], item: str, today: datetime.date) -> dict:
-    """The item's own prices on the list, valid today, for any customer: ``{(uom, packing unit): row}``, the latest
-    ``valid_from`` of each."""
+    """The item's own prices on the list, valid today, for no particular customer or supplier: ``{(uom, packing unit):
+    row}``, the latest ``valid_from`` of each."""
     out = {}
     for r in rows:
         if r.get("item_code") != item or not _blank(r.get("batch_no")) or not _blank(r.get("customer")) \
@@ -217,8 +219,12 @@ def plan(lot: dict, item: dict | None, rows: list[dict], groups: dict, today: da
         if r is None:
             writes.append(("create", dict(want, item_code=lot["item"], price_list=price_list, uom=k[0],
                                           packing_unit=k[1], batch_no=name, valid_from=today.isoformat())))
-        elif any(r.get(f) != v for f, v in want.items()):
-            writes.append(("update", r, dict(want, modified=r.get("modified"))))
+            continue
+        # the shop's price lookup takes the newest valid_from first and the lot only after it (``get_item_price``), so a
+        # lot's row older than the item's own row is never read: move it to today with the new price
+        older = (date_of(r.get("valid_from")) or datetime.date.min) < (date_of(b.get("valid_from")) or datetime.date.min)
+        if older or any(r.get(f) != v for f, v in want.items()):
+            writes.append(("update", r, dict(want, valid_from=today.isoformat(), modified=r.get("modified"))))
     marked_now = any(w[0] in ("create", "update") for w in writes)
     return ("marked" if marked_now else "already"), writes
 

@@ -75,7 +75,7 @@ class FakeTenant:
     """The shop's record API: settings, lots, items, the group tree, price lists and Item Price rows (created, updated
     with the shop's ``modified`` check, deleted)."""
 
-    def __init__(self, settings=None, refuse=None, edit_before_update=0, duplicate_on_create=0, fraction=100,
+    def __init__(self, settings=None, refuse=None, edit_before_update=0, duplicate_on_create=0, number_format="#,###.##",
                  price_list=None, clock=None):
         # None: the shop's usual settings; False: no record Default at all
         self.settings = {"price_list": PL, "hours_from_utc": 3} if settings is None else None if settings is False else settings
@@ -84,7 +84,7 @@ class FakeTenant:
                                         "supplier": None, "valid_from": None, "valid_upto": None, "note": None,
                                         "packing_unit": 0}, **p) for p in prices()}
         self.price_list = price_list if price_list is not None else {"selling": 1, "enabled": 1, "currency": "AED"}
-        self.fraction, self.refuse, self.clock = fraction, refuse, clock
+        self.number_format, self.refuse, self.clock = number_format, refuse, clock
         self.edit_before_update, self.duplicate_on_create = edit_before_update, duplicate_on_create
         self.writes, self.n = [], 0
 
@@ -105,7 +105,7 @@ class FakeTenant:
                 raise app.TenantError("GET -> HTTP 404", 404)
             return dict(self.price_list, name=name)
         if doctype == "Currency":
-            return {"name": name, "fraction_units": self.fraction}
+            return {"name": name, "number_format": self.number_format, "fraction_units": 100}
         raise app.TenantError("GET -> HTTP 404", 404)
 
     def rows(self, doctype, fields, filters):
@@ -310,12 +310,29 @@ class ServiceTest(unittest.TestCase):
         self.assertIn(f"Did {done} of 30 lots. Press Mark down again for the rest.", out["message"]["body"])
 
     def test_s13_the_currencys_own_digits_are_the_grain(self):
-        self.use(FakeTenant(fraction=1000))     # KWD: three digits
+        self.use(FakeTenant(number_format="#,###.###"))     # KWD: three digits
         self.press("MILK-L1")
         self.assertEqual([r["price_list_rate"] for r in self.tenant.lot_rows("MILK-L1")], [33.75, 2.992])
-        self.use(FakeTenant(fraction=1))        # JPY: none
+        self.use(FakeTenant(number_format="#,###"))         # JPY: 100 sen to the yen, and no digits shown
         self.press("MILK-L1")
         self.assertEqual([r["price_list_rate"] for r in self.tenant.lot_rows("MILK-L1")], [33.0, 2.0])
+
+    def test_s13b_a_currency_the_app_cannot_read_writes_nothing(self):
+        self.tenant.doc = (lambda orig: lambda dt, name: (_ for _ in ()).throw(app.TenantError("GET -> HTTP 404", 404))
+                           if dt == "Currency" else orig(dt, name))(self.tenant.doc)
+        code, out = self.press("MILK-L1")
+        self.assertEqual((out["message"]["level"], self.tenant.writes), ("warning", []))
+
+    def test_s4b_a_newer_item_price_moves_the_lots_row_to_today(self):
+        """The shop's lookup reads the newest valid_from first and the lot only after it: a lot row older than the item's
+        own row would never be read. A new item price from yesterday: the press moves the lot's row to today, re-priced."""
+        self.tenant.prices["ip-old-lot"] = {"name": "ip-old-lot", "item_code": "MILK", "uom": "Nos", "price_list": PL,
+                                            "batch_no": "MILK-L1", "price_list_rate": 2.99, "valid_from": day(-5),
+                                            "valid_upto": day(4), "note": "PP EXM: 25% off until it expires", "modified": "x"}
+        self.tenant.prices["ip-milk"].update(valid_from=day(-1))     # the same price, re-entered from yesterday
+        self.press("MILK-L1")
+        row = self.tenant.prices["ip-old-lot"]
+        self.assertEqual((row["valid_from"], row["price_list_rate"]), (TODAY.isoformat(), 2.99))
 
     def test_s14_no_settings_or_a_list_the_tills_do_not_sell_from_is_said_in_words(self):
         self.use(FakeTenant(settings={}))

@@ -23,21 +23,22 @@ Pressed again, the button writes nothing: *"2 lots already marked down."*
    | Record type | Right | Why |
    |---|---|---|
    | Batch | Read | the ticked lots: item, expiry date, stock |
+   | Item | Read | each lot's item group (with *select* alone the shop answers only the fields it lists for search, which a shop may change) |
    | Item Group | Read | the steps, and the tree they are read up (with *select* alone the shop lists the names only, and every lot reads as having no steps) |
    | Price List | Read | the settings' list: is it a selling list that is on, and its currency |
    | Currency | Read | the currency's smallest unit, for the rounding |
    | Item Price | Read, Write, Create, Delete | the item's own price, and each lot's own price |
 
-   Item is read with the shop's own rights already. The role reaches every price on every list: give it to the app's user and no one else. A service for one shop takes the key in its settings. A service for many shops receives it from the shop: choose the user as the *Application User* of the feed **PP EXM Markdown feed**, then press **Connect again** on the app (*Many shops, hosted* below).
+   The role reaches every price on every list: give it to the app's user and no one else. A service for one shop takes the key in its settings. A service for many shops receives it from the shop: choose the user as the *Application User* of the feed **PP EXM Markdown feed**, then press **Connect again** on the app (*Many shops, hosted* below).
 3. **Fill in the settings:** open **PP EXM Settings**, make the record **Default**, choose the selling **price list** your tills sell from, and the shop's **hours from UTC** (the shop's own day decides how many days a lot has left).
 4. **Give the steps** to your perishable item groups (Item Group form).
-5. **Switch the service on** (the System Manager): **Retail Extension Subscription**, the record *Mark down service*: read what it is sent, tick the consent, switch it on. Then **Retail Desk Action**, the record *Mark down*: switch it on. The button shows to an *Item Manager*, the shop role that reads Batch (the shop checks, at every press, that the user may read each ticked lot). If your shop's markdowns are someone else's job, add their role on the button and give that role read on Batch.
+5. **Switch the service on** (the System Manager): **Retail Extension Subscription**, the record *Mark down service*: read what it is sent, tick the consent, switch it on. Then **Retail Desk Action**, the record *Mark down*: switch it on. The button shows to an *Item Manager*, the engine's role that reads Batch (the shop checks, at every press, that the user may read each ticked lot). If your shop's markdowns are someone else's job, add their role on the button and give that role read on Batch.
 
 **Where it shows.** In Desk: the four steps on the Item Group form, the settings record, and the button on the Batch list and form. At the till: nothing new; a lot rings at its own price.
 
-**What leaves the shop.** One address: your service (the manifest ships a test address; you write your own). Each press sends the ticked lots' names, items and expiry dates, the pressing user (an e-mail address) and the language. Your service then reads the lots, their items' groups, the steps, the price list and those items' prices on it, and writes the lots' prices. It keeps nothing between presses. Say so on your card.
+**What leaves the shop.** One address: your service (the manifest ships a test address; you write your own). Each press sends the ticked lots' names, items and expiry dates, the pressing user (an e-mail address) and the language. Your service then reads the lots, their items' groups, the steps, the price list and those items' prices on it, and writes the lots' prices. It keeps nothing of a press; a hosted copy holds each shop's press secret and its user's API key from *Connect again* until the shop removes the app. Say so on your card.
 
-⚠ **The till offline.** The till's offline price list has no lot in it, so while **any** lot on the site has a price of its own, the shop's tills do not sell a lot-tracked item offline: they refuse it rather than promise one price and book another. The app removes its own prices once they expire, so the tills sell lots offline again when no markdown is left.
+⚠ **The till offline.** The till's offline price list has no lot in it, so while **any** lot on the site has a price of its own (expired ones and buying lists' included), the shop's tills do not sell a lot-tracked item offline: they refuse it rather than promise one price and book another. Each press removes up to 20 of the app's prices whose date has passed, so once no markdown is left and the last expired one is removed by a press, the tills sell lots offline again from their next start. A till that started before the first markdown keeps selling lots offline until its next start, at the item's own price.
 
 ## The files
 
@@ -86,7 +87,7 @@ What a partner usually changes:
 - **An edit is never overwritten.** An update carries the row's `modified` as read; the shop refuses a stale write (`TimestampMismatchError`), and the answer asks for another press. A second press that created the same row a moment earlier is no failure either.
 - **The shop's own words never reach the user.** The service branches on the error's type (`exc_type`), never shows its message.
 - **A press stops in time.** The shop waits 10 seconds at most for a Desk button; the service starts no new lot after 6 seconds and says how many are left (*Did 40 of 100 lots. Press Mark down again for the rest.*). A repeated press is harmless.
-- **Removing the app leaves the lots' prices it wrote** (they are the shop's Item Price rows). Before you remove it, filter the Item Price list on *Note* starting with your prefix and delete them, or let them end on their expiry dates.
+- **Removing the app leaves the lots' prices it wrote** (they are the shop's Item Price rows). Before you remove it, filter the Item Price list on *Note* starting with your prefix and delete them (a *Sales Master Manager* reads that list): once the app is gone nothing removes them, and while they exist the tills do not sell lot-tracked items offline.
 - **Test routes.** Delete `/test/received` from your copy.
 - **Your address.** Write your own address in `allowed_urls`. The shop's server must trust your certificate: a real one for a shop.
 
@@ -109,3 +110,8 @@ A manifest cannot write an Item Price: a save rule's derived value writes only n
 - **Which lot rings:** a scanned lot label names its lot. An item's own barcode lets the shop pick the lot (Stock Settings *Pick Serial / Batch Based On*): with *Expiry*, the lot nearest its date sells first, at its markdown.
 - **Up to 100 lots a press** (the Desk action's own limit), and as many as fit in 6 seconds.
 - **A promotion still applies** on top of a lot's price.
+- **What the till shows before it prices the line.** The item's tile and a scan show a price the till reads from any of the item's prices on the list, so on a store with lot prices it can show another lot's price; the line, the total and the receipt then carry the right one (measured on our bench; a POS request).
+- **A line from several lots.** A line the till fills from more than one lot is priced once for the whole line; scan each lot's label to ring each lot at its own price (not measured on our bench).
+- **A customer with their own price.** With a customer on the sale who has a price of their own for the item, a scanned lot rings the customer's price, not the lot's markdown (the shop's own price order).
+- **The shop's day** is the hours from UTC in the settings: change it when your clocks change. A press made just before midnight on a site ahead of UTC with the hours left at 0 writes yesterday's date, which the till reads as valid.
+- **The app's own rows** are those whose note starts with its prefix and a colon. A price you edit on such a row is the app's again at the next press; to keep a lot price of your own, write your own note.

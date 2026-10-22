@@ -11,7 +11,7 @@ A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it 
 ## What the manager and the cashier see
 
 1. The manager filters the **Batch** list on *Expiry Date* (this week), ticks the lots and presses **Mark down**, then confirms: *"Mark down these lots by your item groups' steps? Each lot's own price changes until its expiry date."*
-2. *Mark down — Marked down 2 lots. 2 lots not yet due.* The list reloads. Each marked lot now has its own price on the shop's selling price list: the item's price less the step's percent, rounded down to the currency's smallest unit, valid from today until the lot's expiry date, noted *IVENDNEXT EXM: 25% off until it expires*.
+2. *Mark down — Marked down 2 lots. 2 lots not yet due.* The list reloads. Each marked lot now has its own price on the shop's selling price list: the item's price less the step's percent, rounded down to the currency's smallest unit, valid from today until the lot's expiry date, noted *PP EXM: 25% off until it expires* (the library's copy writes *IVENDNEXT EXM: …*).
 3. The manager prints the lot labels at the till (*Print label*, the lot chosen): the label shows the lot's price and its expiry date.
 4. The cashier scans as always. A scanned lot label rings its lot at the markdown.
 
@@ -31,7 +31,7 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 
 2. **Add a settings record type** whose record *Default* names the selling price list the tills sell from, and the shop's hours from UTC (the shop's own day decides how many days a lot has left). See the sample's `manifest.json`.
 
-3. **Add the button on Batch**, form and list, for the role that reads Batch (*Item Manager*: the shop re-checks at every press that the user may read each ticked lot), sending each lot's name, item and expiry date, and the service that answers it ([Desk action recipe](desk_action.md)):
+3. **Add the button on Batch**, form and list, for the engine's role that reads Batch (*Item Manager*: the shop re-checks at every press that the user may read each ticked lot), sending each lot's name, item and expiry date, and the service that answers it ([Desk action recipe](desk_action.md)):
 
    ```json
    "extension_subscriptions": [
@@ -64,12 +64,13 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
    | Record type | Right | Why |
    |---|---|---|
    | Batch | Read | the ticked lots |
+   | Item | Read | each lot's item group (with *select* alone the shop answers only the fields it lists for search, which a shop may change) |
    | Item Group | Read | the steps, and the tree they are read up (with *select* alone the shop lists the names only, and every lot reads as having no steps) |
    | Price List | Read | the settings' list and its currency |
    | Currency | Read | the currency's smallest unit |
    | Item Price | Read, Write, Create, Delete | the item's price, and each lot's own price |
 
-   Item is read with the shop's own rights already. The role reaches every price on every list: give it to the app's user and no one else.
+   The role reaches every price on every list: give it to the app's user and no one else.
 3. **Choose the user** on the app's feed. A hosted service: press **Connect again** on the app.
 4. **Fill in the settings** (*Default*: the price list, the hours from UTC) and **give the steps** to the perishable item groups.
 5. **Switch the service on** in **Retail Extension Subscription** (read what it is sent, tick the consent), then the button in **Retail Desk Action**.
@@ -78,18 +79,21 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 
 - **A press, once a day.** There is no run without a press: the manager who prints the lot labels presses it.
 - **Lot-tracked items only.** An item with no lots has no expiry date.
-- **The till offline.** While any lot on the site has a price of its own, the shop's tills do not sell a lot-tracked item offline: the till's offline price list has no lot in it, so it refuses the line rather than promise one price and book another. Your expired prices are removed by the next press.
+- **The till offline.** While any lot on the site has a price of its own (expired ones included), the shop's tills do not sell a lot-tracked item offline: the till's offline price list has no lot in it, so it refuses the line rather than promise one price and book another. Expired prices are removed by the next press, up to 20 a press; the tills sell lots offline again from their next start once none is left.
+- **What the till shows before it prices the line.** The item's tile and a scan can show another lot's price; the line and the receipt carry the right one.
+- **A line from several lots** is priced once; scan each lot's label. **A customer with their own price** pays it on a scanned lot, not the markdown.
+- **A price you edit on the app's row** (its note starts with the app's prefix) is the app's again at the next press: write your own note to keep it.
 - **Which lot rings.** A scanned lot label names its lot. An item's own barcode lets the shop pick the lot (Stock Settings *Pick Serial / Batch Based On*): with *Expiry*, the lot nearest its date sells first.
 - **One set of steps per item group,** one price list per site; up to 100 lots a press.
 - **A promotion still applies** on top of a lot's price.
-- **Removing the app leaves the lots' prices it wrote:** delete them first (Item Price filtered on *Note*), or let them end on their dates.
+- **Removing the app leaves the lots' prices it wrote:** delete them first (Item Price filtered on *Note*); nothing removes them after, and while they exist the tills do not sell lot-tracked items offline.
 
 ## Technical notes
 
 ### What the service sends and writes
 
 - **Each press sends** the ticked lots' names, items and expiry dates, the pressing user (an e-mail address) and the language. The consent the System Manager reads lists exactly these.
-- **The service reads** the settings, the price list and its currency, the lots, their items' groups, the item group tree and those items' prices on the list, **and writes** each lot's own Item Price. It keeps nothing between presses.
+- **The service reads** the settings, the price list and its currency, the lots, their items' groups, the item group tree and those items' prices on the list, **and writes** each lot's own Item Price. It keeps nothing of a press; a hosted copy holds each shop's press secret and its user's API key from *Connect again* until the shop removes the app.
 - **The rounding** is down, to the currency's smallest unit (its fraction units: 100 → 2 digits, 1000 → 3), so the customer never pays more than the step promises.
 - **An edit saved meanwhile is never overwritten:** an update carries the row's `modified` as read, and the shop refuses a stale one (`TimestampMismatchError`); the answer asks for another press. Two presses that create the same lot's row at once: the shop refuses the second as a duplicate, and its answer asks for another press, which finds the row right.
 - **The shop's own words never reach the user.** The service branches on the error's type (`exc_type`), never shows its message.

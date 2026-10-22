@@ -220,13 +220,12 @@ class Service:
             raise
         if not pl.get("selling") or not pl.get("enabled"):
             return _warning(bad_list(price_list))
-        exponent = 2
-        if pl.get("currency"):
-            try:
-                exponent = markdown.exponent_of(door.doc("Currency", pl["currency"]).get("fraction_units"))
-            except TenantError as e:
-                if e.code not in (403, 404):
-                    raise
+        try:            # the currency's own digits: never guessed, a price rounded to the wrong grain is a wrong price
+            exponent = markdown.exponent_of(door.doc("Currency", pl.get("currency") or "-").get("number_format"))
+        except TenantError as e:
+            if e.code == 404:
+                return _warning(bad_list(price_list))
+            raise
         hours = settings.get("hours_from_utc")
         today = markdown.today_at(hours if isinstance(hours, (int, float)) else 0, self.now)
         got = {r["name"]: r for r in door.rows("Batch", ["name", "item", "expiry_date", "batch_qty", "disabled"],
