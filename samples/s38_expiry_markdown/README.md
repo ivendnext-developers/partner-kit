@@ -112,6 +112,8 @@ A manifest cannot write an Item Price: a save rule's derived value writes only n
 - **A promotion still applies** on top of a lot's price.
 - **What the till shows before it prices the line.** The item's tile and a scan show a price the till reads from any of the item's prices on the list, so on a store with lot prices it can show another lot's price; the line, the total and the receipt then carry the right one (measured on our bench; a POS request).
 - **A line from several lots.** A line the till fills from more than one lot is priced once for the whole line; scan each lot's label to ring each lot at its own price (not measured on our bench).
+- **A newer item price.** A new price for the item, or one dated to start later, takes the markdown off a scanned lot label from that day until the next press, which moves the lot's price to it.
+- **The rounding.** The rounding is to the currency's own digits (its number format); a site whose currency precision is set to fewer digits rounds the line again, which can add up to half of its smallest unit.
 - **A customer with their own price.** With a customer on the sale who has a price of their own for the item, a scanned lot rings the customer's price, not the lot's markdown (the shop's own price order).
 - **The shop's day** is the hours from UTC in the settings: change it when your clocks change. A press made just before midnight on a site ahead of UTC with the hours left at 0 writes yesterday's date, which the till reads as valid.
 - **The app's own rows** are those whose note starts with its prefix and a colon. A price you edit on such a row is the app's again at the next press; to keep a lot price of your own, write your own note.

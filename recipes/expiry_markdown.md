@@ -82,6 +82,7 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 - **The till offline.** While any lot on the site has a price of its own (expired ones included), the shop's tills do not sell a lot-tracked item offline: the till's offline price list has no lot in it, so it refuses the line rather than promise one price and book another. Expired prices are removed by the next press, up to 20 a press; the tills sell lots offline again from their next start once none is left.
 - **What the till shows before it prices the line.** The item's tile and a scan can show another lot's price; the line and the receipt carry the right one.
 - **A line from several lots** is priced once; scan each lot's label. **A customer with their own price** pays it on a scanned lot, not the markdown.
+- **A newer item price.** A new price for the item, or one dated to start later, takes the markdown off a scanned lot label from that day until the next press, which moves the lot's price to it.
 - **A price you edit on the app's row** (its note starts with the app's prefix) is the app's again at the next press: write your own note to keep it.
 - **Which lot rings.** A scanned lot label names its lot. An item's own barcode lets the shop pick the lot (Stock Settings *Pick Serial / Batch Based On*): with *Expiry*, the lot nearest its date sells first.
 - **One set of steps per item group,** one price list per site; up to 100 lots a press.
@@ -94,6 +95,6 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 
 - **Each press sends** the ticked lots' names, items and expiry dates, the pressing user (an e-mail address) and the language. The consent the System Manager reads lists exactly these.
 - **The service reads** the settings, the price list and its currency, the lots, their items' groups, the item group tree and those items' prices on the list, **and writes** each lot's own Item Price. It keeps nothing of a press; a hosted copy holds each shop's press secret and its user's API key from *Connect again* until the shop removes the app.
-- **The rounding** is down, to the currency's smallest unit (its fraction units: 100 → 2 digits, 1000 → 3), so the customer never pays more than the step promises.
+- **The rounding** is down, to the currency's own digits from its number format (`#,###.##` → 2, `#,###.###` → 3, `#,###` → 0; the yen counts 100 sen and shows none), so the customer never pays more than the step promises at that grain. The rounding is to the currency's own digits (its number format); a site whose currency precision is set to fewer digits rounds the line again, which can add up to half of its smallest unit.
 - **An edit saved meanwhile is never overwritten:** an update carries the row's `modified` as read, and the shop refuses a stale one (`TimestampMismatchError`); the answer asks for another press. Two presses that create the same lot's row at once: the shop refuses the second as a duplicate, and its answer asks for another press, which finds the row right.
 - **The shop's own words never reach the user.** The service branches on the error's type (`exc_type`), never shows its message.

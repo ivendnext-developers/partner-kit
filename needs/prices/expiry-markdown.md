@@ -18,12 +18,13 @@ Markdown steps on each perishable item group (25% off from 5 days before expiry,
 ## Limits
 - A manager presses it, once a day: there is no run without a press.
 - Lot-tracked items only: an item with no lots has no expiry date.
-- While any lot on the site has a price of its own, the tills do not sell a lot-tracked item offline; each press removes up to 20 expired ones.
+- While any lot on the site has a price of its own, the tills do not sell a lot-tracked item offline; each press removes up to 20 of the app's expired ones (a lot price you typed yourself stays until you delete it).
 - Before a line is priced, the item's tile or a scan can show another lot's price; the line and the receipt carry the right one.
 - A customer with their own price for the item pays it on a scanned lot, not the markdown.
 - An item's own barcode rings the lot the shop picks (Stock Settings); a scanned lot label rings that lot.
 - One set of steps per item group, one price list per site, rounded down to the currency's smallest unit.
 - A price the shop typed for a lot is never changed.
+- A new item price takes the markdown off a scanned lot label until the next press.
 - Up to 100 lots a press, and as many as the service writes in 6 seconds; press again for the rest.
 
 ## Tell the customer

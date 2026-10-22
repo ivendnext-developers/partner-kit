@@ -137,7 +137,8 @@ DIGITS = {"#,###.##": 2, "#.###,##": 2, "# ###.##": 2, "# ###,##": 2, "#'###.##"
 
 
 def exponent_of(number_format) -> int:
-    """A currency's digits from its number format, as the shop shows and rounds it (unknown or blank: 2, the framework's)."""
+    """A currency's digits from its number format, as the shop shows it (unknown or blank: 2, the framework's). The shop
+    rounds a line to its currency precision setting, which can be fewer digits: the README says so."""
     return DIGITS.get(number_format, 2) if isinstance(number_format, str) else 2
 
 
