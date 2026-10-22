@@ -37,6 +37,7 @@ A shop reads two things before and after it installs your app: the **card** in t
 
 - `details`: one **lead** sentence in shop words, at least one point under **what** the app does, at least one **step** under **setup** (the steps a shop takes after the install, in the order it meets them), and **notes** (good to know). Each list holds up to ten points of one to 300 characters.
 - `docs`: one to six `{title, url}` addresses, the first of them your guide page.
+- `industries`: `["all"]` for an app every retailer can use, standing alone, or one to six of the App library's industries (the list and how to choose are on the [publishing page](../site/pages/publish.md)). Required on a public card.
 
 **The guide page** has five headings, in this order, written for the shop's owner or manager, not for a developer:
 
