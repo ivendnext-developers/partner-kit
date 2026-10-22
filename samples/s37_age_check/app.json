@@ -1,0 +1,16 @@
+{
+ "app": "age-restricted-sale-check",
+ "version": "1.0.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s37_age_check/service/app.lambda_handler",
+ "package": ["tools/app_template/service", "samples/s37_age_check/agecheck.py", "samples/s37_age_check/service"],
+ "env": [
+  {"name": "IVN_LIBRARY_APP", "required": true},
+  {"name": "AGE_PREFIX", "required": true}
+ ]
+}

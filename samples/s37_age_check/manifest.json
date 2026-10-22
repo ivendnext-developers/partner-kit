@@ -1,0 +1,53 @@
+{
+ "manifest_version": 2,
+ "app": "pp_age",
+ "prefix": "PP AGE",
+ "title": "Age-restricted sale check",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "An age check for alcohol, tobacco, vapes and other restricted items. A capture on scan: when the cashier scans an item whose 'Customers must be at least this old' is set (its own, or a group named on the scan service), the till shows the date of birth the customer must be born on or before and the sale detail PP AGE ID Checked holding '18 or over'; 'Add with these details' puts the item on the sale and records the check, 'Don't add it' leaves both off. A check before payment: when the cashier presses Pay, the service refuses a line that needs an age the sale's recorded check does not cover (an item picked from a list, a check refused earlier, or a lower age); the cashier can type the age in Sale details. An item's age is its own, else the nearest item group above it that has one. A refund is never judged. No date of birth or ID number is asked or kept. The settings are the shop's own, in the record Default of PP AGE Settings, and the ages are on its Item Groups and Items; the service reads them with the app's integration user and writes nothing. The install makes the role PP AGE Integration; the shop gives it to the app's integration user, with a plain read on Item Group and Item. Both services install switched off; the shop reads what each is sent, ticks the consent, adds its restricted item groups to the scan service's settings and switches them on. When the service is down the item goes on, or the sale is paid, and it is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": ["https://host.docker.internal:8125/age/scan", "https://host.docker.internal:8125/age/check"],
+ "doctypes": [
+  {
+   "name": "PP AGE Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1, "unique": 1, "default": "Default",
+     "description": "The service reads the record named Default."},
+    {"fieldname": "hours_from_utc", "fieldtype": "Float", "label": "Hours from UTC at the shop",
+     "description": "The shop's own day decides the date of birth the till shows: 4 for Dubai, 3 for Nairobi or Riyadh, 2 for Johannesburg, -6 for Mexico City. Blank: UTC."},
+    {"fieldname": "look_under", "fieldtype": "Int", "label": "Ask for ID from anyone who looks under",
+     "description": "Your policy, such as 25: the till adds 'Ask for ID if they look under 25.' to an item whose age is lower. 0 or blank: 'See their ID.'"}
+   ],
+   "permissions": [
+    {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "share": 0, "print": 1, "email": 0},
+    {"role": "PP AGE Integration", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 0, "export": 0, "share": 0, "print": 0, "email": 0}
+   ]
+  }
+ ],
+ "custom_fields": [
+  {"dt": "Item Group", "fieldname": "pp_age_min_age", "fieldtype": "Int", "label": "Customers must be at least this old",
+   "insert_after": "parent_item_group",
+   "description": "Such as 18 for alcohol or 21 for vapes, where the law says so. It covers every group below this one, unless a group below sets its own. 0: no age."},
+  {"dt": "Item", "fieldname": "pp_age_min_age", "fieldtype": "Int", "label": "Customers must be at least this old",
+   "insert_after": "stock_uom",
+   "description": "This item's own age, when it differs from its group's. 0: its item group's age applies."}
+ ],
+ "sale_attributes": [
+  {"name": "PP AGE ID Checked"}
+ ],
+ "property_setters": [
+  {"doc_type": "PP AGE Settings", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/age_check.html#settings"}
+ ],
+ "registered_applications": [
+  {"name": "PP AGE Check", "description": "the age check service reads the shop's settings, item groups and items", "events": ["PP AGE Settings"]}
+ ],
+ "extension_subscriptions": [
+  {"key": "scan", "point": "capture", "label": "Age check", "endpoint_url": "https://host.docker.internal:8125/age/scan",
+   "timeout_seconds": 1.5, "down_answer": "allow_and_flag", "settings": {"event": "scan", "item_field": "pp_age_min_age"}},
+  {"key": "check", "point": "check", "label": "Age check at Pay", "endpoint_url": "https://host.docker.internal:8125/age/check",
+   "timeout_seconds": 3, "down_answer": "allow_and_flag"}
+ ]
+}
