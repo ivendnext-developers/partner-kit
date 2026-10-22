@@ -11,7 +11,13 @@ A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it 
 ## What the manager and the cashier see
 
 1. The manager filters the **Batch** list on *Expiry Date* (this week), ticks the lots and presses **Mark down**, then confirms: *"Mark down these lots by your item groups' steps? Each lot's own price changes until its expiry date."*
+
+   ![Three lots ticked in the Batch list on a demo shop, and Mark down in the Actions menu](../samples/s38_expiry_markdown/screenshots/05_batch_list_mark_down.png)
 2. *Mark down — Marked down 2 lots. 2 lots not yet due.* The list reloads. Each marked lot now has its own price on the shop's selling price list: the item's price less the step's percent, rounded down to the currency's smallest unit, valid from today until the lot's expiry date, noted *PP EXM: 25% off until it expires* (the library's copy writes *IVENDNEXT EXM: …*).
+
+   ![The answer on a demo shop: Marked down 2 lots. 1 lot not yet due.](../samples/s38_expiry_markdown/screenshots/07_marked_down.png)
+
+   ![A lot's own price on a demo shop: 3.00 instead of 4.00, until its expiry date](../samples/s38_expiry_markdown/screenshots/08_lot_price.png)
 3. The manager prints the lot labels at the till (*Print label*, the lot chosen): the label shows the lot's price and its expiry date.
 4. The cashier scans as always. A scanned lot label rings its lot at the markdown.
 
@@ -73,6 +79,8 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
    The role reaches every price on every list: give it to the app's user and no one else.
 3. **Choose the user** on the app's feed. A hosted service: press **Connect again** on the app.
 4. **Fill in the settings** (*Default*: the price list, the hours from UTC) and **give the steps** to the perishable item groups.
+
+   ![The steps on an item group on a demo shop: 25% off from 5 days before expiry, 50% off from 2 days](../samples/s38_expiry_markdown/screenshots/03_item_group_steps.png)
 5. **Switch the service on** in **Retail Extension Subscription** (read what it is sent, tick the consent), then the button in **Retail Desk Action**.
 
 ## Limits

@@ -15,6 +15,17 @@ A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it 
 
 Pressed again, the button writes nothing: *"2 lots already marked down."*
 
+| What the shop sees (on a demo shop, 2026-10-22) | |
+|---|---|
+| What the install will change, read before you agree | ![](screenshots/01_install.png) |
+| The settings record *Default*: the price list and the hours from UTC | ![](screenshots/02_settings.png) |
+| The steps on an item group | ![](screenshots/03_item_group_steps.png) |
+| The service switched on, with its address and its time to answer | ![](screenshots/04_service_on.png) |
+| **Mark down** in the Batch list's *Actions*, three lots ticked | ![](screenshots/05_batch_list_mark_down.png) |
+| The question before the press | ![](screenshots/06_confirm.png) |
+| The answer from the hosted service | ![](screenshots/07_marked_down.png) |
+| A lot's own price: 3.00 instead of 4.00 until its expiry date, with the app's note | ![](screenshots/08_lot_price.png) |
+
 ## What the shop does
 
 1. **Install the app** (the shop's administrator). It comes in switched off: the service has no consent and is off, and the button is off. The install adds the four step fields to Item Group, the settings record type **PP EXM Settings** and the role **PP EXM Integration**.
