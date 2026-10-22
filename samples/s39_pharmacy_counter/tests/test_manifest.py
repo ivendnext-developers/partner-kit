@@ -1,0 +1,117 @@
+"""S39's manifest passes the kit's checker; five services install switched off with the down answers the design names
+(the dispensary refuses, the front lets the sale through, the Desk refuses); the two till checks fit one POS Profile's
+10 seconds beside the age check; the record types, fields and sale details are the ones the service reads; only the
+pharmacist-in-charge writes the Pharmacist list, only pharmacists write prescriptions, only the service writes dispensings;
+nothing is required and nothing names a role the framework gives by itself."""
+import json
+import sys
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path[:0] = [str(HERE.parents[2] / "tools" / "manifest"), str(HERE.parent / "service"), str(HERE.parent)]
+import validate  # noqa: E402
+
+MANIFEST = json.loads((HERE.parent / "manifest.json").read_text())
+SUBS = {s["key"]: s for s in MANIFEST["extension_subscriptions"]}
+P, PF = MANIFEST["prefix"], MANIFEST["app"]
+DT = {d["name"]: d for d in MANIFEST["doctypes"]}
+
+
+def perm(dt, role):
+    row = next((p for p in DT[dt]["permissions"] if p["role"] == role), None)
+    return {k for k, v in (row or {}).items() if k != "role" and v}
+
+
+class ManifestTest(unittest.TestCase):
+    def test_the_manifest_passes_the_kits_checker_with_no_warning(self):
+        self.assertEqual(validate.validate(MANIFEST), [])
+        self.assertEqual(validate.warnings(MANIFEST), [])
+
+    def test_five_services_switched_off_with_the_designs_down_answers(self):
+        self.assertEqual({k: (s["point"], s["down_answer"]) for k, s in SUBS.items()},
+                         {"dispensary": ("check", "refuse"), "front": ("check", "allow_and_flag"),
+                          "desk_order": ("doccheck", "refuse"), "desk_delivery": ("doccheck", "refuse"),
+                          "desk_invoice": ("doccheck", "refuse")})
+        for s in SUBS.values():
+            self.assertFalse(any(k in s for k in ("enabled", "consent_given", "scope", "secret", "may_approve")))
+
+    def test_the_two_till_checks_fit_one_profiles_ten_seconds_beside_the_age_check(self):
+        disp, front = SUBS["dispensary"]["timeout_seconds"], SUBS["front"]["timeout_seconds"]
+        self.assertLessEqual(disp + front, 10)              # the shop's checker counts them as one profile
+        self.assertLessEqual(max(disp, front) + 4, 10)      # S37's library copy takes 4 s on the same profile
+
+    def test_the_desk_checks_name_their_record_types_send_stock_qty_and_never_a_draft(self):
+        for key, dt in (("desk_order", "Sales Order"), ("desk_delivery", "Delivery Note"), ("desk_invoice", "Sales Invoice")):
+            st = SUBS[key]["settings"]
+            self.assertEqual((st["record_type"], st["on_validate"]), (dt, False))
+            self.assertIn("stock_qty", st["send_fields"])
+            self.assertIn(f"{PF}_rx_number", st["send_fields"])
+        self.assertIn("against_sales_order", SUBS["desk_delivery"]["settings"]["send_fields"])
+        self.assertIn("delivery_note", SUBS["desk_invoice"]["settings"]["send_fields"])
+
+    def test_the_routes_are_the_services_own_and_its_only_addresses_on_one_origin(self):
+        import app
+        for key, s in SUBS.items():
+            path = "/" + s["endpoint_url"].split("/", 3)[3]
+            self.assertEqual(app.ROUTES[path][0], key)
+        self.assertEqual(sorted(MANIFEST["allowed_urls"]), sorted(s["endpoint_url"] for s in SUBS.values()))
+        self.assertEqual(len({u.split("/")[2] for u in MANIFEST["allowed_urls"]}), 1)
+
+    def test_the_sale_details_are_the_ones_the_service_reads_and_never_required(self):
+        import rxrules
+        want = [f"{P} {s}" for s in (rxrules.RX, rxrules.PRESCRIBER, rxrules.LICENCE, rxrules.DIRECTIONS)]
+        self.assertEqual([a for a in MANIFEST["sale_attributes"]], [{"name": n} for n in want])
+
+    def test_the_desk_fields_are_the_ones_the_service_reads_on_each_document(self):
+        import rxrules
+        for dt in rxrules.DESK_TYPES:
+            got = {f["fieldname"] for f in MANIFEST["custom_fields"] if f["dt"] == dt}
+            self.assertEqual(got, {f"{PF}_{v}" for v in rxrules.DESK_FIELDS.values()})
+        cust = {f["fieldname"] for f in MANIFEST["custom_fields"] if f["dt"] == "Customer"}
+        self.assertEqual(cust, {f"{PF}_{f}" for _, f, _ in rxrules.IDENTITY})
+        self.assertTrue(all(f["fieldtype"] == "Data" for f in MANIFEST["custom_fields"] if f["dt"] == "Customer"))
+        self.assertFalse([f for f in MANIFEST["custom_fields"] if f.get("reqd")])
+
+    def test_the_schedule_holds_every_rule_the_service_reads(self):
+        import rxrules
+        fields = {f["fieldname"] for f in DT[f"{P} Drug Schedule"]["fields"]}
+        for k in ("needs_prescription", "pharmacist_only", "dispensary_only", "validity_days", "max_fills", "qty_cap",
+                  "freq_qty", "freq_days", "returnable", "return_gives_back", "needs_directions", "axis",
+                  "own_sale_without_rx"):
+            self.assertIn(k, fields)
+        self.assertTrue({t for t, _, _ in rxrules.IDENTITY} <= fields)
+
+    def test_who_writes_what(self):
+        self.assertEqual(perm(f"{P} Pharmacist", "System Manager") & {"write", "create", "delete"}, set())
+        self.assertIn("write", perm(f"{P} Pharmacist", f"{P} Pharmacist in Charge"))
+        self.assertEqual(perm(f"{P} Pharmacist", f"{P} Pharmacist") & {"write", "create"}, set())
+        self.assertEqual(perm(f"{P} Prescription", f"{P} Integration"), {"read"})
+        self.assertIn("create", perm(f"{P} Prescription", f"{P} Pharmacist"))
+        self.assertEqual(perm(f"{P} Prescription", "System Manager") & {"write", "create"}, set())
+        self.assertEqual(perm(f"{P} Dispensing", f"{P} Integration"), {"read", "write", "create"})
+        for role in ("System Manager", f"{P} Pharmacist"):
+            self.assertEqual(perm(f"{P} Dispensing", role) & {"write", "create", "delete"}, set())
+        # the pharmacist-in-charge may release a stuck reservation by hand, never make or delete one
+        self.assertEqual(perm(f"{P} Dispensing", f"{P} Pharmacist in Charge") & {"write", "create", "delete"}, {"write"})
+
+    def test_the_dispensing_is_named_by_the_services_key_and_every_record_keeps_its_changes(self):
+        self.assertEqual(DT[f"{P} Dispensing"]["autoname"], "field:key")
+        for d in MANIFEST["doctypes"]:
+            if not d.get("istable"):
+                self.assertEqual(d.get("track_changes"), 1, d["name"])
+
+    def test_the_licence_reminders_go_to_the_pharmacist_in_charge(self):
+        n = {x["document_type"]: x for x in MANIFEST["notifications"]}
+        for dt in (f"{P} Pharmacist", f"{P} Premises Licence"):
+            self.assertEqual((n[dt]["event"], n[dt]["date_changed"]), ("Days Before", "valid_until"))
+            self.assertEqual(n[dt]["recipients"], [{"receiver_by_role": f"{P} Pharmacist in Charge"}])
+
+    def test_each_record_type_opens_its_help(self):
+        own = {d["name"] for d in MANIFEST["doctypes"] if not d.get("istable")}
+        got = {p["doc_type"] for p in MANIFEST["property_setters"] if p["property"] == "documentation"}
+        self.assertEqual(got, own - {f"{P} Prescription Item", f"{P} Item Schedule"})
+
+
+if __name__ == "__main__":
+    unittest.main()

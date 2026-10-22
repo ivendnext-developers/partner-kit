@@ -1,0 +1,1129 @@
+{
+ "manifest_version": 2,
+ "app": "pp_rxc",
+ "prefix": "PP RXC",
+ "title": "Pharmacy counter rules",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A pharmacy counter's rules, checked at Pay on the till and when a sales order, delivery or sales invoice is submitted on the Desk. A line whose drug schedule needs a prescription is paid only against a prescription the pharmacist entered on the Desk, for this customer, in date for its class, with quantity and a fill left; the fill is reserved when the check answers, so two tills cannot both take the last one, and it comes back if the sale is never booked and its POS day closes, or its sale or document is cancelled. A pharmacist-only line is paid only by a user on the app's Pharmacist list whose licence is in date; a schedule can need the customer's ID, date of birth or authority to possess, a doctor's name and directions, a quantity cap per sale and per patient over days; dispensed medicine of a non-returnable schedule is refused at a till return and on a Desk return. Two till services: the dispensary's refuses the sale when the service is down; the front's lets it through, flagged, and refuses medicine that must be sold at the dispensary. Prescriptions, pharmacists, schedules, patient fields and dispensings are records in the shop; the service reads them with the app's integration user and writes only its Dispensing records. The install makes the roles PP RXC Integration, PP RXC Pharmacist and PP RXC Pharmacist in Charge; every service installs switched off. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/rxc/dispensary",
+  "https://host.docker.internal:8125/rxc/front",
+  "https://host.docker.internal:8125/rxc/desk/order",
+  "https://host.docker.internal:8125/rxc/desk/delivery",
+  "https://host.docker.internal:8125/rxc/desk/invoice"
+ ],
+ "doctypes": [
+  {
+   "name": "PP RXC Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Title",
+     "reqd": 1,
+     "unique": 1,
+     "default": "Default",
+     "description": "The service reads the record named Default."
+    },
+    {
+     "fieldname": "hours_from_utc",
+     "fieldtype": "Float",
+     "label": "Hours from UTC at the shop",
+     "description": "The shop's own day decides a prescription's validity and a licence's date: 3 for Nairobi, 4 for Dubai, 1 for Lagos, -6 for Mexico City. Blank: UTC."
+    },
+    {
+     "fieldname": "walk_in_customers",
+     "fieldtype": "Small Text",
+     "label": "Walk-in customers, one per line",
+     "description": "Customers that stand for an unnamed sale. Each POS Profile's own default customer counts as one already. A prescription or a frequency-capped medicine is never sold to them."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RXC Drug Schedule",
+   "autoname": "field:schedule_name",
+   "track_changes": 1,
+   "title_field": "schedule_name",
+   "fields": [
+    {
+     "fieldname": "schedule_name",
+     "fieldtype": "Data",
+     "label": "Schedule",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "Such as KE Part I Poisons, GH Class A, POM, Pharmacy only."
+    },
+    {
+     "fieldname": "market",
+     "fieldtype": "Data",
+     "label": "Market",
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The country or authority whose class this is."
+    },
+    {
+     "fieldname": "axis",
+     "fieldtype": "Data",
+     "label": "Classification axis",
+     "in_list_view": 1,
+     "description": "A drug can be on one schedule per axis (Ghana's Act 489 classes and its Act 1019 schedules). Blank: this schedule's own axis."
+    },
+    {
+     "fieldname": "rules_section",
+     "fieldtype": "Section Break",
+     "label": "Who may sell it"
+    },
+    {
+     "fieldname": "needs_prescription",
+     "fieldtype": "Check",
+     "label": "Needs a prescription",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "pharmacist_only",
+     "fieldtype": "Check",
+     "label": "Pharmacist only",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "dispensary_only",
+     "fieldtype": "Check",
+     "label": "Sold at the dispensary only",
+     "description": "The front of the shop's check refuses it."
+    },
+    {
+     "fieldname": "needs_directions",
+     "fieldtype": "Check",
+     "label": "Needs a doctor's name and directions for use"
+    },
+    {
+     "fieldname": "limits_section",
+     "fieldtype": "Section Break",
+     "label": "Limits"
+    },
+    {
+     "fieldname": "validity_days",
+     "fieldtype": "Int",
+     "label": "A prescription is valid for (days)",
+     "description": "From the date written. 0: no limit."
+    },
+    {
+     "fieldname": "max_fills",
+     "fieldtype": "Int",
+     "label": "Most fills a prescription may authorise",
+     "description": "1: dispensed once. 0: as the prescription says."
+    },
+    {
+     "fieldname": "max_occasions",
+     "fieldtype": "Int",
+     "label": "Most dispensings of one prescription",
+     "description": "Occasions, however small each: such as 3 where a regulation counts occasions. 0: no limit beyond the fills."
+    },
+    {
+     "fieldname": "one_drug_per_rx",
+     "fieldtype": "Check",
+     "label": "One drug per prescription",
+     "description": "A prescription naming more than one item is refused for a line of this class."
+    },
+    {
+     "fieldname": "qty_cap",
+     "fieldtype": "Float",
+     "label": "Most per sale (stock unit)",
+     "description": "0: no cap."
+    },
+    {
+     "fieldname": "freq_qty",
+     "fieldtype": "Float",
+     "label": "Most per patient (stock unit)",
+     "description": "With the days below. 0: no cap."
+    },
+    {
+     "fieldname": "freq_days",
+     "fieldtype": "Int",
+     "label": "… over this many days"
+    },
+    {
+     "fieldname": "patient_section",
+     "fieldtype": "Section Break",
+     "label": "The patient"
+    },
+    {
+     "fieldname": "needs_id_number",
+     "fieldtype": "Check",
+     "label": "Needs the customer's national or residence ID"
+    },
+    {
+     "fieldname": "needs_birth_date",
+     "fieldtype": "Check",
+     "label": "Needs the customer's date of birth"
+    },
+    {
+     "fieldname": "needs_authority",
+     "fieldtype": "Check",
+     "label": "Needs the customer's authority to possess"
+    },
+    {
+     "fieldname": "own_sale_without_rx",
+     "fieldtype": "Check",
+     "label": "Sold in a sale of its own when not on the prescription",
+     "description": "For a register that books the sale's prescription number for the whole sale (Kenya's Prescription Book and Poisons Book): with a prescription named on the sale, an item of this schedule that is not on it is refused."
+    },
+    {
+     "fieldname": "returns_section",
+     "fieldtype": "Section Break",
+     "label": "Returns"
+    },
+    {
+     "fieldname": "returnable",
+     "fieldtype": "Check",
+     "label": "Can be taken back once dispensed",
+     "description": "Off: the till and Desk returns refuse it."
+    },
+    {
+     "fieldname": "return_gives_back",
+     "fieldtype": "Check",
+     "label": "A return gives the quantity back to its prescription",
+     "default": "1"
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Source (the law and section)"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Pharmacist in Charge",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Pharmacist",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RXC Item Schedule",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "schedule",
+     "fieldtype": "Link",
+     "label": "Schedule",
+     "options": "PP RXC Drug Schedule",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "effective_from",
+     "fieldtype": "Date",
+     "label": "Effective from",
+     "in_list_view": 1,
+     "description": "Blank: always. A reclassification takes effect on its own date."
+    }
+   ],
+   "permissions": []
+  },
+  {
+   "name": "PP RXC Pharmacist",
+   "autoname": "field:user",
+   "track_changes": 1,
+   "title_field": "full_name",
+   "fields": [
+    {
+     "fieldname": "user",
+     "fieldtype": "Link",
+     "label": "User",
+     "options": "User",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "full_name",
+     "fieldtype": "Data",
+     "label": "Name",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "licence_number",
+     "fieldtype": "Data",
+     "label": "Licence number",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "valid_until",
+     "fieldtype": "Date",
+     "label": "Licence valid until",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "active",
+     "fieldtype": "Check",
+     "label": "Active",
+     "default": "1",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "delegate",
+     "fieldtype": "Check",
+     "label": "A delegate, not the licensed pharmacist"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "PP RXC Pharmacist in Charge",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Pharmacist",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RXC Premises Licence",
+   "autoname": "field:licence_number",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "licence_number",
+     "fieldtype": "Data",
+     "label": "Licence number",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "authority",
+     "fieldtype": "Data",
+     "label": "Issuing authority",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "valid_until",
+     "fieldtype": "Date",
+     "label": "Valid until",
+     "reqd": 1,
+     "in_list_view": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "PP RXC Pharmacist in Charge",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Pharmacist",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RXC Prescription",
+   "autoname": "format:RX-{#####}",
+   "track_changes": 1,
+   "search_fields": "reference,customer",
+   "fields": [
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Patient",
+     "options": "Customer",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "reference",
+     "fieldtype": "Data",
+     "label": "Prescription's own number",
+     "in_list_view": 1,
+     "description": "The number on the paper. The till takes this or the record's own number."
+    },
+    {
+     "fieldname": "date_written",
+     "fieldtype": "Date",
+     "label": "Date written",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Active\nCancelled",
+     "default": "Active",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "prescriber_section",
+     "fieldtype": "Section Break",
+     "label": "Prescriber"
+    },
+    {
+     "fieldname": "prescriber",
+     "fieldtype": "Data",
+     "label": "Prescriber",
+     "reqd": 1
+    },
+    {
+     "fieldname": "prescriber_licence",
+     "fieldtype": "Data",
+     "label": "Prescriber's licence number",
+     "reqd": 1
+    },
+    {
+     "fieldname": "fills_section",
+     "fieldtype": "Section Break",
+     "label": "Fills"
+    },
+    {
+     "fieldname": "fills_authorised",
+     "fieldtype": "Int",
+     "label": "Fills authorised",
+     "default": "1",
+     "description": "Dispensings in all, the first included. Each schedule's own limit applies too."
+    },
+    {
+     "fieldname": "retained",
+     "fieldtype": "Check",
+     "label": "Original retained at the pharmacy",
+     "description": "Dispensed once."
+    },
+    {
+     "fieldname": "items_section",
+     "fieldtype": "Section Break",
+     "label": "Items"
+    },
+    {
+     "fieldname": "items",
+     "fieldtype": "Table",
+     "label": "Items",
+     "options": "PP RXC Prescription Item",
+     "reqd": 1
+    },
+    {
+     "fieldname": "image",
+     "fieldtype": "Attach",
+     "label": "Prescription image",
+     "description": "Kept in your site. Leave Is Private ticked when you attach it."
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Notes"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "PP RXC Pharmacist",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Pharmacist in Charge",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RXC Prescription Item",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "item_code",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Quantity per fill (stock unit)",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "directions",
+     "fieldtype": "Small Text",
+     "label": "Directions for use",
+     "in_list_view": 1
+    }
+   ],
+   "permissions": []
+  },
+  {
+   "name": "PP RXC Dispensing",
+   "autoname": "field:key",
+   "track_changes": 1,
+   "sort_field": "creation",
+   "fields": [
+    {
+     "fieldname": "key",
+     "fieldtype": "Data",
+     "label": "Number (the patient's key and their dispensing)",
+     "reqd": 1,
+     "unique": 1,
+     "description": "An opaque key per patient, never their name, then the patient's next number."
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Patient",
+     "options": "Customer",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "prescription",
+     "fieldtype": "Link",
+     "label": "Prescription",
+     "options": "PP RXC Prescription",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Reserved\nDispensed\nReleased\nReturned",
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The pharmacist-in-charge may set a stuck reservation (a sale the till gave up on) to Released; the service reads every other status back from the shop."
+    },
+    {
+     "fieldname": "summary",
+     "fieldtype": "Small Text",
+     "label": "What it dispensed",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "day",
+     "fieldtype": "Date",
+     "label": "Day (the shop's)",
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "seq",
+     "fieldtype": "Int",
+     "label": "The patient's dispensing number"
+    },
+    {
+     "fieldname": "give_back",
+     "fieldtype": "Check",
+     "label": "A return giving back"
+    },
+    {
+     "fieldname": "where_section",
+     "fieldtype": "Section Break",
+     "label": "Where"
+    },
+    {
+     "fieldname": "source",
+     "fieldtype": "Select",
+     "label": "Source",
+     "options": "till\ndesk"
+    },
+    {
+     "fieldname": "operator",
+     "fieldtype": "Data",
+     "label": "Sold by (user)"
+    },
+    {
+     "fieldname": "sale_ref",
+     "fieldtype": "Data",
+     "label": "Sale reference"
+    },
+    {
+     "fieldname": "pos_opening",
+     "fieldtype": "Link",
+     "label": "POS day",
+     "options": "POS Opening Entry"
+    },
+    {
+     "fieldname": "pos_invoice",
+     "fieldtype": "Link",
+     "label": "POS Invoice",
+     "options": "POS Invoice"
+    },
+    {
+     "fieldname": "document_type",
+     "fieldtype": "Data",
+     "label": "Desk document type"
+    },
+    {
+     "fieldname": "document",
+     "fieldtype": "Data",
+     "label": "Desk document"
+    },
+    {
+     "fieldname": "lines_json",
+     "fieldtype": "Long Text",
+     "label": "Lines (the service's record)"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "PP RXC Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Pharmacist",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Pharmacist in Charge",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "Item",
+   "fieldname": "pp_rxc_schedules",
+   "fieldtype": "Table",
+   "label": "Drug schedules",
+   "options": "PP RXC Item Schedule",
+   "insert_after": "stock_uom",
+   "description": "One row per classification axis; the strictest rule applies. To give variants their template's rows, add this field in Item Variant Settings."
+  },
+  {
+   "dt": "Item",
+   "fieldname": "pp_rxc_registration_no",
+   "fieldtype": "Data",
+   "label": "Registration number",
+   "insert_after": "pp_rxc_schedules"
+  },
+  {
+   "dt": "Item",
+   "fieldname": "pp_rxc_directions",
+   "fieldtype": "Small Text",
+   "label": "Default directions for use",
+   "insert_after": "pp_rxc_registration_no"
+  },
+  {
+   "dt": "Item Group",
+   "fieldname": "pp_rxc_schedule",
+   "fieldtype": "Link",
+   "label": "Drug schedule",
+   "options": "PP RXC Drug Schedule",
+   "insert_after": "parent_item_group",
+   "description": "For items of this group, and the groups below it, that have no schedule of their own."
+  },
+  {
+   "dt": "Item Group",
+   "fieldname": "pp_rxc_needs_directions",
+   "fieldtype": "Check",
+   "label": "Needs a doctor's name and directions for use",
+   "insert_after": "pp_rxc_schedule",
+   "description": "Covers the groups below it too."
+  },
+  {
+   "dt": "Customer",
+   "fieldname": "pp_rxc_id_number",
+   "fieldtype": "Data",
+   "label": "National or residence ID",
+   "insert_after": "customer_group",
+   "description": "Asked for by a schedule that needs it. Readable by everyone who reads customers."
+  },
+  {
+   "dt": "Customer",
+   "fieldname": "pp_rxc_birth_date",
+   "fieldtype": "Data",
+   "label": "Date of birth (patient)",
+   "insert_after": "pp_rxc_id_number"
+  },
+  {
+   "dt": "Customer",
+   "fieldname": "pp_rxc_authority",
+   "fieldtype": "Data",
+   "label": "Authority to possess",
+   "insert_after": "pp_rxc_birth_date"
+  },
+  {
+   "dt": "Sales Order",
+   "fieldname": "pp_rxc_rx_number",
+   "fieldtype": "Data",
+   "label": "Prescription number(s)",
+   "insert_after": "customer",
+   "description": "The Pharmacy counter rules check it at submit. Several: separate them with commas."
+  },
+  {
+   "dt": "Sales Order",
+   "fieldname": "pp_rxc_prescriber",
+   "fieldtype": "Data",
+   "label": "Prescriber",
+   "insert_after": "pp_rxc_rx_number"
+  },
+  {
+   "dt": "Sales Order",
+   "fieldname": "pp_rxc_prescriber_licence",
+   "fieldtype": "Data",
+   "label": "Prescriber's licence",
+   "insert_after": "pp_rxc_prescriber"
+  },
+  {
+   "dt": "Sales Order",
+   "fieldname": "pp_rxc_directions",
+   "fieldtype": "Small Text",
+   "label": "Directions for use",
+   "insert_after": "pp_rxc_prescriber_licence"
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rxc_rx_number",
+   "fieldtype": "Data",
+   "label": "Prescription number(s)",
+   "insert_after": "customer",
+   "description": "The Pharmacy counter rules check it at submit. Several: separate them with commas."
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rxc_prescriber",
+   "fieldtype": "Data",
+   "label": "Prescriber",
+   "insert_after": "pp_rxc_rx_number"
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rxc_prescriber_licence",
+   "fieldtype": "Data",
+   "label": "Prescriber's licence",
+   "insert_after": "pp_rxc_prescriber"
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rxc_directions",
+   "fieldtype": "Small Text",
+   "label": "Directions for use",
+   "insert_after": "pp_rxc_prescriber_licence"
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rxc_rx_number",
+   "fieldtype": "Data",
+   "label": "Prescription number(s)",
+   "insert_after": "customer",
+   "description": "The Pharmacy counter rules check it at submit. Several: separate them with commas."
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rxc_prescriber",
+   "fieldtype": "Data",
+   "label": "Prescriber",
+   "insert_after": "pp_rxc_rx_number"
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rxc_prescriber_licence",
+   "fieldtype": "Data",
+   "label": "Prescriber's licence",
+   "insert_after": "pp_rxc_prescriber"
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rxc_directions",
+   "fieldtype": "Small Text",
+   "label": "Directions for use",
+   "insert_after": "pp_rxc_prescriber_licence"
+  }
+ ],
+ "sale_attributes": [
+  {
+   "name": "PP RXC Rx Number"
+  },
+  {
+   "name": "PP RXC Prescriber"
+  },
+  {
+   "name": "PP RXC Prescriber Licence"
+  },
+  {
+   "name": "PP RXC Directions"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP RXC Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/pharmacy_counter.html#settings"
+  },
+  {
+   "doc_type": "PP RXC Drug Schedule",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/pharmacy_counter.html#drug-schedules"
+  },
+  {
+   "doc_type": "PP RXC Pharmacist",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/pharmacy_counter.html#pharmacists"
+  },
+  {
+   "doc_type": "PP RXC Premises Licence",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/pharmacy_counter.html#premises-licence"
+  },
+  {
+   "doc_type": "PP RXC Prescription",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/pharmacy_counter.html#prescriptions"
+  },
+  {
+   "doc_type": "PP RXC Dispensing",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/pharmacy_counter.html#dispensings"
+  }
+ ],
+ "links": [
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP RXC Prescription",
+   "link_fieldname": "customer",
+   "group": "Pharmacy"
+  },
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP RXC Dispensing",
+   "link_fieldname": "customer",
+   "group": "Pharmacy"
+  },
+  {
+   "doctype": "PP RXC Prescription",
+   "link_doctype": "PP RXC Dispensing",
+   "link_fieldname": "prescription",
+   "group": "Dispensings"
+  }
+ ],
+ "notifications": [
+  {
+   "name": "PP RXC Pharmacist Licence Due",
+   "document_type": "PP RXC Pharmacist",
+   "event": "Days Before",
+   "date_changed": "valid_until",
+   "days_in_advance": 30,
+   "channel": "System Notification",
+   "subject": "Pharmacist licence of {{ doc.full_name }} ends on {{ doc.valid_until }}",
+   "message": "The licence {{ doc.licence_number }} of {{ doc.full_name }} ({{ doc.user }}) is valid until {{ doc.valid_until }}. After that date the till refuses their pharmacist-only sales.",
+   "recipients": [
+    {
+     "receiver_by_role": "PP RXC Pharmacist in Charge"
+    }
+   ]
+  },
+  {
+   "name": "PP RXC Premises Licence Due",
+   "document_type": "PP RXC Premises Licence",
+   "event": "Days Before",
+   "date_changed": "valid_until",
+   "days_in_advance": 60,
+   "channel": "System Notification",
+   "subject": "Premises licence {{ doc.licence_number }} ends on {{ doc.valid_until }}",
+   "message": "The premises licence {{ doc.licence_number }} of {{ doc.store }}, issued by {{ doc.authority }}, is valid until {{ doc.valid_until }}.",
+   "recipients": [
+    {
+     "receiver_by_role": "PP RXC Pharmacist in Charge"
+    }
+   ]
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP RXC Counter",
+   "description": "the pharmacy counter service reads prescriptions, pharmacists, schedules, patients and sales, and writes its dispensings",
+   "events": [
+    "PP RXC Settings"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "dispensary",
+   "point": "check",
+   "label": "Pharmacy counter rules (dispensary)",
+   "endpoint_url": "https://host.docker.internal:8125/rxc/dispensary",
+   "timeout_seconds": 5,
+   "down_answer": "refuse"
+  },
+  {
+   "key": "front",
+   "point": "check",
+   "label": "Pharmacy counter rules (front)",
+   "endpoint_url": "https://host.docker.internal:8125/rxc/front",
+   "timeout_seconds": 5,
+   "down_answer": "allow_and_flag"
+  },
+  {
+   "key": "desk_order",
+   "point": "doccheck",
+   "label": "Pharmacy counter rules (sales order)",
+   "endpoint_url": "https://host.docker.internal:8125/rxc/desk/order",
+   "timeout_seconds": 5,
+   "down_answer": "refuse",
+   "settings": {
+    "record_type": "Sales Order",
+    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, items(item_code, item_group, stock_qty)",
+    "on_validate": false
+   }
+  },
+  {
+   "key": "desk_delivery",
+   "point": "doccheck",
+   "label": "Pharmacy counter rules (delivery)",
+   "endpoint_url": "https://host.docker.internal:8125/rxc/desk/delivery",
+   "timeout_seconds": 5,
+   "down_answer": "refuse",
+   "settings": {
+    "record_type": "Delivery Note",
+    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, is_return, return_against, items(item_code, item_group, stock_qty, against_sales_order, so_detail, against_sales_invoice, si_detail)",
+    "on_validate": false
+   }
+  },
+  {
+   "key": "desk_invoice",
+   "point": "doccheck",
+   "label": "Pharmacy counter rules (sales invoice)",
+   "endpoint_url": "https://host.docker.internal:8125/rxc/desk/invoice",
+   "timeout_seconds": 5,
+   "down_answer": "refuse",
+   "settings": {
+    "record_type": "Sales Invoice",
+    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, is_return, return_against, update_stock, items(item_code, item_group, stock_qty, sales_order, so_detail, delivery_note, dn_detail)",
+    "on_validate": false
+   }
+  }
+ ]
+}
