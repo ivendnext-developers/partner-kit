@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The five feedback forms (feedback/*.md) as GitHub issue forms (.github/ISSUE_TEMPLATE/), generated so the two can
+"""The six feedback forms (feedback/*.md) as GitHub issue forms (.github/ISSUE_TEMPLATE/), generated so the two can
 never drift apart. Edit the Markdown form, then run this from the repository's root:
 
     python3 .github/scripts/issue_forms.py            # rewrite the issue forms
@@ -7,7 +7,7 @@ never drift apart. Edit the Markdown form, then run this from the repository's r
                                                       # or a form is over the cap (see CAPS)
 
 The forms are filed in the private repository ivendnext-developers/partner-feedback, not here. After a change, copy the
-six generated files (the five forms and config.yml) from .github/ISSUE_TEMPLATE/ into that repository's
+seven generated files (the six forms and config.yml) from .github/ISSUE_TEMPLATE/ into that repository's
 .github/ISSUE_TEMPLATE/ unchanged, and compare them byte for byte.
 
 A form in the Markdown file is the fenced block under "The form". In it: a line "Label: <a | b>" is a required drop-down, and "Label: <hint>" a required one-line box;
@@ -24,7 +24,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / ".github" / "ISSUE_TEMPLATE"
 KIT_URL = "https://github.com/ivendnext-developers/partner-kit"
 PARTNER_FORM = "https://www.ivendnext.com/partner/#be-a-partner"
-FORMS = ("kit_defect", "point_request", "recipe_or_document_gap", "sample_request", "app_listing")
+FORMS = ("kit_defect", "point_request", "recipe_or_document_gap", "sample_request", "app_listing",
+         "claim_a_need")
 TICK_GROUP = {"app_listing": "The listing bar"}  # a tick box's group label; every other form's is "Money or the till"
 CAPS = {"fields": 5, "required": 3}      # a form with more fields, or more required fields, than this is too long to fill in
 

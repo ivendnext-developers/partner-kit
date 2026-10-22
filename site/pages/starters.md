@@ -34,7 +34,7 @@ Why this is yours to build, and what stays yours: [Build your business on iVendN
 - **What works today:** the till sends the receipt by WhatsApp through the store's receipt settings, with the limits on its card: [The receipt sent by WhatsApp](../../needs/documents/receipt-by-whatsapp.md) (ready, with limits: only where the store has the WhatsApp app set up, and not offered offline). The app is [WhatsApp messages](https://library.ivendnext.app/apps/ivend_whatsapp) in the App library, on the retailer's own WhatsApp Business account.
 - **The door:** the receipt settings on the register ([the receipt page](../../contracts/pages/receipt.md)).
 - **What changes per market:** the account and its provider, the approved message templates, the language.
-- The kit has no starter for a country's own SMS or messaging gateway today.
+- The kit has no starter for a country's own SMS or messaging gateway today. What we build, and when, is on [What iVendNext builds](roadmap.md); the gateway stays yours.
 
 ## A local delivery app
 

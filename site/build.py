@@ -87,7 +87,8 @@ IMAGE_EXT = {".png", ".gif", ".jpg", ".jpeg", ".svg", ".webp"}
 
 NAV = [("Needs", "needs/index.html"), ("Get started", "start.html"), ("Guide", "guide/index.html"),
        ("Recipes", "recipes/index.html"), ("Samples", "samples/index.html"),
-       ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("Feedback", "feedback.html")]
+       ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("Roadmap", "roadmap.html"),
+       ("Feedback", "feedback.html")]
 CORP = "https://www.ivendnext.com"
 FOOT_CORP = [("ivendnext.com", CORP + "/"), ("Documentation", "https://docs.ivendnext.com/"), ("Application suite", CORP + "/application-suite/"), ("Partners", CORP + "/partner/"),
              ("Release 2.0", CORP + "/release/2.0/"), ("Blog", CORP + "/blog/"), ("Events", CORP + "/events/"),

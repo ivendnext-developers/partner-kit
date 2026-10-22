@@ -2,7 +2,7 @@
 
 This chapter tells you what to do when your work is ready for a customer, and how to tell us when something in the kit is missing or wrong. It is for a builder ready to deliver, or one who has hit a gap.
 
-You will need [the feedback channel and its four forms](../feedback/README.md) and [the project blueprint](../kit/blueprint.md).
+You will need [the feedback channel and its six forms](../feedback/README.md) and [the project blueprint](../kit/blueprint.md).
 
 ## Read this first
 

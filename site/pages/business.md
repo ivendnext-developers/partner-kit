@@ -26,10 +26,17 @@ The next retailer with the same need can buy the same version from you. When it 
 
 - **We build the standard version; the customer's own version is yours.** We add to our apps what every shop with a need shares. A customer's particular way of working is your business, not ours.
 - **Local systems are yours to connect.** A local ERP or accounting system, a local payment gateway or wallet, a loyalty provider, a messaging gateway, a local delivery app: we give you a starting point for most of them ([Starters for local work](starters.md)).
-- **The partner leads the customer.** Our own development team works for you as your subcontractor when you want it. It works directly with a retailer only where no partner covers the country, or on an account named in advance as one we serve ourselves.
+- **The partner leads the customer.** Our own development team works for you as your subcontractor when you want it. It works directly with a retailer only where no partner covers the country, or on an account named to partners in advance, on the partner pages you see once signed in. No account has been named, so today it works directly only where no partner covers the country.
 - **A registered deal is protected** for 90 days, and the protection renews while the deal moves.
 
 These are the partner programme's published terms: [iVendNext Partners](https://www.ivendnext.com/partner/).
+
+## Our two promises
+
+- **The services are always yours.** We never sell implementation, customisation or support to a customer a partner covers, apart from the two cases above.
+- **Partner first in the App library.** Where your listed app already answers a need, we build no free app against it, and we feature yours. You may claim a need from our roadmap before we start it, and we hold back from it for 90 days.
+
+**The honest limit.** A free standard app does take the product sale of that exact need off the table. We accept that because a free standard version brings more retailers to iVendNext for partners to implement. So we say in advance what we will build, what we give you a starter for and what is yours: [What iVendNext builds](roadmap.md).
 
 ## The path
 
