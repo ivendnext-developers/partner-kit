@@ -2,7 +2,7 @@
 
 Your customer likes one of the App library's apps but works differently. This recipe turns that app into yours: your company's name on it, your customer's change in it, delivered to your customer's site, at your price. It is for an iVendNext Partner, or a licensed customer's IT team, who builds for a customer. Why it is worth doing, what it costs and what stays yours: [Build your business on iVendNext's apps](../site/pages/business.md).
 
-**Start from:** any app iVendNext lists in the App library. Each one is built from a sample in this kit, and its page in the App library links that sample. **Worked example:** `samples/s2_bins/`, the code of *Bin locations*, made into *ACME Bins* for a chain that keeps stock in zones.
+**Start from:** an app iVendNext lists in the App library that is built from a sample in this kit; its page in the App library links that sample. iVendNext's own products there (iVendNext POS, its payment apps, its connectors) are not kit samples and are not copied. **Worked example:** `samples/s2_bins/`, the code of *Bin locations*, made into *ACME Bins* for a chain that keeps stock in zones.
 
 ## First: does the customer need a copy?
 

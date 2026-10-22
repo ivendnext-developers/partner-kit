@@ -1,6 +1,6 @@
 # Build your business on iVendNext's apps
 
-Every app iVendNext lists in the App library starts as working code in this kit. When your customer wants one of them to work their way, copy it, change it, put your company's name on it, and sell it. The code costs you nothing, and we take no share of what you charge.
+Most apps iVendNext lists in the App library start as working code in this kit, and each such app's page links that code. When your customer wants one of them to work their way, copy it, change it, put your company's name on it, and sell it. iVendNext's own products in the library, such as iVendNext POS, its payment apps and its connectors, are not kit code and are not copied. The code costs you nothing, and we take no share of what you charge.
 
 [Make one of our apps your own](../../recipes/make_it_your_own.md) · [Become an iVendNext Partner](https://www.ivendnext.com/partner/#be-a-partner) · [Browse the apps you can start from](https://library.ivendnext.app)
 
@@ -42,7 +42,7 @@ These are the partner programme's published terms: [iVendNext Partners](https://
 
 1. **Become an iVendNext Partner.** Fill in the [partner form](https://www.ivendnext.com/partner/#be-a-partner). We talk to you first, then give you a sandbox site of your own.
 2. **Register your company once.** You make your signing key with the kit and send us its public line; we give your company its first word ([Publish your app](publish.md), step 2).
-3. **Copy an app.** Each app's page in the App library links the code it was built from. Copy it into your own repository.
+3. **Copy an app.** An app that starts as kit code has a page in the App library that links the code it was built from. Copy it into your own repository.
 4. **Make it your customer's.** One command renames it to your company's name. Then change what your customer needs. Your AI assistant can do much of this: point it at the kit's [`AGENTS.md`](../../AGENTS.md).
 5. **Check it and try it.** The kit's check runs the same checks your customer's site will run, before anyone sees your app. Then install it on your sandbox.
 6. **Deliver it.** For one customer, publish it to that customer's own *Made for you* shelf, with no approval needed from us. Their administrator installs it from their App library and agrees to what it does.
@@ -55,7 +55,7 @@ Every command, with *Bin locations* as the worked example: [Make one of our apps
 
 | Item | What you pay |
 |---|---|
-| The kit and the code of every iVendNext library app, under the Apache 2.0 licence: copy it, change it, sell it, keep your changes private; keep its licence notice | Free |
+| The kit and the code of every iVendNext library app that starts as kit code, under the Apache 2.0 licence: copy it, change it, sell it, keep your changes private; keep its licence notice | Free |
 | Becoming a partner, registering your company, your sandbox site | Free |
 | Delivering to a customer's *Made for you* shelf, or listing in the App library | Free |
 | A share of what you charge for your app, your work or your support | None: we earn from iVendNext itself, never from partners' apps |
