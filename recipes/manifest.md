@@ -115,7 +115,7 @@ A manifest has two readers: the installer, which checks it, and the **people in 
 
 ### 1. The card: what the app does and how a shop sets it up
 
-The card is `library/app.json`. Besides its title, one-line summary, category, who uses it and changelog, it carries two things every listed app must have:
+The card is `library/app.json`. Besides its title, one-line summary, category, who uses it and changelog, it carries three things every listed app must have (its industries, its details and its guide):
 
 ```json
 {
@@ -123,6 +123,7 @@ The card is `library/app.json`. Besides its title, one-line summary, category, w
   "title": {"en": "Bin locations"},
   "summary": {"en": "Mark where each item sits in a store, by aisle and bin."},
   "category": "Stock",
+  "industries": ["distribution-and-warehousing", "hardware-and-diy"],
   "used_by": ["Stock clerk", "Store manager"],
   "details": {
     "en": {
@@ -146,6 +147,7 @@ The card is `library/app.json`. Besides its title, one-line summary, category, w
 ```
 
 - **`details`** is a lead sentence, a list of points under **what** the app does, a list of **setup** steps the shop takes after the install, in the order it meets them, and a list of **notes** (good to know). Up to ten points in each list, each 1 to 300 characters. `en` is required; `es` and `ar` are optional and checked the same way.
+- **`industries`** is required on a public card: `["all"]` for an app every retailer can use, standing alone, or one to six of `fashion`, `grocery`, `pharmacy`, `beauty-and-cosmetics`, `electronics-and-phones`, `hardware-and-diy`, `liquor-and-wine`, `hospitality`, `travel-retail`, `distribution-and-warehousing`, `optical`, `thrift-and-resale`. Name an industry only where the app is especially used; the App library lists the app on each one's page.
 - **`docs`** is one to six `{title, url}` addresses (a title up to 80 characters), the first of them your guide page.
 - **A setup step names the Desk screen** by the name a shop searches for and says who does it: *In Desk, search for ACME BINS Location and add one for each store*, not *configure the locations*.
 - **Do not say a shop must create your own roles.** The install makes the ones that start with your prefix (above): say which roles the install adds, and make the step the one that gives them to people.
@@ -192,6 +194,8 @@ The library checks the card and the manifest together on its own side when you p
 | `help_nothing_leaves` | `<app>: the card says nothing leaves the shop, but the app has <an outside address (host) · webhooks · till keys · event feeds · extensions · print formats · label layouts · an outside service that signs in to read and write>: say what it sends or runs outside, or take that line out` |
 | `help_roles` | `<app>: a setup step tells the shop to create the app's own roles ('<the step>'): the install makes them, so say which roles the install adds and make the step giving them to people` |
 | `help_record_guide` | `<app>: the record type <name> has no guide address: add a property setter {doc_type: '<name>', property: 'documentation', value: <https address of its page in your guide>} on docs.ivendnext.com, developer.ivendnext.com, help.ivendnext.com, www.ivendnext.com` (and ` (its address '<value>' is not https on one of them)` when a setter exists but its address is off those hosts) |
+
+A public card without `industries` is refused as `bad_entry`, *<app>: a public card names its industries: industries is ["all"] for every retailer, or one to six of fashion, grocery, pharmacy, beauty-and-cosmetics, electronics-and-phones, hardware-and-diy, liquor-and-wine, hospitality, travel-retail, distribution-and-warehousing, optical, thrift-and-resale*; an unknown industry, or `all` beside another, is refused as `bad_entry` too.
 
 A guide address off those hosts keeps its older code: `bad_entry`, *a document's address is on docs.ivendnext.com, developer.ivendnext.com, help.ivendnext.com, www.ivendnext.com*. All of these come back as HTTP 400 and, on the upload door, as `{refused, words}`; a refused upload writes nothing.
 
