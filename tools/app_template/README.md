@@ -17,6 +17,7 @@ A small service that does what every deployable app does ([guide chapter 14b](..
 | `Dockerfile` · `docker-compose.yml` | the container, and a one-command run on your laptop |
 | `app.json` | the settings file: name, port, health address, size, region and the **names** of the environment variables. Never a value |
 | `validate_app.py` | checks `app.json` and the `Dockerfile` before you deploy |
+| `local_key.py` | local mode: a key pair of your own, and a library key it signs for a shop on your machine |
 | `tests/` | the service, the handshake and the checker, with no cloud and no shop; `canaries.py` removes each check of the handshake and expects its test to fail |
 
 ## Run it
@@ -49,9 +50,33 @@ Then call it with the stand-in caller (`tools/standin_caller/`) at `http://local
 | `IVN_LIBRARY_APP` | many shops | your app's id in the App library. The key a shop connects with must name it |
 | `IVN_SHOPS_FILE` | many shops, not hosted | a file the app may write, where it keeps the shops and their secrets (readable by the app's user alone) |
 | `IVN_SHOPS_TABLE` | many shops, hosted | set by CitiXsys hosting when `app.json` says `"shops": true` |
+| `IVN_LOCAL` | no | `1`: local mode (below). Never with `IVN_SHOPS_TABLE` |
+| `IVN_LOCAL_LIBRARY_KEYS` | no, local mode only | the public keys file `local_key.py keygen` wrote |
 | `PORT` | no | default 8080 |
 
 The app does not start without one of `IVN_POINT_SECRET` or `IVN_LIBRARY_APP` (with its store). Secrets come from your host's secret store, or from each shop at connect. They are never in the image, the repository or `app.json`.
+
+## Local mode: many shops on your laptop
+
+A shop's site on your own machine (a local bench at `http://shop.localhost:8000`, say) has no certificate and a port, so the
+handshake would refuse it and the app would call it back at `https://`. With `IVN_LOCAL=1` and the file store, a shop
+on this machine (`localhost`, `<name>.localhost`, `127.0.0.1` or `[::1]`, with or without a port) connects, and the app,
+and every sample built on this template, calls it back over plain `http`. Every other site keeps `https` and the two
+pinned keys, and local mode refuses to start with the hosting's table.
+
+The App library signs keys only for real sites, so you sign your own, with a key pair that is accepted for a shop on this
+machine and no other:
+
+```bash
+python3 tools/app_template/local_key.py keygen --out .local-keys
+python3 tools/app_template/local_key.py sign --secret .local-keys/library.secret \
+    --app ivendnext_hello --site shop.localhost:8000          # prints the "IVN1-…" key the shop connects with
+IVN_LOCAL=1 IVN_LIBRARY_APP=ivendnext_hello IVN_SHOPS_FILE=shops.local.json \
+    IVN_LOCAL_LIBRARY_KEYS=.local-keys/library_keys.json python3 tools/app_template/service/app.py
+```
+
+`.local-keys/` is in `.gitignore`. For one shop you need none of this: `IVN_POINT_SECRET`, and a sample's
+`IVN_SHOP_URL=http://localhost:8000`, already work on your laptop.
 
 ## Technical notes
 

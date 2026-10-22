@@ -24,9 +24,11 @@ import urllib.request
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "service"))
+sys.path.insert(0, str(HERE.parent))
 import app  # noqa: E402
 import dynamo  # noqa: E402
 import ed25519  # noqa: E402
+import local_key  # noqa: E402
 import shops  # noqa: E402
 
 PAID_SECRET, FREE_SECRET = hashlib.sha256(b"test L1").digest(), hashlib.sha256(b"test F1").digest()
@@ -299,6 +301,89 @@ class Settings(unittest.TestCase):
             app.settings({"IVN_LIBRARY_APP": APP, "IVN_SHOPS_TABLE": "t"})          # a table needs its region
         self.assertIsInstance(app.settings({"IVN_LIBRARY_APP": APP, "IVN_SHOPS_TABLE": "t", "AWS_REGION": "us-east-1"})["store"],
                               dynamo.TableStore)
+
+
+class LocalMode(unittest.TestCase):
+    """IVN_LOCAL=1: a shop on this machine connects and is called back over http; every other site is as before."""
+    LOCAL = "shop.localhost:8000"
+
+    def setUp(self):
+        d = tempfile.mkdtemp()
+        self.file = os.path.join(d, "shops.json")
+        secret_file, self.keys_file = local_key.keygen(pathlib.Path(d) / "keys")
+        self.seed = base64.b64decode(secret_file.read_text().strip())
+
+    def serve(self, **env):
+        conf = app.settings({"IVN_LIBRARY_APP": APP, "IVN_SHOPS_FILE": self.file, **env})
+        conf["keys"] = KEYS
+        srv = app.make_server(conf, port=0, log=io.StringIO())
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        self.addCleanup(srv.server_close)
+        self.addCleanup(srv.shutdown)
+        svc = Service()
+        svc.base = f"http://127.0.0.1:{srv.server_address[1]}"
+        return svc
+
+    def local(self):
+        return self.serve(IVN_LOCAL="1", IVN_LOCAL_LIBRARY_KEYS=str(self.keys_file))
+
+    def stored(self, site):
+        return json.loads(pathlib.Path(self.file).read_text())[site]
+
+    def test_a_shop_on_this_machine_connects_and_is_called_back_over_http(self):
+        svc = self.local()
+        key = local_key.sign(self.seed, APP, self.LOCAL)
+        self.assertEqual(svc.connect(self.LOCAL, key=key), (200, {"connected": self.LOCAL}))
+        self.assertEqual(self.stored(self.LOCAL)["url"], f"http://{self.LOCAL}")
+        self.assertEqual(svc.press(self.LOCAL)[0], 200)
+        self.assertEqual(svc.post(app.DISCONNECT, {"key": key, "site": self.LOCAL}, site=self.LOCAL)[0], 200)
+        self.assertEqual(svc.press(self.LOCAL)[0], 401)
+
+    def test_every_other_site_keeps_https_in_local_mode(self):
+        svc = self.local()
+        self.assertEqual(svc.connect(A)[0], 200)
+        self.assertEqual(self.stored(A)["url"], f"https://{A}")
+
+    def test_canary_a_shop_on_this_machine_without_local_mode(self):
+        svc = self.serve()
+        self.assertEqual(svc.connect(self.LOCAL, key=make_key(host=self.LOCAL)), (400, {"refused": "bad_request"}))
+        self.assertFalse(os.path.exists(self.file))
+
+    def test_canary_a_local_key_never_signs_for_another_site(self):
+        svc = self.local()
+        key = make_key(host=A, kid=local_key.KID, secret=self.seed)
+        self.assertEqual(svc.connect(A, key=key), (403, {"refused": "key_signature"}))
+
+    def test_canary_a_local_key_without_its_keys_file(self):
+        svc = self.serve(IVN_LOCAL="1")
+        key = local_key.sign(self.seed, APP, self.LOCAL)
+        self.assertEqual(svc.connect(self.LOCAL, key=key), (403, {"refused": "key_signature"}))
+
+    def test_what_is_on_this_machine(self):
+        for s in ("localhost", "localhost:8000", "shop.localhost:8000", "a.b.localhost", "127.0.0.1:8000", "[::1]:8000"):
+            self.assertTrue(shops.is_local(s), s)
+            self.assertEqual(shops.site_of(s.upper()), s)
+        for s in ("localhost.evil.com", "evil.com:8000", "127.0.0.2", "10.0.0.1:8000", "localhost:", "shop.localhost/x"):
+            self.assertFalse(shops.is_local(s), s)
+        self.assertIsNone(shops.site_of("evil.com:8000"))
+
+    def test_local_mode_is_refused_where_it_does_not_belong(self):
+        with self.assertRaises(SystemExit):
+            app.settings({"IVN_LIBRARY_APP": APP, "IVN_SHOPS_TABLE": "t", "AWS_REGION": "us-east-1", "IVN_LOCAL": "1"})
+        with self.assertRaises(SystemExit):
+            app.settings({"IVN_LIBRARY_APP": APP, "IVN_SHOPS_FILE": self.file, "IVN_LOCAL_LIBRARY_KEYS": str(self.keys_file)})
+        bad = pathlib.Path(self.file).with_name("bad.json")
+        bad.write_text('{"LOCAL": ["not a key", ["paid"]]}')
+        with self.assertRaises(SystemExit):
+            app.settings({"IVN_LIBRARY_APP": APP, "IVN_SHOPS_FILE": self.file, "IVN_LOCAL": "1",
+                          "IVN_LOCAL_LIBRARY_KEYS": str(bad)})
+
+    def test_the_local_secret_is_readable_by_this_user_alone(self):
+        self.assertEqual(stat.S_IMODE(os.stat(self.keys_file.with_name("library.secret")).st_mode), 0o600)
+
+    def test_local_key_signs_only_for_this_machine(self):
+        with self.assertRaises(SystemExit):
+            local_key.sign(self.seed, APP, A)
 
 
 class Table(unittest.TestCase):

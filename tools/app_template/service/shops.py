@@ -8,7 +8,7 @@ After a shop installs the app from the App library, the shop's site sends ONE ca
 `check_key` checks the library key: our signature, by one of the two pinned public keys (L1 signs paid keys, F1 free
 keys only), for THIS app (`IVN_LIBRARY_APP`, its catalogue id) and THIS site (the key's host is the site the call
 names). Nothing else: no end date, no withdrawn list, no rate limit. Then the shop is
-stored with its secrets, and the app calls the shop back at https://<site> (its key address serves it), never at an
+stored with its secrets, and the app calls the shop back at https://<site> (http in local mode, below; its key address serves it), never at an
 address the call chooses. A second connect from the same site replaces them and keeps the old ones as the previous
 set, accepted while the shop's site moves over (the template's rotation overlap). `POST /ivendnext/disconnect` with the
 same key forgets the shop. On every other call the site names itself (`X-iVendNext-Site`), and the call is checked with
@@ -20,6 +20,11 @@ and replace its secrets; the shop's next install of the app connects it again.
 Two stores behind one small interface (`get`, `put`, `delete`, `sites`, and `claim`: a call's short hold on a name,
 which every copy of the app sees, so two copies never do the same work at once): a JSON file (`IVN_SHOPS_FILE`: tests, your
 laptop, your own server) and, on CitiXsys hosting, the app's own encrypted table (`IVN_SHOPS_TABLE`, `dynamo.py`).
+
+LOCAL MODE (`IVN_LOCAL=1`, with the file store only): a shop on this machine — `localhost`, `<name>.localhost`,
+`127.0.0.1` or `[::1]`, with a port, as a local bench serves it — may connect, and the app calls it back over plain
+http. `IVN_LOCAL_LIBRARY_KEYS` names a JSON file of public keys you made (`local_key.py`) that may sign a key for such a
+shop, and for no other. Every other site keeps https and our two pinned keys; the table refuses local mode.
 """
 
 from __future__ import annotations
@@ -44,6 +49,7 @@ CONNECT, DISCONNECT, SITE_HEADER = "/ivendnext/connect", "/ivendnext/disconnect"
 PAYLOAD_MAX, SECRETS_MAX, NAME_MAX, VALUE_MAX = 1024, 100, 200, 2048
 CLAIM_MARK = "|"       # in a claim's name (``claim``), never in a site's: a claim is never taken for a shop
 SITE = re.compile(r"[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+")
+LOCAL_SITE = re.compile(r"((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*localhost|127\.0\.0\.1|\[::1\])(:[0-9]{1,5})?")
 _B64U = re.compile(r"[A-Za-z0-9_-]+")
 
 
@@ -65,9 +71,37 @@ def _b64u(text: str) -> bytes | None:
 
 
 def site_of(value) -> str | None:
-    """A site's key address: lower case, no port, no path. None for anything else."""
+    """A site's key address: lower case, no path, no port (but a shop on this machine's). None for anything else.
+    A name on this machine only ever has a record when local mode connected it (``connect``)."""
     s = (value or "").strip().lower() if isinstance(value, str) else ""
-    return s if len(s) <= 253 and SITE.fullmatch(s) else None
+    return s if len(s) <= 253 and (SITE.fullmatch(s) or LOCAL_SITE.fullmatch(s)) else None
+
+
+def is_local(site: str) -> bool:
+    """A shop on this machine: called back over plain http, in local mode only."""
+    return LOCAL_SITE.fullmatch(site or "") is not None
+
+
+def local_mode(env) -> bool:
+    return (env.get("IVN_LOCAL") or "").strip() == "1"
+
+
+def local_keys(path: str) -> dict:
+    """The public keys in ``IVN_LOCAL_LIBRARY_KEYS``: {"<kid>": ["<base64 public key>", ["paid", "free"]]}."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            raw = json.load(f)
+        keys = {kid: (pub, frozenset(kinds)) for kid, (pub, kinds) in raw.items()}
+    except (OSError, ValueError, TypeError, AttributeError) as e:
+        raise SystemExit(f"IVN_LOCAL_LIBRARY_KEYS: cannot read {path}: {e}")
+    try:
+        good = all(len(base64.b64decode(pub, validate=True)) == 32 and kinds <= {"paid", "free"}
+                   for pub, kinds in keys.values())
+    except (binascii.Error, ValueError, TypeError):
+        good = False
+    if not good:
+        raise SystemExit(f"IVN_LOCAL_LIBRARY_KEYS: {path} is not a file local_key.py made")
+    return keys
 
 
 def check_key(line, app: str, site: str, keys: dict | None = None) -> dict:
@@ -116,9 +150,15 @@ def connect(store, app: str, header_site, body: dict, keys: dict | None = None) 
     if not isinstance(body, dict):
         raise Refused("bad_request", 400)
     secrets = _secrets(body.get("secrets"))
+    site = site_of(header_site)
+    local = bool(site) and is_local(site)
+    if local and not getattr(store, "local", False):    # a shop on this machine connects in local mode only
+        raise Refused("bad_request", 400)
+    if local and getattr(store, "local_keys", None):
+        keys = {**(keys or LIBRARY_KEYS), **store.local_keys}
     site, payload = _site_and_key(header_site, body, app, keys)
     old = store.get(site)
-    record = {"site": site, "url": f"https://{site}", "secrets": secrets,
+    record = {"site": site, "url": f"{'http' if local else 'https'}://{site}", "secrets": secrets,
               "previous": (old or {}).get("secrets") or {}, "key_id": payload["id"], "kind": payload["kind"],
               "connected": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
     store.put(site, record)
@@ -129,6 +169,9 @@ def disconnect(store, app: str, header_site, body: dict, keys: dict | None = Non
     """Forget the shop the key names (the same key check as connect)."""
     if not isinstance(body, dict):
         raise Refused("bad_request", 400)
+    site = site_of(header_site)
+    if site and is_local(site) and getattr(store, "local", False) and getattr(store, "local_keys", None):
+        keys = {**(keys or LIBRARY_KEYS), **store.local_keys}
     site, _ = _site_and_key(header_site, body, app, keys)
     store.delete(site)
     return {"disconnected": site}
@@ -159,8 +202,9 @@ def secrets_for(record: dict | None, name: str) -> list[bytes]:
 class FileStore:
     """The shops in one JSON file (tests, a laptop, your own server). Written whole, through a temporary file."""
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, local: bool = False, local_keys: dict | None = None):
         self.path, self._lock = path, threading.Lock()
+        self.local, self.local_keys = local, local_keys or {}
 
     def _read(self) -> dict:
         try:
@@ -208,10 +252,16 @@ class FileStore:
 
 
 def open_store(env) -> object:
-    """The table on CitiXsys hosting (``IVN_SHOPS_TABLE``), else the file (``IVN_SHOPS_FILE``)."""
+    """The table on CitiXsys hosting (``IVN_SHOPS_TABLE``), else the file (``IVN_SHOPS_FILE``), in local mode or not."""
+    local = local_mode(env)
+    if local and (env.get("IVN_SHOPS_TABLE") or "").strip():
+        raise SystemExit("IVN_LOCAL is for your laptop: it never runs with IVN_SHOPS_TABLE (hosting)")
+    if not local and (env.get("IVN_LOCAL_LIBRARY_KEYS") or "").strip():
+        raise SystemExit("IVN_LOCAL_LIBRARY_KEYS is read in local mode only: set IVN_LOCAL=1 too")
     if (env.get("IVN_SHOPS_TABLE") or "").strip():
         import dynamo
         return dynamo.TableStore(env["IVN_SHOPS_TABLE"].strip(), env.get("AWS_REGION") or env.get("AWS_DEFAULT_REGION"))
     if (env.get("IVN_SHOPS_FILE") or "").strip():
-        return FileStore(env["IVN_SHOPS_FILE"].strip())
+        path = (env.get("IVN_LOCAL_LIBRARY_KEYS") or "").strip()
+        return FileStore(env["IVN_SHOPS_FILE"].strip(), local, local_keys(path) if path else None)
     raise SystemExit("IVN_LIBRARY_APP is set but no store is: set IVN_SHOPS_TABLE (hosting) or IVN_SHOPS_FILE")

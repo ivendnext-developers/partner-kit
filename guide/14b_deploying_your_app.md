@@ -43,6 +43,8 @@ The template does all eight. Replace its `core.py` with your logic and keep the 
    IVN_POINT_SECRET=any-long-random-string docker compose up --build
    ```
 
+   For many shops against a shop's site on your own machine (`http://shop.localhost:8000`, say), use the template's local mode, `IVN_LOCAL=1` ([the template's README](../tools/app_template/README.md#local-mode-many-shops-on-your-laptop)).
+
 3. **Call it the way the till does** with the stand-in caller (`tools/standin_caller/`), which signs a call and judges the answer as the remote till key does.
 4. **Check the settings file and the Dockerfile:**
 
@@ -132,7 +134,7 @@ An app listed in the App library is installed by shops you have never met. Each 
 
 ⚠ The site connects by itself only to an app hosted at an `*.ivendnext.app` address and installed from the App library. For an app on your own server, or one delivered on a customer's *Made for you* shelf, the shop's secrets reach you by hand, and you run the template for that one shop (`IVN_POINT_SECRET`).
 
-To switch the template to many shops, set `IVN_LIBRARY_APP` to your app's id in the App library, give it a store (`IVN_SHOPS_FILE`, or `"shops": true` in `app.json` on CitiXsys hosting, which makes your app its own encrypted table), and name your till key in `app.py` (`KEY`). Sample [S22](../samples/s22_customer_loyalty/README.md) runs this way: one service for every shop, with a feed poll for each.
+To switch the template to many shops, set `IVN_LIBRARY_APP` to your app's id in the App library, give it a store (`IVN_SHOPS_FILE`, or `"shops": true` in `app.json` on CitiXsys hosting, which makes your app its own encrypted table), and name your till key in `app.py` (`KEY`). On your laptop, `IVN_LOCAL=1` lets a shop's site on your own machine connect with a key you sign yourself ([local mode](../tools/app_template/README.md#local-mode-many-shops-on-your-laptop)). Sample [S22](../samples/s22_customer_loyalty/README.md) runs this way: one service for every shop, with a feed poll for each.
 
 **Technical notes**
 
@@ -142,7 +144,7 @@ To switch the template to many shops, set `IVN_LIBRARY_APP` to your app's id in 
 | `POST /ivendnext/disconnect` | the same header; body `{"key": "IVN1-…", "site": "<site>"}` | `200 {"disconnected": "<site>"}`, or the refusals above |
 | every other call | `X-iVendNext-Site: <site>` beside the signature headers | the call's own answer; `401` for a site it does not know or a signature that is not that shop's |
 
-- **`<site>`** is the shop's key address, as the App library shows it (*This site's key address*), in lower case. The header and the body name the same one, and so does the key's `host`. Your app calls the shop back at `https://<site>`, never at an address the call names.
+- **`<site>`** is the shop's key address, as the App library shows it (*This site's key address*), in lower case. The header and the body name the same one, and so does the key's `host`. Your app calls the shop back at `https://<site>`, never at an address the call names. The one exception is the template's local mode (`IVN_LOCAL=1`, never on hosting): a shop on your own machine (`localhost`, `<name>.localhost`, `127.0.0.1` or `[::1]`) is named with its port and called back at `http://<site>`.
 - **The secrets' names** are the install's own: a till key's secret is `<app>:<key>`, a Desk action's service `<app>:sub:<key>`, a webhook's its name. An integration user's key is named by this contract, since the install makes none today: `user:<email>`, with the value `<api key>:<api secret>`. At most 100, each name up to 200 characters and each value up to 2,048, and the whole call within your app's body limit (the template's is 64 KB).
 - **The key check** is `tools/app_template/service/shops.py` `check_key`: the line starts `IVN1-`, its payload is the App library's key (`typ` `applib-key`, `v` 1), its `kid` is one of the two pinned keys and that key may sign its `kind` (`L1` paid keys, `F1` free keys only), its Ed25519 signature verifies, its `app` is `IVN_LIBRARY_APP` and its `host` is the site. The end date and the withdrawn list are not checked: the site checked both at install.
 - **Rotation:** a second connect keeps the shop's previous secrets, and a call signed with either is accepted, so the overlap is one connect long. A third connect drops the first set.
