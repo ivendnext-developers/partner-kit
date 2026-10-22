@@ -38,6 +38,10 @@ class Settings(unittest.TestCase):
     def test_a_non_secret_name_needs_no_flag_and_a_secret_one_passes_when_marked(self):
         self.assertEqual(bad(env=[{"name": "LOG_LEVEL"}, {"name": "DB_PASSWORD", "secret": True, "required": True}]), [])
 
+    def test_canary_local_mode_is_never_a_hosting_setting(self):
+        for name in ("IVN_LOCAL", "IVN_LOCAL_LIBRARY_KEYS"):
+            self.assertTrue(any("never for hosting" in e for e in bad(env=[{"name": name}])), name)
+
     def test_not_an_object(self):
         self.assertEqual(V.check_settings([]), ["app.json is not a JSON object"])
 

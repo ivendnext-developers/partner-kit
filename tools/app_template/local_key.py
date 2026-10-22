@@ -31,10 +31,13 @@ import shops  # noqa: E402
 KID = "LOCAL"       # never one of the pinned kids (L1, F1)
 
 
-def keygen(out: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]:
+def keygen(out: pathlib.Path, force: bool = False) -> tuple[pathlib.Path, pathlib.Path]:
     out.mkdir(parents=True, exist_ok=True)
     seed, secret_file, keys_file = secrets.token_bytes(32), out / "library.secret", out / "library_keys.json"
-    fd = os.open(secret_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)      # readable by this user alone
+    if secret_file.exists() and not force:     # a new pair stops every key the old one signed: said out loud
+        raise SystemExit(f"{secret_file} exists: keys you signed with it stop working if you replace it (--force)")
+    fd = os.open(secret_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    os.chmod(secret_file, 0o600)               # readable by this user alone, an older file's mode included
     with os.fdopen(fd, "w") as f:
         f.write(base64.b64encode(seed).decode() + "\n")
     public = base64.b64encode(ed25519.public_key(seed)).decode()
@@ -60,6 +63,7 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="command", required=True)
     g = sub.add_parser("keygen", help="make a key pair for local mode")
     g.add_argument("--out", default=".local-keys", help="the folder to write it to (default .local-keys)")
+    g.add_argument("--force", action="store_true", help="replace a key pair made before (its keys stop working)")
     s = sub.add_parser("sign", help="sign a library key for a shop on this machine")
     s.add_argument("--secret", required=True, help="the library.secret keygen wrote")
     s.add_argument("--app", required=True, help="your app's id in the App library (IVN_LIBRARY_APP)")
@@ -67,7 +71,7 @@ def main(argv=None):
     s.add_argument("--kind", choices=("paid", "free"), default="paid")
     a = ap.parse_args(argv)
     if a.command == "keygen":
-        secret_file, keys_file = keygen(pathlib.Path(a.out))
+        secret_file, keys_file = keygen(pathlib.Path(a.out), a.force)
         print(f"secret: {secret_file}  (never commit it)\npublic: {keys_file}  (IVN_LOCAL_LIBRARY_KEYS)")
         return 0
     seed = base64.b64decode(pathlib.Path(a.secret).read_text().strip())

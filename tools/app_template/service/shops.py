@@ -22,7 +22,7 @@ which every copy of the app sees, so two copies never do the same work at once):
 laptop, your own server) and, on CitiXsys hosting, the app's own encrypted table (`IVN_SHOPS_TABLE`, `dynamo.py`).
 
 LOCAL MODE (`IVN_LOCAL=1`, with the file store only): a shop on this machine — `localhost`, `<name>.localhost`,
-`127.0.0.1` or `[::1]`, with a port, as a local bench serves it — may connect, and the app calls it back over plain
+`127.0.0.1` or `[::1]`, with or without a port, as a local bench serves it — may connect, and the app calls it back over plain
 http. `IVN_LOCAL_LIBRARY_KEYS` names a JSON file of public keys you made (`local_key.py`) that may sign a key for such a
 shop, and for no other. Every other site keeps https and our two pinned keys; the table refuses local mode.
 """
@@ -101,6 +101,8 @@ def local_keys(path: str) -> dict:
         good = False
     if not good:
         raise SystemExit(f"IVN_LOCAL_LIBRARY_KEYS: {path} is not a file local_key.py made")
+    if set(keys) & set(LIBRARY_KEYS):
+        raise SystemExit(f"IVN_LOCAL_LIBRARY_KEYS: {path} names a pinned key ({', '.join(sorted(set(keys) & set(LIBRARY_KEYS)))})")
     return keys
 
 
@@ -221,6 +223,8 @@ class FileStore:
         os.replace(tmp, self.path)
 
     def get(self, site: str) -> dict | None:
+        if not self.local and is_local(site):     # a shop local mode connected is never served outside local mode
+            return None
         with self._lock:
             return self._read().get(site)
 
@@ -238,7 +242,7 @@ class FileStore:
 
     def sites(self) -> list[str]:
         with self._lock:
-            return sorted(n for n in self._read() if CLAIM_MARK not in n)
+            return sorted(n for n in self._read() if CLAIM_MARK not in n and (self.local or not is_local(n)))
 
     def claim(self, name: str, now: float, stale_s: float) -> bool:
         """Take ``name`` unless another call took it less than ``stale_s`` seconds ago (``TableStore.claim``)."""

@@ -65,6 +65,8 @@ def check_settings(m) -> list[str]:
             continue
         if name in seen:
             bad.append(f"{w}: {name} twice")
+        if name.startswith("IVN_LOCAL"):
+            bad.append(f"{w}: {name} is for your laptop (local mode), never for hosting")
         seen.add(name)
         for flag in ("secret", "required"):
             if flag in e and not isinstance(e[flag], bool):

@@ -378,6 +378,40 @@ class LocalMode(unittest.TestCase):
             app.settings({"IVN_LIBRARY_APP": APP, "IVN_SHOPS_FILE": self.file, "IVN_LOCAL": "1",
                           "IVN_LOCAL_LIBRARY_KEYS": str(bad)})
 
+    def test_canary_a_shop_connected_in_local_mode_is_ignored_without_it(self):
+        svc = self.local()
+        self.assertEqual(svc.connect(self.LOCAL, key=local_key.sign(self.seed, APP, self.LOCAL))[0], 200)
+        self.assertEqual(svc.press(self.LOCAL)[0], 200)
+        plain = self.serve()        # the same shops file, local mode off
+        self.assertEqual(plain.press(self.LOCAL)[0], 401)
+        self.assertEqual(shops.FileStore(self.file).sites(), [])
+        self.assertEqual(shops.FileStore(self.file, local=True).sites(), [self.LOCAL])
+
+    def test_canary_a_local_key_never_disconnects_another_site(self):
+        svc = self.local()
+        self.assertEqual(svc.connect(A)[0], 200)
+        key = make_key(host=A, kid=local_key.KID, secret=self.seed)
+        self.assertEqual(svc.post(app.DISCONNECT, {"key": key, "site": A}, site=A), (403, {"refused": "key_signature"}))
+        self.assertEqual(svc.press(A)[0], 200)
+
+    def test_canary_a_local_keys_file_never_names_a_pinned_key(self):
+        named = pathlib.Path(self.file).with_name("pinned.json")
+        named.write_text(json.dumps({"L1": json.loads(self.keys_file.read_text())[local_key.KID]}))
+        with self.assertRaises(SystemExit):
+            app.settings({"IVN_LIBRARY_APP": APP, "IVN_SHOPS_FILE": self.file, "IVN_LOCAL": "1",
+                          "IVN_LOCAL_LIBRARY_KEYS": str(named)})
+
+    def test_canary_keygen_never_replaces_a_pair_unasked(self):
+        out = self.keys_file.parent
+        before = (out / "library.secret").read_text()
+        with self.assertRaises(SystemExit):
+            local_key.keygen(out)
+        self.assertEqual((out / "library.secret").read_text(), before)
+        os.chmod(out / "library.secret", 0o644)
+        local_key.keygen(out, force=True)
+        self.assertNotEqual((out / "library.secret").read_text(), before)
+        self.assertEqual(stat.S_IMODE(os.stat(out / "library.secret").st_mode), 0o600)
+
     def test_the_local_secret_is_readable_by_this_user_alone(self):
         self.assertEqual(stat.S_IMODE(os.stat(self.keys_file.with_name("library.secret")).st_mode), 0o600)
 

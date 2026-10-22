@@ -60,9 +60,10 @@ The app does not start without one of `IVN_POINT_SECRET` or `IVN_LIBRARY_APP` (w
 
 A shop's site on your own machine (a local bench at `http://shop.localhost:8000`, say) has no certificate and a port, so the
 handshake would refuse it and the app would call it back at `https://`. With `IVN_LOCAL=1` and the file store, a shop
-on this machine (`localhost`, `<name>.localhost`, `127.0.0.1` or `[::1]`, with or without a port) connects, and the app,
-and every sample built on this template, calls it back over plain `http`. Every other site keeps `https` and the two
-pinned keys, and local mode refuses to start with the hosting's table.
+on this machine (`localhost`, `<name>.localhost`, `127.0.0.1` or `[::1]`, with or without a port) may connect, and the
+app, and every sample built on this template, calls it back over plain `http`. Every other site keeps `https` and the two
+pinned keys, and local mode refuses to start with the hosting's table. A shop connected in local mode is ignored when the
+app runs without it.
 
 The App library signs keys only for real sites, so you sign your own, with a key pair that is accepted for a shop on this
 machine and no other:
@@ -75,8 +76,27 @@ IVN_LOCAL=1 IVN_LIBRARY_APP=ivendnext_hello IVN_SHOPS_FILE=shops.local.json \
     IVN_LOCAL_LIBRARY_KEYS=.local-keys/library_keys.json python3 tools/app_template/service/app.py
 ```
 
-`.local-keys/` is in `.gitignore`. For one shop you need none of this: `IVN_POINT_SECRET`, and a sample's
-`IVN_SHOP_URL=http://localhost:8000`, already work on your laptop.
+**You send the connect yourself.** A shop's site connects by itself only to an app at an `*.ivendnext.app` address, so
+a site on your machine never calls your laptop's app. Send the call it would send, with the key you signed and the
+secrets its install made: the till key's secret (Desk shows it once, on the till key's record), named
+`<IVN_LIBRARY_APP>:<KEY>` (`KEY` in `app.py`), and, if your app calls the shop back, its user's key, named `user:<email>`
+with the value `<api key>:<api secret>` (chapter 14b, *The handshake*):
+
+```bash
+curl -s http://localhost:8080/ivendnext/connect -H 'X-iVendNext-Site: shop.localhost:8000' \
+    -H 'Content-Type: application/json' \
+    -d '{"key": "IVN1-…", "site": "shop.localhost:8000", "secrets": {"ivendnext_hello:hello": "<the till key secret>"}}'
+```
+
+The same body without `secrets`, sent to `/ivendnext/disconnect`, forgets the shop.
+
+Your key pair and the shops file hold secrets, so they never go to git: the template's own `.gitignore` (and
+`.dockerignore`) keeps `.local-keys/` and `*.local.json` out, in your copy too. Run `keygen` and the app from the folder
+that holds them. `keygen` refuses to replace a pair it made before unless you add `--force`, since every key the old pair
+signed stops working.
+
+For one shop you need none of this: `IVN_POINT_SECRET`, and a sample's `IVN_SHOP_URL=http://localhost:8000`, already
+work on your laptop.
 
 ## Technical notes
 
