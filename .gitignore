@@ -4,6 +4,7 @@
 *.env.local
 *.local.json
 *.local.md
+.local-keys/
 # Python, Node and Rust build output
 .venv
 __pycache__/

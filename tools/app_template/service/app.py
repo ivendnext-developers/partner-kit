@@ -13,6 +13,8 @@ It runs in one of two ways. Settings come from the environment, never from a fil
     IVN_LIBRARY_APP             your app's id in the App library (the key names it), e.g. ivendnext_lyl
     IVN_SHOPS_TABLE             on CitiXsys hosting: the app's own shops table (set by the hosting)
     IVN_SHOPS_FILE              elsewhere: a JSON file the app may write (tests, your laptop, your own server)
+    IVN_LOCAL                   optional — 1: a shop on this machine connects and is called back over http (shops.py)
+    IVN_LOCAL_LIBRARY_KEYS      optional, local mode only — the public keys local_key.py made
     Each call then names its shop (X-iVendNext-Site) and is checked with that shop's secret for this route,
     the one the install made for your till key: "<IVN_LIBRARY_APP>:<KEY>". A site the app does not know gets 401.
   PORT                          optional — default 8080

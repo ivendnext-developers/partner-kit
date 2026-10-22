@@ -1,0 +1,3 @@
+# local mode (README, *Local mode*): your own key pair and the shops file hold secrets; they never go to git
+.local-keys/
+*.local.json

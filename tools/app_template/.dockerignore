@@ -3,3 +3,5 @@
 tests/
 __pycache__/
 *.md
+.local-keys/
+*.local.json
