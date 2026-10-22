@@ -115,13 +115,13 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
    - **To every shop:** set `{"public": true}`, write its card and its guide, and publish the same way. Its first listing is reviewed once by us; your company is then its maker in the App library.
 
 8. **Run its service.**
-   - **On iVendNext App Hosting** (for one customer or for every shop): run it once, as a function. Each shop's site connects it by itself after the install, whether the shop took it from the public list or from its *Made for you* shelf: each publish to a shelf carries your app's own key for each of that customer's sites. Deploy it once:
+   - **On iVendNext App Hosting** (for one customer or for every shop): run it once, as a function. Each shop's site connects it by itself after the install, whether the shop took it from the public list or from its *Made for you* shelf: each publish of your app to a shelf carries its own key for that customer's sites. Deploy it once:
 
      ```bash
      python3 tools/deploy_app/deploy_app.py apps/acme_bins --zip acme-bins.zip --root . --plan starter --partner acme
      ```
 
-     It builds the package and prints the order we run. Your app answers at `https://acme-bins.ivendnext.app`, with `BLN_PREFIX=ACME BINS` and `IVN_LIBRARY_APP=acme_bins`. Each shop's site connects itself after its install. Once the shop chooses the app's user on the feed (step 4) and presses **Connect again** on your app's record, your service has that shop's user. An app that only answers presses, listed in the App library, carries no hosting charge.
+     It builds the package and prints the order we run. Your app answers at `https://acme-bins.ivendnext.app`, with `BLN_PREFIX=ACME BINS` and `IVN_LIBRARY_APP=acme_bins`. Each shop's site connects itself after its install. Once the shop chooses the app's user on the feed (step 4) and presses **Connect again** on your app's record, your service has that shop's user. An app that only answers presses, listed on the App library's public list, carries no hosting charge.
    - **On your own server, for one customer:** set the shop's three values (S2's `service/where.py` names them):
      - `IVN_POINT_SECRET`, the till key's secret, which the install shows once in Desk, on the till key's record;
      - `IVN_SHOP_URL`, the shop's address;

@@ -4,7 +4,7 @@ Versions will follow our product releases once the kit is versioned; until then 
 
 ## Unreleased
 
-- **2026-10-22 — a hosted app on a customer's *Made for you* shelf connects by itself.** Each time you publish an app hosted by CitiXsys to a customer's shelf, the shelf carries the app's own key for each of that customer's sites, so the site connects it, and later says goodbye, as it does for an app from the public list. A site can now hold several companies' shelves. Updated: guide chapter 14b, [Publish your app](site/pages/publish.md), [Host with CitiXsys or run your own](site/pages/hosting.md), [Security and the handshake](site/pages/security.md) and the [Make it your own](recipes/make_it_your_own.md) recipe (step 8: a hosted function serves a single customer too).
+- **2026-10-22 — a hosted app on a customer's *Made for you* shelf connects by itself.** Each time you publish an app hosted by CitiXsys to a customer's shelf, the shelf carries the app's own key for that customer's sites, so the site connects it, and later says goodbye, as it does for an app from the public list. A site can now hold several companies' shelves. Updated: guide chapter 14b, [Publish your app](site/pages/publish.md), [Host with CitiXsys or run your own](site/pages/hosting.md), [Security and the handshake](site/pages/security.md) and the [Make it your own](recipes/make_it_your_own.md) recipe (step 8: a hosted function serves a single customer too).
 
 - **2026-10-22 — Age-restricted sale check, live.** The App library lists it free, hosted by CitiXsys at `age-restricted-sale-check.ivendnext.app`. Eight pictures from a demo shop are in S37's README, and three in its recipe; its guide is at docs.ivendnext.com.
 
