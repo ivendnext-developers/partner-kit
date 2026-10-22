@@ -22,7 +22,8 @@ Markdown steps on each perishable item group (25% off from 5 days before expiry,
 - Before a line is priced, the item's tile or a scan can show another lot's price; the line and the receipt carry the right one.
 - A customer with their own price for the item pays it on a scanned lot, not the markdown.
 - An item's own barcode rings the lot the shop picks (Stock Settings); a scanned lot label rings that lot.
-- One set of steps per item group, one price list per site, rounded down to the currency's smallest unit.
+- One set of steps per item group, one price list per site, rounded down to the currency's smallest unit; put steps only on groups whose every item may be sold below its price (price-regulated medicines too).
+- After the first press, restart the tills before they go offline.
 - A price the shop typed for a lot is never changed.
 - A new item price takes the markdown off a scanned lot label until the next press.
 - Up to 100 lots a press, and as many as the service writes in 6 seconds; press again for the rest.

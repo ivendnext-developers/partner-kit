@@ -85,8 +85,10 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 - **A newer item price.** A new price for the item, or one dated to start later, takes the markdown off a scanned lot label from that day until the next press, which moves the lot's price to it.
 - **A price you edit on the app's row** (its note starts with the app's prefix) is the app's again at the next press: write your own note to keep it.
 - **Which lot rings.** A scanned lot label names its lot. An item's own barcode lets the shop pick the lot (Stock Settings *Pick Serial / Batch Based On*): with *Expiry*, the lot nearest its date sells first.
+- **Regulated prices.** Put steps only on item groups whose every item may be sold below its price: a group below takes its parent's steps, and a step of 0 is no step, so a group of price-regulated medicines must not sit under one with steps.
+- **The first press.** After the first press, restart the tills (or sign them in again) before they go offline: a till started before any lot had its own price keeps selling lots offline at the item's own price, above the markdown on the label.
+- **No answer in time.** If the service does not answer in time, some lots may already be marked down: press again, and a repeat writes nothing.
 - **One set of steps per item group,** one price list per site; up to 100 lots a press.
-- **A promotion still applies** on top of a lot's price.
 - **Removing the app leaves the lots' prices it wrote:** delete them first (Item Price filtered on *Note*); nothing removes them after, and while they exist the tills do not sell lot-tracked items offline.
 
 ## Technical notes

@@ -106,10 +106,11 @@ A manifest cannot write an Item Price: a save rule's derived value writes only n
 ### Bounds, stated
 
 - **Lot-tracked items only:** an item with no lots has no expiry date to read.
-- **One set of steps per item group** and one price list per site.
+- **One set of steps per item group** and one price list per site. Put steps only on item groups whose every item may be sold below its price: a group below takes its parent's steps, and a step of 0 is no step, so a group of price-regulated medicines must not sit under one with steps.
+- **The first markdown and the tills.** After the first press, restart the tills (or sign them in again) before they go offline: a till started before any lot had its own price keeps selling lots offline at the item's own price, above the markdown on the label.
+- **The service does not answer in time.** If the service does not answer in time, some lots may already be marked down: press again, and a repeat writes nothing.
 - **Which lot rings:** a scanned lot label names its lot. An item's own barcode lets the shop pick the lot (Stock Settings *Pick Serial / Batch Based On*): with *Expiry*, the lot nearest its date sells first, at its markdown.
 - **Up to 100 lots a press** (the Desk action's own limit), and as many as fit in 6 seconds.
-- **A promotion still applies** on top of a lot's price.
 - **What the till shows before it prices the line.** The item's tile and a scan show a price the till reads from any of the item's prices on the list, so on a store with lot prices it can show another lot's price; the line, the total and the receipt then carry the right one (measured on our bench; a POS request).
 - **A line from several lots.** A line the till fills from more than one lot is priced once for the whole line; scan each lot's label to ring each lot at its own price (not measured on our bench).
 - **A newer item price.** A new price for the item, or one dated to start later, takes the markdown off a scanned lot label from that day until the next press, which moves the lot's price to it.

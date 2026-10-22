@@ -54,7 +54,8 @@ import shops  # noqa: E402
 
 SUB = "markdown"        # the manifest's extension_subscriptions[].key; its secret is "<app>:sub:markdown"
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
-BUDGET_S = 6.0          # no new lot is started after this: the shop waits 10 seconds at most
+BUDGET_S = 5.0          # no new lot is started after this: the shop waits 10 seconds at most, and a hosted function's
+                        # cold start (about 2.5 s, APPF run 9) comes before this clock starts
 SWEEP = 20              # expired prices of the app's own removed per press, at most
 APP_NAME = "Mark down"
 NOT_SET_UP = (f"{APP_NAME} is not set up yet. Ask your manager to choose its user on the app's feed and press "

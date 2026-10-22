@@ -64,6 +64,8 @@ def prices():
             {"name": "ip-milk-crate", "item_code": "MILK", "uom": "Crate", "price_list": PL, "price_list_rate": 45.0},
             {"name": "ip-milk-vip", "item_code": "MILK", "uom": "Nos", "price_list": PL, "price_list_rate": 2.0,
              "customer": "VIP", "valid_from": day(-1)},                                # a customer's own price: not the base
+            {"name": "ip-milk-buy", "item_code": "MILK", "uom": "Nos", "price_list": PL, "price_list_rate": 1.0,
+             "supplier": "Dairy Co", "valid_from": day(-1)},                           # a supplier's price: not the base
             {"name": "ip-milk-later", "item_code": "MILK", "uom": "Nos", "price_list": PL, "price_list_rate": 9.0,
              "valid_from": day(3)},                                                    # not valid today: not the base
             {"name": "ip-bread", "item_code": "BREAD", "uom": "Nos", "price_list": PL, "price_list_rate": 2.5},
@@ -250,6 +252,17 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual([r["note"] for r in self.tenant.lot_rows("MILK-L2")], ["PP EXM: 25% off until it expires"] * 2)
         self.assertIn("Took the markdown off 1 lot.", out["message"]["body"])
 
+    def test_s1b_another_lots_markdown_is_never_the_base(self):
+        self.press("MILK-L2")              # L2's own rows now exist, dated today: still not the item's price for L1
+        self.press("MILK-L1")
+        self.assertEqual([r["price_list_rate"] for r in self.tenant.lot_rows("MILK-L1")], [33.75, 2.99])
+
+    def test_s7c_a_disabled_lot_has_the_apps_price_taken_off(self):
+        self.press("MILK-L1")
+        self.tenant.lots["MILK-L1"]["disabled"] = 1
+        self.press("MILK-L1")
+        self.assertEqual(self.tenant.lot_rows("MILK-L1"), [])
+
     def test_s7b_a_lot_past_its_date_is_never_marked_down(self):
         code, out = self.press("MILK-L4")
         self.assertEqual((self.tenant.writes, out["message"]["body"]), ([], "1 lot not yet due."))
@@ -288,6 +301,9 @@ class ServiceTest(unittest.TestCase):
         self.tenant.prices["shop-old"] = {"name": "shop-old", "item_code": "MILK", "uom": "Nos", "price_list": PL,
                                           "batch_no": "OLD-S", "valid_upto": day(-3), "price_list_rate": 1.0,
                                           "note": "pp exm: typed by the manager", "modified": "x"}   # the LIKE finds it
+        self.tenant.prices["live-own"] = {"name": "live-own", "item_code": "MILK", "uom": "Nos", "price_list": PL,
+                                          "batch_no": "LIVE-1", "valid_upto": day(3), "price_list_rate": 2.99,
+                                          "note": "PP EXM: 25% off until it expires", "modified": "x"}   # live: never swept
         for i in range(25):
             self.tenant.prices[f"old-{i}"] = {"name": f"old-{i}", "item_code": "MILK", "uom": "Nos", "price_list": PL,
                                               "batch_no": f"OLD-{i}", "valid_upto": day(-3), "price_list_rate": 1.0,
@@ -295,6 +311,7 @@ class ServiceTest(unittest.TestCase):
         code, out = self.press("MILK-L3")
         self.assertEqual(len([w for w in self.tenant.writes if w[0] == "delete"]), app.SWEEP)
         self.assertNotIn("shop-old", [w[1] for w in self.tenant.writes])
+        self.assertNotIn("live-own", [w[1] for w in self.tenant.writes])
         self.assertIn(f"Removed {app.SWEEP} expired markdowns.", out["message"]["body"])
 
     def test_s12_a_press_stops_in_time_and_says_how_many_are_left(self):
