@@ -13,9 +13,9 @@ How a shop and your app trust each other, from the shop's consent at install to 
 5. **Your app checks the signature before it reads the call.** It refuses a call more than five minutes old, a call signed with another shop's secret and a shop it does not know, each with `401`. The template does all of this (below).
 6. **Your app answers within the time.** A till key has 3 seconds unless the shop raises it, and 10 at most.
 7. **Your app calls the shop back** at the shop's own address, never at an address a call names, with its user's key.
-8. **At uninstall the site says goodbye** to a hosted app installed from the public list, and your app forgets the shop and its secrets. An app on a *Made for you* shelf is not told yet: disconnect that shop yourself. Before it removes anything, the site saves your app's records to a private file of the shop's; then it removes the records, fields, roles and keys the install added.
+8. **At uninstall the site says goodbye** to a hosted app it connected, from the public list or a *Made for you* shelf, and your app forgets the shop and its secrets. A shelf app the site could not connect (its shelf sent no key for that site) is not told: disconnect that shop yourself. Before it removes anything, the site saves your app's records to a private file of the shop's; then it removes the records, fields, roles and keys the install added.
 
-**Where the connect does not reach yet.** The site connects by itself only to an app hosted at an `*.ivendnext.app` address and installed from the App library's public list. An app on your own server, or an app delivered on one customer's *Made for you* shelf, is connected by hand: you put the shop's secret in your app's settings, and run the template for that one shop.
+**Where the connect does not reach.** The site connects by itself only to an app hosted at an `*.ivendnext.app` address and installed from the App library: its public list, or a customer's *Made for you* shelf, which carries your app's own key for each of that customer's sites each time you publish to it. An app on your own server is connected by hand: you put the shop's secret in your app's settings, and run the template for that one shop.
 
 ## The check, as the template does it
 

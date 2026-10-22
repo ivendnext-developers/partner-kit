@@ -115,17 +115,17 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
    - **To every shop:** set `{"public": true}`, write its card and its guide, and publish the same way. Its first listing is reviewed once by us; your company is then its maker in the App library.
 
 8. **Run its service.**
-   - **For one customer** (a *Made for you* shelf): run the service for that one shop. On your own server, or on iVendNext App Hosting as a container (chapter 14b, *Let CitiXsys host it*), set the shop's three values (S2's `service/where.py` names them):
-     - `IVN_POINT_SECRET`, the till key's secret, which the install shows once in Desk, on the till key's record;
-     - `IVN_SHOP_URL`, the shop's address;
-     - `IVN_SHOP_KEY`, the API key of the app's user.
-   - **For every shop** (listed in the App library): run it once for all of them, as a function on iVendNext App Hosting:
+   - **On iVendNext App Hosting** (for one customer or for every shop): run it once, as a function. Each shop's site connects it by itself after the install, whether the shop took it from the public list or from its *Made for you* shelf: each publish to a shelf carries your app's own key for each of that customer's sites. Deploy it once:
 
      ```bash
      python3 tools/deploy_app/deploy_app.py apps/acme_bins --zip acme-bins.zip --root . --plan starter --partner acme
      ```
 
      It builds the package and prints the order we run. Your app answers at `https://acme-bins.ivendnext.app`, with `BLN_PREFIX=ACME BINS` and `IVN_LIBRARY_APP=acme_bins`. Each shop's site connects itself after its install. Once the shop chooses the app's user on the feed (step 4) and presses **Connect again** on your app's record, your service has that shop's user. An app that only answers presses, listed in the App library, carries no hosting charge.
+   - **On your own server, for one customer:** set the shop's three values (S2's `service/where.py` names them):
+     - `IVN_POINT_SECRET`, the till key's secret, which the install shows once in Desk, on the till key's record;
+     - `IVN_SHOP_URL`, the shop's address;
+     - `IVN_SHOP_KEY`, the API key of the app's user.
 
 9. **If the customer already uses our app, move its records.** Install yours beside ours: the two prefixes never share a name. Then copy every record across:
 
@@ -142,7 +142,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
 
 ## Good to know
 
-- **A site holds one company's shelf at a time.** If another company's shelf key is pasted on your customer's site, it takes your shelf's place there. Your installed apps keep working, and their updates resume when your key is pasted again.
+- **A site can hold several companies' shelves.** Each opens with its own shelf key, and your app takes its updates only from your shelf.
 - **Hosting with us** is ordered through your account manager, with the order `deploy_app.py` prints. Each new version is a new package you send us.
 - **Taking our improvements.** Your copy changes only when you change it. At each kit release, `git fetch kit` and read what changed in the sample since you copied it (`git diff <the kit commit you copied> kit/main -- samples/s2_bins`); take what you want into your copy.
 - **A copied app keeps the extension points it uses.** A copy of a till key app is a till key app: the doors, their limits and what the shop consents to are the same as the original's (each sample's README says them).

@@ -28,7 +28,8 @@ This site helps you **build** an app. The **App library** (`https://library.iven
    - **The first time**, the listing waits for one approval by us. The command says so, with the request's id.
    - **A later version** is listed at once, unless it does more than the one before: a new outside address, an outside service with its own user, or more Desk users. That waits for one approval again.
 6. **An app made for one customer** goes to that customer's own *Made for you* shelf, with **no approval by us**. Their administrator pastes the shelf key you send them, once on their test site and once on their live site, and agrees to each install.
-   - ⚠ **For now a site holds one shelf.** If another company's shelf key is pasted on the same site, it replaces yours there. Your installed apps keep working, but their updates wait until your key is pasted again. Several shelves on one site are planned.
+   - **An app hosted by CitiXsys** carries its own key for each of the customer's sites on the shelf, so each site connects it by itself, as an app from the public list. A site the customer adds later gets its key at your next publish to that shelf.
+   - **A site can hold several shelves**, one per company: each opens with its own shelf key and shows as its own section. Your app takes its updates only from your shelf.
 
 A listed version never changes: any change, even a word, is a higher version with a changelog line.
 
