@@ -1,6 +1,6 @@
-# The feedback channel — five short forms, and which one to use
+# The feedback channel — six short forms, and which one to use
 
-If you build for an iVendNext customer and find something missing or broken, these forms are how you tell us; the fifth asks us to list an app you built. Each is a short GitHub issue form: a few questions, and for two of them a tick box for money or the till.
+If you build for an iVendNext customer and find something missing or broken, these forms are how you tell us; the fifth asks us to list an app you built, and the sixth claims a need from our roadmap. Each is a short GitHub issue form: a few questions, and for two of them a tick box for money or the till.
 
 ## Who can file
 
@@ -10,7 +10,7 @@ The forms are for **onboarded members**: an iVendNext Partner, a licensed custom
 
 **When to use it:** a piece of the kit failed, a page is wrong, you want a worked example, or no extension point meets your need.
 
-**Reference:** the five forms in this folder; guide chapter 17 ([Submitting, support, feedback](../guide/17_submit_support_feedback.md)); the extension-point catalogue (guide chapter 9, [The extension points, and how to ask for a new one](../guide/09_points_and_requests.md)).
+**Reference:** the six forms in this folder; guide chapter 17 ([Submitting, support, feedback](../guide/17_submit_support_feedback.md)); the extension-point catalogue (guide chapter 9, [The extension points, and how to ask for a new one](../guide/09_points_and_requests.md)).
 
 We do not interview builders or customers. The analysis we already hold is the evidence, and **a form is how a new need reaches us**. The forms ask only what we need to start. Anything else we need, we ask in the issue.
 
@@ -23,6 +23,7 @@ We do not interview builders or customers. The analysis we already hold is the e
 | [Sample request](sample_request.md) | You want a worked example of a pattern we do not show yet, a variant of one we do, or a manifest installed on your sandbox. | You want a new way in, not an example of an existing one → *extension-point request*. |
 | [Kit defect](kit_defect.md) | A piece of the kit does not do what its recipe says: event feed client, manifest, Wasm kit, MCP server, design kit, sign-in recipe, scale-profile kit. | The kit does what it says but you want it to do more → *extension-point request* or *sample request*. |
 | [App listing request](app_listing.md) | Your company's first app works on your sandbox: ask us to register your company and give it its first word. From then on you publish yourself with the kit's publish command (*Publish your app*). | It is for one customer only → ask through Help, with the customer's site address (it goes on that customer's private shelf, not in an issue every member reads). |
+| [Claim a need](claim_a_need.md) | You will build and sell something on our roadmap's *next* list ([What iVendNext builds](../site/pages/roadmap.md)): claim it, and once we accept the claim we do not start it for 90 days. | The need is already being built or listed (it has started, or it is answered), or is on the roadmap's *you build* list (it is yours already). |
 
 **Not sure?** Ask in this order:
 1. Did something that the page says should work fail? → *kit defect*.
@@ -57,6 +58,6 @@ Every form says the same in its own words:
 
 ## If you change a form (for the kit's code owners)
 
-Edit the Markdown form here, then run `python3 .github/scripts/issue_forms.py` from the repository's root: it rewrites the issue forms in `.github/ISSUE_TEMPLATE/`, and `--check` fails when the two differ. The forms are filed in the private `partner-feedback` repository, so copy the six generated files (the five forms and `config.yml`) into that repository's `.github/ISSUE_TEMPLATE/` unchanged and compare them byte for byte.
+Edit the Markdown form here, then run `python3 .github/scripts/issue_forms.py` from the repository's root: it rewrites the issue forms in `.github/ISSUE_TEMPLATE/`, and `--check` fails when the two differ. The forms are filed in the private `partner-feedback` repository, so copy the seven generated files (the six forms and `config.yml`) into that repository's `.github/ISSUE_TEMPLATE/` unchanged and compare them byte for byte.
 
 *Form version 2 · 2026-10-08. Shortened from the first version: each form lists what we may ask next, so nothing is lost, only moved to the issue's thread. A field you think is missing goes in a recipe-or-document-gap form.*

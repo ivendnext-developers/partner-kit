@@ -1,0 +1,36 @@
+# Generated from feedback/claim_a_need.md by .github/scripts/issue_forms.py: edit that form, then re-run the script.
+name: "Claim a need"
+description: "tell us you will build something on our *next* list, so we hold back from it"
+title: "Claim a need: "
+body:
+  - type: markdown
+    attributes:
+      value: "**Every member of the programme can read this issue**, other partners' and other customers' teams too. Never put a secret in it (no key, password, signing secret or token), no shoppers' personal data, and no customer's name unless the customer has agreed. What we may ask you next, and what happens after you send it: [`feedback/claim_a_need.md`](https://github.com/ivendnext-developers/partner-kit/blob/main/feedback/claim_a_need.md)."
+  - type: input
+    id: company
+    attributes:
+      label: "Company"
+      placeholder: "your company's name, as you registered it with the iVendNext Partner programme"
+    validations:
+      required: true
+  - type: textarea
+    id: s1
+    attributes:
+      label: "1. What you will build"
+      placeholder: "The app or the solution, who uses it, and how a shop will get it: listed in the App library for every shop, or delivered customer by customer."
+    validations:
+      required: true
+  - type: textarea
+    id: s2
+    attributes:
+      label: "2. Your market"
+      placeholder: "The countries or the region you will sell it in."
+    validations:
+      required: true
+  - type: textarea
+    id: s3
+    attributes:
+      label: "3. Where you are with it"
+      placeholder: "A design, a first version on your sandbox, a customer waiting for it."
+    validations:
+      required: false
