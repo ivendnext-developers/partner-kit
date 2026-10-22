@@ -130,7 +130,7 @@ An app listed in the App library is installed by shops you have never met. Each 
 - **Reinstalling, or pressing *Connect again*, replaces the shop's secrets.** The old ones keep working while the shop moves over, like the rotation below, until the next connect. So to stop a leaked secret working, the shop connects **twice**.
 - **What we keep on purpose:** a library key works like a password for its shop. Whoever holds it can connect as that shop and replace its secrets. The shop's next install of your app connects it again. A key that has ended or been withdrawn still connects here (only the shop's site checks those), so keep keys out of tickets and chats.
 
-⚠ The site connects by itself only to an app hosted at an `*.ivendnext.app` address and installed from the App library. For an app on your own server, or one delivered on a customer's *Made for you* shelf, the shop's secrets reach you by hand, and you run the template for that one shop (`IVN_POINT_SECRET`).
+⚠ The site connects by itself only to an app hosted at one `*.ivendnext.app` address (the only such address its manifest names) and installed from the App library: from its public list, or from a customer's *Made for you* shelf. Each time you publish a hosted app to a shelf, the shelf carries that app's own key for the customer's sites that hold the shelf's key. A site the customer adds later gets its key the next time you publish that app to the shelf; a site that installed the app before its key arrived connects once you publish a higher version and the shop takes the update. For an app on your own server, the shop's secrets reach you by hand, and you run the template for that one shop (`IVN_POINT_SECRET`).
 
 To switch the template to many shops, set `IVN_LIBRARY_APP` to your app's id in the App library, give it a store (`IVN_SHOPS_FILE`, or `"shops": true` in `app.json` on CitiXsys hosting, which makes your app its own encrypted table), and name your till key in `app.py` (`KEY`). Sample [S22](../samples/s22_customer_loyalty/README.md) runs this way: one service for every shop, with a feed poll for each.
 
@@ -158,7 +158,7 @@ When CitiXsys hosts your app, it runs in one of two ways. Your code is the same 
 
 **How to choose:** if your app does nothing until a shop calls it, it is a function. If it does anything on its own, it is a container. Sample [S18](../samples/s18_rule_guard/README.md), the members-only rule guard, runs as a function. Sample [S22](../samples/s22_customer_loyalty/README.md), customer-owned loyalty, reads the feed, so it stays a container.
 
-**A function serves many shops** (the handshake above) and keeps no secret of its own: each shop hands over its own when it connects. An app that needs its own secret runs as a container. ⚠ A shop that cannot connect itself (above), such as one your app reaches through its *Made for you* shelf, cannot hand a function its secrets: host a one-shop app as a container.
+**A function serves many shops** (the handshake above) and keeps no secret of its own: each shop hands over its own when it connects, whether it installed your app from the public list or from its *Made for you* shelf. An app that needs its own secret runs as a container.
 
 **Say which in `app.json`:** `"runs": "function"`, with `"handler"` (the file and function the call goes to) and `"package"` (the files it is made from). An app that says nothing runs as a container, exactly as before. `deploy_app` checks it and writes the package; send that file instead of an image.
 
