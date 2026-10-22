@@ -88,11 +88,13 @@ curl -s http://localhost:8080/ivendnext/connect -H 'X-iVendNext-Site: shop.local
     -d '{"key": "IVN1-…", "site": "shop.localhost:8000", "secrets": {"ivendnext_hello:hello": "<the till key secret>"}}'
 ```
 
-The same body without `secrets`, sent to `/ivendnext/disconnect`, forgets the shop.
+The same call to `/ivendnext/disconnect`, with the same `X-iVendNext-Site` header and the body without `secrets`, forgets
+the shop.
 
 Your key pair and the shops file hold secrets, so they never go to git: the template's own `.gitignore` (and
-`.dockerignore`) keeps `.local-keys/` and `*.local.json` out, in your copy too. Run `keygen` and the app from the folder
-that holds them. `keygen` refuses to replace a pair it made before unless you add `--force`, since every key the old pair
+`.dockerignore`) keeps `.local-keys/` and `*.local.json` out, but only inside your app's own folder. In your copy, run these commands from
+that folder (`python3 local_key.py …`, `python3 service/app.py`), so the files land where it ignores them; in this
+repository, its root `.gitignore` covers them. `keygen` refuses to replace a pair it made before unless you add `--force`, since every key the old pair
 signed stops working.
 
 For one shop you need none of this: `IVN_POINT_SECRET`, and a sample's `IVN_SHOP_URL=http://localhost:8000`, already

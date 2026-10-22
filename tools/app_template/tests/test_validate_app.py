@@ -41,6 +41,7 @@ class Settings(unittest.TestCase):
     def test_canary_local_mode_is_never_a_hosting_setting(self):
         for name in ("IVN_LOCAL", "IVN_LOCAL_LIBRARY_KEYS"):
             self.assertTrue(any("never for hosting" in e for e in bad(env=[{"name": name}])), name)
+        self.assertEqual(bad(env=[{"name": "IVN_LOCALE"}]), [])
 
     def test_not_an_object(self):
         self.assertEqual(V.check_settings([]), ["app.json is not a JSON object"])

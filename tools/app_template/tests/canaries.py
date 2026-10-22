@@ -81,7 +81,7 @@ CANARIES = [
      "    os.chmod(secret_file, 0o600)", "    pass",
      "test_shops.LocalMode.test_canary_keygen_never_replaces_a_pair_unasked"),
     ("local mode is never a hosting setting", "validate_app.py",
-     '        if name.startswith("IVN_LOCAL"):', "        if False:",
+     '        if name in ("IVN_LOCAL", "IVN_LOCAL_LIBRARY_KEYS"):', "        if False:",
      "test_validate_app.Settings.test_canary_local_mode_is_never_a_hosting_setting"),
     ("a store that does not answer is never a pass", "service/app.py", "            code = 503\n"
      "            return code, {\"error\": \"unavailable\"}\n", "            secrets = []\n",
