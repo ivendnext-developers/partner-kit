@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/age_check.md
 sample: samples/s37_age_check
 request: -
-verified: 2026-10-22 · laptop
+verified: 2026-10-22 · bench
 ---
 ## What you build
 An age on each restricted item group (or item), and a service that answers two extension points. At the scan of a restricted item, it shows the date of birth the customer must be born on or before, and one tap records *"18 or over"* on the sale as a sale detail. At Pay, it refuses a restricted line the recorded check does not cover: an item picked from a list, a check refused earlier, or a lower age.
