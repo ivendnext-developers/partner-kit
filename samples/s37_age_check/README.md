@@ -11,6 +11,17 @@ A shop that sells alcohol, tobacco, vapes, knives or some medicines must see the
 
 Everything else is allowed. A refund is never judged; an exchange is judged for what it sells. No date of birth or ID number is asked or kept: the sale records the age band the cashier confirmed. The recipe: [`recipes/age_check.md`](../../recipes/age_check.md).
 
+| What the shop sees (on a demo shop, 2026-10-22) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/01_install.png) |
+| The settings record *Default*: 4 hours ahead of UTC, ID asked of anyone who looks under 25 | ![](screenshots/02_settings.png) |
+| An age on the item group *Alcohol*: 18 | ![](screenshots/03_item_group_age.png) |
+| The check at Pay switched on for one store, with the shop's consent | ![](screenshots/04_check_consent.png) |
+| The scan of a bottle of wine: the date of birth to check, and the record *18 or over* | ![](screenshots/05_till_age_sheet.png) |
+| A vape picked from the catalogue: Pay refused, naming 21 | ![](screenshots/06_till_pay_refused.png) |
+| *21* entered in **Sale details** | ![](screenshots/07_till_sale_details.png) |
+| The payment screen opens | ![](screenshots/08_till_payment_screen.png) |
+
 ## What the shop does
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP AGE Settings*, a field *Customers must be at least this old* on Item Group and on Item, the sale detail *PP AGE ID Checked*, the role `PP AGE Integration`, the two services and the feed registration, the services switched off. Nothing changes at the till yet.
@@ -69,6 +80,7 @@ python3 samples/s37_age_check/service/app.py samples/s37_age_check/service/.env.
 ### What was proven where
 
 - **On the laptop:** the tests and canaries above (81 tests, 1 more that replays a recorded bench run when one is given; 49 canaries, each RED with its baseline passing).
+- **On a demo shop** (2026-10-22, iVendNext POS 2.0.0.659): installed from the App library with a free key and set up in the card's order (the scan service's item groups added in its form); at the till, a bottle of wine scanned showed the age sheet from the service hosted by CitiXsys and went on with *Add with these details*, a second bottle was asked once more (the sale's first item had no reference) and a third was not, a vape picked from the catalogue went on unasked and Pay was refused naming 21, and with *21* in Sale details the payment screen opened (the pictures above). Then voided, the day closed, uninstalled and the walk's data removed.
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344` (the programme's own clone the bench mounts), the engine at `dc65d832`; the service in its one-shop form, reading the shop with a user holding only the app's role and a read on Item Group and Item; the shop's settings UTC+2, *ask for ID if they look under* 25; a group *Alcohol* at 18 with a whisky in a group below it, *Vapes* at 21, and a knife with its own age 18 in a group of none; the scan service naming Alcohol and Vapes), **11 of 11** through the till's own calls (the scan, the check, the card push, the booking) inside one day that was closed after: the whisky's scan answered with the date of birth and *18 or over*, on the sale's first scan and again once the sale had its reference · the same sale's next whisky not asked again · a vape on that sale asked at 21 · the knife asked by its own age · a plain item, and a whisky picked from a list, calling nobody · Pay on a whisky with no check refused in the app's words, the card push refused, no sale booked · a whisky with *18 or over* allowed and booked with the check on the sale · a whisky and a vape with *18 or over* refused naming the vape and 21 · the same basket with *21* typed in Sale details allowed and booked · a plain item booked with no check · the calls the till sent hold the published contracts. Before the scenario, each read the service makes was made as the app's user and none was refused. The install, the uninstall (the schema as found; the sale detail kept, switched off) and the rights put back were checked too, and no POS day was left open. **In a browser** on that bench: as a System Manager with Item Manager, the settings record (a change saved), the age on an item group and on an item (a change saved); at the till as the cashier (`/pos?frame=terminal`, 1440 wide), a whisky scanned showed the *Age check* sheet and went on with *Add with these details* (*Sale details · 1 recorded*), a vape picked from the catalogue went on with no question, Checkout was refused (*"Line 2: PPAGE-VAPE-01 is for customers 21 or over; the sale's ID check says 18. See their ID, then enter 21 in Sale details."*), and with 21 entered in Sale details the payment screen opened; the sale was voided.
 
 ## Make it your own
