@@ -90,23 +90,21 @@ class Marks(unittest.TestCase):
 
 
 class Prescriptions(unittest.TestCase):
-    def test_in_date_is_its_kind_tested_on_or_before_today_and_valid_on_or_after_it(self):
+    def test_in_date_is_its_kind_valid_until_today_or_later(self):
         (rx,) = rxs(RX_SPECS)
         self.assertTrue(optical.in_date(rx, "Spectacles", TODAY))
         self.assertFalse(optical.in_date(rx, "Contact lenses", TODAY))
         self.assertTrue(optical.in_date(rx, "Spectacles", datetime.date(2027, 11, 1)))      # its last day
         self.assertFalse(optical.in_date(rx, "Spectacles", datetime.date(2027, 11, 2)))
-        self.assertFalse(optical.in_date(rx, "Spectacles", datetime.date(2025, 10, 31)))    # before its test
 
-    def test_a_record_without_its_kind_and_dates_is_unreadable(self):
-        for bad in ([{"name": "OPT-RX-00001"}], [{"kind": "Spectacles", "valid_until": "2027-01-01"}], None, {"data": []}):
+    def test_a_record_without_its_kind_and_valid_until_is_unreadable(self):
+        for bad in ([{"name": "OPT-RX-00001"}], [{"kind": "Spectacles"}], [{"valid_until": "2027-01-01"}], None, {"data": []}):
             with self.assertRaises(ValueError):
                 optical.prescriptions_of(bad)
 
     def test_an_unreadable_date_or_kind_counts_as_none(self):
-        got = rxs({"kind": "Spectacles", "test_date": "soon", "valid_until": "2027-01-01"},
-                  {"kind": "Glasses", "test_date": "2026-01-01", "valid_until": "2027-01-01"})
-        self.assertEqual(got, [("Spectacles", None, datetime.date(2027, 1, 1))])
+        got = rxs({"kind": "Spectacles", "valid_until": "soon"}, {"kind": "Glasses", "valid_until": "2027-01-01"})
+        self.assertEqual(got, [("Spectacles", None)])
         self.assertFalse(optical.in_date(got[0], "Spectacles", TODAY))
 
     def test_today_is_the_shops_own_day(self):
@@ -149,10 +147,10 @@ class Check(unittest.TestCase):
         ctx = context([line("ACUVUE-30", "Contact lenses")])
         self.assertIn("ran out on 10 Jan 2026", optical.on_check(ctx, needs(ctx), rxs(older, RX_CL_OLD), TODAY)["reason"])
 
-    def test_a_prescription_dated_after_today_is_not_in_date(self):
-        future = dict(RX_CL, test_date="2026-11-01")
+    def test_the_test_date_is_not_judged(self):        # Desk dates it by the site's zone; the check's day is the settings'
+        future = dict(RX_CL, test_date="2026-10-24")
         ctx = context([line("ACUVUE-30", "Contact lenses")])
-        self.assertIn("needs a contact lens", optical.on_check(ctx, needs(ctx), rxs(future), TODAY)["reason"])
+        self.assertEqual(optical.on_check(ctx, needs(ctx), rxs(future), TODAY), {"verdict": "allow"})
 
     def test_nothing_needing_one_is_allowed(self):
         ctx = context([line("FRAME-1", "Frames"), line("PLANO", "Plano lenses", n=2)])
@@ -202,6 +200,12 @@ class Context(unittest.TestCase):
                 optical.groups_of(bad, "PP OPT")
         with self.assertRaises(ValueError):
             optical.items_of([{"code": "X"}], "PP OPT")
+
+    def test_a_group_or_item_without_the_marks_field_is_refused(self):     # a bare SELECT right: names only, with a 200
+        with self.assertRaises(ValueError):
+            optical.groups_of([{"name": "A", "lft": 1, "rgt": 2}], "PP OPT")
+        with self.assertRaises(ValueError):
+            optical.items_of([{"name": "SV-LENS", "variant_of": ""}], "PP OPT")
 
 
 class Signature(unittest.TestCase):

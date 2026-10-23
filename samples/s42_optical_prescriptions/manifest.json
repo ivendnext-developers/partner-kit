@@ -5,7 +5,7 @@
  "title": "Optical prescriptions and lab orders",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "An optical store's prescriptions and lab orders, and a check at the till. A Prescription holds a customer's eye test: Spectacles or Contact lenses, the test date and Valid until, each eye's values, the distances between pupils, a contact lens's fit, notes and a scan. A Lab Order is made from a prescription (its customer and lens values copied, read only) and moves Ordered, Sent to lab, Ready to collect, Collected (or Cancelled) by a workflow; it prints as a job sheet. Each record keeps the customer's e-mail, so the shop's own Notifications can tell the customer when the glasses are ready and when an eye test is due. Item groups and items carry Sold against a prescription: Spectacles, Contact lenses or Not needed (blank: the group above). When the cashier presses Pay, the service refuses a sold line marked Spectacles or Contact lenses when the sale's customer has no prescription of that kind in date. A refund is never judged. The service reads the customer's prescriptions' kind, test date and Valid until with the app's integration user, never their values, and writes nothing. The install makes the roles PP OPT Optometrist and PP OPT Integration; the shop gives the integration role to the app's user, with a plain read on Item Group and Item. The check installs switched off; when its service is down the sale is paid and flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "An optical store's prescriptions and lab orders, and a check at the till. A Prescription holds a customer's eye test: Spectacles or Contact lenses, the test date and Valid until, each eye's values, the distances between pupils, a contact lens's fit, notes and a scan. A Lab Order is made from a prescription (its customer and lens values copied, read only) and moves Ordered, Sent to lab, Ready to collect, Collected (or Cancelled) by a workflow; it prints as a job sheet. Each record keeps the customer's e-mail, so the shop's own Notifications can tell the customer when the glasses are ready and when an eye test is due. Item groups and items carry Sold against a prescription: Spectacles, Contact lenses or Not needed (blank: the group above). When the cashier presses Pay, the service refuses a sold line marked Spectacles or Contact lenses when the sale's customer has no prescription of that kind valid until today or later. A refund is never judged. The service reads the customer's prescriptions' kind and Valid until with the app's integration user, never their values, and writes nothing. The install makes the roles PP OPT Optometrist and PP OPT Integration; the shop gives the integration role to the app's user, with a plain read on Item Group and Item. The check installs switched off; when its service is down the sale is paid and flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/opt/check"
  ],
@@ -320,7 +320,14 @@
      "label": "Customer's e-mail",
      "options": "Email",
      "fetch_from": "customer.email_id",
-     "description": "Filled from the customer, for your own eye-test reminder (a Notification on Valid until). Clear it to send none."
+     "description": "Filled from the customer when empty, for your own messages to the customer (the guide's Notifications)."
+    },
+    {
+     "fieldname": "remind",
+     "fieldtype": "Check",
+     "label": "E-mail reminders",
+     "default": "1",
+     "description": "Untick to send this prescription no reminder (your own Notification's condition: doc.remind), such as an older one after a new eye test."
     }
    ],
    "permissions": [
@@ -448,7 +455,7 @@
      "fieldtype": "Check",
      "label": "Ready to collect",
      "read_only": 1,
-     "description": "Set once, by Back from lab: a Notification on its change tells the customer."
+     "description": "Ticked by Back from lab, unticked by Send to lab (a remake): your own Notification on its change, with the condition doc.ready_to_collect in (1, \"1\"), tells the customer."
     },
     {
      "fieldname": "closed",
@@ -676,8 +683,8 @@
     {
      "role": "PP OPT Optometrist",
      "read": 1,
-     "write": 1,
-     "create": 1,
+     "write": 0,
+     "create": 0,
      "delete": 0,
      "report": 1,
      "export": 0,
@@ -732,7 +739,9 @@
     },
     {
      "state": "PP OPT Sent to lab",
-     "allow_edit": "Sales User"
+     "allow_edit": "Sales User",
+     "update_field": "ready_to_collect",
+     "update_value": "0"
     },
     {
      "state": "PP OPT Ready to collect",
@@ -791,6 +800,13 @@
     },
     {
      "state": "PP OPT Sent to lab",
+     "action": "PP OPT Cancel",
+     "next_state": "PP OPT Cancelled",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP OPT Ready to collect",
      "action": "PP OPT Cancel",
      "next_state": "PP OPT Cancelled",
      "allowed": "Sales User",
@@ -874,7 +890,7 @@
  "registered_applications": [
   {
    "name": "PP OPT Check",
-   "description": "the prescription check reads the shop's settings, item groups, items and the customer's prescriptions' kind and dates",
+   "description": "the prescription check reads the shop's settings, item groups, items and the customer's prescriptions' kind and Valid until",
    "events": [
     "PP OPT Settings"
    ]

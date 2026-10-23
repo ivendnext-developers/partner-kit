@@ -14,7 +14,7 @@ allowed at once, without reading the shop. Otherwise the shop's settings (``<pre
 and its item groups (with their ``<prefix>_needs``) are read with the app's integration key and kept one minute
 (``KEPT_TTL``), and the items' own marks are read for the codes not already kept (kept one minute), then the templates of
 variants with no mark of their own. Only when a sold line needs a prescription are the sale customer's prescriptions read:
-their kind, test date and *Valid until*, never a lens value, a note or a scan, and never kept. The service writes nothing
+their kind and *Valid until*, never a lens value, a note or a scan, and never kept. The service writes nothing
 to the shop.
 
 When the shop cannot be read, refuses the key, or has not handed over its integration user's key yet, the service
@@ -116,9 +116,9 @@ class ShopApi:
             "filters": json.dumps([["name", "in", codes]]), "limit_page_length": 0}), list)
 
     def prescriptions(self, url: str, key: str, prefix: str, customer: str) -> list:
-        """The customer's prescriptions: their kind, test date and *Valid until* only."""
+        """The customer's prescriptions: their kind and *Valid until* only."""
         return self._data(self._get(url, key, "/api/resource/" + urllib.parse.quote(f"{prefix} Prescription"), {
-            "fields": json.dumps(["kind", "test_date", "valid_until"]),
+            "fields": json.dumps(["kind", "valid_until"]),
             "filters": json.dumps([["customer", "=", customer]]), "limit_page_length": 0}), list)
 
 

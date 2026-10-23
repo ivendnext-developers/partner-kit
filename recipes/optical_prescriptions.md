@@ -6,12 +6,12 @@ An optical store keeps each customer's eye prescription, sells lenses against it
 
 **When to use it.** The store sells frames, spectacle lenses and contact lenses, and its optometrists test eyes in the store or the customer brings another practice's prescription. Many markets require a fitted prescription in date before contact lenses are sold, and a store wants the same for prescription spectacle lenses. For a medicine's prescription with fills and a pharmacist, see S39 (*Pharmacy counter rules*); for an age check, S37.
 
-**The four rules, here.** No code runs inside the shop. One address is called, your service, and only when the cashier presses Pay. The service reads three fields of a prescription (its kind, its test date and *Valid until*), never a lens value, and writes nothing. It never changes the money: it allows the sale or refuses it in the cashier's words.
+**The four rules, here.** No code runs inside the shop. One address is called, your service, and only when the cashier presses Pay. The service reads two fields of a prescription (its kind and *Valid until*), never a lens value, and writes nothing. It never changes the money: it allows the sale or refuses it in the cashier's words.
 
 ## What the optometrist, the staff and the cashier see
 
 1. The optometrist opens **Prescription**, picks the customer, chooses *Spectacles* or *Contact lenses*, and fills the test date, **Valid until** and each eye's values.
-2. The cashier rings frames and lenses for the customer and presses **Pay**. A lens line for a customer with no prescription of its kind in date is refused: *"Line 2: SV-LENS needs a spectacle prescription for this customer. Add the customer, or enter it in Desk, then Pay again."* One that ran out names its last day: *"…: the customer's contact lens prescription ran out on 18 Sep 2026. Enter the new one in Desk, then Pay again."* A frame alone, plano lenses or solutions are never asked.
+2. The cashier rings frames and lenses for the customer and presses **Pay**. A lens line for a customer with no prescription of its kind in date is refused: *"Line 2: SV-LENS needs a spectacle prescription for this customer. Add the customer, or enter it in Desk, then Pay again."* One that ran out names its last day: *"…: the customer's contact lens prescription ran out on 18 Sep 2026. Enter the new one in Desk, then Pay again."* A frame alone, solutions, or plano lenses in a group marked *Not needed* are never asked.
 3. Staff open **Lab Order**, choose the prescription (its customer and lens values come with it, read only), and fill the lab, frame, lenses, coatings, fitting heights, the store to collect at, the sale and the due date. They print the **job sheet** for the lab.
 4. The order moves by its buttons: **Send to lab**, **Back from lab** (*Ready to collect* is ticked), **Hand over** (*Closed*), or **Cancel**; **Send back to lab** for a remake. **Lab orders to chase** lists every open order, the oldest due first.
 
@@ -24,7 +24,8 @@ A record type of your own, numbered (`format:OPT-RX-{#####}`), whose required fi
 {"fieldname": "kind", "fieldtype": "Select", "options": "Spectacles\nContact lenses", "reqd": 1},
 {"fieldname": "test_date", "fieldtype": "Date", "reqd": 1, "default": "Today"},
 {"fieldname": "valid_until", "fieldtype": "Date", "reqd": 1},
-{"fieldname": "customer_email", "fieldtype": "Data", "options": "Email", "fetch_from": "customer.email_id"}
+{"fieldname": "customer_email", "fieldtype": "Data", "options": "Email", "fetch_from": "customer.email_id"},
+{"fieldname": "remind", "fieldtype": "Check", "default": "1"}
 ```
 
 then each eye's sphere, cylinder, axis, addition, prism, base and visual acuity, the distances between pupils, a contact lens's base curve and diameter, notes and a scan (an *Attach*: keep *Is Private* ticked). Permissions: your optometrist role writes; **Sales User** reads, reports and prints; your integration role reads. Add a Connections link from **Customer** (`links`, group *Optical*).
@@ -72,18 +73,18 @@ A settings record type whose record *Default* holds the shop's **hours from UTC*
    - a refund that sells nothing is allowed at once;
    - read, with the app's user: the settings *Default*, the item groups with their mark (`lft`, `rgt`), the sold items' own marks and their templates — kept a minute;
    - if no sold line is marked, allow without reading a prescription;
-   - otherwise read the sale customer's prescriptions with `fields=["kind","test_date","valid_until"]` and `filters=[["customer","=",…]]`, never kept; a record without those three fields (a bare *select* right) is a 503, never a refusal;
-   - refuse the first marked line whose kind has no prescription tested on or before the shop's today and valid until today or later, naming the last day one ran out if it did; sentences at most 140 characters.
+   - otherwise read the sale customer's prescriptions with `fields=["kind","valid_until"]` and `filters=[["customer","=",…]]`, never kept; a record without those two fields (a bare *select* right) is a 503, never a refusal, and so is an item or group answered without its mark;
+   - refuse the first marked line whose kind has no prescription valid until the shop's today or later (not the test date: Desk stamps it by the site's time zone, so a bound on it could refuse this morning's eye test), naming the last day one ran out if it did; sentences at most 140 characters.
 4. **Check it before the shop:** `python3 tools/check/check.py samples/s42_optical_prescriptions`.
 
 ## What the shop does
 
 1. **Install the app.** The check comes in switched off. The install adds the records, the mark, the workflow, the job sheet, the report and the roles.
-2. **Give the optometrist role** to whoever writes prescriptions; store staff keep **Sales User**.
+2. **Give the optometrist role and Sales User** to whoever writes prescriptions (Sales User reads customers for the picker and holds the lab order's buttons); store staff keep **Sales User**.
 3. **Give the app a user**, as in the [integration user recipe](integration_user.md): its integration role alone, its API key, and in **Role Permissions** a plain **Read** on **Item Group** and **Item**. Choose the user on the app's feed; a hosted service: press **Connect again**.
 4. **Fill in the settings** (*Default*: hours from UTC) and **mark the lens item groups**.
 5. **Switch the check on** in **Retail Extension Subscription** for the optical stores' POS Profiles (read what it is sent, tick the consent).
-6. **Tell customers, with the shop's own Notifications** (a manifest may only notify the shop's own users): *Lab Order*, **Value Change** on **Ready to collect**, to **Customer's e-mail**; *Prescription*, **Days Before** **Valid until** (30 days), to **Customer's e-mail**. Clear a prescription's e-mail to send it none; the SMS channel works the same way through the shop's SMS gateway.
+6. **Tell customers, with the shop's own Notifications** (a manifest may only notify the shop's own users; a shop's own Notification may carry a condition): *Lab Order*, **Value Change** on **Ready to collect**, condition `doc.ready_to_collect in (1, "1")` (the workflow writes the tick as text, `"0"` or `"1"`, so a bare `doc.ready_to_collect` also fires on the remake's untick), to **Customer's e-mail**; *Prescription*, **Days Before** **Valid until** (30 days), condition `doc.remind`, to **Customer's e-mail**. The e-mail is filled from the customer whenever it is empty, so untick a prescription's **E-mail reminders** to send it none; the SMS channel works the same way through the shop's SMS gateway.
 
 ## Limits
 
@@ -91,7 +92,7 @@ A settings record type whose record *Default* holds the shop's **hours from UTC*
 - **One check of three on a POS Profile**, 10 seconds together.
 - **When the service is down,** the sale is paid and flagged for review (`allow_and_flag`); offline, the same.
 - **A lab order's copied values** are its prescription's at the order's last save.
-- **A newer eye test** does not stop the older prescription's reminder: clear the older one's e-mail.
+- **A newer eye test** does not stop the older prescription's reminder: untick the older one's **E-mail reminders**.
 - **An insurer's or vision plan's share** of the payment is not this recipe's.
 
 ## Technical notes
@@ -99,4 +100,4 @@ A settings record type whose record *Default* holds the shop's **hours from UTC*
 ### What the service is sent and reads
 
 - **Each Pay, and each refund the till pays, sends** the priced basket: lines with their item groups, totals, store, till, the cashier's user, the customer and the sale's details. The consent the System Manager reads lists exactly these.
-- **The service reads** the settings, the item groups' and the items' marks, and the customer's prescriptions' kind, test date and *Valid until*; it writes nothing and keeps nothing about a prescription. That a customer has a spectacle or contact lens prescription, and until when, is health-related personal data: say so on the card, and host the service where the shop's rules allow.
+- **The service reads** the settings, the item groups' and the items' marks, and the customer's prescriptions' kind and *Valid until*; it writes nothing and keeps nothing about a prescription. That a customer has a spectacle or contact lens prescription, and until when, is health-related personal data: say so on the card, and host the service where the shop's rules allow.

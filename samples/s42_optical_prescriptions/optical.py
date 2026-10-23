@@ -5,15 +5,16 @@ The shop keeps prescriptions and lab orders as its own records (the manifest). O
 
 - **a check before payment** (``check/1``): when the cashier presses Pay, ``on_check`` refuses the sale when a line it
   sells is marked *Spectacles* or *Contact lenses* and the sale's customer has no prescription of that kind in date
-  (its test date on or before the shop's today, its *Valid until* on or after it). A walk-in customer has none, so the
-  cashier adds the customer.
+  (its *Valid until* the shop's today or later). A walk-in customer has none, so the cashier adds the customer. The test
+  date is not judged: Desk stamps it by the site's time zone and the service's day is the shop's settings', so a bound on
+  it could refuse an eye test made this morning (run 11's review).
 
 An item's mark is its own *Sold against a prescription* when set, else its template's (a variant), else the nearest item
 group above it (itself included) that has one (``need_of``). *Not needed* frees an item or a group below a marked one. A
 return is judged only for what it sells (an exchange's new lines).
 
-⛔ No answer moves money: no price, no line, no payment. The service reads three fields of a prescription (its kind, test
-date and *Valid until*), never a lens value, a note or a scan, and keeps none of them.
+⛔ No answer moves money: no price, no line, no payment. The service reads two fields of a prescription (its kind and
+*Valid until*), never a lens value, a note or a scan, and keeps none of them.
 
 ``verify`` and ``plain`` are S23's (``samples/s23_till_guard/guard.py``), copied: a defect there is a defect here.
 ``groups_of``, ``items_of`` and the nearest-group rule are S37's (``samples/s37_age_check/agecheck.py``), copied the same way.
@@ -97,11 +98,11 @@ def settings_of(record) -> dict:
 
 def groups_of(records, prefix: str) -> dict:
     """The shop's item groups: ``{name: (lft, rgt, mark)}``. Anything that is not a list of records with whole ``lft`` and
-    ``rgt`` is ``ValueError`` (the service then answers 503: nothing was judged)."""
+    ``rgt`` and the mark's field is ``ValueError`` (the service then answers 503: nothing was judged)."""
     field = field_of(prefix)
     if not isinstance(records, list) or not all(
             isinstance(r, dict) and isinstance(r.get("name"), str) and isinstance(r.get("lft"), int)
-            and isinstance(r.get("rgt"), int) for r in records):
+            and isinstance(r.get("rgt"), int) and field in r for r in records):
         raise ValueError("the shop's item groups are not a list of records")
     return {r["name"]: (r["lft"], r["rgt"], _mark(r.get(field))) for r in records}
 
@@ -109,9 +110,11 @@ def groups_of(records, prefix: str) -> dict:
 def items_of(records, prefix: str) -> dict:
     """The items' own marks and templates: ``{item_code: (mark, template or "")}``. A variant does not inherit a field
     its template gained later (the shop copies only the fields its Item Variant Settings list), so ``need_of`` falls back
-    to the template's own mark."""
+    to the template's own mark. A record without the mark's field (an app user with a bare SELECT right gets names only)
+    is ``ValueError``: a 503, never an item read as unmarked (run 11's review)."""
     field = field_of(prefix)
-    if not isinstance(records, list) or not all(isinstance(r, dict) and isinstance(r.get("name"), str) for r in records):
+    if not isinstance(records, list) or not all(
+            isinstance(r, dict) and isinstance(r.get("name"), str) and field in r for r in records):
         raise ValueError("the shop's items are not a list of records")
     return {r["name"]: (_mark(r.get(field)), r.get("variant_of") if isinstance(r.get("variant_of"), str) else "")
             for r in records}
@@ -139,13 +142,13 @@ def _date(v) -> datetime.date | None:
 
 
 def prescriptions_of(records) -> list:
-    """The customer's prescriptions as ``[(kind, test_date, valid_until)]``. The shop answers each with the three fields
-    asked for; a record without them (an app user with a bare SELECT right gets names only) is ``ValueError``, so a
-    missing right is a 503, never a refusal. A record with an unreadable date counts as none."""
+    """The customer's prescriptions as ``[(kind, valid_until)]``. The shop answers each with the two fields asked for; a
+    record without them (an app user with a bare SELECT right gets names only) is ``ValueError``, so a missing right is a
+    503, never a refusal. A record with an unreadable date counts as none."""
     if not isinstance(records, list) or not all(
-            isinstance(r, dict) and {"kind", "test_date", "valid_until"} <= set(r) for r in records):
-        raise ValueError("the customer's prescriptions are not records with their kind and dates")
-    return [(r["kind"], _date(r["test_date"]), _date(r["valid_until"])) for r in records if r["kind"] in KINDS]
+            isinstance(r, dict) and {"kind", "valid_until"} <= set(r) for r in records):
+        raise ValueError("the customer's prescriptions are not records with their kind and Valid until")
+    return [(r["kind"], _date(r["valid_until"])) for r in records if r["kind"] in KINDS]
 
 
 def today_at(hours: float, now: float | None = None) -> datetime.date:
@@ -155,8 +158,8 @@ def today_at(hours: float, now: float | None = None) -> datetime.date:
 
 
 def in_date(rx: tuple, kind: str, today: datetime.date) -> bool:
-    k, tested, until = rx
-    return k == kind and tested is not None and until is not None and tested <= today <= until
+    k, until = rx
+    return k == kind and until is not None and today <= until
 
 
 def on_check(ctx: dict, needs: list, rxs: list, today: datetime.date) -> dict:
@@ -168,7 +171,7 @@ def on_check(ctx: dict, needs: list, rxs: list, today: datetime.date) -> dict:
             continue
         # 20: the whole sentence fits the till's 140 on line 500
         n, item, word = line.get("line_no") or i + 1, plain(line["item_code"], 20), WORDS[kind]
-        ended = [u for k, _t, u in rxs if k == kind and u is not None and u < today]
+        ended = [u for k, u in rxs if k == kind and u is not None and u < today]
         if ended:
             d = max(ended)
             text = (f"Line {n}: {item}: the customer's {word} prescription ran out on {d.day} {d:%b %Y}. "

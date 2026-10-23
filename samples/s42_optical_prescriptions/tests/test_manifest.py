@@ -72,6 +72,7 @@ class ManifestTest(unittest.TestCase):
         self.assertTrue({"read", "write", "create"} <= rights(f"{P} Prescription", f"{P} Optometrist"))
         self.assertEqual(rights(f"{P} Prescription", "Sales User"), {"read", "report", "print"})
         self.assertTrue({"read", "write", "create"} <= rights(f"{P} Lab Order", "Sales User"))
+        self.assertEqual(rights(f"{P} Lab Order", f"{P} Optometrist"), {"read", "report", "print"})  # the buttons are Sales User's
         self.assertNotIn("delete", rights(f"{P} Lab Order", "Sales User"))
 
     def test_a_lab_order_copies_its_prescription_read_only(self):
@@ -83,13 +84,17 @@ class ManifestTest(unittest.TestCase):
             self.assertEqual(f.get("read_only"), 1, n)
             self.assertIn(f["fetch_from"].split(".", 1)[1], rx, n)          # it names a field the prescription has
 
-    def test_the_workflow_sets_ready_once_and_closed_at_the_end(self):
+    def test_the_workflow_ticks_ready_at_the_store_unticks_it_on_a_remake_and_closes_at_the_end(self):
         (wf,) = MANIFEST["workflows"]
-        sets = {s["state"][len(P) + 1:]: s.get("update_field") for s in wf["states"]}
-        self.assertEqual(sets, {"Ordered": None, "Sent to lab": None, "Ready to collect": "ready_to_collect",
-                                "Collected": "closed", "Cancelled": "closed"})
+        sets = {s["state"][len(P) + 1:]: (s.get("update_field"), s.get("update_value")) for s in wf["states"]}
+        self.assertEqual(sets, {"Ordered": (None, None), "Sent to lab": ("ready_to_collect", "0"),
+                                "Ready to collect": ("ready_to_collect", "1"), "Collected": ("closed", "1"),
+                                "Cancelled": ("closed", "1")})
         self.assertTrue(all(t["allow_self_approval"] == 1 for t in wf["transitions"]))   # whoever made the order moves it
-        self.assertFalse(any(s.get("update_field") == "ready_to_collect" and s.get("update_value") != "1" for s in wf["states"]))
+        moves = {(t["state"][len(P) + 1:], t["next_state"][len(P) + 1:]) for t in wf["transitions"]}
+        self.assertTrue({("Ready to collect", "Sent to lab"), ("Ready to collect", "Cancelled"),
+                         ("Ordered", "Cancelled"), ("Sent to lab", "Cancelled")} <= moves)   # a remake; an order never collected
+        self.assertEqual({t["allowed"] for t in wf["transitions"]} | {s["allow_edit"] for s in wf["states"][:3]}, {"Sales User"})
         (rep,) = MANIFEST["reports"]
         self.assertEqual(rep["filters"], [["closed", "=", 0]])
         for f in ("ready_to_collect", "closed"):

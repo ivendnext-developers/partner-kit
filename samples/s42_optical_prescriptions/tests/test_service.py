@@ -186,6 +186,10 @@ class OneShop(unittest.TestCase):
         self.api.rx_by[(URL, "Ana Lopez")] = [{"name": "OPT-RX-00001"}]     # a bare SELECT right: names only
         self.assertEqual(self.check(context())[0], 503)
 
+    def test_items_without_their_mark_are_a_503_not_unmarked(self):
+        self.api.items_by[URL] = [{"name": i["name"], "variant_of": i.get("variant_of")} for i in ITEMS]   # names only
+        self.assertEqual(self.check(context([line("SUN-RX", "Frames")], customer="Walk In"))[0], 503)
+
     def test_an_item_the_shop_does_not_return_is_a_503(self):
         self.assertEqual(self.check(context([line("NEW-LENS", "Spectacle lenses")]))[0], 503)
 
@@ -329,11 +333,11 @@ class ShopApi(unittest.TestCase):
         self.assertEqual((json.loads(a["fields"]), json.loads(a["filters"]), a["limit_page_length"]),
                          (["name", "pp_opt_needs", "variant_of"], [["name", "in", ["SV-LENS"]]], "0"))
 
-    def test_reads_only_three_fields_of_the_customers_prescriptions(self):
+    def test_reads_only_two_fields_of_the_customers_prescriptions(self):
         self.assertEqual(self.api.prescriptions(self.url, "k:s", "PP OPT", "Ana Lopez"), [RX_SPECS])
         a = self.args()
         self.assertEqual((json.loads(a["fields"]), json.loads(a["filters"]), a["limit_page_length"]),
-                         (["kind", "test_date", "valid_until"], [["customer", "=", "Ana Lopez"]], "0"))
+                         (["kind", "valid_until"], [["customer", "=", "Ana Lopez"]], "0"))
 
     def test_a_refusal_or_an_answer_that_is_not_records_is_unreadable(self):
         for prefix in ("LOCKED", "LIST"):
