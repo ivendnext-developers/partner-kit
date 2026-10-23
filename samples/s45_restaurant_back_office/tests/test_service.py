@@ -209,10 +209,10 @@ class ServiceTest(unittest.TestCase):
                            "items": [{"item_code": "BURGER", "qty": 1, "stock_qty": 1, "net_amount": 80}]})
         code, out = self.issue(shop, clock=Clock(step=3.0))
         self.assertIn("press Issue ingredients again", out["message"]["body"])
-        got = {i["posting_date"]: i["status"] for i in shop.issues.values()}
-        self.assertEqual(got, {"2026-10-21": "Issued", "2026-10-22": "Pending"})       # oldest day first, both claimed
+        self.assertEqual([i["posting_date"] for i in shop.issues.values()], ["2026-10-21"])     # oldest day first
         self.issue(shop)
-        self.assertEqual(({i["status"] for i in shop.issues.values()}, len(shop.entries)), ({"Issued"}, 2))
+        self.assertEqual(({i["status"] for i in shop.issues.values()}, len(shop.issues), len(shop.entries)),
+                         ({"Issued"}, 2, 2))
 
     def test_i14b_a_sale_whose_lines_left_two_stores_is_issued_at_both_though_the_time_runs_out(self):
         shop = fs.FakeTenant(sales=[{"name": "S7", "posting_date": "2026-10-22", "posting_time": "12:00:00", "owner": "ana@x",
@@ -387,7 +387,7 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((fc["food_sales"], fc["theoretical_cost"], fc["actual_cost"]), (187, 8, 16))
         self.assertIn("% actual", out["message"]["body"])
 
-    def test_f1a_sales_still_short_count_once_their_ingredients_are_off_stock(self):
+    def test_f1a_a_day_still_short_counts_its_sales(self):
         shop = fs.FakeTenant()
         self.issue(shop)
         shop.issues["SHORT"] = {"name": "SHORT", "company": fs.CO, "status": "Short", "posting_date": "2026-10-22",
@@ -395,7 +395,7 @@ class ServiceTest(unittest.TestCase):
         shop.foodcosts["FC-3"] = {"name": "FC-3", "company": fs.CO, "store": fs.STORE, "from_date": "2026-10-22",
                                   "to_date": "2026-10-22", "modified": "m"}
         self.press(self.svc(shop), "/press/foodcost", "PP RBO Food Cost", ["FC-3"])
-        self.assertEqual(shop.foodcosts["FC-3"]["food_sales"], 187)
+        self.assertEqual(shop.foodcosts["FC-3"]["food_sales"], 687)        # its food was eaten: the count finds it
 
     def test_f1b_a_desk_copy_is_the_shops_own_and_an_entry_from_before_a_reinstall_is_the_apps(self):
         shop = fs.FakeTenant()

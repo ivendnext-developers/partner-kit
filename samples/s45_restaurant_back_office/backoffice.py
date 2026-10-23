@@ -233,23 +233,38 @@ def group_lines(sales: list[dict], lines: list[dict], items: dict, profile_store
     return out
 
 
+def sharing_sales(groups: dict) -> list[list]:
+    """The groups' keys in sets a press writes together, oldest day first: the store-days that share a sale (one whose
+    lines left two stores) are one set, so a press never claims a sale at one store and stops before the other."""
+    order = sorted(groups, key=lambda k: (k[1], k[0]))
+    owner, sets = {}, []
+    for key in order:
+        joined = [x for x in sets if any(owner.get(s) is x for s in groups[key]["sales"])]
+        mine = [key] + [k for x in joined for k in x]
+        sets = [x for x in sets if all(x is not y for y in joined)] + [mine]
+        for k in mine:
+            for s in groups[k]["sales"]:
+                owner[s] = mine
+    return sorted((sorted(x, key=order.index) for x in sets), key=lambda x: order.index(x[0]))
+
+
 def need_of(group: dict, items: dict, boms: dict) -> tuple[dict, list]:
     """What a group's dishes took from stock: ``({part: quantity}, notes)``. Returned lines (a negative quantity) take
     nothing back: the food was made."""
-    need, notes = {}, []
+    need, notes, dishes = {}, [], []
     for ln in group["lines"]:
         if ln["qty"] <= 0:
             continue
         if not ln["has_recipe"]:        # a dish rung before its recipe was made: its sale is taken, so say so
-            note = f"{ln['item_code']}: no recipe"
-            if not (items.get(ln["item_code"]) or {}).get("is_stock_item") and note not in notes:
-                notes.append(note)
+            note = f"{ln['item_code']}: sold with no recipe"
+            if not (items.get(ln["item_code"]) or {}).get("is_stock_item") and note not in dishes:
+                dishes.append(note)
             continue
         got, why = parts_of(ln["item_code"], ln["qty"], items, boms)
         for k, v in got.items():
             need[k] = need.get(k, 0.0) + v
         notes += [w for w in why if w not in notes]
-    return {k: round(v, PLACES) for k, v in sorted(need.items()) if round(v, PLACES) > 0}, notes
+    return {k: round(v, PLACES) for k, v in sorted(need.items()) if round(v, PLACES) > 0}, notes + dishes
 
 
 def taken_before(name: str, amends: dict, claimed: set) -> bool:

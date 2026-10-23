@@ -407,26 +407,31 @@ class Service:
             self._recipes(door, {ln.get("item_code") for ln in lines if ln.get("item_code")}, items, boms)
             groups = bo.group_lines(sales, lines, items, stores, s.get("day_parts") or [], s.get("kitchen_store") or "")
             to_book = []
-            # every store-day's issue first: a sale whose lines left two stores is claimed by both before any is booked
-            for key in sorted(groups, key=lambda k: (k[1], k[0])):
-                g = groups[key]
-                try:
-                    need, notes = bo.need_of(g, items, boms)
-                    problem = "" if g["issue_from"] else NO_STORE
-                except bo.RecipeError as e:
-                    need, notes, problem = {}, [], f"Not issued: {e}. Fix the recipe, then press again."[:500]
-                body = bo.issue_doc(company, g, need, items, notes)
-                if problem:                 # claimed as Refused: a retry works it out again from the recipes and settings then
-                    body.update(status="Refused", problem=problem)
-                doc = door.create(bo.dt("Issue"), body)      # FIRST: it claims the sales
-                touched.add(doc.get("name"))
-                out["sales"] += len(g["sales"])
-                if body["status"] == "Nothing to issue":
-                    out["nothing"] += 1
-                elif body["status"] == "Refused":
-                    out["refused"] += 1
-                else:
-                    to_book.append(dict(body, name=doc.get("name")))
+            # every store-day's issue first, the store-days that share a sale together (a sale whose lines left two
+            # stores is claimed by each of them at once); no new set is started after the budget
+            for keys in bo.sharing_sales(groups):
+                if self.clock() - t0 > BUDGET_S:
+                    left = True
+                    break
+                for key in keys:
+                    g = groups[key]
+                    try:
+                        need, notes = bo.need_of(g, items, boms)
+                        problem = "" if g["issue_from"] else NO_STORE
+                    except bo.RecipeError as e:
+                        need, notes, problem = {}, [], f"Not issued: {e}. Fix the recipe, then press again."[:500]
+                    body = bo.issue_doc(company, g, need, items, notes)
+                    if problem:     # claimed as Refused: a retry works it out again from the recipes and settings then
+                        body.update(status="Refused", problem=problem)
+                    doc = door.create(bo.dt("Issue"), body)      # FIRST: it claims the sales
+                    touched.add(doc.get("name"))
+                    out["sales"] += len(g["sales"])
+                    if body["status"] == "Nothing to issue":
+                        out["nothing"] += 1
+                    elif body["status"] == "Refused":
+                        out["refused"] += 1
+                    else:
+                        to_book.append(dict(body, name=doc.get("name")))
             for issue in to_book:       # then their stock, with the time left: one not reached stays Pending (step 1)
                 if self.clock() - t0 > BUDGET_S:
                     left = True
@@ -501,10 +506,10 @@ class Service:
         counts = door.rows("Stock Reconciliation Item", ["item_code", "qty", "current_qty", "amount_difference"],
                            [["parent", "in", recos], ["warehouse", "=", store]], parent="Stock Reconciliation") \
             if recos else []
-        # the sales of the store-days whose ingredients are off stock: one still Short, Refused or Pending is not
+        # every store-day's sales: a day still Short has eaten its food (the count finds it), so it counts its sales too
         sold = sum(bo.num(r.get("food_sales")) for r in door.rows(
             bo.dt("Issue"), ["food_sales"], [["company", "=", company], ["issue_from", "=", store],
-                                             ["status", "in", ["Issued", "Nothing to issue"]], ["posting_date"] + span]))
+                                             ["posting_date"] + span]))
         codes = sorted({r["item_code"] for r in ledger + counts if r.get("item_code")})
         uoms = {r["name"]: r.get("stock_uom") for r in door.rows("Item", ["name", "stock_uom"],
                                                                  [["name", "in", codes]])} if codes else {}

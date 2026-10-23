@@ -128,8 +128,13 @@ class Groups(unittest.TestCase):
                          {"BUN": 3, "PATTY": 3, "MAYO": 0.06, "MUSTARD": 0.015, "FRIES": 0.15, "SODA": 1})
 
     def test_g7_a_dish_with_no_recipe_issues_nothing_and_is_named(self):
-        self.assertEqual(bo.need_of(self.g[("Store A", "2026-10-24")], ITEMS, BOMS), ({}, ["SALAD: no recipe"]))
+        self.assertEqual(bo.need_of(self.g[("Store A", "2026-10-24")], ITEMS, BOMS), ({}, ["SALAD: sold with no recipe"]))
         self.assertEqual(bo.need_of(self.g[("Store A", "2026-10-23")], ITEMS, BOMS)[1], [])    # a stocked soda is no dish
+
+    def test_g7c_store_days_that_share_a_sale_are_written_together(self):
+        g = {("A", "1"): {"sales": ["S1", "S7"]}, ("B", "1"): {"sales": ["S7"]}, ("A", "2"): {"sales": ["S3"]},
+             ("C", "1"): {"sales": ["S9"]}, ("D", "1"): {"sales": ["S9", "S1"]}}      # D joins C to A through S1
+        self.assertEqual(bo.sharing_sales(g), [[("A", "1"), ("B", "1"), ("C", "1"), ("D", "1")], [("A", "2")]])
 
     def test_g8_a_line_sold_in_another_unit_counts_in_the_stock_unit(self):
         sale = dict(SALES[0])

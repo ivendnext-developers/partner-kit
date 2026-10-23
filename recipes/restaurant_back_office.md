@@ -68,7 +68,7 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 - Only till sales; a returned dish takes nothing back; a dish that is itself a stock item is never opened.
 - An ingredient counted in whole units takes whole quantities: a recipe using half a bun is refused by the shop and named on the issue.
 - The kitchen ticket does not print the allergens; the till shows at most three extra item fields per theme, and the field holds 140 characters.
-- A sale older than the look-back is never taken up; a till sale cancelled after its issue keeps its issue, and one cancelled and amended in Desk is not issued again.
+- A sale older than the look-back is never taken up; a till sale cancelled after its issue keeps its issue, and one cancelled and amended in Desk, its date left as it was, is not issued again.
 - A dish rung before its recipe was made issues nothing; its issue names it.
 - A combo leaves out of its recipe the side or drink the customer chooses as an option line, or that part comes off twice; a *No onions* option takes nothing off the dish.
 - Reinstalling removes the app's issues: set *Issue sales booked from* again, or the same sales are taken up twice.
