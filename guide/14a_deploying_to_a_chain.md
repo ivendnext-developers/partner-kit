@@ -133,7 +133,7 @@ A partner ships a warranty service, with a Desk report of warranties sold (Kind 
 5. The administrator moves the 30 till profiles of the next three stores onto the theme, then the rest. The warranty role goes to each store's staff as its tills get the key.
 6. The partner later improves the terms on its server, first for Store 1 only, by reading `store` in each call's context, then for every store.
 
-### Your own server's releases skip iVendNext's switch
+### Your own server's releases skip the retailer's switch
 Your server answers every store at once. A change you release there reaches **every till on its next call**, whatever the retailer has switched on. Roll it out on your side the same way:
 - **A call from a till names the store and the till profile.** A till key's context carries `store` and `pos_profile`, and a page opened on the till carries the till profile. Turn new behaviour on for the pilot store first, in your own code. A Desk button's call and a webhook's body carry no store.
 - **Or run the new version at a new address**, and let the retailer move store by store. ⚠ A new address **clears the customer's consent** on that service until the administrator ticks it again. That is the point: the customer agrees to where its data goes.

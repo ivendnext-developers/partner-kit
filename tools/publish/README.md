@@ -1,6 +1,6 @@
 # publish — put your app in the App library from any computer
 
-One command checks your project's `library/` folder, signs it with your company's key and uploads it to the iVendNext App library (`https://library.ivendnext.app`). It runs on your laptop or on any build server, with or without GitHub. **We take only the files in `library/`: never your source code.** The developer site's [*Publish your app*](../../site/pages/publish.md) page says what happens to each version and what a shop sees.
+One command checks your project's `library/` folder, signs it with your company's key and uploads it to the iVendNext App library (`https://library.ivendnext.app`). It runs on your laptop or on any build server, with or without GitHub. **We take only the files in `library/`: never your source code.** The developer site's [*Publish your app*](../../site/pages/publish.md) page says what happens to each version and what a retailer sees.
 
 Standard library only (Python 3.10+). Exit code: 0 published (or waiting for our approval) · 1 refused · 2 usage.
 

@@ -20,20 +20,20 @@ The hint comes from the sample's stand-in AI service (no real AI model), and it 
 | 2. Pressed: the hint, in the till's own sheet (the till draws it; the service sends only words) | the till | ![](screenshots/02_hint_in_the_tills_sheet.png) |
 | 3. The key's record in Desk: enabled, message only (cut above the partner's HTTPS address and the signing secret) | Desk | ![](screenshots/03_the_key_in_desk.png) |
 
-## What the shop does
+## What the retailer does
 
-A shop that wants an AI hint key at its till does this, in the order it meets it:
+A retailer that wants an AI hint key at its till does this, in the order it meets it:
 
-1. **Choose the AI model.** The shop uses a provider it already has or pays for: a model on its own machine, or the assistant it already pays for. The sample also ships a stand-in that needs no account. Whoever runs the service sets that provider and a signing secret in the service's settings and puts the service behind **HTTPS**.
+1. **Choose the AI model.** The retailer uses a provider it already has or pays for: a model on its own machine, or the assistant it already pays for. The sample also ships a stand-in that needs no account. Whoever runs the service sets that provider and a signing secret in the service's settings and puts the service behind **HTTPS**.
 2. **Register the key in Desk.** A System Manager adds a **Retail Remote App Key** record: the partner's name, an app name, the key, its label (here *AI tip*), *message* as the only thing it may return, the service's HTTPS address (`…/point/ai_tip`), the signing secret both sides hold, and the time to answer (3 seconds unless raised, at most 10 on this record). The same System Manager ticks **the customer's consent**, pastes the consent text the sample prints (it lists what is sent) and ticks the key enabled.
 3. **Switch it on in the store.** In Desk, **POS Studio**, open the theme, **Apps** tab, tick the key and **Save**. Every till whose profile wears that theme shows the key.
 4. **Press it.** The cashier presses **AI tip** on a sale and the hint comes back in the till's own sheet. If the service is slow or down, the cashier reads the till's own sentence and the sale goes on with nothing added.
 
 **Where it shows.** At the till: the **AI tip** key among the store's keys, and the hint in the till's own sheet (its title is the key's label; the service's message is titled *Suggestion*). In Desk: the key's record. In POS Studio: the key, under **Apps**. The key works online only, and never changes a price, a total, a payment or stock. No report or print layout.
 
-**What leaves the shop.** The sample has no manifest and no integration user: it is a service the till calls, and it holds no key to the shop and writes nothing there. Two hops leave the shop:
+**What leaves the retailer's iVendNext.** The sample has no manifest and no integration user: it is a service the till calls, and it holds no key to iVendNext and writes nothing there. Two hops leave the retailer's iVendNext:
 - each press makes the till's server send the service the sale's context: the item codes, quantities and units, the store, the customer on the sale and the cashier, the sale's reference, the register's profile, the company and the currency. No prices, totals or payment details;
-- the service forwards only the item codes with quantities and the store's name to the AI provider the shop configured. The customer, the cashier and everything else stop at the service.
+- the service forwards only the item codes with quantities and the store's name to the AI provider the retailer configured. The customer, the cashier and everything else stop at the service.
 
 ## The files
 
@@ -54,7 +54,7 @@ python3 -m unittest discover -s samples/s6_ai_till_key/tests -v
 
 ## What is refused, and why
 
-The service refuses a call whose signature does not check, and a call larger than its size cap: only the shop may ask it, and only for a small answer. It sends the AI provider only what `SENT_FIELDS` lists. Its log keeps no secret and no prompt.
+The service refuses a call whose signature does not check, and a call larger than its size cap: only the retailer may ask it, and only for a small answer. It sends the AI provider only what `SENT_FIELDS` lists. Its log keeps no secret and no prompt.
 
 ## Technical notes
 
@@ -70,4 +70,4 @@ Our test bench runs the service and the stub provider on ports 8126 and 8127. Be
 
 ### Why this way (R6)
 
-*Pure core + a tiny service, provider behind one function* (picked: ~240 lines in all; a developer reads it unaided; the same shape as S1) · *a provider SDK* (rejected: ties the sample to one vendor and adds an install) · *the model call inside the shop as a hosted key* (rejected: partner Python in the tenant, and no deadline on the call).
+*Pure core + a tiny service, provider behind one function* (picked: ~240 lines in all; a developer reads it unaided; the same shape as S1) · *a provider SDK* (rejected: ties the sample to one vendor and adds an install) · *the model call inside the retailer's iVendNext as a hosted key* (rejected: partner Python in the tenant, and no deadline on the call).

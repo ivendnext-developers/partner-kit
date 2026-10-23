@@ -4,7 +4,7 @@
 
 *The manager asks the assistant to switch a promotion on and says yes; the till's price drops from R 3,999.00 to R 3,599.10, and the promotion reads Active in Desk.*
 
-An AI assistant for a store or area manager, which reads and changes the shop through **our MCP server** (`tools/mcp_server/`). This sample is for a developer who wants to put an assistant in front of iVendNext safely: it uses the manager's own key, reads only unless you allow writes, and its assistant is told to ask before every change (the server cannot see a person: see *Before you copy it*).
+An AI assistant for a store or area manager, which reads and changes iVendNext through **our MCP server** (`tools/mcp_server/`). This sample is for a developer who wants to put an assistant in front of iVendNext safely: it uses the manager's own key, reads only unless you allow writes, and its assistant is told to ask before every change (the server cannot see a person: see *Before you copy it*).
 
 **When to use it:** a manager wants to ask *"what sold in the Store 1 store yesterday?"* or say *"put the 10% off AirPods promotion on"* in plain words.
 
@@ -38,18 +38,18 @@ ASSISTANT: Done. The shop has saved the change.
 
 The promotion and the item are demo data.
 
-## What the shop does
+## What the retailer does
 
-This is for a store or area manager, with the shop's administrator and whoever runs the assistant. The assistant is the customer's own: no AI is paid for or shipped here.
+This is for a store or area manager, with the retailer's administrator and whoever runs the assistant. The assistant is the customer's own: no AI is paid for or shipped here.
 
 1. **Give the manager a key with only the rights they need.** The administrator gives the manager's **User** a role that can *read* sales, closings, stock, till profiles, items, prices and promotions and, only if the manager may change them, *write* promotions and price rows. Then, in the user's **API Access**, **Generate Keys**. The assistant can never do more than that role allows.
-2. **Choose what the assistant may do.** The person who runs it starts the server, outside the shop, with one of two profiles: `profile_read.json` to look only, or `profile_writes.json` with `--writes` to also switch a promotion on or off and change a price-list row. If the shop runs price approvals, leave **Item Price** out of the writes: a price changed here skips them.
+2. **Choose what the assistant may do.** The person who runs it starts the server, outside the retailer's iVendNext, with one of two profiles: `profile_read.json` to look only, or `profile_writes.json` with `--writes` to also switch a promotion on or off and change a price-list row. If the retailer runs price approvals, leave **Item Price** out of the writes: a price changed here skips them.
 3. **Connect the assistant** to the server. Any assistant that speaks the Model Context Protocol will do. Put HTTPS in front of the server before anyone else reaches it.
 4. **The manager speaks in plain words.** For a question, the assistant reads and answers. For a change, a well-behaved assistant says what it will do and waits for the manager's yes; the server cannot check that it did.
 
-**Where it shows.** In the manager's conversation with the assistant. A change made after a yes shows where the shop's own screens show it: the promotion reads *Active* in Desk, and the till's price drops (R 3,999.00 to R 3,599.10 in the walk above). Every confirmed change is one line on the server's audit log, with a fingerprint of the manager's key and no value. Nothing is added to the till's screens, to POS Studio or to a print layout.
+**Where it shows.** In the manager's conversation with the assistant. A change made after a yes shows where iVendNext's own screens show it: the promotion reads *Active* in Desk, and the till's price drops (R 3,999.00 to R 3,599.10 in the walk above). Every confirmed change is one line on the server's audit log, with a fingerprint of the manager's key and no value. Nothing is added to the till's screens, to POS Studio or to a print layout.
 
-**What leaves the shop.** Whatever the manager's key may read, and the assistant requests, goes to the assistant and so to the customer's AI provider: a customer's name or phone on a sale reaches it if the assistant requests it, because the server does not fence the fields it reads. The server holds no key of its own; each call carries the manager's key, and the shop's permissions for that person decide. Narrow what is readable in the manager's role in the shop.
+**What leaves the retailer's iVendNext.** Whatever the manager's key may read, and the assistant requests, goes to the assistant and so to the customer's AI provider: a customer's name or phone on a sale reaches it if the assistant requests it, because the server does not fence the fields it reads. The server holds no key of its own; each call carries the manager's key, and the retailer's permissions for that person decide. Narrow what is readable in the manager's role in the retailer's iVendNext.
 
 ## The files
 
@@ -58,14 +58,14 @@ This is for a store or area manager, with the shop's administrator and whoever r
 | `profile_read.json` | the read-only profile: 6 tools (with the words the assistant reads for each) and 3 record types |
 | `profile_writes.json` | the same plus one write — switch a promotion on or off, change a price-list row — start with `--writes` |
 | `assistant.py` | a scripted stand-in for the AI (standard library): the manager's sentence → tool calls → an answer; it asks before it confirms |
-| `tests/test_s10.py` | 19 laptop tests against a fake shop, no AI |
+| `tests/test_s10.py` | 19 laptop tests against a fake iVendNext, no AI |
 
 ## Before you copy it
 
 - It needs the server change `--profile` in `tools/mcp_server/server.py`.
 - `assistant.py` is a scripted stand-in, not an AI. No AI provider is paid for or shipped: bring your own.
 - **"It asks before every change" is the stand-in's behaviour, not the server's.** `confirm: true` is the assistant's promise that the manager said yes: the server cannot see a person. Pick an assistant that asks before it calls a tool marked as changing things, and read the audit log.
-- **A price changed through it skips any approval** the shop runs ([approvals](../../recipes/approvals.md)). Where prices need a manager's yes from someone else, leave `Item Price` out of the writes profile.
+- **A price changed through it skips any approval** the retailer runs ([approvals](../../recipes/approvals.md)). Where prices need a manager's yes from someone else, leave `Item Price` out of the writes profile.
 
 ## Run it
 
@@ -75,7 +75,7 @@ From the kit's root (the folder that holds `samples/`):
 python3 -m unittest discover -s samples/s10_ai_manager/tests -p 'test_*.py'
 ```
 
-To start the server for a staging shop (it needs a shop and the manager's key, so it needs a sandbox), run this from the kit's root:
+To start the server for a staging site (it needs a site and the manager's key, so it needs a sandbox), run this from the kit's root:
 
 ```bash
 IVN_BASE=https://shop.example python3 tools/mcp_server/server.py --http localhost:8130 --profile samples/s10_ai_manager/profile_read.json
@@ -89,11 +89,11 @@ The GIF: frames: the till (`/pos?frame=terminal`, 1440 wide), then Desk. Walked 
 
 The conversation was run by the scripted assistant on our test bench (2026-10-07), on the manager's own key through our MCP server started with `--writes`.
 
-The promotion and the item are the demo shop's own data (*UC-003*, AirPods; the walk-in is *Walk-in — Demo Retail*); both baskets were voided, so nothing was sold. The promotion was switched off again by the sample's tear-down.
+The promotion and the item are the demo site's own data (*UC-003*, AirPods; the walk-in is *Walk-in — Demo Retail*); both baskets were voided, so nothing was sold. The promotion was switched off again by the sample's tear-down.
 
 ### What was tested
 
 | Where | What |
 |---|---|
-| `tests/test_s10.py` | 19 laptop tests against a fake shop, no AI |
-| (our test bench) | the same flow against a real shop: 25 checks, passed |
+| `tests/test_s10.py` | 19 laptop tests against a fake iVendNext, no AI |
+| (our test bench) | the same flow against a real site: 25 checks, passed |

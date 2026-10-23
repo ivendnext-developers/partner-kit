@@ -13,7 +13,7 @@ git clone https://github.com/ivendnext-developers/partner-kit.git && cd partner-
 python3 -m unittest discover -s samples/s32_coupon_rules/tests -p 'test_*.py'
 ```
 
-Then read [that sample's README](samples/s32_coupon_rules/README.md): what iVendNext does, what the cashier sees, what leaves the retailer's iVendNext, and the limits. Most samples come with tests you run the same way.
+Then read [that sample's README](samples/s32_coupon_rules/README.md): what the retailer does, what the cashier sees, what leaves the retailer's iVendNext, and the limits. Most samples come with tests you run the same way.
 
 **Building with an AI assistant?** Point it at [AGENTS.md](AGENTS.md) first: it holds the rules, the commands and a prompt recipe for each way in, in [`ai/`](ai/README.md).
 

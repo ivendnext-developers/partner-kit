@@ -1,6 +1,6 @@
 # The Wasm kit — write, test and publish a sandboxed function
 
-An extension point can offer a **sandboxed function**: a small piece of logic, written in Rust and compiled to WebAssembly, that runs inside a sale. Two extension points are built for one in the POS app — the price module (P-PRICE) and the check's module leg (P-CHECK) — and each runs one only after CitiXsys has certified it and the shop's administrator has added it in Desk. This kit builds your function, checks it and runs it on your own machine, on a server host and on a browser host; a real browser and a real low-end till are not run by the kit.
+An extension point can offer a **sandboxed function**: a small piece of logic, written in Rust and compiled to WebAssembly, that runs inside a sale. Two extension points are built for one in the POS app — the price module (P-PRICE) and the check's module leg (P-CHECK) — and each runs one only after CitiXsys has certified it and the retailer's administrator has added it in Desk. This kit builds your function, checks it and runs it on your own machine, on a server host and on a browser host; a real browser and a real low-end till are not run by the kit.
 
 **When to use it:** the extension point you build for offers a sandboxed function. Outsiders never write Python inside a customer's site; logic that must run inside a sale goes in a **sandboxed function** (and data in a **manifest**).
 
@@ -24,7 +24,7 @@ The kit runs your function on two hosts: the server host `vendor/host.py` and th
 
 ## What is refused, and why
 
-- **The kit does not certify.** A partner never vouches for its own module. **We** run this same harness on a submitted module and sign its sha256 with our module certificate key (built; by hand until the submission route and its automatic intake exist — guide chapter 8, step 7; chapter 17). The POS app accepts a module certified with that key, which is pinned in it; the shop's administrator adds the module in Desk.
+- **The kit does not certify.** A partner never vouches for its own module. **We** run this same harness on a submitted module and sign its sha256 with our module certificate key (built; by hand until the submission route and its automatic intake exist — guide chapter 8, step 7; chapter 17). The POS app accepts a module certified with that key, which is pinned in it; the retailer's administrator adds the module in Desk.
 - **A module that already carries a meter is refused** at admission: a module's own counter is never trusted. Submit your raw build.
 - **Any trap, refusal or wrong answer** on any sample, on either host, is a refusal, named.
 - **Floats, SIMD and atomics.** A function that runs on the till may not use floating-point or SIMD instructions, because a float's result can differ between the two hosts; no function may use atomics ([`CONTRACT.md`](CONTRACT.md)). The scan reads every instruction for floats, SIMD, atomics and anything unknown. The template's JSON is integer-only for this reason. If your JSON library brings floats, move to the template's JSON or publish as server-only.
