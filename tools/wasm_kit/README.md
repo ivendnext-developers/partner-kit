@@ -38,6 +38,7 @@ The kit runs your function on two hosts: the server host `vendor/host.py` and th
 | `HOST_CONTRACT.md` | the host contract both hosts keep: input and output, validation, escaping, the host interface, the limits |
 | `template/` | the Rust template: `src/lib.rs` (host glue), `src/json.rs` (integer-only JSON — no float instruction), `src/point.rs` (**yours**; ships with a `price/1` member discount, taken after the promotions, as the worked example), `samples/samples.json` (196 parity samples in the `price/1` shape, with expected answers) |
 | `scan.py` | reads every instruction: floats, SIMD, atomics, anything unknown |
+| `tests/` | the scan's laptop tests, on modules built byte by byte (no Rust, no Node): `python3 -m unittest discover -s tools/wasm_kit/tests` |
 | `stackmeter/` | the deterministic stack bound, written into the module |
 | `meter/` | the fuel meter, written into the module |
 | `kit.py` | build · publish · parity · admit |
