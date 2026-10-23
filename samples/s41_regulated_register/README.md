@@ -1,0 +1,98 @@
+# S41 — Regulated stock register (`pp_rsr`): each market's books as data
+
+A shop selling regulated stock keeps a legal register an inspector can ask for at any time: a pharmacy's poisons and controlled-drug books, a liquor or tobacco register, a duty-free ledger. Today most keep it on paper. This app keeps it for them: **one app for any regulated stock**, whose books (which book, which items, which movements, which columns, which printed layout) are a **data set** per market and vertical. A second market, or a second vertical, is a new data set file with no code change.
+
+The first data set is **Kenya's three pharmacy books**: the Poisons Book (Rules Schedule VIII Form 16), the Prescription Book (Act s. 31(1)(b)) and the NPP Ledger Book (PPB NPP Guidelines Annex II), with the routing Kenya's law asks for: a supply on prescription goes to the Prescription Book, **not** the Poisons Book (s. 31(2)); every movement of a controlled drug goes to the NPP ledger as well.
+
+⚠ **Every layout here is a starting point, not certified for the country.** It is read from the instruments named in the data set, and each print says so. A partner certifies it for a market, changes it, or adds a market.
+
+**Door:** Manifest
+
+**When to use it:** the shop's law names a book and its columns, and the book must hold every sale or receipt of certain stock, in order, never edited.
+
+## The register door: what is here now, and what waits for it
+
+The book itself is a legal record: one line written in the **same save** as the sale or the receipt, numbered without a gap, with a running balance two tills cannot break, and never edited. An app installed from a manifest cannot write such a record, so the POS app carries a **register door** for it, and this app declares its books to that door. ⚠ **The door is not in the POS app yet.** Its specification is written and requested on the POS team's board.
+
+| Part | Installs | What it is |
+|---|---|---|
+| `manifest.json` | ✅ **now** | the register's own columns as fields on the Desk sale and delivery (a collapsible *Register details* section) and as the till's sale details · the role **PP RSR Register Approver** · the report *PP RSR Stock counts to watch* · the workspace *PP RSR Regulated stock register* |
+| `door_declaration.json` | ⏳ **after the door** | each book's declaration (the manifest kind `register_books`), each book's print format, a reminder before each return's due date. The shop's checker refuses the kind and the door's record types until the door is in the POS app; this app's next version (0.2.0) installs them, with what it still owes: the register's lists per book, store and period (FR-K3-04), the open-tasks cards (late, incomplete and below-zero lines, a count due after a loss, a return due), the loss report with its count, the daily-print reminder, and a purchaser's slip for a Poisons Book sale |
+
+Until the door is there, the shop's books are kept as before. Setting this app up now puts the columns on the documents, so the door's first line has them.
+
+## A data set
+
+`datasets/ke_pharmacy.json` is the whole of Kenya. A data set says:
+
+| Key | What |
+|---|---|
+| `id`, `title`, `jurisdiction`, `vertical`, `sources` | which market and trade it is, and the instruments it is read from |
+| `certified`, `notice` | `0` and the notice every print carries, until a partner certifies the layouts |
+| `details` | up to six columns of the book that are neither on the line nor the authority's: each a key, a label and a type. `own: 1` makes it this app's Desk field (`pp_rsr_<key>`) and, unless `till: 0`, a sale detail every till offers (`PP RSR <Key>`): keep the till's to what the counter fills often (Kenya: occupation, purpose, the prescriber's address) |
+| `authority` | where the authority columns come from: a prescription, a permit, a boarding pass (the till's sale details, the Desk's fields, and the dispenser's licence from a record) |
+| `books` | each book: its title, form and citation; its items (`classes` or `item_groups`); for classes, its `class_source`: the axis it reads, from an Item field or a dated table of schedules on Item (the door copies the class into the line when it writes it, so a reclassification never rewrites history); **up to three routing conditions, all of which must hold** (`=`, `!=`, `>`, `>=`, `<`, `<=`, `is set`, `is not set`, on a column of the line: the POS app's save-rule form); numbering per book and store or per drug; a running balance or none; the market's correction mode; retention in years; the medium (`system_of_record`, `printed_book`: its signed printed pages are the book, or `official_book`: printed into the authority's own book); the columns Desk may not leave empty; and its printed columns in order |
+
+A column prints one or more of the line's columns (`movement_date`, `item_name`, `qty`, `counterparty`, `authority_no`, `balance` …, the door's line) or a declared detail (`detail:occupation`), joined with ` · `. `when: "In"` or `"Out"` prints it only on receipts or only on issues (the NPP ledger's two halves); `mark: 1` leaves room for a signature on the printed page; `in_colour` prints received quantities in a colour (Kenya: red ink, s. 8.1(i)).
+
+`build.py`'s `check()` is the format: it refuses `in` (a list of classes is the book's `classes`), a fourth condition, a comparison against a date (a date is not a number to the condition form), a column the line does not have, markup or template text in any label, and the rest, each in words. `routing.py` models which books a line enters, so you can test a data set before the door is installed.
+
+## Kenya's three books
+
+| Book | Takes | Routing | Numbering · balance | Correction | Kept |
+|---|---|---|---|---|---|
+| **Poisons Book** (Form 16, 9 columns) | Part I poisons (the poisons axis) | a sale (`kind = Sale`) with **no prescription** (`authority_no is not set`) | per store · none | a single strike-through, signed (NPP Guidelines s. 8.1(j)) | 2 years (Rules r. 21) |
+| **Prescription Book** (s. 31(1)(b); no form prescribed: its four cited particulars) | the same | a sale **on prescription** (`authority_no is set`) | per store · none | the same | 2 years |
+| **NPP Ledger Book** (Annex II, 10 columns, a page per drug headed by the establishment and its address) | controlled drugs (the controlled axis) | every receipt and issue | per drug · running balance | the same | 5 years (s. 8.1) |
+
+So a prescription supply of pethidine (a Part I poison on one axis, a controlled drug on the other) enters the Prescription Book **and** the NPP ledger; a counter sale of a Part I poison enters the Poisons Book only; a transfer, an issue or a loss of a poison enters no sales book.
+
+⚠ **The two poisons books are kept as printed books.** Electronic records are cited for NPP records only (Guidelines s. 8.1): print the day's pages, sign them, and keep them as the book; each print of those two books ends with a line for that signature. ⚠ Form 16 also asks for **the purchaser's** signature, given at the sale: until this app's next version prints a slip for it, have the purchaser sign the paper book or a slip at the counter (FR-K3-11).
+
+⚠ **The classes are the shop's.** `KE Part I Poison` and `KE NPP`, and the axes `KE Poisons` and `KE Controlled`, are working names of the counter-rules app's drug schedules, read from its dated *Item Schedule* rows on Item (`pp_rxc_schedules`: `schedule`, `effective_from`), or from the Item Group's `pp_rxc_schedule` where an item has no row; the axis is the schedule's own `axis`. Rename them in the data set to the shop's own. The door refuses, at setup, a declaration naming a field or table that does not exist. ⚠ Whether every controlled drug is also a Part I poison is not cited (Kenya's narcotics Act, Cap. 245, was not read): the shop gives each drug its schedule on each axis.
+
+⚠ **One prescription per sale.** The till's sale details belong to the whole sale, so a basket holding a poison on prescription and another sold without one would put both in the Prescription Book. The counter-rules app refuses such a line (its schedule's tick *Sold in a sale of its own when not on the prescription*): tick it on the Part I poison schedule, and the cashier sells the other as a sale of its own.
+
+## What the shop does (now)
+
+1. **Install the app** (the shop's administrator). It adds the *Register details* section to the Sales Invoice and the Delivery Note, the till's sale details, the role **PP RSR Register Approver**, the report and the workspace.
+2. **Give the role** to the person responsible for the register (a pharmacist in charge, a licensee).
+3. **Tell the dispensary's cashiers** to fill the sale's details for a regulated sale (the till's sale details: occupation, purpose …). They are never required, so no other till is stopped; the counter-rules app's check before payment is what refuses an incomplete controlled sale.
+4. **Print the day's register pages** at each day's close and keep them at the store, for an outage (from the door's version on; until then, the paper book).
+
+## The files
+
+| File | What |
+|---|---|
+| `datasets/ke_pharmacy.json` | Kenya's three books, routing, columns and layouts, with their citations |
+| `layouts/register.html` | the one print template every book uses: build.py writes the book's data above it. It reads the book's lines with `ivn_rows` as the person printing may read them, 200 at a time |
+| `build.py` | the format's check, and the build of `manifest.json` and `door_declaration.json` from the data sets |
+| `routing.py` | which books a line enters, as the door decides it |
+| `tests/test_rsr.py` | the manifest and its checks; each rule of the format broken once; Kenya's routing on fixture lines; each book rendered from lines shaped as the door's line; a second data set (`tests/fixtures/liquor_one_book.json`) built and rendered with no code change |
+
+## Run it
+
+```bash
+python3 samples/s41_regulated_register/build.py
+python3 tools/check/check.py samples/s41_regulated_register
+python3 -m unittest discover -s samples/s41_regulated_register/tests -p 'test_*.py'   # the rendering tests need jinja2
+```
+
+## Limits
+
+- **No book is written or printed until the door is in the POS app.** The book prints name the door's period record type, which the shop's install refuses until it exists.
+- A print reads at most 10,000 lines (50 reads of 200) and, in a book printed a page per drug, 2,000 drugs. Print a shorter range for more.
+- A correction struck through on this print is matched within the printed range: a correction of an entry printed in an earlier range shows as a correction line only.
+- The print is printed by a signed-in person: the print readers answer nothing in a background print or an e-mail, and the print then says so rather than showing an empty book.
+- On the ERP's stock-entry path no supplier is carried, so the NPP ledger's *Received from* prints empty there; *Invoice no.* is the ERP's own log number.
+- The ledger's header shows the drug by its item name: put the strength in the name, as Annex II asks for it.
+- The workspace's links show only to someone who may read those record types: a System Manager alone sees none (on our bench, the links appeared once the user had the stock and accounts roles a register keeper has).
+- Dates print as the record holds them (`2026-10-20`). Labels are in English.
+
+## Make it your own
+
+- **Another market, or another trade:** copy `datasets/ke_pharmacy.json`, read the market's instrument, and write its books. Run `build.py` and the tests. Nothing else changes.
+- **Another prefix:** set `PREFIX`, `FPREFIX` and `ROLE` at the top of `build.py` and build again (or copy the built manifest with `tools/manifest/rename.py`).
+- **Certify a layout:** set `certified: 1` once you have checked it against the market's instrument, and change its `notice`.
+
+The register door this app declares to is requested of the POS app as `PB-4`, the regulated-stock register door; its version will be named here when it ships.

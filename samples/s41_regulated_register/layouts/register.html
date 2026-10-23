@@ -1,0 +1,113 @@
+{#- One book of the regulated stock register, printed from its register period. build.py writes the book's own data
+    above this line ({% set book = … %}: its title, form, citation, notice, columns, correction mode), so every book of
+    every data set prints from this one template. The lines are read with ivn_rows, as the person printing may read
+    them: 200 a call, at most 50 calls (10,000 lines) a print, or a page, and 2,000 items in a book printed a page per
+    item. A correction never prints as a movement of its own: its book's mode says how it shows. -#}
+<style>
+  .rsr { font-family: Arial, sans-serif; font-size: 9pt; color: #111; }
+  .rsr h1 { font-size: 13pt; margin: 0; }
+  .rsr .sub { color: #444; margin: 2px 0 6px; }
+  .rsr .notice { border: 1px solid #b26b00; color: #7a4a00; padding: 3px 6px; margin: 4px 0 8px; }
+  .rsr table { width: 100%; border-collapse: collapse; }
+  .rsr th, .rsr td { border: 1px solid #555; padding: 3px 4px; vertical-align: top; text-align: left; }
+  .rsr th { background: #eee; font-weight: bold; }
+  .rsr td.no { color: #555; white-space: nowrap; }
+  .rsr td.mark { min-width: 70px; }
+  .rsr tr.struck td.cell { text-decoration: line-through; }
+  .rsr tr.note td { font-style: italic; background: #fafafa; }
+  .rsr .fine { color: #555; font-size: 8pt; }
+  .rsr .warn { color: #8a1c1c; font-weight: bold; }
+  .rsr .item-page { page-break-after: always; }
+  .rsr .item-page:last-child { page-break-after: auto; }
+</style>
+{%- macro row(l, struck) -%}
+  <tr{% if struck %} class="struck"{% endif %}>
+    <td class="no">{{ l.number|e }}</td>
+    {%- for c in book.columns -%}
+      {%- set cell = namespace(s="") -%}
+      {%- if not c.when or c.when == l.direction -%}
+        {%- for k in c.value -%}
+          {%- if l[k] is not none and l[k] != "" -%}{%- set cell.s = cell.s ~ (" · " if cell.s else "") ~ l[k] -%}{%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+      <td class="cell{% if c.mark %} mark{% endif %}"{% if book.in_colour and c.when == "In" and l.direction == "In" %} style="color: {{ book.in_colour }}"{% endif %}>{{ cell.s|e }}
+        {%- if loop.last and l.booked_late %} <span class="fine">Entered late, {{ l.entered_at|e }}.</span>{% endif -%}
+      </td>
+    {%- endfor -%}
+  </tr>
+{%- endmacro -%}
+{%- macro note(text) -%}
+  <tr class="note"><td></td><td colspan="{{ book.columns|length }}">{{ text|e }}</td></tr>
+{%- endmacro -%}
+{%- macro page(lines, item_name, cut, brought) -%}
+  {%- set seen = namespace(fixes=[]) -%}
+  {%- for l in lines if l.correction_of_number -%}{%- set seen.fixes = seen.fixes + [l] -%}{%- endfor -%}
+  <h1>{{ book.title|e }}{% if book.form %} <span class="fine">({{ book.form|e }})</span>{% endif %}</h1>
+  <div class="sub">{% if doc.establishment %}{{ doc.establishment|e }}{% if doc.establishment_address %}, {{ doc.establishment_address|e }}{% endif %} · {% endif %}{{ doc.register_store|e }}{% if item_name %} · {{ item_name|e }}{% endif %} · {{ doc.from_date|e }} to {{ doc.to_date|e }}</div>
+  <div class="fine">{{ book.data_set_title|e }}. {{ book.cite|e }}</div>
+  {%- if not book.certified %}<div class="notice">{{ book.notice|e }}</div>{% endif %}
+  <table>
+    <thead><tr><th>No.</th>{% for c in book.columns %}<th>{{ c.label|e }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {%- if book.balance and brought is not none -%}{{ note("Balance brought forward: " ~ brought ~ ".") }}{%- endif -%}
+    {%- for l in lines -%}
+      {%- if l.kind in ("Opening", "Count") -%}
+        {{ note("Entry " ~ l.number ~ ": " ~ ("opening balance " ~ l.qty if l.kind == "Opening" else "register count, " ~ ("+" if l.direction == "In" else "-") ~ l.qty) ~ (", balance " ~ l.balance if l.balance is not none else "") ~ ". Signed " ~ (l.signed_by_name or "") ~ ".") }}
+      {%- elif l.correction_of_number -%}
+        {%- set who = l.signed_by_name or "" -%}
+        {%- if book.correction == "reversing_line" -%}
+          {{ row(l, false) }}{{ note("Entry " ~ l.number ~ " reverses entry " ~ l.correction_of_number ~ (": " ~ l.correction_note if l.correction_note else "") ~ ". Signed " ~ who ~ ".") }}
+        {%- elif book.correction == "dated_note" -%}
+          {{ note("Note dated " ~ l.entry_date ~ " to entry " ~ l.correction_of_number ~ ": " ~ (l.correction_note or "entry cancelled") ~ ". " ~ who ~ " (entry " ~ l.number ~ ").") }}
+        {%- endif -%}
+      {%- else -%}
+        {%- set fix = seen.fixes|selectattr("correction_of_number", "equalto", l.number)|first -%}
+        {{ row(l, fix and book.correction == "signed_strike_through") }}
+        {%- if fix and book.correction in ("signed_strike_through", "signed_amendment") -%}
+          {{ note(("Struck through" if book.correction == "signed_strike_through" else "Amended") ~ " by entry " ~ fix.number ~ (": " ~ fix.correction_note if fix.correction_note else "") ~ ". Signed " ~ (fix.signed_by_name or "") ~ ((", the entry's author being " ~ l.dispenser_name) if l.dispenser_name and l.dispenser_name != fix.signed_by_name else "") ~ ".") }}
+        {%- endif -%}
+      {%- endif -%}
+    {%- else -%}
+      <tr><td colspan="{{ (book.columns|length) + 1 }}">No entries you may read in this period. A print sent by e-mail, in the background or through a shared link reads none: print it signed in.</td></tr>
+    {%- endfor -%}
+    </tbody>
+  </table>
+  <p class="fine">{{ lines|length }} entries.{% if cut %} <span class="warn">This print stopped at its reading limit: print a shorter date range.</span>{% endif %}
+  Retention: {{ book.retention_years|e }} years from the last entry. Corrections: {{ book.correction_words|e }}. {{ book.medium_note|e }}</p>
+  {%- if doc.chain_status %}<p class="fine">Entry chain: {{ doc.chain_status|e }}</p>{% endif -%}
+  {%- if book.medium != "system_of_record" %}<p class="fine">Kept as the book: signed ____________________ date __________</p>{% endif %}
+{%- endmacro -%}
+<div class="rsr">
+{%- if doc.book != book.ref -%}
+  <p>This layout prints the {{ book.title|e }}; this period is of {{ doc.book|e }}. Choose that book's print format.</p>
+{%- else -%}
+  {%- set where = [["book", "=", doc.book], ["register_store", "=", doc.register_store], ["entry_date", "between", [doc.from_date, doc.to_date]]] -%}
+  {%- if book.per_item_pages -%}
+    {%- set any = namespace(page=false) -%}
+    {%- set items = namespace(rows=[], more=true) -%}
+    {%- for p in range(10) if items.more -%}
+      {%- set got = ivn_rows("Retail Register State", filters=[["book", "=", doc.book], ["register_store", "=", doc.register_store]], fields=["item", "item_name"], order_by="item asc", limit=200, start=p * 200) -%}
+      {%- set items.rows = items.rows + got -%}{%- set items.more = got|length == 200 -%}
+    {%- endfor -%}
+    {%- for st in items.rows -%}
+      {%- set ns = namespace(lines=[], more=true) -%}
+      {%- for p in range(50) if ns.more -%}
+        {%- set got = ivn_rows("Retail Register Line", filters=where + [["item", "=", st.item]], fields=book.fields, order_by="number asc", limit=200, start=p * 200) -%}
+        {%- set ns.lines = ns.lines + got -%}{%- set ns.more = got|length == 200 -%}
+      {%- endfor -%}
+      {%- set before = ivn_rows("Retail Register Line", filters=[["book", "=", doc.book], ["register_store", "=", doc.register_store], ["item", "=", st.item], ["entry_date", "<", doc.from_date]], fields=["balance"], order_by="number desc", limit=1) -%}
+      {%- set brought = before[0].balance if before else none -%}
+      {%- if ns.lines or brought -%}{%- set any.page = true -%}<div class="item-page">{{ page(ns.lines, st.item_name, ns.more, brought) }}</div>{%- endif -%}
+    {%- endfor -%}
+    {%- if not any.page -%}{{ page([], none, false, none) }}{%- endif -%}
+    {%- if items.more %}<p class="warn">This print stopped at 2,000 items: print each store's book on its own.</p>{% endif -%}
+  {%- else -%}
+    {%- set ns = namespace(lines=[], more=true) -%}
+    {%- for p in range(50) if ns.more -%}
+      {%- set got = ivn_rows("Retail Register Line", filters=where, fields=book.fields, order_by="number asc", limit=200, start=p * 200) -%}
+      {%- set ns.lines = ns.lines + got -%}{%- set ns.more = got|length == 200 -%}
+    {%- endfor -%}
+    {{ page(ns.lines, none, ns.more, none) }}
+  {%- endif -%}
+{%- endif -%}
+</div>

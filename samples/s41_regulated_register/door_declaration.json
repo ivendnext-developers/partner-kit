@@ -1,0 +1,462 @@
+{
+ "waits_for": "PB-4, the register door in the POS app",
+ "version": "0.2.0",
+ "register_books": [
+  {
+   "book": "ke_pharmacy.poisons_book",
+   "title": "Poisons Book",
+   "data_set": "ke_pharmacy",
+   "cite": "Act s. 30; Rules Schedule VIII Form 16. Not for a supply on prescription (s. 31(2))",
+   "certified": 0,
+   "numbering": "book_store",
+   "balance": 0,
+   "correction": "signed_strike_through",
+   "retention_years": 2,
+   "count_role": "PP RSR Register Approver",
+   "conditions": [
+    {
+     "field": "kind",
+     "operator": "=",
+     "value": "Sale"
+    },
+    {
+     "field": "authority_no",
+     "operator": "is not set"
+    }
+   ],
+   "required": [
+    "counterparty",
+    "counterparty_address",
+    "detail_1",
+    "detail_2"
+   ],
+   "columns": [
+    {
+     "label": "Date of sale",
+     "value": [
+      "movement_date"
+     ]
+    },
+    {
+     "label": "Name and quantity of poison supplied",
+     "value": [
+      "item_name",
+      "qty",
+      "uom"
+     ]
+    },
+    {
+     "label": "Purchaser's name",
+     "value": [
+      "counterparty"
+     ]
+    },
+    {
+     "label": "Address",
+     "value": [
+      "counterparty_address"
+     ]
+    },
+    {
+     "label": "Business, trade or occupation",
+     "value": [
+      "detail_1"
+     ]
+    },
+    {
+     "label": "Purpose for which stated to be required",
+     "value": [
+      "detail_2"
+     ]
+    },
+    {
+     "label": "Date of certificate (if any)",
+     "value": [
+      "detail_3"
+     ]
+    },
+    {
+     "label": "Name and address of person giving certificate (if any)",
+     "value": [
+      "detail_4"
+     ]
+    },
+    {
+     "label": "Signature of purchaser, or the date of a permitted signed order",
+     "value": [
+      "detail_5"
+     ]
+    }
+   ],
+   "details": {
+    "detail_1": {
+     "label": "Business, trade or occupation",
+     "pos_sale_detail": "PP RSR Occupation",
+     "desk_field": "pp_rsr_occupation"
+    },
+    "detail_2": {
+     "label": "Purpose for which required",
+     "pos_sale_detail": "PP RSR Purpose",
+     "desk_field": "pp_rsr_purpose"
+    },
+    "detail_3": {
+     "label": "Date of certificate",
+     "desk_field": "pp_rsr_certificate_date"
+    },
+    "detail_4": {
+     "label": "Certificate given by (name and address)",
+     "desk_field": "pp_rsr_certificate_by"
+    },
+    "detail_5": {
+     "label": "Date of signed order",
+     "desk_field": "pp_rsr_signed_order_date"
+    },
+    "detail_6": {
+     "label": "Prescriber's address",
+     "pos_sale_detail": "PP RSR Prescriber Address",
+     "desk_field": "pp_rsr_prescriber_address"
+    }
+   },
+   "authority": {
+    "pos_sale_details": {
+     "authority_no": "PP RXC Rx Number",
+     "authority_issuer": "PP RXC Prescriber",
+     "authority_issuer_licence": "PP RXC Prescriber Licence"
+    },
+    "desk_fields": {
+     "authority_no": "pp_rxc_rx_number",
+     "authority_issuer": "pp_rxc_prescriber",
+     "authority_issuer_licence": "pp_rxc_prescriber_licence"
+    },
+    "dispenser_licence": {
+     "doctype": "PP RXC Pharmacist",
+     "match": "user",
+     "field": "licence_number"
+    }
+   },
+   "columns_from": {
+    "Purchase Receipt": {
+     "reference_no": "supplier_delivery_note"
+    },
+    "Purchase Invoice": {
+     "reference_no": "bill_no"
+    },
+    "Stock Entry": {
+     "reference_no": "custom_external_reference_no"
+    }
+   },
+   "enabled": 1,
+   "items": {
+    "classes": [
+     "KE Part I Poison"
+    ]
+   },
+   "class_source": {
+    "item_table": "pp_rxc_schedules",
+    "class_field": "schedule",
+    "from_field": "effective_from",
+    "group_field": "pp_rxc_schedule",
+    "axis": "KE Poisons"
+   }
+  },
+  {
+   "book": "ke_pharmacy.prescription_book",
+   "title": "Prescription Book",
+   "data_set": "ke_pharmacy",
+   "cite": "Act s. 31(1)(b): entered within 24 hours; s. 31(2): no Poisons Book entry is then required",
+   "certified": 0,
+   "numbering": "book_store",
+   "balance": 0,
+   "correction": "signed_strike_through",
+   "retention_years": 2,
+   "count_role": "PP RSR Register Approver",
+   "conditions": [
+    {
+     "field": "kind",
+     "operator": "=",
+     "value": "Sale"
+    },
+    {
+     "field": "authority_no",
+     "operator": "is set"
+    }
+   ],
+   "required": [
+    "counterparty",
+    "counterparty_address",
+    "authority_issuer",
+    "detail_6"
+   ],
+   "columns": [
+    {
+     "label": "Date",
+     "value": [
+      "movement_date"
+     ]
+    },
+    {
+     "label": "Ingredients and quantity",
+     "value": [
+      "item_name",
+      "qty",
+      "uom"
+     ]
+    },
+    {
+     "label": "Name and address of person supplied",
+     "value": [
+      "counterparty",
+      "counterparty_address"
+     ]
+    },
+    {
+     "label": "Name and address of prescriber",
+     "value": [
+      "authority_issuer",
+      "detail_6",
+      "authority_no"
+     ]
+    }
+   ],
+   "details": {
+    "detail_1": {
+     "label": "Business, trade or occupation",
+     "pos_sale_detail": "PP RSR Occupation",
+     "desk_field": "pp_rsr_occupation"
+    },
+    "detail_2": {
+     "label": "Purpose for which required",
+     "pos_sale_detail": "PP RSR Purpose",
+     "desk_field": "pp_rsr_purpose"
+    },
+    "detail_3": {
+     "label": "Date of certificate",
+     "desk_field": "pp_rsr_certificate_date"
+    },
+    "detail_4": {
+     "label": "Certificate given by (name and address)",
+     "desk_field": "pp_rsr_certificate_by"
+    },
+    "detail_5": {
+     "label": "Date of signed order",
+     "desk_field": "pp_rsr_signed_order_date"
+    },
+    "detail_6": {
+     "label": "Prescriber's address",
+     "pos_sale_detail": "PP RSR Prescriber Address",
+     "desk_field": "pp_rsr_prescriber_address"
+    }
+   },
+   "authority": {
+    "pos_sale_details": {
+     "authority_no": "PP RXC Rx Number",
+     "authority_issuer": "PP RXC Prescriber",
+     "authority_issuer_licence": "PP RXC Prescriber Licence"
+    },
+    "desk_fields": {
+     "authority_no": "pp_rxc_rx_number",
+     "authority_issuer": "pp_rxc_prescriber",
+     "authority_issuer_licence": "pp_rxc_prescriber_licence"
+    },
+    "dispenser_licence": {
+     "doctype": "PP RXC Pharmacist",
+     "match": "user",
+     "field": "licence_number"
+    }
+   },
+   "columns_from": {
+    "Purchase Receipt": {
+     "reference_no": "supplier_delivery_note"
+    },
+    "Purchase Invoice": {
+     "reference_no": "bill_no"
+    },
+    "Stock Entry": {
+     "reference_no": "custom_external_reference_no"
+    }
+   },
+   "enabled": 1,
+   "items": {
+    "classes": [
+     "KE Part I Poison"
+    ]
+   },
+   "class_source": {
+    "item_table": "pp_rxc_schedules",
+    "class_field": "schedule",
+    "from_field": "effective_from",
+    "group_field": "pp_rxc_schedule",
+    "axis": "KE Poisons"
+   }
+  },
+  {
+   "book": "ke_pharmacy.npp_ledger",
+   "title": "NPP Ledger Book",
+   "data_set": "ke_pharmacy",
+   "cite": "PPB NPP Guidelines s. 8.1(h), Annex II; received in red ink, issued in blue or black (s. 8.1(i))",
+   "certified": 0,
+   "numbering": "book_store_item",
+   "balance": 1,
+   "correction": "signed_strike_through",
+   "retention_years": 5,
+   "count_role": "PP RSR Register Approver",
+   "conditions": [],
+   "required": [],
+   "columns": [
+    {
+     "label": "Date",
+     "value": [
+      "movement_date"
+     ]
+    },
+    {
+     "label": "Received from",
+     "value": [
+      "counterparty"
+     ]
+    },
+    {
+     "label": "Quantity received",
+     "value": [
+      "qty"
+     ]
+    },
+    {
+     "label": "Invoice no.",
+     "value": [
+      "reference_no"
+     ]
+    },
+    {
+     "label": "Issued to",
+     "value": [
+      "counterparty"
+     ]
+    },
+    {
+     "label": "Quantity issued",
+     "value": [
+      "qty"
+     ]
+    },
+    {
+     "label": "Requisition no.",
+     "value": [
+      "authority_no",
+      "reference_no"
+     ]
+    },
+    {
+     "label": "Balance",
+     "value": [
+      "balance"
+     ]
+    },
+    {
+     "label": "Name and sign. of receiving officer",
+     "value": [
+      "dispenser_name"
+     ]
+    },
+    {
+     "label": "Remarks",
+     "value": [
+      "remarks"
+     ]
+    }
+   ],
+   "details": {
+    "detail_1": {
+     "label": "Business, trade or occupation",
+     "pos_sale_detail": "PP RSR Occupation",
+     "desk_field": "pp_rsr_occupation"
+    },
+    "detail_2": {
+     "label": "Purpose for which required",
+     "pos_sale_detail": "PP RSR Purpose",
+     "desk_field": "pp_rsr_purpose"
+    },
+    "detail_3": {
+     "label": "Date of certificate",
+     "desk_field": "pp_rsr_certificate_date"
+    },
+    "detail_4": {
+     "label": "Certificate given by (name and address)",
+     "desk_field": "pp_rsr_certificate_by"
+    },
+    "detail_5": {
+     "label": "Date of signed order",
+     "desk_field": "pp_rsr_signed_order_date"
+    },
+    "detail_6": {
+     "label": "Prescriber's address",
+     "pos_sale_detail": "PP RSR Prescriber Address",
+     "desk_field": "pp_rsr_prescriber_address"
+    }
+   },
+   "authority": {
+    "pos_sale_details": {
+     "authority_no": "PP RXC Rx Number",
+     "authority_issuer": "PP RXC Prescriber",
+     "authority_issuer_licence": "PP RXC Prescriber Licence"
+    },
+    "desk_fields": {
+     "authority_no": "pp_rxc_rx_number",
+     "authority_issuer": "pp_rxc_prescriber",
+     "authority_issuer_licence": "pp_rxc_prescriber_licence"
+    },
+    "dispenser_licence": {
+     "doctype": "PP RXC Pharmacist",
+     "match": "user",
+     "field": "licence_number"
+    }
+   },
+   "columns_from": {
+    "Purchase Receipt": {
+     "reference_no": "supplier_delivery_note"
+    },
+    "Purchase Invoice": {
+     "reference_no": "bill_no"
+    },
+    "Stock Entry": {
+     "reference_no": "custom_external_reference_no"
+    }
+   },
+   "enabled": 1,
+   "items": {
+    "classes": [
+     "KE NPP"
+    ]
+   },
+   "class_source": {
+    "item_table": "pp_rxc_schedules",
+    "class_field": "schedule",
+    "from_field": "effective_from",
+    "group_field": "pp_rxc_schedule",
+    "axis": "KE Controlled"
+   },
+   "loss_count_hours": 48
+  }
+ ],
+ "print_formats": [
+  {
+   "name": "PP RSR Kenya Poisons Book",
+   "doc_type": "Retail Register Period",
+   "print_format_type": "Jinja",
+   "html": "{%- set book = {\"ref\": \"ke_pharmacy.poisons_book\", \"title\": \"Poisons Book\", \"form\": \"Form 16\", \"cite\": \"Act s. 30; Rules Schedule VIII Form 16. Not for a supply on prescription (s. 31(2))\", \"data_set_title\": \"Kenya: pharmacy registers\", \"certified\": 0, \"notice\": \"A starting point, not certified for the country. Check each column against the instrument before you rely on it.\", \"columns\": [{\"label\": \"Date of sale\", \"value\": [\"movement_date\"]}, {\"label\": \"Name and quantity of poison supplied\", \"value\": [\"item_name\", \"qty\", \"uom\"]}, {\"label\": \"Purchaser's name\", \"value\": [\"counterparty\"]}, {\"label\": \"Address\", \"value\": [\"counterparty_address\"]}, {\"label\": \"Business, trade or occupation\", \"value\": [\"detail_1\"]}, {\"label\": \"Purpose for which stated to be required\", \"value\": [\"detail_2\"]}, {\"label\": \"Date of certificate (if any)\", \"value\": [\"detail_3\"]}, {\"label\": \"Name and address of person giving certificate (if any)\", \"value\": [\"detail_4\"]}, {\"label\": \"Signature of purchaser, or the date of a permitted signed order\", \"value\": [\"detail_5\"], \"mark\": 1}], \"fields\": [\"booked_late\", \"correction_note\", \"correction_of_number\", \"counterparty\", \"counterparty_address\", \"detail_1\", \"detail_2\", \"detail_3\", \"detail_4\", \"detail_5\", \"direction\", \"dispenser_name\", \"entered_at\", \"entry_date\", \"item_name\", \"kind\", \"movement_date\", \"number\", \"qty\", \"remarks\", \"signed_by_name\", \"uom\"], \"correction\": \"signed_strike_through\", \"correction_words\": \"a single strike-through, signed by its author\", \"retention_years\": 2, \"medium_note\": \"Electronic records are cited for NPP records only (Guidelines s. 8.1): keep this book's printed pages, signed, as the book.\", \"per_item_pages\": 0, \"medium\": \"printed_book\", \"balance\": 0} -%}\n{#- One book of the regulated stock register, printed from its register period. build.py writes the book's own data\n    above this line ({% set book = … %}: its title, form, citation, notice, columns, correction mode), so every book of\n    every data set prints from this one template. The lines are read with ivn_rows, as the person printing may read\n    them: 200 a call, at most 50 calls (10,000 lines) a print, or a page, and 2,000 items in a book printed a page per\n    item. A correction never prints as a movement of its own: its book's mode says how it shows. -#}\n<style>\n  .rsr { font-family: Arial, sans-serif; font-size: 9pt; color: #111; }\n  .rsr h1 { font-size: 13pt; margin: 0; }\n  .rsr .sub { color: #444; margin: 2px 0 6px; }\n  .rsr .notice { border: 1px solid #b26b00; color: #7a4a00; padding: 3px 6px; margin: 4px 0 8px; }\n  .rsr table { width: 100%; border-collapse: collapse; }\n  .rsr th, .rsr td { border: 1px solid #555; padding: 3px 4px; vertical-align: top; text-align: left; }\n  .rsr th { background: #eee; font-weight: bold; }\n  .rsr td.no { color: #555; white-space: nowrap; }\n  .rsr td.mark { min-width: 70px; }\n  .rsr tr.struck td.cell { text-decoration: line-through; }\n  .rsr tr.note td { font-style: italic; background: #fafafa; }\n  .rsr .fine { color: #555; font-size: 8pt; }\n  .rsr .warn { color: #8a1c1c; font-weight: bold; }\n  .rsr .item-page { page-break-after: always; }\n  .rsr .item-page:last-child { page-break-after: auto; }\n</style>\n{%- macro row(l, struck) -%}\n  <tr{% if struck %} class=\"struck\"{% endif %}>\n    <td class=\"no\">{{ l.number|e }}</td>\n    {%- for c in book.columns -%}\n      {%- set cell = namespace(s=\"\") -%}\n      {%- if not c.when or c.when == l.direction -%}\n        {%- for k in c.value -%}\n          {%- if l[k] is not none and l[k] != \"\" -%}{%- set cell.s = cell.s ~ (\" · \" if cell.s else \"\") ~ l[k] -%}{%- endif -%}\n        {%- endfor -%}\n      {%- endif -%}\n      <td class=\"cell{% if c.mark %} mark{% endif %}\"{% if book.in_colour and c.when == \"In\" and l.direction == \"In\" %} style=\"color: {{ book.in_colour }}\"{% endif %}>{{ cell.s|e }}\n        {%- if loop.last and l.booked_late %} <span class=\"fine\">Entered late, {{ l.entered_at|e }}.</span>{% endif -%}\n      </td>\n    {%- endfor -%}\n  </tr>\n{%- endmacro -%}\n{%- macro note(text) -%}\n  <tr class=\"note\"><td></td><td colspan=\"{{ book.columns|length }}\">{{ text|e }}</td></tr>\n{%- endmacro -%}\n{%- macro page(lines, item_name, cut, brought) -%}\n  {%- set seen = namespace(fixes=[]) -%}\n  {%- for l in lines if l.correction_of_number -%}{%- set seen.fixes = seen.fixes + [l] -%}{%- endfor -%}\n  <h1>{{ book.title|e }}{% if book.form %} <span class=\"fine\">({{ book.form|e }})</span>{% endif %}</h1>\n  <div class=\"sub\">{% if doc.establishment %}{{ doc.establishment|e }}{% if doc.establishment_address %}, {{ doc.establishment_address|e }}{% endif %} · {% endif %}{{ doc.register_store|e }}{% if item_name %} · {{ item_name|e }}{% endif %} · {{ doc.from_date|e }} to {{ doc.to_date|e }}</div>\n  <div class=\"fine\">{{ book.data_set_title|e }}. {{ book.cite|e }}</div>\n  {%- if not book.certified %}<div class=\"notice\">{{ book.notice|e }}</div>{% endif %}\n  <table>\n    <thead><tr><th>No.</th>{% for c in book.columns %}<th>{{ c.label|e }}</th>{% endfor %}</tr></thead>\n    <tbody>\n    {%- if book.balance and brought is not none -%}{{ note(\"Balance brought forward: \" ~ brought ~ \".\") }}{%- endif -%}\n    {%- for l in lines -%}\n      {%- if l.kind in (\"Opening\", \"Count\") -%}\n        {{ note(\"Entry \" ~ l.number ~ \": \" ~ (\"opening balance \" ~ l.qty if l.kind == \"Opening\" else \"register count, \" ~ (\"+\" if l.direction == \"In\" else \"-\") ~ l.qty) ~ (\", balance \" ~ l.balance if l.balance is not none else \"\") ~ \". Signed \" ~ (l.signed_by_name or \"\") ~ \".\") }}\n      {%- elif l.correction_of_number -%}\n        {%- set who = l.signed_by_name or \"\" -%}\n        {%- if book.correction == \"reversing_line\" -%}\n          {{ row(l, false) }}{{ note(\"Entry \" ~ l.number ~ \" reverses entry \" ~ l.correction_of_number ~ (\": \" ~ l.correction_note if l.correction_note else \"\") ~ \". Signed \" ~ who ~ \".\") }}\n        {%- elif book.correction == \"dated_note\" -%}\n          {{ note(\"Note dated \" ~ l.entry_date ~ \" to entry \" ~ l.correction_of_number ~ \": \" ~ (l.correction_note or \"entry cancelled\") ~ \". \" ~ who ~ \" (entry \" ~ l.number ~ \").\") }}\n        {%- endif -%}\n      {%- else -%}\n        {%- set fix = seen.fixes|selectattr(\"correction_of_number\", \"equalto\", l.number)|first -%}\n        {{ row(l, fix and book.correction == \"signed_strike_through\") }}\n        {%- if fix and book.correction in (\"signed_strike_through\", \"signed_amendment\") -%}\n          {{ note((\"Struck through\" if book.correction == \"signed_strike_through\" else \"Amended\") ~ \" by entry \" ~ fix.number ~ (\": \" ~ fix.correction_note if fix.correction_note else \"\") ~ \". Signed \" ~ (fix.signed_by_name or \"\") ~ ((\", the entry's author being \" ~ l.dispenser_name) if l.dispenser_name and l.dispenser_name != fix.signed_by_name else \"\") ~ \".\") }}\n        {%- endif -%}\n      {%- endif -%}\n    {%- else -%}\n      <tr><td colspan=\"{{ (book.columns|length) + 1 }}\">No entries you may read in this period. A print sent by e-mail, in the background or through a shared link reads none: print it signed in.</td></tr>\n    {%- endfor -%}\n    </tbody>\n  </table>\n  <p class=\"fine\">{{ lines|length }} entries.{% if cut %} <span class=\"warn\">This print stopped at its reading limit: print a shorter date range.</span>{% endif %}\n  Retention: {{ book.retention_years|e }} years from the last entry. Corrections: {{ book.correction_words|e }}. {{ book.medium_note|e }}</p>\n  {%- if doc.chain_status %}<p class=\"fine\">Entry chain: {{ doc.chain_status|e }}</p>{% endif -%}\n  {%- if book.medium != \"system_of_record\" %}<p class=\"fine\">Kept as the book: signed ____________________ date __________</p>{% endif %}\n{%- endmacro -%}\n<div class=\"rsr\">\n{%- if doc.book != book.ref -%}\n  <p>This layout prints the {{ book.title|e }}; this period is of {{ doc.book|e }}. Choose that book's print format.</p>\n{%- else -%}\n  {%- set where = [[\"book\", \"=\", doc.book], [\"register_store\", \"=\", doc.register_store], [\"entry_date\", \"between\", [doc.from_date, doc.to_date]]] -%}\n  {%- if book.per_item_pages -%}\n    {%- set any = namespace(page=false) -%}\n    {%- set items = namespace(rows=[], more=true) -%}\n    {%- for p in range(10) if items.more -%}\n      {%- set got = ivn_rows(\"Retail Register State\", filters=[[\"book\", \"=\", doc.book], [\"register_store\", \"=\", doc.register_store]], fields=[\"item\", \"item_name\"], order_by=\"item asc\", limit=200, start=p * 200) -%}\n      {%- set items.rows = items.rows + got -%}{%- set items.more = got|length == 200 -%}\n    {%- endfor -%}\n    {%- for st in items.rows -%}\n      {%- set ns = namespace(lines=[], more=true) -%}\n      {%- for p in range(50) if ns.more -%}\n        {%- set got = ivn_rows(\"Retail Register Line\", filters=where + [[\"item\", \"=\", st.item]], fields=book.fields, order_by=\"number asc\", limit=200, start=p * 200) -%}\n        {%- set ns.lines = ns.lines + got -%}{%- set ns.more = got|length == 200 -%}\n      {%- endfor -%}\n      {%- set before = ivn_rows(\"Retail Register Line\", filters=[[\"book\", \"=\", doc.book], [\"register_store\", \"=\", doc.register_store], [\"item\", \"=\", st.item], [\"entry_date\", \"<\", doc.from_date]], fields=[\"balance\"], order_by=\"number desc\", limit=1) -%}\n      {%- set brought = before[0].balance if before else none -%}\n      {%- if ns.lines or brought -%}{%- set any.page = true -%}<div class=\"item-page\">{{ page(ns.lines, st.item_name, ns.more, brought) }}</div>{%- endif -%}\n    {%- endfor -%}\n    {%- if not any.page -%}{{ page([], none, false, none) }}{%- endif -%}\n    {%- if items.more %}<p class=\"warn\">This print stopped at 2,000 items: print each store's book on its own.</p>{% endif -%}\n  {%- else -%}\n    {%- set ns = namespace(lines=[], more=true) -%}\n    {%- for p in range(50) if ns.more -%}\n      {%- set got = ivn_rows(\"Retail Register Line\", filters=where, fields=book.fields, order_by=\"number asc\", limit=200, start=p * 200) -%}\n      {%- set ns.lines = ns.lines + got -%}{%- set ns.more = got|length == 200 -%}\n    {%- endfor -%}\n    {{ page(ns.lines, none, ns.more, none) }}\n  {%- endif -%}\n{%- endif -%}\n</div>\n"
+  },
+  {
+   "name": "PP RSR Kenya Prescription Book",
+   "doc_type": "Retail Register Period",
+   "print_format_type": "Jinja",
+   "html": "{%- set book = {\"ref\": \"ke_pharmacy.prescription_book\", \"title\": \"Prescription Book\", \"form\": \"no form prescribed\", \"cite\": \"Act s. 31(1)(b): entered within 24 hours; s. 31(2): no Poisons Book entry is then required\", \"data_set_title\": \"Kenya: pharmacy registers\", \"certified\": 0, \"notice\": \"A starting point, not certified for the country. Check each column against the instrument before you rely on it.\", \"columns\": [{\"label\": \"Date\", \"value\": [\"movement_date\"]}, {\"label\": \"Ingredients and quantity\", \"value\": [\"item_name\", \"qty\", \"uom\"]}, {\"label\": \"Name and address of person supplied\", \"value\": [\"counterparty\", \"counterparty_address\"]}, {\"label\": \"Name and address of prescriber\", \"value\": [\"authority_issuer\", \"detail_6\", \"authority_no\"]}], \"fields\": [\"authority_issuer\", \"authority_no\", \"booked_late\", \"correction_note\", \"correction_of_number\", \"counterparty\", \"counterparty_address\", \"detail_6\", \"direction\", \"dispenser_name\", \"entered_at\", \"entry_date\", \"item_name\", \"kind\", \"movement_date\", \"number\", \"qty\", \"remarks\", \"signed_by_name\", \"uom\"], \"correction\": \"signed_strike_through\", \"correction_words\": \"a single strike-through, signed by its author\", \"retention_years\": 2, \"medium_note\": \"Electronic records are cited for NPP records only (Guidelines s. 8.1): keep this book's printed pages, signed, as the book.\", \"per_item_pages\": 0, \"medium\": \"printed_book\", \"balance\": 0} -%}\n{#- One book of the regulated stock register, printed from its register period. build.py writes the book's own data\n    above this line ({% set book = … %}: its title, form, citation, notice, columns, correction mode), so every book of\n    every data set prints from this one template. The lines are read with ivn_rows, as the person printing may read\n    them: 200 a call, at most 50 calls (10,000 lines) a print, or a page, and 2,000 items in a book printed a page per\n    item. A correction never prints as a movement of its own: its book's mode says how it shows. -#}\n<style>\n  .rsr { font-family: Arial, sans-serif; font-size: 9pt; color: #111; }\n  .rsr h1 { font-size: 13pt; margin: 0; }\n  .rsr .sub { color: #444; margin: 2px 0 6px; }\n  .rsr .notice { border: 1px solid #b26b00; color: #7a4a00; padding: 3px 6px; margin: 4px 0 8px; }\n  .rsr table { width: 100%; border-collapse: collapse; }\n  .rsr th, .rsr td { border: 1px solid #555; padding: 3px 4px; vertical-align: top; text-align: left; }\n  .rsr th { background: #eee; font-weight: bold; }\n  .rsr td.no { color: #555; white-space: nowrap; }\n  .rsr td.mark { min-width: 70px; }\n  .rsr tr.struck td.cell { text-decoration: line-through; }\n  .rsr tr.note td { font-style: italic; background: #fafafa; }\n  .rsr .fine { color: #555; font-size: 8pt; }\n  .rsr .warn { color: #8a1c1c; font-weight: bold; }\n  .rsr .item-page { page-break-after: always; }\n  .rsr .item-page:last-child { page-break-after: auto; }\n</style>\n{%- macro row(l, struck) -%}\n  <tr{% if struck %} class=\"struck\"{% endif %}>\n    <td class=\"no\">{{ l.number|e }}</td>\n    {%- for c in book.columns -%}\n      {%- set cell = namespace(s=\"\") -%}\n      {%- if not c.when or c.when == l.direction -%}\n        {%- for k in c.value -%}\n          {%- if l[k] is not none and l[k] != \"\" -%}{%- set cell.s = cell.s ~ (\" · \" if cell.s else \"\") ~ l[k] -%}{%- endif -%}\n        {%- endfor -%}\n      {%- endif -%}\n      <td class=\"cell{% if c.mark %} mark{% endif %}\"{% if book.in_colour and c.when == \"In\" and l.direction == \"In\" %} style=\"color: {{ book.in_colour }}\"{% endif %}>{{ cell.s|e }}\n        {%- if loop.last and l.booked_late %} <span class=\"fine\">Entered late, {{ l.entered_at|e }}.</span>{% endif -%}\n      </td>\n    {%- endfor -%}\n  </tr>\n{%- endmacro -%}\n{%- macro note(text) -%}\n  <tr class=\"note\"><td></td><td colspan=\"{{ book.columns|length }}\">{{ text|e }}</td></tr>\n{%- endmacro -%}\n{%- macro page(lines, item_name, cut, brought) -%}\n  {%- set seen = namespace(fixes=[]) -%}\n  {%- for l in lines if l.correction_of_number -%}{%- set seen.fixes = seen.fixes + [l] -%}{%- endfor -%}\n  <h1>{{ book.title|e }}{% if book.form %} <span class=\"fine\">({{ book.form|e }})</span>{% endif %}</h1>\n  <div class=\"sub\">{% if doc.establishment %}{{ doc.establishment|e }}{% if doc.establishment_address %}, {{ doc.establishment_address|e }}{% endif %} · {% endif %}{{ doc.register_store|e }}{% if item_name %} · {{ item_name|e }}{% endif %} · {{ doc.from_date|e }} to {{ doc.to_date|e }}</div>\n  <div class=\"fine\">{{ book.data_set_title|e }}. {{ book.cite|e }}</div>\n  {%- if not book.certified %}<div class=\"notice\">{{ book.notice|e }}</div>{% endif %}\n  <table>\n    <thead><tr><th>No.</th>{% for c in book.columns %}<th>{{ c.label|e }}</th>{% endfor %}</tr></thead>\n    <tbody>\n    {%- if book.balance and brought is not none -%}{{ note(\"Balance brought forward: \" ~ brought ~ \".\") }}{%- endif -%}\n    {%- for l in lines -%}\n      {%- if l.kind in (\"Opening\", \"Count\") -%}\n        {{ note(\"Entry \" ~ l.number ~ \": \" ~ (\"opening balance \" ~ l.qty if l.kind == \"Opening\" else \"register count, \" ~ (\"+\" if l.direction == \"In\" else \"-\") ~ l.qty) ~ (\", balance \" ~ l.balance if l.balance is not none else \"\") ~ \". Signed \" ~ (l.signed_by_name or \"\") ~ \".\") }}\n      {%- elif l.correction_of_number -%}\n        {%- set who = l.signed_by_name or \"\" -%}\n        {%- if book.correction == \"reversing_line\" -%}\n          {{ row(l, false) }}{{ note(\"Entry \" ~ l.number ~ \" reverses entry \" ~ l.correction_of_number ~ (\": \" ~ l.correction_note if l.correction_note else \"\") ~ \". Signed \" ~ who ~ \".\") }}\n        {%- elif book.correction == \"dated_note\" -%}\n          {{ note(\"Note dated \" ~ l.entry_date ~ \" to entry \" ~ l.correction_of_number ~ \": \" ~ (l.correction_note or \"entry cancelled\") ~ \". \" ~ who ~ \" (entry \" ~ l.number ~ \").\") }}\n        {%- endif -%}\n      {%- else -%}\n        {%- set fix = seen.fixes|selectattr(\"correction_of_number\", \"equalto\", l.number)|first -%}\n        {{ row(l, fix and book.correction == \"signed_strike_through\") }}\n        {%- if fix and book.correction in (\"signed_strike_through\", \"signed_amendment\") -%}\n          {{ note((\"Struck through\" if book.correction == \"signed_strike_through\" else \"Amended\") ~ \" by entry \" ~ fix.number ~ (\": \" ~ fix.correction_note if fix.correction_note else \"\") ~ \". Signed \" ~ (fix.signed_by_name or \"\") ~ ((\", the entry's author being \" ~ l.dispenser_name) if l.dispenser_name and l.dispenser_name != fix.signed_by_name else \"\") ~ \".\") }}\n        {%- endif -%}\n      {%- endif -%}\n    {%- else -%}\n      <tr><td colspan=\"{{ (book.columns|length) + 1 }}\">No entries you may read in this period. A print sent by e-mail, in the background or through a shared link reads none: print it signed in.</td></tr>\n    {%- endfor -%}\n    </tbody>\n  </table>\n  <p class=\"fine\">{{ lines|length }} entries.{% if cut %} <span class=\"warn\">This print stopped at its reading limit: print a shorter date range.</span>{% endif %}\n  Retention: {{ book.retention_years|e }} years from the last entry. Corrections: {{ book.correction_words|e }}. {{ book.medium_note|e }}</p>\n  {%- if doc.chain_status %}<p class=\"fine\">Entry chain: {{ doc.chain_status|e }}</p>{% endif -%}\n  {%- if book.medium != \"system_of_record\" %}<p class=\"fine\">Kept as the book: signed ____________________ date __________</p>{% endif %}\n{%- endmacro -%}\n<div class=\"rsr\">\n{%- if doc.book != book.ref -%}\n  <p>This layout prints the {{ book.title|e }}; this period is of {{ doc.book|e }}. Choose that book's print format.</p>\n{%- else -%}\n  {%- set where = [[\"book\", \"=\", doc.book], [\"register_store\", \"=\", doc.register_store], [\"entry_date\", \"between\", [doc.from_date, doc.to_date]]] -%}\n  {%- if book.per_item_pages -%}\n    {%- set any = namespace(page=false) -%}\n    {%- set items = namespace(rows=[], more=true) -%}\n    {%- for p in range(10) if items.more -%}\n      {%- set got = ivn_rows(\"Retail Register State\", filters=[[\"book\", \"=\", doc.book], [\"register_store\", \"=\", doc.register_store]], fields=[\"item\", \"item_name\"], order_by=\"item asc\", limit=200, start=p * 200) -%}\n      {%- set items.rows = items.rows + got -%}{%- set items.more = got|length == 200 -%}\n    {%- endfor -%}\n    {%- for st in items.rows -%}\n      {%- set ns = namespace(lines=[], more=true) -%}\n      {%- for p in range(50) if ns.more -%}\n        {%- set got = ivn_rows(\"Retail Register Line\", filters=where + [[\"item\", \"=\", st.item]], fields=book.fields, order_by=\"number asc\", limit=200, start=p * 200) -%}\n        {%- set ns.lines = ns.lines + got -%}{%- set ns.more = got|length == 200 -%}\n      {%- endfor -%}\n      {%- set before = ivn_rows(\"Retail Register Line\", filters=[[\"book\", \"=\", doc.book], [\"register_store\", \"=\", doc.register_store], [\"item\", \"=\", st.item], [\"entry_date\", \"<\", doc.from_date]], fields=[\"balance\"], order_by=\"number desc\", limit=1) -%}\n      {%- set brought = before[0].balance if before else none -%}\n      {%- if ns.lines or brought -%}{%- set any.page = true -%}<div class=\"item-page\">{{ page(ns.lines, st.item_name, ns.more, brought) }}</div>{%- endif -%}\n    {%- endfor -%}\n    {%- if not any.page -%}{{ page([], none, false, none) }}{%- endif -%}\n    {%- if items.more %}<p class=\"warn\">This print stopped at 2,000 items: print each store's book on its own.</p>{% endif -%}\n  {%- else -%}\n    {%- set ns = namespace(lines=[], more=true) -%}\n    {%- for p in range(50) if ns.more -%}\n      {%- set got = ivn_rows(\"Retail Register Line\", filters=where, fields=book.fields, order_by=\"number asc\", limit=200, start=p * 200) -%}\n      {%- set ns.lines = ns.lines + got -%}{%- set ns.more = got|length == 200 -%}\n    {%- endfor -%}\n    {{ page(ns.lines, none, ns.more, none) }}\n  {%- endif -%}\n{%- endif -%}\n</div>\n"
+  },
+  {
+   "name": "PP RSR Kenya NPP Ledger Book",
+   "doc_type": "Retail Register Period",
+   "print_format_type": "Jinja",
+   "html": "{%- set book = {\"ref\": \"ke_pharmacy.npp_ledger\", \"title\": \"NPP Ledger Book\", \"form\": \"Annex II\", \"cite\": \"PPB NPP Guidelines s. 8.1(h), Annex II; received in red ink, issued in blue or black (s. 8.1(i))\", \"data_set_title\": \"Kenya: pharmacy registers\", \"certified\": 0, \"notice\": \"A starting point, not certified for the country. Check each column against the instrument before you rely on it.\", \"columns\": [{\"label\": \"Date\", \"value\": [\"movement_date\"]}, {\"label\": \"Received from\", \"value\": [\"counterparty\"], \"when\": \"In\"}, {\"label\": \"Quantity received\", \"value\": [\"qty\"], \"when\": \"In\"}, {\"label\": \"Invoice no.\", \"value\": [\"reference_no\"], \"when\": \"In\"}, {\"label\": \"Issued to\", \"value\": [\"counterparty\"], \"when\": \"Out\"}, {\"label\": \"Quantity issued\", \"value\": [\"qty\"], \"when\": \"Out\"}, {\"label\": \"Requisition no.\", \"value\": [\"authority_no\", \"reference_no\"], \"when\": \"Out\"}, {\"label\": \"Balance\", \"value\": [\"balance\"]}, {\"label\": \"Name and sign. of receiving officer\", \"value\": [\"dispenser_name\"], \"mark\": 1}, {\"label\": \"Remarks\", \"value\": [\"remarks\"]}], \"fields\": [\"authority_no\", \"balance\", \"booked_late\", \"correction_note\", \"correction_of_number\", \"counterparty\", \"direction\", \"dispenser_name\", \"entered_at\", \"entry_date\", \"kind\", \"movement_date\", \"number\", \"qty\", \"reference_no\", \"remarks\", \"signed_by_name\"], \"correction\": \"signed_strike_through\", \"correction_words\": \"a single strike-through, signed by its author\", \"retention_years\": 5, \"medium_note\": \"Records may be kept electronically, manually or both (Guidelines s. 8.1).\", \"per_item_pages\": 1, \"medium\": \"system_of_record\", \"balance\": 1, \"in_colour\": \"#b00020\"} -%}\n{#- One book of the regulated stock register, printed from its register period. build.py writes the book's own data\n    above this line ({% set book = … %}: its title, form, citation, notice, columns, correction mode), so every book of\n    every data set prints from this one template. The lines are read with ivn_rows, as the person printing may read\n    them: 200 a call, at most 50 calls (10,000 lines) a print, or a page, and 2,000 items in a book printed a page per\n    item. A correction never prints as a movement of its own: its book's mode says how it shows. -#}\n<style>\n  .rsr { font-family: Arial, sans-serif; font-size: 9pt; color: #111; }\n  .rsr h1 { font-size: 13pt; margin: 0; }\n  .rsr .sub { color: #444; margin: 2px 0 6px; }\n  .rsr .notice { border: 1px solid #b26b00; color: #7a4a00; padding: 3px 6px; margin: 4px 0 8px; }\n  .rsr table { width: 100%; border-collapse: collapse; }\n  .rsr th, .rsr td { border: 1px solid #555; padding: 3px 4px; vertical-align: top; text-align: left; }\n  .rsr th { background: #eee; font-weight: bold; }\n  .rsr td.no { color: #555; white-space: nowrap; }\n  .rsr td.mark { min-width: 70px; }\n  .rsr tr.struck td.cell { text-decoration: line-through; }\n  .rsr tr.note td { font-style: italic; background: #fafafa; }\n  .rsr .fine { color: #555; font-size: 8pt; }\n  .rsr .warn { color: #8a1c1c; font-weight: bold; }\n  .rsr .item-page { page-break-after: always; }\n  .rsr .item-page:last-child { page-break-after: auto; }\n</style>\n{%- macro row(l, struck) -%}\n  <tr{% if struck %} class=\"struck\"{% endif %}>\n    <td class=\"no\">{{ l.number|e }}</td>\n    {%- for c in book.columns -%}\n      {%- set cell = namespace(s=\"\") -%}\n      {%- if not c.when or c.when == l.direction -%}\n        {%- for k in c.value -%}\n          {%- if l[k] is not none and l[k] != \"\" -%}{%- set cell.s = cell.s ~ (\" · \" if cell.s else \"\") ~ l[k] -%}{%- endif -%}\n        {%- endfor -%}\n      {%- endif -%}\n      <td class=\"cell{% if c.mark %} mark{% endif %}\"{% if book.in_colour and c.when == \"In\" and l.direction == \"In\" %} style=\"color: {{ book.in_colour }}\"{% endif %}>{{ cell.s|e }}\n        {%- if loop.last and l.booked_late %} <span class=\"fine\">Entered late, {{ l.entered_at|e }}.</span>{% endif -%}\n      </td>\n    {%- endfor -%}\n  </tr>\n{%- endmacro -%}\n{%- macro note(text) -%}\n  <tr class=\"note\"><td></td><td colspan=\"{{ book.columns|length }}\">{{ text|e }}</td></tr>\n{%- endmacro -%}\n{%- macro page(lines, item_name, cut, brought) -%}\n  {%- set seen = namespace(fixes=[]) -%}\n  {%- for l in lines if l.correction_of_number -%}{%- set seen.fixes = seen.fixes + [l] -%}{%- endfor -%}\n  <h1>{{ book.title|e }}{% if book.form %} <span class=\"fine\">({{ book.form|e }})</span>{% endif %}</h1>\n  <div class=\"sub\">{% if doc.establishment %}{{ doc.establishment|e }}{% if doc.establishment_address %}, {{ doc.establishment_address|e }}{% endif %} · {% endif %}{{ doc.register_store|e }}{% if item_name %} · {{ item_name|e }}{% endif %} · {{ doc.from_date|e }} to {{ doc.to_date|e }}</div>\n  <div class=\"fine\">{{ book.data_set_title|e }}. {{ book.cite|e }}</div>\n  {%- if not book.certified %}<div class=\"notice\">{{ book.notice|e }}</div>{% endif %}\n  <table>\n    <thead><tr><th>No.</th>{% for c in book.columns %}<th>{{ c.label|e }}</th>{% endfor %}</tr></thead>\n    <tbody>\n    {%- if book.balance and brought is not none -%}{{ note(\"Balance brought forward: \" ~ brought ~ \".\") }}{%- endif -%}\n    {%- for l in lines -%}\n      {%- if l.kind in (\"Opening\", \"Count\") -%}\n        {{ note(\"Entry \" ~ l.number ~ \": \" ~ (\"opening balance \" ~ l.qty if l.kind == \"Opening\" else \"register count, \" ~ (\"+\" if l.direction == \"In\" else \"-\") ~ l.qty) ~ (\", balance \" ~ l.balance if l.balance is not none else \"\") ~ \". Signed \" ~ (l.signed_by_name or \"\") ~ \".\") }}\n      {%- elif l.correction_of_number -%}\n        {%- set who = l.signed_by_name or \"\" -%}\n        {%- if book.correction == \"reversing_line\" -%}\n          {{ row(l, false) }}{{ note(\"Entry \" ~ l.number ~ \" reverses entry \" ~ l.correction_of_number ~ (\": \" ~ l.correction_note if l.correction_note else \"\") ~ \". Signed \" ~ who ~ \".\") }}\n        {%- elif book.correction == \"dated_note\" -%}\n          {{ note(\"Note dated \" ~ l.entry_date ~ \" to entry \" ~ l.correction_of_number ~ \": \" ~ (l.correction_note or \"entry cancelled\") ~ \". \" ~ who ~ \" (entry \" ~ l.number ~ \").\") }}\n        {%- endif -%}\n      {%- else -%}\n        {%- set fix = seen.fixes|selectattr(\"correction_of_number\", \"equalto\", l.number)|first -%}\n        {{ row(l, fix and book.correction == \"signed_strike_through\") }}\n        {%- if fix and book.correction in (\"signed_strike_through\", \"signed_amendment\") -%}\n          {{ note((\"Struck through\" if book.correction == \"signed_strike_through\" else \"Amended\") ~ \" by entry \" ~ fix.number ~ (\": \" ~ fix.correction_note if fix.correction_note else \"\") ~ \". Signed \" ~ (fix.signed_by_name or \"\") ~ ((\", the entry's author being \" ~ l.dispenser_name) if l.dispenser_name and l.dispenser_name != fix.signed_by_name else \"\") ~ \".\") }}\n        {%- endif -%}\n      {%- endif -%}\n    {%- else -%}\n      <tr><td colspan=\"{{ (book.columns|length) + 1 }}\">No entries you may read in this period. A print sent by e-mail, in the background or through a shared link reads none: print it signed in.</td></tr>\n    {%- endfor -%}\n    </tbody>\n  </table>\n  <p class=\"fine\">{{ lines|length }} entries.{% if cut %} <span class=\"warn\">This print stopped at its reading limit: print a shorter date range.</span>{% endif %}\n  Retention: {{ book.retention_years|e }} years from the last entry. Corrections: {{ book.correction_words|e }}. {{ book.medium_note|e }}</p>\n  {%- if doc.chain_status %}<p class=\"fine\">Entry chain: {{ doc.chain_status|e }}</p>{% endif -%}\n  {%- if book.medium != \"system_of_record\" %}<p class=\"fine\">Kept as the book: signed ____________________ date __________</p>{% endif %}\n{%- endmacro -%}\n<div class=\"rsr\">\n{%- if doc.book != book.ref -%}\n  <p>This layout prints the {{ book.title|e }}; this period is of {{ doc.book|e }}. Choose that book's print format.</p>\n{%- else -%}\n  {%- set where = [[\"book\", \"=\", doc.book], [\"register_store\", \"=\", doc.register_store], [\"entry_date\", \"between\", [doc.from_date, doc.to_date]]] -%}\n  {%- if book.per_item_pages -%}\n    {%- set any = namespace(page=false) -%}\n    {%- set items = namespace(rows=[], more=true) -%}\n    {%- for p in range(10) if items.more -%}\n      {%- set got = ivn_rows(\"Retail Register State\", filters=[[\"book\", \"=\", doc.book], [\"register_store\", \"=\", doc.register_store]], fields=[\"item\", \"item_name\"], order_by=\"item asc\", limit=200, start=p * 200) -%}\n      {%- set items.rows = items.rows + got -%}{%- set items.more = got|length == 200 -%}\n    {%- endfor -%}\n    {%- for st in items.rows -%}\n      {%- set ns = namespace(lines=[], more=true) -%}\n      {%- for p in range(50) if ns.more -%}\n        {%- set got = ivn_rows(\"Retail Register Line\", filters=where + [[\"item\", \"=\", st.item]], fields=book.fields, order_by=\"number asc\", limit=200, start=p * 200) -%}\n        {%- set ns.lines = ns.lines + got -%}{%- set ns.more = got|length == 200 -%}\n      {%- endfor -%}\n      {%- set before = ivn_rows(\"Retail Register Line\", filters=[[\"book\", \"=\", doc.book], [\"register_store\", \"=\", doc.register_store], [\"item\", \"=\", st.item], [\"entry_date\", \"<\", doc.from_date]], fields=[\"balance\"], order_by=\"number desc\", limit=1) -%}\n      {%- set brought = before[0].balance if before else none -%}\n      {%- if ns.lines or brought -%}{%- set any.page = true -%}<div class=\"item-page\">{{ page(ns.lines, st.item_name, ns.more, brought) }}</div>{%- endif -%}\n    {%- endfor -%}\n    {%- if not any.page -%}{{ page([], none, false, none) }}{%- endif -%}\n    {%- if items.more %}<p class=\"warn\">This print stopped at 2,000 items: print each store's book on its own.</p>{% endif -%}\n  {%- else -%}\n    {%- set ns = namespace(lines=[], more=true) -%}\n    {%- for p in range(50) if ns.more -%}\n      {%- set got = ivn_rows(\"Retail Register Line\", filters=where, fields=book.fields, order_by=\"number asc\", limit=200, start=p * 200) -%}\n      {%- set ns.lines = ns.lines + got -%}{%- set ns.more = got|length == 200 -%}\n    {%- endfor -%}\n    {{ page(ns.lines, none, ns.more, none) }}\n  {%- endif -%}\n{%- endif -%}\n</div>\n"
+  }
+ ],
+ "notifications": []
+}

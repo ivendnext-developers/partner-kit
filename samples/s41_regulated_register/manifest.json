@@ -1,0 +1,220 @@
+{
+ "manifest_version": 2,
+ "app": "pp_rsr",
+ "prefix": "PP RSR",
+ "title": "Regulated stock register",
+ "version": "0.1.1",
+ "publisher": "Partner Programme sample",
+ "description": "A legal register for regulated stock (controlled medicine, liquor, tobacco, duty-free), its books declared per market as data. This version adds the register's own columns to the Desk sale and delivery and to the till's sale details, the approver role and the register's workspace. The books themselves are written by the register door in the POS app, once it is there.",
+ "custom_fields": [
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rsr_section",
+   "fieldtype": "Section Break",
+   "label": "Register details",
+   "insert_after": "remarks",
+   "collapsible": 1,
+   "description": "For the regulated stock register: copied into the register's line when this document is submitted."
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rsr_occupation",
+   "fieldtype": "Data",
+   "label": "Business, trade or occupation",
+   "insert_after": "pp_rsr_section"
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rsr_purpose",
+   "fieldtype": "Data",
+   "label": "Purpose for which required",
+   "insert_after": "pp_rsr_occupation"
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rsr_certificate_date",
+   "fieldtype": "Date",
+   "label": "Date of certificate",
+   "insert_after": "pp_rsr_purpose"
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rsr_certificate_by",
+   "fieldtype": "Data",
+   "label": "Certificate given by (name and address)",
+   "insert_after": "pp_rsr_certificate_date"
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rsr_signed_order_date",
+   "fieldtype": "Date",
+   "label": "Date of signed order",
+   "insert_after": "pp_rsr_certificate_by"
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rsr_prescriber_address",
+   "fieldtype": "Data",
+   "label": "Prescriber's address",
+   "insert_after": "pp_rsr_signed_order_date"
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rsr_section",
+   "fieldtype": "Section Break",
+   "label": "Register details",
+   "insert_after": "instructions",
+   "collapsible": 1,
+   "description": "For the regulated stock register: copied into the register's line when this document is submitted."
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rsr_occupation",
+   "fieldtype": "Data",
+   "label": "Business, trade or occupation",
+   "insert_after": "pp_rsr_section"
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rsr_purpose",
+   "fieldtype": "Data",
+   "label": "Purpose for which required",
+   "insert_after": "pp_rsr_occupation"
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rsr_certificate_date",
+   "fieldtype": "Date",
+   "label": "Date of certificate",
+   "insert_after": "pp_rsr_purpose"
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rsr_certificate_by",
+   "fieldtype": "Data",
+   "label": "Certificate given by (name and address)",
+   "insert_after": "pp_rsr_certificate_date"
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rsr_signed_order_date",
+   "fieldtype": "Date",
+   "label": "Date of signed order",
+   "insert_after": "pp_rsr_certificate_by"
+  },
+  {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rsr_prescriber_address",
+   "fieldtype": "Data",
+   "label": "Prescriber's address",
+   "insert_after": "pp_rsr_signed_order_date"
+  }
+ ],
+ "sale_attributes": [
+  {
+   "name": "PP RSR Occupation"
+  },
+  {
+   "name": "PP RSR Purpose"
+  },
+  {
+   "name": "PP RSR Prescriber Address"
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP RSR Stock counts to watch",
+   "ref_doctype": "Stock Reconciliation",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "posting_date",
+    "purpose",
+    "set_warehouse",
+    "docstatus"
+   ],
+   "filters": [
+    [
+     "docstatus",
+     "!=",
+     2
+    ]
+   ],
+   "order_by": "posting_date desc",
+   "roles": [
+    "PP RSR Register Approver"
+   ]
+  }
+ ],
+ "workspaces": [
+  {
+   "name": "PP RSR Regulated stock register",
+   "blocks": [
+    {
+     "type": "header",
+     "data": {
+      "text": "<span class=\"h4\">Regulated stock register</span>",
+      "col": 12
+     }
+    },
+    {
+     "type": "paragraph",
+     "data": {
+      "text": "Open tasks. Until the register door is in your POS app, the books are kept as before: fill the Register details on each Desk sale and delivery of a regulated item, and the till's sale details for each counter sale. Before a stock count of a regulated item, check it with your Register Approver: search Desk for Stock counts to watch. Print the day's register pages at each day's close and keep them at the store, for an outage.",
+      "col": 12
+     }
+    },
+    {
+     "type": "shortcut",
+     "data": {
+      "shortcut_name": "Stock counts",
+      "col": 3
+     }
+    },
+    {
+     "type": "shortcut",
+     "data": {
+      "shortcut_name": "Sales invoices",
+      "col": 3
+     }
+    },
+    {
+     "type": "shortcut",
+     "data": {
+      "shortcut_name": "Delivery notes",
+      "col": 3
+     }
+    },
+    {
+     "type": "shortcut",
+     "data": {
+      "shortcut_name": "Purchase receipts",
+      "col": 3
+     }
+    }
+   ],
+   "shortcuts": [
+    {
+     "type": "DocType",
+     "link_to": "Stock Reconciliation",
+     "label": "Stock counts"
+    },
+    {
+     "type": "DocType",
+     "link_to": "Sales Invoice",
+     "label": "Sales invoices"
+    },
+    {
+     "type": "DocType",
+     "link_to": "Delivery Note",
+     "label": "Delivery notes"
+    },
+    {
+     "type": "DocType",
+     "link_to": "Purchase Receipt",
+     "label": "Purchase receipts"
+    }
+   ]
+  }
+ ]
+}

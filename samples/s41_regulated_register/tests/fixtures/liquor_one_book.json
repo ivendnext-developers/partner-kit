@@ -1,0 +1,76 @@
+{
+  "format": 1,
+  "id": "example_liquor",
+  "title": "Example: a liquor stock register",
+  "jurisdiction": "an example market",
+  "vertical": "liquor",
+  "certified": 0,
+  "notice": "A test data set, not any market's register: it proves a second data set needs no code change.",
+  "sources": [
+    "none: a test fixture"
+  ],
+  "details": {
+    "id_document": {
+      "label": "Identity document seen",
+      "type": "Data",
+      "own": 1
+    }
+  },
+  "books": [
+    {
+      "id": "stock_register",
+      "title": "Liquor stock register",
+      "cite": "none: a test fixture",
+      "item_groups": [
+        "Spirits"
+      ],
+      "numbering": "book_store_item",
+      "balance": 1,
+      "correction": "reversing_line",
+      "retention_years": 3,
+      "medium": "system_of_record",
+      "columns": [
+        {
+          "label": "Date",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "In",
+          "value": [
+            "qty"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "Out",
+          "value": [
+            "qty"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "From or to",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Identity document seen",
+          "value": [
+            "detail:id_document"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Balance",
+          "value": [
+            "balance"
+          ]
+        }
+      ],
+      "per_item_pages": 1
+    }
+  ]
+}
