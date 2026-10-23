@@ -219,15 +219,22 @@ class Manifest(unittest.TestCase):
         self.assertLessEqual({"PP RSR Occupation", "PP RSR Purpose", "PP RSR Prescriber Address"},
                              {a["name"] for a in m["sale_attributes"]})
 
-    def test_a_detail_read_from_the_customer_is_declared_with_its_record(self):
-        rec = {"doctype": "Customer", "match": "customer", "field": "pp_rxc_id_number"}
+    def test_a_detail_read_from_the_customers_linked_record_is_declared_with_its_record(self):
+        # since K1 0.1.2 (PH-B1d) the patient's ID is on the counter-rules app's patient record, which links to the Customer
+        rec = {"doctype": "PP RXC Patient", "match": "customer_link", "field": "id_number"}
         self.assertEqual(declared("sa_pharmacy.drug_register")["details"]["detail_2"], {"label": "رقم الهوية", "record": rec})
         self.assertEqual(declared("ae_abu_dhabi_pharmacy.ph_17")["details"]["detail_2"],
                          {"label": "Patient identifier", "record": rec})
-        # the field it names is K1's, on Customer, today (the door refuses a lookup of a field that does not exist)
+        # the record and field it names are K1's today, the record linking its customer by a field named customer (the
+        # door refuses a lookup of a field that does not exist)
         k1 = json.loads((SAMPLE.parent / "s39_pharmacy_counter" / "manifest.json").read_text(encoding="utf-8"))
-        self.assertIn(("Customer", "pp_rxc_id_number", "Data"),
-                      {(f["dt"], f["fieldname"], f["fieldtype"]) for f in k1["custom_fields"]})
+        pat = next(d for d in k1["doctypes"] if d["name"] == "PP RXC Patient")
+        got = {f["fieldname"]: f for f in pat["fields"]}
+        self.assertEqual(got["id_number"]["fieldtype"], "Data")
+        self.assertEqual((got["customer"]["fieldtype"], got["customer"]["options"], got["customer"].get("unique")),
+                         ("Link", "Customer", 1))
+        self.assertFalse([b for b in build.build_declaration()["register_books"]
+                          if "pp_rxc_id_number" in json.dumps(b)])
 
     def test_a_detail_with_no_source_is_declared_with_none(self):
         # PB-4 spec §15 R-4: the door must accept it and leave its slot empty; the age is the door's computed detail (R-3)
@@ -308,7 +315,7 @@ class DataSetFormat(unittest.TestCase):
     def test_a_record_lookup_takes_the_specs_three_keys(self):
         good = {"doctype": "Customer", "match": "customer", "field": "pp_rxc_id_number"}
         for broken in ({**good, "match": "supplier"}, {k: v for k, v in good.items() if k != "field"}, {**good, "match": "user"},
-                       {**good, "doctype": "PP RXC Patient"},
+                       {**good, "doctype": "PP RXC Patient"}, {**good, "match": "customer_link"},
                        {**good, "filters": "x"}, {**good, "doctype": "<b>Customer</b>"}, {**good, "field": "Bad Field"}):
             self.refused(lambda d: d["details"].__setitem__("id_no", {"label": "ID", "type": "Data", "record": broken}),
                          "details.id_no.record")
@@ -342,6 +349,8 @@ class DataSetFormat(unittest.TestCase):
     def test_the_dispensers_licence_is_a_record_lookup(self):
         self.refused(lambda d: d["authority"]["dispenser_licence"].__setitem__("match", "owner"),
                      "authority.dispenser_licence")
+        self.refused(lambda d: d["authority"]["dispenser_licence"].__setitem__("match", "customer_link"),
+                     "authority.dispenser_licence")  # the dispenser's licence is the user's, never the customer's
 
     def test_a_period_takes_a_month_count_that_divides_the_year_and_its_due_days(self):
         for months in (5, 0, 24, True, "6"):
@@ -659,11 +668,20 @@ class Template(unittest.TestCase):
 
     def test_no_market_or_vertical_in_the_apps_code_or_names(self):
         words = re.compile(r"kenya|nigeria|\bKE\b|pharma|poison|drug|medic|liquor|tobacco|npp", re.I)
+        markets = re.compile(r"kenya|nigeria|ghana|egypt|saudi|emirat|dubai|abu_?dhabi|jordan|mexic|cameroon|rwanda|nairobi|"
+                             r"lagos|accra|cairo|riyadh|amman|sfda|nafdac|mohap|cofepris|tatmeen|nphies|jfda|ppb", re.I)
+        codes = re.compile(r"\b(KE|NG|GH|EG|SA|AE|UAE|JO|MX|KSA|CM|RW)\b")
         self.assertFalse(words.findall((SAMPLE / "layouts" / "register.html").read_text(encoding="utf-8")))
         for py in ("build.py", "routing.py"):  # every name the code uses; its words to a reader may give examples
             with open(SAMPLE / py, encoding="utf-8") as f:
-                idents = [t.string for t in tokenize.generate_tokens(f.readline) if t.type == tokenize.NAME]
+                toks = list(tokenize.generate_tokens(f.readline))
+            idents = [t.string for t in toks if t.type == tokenize.NAME]
             self.assertFalse([i for i in idents if words.search(i)], py)
+            # and no market in the strings the code holds, as S39's test since its 0.1.1: a market's name, or its code as a
+            # value the code compares (docstrings left out, and the trade's words: a description gives a reader examples)
+            text = {tokenize.STRING, getattr(tokenize, "FSTRING_MIDDLE", tokenize.STRING)}   # an f-string's text, 3.12+
+            strings = [t.string for t in toks if t.type in text and not t.string.startswith(('"""', 'r"""'))]
+            self.assertFalse([x for x in strings if markets.search(x) or codes.search(x)], py)
         m = build.build_manifest()
         names = [m["app"], m["prefix"], m["title"], build.ROLE] + [f["fieldname"] for f in m["custom_fields"]] + \
                 [a["name"] for a in m["sale_attributes"]] + [r["name"] for r in m["reports"]] + [w["name"] for w in m["workspaces"]]

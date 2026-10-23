@@ -118,9 +118,9 @@
     "detail_2": {
      "label": "Patient identifier",
      "record": {
-      "doctype": "Customer",
-      "match": "customer",
-      "field": "pp_rxc_id_number"
+      "doctype": "PP RXC Patient",
+      "match": "customer_link",
+      "field": "id_number"
      }
     }
    },
@@ -274,9 +274,9 @@
     "detail_2": {
      "label": "Patient identifier",
      "record": {
-      "doctype": "Customer",
-      "match": "customer",
-      "field": "pp_rxc_id_number"
+      "doctype": "PP RXC Patient",
+      "match": "customer_link",
+      "field": "id_number"
      }
     }
    },
@@ -3315,9 +3315,9 @@
     "detail_2": {
      "label": "رقم الهوية",
      "record": {
-      "doctype": "Customer",
-      "match": "customer",
-      "field": "pp_rxc_id_number"
+      "doctype": "PP RXC Patient",
+      "match": "customer_link",
+      "field": "id_number"
      }
     },
     "detail_3": {
