@@ -391,8 +391,8 @@ details (default `PP RXC`).
 
 ### What was proven where
 
-- **On the laptop:** the tests and canaries above (124 tests, one of them replaying a recorded bench run when one is
-  given; 90 canaries, each RED with its baseline passing).
+- **On the laptop:** the tests and canaries above (126 tests, one of them replaying a recorded bench run when one is
+  given; 93 canaries, each RED with its baseline passing).
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344`, the engine at `dc65d832`):
   - **The setup.** The app was installed through the shop's own installer: five services, switched off, with the
     declared down answers. The service's user held only the app's role and the card's reads, and every read and write
