@@ -79,6 +79,8 @@ S18's rule does not read coupons. **Sample S32** (*Coupon rules*, [recipe](coupo
 | an answer within your timeout | your declared down answer applies otherwise, and one log row is written (no body, no secret) |
 | plain sentences of 1 to 140 characters | the whole answer is judged; one bad value refuses all of it |
 
+**A member group is only as safe as the customer's group.** The till's edit sheet lets a cashier change it (the shop's cashier role saves customers): a customer moved into a member group buys a members-only item. The shop closes it by putting *Customer Group* at permission level 1 in *Customize Form* and giving level-1 write only to its managers: the cashier's change then leaves the group as it was ([Customers by store](customers_by_store.md), rule 7). Put that in the setup, with what follows from it: a cashier can no longer choose a group for a new customer (it takes the store's default group), the till still says *Saved* after a group change it dropped, and no cashier's role may keep level-1 write (Sales Master Manager has it by default).
+
 ## Technical notes
 
 ### What was proven where

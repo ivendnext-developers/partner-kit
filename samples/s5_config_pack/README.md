@@ -55,6 +55,7 @@ Run it twice and nothing doubles. Add `--remove` to undo it.
 ## Before you build on it
 
 - **The member discount is a promotion,** not a pricing rule: this version of iVendNext refuses selling pricing rules.
+- **The member price follows the customer's group.** The till's edit sheet lets a cashier change a customer's group, so a cashier could give a non-member the member price. A shop that must prevent it puts Customer Group at a permission level only its managers write ([S47](../s47_customers_by_store/README.md), step 3).
 - **What it does not show.** It hides or requires no till field, refuses no wrong detail when the record is saved, and adds no wallet. Each has shipped as its own extension point: field rules ([S21](../s21_field_rules/README.md)), save rules ([the recipe](../../recipes/save_rules.md)), a partner wallet ([S22](../s22_customer_loyalty/README.md)). A card check has not shipped.
 
 ## Technical notes
