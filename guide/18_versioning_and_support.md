@@ -33,7 +33,7 @@ A change that would break a version-1 service is a new version, published beside
 
 - **`manifest_version`** in your manifest. The checker reads versions 1 and 2; write 2 (chapter 7).
 - **The version line of the contract's page.** Every extension point's library page says *Version 1*.
-- **A header on the call.** A call to your service for a Desk action, a check, a capture or a fulfil at sale (POS build 2.0.0.654 on) carries `X-iVendNext-Point: <point>/<version>` — for example `check/1`, `capture/1`, `desk_action/1`, `fulfil/1`. The body repeats it where the page says so (`"point": "check/1"`, and a `"v": 1` in the context). The remote till key's call carries `User-Agent: iVendNext-POS-AppKey/1` instead. A payment connector's calls (card, push or wallet) carry `X-iVendNext-Point: paygw/1` (the payments core's wire contract). Pricing sends your server no call: the certified module runs inside the shop. A partner page is framed by the till, which sends your server no call: its version is the `"v": 1` in the signed context. The event feed, the save rules, the scan source, the field rules, the fiscal reader, the label layout, the receipt settings and the list marks send no call to you either: the shop declares them, and their page's version line is the version.
+- **A header on the call.** A call to your service for a Desk action, a check, a capture, a document check or a fulfil at sale (POS build 2.0.0.654 on) carries `X-iVendNext-Point: <point>/<version>` — for example `check/1`, `capture/1`, `desk_action/1`, `doccheck/1`, `fulfil/1`. The body repeats it where the page says so (`"point": "check/1"`, and a `"v": 1` in the context). The remote till key's call carries `User-Agent: iVendNext-POS-AppKey/1` instead. A payment connector's calls (card, push or wallet) carry `X-iVendNext-Point: paygw/1` (the payments core's wire contract). Pricing sends your server no call: the certified module runs inside the shop. A partner page is framed by the till, which sends your server no call: its version is the `"v": 1` in the signed context. The event feed, the save rules, the scan source, the field rules, the fiscal reader, the label layout, the receipt settings and the list marks send no call to you either: the shop declares them, and their page's version line is the version.
 - **The changelog**, a dated entry for every change.
 
 ## Steps
@@ -103,7 +103,7 @@ Without `_build.py` the app reports `2.1.0.0`: a build nobody stamped, which is 
 ### Sources
 
 - **The policy** is our decision of 2026-10-08.
-- **The library pages** read: all fourteen: `remote_till_key`, `event_feed`, `save_rules`, `desk_action`, `partner_page`, `fiscal_reader`, `partner_check`, `scan_source`, `partner_capture`, `fields`, `label_layout`, `receipt`, `price`, `wallet` (`docs/extending/` in the POS app, at `8ce9bed2`).
+- **The library pages** read: all fourteen: `remote_till_key`, `event_feed`, `save_rules`, `desk_action`, `partner_page`, `fiscal_reader`, `partner_check`, `scan_source`, `partner_capture`, `fields`, `label_layout`, `receipt`, `price`, `wallet` (`docs/extending/` in the POS app, at `8ce9bed2`). The four added since, `doccheck`, `partner_fulfil`, `list_mark` and `print_template_readers`, read in the kit's copies at `7d47d331a` (build 2.0.0.654, `contracts/pages/`).
 
 ## See also
 
