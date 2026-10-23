@@ -21,4 +21,4 @@ The standard *Process Statement Of Accounts*: pick the customers, the layout, th
 - A customer with no e-mail address is skipped by the send (read from the code).
 
 ## Tell the customer
-Each customer's statement is a PDF made on demand, and can be e-mailed on a schedule once the shop's outgoing e-mail is set up; we have not run a send.
+Each customer's statement is a PDF made on demand, and can be e-mailed on a schedule once the retailer's outgoing e-mail is set up; we have not run a send.

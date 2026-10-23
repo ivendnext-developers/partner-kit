@@ -2,7 +2,7 @@
 
 **Goal.** A small function, compiled to WebAssembly, that gives the same answer on the server and on an offline till, at an extension point that offers one.
 
-**Read first, and tell the person.** [guide/08_sandboxed_functions.md](../guide/08_sandboxed_functions.md) says which extension points take a sandboxed function today: the check before payment and pricing. If the need is at another, a module has nowhere to go: say so, use a higher way in, or request the extension point (guide 9, `feedback/point_request.md`). Tell the person too that a module runs on a shop only after CitiXsys certifies it (by hand today; a route for submitting one is planned) and the shop's administrator adds it in Desk. Do not build the function and hope.
+**Read first, and tell the person.** [guide/08_sandboxed_functions.md](../guide/08_sandboxed_functions.md) says which extension points take a sandboxed function today: the check before payment and pricing. If the need is at another, a module has nowhere to go: say so, use a higher way in, or request the extension point (guide 9, `feedback/point_request.md`). Tell the person too that a module runs on a retailer's iVendNext only after CitiXsys certifies it (by hand today; a route for submitting one is planned) and the retailer's administrator adds it in Desk. Do not build the function and hope.
 
 **Read.** [tools/wasm_kit/README.md](../tools/wasm_kit/README.md) · [tools/wasm_kit/CONTRACT.md](../tools/wasm_kit/CONTRACT.md) · [tools/wasm_kit/HOST_CONTRACT.md](../tools/wasm_kit/HOST_CONTRACT.md).
 

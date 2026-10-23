@@ -10,7 +10,7 @@ A till key lets the cashier see an answer from your server **during** a sale: a 
 
 ## When to use it
 
-Rung 3 of the ladder (chapter 3), after configuration (chapter 4) and an outside app (chapter 5). The cashier taps a key; the till calls your HTTPS service with the sale as it stands; you answer with a **message** to read, **sale details**, **values for its lines**, or any of them together; the cashier confirms before the till applies them. It never changes a price, a total or a payment. Python that runs inside the shop is not a partner route (chapter 3).
+Rung 3 of the ladder (chapter 3), after configuration (chapter 4) and an outside app (chapter 5). The cashier taps a key; the till calls your HTTPS service with the sale as it stands; you answer with a **message** to read, **sale details**, **values for its lines**, or any of them together; the cashier confirms before the till applies them. It never changes a price, a total or a payment. Python that runs inside the retailer's iVendNext is not a partner route (chapter 3).
 
 ## Steps
 
@@ -23,7 +23,7 @@ Rung 3 of the ladder (chapter 3), after configuration (chapter 4) and an outside
    ```
 
    ⛔ **No prices, no totals, no serial numbers.** If you need a serial, ask the cashier on your own page, or read the booked sale afterwards (chapter 5). The till sends what is on the device, so never grant value on this context alone.
-2. **Write your logic once, as a function with nothing from iVendNext in it:** the context and your own reference data in, the answer out. Record a few real contexts and test against them without a shop:
+2. **Write your logic once, as a function with nothing from iVendNext in it:** the context and your own reference data in, the answer out. Record a few real contexts and test against them without a retailer's iVendNext:
 
    ```bash
    python3 -m unittest discover -s samples/s1_warranty/tests -p 'test_core.py'
@@ -48,16 +48,16 @@ Rung 3 of the ladder (chapter 3), after configuration (chapter 4) and an outside
 
    What each call looks like, and what you check:
    - Each call is one `POST` with the headers `X-iVendNext-Timestamp`, `X-iVendNext-Signature` and `X-iVendNext-Request-Id`, and the body `{"app", "key", "returns", "context"}`.
-   - Verify it against the **raw body** before parsing. The signature is the base64 HMAC-SHA256 of `<timestamp>.<raw body>` with the secret you and the shop share. A timestamp more than five minutes from your clock is refused.
+   - Verify it against the **raw body** before parsing. The signature is the base64 HMAC-SHA256 of `<timestamp>.<raw body>` with the secret you and iVendNext share. A timestamp more than five minutes from your clock is refused.
    - Answer a JSON object of at most 64 KB, well inside the time to answer.
-   - Only **HTTPS** is called, with the certificate checked against your host name. An address that resolves to a private network is refused unless the shop's site is set to allow it (for test sites).
-5. **The shop registers the key.** A System Manager opens **Retail Remote App Key** in Desk and adds one record per key: your name as the partner, an app name, the key, its label, what it may return, your HTTPS address, the signing secret, and the **time to answer**: 3 seconds unless raised. Design for 3. The ceiling depends on who sets it: the record itself accepts at most 10 seconds (this step, filled in by hand in Desk), and a manifest may declare at most 5 (our checker refuses more). The administrator ticks **the customer's consent** to send the listed sale details to your address. Then the store switches the key on in **POS Studio → the theme → Apps → tick the key → Save**. The counter and tablet layouts show it; the phone shows no key. If your package is a manifest, it can declare the key too (chapter 7): it is installed switched off, with consent not given.
+   - Only **HTTPS** is called, with the certificate checked against your host name. An address that resolves to a private network is refused unless the retailer's site is set to allow it (for test sites).
+5. **The retailer registers the key.** A System Manager opens **Retail Remote App Key** in Desk and adds one record per key: your name as the partner, an app name, the key, its label, what it may return, your HTTPS address, the signing secret, and the **time to answer**: 3 seconds unless raised. Design for 3. The ceiling depends on who sets it: the record itself accepts at most 10 seconds (this step, filled in by hand in Desk), and a manifest may declare at most 5 (our checker refuses more). The administrator ticks **the customer's consent** to send the listed sale details to your address. Then the store switches the key on in **POS Studio → the theme → Apps → tick the key → Save**. The counter and tablet layouts show it; the phone shows no key. If your package is a manifest, it can declare the key too (chapter 7): it is installed switched off, with consent not given.
 
    ![A till key's record in Desk: switched on, message only, the partner's HTTPS address](../samples/s6_ai_till_key/screenshots/03_the_key_in_desk.png)
 
    *A till key's record in Desk: switched on, it may return a message only, and it calls the partner's HTTPS address (sample S6; the picture is cut above the signing secret).*
 
-6. **Test your service's failures before the shop does.** Make it slow, make it fail, send the wrong shape. Check that the cashier would read one of the three sentences below and nothing would be added to the sale. The warranty sample's fault routes (`remote/wrapper.py`) do this; they are on only when its test runner starts it, and your copy deletes them.
+6. **Test your service's failures before iVendNext does.** Make it slow, make it fail, send the wrong shape. Check that the cashier would read one of the three sentences below and nothing would be added to the sale. The warranty sample's fault routes (`remote/wrapper.py`) do this; they are on only when its test runner starts it, and your copy deletes them.
 
 ## What is refused, and why
 
@@ -84,8 +84,8 @@ Every failure ends in a refusal in words, with **nothing added to the sale**. Th
 ### Sources for the plain layer
 
 - **The refusal words:** the stand-in caller below writes the same words the remote till key publishes.
-- **The manifest-declared key (step 5):** installed switched off, consent not given, and read back on the test shop (2026-10-07). From the release that carries the change, it is ready in POS Studio > Apps once the app is installed; that has not been walked with a kit sample.
-- **Offline:** by the till's own documentation the key is dimmed on an offline till and the sale goes on without it. **This was not run:** the test shop had no offline till.
+- **The manifest-declared key (step 5):** installed switched off, consent not given, and read back on the test site (2026-10-07). From the release that carries the change, it is ready in POS Studio > Apps once the app is installed; that has not been walked with a kit sample.
+- **Offline:** by the till's own documentation the key is dimmed on an offline till and the sale goes on without it. **This was not run:** the test site had no offline till.
 
 ### What the kit has proven
 
@@ -97,9 +97,9 @@ Every failure ends in a refusal in words, with **nothing added to the sale**. Th
 
 - **A refusal seen on a real till.** A press through the remote till key was walked once, and answered (our test bench, 2026-10-07: S6's *AI tip*, pressed by a cashier on the till over HTTPS, the bench's server trusting a throw-away certificate for the run; `recipes/ai_till_key.md`); the till's refusal sentences were not seen on its screen.
 - **Registering the key and switching it on by hand** (step 5) in Desk: never done. The record type is there (the iVendNext POS app at `8dc36aab8` carries `retail_remote_app_key`), and two bench runs saved a key record and its theme row by the record's own save (2026-10-07; S6's walk). The Desk form, its consent tick and POS Studio's Apps tab were not walked.
-- **A manifest-installed key pressed from a physical till.** The install was read back on the test shop (chapter 7); a press from a physical till was not tried.
+- **A manifest-installed key pressed from a physical till.** The install was read back on the test site (chapter 7); a press from a physical till was not tried.
 - **The "cannot use" sentence,** end to end through the stand-in.
-- **A certificate a shop trusts by default,** at a real till: the walk's was trusted for the run only.
+- **A certificate iVendNext trusts by default,** at a real till: the walk's was trusted for the run only.
 - **Offline,** as above.
 
 ### The pictures

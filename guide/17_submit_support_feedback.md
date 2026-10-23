@@ -22,7 +22,7 @@ When your work has passed the checks in chapter 14 and you want it in front of a
    ```
 
    Also: the local admission check for a sandboxed function (chapter 8), and the customer's release gate in the customer's own pipeline (chapter 14).
-3. **Submit.** A manifest is **not** submitted to us: it goes to the shop, whose administrator installs it from the install screen, checked by our code (chapter 7); on your sandbox you install it yourself with `deploy`. An app for many customers is published to the App library with `tools/publish/publish.py` ([*Publish your app*](../site/pages/publish.md)). A sandboxed module is certified by us by hand today. Of the two checks planned for a submission, the screen check against the design kit is built as a script you can run yourself (chapter 13a); running it on a submission waits on this step. The check of a remote endpoint is not built.
+3. **Submit.** A manifest is **not** submitted to us: it goes to iVendNext, whose administrator installs it from the install screen, checked by our code (chapter 7); on your sandbox you install it yourself with `deploy`. An app for many customers is published to the App library with `tools/publish/publish.py` ([*Publish your app*](../site/pages/publish.md)). A sandboxed module is certified by us by hand today. Of the two checks planned for a submission, the screen check against the design kit is built as a script you can run yourself (chapter 13a); running it on a submission waits on this step. The check of a remote endpoint is not built.
 4. **Choose a feedback form.** Go down this list and send the first that fits:
 
    | If… | Send |
@@ -58,7 +58,7 @@ When your work has passed the checks in chapter 14 and you want it in front of a
 ### What the kit has proven
 
 - **The checks you run yourself:** the manifest checker, a sandboxed function's local admission and the customer's release gate were each run in this programme's own tests (chapters 7, 8 and 14 say how far).
-- **The forms and the blueprint exist,** with a filled example blueprint for an invented chain of phone shops ([Blueprint example](../kit/blueprint_example.md)).
+- **The forms and the blueprint exist,** with a filled example blueprint for an invented chain of phone stores ([Blueprint example](../kit/blueprint_example.md)).
 
 ### What it has not
 

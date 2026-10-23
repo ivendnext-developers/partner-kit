@@ -11,7 +11,7 @@ Before you quote a customer. Place every need on the ladder (chapter 3) first: m
 A customer's own behaviour, without changing iVendNext itself:
 - the customer's rules at the till — a warranty check, a member's balance, a refusal before payment;
 - the customer's own records in iVendNext Desk — warranties, bins, a loyalty ledger — with native screens;
-- links to the customer's own systems — an ERP, an online shop, a warehouse system, a loyalty programme;
+- links to the customer's own systems — an ERP, an web store, a warehouse system, a loyalty programme;
 - reports, approvals, print formats, labels;
 - an AI assistant that works with the customer's data on the user's own key.
 
@@ -29,11 +29,11 @@ Your work keeps working when we upgrade iVendNext, because it uses only publishe
 8. Before every upgrade, the customer's own gate runs against the new release (chapter 14).
 9. Tell us what is missing: an extension point, a recipe, a sample, a defect (chapter 17).
 
-The path is the same for a three-store shop and for a fifty-store chain. A large project's blueprint adds a scale proof, a release gate in the customer's own CI and, where an extension point is missing, joint work with us on that extension point. The project's needs decide that, not its size.
+The path is the same for a three-store retailer and for a fifty-store chain. A large project's blueprint adds a scale proof, a release gate in the customer's own CI and, where an extension point is missing, joint work with us on that extension point. The project's needs decide that, not its size.
 
 ## What is refused, and why
 
-You never put your own server code inside a customer's iVendNext site, and you never change money, overrides or our code (the full list is in chapter 3). Your logic runs on your own server, or as data the shop installs, checked by our code (a manifest), or, at the extension points that take one (the check before payment and pricing), as a sandboxed function we certify (chapter 8). That keeps every customer on the same product and every upgrade safe.
+You never put your own server code inside a customer's iVendNext site, and you never change money, overrides or our code (the full list is in chapter 3). Your logic runs on your own server, or as data the retailer installs, checked by our code (a manifest), or, at the extension points that take one (the check before payment and pricing), as a sandboxed function we certify (chapter 8). That keeps every customer on the same product and every upgrade safe.
 
 ## When your service is down, and when the till is offline
 
@@ -43,6 +43,6 @@ Design for both from the first day:
 
 ## Checking your work
 
-Every chapter ends with the tests for its door, in its Technical notes. The checks you can run yourself are in chapter 14 (the manifest checker, the money kit, the customer's release gate); the shop's install runs the same manifest checker again, inside the site (chapter 7).
+Every chapter ends with the tests for its door, in its Technical notes. The checks you can run yourself are in chapter 14 (the manifest checker, the money kit, the customer's release gate); iVendNext's install runs the same manifest checker again, inside the site (chapter 7).
 
 **Read next:** [2. Getting started](02_getting_started.md) · [3. The ladder and the four rules](03_ladder_and_never_list.md).

@@ -13,7 +13,7 @@ request: -
 verified: 2026-10-22 · bench
 ---
 ## What you build
-Drug schedules, pharmacists and prescriptions as the shop's own records, and a service that answers the check before payment and the Desk's document checks. A prescription line is paid only against a prescription for this customer, in date for its class, with a fill and quantity left; the fill is reserved when the check answers, so two tills cannot both spend the last one. A pharmacist-only line is paid only by a pharmacist whose licence is in date; a controlled line needs the customer's identity fields; caps per sale and per patient hold; dispensed medicine is refused at a return and on a Desk credit note.
+Drug schedules, pharmacists and prescriptions as the retailer's own records, and a service that answers the check before payment and the Desk's document checks. A prescription line is paid only against a prescription for this customer, in date for its class, with a fill and quantity left; the fill is reserved when the check answers, so two tills cannot both spend the last one. A pharmacist-only line is paid only by a pharmacist whose licence is in date; a controlled line needs the customer's identity fields; caps per sale and per patient hold; dispensed medicine is refused at a return and on a Desk credit note.
 
 ## Limits
 - Answered when the cashier presses Pay, not when the line is entered.

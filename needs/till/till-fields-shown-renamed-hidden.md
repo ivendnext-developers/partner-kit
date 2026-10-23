@@ -1,6 +1,6 @@
 ---
 id: till-fields-shown-renamed-hidden
-title: The shop's own fields on the till, renamed or hidden
+title: The retailer's own fields on the till, renamed or hidden
 area: till
 topic: till-screen
 asks: Show our own fields on the till, call them by our words, hide the ones we never use
@@ -14,7 +14,7 @@ verified: carried 2026-10-16 · not re-run
 popular: yes
 ---
 ## What you build
-Field rules per till theme: hide a field, call it by the shop's word, or show up to three more item and three more customer fields, offline too. It is data: no code runs.
+Field rules per till theme: hide a field, call it by the retailer's word, or show up to three more item and three more customer fields, offline too. It is data: no code runs.
 
 ## Limits
 - Up to three more item fields and three more customer fields; the field rules page lists which fields.

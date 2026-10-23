@@ -13,11 +13,11 @@ request: -
 verified: carried 2026-10-16 · not re-run
 ---
 ## What you build
-The shop declares a table of its units' own codes; the till's scan finds the unit, its batch and serial, and refuses one already sold. It is data: no code runs.
+The retailer declares a table of its units' own codes; the till's scan finds the unit, its batch and serial, and refuses one already sold. It is data: no code runs.
 
 ## Limits
 - A unit sold on another till a moment before: not run in the kit (the product's own tests cover it).
-- When the code must be checked on Desk documents too (receipts, transfers, counts), make it a serial number instead: the card units-as-serial-numbers, sample S30. This card's scan source stays for codes a shop keeps in its own table.
+- When the code must be checked on Desk documents too (receipts, transfers, counts), make it a serial number instead: the card units-as-serial-numbers, sample S30. This card's scan source stays for codes a retailer keeps in its own table.
 - A batch-and-serial unit is booked at the till with the batch its serial number carries from POS build 2.0.0.654; before it, a unit sold reliably only from the lot iVendNext picks first.
 
 ## Tell the customer

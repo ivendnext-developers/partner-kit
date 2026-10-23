@@ -13,7 +13,7 @@ request: -
 verified: carried 2026-10-15 · not re-run
 ---
 ## What you build
-Nothing inside the shop: the connectors on our framework are ours.
+Nothing inside the retailer's iVendNext: the connectors on our framework are ours.
 
 ## Limits
 - Today: build an outside app instead.

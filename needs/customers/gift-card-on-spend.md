@@ -13,7 +13,7 @@ request: -
 verified: carried 2026-10-16 · not re-run
 ---
 ## What you build
-An outside app reads booked sales from the feed and issues the shop's own gift card, released after the hold.
+An outside app reads booked sales from the feed and issues the retailer's own gift card, released after the hold.
 
 ## Limits
 - The card is made after the sale, not on its receipt.

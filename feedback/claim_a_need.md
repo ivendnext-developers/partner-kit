@@ -18,7 +18,7 @@ A claim is how you keep us out of your way: once we accept it, we do not start t
 Company: <your company's name, as you registered it with the iVendNext Partner programme>
 
 ## 1. What you will build
-<The app or the solution, who uses it, and how a shop will get it: listed in the App library for every shop, or delivered customer by customer.>
+<The app or the solution, who uses it, and how a retailer will get it: listed in the App library for every retailer, or delivered customer by customer.>
 
 ## 2. Your market
 <The countries or the region you will sell it in.>

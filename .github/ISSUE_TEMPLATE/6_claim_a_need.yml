@@ -17,7 +17,7 @@ body:
     id: s1
     attributes:
       label: "1. What you will build"
-      placeholder: "The app or the solution, who uses it, and how a shop will get it: listed in the App library for every shop, or delivered customer by customer."
+      placeholder: "The app or the solution, who uses it, and how a retailer will get it: listed in the App library for every retailer, or delivered customer by customer."
     validations:
       required: true
   - type: textarea

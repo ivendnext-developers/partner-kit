@@ -4,7 +4,7 @@
 
 **Read.** [kit/blueprint.md](../kit/blueprint.md) · [guide/03_ladder_and_never_list.md](../guide/03_ladder_and_never_list.md) · [guide/15_customer_archetypes.md](../guide/15_customer_archetypes.md) · the needs catalogue ([needs/README.md](../needs/README.md)) and [guide/16_possible_not_possible.md](../guide/16_possible_not_possible.md) · [guide/09_points_and_requests.md](../guide/09_points_and_requests.md).
 
-**Samples that combine ways in.** [samples/s1_warranty/](../samples/s1_warranty/) (outside service, a record type and a till key) · [samples/s22_customer_loyalty/](../samples/s22_customer_loyalty/) (logic outside, records inside the shop) · [samples/s11_approvals/](../samples/s11_approvals/) (a manifest with a workflow, and a nightly export).
+**Samples that combine ways in.** [samples/s1_warranty/](../samples/s1_warranty/) (outside service, a record type and a till key) · [samples/s22_customer_loyalty/](../samples/s22_customer_loyalty/) (logic outside, records inside the retailer's iVendNext) · [samples/s11_approvals/](../samples/s11_approvals/) (a manifest with a workflow, and a nightly export).
 
 **Steps.**
 1. **Fill the blueprint.** Copy `kit/blueprint_template.md` into the project and fill it (`kit/blueprint.md` says how): the project in two lines, then one row per need in the customer's words. Mark a guess as a guess.
@@ -16,6 +16,6 @@
 
 **Check.** Every recipe's check, then `python3 tools/check/check.py <project folder>` over the whole project, green; the project's own unit tests, green.
 
-**Done looks like.** The blueprint is filled and agreed; each need is built on its way in or marked as a request; the check is green; the README tells the person how to put it on their own sandbox; no key, secret or real customer detail is in any file; nothing was written to a shop without a yes.
+**Done looks like.** The blueprint is filled and agreed; each need is built on its way in or marked as a request; the check is green; the README tells the person how to put it on their own sandbox; no key, secret or real customer detail is in any file; nothing was written to a retailer's iVendNext without a yes.
 
 **Never.** Choose a way in because it is more fun to build. The highest way in that does the job wins.

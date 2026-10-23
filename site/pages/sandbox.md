@@ -1,6 +1,6 @@
 # Request a sandbox
 
-A sandbox site is your own iVendNext shop, hosted by us and full of made-up demo data. It is where you build and test before you touch a customer's site. It is for anyone who builds for an iVendNext customer: an iVendNext Partner, or a licensed customer's IT team.
+A sandbox site is your own iVendNext site, hosted by us and full of made-up demo data. It is where you build and test before you touch a customer's site. It is for anyone who builds for an iVendNext customer: an iVendNext Partner, or a licensed customer's IT team.
 
 Your site's address looks like `yourcompany.sandbox.ivend.co`. We tell you the address when the site is ready.
 

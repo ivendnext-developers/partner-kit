@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/lucky_draw.md
 sample: samples/s44_lucky_draw
 request: -
-verified: run on our test bench 2026-10-23 · the shop's own till sales and a return counted, drawn once, the draw refused before the last day and not repeated, walked in a browser as the campaign's manager
+verified: run on our test bench 2026-10-23 · the retailer's own till sales and a return counted, drawn once, the draw refused before the last day and not repeated, walked in a browser as the campaign's manager
 ---
 ## What you build
 A campaign record and two buttons on it: *Count entries* and *Draw winners*. Your service reads the campaign's till sales, counts each sale's entries net of its returns, draws the winners and reserves, and writes the results on the campaign.
@@ -22,7 +22,7 @@ A campaign record and two buttons on it: *Count entries* and *Draw winners*. You
 - One press reads the whole campaign: if a campaign is too large for one press, the press writes nothing; split it by till.
 - A credit note made in Desk after the day closed takes no entries off; the till's own returns do.
 - The app never draws a campaign twice, but someone with write on campaigns can still remove a result row or change a drawn one; its history shows it.
-- A draw may need a permit where you sell, and some countries require a free way to enter: both are the shop's.
+- A draw may need a permit where you sell, and some countries require a free way to enter: both are the retailer's.
 - The customer's own entries are not shown at the till or on the receipt.
 
 ## Tell the customer

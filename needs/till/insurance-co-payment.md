@@ -13,7 +13,7 @@ request: P-PAYER
 verified: 2026-10-23 · tests (the rules, claims, remittances) · not run (the door)
 ---
 ## What you build
-A payer service: its payers, plans, formularies and members as records in the shop; claims made from the sales the
+A payer service: its payers, plans, formularies and members as records in the retailer's iVendNext; claims made from the sales the
 POS app's payer door books, filed as a file, matched to the payer's remittance. Start from sample S43 (`samples/s43_third_party_payer`)
 and its recipe, *Third-party payer* (`recipes/third_party_payer.md`).
 

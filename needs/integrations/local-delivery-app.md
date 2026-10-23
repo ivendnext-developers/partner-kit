@@ -13,12 +13,12 @@ request: -
 verified: read 2026-10-22 in the system sync and event feed recipes · S7's pattern with a delivery app (orders out, status back) not built or run
 ---
 ## What you build
-Your outside app on S7's pattern: it reads each order to deliver from the event feed, sends it to the delivery app, and writes the delivery's status back to the shop over the API.
+Your outside app on S7's pattern: it reads each order to deliver from the event feed, sends it to the delivery app, and writes the delivery's status back to iVendNext over the API.
 
 ## Limits
 - Not run: no sample sends orders to a delivery app.
 - The feed reports an order after it is booked, so the delivery app hears of it seconds later.
-- The status lands where your app writes it (a field your manifest adds, or a record of your own), not on a screen the shop already has.
+- The status lands where your app writes it (a field your manifest adds, or a record of your own), not on a screen the retailer already has.
 
 ## Tell the customer
 Orders to deliver reach your delivery company within seconds, and each order shows the status the delivery company reports.

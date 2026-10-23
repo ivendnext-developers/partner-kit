@@ -14,14 +14,14 @@ verified: 2026-10-23 · bench
 related: recipes-off-stock, item-fields-on-receipt
 ---
 ## What you build
-An *Allergens* field on Item from your manifest, filled by the shop on its dishes and ingredients in its own words. Two field rules on the till theme (POS Studio, *Fields*) show it under each line of the sale and print it under the item on the receipt. A **Check allergens** button on the Item list writes a check record of every dish that leaves out an allergen one of its recipe's ingredients carries (at every depth), every variant with none of its template's, and every word that is not on the shop's allergen list, and opens it.
+An *Allergens* field on Item from your manifest, filled by the retailer on its dishes and ingredients in its own words. Two field rules on the till theme (POS Studio, *Fields*) show it under each line of the sale and print it under the item on the receipt. A **Check allergens** button on the Item list writes a check record of every dish that leaves out an allergen one of its recipe's ingredients carries (at every depth), every variant with none of its template's, and every word that is not on the retailer's allergen list, and opens it.
 
 ## Limits
-- The check names what to fix and changes nothing: the shop corrects the dish. It cannot know an allergen nobody typed.
+- The check names what to fix and changes nothing: the retailer corrects the dish. It cannot know an allergen nobody typed.
 - The kitchen ticket does not print it.
 - The till shows at most three extra item fields per theme, and the field holds 140 characters.
 - A variant shows its own field: type it, or copy it through Item Variant Settings where every variant shares the template's allergens.
-- A receipt layout of the shop's own prints it only if it calls the till's item-fields reader.
+- A receipt layout of the retailer's own prints it only if it calls the till's item-fields reader.
 
 ## Tell the customer
 The cashier sees a dish's allergens on the sale, the receipt prints them, and one press checks every dish against its recipe.

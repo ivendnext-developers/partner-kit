@@ -4,7 +4,7 @@ From nothing to your first working call against an iVendNext site. You need git,
 
 ## 1. Request a sandbox site
 
-A sandbox site is your own iVendNext shop, hosted by us and full of made-up demo data, where you build and test before you touch a customer's site. You receive an address in your name, an administrator login, and logins for the shop's people. You never receive the software or a server.
+A sandbox site is your own iVendNext site, hosted by us and full of made-up demo data, where you build and test before you touch a customer's site. You receive an address in your name, an administrator login, and logins for the retailer's people. You never receive the software or a server.
 
 [Request a sandbox](sandbox.md) and read what is on your site and what its limits are.
 
@@ -42,6 +42,6 @@ Each [sample](../../samples/) is a small working example of one way in, with its
 
 [Chapter 3](../../guide/03_ladder_and_never_list.md) is the order in which to try the ways in: configure first, then an outside app, a till key, a manifest, a sandboxed function, and last a request for a new extension point. Most needs stop at the first two. The [recipes](../../recipes/) are one per way in. Before you quote a customer, place every need on the ladder with the [project blueprint](../../kit/blueprint.md).
 
-Before your app talks to a shop, read [Security and the handshake](security.md): consent, your app's own user, the signed call and its check. Every record call the samples make is in the [API reference](api.md). When your service is ready to leave your laptop: [Host with CitiXsys or run your own](hosting.md).
+Before your app talks to a retailer's iVendNext, read [Security and the handshake](security.md): consent, your app's own user, the signed call and its check. Every record call the samples make is in the [API reference](api.md). When your service is ready to leave your laptop: [Host with CitiXsys or run your own](hosting.md).
 
 When something is missing or broken, [tell us](feedback.md).

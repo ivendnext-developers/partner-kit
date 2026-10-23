@@ -13,7 +13,7 @@ request: -
 verified: 2026-10-21 · bench
 ---
 ## What you build
-A Serving store field on the shop's own Territory tree (a district's store, or the store of the territory above it), and a button on a draft sales order, *Send to store*, answered by your service: it walks the order's territory up the tree, checks the store's warehouse, and writes it on the order and on every line. The store then sees the order in its own list.
+A Serving store field on the retailer's own Territory tree (a district's store, or the store of the territory above it), and a button on a draft sales order, *Send to store*, answered by your service: it walks the order's territory up the tree, checks the store's warehouse, and writes it on the order and on every line. The store then sees the order in its own list.
 
 ## Limits
 - An agent presses the button: an order is not routed on its own when it is saved.

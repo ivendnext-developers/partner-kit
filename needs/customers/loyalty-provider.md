@@ -13,7 +13,7 @@ request: -
 verified: read 2026-10-22 in the event feed, wallet and capture recipes and contracts · the three together not run (no sample calls a provider)
 ---
 ## What you build
-Your outside app between the shop and the provider: earning from the event feed, spending through the wallet, and a one-time code where the provider asks for one. The provider's account and keys stay on your server.
+Your outside app between iVendNext and the provider: earning from the event feed, spending through the wallet, and a one-time code where the provider asks for one. The provider's account and keys stay on your server.
 
 ## Limits
 - The combination is not run: no sample calls a provider.

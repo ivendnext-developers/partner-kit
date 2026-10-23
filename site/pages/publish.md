@@ -15,7 +15,7 @@ This site helps you **build** an app. The **App library** (`https://library.iven
    ```
 
    It keeps the private half in `~/.ivendnext/library-signing.key` and prints one line starting `ivn-ed25519:`. That line is public.
-2. **We register your company once.** Send us, through Help (`https://help.ivendnext.com`) or your account manager: your company's name as retailers see it, the line `keygen` printed, your `recipient.pem` (below) and the first word you would like for your company (for example `acme`: letters and digits, starting with a letter, 2 to 12 in all; not one that is ours or another company's, and not one of the 22 words the shop's checker refuses as a prefix's first word, listed on the save rules page: `is`, `for`, `set`, `base`, `free`, `price` …). We give each company its own word, once, and a company registered before we gave words asks for its word through Help; you then name every app under it yourself (`ACME LOYALTY` → `acme_loyalty`), with no wait on us, and no other company can take a name under it. The *App listing request* form is for your first app's listing; send the key line and `recipient.pem` through Help, not in the form.
+2. **We register your company once.** Send us, through Help (`https://help.ivendnext.com`) or your account manager: your company's name as retailers see it, the line `keygen` printed, your `recipient.pem` (below) and the first word you would like for your company (for example `acme`: letters and digits, starting with a letter, 2 to 12 in all; not one that is ours or another company's, and not one of the 22 words iVendNext's checker refuses as a prefix's first word, listed on the save rules page: `is`, `for`, `set`, `base`, `free`, `price` …). We give each company its own word, once, and a company registered before we gave words asks for its word through Help; you then name every app under it yourself (`ACME LOYALTY` → `acme_loyalty`), with no wait on us, and no other company can take a name under it. The *App listing request* form is for your first app's listing; send the key line and `recipient.pem` through Help, not in the form.
 3. **You publish.** From your project's folder:
 
    ```bash
@@ -28,7 +28,7 @@ This site helps you **build** an app. The **App library** (`https://library.iven
    - **The first time**, the listing waits for one approval by us. The command says so, with the request's id.
    - **A later version** is listed at once, unless it does more than the one before: a new outside address, an outside service with its own user, or more Desk users. That waits for one approval again.
 6. **An app made for one customer** goes to that customer's own *Made for you* shelf, with **no approval by us**. Their administrator pastes the shelf key you send them, once on their test site and once on their live site, and agrees to each install.
-   - **An app hosted by CitiXsys** carries its own key for the customer's sites on the shelf, so the site connects it by itself, as an app from the public list. A site the customer adds later gets its key the next time you publish that app to the shelf; a site that installed the app before its key arrived connects once you publish a higher version and the shop takes the update.
+   - **An app hosted by CitiXsys** carries its own key for the customer's sites on the shelf, so the site connects it by itself, as an app from the public list. A site the customer adds later gets its key the next time you publish that app to the shelf; a site that installed the app before its key arrived connects once you publish a higher version and the retailer takes the update.
    - **A site can hold several shelves**, from several companies: each opens with its own shelf key and shows as its own section. Your app takes its updates only from your shelf.
 
 A listed version never changes: any change, even a word, is a higher version with a changelog line.
@@ -36,30 +36,30 @@ A listed version never changes: any change, even a word, is a higher version wit
 ## What goes in your project
 
 - **A `library/` folder** — the only files the command uploads:
-  - `app.json`, the card: title, one-line summary, category, who uses it, changelog, **and what a shop needs to set the app up and find its guide** (the next section);
+  - `app.json`, the card: title, one-line summary, category, who uses it, changelog, **and what a retailer needs to set the app up and find its guide** (the next section);
   - `manifest.json`, your app;
   - `library.json`: `{"public": true, "preview_sites": ["your-test-site.staging.ivendnext.com"]}` (`public: false` for an app made for one customer only);
   - `recipient.pem`, your sealing key's public half, so keys reach only you. Make the pair with `openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out recipient-private.pem`, then `openssl pkey -in recipient-private.pem -pubout -out library/recipient.pem`. Keep `recipient-private.pem` out of the project. On Windows, `openssl` comes with Git for Windows or WSL, and `python3` is `py -3`.
 - **A licence file and a list of third-party components** at your project's root: `LICENSE` (your choice of licence; the App library shows it on your card) and `THIRD_PARTY.md`, one line per component your app ships with its licence, or `None`. The command refuses a project without them, or with an empty one (`tools/check/licence.py`).
 
-## What a shop must be able to read
+## What a retailer must be able to read
 
-A shop decides from your card and finds its way from your guide, so the library lists an app only when both can help. **Write them before you publish,** in shop words, for the owner or the manager.
+A retailer decides from your card and finds its way from your guide, so the library lists an app only when both can help. **Write them before you publish,** in a retailer's words, for the owner or the manager.
 
-- **Setup steps on the card.** `details` in `app.json`: one lead sentence, at least one point under **what** the app does, **at least one step under setup** (what a shop does after the install, in the order it meets it, naming the Desk screen as a shop searches for it), and notes.
+- **Setup steps on the card.** `details` in `app.json`: one lead sentence, at least one point under **what** the app does, **at least one step under setup** (what a retailer does after the install, in the order it meets it, naming the Desk screen as a retailer searches for it), and notes.
 - **The industries it is for.** `industries` in `app.json`, required on a public card. Either `["all"]`, for an app every retailer can use, standing alone, or **one to six** of these industries, for an app made especially for them: `fashion`, `grocery`, `pharmacy`, `beauty-and-cosmetics`, `electronics-and-phones`, `hardware-and-diy`, `liquor-and-wine`, `hospitality`, `travel-retail`, `distribution-and-warehousing`, `optical`, `thrift-and-resale`. Your app then shows on each of those industries' pages in the App library, and your company shows as a partner who builds for them. Name an industry only where your app is especially used; a card for one customer's shelf needs none.
-- **A guide page.** `docs` in `app.json` links it. It has five headings, in this order: **What it does** · **What you set up first** · **Where it shows** · **What leaves your shop** · **How to remove it**. An app that adds three or more screens a shop opens gets a **section** of pages, with a heading for each screen. The docs site also groups every app as an **App** (it adds records a shop works in every day, or a screen of its own) or a **Rule** (it adds one check, field or layout to a screen the shop already uses, with only the settings it needs). Say which yours is when you describe the app in the listing request.
+- **A guide page.** `docs` in `app.json` links it. It has five headings, in this order: **What it does** · **What you set up first** · **Where it shows** · **What leaves your iVendNext** · **How to remove it**. An app that adds three or more screens a retailer opens gets a **section** of pages, with a heading for each screen. The docs site also groups every app as an **App** (it adds records a retailer works in every day, or a screen of its own) or a **Rule** (it adds one check, field or layout to a screen the retailer already uses, with only the settings it needs). Say which yours is when you describe the app in the listing request.
 - **An address for each screen.** Each record type your manifest adds, other than a table inside another, has one `documentation` property setter at its page and heading. The install makes only the roles that start with your prefix.
 - **Where the page lives.** The library accepts a guide address on `docs.ivendnext.com`, `developer.ivendnext.com`, `help.ivendnext.com` or `www.ivendnext.com`. Send the page's text with your listing request ([the form](../../feedback/app_listing.md)); we put it on the docs site and send you its address. Until you have it, publish with `"public": false` in `library.json`: that goes to your preview shelf and is not checked this way; a `public: true` upload is checked before anything is written.
 
-The shapes, the template and the exact words are in the manifest recipe, [*What a shop reads: the card and the guide*](../../recipes/manifest.md).
+The shapes, the template and the exact words are in the manifest recipe, [*What a retailer reads: the card and the guide*](../../recipes/manifest.md).
 
 ## Your customers' sites and your keys
 
 Never in your project or the kit: give them to the command from the environment or from a file you name.
 
 - **A customer's shelf:** `LIBRARY_DELIVERIES` (or `--deliveries <file>`), for example `[{"customer": "shop-a", "name": "Shop A", "sites": ["shop-a-test.staging.ivendnext.com", "shop-a.ivendnext.com"]}]`.
-- **Keys:** every app is free unless you choose `access: key`; a shop then presses *Get a free key* in its Desk. For an app that needs a key, `LIBRARY_KEYS` (or `--keys <file>`), for example `[{"app": "acme_bins", "host": "shop-a.ivendnext.com", "to": "customer:shop-a", "expires": "2027-10-31"}]`. Keys are issued for your own apps only.
+- **Keys:** every app is free unless you choose `access: key`; a retailer then presses *Get a free key* in its Desk. For an app that needs a key, `LIBRARY_KEYS` (or `--keys <file>`), for example `[{"app": "acme_bins", "host": "shop-a.ivendnext.com", "to": "customer:shop-a", "expires": "2027-10-31"}]`. Keys are issued for your own apps only.
 - **Keys and shelf keys come back sealed** to your `recipient.pem`, in `library-keys.json` (readable by you only), never on the screen. Open each with your private key; `tools/publish/README.md` has the command. Send each to its customer.
 
 ## From a build server
@@ -80,7 +80,7 @@ Our service checks your app again when you publish, whatever your computer says.
 - a `recipient.pem` other than the one we registered (ask us to register the new one);
 - more than 10 sites, 10 customers or 20 keys in one upload.
 
-Each refusal is printed by the command, in words. A public listing is also refused, in these words, when it cannot help a shop (`<app>` is your app's name; the recipe has the same table):
+Each refusal is printed by the command, in words. A public listing is also refused, in these words, when it cannot help a retailer (`<app>` is your app's name; the recipe has the same table):
 
 - `help_details`: *<app>: the card must say what the app does and how to set it up: details needs a lead, at least one point under what and at least one step under setup* (with ` (in es)` or ` (in ar)` added when that language is the short one);
 - `help_guide`: *<app>: the card must link its guide: docs is one to six {title, url} addresses on docs.ivendnext.com, developer.ivendnext.com, help.ivendnext.com, www.ivendnext.com*;
@@ -96,6 +96,6 @@ A guide address on any other site is refused as `bad_entry`.
 
 Tell us at once through Help. We register a new key for your company, and the old one stops working the moment we do. We confirm every new or changed key (signing key or `recipient.pem`) with your company's registered contact, and read its key id back to you, before we register it. You can hold up to three keys (one per build server, say) and we remove any of them on request.
 
-## What a shop sees
+## What a retailer sees
 
-Each listed app has a card in the App library: what it does, who uses it, whether it is free or needs a key, whether anything leaves the shop, the industries it is for, **the steps the shop takes first, and a link to the app's guide**. Browse the cards at [library.ivendnext.app](https://library.ivendnext.app).
+Each listed app has a card in the App library: what it does, who uses it, whether it is free or needs a key, whether anything leaves the retailer's iVendNext, the industries it is for, **the steps a retailer takes first, and a link to the app's guide**. Browse the cards at [library.ivendnext.app](https://library.ivendnext.app).

@@ -13,7 +13,7 @@ request: -
 verified: carried 2026-10-16 · not re-run
 ---
 ## What you build
-A label layout the shop declares or your manifest installs (HTML, or Zebra printer commands); the till prints it from an item's card or a basket line, on any printer the device reaches.
+A label layout the retailer declares or your manifest installs (HTML, or Zebra printer commands); the till prints it from an item's card or a basket line, on any printer the device reaches.
 
 ## Limits
 - Labels from the back office and from Handheld print through a desktop utility.

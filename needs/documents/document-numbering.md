@@ -19,4 +19,4 @@ Naming series set up in iVendNext Desk.
 None known.
 
 ## Tell the customer
-Documents carry the shop's own numbering.
+Documents carry the retailer's own numbering.

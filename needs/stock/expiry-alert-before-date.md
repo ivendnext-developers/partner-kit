@@ -1,9 +1,9 @@
 ---
 id: expiry-alert-before-date
-title: A notification a number of days before a date on a shop's record
+title: A notification a number of days before a date on a retailer's record
 area: stock
 topic: alerts-and-reorder
-asks: A notification a number of days before a date on a shop's own record, such as a batch's expiry
+asks: A notification a number of days before a date on a retailer's own record, such as a batch's expiry
 status: ready-with-limits
 door: manifest
 blocked-by: -
@@ -13,7 +13,7 @@ request: -
 verified: run on a sandbox 2026-10-21 · POS 2.0.0.658 · S27's reminder package installed: a Days Before notification on Batch, 30 days before its expiry date, to the Stock Manager role, by e-mail, read back, then uninstalled; not run: a message sent (the daily send rests on the product's tests)
 ---
 ## What you build
-From POS build 2.0.0.654, a manifest ships the reminder: a notification on Batch, *Days Before* its expiry date, to a role, by e-mail or the bell (`guide/07_manifests.md`, *A reminder before or after a date on a shop's record*). Sample S27 carries the package (`batch_expiry_package.json`). Before that build, the shop's administrator sets the same notification in Desk.
+From POS build 2.0.0.654, a manifest ships the reminder: a notification on Batch, *Days Before* its expiry date, to a role, by e-mail or the bell (`guide/07_manifests.md`, *A reminder before or after a date on a retailer's record*). Sample S27 carries the package (`batch_expiry_package.json`). Before that build, the retailer's administrator sets the same notification in Desk.
 
 ## Limits
 - No cap: one message per batch on the day.

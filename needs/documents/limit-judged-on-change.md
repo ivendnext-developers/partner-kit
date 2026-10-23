@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/event_feed.md
 sample: none
 request: -
-verified: laptop 2026-10-16 · the feed client's changed, 2 tests · not run on a shop
+verified: laptop 2026-10-16 · the feed client's changed, 2 tests · not run on a retailer's iVendNext
 ---
 ## What you build
 Your service reads the record's events and judges the value only when it is new or differs from the last one it saw (`changed` in the kit's feed client), then flags it. Recipe section *A value judged only when it changes*.

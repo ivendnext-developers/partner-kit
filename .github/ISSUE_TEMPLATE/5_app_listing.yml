@@ -1,6 +1,6 @@
 # Generated from feedback/app_listing.md by .github/scripts/issue_forms.py: edit that form, then re-run the script.
 name: "App listing request"
-description: "ask us to list your app in the App library, for every shop"
+description: "ask us to list your app in the App library, for every retailer"
 title: "App listing request: "
 body:
   - type: markdown
@@ -16,8 +16,8 @@ body:
   - type: textarea
     id: s1
     attributes:
-      label: "1. What it does, who uses it and what a shop sets up first"
-      placeholder: "The card's one line, the roles that use it, and whether it should be free or need a key. Then the steps a shop takes after it installs the app, in the order the shop meets them: the Desk screen to open, what to choose or fill in, who does it."
+      label: "1. What it does, who uses it and what a retailer sets up first"
+      placeholder: "The card's one line, the roles that use it, and whether it should be free or need a key. Then the steps a retailer takes after it installs the app, in the order the retailer meets them: the Desk screen to open, what to choose or fill in, who does it."
     validations:
       required: true
   - type: textarea
@@ -32,4 +32,4 @@ body:
     attributes:
       label: "The listing bar"
       options:
-        - label: "It meets the listing bar: its name is under your company's first word, it uninstalls cleanly on a sandbox with developer mode off, the kit's checks pass, the card says how a shop sets the app up and links its guide, and someone answers for it."
+        - label: "It meets the listing bar: its name is under your company's first word, it uninstalls cleanly on a sandbox with developer mode off, the kit's checks pass, the card says how a retailer sets the app up and links its guide, and someone answers for it."
