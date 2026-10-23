@@ -27,13 +27,16 @@ answering presses keeps nothing.
    - **permission rows that say who writes what:**
      - only `<PREFIX> Pharmacist in Charge` writes the pharmacist list;
      - only pharmacists write prescriptions;
-     - only `<PREFIX> Integration` writes dispensings.
+     - only `<PREFIX> Integration` writes dispensings;
+     - only `<PREFIX> Records Officer`, a role nobody holds until the shop gives it, deletes a prescription or a
+       dispensing: laws keep a prescription for years, and a permission row cannot say *not once dispensed*.
 
      Name the roles with your prefix and the install makes them;
    - **fields on the shop's record types:**
      - a schedules table on Item (one row per axis, with *effective from*);
      - a schedule on Item Group;
-     - Data fields for the patient's identity on Customer;
+     - fields for the patient's identity on Customer, and the day and giver of their consent. A manifest cannot give
+       them a permission level yet, so your README has the shop raise it (see S39's step 3);
      - the prescription fields on Sales Order, Delivery Note and Sales Invoice;
    - **sale details** for the prescription number, prescriber, licence and directions. ⛔ Never `required`: a required
      sale detail stops every sale on every till of the site;

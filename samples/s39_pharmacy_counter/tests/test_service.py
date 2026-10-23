@@ -221,6 +221,28 @@ class People(Base):
         self.assertTrue(all(fields == ["name"] for *_x, fields in reads))       # only the name ever comes back
         self.assertIn([["name", "=", "Ann"], ["pp_rxc_id_number", "is", "set"]], [c[2] for c in reads])
 
+    def test_a_schedule_that_needs_consent_reads_only_whether_the_patients_consent_date_has_come(self):
+        sched = next(r for r in self.shop.rows(f"{P} Drug Schedule") if r["name"] == "POM")
+        sched["needs_consent"] = 1
+        self.shop.prescription("RX1", "Ann", "AMOX", 21)
+        self.assertIn("consent to keep their records", self.sell(("AMOX", "Rx", 21), rx="RX1")[1]["reason"])
+        reads = [c for c in self.shop.calls if c[0] == "list" and c[1] == "Customer"]
+        self.assertTrue(all(fields == ["name"] for *_x, fields in reads))       # the date never leaves the shop
+        ann = next(r for r in self.shop.rows("Customer") if r["name"] == "Ann")
+        ann["pp_rxc_consent_date"] = "2026-11-01"                                # dated ahead: a mis-keyed consent
+        self.assertIn("consent to keep their records", self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-2")[1]["reason"])
+        self.assertIn(["pp_rxc_consent_date", "<=", "2026-10-22"], [c[2][1] for c in self.shop.calls
+                                                                    if c[0] == "list" and c[1] == "Customer" and len(c[2]) > 1])
+        ann["pp_rxc_consent_date"] = "2026-10-01"
+        self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-3")[1], {"verdict": "allow"})
+
+    def test_a_shop_that_drops_a_filter_on_a_patient_field_is_unreadable_never_a_field_filled_in(self):
+        # a field the service's user may not read, its filter dropped by the shop: every customer would answer "set"
+        real = self.shop._match
+        self.shop._match = lambda r, filters: real(r, [x for x in filters or [] if not str(x[0]).startswith("pp_rxc_")])
+        self.shop.prescription("RX1", "Bob", "TRAM", 10)
+        self.assertEqual(self.sell(("TRAM", "CD", 10), rx="RX1", customer="Bob")[0], 503)
+
     def test_the_settings_walk_in_list_counts_too(self):
         self.assertIn("walk-in", self.sell(("AMOX", "Rx", 21), rx="RX1", customer="Cash Sale")[1]["reason"])
 

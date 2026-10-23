@@ -21,6 +21,7 @@ recipe: [`recipes/pharmacy_counter.md`](../../recipes/pharmacy_counter.md).
 | **Pay**, every fill used, or this sale over what is left | *"… Prescription RX-00012 has nothing left to dispense."* · *"… has only 9 of this left."* |
 | **Pay**, another patient's prescription, or the walk-in customer | *"… Prescription RX-00012 is for another patient."* · *"… needs a named customer, not a walk-in sale."* |
 | **Pay**, a controlled line, the customer has no ID on record | *"… needs the customer's national or residence ID. Add it on their Desk record."* |
+| **Pay**, a schedule that needs consent, none on record | *"… needs the customer's consent to keep their records. Add it on their Desk record."* |
 | **Pay**, over the schedule's cap | *"… No more than 20 may be sold at once."* · *"The patient has reached the limit for CD Schedule 2 until 2026-11-11."* |
 | a till return, or a Desk credit note, of dispensed medicine | *"… Dispensed medicine cannot be taken back."* |
 | **Pay** on the front of the shop, prescription medicine | *"… Sell this at the dispensary."* |
@@ -73,8 +74,9 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
      *Prescription* and *Dispensing*.
    - It adds fields on Item, Item Group, Customer, Sales Order, Delivery Note and Sales Invoice, and four sale details
      (*PP RXC Rx Number*, *Prescriber*, *Prescriber Licence*, *Directions*).
-   - It adds two licence reminders and the roles **PP RXC Integration**, **PP RXC Pharmacist** and
-     **PP RXC Pharmacist in Charge**.
+   - It adds two licence reminders and the roles **PP RXC Integration**, **PP RXC Pharmacist**, **PP RXC Pharmacist in
+     Charge** and **PP RXC Records Officer**. Nobody holds the last one until you give it ([How long to
+     keep](#how-long-to-keep-and-what-happens-after)).
    - It adds five services, all switched off. Nothing changes at the till yet.
 2. **Make the app's integration user** ([integration user recipe](../../recipes/integration_user.md)). Give it the role
    **PP RXC Integration** alone, generate its API key, and choose it on the feed registration **PP RXC Counter**. Then
@@ -85,11 +87,59 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
    Pharmacist in Charge**, adds each pharmacist under *PP RXC Pharmacist* (user, licence number, *valid until*) and enters
    the premises licence. Only that role writes the list, so nobody adds themselves. A row ticked *delegate* does not
    sell pharmacist-only medicine.
+
+   **Keep the patient's fields to the pharmacists.** Until you do this, everyone who reads customers reads the ID, the
+   date of birth, the authority to possess and the consent. The health and data-protection laws of the UAE, Saudi
+   Arabia, Kenya, Jordan, Mexico and Nigeria limit them to the staff whose work needs them.
+   - In **Role Permissions Manager**, open *Customer* and note the levels its roles hold already, and in **Customize
+     Form** the levels its fields use. Choose the lowest level none of them uses. On our test bench *Retail Cashier*,
+     *Sales User* and *Sales Master Manager* hold level 1, so we chose 2: a field at level 1 would still reach a Desk
+     clerk. A level covers every field on *Customer* that sits at it: never give it to another role later.
+   - Open the **Custom Field** list, filter it to *Customer*, and on each of five fields set **Permission Level** to
+     that level and save: *National or residence ID*, *Date of birth (patient)*, *Authority to possess*, *Consent to
+     keep prescription records, given on* and *Consent given by*.
+     ⚠ Not through **Customize Form**: with this app installed, Customize Form on *Customer* lists the app's two
+     *Pharmacy* links twice and refuses to save (*"Document has been modified after you have opened it"*). We have
+     reported it.
+   - ⚠ If *Customer* has no rules of your own yet, the first one you add copies the engine's rules on *Customer* into
+     your own, and from then on yours apply instead: a later engine update of *Customer*'s permissions does not reach
+     your shop. After such an update, compare, or press **Restore Original Permissions** on *Customer* and take this
+     step again.
+   - Back in **Role Permissions Manager**, on *Customer*, give **PP RXC Pharmacist** and **PP RXC Pharmacist in
+     Charge** a *read* at level 0 (it asks for that first), then *read* and *write* at your level. The pharmacists also
+     need a role that edits customers (*Sales User* does) to fill the fields in.
+   - Give **PP RXC Integration** *read* at your level. The service asks only whether each field is set, never its
+     value, but the shop answers that question only for a field the asker may read: without the grant the service
+     reads the field as unreadable, and the dispensary stops taking payment (*"did not answer"*). The grant lets the
+     service's key read the values too, so keep that key as you would a pharmacist's password.
+   - An update of this app keeps your level: it writes only the settings its own manifest gives a field. A field a new
+     version adds arrives at level 0: updating from 0.1.0, set the level on the two consent fields. An uninstall and a
+     new install make the fields again at level 0: set them again.
 4. **Make your drug schedules** (*PP RXC Drug Schedule*), one per class per classification axis, each with its rules. Set
    them on your medicine items (*Drug schedules*: one row per axis, with its *effective from*) or on an item group
    (*Drug schedule*), which covers the groups below it. For items with variants, add *Drug schedules* in **Item Variant
    Settings** so variants copy it. Make the settings record **Default**: your hours from UTC, and any walk-in customers
    besides each POS Profile's own.
+   - **Consent.** Tick *Needs the patient's recorded consent* on a schedule whose prescriptions your law lets you keep
+     only with the patient's consent:
+     - **Egypt:** written and explicit, for any prescription record no law requires (Law 151 of 2020, Art. 12);
+     - **Mexico** and **Saudi Arabia:** for what goes beyond dispensing, such as an image kept or a history used for
+       later sales (Mexico's LFPDPPP arts 8 and 9; Saudi Arabia's PDPL Art. 6(2), Implementing Regulation Art. 11(2)(a));
+     - **Kenya,** if your pharmacy is a healthcare provider under the *Digital Health Act* (s. 31), and **Jordan,**
+       unless your pharmacists count as licensed medical professionals (Law 24 of 2023, Art. 6(a)(2)).
+
+     The consent goes on **the patient's** Desk record, the prescription's customer, with the day it was given (a day
+     after today counts as no consent) and who gave it: the patient, or for a child their parent or guardian. Record it before you enter the prescription: the
+     app checks it at Pay and on the Desk, never when a prescription is saved. Keep the signed form where *Consent given
+     by* says. When a patient withdraws consent, clear the date: their next sale under that schedule is refused (a Desk
+     delivery or invoice made from an order already submitted still goes through). What a law makes you keep stays for
+     its period ([How long to keep](#how-long-to-keep-and-what-happens-after)); what you kept only on their consent
+     (in Egypt, a record no law requires; in Mexico and Saudi Arabia, an image or a history kept beyond dispensing)
+     has no basis left: delete it, as *How long to keep* says. The app
+     writes no consent text: yours is your own.
+   - **The UAE:** tick *Needs the customer's national or residence ID* on every schedule. The law wants the ID on every
+     health record, except in emergencies and other cases a Ministry decision sets (Federal Law 2 of 2019, Art. 21).
+     Those exceptions are not built in: the till refuses a sale with no ID on a schedule that needs it.
 5. **Narrow the till services before switching either on.**
    - On **Pharmacy counter rules (dispensary)**, choose the dispensary's POS Profile.
    - On **(front)**, choose the shop's other profiles.
@@ -118,8 +168,8 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
 - **At each Desk submit,** the shop sends the fields each Desk service names.
 - **The service reads back with the integration user's key:**
   - the prescriptions named and the operator's pharmacist record;
-  - whether each identity field the sale needs is filled in. The shop answers yes or no: the ID, date of birth and
-    authority values never leave it;
+  - whether each patient field the sale needs is filled in. The shop answers yes or no: the ID, date of birth,
+    authority and consent values never leave it;
   - the patient's dispensings (which medicine, how much, when);
   - the schedules and the items;
   - the sales, days and documents the patient's dispensings name;
@@ -132,12 +182,31 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
 
 **Limits, said plainly.**
 - **The till cannot ask for the patient's ID when it adds a customer:** field rules show nothing at customer create.
-  Enter it on the customer's Desk form. Until fields readable by one role only exist, everyone who reads customers can
-  read these three.
+  Enter it on the customer's Desk form.
+- **Who reads the patient's fields is your setup** (step 3), not the app's: a manifest cannot give a field a
+  permission level yet. Until you take that step, everyone who reads customers reads them. After it, on our test bench
+  a Desk clerk who reads customers saw none of them on the form, the list, the report view or the print, and a clerk's
+  edit of one was ignored, and a clerk's filter on one was refused (*"Field not permitted in query"*) by the API's and
+  the Desk's lists, the count and a single value. It does not yet hold everywhere; each is recorded for the team that
+  owns it:
+  - **the form's change history:** a customer's form brings its recent changes with it, old and new values included.
+    The screen hides a field the user may not read, but the values reach the clerk's browser;
+  - **two Desk calls answer a filter:** the list's group-by count (its sidebar) and the link search answer a clerk's
+    *starts with* filter on the ID. A clerk who asks enough of them learns the value;
+  - **code inside the server:** a filter made by server code with the framework's own list call is answered for the
+    clerk. An app that takes a person's filters and runs them that way would let the clerk ask;
+  - **one engine call** returns a whole record to any signed-in user, whatever its levels;
+  - **the till** reads customers with its own rights: never show these fields on a till field rule, and never make
+    one a customer search field;
+  - **the regulated register app** ([S41](../s41_regulated_register/README.md)) prints the ID into Saudi Arabia's and
+    Abu Dhabi's books: its register must read it with its own rights, or a line written by a clerk prints it empty.
 - **A POS Invoice made on the Desk POS screen, or through the API, is not checked:** a check before payment holds only
   at the till's own doors, and a POS Invoice cannot be a document check's target. Sell medicine at the till, or on a
   Sales Invoice.
-- **The prescription image is kept in your site.** Leave *Is Private* ticked when you attach it.
+- **The prescription image is kept in your site, private when attached on the Desk:** the upload opens with its lock
+  closed, because neither the field nor the record type makes attachments public. A person can open the lock, and a
+  file attached through the API is public unless the call says it is private. Keep the lock closed: a public file is
+  read by anyone who has its address. The app cannot hold it private.
 - **When the service is down,** the dispensary stops taking payment and the front till lets sales through, flagged on
   *Sales to review*.
 - **The till holds a check's answer for the basket, not for the cashier who asked.** A pharmacist's answer stays valid
@@ -161,11 +230,67 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
   check is asked. This app adds the schedule's rule, so a medicine ticked returnable by mistake is still refused, and
   the Desk credit note.
 
+## How long to keep, and what happens after
+
+**No role that works the counter can delete a prescription or a dispensing.** The pharmacist-in-charge could before
+version 0.1.1; a permission is the same for every record of a type, so *not once dispensed* cannot be one. A
+prescription entered by mistake is set *Cancelled*, and a cancelled prescription never sells. The site's
+*Administrator* still deletes anything, and a *System Manager* can give any role delete in **Role Permissions
+Manager**: keep both few.
+- ⚠ **Updating from 0.1.0:** if your shop ever changed the permissions of *PP RXC Prescription* or *PP RXC Dispensing*
+  in Role Permissions Manager, your own rows replace the app's, and the update cannot take delete from the
+  pharmacist-in-charge. Open each in Role Permissions Manager and press **Restore Original Permissions**, then make
+  your change again.
+- ⚠ **Never uninstall this app while a period runs.** An uninstall removes its record types, and every prescription and
+  dispensing with them. Take the export it offers and keep it as long as the longest period.
+
+**The periods the laws set for a prescription** (read from their texts, October 2026):
+
+| Market | Keep a prescription | Counted from |
+|---|---|---|
+| UAE | 25 years (Federal Law 2 of 2019, Art. 20; in Dubai all prescriptions, controlled drugs included, DHA PP-12) | the patient's last health procedure |
+| Egypt | 10 years, the controlled-drug prescriptions and the books (Law 182 of 1960, Art. 31) | the book's last entry |
+| Saudi Arabia | the original 3 years; the pharmacy's prescriptions register 5 years (Executive Regulation, Art. 21) | not stated in the text read |
+| Ghana | 2 years (Act 489, s. 32(b)) | the full dispensing |
+| Kenya | 2 years, a prescription that is not repeatable (Rules, r. 6(6)) | not stated in the text read |
+| Nigeria | at least 2 years, the controlled-drug records (reg. 26) | the prescription's date or the last entry |
+
+Elsewhere no prescription period was found in the laws read: keep as long as your pharmacy law and your register need,
+and no longer, since a data-protection law ends the keeping when its purpose ends. Three more rules from those laws:
+- **Egypt:** what you keep only because a law says so (the 10 years above) is held unreadable and not identifying,
+  and erased when the period ends (the Executive Regulation, Decision 816 of 2025, Art. 3);
+- **Nigeria:** where no law sets a period, 6 months after the purpose (GAID 2025, Art. 49(3)), so a prescription that
+  is not for a controlled drug;
+- **Kenya:** what is sent to the national Shared Health Record is kept 20 years (*Digital Health Act*, s. 25(1)).
+
+A register book's own period is the register app's.
+
+**After the period, the shop acts; nothing runs on a timer.**
+1. Where your law says how a record is destroyed, do that first: in Saudi Arabia a three-member committee the director
+   appoints, with minutes (Executive Regulation, Arts 21(3) and 22(7)).
+2. Give a person **PP RXC Records Officer** for the act. It reads, and deletes, prescriptions and dispensings, nothing
+   else.
+3. Delete a prescription and all its dispensings in one act, the dispensings first (a prescription the dispensing names
+   first cannot go before it). ⛔ Never a dispensing whose prescription stays: its fill would count again. A dispensing
+   names only the first of the prescriptions its sale used; look for the others in its lines, and keep the dispensing
+   until the last of their periods ends. An attached image goes with its prescription.
+4. A pharmacist clears the patient's fields on their customer record: ID, date of birth, authority, consent.
+5. The Desk still holds copies: each deleted record in *Deleted Documents*, which a *System Manager* deletes, and
+   each record's change history, the customer's included, with its old values, which only the site's
+   *Administrator* deletes.
+6. The prescription number, prescriber, licence and directions also stay on the sales orders, deliveries and invoices
+   that carried them, and on the till's sales as sale details. They are your sales records: what your law lets you keep
+   of them is yours to decide.
+7. Take the role back.
+
+A patient's request to erase does not shorten a period a law sets in seven of the eight markets read. Egypt's law lists
+no exception to erasure: ask your adviser there.
+
 ## What is in the folder
 
 | File | What it is |
 |---|---|
-| `manifest.json` | the record types, fields, sale details, roles, two licence reminders, the feed registration, and five services: two checks before payment (dispensary `refuse`, front `allow_and_flag`) and three document checks (Sales Order, Delivery Note, Sales Invoice; `refuse`), each installed switched off |
+| `manifest.json` | the record types, fields (the patient's identity and consent on Customer), sale details, four roles, two licence reminders, the feed registration, and five services: two checks before payment (dispensary `refuse`, front `allow_and_flag`) and three document checks (Sales Order, Delivery Note, Sales Invoice; `refuse`), each installed switched off |
 | `rxrules.py` | the pure core: the signature check (`verify`), the shapes (`sale_context`, `desk_context`), an item's schedules (`schedules_for`, `strictest`), prescriptions and fingerprints, the dispensings that count (`counts`) and their statuses (`resolve`), and the rules (`decide`) |
 | `service/app.py` | the service, standard library only: five routes, `GET /health`, the app template's handshake for many shops; one `handle` answers the web server and the function entry (`lambda_handler`) alike |
 | `Dockerfile` · `app.json` | the settings file for hosting (`"runs": "function"`: on CitiXsys hosting it is a function, paid per call) and an image for your own server (built from the kit's root) |
@@ -224,8 +349,8 @@ details (default `PP RXC`).
 
 ### What was proven where
 
-- **On the laptop:** the tests and canaries above (113 tests, one of them replaying a recorded bench run when one is
-  given; 72 canaries, each RED with its baseline passing).
+- **On the laptop:** the tests and canaries above (119 tests, one of them replaying a recorded bench run when one is
+  given; 77 canaries, each RED with its baseline passing).
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344`, the engine at `dc65d832`):
   - **The setup.** The app was installed through the shop's own installer: five services, switched off, with the
     declared down answers. The service's user held only the app's role and the card's reads, and every read and write
@@ -256,6 +381,35 @@ details (default `PP RXC`).
     sale go on.
   - **The uninstall** left the schema as found, the sale details kept and switched off, and no permission row of the
     app's role was left.
+- **On our test bench again for 0.1.1** (2026-10-23, the same builds; 32 of 32 checks):
+  - **The update.** Version 0.1.0 was installed, the three identity fields were given level 2 as step 3 says (level 1
+    is held there by *Retail Cashier*, *Sales User* and *Sales Master Manager*), and the app was updated to 0.1.1
+    through the shop's installer. The fields kept level 2, the ID's new description was written, the
+    pharmacist-in-charge lost *delete* on prescriptions, and the Records Officer role was made.
+  - **The till and the Desk, with the fields at level 2:** all of the 0.1.0 walk above again, the controlled sale's ID
+    check included, with the service's user reading at that level. Without that grant, the shop answered the service
+    neither way and the service refused the controlled sale (*"did not answer"*), as step 3 says.
+  - **Who reads them:** a Desk clerk who reads customers saw none of the five fields on the form, the list, the report
+    view or the print, a clerk's edit of one was ignored, and a clerk's filter on the ID was refused by the API's and
+    the Desk's lists, the count and a single value; the pharmacist read and wrote them. The form's change history,
+    the group-by count and the link search still reach the clerk (*Limits*).
+  - **Consent:** with *Needs the patient's recorded consent* ticked, Pay was refused (*"needs the customer's consent to
+    keep their records"*) until the pharmacist entered the day on the patient's form, then the sale was allowed.
+  - **Deleting:** the pharmacist-in-charge and a pharmacist were refused. On a dispensed prescription with an image,
+    the prescription could not go before its dispensing; the Records Officer deleted the dispensing, then it, and the
+    image went with it. A *System Manager* deleted the *Deleted Documents* copies and was refused the change history,
+    which the *Administrator* deleted.
+  - **A shop's own permission copy:** with the prescription and dispensing permissions changed on 0.1.0, the update
+    left the pharmacist-in-charge's delete in the shop's copy; *Restore Original Permissions* on each left only the
+    Records Officer deleting.
+  - **Filters:** a clerk's filter on the ID was refused by the API's and the Desk's lists, the count and a single
+    value; the group-by count and the link search answered a *starts with* filter that matched and gave nothing for
+    one that did not (*Limits*).
+  - **Timing:** the dispensary's checks took 164 ms at the median and 395 ms at the slowest, each patient field asked
+    both ways.
+  - **Customize Form** on Customer refused to save with the app installed (*Limits*, step 3), so the levels were set on
+    each Custom Field record.
+  - **The teardown** put Customer's permission rows back exactly as found and left no setting on its fields.
 
 ## Make it your own
 

@@ -21,8 +21,8 @@ How a sale is decided (``Service.decide``):
 1. the shop's settings, schedules and item groups (kept a minute), the lines' items, their schedule rows and units;
 2. a sale with no line under a schedule or a group that needs directions is allowed, after releasing any reservation the
    same sale made on an earlier press of Pay;
-3. otherwise the operator's Pharmacist record, the customer's identity fields, the named prescriptions and the patient's
-   dispensings, each dispensing's status read back from the shop (``rxrules.resolve``);
+3. otherwise the operator's Pharmacist record, the customer's identity and consent fields, the named prescriptions and the
+   patient's dispensings, each dispensing's status read back from the shop (``rxrules.resolve``);
 4. ``rxrules.decide``; on allow, the reservation is inserted as the patient's next number. The name is unique: an insert
    another till made first fails, and the decision is made again from a fresh read (at most ``TRIES`` times);
 5. this sale's earlier reservation, and every status the shop gave back, are written (best effort).
@@ -70,7 +70,7 @@ import shops  # noqa: E402
 KEPT_TTL = 60          # the shop's settings, schedules, item groups and profiles' customers, kept a minute per shop
 RESERVE_BY = 4.0       # seconds from the call's arrival: past it the service answers 503 rather than reserve a fill the
                        # till may already have given up on (its 5 s), which would hold the fill until the day closes
-READ_TIMEOUT = 2.0     # each read waits at most this (1.0 timed out once on the bench, PH-B1 run 6, a read queued behind
+READ_TIMEOUT = 2.0     # each read waits at most this (1.0 timed out once on our test bench, a read queued behind
                        # its parallel siblings); the till cuts the whole check at its 5 s and applies the down answer
 WRITE_BACK_MAX = 5     # statuses written back per call (the Desk list's words; every decision reads them back anyway)
 TRIES = 3              # decide again after another till took the patient's next number first
@@ -202,7 +202,7 @@ class Service:
             g = pool.submit(self._list, shop, "Item Group", ["name", "lft", "rgt", f"{p}_schedule", f"{p}_needs_directions"])
             d = pool.submit(self._list, shop, self.dt("Drug Schedule"), [
                 "name", "axis", "needs_prescription", "pharmacist_only", "dispensary_only", "validity_days", "max_fills",
-                "qty_cap", "freq_qty", "freq_days", "needs_id_number", "needs_birth_date", "needs_authority",
+                "qty_cap", "freq_qty", "freq_days", "needs_id_number", "needs_birth_date", "needs_authority", "needs_consent",
                 "returnable", "return_gives_back", "needs_directions", "own_sale_without_rx", "max_occasions",
                 "one_drug_per_rx"])
             out = (rxrules.settings_of(s.result()), rxrules.groups_of(g.result(), self.prefix),
@@ -253,21 +253,32 @@ class Service:
                            and v["template"] not in items})
         return items, rows, units
 
-    def patient(self, shop: dict, ctx: dict, refs: list, ids: list) -> dict:
+    def patient(self, shop: dict, ctx: dict, refs: list, ids: list, today=None) -> dict:
         """The operator's Pharmacist record, WHETHER each identity field this sale needs is filled in (a filter on the
         shop's side: the value never leaves the shop), the named prescriptions and the patient's dispensings (newest
-        first), in one parallel step."""
+        first), in one parallel step. Each field is asked both ways, set and not set: a shop that answers yes to both
+        (a filter it dropped) or no to both is unreadable, never a field read as filled in. A dated field is also asked
+        whether its day has come."""
         p, cust = self.p, ctx["customer"]
-        with ThreadPoolExecutor(max_workers=4 + len(ids)) as pool:
+        on = (today or datetime.date.today()).isoformat()
+        asks = {f: {"set": [[f"{p}_{f}", "is", "set"]], "unset": [[f"{p}_{f}", "is", "not set"]],
+                    **({"due": [[f"{p}_{f}", "<=", on]]} if f in rxrules.DATED else {})} for f in ids}
+        with ThreadPoolExecutor(max_workers=4 + 3 * len(ids)) as pool:
             ph = pool.submit(self._pharmacist_rows, shop, ctx["operator"])
             known = pool.submit(self._list, shop, "Customer", ["name"], [["name", "=", cust]])
-            has = {f: pool.submit(self._list, shop, "Customer", ["name"], [["name", "=", cust], [f"{p}_{f}", "is", "set"]])
-                   for f in ids}
+            has = {f: {k: pool.submit(self._list, shop, "Customer", ["name"], [["name", "=", cust]] + c) for k, c in a.items()}
+                   for f, a in asks.items()}
             rx = pool.submit(self._rx_headers, shop, refs, cust) if refs else None
             disp = pool.submit(self._dispensings, shop, [["customer", "=", cust]])
             if not known.result():
                 raise ShopUnreadable("the customer could not be read")
-            return {"pharmacist": self._pharmacist(ph.result()), "customer_fields": {f: bool(j.result()) for f, j in has.items()},
+            filled = {}
+            for f, js in has.items():
+                got = {k: bool(j.result()) for k, j in js.items()}
+                if got["set"] == got["unset"]:
+                    raise ShopUnreadable("the shop answered a patient field both ways")
+                filled[f] = got["set"] and got.get("due", True)
+            return {"pharmacist": self._pharmacist(ph.result()), "customer_fields": filled,
                     "rx_headers": rx.result() if rx else [], "dispensings": disp.result()}
 
     def _pharmacist_rows(self, shop, operator):
@@ -395,7 +406,7 @@ class Service:
                 pat = {"pharmacist": None, "customer_fields": {}, "rx_headers": [], "dispensings": []}
                 pat["pharmacist"] = self.patient_pharmacist(shop, ctx["operator"])
             else:
-                pat = self.patient(shop, ctx, refs, ids)
+                pat = self.patient(shop, ctx, refs, ids, today)
             dispensings = rxrules.dispensings_of(pat["dispensings"])
             states, _ = self.shop_states(shop, dispensings, ctx["return_of"], today) if dispensings else (
                 {"sales": {}, "returns": {}, "closed_days": set(), "documents": {}, "newest": {}, "return_of_ref": ""}, [])

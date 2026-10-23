@@ -3,9 +3,9 @@
  "app": "pp_rxc",
  "prefix": "PP RXC",
  "title": "Pharmacy counter rules",
- "version": "0.1.0",
+ "version": "0.1.1",
  "publisher": "Partner Programme sample",
- "description": "A pharmacy counter's rules, checked at Pay on the till and when a sales order, delivery or sales invoice is submitted on the Desk. A line whose drug schedule needs a prescription is paid only against a prescription the pharmacist entered on the Desk, for this customer, in date for its class, with quantity and a fill left; the fill is reserved when the check answers, so two tills cannot both take the last one, and it comes back if the sale is never booked and its POS day closes, or its sale or document is cancelled. A pharmacist-only line is paid only by a user on the app's Pharmacist list whose licence is in date; a schedule can need the customer's ID, date of birth or authority to possess, a doctor's name and directions, a quantity cap per sale and per patient over days; dispensed medicine of a non-returnable schedule is refused at a till return and on a Desk return. Two till services: the dispensary's refuses the sale when the service is down; the front's lets it through, flagged, and refuses medicine that must be sold at the dispensary. Prescriptions, pharmacists, schedules, patient fields and dispensings are records in the shop; the service reads them with the app's integration user and writes only its Dispensing records. The install makes the roles PP RXC Integration, PP RXC Pharmacist and PP RXC Pharmacist in Charge; every service installs switched off. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "A pharmacy counter's rules, checked at Pay on the till and when a sales order, delivery or sales invoice is submitted on the Desk. A line whose drug schedule needs a prescription is paid only against a prescription the pharmacist entered on the Desk, for this customer, in date for its class, with quantity and a fill left; the fill is reserved when the check answers, so two tills cannot both take the last one, and it comes back if the sale is never booked and its POS day closes, or its sale or document is cancelled. A pharmacist-only line is paid only by a user on the app's Pharmacist list whose licence is in date; a schedule can need the customer's ID, date of birth or authority to possess, a doctor's name and directions, a quantity cap per sale and per patient over days; dispensed medicine of a non-returnable schedule is refused at a till return and on a Desk return. Two till services: the dispensary's refuses the sale when the service is down; the front's lets it through, flagged, and refuses medicine that must be sold at the dispensary. Prescriptions, pharmacists, schedules, patient fields and dispensings are records in the shop; the service reads them with the app's integration user and writes only its Dispensing records. The install makes the roles PP RXC Integration, PP RXC Pharmacist, PP RXC Pharmacist in Charge and PP RXC Records Officer (nobody holds it: the shop gives it for destroying records whose keeping period has ended); every service installs switched off. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/rxc/dispensary",
   "https://host.docker.internal:8125/rxc/front",
@@ -191,6 +191,12 @@
      "fieldname": "needs_authority",
      "fieldtype": "Check",
      "label": "Needs the customer's authority to possess"
+    },
+    {
+     "fieldname": "needs_consent",
+     "fieldtype": "Check",
+     "label": "Needs the patient's recorded consent",
+     "description": "Refuse the sale until the patient's Desk record holds the day they consented to the pharmacy keeping their records."
     },
     {
      "fieldname": "own_sale_without_rx",
@@ -556,7 +562,7 @@
      "fieldname": "image",
      "fieldtype": "Attach",
      "label": "Prescription image",
-     "description": "Kept in your site. Leave Is Private ticked when you attach it."
+     "description": "Private when attached on the Desk: keep the lock closed. It goes with the prescription when that is destroyed."
     },
     {
      "fieldname": "notes",
@@ -582,7 +588,7 @@
      "read": 1,
      "write": 1,
      "create": 1,
-     "delete": 1,
+     "delete": 0,
      "report": 1,
      "export": 1,
      "share": 0,
@@ -608,6 +614,18 @@
      "create": 0,
      "delete": 0,
      "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Records Officer",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 1,
+     "report": 1,
      "export": 0,
      "share": 0,
      "print": 0,
@@ -801,6 +819,18 @@
      "share": 0,
      "print": 1,
      "email": 0
+    },
+    {
+     "role": "PP RXC Records Officer",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 1,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
     }
    ]
   }
@@ -852,7 +882,7 @@
    "fieldtype": "Data",
    "label": "National or residence ID",
    "insert_after": "customer_group",
-   "description": "Asked for by a schedule that needs it. Readable by everyone who reads customers."
+   "description": "Asked for by a schedule that needs it. Give this, the date of birth, the authority to possess and the consent a permission level only the pharmacists and the app's integration user hold (the app's README, step 3)."
   },
   {
    "dt": "Customer",
@@ -867,6 +897,22 @@
    "fieldtype": "Data",
    "label": "Authority to possess",
    "insert_after": "pp_rxc_birth_date"
+  },
+  {
+   "dt": "Customer",
+   "fieldname": "pp_rxc_consent_date",
+   "fieldtype": "Date",
+   "label": "Consent to keep prescription records, given on",
+   "insert_after": "pp_rxc_authority",
+   "description": "The day the patient, or for a child their parent or guardian, agreed to the pharmacy keeping their prescriptions and dispensings. Asked for by a schedule that needs it. Clear it when consent is withdrawn."
+  },
+  {
+   "dt": "Customer",
+   "fieldname": "pp_rxc_consent_by",
+   "fieldtype": "Data",
+   "label": "Consent given by",
+   "insert_after": "pp_rxc_consent_date",
+   "description": "The patient, or the parent or guardian who consented for them, and where the signed form is kept."
   },
   {
    "dt": "Sales Order",

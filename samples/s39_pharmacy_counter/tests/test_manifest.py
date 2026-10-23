@@ -4,6 +4,7 @@
 pharmacist-in-charge writes the Pharmacist list, only pharmacists write prescriptions, only the service writes dispensings;
 nothing is required and nothing names a role the framework gives by itself."""
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -68,10 +69,20 @@ class ManifestTest(unittest.TestCase):
         for dt in rxrules.DESK_TYPES:
             got = {f["fieldname"] for f in MANIFEST["custom_fields"] if f["dt"] == dt}
             self.assertEqual(got, {f"{PF}_{v}" for v in rxrules.DESK_FIELDS.values()})
-        cust = {f["fieldname"] for f in MANIFEST["custom_fields"] if f["dt"] == "Customer"}
-        self.assertEqual(cust, {f"{PF}_{f}" for _, f, _ in rxrules.IDENTITY})
-        self.assertTrue(all(f["fieldtype"] == "Data" for f in MANIFEST["custom_fields"] if f["dt"] == "Customer"))
+        cust = {f["fieldname"]: f["fieldtype"] for f in MANIFEST["custom_fields"] if f["dt"] == "Customer"}
+        self.assertEqual(set(cust), {f"{PF}_{f}" for _, f, _ in rxrules.IDENTITY} | {f"{PF}_consent_by"})
+        self.assertEqual({k for k, t in cust.items() if t != "Data"}, {f"{PF}_consent_date"})
+        self.assertEqual(cust[f"{PF}_consent_date"], "Date")
         self.assertFalse([f for f in MANIFEST["custom_fields"] if f.get("reqd")])
+
+    def test_the_patient_fields_name_the_readers_setup_and_carry_no_level_the_kit_cannot_set(self):
+        # who reads them is the shop's setup step (README step 3) until a kit field can name its roles
+        cust = {f["fieldname"]: f for f in MANIFEST["custom_fields"] if f["dt"] == "Customer"}
+        self.assertFalse([f for f in MANIFEST["custom_fields"] if "permlevel" in f])
+        words = cust[f"{PF}_id_number"]["description"]
+        self.assertNotIn("everyone", words)
+        self.assertIn("permission level", words)
+        self.assertIn("parent or guardian", cust[f"{PF}_consent_date"]["description"])
 
     def test_the_schedule_holds_every_rule_the_service_reads(self):
         import rxrules
@@ -81,6 +92,7 @@ class ManifestTest(unittest.TestCase):
                   "own_sale_without_rx"):
             self.assertIn(k, fields)
         self.assertTrue({t for t, _, _ in rxrules.IDENTITY} <= fields)
+        self.assertIn("needs_consent", fields)
 
     def test_who_writes_what(self):
         self.assertEqual(perm(f"{P} Pharmacist", "System Manager") & {"write", "create", "delete"}, set())
@@ -94,6 +106,51 @@ class ManifestTest(unittest.TestCase):
             self.assertEqual(perm(f"{P} Dispensing", role) & {"write", "create", "delete"}, set())
         # the pharmacist-in-charge may release a stuck reservation by hand, never make or delete one
         self.assertEqual(perm(f"{P} Dispensing", f"{P} Pharmacist in Charge") & {"write", "create", "delete"}, {"write"})
+
+    def test_only_the_records_officer_destroys_a_prescription_or_a_dispensing(self):
+        # a law keeps a prescription for years (AE 25, SA 3 and its register 5, GH 2, KE 2 if not repeatable): a permission
+        # row is role-wide, so no role that works the counter may delete one; the shop gives the officer's role for the act
+        officer = f"{P} Records Officer"
+        for dt in (f"{P} Prescription", f"{P} Dispensing"):
+            deleters = {p["role"] for p in DT[dt]["permissions"] if p.get("delete")}
+            self.assertEqual(deleters, {officer}, dt)
+            self.assertEqual(perm(dt, officer), {"read", "report", "delete"}, dt)
+        for d in MANIFEST["doctypes"]:
+            if d["name"] not in (f"{P} Prescription", f"{P} Dispensing"):
+                self.assertFalse([p for p in d.get("permissions") or [] if p["role"] == officer], d["name"])
+        self.assertEqual(perm(f"{P} Prescription", f"{P} Pharmacist in Charge") & {"delete"}, set())
+
+    def test_the_prescription_image_is_said_to_be_private_on_the_desk(self):
+        img = next(f for f in DT[f"{P} Prescription"]["fields"] if f["fieldname"] == "image")
+        self.assertEqual(img["fieldtype"], "Attach")
+        self.assertNotIn("make_attachment_public", img)      # the field's own setting: private when attached on the Desk
+        self.assertNotIn("make_attachments_public", DT[f"{P} Prescription"])
+        self.assertIn("Private when attached on the Desk", img["description"])
+
+    def test_no_market_in_the_apps_code_or_names(self):
+        # a market's rules are its schedules, records the shop loads (README step 4): never a name in code. Its words to a
+        # reader may give examples. The trade's own words (Drug Schedule, Pharmacist) are this app's, so only markets are barred
+        import tokenize
+        names_re = re.compile(r"kenya|nigeria|ghana|egypt|saudi|emirat|dubai|abu_?dhabi|jordan|mexic|nairobi|lagos|accra|"
+                              r"cairo|riyadh|amman|sfda|nafdac|mohap|cofepris|tatmeen|nphies|jfda", re.I)
+        codes = {"ke", "ng", "gh", "eg", "sa", "ae", "uae", "jo", "mx", "ksa", "dha", "doh", "eda", "ppb", "nhia", "pdpl"}
+
+        def market(n):  # a market's name anywhere in a name, or its code as one part of it (KE_DAYS, pp_rxc_sa_id)
+            return names_re.search(n) or any(x.lower() in codes for x in re.split(r"[_\s-]+", n))
+        code_word = re.compile(r"\b(KE|NG|GH|EG|SA|AE|UAE|JO|MX|KSA)\b")      # a market's code as a value the code compares
+        for py in ("rxrules.py", "service/app.py"):
+            with open(HERE.parent / py, encoding="utf-8") as f:
+                toks = list(tokenize.generate_tokens(f.readline))
+            idents = [t.string for t in toks if t.type == tokenize.NAME]
+            self.assertFalse([i for i in idents if market(i)], py)
+            # the strings the code holds, its docstrings left out (words to a reader may give examples)
+            strings = [t.string for t in toks if t.type == tokenize.STRING and not t.string.startswith(('"""', 'r"""'))]
+            self.assertFalse([x for x in strings if code_word.search(x) or names_re.search(x)], py)
+        names = [MANIFEST["app"], MANIFEST["prefix"], MANIFEST["title"]] + [d["name"] for d in MANIFEST["doctypes"]] + \
+                [f["fieldname"] for d in MANIFEST["doctypes"] for f in d["fields"]] + \
+                [p["role"] for d in MANIFEST["doctypes"] for p in d.get("permissions") or []] + \
+                [f["fieldname"] for f in MANIFEST["custom_fields"]] + [a["name"] for a in MANIFEST["sale_attributes"]]
+        self.assertFalse([n for n in names if market(n)], names)
 
     def test_the_dispensing_is_named_by_the_services_key_and_every_record_keeps_its_changes(self):
         self.assertEqual(DT[f"{P} Dispensing"]["autoname"], "field:key")
