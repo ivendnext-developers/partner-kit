@@ -297,6 +297,44 @@ class Register(Base):
         self.assertEqual((d["prescriber"], d["directions"], d["pharmacist_name"]),
                          ("Dr Who", "AMOX: 1 capsule three times a day", "P. Pharmacist"))
 
+    def test_only_a_licensed_pharmacist_is_named_never_a_delegate(self):
+        self.shop.add(f"{P} Pharmacist", name="tech@shop", user="tech@shop", full_name="T. Technician", active=1,
+                      valid_until="2027-10-22", delegate=1)
+        self.shop.add(f"{P} Drug Schedule", name="RXONLY", axis="Prescription only", needs_prescription=1, returnable=0,
+                      return_gives_back=1)
+        self.shop.add("Item", name="CREAM", stock_uom="Nos", variant_of=None, pp_rxc_directions="apply twice a day")
+        self.shop.add(f"{P} Item Schedule", parent="CREAM", schedule="RXONLY", effective_from=None)
+        self.shop.prescription("RX5", "Ann", "CREAM", 1)
+        self.assertEqual(self.sell(("CREAM", "Food", 1), rx="RX5", operator="tech@shop")[1], {"verdict": "allow"})
+        (d,) = self.shop.dispensings()
+        self.assertEqual(d["pharmacist_name"], "")
+
+    def test_a_0_1_2_shop_is_answered_as_before(self):
+        # the 0.1.3 service may move first: a shop that refuses the new tick is asked again without it, and a Desk
+        # subscription that does not send the date is answered allow, never fill
+        real = self.shop.get_list
+
+        def old_shop(url, key, doctype, fields, *a, **k):
+            if "register_books_rx_date" in fields:
+                raise app.ShopUnreadable("the shop answered 417")
+            return real(url, key, doctype, fields, *a, **k)
+        self.shop.get_list = old_shop
+        self.shop.prescription("RX1", "Ann", "AMOX", 21)
+        body = desk_body("Sales Invoice", "SI-1", [{"item_code": "AMOX", "item_group": "Rx", "stock_qty": 21000}], rx="RX1")
+        del body["context"]["fields"]["pp_rxc_rx_date"]
+        self.assertEqual(self.call("/rxc/desk/invoice", body), (200, {"verdict": "allow"}))
+        self.shop.get_list = real
+
+    def test_a_shop_that_refuses_the_key_is_not_asked_again_without_the_tick(self):
+        asked = []
+
+        def refused(url, key, doctype, fields, *a, **k):
+            asked.append(doctype)
+            raise app.ShopUnreadable("the shop answered 401")
+        self.shop.get_list = refused
+        self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1")[0], 503)
+        self.assertLessEqual(asked.count(f"{P} Drug Schedule"), 1)
+
     def test_the_schedule_tick_is_read_and_the_till_asks_for_the_date(self):
         self.shop.add(f"{P} Drug Schedule", name="DATED", axis="Register", needs_prescription=1, pharmacist_only=1,
                       register_books_rx_date=1, returnable=0, return_gives_back=1)

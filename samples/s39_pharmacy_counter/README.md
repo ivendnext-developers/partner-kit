@@ -77,7 +77,8 @@ number: Jordan's narcotics and psychotropics register (Form 9), Mexico's control
 it as it carries the prescription's number:
 - **On the Desk** the field *Prescription's date* on a sales order, delivery or invoice is **filled at Submit** from the
   prescriptions it names, over whatever was typed: the order's check, the delivery's made from it and its invoice's
-  each fill it again. A draft shows it empty until it is submitted.
+  each fill it again. A new document shows it empty until it is submitted; one made from an order carries the
+  order's date in its draft.
 - **At the till** the cashier types it in **Sale details** (*Rx Date*, `2026-10-19`): a check cannot write a sale, so
   the till cannot be filled from the prescription. A date that is not the prescription's is refused, and so is an empty
   one where the schedule ticks *Its register books the prescription's date*; the sentence shows the date to type. We
@@ -86,20 +87,20 @@ it as it carries the prescription's number:
   refused, so sell each prescription in its own sale. Elsewhere it goes through with no date.
 
 **The prescriptions register** (0.1.3), the report **PP RXC Prescriptions Register** on the dispensings, for a daily
-prescriptions register such as Jordan's Form 7 (*سجل الأوصفات الطبية اليومي*: JFDA *Instructions on Medical Prescriptions and Registers*, 2025, Art. 7(a), the form on p. 27): one row
+prescriptions register such as Jordan's Form 7 (*سجل الأوصفات الطبية اليومي*: JFDA *Instructions on Medical Prescriptions and Registers*, 2025, the form on p. 27): one row
 per sale that dispensed against a prescription, in the order they were taken. Filter it by *Day* and print it from the
 report view.
 
 | Form 7's column | The report's column |
 |---|---|
-| serial | the report view's row number |
+| serial | the report view's row number (it starts again with each filter: print one day at a time) |
 | patient's name | *Patient's name*, from the customer |
 | patient's age | ⛔ **not printed** (below) |
 | prescribing doctor | *Prescriber*: each prescription's, written on the dispensing when it was taken |
 | contents | *What it dispensed*: each item, its quantity and its prescription |
-| dose | *Directions (the dose)*: the prescription's directions for each item, else the sale's, else the item's own |
-| date | *Day (the shop's)* |
-| pharmacist | *Pharmacist*: the name on the seller's pharmacist record |
+| dose | *Directions (the dose)*: the prescriber's directions on the prescription, for each item; empty where the prescription carries none (the sale's or the item's own directions never stand in) |
+| date | *Day (the shop's)*: the POS day the sale was taken under |
+| pharmacist | *Pharmacist*: the name on the seller's pharmacist record, when it is active, not a delegate and in date; else empty. On the Desk, the pharmacist who submitted the chain's first document |
 | price | ⛔ **not printed** (below) |
 
 - **No age.** A report reads only the dispensing, and a print may not read the patient's record yet with its reader's
@@ -109,11 +110,13 @@ report view.
   *Desk document*.
 - **One row per sale**, not per prescription: a sale naming two prescriptions is one row naming both. Sell each
   prescription in its own sale where your register wants an entry each.
-- **The status column.** A sale's dispensing reads *Reserved* from Pay until the service next checks that patient,
-  then *Dispensed*; a sale never booked is *Released* once its day closes, and drops out of the report. Close every POS
-  day before you print a day's register, and read *Reserved* rows of a closed day against the day's sales.
+- **The status column.** A dispensing's status changes only when the service next checks that patient: from Pay it
+  reads *Reserved*, then *Dispensed* once its sale is booked, or *Released* once a sale never booked has its day
+  closed, and only then drops out of the report. So a sale abandoned at Pay can still be listed as *Reserved* in a
+  closed day. Close every POS day before you print a day's register, and strike any *Reserved* row whose *Sale
+  reference* has no booked sale.
 - **Who reads it:** the pharmacist roles, who read the patient's record; a clerk is refused it and the dispensings.
-- Dispensings made before 0.1.3 show no prescriber, dose or pharmacist.
+- Dispensings made before 0.1.3 show no patient's name, prescriber, dose or pharmacist.
 
 ## What the shop does
 
@@ -172,17 +175,19 @@ report view.
    7. The level and its grants on *Customer* (0.1.1's step 3) can then go: the service no longer reads those fields.
 
    **Updating from 0.1.2.** In this order:
-   1. Update the app. Its screen says the three Desk services changed: each now sends and fills the prescription's
+   1. Deploy the 0.1.3 service first. It answers a shop still on 0.1.2 as 0.1.2 did: it asks again without the
+      schedule's new tick when the shop does not know it, and fills a Desk document only when the document sent the
+      date, which only 0.1.3's settings do. A service that answers many shops moves once, before any of them updates.
+   2. Update the app. Its screen says the three Desk services changed: each now sends and fills the prescription's
       date, so **the update switches each of them off and clears its consent**, as it does any service whose settings
       change. ⚠ Until they are on again, a sales order, delivery or invoice of medicine is submitted **unchecked**:
-      update when the Desk sells no medicine. The two till services are unchanged and stay as they were.
-   2. Deploy the 0.1.3 service (it reads the schedule's new tick, so a 0.1.2 shop could not be read by it). ⚠ A service
-      that answers many shops moves to 0.1.3 only once every one of them has updated.
+      update when the Desk sells no medicine, and do step 3 at once. The two till services are unchanged and stay as
+      they were.
    3. As a System Manager, open each of the three Desk services, read what it sends and fills, tick the consent and
       switch it on.
    4. Tick *Its register books the prescription's date* on the schedules whose register prints it (step 4).
-   A dispensing made before the update keeps its register columns empty: the register lists it with no prescriber,
-   dose or pharmacist.
+   A dispensing made before the update keeps its register columns empty: the register lists it with no patient's
+   name, prescriber, dose or pharmacist.
 
 4. **Make your drug schedules** (*PP RXC Drug Schedule*), one per class per classification axis, each with its rules. Set
    them on your medicine items (*Drug schedules*: one row per axis, with its *effective from*) or on an item group
@@ -231,8 +236,9 @@ report view.
    - **The prescription's date in your register.** Tick *Its register books the prescription's date* on a schedule
      whose register prints the date the prescription was written: in **Jordan**, the narcotics and psychotropics
      register's special-prescription date (Form 9; JFDA *Instructions on Medical Prescriptions and Registers*, 2025,
-     Art. 7); in **Mexico**, the control book's issue date of the special prescription (fracciones I to III; RIS Art.
-     117 I). The till then refuses such a sale until its date is in Sale details ([below](#the-prescriptions-date-and-the-prescriptions-register)).
+     Art. 7); in **Mexico**, the control book's issue date of the special prescription (fracción I; RIS Art. 117 I),
+     which the register app's Mexican data set also prints in the fracción II and III books (its choice, not a cited
+     field). The till then refuses such a sale until its date is in Sale details ([below](#the-prescriptions-date-and-the-prescriptions-register)).
    - **Saudi Arabia:** controlled prescriptions are dispensed through SFDA's **Raqeeb** platform, on paper only while it
      is down (SFDA *Procedures and Controls*, 2026, Art. 11(1)). A prescription entered in this app is your shop's
      working copy for the counter's rules, not the lawful record (our reading; the text read does not name the decision

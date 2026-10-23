@@ -92,8 +92,9 @@ answering presses keeps nothing.
 
    Answer `refuse` with one sentence of at most 140 characters, naming the line. On the Desk, an allowed document whose
    prescriptions share one date answers `fill` with that date (`{"verdict": "fill", "fields": {"<prefix>_rx_date":
-   "2026-10-19"}}`), which writes it over whatever was typed; a fill reserves as an allow does. A till check cannot
-   write the sale, so there the cashier types it.
+   "2026-10-19"}}`), which writes it over whatever was typed; a fill reserves as an allow does. Fill only a document
+   that sent the field: a subscription still on older settings does not list it to fill, and refuses the answer
+   whole. A till check cannot write the sale, so there the cashier types it.
 
 5. **Reserve with the record's name as the lock.**
    - On allow, insert `<PREFIX> Dispensing` named `<an opaque key for the customer>~<next number>`. Never the patient's
@@ -103,8 +104,9 @@ answering presses keeps nothing.
    - If the insert fails because the name exists (409), another till took that number: read again and decide again.
    - Every dispensing of one patient is thereby decided in turn.
    - Pay pressed again for the same basket keeps its reservation. A changed basket releases it.
-   - Write on it what the prescriptions register prints: the prescriber, the directions (the dose) and the
-     pharmacist's name from their record; the patient's name is fetched from the customer.
+   - Write on it what the prescriptions register prints: the prescriber, the prescriber's directions (the dose: never
+     a default standing in) and a licensed pharmacist's name from their record; the patient's name is fetched from the
+     customer.
 
 6. **Read back what the shop says, never a timer.** At the next decision for that patient:
    - **a reservation becomes *Dispensed*** when a booked POS Invoice carries its `sale_ref` (`custom_mpos_sale_ref`,

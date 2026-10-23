@@ -51,7 +51,7 @@ class ContractTest(unittest.TestCase):
 
     def test_the_prescriptions_date_answers_hold_the_desks_fill_and_the_tills_refusals(self):
         long = "X" * 200
-        c = ctx([line("A", 21)], details={"Rx Number": "RX1"}, source="desk")
+        c = dict(ctx([line("A", 21)], details={"Rx Number": "RX1"}, source="desk"), fillable=True)
         out = decide(c, shop(c, [rule("POM")], [rx("RX1", "A", 21, written="2026-10-19")]))
         out = {k: v for k, v in out.items() if k != "record"}
         self.assertEqual(out["verdict"], "fill")

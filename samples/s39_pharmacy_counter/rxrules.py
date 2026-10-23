@@ -155,12 +155,15 @@ def desk_context(body: dict, prefix: str) -> dict:
                       "qty": x["stock_qty"] / 1000, "uom": "", "linked": bool(parent), "parent": parent})
     is_return = bool(f.get("is_return"))
     details = {suffix: _text(f.get(f"{p}_{field}")) for suffix, field in DESK_FIELDS.items()}
+    # 0.1.3: a subscription that sends the prescription's date may be answered with it (its fill list names it); one
+    # still on 0.1.2's settings does not send it, and would refuse a fill whole
     moves = ctx["doctype"] == "Delivery Note" or bool(f.get("update_stock"))
     return {"source": "desk", "stage": "return" if is_return else "sale", "event": ctx["event"], "moves_stock": moves,
             "sale_ref": f"{ctx['doctype']}:{ctx['name']}", "operator": _text(ctx.get("user")),
             "customer": f["customer"].strip(), "pos_profile": "", "pos_opening": "",
             "return_of": _text(f.get("return_against")), "doctype": ctx["doctype"], "name": ctx["name"],
-            "details": {f"{prefix} {k}": v for k, v in details.items()}, "lines": lines}
+            "details": {f"{prefix} {k}": v for k, v in details.items()}, "lines": lines,
+            "fillable": f"{p}_{DESK_FIELDS[RX_DATE]}" in f}
 
 
 def field_prefix(prefix: str) -> str:
@@ -605,22 +608,25 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
             if r and r["own_sale"] and not any(it["item"] == lines[i]["item"] for x in found for it in x["items"]):
                 return _refuse(lines[i], "Sell this in a sale of its own: it is not on the prescription this sale names.")
 
-    # 7c · the prescription's date on the sale, for a register that books it (Jordan's Form 9, Mexico's RIS Art. 117 I):
-    # the date the named prescriptions were written. The Desk's answer fills it; the till cannot be filled by a check, so
+    # 7c · the prescription's date on the sale, for a register that books it (README, The prescription's date): the date
+    # the named prescriptions were written. The Desk's answer fills it; the till cannot be filled by a check, so
     # its cashier types it, a date that is not the prescription's is refused, and an empty one where a schedule says
     # its register books the date (the refusal shows the date to type)
-    fill = {}
-    days = sorted({x["date_written"] for x in found}) if named and len(found) == len(named) \
-        and all(_date(x["date_written"]) for x in found) else []
+    # the patient's prescriptions that cover a line of the sale (a linked Desk line's too): a number named for nothing
+    # here never adds a date
+    fill, items_here = {}, {x["item"] for x in lines if x["qty"] > 0}
+    covering = [x for x in found if x["customer"] == ctx["customer"] and any(it["item"] in items_here for it in x["items"])]
+    days = sorted({x["date_written"] for x in covering}) if named and not why \
+        and all(_date(x["date_written"]) for x in covering) else []
     typed, needed = detail(RX_DATE), any(rules[i]["rx_date"] for i in rx_lines)
     if rx_lines and len(days) > 1 and (typed or needed):
-        return _refuse(lines[rx_lines[0]], f"Prescriptions {', '.join(x['name'] for x in found)} were written on "
+        return _refuse(lines[rx_lines[0]], f"Prescriptions {', '.join(x['name'] for x in covering)} were written on "
                                            "different days. Sell each in a sale of its own.")
-    if len(days) == 1 and on_desk:      # a linked document's too: its order's date, filled again from the prescription
+    if len(days) == 1 and on_desk and ctx.get("fillable"):   # a linked document's too, filled again from the prescription
         fill = {f"{field_prefix(prefix)}_{DESK_FIELDS[RX_DATE]}": days[0]}
-    elif len(days) == 1 and rx_lines and typed != days[0] and (typed or needed):
+    elif len(days) == 1 and rx_lines and not on_desk and typed != days[0] and (typed or needed):
         return _refuse(lines[rx_lines[0]], f"needs the prescription's date in Sale details: {days[0]}." if not typed else
-                       f"Prescription {found[0]['name']} was written on {days[0]}. Correct the date in Sale details.")
+                       f"Prescription {covering[0]['name']} was written on {days[0]}. Correct the date in Sale details.")
 
     # 8 · directions and a doctor's name, per product group or schedule
     for i in sold:
@@ -683,16 +689,15 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
     if record_lines:      # 0.1.3: what the prescriptions register prints of the dispensing, beside its lines
         used = [x for x in found if any(ln.get("rx") == x["name"] for ln in record_lines)]
         dose = []
-        for ln in record_lines:          # the directions as rule 8 reads them: the prescription's, the sale's, the item's
+        for ln in record_lines:          # the dose: the prescriber's own directions, never the sale's or the item's
             x = next((x for x in used if x["name"] == ln.get("rx")), None)
             words = next((it["directions"] for it in x["items"] if it["item"] == ln["item"] and it["directions"]), "") \
                 if x else ""
-            words = words or detail(DIRECTIONS) or (shop["items"].get(ln["item"]) or {}).get("directions", "")
-            if x and words:
+            if words:
                 dose.append(f"{ln['item']}: {words}")
         record = {"lines": record_lines, "fingerprints": fps,
-                  "prescriber": plain("; ".join(dict.fromkeys(x["prescriber"] for x in used if x["prescriber"]))),
-                  "directions": plain("; ".join(dict.fromkeys(dose)))}
+                  "prescriber": plain("; ".join(dict.fromkeys(x["prescriber"] for x in used if x["prescriber"])), 1000),
+                  "directions": plain("; ".join(dict.fromkeys(dose)), 4000)}
     if fill:
         return {"verdict": "fill", "fields": fill, "record": record}
     return {"verdict": "allow", "record": record}

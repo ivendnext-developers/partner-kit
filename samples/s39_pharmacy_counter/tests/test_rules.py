@@ -317,9 +317,10 @@ class Prescriptions(unittest.TestCase):
 
 class RxDate(unittest.TestCase):
     """0.1.3: the date the prescription was written, on the sale for a register that books it (K1-d)."""
-    def desk(self, rules, rxs, details=None, lines=None):
+    def desk(self, rules, rxs, details=None, lines=None, fillable=True):
         c = ctx(lines or [line("AMOX", 21)], details=dict({"Rx Number": ",".join(r["name"] for r in rxs)}, **(details or {})),
                 source="desk")
+        c["fillable"] = fillable                 # the document sent the date: its subscription's fill list names it
         return decide(c, shop(c, rules, rxs))
 
     def till(self, rules, rxs, details=None, lines=None):
@@ -334,9 +335,14 @@ class RxDate(unittest.TestCase):
             self.assertTrue(out["record"])                    # a fill reserves as an allow does
 
     def test_a_linked_desk_line_is_filled_too_and_the_field_takes_the_prefix(self):
-        c = dict(ctx([line("AMOX", 21, linked=True)], source="desk"), details={"ACME RXC Rx Number": "RX1"})
+        c = dict(ctx([line("AMOX", 21, linked=True)], source="desk"), details={"ACME RXC Rx Number": "RX1"}, fillable=True)
         out = R.decide(c, "desk", shop(c, [rule("POM")], [rx("RX1", "AMOX", 21, written="2026-10-19")]), TODAY, "ACME RXC")
         self.assertEqual((out["verdict"], out["fields"], out["record"]), ("fill", {"acme_rxc_rx_date": "2026-10-19"}, None))
+
+    def test_a_document_that_did_not_send_the_date_is_never_filled(self):
+        # a subscription still on 0.1.2's settings (no date sent, none in its fill list) would refuse a fill whole
+        out = self.desk([rule("DATED")], [rx("RX1", "AMOX", 21, written="2026-10-19")], fillable=False)
+        self.assertEqual(out["verdict"], "allow")
 
     def test_the_till_refuses_a_date_that_is_not_the_prescriptions(self):
         out = self.till([rule("POM")], [rx("RX1", "AMOX", 21, written="2026-10-19")], {"Rx Date": "19/10/2026"})
@@ -361,8 +367,20 @@ class RxDate(unittest.TestCase):
         self.assertEqual(self.till([rule("POM"), rule("POM")], ps, lines=two)["verdict"], "allow")
         self.assertEqual(self.desk([rule("POM"), rule("POM")], ps, lines=two)["verdict"], "allow")    # no date to fill
 
+    def test_a_number_named_for_no_line_here_never_adds_its_date(self):
+        ps = [rx("RX1", "AMOX", 21, written="2026-10-19"), rx("RX2", "TRAM", 10, written="2026-10-20")]
+        out = self.till([rule("DATED")], ps, {"Rx Date": "2026-10-19"})            # RX2 covers no line of this sale
+        self.assertEqual(out["verdict"], "allow")
+        out = self.desk([rule("POM")], ps)
+        self.assertEqual(out["fields"], {"pp_rxc_rx_date": "2026-10-19"})
+
+    def test_a_long_dose_is_kept_whole(self):
+        long = "1 tablet in the morning and 1 at night, with food, for 28 days; do not drive; " * 3
+        out = self.till([rule("POM")], [rx("RX1", "AMOX", 21, directions=long.strip())])
+        self.assertEqual(out["record"]["directions"], f"AMOX: {long.strip()}")
+
     def test_a_prescription_with_no_date_never_fills_an_empty_value(self):
-        c = ctx([line("AMOX", 21, linked=True)], details={"Rx Number": "RX1"}, source="desk")
+        c = dict(ctx([line("AMOX", 21, linked=True)], details={"Rx Number": "RX1"}, source="desk"), fillable=True)
         out = decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21, written="")]))
         self.assertEqual(out["verdict"], "allow")
 
@@ -371,8 +389,9 @@ class RxDate(unittest.TestCase):
         ps[1]["prescriber"] = "Dr Two"
         out = self.till([rule("POM"), rule("POM")], ps, {"Directions": "as the sale says"},
                         lines=[line("AMOX", 21, 1), line("TRAM", 10, 2)])
+        # the dose is the prescriber's own: RX2 carries none, so the sale's text never stands in for it
         self.assertEqual((out["record"]["prescriber"], out["record"]["directions"]),
-                         ("Dr Who; Dr Two", "AMOX: 1 capsule three times a day; TRAM: as the sale says"))
+                         ("Dr Who; Dr Two", "AMOX: 1 capsule three times a day"))
         c = ctx([line("PARA", 2)])                    # a capped sale with no prescription: no prescriber, no dose
         out = decide(c, shop(c, [R.strictest([dict(SCHEDULES["PMED"], freq=[], freq_qty=10, freq_days=7)])]))
         self.assertEqual((out["record"] or {}).get("prescriber", ""), "")
@@ -574,6 +593,9 @@ class Shapes(unittest.TestCase):
         c = R.desk_context(body, P)
         self.assertEqual((c["sale_ref"], c["lines"][0]["qty"], c["lines"][0]["linked"], c["details"][f"{P} Rx Number"]),
                          ("Delivery Note:DN-1", 21, True, "RX1"))
+        self.assertFalse(c["fillable"])                   # 0.1.2's settings send no date: never answered with one
+        body["context"]["fields"]["pp_rxc_rx_date"] = None
+        self.assertTrue(R.desk_context(body, P)["fillable"])
         body["context"]["fields"]["items"][0].update(against_sales_order="", so_detail="", against_sales_invoice="SI-1",
                                                      si_detail="row-9")                 # a delivery made from an invoice
         self.assertTrue(R.desk_context(body, P)["lines"][0]["linked"])
