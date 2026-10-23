@@ -97,6 +97,10 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual({t["allowed"] for t in wf["transitions"]} | {s["allow_edit"] for s in wf["states"][:3]}, {"Sales User"})
         (rep,) = MANIFEST["reports"]
         self.assertEqual(rep["filters"], [["closed", "=", 0]])
+        # Desk puts a saved filter on a standard-filter field into that field, and an unticked Check filters nothing
+        # (run 11's walk: the report listed a collected order), so a field the report filters on is no standard filter
+        lab = fields(f"{P} Lab Order")
+        self.assertFalse(any(lab[f].get("in_standard_filter") for f, _op, _v in rep["filters"]))
         for f in ("ready_to_collect", "closed"):
             self.assertEqual(fields(f"{P} Lab Order")[f]["read_only"], 1)
 

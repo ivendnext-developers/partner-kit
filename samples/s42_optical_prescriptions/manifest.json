@@ -462,7 +462,6 @@
      "fieldtype": "Check",
      "label": "Closed",
      "read_only": 1,
-     "in_standard_filter": 1,
      "description": "Set by Hand over or Cancel."
     },
     {
@@ -820,7 +819,7 @@
    "name": "PP OPT Job Sheet",
    "doc_type": "PP OPT Lab Order",
    "print_format_type": "Jinja",
-   "html": "<div style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n<h2 style=\"margin: 0 0 4px;\">Lab job sheet {{ doc.name }}</h2>\n<p style=\"margin: 0 0 10px;\">{{ doc.customer_name or \"\" }} · prescription {{ doc.prescription }} · due {{ doc.get_formatted(\"due_date\") }}</p>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th></th><th>SPH</th><th>CYL</th><th>Axis</th><th>ADD</th><th>Prism</th><th>Base</th></tr>\n<tr><th>Right</th><td>{{ doc.r_sph }}</td><td>{{ doc.r_cyl }}</td><td>{{ doc.r_axis }}</td><td>{{ doc.r_add }}</td><td>{{ doc.r_prism }}</td><td>{{ doc.r_base or \"\" }}</td></tr>\n<tr><th>Left</th><td>{{ doc.l_sph }}</td><td>{{ doc.l_cyl }}</td><td>{{ doc.l_axis }}</td><td>{{ doc.l_add }}</td><td>{{ doc.l_prism }}</td><td>{{ doc.l_base or \"\" }}</td></tr>\n</table>\n<p>Distance PD {{ doc.pd_distance }} mm · near PD {{ doc.pd_near }} mm · fitting heights R {{ doc.r_height }} / L {{ doc.l_height }} mm</p>\n<p>Frame {{ doc.frame or \"\" }} {{ doc.frame_size or \"\" }} · lenses {{ doc.lens or \"\" }} {{ doc.lens_type or \"\" }} · {{ doc.coatings or \"\" }}</p>\n<p>Lab {{ doc.lab or \"\" }} {{ doc.lab_reference or \"\" }} · collect at {{ doc.store or \"\" }}</p>\n<p>{{ doc.notes or \"\" }}</p>\n</div>"
+   "html": "<div style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n<h2 style=\"margin: 0 0 4px;\">Lab job sheet {{ doc.name }}</h2>\n<p style=\"margin: 0 0 10px;\">{{ doc.customer_name or \"\" }} · prescription {{ doc.prescription }} · due {{ doc.get_formatted(\"due_date\") }}</p>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th></th><th>SPH</th><th>CYL</th><th>Axis</th><th>ADD</th><th>Prism</th><th>Base</th></tr>\n<tr><th>Right</th><td>{{ doc.get_formatted(\"r_sph\") }}</td><td>{{ doc.get_formatted(\"r_cyl\") }}</td><td>{{ doc.r_axis }}</td><td>{{ doc.get_formatted(\"r_add\") }}</td><td>{{ doc.get_formatted(\"r_prism\") }}</td><td>{{ doc.r_base or \"\" }}</td></tr>\n<tr><th>Left</th><td>{{ doc.get_formatted(\"l_sph\") }}</td><td>{{ doc.get_formatted(\"l_cyl\") }}</td><td>{{ doc.l_axis }}</td><td>{{ doc.get_formatted(\"l_add\") }}</td><td>{{ doc.get_formatted(\"l_prism\") }}</td><td>{{ doc.l_base or \"\" }}</td></tr>\n</table>\n<p>Distance PD {{ doc.pd_distance }} mm · near PD {{ doc.pd_near }} mm · fitting heights R {{ doc.r_height }} / L {{ doc.l_height }} mm</p>\n<p>Frame {{ doc.frame or \"\" }} {{ doc.frame_size or \"\" }} · lenses {{ doc.lens or \"\" }} {{ doc.lens_type or \"\" }} · {{ doc.coatings or \"\" }}</p>\n<p>Lab {{ doc.lab or \"\" }} {{ doc.lab_reference or \"\" }} · collect at {{ doc.store or \"\" }}</p>\n<p>{{ doc.notes or \"\" }}</p>\n</div>"
   }
  ],
  "reports": [
