@@ -14,6 +14,17 @@ A shop runs a *shop and win* campaign: every 200 spent at its tills during the c
 
 The **Draw winners** button is gone once the campaign is drawn, the form locks its rule, and the app never draws it again.
 
+| What the shop sees (on a demo shop, 2026-10-23) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/01_install.png) |
+| The draw's service consented and switched on | ![](screenshots/02_consent.png) |
+| A campaign made by the manager role alone: its company, days, hours from UTC, spend for one entry, winners, reserves and prize | ![](screenshots/03_campaign.png) |
+| **Count entries**: three named sales by two customers in the campaign's groups counted; the staff group and the walk-in left out | ![](screenshots/04_count.png) |
+| The question before **Draw winners** | ![](screenshots/05_confirm.png) |
+| **Draw winners** before the last day has ended at the shop: refused, nothing written | ![](screenshots/06_too-early.png) |
+| **Draw winners** after it: one winner and one reserve from six entries | ![](screenshots/07_drawn.png) |
+| The draw's record and the results, the winner handed over | ![](screenshots/08_handed-over.png) |
+
 ## What the shop does
 
 1. **Install the app** (the shop's administrator). It comes in switched off: both services have no consent and are off, and both buttons are off. The install adds the campaign record type **PP LDW Campaign** (and its three tables) and makes the roles **PP LDW Manager** and **PP LDW Integration**.

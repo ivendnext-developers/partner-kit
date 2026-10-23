@@ -17,6 +17,14 @@ A shop runs a *shop and win* campaign: every so much a customer spends at its ti
 3. **Draw winners**, after the last day (by the campaign's own *hours from UTC*): *"Drew 3 winners and 2 reserves from 1,036 entries. The results are on the campaign."* The campaign now reads *Drawn*; its results list each winner and reserve with their name, mobile and e-mail from the shop's own customer record, their entries, the entry number drawn and the sale holding it. Its rule can no longer change, and the button is gone.
 4. The manager calls the winners, hands over the prizes and ticks *Handed over* on each row.
 
+![A campaign made by its manager on a demo shop](../samples/s44_lucky_draw/screenshots/03_campaign.png)
+
+![Count entries on a demo shop: 3 sales by 2 customers, 6 entries so far](../samples/s44_lucky_draw/screenshots/04_count.png)
+
+![Draw winners on a demo shop: one winner and one reserve from six entries](../samples/s44_lucky_draw/screenshots/07_drawn.png)
+
+![The results on a demo shop, the winner handed over](../samples/s44_lucky_draw/screenshots/08_handed-over.png)
+
 ## Steps
 
 1. **Add the campaign record type** with three tables of its own: the tills (POS Profile), the customer groups (Customer Group), and the results (rank, winner or reserve, customer, the customer's name, mobile and e-mail fetched from the customer on save, entries, the entry number drawn, the sale, *Handed over*). Give the campaign's rule fields `read_only_depends_on: "eval:doc.status=='Drawn'"`, so the rule is locked once drawn, and make the status, the counts and the draw's record read-only: only the service writes them. See the sample's `manifest.json`.
