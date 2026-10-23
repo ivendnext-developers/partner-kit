@@ -15,6 +15,14 @@ An optical store keeps each customer's eye prescription, sells lenses against it
 3. Staff open **Lab Order**, choose the prescription (its customer and lens values come with it, read only), and fill the lab, frame, lenses, coatings, fitting heights, the store to collect at, the sale and the due date. They print the **job sheet** for the lab.
 4. The order moves by its buttons: **Send to lab**, **Back from lab** (*Ready to collect* is ticked), **Hand over** (*Closed*), or **Cancel**; **Send back to lab** for a remake. **Lab orders to chase** lists every open order, the oldest due first.
 
+![Pay refused on a demo shop: a pair of spectacle lenses for a customer with no spectacle prescription](../samples/s42_optical_prescriptions/screenshots/05_till_refused.png)
+
+![The customer's spectacle prescription, entered in Desk on a demo shop](../samples/s42_optical_prescriptions/screenshots/06_prescription.png)
+
+![The lab order made from it, ready to collect, on a demo shop](../samples/s42_optical_prescriptions/screenshots/08_lab_order.png)
+
+![The lab order's job sheet](../samples/s42_optical_prescriptions/screenshots/09_job_sheet.png)
+
 ## Prescriptions
 
 A record type of your own, numbered (`format:OPT-RX-{#####}`), whose required fields are what the till's rule reads:
@@ -91,7 +99,7 @@ A settings record type whose record *Default* holds the shop's **hours from UTC*
 ## What the shop does
 
 1. **Install the app.** The check comes in switched off. The install adds the records, the mark, the workflow, the job sheet, the report and the roles.
-2. **Give the optometrist role and Sales User** to whoever writes prescriptions (Sales User reads customers for the picker and holds the lab order's buttons); store staff keep **Sales User**.
+2. **Give the optometrist role and Sales User** to whoever writes prescriptions (Sales User reads customers for the picker and holds the lab order's buttons); store staff keep **Sales User**. Whoever chooses a lab order's **Lab** (a supplier) also needs a role that can see suppliers, such as **Stock User** or **Purchase User**.
 3. **Give the app a user**, as in the [integration user recipe](integration_user.md): its integration role alone, its API key, and in **Role Permissions** a plain **Read** on **Item Group** and **Item**. Choose the user on the app's feed; a hosted service: press **Connect again**.
 4. **Fill in the settings** (*Default*: hours from UTC) and **mark the lens item groups**.
 5. **Switch the check on** in **Retail Extension Subscription** for the optical stores' POS Profiles (read what it is sent, tick the consent).
