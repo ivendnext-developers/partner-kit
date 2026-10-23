@@ -1,0 +1,834 @@
+{
+ "manifest_version": 2,
+ "app": "pp_rbo",
+ "prefix": "PP RBO",
+ "title": "Restaurant back office",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A restaurant's back office. A dish is a plain item that is not stocked, with the shop's own recipe on it (a Bill of Materials). Issue ingredients, a button on the company's settings record for Stock Managers and Stock Users, takes the ingredients of the till sales booked since the settings' start moment off stock: one issue record per store and day, written first and naming its sales so no sale is taken twice, then the shop's own Material Issue of the recipes' parts (a recipe inside a recipe opened, a part that is not stocked and has none skipped and named), from the store or the settings' kitchen store, dated at the day's last sale, or at the press when the stock came in after the sales. A store short of a part books nothing for that day and the issue names every short part; the next press after a delivery or a count books it. A press repeated, or one that stopped half way, books nothing twice; a sale made offline is taken up once it posts. The issue's lines feed a report of sales by item, by who rang them and by day part. Work out food cost, on a food cost record for a store and a period, reads the stock ledger and counts: by recipe, sold as it is, other issues, missing at the count, and both costs as a share of sales. Check allergens, on the Item list, names a dish that leaves out an allergen of its recipe's ingredients and any word not on the shop's list; the till shows the Allergens field on the line and the receipt once the shop adds two field rules in POS Studio. Each press sends the record's name and the fields it names, the pressing user and the language. The install makes the role PP RBO Integration; the shop gives it to the app's user with read on POS Invoice, POS Profile, Item, BOM, Bin, Stock Ledger Entry, Stock Reconciliation and Warehouse and read, write, create and submit on Stock Entry, chooses that user on the feed PP RBO Back office feed (leave the feed off) and presses Connect again. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8145/press/issue",
+  "https://host.docker.internal:8145/press/foodcost",
+  "https://host.docker.internal:8145/press/allergens"
+ ],
+ "doctypes": [
+  {
+   "name": "PP RBO Day Part",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "day_part",
+     "fieldtype": "Data",
+     "label": "Day part",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "Your name for it: Breakfast, Lunch, Dinner."
+    },
+    {
+     "fieldname": "from_time",
+     "fieldtype": "Time",
+     "label": "From",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "to_time",
+     "fieldtype": "Time",
+     "label": "To",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "Before From: it runs past midnight."
+    }
+   ]
+  },
+  {
+   "name": "PP RBO Settings",
+   "autoname": "field:company",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "company",
+     "fieldtype": "Link",
+     "options": "Company",
+     "label": "Company",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "One settings record per company. Issue ingredients works for this company's tills."
+    },
+    {
+     "fieldname": "start_from",
+     "fieldtype": "Datetime",
+     "label": "Issue sales booked from",
+     "reqd": 1,
+     "description": "Sales booked before this moment are never issued. Set it to when you start (and again after a reinstall), so stock already taken off is not taken off again."
+    },
+    {
+     "fieldname": "days_back",
+     "fieldtype": "Int",
+     "label": "Look back (days)",
+     "default": "7",
+     "description": "Each press takes up sales of this many days back that no issue names yet (a sale made offline and posted late is caught). Blank: 7."
+    },
+    {
+     "fieldname": "kitchen_store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Kitchen store",
+     "description": "Blank: each store's ingredients come from that store. Set it when one kitchen cooks for several stores or brands."
+    },
+    {
+     "fieldname": "day_parts_section",
+     "fieldtype": "Section Break",
+     "label": "Day parts"
+    },
+    {
+     "fieldname": "day_parts",
+     "fieldtype": "Table",
+     "options": "PP RBO Day Part",
+     "label": "Day parts",
+     "description": "The sales report names the part of the day each sale was rung in."
+    },
+    {
+     "fieldname": "allergens_section",
+     "fieldtype": "Section Break",
+     "label": "Allergens"
+    },
+    {
+     "fieldname": "allergens",
+     "fieldtype": "Small Text",
+     "label": "Your allergen list",
+     "default": "Celery\nCereals containing gluten\nCrustaceans\nEggs\nFish\nLupin\nMilk\nMolluscs\nMustard\nTree nuts\nPeanuts\nSesame\nSoya\nSulphites",
+     "description": "One per line, in the words your menu uses (the EU's 14 to start). Check allergens names any word on an item that is not on this list."
+    },
+    {
+     "fieldname": "run_started",
+     "fieldtype": "Data",
+     "label": "Press running since (UTC)",
+     "read_only": 1,
+     "description": "Set while Issue ingredients runs, so two presses never issue the same sales."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock User",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP RBO Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RBO Issue Line",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "sale",
+     "fieldtype": "Link",
+     "options": "POS Invoice",
+     "label": "Sale",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "item_code",
+     "fieldtype": "Link",
+     "options": "Item",
+     "label": "Item",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Quantity",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "amount",
+     "fieldtype": "Currency",
+     "label": "Amount (net of tax)",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "server",
+     "fieldtype": "Link",
+     "options": "User",
+     "label": "Rung by",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sold_at",
+     "fieldtype": "Time",
+     "label": "Sold at",
+     "read_only": 1
+    },
+    {
+     "fieldname": "day_part",
+     "fieldtype": "Data",
+     "label": "Day part",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "has_recipe",
+     "fieldtype": "Check",
+     "label": "Has a recipe",
+     "read_only": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RBO Issue Part",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "item_code",
+     "fieldtype": "Link",
+     "options": "Item",
+     "label": "Ingredient",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Quantity",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "uom",
+     "fieldtype": "Link",
+     "options": "UOM",
+     "label": "Unit",
+     "in_list_view": 1,
+     "read_only": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RBO Issue",
+   "autoname": "format:RBO-ISS-{#####}",
+   "fields": [
+    {
+     "fieldname": "company",
+     "fieldtype": "Link",
+     "options": "Company",
+     "label": "Company",
+     "read_only": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Sold at",
+     "in_list_view": 1,
+     "read_only": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "issue_from",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Issued from",
+     "read_only": 1
+    },
+    {
+     "fieldname": "posting_date",
+     "fieldtype": "Date",
+     "label": "Day",
+     "in_list_view": 1,
+     "read_only": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "posting_time",
+     "fieldtype": "Time",
+     "label": "Last sale at",
+     "read_only": 1
+    },
+    {
+     "fieldname": "column_break_status",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Pending\nIssued\nShort\nRefused\nNothing to issue",
+     "default": "Pending",
+     "in_list_view": 1,
+     "read_only": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "stock_entry",
+     "fieldtype": "Link",
+     "options": "Stock Entry",
+     "label": "Stock entry",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sale_count",
+     "fieldtype": "Int",
+     "label": "Sales",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "food_sales",
+     "fieldtype": "Currency",
+     "label": "Sales (net of tax)",
+     "read_only": 1
+    },
+    {
+     "fieldname": "problem",
+     "fieldtype": "Small Text",
+     "label": "Why it is not issued",
+     "read_only": 1,
+     "description": "Set while the issue is Short or Refused; cleared once it is issued."
+    },
+    {
+     "fieldname": "note",
+     "fieldtype": "Small Text",
+     "label": "Recipe notes",
+     "read_only": 1,
+     "description": "Parts the recipes name that are not stocked and have no recipe of their own (water, say): nothing is taken off for them."
+    },
+    {
+     "fieldname": "parts_section",
+     "fieldtype": "Section Break",
+     "label": "Ingredients issued"
+    },
+    {
+     "fieldname": "parts",
+     "fieldtype": "Table",
+     "options": "PP RBO Issue Part",
+     "label": "Ingredients",
+     "read_only": 1
+    },
+    {
+     "fieldname": "lines_section",
+     "fieldtype": "Section Break",
+     "label": "What was sold",
+     "collapsible": 1
+    },
+    {
+     "fieldname": "lines",
+     "fieldtype": "Table",
+     "options": "PP RBO Issue Line",
+     "label": "Sale lines",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sales",
+     "fieldtype": "Long Text",
+     "label": "Sales it covers",
+     "read_only": 1,
+     "hidden": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock User",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "Accounts User",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP RBO Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RBO Food Cost Line",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "item_code",
+     "fieldtype": "Link",
+     "options": "Item",
+     "label": "Ingredient",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "uom",
+     "fieldtype": "Data",
+     "label": "Unit",
+     "read_only": 1
+    },
+    {
+     "fieldname": "recipe_qty",
+     "fieldtype": "Float",
+     "label": "Used by recipe",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "sold_qty",
+     "fieldtype": "Float",
+     "label": "Sold as it is",
+     "read_only": 1
+    },
+    {
+     "fieldname": "other_qty",
+     "fieldtype": "Float",
+     "label": "Other issues (waste, staff meals)",
+     "read_only": 1
+    },
+    {
+     "fieldname": "count_qty",
+     "fieldtype": "Float",
+     "label": "Missing at the count",
+     "read_only": 1
+    },
+    {
+     "fieldname": "actual_qty",
+     "fieldtype": "Float",
+     "label": "Actually used",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "theoretical_value",
+     "fieldtype": "Currency",
+     "label": "Cost by recipe",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "actual_value",
+     "fieldtype": "Currency",
+     "label": "Actual cost",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "variance_value",
+     "fieldtype": "Currency",
+     "label": "Difference",
+     "in_list_view": 1,
+     "read_only": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RBO Food Cost",
+   "autoname": "format:RBO-FC-{#####}",
+   "fields": [
+    {
+     "fieldname": "company",
+     "fieldtype": "Link",
+     "options": "Company",
+     "label": "Company",
+     "reqd": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Store",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "The store the ingredients are kept in (the kitchen store, where one kitchen cooks for several)."
+    },
+    {
+     "fieldname": "from_date",
+     "fieldtype": "Date",
+     "label": "From",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "to_date",
+     "fieldtype": "Date",
+     "label": "To",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "At most 92 days. Count the stock at the end of the period first, so the actual cost is true."
+    },
+    {
+     "fieldname": "column_break_totals",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "food_sales",
+     "fieldtype": "Currency",
+     "label": "Sales (net of tax)",
+     "read_only": 1
+    },
+    {
+     "fieldname": "theoretical_cost",
+     "fieldtype": "Currency",
+     "label": "Cost by recipe",
+     "read_only": 1
+    },
+    {
+     "fieldname": "actual_cost",
+     "fieldtype": "Currency",
+     "label": "Actual cost",
+     "read_only": 1
+    },
+    {
+     "fieldname": "theoretical_pct",
+     "fieldtype": "Percent",
+     "label": "Food cost by recipe (%)",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "actual_pct",
+     "fieldtype": "Percent",
+     "label": "Actual food cost (%)",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "worked_out_at",
+     "fieldtype": "Data",
+     "label": "Worked out (UTC)",
+     "read_only": 1
+    },
+    {
+     "fieldname": "lines_section",
+     "fieldtype": "Section Break",
+     "label": "By ingredient"
+    },
+    {
+     "fieldname": "lines",
+     "fieldtype": "Table",
+     "options": "PP RBO Food Cost Line",
+     "label": "Ingredients",
+     "read_only": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Accounts Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock User",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP RBO Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "Item",
+   "fieldname": "pp_rbo_allergens",
+   "fieldtype": "Data",
+   "label": "Allergens",
+   "insert_after": "item_group",
+   "description": "The allergens it contains, in your list's words, separated by commas: Milk, Eggs. On a dish, every allergen of its recipe (Check allergens compares). The till can show it on the sale's line and the receipt (POS Studio, Fields)."
+  },
+  {
+   "dt": "Stock Entry",
+   "fieldname": "pp_rbo_issue",
+   "fieldtype": "Link",
+   "options": "PP RBO Issue",
+   "label": "Restaurant back office issue",
+   "insert_after": "stock_entry_type",
+   "read_only": 1,
+   "description": "The issue whose ingredients this entry takes off stock."
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP RBO Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/restaurant_back_office.html#settings"
+  },
+  {
+   "doc_type": "PP RBO Issue",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/restaurant_back_office.html#issues"
+  },
+  {
+   "doc_type": "PP RBO Food Cost",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/restaurant_back_office.html#food-cost"
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP RBO Sales by item",
+   "ref_doctype": "PP RBO Issue",
+   "report_type": "Report Builder",
+   "columns": [
+    "posting_date",
+    "store",
+    "lines.sale",
+    "lines.item_code",
+    "lines.qty",
+    "lines.amount",
+    "lines.server",
+    "lines.day_part"
+   ],
+   "order_by": "posting_date desc",
+   "add_total_row": 1,
+   "roles": [
+    "Stock Manager",
+    "Accounts User",
+    "System Manager"
+   ]
+  },
+  {
+   "name": "PP RBO Food cost by ingredient",
+   "ref_doctype": "PP RBO Food Cost",
+   "report_type": "Report Builder",
+   "columns": [
+    "from_date",
+    "to_date",
+    "store",
+    "lines.item_code",
+    "lines.uom",
+    "lines.recipe_qty",
+    "lines.sold_qty",
+    "lines.other_qty",
+    "lines.count_qty",
+    "lines.actual_qty",
+    "lines.theoretical_value",
+    "lines.actual_value",
+    "lines.variance_value"
+   ],
+   "order_by": "to_date desc",
+   "add_total_row": 1,
+   "roles": [
+    "Stock Manager",
+    "Accounts Manager",
+    "System Manager"
+   ]
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP RBO Back office feed",
+   "description": "the back office service reads sales, recipes and stock and writes stock issues as this feed's user; leave the feed switched off",
+   "events": [
+    "PP RBO Settings"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "issue",
+   "point": "desk_action",
+   "label": "Issue ingredients service",
+   "endpoint_url": "https://host.docker.internal:8145/press/issue",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "foodcost",
+   "point": "desk_action",
+   "label": "Food cost service",
+   "endpoint_url": "https://host.docker.internal:8145/press/foodcost",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "allergens",
+   "point": "desk_action",
+   "label": "Allergen check service",
+   "endpoint_url": "https://host.docker.internal:8145/press/allergens",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP RBO Settings",
+   "label": "Issue ingredients",
+   "placement": "form",
+   "service": "issue",
+   "roles": [
+    "Stock Manager",
+    "Stock User"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name, company",
+   "confirm_text": "Take the ingredients of this company's new till sales off stock, one stock issue per store and day?"
+  },
+  {
+   "record_type": "PP RBO Food Cost",
+   "label": "Work out food cost",
+   "placement": "form",
+   "service": "foodcost",
+   "roles": [
+    "Stock Manager",
+    "Accounts Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name, store, from_date, to_date"
+  },
+  {
+   "record_type": "Item",
+   "label": "Check allergens",
+   "placement": "both",
+   "service": "allergens",
+   "roles": [
+    "Item Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name, item_name"
+  }
+ ]
+}
