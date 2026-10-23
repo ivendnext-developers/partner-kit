@@ -13,7 +13,7 @@ request: -
 verified: 2026-10-23 · bench
 ---
 ## What you build
-Lab orders as your manifest's own record type, made from the customer's prescription (its lens values copied, read only), with a workflow *Ordered → Sent to lab → Ready to collect → Collected* and a job sheet to print. A tick the workflow sets once, *Ready to collect*, lets the shop's own Notification tell the customer; an outside app of yours can send the order to the lab's own system.
+Lab orders as your manifest's own record type, made from the customer's prescription (its lens values copied, read only), with a workflow *Ordered → Sent to lab → Ready to collect → Collected* and a job sheet to print. A tick the workflow sets, *Ready to collect* (unticked again for a remake), lets the shop's own Notification tell the customer; an outside app of yours can send the order to the lab's own system.
 
 ## Limits
 - Who may edit a record in a workflow state is checked in the browser only: follow the four safeguards in chapter 13a.

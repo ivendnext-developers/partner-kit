@@ -32,20 +32,31 @@ then each eye's sphere, cylinder, axis, addition, prism, base and visual acuity,
 
 ## Lab orders
 
-A second record type, numbered (`format:OPT-LAB-{#####}`), linked to its prescription. Copy the customer, the e-mail and the lens values from it with `fetch_from: "prescription.<field>"` and `read_only: 1`: the order carries what it prints (the print readers do not serve a package's own record types). Add two read-only ticks the workflow sets, because a manifest's notification carries no condition and a report runs before the workflow's state field exists:
+A second record type, numbered (`format:OPT-LAB-{#####}`), linked to its prescription. Copy the customer, the e-mail and the lens values from it with `fetch_from: "prescription.<field>"` and `read_only: 1`: the order carries what it prints (the print readers do not serve a package's own record types). Add two read-only ticks the workflow sets, *Ready to collect* and *Closed*, because a manifest's notification goes to the shop's own users only (the customer's message is the shop's own Notification on the tick) and a report is installed before the workflow's state field exists:
 
 ```json
 "workflows": [{"name": "PP OPT Lab Order", "document_type": "PP OPT Lab Order",
   "states": [{"state": "PP OPT Ordered", "allow_edit": "Sales User"},
-             {"state": "PP OPT Sent to lab", "allow_edit": "Sales User"},
+             {"state": "PP OPT Sent to lab", "allow_edit": "Sales User", "update_field": "ready_to_collect", "update_value": "0"},
              {"state": "PP OPT Ready to collect", "allow_edit": "Sales User", "update_field": "ready_to_collect", "update_value": "1"},
              {"state": "PP OPT Collected", "allow_edit": "System Manager", "update_field": "closed", "update_value": "1"},
              {"state": "PP OPT Cancelled", "allow_edit": "System Manager", "update_field": "closed", "update_value": "1"}],
-  "transitions": [{"state": "PP OPT Ordered", "action": "PP OPT Send to lab", "next_state": "PP OPT Sent to lab",
-                   "allowed": "Sales User", "allow_self_approval": 1}, "…"]}]
+  "transitions": [
+    {"state": "PP OPT Ordered", "action": "PP OPT Send to lab", "next_state": "PP OPT Sent to lab", "allowed": "Sales User", "allow_self_approval": 1},
+    {"state": "PP OPT Sent to lab", "action": "PP OPT Back from lab", "next_state": "PP OPT Ready to collect", "allowed": "Sales User", "allow_self_approval": 1},
+    {"state": "PP OPT Ready to collect", "action": "PP OPT Hand over", "next_state": "PP OPT Collected", "allowed": "Sales User", "allow_self_approval": 1},
+    {"state": "PP OPT Ready to collect", "action": "PP OPT Send back to lab", "next_state": "PP OPT Sent to lab", "allowed": "Sales User", "allow_self_approval": 1},
+    {"state": "PP OPT Ordered", "action": "PP OPT Cancel", "next_state": "PP OPT Cancelled", "allowed": "Sales User", "allow_self_approval": 1},
+    {"state": "PP OPT Sent to lab", "action": "PP OPT Cancel", "next_state": "PP OPT Cancelled", "allowed": "Sales User", "allow_self_approval": 1},
+    {"state": "PP OPT Ready to collect", "action": "PP OPT Cancel", "next_state": "PP OPT Cancelled", "allowed": "Sales User", "allow_self_approval": 1}]}]
 ```
 
-`allow_self_approval: 1` lets whoever made the order move it (the installer writes 0 when it is left out). A report on `closed = 0` lists the open orders, and a print format of your own is the job sheet. A state's *who may edit* is a screen rule: over the record API anyone with write can change an order in any state.
+- *Sent to lab* unticks *Ready to collect*, so a remake (*Send back to lab*) is told again when it is back; *Cancel* closes an order at any step before *Collected*, one the customer never collects included.
+- `allow_self_approval: 1` lets whoever made the order move it (the installer writes 0 when it is left out).
+- A report on `closed = 0` lists the open orders. ⚠ Never mark `closed` (or any field a report filters on) `in_standard_filter`: Desk moves a saved filter on a standard-filter field into that field, and an unticked tick filters nothing, so the report lists closed orders too (measured).
+- A print format of your own is the job sheet: print each value with `doc.get_formatted("<field>")`, so `-0.50` prints as the lab reads it.
+- A state's *who may edit* is a screen rule: over the record API anyone with write can change an order in any state.
+- The states and actions carry your prefix (*PP OPT Send to lab*): they are site-wide records your install and uninstall own by it.
 
 ## Settings
 
@@ -93,11 +104,13 @@ A settings record type whose record *Default* holds the shop's **hours from UTC*
 - **When the service is down,** the sale is paid and flagged for review (`allow_and_flag`); offline, the same.
 - **A lab order's copied values** are its prescription's at the order's last save.
 - **A newer eye test** does not stop the older prescription's reminder: untick the older one's **E-mail reminders**.
-- **An insurer's or vision plan's share** of the payment is not this recipe's.
+- **An insurer's or optical plan's share** of the payment is the POS board's payer split (`PB-8`), not this recipe's.
+- **One customer record, one person's prescriptions:** the check passes a line on any prescription of the sale's customer, so a family sharing one record shares its prescriptions. Never enter a prescription on your walk-in customer: every walk-in sale would pass.
+- **One time zone per site:** *Hours from UTC* holds for every store of the site.
 
 ## Technical notes
 
 ### What the service is sent and reads
 
 - **Each Pay, and each refund the till pays, sends** the priced basket: lines with their item groups, totals, store, till, the cashier's user, the customer and the sale's details. The consent the System Manager reads lists exactly these.
-- **The service reads** the settings, the item groups' and the items' marks, and the customer's prescriptions' kind and *Valid until*; it writes nothing and keeps nothing about a prescription. That a customer has a spectacle or contact lens prescription, and until when, is health-related personal data: say so on the card, and host the service where the shop's rules allow.
+- **The service reads** the settings, the item groups' and the items' marks, and the customer's prescriptions' kind and *Valid until*; it writes nothing and keeps nothing about a prescription. The app's user holds a read on the prescription record type, so its key could read a whole prescription: the service asks for two fields, and the card says so. That a customer has a spectacle or contact lens prescription, and until when, is health-related personal data: say so on the card, and host the service where the shop's rules allow.

@@ -60,7 +60,7 @@ import shops  # noqa: E402
 
 KEPT_TTL, READ_TIMEOUT = 60, 0.45    # four steps of reads at most (settings and groups; the items; their templates; the
                                      # customer's prescriptions), each 0.45 s per wait on its connection, inside the check's
-                                     # 3 s; a slower shop gets the down answer
+                                     # 3 s (4 s in the library's copy, a function's cold start); a slower shop gets the down answer
 ITEMS_MAX = 20000                    # item marks kept per running copy; past it the copy forgets them all and reads again
 ROUTES = {"/opt/check": "check"}
 

@@ -1,6 +1,6 @@
 # S42 — Optical prescriptions and lab orders (`pp_opt`)
 
-The worked sample for an optical store: eye tests, lab jobs and one rule at the till. This sample gives the shop its **prescriptions** and **lab orders** as its own records in Desk, with a workflow, a lab job sheet and the fields the shop's own messages need. At the till, a check refuses a lens line when the customer has no prescription of that kind in date. It is for a developer who wants a shop's own records with a workflow, and one rule at the till that reads them **without seeing what they hold**.
+The worked sample for an optical store: eye tests, lab jobs and one rule at the till. This sample gives the shop its **prescriptions** and **lab orders** as its own records in Desk, with a workflow, a lab job sheet and the fields the shop's own messages need. At the till, a check refuses a lens line when the customer has no prescription of that kind in date. It is for a developer who wants a shop's own records with a workflow, and one rule at the till that asks for **only the two fields it needs** of them.
 
 **When to use it:** a store keeps a record about its customers that decides whether some items may be sold, and the till must hold the rule while the record's contents stay in the shop.
 
@@ -28,7 +28,7 @@ A refund is never judged; an exchange is judged only for what it sells.
 
 **Where it shows.** In Desk: the two records, the settings, the mark on Item Group and Item, the report, and *Optical* on the customer's form. At the till: nothing new until a line is refused.
 
-**What leaves the shop.** One address: your service (the manifest ships a test address; you write your own). Each Pay, and each refund the till pays, sends the priced basket (lines, totals, store, till, the cashier's user, the customer and the sale's details). Your service then reads the item marks and the customer's prescriptions' kind and Valid until. It keeps the marks a minute and nothing about a prescription, and writes nothing. ⚠ That a customer has a spectacle or contact lens prescription, and until when, is health-related personal data: say so on your card, and host the service where the shop's rules allow.
+**What leaves the shop.** One address: your service (the manifest ships a test address; you write your own). Each Pay, and each refund the till pays, sends the priced basket (lines, totals, store, till, the cashier's user, the customer and the sale's details). Your service then reads the item marks and the customer's prescriptions' kind and Valid until. It keeps the marks a minute and nothing about a prescription, and writes nothing. The app's user holds a read on the prescription record type: its key could read a whole prescription (values, notes, scans), so the service asks the shop for two fields, and the card says so. ⚠ That a customer has a spectacle or contact lens prescription, and until when, is health-related personal data: say so on your card, and host the service where the shop's rules allow.
 
 ## The files
 
@@ -93,6 +93,8 @@ A manifest cannot notify a customer (its notifications go to the shop's own user
 ### Bounds, stated
 
 - Answered when the cashier presses Pay, not when the line is entered. A sale made in Desk, on the Desk POS screen or through the API is not checked.
+- An insurer's or optical plan's share of the payment is the POS board's payer split (`PB-8`), not this app's.
 - At most three checks per POS Profile, 10 seconds together; this app takes one per profile.
+- **One customer record, one person's prescriptions:** the check passes a line on any prescription of the sale's customer, so a family sharing one record shares its prescriptions. Never enter a prescription on your walk-in customer: every walk-in sale would pass.
+- **One time zone per site:** *Hours from UTC* holds for every store of the site.
 - A newer eye test does not stop the older prescription's reminder: untick the older one's **E-mail reminders**.
-- An insurer's or vision plan's share of the payment is not this app's.

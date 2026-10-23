@@ -49,7 +49,7 @@ class ManifestTest(unittest.TestCase):
         marks = "\n" + "\n".join((*optical.KINDS, optical.NOT_NEEDED))
         self.assertEqual(got, {("Item Group", f, "Select", marks), ("Item", f, "Select", marks)})
 
-    def test_a_prescription_holds_the_three_fields_the_service_reads_and_its_kinds(self):
+    def test_a_prescription_requires_what_the_service_reads_and_holds_its_kinds(self):
         import optical
         rx = fields(f"{P} Prescription")
         self.assertEqual(tuple(rx["kind"]["options"].split("\n")), optical.KINDS)
@@ -103,6 +103,13 @@ class ManifestTest(unittest.TestCase):
         self.assertFalse(any(lab[f].get("in_standard_filter") for f, _op, _v in rep["filters"]))
         for f in ("ready_to_collect", "closed"):
             self.assertEqual(fields(f"{P} Lab Order")[f]["read_only"], 1)
+
+    def test_the_job_sheet_prints_each_lens_value_in_its_fields_format(self):     # run 11's walk: -0.5, not -0.50
+        (pf,) = MANIFEST["print_formats"]
+        for side in ("r", "l"):
+            for f in ("sph", "cyl", "add", "prism"):
+                self.assertIn(f'doc.get_formatted("{side}_{f}")', pf["html"])
+                self.assertNotIn(f"{{{{ doc.{side}_{f} }}}}", pf["html"])
 
     def test_no_notification_or_address_reaches_a_customer_from_the_manifest(self):
         self.assertNotIn("notifications", MANIFEST)        # the shop's own Notifications do (the guide)
