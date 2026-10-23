@@ -30,8 +30,6 @@ BODY_MAX = 256 * 1024
 MOST_RECORDS = 100          # the Desk action's own limit for a list press
 DEPTH = 5                   # recipes inside recipes: deeper than this is refused as a loop
 PLACES = 6                  # quantities are kept to six decimals; the shop rounds to its own precision when it books
-MOST_LATE = 31              # an issue booked at the press (the stock came in later) lands at most this many days after its
-                            # sales' day, for food cost's look back
 EU_14 = ["Celery", "Cereals containing gluten", "Crustaceans", "Eggs", "Fish", "Lupin", "Milk", "Molluscs", "Mustard",
          "Tree nuts", "Peanuts", "Sesame", "Soya", "Sulphites"]
 
@@ -92,16 +90,23 @@ def date_of(v) -> datetime.date | None:
         return None
 
 
+def clock_of(v) -> str:
+    """A time of day the shop sent, as ``HH:MM:SS``: the shop's API prints a time's seconds without a leading zero
+    (``11:35:9.97``, measured on the bench), so a time is never compared or sent back as the text it came in."""
+    t = seconds_of(v)
+    return "" if t is None else f"{t // 3600:02d}:{t % 3600 // 60:02d}:{t % 60:02d}"
+
+
 def moment_of(v) -> str:
     """A date and time the shop sent, as text that sorts (``2026-10-23 11:04:18``), or ``""``."""
-    t = str(v or "").replace("T", " ").split(".")[0].split("+")[0]
-    return t if len(t) >= 10 else ""
+    d, _, t = str(v or "").replace("T", " ").partition(" ")
+    day = date_of(d)
+    return f"{day.isoformat()} {clock_of(t.split('+')[0]) or '00:00:00'}" if day else ""
 
 
 def booked_from(sale: dict, start: str) -> bool:
     """A sale counts only when it was booked at or after the settings' start (its own date and time, the shop's clock)."""
-    t = str(sale.get("posting_time") or "00:00:00").split(".")[0]
-    return f"{str(sale.get('posting_date'))[:10]} {t.zfill(8)}" >= start
+    return f"{str(sale.get('posting_date'))[:10]} {clock_of(sale.get('posting_time')) or '00:00:00'}" >= start
 
 
 def seconds_of(v) -> int | None:
@@ -216,14 +221,14 @@ def group_lines(sales: list[dict], lines: list[dict], items: dict, profile_store
                                  "posting_time": "00:00:00", "sales": [], "lines": []})
         if sale["name"] not in g["sales"]:
             g["sales"].append(sale["name"])
-        t = str(sale.get("posting_time") or "00:00:00")
+        t = clock_of(sale.get("posting_time")) or "00:00:00"
         if (seconds_of(t) or 0) > (seconds_of(g["posting_time"]) or 0):
-            g["posting_time"] = t.split(".")[0]
+            g["posting_time"] = t
         meta = items.get(ln.get("item_code")) or {}
         qty = num(ln.get("stock_qty")) or num(ln.get("qty"))
         g["lines"].append({"sale": sale["name"], "item_code": ln.get("item_code"), "qty": qty,
                            "amount": round(num(ln.get("net_amount")), 2), "server": sale.get("owner") or "",
-                           "sold_at": t.split(".")[0], "day_part": day_part_of(t, day_parts),
+                           "sold_at": t, "day_part": day_part_of(t, day_parts),
                            "has_recipe": int(not meta.get("is_stock_item") and bool(meta.get("default_bom")))})
     return out
 

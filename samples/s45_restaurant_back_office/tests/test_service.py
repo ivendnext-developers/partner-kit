@@ -124,6 +124,7 @@ class ServiceTest(unittest.TestCase):
         self.assertIn("MILK (needs 0.15, has 0.1)", iss["problem"])
         self.assertEqual(shop.entries, {})
         self.assertEqual(out["message"]["level"], "warning")
+        self.assertTrue(out["message"]["body"].startswith("1 store-day is short"))     # tried once in a press, counted once
 
     def test_i8_short_at_the_sales_time_is_booked_at_the_press_once_stock_is_in(self):
         shop = fs.FakeTenant()
@@ -227,17 +228,33 @@ class ServiceTest(unittest.TestCase):
         (iss,) = shop.issues.values()
         self.assertEqual((iss["status"], shop.entries), ("Nothing to issue", {}))
 
-    def test_i16b_a_store_day_whose_recipe_goes_round_is_not_taken_up_until_it_is_fixed(self):
+    def test_i16b_a_store_day_whose_recipe_goes_round_is_refused_and_issued_once_it_is_fixed(self):
         shop = fs.FakeTenant()
         shop.boms["BOM-BURGER"]["items"].append({"item_code": "BURGER", "stock_qty": 1, "bom_no": "BOM-BURGER"})
-        shop.items["BURGER"]["is_stock_item"] = 0
-        out = self.issue(shop)[1]
-        self.assertEqual(shop.issues, {})
-        self.assertIn("Not taken up, fix and press again", out["message"]["body"])
-        shop.boms["BOM-BURGER"]["items"].pop()
         self.issue(shop)
         (iss,) = shop.issues.values()
-        self.assertEqual((iss["status"], iss["sales"]), ("Issued", "S1\nS2"))
+        self.assertEqual((iss["status"], iss["sales"], shop.entries), ("Refused", "S1\nS2", {}))
+        self.assertIn("goes round in a loop", iss["problem"])
+        shop.boms["BOM-BURGER"]["items"].pop()
+        self.issue(shop)
+        self.assertEqual((iss["status"], len(shop.issues), len(shop.entries)), ("Issued", 1, 1))
+
+    def test_i16b2_sales_with_no_store_are_refused_without_a_call_until_a_kitchen_store_is_chosen(self):
+        shop = fs.FakeTenant()
+        for x in shop.sales:
+            x.pop("set_warehouse", None)
+            x["pos_profile"] = "Nowhere"
+        self.issue(shop)
+        (iss,) = shop.issues.values()
+        self.assertEqual((iss["status"], shop.entries), ("Refused", {}))
+        self.assertNotIn("POST Stock Entry", shop.calls)
+        self.issue(shop)                                     # tried again with still no store: still no call
+        self.assertEqual((iss["status"], "POST Stock Entry" in shop.calls), ("Refused", False))
+        shop.settings[fs.CO]["kitchen_store"] = "Kitchen - CC"
+        shop.stock.update(BUN=20)
+        self.issue(shop)
+        (se,) = shop.entries.values()
+        self.assertEqual((iss["status"], se["from_warehouse"]), ("Issued", "Kitchen - CC"))
 
     def test_i16c_a_refused_issue_is_tried_again_with_the_recipe_as_it_is_now(self):
         shop = fs.FakeTenant()
@@ -257,6 +274,18 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(iss["status"], "Issued")
         (se,) = shop.entries.values()
         self.assertEqual(sorted(r["item_code"] for r in se["items"]), ["BEANS", "BUN", "MILK"])
+
+    def test_i16c2_short_is_tried_before_refused_and_the_rest_are_counted(self):
+        shop = fs.FakeTenant()
+        for d in range(1, 8):                                # seven Refused, older
+            shop.issues[f"R{d}"] = {"name": f"R{d}", "company": fs.CO, "status": "Refused", "posting_date": f"2026-10-1{d}",
+                                    "store": fs.STORE, "sale_count": 1, "lines": [{"item_code": "SALAD", "qty": 1, "has_recipe": 0}],
+                                    "problem": "x", "sales": f"X{d}"}
+        shop.issues["S"] = {"name": "S", "company": fs.CO, "status": "Short", "posting_date": "2026-10-21", "store": fs.STORE,
+                            "sale_count": 1, "lines": [{"item_code": "BURGER", "qty": 1, "has_recipe": 1}], "problem": "x", "sales": "Y"}
+        out = self.issue(shop)[1]
+        self.assertEqual(shop.issues["S"]["status"], "Issued")
+        self.assertIn("3 more issues wait to be tried again", out["message"]["body"])
 
     def test_i16d_an_issue_left_out_is_never_tried_again(self):
         shop = fs.FakeTenant(stock={"BUN": 0, "PATTY": 20, "MILK": 5, "BEANS": 1})
@@ -341,6 +370,20 @@ class ServiceTest(unittest.TestCase):
         (bun,) = shop.foodcosts["FC-4"]["lines"]
         self.assertEqual((bun["recipe_qty"], bun["other_qty"]), (2, 1))
 
+    def test_f1c_an_issue_booked_long_after_its_sales_is_still_the_apps(self):
+        shop = fs.FakeTenant()
+        shop.issues["OLD"] = {"name": "OLD", "company": fs.CO, "status": "Issued", "posting_date": "2026-08-01",
+                              "stock_entry": "LATE", "issue_from": fs.STORE, "food_sales": 0, "sales": "Z"}
+        shop.entries["LATE"] = {"name": "LATE", "purpose": "Material Issue", "posting_date": "2026-10-22", "company": fs.CO,
+                                "docstatus": 1, "pp_rbo_issue": "OLD", "remarks": "PP RBO: the ingredients of 1 sales"}
+        shop.ledger = [{"item_code": "BUN", "actual_qty": -2, "stock_value_difference": -8, "voucher_type": "Stock Entry",
+                        "voucher_no": "LATE"}]
+        shop.foodcosts["FC-5"] = {"name": "FC-5", "company": fs.CO, "store": fs.STORE, "from_date": "2026-10-22",
+                                  "to_date": "2026-10-22", "modified": "m"}
+        self.press(self.svc(shop), "/press/foodcost", "PP RBO Food Cost", ["FC-5"])
+        (bun,) = shop.foodcosts["FC-5"]["lines"]
+        self.assertEqual((bun["recipe_qty"], bun["other_qty"]), (2, 0))
+
     def test_f2_a_period_too_long_or_back_to_front_is_refused_in_words(self):
         shop = fs.FakeTenant()
         shop.foodcosts["FC-2"] = {"name": "FC-2", "company": fs.CO, "store": fs.STORE, "from_date": "2026-01-01",
@@ -406,12 +449,26 @@ class ServiceTest(unittest.TestCase):
         out = self.press_check(shop, ["BURGER"])
         self.assertEqual(out["message"]["body"], "1 item names every allergen of its recipe.")
         self.assertNotIn("open_record", out)
+        self.assertEqual(shop.checks, {})
+
+    def test_a4b_an_ingredient_that_is_a_variant_carries_its_templates_allergens(self):
+        shop = fs.FakeTenant()
+        shop.items["MAYO"] = {"is_stock_item": 1, "stock_uom": "Litre", "pp_rbo_allergens": "Eggs"}
+        shop.items["MAYO-L"] = {"is_stock_item": 1, "stock_uom": "Litre", "variant_of": "MAYO"}
+        shop.boms["BOM-BURGER"]["items"].append({"item_code": "MAYO-L", "stock_qty": 0.02})
+        shop.items["BURGER"]["pp_rbo_allergens"] = "Cereals containing gluten, Sesame"
+        self.press_check(shop, ["BURGER"])
+        (chk,) = shop.checks.values()
+        self.assertIn(("BURGER", "Eggs (from MAYO-L)"), {(r["item_code"], r["detail"]) for r in chk["lines"]})
 
     def test_a5_no_allergen_list_is_said_on_the_check(self):
         shop = fs.FakeTenant(settings_=fs.settings(allergens=""))
         self.press_check(shop, ["COFFEE"])
         (chk,) = shop.checks.values()
         self.assertIn("No allergen list", [r["finding"] for r in chk["lines"]])
+        shop.items["COFFEE"]["pp_rbo_allergens"] = "Milk"
+        out = self.press_check(shop, ["COFFEE"])
+        self.assertTrue(out["message"]["body"].startswith("No allergen list in the settings"))
 
     def test_a6_every_answer_holds_the_message_limits(self):
         shop = fs.FakeTenant()

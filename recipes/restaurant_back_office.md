@@ -40,8 +40,8 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
    - read the dishes' items and recipes (`BOM` and `BOM Item` with `parent=BOM`, two lists a level, never one read per recipe), group the lines by store and day, and open each dish into its stock parts;
    - **write the issue first** (it claims the sales), then the shop's Material Issue in one call (`docstatus` 1), dated at the day's last sale (`set_posting_time` 1), carrying the issue's link;
    - if the shop refuses it for want of stock, try once more without a date (the shop dates it now: the stock came in after the sales); if that is refused too, read `Bin` for the store and write *Short* naming every short part; any other refusal is *Refused* with the shop's own words;
-   - a store-day whose recipe goes round, or whose sales name no store, is not written: the answer names it, and the next press after the fix takes it up;
-   - then try up to five issues left *Short* or *Refused*, oldest first, working their parts out again from their own lines and the recipes as they are now (a manager may set one to *Left out* instead: never tried again);
+   - a store-day whose recipe goes round, or whose sales name no store, is written *Refused* with why, and nothing is booked;
+   - then try up to five issues left *Short* or *Refused*, *Short* first, oldest first, working their parts out again from their own lines and the recipes as they are now (a manager may set one to *Left out* instead: never tried again);
    - stop starting anything new after five and a half seconds and say more is waiting; clear the stamp. ⚠ When the shop's answer never came back, leave the stamp: the shop may still be writing, and a second press would book the same sales. It lapses after three minutes, and the next press finds the entry by its link.
 
 <a id="food-cost"></a>
@@ -50,7 +50,7 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 <a id="allergens"></a>
 6. **The allergen check** on Item (list and form), for Item Manager: read the ticked items, their recipes at every depth (a stocked sauce's own recipe too: its ingredients' allergens are in the dish; a row's own sub-recipe first) and the parts' *Allergens*, and each variant's template. Write every finding to a check record (a dish missing an allergen and from which part, a variant with none of its template's, a dish with none typed, a word not on the list) and answer with `open_record` to it: a message holds 280 characters, a menu's findings do not. Nothing on an item changes.
 
-7. **The field rules** on each till theme the shop's tills wear (POS Studio, *Fields*), `cart_line` and `receipt_preview`, `show` `pp_rbo_allergens` labelled *Allergens* ([field rules recipe](field_rules.md)). They name the shop's own theme, so the shop adds them; your manifest can carry them only when you know the theme. The till shows the field of the item sold: a variant needs the field in **Item Variant Settings**. The shipped receipt prints it; a receipt layout of the shop's own prints it only if it calls the till's item-fields reader.
+7. **The field rules** on each till theme the shop's tills wear (POS Studio, *Fields*), `cart_line` and `receipt_preview`, `show` `pp_rbo_allergens` labelled *Allergens* ([field rules recipe](field_rules.md)). They name the shop's own theme, so the shop adds them; your manifest can carry them only when you know the theme. The till shows the field of the item sold: a variant needs its own (typed, or copied by **Item Variant Settings** where every variant shares the template's allergens; a template's save then writes over each variant's). The shipped receipt prints it; a receipt layout of the shop's own prints it only if it calls the till's item-fields reader.
 
 8. **Two reports** in your manifest: the issues' lines (date, store, sale, item, quantity, amount, who rang it, day part) and the food cost lines, each with a totals row.
 
@@ -67,7 +67,7 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 - An issue booked at the press after a delivery lands on that day, not the sales' day.
 - Only till sales; a returned dish takes nothing back; a dish that is itself a stock item is never opened.
 - An ingredient counted in whole units takes whole quantities: a recipe using half a bun is refused by the shop and named on the issue.
-- The kitchen ticket does not print the allergens yet; the till shows at most three extra item fields per theme, and the field holds 140 characters.
+- The kitchen ticket does not print the allergens; the till shows at most three extra item fields per theme, and the field holds 140 characters.
 - A sale older than the look-back is never taken up; a till sale cancelled after its issue keeps its issue.
 - Reinstalling removes the app's issues: set *Issue sales booked from* again, or the same sales are taken up twice.
 

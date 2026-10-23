@@ -124,6 +124,15 @@ class Groups(unittest.TestCase):
     def test_g7_a_day_with_no_recipe_issues_nothing(self):
         self.assertEqual(bo.need_of(self.g[("Store A", "2026-10-24")], ITEMS, BOMS), ({}, []))
 
+    def test_g7b_a_time_the_shop_prints_without_its_leading_zero(self):
+        self.assertEqual(bo.clock_of("11:35:9.97032"), "11:35:09")
+        self.assertEqual(bo.clock_of("9:5:0"), "09:05:00")
+        self.assertTrue(bo.booked_from({"posting_date": "2026-10-23", "posting_time": "11:35:9.97"}, "2026-10-23 11:34:50"))
+        self.assertFalse(bo.booked_from({"posting_date": "2026-10-23", "posting_time": "11:34:9.5"}, "2026-10-23 11:34:50"))
+        self.assertEqual(bo.moment_of("2026-10-23 11:34:5"), "2026-10-23 11:34:05")
+        g = bo.group_lines([dict(SALES[0], posting_time="23:59:7.5")], LINES[:1], ITEMS, {}, PARTS)
+        self.assertEqual(next(iter(g.values()))["posting_time"], "23:59:07")
+
     def test_g8_day_parts(self):
         self.assertEqual(bo.day_part_of("10:59:59", PARTS), "Breakfast")
         self.assertEqual(bo.day_part_of("11:00:00", PARTS), "Lunch")

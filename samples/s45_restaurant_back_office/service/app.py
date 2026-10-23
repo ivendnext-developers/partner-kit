@@ -79,6 +79,8 @@ REFUSED = (f"{APP_NAME} may not read or write what it needs. Ask your manager to
 CONNECT_AGAIN = " Then press Connect again on the app."    # many shops: a new key reaches the service only that way
 BUSY = ("Another press is issuing for this company now, or one did not answer in time. Press Issue ingredients again "
         "in a few minutes.")
+NO_STORE = ("Not issued: the sales name no store and the settings no kitchen store. Choose the kitchen store, then press "
+            "again.")
 NO_START = ("Choose Issue sales booked from on this record first: sales booked before that moment are never issued "
             "(set it to when you start, so stock already taken off by hand is not taken off again).")
 
@@ -157,6 +159,13 @@ class Tenant:
         if parent:
             q["parent"] = parent
         return [r for r in self._data("GET", doctype, query=q, kind=list) if isinstance(r, dict)]
+
+    def rows_in(self, doctype: str, fields: list, field: str, names, filters: list = (), parent: str | None = None) -> list:
+        """``rows`` for a long list of names, a hundred a read, so the address stays short."""
+        names, out = sorted(set(names)), []
+        for i in range(0, len(names), CHUNK):
+            out += self.rows(doctype, fields, list(filters) + [[field, "in", names[i:i + CHUNK]]], parent=parent)
+        return out
 
     def create(self, doctype: str, body: dict) -> dict:
         return self._data("POST", doctype, body)
@@ -246,17 +255,15 @@ class Service:
         want = sorted(set(codes) - set(items))
         for _ in range(bo.DEPTH + 2):
             if want:
-                for r in door.rows("Item", ["name", "is_stock_item", "default_bom", "stock_uom", "variant_of",
-                                            f"{bo.FIELD}_allergens"], [["name", "in", want]]):
+                for r in door.rows_in("Item", ["name", "is_stock_item", "default_bom", "stock_uom", "variant_of",
+                                               f"{bo.FIELD}_allergens"], "name", want):
                     items[r["name"]] = r
             todo = sorted({b for b in bo.boms_to_read(list(items), items, deep) + bo.bom_rows_to_read(boms, items, deep)
                            if b not in boms})
             if not todo:
                 return
-            heads = {r["name"]: r for r in door.rows("BOM", ["name", "quantity", "is_active", "docstatus"],
-                                                     [["name", "in", todo]])}
-            rows = door.rows("BOM Item", ["parent", "item_code", "stock_qty", "bom_no"], [["parent", "in", todo]],
-                             parent="BOM")
+            heads = {r["name"]: r for r in door.rows_in("BOM", ["name", "quantity", "is_active", "docstatus"], "name", todo)}
+            rows = door.rows_in("BOM Item", ["parent", "item_code", "stock_qty", "bom_no"], "parent", todo, parent="BOM")
             for name in todo:
                 h = heads.get(name) or {}
                 ok = h.get("docstatus") == 1 and h.get("is_active")
@@ -319,11 +326,14 @@ class Service:
                                                "problem": f"Not issued: {e}. Fix the recipe, then press again."[:500]})
             return "refused"
         if not need:
-            door.update(bo.dt("Issue"), name, {"status": "Nothing to issue", "parts": [], "problem": ""})
+            door.update(bo.dt("Issue"), name, {"status": "Nothing to issue", "parts": [], "lines": lines, "problem": ""})
             return "nothing"
         issue_from = s.get("kitchen_store") or issue.get("store")
+        if not issue_from:
+            door.update(bo.dt("Issue"), name, {"status": "Refused", "problem": NO_STORE})
+            return "refused"
         parts = [{"item_code": k, "qty": v, "uom": (items.get(k) or {}).get("stock_uom")} for k, v in need.items()]
-        door.update(bo.dt("Issue"), name, {"parts": parts, "issue_from": issue_from})
+        door.update(bo.dt("Issue"), name, {"parts": parts, "issue_from": issue_from, "lines": lines})
         return self._book(door, company, dict(issue, parts=parts, issue_from=issue_from))
 
     def issue(self, door, settings_name: str) -> dict:
@@ -354,33 +364,34 @@ class Service:
                 self._unlock(door, settings_name, mine)
 
     def _issue(self, door, s: dict, company: str, start: str, t0: float) -> dict:
-        out = {"issued": 0, "short": 0, "refused": 0, "nothing": 0, "sales": 0, "skipped": []}
-        items, boms = {}, {}
+        out = {"issued": 0, "short": 0, "refused": 0, "nothing": 0, "sales": 0, "waiting": 0}
+        items, boms, touched = {}, {}, set()    # touched: the issues this press already tried, never tried twice
         # 1. an issue whose stock entry an earlier press may have made before its answer was lost
         for old in door.rows(bo.dt("Issue"), ["name"], [["company", "=", company], ["status", "=", "Pending"]]):
             if self.clock() - t0 > BUDGET_S:
                 return self._answer(out, left=True)
             out[self._book(door, company, door.doc(bo.dt("Issue"), old["name"]))] += 1
+            touched.add(old["name"])
         # 2. the sales no issue names yet
         today = _now_utc(self.now).date()
         days = int(bo.num(s.get("days_back")) or 7)
         since = max(bo.date_of(start), today - datetime.timedelta(days=days)).isoformat()
-        sales = door.rows("POS Invoice", ["name", "posting_date", "posting_time", "owner", "set_warehouse", "pos_profile"],
-                          [["company", "=", company], ["docstatus", "=", 1], ["posting_date", ">=", since]])
+        listed = door.rows("POS Invoice", ["name", "posting_date", "posting_time", "owner", "set_warehouse", "pos_profile"],
+                           [["company", "=", company], ["docstatus", "=", 1], ["posting_date", ">=", since]])
         claimed = set()
         for r in door.rows(bo.dt("Issue"), ["sales"], [["company", "=", company], ["posting_date", ">=", since]]):
             claimed |= set((r.get("sales") or "").split("\n"))
-        sales = sorted((x for x in sales if x.get("name") and x["name"] not in claimed and bo.booked_from(x, start)),
+        sales = sorted((x for x in listed if x.get("name") and x["name"] not in claimed and bo.booked_from(x, start)),
                        key=lambda x: (str(x.get("posting_date")), str(x.get("posting_time")), x["name"]))
         left = len(sales) > MOST_SALES
+        if self.test_modes:             # test modes only: what this press read, for the bench's record
+            self.received = (self.received + [{"trace": {"start": start, "since": since, "listed": len(listed),
+                                                         "claimed": len(claimed), "new": len(sales)}}])[-20:]
         sales = sales[:MOST_SALES]
         if sales:
             names = [x["name"] for x in sales]
-            lines = []
-            for i in range(0, len(names), CHUNK):
-                lines += door.rows("POS Invoice Item", ["parent", "item_code", "qty", "stock_qty", "net_amount",
-                                                        "warehouse"], [["parent", "in", names[i:i + CHUNK]]],
-                                   parent="POS Invoice")
+            lines = door.rows_in("POS Invoice Item", ["parent", "item_code", "qty", "stock_qty", "net_amount", "warehouse"],
+                                 "parent", names, parent="POS Invoice")
             profiles = sorted({x["pos_profile"] for x in sales if x.get("pos_profile")})
             stores = {r["name"]: r.get("warehouse") for r in door.rows("POS Profile", ["name", "warehouse"],
                                                                        [["name", "in", profiles]])} if profiles else {}
@@ -391,29 +402,34 @@ class Service:
                     left = True
                     break
                 g = groups[key]
-                if not g["store"] or not g["issue_from"]:      # never claimed: the next press after the fix takes them up
-                    out["skipped"].append(f"{key[1]}: the sales name no store and the settings no kitchen store")
-                    continue
                 try:
                     need, notes = bo.need_of(g, items, boms)
+                    problem = "" if g["issue_from"] else NO_STORE
                 except bo.RecipeError as e:
-                    out["skipped"].append(f"{key[0]} {key[1]}: {e}")
-                    continue
+                    need, notes, problem = {}, [], f"Not issued: {e}. Fix the recipe, then press again."[:500]
                 body = bo.issue_doc(company, g, need, items, notes)
+                if problem:                 # claimed as Refused: a retry works it out again from the recipes and settings then
+                    body.update(status="Refused", problem=problem)
                 doc = door.create(bo.dt("Issue"), body)      # FIRST: it claims the sales
+                touched.add(doc.get("name"))
                 out["sales"] += len(g["sales"])
                 if body["status"] == "Nothing to issue":
                     out["nothing"] += 1
+                elif body["status"] == "Refused":
+                    out["refused"] += 1
                 else:
                     out[self._book(door, company, dict(body, name=doc.get("name")))] += 1
         # 3. issues left Short or Refused, with what time is left, oldest first, a few a press
-        stuck = door.rows(bo.dt("Issue"), ["name", "posting_date"], [["company", "=", company],
+        stuck = door.rows(bo.dt("Issue"), ["name", "posting_date", "status"], [["company", "=", company],
                                                                     ["status", "in", ["Short", "Refused"]]])
-        for old in sorted(stuck, key=lambda r: (str(r.get("posting_date")), r["name"]))[:RETRIES]:
+        stuck = sorted((r for r in stuck if r["name"] not in touched),
+                       key=lambda r: (r.get("status") != "Short", str(r.get("posting_date")), r["name"]))
+        for old in stuck[:RETRIES]:     # Short first: a delivery fixes those; a Refused one waits for a person
             if self.clock() - t0 > BUDGET_S:
                 left = True
                 break
             out[self._retry(door, company, s, old["name"], items, boms)] += 1
+        out["waiting"] = max(0, len(stuck) - RETRIES)
         return self._answer(out, left)
 
     @staticmethod
@@ -431,11 +447,12 @@ class Service:
             parts.append(f"{bo.n(out['nothing'], 'store-day', 'store-days')} sold nothing with a recipe.")
         if out["sales"]:
             parts.append(f"{bo.n(out['sales'], 'sale', 'sales')} taken up.")
-        if out.get("skipped"):
-            parts.append("Not taken up, fix and press again: " + "; ".join(out["skipped"]) + ".")
+        if out.get("waiting"):
+            parts.append(f"{bo.n(out['waiting'], 'more issue waits', 'more issues wait')} to be tried again: fix them, or "
+                         "mark them Left out.")
         if left:
             parts.append("More is waiting: press Issue ingredients again.")
-        warn = left or out["short"] or out["refused"] or out.get("skipped")
+        warn = left or out["short"] or out["refused"] or out.get("waiting")
         return bo.message(APP_NAME, " ".join(parts) or "Nothing new to issue.", "warning" if warn else "success")
 
     # ── Work out food cost ──
@@ -458,9 +475,8 @@ class Service:
         # are the app's (the link field goes with an uninstall, the remarks stay). A copy made in Desk carries the
         # link but no issue names it: it is the shop's own issue
         issues = door.rows("Stock Entry", ["name", f"{bo.FIELD}_issue", "remarks"], base + [["purpose", "=", "Material Issue"]])
-        named = {r.get("stock_entry") for r in door.rows(bo.dt("Issue"), ["stock_entry"], [
-            ["company", "=", company], ["stock_entry", "is", "set"],
-            ["posting_date", ">=", (a - datetime.timedelta(days=bo.MOST_LATE)).isoformat()]])}
+        named = {r.get("stock_entry") for r in door.rows_in(bo.dt("Issue"), ["stock_entry"], "stock_entry",
+                                                            [r["name"] for r in issues])}
         ours = {r["name"] for r in issues if r["name"] in named
                 or (not r.get(f"{bo.FIELD}_issue") and bo.ours_by_remarks(r.get("remarks")))}
         other = {r["name"] for r in issues} - ours
@@ -507,13 +523,16 @@ class Service:
         if tpls:
             for r in door.rows("Item", ["name", f"{bo.FIELD}_allergens"], [["name", "in", tpls]]):
                 items.setdefault(r["name"], r)
-        words = {k: v.get(f"{bo.FIELD}_allergens") for k, v in items.items()}
+        own = {k: v.get(f"{bo.FIELD}_allergens") for k, v in items.items()}
+        # an ingredient that is a variant with none of its own carries its template's (the till would show nothing for
+        # it, but the dish's allergens are still in it)
+        words = {k: own.get(k) if bo.words_of(own.get(k)) else own.get(v.get("variant_of")) for k, v in items.items()}
         rows, missing = [], 0
         for name in names:
             if name not in items:
                 rows.append({"item_code": name, "finding": "Not found", "detail": ""})
                 continue
-            tpl = bo.variant_gap(name, items, words)
+            tpl = bo.variant_gap(name, items, own)
             if tpl:
                 rows.append({"item_code": name, "finding": "Variant with no allergens",
                              "detail": f"its template {tpl} has them: the till shows this item's own (add the field to "
@@ -533,11 +552,11 @@ class Service:
                     missing += 1
                     rows.append({"item_code": name, "finding": "Misses an allergen of its recipe",
                                  "detail": f"{', '.join(m)} (from {', '.join(src)})"[:140]})
-                elif not bo.words_of(words.get(name)):
+                elif not bo.words_of(own.get(name)):
                     rows.append({"item_code": name, "finding": "No allergens typed",
                                  "detail": "its recipe's items carry none either: the till prints nothing for it"})
             for code in [name] + parts:
-                bad = bo.unknown_words(words.get(code), known)
+                bad = bo.unknown_words(own.get(code), known)
                 if bad:
                     rows.append({"item_code": code, "finding": "Not on your allergen list",
                                  "detail": f"{', '.join(bad)}: check the spelling"[:140]})
@@ -546,14 +565,17 @@ class Service:
         if not known:
             rows.append({"item_code": "", "finding": "No allergen list", "detail": "no settings record holds one: "
                          "words were not checked against a list"})
+        if not rows:                    # nothing to show: no record is written
+            return bo.message(APP_NAME, f"{bo.n(len(names), 'item names', 'items name')} every allergen of its recipe.",
+                              refresh=False)
         doc = door.create(bo.dt("Allergen Check"), {"checked_by": user, "items_checked": len(names), "flagged": flagged,
                                                     "lines": rows})
         if missing:
             body = f"{bo.n(missing, 'dish misses', 'dishes miss')} an allergen of its recipe. Open the check for every finding."
-        elif rows:
+        elif flagged:
             body = f"{bo.n(flagged, 'item needs', 'items need')} a look. Open the check for every finding."
         else:
-            body = f"{bo.n(len(names), 'item names', 'items name')} every allergen of its recipe."
+            body = "No allergen list in the settings: words were not checked against one. Open the check."
         out = bo.message(APP_NAME, body, "warning" if rows else "success", refresh=False)
         if rows:
             out["open_record"] = {"doctype": bo.dt("Allergen Check"), "name": doc.get("name")}

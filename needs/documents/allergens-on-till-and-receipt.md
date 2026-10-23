@@ -18,9 +18,9 @@ An *Allergens* field on Item from your manifest, filled by the shop on its dishe
 
 ## Limits
 - The check names what to fix and changes nothing: the shop corrects the dish. It cannot know an allergen nobody typed.
-- The kitchen ticket does not print it yet.
+- The kitchen ticket does not print it.
 - The till shows at most three extra item fields per theme, and the field holds 140 characters.
-- A variant shows its own field: copy it through Item Variant Settings.
+- A variant shows its own field: type it, or copy it through Item Variant Settings where every variant shares the template's allergens.
 - A receipt layout of the shop's own prints it only if it calls the till's item-fields reader.
 
 ## Tell the customer

@@ -317,7 +317,7 @@
      "default": "Pending",
      "in_list_view": 1,
      "in_standard_filter": 1,
-     "description": "Set by the app. A manager may set a Short or Refused issue to Left out: its sales stay taken up and it is never tried again (take the stock off by hand if it was used)."
+     "description": "Set by the app. A manager may set a Short, Refused or Pending issue to Left out: its sales stay taken up and it is never tried again (take the stock off by hand if it was used)."
     },
     {
      "fieldname": "stock_entry",
@@ -807,7 +807,7 @@
    "fieldtype": "Data",
    "label": "Allergens",
    "insert_after": "item_group",
-   "description": "The allergens it contains, in your list's words, separated by commas: Milk, Eggs (140 characters at most). On a dish, every allergen of its recipe (Check allergens compares). The till can show it on the sale's line and the receipt (POS Studio, Fields). A variant shows its own: add this field to Item Variant Settings to copy it from the template."
+   "description": "The allergens it contains, in your list's words, separated by commas: Milk, Eggs (140 characters at most). On a dish, every allergen of its recipe (Check allergens compares). The till can show it on the sale's line and the receipt (POS Studio, Fields). A variant shows its own: type it on each variant, or, where every variant has the template's allergens, add this field to Item Variant Settings (each save of the template then copies it over the variants)."
   },
   {
    "dt": "Stock Entry",

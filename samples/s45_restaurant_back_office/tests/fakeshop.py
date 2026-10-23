@@ -133,6 +133,9 @@ class FakeTenant:
             return [copy.deepcopy(s) for s in self.settings.values()]
         raise app.TenantError("403", 403)
 
+    def rows_in(self, doctype, fields, field, names, filters=(), parent=None):
+        return app.Tenant.rows_in(self, doctype, fields, field, names, filters, parent)
+
     # ── writes ──
     def create(self, doctype, body):
         self._gate(f"POST {doctype}")
