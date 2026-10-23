@@ -16,10 +16,23 @@ The worked sample for an optical store: eye tests, lab jobs and one rule at the 
 
 A refund is never judged; an exchange is judged only for what it sells.
 
+| What the shop sees (on a demo shop, 2026-10-23) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/01_install.png) |
+| The settings record *Default*: the shop's hours from UTC | ![](screenshots/02_settings.png) |
+| *Sold against a prescription* on the item group of spectacle lenses | ![](screenshots/03_item_group_mark.png) |
+| The check at Pay switched on for two stores, with the shop's consent | ![](screenshots/04_check_on.png) |
+| A frame and a pair of lenses, the customer with no prescription: Pay refused, naming the line | ![](screenshots/05_till_refused.png) |
+| The optometrist enters the customer's spectacle prescription in Desk | ![](screenshots/06_prescription.png) |
+| The same basket for that customer: the payment screen opens | ![](screenshots/07_till_allowed.png) |
+| The lab order made from the prescription, back from the lab and ready to collect | ![](screenshots/08_lab_order.png) |
+| Its job sheet for the lab | ![](screenshots/09_job_sheet.png) |
+| **Lab orders to chase**: the open order, before **Hand over** takes it off | ![](screenshots/10_report.png) |
+
 ## What the shop does
 
 1. **Install the app** (the shop's administrator). It comes in switched off: the check has no consent and is off. The install adds the three record types (**PP OPT Prescription**, **PP OPT Lab Order**, **PP OPT Settings**), the workflow, the job sheet, the report, the mark on Item Group and Item, and the roles **PP OPT Optometrist** and **PP OPT Integration**.
-2. **Give the roles to people:** **PP OPT Optometrist** and **Sales User** to whoever writes prescriptions (Sales User reads customers for the form's picker, and the lab order's buttons are Sales User's); store staff (**Sales User**) read prescriptions and make and move lab orders.
+2. **Give the roles to people:** **PP OPT Optometrist** and **Sales User** to whoever writes prescriptions (Sales User reads customers for the form's picker, and the lab order's buttons are Sales User's); store staff (**Sales User**) read prescriptions and make and move lab orders. Whoever chooses the order's **Lab** (a supplier) needs a role that can see suppliers, such as **Stock User** or **Purchase User**: Sales User alone cannot, and the lab picker answers *No permission for Supplier*.
 3. **Give the app a user** (as in the [integration user recipe](../../recipes/integration_user.md)): tick **Is Desk User**, set no password and no User Permissions, give it the role **PP OPT Integration** alone, and generate its API key. In **Role Permissions**, give that role a plain **Read** on **Item Group** and **Item** (with *select* alone the shop answers names only, and the check answers 503: the sale is paid and flagged). The install already lets it read the settings and the prescriptions; it reads two fields of a prescription. A service for one shop takes the key in its settings. A service for many shops receives it from the shop: choose the user as the *Application User* of the feed **PP OPT Check**, then press **Connect again** on the app (*Many shops, hosted* below).
 4. **Fill in the settings:** open **PP OPT Settings**, make the record **Default**, set the shop's **hours from UTC** (the shop's own day decides whether a prescription is still in date).
 5. **Mark your lens item groups** (Item Group form, *Sold against a prescription*).
