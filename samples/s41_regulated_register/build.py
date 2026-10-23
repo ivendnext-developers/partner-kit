@@ -59,9 +59,11 @@ MEDIA = ("system_of_record", "printed_book", "official_book")  # the system · i
 DETAIL_TYPES = ("Data", "Date", "Small Text")
 # a detail's sources: this app's own field (own), the till's sale detail and the Desk's field of another app, or one value
 # of a record (PB-4 spec §2.2): the record named by the moving document's customer (match customer: a Customer; a receipt
-# or a stock entry has none, so the column is empty), or by the line's dispenser (match user: a record named by its user)
+# or a stock entry has none, so the column is empty), the one record of another type whose Link field `customer` names
+# that customer (match customer_link: a record the customer's own readers cannot read, such as the counter-rules app's
+# patient record; none, the column is empty), or by the line's dispenser (match user: a record named by its user)
 DETAIL_KEYS = ("label", "type", "own", "till", "pos_sale_detail", "desk_field", "record")
-LOOKUP_KEYS, LOOKUP_MATCH = ("doctype", "match", "field"), ("user", "customer")
+LOOKUP_KEYS, LOOKUP_MATCH = ("doctype", "match", "field"), ("user", "customer", "customer_link")
 PERIOD_MONTHS = (1, 2, 3, 4, 6, 12)  # a period starts on 1 January, and every period_months after it (PB-4 spec §7)
 NAME_MAX = 61  # the shop's name rule for a print format or a reminder (tools/manifest/validate.py)
 _ID = re.compile(r"^[a-z][a-z0-9_]{1,39}$")
@@ -111,7 +113,7 @@ def check(ds):
         elif set(d) - set(DETAIL_KEYS):
             bad.append(f"details.{key}: {', '.join(sorted(set(d) - set(DETAIL_KEYS)))} is not a key of a detail")
         elif "record" in d and not _lookup_ok(d["record"]):
-            bad.append(f"details.{key}.record: the record's type, match (user, or customer for a Customer) and field")
+            bad.append(f"details.{key}.record: the record's type, match (user, customer_link, or customer for a Customer) and field")
         elif "record" in d and (d.get("own") or "pos_sale_detail" in d or "desk_field" in d or "till" in d):
             bad.append(f"details.{key}: a detail read from a record has no other source and no till")
         elif d.get("own") and ("pos_sale_detail" in d or "desk_field" in d):
@@ -120,7 +122,7 @@ def check(ds):
             bad.append(f"details.{key}: a sale detail's name in plain text, a Desk field's name in lower case")
     dl = (ds.get("authority") or {}).get("dispenser_licence")
     if dl is not None and not _lookup_ok(dl):
-        bad.append("authority.dispenser_licence: the record's type, match (user or customer) and field")
+        bad.append("authority.dispenser_licence: the record's type, match (user, customer or customer_link) and field")
     known = set(LINE_COLUMNS) | {f"detail:{k}" for k in details}
     looked_up = {f"detail:{k}" for k, d in details.items() if isinstance(d, dict) and "record" in d}
     dated = set(DATE_COLUMNS) | {f"detail:{k}" for k, d in details.items() if isinstance(d, dict) and d.get("type") == "Date"}

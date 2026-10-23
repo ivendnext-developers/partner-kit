@@ -86,7 +86,8 @@ class FakeShop:
     # ── a pharmacy, ready to sell ────────────────────────────────────────────
 
     def pharmacy(self, today: str = "2026-10-22"):
-        """Three schedules, three items in three groups, two pharmacists, two patients, a walk-in profile."""
+        """Three schedules, three items in three groups, two pharmacists, two patients (one with a patient record), a walk-in
+        profile."""
         self.add(f"{P} Settings", name="Default", hours_from_utc=0, walk_in_customers="Cash Sale\n")
         lft = iter(range(2, 100, 2))
         self.add("Item Group", name="All Item Groups", lft=1, rgt=100)
@@ -106,9 +107,10 @@ class FakeShop:
         self.add("UOM Conversion Detail", parent="AMOX", uom="Strip", conversion_factor=7)
         self.add(f"{P} Pharmacist", name="ph@shop", user="ph@shop", active=1, valid_until="2027-10-22")
         self.add(f"{P} Pharmacist", name="old@shop", user="old@shop", active=1, valid_until="2026-10-21")
-        self.add("Customer", name="Ann", pp_rxc_id_number="ID-1", pp_rxc_birth_date="1980-01-01", pp_rxc_authority="")
-        self.add("Customer", name="Bob", pp_rxc_id_number="", pp_rxc_birth_date="", pp_rxc_authority="")
-        self.add("Customer", name="Cash Sale", pp_rxc_id_number="", pp_rxc_birth_date="", pp_rxc_authority="")
+        for c in ("Ann", "Bob", "Cash Sale"):
+            self.add("Customer", name=c)
+        # the patients' identity and consent are records of the app's own (0.1.2): Ann has one, Bob none
+        self.add(f"{P} Patient", name="a1b2c3d4e5", customer="Ann", id_number="ID-1", birth_date="1980-01-01", authority="")
         self.add("POS Profile", name="Dispensary", customer="Walk-in")
         return self
 

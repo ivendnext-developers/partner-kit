@@ -335,7 +335,7 @@ class Patient(unittest.TestCase):
         base = shop(c, [rule("POM")], [rx("RX1", "AMOX", 21)], fields={"id_number": "1", "birth_date": "x"})
         out = decide(c, dict(base, rules=[r]))
         self.assertEqual(out["verdict"], "refuse")
-        self.assertIn("needs the customer's consent to keep their records. Add it on their Desk record.", out["reason"])
+        self.assertIn("needs the customer's consent to keep their records. Add it on their patient record on the Desk.", out["reason"])
         ok = decide(c, dict(base, rules=[r], customer_fields={"consent_date": "2026-10-01"}))
         self.assertEqual(ok["verdict"], "allow")
         # a schedule without the tick never asks for it, and the strictest of two keeps it

@@ -11,7 +11,7 @@ Two extension points, one app:
 
 What a rule needs is the shop's own data: drug schedules (``<prefix> Drug Schedule``) linked to items, one dated link per
 classification axis (the strictest applies); prescriptions and pharmacists (records in the shop); the patient's identity
-fields on Customer. Nothing is hard-coded per market.
+and consent on their ``<prefix> Patient`` record. Nothing is hard-coded per market.
 
 **Dispensings.** Every sale that dispenses against a prescription, or sells a schedule with a frequency cap, is one
 ``<prefix> Dispensing`` record in the shop, named ``<patient key>~<0001…>`` (an opaque key per customer): the patient's
@@ -47,8 +47,8 @@ REFS_MAX = 5          # prescription numbers one sale may name
 # the sale details (till) and the fields (Desk) this app reads; "<prefix> <suffix>" and "<prefix>_<field>"
 RX, PRESCRIBER, LICENCE, DIRECTIONS = "Rx Number", "Prescriber", "Prescriber Licence", "Directions"
 DESK_FIELDS = {RX: "rx_number", PRESCRIBER: "prescriber", LICENCE: "prescriber_licence", DIRECTIONS: "directions"}
-# the patient's fields on Customer a schedule may need set: the schedule's tick → the Customer field → the words the cashier
-# reads. The last is the patient's consent to keep their prescription records, dated (who gave it is a field of its own)
+# the patient's fields a schedule may need set, on their <prefix> Patient record: the schedule's tick → the record's field →
+# the words the cashier reads. The last is the patient's consent to keep their prescription records, dated (who gave it is a field of its own)
 IDENTITY = (("needs_id_number", "id_number", "national or residence ID"),
             ("needs_birth_date", "birth_date", "date of birth"),
             ("needs_authority", "authority", "authority to possess"),
@@ -521,7 +521,7 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
             return _refuse(lines[i], "needs a named customer, not a walk-in sale.")
         for _tick, field, words in IDENTITY:
             if r and field in r["ids"] and not shop["customer_fields"].get(field):
-                return _refuse(lines[i], f"needs the customer's {words}. Add it on their Desk record.")
+                return _refuse(lines[i], f"needs the customer's {words}. Add it on their patient record on the Desk.")
 
     # 6 · the quantity cap per sale, in the stock unit (VR-09)
     per_item: dict = {}

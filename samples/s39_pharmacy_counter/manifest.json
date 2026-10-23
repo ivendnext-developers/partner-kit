@@ -3,9 +3,9 @@
  "app": "pp_rxc",
  "prefix": "PP RXC",
  "title": "Pharmacy counter rules",
- "version": "0.1.1",
+ "version": "0.1.2",
  "publisher": "Partner Programme sample",
- "description": "A pharmacy counter's rules, checked at Pay on the till and when a sales order, delivery or sales invoice is submitted on the Desk. A line whose drug schedule needs a prescription is paid only against a prescription the pharmacist entered on the Desk, for this customer, in date for its class, with quantity and a fill left; the fill is reserved when the check answers, so two tills cannot both take the last one, and it comes back if the sale is never booked and its POS day closes, or its sale or document is cancelled. A pharmacist-only line is paid only by a user on the app's Pharmacist list whose licence is in date; a schedule can need the customer's ID, date of birth or authority to possess, a doctor's name and directions, a quantity cap per sale and per patient over days; dispensed medicine of a non-returnable schedule is refused at a till return and on a Desk return. Two till services: the dispensary's refuses the sale when the service is down; the front's lets it through, flagged, and refuses medicine that must be sold at the dispensary. Prescriptions, pharmacists, schedules, patient fields and dispensings are records in the shop; the service reads them with the app's integration user and writes only its Dispensing records. The install makes the roles PP RXC Integration, PP RXC Pharmacist, PP RXC Pharmacist in Charge and PP RXC Records Officer (nobody holds it: the shop gives it for destroying records whose keeping period has ended); every service installs switched off. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "A pharmacy counter's rules, checked at Pay on the till and when a sales order, delivery or sales invoice is submitted on the Desk. A line whose drug schedule needs a prescription is paid only against a prescription the pharmacist entered on the Desk, for this customer, in date for its class, with quantity and a fill left; the fill is reserved when the check answers, so two tills cannot both take the last one, and it comes back if the sale is never booked and its POS day closes, or its sale or document is cancelled. A pharmacist-only line is paid only by a user on the app's Pharmacist list whose licence is in date; a schedule can need the customer's ID, date of birth or authority to possess, a doctor's name and directions, a quantity cap per sale and per patient over days; dispensed medicine of a non-returnable schedule is refused at a till return and on a Desk return. Two till services: the dispensary's refuses the sale when the service is down; the front's lets it through, flagged, and refuses medicine that must be sold at the dispensary. Prescriptions, pharmacists, schedules, patients (their identity and consent, on a record only the pharmacist roles read) and dispensings are records in the shop; the service reads them with the app's integration user and writes only its Dispensing records. The install makes the roles PP RXC Integration, PP RXC Pharmacist, PP RXC Pharmacist in Charge and PP RXC Records Officer (nobody holds it: the shop gives it for destroying records whose keeping period has ended); every service installs switched off. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/rxc/dispensary",
   "https://host.docker.internal:8125/rxc/front",
@@ -196,7 +196,7 @@
      "fieldname": "needs_consent",
      "fieldtype": "Check",
      "label": "Needs the patient's recorded consent",
-     "description": "Refuse the sale until the patient's Desk record holds the day they consented to the pharmacy keeping their records."
+     "description": "Refuse the sale until the patient's PP RXC Patient record holds the day they consented to the pharmacy keeping their records."
     },
     {
      "fieldname": "own_sale_without_rx",
@@ -469,6 +469,108 @@
      "export": 1,
      "share": 0,
      "print": 1,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RXC Patient",
+   "description": "One record per patient: the identity and consent a drug schedule may need. Only the pharmacist roles, the Records Officer and the app's integration user read it; nobody else is given it.",
+   "autoname": "hash",
+   "track_changes": 1,
+   "title_field": "customer",
+   "fields": [
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer (the patient)",
+     "options": "Customer",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The patient's customer record. One patient record per customer."
+    },
+    {
+     "fieldname": "id_number",
+     "fieldtype": "Data",
+     "label": "National or residence ID"
+    },
+    {
+     "fieldname": "birth_date",
+     "fieldtype": "Date",
+     "label": "Date of birth"
+    },
+    {
+     "fieldname": "authority",
+     "fieldtype": "Data",
+     "label": "Authority to possess"
+    },
+    {
+     "fieldname": "consent_section",
+     "fieldtype": "Section Break",
+     "label": "Consent"
+    },
+    {
+     "fieldname": "consent_date",
+     "fieldtype": "Date",
+     "label": "Consent to keep prescription records, given on",
+     "description": "The day the patient, or for a child their parent or guardian, agreed to the pharmacy keeping their prescriptions and dispensings. Asked for by a schedule that needs it. Clear it when consent is withdrawn."
+    },
+    {
+     "fieldname": "consent_by",
+     "fieldtype": "Data",
+     "label": "Consent given by",
+     "description": "The patient, or the parent or guardian who consented for them, and where the signed form is kept."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "PP RXC Pharmacist",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Pharmacist in Charge",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP RXC Records Officer",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 1,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
      "email": 0
     }
    ]
@@ -880,39 +982,46 @@
    "dt": "Customer",
    "fieldname": "pp_rxc_id_number",
    "fieldtype": "Data",
-   "label": "National or residence ID",
+   "label": "National or residence ID (moved)",
    "insert_after": "customer_group",
-   "description": "Asked for by a schedule that needs it. Give this, the date of birth, the authority to possess and the consent a permission level only the pharmacists and the app's integration user hold (the app's README, step 3)."
+   "description": "Not used since version 0.1.2: the patient's national or residence ID is on their PP RXC Patient record. Shown only while it holds a value: copy it there, then clear it (the app's README, Updating).",
+   "depends_on": "pp_rxc_id_number"
   },
   {
    "dt": "Customer",
    "fieldname": "pp_rxc_birth_date",
    "fieldtype": "Data",
-   "label": "Date of birth (patient)",
-   "insert_after": "pp_rxc_id_number"
+   "label": "Date of birth (moved)",
+   "insert_after": "pp_rxc_id_number",
+   "description": "Not used since version 0.1.2: the patient's date of birth is on their PP RXC Patient record. Shown only while it holds a value: copy it there, then clear it (the app's README, Updating).",
+   "depends_on": "pp_rxc_birth_date"
   },
   {
    "dt": "Customer",
    "fieldname": "pp_rxc_authority",
    "fieldtype": "Data",
-   "label": "Authority to possess",
-   "insert_after": "pp_rxc_birth_date"
+   "label": "Authority to possess (moved)",
+   "insert_after": "pp_rxc_birth_date",
+   "description": "Not used since version 0.1.2: the patient's authority to possess is on their PP RXC Patient record. Shown only while it holds a value: copy it there, then clear it (the app's README, Updating).",
+   "depends_on": "pp_rxc_authority"
   },
   {
    "dt": "Customer",
    "fieldname": "pp_rxc_consent_date",
    "fieldtype": "Date",
-   "label": "Consent to keep prescription records, given on",
+   "label": "Consent to keep prescription records, given on (moved)",
    "insert_after": "pp_rxc_authority",
-   "description": "The day the patient, or for a child their parent or guardian, agreed to the pharmacy keeping their prescriptions and dispensings. Asked for by a schedule that needs it. Clear it when consent is withdrawn."
+   "description": "Not used since version 0.1.2: the patient's consent day is on their PP RXC Patient record. Shown only while it holds a value: copy it there, then clear it (the app's README, Updating).",
+   "depends_on": "pp_rxc_consent_date"
   },
   {
    "dt": "Customer",
    "fieldname": "pp_rxc_consent_by",
    "fieldtype": "Data",
-   "label": "Consent given by",
+   "label": "Consent given by (moved)",
    "insert_after": "pp_rxc_consent_date",
-   "description": "The patient, or the parent or guardian who consented for them, and where the signed form is kept."
+   "description": "Not used since version 0.1.2: the patient's consent giver is on their PP RXC Patient record. Shown only while it holds a value: copy it there, then clear it (the app's README, Updating).",
+   "depends_on": "pp_rxc_consent_by"
   },
   {
    "dt": "Sales Order",
@@ -1046,6 +1155,12 @@
    "property": "documentation",
    "property_type": "Data",
    "value": "https://developer.ivendnext.com/recipes/pharmacy_counter.html#prescriptions"
+  },
+  {
+   "doc_type": "PP RXC Patient",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/pharmacy_counter.html#patients"
   },
   {
    "doc_type": "PP RXC Dispensing",

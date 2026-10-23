@@ -216,32 +216,49 @@ class People(Base):
     def test_the_identity_values_never_leave_the_shop_only_whether_they_are_set(self):
         self.shop.prescription("RX1", "Ann", "TRAM", 10)
         self.assertEqual(self.sell(("TRAM", "CD", 10), rx="RX1")[1], {"verdict": "allow"})
-        reads = [c for c in self.shop.calls if c[0] == "list" and c[1] == "Customer"]
+        reads = [c for c in self.shop.calls if c[0] == "list" and c[1] == f"{P} Patient"]
         self.assertTrue(reads)
-        self.assertTrue(all(fields == ["name"] for *_x, fields in reads))       # only the name ever comes back
-        self.assertIn([["name", "=", "Ann"], ["pp_rxc_id_number", "is", "set"]], [c[2] for c in reads])
+        self.assertTrue(all(fields == ["name"] for *_x, fields in reads))       # only the record's name ever comes back
+        self.assertIn([["customer", "=", "Ann"], ["id_number", "is", "set"]], [c[2] for c in reads])
+        # 0.1.2: nothing about the patient is asked of Customer but that the customer exists
+        self.assertEqual([c[2] for c in self.shop.calls if c[0] == "list" and c[1] == "Customer"], [[["name", "=", "Ann"]]])
 
     def test_a_schedule_that_needs_consent_reads_only_whether_the_patients_consent_date_has_come(self):
         sched = next(r for r in self.shop.rows(f"{P} Drug Schedule") if r["name"] == "POM")
         sched["needs_consent"] = 1
         self.shop.prescription("RX1", "Ann", "AMOX", 21)
         self.assertIn("consent to keep their records", self.sell(("AMOX", "Rx", 21), rx="RX1")[1]["reason"])
-        reads = [c for c in self.shop.calls if c[0] == "list" and c[1] == "Customer"]
+        reads = [c for c in self.shop.calls if c[0] == "list" and c[1] == f"{P} Patient"]
         self.assertTrue(all(fields == ["name"] for *_x, fields in reads))       # the date never leaves the shop
-        ann = next(r for r in self.shop.rows("Customer") if r["name"] == "Ann")
-        ann["pp_rxc_consent_date"] = "2026-11-01"                                # dated ahead: a mis-keyed consent
+        ann = next(r for r in self.shop.rows(f"{P} Patient") if r["customer"] == "Ann")
+        ann["consent_date"] = "2026-11-01"                                       # dated ahead: a mis-keyed consent
         self.assertIn("consent to keep their records", self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-2")[1]["reason"])
-        self.assertIn(["pp_rxc_consent_date", "<=", "2026-10-22"], [c[2][1] for c in self.shop.calls
-                                                                    if c[0] == "list" and c[1] == "Customer" and len(c[2]) > 1])
-        ann["pp_rxc_consent_date"] = "2026-10-01"
+        self.assertIn(["consent_date", "<=", "2026-10-22"], [c[2][1] for c in self.shop.calls
+                                                             if c[0] == "list" and c[1] == f"{P} Patient" and len(c[2]) > 1])
+        ann["consent_date"] = "2026-10-01"
         self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-3")[1], {"verdict": "allow"})
 
     def test_a_shop_that_drops_a_filter_on_a_patient_field_is_unreadable_never_a_field_filled_in(self):
-        # a field the service's user may not read, its filter dropped by the shop: every customer would answer "set"
+        # a field the service's user may not read, its filter dropped by the shop: the record would answer "set" both ways
         real = self.shop._match
-        self.shop._match = lambda r, filters: real(r, [x for x in filters or [] if not str(x[0]).startswith("pp_rxc_")])
+        self.shop._match = lambda r, filters: real(r, [x for x in filters or [] if x[0] not in ("id_number", "birth_date")])
+        self.shop.add(f"{P} Patient", name="f6e5d4c3b2", customer="Bob", id_number="", birth_date="", authority="")
         self.shop.prescription("RX1", "Bob", "TRAM", 10)
         self.assertEqual(self.sell(("TRAM", "CD", 10), rx="RX1", customer="Bob")[0], 503)
+
+    def test_a_shop_that_answers_a_field_for_a_patient_record_it_does_not_list_is_unreadable(self):
+        # Bob has no patient record, yet the shop answers "not set" (a filter on the customer it dropped): never trusted
+        real = self.shop._match
+        self.shop._match = lambda r, filters: real(r, [x for x in filters or [] if not (x[0] == "customer" and len(filters) > 1)])
+        self.shop.prescription("RX1", "Bob", "TRAM", 10)
+        self.assertEqual(self.sell(("TRAM", "CD", 10), rx="RX1", customer="Bob")[0], 503)
+
+    def test_a_customer_with_no_patient_record_has_nothing_on_record(self):
+        self.shop.prescription("RX1", "Bob", "TRAM", 10)
+        self.assertFalse([r for r in self.shop.rows(f"{P} Patient") if r["customer"] == "Bob"])
+        self.assertIn("national or residence ID", self.sell(("TRAM", "CD", 10), rx="RX1", customer="Bob")[1]["reason"])
+        self.shop.add(f"{P} Patient", name="f6e5d4c3b2", customer="Bob", id_number="ID-2", birth_date="1990-02-02")
+        self.assertEqual(self.sell(("TRAM", "CD", 10), rx="RX1", customer="Bob", sale_ref="sale-2")[1], {"verdict": "allow"})
 
     def test_the_settings_walk_in_list_counts_too(self):
         self.assertIn("walk-in", self.sell(("AMOX", "Rx", 21), rx="RX1", customer="Cash Sale")[1]["reason"])

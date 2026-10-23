@@ -21,8 +21,8 @@ How a sale is decided (``Service.decide``):
 1. the shop's settings, schedules and item groups (kept a minute), the lines' items, their schedule rows and units;
 2. a sale with no line under a schedule or a group that needs directions is allowed, after releasing any reservation the
    same sale made on an earlier press of Pay;
-3. otherwise the operator's Pharmacist record, the customer's identity and consent fields, the named prescriptions and the
-   patient's dispensings, each dispensing's status read back from the shop (``rxrules.resolve``);
+3. otherwise the operator's Pharmacist record, whether the patient's record holds each identity field, the named
+   prescriptions and the patient's dispensings, each dispensing's status read back from the shop (``rxrules.resolve``);
 4. ``rxrules.decide``; on allow, the reservation is inserted as the patient's next number. The name is unique: an insert
    another till made first fails, and the decision is made again from a fresh read (at most ``TRIES`` times);
 5. this sale's earlier reservation, and every status the shop gave back, are written (best effort).
@@ -254,29 +254,35 @@ class Service:
         return items, rows, units
 
     def patient(self, shop: dict, ctx: dict, refs: list, ids: list, today=None) -> dict:
-        """The operator's Pharmacist record, WHETHER each identity field this sale needs is filled in (a filter on the
-        shop's side: the value never leaves the shop), the named prescriptions and the patient's dispensings (newest
-        first), in one parallel step. Each field is asked both ways, set and not set: a shop that answers yes to both
-        (a filter it dropped) or no to both is unreadable, never a field read as filled in. A dated field is also asked
-        whether its day has come."""
-        p, cust = self.p, ctx["customer"]
+        """The operator's Pharmacist record, WHETHER each identity field this sale needs is filled in on the patient's
+        ``<prefix> Patient`` record (a filter on the shop's side: the value never leaves the shop), the named prescriptions
+        and the patient's dispensings (newest first), in one parallel step. A customer with no patient record has none
+        filled in. Each field of a record is asked both ways, set and not set: a shop that answers yes to both (a filter it
+        dropped) or no to both is unreadable, never a field read as filled in. A dated field is also asked whether its
+        day has come."""
+        cust = ctx["customer"]
         on = (today or datetime.date.today()).isoformat()
-        asks = {f: {"set": [[f"{p}_{f}", "is", "set"]], "unset": [[f"{p}_{f}", "is", "not set"]],
-                    **({"due": [[f"{p}_{f}", "<=", on]]} if f in rxrules.DATED else {})} for f in ids}
-        with ThreadPoolExecutor(max_workers=4 + 3 * len(ids)) as pool:
+        asks = {f: {"set": [[f, "is", "set"]], "unset": [[f, "is", "not set"]],
+                    **({"due": [[f, "<=", on]]} if f in rxrules.DATED else {})} for f in ids}
+        mine = [["customer", "=", cust]]
+        with ThreadPoolExecutor(max_workers=5 + 3 * len(ids)) as pool:
             ph = pool.submit(self._pharmacist_rows, shop, ctx["operator"])
             known = pool.submit(self._list, shop, "Customer", ["name"], [["name", "=", cust]])
-            has = {f: {k: pool.submit(self._list, shop, "Customer", ["name"], [["name", "=", cust]] + c) for k, c in a.items()}
+            record = pool.submit(self._list, shop, self.dt("Patient"), ["name"], mine) if ids else None
+            has = {f: {k: pool.submit(self._list, shop, self.dt("Patient"), ["name"], mine + c) for k, c in a.items()}
                    for f, a in asks.items()}
             rx = pool.submit(self._rx_headers, shop, refs, cust) if refs else None
             disp = pool.submit(self._dispensings, shop, [["customer", "=", cust]])
             if not known.result():
                 raise ShopUnreadable("the customer could not be read")
+            on_record = bool(record.result()) if record else False
             filled = {}
             for f, js in has.items():
                 got = {k: bool(j.result()) for k, j in js.items()}
-                if got["set"] == got["unset"]:
+                if on_record and got["set"] == got["unset"]:
                     raise ShopUnreadable("the shop answered a patient field both ways")
+                if not on_record and (got["set"] or got["unset"]):
+                    raise ShopUnreadable("the shop answered for a patient record it does not list")
                 filled[f] = got["set"] and got.get("due", True)
             return {"pharmacist": self._pharmacist(ph.result()), "customer_fields": filled,
                     "rx_headers": rx.result() if rx else [], "dispensings": disp.result()}

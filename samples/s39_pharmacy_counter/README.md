@@ -20,8 +20,8 @@ recipe: [`recipes/pharmacy_counter.md`](../../recipes/pharmacy_counter.md).
 | **Pay**, an expired or post-dated prescription | *"… Prescription RX-00012 was valid until 2026-10-01."* (the class's validity, the written day counting as day 1) · *"… is dated 2026-10-25, after today."* |
 | **Pay**, every fill used, or this sale over what is left | *"… Prescription RX-00012 has nothing left to dispense."* · *"… has only 9 of this left."* |
 | **Pay**, another patient's prescription, or the walk-in customer | *"… Prescription RX-00012 is for another patient."* · *"… needs a named customer, not a walk-in sale."* |
-| **Pay**, a controlled line, the customer has no ID on record | *"… needs the customer's national or residence ID. Add it on their Desk record."* |
-| **Pay**, a schedule that needs consent, none on record | *"… needs the customer's consent to keep their records. Add it on their Desk record."* |
+| **Pay**, a controlled line, the customer has no ID on record | *"… needs the customer's national or residence ID. Add it on their patient record on the Desk."* |
+| **Pay**, a schedule that needs consent, none on record | *"… needs the customer's consent to keep their records. Add it on their patient record on the Desk."* |
 | **Pay**, over the schedule's cap | *"… No more than 20 may be sold at once."* · *"The patient has reached the limit for CD Schedule 2 until 2026-11-11."* |
 | a till return, or a Desk credit note, of dispensed medicine | *"… Dispensed medicine cannot be taken back."* |
 | **Pay** on the front of the shop, prescription medicine | *"… Sell this at the dispensary."* |
