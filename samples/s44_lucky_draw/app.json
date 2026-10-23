@@ -1,0 +1,17 @@
+{
+ "app": "lucky-draw",
+ "version": "1.0.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s44_lucky_draw/service/app.lambda_handler",
+ "package": ["tools/app_template/service/function.py", "tools/app_template/service/shops.py", "tools/app_template/service/dynamo.py",
+             "tools/app_template/service/ed25519.py", "samples/s44_lucky_draw/draw.py", "samples/s44_lucky_draw/service/app.py"],
+ "env": [
+  {"name": "IVN_LIBRARY_APP", "required": true},
+  {"name": "LDW_PREFIX", "required": true}
+ ]
+}

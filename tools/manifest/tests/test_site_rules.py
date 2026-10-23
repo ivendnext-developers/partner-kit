@@ -66,5 +66,23 @@ class OwnAddedFields(unittest.TestCase):
         self.assertEqual(refused(lambda m: m["reports"].append(rep)), [])
 
 
+class FeedDescription(unittest.TestCase):
+    """The shop's Registered Application keeps 140 characters of description (APPF run 12, S44's first install)."""
+
+    def test_a_feed_description_over_140_characters_is_refused_and_140_passes(self):
+        m = copy.deepcopy(BASE)
+        reg = m.setdefault("registered_applications", [{"name": "PP CCB feed", "events": ["Delivery Note"]}])[0]
+        reg["description"] = "x" * 140
+        self.assertEqual([r for r in site(m) if "description" in r["reason"]], [])
+        reg["description"] = "x" * 141
+        self.assertEqual(validate(m), [])                 # the shop's checker passes it: only the install refuses it
+        self.assertTrue(any("141 characters" in r["reason"] for r in site(m)))
+
+    def test_every_sample_feed_description_fits(self):
+        for f in sorted((HERE.parents[2] / "samples").glob("*/manifest.json")):
+            bad = [r for r in site(json.loads(f.read_text())) if "description" in r["reason"]]
+            self.assertEqual(bad, [], f.parent.name)
+
+
 if __name__ == "__main__":
     unittest.main()

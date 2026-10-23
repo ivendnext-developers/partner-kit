@@ -1,0 +1,479 @@
+{
+ "manifest_version": 2,
+ "app": "pp_ldw",
+ "prefix": "PP LDW",
+ "title": "Lucky draw",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A shop-and-win campaign: every so much spent at the shop's tills during the campaign is one entry, and after its last day a fair draw picks the winners and reserves, one prize per customer. A campaign, PP LDW Campaign, holds the rule: its company, first and last days, the spend for one entry, the most entries per sale, the tills (POS Profiles) and customer groups that take part, the winners, the reserves and the prize in the shop's words. Two buttons on the campaign's form, for the role PP LDW Manager, which the install makes: Count entries counts the entries so far, and Draw winners draws once, after the last day by the campaign's own hours from UTC. An entry comes from a submitted till sale (POS Invoice) in those days, on those tills, by a named customer in those groups (never a till's walk-in customer): what the customer paid in the company's currency, less every till return against it, divided by the spend for one entry, rounded down. Each entry has the same chance; a customer wins once; the draw uses the service's own cryptographic random source, and its record (when, who, the entries at the draw, their fingerprint, the numbers drawn) and the results are written on the campaign, which then reads Drawn; the form locks its rule and the app never draws it again (a person with write on campaigns can still change one outside the form, which its history shows). Desk sales and web orders do not count. Each press sends the campaign's name, the pressing user and the language; the service then reads the campaign's sales (each sale's number, customer, customer group, total, date, time and till), their returns, the tills' walk-in customers and the customer group tree, and writes the campaign. The results name each winner and, from the shop's own customer record, their name, mobile and e-mail. The install makes the role PP LDW Integration; the shop gives it to the app's user with read on POS Invoice, POS Profile and Customer Group, chooses that user on the feed PP LDW Draw feed (leave the feed off) and presses Connect again. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/press/count",
+  "https://host.docker.internal:8125/press/draw"
+ ],
+ "doctypes": [
+  {
+   "name": "PP LDW Campaign Till",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "pos_profile",
+     "fieldtype": "Link",
+     "label": "POS Profile",
+     "options": "POS Profile",
+     "reqd": 1,
+     "in_list_view": 1
+    }
+   ],
+   "permissions": []
+  },
+  {
+   "name": "PP LDW Campaign Group",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "customer_group",
+     "fieldtype": "Link",
+     "label": "Customer group",
+     "options": "Customer Group",
+     "reqd": 1,
+     "in_list_view": 1
+    }
+   ],
+   "permissions": []
+  },
+  {
+   "name": "PP LDW Result",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "rank",
+     "fieldtype": "Int",
+     "label": "Rank",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "label": "Winner or reserve",
+     "options": "Winner\nReserve",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "read_only": 1
+    },
+    {
+     "fieldname": "customer_name",
+     "fieldtype": "Data",
+     "label": "Customer name",
+     "fetch_from": "customer.customer_name",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "mobile_no",
+     "fieldtype": "Data",
+     "label": "Mobile",
+     "fetch_from": "customer.mobile_no",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "email_id",
+     "fieldtype": "Data",
+     "label": "E-mail",
+     "fetch_from": "customer.email_id",
+     "read_only": 1
+    },
+    {
+     "fieldname": "entries",
+     "fieldtype": "Int",
+     "label": "Entries",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "entry_no",
+     "fieldtype": "Int",
+     "label": "Entry number drawn",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sale",
+     "fieldtype": "Link",
+     "label": "Sale holding the entry",
+     "options": "POS Invoice",
+     "read_only": 1
+    },
+    {
+     "fieldname": "handed_over",
+     "fieldtype": "Check",
+     "label": "Handed over",
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "handed_over_on",
+     "fieldtype": "Date",
+     "label": "Handed over on",
+     "columns": 2,
+     "in_list_view": 1
+    }
+   ],
+   "permissions": []
+  },
+  {
+   "name": "PP LDW Campaign",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "title_field": "title",
+   "search_fields": "status,from_date,to_date",
+   "sort_field": "to_date",
+   "sort_order": "DESC",
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Campaign",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "Such as Summer draw 2026. The campaign is named by it."
+    },
+    {
+     "fieldname": "company",
+     "fieldtype": "Link",
+     "label": "Company",
+     "options": "Company",
+     "reqd": 1,
+     "read_only_depends_on": "eval:doc.status=='Drawn'"
+    },
+    {
+     "fieldname": "currency",
+     "fieldtype": "Link",
+     "label": "Currency",
+     "options": "Currency",
+     "fetch_from": "company.default_currency",
+     "read_only": 1,
+     "description": "The company's own currency: every sale's total is read in it."
+    },
+    {
+     "fieldname": "hours_from_utc",
+     "fieldtype": "Float",
+     "label": "Hours from UTC at the shop",
+     "read_only_depends_on": "eval:doc.status=='Drawn'",
+     "description": "The shop's own day decides when the campaign has ended: 4 for Dubai, 3 for Nairobi or Riyadh, 2 for Johannesburg, -6 for Mexico City; between -12 and 14. Blank: UTC."
+    },
+    {
+     "fieldname": "col_dates",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "from_date",
+     "fieldtype": "Date",
+     "label": "First day",
+     "reqd": 1,
+     "in_list_view": 1,
+     "read_only_depends_on": "eval:doc.status=='Drawn'"
+    },
+    {
+     "fieldname": "to_date",
+     "fieldtype": "Date",
+     "label": "Last day",
+     "reqd": 1,
+     "in_list_view": 1,
+     "read_only_depends_on": "eval:doc.status=='Drawn'"
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Open\nDrawn",
+     "default": "Open",
+     "read_only": 1,
+     "in_list_view": 1,
+     "description": "Drawn once Draw winners has drawn. A draw is never repeated."
+    },
+    {
+     "fieldname": "rule_section",
+     "fieldtype": "Section Break",
+     "label": "The rule"
+    },
+    {
+     "fieldname": "spend_per_entry",
+     "fieldtype": "Currency",
+     "label": "Spend for one entry",
+     "options": "currency",
+     "reqd": 1,
+     "read_only_depends_on": "eval:doc.status=='Drawn'",
+     "description": "Such as 200: a sale of 650 is 3 entries. A sale's total is less every return against it."
+    },
+    {
+     "fieldname": "most_entries_per_sale",
+     "fieldtype": "Int",
+     "label": "Most entries per sale",
+     "read_only_depends_on": "eval:doc.status=='Drawn'",
+     "description": "Such as 10. 0 or blank: no limit."
+    },
+    {
+     "fieldname": "col_rule",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "winners",
+     "fieldtype": "Int",
+     "label": "Winners",
+     "default": "1",
+     "reqd": 1,
+     "read_only_depends_on": "eval:doc.status=='Drawn'",
+     "description": "1 to 50. A customer wins once."
+    },
+    {
+     "fieldname": "reserves",
+     "fieldtype": "Int",
+     "label": "Reserves",
+     "default": "0",
+     "read_only_depends_on": "eval:doc.status=='Drawn'",
+     "description": "0 to 20, drawn after the winners, in order: call the first reserve when a winner cannot be reached."
+    },
+    {
+     "fieldname": "prize",
+     "fieldtype": "Small Text",
+     "label": "Prize",
+     "description": "What each winner gets, in your words. The app gives nothing itself: hand it over and tick it below."
+    },
+    {
+     "fieldname": "where_section",
+     "fieldtype": "Section Break",
+     "label": "Tills and customers"
+    },
+    {
+     "fieldname": "tills",
+     "fieldtype": "Table",
+     "label": "Tills",
+     "options": "PP LDW Campaign Till",
+     "read_only_depends_on": "eval:doc.status=='Drawn'",
+     "description": "The POS Profiles whose sales count. None listed: every till."
+    },
+    {
+     "fieldname": "col_where",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "customer_groups",
+     "fieldtype": "Table",
+     "label": "Customer groups",
+     "options": "PP LDW Campaign Group",
+     "read_only_depends_on": "eval:doc.status=='Drawn'",
+     "description": "Only customers in these groups, or a group below one, take part. None listed: every customer. A sale on a till's walk-in customer is never an entry."
+    },
+    {
+     "fieldname": "count_section",
+     "fieldtype": "Section Break",
+     "label": "Count"
+    },
+    {
+     "fieldname": "counted_on",
+     "fieldtype": "Data",
+     "label": "Counted on",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sales_counted",
+     "fieldtype": "Int",
+     "label": "Sales",
+     "read_only": 1
+    },
+    {
+     "fieldname": "col_count",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "customers_counted",
+     "fieldtype": "Int",
+     "label": "Customers",
+     "read_only": 1
+    },
+    {
+     "fieldname": "entries_counted",
+     "fieldtype": "Int",
+     "label": "Entries",
+     "read_only": 1
+    },
+    {
+     "fieldname": "count_fingerprint",
+     "fieldtype": "Data",
+     "label": "Entries fingerprint",
+     "read_only": 1,
+     "description": "The same sales, counted again, give the same fingerprint."
+    },
+    {
+     "fieldname": "draw_section",
+     "fieldtype": "Section Break",
+     "label": "Draw"
+    },
+    {
+     "fieldname": "drawn_on",
+     "fieldtype": "Data",
+     "label": "Drawn on",
+     "read_only": 1
+    },
+    {
+     "fieldname": "drawn_by",
+     "fieldtype": "Data",
+     "label": "Drawn by",
+     "read_only": 1
+    },
+    {
+     "fieldname": "draw_entries",
+     "fieldtype": "Int",
+     "label": "Entries at the draw",
+     "read_only": 1
+    },
+    {
+     "fieldname": "col_draw",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "draw_fingerprint",
+     "fieldtype": "Data",
+     "label": "Fingerprint at the draw",
+     "read_only": 1
+    },
+    {
+     "fieldname": "drawn_numbers",
+     "fieldtype": "Small Text",
+     "label": "Entry numbers drawn",
+     "read_only": 1,
+     "description": "In drawn order. Entries are numbered through the campaign's sales by date, time and number."
+    },
+    {
+     "fieldname": "results_section",
+     "fieldtype": "Section Break",
+     "label": "Winners and reserves"
+    },
+    {
+     "fieldname": "results",
+     "fieldtype": "Table",
+     "label": "Results",
+     "options": "PP LDW Result"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP LDW Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP LDW Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP LDW Campaign",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/lucky_draw.html#the-campaign"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP LDW Draw feed",
+   "description": "the draw service reads till sales, tills and customer groups and writes campaigns as this user; leave the feed off",
+   "events": [
+    "PP LDW Campaign"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "count",
+   "point": "desk_action",
+   "label": "Lucky draw count",
+   "endpoint_url": "https://host.docker.internal:8125/press/count",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "draw",
+   "point": "desk_action",
+   "label": "Lucky draw",
+   "endpoint_url": "https://host.docker.internal:8125/press/draw",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP LDW Campaign",
+   "label": "Count entries",
+   "placement": "form",
+   "service": "count",
+   "roles": [
+    "PP LDW Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name"
+  },
+  {
+   "record_type": "PP LDW Campaign",
+   "label": "Draw winners",
+   "placement": "form",
+   "service": "draw",
+   "roles": [
+    "PP LDW Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "conditions": [
+    {
+     "field": "status",
+     "operator": "!=",
+     "value": "Drawn"
+    }
+   ],
+   "confirm_text": "Draw the winners and reserves now? A draw is never repeated, and the campaign's rule can no longer change."
+  }
+ ]
+}
