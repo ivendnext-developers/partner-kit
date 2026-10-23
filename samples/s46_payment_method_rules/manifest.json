@@ -1,0 +1,131 @@
+{
+ "manifest_version": 2,
+ "app": "pp_pmr",
+ "prefix": "PP PMR",
+ "title": "Payment method rules",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "Which payment methods each customer group may use at the till. A check before payment: when the cashier presses Pay, and before each refund, the shop's server sends its priced basket with the customer's group and the payment methods the till offers, and the service answers with the methods the group's rule leaves out; the till draws them dimmed with the rule's words, and the cashier takes another. One record of PP PMR Rule per customer group: Only these payment methods, or Every payment method but these; a group with no rule takes the rule of the nearest group above it, and a customer with no rule up the tree keeps every method. A rule that leaves out every method the till offers refuses the sale in words. A group's own rule replaces the rule above it. Refunds are not judged. An exchange's new items are judged as a sale and paid by store credit, so an Only these rule that does not list the store-credit method stops that group's exchanges. The service reads the rules and the customer group tree with the app's integration user and writes nothing. The install makes the role PP PMR Integration; the shop gives it to the app's integration user, with read on Customer Group. The check installs switched off; the shop reads what it is sent, ticks the consent and switches it on. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/pmr/check"
+ ],
+ "doctypes": [
+  {
+   "name": "PP PMR Rule Method",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "mode_of_payment",
+     "fieldtype": "Link",
+     "label": "Payment method",
+     "options": "Mode of Payment",
+     "reqd": 1,
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP PMR Rule",
+   "autoname": "field:customer_group",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "customer_group",
+     "fieldtype": "Link",
+     "label": "Customer group",
+     "options": "Customer Group",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "One rule per group, named by it. A group below this one takes this rule until it has its own."
+    },
+    {
+     "fieldname": "enabled",
+     "fieldtype": "Check",
+     "label": "Switched on",
+     "default": "1",
+     "in_list_view": 1,
+     "description": "Off: this group takes the rule of the nearest group above it that has one."
+    },
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "label": "Rule",
+     "reqd": 1,
+     "in_list_view": 1,
+     "options": "Only these payment methods\nEvery payment method but these",
+     "default": "Only these payment methods",
+     "description": "Only these: the till leaves out every other method. Every method but these: it leaves out the ones listed."
+    },
+    {
+     "fieldname": "methods",
+     "fieldtype": "Table",
+     "label": "Payment methods",
+     "options": "PP PMR Rule Method",
+     "reqd": 1,
+     "description": "As named in Mode of Payment, for example Cash, Credit Card or On Account."
+    },
+    {
+     "fieldname": "words",
+     "fieldtype": "Data",
+     "label": "Words the cashier reads",
+     "length": 120,
+     "description": "Shown beside each method left out, such as: Talabat customers pay with Talabat. Blank: the app's own words."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP PMR Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP PMR Rule",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/payment_method_rules.html#rules"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP PMR Rules feed",
+   "description": "the payment method rules service reads the shop's rules and its customer group tree as this user; leave the feed off",
+   "events": [
+    "PP PMR Rule"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "methods",
+   "point": "check",
+   "label": "Payment method rules",
+   "endpoint_url": "https://host.docker.internal:8125/pmr/check",
+   "timeout_seconds": 3,
+   "down_answer": "allow_and_flag"
+  }
+ ]
+}
