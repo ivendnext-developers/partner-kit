@@ -173,6 +173,9 @@ def main(argv=None):
         return act(site, a.target, a.name, seconds=a.wait)
     try:
         manifest = json.loads(pathlib.Path(a.target).read_text("utf-8"))
+    except json.JSONDecodeError as e:   # the place in plain words, not the parser's own message
+        ap.error(f"cannot read the manifest: the file is not valid JSON: something is missing or extra at line {e.lineno}, "
+                 f"column {e.colno}")
     except (OSError, ValueError) as e:
         ap.error(f"cannot read the manifest: {e}")
     return deploy(site, manifest, a.consent, seconds=a.wait)

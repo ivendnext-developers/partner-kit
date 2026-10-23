@@ -77,6 +77,9 @@ def _manifest(path, rel, out):
     try:
         manifest = json.loads(path.read_text("utf-8"))
         refusals = validate.validate(manifest)
+    except json.JSONDecodeError as e:   # the place in plain words, not the parser's own message
+        return out.append(("REFUSED", f"{rel}: the file is not valid JSON: something is missing or extra at line {e.lineno}, "
+                                      f"column {e.colno}"))
     except (ValueError, OSError, AttributeError, TypeError) as e:
         return out.append(("REFUSED", f"{rel}: not a readable manifest ({type(e).__name__}: {e})"))
     if not refusals:   # what the shop's install refuses that its checker passes (tools/manifest/site_rules.py)
