@@ -571,7 +571,8 @@ class Service:
         doc = door.create(bo.dt("Allergen Check"), {"checked_by": user, "items_checked": len(names), "flagged": flagged,
                                                     "lines": rows})
         if missing:
-            body = f"{bo.n(missing, 'dish misses', 'dishes miss')} an allergen of its recipe. Open the check for every finding."
+            body = (f"{bo.n(missing, 'dish misses an allergen of its', 'dishes miss an allergen of their')} recipe. "
+                    "Open the check for every finding.")
         elif flagged:
             body = f"{bo.n(flagged, 'item needs', 'items need')} a look. Open the check for every finding."
         else:
