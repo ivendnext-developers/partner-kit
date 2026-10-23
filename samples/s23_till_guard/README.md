@@ -14,6 +14,8 @@ A return is judged only for the items it sells (an exchange rung without its sal
 
 ## What the shop does
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the role `PP TGR Integration`, the two services and the feed registration, the services switched off. Nothing changes at the till yet.
 2. **Make the record `Default`** of *PP TGR Settings* in Desk and fill in the rules it wants (0 or blank = off).
 3. **Tick *Confirm at the till when scanned*** on each item to confirm. To warn of a shorter-dated batch instead of asking, tick **Warn of a shorter-dated batch instead of asking** on the settings record, and in **Role Permissions** give PP TGR Integration **read** on Batch (a manifest grants rights on its own record types only).

@@ -23,6 +23,8 @@ Kit sample **S40**; its App library copy is `ivendnext_rcl`. Part of iVendNext's
 
 ## What the shop does
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 1. **Install** the manifest. It installs switched off.
 2. **The app's user:** give the role *PP RCL Integration* to the user the service works as, with read on Item, Serial and Batch Bundle, POS Invoice, Sales Invoice, Delivery Note, Stock Entry and Retail Save Rule, and read and write on Batch (it writes `disabled` only). Make its API key, choose it on the feed *PP RCL Recall feed* (leave the feed switched off) and press *Connect again*.
 3. **The settings record `Default`:** your site's time zone (hours from UTC); the minimum shelf life at receipt; whether the pack's expiry is required where an item has a shelf life (untick it, and the supplier's number, if you receive on Handheld, which can send neither); the near-expiry window; the quarantine stores; the ERP connector's own users (never a person's login); each class's clock and depth (the defaults are Kenya's PPB table: 24 h / 14 days, 72 h / 21 days, 5 days / 28 days); and who needs the regulator's visit (by the items' schedules: *Pharmacy counter rules*' field by default; *Every disposal*; or *No disposal*).

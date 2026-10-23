@@ -12,6 +12,8 @@ It uses the **document check** extension point (`doccheck/1`, POS app from train
 
 ## What the shop does
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the field *ERP order number* to Purchase Order and the check, switched off. Nothing changes yet.
 2. **Give the role *Purchase Manager*** to the people who may approve an order over the monthly budget.
 3. **Switch the check on:** open it (*Retail Extension Subscription*, *ERP purchase order check*), read what is sent, tick the consent and switch it on.

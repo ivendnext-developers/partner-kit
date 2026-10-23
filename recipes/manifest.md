@@ -72,6 +72,8 @@ A manifest is one file that adds **your own record types and fields** to a shop 
 
 4. **Install.** The **shop's own administrator** installs your manifest, from the **Retail Extension Package** screen in Desk: paste it, press *Check*, read the summary, tick the consent, install. The summary is written by our code from the manifest itself, never from your description of it, and it lists everything your manifest makes or switches on, every outside address, and each print format as a template that runs on the server when printed, able to read, change and send the shop's data. The install runs as a background job: *Queued → Installing → Installed*. Each secret (a webhook's, a service's) is shown once to whoever installed, and can be read again on its own record. **Before each part works** lists what the shop still switches on.
 
+   **A sample's address is not yours.** A kit sample's manifest calls our test bench's own address for its service, `http(s)://host.docker.internal:<port>/…` (in `allowed_urls`, its webhooks and its services). That name resolves only where Docker provides it: on a Linux bench without Docker it resolves to nothing, and every webhook and call to it fails. Before you install a sample, replace that address with your own service's, everywhere it appears in the manifest; if the manifest is already installed, raise its `version` and install it again (step 6).
+
    On **your own sandbox** you do the same with one command, with your sandbox administrator's API key:
 
    ```bash

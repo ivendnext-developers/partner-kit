@@ -60,6 +60,8 @@ The service reads the shop with its integration user's key and answers the door.
 
 ## What the shop does (now)
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 1. **Install the app** (the shop's administrator).
 2. **Give the role PP ICP Claims Clerk** to whoever sets up payers and files claims. Members and claims are read by that role and the service's user only, never by a till role. ⚠ The *Barred* tick is on Customer, so anyone who can edit a customer can clear it; to stop a cover for certain, the clerk also switches the customer's Member off.
 3. **Make each payer**: its own **Customer record** first (what it owes is booked against it), then the Payer, its formulary, and each plan with its rules and price list. A data set file (`datasets/`) loads a payer in one go: `python3 dataset.py records datasets/generic_insurer.json` lists the records it makes.
