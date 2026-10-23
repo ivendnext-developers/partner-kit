@@ -18,7 +18,7 @@ issue per store and day. Each issue is written FIRST, naming its sales (so a sal
 the parts its dishes used; then the shop's own Material Issue of those parts is made and submitted in one call. When
 the shop refuses it for want of stock, the service reads the store's stock and names every short part on the issue.
 One press at a time per company: the press stamps the settings record with the shop's own ``modified`` check, and a
-second press while one runs is told so. A press starts no new store-day after ``BUDGET_S`` and says what is left.
+second press while one runs is told so. A press starts no new set of store-days (those sharing a sale) after ``BUDGET_S`` and says what is left.
 
 **Work out food cost** fills a food cost record from the shop's own stock ledger, counts and the app's issues.
 **Check allergens** reads the ticked items' recipes and allergens and answers in words; it writes nothing.
@@ -63,7 +63,7 @@ import shops  # noqa: E402
 SUBS = {"/press/issue": "issue", "/press/foodcost": "foodcost", "/press/allergens": "allergens"}
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
 SHORT = "NegativeStockError"         # the shop's refusal of an issue it has not the stock for
-BUDGET_S = 5.5          # no new store-day is started after this: the shop waits 10 seconds at most, and a hosted
+BUDGET_S = 5.5          # no new set of store-days is started after this: the shop waits 10 seconds at most, and a hosted
                         # function's cold start (about 2.5 s, APPF run 9) comes before this clock starts
 LOCK_S = 180            # a press stamp older than this has lapsed: a press clears its own at once, and one whose
                         # answer was lost keeps it this long, while the shop may still be writing (the function stops at
