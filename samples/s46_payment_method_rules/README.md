@@ -24,6 +24,14 @@ The shop decides which payment methods each group of its customers may use at th
 
 A customer in *Retail* (under *All Customer Groups*) cannot buy on account; a customer in *Account customers*, or a group below it, can.
 
+| What the shop sees (on a demo shop, 2026-10-23) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/01_install.png) |
+| A rule for a customer group: every payment method but Credit Card, with the words the cashier reads | ![](screenshots/02_rule.png) |
+| The check switched on for one POS Profile, with its time to answer and its down answer | ![](screenshots/03_check-on.png) |
+| At Pay for a customer in that group: the card left out with the rule's words | ![](screenshots/04_card-left-out.png) |
+| A customer in a group with no rule of its own, below one whose rule is *Only these: Cash*: the card and the gift card left out | ![](screenshots/05_cash-only.png) |
+
 ## What the shop does
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP PMR Rule*, the role `PP PMR Integration`, the check and the feed registration, the check switched off. Nothing changes at the till yet.

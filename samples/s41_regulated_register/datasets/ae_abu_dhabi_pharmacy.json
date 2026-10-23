@@ -20,9 +20,9 @@
       "label": "Patient identifier",
       "type": "Data",
       "record": {
-        "doctype": "Customer",
-        "match": "customer",
-        "field": "pp_rxc_id_number"
+        "doctype": "PP RXC Patient",
+        "match": "customer_link",
+        "field": "id_number"
       }
     }
   },

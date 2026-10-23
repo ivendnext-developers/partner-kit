@@ -95,7 +95,7 @@ If you would rather not run a server, CitiXsys runs your app for you on our own 
 python3 tools/deploy_app/deploy_app.py <your app folder> --image <registry>/<repository>:1.0.0 --plan starter --partner <your name>
 ```
 
-**Order it** from your CitiXsys partner manager. A licensed customer's IT team and CitiXsys's own teams, such as the CitiXsys Consulting Team, order hosting the same way. Not an iVendNext Partner yet? Start with the [iVendNext Partner form](https://www.ivendnext.com/partner/#be-a-partner).
+**Order it** from your CitiXsys partner manager. A licensed customer's IT team and CitiXsys's own teams, such as the CitiXsys Consulting Team, order hosting the same way. Not an iVendNext Partner yet? Start with the [iVendNext Partner form](https://www.ivendnext.com/partners/apply/).
 
 **What it costs:** a price per app per month, in US dollars (below), covering the copies the plan runs (sandbox, staging). It is billed monthly, in whole months from the month the app goes live, with no minimum term: either side can stop at any month end. Whoever orders the hosting pays: you, or the customer the app is built for when that customer orders it. App Hosting is billed on its own, never as a line on an iVendNext subscription invoice. An app that only answers presses and is listed in the App library carries no hosting charge. The managed database, when it is offered, is priced separately.
 

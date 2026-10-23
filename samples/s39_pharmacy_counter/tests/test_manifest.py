@@ -70,19 +70,46 @@ class ManifestTest(unittest.TestCase):
             got = {f["fieldname"] for f in MANIFEST["custom_fields"] if f["dt"] == dt}
             self.assertEqual(got, {f"{PF}_{v}" for v in rxrules.DESK_FIELDS.values()})
         cust = {f["fieldname"]: f["fieldtype"] for f in MANIFEST["custom_fields"] if f["dt"] == "Customer"}
-        self.assertEqual(set(cust), {f"{PF}_{f}" for _, f, _ in rxrules.IDENTITY} | {f"{PF}_consent_by"})
-        self.assertEqual({k for k, t in cust.items() if t != "Data"}, {f"{PF}_consent_date"})
-        self.assertEqual(cust[f"{PF}_consent_date"], "Date")
+        self.assertEqual(cust[f"{PF}_consent_date"], "Date")       # 0.1.1's types, unchanged: an update may not change one
         self.assertFalse([f for f in MANIFEST["custom_fields"] if f.get("reqd")])
 
-    def test_the_patient_fields_name_the_readers_setup_and_carry_no_level_the_kit_cannot_set(self):
-        # who reads them is the shop's setup step (README step 3) until a kit field can name its roles
+    def test_the_patient_record_holds_every_field_a_schedule_may_need_and_only_the_pharmacists_read_it(self):
+        # 0.1.2 (PH-B1d): a record of its own, so the framework's paths that pass a permission level by (the form's
+        # change history, the group-by count, the link search) answer only those who read the record at all
+        import rxrules
+        pat = DT[f"{P} Patient"]
+        fields = {f["fieldname"]: f for f in pat["fields"]}
+        self.assertTrue({f for _, f, _ in rxrules.IDENTITY} | {"consent_by"} <= set(fields))
+        self.assertEqual(fields["consent_date"]["fieldtype"], "Date")
+        self.assertIn("parent or guardian", fields["consent_date"]["description"])
+        cust = fields["customer"]
+        self.assertEqual((cust["fieldtype"], cust["options"], cust.get("reqd"), cust.get("unique")), ("Link", "Customer", 1, 1))
+        # named by a hash, never after its customer: the group-by count's assignment branch matches a name, not a type
+        self.assertEqual(pat["autoname"], "hash")
+        self.assertEqual(pat.get("track_changes"), 1)
+        self.assertNotIn("search_fields", pat)
+        readers = {p["role"]: {k for k, v in p.items() if v == 1} for p in pat["permissions"]}
+        self.assertEqual(set(readers), {f"{P} Pharmacist", f"{P} Pharmacist in Charge", f"{P} Integration",
+                                        f"{P} Records Officer", "System Manager"})
+        # the shop's installer gives System Manager every right on a record type whose manifest names no System Manager
+        # row (PH-B1d run 1), and the framework refuses a row with no right (run 2): read alone is the least (the
+        # administrator still reads a patient, run 3, but cannot change or delete one)
+        self.assertEqual(readers["System Manager"], {"read"})
+        self.assertEqual(readers[f"{P} Integration"], {"read"})
+        self.assertEqual({r for r, k in readers.items() if "delete" in k}, {f"{P} Records Officer"})
+        self.assertFalse([r for r, k in readers.items() if k & {"export", "print", "email", "share"}])
+        # no Connections link to it: a count there would tell any customer reader the person is a patient
+        self.assertFalse([ln for ln in MANIFEST["links"] if ln["link_doctype"] == f"{P} Patient"])
+
+    def test_the_customer_fields_of_0_1_1_stay_empty_and_show_only_while_they_hold_a_value(self):
+        # an update may not drop a field (recipes/manifest.md step 6): they stay, shown only until the shop moves them
         cust = {f["fieldname"]: f for f in MANIFEST["custom_fields"] if f["dt"] == "Customer"}
+        self.assertEqual(set(cust), {f"{PF}_{f}" for f in ("id_number", "birth_date", "authority", "consent_date", "consent_by")})
+        for name, f in cust.items():
+            self.assertEqual(f.get("depends_on"), name, name)
+            self.assertIn("Not used since version 0.1.2", f["description"], name)
+            self.assertTrue(f["label"].endswith("(moved)"), name)
         self.assertFalse([f for f in MANIFEST["custom_fields"] if "permlevel" in f])
-        words = cust[f"{PF}_id_number"]["description"]
-        self.assertNotIn("everyone", words)
-        self.assertIn("permission level", words)
-        self.assertIn("parent or guardian", cust[f"{PF}_consent_date"]["description"])
 
     def test_the_schedule_holds_every_rule_the_service_reads(self):
         import rxrules
@@ -109,14 +136,16 @@ class ManifestTest(unittest.TestCase):
 
     def test_only_the_records_officer_destroys_a_prescription_or_a_dispensing(self):
         # a law keeps a prescription for years (AE 25, SA 3 and its register 5, GH 2, KE 2 if not repeatable): a permission
-        # row is role-wide, so no role that works the counter may delete one; the shop gives the officer's role for the act
+        # row is role-wide, so no role that works the counter may delete one; the shop gives the officer's role for the act,
+        # and the officer deletes the patient's record too when the last of their periods ends
         officer = f"{P} Records Officer"
         for dt in (f"{P} Prescription", f"{P} Dispensing"):
             deleters = {p["role"] for p in DT[dt]["permissions"] if p.get("delete")}
             self.assertEqual(deleters, {officer}, dt)
             self.assertEqual(perm(dt, officer), {"read", "report", "delete"}, dt)
+        self.assertEqual(perm(f"{P} Patient", officer), {"read", "report", "delete"})
         for d in MANIFEST["doctypes"]:
-            if d["name"] not in (f"{P} Prescription", f"{P} Dispensing"):
+            if d["name"] not in (f"{P} Prescription", f"{P} Dispensing", f"{P} Patient"):
                 self.assertFalse([p for p in d.get("permissions") or [] if p["role"] == officer], d["name"])
         self.assertEqual(perm(f"{P} Prescription", f"{P} Pharmacist in Charge") & {"delete"}, set())
 
@@ -144,7 +173,8 @@ class ManifestTest(unittest.TestCase):
             idents = [t.string for t in toks if t.type == tokenize.NAME]
             self.assertFalse([i for i in idents if market(i)], py)
             # the strings the code holds, its docstrings left out (words to a reader may give examples)
-            strings = [t.string for t in toks if t.type == tokenize.STRING and not t.string.startswith(('"""', 'r"""'))]
+            text = {tokenize.STRING, getattr(tokenize, "FSTRING_MIDDLE", tokenize.STRING)}   # an f-string's text, 3.12+
+            strings = [t.string for t in toks if t.type in text and not t.string.startswith(('"""', 'r"""'))]
             self.assertFalse([x for x in strings if code_word.search(x) or names_re.search(x)], py)
         names = [MANIFEST["app"], MANIFEST["prefix"], MANIFEST["title"]] + [d["name"] for d in MANIFEST["doctypes"]] + \
                 [f["fieldname"] for d in MANIFEST["doctypes"] for f in d["fields"]] + \

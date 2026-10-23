@@ -2,7 +2,7 @@
 
 Most apps iVendNext lists in the App library start as working code in this kit, and each such app's page links that code. When your customer wants one of them to work their way, copy it, change it, put your company's name on it, and sell it. iVendNext's own products in the library, such as iVendNext POS, its payment apps and its connectors, are not kit code and are not copied. The code costs you nothing, and what you build is yours.
 
-[Make one of our apps your own](../../recipes/make_it_your_own.md) · [Become an iVendNext Partner](https://www.ivendnext.com/partner/#be-a-partner) · [Browse the apps you can start from](https://library.ivendnext.app)
+[Make one of our apps your own](../../recipes/make_it_your_own.md) · [Become an iVendNext Partner](https://www.ivendnext.com/partners/apply/) · [Browse the apps you can start from](https://library.ivendnext.app)
 
 ## What you sell
 
@@ -36,7 +36,7 @@ The next retailer with the same need can buy the same version from you. When it 
 
 ## The path
 
-1. **Become an iVendNext Partner.** Fill in the [partner form](https://www.ivendnext.com/partner/#be-a-partner). We talk to you first, then give you a sandbox site of your own.
+1. **Become an iVendNext Partner.** Fill in the [partner form](https://www.ivendnext.com/partners/apply/). We talk to you first, then give you a sandbox site of your own.
 2. **Register your company once.** You make your signing key with the kit and send us its public line; we give your company its first word ([Publish your app](publish.md), step 2).
 3. **Copy an app.** An app that starts as kit code has a page in the App library that links the code it was built from. Copy it into your own repository.
 4. **Make it your customer's.** One command renames it to your company's name. Then change what your customer needs. Your AI assistant can do much of this: point it at the kit's [`AGENTS.md`](../../AGENTS.md).

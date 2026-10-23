@@ -20,7 +20,7 @@
 (function (root) {
   "use strict";
   var OUT_HOSTS = ["library.ivendnext.app", "www.ivendnext.com", "ivendnext.com", "docs.ivendnext.com"];
-  var SANDBOX_FORM = "https://www.ivendnext.com/partner/#be-a-partner";
+  var SANDBOX_FORM = "https://www.ivendnext.com/partners/apply/";
   var REQUEST_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new";
   var NOTRACK_FLAG = "ivnNoTrack";
 

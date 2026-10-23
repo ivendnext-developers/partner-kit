@@ -12,6 +12,10 @@ A till offers every payment method its POS Profile lists to every customer. Shop
 - A sale the rule leaves nothing to pay with: *"This sale can't be paid"* and your sentence, then back to the basket.
 - Any other sale: the payment screen as always. Every refund: the refund choices as always.
 
+![At Pay on a demo shop: the card left out for a customer whose group may not pay by card](../samples/s46_payment_method_rules/screenshots/04_card-left-out.png)
+
+![A customer whose group takes its parent's rule, Only these: Cash](../samples/s46_payment_method_rules/screenshots/05_cash-only.png)
+
 ## Rules
 
 1. **Declare the rule record and the check in your manifest** (`samples/s46_payment_method_rules/manifest.json`):

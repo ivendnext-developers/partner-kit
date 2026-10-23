@@ -23,7 +23,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / ".github" / "ISSUE_TEMPLATE"
 KIT_URL = "https://github.com/ivendnext-developers/partner-kit"
-PARTNER_FORM = "https://www.ivendnext.com/partner/#be-a-partner"
+PARTNER_FORM = "https://www.ivendnext.com/partners/apply/"
 FORMS = ("kit_defect", "point_request", "recipe_or_document_gap", "sample_request", "app_listing",
          "claim_a_need")
 TICK_GROUP = {"app_listing": "The listing bar"}  # a tick box's group label; every other form's is "Money or the till"

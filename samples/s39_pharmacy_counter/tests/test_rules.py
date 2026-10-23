@@ -327,6 +327,13 @@ class Patient(unittest.TestCase):
         out = decide(c, shop(c, [R.strictest([rules["EGP"]])], walk_in=True, fields={}))
         self.assertIn("needs a named customer, not a walk-in sale.", out["reason"])
 
+    def test_every_identity_refusal_fits_the_tills_sentence_whole(self):
+        # PH-B1d: the longest field's words, a two-digit line and a 24-character item, still end with where to add it
+        for _tick, _field, words in R.IDENTITY:
+            out = R._refuse({"n": 12, "item": "X" * 40}, R.ID_REFUSAL.format(words=words))
+            self.assertLessEqual(len(out["reason"]), R.TEXT_MAX)
+            self.assertTrue(out["reason"].endswith(R.ID_REFUSAL.format(words=words)), words)
+
     def test_a_schedule_that_needs_consent_waits_for_the_patients_dated_consent(self):
         rules = R.schedules_of([sched("EGP", axis="Prescription", needs_prescription=1, validity_days=30, needs_consent=1)])
         self.assertEqual(rules["EGP"]["ids"], ("consent_date",))
@@ -335,7 +342,7 @@ class Patient(unittest.TestCase):
         base = shop(c, [rule("POM")], [rx("RX1", "AMOX", 21)], fields={"id_number": "1", "birth_date": "x"})
         out = decide(c, dict(base, rules=[r]))
         self.assertEqual(out["verdict"], "refuse")
-        self.assertIn("needs the customer's consent to keep their records. Add it on their Desk record.", out["reason"])
+        self.assertIn("needs the customer's consent to keep their records. Add it on their patient record on the Desk.", out["reason"])
         ok = decide(c, dict(base, rules=[r], customer_fields={"consent_date": "2026-10-01"}))
         self.assertEqual(ok["verdict"], "allow")
         # a schedule without the tick never asks for it, and the strictest of two keeps it

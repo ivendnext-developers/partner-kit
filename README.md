@@ -19,7 +19,7 @@ Then read [that sample's README](samples/s32_coupon_rules/README.md): what the s
 
 > **Generally released.** iVendNext POS 2.0.0.652 (18 October 2026) is the general release of the extension points, the API calls the kit describes and the manifest format. From it, each version is served for 12 months after its successor ships ([guide ch. 18](guide/18_versioning_and_support.md)), and every change is a dated entry in [the changelog](CHANGELOG.md).
 
-**Anyone may read the kit. To get a sandbox or build for an iVendNext customer, [become an iVendNext Partner](https://www.ivendnext.com/partner/#be-a-partner).**
+**Anyone may read the kit. To get a sandbox or build for an iVendNext customer, [become an iVendNext Partner](https://www.ivendnext.com/partners/apply/).**
 
 ## What this is, and how you play
 
@@ -89,7 +89,7 @@ The kit in [`tools/wasm_kit/`](tools/wasm_kit/README.md) builds, meters, checks 
 
 ## Feedback, contributing and security
 
-- **Found a gap or a defect?** Onboarded members (an iVendNext Partner, a licensed customer's IT team, the CitiXsys Consulting Team) file it with one of the feedback forms in the private `partner-feedback` repository ([how](feedback/README.md)). One subject per form; never a secret or a shopper's personal data. Everyone else: [become an iVendNext Partner](https://www.ivendnext.com/partner/#be-a-partner), or propose a fix to a text or a link (see [CONTRIBUTING.md](CONTRIBUTING.md)).
+- **Found a gap or a defect?** Onboarded members (an iVendNext Partner, a licensed customer's IT team, the CitiXsys Consulting Team) file it with one of the feedback forms in the private `partner-feedback` repository ([how](feedback/README.md)). One subject per form; never a secret or a shopper's personal data. Everyone else: [become an iVendNext Partner](https://www.ivendnext.com/partners/apply/), or propose a fix to a text or a link (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 - **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md). Contributions are signed off under the Developer Certificate of Origin.
 - **A security problem:** never in an issue — see [SECURITY.md](SECURITY.md).
 - **Where every file comes from:** [EXPORT_SOURCES.md](EXPORT_SOURCES.md).
