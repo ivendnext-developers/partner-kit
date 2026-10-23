@@ -142,7 +142,16 @@ class CheckTest(unittest.TestCase):
         p.write("manifest.json", "{not json")
         code, out = p.run()
         self.assertEqual(code, 1, out)
-        self.assertIn("not a readable manifest", out)
+        self.assertIn("manifest.json: the file is not valid JSON: something is missing or extra at line 1, column 2", out)
+
+    def test_a_manifest_cut_short_names_the_place_in_plain_words(self):
+        p = self.project().good()
+        p.write("manifest.json", '{"app": "pp_broken", "version": "0.0.1", ')
+        code, out = p.run()
+        self.assertEqual(code, 1, out)
+        self.assertIn("the file is not valid JSON: something is missing or extra at line 1, column 42", out)
+        self.assertNotIn("property name", out)
+        self.assertNotIn("char 41", out)
 
     def test_an_app_always_carries_a_note_that_a_person_reviews_it(self):
         code, out = self.project().good().run()

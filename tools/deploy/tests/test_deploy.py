@@ -12,7 +12,7 @@ import sys
 import threading
 import unittest
 import urllib.parse
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest import mock
 
@@ -197,6 +197,18 @@ class DeployTests(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("status: Installed", out)
         self.assertIn("secrets not read", out)
+
+    def test_a_manifest_that_is_not_json_is_refused_in_plain_words_and_sends_nothing(self):
+        p = pathlib.Path(self.id().rsplit(".", 1)[1] + ".json")
+        p.write_text('{"app": "pp_broken", "version": "0.0.1", ')
+        self.addCleanup(p.unlink)
+        err = io.StringIO()
+        with redirect_stderr(err):
+            code, _, calls = self.run_tool([str(p)])
+        self.assertEqual((code, calls), (2, []))
+        self.assertIn("cannot read the manifest: the file is not valid JSON: something is missing or extra at line 1, "
+                      "column 42", err.getvalue())
+        self.assertNotIn("property name", err.getvalue())
 
     def test_finish_and_usage(self):
         code, _, calls = self.run_tool(["uninstall"])
