@@ -175,9 +175,10 @@ report view.
    7. The level and its grants on *Customer* (0.1.1's step 3) can then go: the service no longer reads those fields.
 
    **Updating from 0.1.2.** In this order:
-   1. Deploy the 0.1.3 service first. It answers a shop still on 0.1.2 as 0.1.2 did: it asks again without the
-      schedule's new tick when the shop does not know it, and fills a Desk document only when the document sent the
-      date, which only 0.1.3's settings do. A service that answers many shops moves once, before any of them updates.
+   1. Deploy the 0.1.3 service first. It answers a shop still on 0.1.2 as 0.1.2 did: that shop leaves the schedule's
+      new tick out of its answer (on our bench), so no schedule books the date (and a shop that refused the field is
+      asked again without it), and a Desk document is filled only when it sent the date, which only 0.1.3's settings
+      do. A service that answers many shops moves once, before any of them updates.
    2. Update the app. Its screen says the three Desk services changed: each now sends and fills the prescription's
       date, so **the update switches each of them off and clears its consent**, as it does any service whose settings
       change. ⚠ Until they are on again, a sales order, delivery or invoice of medicine is submitted **unchecked**:
@@ -472,8 +473,8 @@ details (default `PP RXC`).
 
 ### What was proven where
 
-- **On the laptop:** the tests and canaries above (126 tests, one of them replaying a recorded bench run when one is
-  given; 93 canaries, each RED with its baseline passing).
+- **On the laptop:** the tests and canaries above (144 tests, one of them replaying a recorded bench run when one is
+  given; 114 canaries, each RED with its baseline passing).
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344`, the engine at `dc65d832`):
   - **The setup.** The app was installed through the shop's own installer: five services, switched off, with the
     declared down answers. The service's user held only the app's role and the card's reads, and every read and write
@@ -558,6 +559,28 @@ details (default `PP RXC`).
     (a patient with no record refused); consent refused, then sold once the pharmacist entered the day on the patient
     record; only the Records Officer deleted a patient record; the deletion steps as in 0.1.1.
   - **Timing:** the dispensary's checks took 167 ms at the median and 749 ms at the slowest (the last 50).
+
+- **On our test bench again for 0.1.3** (2026-10-23, the same builds; 38 of 38 checks):
+  - **0.1.2 first.** With a patient record on it, and the dispensary's and the Desk invoice's services switched on with
+    consent, 0.1.2 was updated to 0.1.3 through the shop's installer. The patient record was kept whole; the
+    prescription's date was added as a Date field on the three Desk documents and as a sale detail (on, never required),
+    with the schedule's tick, the dispensing's four register columns and the report. The Desk invoice's service, whose
+    lists changed, came back switched off with its consent cleared; the dispensary's, unchanged, stayed on. Asked for
+    0.1.3's tick, the 0.1.2 shop answered without it.
+  - **The Desk:** the pharmacist's order, with a wrong date typed, was filled with the prescription's date at Submit;
+    the delivery a clerk made from it, its date blanked, and that delivery's invoice were each filled again; a draft
+    was never filled.
+  - **The till:** a date that was not the prescription's was refused; an empty one passed until the schedule was ticked,
+    then was refused with the date to type; the right date booked, and the booked sale carried it.
+  - **The register:** the pharmacist read the till's dispensing with the patient's name, the prescriber, the contents,
+    the prescriber's directions, the day and their own name; released dispensings and give-backs were left out, and a
+    sale abandoned at Pay was still listed *Reserved* after its day closed (as *The status column* says); the installed
+    report matched the manifest's; a Desk clerk was refused the report and the dispensings.
+  - **All of 0.1.2's walk again**, the patient record's privacy checks included, and the uninstall as before.
+  - **Timing:** the dispensary's checks took 184 ms at the median and 1,104 ms at the slowest (the last 50).
+  - **An update that adds a sale detail which an earlier uninstall kept** (switched off, because booked sales name it)
+    stopped whole on our bench, where a first install takes the kept one over: we have reported it. A shop that never
+    ran 0.1.3 has no such detail.
 
 ## Make it your own
 

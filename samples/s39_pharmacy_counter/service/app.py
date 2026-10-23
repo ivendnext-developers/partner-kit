@@ -214,8 +214,9 @@ class Service:
     NEW_SCHEDULE_FIELDS = ["register_books_rx_date"]      # 0.1.3's
 
     def _schedules(self, shop) -> list:
-        """The drug schedules. A shop still on 0.1.2 refuses a list naming 0.1.3's tick: asked again without it (no
-        schedule then books the date), so this service can move before every shop it answers has updated."""
+        """The drug schedules. A shop still on 0.1.2 leaves 0.1.3's tick out of its answer (measured on our bench), so
+        no schedule there books the date; one that refuses a list naming it is asked again without it. Either way this
+        service can move before every shop it answers has updated."""
         try:
             return self._list(shop, self.dt("Drug Schedule"), self.SCHEDULE_FIELDS + self.NEW_SCHEDULE_FIELDS)
         except ShopUnreadable as e:
