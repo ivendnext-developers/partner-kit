@@ -268,17 +268,22 @@ class Service:
         with ThreadPoolExecutor(max_workers=5 + 3 * len(ids)) as pool:
             ph = pool.submit(self._pharmacist_rows, shop, ctx["operator"])
             known = pool.submit(self._list, shop, "Customer", ["name"], [["name", "=", cust]])
-            record = pool.submit(self._list, shop, self.dt("Patient"), ["name"], mine) if ids else None
-            has = {f: {k: pool.submit(self._list, shop, self.dt("Patient"), ["name"], mine + c) for k, c in a.items()}
-                   for f, a in asks.items()}
+            record = pool.submit(self._list, shop, self.dt("Patient"), ["name", "customer"], mine) if ids else None
+            has = {f: {k: pool.submit(self._list, shop, self.dt("Patient"), ["name", "customer"], mine + c)
+                       for k, c in a.items()} for f, a in asks.items()}
             rx = pool.submit(self._rx_headers, shop, refs, cust) if refs else None
             disp = pool.submit(self._dispensings, shop, [["customer", "=", cust]])
             if not known.result():
                 raise ShopUnreadable("the customer could not be read")
-            on_record = bool(record.result()) if record else False
+
+            def mine_only(rows):     # an answer about another customer is a filter the shop dropped, never this patient's
+                if any(r.get("customer") != cust for r in rows):
+                    raise ShopUnreadable("the shop answered for another customer's patient record")
+                return bool(rows)
+            on_record = mine_only(record.result()) if record else False
             filled = {}
             for f, js in has.items():
-                got = {k: bool(j.result()) for k, j in js.items()}
+                got = {k: mine_only(j.result()) for k, j in js.items()}
                 if on_record and got["set"] == got["unset"]:
                     raise ShopUnreadable("the shop answered a patient field both ways")
                 if not on_record and (got["set"] or got["unset"]):

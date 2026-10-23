@@ -39,7 +39,7 @@ answering presses keeps nothing.
        permission level does not keep it from the form's change history, the list's group-by count or the link
        search. Put them on a record type of your own, one per customer (a `customer` Link, unique), named by a hash,
        readable only by the pharmacist roles, the integration role and the records officer, with a System Manager row
-       that has no right (else the install gives that role every right). S39 0.1.2's *Patient*;
+       of read alone (else the install gives that role every right, and a row with no right is refused). S39 0.1.2's *Patient*;
      - the prescription fields on Sales Order, Delivery Note and Sales Invoice;
    - **sale details** for the prescription number, prescriber, licence and directions. ⛔ Never `required`: a required
      sale detail stops every sale on every till of the site;

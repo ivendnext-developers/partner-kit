@@ -121,8 +121,8 @@ def check(ds):
         elif not (_text(d.get("pos_sale_detail", "x")) and _ID.match(d.get("desk_field", "xx") or "")):
             bad.append(f"details.{key}: a sale detail's name in plain text, a Desk field's name in lower case")
     dl = (ds.get("authority") or {}).get("dispenser_licence")
-    if dl is not None and not _lookup_ok(dl):
-        bad.append("authority.dispenser_licence: the record's type, match (user, customer or customer_link) and field")
+    if dl is not None and (not _lookup_ok(dl) or dl.get("match") == "customer_link"):
+        bad.append("authority.dispenser_licence: the record's type, match (user or customer) and field")
     known = set(LINE_COLUMNS) | {f"detail:{k}" for k in details}
     looked_up = {f"detail:{k}" for k, d in details.items() if isinstance(d, dict) and "record" in d}
     dated = set(DATE_COLUMNS) | {f"detail:{k}" for k, d in details.items() if isinstance(d, dict) and d.get("type") == "Date"}

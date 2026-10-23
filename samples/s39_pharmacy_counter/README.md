@@ -100,17 +100,23 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
    Desk. Open the record from the *PP RXC Patient* list, filtered by the customer; it has no link on the customer's
    form, because a count there would tell everyone who reads customers that the person is a patient.
 
-   **Updating from 0.1.0 or 0.1.1** (the patient's fields were on Customer):
-   - Update the app first. Customer's five fields keep their values (and any level you gave them), and show only while
-     they hold a value; their labels end *(moved)*.
-   - As a pharmacist, filter the *Customer* list by each field *is set*. For each customer found, make their *PP RXC
-     Patient* record with the same values, then clear the five fields on the customer and save. Until you do, the till
-     refuses a sale that needs one of them: the app reads only the patient's record.
-   - Then, as the site's *Administrator*, open the **Version** list, filter *Document Type* = *Customer* and *Data*
-     like `%pp_rxc_%`, and delete those rows: each customer's change history still holds the values, and clearing a
-     field adds one more row holding them. Only the Administrator deletes a change history.
-   - The level and its grants on *Customer* (0.1.1's step 3) can then go: the app's integration user no longer reads
-     those fields.
+   **Updating from 0.1.0 or 0.1.1** (the patient's fields were on Customer). In this order, so the till never reads an
+   empty record:
+   1. Update the app. Customer's five fields keep their values (and any level you gave them), and show only while they
+      hold a value; their labels end *(moved)*. The 0.1.1 service still reads them.
+   2. As a pharmacist, filter the *Customer* list by each field *is set*, and for each customer found make their *PP
+      RXC Patient* record with the same values. Leave the customer's fields as they are for now.
+   3. Deploy the 0.1.2 service. From now on it reads only the patient's record: a customer with none is refused a
+      sale that needs one of the fields. ⚠ A service that answers many shops moves to 0.1.2 only once every one of
+      them has done step 2: until then, a shop still on 0.1.1 is answered *"did not answer"* on each such sale.
+   4. Clear the five fields on each of those customers and save.
+   5. As the site's *Administrator*, open the **Version** list, filter *Document Type* = *Customer* and *Data* like
+      `%pp_rxc_%`, and delete those rows: each customer's change history still holds the values, and clearing them
+      added one more row holding them. Only the Administrator deletes a change history. A row goes whole, so any
+      other Customer field changed in the same save loses that piece of its history too.
+   6. As a *System Manager*, delete the **Deleted Document** rows of type *Version* that step 5 made: each holds a full
+      copy of the row it replaced.
+   7. The level and its grants on *Customer* (0.1.1's step 3) can then go: the service no longer reads those fields.
 
 4. **Make your drug schedules** (*PP RXC Drug Schedule*), one per class per classification axis, each with its rules. Set
    them on your medicine items (*Drug schedules*: one row per axis, with its *effective from*) or on an item group
@@ -126,7 +132,9 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
      - **Jordan,** likely not for dispensing records: the data-protection law lets a licensed medical professional
        keep health data without consent (Law 24 of 2023, Art. 6(a)(2)), and the Public Health Law lists pharmacy among
        the medical and health professions a minister licenses (Art. 5(a)–(b)). That is our reading, not a ruling: the
-       law does not separate *medical* from *health*. Tick it if you want the consent anyway. Sending a claim to a
+       law does not separate *medical* from *health*. For controlled drugs no inference is needed: the
+       register is required by law, and the same article lets records a law requires be kept without consent (Art.
+       6(a)(5)). Tick it if you want the consent anyway. Sending a claim to a
        private insurer, or a recall trace to a manufacturer, needs the patient's consent and a record of it whatever
        the profession (Art. 14(أ)–(ب)); those are the payer and recall apps' sends, not this app's.
 
@@ -146,13 +154,19 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
        number (Federal Decree-Law 30 of 2021, Art. 37). On your narcotic schedule set *Most fills a prescription may
        authorise* to **1** (⛔ never 0: 0 means no cap) and *Most dispensings of one prescription* to **1**, and have
        the pharmacist tick *Original retained at the pharmacy* on each such prescription, which also holds it to one
-       fill. The entry number is the register's.
+       fill. The entry number is the register's. The same article covers psychotropic prescriptions, which repeat only
+       where the Minister lists them (the list is not yet read): give your psychotropic schedule *Most fills* 1 too,
+       unless that list allows a repeat.
      - Controlled and semi-controlled habit-forming products do not repeat either, unless the prescriber marks the
-       prescription so (Federal Decree-Law 38 of 2024, Art. 79): set *Most fills* to 1 on those schedules, and enter a
-       higher *Fills authorised* only when the prescription says so.
+       prescription so (Federal Decree-Law 38 of 2024, Art. 79). On those schedules leave *Most fills* empty: a
+       prescription whose *Fills authorised* is blank is one fill, and the pharmacist enters more only when the
+       prescriber marked a repeat (*Most fills* 1 would refuse that repeat too). A fill may be supplied over several
+       visits: set *Most dispensings* to 1 as well where part supply must not happen.
    - **Saudi Arabia:** controlled prescriptions are dispensed through SFDA's **Raqeeb** platform, on paper only while it
      is down (SFDA *Procedures and Controls*, 2026, Art. 11(1)). A prescription entered in this app is your shop's
-     working copy for the counter's rules, not the lawful record (our reading); the app does not connect to Raqeeb.
+     working copy for the counter's rules, not the lawful record (our reading; the text read does not name the decision
+     that approved it); the app does not connect to Raqeeb. A prescription dispensed on paper while Raqeeb is down is
+     entered in it once it is back (Art. 1).
    - **Jordan:** a special (controlled) prescription that anyone but its prescriber has struck out or amended, signed and
      stamped, is refused (JFDA *Instructions on Medical Prescriptions and Registers*, 2025, Annex 7 (خ); read from the
      page image). That is the pharmacist's check at the counter: the app does not see the paper.
@@ -189,7 +203,8 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
 - **The service reads back with the integration user's key:**
   - the prescriptions named and the operator's pharmacist record;
   - whether each patient field the sale needs is filled in on the patient's record. The shop answers yes or no: the
-    ID, date of birth, authority and consent values never leave it;
+    ID, date of birth, authority and consent values never leave it. The service never asks for them, but its key
+    may read them: keep that key as you would a pharmacist's password;
   - the patient's dispensings (which medicine, how much, when);
   - the schedules and the items;
   - the sales, days and documents the patient's dispensings name;
@@ -215,6 +230,8 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
     dispensings for anyone who reads the customer. It shows that the person has had prescriptions, never which;
   - **one engine call** returns any record whole to any signed-in user, a patient's record included.
 - **The till never shows a patient's fields** and cannot take them: enter them on the Desk, never on a till field rule.
+- **Deleting or renaming a customer who has a patient record** is refused, or carried to the record, by the Desk's own
+  link check, which names the record to whoever does it: that the person is a patient, never what it holds.
 - **The regulated register app** ([S41](../s41_regulated_register/README.md)) prints the ID into Saudi Arabia's and
   Abu Dhabi's books from the patient's record: its register must read it with its own rights, or a line written by a
   clerk prints it empty.
@@ -272,7 +289,7 @@ Manager**: keep both few.
 | Ghana | 2 years (Act 489, s. 32(b)) | the full dispensing |
 | Kenya | 2 years, a prescription that is not repeatable (Rules, r. 6(6)) | not stated in the text read |
 | Nigeria | at least 2 years, the controlled-drug records (reg. 26) | the prescription's date or the last entry |
-| Jordan | at least 5 years, the narcotic records, destroyed in the inspector's presence (Law 12 of 2013, Art. 74) | the last entry |
+| Jordan | at least 5 years, the narcotic and psychotropic prescriptions, registers and documents, destroyed in the inspector's presence (Law 12 of 2013, Art. 74) | the last entry |
 
 Elsewhere no prescription period was found in the laws read: keep as long as your pharmacy law and your register need,
 and no longer, since a data-protection law ends the keeping when its purpose ends. Three more rules from those laws:
@@ -286,7 +303,7 @@ A register book's own period is the register app's.
 
 **After the period, the shop acts; nothing runs on a timer.**
 1. Where your law says how a record is destroyed, do that first: in Saudi Arabia a three-member committee the director
-   appoints, with minutes (Executive Regulation, Arts 21(3) and 22(7)).
+   appoints, with minutes (Executive Regulation, Arts 21(3) and 22(7)); in Jordan in the inspector's presence (Art. 74).
 2. Give a person **PP RXC Records Officer** for the act. It reads, and deletes, prescriptions and dispensings, nothing
    else.
 3. Delete a prescription and all its dispensings in one act, the dispensings first (a prescription the dispensing names
@@ -369,8 +386,8 @@ details (default `PP RXC`).
 
 ### What was proven where
 
-- **On the laptop:** the tests and canaries above (119 tests, one of them replaying a recorded bench run when one is
-  given; 77 canaries, each RED with its baseline passing).
+- **On the laptop:** the tests and canaries above (124 tests, one of them replaying a recorded bench run when one is
+  given; 90 canaries, each RED with its baseline passing).
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344`, the engine at `dc65d832`):
   - **The setup.** The app was installed through the shop's own installer: five services, switched off, with the
     declared down answers. The service's user held only the app's role and the card's reads, and every read and write
@@ -427,9 +444,31 @@ details (default `PP RXC`).
     one that did not (*Limits*).
   - **Timing:** the dispensary's checks took 164 ms at the median and 395 ms at the slowest, each patient field asked
     both ways.
-  - **Customize Form** on Customer refused to save with the app installed (*Limits*, step 3), so the levels were set on
+  - **Customize Form** on Customer refused to save with the app installed (we have reported it), so the levels were set on
     each Custom Field record.
   - **The teardown** put Customer's permission rows back exactly as found and left no setting on its fields.
+- **On our test bench again for 0.1.2** (2026-10-23, the same builds; 35 of 35 checks):
+  - **0.1.1 first.** With the ID at the shop's level on Customer, a Desk clerk who reads customers was sent it in the
+    customer's change history, and the list's group-by count answered a *starts with* filter on it, by customer group
+    and by *Assigned To* (the customer assigned), only when the pattern matched.
+  - **The update and the move.** The level survived the update and each field's new description and show-while-set
+    were written. As step 3 says, the pharmacist found the patient by the ID being set, made their patient record with
+    the same values and cleared the customer's five fields; clearing wrote one more change-history row holding the
+    old value, which the clerk was still sent until the Administrator deleted the rows that carry the fields.
+  - **The patient record.** Named by a code, history kept, one per customer; the pharmacist roles, the Records Officer,
+    the service's role (read) and System Manager (read alone) hold a row. A clerk was refused it whole: form and change
+    history, list, report view, print, its Version rows, making one, and a *starts with* filter on the ID through the
+    API's and the Desk's lists, the count, a single value, the group-by count on a field and the link search. The
+    pharmacist read and wrote it; a System Manager read its form, report view and Version rows; the customer's own
+    form carried nothing of it. The service read whether the ID is set, both ways, with no level anywhere.
+  - **What still reaches the clerk** (*Limits*): with only the customer assigned, the group-by count by *Assigned To* on
+    patient records answered nothing; once the patient record itself was assigned, it answered the filter (and not
+    a control pattern). The customer's *Pharmacy* Connections counted their prescriptions, and the engine's export
+    returned the record whole.
+  - **The till and the Desk:** all of the 0.1.0 walk again, the controlled sale's ID check read off the patient record
+    (a patient with no record refused); consent refused, then sold once the pharmacist entered the day on the patient
+    record; only the Records Officer deleted a patient record; the deletion steps as in 0.1.1.
+  - **Timing:** the dispensary's checks took 194 ms at the median and 494 ms at the slowest.
 
 ## Make it your own
 

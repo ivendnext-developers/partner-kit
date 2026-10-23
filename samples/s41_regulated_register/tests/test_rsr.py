@@ -349,6 +349,8 @@ class DataSetFormat(unittest.TestCase):
     def test_the_dispensers_licence_is_a_record_lookup(self):
         self.refused(lambda d: d["authority"]["dispenser_licence"].__setitem__("match", "owner"),
                      "authority.dispenser_licence")
+        self.refused(lambda d: d["authority"]["dispenser_licence"].__setitem__("match", "customer_link"),
+                     "authority.dispenser_licence")  # the dispenser's licence is the user's, never the customer's
 
     def test_a_period_takes_a_month_count_that_divides_the_year_and_its_due_days(self):
         for months in (5, 0, 24, True, "6"):
