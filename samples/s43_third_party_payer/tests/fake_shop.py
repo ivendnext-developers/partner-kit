@@ -108,10 +108,11 @@ class FakeShop:
                  valid_to="2026-12-31")
         self.add(f"{P} Member", name="m2", customer="C2", plan="Generic Silver", payer="GEN-INS", active=1,
                  member_number="GEN-000999", valid_to="2026-12-31")
+        self.add("Price List", name="Generic Insurer Prices", currency="KES")
         for code, group, rate in (("PHD-AMOX-500", "Prescription Medicines", 120),
                                   ("PHD-PARA-500", "Over-the-Counter Medicines", 25),
                                   ("PHD-TRAM-50", "Controlled Medicines", 0)):
-            self.add("Item", name=code, item_group=group)
+            self.add("Item", name=code, item_group=group, stock_uom="Nos")
             self.add("Item Price", item_code=code, price_list="Generic Insurer Prices", uom="Nos", price_list_rate=rate)
         self.add("Item", name="PHD-VITC", item_group="Over-the-Counter Medicines")   # on no list of the insurer
         return self

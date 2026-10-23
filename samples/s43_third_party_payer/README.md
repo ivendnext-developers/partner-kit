@@ -2,7 +2,7 @@
 
 In many markets a pharmacy cannot sell to most of its patients without their insurer: the insurer pays part of the sale and the patient pays the rest. The same shape serves an optical plan, and a company paying for what its staff buy. This app is **one payer service for any third party that pays part of a sale**. Its payers, plans, formularies and members are records the shop fills; it answers the POS app's **payer door** line by line, makes a **claim** from each sale the door books, files claims as a file, and follows each claim to payment.
 
-Its first data set is **one generic insurer**, with the co-pay rules we built for a pharmacy chain in Egypt on iVend Retail and the insurer price-list rule a pharmacy in Kenya ran. A second data set, **a company paying 70% of what its staff buy**, loads and answers with no code change.
+Its first data set is **one generic insurer**, with the co-pay rules of an iVend Retail add-on we built for a pharmacy chain and an insurer price-list rule a pharmacy customer ran. A second data set, **a company paying 70% of what its staff buy**, loads and answers with no code change.
 
 ⚠ **The generic insurer is a sample, not a real insurer.** A partner replaces it with each real payer's terms, and writes each payer's own claim link (NHIF/SHA, NPHIES, eClaimLink, Shafafiya, NHIA) against the same door.
 
@@ -47,10 +47,10 @@ The plan's rules, all data (`copay.py`, the tests' 1,728 combinations):
 
 1. The door books a sale with its payer details (its claim reference, the cover, each line's two shares, the prescription details it sent). The event feed says so.
 2. **Build claims** (a button on the Payer list) reads the feed and makes one **Claim** per booked sale, named by its claim reference, so a sale is never claimed twice. A return reduces its claim's lines by what it gave back to the payer, once.
-3. A claim missing what its payer needs (the payer's ticks: member number, card serial, prescription, each line's GTIN, dose and frequency) is **Incomplete**: the claims clerk fills it on the Desk and sets it **Ready**. ⚠ The pharmacy counter-rules app (S39) keeps a prescription's directions as free text, so the clerk types the dose and frequency where a payer asks for them (Abu Dhabi's Shafafiya does, on every line).
+3. A claim missing what its payer needs (the payer's ticks: member number, card serial, prescription, each line's GTIN, dose and frequency) is **Incomplete**: the claims clerk fills it on the Desk and presses **Mark ready**, which is refused while anything is still missing. A claim's status is never typed: the claims file, *Match*, *Mark ready* and *Settle as it stands* (a short-paid claim closed with its shortfall left on the payer's account) move it. ⚠ The pharmacy counter-rules app (S39) keeps a prescription's directions as free text, so the clerk types the dose and frequency where a payer asks for them (Abu Dhabi's Shafafiya does, on every line).
 4. **Make the claims file** (a button on a Payer) puts every Ready claim of that payer into one **Claim Batch**: a CSV, one row per claim line, the file you send to the payer. Each claim becomes **Submitted** (**Resubmitted** when it was corrected after a rejection). A cell is never written so that a spreadsheet runs it as a formula.
 5. The payer's **Remittance** is entered line by line (claim, paid, rejected, the payer's reason); **Match** sums every line of one claim, then compares it with what the claim is still owed, so a payer paying a claim line by line, or in parts over several remittances, is followed to the cent: **Paid**, **Short paid**, **Rejected**, or *Unmatched* (a reference the payer sent that is not ours, or a claim of another payer). The money itself is the shop's own payment from the payer's customer record, allocated against what the door booked.
-6. A rejected claim is corrected and made Ready again, or **billed to the customer**: ⏳ the *Bill to the customer* button installs with the door, which books it.
+6. A rejected claim is corrected and made Ready again with *Mark ready* (the next file sends it as *Resubmitted*), or **billed to the customer**: ⏳ the *Bill to the customer* button installs with the door, which books it.
 
 Reports: *PP ICP Claims*, *PP ICP Rejected and short-paid claims*, *PP ICP Incomplete claims*, *PP ICP Remittances*; charts *PP ICP Payer share by month* and *PP ICP Claims by status*.
 
@@ -65,7 +65,7 @@ The service reads the shop with its integration user's key and answers the door.
 3. **Make each payer**: its own **Customer record** first (what it owes is booked against it), then the Payer, its formulary, and each plan with its rules and price list. A data set file (`datasets/`) loads a payer in one go: `python3 dataset.py records datasets/generic_insurer.json` lists the records it makes.
 4. **Make each customer's cover**: a Member per policy (customer, plan, member number exactly as on the card).
 5. **Give the price list its prices**: the shop's own Item Prices on the plan's list. ⚠ Do not make the plan's list a customer group's default: it would price every sale of the member, insured or not; the door switches the sale to the plan's list when a cover is picked.
-6. **Choose the app's user on its feed, switch its record types on (POS Invoice, Sales Invoice), then press Connect again** (each button says so until you do). That user reads POS Invoices, Sales Invoices, Items, Item Prices and Customers, and writes the app's own records.
+6. **Choose the app's user on its feed, switch its record types on (POS Invoice, Sales Invoice), then press Connect again** (each button says so until you do). That user reads POS Invoices, Sales Invoices, Items, Item Prices, Price Lists and Customers, and writes the app's own records.
 
 ## Data sets
 

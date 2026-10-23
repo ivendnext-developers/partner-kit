@@ -13,7 +13,7 @@
    "timeout_seconds": 5,
    "settings": {
     "prescription_details": "PP RXC Rx Number, PP RXC Prescriber, PP RXC Prescriber Licence",
-    "bill_back_role": "PP ICP Claims Clerk"
+    "bill_back_role": "PP ICP Integration"
    }
   },
   {

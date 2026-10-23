@@ -54,6 +54,7 @@ WORDS = {
     "barred": "{customer} cannot buy on {payer}.",                              # VR-30
     "no_member": "{customer} has no cover with {payer} today.",
     "plan_off": "{plan} is not active today.",
+    "plan_currency": "{plan} is priced in another currency than this sale.",
     "not_on_list": "{item} is not covered by {payer}'s price list.",          # VR-29
     "zero_on_list": "{item} has no price on {payer}'s price list.",           # VR-36
     "not_covered": "{item} is not covered by {plan}: the customer pays it.",  # informational, never a refusal
@@ -150,6 +151,8 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
         return no_cover("no_member")
     if not plan or not _in_force(plan, today) or (payer is not None and not _in_force(payer, today)):
         return no_cover("plan_off")
+    if plan.get("currency") and request.get("currency") and plan["currency"] != request["currency"]:
+        return no_cover("plan_currency")    # its limits and its list are in its own currency, never converted here
 
     p = D(plan.get("copay_percent")) / 100
     limit = D(plan.get("invoice_upper_limit"))

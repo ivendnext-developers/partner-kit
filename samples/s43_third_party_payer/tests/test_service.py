@@ -22,7 +22,7 @@ sys.path[:0] = [os.path.join(SAMPLE, "service"), SAMPLE, HERE]
 import app  # noqa: E402
 from fake_shop import FakeShop  # noqa: E402
 
-SECRETS = {k: f"s-{k}" for k in ("payer", "claims", "file", "remit", "billback")}
+SECRETS = {k: f"s-{k}" for k in ("payer", "claims", "file", "remit", "ready", "settle", "billback")}
 NOW = time.mktime((2026, 10, 23, 12, 0, 0, 0, 0, -1))
 
 
@@ -63,6 +63,7 @@ class Base(unittest.TestCase):
 
     def coverage(self, **kw):
         body = {"call": "coverage", "sale_ref": "PHD-26-0001", "customer": "C1", "member": "m1", "date": "2026-10-23",
+                "currency": "KES",
                 "precision": 2, "lines": [dict(l) for l in LINES]}
         body.update(kw)
         return self.payer(body)
@@ -118,6 +119,20 @@ class Calls(Base):
                                            "uom": "Box", "price_list_rate": 0}]
         out = self.coverage(lines=[dict(LINES[0]), dict(LINES[0], line_id="r9", uom="Box", amount=1200)])[1]
         self.assertEqual([l["reason"] for l in out["lines"]], [None, "zero_on_list"])
+
+    def test_a_sale_in_another_currency_than_the_plans_list_has_no_cover(self):
+        out = self.coverage(currency="USD")[1]
+        self.assertEqual((out["answer"], out["code"]), ("no_cover", "plan_currency"))
+
+    def test_a_line_in_a_pack_unit_takes_the_stock_units_price_times_the_pack(self):
+        # listed per tablet (the stock unit), sold by the box of 10: the engine prices it 10 x; it is on the list
+        self.shop.tables["Item Price"] = [{"item_code": "PHD-AMOX-500", "price_list": "Generic Insurer Prices",
+                                           "uom": "Nos", "price_list_rate": 12}]
+        out = self.coverage(lines=[dict(LINES[0], uom="Box", conversion_factor=10, qty=1, amount=120)])[1]
+        self.assertEqual((out["answer"], out["lines"][0]["reason"]), ("cover", None))
+        self.shop.tables["Item Price"][0]["price_list_rate"] = 0
+        self.assertEqual(self.coverage(lines=[dict(LINES[0], uom="Box", conversion_factor=10, qty=1,
+                                                   amount=120)])[1]["lines"][0]["reason"], "zero_on_list")
 
     def test_a_line_not_at_the_sales_precision_or_a_repeated_line_id_is_refused(self):
         self.assertEqual(self.coverage(lines=[dict(LINES[0], amount=33.333)])[0], 400)
@@ -244,6 +259,37 @@ class Claims(Base):
         out = self.call("/icp/press/billback", press("PP ICP Claim", "GEN-INS-S-1"), "billback")[1]
         self.assertEqual(out["message"]["level"], "warning")
         self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-S-1")["status"], "Rejected")
+
+    def test_the_clerk_marks_a_claim_ready_only_once_complete_and_a_corrected_one_goes_again(self):
+        self.shop.book("S-1", door_lines(self.coverage(sale_ref="S-1")[1]), payer_prescription=None)
+        self.build()
+        c = self.shop.find("PP ICP Claim", "GEN-INS-S-1")
+        self.assertEqual(c["status"], "Incomplete")
+        out = self.call("/icp/press/ready", press("PP ICP Claim", "GEN-INS-S-1"), "ready")[1]
+        self.assertEqual(out["message"]["level"], "warning")                  # the prescription is still missing
+        c["prescription"] = "RX-77"
+        self.call("/icp/press/ready", press("PP ICP Claim", "GEN-INS-S-1"), "ready")
+        self.assertEqual(c["status"], "Ready")
+        self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
+        self.shop.add("PP ICP Remittance", name="R", payer="GEN-INS",
+                      lines=[{"name": "l", "claim_ref": "GEN-INS-S-1", "paid": "0", "rejected": 1, "reason": "x"}])
+        self.call("/icp/press/remit", press("PP ICP Remittance", "R"), "remit")
+        self.call("/icp/press/ready", press("PP ICP Claim", "GEN-INS-S-1"), "ready")
+        self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
+        self.assertEqual((c["status"], c["resubmissions"]), ("Resubmitted", 1))
+
+    def test_only_a_short_paid_claim_is_settled_as_it_stands(self):
+        self.booked("S-1")
+        self.build()
+        self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
+        out = self.call("/icp/press/settle", press("PP ICP Claim", "GEN-INS-S-1"), "settle")[1]
+        self.assertEqual(out["message"]["level"], "warning")                  # sent, not short-paid: never closed
+        self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-S-1")["status"], "Submitted")
+        self.shop.add("PP ICP Remittance", name="R", payer="GEN-INS",
+                      lines=[{"name": "l", "claim_ref": "GEN-INS-S-1", "paid": "200"}])
+        self.call("/icp/press/remit", press("PP ICP Remittance", "R"), "remit")
+        self.call("/icp/press/settle", press("PP ICP Claim", "GEN-INS-S-1"), "settle")
+        self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-S-1")["status"], "Paid")
 
     def test_a_sale_with_no_payer_leg_or_another_payers_is_not_ours(self):
         self.shop.book("CASH-1", [], payer_claim_ref=None, payer_code=None)

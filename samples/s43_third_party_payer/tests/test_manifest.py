@@ -31,9 +31,9 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(validate.validate(MANIFEST), [])
         self.assertEqual(validate.warnings(MANIFEST), [])
 
-    def test_now_three_desk_buttons_and_the_door_s_two_later(self):
+    def test_now_five_desk_buttons_and_the_door_s_two_later(self):
         self.assertEqual({s["key"]: s["point"] for s in MANIFEST["extension_subscriptions"]},
-                         {"claims": "desk_action", "file": "desk_action", "remit": "desk_action"})
+                         {k: "desk_action" for k in ("claims", "file", "remit", "ready", "settle")})
         self.assertEqual({s["key"]: s["point"] for s in LATER["extension_subscriptions"]},
                          {"payer": "payer", "billback": "desk_action"})
         self.assertEqual(sorted(app.NOW), sorted(s["key"] for s in MANIFEST["extension_subscriptions"]))
@@ -53,6 +53,11 @@ class ManifestTest(unittest.TestCase):
         for p in DT[f"{P} Claim"]["permissions"]:
             self.assertFalse(p["delete"], p["role"])
         self.assertTrue(next(p for p in DT[f"{P} Claim"]["permissions"] if p["role"] == f"{P} Integration")["create"])
+
+    def test_a_claims_status_is_never_typed(self):
+        status = next(f for f in DT[f"{P} Claim"]["fields"] if f["fieldname"] == "status")
+        self.assertEqual(status.get("read_only"), 1)
+        self.assertEqual(LATER["extension_subscriptions"][0]["settings"]["bill_back_role"], f"{P} Integration")
 
     def test_a_claims_name_is_its_reference_so_a_second_insert_is_refused(self):
         self.assertEqual(DT[f"{P} Claim"]["autoname"], "field:claim_ref")

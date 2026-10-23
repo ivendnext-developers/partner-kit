@@ -9,7 +9,9 @@
  "allowed_urls": [
   "https://host.docker.internal:8142/icp/press/claims",
   "https://host.docker.internal:8142/icp/press/file",
-  "https://host.docker.internal:8142/icp/press/remit"
+  "https://host.docker.internal:8142/icp/press/remit",
+  "https://host.docker.internal:8142/icp/press/ready",
+  "https://host.docker.internal:8142/icp/press/settle"
  ],
  "doctypes": [
   {
@@ -727,7 +729,9 @@
      "options": "Ready\nIncomplete\nSubmitted\nAccepted\nRejected\nResubmitted\nPaid\nShort paid\nBilled to patient\nReturned",
      "default": "Ready",
      "in_list_view": 1,
-     "in_standard_filter": 1
+     "in_standard_filter": 1,
+     "read_only": 1,
+     "description": "Moved by the claims file, a remittance's Match and the buttons Mark ready and Settle as it stands, never typed."
     },
     {
      "fieldname": "payer",
@@ -871,6 +875,12 @@
      "label": "Payer's share",
      "read_only": 1,
      "in_list_view": 1
+    },
+    {
+     "fieldname": "patient_share",
+     "fieldtype": "Currency",
+     "label": "Customer's share",
+     "read_only": 1
     },
     {
      "fieldname": "received",
@@ -1123,6 +1133,20 @@
    "label": "Match a remittance",
    "endpoint_url": "https://host.docker.internal:8142/icp/press/remit",
    "timeout_seconds": 10
+  },
+  {
+   "key": "ready",
+   "point": "desk_action",
+   "label": "Mark ready",
+   "endpoint_url": "https://host.docker.internal:8142/icp/press/ready",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "settle",
+   "point": "desk_action",
+   "label": "Settle as it stands",
+   "endpoint_url": "https://host.docker.internal:8142/icp/press/settle",
+   "timeout_seconds": 10
   }
  ],
  "desk_actions": [
@@ -1164,6 +1188,32 @@
    "on_submitted": 0,
    "send_fields": "name",
    "confirm_text": "Match each line with its claim?"
+  },
+  {
+   "record_type": "PP ICP Claim",
+   "label": "Mark ready",
+   "placement": "form",
+   "service": "ready",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Mark this claim ready for the next claims file? It is refused while anything its payer needs is missing."
+  },
+  {
+   "record_type": "PP ICP Claim",
+   "label": "Settle as it stands",
+   "placement": "form",
+   "service": "settle",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Close this short-paid claim as paid? The shortfall stays on the payer's account for your accountant."
   }
  ],
  "reports": [
@@ -1178,6 +1228,7 @@
     "customer",
     "sale_date",
     "total",
+    "patient_share",
     "payer_share",
     "received",
     "billed_back"

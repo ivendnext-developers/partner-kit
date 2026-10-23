@@ -86,7 +86,8 @@ def build_claim(sale: dict, payer: dict, member: dict) -> dict:
         "policy_number": member.get("policy_number"), "prescription": sale.get("prescription"),
         "prescriber": sale.get("prescriber"), "prescriber_licence": sale.get("prescriber_licence"),
         "lines": lines, "total": str(sum((D(l["amount"]) for l in lines), ZERO)),
-        "payer_share": str(sum((D(l["payer_share"]) for l in lines), ZERO)), "received": "0", "billed_back": "0",
+        "payer_share": str(sum((D(l["payer_share"]) for l in lines), ZERO)),
+        "patient_share": str(sum((D(l.get("patient_share")) for l in lines), ZERO)), "received": "0", "billed_back": "0",
     }
     missing = what_is_missing(claim, payer)
     claim["status"] = INCOMPLETE if missing else READY

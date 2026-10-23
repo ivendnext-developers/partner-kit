@@ -9,6 +9,8 @@ for the claims clerk (standard library only).
     POST /icp/press/file       Desk button *Make the claims file* on a Payer (``desk_action/1``): every Ready claim of
                                that payer into one Claim Batch (a CSV), each then Submitted (Resubmitted if corrected)
     POST /icp/press/remit      Desk button *Match* on a Remittance (``desk_action/1``): each line against its claim
+    POST /icp/press/ready      Desk button *Mark ready* on a Claim: Ready once complete (a corrected rejection goes again)
+    POST /icp/press/settle     Desk button *Settle as it stands* on a short-paid Claim: Paid, the shortfall left
     POST /icp/press/billback   Desk button *Bill to the customer* on a rejected or short-paid Claim (``desk_action/1``):
                                the payer door's ``payer_bill_back`` moves what the payer did not pay back to the
                                customer (PB-8 spec §5.2; ⏳ the button installs with the door, door_declaration.json)
@@ -23,7 +25,7 @@ integration key. ⚠ Members and claims are health data for a pharmacy: run it i
 Each route is checked with ITS OWN secret, the one the install made for that subscription (``<app>:sub:<key>``).
 
 ONE SHOP (env or an env file):
-    IVN_SECRET_<KEY>   each subscription's secret, for the keys CLAIMS, FILE, REMIT (and PAYER, BILLBACK once the
+    IVN_SECRET_<KEY>   each subscription's secret, for the keys CLAIMS, FILE, REMIT, READY, SETTLE (and PAYER, BILLBACK once the
                        payer door is in the POS app: a route without its secret refuses every call)
     IVN_SHOP_URL       the shop's address · IVN_SHOP_KEY  the app's integration user's key, "<api key>:<api secret>"
 MANY SHOPS: IVN_LIBRARY_APP (ivendnext_icp) with IVN_SHOPS_TABLE or IVN_SHOPS_FILE (tools/app_template/service/shops.py)
@@ -73,8 +75,10 @@ ROUTES = {"/icp/payer": ("payer", "payer"),
           "/icp/press/claims": ("claims", "desk_action"),
           "/icp/press/file": ("file", "desk_action"),
           "/icp/press/remit": ("remit", "desk_action"),
+          "/icp/press/ready": ("ready", "desk_action"),
+          "/icp/press/settle": ("settle", "desk_action"),
           "/icp/press/billback": ("billback", "desk_action")}
-NOW = ("claims", "file", "remit")       # the subscriptions this version installs; payer and billback wait for the door
+NOW = ("claims", "file", "remit", "ready", "settle")       # the subscriptions this version installs; payer and billback wait for the door
 DOOR_METHOD = "/api/method/ivendnext_mpos.api.v1.payer_bill_back"
 # What the payer door stores on a sale (PB-8 spec §5.1, working names: the door's builder may rename them, and only this
 # table changes). A payer service reads them through the event feed.
@@ -246,6 +250,7 @@ class Service:
         if len({l.get("line_id") for l in lines}) != len(lines):
             raise ValueError("each line has its own line_id")
         req = {"sale_ref": body.get("sale_ref"), "customer": customer, "date": body.get("date") or self.today(),
+               "currency": body.get("currency"),
                "precision": int(body.get("precision", 2)), "lines": lines}
         member = self._one(shop, self.dt("Member"), body.get("member"))
         if member and member.get("customer") != customer:
@@ -255,6 +260,8 @@ class Service:
         if plan:
             form = self._one(shop, self.dt("Formulary"), plan.get("formulary"))
             plan = dict(plan, formulary=(form or {}).get("rows") or [])
+            if plan.get("price_list"):
+                plan["currency"] = (self._one(shop, "Price List", plan["price_list"]) or {}).get("currency")
             codes = sorted({str(l.get("item_code")) for l in lines if l.get("item_code")})
             missing_groups = [c for c in codes if not any(l.get("item_code") == c and l.get("item_group")
                                                           for l in lines)]
@@ -268,9 +275,12 @@ class Service:
 
     def list_prices(self, shop, plan, lines, today, customer) -> dict:
         """{line_id: that line's price on the plan's list today, or None}: read from the list itself, never from the
-        line. A row counts for a line only as the engine applies it: in force today, in no other unit, for no other
-        customer, and for no batch (a batch's own price is not the list's)."""
+        line. A row counts for a line only as the engine applies it: in force today, for no other customer, for no
+        batch (a batch's own price is not the list's), and in the line's unit, or else in the item's stock unit times
+        the line's conversion factor, or in no unit."""
         codes = sorted({str(l.get("item_code")) for l in lines if l.get("item_code")})
+        stock = {r["name"]: r.get("stock_uom") for r in self._list(shop, "Item", ["name", "stock_uom"],
+                                                                     [["name", "in", codes]])}
         rows = self._list(shop, "Item Price", ["item_code", "uom", "customer", "batch_no", "price_list_rate",
                                                "valid_from", "valid_upto"],
                           [["price_list", "=", plan["price_list"]], ["item_code", "in", codes]])
@@ -281,12 +291,18 @@ class Service:
                 if r["item_code"] != l.get("item_code") or r.get("batch_no") or \
                         (r.get("customer") and r["customer"] != customer) or \
                         (r.get("valid_from") and r["valid_from"] > today) or \
-                        (r.get("valid_upto") and r["valid_upto"] < today) or \
-                        (r.get("uom") and l.get("uom") and r["uom"] != l["uom"]):
+                        (r.get("valid_upto") and r["valid_upto"] < today):
                     continue
-                if best is None or (r.get("uom") and r["uom"] == l.get("uom")):
-                    best = r.get("price_list_rate") or 0
-            out[l.get("line_id")] = best
+                rate = C.D(r.get("price_list_rate"))
+                if not r.get("uom") or not l.get("uom") or r["uom"] == l["uom"]:
+                    rank = 2 if r.get("uom") and r["uom"] == l.get("uom") else 0
+                elif r["uom"] == stock.get(l.get("item_code")):
+                    rank, rate = 1, rate * (C.D(l.get("conversion_factor")) or C.Decimal(1))
+                else:
+                    continue                                 # another unit, neither the line's nor the stock unit
+                if best is None or rank > best[0]:
+                    best = (rank, rate)
+            out[l.get("line_id")] = None if best is None else best[1]
         return out
 
     # ── claims from booked sales (the event feed) ────────────────────────────
@@ -298,7 +314,7 @@ class Service:
         if doctype == "Sales Invoice" and (doc.get("is_consolidated") or any(
                 it.get("pos_invoice") for it in doc.get("items") or [])):
             return None         # the till sale's own posting: its claim is the POS sale's, made from that record
-        lines = [{"line_id": it.get("name"), "item_code": it.get("item_code"), "gtin": it.get("barcode") or None,
+        lines = [{"line_id": it.get("name"), "item_code": it.get("item_code"), "gtin": it.get("payer_gtin") or it.get("barcode") or None,
                   "qty": it.get(DOOR["line_qty"]) or it.get("stock_qty") or it.get("qty"), "uom": it.get("uom"),
                   "amount": str(C.D(it.get(DOOR["line_payer"])) + C.D(it.get(DOOR["line_patient"]))),
                   "payer_share": it.get(DOOR["line_payer"]), "patient_share": it.get(DOOR["line_patient"]),
@@ -430,6 +446,24 @@ class Service:
             "status": "Matched" if not unknown else "Partly matched", "lines": K.rows(rows)})
         return {"text": f"{len(rows) - unknown} of {len(rows)} lines matched."}
 
+    def move_claim(self, shop, claim_name, to) -> dict:
+        """The clerk's two moves (a claim's status is never typed): Ready once complete (a rejected one corrected goes
+        again as Resubmitted), or a short-paid claim settled as it stands."""
+        c = self._one(shop, self.dt("Claim"), claim_name)
+        if not c:
+            raise ValueError("no such claim")
+        if to == K.PAID and c["status"] != K.SHORT:
+            return {"text": "Only a short-paid claim is settled as it stands.", "level": "warning"}
+        payer = self._one(shop, self.dt("Payer"), c.get("payer")) or {}
+        try:
+            K.move(c, to, payer=payer)
+        except ValueError as e:
+            return {"text": str(e), "level": "warning"}
+        self.api.update(shop["url"], shop["key"], self.dt("Claim"), c["name"],
+                        {k: c.get(k) for k in ("status", "resubmissions", "incomplete_reason")} |
+                        ({"incomplete_reason": ""} if to == K.READY else {}))
+        return {"text": f"{c['name']} is {c['status']}."}
+
     def bill_back(self, shop, claim_name) -> dict:
         """What the payer did not pay, owed by the customer again (FR-K4-05): the door books it, then the claim says so."""
         c = self._one(shop, self.dt("Claim"), claim_name)
@@ -487,6 +521,9 @@ class Service:
                 return 200, _message(self.build_claims(shop)["text"])
             if route_key == "file":
                 return 200, _message(self.make_file(shop, name)["text"])
+            if route_key in ("ready", "settle"):
+                out = self.move_claim(shop, name, K.READY if route_key == "ready" else K.PAID)
+                return 200, _message(out["text"], out.get("level", "info"))
             if route_key == "billback":
                 out = self.bill_back(shop, name)
                 return 200, _message(out["text"], out.get("level", "info"))

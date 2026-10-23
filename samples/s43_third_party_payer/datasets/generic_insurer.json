@@ -3,8 +3,8 @@
  "title": "Generic insurer",
  "notice": "A sample payer, not a real insurer: its plans show the co-pay rules of an iVend Retail pharmacy add-on and a pharmacy's insurer price-list rule. A partner replaces it with each real payer's terms, and adds the payer's own claim link.",
  "sources": [
-  "An iVend Retail pharmacy add-on (Egypt): co-pay %, invoice upper limit, maximum patient amount, extra-item pay, discount before or after the limit, no partial refunds, a customer barred from insurance sales",
-  "A pharmacy's insurer price-list rule (Kenya, a third party's add-on, observed): only items on the insurer's price list, none at zero"
+  "An iVend Retail pharmacy add-on: co-pay %, invoice upper limit, maximum patient amount, extra-item pay, discount before or after the limit, no partial refunds, a customer barred from insurance sales",
+  "A pharmacy's insurer price-list rule (a third party's add-on, observed): only items on the insurer's price list, none at zero"
  ],
  "payer": {
   "code": "GEN-INS",
