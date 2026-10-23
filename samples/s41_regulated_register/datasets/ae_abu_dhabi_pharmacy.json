@@ -5,9 +5,9 @@
   "jurisdiction": "AE-AZ",
   "vertical": "pharmacy",
   "certified": 0,
-  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. Abu Dhabi only: the columns are the data DOH's Standard s. 3.6 lists, in its order; the pages of the books PH 17 and PH 20 were not seen, so print into them following the book's own page and line numbers. The patient identifier of s. 7.2.1 is not printed yet. PH 18, the wards' book, is not a pharmacy's. Narcotic prescriptions go through the unified platform (s. 3.9); this set does not talk to it. Dubai's register book is not in this set.",
+  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. Abu Dhabi only: the columns are the data DOH's Standard s. 3.6 lists, in its order; the pages of the books PH 17 and PH 20 were not seen, so print into them following the book's own page and line numbers. The patient identifier s. 7.2.1 asks for is read from the customer's record (the counter-rules app's national or residence ID): the Standard does not say which identifier, so change its source if DOH names another; it is the buyer's, so sell to the patient's own customer record. Section 4.6's consumption reports: PH 17's period is a month and PH 20's a quarter, from 1 January; the Standard names neither a start nor a due day, so this set takes 1 January and each reminder falls on the period's last day. The report itself is sent to DOH by e-mail and is not printed here. PH 18, the wards' book, is not a pharmacy's. Narcotic prescriptions go through the unified platform (s. 3.9); this set does not talk to it. Dubai's register book is not in this set.",
   "sources": [
-    "Department of Health Abu Dhabi, Standard for the Management of Narcotics, Psychotropic and Semi-Controlled Medicinal Products, DOH/HLME/DMP/1.0/2021 (June 2021): ss. 3.6, 3.6.1, 3.6.3, 7.1-7.5, 7.7"
+    "Department of Health Abu Dhabi, Standard for the Management of Narcotics, Psychotropic and Semi-Controlled Medicinal Products, DOH/HLME/DMP/1.0/2021 (June 2021): ss. 3.6, 3.6.1, 3.6.3, 4.6, 7.1-7.5, 7.7"
   ],
   "details": {
     "dose": {
@@ -15,6 +15,15 @@
       "type": "Data",
       "pos_sale_detail": "PP RXC Directions",
       "desk_field": "pp_rxc_directions"
+    },
+    "patient_id": {
+      "label": "Patient identifier",
+      "type": "Data",
+      "record": {
+        "doctype": "Customer",
+        "match": "customer",
+        "field": "pp_rxc_id_number"
+      }
     }
   },
   "authority": {
@@ -39,7 +48,7 @@
       "id": "ph_20",
       "title": "PH 20 Narcotic register",
       "form": "PH 20",
-      "cite": "DOH Standard DOH/HLME/DMP/1.0/2021 s. 3.6.3: narcotic purchasing and dispensing in stores and pharmacies; s. 3.6 (its data); errors re-entered on the following line, s. 7.3; kept 5 years after the last entry, s. 7.4",
+      "cite": "DOH Standard DOH/HLME/DMP/1.0/2021 s. 3.6.3: narcotic purchasing and dispensing in stores and pharmacies; s. 3.6 (its data); errors re-entered on the following line, s. 7.3; kept 5 years after the last entry, s. 7.4; narcotic consumption reported quarterly, s. 4.6",
       "classes": [
         "AE Narcotic"
       ],
@@ -55,6 +64,8 @@
       "balance": 1,
       "correction": "reversing_line",
       "retention_years": 5,
+      "period_months": 3,
+      "return_due_days": 0,
       "medium": "official_book",
       "medium_note": "Issued by DOH against a fee (DOH Standard s. 3.6): print into it. Each entry contemporaneous and in date order (s. 7.2); the register's stock must match the physical stock (s. 7.5).",
       "required": [],
@@ -113,6 +124,13 @@
           "value": [
             "counterparty",
             "counterparty_address"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Patient identifier (s. 7.2.1)",
+          "value": [
+            "detail:patient_id"
           ],
           "when": "Out"
         },
@@ -150,7 +168,7 @@
       "id": "ph_17",
       "title": "PH 17 Psychotropic register",
       "form": "PH 17",
-      "cite": "DOH Standard DOH/HLME/DMP/1.0/2021 s. 3.6.1: SCD and CD transactions within pharmacy and drug stores; s. 3.6 (its data); errors re-entered on the following line, s. 7.3; kept 5 years after the last entry, s. 7.4",
+      "cite": "DOH Standard DOH/HLME/DMP/1.0/2021 s. 3.6.1: SCD and CD transactions within pharmacy and drug stores; s. 3.6 (its data); errors re-entered on the following line, s. 7.3; kept 5 years after the last entry, s. 7.4; psychotropic and semi-controlled consumption reported monthly, s. 4.6",
       "classes": [
         "AE Psychotropic",
         "AE Semi-controlled"
@@ -167,6 +185,8 @@
       "balance": 1,
       "correction": "reversing_line",
       "retention_years": 5,
+      "period_months": 1,
+      "return_due_days": 0,
       "medium": "official_book",
       "medium_note": "Issued by DOH against a fee (DOH Standard s. 3.6): print into it. Each entry contemporaneous and in date order (s. 7.2); the register's stock must match the physical stock (s. 7.5).",
       "required": [],
@@ -225,6 +245,13 @@
           "value": [
             "counterparty",
             "counterparty_address"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Patient identifier (s. 7.2.1)",
+          "value": [
+            "detail:patient_id"
           ],
           "when": "Out"
         },

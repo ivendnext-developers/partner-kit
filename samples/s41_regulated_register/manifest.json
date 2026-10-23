@@ -3,7 +3,7 @@
  "app": "pp_rsr",
  "prefix": "PP RSR",
  "title": "Regulated stock register",
- "version": "0.1.2",
+ "version": "0.1.3",
  "publisher": "Partner Programme sample",
  "description": "A legal register for regulated stock (controlled medicine, liquor, tobacco, duty-free), its books declared per market as data. This version adds the register's own columns to the Desk sale and delivery and to the till's sale details, the approver role and the register's workspace. The books themselves are written by the register door in the POS app, once it is there.",
  "custom_fields": [

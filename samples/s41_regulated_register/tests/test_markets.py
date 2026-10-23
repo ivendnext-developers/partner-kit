@@ -11,7 +11,7 @@ import re
 import unittest
 from pathlib import Path
 
-from test_rsr import NEED_JINJA, cells, line, period, render  # first: it puts the sample on the path
+from test_rsr import KE, NEED_JINJA, cells, line, period, render  # first: it puts the sample on the path
 
 import build  # noqa: E402
 import routing  # noqa: E402
@@ -68,6 +68,14 @@ class EveryMarket(unittest.TestCase):
         self.assertEqual({got["ae_abu_dhabi_pharmacy.ph_17"], got["ae_abu_dhabi_pharmacy.ph_20"]}, {5})  # DOH s. 7.4
         self.assertEqual(got["sa_pharmacy.drug_register"], 10)  # Art. 22(6)
         self.assertEqual(got["eg_pharmacy.received_dispensed"], 10)  # Law 182/1960 Art. 31
+
+    def test_a_period_and_its_return_only_where_the_law_names_one(self):
+        got = {f"{ds['id']}.{b['id']}": (b.get("period_months"), b.get("return_due_days"))
+               for ds in MARKETS + (KE,) for b in ds["books"] if "period_months" in b or "return_due_days" in b}
+        self.assertEqual(got, {"ae_abu_dhabi_pharmacy.ph_17": (1, 0),  # DOH s. 4.6: monthly; no due day stated
+                               "ae_abu_dhabi_pharmacy.ph_20": (3, 0),  # quarterly for narcotics
+                               "sa_pharmacy.drug_register": (6, 0),  # Art. 16(2): every six months; no day stated
+                               "eg_pharmacy.received_dispensed": (6, 15)})  # Art. 23: first 15 days of January and July
 
     def test_no_market_adds_a_till_detail_of_its_own(self):
         # every own column of a data set is a Desk field and a till detail in every shop: the markets after Kenya add
@@ -312,8 +320,8 @@ HEADS = {
                               "Product, strength and formulation (brand and generic name, s. 7.7)", "Dose", "Quantity",
                               "Balance", "Name and license number of the prescribing physician",
                               "Name and license number of the dispensing pharmacist", "Patient's name and address",
-                              "Date issued", "Source of the medicine", "Receiving date",
-                              "Invoice reference number"],  # s. 3.6
+                              "Patient identifier (s. 7.2.1)", "Date issued", "Source of the medicine", "Receiving date",
+                              "Invoice reference number"],  # s. 3.6, and s. 7.2.1's patient identifier
     "gh_pharmacy.dangerous_drugs_record": [
         "Name and quantity of the drug supplied",
         "Name, address, and signature or thumbprint of the person to whom it is supplied",
@@ -458,13 +466,14 @@ class FieldListLayouts(unittest.TestCase):
         b = "ae_abu_dhabi_pharmacy.ph_20"
         out, _ = render(AE, "ph_20", period(b), [
             row(book=b, item_class="AE Narcotic", authority_no="RX-3", authority_issuer="Dr. Ali",
-                authority_issuer_licence="DOH-1", dispenser_licence="PH-9", detail_1="1 tablet twice daily", balance=30),
+                authority_issuer_licence="DOH-1", dispenser_licence="PH-9", detail_1="1 tablet twice daily",
+                detail_2="784-1980-1234567-1", balance=30),
             line(2, book=b, item_class="AE Narcotic", direction="In", kind="Receipt", counterparty="Supplier LLC",
                  reference_no="INV-2", balance=40)])
         self.assertEqual(cells(out)[0], ["1", "RX-3", "Tramadol 50 mg capsules", "1 tablet twice daily", "10 · Nos", "30",
                                          "Dr. Ali · DOH-1", "P. Pharmacist · PH-9", "A. Buyer · 1 Moi Avenue, Nairobi",
-                                         "2026-10-20", "", "", ""])
-        self.assertEqual(cells(out)[1], ["2", "", "Tramadol 50 mg capsules", "", "10 · Nos", "40", "", "", "", "",
+                                         "784-1980-1234567-1", "2026-10-20", "", "", ""])
+        self.assertEqual(cells(out)[1], ["2", "", "Tramadol 50 mg capsules", "", "10 · Nos", "40", "", "", "", "", "",
                                          "Supplier LLC", "2026-10-20", "INV-2"])
 
     def test_ghana_prints_section_34s_four_particulars_with_two_signatures(self):
@@ -477,7 +486,7 @@ class FieldListLayouts(unittest.TestCase):
     def test_saudi_prints_batch_and_expiry_on_a_receipt_and_the_patient_on_a_dispensing(self):
         b = "sa_pharmacy.drug_register"
         common = dict(book=b, item="PHD-MORPH-10", item_name="Morphine sulfate injection 10 mg/ml 1 ml",
-                      item_class="SA Narcotic", detail_1="45", detail_2="1012345678", detail_3="MRN-9")  # once sourced
+                      item_class="SA Narcotic", detail_1="45", detail_2="1012345678", detail_3="MRN-9")  # the ID from the customer
         lines = [row(**common, direction="In", kind="Receipt", qty=20, balance=20, batch_no="B-77",
                      expiry_date="2027-06-30", counterparty="NUPCO"),
                  line(2, **common, qty=1, balance=19, batch_no="B-77", authority_no="RX-11", authority_issuer="Dr. Saad",

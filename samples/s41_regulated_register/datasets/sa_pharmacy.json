@@ -5,7 +5,7 @@
   "jurisdiction": "SA",
   "vertical": "pharmacy",
   "certified": 0,
-  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. Art. 22(3) lists the register's data, lettered; each column is headed by its letter. Item (a), the drug's scientific name, form, strength and size, heads each page: put them in the item's name. Item (b), the previous balance, is the balance on the line above. The patient's age, ID number and medical file print empty until the register reads them from the customer: write them in. Item (g) is for warehouses only. The yearly close (Art. 22(5)) and the six-monthly statement (Art. 16) are not set up yet, nor the pharmacy's prescriptions register (Art. 21(2), kept 5 years), which lists no fields.",
+  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. Art. 22(3) lists the register's data, lettered; each column is headed by its letter. Item (a), the drug's scientific name, form, strength and size, heads each page: put them in the item's name. Item (b), the previous balance, is the balance on the line above. The ID number is read from the customer's record (the counter-rules app's national or residence ID): the buyer's, so sell to the patient's own customer record; the patient's age and medical file print empty: write them in. Item (g) is for warehouses only. The book's period is six months, from 1 January and 1 July, for the statement of Art. 16(2), whose data are this register's own; Art. 16 names neither a start nor a due day, so the reminder falls on the period's last day. The statement's signatures and seal (Art. 16(1)) and the yearly close (Art. 22(5)) are not printed: sign and seal the printed pages. The pharmacy's prescriptions register (Art. 21(2), kept 5 years) lists no fields and is not set up.",
   "sources": [
     "Executive Regulation of the Narcotics and Psychotropic Substances Control Law, Council of Ministers Resolution 201 of 10/6/1431H: Arts. 16, 21, 22 (Bureau of Experts text, as archived 2026-02-09)"
   ],
@@ -16,7 +16,12 @@
     },
     "patient_id": {
       "label": "رقم الهوية",
-      "type": "Data"
+      "type": "Data",
+      "record": {
+        "doctype": "Customer",
+        "match": "customer",
+        "field": "pp_rxc_id_number"
+      }
     },
     "medical_file_no": {
       "label": "الملف الطبي",
@@ -45,7 +50,7 @@
       "id": "drug_register",
       "title": "Narcotics and psychotropics register",
       "form": "سجل خاص لكل دواء يحتوي على مادة مخدرة أو مؤثر عقلي (المادة 22)",
-      "cite": "Executive Regulation Art. 22(1): a register for each drug; (2) pages serially numbered; (3) its data; (4) indelible ink, an amendment signed; (6) kept 10 years",
+      "cite": "Executive Regulation Art. 22(1): a register for each drug; (2) pages serially numbered; (3) its data; (4) indelible ink, an amendment signed; (6) kept 10 years; its data stated every six months, Art. 16(2)",
       "classes": [
         "SA Narcotic",
         "SA Psychotropic"
@@ -63,6 +68,8 @@
       "per_item_pages": 1,
       "correction": "signed_amendment",
       "retention_years": 10,
+      "period_months": 6,
+      "return_due_days": 0,
       "medium": "printed_book",
       "medium_note": "Written in indelible ink (Art. 22(4)); SFDA verifies any technology for recording receipts (Art. 22(8)): until it has, keep this book's printed pages, signed, as the book.",
       "required": [],

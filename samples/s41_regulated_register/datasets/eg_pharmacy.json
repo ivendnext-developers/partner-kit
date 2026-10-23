@@ -5,7 +5,7 @@
   "jurisdiction": "EG",
   "vertical": "pharmacy",
   "certified": 0,
-  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. Read from Law 182/1960 as first published (Official Gazette No. 131, 13 June 1960): six later amending laws were not traced, so confirm Art. 18 against the current text before printing into the book. The law sets no way to correct an entry: this set takes the strictest, a reversing line. The patient's age and the prescriptions-book entry number print empty until the register reads them: write them in. Art. 18 asks for the quantity of narcotic a dispensed medicine contains; the book prints the quantity dispensed in the item's unit, so put the narcotic content in the item's name. The six-monthly statement (Art. 23) is not set up yet, nor the prescriptions book (Arts. 17, 18(c)), for which the law lists no fields.",
+  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. Read from Law 182/1960 as first published (Official Gazette No. 131, 13 June 1960): six later amending laws were not traced, so confirm Art. 18 against the current text before printing into the book. The law sets no way to correct an entry: this set takes the strictest, a reversing line. The patient's age and the prescriptions-book entry number print empty: write them in. Art. 18 asks for the quantity of narcotic a dispensed medicine contains; the book prints the quantity dispensed in the item's unit, so put the narcotic content in the item's name. The book's period is six months, January to June and July to December, and its reminder is for the statement Art. 23 asks for in the first fifteen days of January and July (the 1960 text); the statement's form is the authority's and is not printed. The prescriptions book (Arts. 17, 18(c)), for which the law lists no fields, is not set up.",
   "sources": [
     "Law No. 182 of 1960 on narcotics, Official Gazette No. 131, 13 June 1960: Arts. 17, 18, 23, 31 (gazette pp. 964-966, the scan on edaegypt.gov.eg)"
   ],
@@ -46,7 +46,7 @@
       "id": "received_dispensed",
       "title": "Narcotics received and dispensed book",
       "form": "دفتر خاص للوارد والمصروف (المادة ١٨)",
-      "cite": "Law 182/1960 Art. 18: entered on the day received and on the day dispensed, in a book whose pages are numbered and sealed by the authority; kept 10 years from the last entry, Art. 31",
+      "cite": "Law 182/1960 Art. 18: entered on the day received and on the day dispensed, in a book whose pages are numbered and sealed by the authority; kept 10 years from the last entry, Art. 31; a statement of the six months, sent in the first 15 days of January and July, Art. 23",
       "classes": [
         "EG Schedule 1"
       ],
@@ -62,6 +62,8 @@
       "balance": 0,
       "correction": "reversing_line",
       "retention_years": 10,
+      "period_months": 6,
+      "return_due_days": 15,
       "medium": "official_book",
       "medium_note": "Pages numbered and sealed by the competent authority (Art. 18): print into that book, in clear letters, following its own page numbers.",
       "required": [],
