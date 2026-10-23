@@ -213,6 +213,10 @@ class Calls(unittest.TestCase):
         with self.assertRaises(ValueError):
             bo.records_of({"point": "x"}, "Item")
 
+    def test_c3_a_long_body_is_cut(self):
+        out = bo.message("T", "x" * 400)
+        self.assertEqual((len(out["message"]["body"]), out["message"]["body"][-1]), (280, "…"))
+
     def test_c2_the_library_prefix(self):
         bo.use_prefix("IVENDNEXT RBO")
         try:

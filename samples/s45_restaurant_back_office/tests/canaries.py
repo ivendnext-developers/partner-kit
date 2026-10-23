@@ -39,7 +39,7 @@ CANARIES = [
      '                names = [r["name"] for r in body["context"]["records"]]',
      T + "test_p2_a_press_on_the_wrong_record_is_refused_before_anything_is_read"),
     # a sale issued once, stock never twice
-    ("the issue claims its sales before the stock entry", S, '            doc = door.create(bo.dt("Issue"), body)      # FIRST: it claims the sales\n',
+    ("the issue claims its sales before the stock entry", S, '                doc = door.create(bo.dt("Issue"), body)      # FIRST: it claims the sales\n',
      "", T + "test_i2_the_issue_is_written_before_the_stock_entry"),
     ("sales an issue names are never taken again", S, ' and x["name"] not in claimed and', " and",
      T + "test_i3_a_press_again_books_nothing_twice"),
@@ -76,7 +76,7 @@ CANARIES = [
      T + "test_i12_two_presses_stamping_at_once_one_loses"),
     ("the stamp is cleared", S, "            self._unlock(door, settings_name, mine)", "            pass",
      T + "test_i13_a_dead_presss_stamp_is_taken_over_and_every_stamp_is_cleared"),
-    ("a press stops in time", S, "            if self.clock() - t0 > BUDGET_S:\n                left = True\n                break\n", "",
+    ("a press stops in time", S, "                if self.clock() - t0 > BUDGET_S:\n                    left = True\n                    break\n", "",
      T + "test_i14_the_budget_leaves_the_rest_for_the_next_press"),
     # the recipe's arithmetic
     ("per unit the recipe makes", B, 'num(row.get("stock_qty")) / num(bom["quantity"])', 'num(row.get("stock_qty"))',
@@ -111,14 +111,14 @@ CANARIES = [
     ("a period of at most 92 days", S, "        if (b - a).days >= MOST_DAYS:", "        if False:",
      T + "test_f2_a_period_too_long_or_back_to_front_is_refused_in_words"),
     # allergens
-    ("allergens at every depth", B, "            out |= recipe_items(part, items, boms, depth + 1, seen + (bom_name,))", "            pass",
+    ("allergens at every depth", B, '            out |= recipe_items(part, items, boms, depth + 1, seen + (bom_name,), row.get("bom_no"))', "            pass",
      R + "Allergens.test_a3_a_dish_inside_a_dish_carries_its_allergens"),
     ("an allergen compared without case", B, '    have = {w.lower() for w in words_of(allergens.get(dish))}',
      '    have = set(words_of(allergens.get(dish)))', R + "Allergens.test_a1_a_dish_missing_an_allergen_of_its_recipe_at_any_depth"),
-    ("a word not on the list is named", S, "                if bad and code not in", "                if False and code not in",
-     T + "test_a1_allergens_missing_and_unknown_words_are_named_and_nothing_is_written"),
+    ("a word not on the list is named", S, "                if bad:\n", "                if False:\n",
+     T + "test_a1_every_finding_is_written_to_a_check_record_the_answer_opens"),
     ("a long body is cut", B, '    return text if len(text) <= most else text[: most - 1] + "…"', "    return text",
-     T + "test_a2_every_answer_holds_the_message_limits"),
+     R + "Calls.test_c3_a_long_body_is_cut"),
     # the library's copy and the shop's door
     ("the prefix names the record types and fields", B, '    PREFIX, FIELD = prefix, prefix.lower().replace(" ", "_")', "    PREFIX = prefix",
      M + "Prefix.test_the_record_types_and_fields_follow_the_prefix_and_the_manifest_names_them"),
@@ -133,6 +133,36 @@ CANARIES = [
     ("the function checks the signature too", S, "    code, out = svc.handle(method, path, headers, raw)\n",
      "    code, out = (200, {'ok': 1}) if path != '/health' else svc.handle(method, path, headers, raw)\n",
      M + "AsAFunction.test_health_a_signed_press_either_body_form_and_a_refusal"),
+    # the folds of the Tier-S review
+    ("a lost answer keeps the stamp", S, "            unknown = e.code is None or e.code >= 500", "            unknown = False",
+     T + "test_i10_a_press_that_stopped_after_its_stock_entry_books_nothing_twice"),
+    ("a lost answer on the issue keeps the stamp", S, "            if not unknown:\n                self._unlock(door, settings_name, mine)",
+     "            self._unlock(door, settings_name, mine)", T + "test_i10b_a_lost_answer_on_the_issue_itself_keeps_the_stamp_too"),
+    ("a recipe that goes round is not taken up", S, "                except bo.RecipeError as e:\n                    out[\"skipped\"].append(f\"{key[0]} {key[1]}: {e}\")\n                    continue",
+     "                except bo.RecipeError as e:\n                    need, notes = {}, [str(e)]",
+     T + "test_i16b_a_store_day_whose_recipe_goes_round_is_not_taken_up_until_it_is_fixed"),
+    ("a retry works the parts out again", S, '        door.update(bo.dt("Issue"), name, {"parts": parts, "issue_from": issue_from})\n        return self._book(door, company, dict(issue, parts=parts, issue_from=issue_from))',
+     '        return self._book(door, company, issue)', T + "test_i16c_a_refused_issue_is_tried_again_with_the_recipe_as_it_is_now"),
+    ("an issue left out is never tried again", S, '["status", "in", ["Short", "Refused"]]])', '["status", "in", ["Short", "Refused", "Left out"]]])',
+     T + "test_i16d_an_issue_left_out_is_never_tried_again"),
+    ("new sales before old retries", S, "        # 2. the sales no issue names yet\n",
+     "        for old in door.rows(bo.dt(\"Issue\"), [\"name\"], [[\"company\", \"=\", company], [\"status\", \"in\", [\"Short\", \"Refused\"]]]):\n"
+     "            if self.clock() - t0 > BUDGET_S:\n                return self._answer(out, left=True)\n"
+     "            out[self._retry(door, company, s, old[\"name\"], items, boms)] += 1\n        # 2. the sales no issue names yet\n",
+     T + "test_i16e_new_sales_come_before_old_retries"),
+    ("a stocked sauce's recipe is read for allergens", S, "        self._recipes(door, names, items, boms, deep=True)",
+     "        self._recipes(door, names, items, boms)", T + "test_a2_a_stocked_sauces_own_recipe_is_read_for_its_allergens"),
+    ("a variant's blank allergens are named", B, "    if tpl and not words_of(allergens.get(item)) and words_of(allergens.get(tpl)):",
+     "    if False:", T + "test_a3_a_variant_with_none_of_its_templates_allergens_is_named"),
+    ("the check opens its record", S, '            out["open_record"] = {"doctype": bo.dt("Allergen Check"), "name": doc.get("name")}', "            pass",
+     T + "test_a1_every_finding_is_written_to_a_check_record_the_answer_opens"),
+    ("no list is said", S, '        if not known:\n            rows.append(', '        if False:\n            rows.append(',
+     T + "test_a5_no_allergen_list_is_said_on_the_check"),
+    ("a Desk copy is the shop's own", S, '        ours = {r["name"] for r in issues if r["name"] in named\n',
+     '        ours = {r["name"] for r in issues if r.get(f"{bo.FIELD}_issue") or r["name"] in named\n',
+     T + "test_f1b_a_desk_copy_is_the_shops_own_and_an_entry_from_before_a_reinstall_is_the_apps"),
+    ("an entry from before a reinstall is the app's", S, '                or (not r.get(f"{bo.FIELD}_issue") and bo.ours_by_remarks(r.get("remarks")))}',
+     '                or False}', T + "test_f1b_a_desk_copy_is_the_shops_own_and_an_entry_from_before_a_reinstall_is_the_apps"),
 ]
 
 

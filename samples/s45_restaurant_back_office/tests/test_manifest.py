@@ -49,13 +49,26 @@ class ManifestTest(unittest.TestCase):
             readers = {p["role"] for p in self.dt[d["record_type"]]["permissions"] if p.get("read")}
             self.assertLessEqual(set(d["roles"]), readers, label)
 
-    def test_m4_only_the_apps_role_writes_issues_and_it_writes_nothing_else_of_its_own_but_the_stamp_and_lines(self):
+    def test_m4_only_the_apps_role_makes_issues_and_no_one_deletes_them(self):
         for p in self.dt["PP RBO Issue"]["permissions"]:
             if p["role"] != INT:
-                self.assertFalse(p.get("write") or p.get("create") or p.get("delete"), p["role"])
+                self.assertFalse(p.get("create") or p.get("delete"), p["role"])
+            self.assertFalse(p.get("delete"), p["role"])       # a deleted issue would let its sales be issued again
         self.assertEqual(self.rights("PP RBO Issue", INT), ["create", "read", "write"])
+        self.assertEqual(self.rights("PP RBO Issue", "Stock Manager"), ["print", "read", "report", "write"])   # Left out
         self.assertEqual(self.rights("PP RBO Settings", INT), ["read", "write"])     # the press stamp
         self.assertEqual(self.rights("PP RBO Food Cost", INT), ["read", "write"])
+        self.assertEqual(self.rights("PP RBO Allergen Check", INT), ["create", "read"])
+        self.assertIn("Left out", {f["fieldname"]: f for f in self.dt["PP RBO Issue"]["fields"]}["status"]["options"])
+
+    def test_m4b_money_in_the_companys_currency(self):
+        for dt in ("PP RBO Issue", "PP RBO Food Cost", "PP RBO Issue Line", "PP RBO Food Cost Line"):
+            for f in self.dt[dt]["fields"]:
+                if f["fieldtype"] == "Currency":
+                    self.assertEqual(f.get("options"), "currency", (dt, f["fieldname"]))
+        for dt in ("PP RBO Issue", "PP RBO Food Cost"):
+            cur = {f["fieldname"]: f for f in self.dt[dt]["fields"]}["currency"]
+            self.assertEqual(cur["fetch_from"], "company.default_currency")
 
     def test_m5_the_start_moment_is_required(self):
         f = {x["fieldname"]: x for x in self.dt["PP RBO Settings"]["fields"]}

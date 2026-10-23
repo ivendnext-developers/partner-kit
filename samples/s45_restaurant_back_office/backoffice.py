@@ -30,6 +30,8 @@ BODY_MAX = 256 * 1024
 MOST_RECORDS = 100          # the Desk action's own limit for a list press
 DEPTH = 5                   # recipes inside recipes: deeper than this is refused as a loop
 PLACES = 6                  # quantities are kept to six decimals; the shop rounds to its own precision when it books
+MOST_LATE = 31              # an issue booked at the press (the stock came in later) lands at most this many days after its
+                            # sales' day, for food cost's look back
 EU_14 = ["Celery", "Cereals containing gluten", "Crustaceans", "Eggs", "Fish", "Lupin", "Milk", "Molluscs", "Mustard",
          "Tree nuts", "Peanuts", "Sesame", "Soya", "Sulphites"]
 
@@ -156,19 +158,21 @@ def _open(item, bom_name, qty, items, boms, depth, seen):
     return out, notes
 
 
-def boms_to_read(codes, items: dict) -> list[str]:
-    """The recipes the dishes name directly (the service reads deeper ones as it meets them)."""
+def boms_to_read(codes, items: dict, deep: bool = False) -> list[str]:
+    """The recipes the items name directly. For the stock issue only an item that is not stocked is opened (a stocked
+    sauce is issued as the sauce); ``deep`` (the allergen check) opens a stocked one's recipe too, because its
+    ingredients' allergens are in the dish."""
     return sorted({(items.get(c) or {}).get("default_bom") for c in codes
-                   if not (items.get(c) or {}).get("is_stock_item") and (items.get(c) or {}).get("default_bom")})
+                   if (deep or not (items.get(c) or {}).get("is_stock_item")) and (items.get(c) or {}).get("default_bom")})
 
 
-def bom_rows_to_read(boms: dict, items: dict) -> list[str]:
-    """Recipes named inside the recipes read so far and not read yet."""
+def bom_rows_to_read(boms: dict, items: dict, deep: bool = False) -> list[str]:
+    """Recipes named inside the recipes read so far and not read yet (a row's own recipe first, else the part's)."""
     want = set()
     for b in boms.values():
         for row in b.get("items") or []:
             meta = items.get(row.get("item_code")) or {}
-            if meta and not meta.get("is_stock_item"):
+            if meta and (deep or not meta.get("is_stock_item")):
                 want.add(row.get("bom_no") or meta.get("default_bom"))
     return sorted(x for x in want if x and x not in boms)
 
@@ -272,6 +276,11 @@ def stock_entry(company: str, issue: dict, now: bool = False) -> dict:
             "items": rows, "docstatus": 1}
 
 
+def ours_by_remarks(remarks) -> bool:
+    """A Material Issue the app made, known by the remarks it wrote (``stock_entry``), when its link field is gone."""
+    return isinstance(remarks, str) and remarks.startswith(f"{PREFIX}: the ingredients of ")
+
+
 def short_of(parts: list[dict], on_hand: dict) -> list[tuple[str, float, float]]:
     """``[(part, needed, on hand)]`` for every part the store has less of than the issue needs."""
     out = []
@@ -358,7 +367,7 @@ def words_of(text) -> list[str]:
 
 def allergens_missing(dish: str, items: dict, boms: dict, allergens: dict) -> tuple[list[str], list[str]]:
     """``(allergens of the recipe's parts the dish does not name, the parts they come from)`` — over every part the
-    recipe reaches, stocked or not. ``allergens[code]`` is the item's own field."""
+    recipe reaches at every depth, a stocked sauce's own recipe included. ``allergens[code]`` is the item's own field."""
     have = {w.lower() for w in words_of(allergens.get(dish))}
     missing, sources = [], []
     for part in sorted(recipe_items(dish, items, boms)):
@@ -371,10 +380,10 @@ def allergens_missing(dish: str, items: dict, boms: dict, allergens: dict) -> tu
     return missing, sources
 
 
-def recipe_items(item: str, items: dict, boms: dict, depth: int = 0, seen: tuple = ()) -> set:
-    """Every item a recipe names, at every depth (a stocked sauce's own parts too, if it has a recipe)."""
-    meta = items.get(item) or {}
-    bom_name = meta.get("default_bom")
+def recipe_items(item: str, items: dict, boms: dict, depth: int = 0, seen: tuple = (), bom_name: str | None = None) -> set:
+    """Every item a recipe names, at every depth: a part's own recipe is the row's ``bom_no``, else the part's default
+    recipe, stocked or not (the service reads them with ``deep``)."""
+    bom_name = bom_name or (items.get(item) or {}).get("default_bom")
     if not bom_name or bom_name not in boms:
         return set()
     if bom_name in seen or depth >= DEPTH:
@@ -384,8 +393,18 @@ def recipe_items(item: str, items: dict, boms: dict, depth: int = 0, seen: tuple
         part = row.get("item_code")
         if part:
             out.add(part)
-            out |= recipe_items(part, items, boms, depth + 1, seen + (bom_name,))
+            out |= recipe_items(part, items, boms, depth + 1, seen + (bom_name,), row.get("bom_no"))
     return out
+
+
+def variant_gap(item: str, items: dict, allergens: dict) -> str | None:
+    """The template a variant left its allergens on: the till reads the item sold, and a field an app adds to Item
+    reaches a variant only if the shop's Item Variant Settings copy it."""
+    meta = items.get(item) or {}
+    tpl = meta.get("variant_of")
+    if tpl and not words_of(allergens.get(item)) and words_of(allergens.get(tpl)):
+        return tpl
+    return None
 
 
 def unknown_words(text, known: list[str]) -> list[str]:

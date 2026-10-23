@@ -19,6 +19,7 @@ Each dish is a plain item that is not stocked, with the shop's own recipe on it 
 ## Limits
 - The ingredients come off when someone presses the button (after the day's close, say), not at the moment of the sale.
 - When the store is short of a part, nothing of that store-day is taken off and the issue names every short part; the next press after a delivery or a count books it.
+- A sale older than the press's look-back (7 days by default) is never taken up.
 - An ingredient counted in whole units (a bun) takes whole quantities: a recipe that uses half of one is refused by the shop and named on the issue.
 
 ## Tell the customer

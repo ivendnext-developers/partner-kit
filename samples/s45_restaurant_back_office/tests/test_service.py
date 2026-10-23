@@ -140,6 +140,7 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(iss["status"], "Issued")
         self.assertNotIn("posting_date", se)               # the shop dates it at the moment it books it
         self.assertIn("came in", se["remarks"])
+        self.assertNotIn("LIST Bin", shop.calls)            # never marked Short on the way: booked in the same try
 
     def test_i9_a_short_issue_is_issued_by_a_later_press_once_the_delivery_is_in(self):
         shop = fs.FakeTenant(stock={"BUN": 1, "PATTY": 20, "MILK": 5, "BEANS": 1})
@@ -155,9 +156,30 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(code, 502)                         # the shop tells the user to check before trying again
         (iss,) = shop.issues.values()
         self.assertEqual(iss["status"], "Pending")
-        self.issue(shop)
+        self.assertTrue(shop.settings[fs.CO]["run_started"])     # the stamp stays: the shop may still be writing
+        self.assertEqual(self.issue(shop)[1]["message"]["body"], app.BUSY)
+        self.assertEqual(len(shop.entries), 1)
+        self.issue(shop, now=NOW + app.LOCK_S + 1)          # the stamp has lapsed: the entry is found by its link
         self.assertEqual((iss["status"], len(shop.entries)), ("Issued", 1))
         self.assertEqual(iss["stock_entry"], next(iter(shop.entries)))
+        self.assertEqual(shop.settings[fs.CO]["run_started"], "")
+
+    def test_i10b_a_lost_answer_on_the_issue_itself_keeps_the_stamp_too(self):
+        shop = fs.FakeTenant()
+        real = shop.create
+
+        def lost(doctype, b):
+            out = real(doctype, b)
+            if doctype.endswith(" Issue"):
+                raise app.TenantError("POST -> TimeoutError")
+            return out
+        shop.create = lost
+        self.assertEqual(self.issue(shop)[0], 502)
+        shop.create = real
+        self.assertEqual(self.issue(shop)[1]["message"]["body"], app.BUSY)
+        self.issue(shop, now=NOW + app.LOCK_S + 1)
+        self.assertEqual(len(shop.issues), 1)               # the sales were claimed once
+        self.assertEqual(len(shop.entries), 1)
 
     def test_i11_another_press_running_touches_nothing(self):
         stamp = datetime.datetime.fromtimestamp(NOW - 20, datetime.timezone.utc).isoformat(timespec="seconds")
@@ -205,6 +227,63 @@ class ServiceTest(unittest.TestCase):
         (iss,) = shop.issues.values()
         self.assertEqual((iss["status"], shop.entries), ("Nothing to issue", {}))
 
+    def test_i16b_a_store_day_whose_recipe_goes_round_is_not_taken_up_until_it_is_fixed(self):
+        shop = fs.FakeTenant()
+        shop.boms["BOM-BURGER"]["items"].append({"item_code": "BURGER", "stock_qty": 1, "bom_no": "BOM-BURGER"})
+        shop.items["BURGER"]["is_stock_item"] = 0
+        out = self.issue(shop)[1]
+        self.assertEqual(shop.issues, {})
+        self.assertIn("Not taken up, fix and press again", out["message"]["body"])
+        shop.boms["BOM-BURGER"]["items"].pop()
+        self.issue(shop)
+        (iss,) = shop.issues.values()
+        self.assertEqual((iss["status"], iss["sales"]), ("Issued", "S1\nS2"))
+
+    def test_i16c_a_refused_issue_is_tried_again_with_the_recipe_as_it_is_now(self):
+        shop = fs.FakeTenant()
+        real = shop.create
+        refuse = {"on": True}
+
+        def refused(doctype, b):
+            if doctype == "Stock Entry" and refuse["on"] and any(r["item_code"] == "PATTY" for r in b["items"]):
+                raise app.TenantError("417", 417, "ValidationError", "PATTY: no valuation rate")
+            return real(doctype, b)
+        shop.create = refused
+        self.issue(shop)
+        (iss,) = shop.issues.values()
+        self.assertEqual(iss["status"], "Refused")
+        shop.boms["BOM-BURGER"]["items"] = [{"item_code": "BUN", "stock_qty": 1}]     # the recipe fixed: no patty
+        self.issue(shop)
+        self.assertEqual(iss["status"], "Issued")
+        (se,) = shop.entries.values()
+        self.assertEqual(sorted(r["item_code"] for r in se["items"]), ["BEANS", "BUN", "MILK"])
+
+    def test_i16d_an_issue_left_out_is_never_tried_again(self):
+        shop = fs.FakeTenant(stock={"BUN": 0, "PATTY": 20, "MILK": 5, "BEANS": 1})
+        self.issue(shop)
+        (iss,) = shop.issues.values()
+        iss["status"] = "Left out"                          # a manager's choice
+        shop.stock["BUN"] = 10
+        self.issue(shop)
+        self.assertEqual((iss["status"], shop.entries), ("Left out", {}))
+
+    def test_i16e_new_sales_come_before_old_retries(self):
+        shop = fs.FakeTenant(stock={"BUN": 0, "PATTY": 0, "MILK": 0, "BEANS": 0})
+        for d in range(15, 21):                             # six stuck days
+            shop.sales.append({"name": f"OLD{d}", "posting_date": f"2026-10-{d}", "posting_time": "10:00:00", "owner": "x",
+                               "set_warehouse": fs.STORE, "pos_profile": "Café", "company": fs.CO, "docstatus": 1,
+                               "items": [{"item_code": "BURGER", "qty": 1, "stock_qty": 1, "net_amount": 80}]})
+        shop.settings[fs.CO]["start_from"] = "2026-10-15 00:00:00"
+        self.issue(shop, now=NOW)
+        self.assertEqual(sum(i["status"] == "Short" for i in shop.issues.values()), 7)
+        shop.stock.update(BUN=50, PATTY=50, MILK=50, BEANS=50)
+        shop.sales.append({"name": "NEW", "posting_date": "2026-10-22", "posting_time": "13:00:00", "owner": "x",
+                           "set_warehouse": fs.STORE, "pos_profile": "Café", "company": fs.CO, "docstatus": 1,
+                           "items": [{"item_code": "BURGER", "qty": 1, "stock_qty": 1, "net_amount": 80}]})
+        self.issue(shop, clock=Clock(step=1.0))           # a second per look at the clock: retries first would starve it
+        new = [i for i in shop.issues.values() if i["sales"] == "NEW"]
+        self.assertEqual([i["status"] for i in new], ["Issued"])     # the new day first, retries with what is left
+
     def test_i17_a_cancelled_or_draft_sale_is_never_issued(self):
         shop = fs.FakeTenant()
         shop.sales[0]["docstatus"] = 2
@@ -249,6 +328,19 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((fc["food_sales"], fc["theoretical_cost"], fc["actual_cost"]), (187, 8, 16))
         self.assertIn("% actual", out["message"]["body"])
 
+    def test_f1b_a_desk_copy_is_the_shops_own_and_an_entry_from_before_a_reinstall_is_the_apps(self):
+        shop = fs.FakeTenant()
+        base = {"purpose": "Material Issue", "posting_date": "2026-10-22", "company": fs.CO, "docstatus": 1}
+        shop.entries["COPY"] = dict(base, name="COPY", pp_rbo_issue="RBO-ISS-00001", remarks="PP RBO: the ingredients of 3 sales")
+        shop.entries["OLD"] = dict(base, name="OLD", remarks="PP RBO: the ingredients of 2 sales at Café on 2026-10-22")
+        shop.ledger = [{"item_code": "BUN", "actual_qty": -1, "stock_value_difference": -4, "voucher_type": "Stock Entry", "voucher_no": "COPY"},
+                       {"item_code": "BUN", "actual_qty": -2, "stock_value_difference": -8, "voucher_type": "Stock Entry", "voucher_no": "OLD"}]
+        shop.foodcosts["FC-4"] = {"name": "FC-4", "company": fs.CO, "store": fs.STORE, "from_date": "2026-10-22",
+                                  "to_date": "2026-10-22", "modified": "m"}
+        self.press(self.svc(shop), "/press/foodcost", "PP RBO Food Cost", ["FC-4"])
+        (bun,) = shop.foodcosts["FC-4"]["lines"]
+        self.assertEqual((bun["recipe_qty"], bun["other_qty"]), (2, 1))
+
     def test_f2_a_period_too_long_or_back_to_front_is_refused_in_words(self):
         shop = fs.FakeTenant()
         shop.foodcosts["FC-2"] = {"name": "FC-2", "company": fs.CO, "store": fs.STORE, "from_date": "2026-01-01",
@@ -273,21 +365,59 @@ class ServiceTest(unittest.TestCase):
         self.assertNotIn("lines", shop.foodcosts["FC-3"])
 
     # ── Check allergens ──
-    def test_a1_allergens_missing_and_unknown_words_are_named_and_nothing_is_written(self):
-        shop = fs.FakeTenant()
-        code, out = self.press(self.svc(shop), "/press/allergens", "Item", ["BURGER", "COFFEE", "SALAD"])
-        b = out["message"]["body"]
-        self.assertIn("BURGER (Sesame from BUN)", b)
-        self.assertIn("COFFEE (Diary)", b)
-        self.assertIn("No recipe to check: SALAD", b)
-        self.assertEqual(out["message"]["level"], "warning")
-        self.assertFalse([c for c in shop.calls if c.startswith(("POST", "PUT"))])
+    def press_check(self, shop, names):
+        return self.press(self.svc(shop), "/press/allergens", "Item", names)[1]
 
-    def test_a2_every_answer_holds_the_message_limits(self):
+    def test_a1_every_finding_is_written_to_a_check_record_the_answer_opens(self):
+        shop = fs.FakeTenant()
+        out = self.press_check(shop, ["BURGER", "COFFEE", "SALAD"])
+        (chk,) = shop.checks.values()
+        found = {(r["item_code"], r["finding"]): r["detail"] for r in chk["lines"]}
+        self.assertEqual(found[("BURGER", "Misses an allergen of its recipe")], "Sesame (from BUN)")
+        self.assertIn("Diary", found[("COFFEE", "Not on your allergen list")])
+        self.assertIn(("SALAD", "No recipe to check"), found)
+        self.assertEqual(out["open_record"], {"doctype": "PP RBO Allergen Check", "name": chk["name"]})
+        self.assertEqual((out["message"]["level"], chk["items_checked"], chk["flagged"]), ("warning", 3, 3))
+        self.assertFalse([c for c in shop.calls if c.startswith("PUT") or (c.startswith("POST") and "Check" not in c)])
+
+    def test_a2_a_stocked_sauces_own_recipe_is_read_for_its_allergens(self):
+        shop = fs.FakeTenant()
+        shop.items.update(MAYO={"is_stock_item": 1, "default_bom": "BOM-MAYO", "stock_uom": "Litre"},
+                          EGG={"is_stock_item": 1, "stock_uom": "Nos", "pp_rbo_allergens": "Eggs"})
+        shop.boms["BOM-MAYO"] = {"docstatus": 1, "is_active": 1, "quantity": 1, "items": [{"item_code": "EGG", "stock_qty": 2}]}
+        shop.boms["BOM-BURGER"]["items"].append({"item_code": "MAYO", "stock_qty": 0.02})
+        shop.items["BURGER"]["pp_rbo_allergens"] = "Cereals containing gluten, Sesame"
+        self.press_check(shop, ["BURGER"])
+        (chk,) = shop.checks.values()
+        self.assertEqual([(r["finding"], r["detail"]) for r in chk["lines"]],
+                         [("Misses an allergen of its recipe", "Eggs (from EGG)")])
+
+    def test_a3_a_variant_with_none_of_its_templates_allergens_is_named(self):
+        shop = fs.FakeTenant()
+        shop.items["BURGER-DBL"] = {"is_stock_item": 0, "default_bom": "BOM-BURGER", "variant_of": "BURGER"}
+        shop.items["BURGER"]["pp_rbo_allergens"] = "Cereals containing gluten, Sesame"
+        self.press_check(shop, ["BURGER-DBL"])
+        (chk,) = shop.checks.values()
+        self.assertIn(("BURGER-DBL", "Variant with no allergens"), {(r["item_code"], r["finding"]) for r in chk["lines"]})
+
+    def test_a4_a_dish_naming_them_all_writes_nothing_and_says_so(self):
+        shop = fs.FakeTenant()
+        shop.items["BURGER"]["pp_rbo_allergens"] = "Cereals containing gluten, Sesame"
+        out = self.press_check(shop, ["BURGER"])
+        self.assertEqual(out["message"]["body"], "1 item names every allergen of its recipe.")
+        self.assertNotIn("open_record", out)
+
+    def test_a5_no_allergen_list_is_said_on_the_check(self):
+        shop = fs.FakeTenant(settings_=fs.settings(allergens=""))
+        self.press_check(shop, ["COFFEE"])
+        (chk,) = shop.checks.values()
+        self.assertIn("No allergen list", [r["finding"] for r in chk["lines"]])
+
+    def test_a6_every_answer_holds_the_message_limits(self):
         shop = fs.FakeTenant()
         for code in list(shop.items):
             shop.items[code]["pp_rbo_allergens"] = ", ".join(f"Word{i}" for i in range(40))
-        out = self.press(self.svc(shop), "/press/allergens", "Item", list(shop.items))[1]
+        out = self.press_check(shop, list(shop.items))
         self.assertLessEqual(len(out["message"]["body"]), 280)
 
 

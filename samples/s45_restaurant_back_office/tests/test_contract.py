@@ -25,7 +25,10 @@ class ContractTest(unittest.TestCase):
                  "nothing": app.Service._answer({"issued": 0, "short": 0, "refused": 0, "nothing": 0, "sales": 0}),
                  "not set up": app._warning(app.NOT_SET_UP), "refused": app._warning(app.REFUSED + app.CONNECT_AGAIN),
                  "busy": app._warning(app.BUSY), "no start": app._warning(app.NO_START),
-                 "long": bo.message(app.APP_NAME, "x " * 400, "warning", refresh=False)}
+                 "long": bo.message(app.APP_NAME, "x " * 400, "warning", refresh=False),
+                 "a check to open": dict(bo.message(app.APP_NAME, "2 dishes miss an allergen of their recipe.", "warning",
+                                                    refresh=False),
+                                         open_record={"doctype": "PP RBO Allergen Check", "name": "RBO-ALC-00001"})}
         for name, value in cases.items():
             self.assertEqual(check.errors("desk_action", "answer", value), [], name)
 

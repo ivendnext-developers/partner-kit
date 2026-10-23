@@ -5,7 +5,7 @@
  "title": "Restaurant back office",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "A restaurant's back office. A dish is a plain item that is not stocked, with the shop's own recipe on it (a Bill of Materials). Issue ingredients, a button on the company's settings record for Stock Managers and Stock Users, takes the ingredients of the till sales booked since the settings' start moment off stock: one issue record per store and day, written first and naming its sales so no sale is taken twice, then the shop's own Material Issue of the recipes' parts (a recipe inside a recipe opened, a part that is not stocked and has none skipped and named), from the store or the settings' kitchen store, dated at the day's last sale, or at the press when the stock came in after the sales. A store short of a part books nothing for that day and the issue names every short part; the next press after a delivery or a count books it. A press repeated, or one that stopped half way, books nothing twice; a sale made offline is taken up once it posts. The issue's lines feed a report of sales by item, by who rang them and by day part. Work out food cost, on a food cost record for a store and a period, reads the stock ledger and counts: by recipe, sold as it is, other issues, missing at the count, and both costs as a share of sales. Check allergens, on the Item list, names a dish that leaves out an allergen of its recipe's ingredients and any word not on the shop's list; the till shows the Allergens field on the line and the receipt once the shop adds two field rules in POS Studio. Each press sends the record's name and the fields it names, the pressing user and the language. The install makes the role PP RBO Integration; the shop gives it to the app's user with read on POS Invoice, POS Profile, Item, BOM, Bin, Stock Ledger Entry, Stock Reconciliation and Warehouse and read, write, create and submit on Stock Entry, chooses that user on the feed PP RBO Back office feed (leave the feed off) and presses Connect again. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "A restaurant's back office. A dish is a plain item that is not stocked, with the shop's own recipe on it (a Bill of Materials). Issue ingredients, a button on the company's settings record for Stock Managers and Stock Users, takes the ingredients of the till sales booked since the settings' start moment off stock: one issue record per store and day, written first and naming its sales so no sale is taken twice, then the shop's own Material Issue of the recipes' parts (a recipe inside a recipe opened, a part that is not stocked and has none skipped and named), from the store or the settings' kitchen store, dated at the day's last sale, or at the press when the stock came in after the sales. A store short of a part books nothing for that day and the issue names every short part; the next press after a delivery or a count books it. A manager may set an issue Left out instead. A press repeated, or one that stopped half way, books nothing twice; a sale made offline is taken up once it posts. The issue's lines feed a report of sales by item, by who rang them and by day part. Work out food cost, on a food cost record for a store and a period, reads the stock ledger and counts: by recipe, sold as it is, other issues, missing at the count, and both costs as a share of sales. Check allergens, on the Item list or an item, writes a check record of each dish that leaves out an allergen of its recipe's ingredients, each variant with none of its template's, and each word not on the shop's list, and opens it; the till shows the Allergens field on the line and the receipt once the shop adds two field rules in POS Studio. Each press sends the record's name and the fields it names, the pressing user and the language. The install makes the role PP RBO Integration; the shop gives it to the app's user with read on POS Invoice, POS Profile, Item, BOM, Bin, Stock Ledger Entry, Stock Reconciliation and Warehouse and read, write, create and submit on Stock Entry, chooses that user on the feed PP RBO Back office feed (leave the feed off) and presses Connect again. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8145/press/issue",
   "https://host.docker.internal:8145/press/foodcost",
@@ -192,6 +192,7 @@
     {
      "fieldname": "amount",
      "fieldtype": "Currency",
+     "options": "currency",
      "label": "Amount (net of tax)",
      "in_list_view": 1,
      "read_only": 1
@@ -266,6 +267,15 @@
      "read_only": 1
     },
     {
+     "fieldname": "currency",
+     "fieldtype": "Link",
+     "options": "Currency",
+     "label": "Currency",
+     "read_only": 1,
+     "fetch_from": "company.default_currency",
+     "hidden": 1
+    },
+    {
      "fieldname": "store",
      "fieldtype": "Link",
      "options": "Warehouse",
@@ -303,11 +313,11 @@
      "fieldname": "status",
      "fieldtype": "Select",
      "label": "Status",
-     "options": "Pending\nIssued\nShort\nRefused\nNothing to issue",
+     "options": "Pending\nIssued\nShort\nRefused\nNothing to issue\nLeft out",
      "default": "Pending",
      "in_list_view": 1,
-     "read_only": 1,
-     "in_standard_filter": 1
+     "in_standard_filter": 1,
+     "description": "Set by the app. A manager may set a Short or Refused issue to Left out: its sales stay taken up and it is never tried again (take the stock off by hand if it was used)."
     },
     {
      "fieldname": "stock_entry",
@@ -326,6 +336,7 @@
     {
      "fieldname": "food_sales",
      "fieldtype": "Currency",
+     "options": "currency",
      "label": "Sales (net of tax)",
      "read_only": 1
     },
@@ -380,7 +391,7 @@
     {
      "role": "System Manager",
      "read": 1,
-     "write": 0,
+     "write": 1,
      "create": 0,
      "delete": 0,
      "report": 1,
@@ -392,7 +403,7 @@
     {
      "role": "Stock Manager",
      "read": 1,
-     "write": 0,
+     "write": 1,
      "create": 0,
      "delete": 0,
      "report": 1,
@@ -493,6 +504,7 @@
     {
      "fieldname": "theoretical_value",
      "fieldtype": "Currency",
+     "options": "currency",
      "label": "Cost by recipe",
      "in_list_view": 1,
      "read_only": 1
@@ -500,6 +512,7 @@
     {
      "fieldname": "actual_value",
      "fieldtype": "Currency",
+     "options": "currency",
      "label": "Actual cost",
      "in_list_view": 1,
      "read_only": 1
@@ -507,6 +520,7 @@
     {
      "fieldname": "variance_value",
      "fieldtype": "Currency",
+     "options": "currency",
      "label": "Difference",
      "in_list_view": 1,
      "read_only": 1
@@ -523,6 +537,15 @@
      "options": "Company",
      "label": "Company",
      "reqd": 1
+    },
+    {
+     "fieldname": "currency",
+     "fieldtype": "Link",
+     "options": "Currency",
+     "label": "Currency",
+     "read_only": 1,
+     "fetch_from": "company.default_currency",
+     "hidden": 1
     },
     {
      "fieldname": "store",
@@ -555,18 +578,21 @@
     {
      "fieldname": "food_sales",
      "fieldtype": "Currency",
+     "options": "currency",
      "label": "Sales (net of tax)",
      "read_only": 1
     },
     {
      "fieldname": "theoretical_cost",
      "fieldtype": "Currency",
+     "options": "currency",
      "label": "Cost by recipe",
      "read_only": 1
     },
     {
      "fieldname": "actual_cost",
      "fieldtype": "Currency",
+     "options": "currency",
      "label": "Actual cost",
      "read_only": 1
     },
@@ -665,6 +691,113 @@
      "email": 0
     }
    ]
+  },
+  {
+   "name": "PP RBO Allergen Check Line",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "item_code",
+     "fieldtype": "Link",
+     "options": "Item",
+     "label": "Item",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "finding",
+     "fieldtype": "Data",
+     "label": "Finding",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "detail",
+     "fieldtype": "Small Text",
+     "label": "Detail",
+     "in_list_view": 1,
+     "read_only": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RBO Allergen Check",
+   "autoname": "format:RBO-ALC-{#####}",
+   "fields": [
+    {
+     "fieldname": "checked_by",
+     "fieldtype": "Data",
+     "label": "Checked by",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "items_checked",
+     "fieldtype": "Int",
+     "label": "Items checked",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "flagged",
+     "fieldtype": "Int",
+     "label": "Items to look at",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "lines_section",
+     "fieldtype": "Section Break",
+     "label": "Findings",
+     "description": "What the check found, item by item. It reads what you typed; it cannot know an allergen nobody wrote down, and it changes nothing: correct the item yourself."
+    },
+    {
+     "fieldname": "lines",
+     "fieldtype": "Table",
+     "options": "PP RBO Allergen Check Line",
+     "label": "Findings",
+     "read_only": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 1,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Item Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RBO Integration",
+     "read": 1,
+     "write": 0,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
   }
  ],
  "custom_fields": [
@@ -674,7 +807,7 @@
    "fieldtype": "Data",
    "label": "Allergens",
    "insert_after": "item_group",
-   "description": "The allergens it contains, in your list's words, separated by commas: Milk, Eggs. On a dish, every allergen of its recipe (Check allergens compares). The till can show it on the sale's line and the receipt (POS Studio, Fields)."
+   "description": "The allergens it contains, in your list's words, separated by commas: Milk, Eggs (140 characters at most). On a dish, every allergen of its recipe (Check allergens compares). The till can show it on the sale's line and the receipt (POS Studio, Fields). A variant shows its own: add this field to Item Variant Settings to copy it from the template."
   },
   {
    "dt": "Stock Entry",
@@ -705,6 +838,12 @@
    "property": "documentation",
    "property_type": "Data",
    "value": "https://developer.ivendnext.com/recipes/restaurant_back_office.html#food-cost"
+  },
+  {
+   "doc_type": "PP RBO Allergen Check",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/restaurant_back_office.html#allergens"
   }
  ],
  "reports": [

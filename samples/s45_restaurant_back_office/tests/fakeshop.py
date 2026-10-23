@@ -50,7 +50,7 @@ class FakeTenant:
              "items": [{"item_code": "COFFEE", "qty": 1, "stock_qty": 1, "net_amount": 27}]}]
         self.items, self.boms = copy.deepcopy(ITEMS), copy.deepcopy(BOMS)
         self.stock = dict(stock if stock is not None else {"BUN": 20, "PATTY": 20, "MILK": 5, "BEANS": 1})
-        self.issues, self.entries, self.foodcosts = {}, {}, {}
+        self.issues, self.entries, self.foodcosts, self.checks = {}, {}, {}, {}
         self.ledger, self.recos = [], {}
         self.refuse, self.stale_lock, self.lose_answer, self.refuse_entry = refuse, stale_lock, lose_answer, refuse_entry
         self.n = itertools.count(1)
@@ -68,10 +68,6 @@ class FakeTenant:
             if name not in self.settings:
                 raise app.TenantError("404", 404)
             return copy.deepcopy(self.settings[name])
-        if doctype == "BOM":
-            if name not in self.boms:
-                raise app.TenantError("404", 404)
-            return dict(copy.deepcopy(self.boms[name]), name=name)
         if doctype.endswith(" Issue"):
             return copy.deepcopy(self.issues[name])
         if doctype.endswith(" Food Cost"):
@@ -98,11 +94,20 @@ class FakeTenant:
         if doctype == "Item":
             names = next((v for f, op, v in filters if f == "name"), list(self.items))
             return [dict(self.items[n], name=n) for n in names if n in self.items]
+        if doctype == "BOM":
+            names = next(v for f, op, v in filters if f == "name")
+            return [{"name": n, "quantity": b["quantity"], "is_active": b.get("is_active"), "docstatus": b.get("docstatus")}
+                    for n, b in self.boms.items() if n in names]
+        if doctype == "BOM Item":
+            assert parent == "BOM", "a table is read through its record type"
+            names = next(v for f, op, v in filters if f == "parent")
+            return [dict(r, parent=n) for n, b in self.boms.items() if n in names for r in b["items"]]
         if doctype.endswith(" Issue"):
             out = list(self.issues.values())
             for f, op, v in filters:
                 out = [i for i in out if (i.get(f) in v if op == "in" else i.get(f) >= v if op == ">=" else
-                                          (v[0] <= i.get(f) <= v[1]) if op == "between" else i.get(f) == v)]
+                                          (v[0] <= i.get(f) <= v[1]) if op == "between" else
+                                          bool(i.get(f)) == (v == "set") if op == "is" else i.get(f) == v)]
             return [{k: i.get(k) for k in fields} for i in out]
         if doctype == "Stock Entry":
             out = list(self.entries.values())
@@ -113,7 +118,7 @@ class FakeTenant:
                     out = [e for e in out if v[0] <= e.get(f) <= v[1]]
                 else:
                     out = [e for e in out if e.get(f) == v]
-            return [{"name": e["name"]} for e in out]
+            return [{k: e.get(k) for k in fields} for e in out]
         if doctype == "Bin":
             names = next(v for f, op, v in filters if f == "item_code")
             return [{"item_code": n, "actual_qty": self.stock.get(n, 0)} for n in names if n in self.stock]
@@ -131,6 +136,10 @@ class FakeTenant:
     # ── writes ──
     def create(self, doctype, body):
         self._gate(f"POST {doctype}")
+        if doctype.endswith(" Allergen Check"):
+            name = f"RBO-ALC-{next(self.n):05d}"
+            self.checks[name] = dict(copy.deepcopy(body), name=name)
+            return {"name": name}
         if doctype.endswith(" Issue"):
             name = f"RBO-ISS-{next(self.n):05d}"
             self.issues[name] = dict(copy.deepcopy(body), name=name, stock_entry=None)
@@ -148,7 +157,7 @@ class FakeTenant:
             for k, v in need.items():
                 self.stock[k] -= v
             name = f"MAT-STE-{next(self.n):05d}"
-            self.entries[name] = dict(copy.deepcopy(body), name=name)
+            self.entries[name] = dict(copy.deepcopy(body), name=name, docstatus=1)
             if self.lose_answer:            # booked, then the answer never came back
                 self.lose_answer -= 1
                 raise app.TenantError("POST Stock Entry -> TimeoutError")

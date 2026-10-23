@@ -93,7 +93,10 @@ class ManyShops(unittest.TestCase):
 
     def test_the_allergen_check_reads_the_librarys_field(self):
         out = self.press("al-a", A, "/press/allergens", "Item", ["BURGER", "COFFEE"])[1]
-        self.assertIn("BURGER (Sesame from BUN)", out["message"]["body"])
+        (d,) = self.doors.values()
+        (chk,) = d.checks.values()
+        self.assertEqual(out["open_record"]["doctype"], "IVENDNEXT RBO Allergen Check")
+        self.assertIn(("BURGER", "Sesame (from BUN)"), {(r["item_code"], r["detail"]) for r in chk["lines"]})
 
     def test_a_shops_table_that_does_not_answer_is_a_503(self):
         class Down:
