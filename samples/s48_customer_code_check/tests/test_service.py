@@ -54,8 +54,8 @@ class Api:
     def __init__(self, rules=None, trees=None):
         self.rules_by = rules if rules is not None else {"https://shop.example": RECORDS}
         self.trees_by = trees if trees is not None else {"https://shop.example": TREE_ROWS}
-        self.codes, self.calls, self.recent_rows = {}, [], []
-        self.down = self.tree_down = self.write_down = False
+        self.codes, self.calls = {}, []
+        self.down = self.tree_down = self.write_down = self.write_unsure = False
 
     def rules(self, url, key, prefix):
         self.calls.append(("rules", url, key, prefix))
@@ -69,17 +69,13 @@ class Api:
             raise app.ShopUnreadable("down")
         return self.trees_by.get(url, [])
 
-    def recent(self, url, key, prefix, ctx, since):
-        self.calls.append(("recent", url, key, prefix, ctx["customer"]["customer"], ctx["pos_profile"], ctx["operator"], since))
-        if self.down:
-            raise app.ShopUnreadable("down")
-        return self.recent_rows
-
-    def create(self, url, key, prefix, record):
-        self.calls.append(("create", url, key, prefix, record["challenge"]))
+    def create(self, url, key, prefix, record, timeout=None):
+        self.calls.append(("create", url, key, prefix, record["challenge"], timeout))
         if self.write_down:
             raise app.ShopUnreadable("the shop answered 417")
         self.codes[record["challenge"]] = dict(record, name=record["challenge"])
+        if self.write_unsure:
+            raise app.WriteUnsure("TimeoutError")
 
     def code(self, url, key, prefix, name):
         self.calls.append(("code", url, key, prefix, name))
@@ -151,18 +147,29 @@ class OneShop(unittest.TestCase):
             self.assertEqual(self.call(context(group=group)), (200, {"verdict": "allow"}))
         self.assertEqual(self.api.codes, {})
 
-    def test_a_right_code_in_the_last_half_hour_is_read_for_this_cashier_customer_and_pos_profile(self):
-        self.api.recent_rows = [{"name": "x"}]
-        self.assertEqual(self.call(context(group="Members")), (200, {"verdict": "allow"}))
-        (r,) = [c for c in self.api.calls if c[0] == "recent"]
-        self.assertEqual(r[1:], ("https://shop.example", "k:s", "PP CCC", "CUST-1", "Cairo Tills", "c@shop.example", NOW - 1800))
-        self.assertEqual(self.api.codes, {})
+    def test_the_same_customer_picked_again_is_asked_again(self):
+        self.call(context(group="Members"))
+        self.call(context(group="Members"))
+        self.assertEqual(len([c for c in self.api.calls if c[0] == "create"]), 2)     # the till spent the first pass
 
-    def test_the_rules_and_the_tree_are_kept_a_minute_the_last_code_is_read_every_pick(self):
+    def test_a_code_record_saved_or_not_with_no_answer_in_time_is_still_the_code_field(self):
+        self.api.write_unsure = True
+        code, out = self.call(context(group="Members"))
+        self.assertEqual((code, out["verdict"]), (200, "challenge"))                # never a 503 that lets them on
+
+    def test_the_write_waits_the_time_the_settings_give_it(self):
+        self.call(context(group="Members"))
+        self.assertEqual([c[5] for c in self.api.calls if c[0] == "create"], [app.WRITE_TIMEOUT])
+        svc = app.Service(dict(ONE, CCC_WRITE_TIMEOUT="7.5"), api=self.api, clock=self.clock, wall=self.wall)
+        raw = raw_of(context(group="Members", customer="CUST-2"))
+        svc.answer("/ccc/capture", signed(raw, SECRET), raw)
+        self.assertEqual([c[5] for c in self.api.calls if c[0] == "create"][-1], 7.5)
+
+    def test_the_rules_and_the_tree_are_kept_a_minute(self):
         self.call(context(group="Retail"))
         self.clock.t += 59
         self.call(context(group="Retail"))
-        self.assertEqual(sorted(c[0] for c in self.api.calls), ["recent", "recent", "rules", "tree"])
+        self.assertEqual(sorted(c[0] for c in self.api.calls), ["rules", "tree"])
         self.clock.t += 2
         self.call(context(group="Retail"))
         self.assertEqual(len([c for c in self.api.calls if c[0] == "rules"]), 2)
@@ -218,16 +225,12 @@ class OneShop(unittest.TestCase):
         self.call(context(group="Retail"))
         self.assertEqual(len([c for c in self.api.calls if c[0] == "rules"]), 2)
 
-    def test_codes_that_are_not_records_are_a_503(self):
-        self.api.recent_rows = None
-        self.assertEqual(self.call(context(group="Members"))[0], 503)
-
     def test_the_prefix_names_the_record_types(self):
         svc = app.Service(dict(ONE, CCC_PREFIX="IVENDNEXT CCC"), api=self.api, clock=self.clock, wall=self.wall)
         raw = raw_of(context(group="Members"))
         svc.answer("/ccc/capture", signed(raw, SECRET), raw)
         self.assertIn(("rules", "https://shop.example", "k:s", "IVENDNEXT CCC"), self.api.calls)
-        self.assertIn(("create", "https://shop.example", "k:s", "IVENDNEXT CCC", CHALLENGE), self.api.calls)
+        self.assertIn(("create", "https://shop.example", "k:s", "IVENDNEXT CCC", CHALLENGE, app.WRITE_TIMEOUT), self.api.calls)
 
 
 class ManyShops(unittest.TestCase):
@@ -326,7 +329,6 @@ class ShopApi(unittest.TestCase):
                     return
                 code, body = {"/api/resource/PP%20CCC%20Rule": (200, {"data": RECORDS}),
                               "/api/resource/Customer%20Group": (200, {"data": TREE_ROWS}),
-                              "/api/resource/PP%20CCC%20Code": (200, {"data": [{"name": "x"}]}),
                               f"/api/resource/PP%20CCC%20Code/{CHALLENGE}": (200, {"data": {
                                   "name": CHALLENGE, "code": "482913", "status": "Sent", "sent_at": NOW, "mobile": "+20"}}),
                               "/api/resource/PP%20CCC%20Code/" + "f" * 32: (404, {"exc_type": "DoesNotExistError"}),
@@ -338,6 +340,8 @@ class ShopApi(unittest.TestCase):
 
             def do_POST(h):
                 cls.seen.append(("POST", h.path, h.headers.get("Authorization"), h._body()))
+                if "Slow" in h.path:            # the save outlasts the write's wait (a gateway that is slow to accept)
+                    time.sleep(0.6)
                 h._reply(417 if "Unsent" in h.path else 200, {"data": {}})
 
             def do_PUT(h):
@@ -372,19 +376,18 @@ class ShopApi(unittest.TestCase):
         a = self.args()
         self.assertEqual((json.loads(a["fields"]), a["limit_page_length"]), (["name", "lft", "rgt"], "0"))
 
-    def test_reads_this_cashiers_last_right_code_for_this_customer_here(self):
-        self.assertEqual(self.api.recent(self.url, "k:s", "PP CCC", context(), NOW - 1800), [{"name": "x"}])
-        a = self.args()
-        self.assertEqual(json.loads(a["filters"]), [["customer", "=", "CUST-1"], ["pos_profile", "=", "Cairo Tills"],
-                                                    ["operator", "=", "c@shop.example"], ["status", "=", "Used"],
-                                                    ["verified_at", ">=", NOW - 1800]])
-        self.assertEqual(a["limit_page_length"], "1")
-
     def test_writes_the_code_record_with_the_token(self):
         rec = app.codecheck.code_record(context(), "482913", NOW)
         self.api.create(self.url, "k:s", "PP CCC", rec)
         method, path, auth, body = self.seen[-1]
         self.assertEqual((method, path, auth, body), ("POST", "/api/resource/PP%20CCC%20Code", "token k:s", rec))
+
+    def test_a_write_with_no_answer_in_time_is_unsure_never_a_read(self):
+        with self.assertRaises(app.WriteUnsure):
+            self.api.create(self.url, "k:s", "Slow", {"challenge": CHALLENGE}, timeout=0.2)
+        with self.assertRaises(app.ShopUnreadable) as e:
+            self.api.create(self.url, "k:s", "Unsent", {"challenge": CHALLENGE})
+        self.assertNotIsInstance(e.exception, app.WriteUnsure)
 
     def test_a_record_the_shop_does_not_save_is_unreadable(self):
         with self.assertRaises(app.ShopUnreadable):     # a save the shop refuses (a right not given, a rule): 417

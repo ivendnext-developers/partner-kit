@@ -43,8 +43,8 @@ def code_ctx(code="482913"):
 RULES, TREE = codecheck.rules_of(RECORDS), codecheck.tree_of(TREE_ROWS)
 
 
-def select(recent=False, **kw):
-    return codecheck.on_select(context(**kw), RULES, TREE, recent=recent)
+def select(**kw):
+    return codecheck.on_select(context(**kw), RULES, TREE)
 
 
 class Select(unittest.TestCase):
@@ -73,18 +73,26 @@ class Select(unittest.TestCase):
     def test_no_mobile_number_lets_the_customer_on_where_the_rule_says(self):
         self.assertEqual(select(group="Trade", phone=""), {"verdict": "allow"})
 
-    def test_a_right_code_in_the_last_half_hour_is_not_asked_again(self):
-        self.assertEqual(select(group="Members", recent=True), {"verdict": "allow"})
+    def test_a_number_is_the_first_one_the_record_holds_in_the_shops_phone_shape(self):
+        for raw, want in (("+971 50 123 4567 / +971 4 123 4567", "+971 50 123 4567"), ("0100 555 0147 ext 2", "0100 555 0147"),
+                          ("+44 (0) 7700 900 123 x", "+44 (0) 7700 900 123"), ("+20 100 555 0147 000 000 11", ""),
+                          ("  +20-100-555-0147  ", "+20-100-555-0147"), ("12345", ""), ("ext 2", ""), ("", ""),
+                          ("+1 234 567 890 123 456 789 0123", "")):
+            self.assertEqual(codecheck.mobile_of(raw), want, raw)
+        self.assertEqual(select(group="Members", phone="+20 100 555 0147 / 0100")["prompt"][-3:], "47.")
+
+    def test_a_record_whose_phone_holds_no_number_is_no_mobile(self):
+        self.assertEqual(select(group="Members", phone="ask at desk")["verdict"], "refuse")
 
     def test_a_customer_with_no_group_takes_the_outermost_rule(self):
         rules = codecheck.rules_of(RECORDS + [{"customer_group": "All Customer Groups", "ask": "Ask for a code"}])
-        self.assertEqual(codecheck.on_select(context(group=""), rules, TREE, recent=False)["verdict"], "challenge")
+        self.assertEqual(codecheck.on_select(context(group=""), rules, TREE)["verdict"], "challenge")
         self.assertEqual(select(group=""), {"verdict": "allow"})
 
     def test_a_group_the_tree_does_not_know_is_unreadable_while_the_shop_has_rules(self):
         with self.assertRaises(ValueError):
             select(group="Made a minute ago")
-        self.assertEqual(codecheck.on_select(context(group="Made a minute ago"), {}, TREE, recent=False), {"verdict": "allow"})
+        self.assertEqual(codecheck.on_select(context(group="Made a minute ago"), {}, TREE), {"verdict": "allow"})
 
     def test_a_value_the_form_never_writes_errs_on_the_side_of_the_code(self):
         rules = codecheck.rules_of([{"customer_group": "Retail", "ask": "Sometimes", "without_mobile": "Maybe"}])
@@ -95,8 +103,8 @@ class Select(unittest.TestCase):
         long = "<G>" * 80
         rules = codecheck.rules_of([{"customer_group": long, "ask": "Ask for a code", "words": "<b>" + "w" * 300}])
         tree = {long: (1, 2)}
-        a = codecheck.on_select(context(group=long), rules, tree, recent=False)
-        b = codecheck.on_select(context(group=long, phone=""), rules, tree, recent=False)
+        a = codecheck.on_select(context(group=long), rules, tree)
+        b = codecheck.on_select(context(group=long, phone=""), rules, tree)
         for s in (a["prompt"], b["reason"]):
             self.assertLessEqual(len(s), 140)
             self.assertNotIn("<", s)
@@ -104,7 +112,7 @@ class Select(unittest.TestCase):
 
     def test_words_that_come_out_empty_fall_back_to_the_apps_own(self):
         rules = codecheck.rules_of([{"customer_group": "Retail", "ask": "Ask for a code", "words": "<>‌"}])
-        self.assertTrue(codecheck.on_select(context(group="Retail"), rules, TREE, recent=False)["prompt"].startswith("Ask the customer"))
+        self.assertTrue(codecheck.on_select(context(group="Retail"), rules, TREE)["prompt"].startswith("Ask the customer"))
 
 
 class Verify(unittest.TestCase):

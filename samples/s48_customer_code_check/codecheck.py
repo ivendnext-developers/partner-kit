@@ -7,8 +7,8 @@ rule record per customer group (``<prefix> Rule``, named by the group): *Ask for
 when the customer has no mobile number. ``on_select`` finds the rule that decides (the customer's own group's, else the
 nearest group above it that has one, by the shop's group tree) and answers:
 
-- ``allow``: no rule decides, the rule says *Never ask*, the record has no mobile number and the rule lets them on, or the
-  same cashier had a right code for this customer at this POS Profile in the last ``REUSE_S`` seconds;
+- ``allow``: no rule decides, the rule says *Never ask*, or the record has no mobile number and the rule lets them on.
+  Every other pick asks again: the till spends a right code's pass at the booking, so the next sale asks anew;
 - ``refuse``: the rule asks, the record has no mobile number, and the rule takes them off the sale;
 - ``challenge``: the rule asks. The service first writes a code record (``code_record``) in the shop; the shop's own
   Notification on that record texts the code to the number it holds. The till then shows a code field, and what the
@@ -29,6 +29,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import re
 import secrets
 import time
 
@@ -37,8 +38,9 @@ BODY_MAX = 256 * 1024
 TEXT_MAX = 140        # every sentence the till shows: plain text, 1 to 140 characters (the extension points' rule)
 LENGTH = 6            # the code's digits (the contract allows 4 to 8)
 CODE_TTL_S = 600      # a code is good for ten minutes, as the shop's own challenge is
-REUSE_S = 1800        # a right code lets the same cashier pick the same customer at the same POS Profile again, unasked
 MOBILE_MIN = 6        # fewer digits than this on the record is no mobile number
+MOBILE_MAX = 20       # the shop's Phone field holds at most 20 characters
+LEAD = re.compile(r"\+?[0-9][0-9 ()\-.]*")   # the number a record's phone starts with (a second number, an extension: dropped)
 ASK, NEVER = "Ask for a code", "Never ask"
 TAKE_OFF, LET_ON = "Take them off the sale", "Let them on"
 SENT, USED = "Sent", "Used"
@@ -156,6 +158,19 @@ def digits(phone: str) -> str:
     return "".join(c for c in phone if c.isascii() and c.isdigit())
 
 
+def mobile_of(phone: str) -> str:
+    """The number the code goes to: the first number the record's phone holds (``+971 50 123 4567 / …`` and
+    ``0100 555 0147 ext 2`` keep their first number), in the characters the shop's Phone field accepts, at most
+    ``MOBILE_MAX``; ``""`` when fewer than ``MOBILE_MIN`` digits are left (no mobile number)."""
+    m = LEAD.match((phone or "").strip())
+    number = m.group(0).strip() if m else ""
+    if len(number) > MOBILE_MAX:
+        number = number.replace(" ", "")
+    if len(number) > MOBILE_MAX or len(digits(number)) < MOBILE_MIN:
+        return ""
+    return number
+
+
 def prompt(rule: dict, phone: str) -> str:
     """The words with the code field: the rule's own, else the app's, which name the last two digits of the number the
     code went to, so the customer can say *that is not my number*."""
@@ -165,24 +180,23 @@ def prompt(rule: dict, phone: str) -> str:
     return f"Ask the customer for the {LENGTH}-digit code we sent to their phone ending {digits(phone)[-2:]}."
 
 
-def on_select(ctx: dict, rules: dict, tree: dict, recent: bool) -> dict:
+def on_select(ctx: dict, rules: dict, tree: dict) -> dict:
     """The answer for one pick, before any code is made: ``allow``, ``refuse``, or ``challenge`` (the service then writes
-    the code record before it answers). ``recent``: this cashier had a right code for this customer at this POS Profile
-    within ``REUSE_S``."""
+    the code record before it answers)."""
     who = ctx["customer"]
     group = who["customer_group"]
     if group and group not in tree and group not in rules and rules:
         raise ValueError("the customer's group is not in the shop's group tree")
     found = deciding(group, rules, tree)
-    if not found or not found[1]["ask"] or recent:
+    if not found or not found[1]["ask"]:
         return {"verdict": "allow"}
     name, rule = found
-    if len(digits(who["phone"])) < MOBILE_MIN:
+    if not mobile_of(who["phone"]):
         if rule["let_on"]:
             return {"verdict": "allow"}
         return {"verdict": "refuse",
                 "reason": plain(f"Customers in {plain(name, 40)} need a code, and this customer has no mobile number.")}
-    return {"verdict": "challenge", "prompt": prompt(rule, who["phone"]), "length": LENGTH}
+    return {"verdict": "challenge", "prompt": prompt(rule, mobile_of(who["phone"])), "length": LENGTH}
 
 
 def new_code() -> str:
@@ -195,7 +209,7 @@ def code_record(ctx: dict, code: str, now: float) -> dict:
     (``code`` to ``mobile``), and what ``on_verify`` and the next pick read back."""
     who = ctx["customer"]
     return {"challenge": ctx["challenge_id"], "customer": who["customer"], "customer_name": plain(who.get("customer_name") or "", 140),
-            "mobile": who["phone"].strip()[:40], "code": code, "store": ctx["store"][:140], "pos_profile": ctx["pos_profile"][:140],
+            "mobile": mobile_of(who["phone"]), "code": code, "store": ctx["store"][:140], "pos_profile": ctx["pos_profile"][:140],
             "operator": ctx["operator"][:140], "status": SENT, "sent_at": int(now)}
 
 

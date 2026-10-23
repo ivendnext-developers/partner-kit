@@ -13,9 +13,8 @@ answers picks and codes. The shape is S47's (``samples/s47_customers_by_store/se
 defect here.
 
 The call is checked with the secret the install made for the capture, ``<app>:sub:on_select``. On a select, the shop's
-switched-on rule records (``<prefix> Rule``), its Customer Group tree and this cashier's last right code for this customer
-at this POS Profile are read at the same time with the app's integration key (the rules and the tree kept one minute,
-``RULES_TTL``). When the rule asks, the service makes a code and **creates** the shop's code record (``<prefix> Code``,
+switched-on rule records (``<prefix> Rule``) and its Customer Group tree are read at the same time with the app's
+integration key and kept one minute (``RULES_TTL``). When the rule asks, the service makes a code and **creates** the shop's code record (``<prefix> Code``,
 named by the till's ``challenge_id``); the shop's own Notification on that record texts the code to the number it holds,
 inside the same save (a gateway that fails is written to the shop's Error Log, never raised: the customer then has no code). On a verify, it reads that record, and on a right code
 **updates** it once (*Used*, the code cleared). The service never reads the Customer record and keeps no code: the code
@@ -65,8 +64,8 @@ import shops  # noqa: E402
 
 KEY, ROUTE = "on_select", "/ccc/capture"   # the subscription's key in the manifest; its secret is "<app>:sub:<key>"
 RULES_TTL = 60
-READ_TIMEOUT = 0.8     # the reads go at once, then the write: both inside the select's 3 s
-WRITE_TIMEOUT = 1.8    # the code record's save carries the shop's text message to its gateway
+READ_TIMEOUT = 0.8     # the reads go at once, then the write: both inside the select's time to answer (6 s, the manifest)
+WRITE_TIMEOUT = 4.5    # the code record's save carries the shop's text to its gateway; CCC_WRITE_TIMEOUT changes it
 
 
 class ShopUnreadable(Exception):
@@ -77,6 +76,12 @@ class ShopUnreadable(Exception):
 class KeyRefused(ShopUnreadable):
     """The shop answered 401 or 403 to the app's user key (a key withdrawn, a user disabled, a right not given): judged as
     the shop unreadable, but logged by its own name, so a partner can tell it from an outage."""
+
+
+class WriteUnsure(ShopUnreadable):
+    """A write sent whole whose answer did not come in time: it may have saved (and texted the code) or not. A code
+    record unsure is answered with the code field: saved, the code works; not saved, the check ends. Never a 503,
+    which lets the customer on with no code."""
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -103,6 +108,8 @@ class ShopApi:
             if missing_ok and e.code == 404:
                 return None
             raise (KeyRefused if e.code in (401, 403) else ShopUnreadable)(f"the shop answered {e.code}") from None
+        except TimeoutError as e:       # sent whole, no answer in time (a connect timeout comes as a URLError, below)
+            raise (WriteUnsure if data is not None else ShopUnreadable)(type(e).__name__) from None
         except (OSError, http.client.HTTPException, ValueError) as e:   # OSError: URLError, timeouts, TLS, a cut
             raise ShopUnreadable(type(e).__name__) from None             # connection; HTTPException: a cut answer
 
@@ -119,18 +126,11 @@ class ShopApi:
         """The shop's Customer Group tree: every group's ``lft`` and ``rgt``."""
         return self._list(url, key, "Customer Group", codecheck.TREE_FIELDS, [])
 
-    def recent(self, url: str, key: str, prefix: str, ctx: dict, since: int) -> list:
-        """This cashier's right codes for this customer at this POS Profile since ``since`` (at most one)."""
-        return self._list(url, key, prefix + " Code", ["name"],
-                          [["customer", "=", ctx["customer"]["customer"]], ["pos_profile", "=", ctx["pos_profile"]],
-                           ["operator", "=", ctx["operator"]], ["status", "=", codecheck.USED], ["verified_at", ">=", since]],
-                          limit=1)
-
-    def create(self, url: str, key: str, prefix: str, record: dict) -> None:
+    def create(self, url: str, key: str, prefix: str, record: dict, timeout: float = WRITE_TIMEOUT) -> None:
         """The code record: the shop's Notification on it texts the code inside this save (a failed text is logged by the shop,
         not raised)."""
         self._call(url, key, "/api/resource/" + urllib.parse.quote(prefix + " Code"), body=record, method="POST",
-                   timeout=WRITE_TIMEOUT)
+                   timeout=timeout)
 
     def code(self, url: str, key: str, prefix: str, name: str) -> dict | None:
         """The code record the till's ``challenge_id`` names, or ``None`` when there is none."""
@@ -144,7 +144,7 @@ class ShopApi:
         return {k: rec.get(k) for k in codecheck.CODE_FIELDS}
 
     def used(self, url: str, key: str, prefix: str, name: str, now: int) -> None:
-        """A right code, spent: *Used*, the code cleared, and when (the next pick's 30 minutes count from it)."""
+        """A right code, spent: *Used*, the code cleared, and when."""
         self._call(url, key, f"/api/resource/{urllib.parse.quote(prefix + ' Code')}/{urllib.parse.quote(name)}",
                    body={"status": codecheck.USED, "code": "", "verified_at": now}, method="PUT")
 
@@ -152,6 +152,7 @@ class ShopApi:
 class Service:
     def __init__(self, conf: dict, store=None, api=None, clock=time.monotonic, wall=time.time):
         self.prefix = (conf.get("CCC_PREFIX") or "PP CCC").strip()
+        self.write_timeout = float(conf.get("CCC_WRITE_TIMEOUT") or WRITE_TIMEOUT)
         self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
         self.api, self.clock, self.wall, self.kept, self.lock = api or ShopApi(), clock, wall, {}, threading.Lock()
         if self.app:                                    # many shops: each connects itself
@@ -180,28 +181,26 @@ class Service:
         return None
 
     def select(self, name: str, shop: dict | None, ctx: dict) -> dict:
-        """One pick: the rules, the tree and the last right code read at the same time (each read has its own timeout, so
-        reads in a row could outrun the select's 3 s); then, when the rule asks, the code record written before the
-        challenge is answered."""
+        """One pick: the rules and the tree read at the same time (each read has its own timeout, so reads in a row could
+        outrun the select's time); then, when the rule asks, the code record written before the challenge is answered."""
         if not shop:
             raise ShopUnreadable("the shop has not handed over its integration user's key")
         now = int(self.wall())
         kept = self._kept(name, shop)
-        with ThreadPoolExecutor(max_workers=3) as pool:
-            if kept is None:
+        if kept is None:
+            with ThreadPoolExecutor(max_workers=2) as pool:
                 rows = pool.submit(self.api.rules, shop["url"], shop["key"], self.prefix)
                 groups = pool.submit(self.api.tree, shop["url"], shop["key"])
-            last = pool.submit(self.api.recent, shop["url"], shop["key"], self.prefix, ctx, now - codecheck.REUSE_S)
-            if kept is None:
                 kept = (codecheck.rules_of(rows.result()), codecheck.tree_of(groups.result()))
-                with self.lock:
-                    self.kept[name] = (self.clock(), shop["key"], kept)
-            recent = last.result()
-        if not isinstance(recent, list):
-            raise ShopUnreadable("the codes are not a list of records")
-        out = codecheck.on_select(ctx, *kept, recent=bool(recent))
+            with self.lock:
+                self.kept[name] = (self.clock(), shop["key"], kept)
+        out = codecheck.on_select(ctx, *kept)
         if out["verdict"] == "challenge":
-            self.api.create(shop["url"], shop["key"], self.prefix, codecheck.code_record(ctx, codecheck.new_code(), now))
+            try:
+                self.api.create(shop["url"], shop["key"], self.prefix, codecheck.code_record(ctx, codecheck.new_code(), now),
+                                timeout=self.write_timeout)
+            except WriteUnsure:         # saved or not, the code field fails closed: never a 503 that lets them on
+                print(json.dumps({"error": "WriteUnsure"}), file=sys.stderr, flush=True)
         return out
 
     def verify(self, shop: dict | None, ctx: dict) -> dict:

@@ -27,13 +27,12 @@ class ContractTest(unittest.TestCase):
     def test_every_select_answer_holds(self):
         long = "G" * 200
         longrules = codecheck.rules_of([{"customer_group": long, "ask": "Ask for a code", "words": "w" * 300}])
-        cases = {"challenge": codecheck.on_select(context(group="Members"), RULES, TREE, recent=False),
-                 "words": codecheck.on_select(context(group="Trade"), RULES, TREE, recent=False),
-                 "allow": codecheck.on_select(context(group="Retail"), RULES, TREE, recent=False),
-                 "recent": codecheck.on_select(context(group="Members"), RULES, TREE, recent=True),
-                 "no mobile": codecheck.on_select(context(group="Members", phone=""), RULES, TREE, recent=False),
-                 "long": codecheck.on_select(context(group=long), longrules, {long: (1, 2)}, recent=False),
-                 "long refuse": codecheck.on_select(context(group=long, phone=""), longrules, {long: (1, 2)}, recent=False)}
+        cases = {"challenge": codecheck.on_select(context(group="Members"), RULES, TREE),
+                 "words": codecheck.on_select(context(group="Trade"), RULES, TREE),
+                 "allow": codecheck.on_select(context(group="Retail"), RULES, TREE),
+                 "no mobile": codecheck.on_select(context(group="Members", phone=""), RULES, TREE),
+                 "long": codecheck.on_select(context(group=long), longrules, {long: (1, 2)}),
+                 "long refuse": codecheck.on_select(context(group=long, phone=""), longrules, {long: (1, 2)})}
         for name, out in cases.items():
             self.assertEqual(check.errors("partner_capture", "select_answer", out), [], name)
         self.assertEqual(cases["challenge"]["verdict"], "challenge")
