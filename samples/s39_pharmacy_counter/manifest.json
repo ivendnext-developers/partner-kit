@@ -3,9 +3,9 @@
  "app": "pp_rxc",
  "prefix": "PP RXC",
  "title": "Pharmacy counter rules",
- "version": "0.1.2",
+ "version": "0.1.3",
  "publisher": "Partner Programme sample",
- "description": "A pharmacy counter's rules, checked at Pay on the till and when a sales order, delivery or sales invoice is submitted on the Desk. A line whose drug schedule needs a prescription is paid only against a prescription the pharmacist entered on the Desk, for this customer, in date for its class, with quantity and a fill left; the fill is reserved when the check answers, so two tills cannot both take the last one, and it comes back if the sale is never booked and its POS day closes, or its sale or document is cancelled. A pharmacist-only line is paid only by a user on the app's Pharmacist list whose licence is in date; a schedule can need the customer's ID, date of birth or authority to possess, a doctor's name and directions, a quantity cap per sale and per patient over days; dispensed medicine of a non-returnable schedule is refused at a till return and on a Desk return. Two till services: the dispensary's refuses the sale when the service is down; the front's lets it through, flagged, and refuses medicine that must be sold at the dispensary. Prescriptions, pharmacists, schedules, patients (their identity and consent, on a record only the pharmacist roles read) and dispensings are records in the shop; the service reads them with the app's integration user and writes only its Dispensing records. The install makes the roles PP RXC Integration, PP RXC Pharmacist, PP RXC Pharmacist in Charge and PP RXC Records Officer (nobody holds it: the shop gives it for destroying records whose keeping period has ended); every service installs switched off. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "A pharmacy counter's rules, checked at Pay on the till and when a sales order, delivery or sales invoice is submitted on the Desk. A line whose drug schedule needs a prescription is paid only against a prescription the pharmacist entered on the Desk, for this customer, in date for its class, with quantity and a fill left; the fill is reserved when the check answers, so two tills cannot both take the last one, and it comes back if the sale is never booked and its POS day closes, or its sale or document is cancelled. A pharmacist-only line is paid only by a user on the app's Pharmacist list whose licence is in date; a schedule can need the customer's ID, date of birth or authority to possess, a doctor's name and directions, a quantity cap per sale and per patient over days; dispensed medicine of a non-returnable schedule is refused at a till return and on a Desk return. The prescription's date goes on the sale for a register that books it: filled at Submit on the Desk, typed by the cashier at the till and refused when it is not the prescription's. Each dispensing keeps the prescriber, the directions and the pharmacist's name, listed day by day in the report PP RXC Prescriptions Register. Two till services: the dispensary's refuses the sale when the service is down; the front's lets it through, flagged, and refuses medicine that must be sold at the dispensary. Prescriptions, pharmacists, schedules, patients (their identity and consent, on a record only the pharmacist roles read) and dispensings are records in the shop; the service reads them with the app's integration user and writes only its Dispensing records. The install makes the roles PP RXC Integration, PP RXC Pharmacist, PP RXC Pharmacist in Charge and PP RXC Records Officer (nobody holds it: the shop gives it for destroying records whose keeping period has ended); every service installs switched off. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/rxc/dispensary",
   "https://host.docker.internal:8125/rxc/front",
@@ -170,7 +170,7 @@
     {
      "fieldname": "freq_days",
      "fieldtype": "Int",
-     "label": "… over this many days"
+     "label": "\u2026 over this many days"
     },
     {
      "fieldname": "patient_section",
@@ -203,6 +203,12 @@
      "fieldtype": "Check",
      "label": "Sold in a sale of its own when not on the prescription",
      "description": "For a register that books the sale's prescription number for the whole sale (Kenya's Prescription Book and Poisons Book): with a prescription named on the sale, an item of this schedule that is not on it is refused."
+    },
+    {
+     "fieldname": "register_books_rx_date",
+     "fieldtype": "Check",
+     "label": "Its register books the prescription's date",
+     "description": "For a register that prints the date a prescription was written (Jordan's Form 9, Mexico's control book): at the till, a sale of this schedule is refused until the prescription's date is in Sale details. On the Desk it is filled at Submit."
     },
     {
      "fieldname": "returns_section",
@@ -837,6 +843,32 @@
      "label": "A return giving back"
     },
     {
+     "fieldname": "register_section",
+     "fieldtype": "Section Break",
+     "label": "For the prescriptions register"
+    },
+    {
+     "fieldname": "patient_name",
+     "fieldtype": "Data",
+     "label": "Patient's name",
+     "fetch_from": "customer.customer_name"
+    },
+    {
+     "fieldname": "prescriber",
+     "fieldtype": "Data",
+     "label": "Prescriber"
+    },
+    {
+     "fieldname": "directions",
+     "fieldtype": "Small Text",
+     "label": "Directions (the dose)"
+    },
+    {
+     "fieldname": "pharmacist_name",
+     "fieldtype": "Data",
+     "label": "Pharmacist"
+    },
+    {
      "fieldname": "where_section",
      "fieldtype": "Section Break",
      "label": "Where"
@@ -1065,6 +1097,14 @@
    "insert_after": "pp_rxc_prescriber_licence"
   },
   {
+   "dt": "Sales Order",
+   "fieldname": "pp_rxc_rx_date",
+   "fieldtype": "Date",
+   "label": "Prescription's date",
+   "insert_after": "pp_rxc_directions",
+   "description": "The date the prescription was written, filled from it by the Pharmacy counter rules at Submit."
+  },
+  {
    "dt": "Delivery Note",
    "fieldname": "pp_rxc_rx_number",
    "fieldtype": "Data",
@@ -1094,6 +1134,14 @@
    "insert_after": "pp_rxc_prescriber_licence"
   },
   {
+   "dt": "Delivery Note",
+   "fieldname": "pp_rxc_rx_date",
+   "fieldtype": "Date",
+   "label": "Prescription's date",
+   "insert_after": "pp_rxc_directions",
+   "description": "The date the prescription was written, filled from it by the Pharmacy counter rules at Submit."
+  },
+  {
    "dt": "Sales Invoice",
    "fieldname": "pp_rxc_rx_number",
    "fieldtype": "Data",
@@ -1121,6 +1169,14 @@
    "fieldtype": "Small Text",
    "label": "Directions for use",
    "insert_after": "pp_rxc_prescriber_licence"
+  },
+  {
+   "dt": "Sales Invoice",
+   "fieldname": "pp_rxc_rx_date",
+   "fieldtype": "Date",
+   "label": "Prescription's date",
+   "insert_after": "pp_rxc_directions",
+   "description": "The date the prescription was written, filled from it by the Pharmacy counter rules at Submit."
   }
  ],
  "sale_attributes": [
@@ -1135,6 +1191,9 @@
   },
   {
    "name": "PP RXC Directions"
+  },
+  {
+   "name": "PP RXC Rx Date"
   }
  ],
  "property_setters": [
@@ -1268,8 +1327,11 @@
    "down_answer": "refuse",
    "settings": {
     "record_type": "Sales Order",
-    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, items(item_code, item_group, stock_qty)",
-    "on_validate": false
+    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, pp_rxc_rx_date, items(item_code, item_group, stock_qty)",
+    "on_validate": false,
+    "fill_fields": [
+     "pp_rxc_rx_date"
+    ]
    }
   },
   {
@@ -1281,8 +1343,11 @@
    "down_answer": "refuse",
    "settings": {
     "record_type": "Delivery Note",
-    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, is_return, return_against, items(item_code, item_group, stock_qty, against_sales_order, so_detail, against_sales_invoice, si_detail)",
-    "on_validate": false
+    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, pp_rxc_rx_date, is_return, return_against, items(item_code, item_group, stock_qty, against_sales_order, so_detail, against_sales_invoice, si_detail)",
+    "on_validate": false,
+    "fill_fields": [
+     "pp_rxc_rx_date"
+    ]
    }
   },
   {
@@ -1294,9 +1359,54 @@
    "down_answer": "refuse",
    "settings": {
     "record_type": "Sales Invoice",
-    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, is_return, return_against, update_stock, items(item_code, item_group, stock_qty, sales_order, so_detail, delivery_note, dn_detail)",
-    "on_validate": false
+    "send_fields": "name, customer, pp_rxc_rx_number, pp_rxc_prescriber, pp_rxc_prescriber_licence, pp_rxc_directions, pp_rxc_rx_date, is_return, return_against, update_stock, items(item_code, item_group, stock_qty, sales_order, so_detail, delivery_note, dn_detail)",
+    "on_validate": false,
+    "fill_fields": [
+     "pp_rxc_rx_date"
+    ]
    }
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP RXC Prescriptions Register",
+   "ref_doctype": "PP RXC Dispensing",
+   "report_type": "Report Builder",
+   "columns": [
+    "day",
+    "patient_name",
+    "prescriber",
+    "summary",
+    "directions",
+    "pharmacist_name",
+    "prescription",
+    "status"
+   ],
+   "filters": [
+    [
+     "prescription",
+     "is",
+     "set"
+    ],
+    [
+     "give_back",
+     "=",
+     0
+    ],
+    [
+     "status",
+     "not in",
+     [
+      "Released",
+      "Returned"
+     ]
+    ]
+   ],
+   "order_by": "creation asc",
+   "roles": [
+    "PP RXC Pharmacist",
+    "PP RXC Pharmacist in Charge"
+   ]
   }
  ]
 }

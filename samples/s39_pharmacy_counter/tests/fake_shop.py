@@ -105,7 +105,8 @@ class FakeShop:
         self.add(f"{P} Item Schedule", parent="TRAM", schedule="CD2", effective_from=None)
         self.add(f"{P} Item Schedule", parent="TRAM", schedule="POM", effective_from=None)
         self.add("UOM Conversion Detail", parent="AMOX", uom="Strip", conversion_factor=7)
-        self.add(f"{P} Pharmacist", name="ph@shop", user="ph@shop", active=1, valid_until="2027-10-22")
+        self.add(f"{P} Pharmacist", name="ph@shop", user="ph@shop", full_name="P. Pharmacist", active=1,
+                 valid_until="2027-10-22")
         self.add(f"{P} Pharmacist", name="old@shop", user="old@shop", active=1, valid_until="2026-10-21")
         for c in ("Ann", "Bob", "Cash Sale"):
             self.add("Customer", name=c)

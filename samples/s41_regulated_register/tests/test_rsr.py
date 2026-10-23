@@ -236,6 +236,25 @@ class Manifest(unittest.TestCase):
         self.assertFalse([b for b in build.build_declaration()["register_books"]
                           if "pp_rxc_id_number" in json.dumps(b)])
 
+    def test_every_authority_source_is_a_sale_detail_and_a_desk_field_the_counter_rules_app_installs(self):
+        # the door refuses a declaration naming a sale detail the shop does not have (PB-4 layer 2): every authority source
+        # is K1's, and the prescription's date (K1 0.1.3, PH-B1e) is named where the book prints it (Jordan, Mexico)
+        k1 = json.loads((SAMPLE.parent / "s39_pharmacy_counter" / "manifest.json").read_text(encoding="utf-8"))
+        details = {a["name"] for a in k1["sale_attributes"]}
+        for ds in build.datasets():          # the authority's sources are the data set's, every book of it
+            a = ds.get("authority") or {}
+            self.assertLessEqual(set(a.get("pos_sale_details", {}).values()), details, ds["id"])
+            for dt in ("Sales Invoice", "Delivery Note"):
+                fields = {f["fieldname"]: f["fieldtype"] for f in k1["custom_fields"] if f["dt"] == dt}
+                self.assertLessEqual(set(a.get("desk_fields", {}).values()), set(fields), ds["id"])
+            prints_it = any("authority_date" in c["value"] for b in ds["books"] for c in b["columns"])
+            self.assertEqual(prints_it, "authority_date" in a.get("pos_sale_details", {}), ds["id"])
+            self.assertEqual(prints_it, "authority_date" in a.get("desk_fields", {}), ds["id"])
+            if prints_it:
+                self.assertEqual((a["pos_sale_details"]["authority_date"], a["desk_fields"]["authority_date"]),
+                                 ("PP RXC Rx Date", "pp_rxc_rx_date"))
+                self.assertEqual(fields["pp_rxc_rx_date"], "Date")
+
     def test_a_detail_with_no_source_is_declared_with_none(self):
         # PB-4 spec §15 R-4: the door must accept it and leave its slot empty; the age is the door's computed detail (R-3)
         empty = sorted(f"{b['book']}:{d['label']}" for b in build.build_declaration()["register_books"]

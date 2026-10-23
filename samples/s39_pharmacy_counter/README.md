@@ -23,6 +23,9 @@ recipe: [`recipes/pharmacy_counter.md`](../../recipes/pharmacy_counter.md).
 | **Pay**, another patient's prescription, or the walk-in customer | *"… Prescription RX-00012 is for another patient."* · *"… needs a named customer, not a walk-in sale."* |
 | **Pay**, a controlled line, the customer has no ID on record | *"… needs the customer's national or residence ID. Add it on their patient record on the Desk."* |
 | **Pay**, a schedule that needs consent, none on record | *"… needs the customer's consent to keep their records. Add it on their patient record on the Desk."* |
+| **Pay**, a prescription date in **Sale details** that is not the prescription's | *"… Prescription RX-00012 was written on 2026-10-19. Correct the date in Sale details."* |
+| **Pay**, a schedule whose register books the prescription's date, none in **Sale details** | *"… needs the prescription's date in Sale details: 2026-10-19."* |
+| **Pay** or **Submit**, prescriptions written on different days, where a date is booked or typed | *"… Prescriptions RX-00012, RX-00015 were written on different days. Sell each in a sale of its own."* |
 | **Pay**, over the schedule's cap | *"… No more than 20 may be sold at once."* · *"The patient has reached the limit for CD Schedule 2 until 2026-11-11."* |
 | a till return, or a Desk credit note, of dispensed medicine | *"… Dispensed medicine cannot be taken back."* |
 | **Pay** on the front of the shop, prescription medicine | *"… Sell this at the dispensary."* |
@@ -67,6 +70,57 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
   the prescription: patient, date, fills and quantities. An edit makes the till refuse it (*"was changed after it was
   dispensed. Enter a new one."*). The record keeps its change history.
 
+## The prescription's date, and the prescriptions register
+
+**The prescription's date on the sale** (0.1.3). A register may print the date a prescription was written beside its
+number: Jordan's narcotics and psychotropics register (Form 9), Mexico's control book (RIS Art. 117 I). The sale carries
+it as it carries the prescription's number:
+- **On the Desk** the field *Prescription's date* on a sales order, delivery or invoice is **filled at Submit** from the
+  prescriptions it names, over whatever was typed: the order's check, the delivery's made from it and its invoice's
+  each fill it again. A new document shows it empty until it is submitted; one made from an order carries the
+  order's date in its draft.
+- **At the till** the cashier types it in **Sale details** (*Rx Date*, `2026-10-19`): a check cannot write a sale, so
+  the till cannot be filled from the prescription. A date that is not the prescription's is refused, and so is an empty
+  one where the schedule ticks *Its register books the prescription's date*; the sentence shows the date to type. We
+  have asked for a check to be able to fill a sale detail, so the cashier types nothing.
+- **A sale naming prescriptions written on different days** has no one date: where a date is booked or typed it is
+  refused, so sell each prescription in its own sale. Elsewhere it goes through with no date.
+
+**The prescriptions register** (0.1.3), the report **PP RXC Prescriptions Register** on the dispensings, for a daily
+prescriptions register such as Jordan's Form 7 (*سجل الأوصفات الطبية اليومي*: JFDA *Instructions on Medical Prescriptions and Registers*, 2025, the form on p. 27): one row
+per sale that dispensed against a prescription, in the order they were taken. Filter it by *Day* and print it from the
+report view.
+
+| Form 7's column | The report's column |
+|---|---|
+| serial | the report view's row number (it starts again with each filter: print one day at a time) |
+| patient's name | *Patient's name*, from the customer |
+| patient's age | ⛔ **not printed** (below) |
+| prescribing doctor | *Prescriber*: each prescription's, written on the dispensing when it was taken |
+| contents | *What it dispensed*: each item, its quantity and its prescription |
+| dose | *Directions (the dose)*: the prescriber's directions on the prescription, for each item; empty where the prescription carries none (the sale's or the item's own directions never stand in) |
+| date | *Day (the shop's)*: the POS day the sale was taken under |
+| pharmacist | *Pharmacist*: the name on the seller's pharmacist record, when it is active, not a delegate and in date; else empty. On the Desk, the pharmacist who submitted the chain's first document |
+| price | ⛔ **not printed** (below) |
+
+- **No age.** A report reads only the dispensing, and a print may not read the patient's record yet with its reader's
+  own rights; the age is never stored. Write it in from the patient's record, where the pharmacist reads the birth
+  date. We have asked for a print to read an app's own records.
+- **No price.** The dispensing keeps no price: it is on the sale. Write it in from the sale named by *Sale reference* or
+  *Desk document*.
+- **One row per sale**, not per prescription: a sale naming two prescriptions is one row naming both. Sell each
+  prescription in its own sale where your register wants an entry each.
+- **A Desk sale's row is its sales order's** (the chain's first document): the order's day and its pharmacist, listed
+  while the order stands, whether or not it has been delivered yet; a delivery or invoice made from it adds no row. A
+  cancelled order's row is *Released* at that patient's next check.
+- **The status column.** A dispensing's status changes only when the service next checks that patient: from Pay it
+  reads *Reserved*, then *Dispensed* once its sale is booked, or *Released* once a sale never booked has its day
+  closed, and only then drops out of the report. So a sale abandoned at Pay can still be listed as *Reserved* in a
+  closed day. Close every POS day before you print a day's register, and strike any *Reserved* row whose *Sale
+  reference* has no booked sale.
+- **Who reads it:** the pharmacist roles, who read the patient's record; a clerk is refused it and the dispensings.
+- Dispensings made before 0.1.3 show no patient's name, prescriber, dose or pharmacist.
+
 ## What the shop does
 
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
@@ -75,9 +129,11 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
    will do, and consent.
    - The install adds the record types *PP RXC Settings*, *Drug Schedule*, *Pharmacist*, *Premises Licence*, *Patient*,
      *Prescription* and *Dispensing*.
-   - It adds fields on Item, Item Group, Sales Order, Delivery Note and Sales Invoice, and four sale details (*PP RXC Rx
-     Number*, *Prescriber*, *Prescriber Licence*, *Directions*). The five fields it adds on Customer are 0.1.1's, kept
+   - It adds fields on Item, Item Group, Sales Order, Delivery Note and Sales Invoice (the prescription's number,
+     prescriber, licence, directions and, since 0.1.3, its date), and five sale details (*PP RXC Rx Number*,
+     *Prescriber*, *Prescriber Licence*, *Directions*, *Rx Date*). The five fields it adds on Customer are 0.1.1's, kept
      empty and out of sight: an update may not remove a field.
+   - It adds the report **PP RXC Prescriptions Register** ([below](#the-prescriptions-date-and-the-prescriptions-register)).
    - It adds two licence reminders and the roles **PP RXC Integration**, **PP RXC Pharmacist**, **PP RXC Pharmacist in
      Charge** and **PP RXC Records Officer**. Nobody holds the last one until you give it ([How long to
      keep](#how-long-to-keep-and-what-happens-after)).
@@ -120,6 +176,23 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
    6. As a *System Manager*, delete the **Deleted Document** rows of type *Version* that step 5 made: each holds a full
       copy of the row it replaced.
    7. The level and its grants on *Customer* (0.1.1's step 3) can then go: the service no longer reads those fields.
+
+   **Updating from 0.1.2.** In this order:
+   1. Deploy the 0.1.3 service first. It answers a shop still on 0.1.2 as 0.1.2 did: that shop leaves the schedule's
+      new tick out of its answer, so no schedule books the date (and a shop that refused the field is asked again
+      without it); it takes the service's reservation, leaving out the four register columns it lacks (both on our
+      bench); and a Desk document is filled only when it sent the date, which only 0.1.3's settings do (a test: no
+      sale was run through the 0.1.3 service against a 0.1.2 shop on our bench). A service that answers many shops moves once, before any of them updates.
+   2. Update the app. Its screen says the three Desk services changed: each now sends and fills the prescription's
+      date, so **the update switches each of them off and clears its consent**, as it does any service whose settings
+      change. ⚠ Until they are on again, a sales order, delivery or invoice of medicine is submitted **unchecked**:
+      update when the Desk sells no medicine, and do step 3 at once. The two till services are unchanged and stay as
+      they were.
+   3. As a System Manager, open each of the three Desk services, read what it sends and fills, tick the consent and
+      switch it on.
+   4. Tick *Its register books the prescription's date* on the schedules whose register prints it (step 4).
+   A dispensing made before the update keeps its register columns empty: the register lists it with no patient's
+   name, prescriber, dose or pharmacist.
 
 4. **Make your drug schedules** (*PP RXC Drug Schedule*), one per class per classification axis, each with its rules. Set
    them on your medicine items (*Drug schedules*: one row per axis, with its *effective from*) or on an item group
@@ -165,6 +238,12 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
        prescription whose *Fills authorised* is blank is one fill, and the pharmacist enters more only when the
        prescriber marked a repeat (*Most fills* 1 would refuse that repeat too). A fill may be supplied over several
        visits: set *Most dispensings* to 1 as well where part supply must not happen.
+   - **The prescription's date in your register.** Tick *Its register books the prescription's date* on a schedule
+     whose register prints the date the prescription was written: in **Jordan**, the narcotics and psychotropics
+     register's special-prescription date (Form 9; JFDA *Instructions on Medical Prescriptions and Registers*, 2025,
+     Art. 7); in **Mexico**, the control book's issue date of the special prescription (fracción I; RIS Art. 117 I),
+     which the register app's Mexican data set also prints in the fracción II and III books (its choice, not a cited
+     field). The till then refuses such a sale until its date is in Sale details ([below](#the-prescriptions-date-and-the-prescriptions-register)).
    - **Saudi Arabia:** controlled prescriptions are dispensed through SFDA's **Raqeeb** platform, on paper only while it
      is down (SFDA *Procedures and Controls*, 2026, Art. 11(1)). A prescription entered in this app is your shop's
      working copy for the counter's rules, not the lawful record (our reading; the text read does not name the decision
@@ -204,7 +283,7 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
   quantity and unit, and, on a refund, the original sale.
 - **At each Desk submit,** the shop sends the fields each Desk service names.
 - **The service reads back with the integration user's key:**
-  - the prescriptions named and the operator's pharmacist record;
+  - the prescriptions named and the operator's pharmacist record (their name included, for the register);
   - whether each patient field the sale needs is filled in on the patient's record. The shop answers yes or no: the
     ID, date of birth, authority and consent values never leave it. The service never asks for them, but its key
     may read them: keep that key as you would a pharmacist's password;
@@ -212,6 +291,7 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
   - the schedules and the items;
   - the sales, days and documents the patient's dispensings name;
   - every POS Profile's default customer.
+- **At a Desk submit it fills one field,** the prescription's date, on the document it checks.
 - **It writes only its own Dispensing records.** It keeps nothing between calls but a minute's copy of the settings,
   schedules, item groups and profiles' default customers. Prescriptions, patients and dispensings stay records in your
   site.
@@ -232,6 +312,10 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
   - **the customer's Connections:** the *Pharmacy* group on a customer's form counts their prescriptions and
     dispensings for anyone who reads the customer. It shows that the person has had prescriptions, never which;
   - **one engine call** returns any record whole to any signed-in user, a patient's record included.
+- **The till cannot fill the prescription's date:** the cashier types it, checked against the prescription. On the Desk
+  it is filled at Submit.
+- **An update that changes a service switches it off** with its consent cleared, the Desk services' in 0.1.3: until they
+  are on again, the Desk submits medicine unchecked (*Updating from 0.1.2*).
 - **The till never shows a patient's fields** and cannot take them: enter them on the Desk, never on a till field rule.
 - **A customer who has a patient record** (not measured on our bench): the Desk's own link check refuses deleting
   the customer while the record names it, and tells whoever tries that the record exists. Before merging two customers
@@ -334,7 +418,7 @@ no exception to erasure: ask your adviser there.
 
 | File | What it is |
 |---|---|
-| `manifest.json` | the record types (the patient's identity and consent on *PP RXC Patient*), fields, sale details, four roles, two licence reminders, the feed registration, and five services: two checks before payment (dispensary `refuse`, front `allow_and_flag`) and three document checks (Sales Order, Delivery Note, Sales Invoice; `refuse`), each installed switched off |
+| `manifest.json` | the record types (the patient's identity and consent on *PP RXC Patient*), fields, sale details, four roles, two licence reminders, the prescriptions register report, the feed registration, and five services: two checks before payment (dispensary `refuse`, front `allow_and_flag`) and three document checks (Sales Order, Delivery Note, Sales Invoice; `refuse`; each fills the prescription's date), each installed switched off |
 | `rxrules.py` | the pure core: the signature check (`verify`), the shapes (`sale_context`, `desk_context`), an item's schedules (`schedules_for`, `strictest`), prescriptions and fingerprints, the dispensings that count (`counts`) and their statuses (`resolve`), and the rules (`decide`) |
 | `service/app.py` | the service, standard library only: five routes, `GET /health`, the app template's handshake for many shops; one `handle` answers the web server and the function entry (`lambda_handler`) alike |
 | `Dockerfile` · `app.json` | the settings file for hosting (`"runs": "function"`: on CitiXsys hosting it is a function, paid per call) and an image for your own server (built from the kit's root) |
@@ -393,8 +477,8 @@ details (default `PP RXC`).
 
 ### What was proven where
 
-- **On the laptop:** the tests and canaries above (126 tests, one of them replaying a recorded bench run when one is
-  given; 93 canaries, each RED with its baseline passing).
+- **On the laptop:** the tests and canaries above (144 tests, one of them replaying a recorded bench run when one is
+  given; 114 canaries, each RED with its baseline passing).
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344`, the engine at `dc65d832`):
   - **The setup.** The app was installed through the shop's own installer: five services, switched off, with the
     declared down answers. The service's user held only the app's role and the card's reads, and every read and write
@@ -479,6 +563,30 @@ details (default `PP RXC`).
     (a patient with no record refused); consent refused, then sold once the pharmacist entered the day on the patient
     record; only the Records Officer deleted a patient record; the deletion steps as in 0.1.1.
   - **Timing:** the dispensary's checks took 167 ms at the median and 749 ms at the slowest (the last 50).
+
+- **On our test bench again for 0.1.3** (2026-10-23, the same builds; 39 of 39 checks):
+  - **0.1.2 first.** With a patient record on it, and the dispensary's and the Desk invoice's services switched on with
+    consent, 0.1.2 was updated to 0.1.3 through the shop's installer. The patient record was kept whole; the
+    prescription's date was added as a Date field on the three Desk documents and as a sale detail (on, never required),
+    with the schedule's tick, the dispensing's four register columns and the report. The Desk invoice's service, whose
+    lists changed, came back switched off with its consent cleared; the dispensary's, unchanged, stayed on. Asked for
+    0.1.3's tick, the 0.1.2 shop answered without it, and took a dispensing naming the four new columns, leaving them
+    out.
+  - **The Desk:** the pharmacist's order, with a wrong date typed, was filled with the prescription's date at Submit;
+    the delivery a clerk made from it, its date blanked, and that delivery's invoice were each filled again; a draft
+    was never filled.
+  - **The till:** a date that was not the prescription's was refused; an empty one passed until the schedule was ticked,
+    then was refused with the date to type; the right date booked, and the booked sale carried it.
+  - **The register:** the pharmacist read the till's dispensing with the patient's name, the prescriber, the contents,
+    the prescriber's directions, the day and their own name; released dispensings and give-backs were left out, and a
+    sale abandoned at Pay was still listed *Reserved* after its day closed (as *The status column* says); the Desk
+    chain was one row, its sales order's; the installed
+    report matched the manifest's; a Desk clerk was refused the report and the dispensings.
+  - **All of 0.1.2's walk again**, the patient record's privacy checks included, and the uninstall as before.
+  - **Timing:** the dispensary's checks took 215 ms at the median and 1,104 ms at the slowest (the last 50).
+  - **An update that adds a sale detail which an earlier uninstall kept** (switched off, because booked sales name it)
+    stopped whole on our bench, where a first install takes the kept one over: we have reported it. A shop that never
+    ran 0.1.3 has no such detail.
 
 ## Make it your own
 

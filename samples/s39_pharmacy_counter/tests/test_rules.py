@@ -31,6 +31,7 @@ SCHEDULES = R.schedules_of([
     sched("GHA", axis="Act 489", needs_prescription=1, validity_days=60, returnable=1, return_gives_back=1),
     sched("GH1019", axis="Act 1019", qty_cap=5, validity_days=14, returnable=1, return_gives_back=0),
     sched("KEP1", axis="KE Poisons", returnable=1, own_sale_without_rx=1),
+    sched("DATED", axis="Register", needs_prescription=1, register_books_rx_date=1),
 ])
 
 
@@ -293,7 +294,8 @@ class Prescriptions(unittest.TestCase):
         p = rx("RX1", "AMOX", 21)
         out = decide(c, shop(c, [rule("POM")], [p]))
         self.assertEqual(out["record"], {"lines": [{"item": "AMOX", "qty": 21, "rx": "RX1", "schedules": ["POM"]}],
-                                         "fingerprints": {"RX1": R.fingerprint(p)}})
+                                         "fingerprints": {"RX1": R.fingerprint(p)}, "prescriber": "Dr Who",
+                                         "directions": ""})
 
     def test_a_register_item_not_on_the_prescription_goes_in_a_sale_of_its_own(self):
         c = ctx([line("AMOX", 21, 1), line("POISON", 1, 2)], details={"Rx Number": "RX1"})
@@ -311,6 +313,88 @@ class Prescriptions(unittest.TestCase):
         out = decide(c, shop(c, [rule("POM"), rule("CD2", "POM")], [rx("RX1", "AMOX", 21), rx("RX2", "TRAM", 10)]))
         self.assertEqual(out["verdict"], "allow")
         self.assertEqual(sorted(x["rx"] for x in out["record"]["lines"]), ["RX1", "RX2"])
+
+
+class RxDate(unittest.TestCase):
+    """0.1.3: the date the prescription was written, on the sale for a register that books it (K1-d)."""
+    def desk(self, rules, rxs, details=None, lines=None, fillable=True):
+        c = ctx(lines or [line("AMOX", 21)], details=dict({"Rx Number": ",".join(r["name"] for r in rxs)}, **(details or {})),
+                source="desk")
+        c["fillable"] = fillable                 # the document sent the date: its subscription's fill list names it
+        return decide(c, shop(c, rules, rxs))
+
+    def till(self, rules, rxs, details=None, lines=None):
+        c = ctx(lines or [line("AMOX", 21)], details=dict({"Rx Number": ",".join(r["name"] for r in rxs)}, **(details or {})))
+        return decide(c, shop(c, rules, rxs))
+
+    def test_the_desk_is_filled_with_the_prescriptions_date_over_whatever_was_typed(self):
+        p = rx("RX1", "AMOX", 21, written="2026-10-19")
+        for typed in ("", "2026-01-01"):
+            out = self.desk([rule("POM")], [p], {"Rx Date": typed})
+            self.assertEqual((out["verdict"], out["fields"]), ("fill", {"pp_rxc_rx_date": "2026-10-19"}), typed)
+            self.assertTrue(out["record"])                    # a fill reserves as an allow does
+
+    def test_a_linked_desk_line_is_filled_too_and_the_field_takes_the_prefix(self):
+        c = dict(ctx([line("AMOX", 21, linked=True)], source="desk"), details={"ACME RXC Rx Number": "RX1"}, fillable=True)
+        out = R.decide(c, "desk", shop(c, [rule("POM")], [rx("RX1", "AMOX", 21, written="2026-10-19")]), TODAY, "ACME RXC")
+        self.assertEqual((out["verdict"], out["fields"], out["record"]), ("fill", {"acme_rxc_rx_date": "2026-10-19"}, None))
+
+    def test_a_document_that_did_not_send_the_date_is_never_filled(self):
+        # a subscription still on 0.1.2's settings (no date sent, none in its fill list) would refuse a fill whole
+        out = self.desk([rule("DATED")], [rx("RX1", "AMOX", 21, written="2026-10-19")], fillable=False)
+        self.assertEqual(out["verdict"], "allow")
+
+    def test_the_till_refuses_a_date_that_is_not_the_prescriptions(self):
+        out = self.till([rule("POM")], [rx("RX1", "AMOX", 21, written="2026-10-19")], {"Rx Date": "19/10/2026"})
+        self.assertEqual(out["reason"], "Line 1: AMOX: Prescription RX1 was written on 2026-10-19. Correct the date in "
+                                        "Sale details.")
+
+    def test_the_till_takes_the_right_date_and_an_empty_one_unless_the_schedule_books_it(self):
+        p = rx("RX1", "AMOX", 21, written="2026-10-19")
+        self.assertEqual(self.till([rule("POM")], [p], {"Rx Date": "2026-10-19"})["verdict"], "allow")
+        self.assertEqual(self.till([rule("POM")], [p])["verdict"], "allow")
+        self.assertEqual(self.till([rule("DATED")], [p])["reason"],
+                         "Line 1: AMOX: needs the prescription's date in Sale details: 2026-10-19.")
+        self.assertEqual(self.till([rule("DATED")], [p], {"Rx Date": "2026-10-19"})["verdict"], "allow")
+
+    def test_prescriptions_of_two_days_are_refused_where_a_date_is_booked_or_typed(self):
+        ps = [rx("RX1", "AMOX", 21, written="2026-10-19"), rx("RX2", "TRAM", 10, written="2026-10-20")]
+        two = [line("AMOX", 21, 1), line("TRAM", 10, 2)]
+        words = "Line 1: AMOX: Prescriptions RX1, RX2 were written on different days. Sell each in a sale of its own."
+        self.assertEqual(self.till([rule("DATED"), rule("POM")], ps, lines=two)["reason"], words)
+        self.assertEqual(self.till([rule("POM"), rule("POM")], ps, {"Rx Date": "2026-10-19"}, lines=two)["reason"], words)
+        self.assertEqual(self.desk([rule("DATED"), rule("POM")], ps, lines=two)["reason"], words)
+        self.assertEqual(self.till([rule("POM"), rule("POM")], ps, lines=two)["verdict"], "allow")
+        self.assertEqual(self.desk([rule("POM"), rule("POM")], ps, lines=two)["verdict"], "allow")    # no date to fill
+
+    def test_a_number_named_for_no_line_here_never_adds_its_date(self):
+        ps = [rx("RX1", "AMOX", 21, written="2026-10-19"), rx("RX2", "TRAM", 10, written="2026-10-20")]
+        out = self.till([rule("DATED")], ps, {"Rx Date": "2026-10-19"})            # RX2 covers no line of this sale
+        self.assertEqual(out["verdict"], "allow")
+        out = self.desk([rule("POM")], ps)
+        self.assertEqual(out["fields"], {"pp_rxc_rx_date": "2026-10-19"})
+
+    def test_a_long_dose_is_kept_whole(self):
+        long = "1 tablet in the morning and 1 at night, with food, for 28 days; do not drive; " * 3
+        out = self.till([rule("POM")], [rx("RX1", "AMOX", 21, directions=long.strip())])
+        self.assertEqual(out["record"]["directions"], f"AMOX: {long.strip()}")
+
+    def test_a_prescription_with_no_date_never_fills_an_empty_value(self):
+        c = dict(ctx([line("AMOX", 21, linked=True)], details={"Rx Number": "RX1"}, source="desk"), fillable=True)
+        out = decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21, written="")]))
+        self.assertEqual(out["verdict"], "allow")
+
+    def test_the_register_columns_the_dispensing_keeps(self):
+        ps = [rx("RX1", "AMOX", 21, directions="1 capsule three times a day"), rx("RX2", "TRAM", 10)]
+        ps[1]["prescriber"] = "Dr Two"
+        out = self.till([rule("POM"), rule("POM")], ps, {"Directions": "as the sale says"},
+                        lines=[line("AMOX", 21, 1), line("TRAM", 10, 2)])
+        # the dose is the prescriber's own: RX2 carries none, so the sale's text never stands in for it
+        self.assertEqual((out["record"]["prescriber"], out["record"]["directions"]),
+                         ("Dr Who; Dr Two", "AMOX: 1 capsule three times a day"))
+        c = ctx([line("PARA", 2)])                    # a capped sale with no prescription: no prescriber, no dose
+        out = decide(c, shop(c, [R.strictest([dict(SCHEDULES["PMED"], freq=[], freq_qty=10, freq_days=7)])]))
+        self.assertEqual((out["record"] or {}).get("prescriber", ""), "")
 
 
 class Patient(unittest.TestCase):
@@ -509,6 +593,9 @@ class Shapes(unittest.TestCase):
         c = R.desk_context(body, P)
         self.assertEqual((c["sale_ref"], c["lines"][0]["qty"], c["lines"][0]["linked"], c["details"][f"{P} Rx Number"]),
                          ("Delivery Note:DN-1", 21, True, "RX1"))
+        self.assertFalse(c["fillable"])                   # 0.1.2's settings send no date: never answered with one
+        body["context"]["fields"]["pp_rxc_rx_date"] = None
+        self.assertTrue(R.desk_context(body, P)["fillable"])
         body["context"]["fields"]["items"][0].update(against_sales_order="", so_detail="", against_sales_invoice="SI-1",
                                                      si_detail="row-9")                 # a delivery made from an invoice
         self.assertTrue(R.desk_context(body, P)["lines"][0]["linked"])
