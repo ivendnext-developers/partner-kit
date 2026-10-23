@@ -162,6 +162,8 @@ class Service:
             rules, tree = self.rules(name, shop)
             return 200, storerules.on_select(ctx, rules, tree)
         except (ShopUnreadable, ValueError) as e:       # the shop did not answer, or not with records: nothing was judged
+            with self.lock:
+                self.kept.pop(name, None)               # a group the kept tree does not know is read again next time
             print(json.dumps({"error": type(e).__name__}), file=sys.stderr, flush=True)   # the class only: no shop data
             return 503, {"error": "the shop cannot be read"}
 

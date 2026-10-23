@@ -5,7 +5,7 @@
  "title": "Customers by store",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "At which stores each customer group may buy. A capture on customer select: when the cashier puts an existing customer on a sale, the shop's server sends the customer with their customer group, the till's store and its POS Profile, and the service answers whether the customer may buy here. One record of PP CBS Rule per customer group, with the places its customers may buy at: each row a store, a POS Profile, or both. A group with no rule takes the rule of the nearest group above it, and a customer with no rule up the tree buys anywhere. A group's own rule replaces the rule above it. At a till the rule does not name, the till takes the customer off the sale with the rule's words, and the server refuses every door that charges or books the sale for that customer. A rule whose places are all blank stops the group everywhere. The store's walk-in customer is never asked. The service reads the rules and the customer group tree with the app's integration user and writes nothing; it never reads the customer record. The install makes the role PP CBS Integration; the shop gives it to the app's integration user, with read on Customer Group. The capture installs switched off; the shop reads what it is sent, ticks the consent and switches it on. When the service is down the customer stays on the sale and the sale is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "At which stores each customer group may buy. A capture on customer select: when the cashier puts an existing customer on a sale, the shop's server sends the customer (their id, name, phone, email and customer group), the till's store, its POS Profile and the cashier's user, and the service answers whether the customer may buy here. One record of PP CBS Rule per customer group, with the places its customers may buy at: each row a store, a POS Profile, or both. A group with no rule takes the rule of the nearest group above it, and a customer with no rule up the tree buys anywhere. A group's own rule replaces the rule above it. At a till the rule does not name, the till takes the customer off the sale with the rule's words, and the server refuses every door that charges or books the sale for that customer. A rule with no place stops the group everywhere. The store's walk-in customer is never asked. The service reads the rules and the customer group tree with the app's integration user and writes nothing; it never reads the customer record. The install makes the role PP CBS Integration; the shop gives it to the app's integration user, with read on Customer Group. The capture installs switched off; the shop reads what it is sent, ticks the consent and switches it on for every POS Profile (a POS Profile left out never asks, and every customer buys there). When the service is down the customer stays on the sale and the sale is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/cbs/select"
  ],
@@ -20,7 +20,7 @@
      "label": "Store",
      "options": "Warehouse",
      "in_list_view": 1,
-     "description": "The store's warehouse, as its tills' POS Profile names it. Blank: any store this POS Profile is used at."
+     "description": "A store's own warehouse, as its tills' POS Profile names it (never a warehouse group). Blank: any store this POS Profile is used at."
     },
     {
      "fieldname": "pos_profile",
@@ -60,8 +60,7 @@
      "fieldtype": "Table",
      "label": "Where they may buy",
      "options": "PP CBS Rule Place",
-     "reqd": 1,
-     "description": "Each row a store, a POS Profile, or both (that POS Profile at that store). Anywhere else, the till takes the customer off the sale."
+     "description": "Each row a store, a POS Profile, or both (that POS Profile at that store). Anywhere else, the till takes the customer off the sale. No row: the group buys nowhere."
     },
     {
      "fieldname": "words",

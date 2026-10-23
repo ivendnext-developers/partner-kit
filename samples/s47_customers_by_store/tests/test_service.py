@@ -132,9 +132,16 @@ class OneShop(unittest.TestCase):
         self.assertEqual(self.select(context(group="Trade accounts", store="Bulawayo - CL"))[0], 503)
 
     def test_the_tree_down_is_a_503_never_an_answer_from_half_the_rules(self):
-        self.api.tree_down = True
-        self.assertEqual(self.select(context(group="Gold trade", store="Bulawayo - CL"))[0], 503)
+        self.api.tree_down = True                       # a group with its own rule: only the tree's read can make this a 503
+        self.assertEqual(self.select(context(group="Trade accounts", store="Bulawayo - CL"))[0], 503)
         self.assertNotIn("-", self.svc.kept)           # nothing half-read is kept
+
+    def test_a_group_the_kept_tree_does_not_know_is_a_503_and_is_read_again(self):
+        self.select(context())
+        self.assertEqual(self.select(context(group="Made a minute ago", store="Bulawayo - CL"))[0], 503)
+        self.assertNotIn("-", self.svc.kept)
+        self.select(context())
+        self.assertEqual(len([c for c in self.api.calls if c[0] == "rules"]), 2)
 
     def test_rules_that_are_not_records_are_a_503(self):
         self.api.rules_by = {"https://shop.example": None}

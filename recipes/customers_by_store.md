@@ -16,7 +16,7 @@ A till puts any customer on any store's sale. Shops ask for less: **account cust
 ## Rules
 
 1. **Declare the rule record and the capture in your manifest** (`samples/s47_customers_by_store/manifest.json`):
-   - a record type `<PREFIX> Rule`, one record per customer group, named by it (`"autoname": "field:customer_group"`, a **Link** to *Customer Group*, unique): *Switched on*, the places (a **Table** of `<PREFIX> Rule Place`, at least one row, each with a **Link** to *Warehouse* named *Store* and a **Link** to *POS Profile*, neither required) and the cashier's words (a **Data** field of at most 120 characters). Give **System Manager** the rights to edit it and your integration role **read only**; name the role `<PREFIX> Integration`, so the install makes it;
+   - a record type `<PREFIX> Rule`, one record per customer group, named by it (`"autoname": "field:customer_group"`, a **Link** to *Customer Group*, unique): *Switched on*, the places (a **Table** of `<PREFIX> Rule Place`, not required: Desk drops a row left blank, so a rule with no row is how a shop stops a group; each row a **Link** to *Warehouse* named *Store*, never a warehouse group, and a **Link** to *POS Profile*, neither required) and the cashier's words (a **Data** field of at most 120 characters). Give **System Manager** the rights to edit it and your integration role **read only**; name the role `<PREFIX> Integration`, so the install makes it;
    - one `capture` subscription with `"settings": {"event": "customer_select"}` at your service's address, and that address alone in `allowed_urls`;
    - a feed registration naming your one integration user (its description at most 140 characters, which the shop's install holds), so the shop's *Connect again* hands that user's key to your service;
    - a help address on the rule record type (a `documentation` property setter).
@@ -29,13 +29,18 @@ A till puts any customer on any store's sale. Shops ask for less: **account cust
 
 5. **Find the rule that decides.** The customer's own group's rule; else the nearest group above it with a rule: the groups whose span holds the group's (`lft` below and `rgt` above), the innermost first. No rule up the tree: allow. One rule decides, whole: a group's own rule replaces the rules above it, so say so to the shop.
 
-6. **Match the place on each side it fills.** A row with a store alone names every till at that store (`context.store`, the till's warehouse); a row with a POS Profile alone names that POS Profile at any store (`context.pos_profile`); a row with both names that POS Profile at that store. Any row that names this till: `{"verdict":"allow"}`. None: `{"verdict":"refuse","reason":"…"}`, a plain reason of 1 to 140 characters. A rule whose rows are all blank names nowhere: refuse, never allow.
+6. **Match the place on each side it fills.** A row with a store alone names every till at that store (`context.store`, the till's warehouse); a row with a POS Profile alone names that POS Profile at any store (`context.pos_profile`); a row with both names that POS Profile at that store. Any row that names this till: `{"verdict":"allow"}`. None: `{"verdict":"refuse","reason":"…"}`, a plain reason of 1 to 140 characters. A rule with no place names nowhere: refuse, never allow. A customer whose group your kept tree does not know, while the shop has rules, answers 503 and drops what you kept, so the next pick reads the shop again (a group made within the minute, or a tree read cut short): never an allow past a rule further up.
 
-7. **Say what the pass covers.** The shop's server records your *allow* for the cashier, the customer and the POS Profile, for twelve hours or until a booking uses it; your *refuse* withdraws an earlier one. A POS Profile used at two stores carries the pass between them, so tell the shop to give each store its own POS Profile when the rule must tell them apart.
+7. **Tell the shop to switch it on for every till.** The capture asks only at the POS Profiles its subscription answers: with none chosen, every one. A POS Profile left off a list never asks, and every customer buys there.
+
+8. **Say what the pass covers.** The shop's server records your *allow* for the cashier, the customer and the POS Profile, for twelve hours or until a booking uses it; your *refuse* withdraws an earlier one. A POS Profile used at two stores carries the pass between them, so tell the shop to give each store its own POS Profile when the rule must tell them apart.
 
 ## Bounds
 
 - The till's own doors: a sales order or invoice made in iVendNext Desk is not asked. A document check (`recipes/document_check.md`) can hold those.
+- What the customer already holds is not a new pick and is not held: a layaway plan's later payment and its settlement, an order's balance, a payment on their account.
+- While any customer-add app is switched on for a POS Profile, a customer the cashier added in the last ten minutes goes on the sale without your service being asked, whatever group the cashier gave them.
+- One cashier sends at most 60 select rounds in ten minutes.
 - One app answers each capture event on a POS Profile: this one takes *customer select* there.
 - Offline, the till does not call your service: the down answer applies, and a sale paid offline books when it syncs and is flagged.
 - One rule per customer group; a customer's own rule is a group of their own.

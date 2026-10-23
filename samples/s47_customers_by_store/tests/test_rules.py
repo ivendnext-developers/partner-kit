@@ -95,8 +95,10 @@ class Rules(unittest.TestCase):
         self.assertEqual(storerules.on_select(context(group="", store="Bulawayo - CL"), rules, TREE)["verdict"], "refuse")
         self.assertEqual(storerules.on_select(context(group="", store="Sandton - CL"), rules, TREE), {"verdict": "allow"})
 
-    def test_a_group_the_tree_does_not_know_buys_anywhere_unless_it_has_its_own_rule(self):
-        self.assertEqual(select(group="Walk-in, new", store="Bulawayo - CL"), {"verdict": "allow"})
+    def test_a_group_the_tree_does_not_know_is_unreadable_while_the_shop_has_rules(self):
+        with self.assertRaises(ValueError):               # a group made since the tree was read: never an unflagged allow
+            select(group="Made a minute ago", store="Bulawayo - CL")
+        self.assertEqual(storerules.on_select(context(group="Made a minute ago"), {}, TREE), {"verdict": "allow"})
         self.assertEqual(storerules.on_select(context(group="Staff", profile="Tills"), RULES, {})["verdict"], "refuse")
 
     def test_an_empty_store_or_pos_profile_from_the_till_never_matches_a_named_side(self):
@@ -194,6 +196,7 @@ class Verify(unittest.TestCase):
         self.assertTrue(storerules.verify(ts, sig, raw, "t", now=1000))
         self.assertTrue(storerules.verify(ts, sig, raw, "s", now=1000 + 301))
         self.assertTrue(storerules.verify(None, sig, raw, "s", now=1000))
+        self.assertTrue(storerules.verify("9" * 5000, sig, raw, "s", now=1000))    # never int() on a long digit string
 
 
 if __name__ == "__main__":

@@ -9,7 +9,10 @@ decides (the customer's own group's, else the nearest group above it that has on
 the server refuses every door that charges or books the sale for that customer until a later pick is allowed.
 
 - no rule for the group or above it: ``allow``, the customer buys anywhere;
-- a rule with no usable row (every row blank): ``refuse`` everywhere, never let through.
+- a rule with no place (or only blank rows): ``refuse`` everywhere, never let through;
+- a group the shop's tree does not know, while the shop has rules (a group made within the minute the tree is kept, or a
+  tree read cut short by the app user's rights): ``ValueError``, so the service answers 503 and the till applies its
+  flagged down answer — never an unflagged allow past a rule further up.
 
 ⛔ No answer moves money or changes the sale: an answer lets a customer on, or takes them off.
 
@@ -35,7 +38,7 @@ def verify(timestamp: str | None, signature: str | None, raw: bytes, secret: str
     """``""`` when the request is the shop's, else why not. The signature is base64 HMAC-SHA256 of
     ``<timestamp>.<raw body>`` with the subscription's secret (the installer handed it back once)."""
     ts, sig = timestamp or "", signature or ""
-    if not (ts.isascii() and ts.isdigit()) or abs((now or time.time()) - int(ts)) > SKEW_S:
+    if not (ts.isascii() and ts.isdigit() and len(ts) <= 12) or abs((now or time.time()) - int(ts)) > SKEW_S:
         return "the request's time is missing or too far from ours"
     want = base64.b64encode(hmac.new(secret.encode(), ts.encode() + b"." + raw, hashlib.sha256).digest())
     if not hmac.compare_digest(want, sig.encode()):
@@ -148,7 +151,10 @@ def _reason(group: str, rule: dict) -> str:
 
 def on_select(ctx: dict, rules: dict, tree: dict) -> dict:
     """The answer for one pick: on the sale when the deciding rule names this till (or no rule decides), else off it."""
-    found = deciding(ctx["customer"]["customer_group"], rules, tree)
+    group = ctx["customer"]["customer_group"]
+    if group and group not in tree and group not in rules and rules:
+        raise ValueError("the customer's group is not in the shop's group tree")
+    found = deciding(group, rules, tree)
     if not found:
         return {"verdict": "allow"}
     group, rule = found

@@ -39,8 +39,8 @@ class ManifestTest(unittest.TestCase):
         fields = {f["fieldname"]: f for f in rule["fields"]}
         g = fields["customer_group"]
         self.assertEqual((g["options"], g["unique"], g["reqd"]), ("Customer Group", 1, 1))
-        self.assertEqual((fields["places"]["fieldtype"], fields["places"]["options"], fields["places"]["reqd"]),
-                         ("Table", MANIFEST["prefix"] + " Rule Place", 1))
+        self.assertEqual((fields["places"]["fieldtype"], fields["places"]["options"]), ("Table", MANIFEST["prefix"] + " Rule Place"))
+        self.assertNotIn("reqd", fields["places"])      # Desk drops a blank row, so "no place" is how a shop stops a group
         table = TYPES[MANIFEST["prefix"] + " Rule Place"]
         self.assertEqual((table["istable"], [(f["fieldname"], f["options"]) for f in table["fields"]]),
                          (1, [("store", "Warehouse"), ("pos_profile", "POS Profile")]))

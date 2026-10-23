@@ -100,8 +100,15 @@ CANARIES = [
      M + "test_one_select_capture_switched_off_that_keeps_the_customer_on_when_down"),
     ("the capture answers the customer select", "manifest.json", '"event": "customer_select"', '"event": "customer_add"',
      M + "test_one_select_capture_switched_off_that_keeps_the_customer_on_when_down"),
-    ("the places table is required", "manifest.json", '"options": "PP CBS Rule Place",\n     "reqd": 1,', '"options": "PP CBS Rule Place",\n     "reqd": 0,',
+    ("a rule may have no place", "manifest.json", '"options": "PP CBS Rule Place",\n', '"options": "PP CBS Rule Place",\n     "reqd": 1,\n',
      M + "test_one_rule_per_group_named_by_it_with_the_fields_the_service_reads"),
+    ("a group the tree does not know is unreadable", "storerules.py",
+     "    if group and group not in tree and group not in rules and rules:\n", "    if False:\n",
+     R + "test_a_group_the_tree_does_not_know_is_unreadable_while_the_shop_has_rules"),
+    ("an unreadable answer is read again", "service/app.py", "                self.kept.pop(name, None)", "                pass",
+     S + "OneShop.test_a_group_the_kept_tree_does_not_know_is_a_503_and_is_read_again"),
+    ("a long timestamp is refused, never parsed", "storerules.py", "ts.isdigit() and len(ts) <= 12)", "ts.isdigit())",
+     "test_rules.Verify.test_the_signature_and_the_time_are_checked"),
 ]
 
 

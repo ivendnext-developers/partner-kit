@@ -1,6 +1,6 @@
 # S47 — Customers by store (`pp_cbs`): at which stores each customer group may buy
 
-The shop decides at which stores each group of its customers may buy: account customers only at the store that holds their account, a trade group only at the trade counters, staff only at the staff shop. When the cashier puts a customer on a sale at any other store, the till takes the customer off the sale with the shop's reason. No payment is taken for that customer there.
+The shop decides at which stores each group of its customers may buy: account customers only at the store that holds their account, a trade group only at the trade counters, staff only at the staff shop. When the cashier puts a customer on a sale at any other store, the till takes the customer off the sale with the shop's reason, and no door that charges or books a new sale takes payment for that customer there.
 
 **When to use it:** a rule about the customer decides where they may buy, and the shop keeps the rule itself, in Desk.
 
@@ -10,7 +10,7 @@ The shop decides at which stores each group of its customers may buy: account cu
 |---|---|
 | A customer whose group's rule names this store, or this till's POS Profile | The customer goes on the sale, as always |
 | A customer whose group's rule names neither | *"This customer can't be on this sale"*, the rule's words (for example *"Customers in Trade accounts buy only at Harare, Sandton."*) and *"Sell without a customer, or pick another one."* The customer is off the sale |
-| A rule whose places are all blank | Refused at every store: *"Customers in ⟨group⟩ can't buy at this store."* |
+| A rule with no place | Refused at every store: *"Customers in ⟨group⟩ can't buy at this store."* |
 | No rule for the customer's group, or for any group above it | The customer goes on the sale, as always |
 | The store's walk-in customer | Never asked |
 | The service down, or the shop's records unreadable | The capture's down answer: the customer stays on the sale, and the sale is flagged on *Sales to review* |
@@ -27,13 +27,13 @@ The shop decides at which stores each group of its customers may buy: account cu
 ## What the shop does
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP CBS Rule*, the role `PP CBS Integration`, the capture and the feed registration, the capture switched off. Nothing changes at the till yet.
-2. **Make the app's integration user** (the [integration user recipe](../../recipes/integration_user.md)): tick *Is Desk User*, give it the role **PP CBS Integration** alone and generate its API key. In *Role Permissions*, give that role **read on Customer Group** (the service reads the group tree). Choose the user on the feed registration **PP CBS Rules feed**, then press **Connect again** on the app's record, which sends that user's key to the service.
+2. **Make the app's integration user** (the [integration user recipe](../../recipes/integration_user.md)): tick *Is Desk User*, give it the role **PP CBS Integration** alone, no User Permissions, and generate its API key. In *Role Permissions*, give that role **read on Customer Group** (the service reads the group tree). Choose the user on the feed registration **PP CBS Rules feed**, then press **Connect again** on the app's record, which sends that user's key to the service.
 3. **Write the rules** in *PP CBS Rule*: one per customer group that needs one. A store is the shop's own warehouse, as its tills' POS Profile names it. *Words the cashier reads* is optional: blank, the app writes *"Customers in ⟨group⟩ buy only at ⟨places⟩."*
-4. **Switch the capture on:** open *Customers by store* in *Retail Extension Subscription*, read what is sent, tick the consent, choose the POS Profiles, and switch it on.
+4. **Switch the capture on:** open *Customers by store* in *Retail Extension Subscription*, read what is sent, tick the consent, leave its POS Profiles empty (every till asks), and switch it on. A POS Profile left off a list never asks, and every customer buys there: name POS Profiles only to leave out tills no locked customer can reach.
 
 **Where it shows.** The rules are Desk records the shop keeps (its System Manager, or a role the shop gives the rights to in *Role Permissions*: that role also needs *Select* on **Customer Group**, **Warehouse** and **POS Profile**, or the rule's lookups answer nothing). At the till the cashier meets them when they pick a customer.
 
-**What leaves the shop.** Each time a cashier puts an existing customer on a sale, the shop's server sends the service: the store, the POS Profile, the till's language, the cashier's user, the till's own id for the sale, and the customer's id, name, phone, email and customer group. No price, total or tender. The service reads the shop's rule records and its customer group tree with the integration user's key, keeps them one minute, and keeps nothing of a call. It never reads the customer record and writes nothing. A hosted copy holds each shop's capture secret and its user's API key from *Connect again* until the shop removes the app. Say so on your card.
+**What leaves the shop.** Each time a cashier puts an existing customer on a sale, the shop's server sends the service: the store, the POS Profile, the till's language, the cashier's user, the till's own id for the sale, an id for a code check, and the customer's id, name, phone, email and customer group. No price, total or tender. The service reads the shop's rule records and its customer group tree with the integration user's key, keeps them one minute, and keeps nothing of a call. It never reads the customer record and writes nothing. A hosted copy holds each shop's capture secret and its user's API key from *Connect again* until the shop removes the app. Say so on your card.
 
 ## The files
 
@@ -76,8 +76,9 @@ What a partner usually changes:
 
 - **One app per question.** A POS Profile takes one service on each capture event, so this app's *customer selected* question cannot share a POS Profile with another app that answers it (a loyalty app that sends a code on select, say). It adds no check before payment.
 - **Down keeps the customer on.** The manifest declares `allow_and_flag`: an outage never stops a shop selling, and a customer the rules could not judge is flagged on *Sales to review*. A shop that must never sell to a customer outside their stores sets the capture's down answer to `refuse`; every pick of a customer then waits on the service. A refused key (401 or 403) is the shop unreadable too, never an allow without the flag.
-- **A rule that names nowhere stops the group.** A rule whose places are all blank refuses its customers at every store; it never lets them through.
-- **A rule changed in Desk, or a new customer group,** reaches the service within a minute (it keeps the rules and the tree that long).
+- **A rule with no place stops the group.** It refuses its customers at every store; it never lets them through. Desk drops a place row left blank, so a rule meant to stop a group simply has no rows.
+- **Sixty picks in ten minutes.** One cashier sends at most 60 select rounds in ten minutes; past that the till shows *"Too many attempts. Try again in a few minutes."* without asking you, and a customer already let on stays on.
+- **A rule changed in Desk, or a new customer group,** reaches the service within a minute (it keeps the rules and the tree that long). A customer in a group the kept tree does not know yet is answered 503 (the down answer, flagged), and the next pick reads the shop again. A sale already open keeps its answer until it books, twelve hours at most.
 - **A new key.** A key withdrawn or a user disabled (401 or 403) is the shop unreadable: every pick goes to the down answer until the user is switched back on or given a new key, and *Connect again* sends it. The log names it `KeyRefused`, apart from an outage.
 - **Your address.** Write your own address in `allowed_urls`. The shop's server must trust your certificate: a real one for a shop.
 
@@ -89,6 +90,8 @@ What a partner usually changes:
 |---|---|---|
 | Do nothing: a POS Profile per store and the cashier's training | 0 | the till shows every customer at every store; nothing stops a sale on account at the wrong store |
 | A manifest only: a field on Customer naming its store, or the POS Profile's own *Customer Groups* | ~½ day | the till reads neither; a manifest cannot answer a capture |
+| A function on the same capture that reads the POS Profile's own *Customer Groups* table | ~1 day | one list per POS Profile (a group per till, never a store), no words of the shop's, and a table that already means *customers shown* on the Desk's own POS screen |
+| A check before payment (S46's door) by store and group | ~1 day | it holds at the booking with no pass to go stale, but the cashier learns at Pay, after the basket is built; the capture takes the customer off at the pick |
 | **A capture on customer select, answered by a function that refuses a customer whose group's rule does not name this till** | ~1 day | **picked**: the server holds every payment door until the app lets the customer on here, in the shop's own words, with no read of the customer record; S46's service shape and group-tree walk reused |
 
 ### The answer, exactly
@@ -101,9 +104,10 @@ What a partner usually changes:
 ### Bounds, stated
 
 - **The till's own doors only.** A sales order or invoice made in iVendNext Desk is not asked (the capture is the till's).
-- **Offline,** the till does not call the service: the down answer applies, and a sale paid offline with a customer the service was not asked about books when it syncs and is flagged.
+- **Offline,** the till does not call the service: the down answer applies, and a sale paid offline with a customer the service was not asked about books when it syncs and is flagged. A sale paid after the connection returns is refused until the customer is picked again.
+- **What the customer already holds** is not a new pick and is not held: a layaway plan's later payment and its settlement, an order's balance, a payment on their account. A locked customer can make those at any store.
 - **The pass is per POS Profile.** The shop's server records an *allow* for the cashier, the customer and the POS Profile, for twelve hours or until a booking uses it. A POS Profile used at two stores carries a pass between them: a rule that must tell two stores apart names each store, and the shop gives each store its own POS Profile.
-- **A customer added at the till** is asked on the pick that follows, unless a customer-add service is switched on for the POS Profile (the add already asked).
+- **A customer added at the till** is asked on the pick that follows. But while any customer-add app is switched on for the POS Profile, a customer this cashier added in the last ten minutes goes on the sale without this app being asked, whatever group the cashier gave them.
 - **A rule per customer group.** A customer's own rule is a group of their own.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. On CitiXsys hosting the first pick after a quiet spell starts the function; past 3 s the down answer applies, flagged.
 - It logs one line per call: the route, the status and the milliseconds, never the body.
