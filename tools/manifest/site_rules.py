@@ -1,7 +1,7 @@
 """What the shop's INSTALL refuses that its checker (``validate.py``, a byte-equal copy of the shop's own) passes.
 
 The install screen runs ``validate.py`` first; then, inside the shop, the installer checks the manifest against the site
-(``manifest_install._site_refusals_v2`` in the POS app) and installs in a fixed order. Two refusals come from that, and a
+(``manifest_install._site_refusals_v2`` in the POS app) and installs in a fixed order. Three refusals come from that, and a
 manifest that passes ``validate.py`` still fails at a shop on them (found on our test bench, 2026-10-18, sample S33, and
 2026-10-23, sample S44):
 
@@ -14,7 +14,7 @@ manifest that passes ``validate.py`` still fails at a shop on them (found on our
    to a report the same manifest makes cannot be saved: *"Could not find Row #n: Link To: <report>"*.
 3. **A feed registration's description holds at most 140 characters.** The shop's Registered Application keeps its
    description in a field of 140 characters, and a longer one stops the install: *"CharacterLengthExceededError"*
-   (found on our test bench by APPF run 12, 2026-10-23, sample S44's first manifest).
+   (found on our test bench, 2026-10-23, sample S44's first manifest).
 
     python3 tools/manifest/site_rules.py samples/s33_click_and_collect/manifest.json    # exit 0 = none; 1 = refused
 
