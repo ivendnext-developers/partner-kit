@@ -110,6 +110,9 @@ report view.
   *Desk document*.
 - **One row per sale**, not per prescription: a sale naming two prescriptions is one row naming both. Sell each
   prescription in its own sale where your register wants an entry each.
+- **A Desk sale's row is its sales order's** (the chain's first document): the order's day and its pharmacist, listed
+  while the order stands, whether or not it has been delivered yet; a delivery or invoice made from it adds no row. A
+  cancelled order's row is *Released* at that patient's next check.
 - **The status column.** A dispensing's status changes only when the service next checks that patient: from Pay it
   reads *Reserved*, then *Dispensed* once its sale is booked, or *Released* once a sale never booked has its day
   closed, and only then drops out of the report. So a sale abandoned at Pay can still be listed as *Reserved* in a
@@ -176,9 +179,10 @@ report view.
 
    **Updating from 0.1.2.** In this order:
    1. Deploy the 0.1.3 service first. It answers a shop still on 0.1.2 as 0.1.2 did: that shop leaves the schedule's
-      new tick out of its answer (on our bench), so no schedule books the date (and a shop that refused the field is
-      asked again without it), and a Desk document is filled only when it sent the date, which only 0.1.3's settings
-      do. A service that answers many shops moves once, before any of them updates.
+      new tick out of its answer, so no schedule books the date (and a shop that refused the field is asked again
+      without it); it takes the service's reservation, leaving out the four register columns it lacks (both on our
+      bench); and a Desk document is filled only when it sent the date, which only 0.1.3's settings do (a test: no
+      sale was run through the 0.1.3 service against a 0.1.2 shop on our bench). A service that answers many shops moves once, before any of them updates.
    2. Update the app. Its screen says the three Desk services changed: each now sends and fills the prescription's
       date, so **the update switches each of them off and clears its consent**, as it does any service whose settings
       change. ⚠ Until they are on again, a sales order, delivery or invoice of medicine is submitted **unchecked**:
@@ -560,13 +564,14 @@ details (default `PP RXC`).
     record; only the Records Officer deleted a patient record; the deletion steps as in 0.1.1.
   - **Timing:** the dispensary's checks took 167 ms at the median and 749 ms at the slowest (the last 50).
 
-- **On our test bench again for 0.1.3** (2026-10-23, the same builds; 38 of 38 checks):
+- **On our test bench again for 0.1.3** (2026-10-23, the same builds; 39 of 39 checks):
   - **0.1.2 first.** With a patient record on it, and the dispensary's and the Desk invoice's services switched on with
     consent, 0.1.2 was updated to 0.1.3 through the shop's installer. The patient record was kept whole; the
     prescription's date was added as a Date field on the three Desk documents and as a sale detail (on, never required),
     with the schedule's tick, the dispensing's four register columns and the report. The Desk invoice's service, whose
     lists changed, came back switched off with its consent cleared; the dispensary's, unchanged, stayed on. Asked for
-    0.1.3's tick, the 0.1.2 shop answered without it.
+    0.1.3's tick, the 0.1.2 shop answered without it, and took a dispensing naming the four new columns, leaving them
+    out.
   - **The Desk:** the pharmacist's order, with a wrong date typed, was filled with the prescription's date at Submit;
     the delivery a clerk made from it, its date blanked, and that delivery's invoice were each filled again; a draft
     was never filled.
@@ -574,10 +579,11 @@ details (default `PP RXC`).
     then was refused with the date to type; the right date booked, and the booked sale carried it.
   - **The register:** the pharmacist read the till's dispensing with the patient's name, the prescriber, the contents,
     the prescriber's directions, the day and their own name; released dispensings and give-backs were left out, and a
-    sale abandoned at Pay was still listed *Reserved* after its day closed (as *The status column* says); the installed
+    sale abandoned at Pay was still listed *Reserved* after its day closed (as *The status column* says); the Desk
+    chain was one row, its sales order's; the installed
     report matched the manifest's; a Desk clerk was refused the report and the dispensings.
   - **All of 0.1.2's walk again**, the patient record's privacy checks included, and the uninstall as before.
-  - **Timing:** the dispensary's checks took 184 ms at the median and 1,104 ms at the slowest (the last 50).
+  - **Timing:** the dispensary's checks took 215 ms at the median and 1,104 ms at the slowest (the last 50).
   - **An update that adds a sale detail which an earlier uninstall kept** (switched off, because booked sales name it)
     stopped whole on our bench, where a first install takes the kept one over: we have reported it. A shop that never
     ran 0.1.3 has no such detail.
