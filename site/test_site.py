@@ -22,7 +22,7 @@ import build_pdfs   # noqa: E402  (the branded PDFs, built after the site as the
 _spec = importlib.util.spec_from_file_location("issue_forms", build.ROOT / ".github" / "scripts" / "issue_forms.py")
 issue_forms = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(issue_forms)
-PARTNER_FORM = "https://www.ivendnext.com/partner/#be-a-partner"
+PARTNER_FORM = "https://www.ivendnext.com/partners/apply/"
 # Calls with no iVendNext name yet: the sign-in addresses (the standard discovery document lists them anyway) and
 # server-side code that runs inside the shop. Every other call has one in ivendnext_mpos.api.v1.
 UPSTREAM_KEPT = ("frappe.integrations.oauth2.", "frappe.get_doc(")

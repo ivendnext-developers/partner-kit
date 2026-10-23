@@ -90,7 +90,7 @@ NAV = [("Needs", "needs/index.html"), ("Get started", "start.html"), ("Guide", "
        ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("Roadmap", "roadmap.html"),
        ("Feedback", "feedback.html")]
 CORP = "https://www.ivendnext.com"
-FOOT_CORP = [("ivendnext.com", CORP + "/"), ("Documentation", "https://docs.ivendnext.com/"), ("Application suite", CORP + "/application-suite/"), ("Partners", CORP + "/partner/"),
+FOOT_CORP = [("ivendnext.com", CORP + "/"), ("Documentation", "https://docs.ivendnext.com/"), ("Application suite", CORP + "/application-suite/"), ("Partners", CORP + "/partners/"),
              ("Release 2.0", CORP + "/release/2.0/"), ("Blog", CORP + "/blog/"), ("Events", CORP + "/events/"),
              ("About us", CORP + "/about-us/"), ("Contact", CORP + "/contact/")]
 FOOT_LEGAL = [("Legal", "https://legal.ivend.com/"), ("Privacy policy", "https://ivend.com/privacy-policy/")]
@@ -417,7 +417,7 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
 <body class="ivn">
 <a class="skip" href="#main">Skip to the content</a>
 <header class="top">
-<div class="band"><div class="band-in"><a href="{CORP}/">ivendnext.com</a><a href="{CORP}/partner/">Partners</a></div></div>
+<div class="band"><div class="band-in"><a href="{CORP}/">ivendnext.com</a><a href="{CORP}/partners/">Partners</a></div></div>
 <div class="bar">
 <a class="brand" href="{up}index.html"{" aria-current=\"page\"" if out == "index.html" else ""}><img src="{up}assets/logo.svg" alt="iVendNext" width="132" height="24"><span class="brand-sub">Developers</span></a>
 {search_box(up)}
