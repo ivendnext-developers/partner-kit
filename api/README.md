@@ -12,13 +12,24 @@ Build against iVendNext **from your own server, in any language**. This folder d
 
 ## Steps
 
-1. Send every call in the collection to your sandbox site:
+1. **Before the first run, make sure the shop has the item `PP-WRC-PHONE`**, a stock item with serial numbers. Files 05 and 06 receive it, and six more files read what those two made, so without it eight files fail (*PP-WRC-PHONE is not a stock Item*). The integration user may not make items, so make it once with your administrator's key:
+
+   ```bash
+   curl -s -X POST "$BASE/api/resource/Item" -H "Authorization: token <admin key>:<admin secret>" \
+     -H "Content-Type: application/json" \
+     -d '{"item_code": "PP-WRC-PHONE", "item_name": "PP Warranty Phone", "item_group": "All Item Groups",
+          "stock_uom": "Nos", "is_stock_item": 1, "has_serial_no": 1}'
+   ```
+
+   Or in Desk: Item → New, code `PP-WRC-PHONE`, *Maintain Stock* and *Has Serial No* ticked.
+
+2. Send every call in the collection to your sandbox site:
 
    ```bash
    BASE=https://<your-sandbox-site> KEY=<api key> SECRET=<api secret> bash api/collection/run.sh
    ```
 
-2. Optional: check that the API description is valid.
+3. Optional: check that the API description is valid.
 
    ```bash
    bash api/validate.sh
