@@ -104,9 +104,10 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
    - Back in **Role Permissions Manager**, on *Customer*, give **PP RXC Pharmacist** and **PP RXC Pharmacist in
      Charge** a *read* at level 0 (it asks for that first), then *read* and *write* at your level. The pharmacists also
      need a role that edits customers (*Sales User* does) to fill the fields in.
-   - Give **PP RXC Integration** nothing at your level: the service asks only whether each field is set, never its
-     value. If the shop ever stops answering that, the service reads the field as unreadable and the dispensary stops
-     taking payment (*"did not answer"*); then give the role *read* at your level.
+   - Give **PP RXC Integration** *read* at your level. The service asks only whether each field is set, never its
+     value, but the shop answers that question only for a field the asker may read: without the grant the service
+     reads the field as unreadable, and the dispensary stops taking payment (*"did not answer"*). The grant lets the
+     service's key read the values too, so keep that key as you would a pharmacist's password.
    - An update of this app keeps your level: it writes only the settings its own manifest gives a field. A field a new
      version adds arrives at level 0: updating from 0.1.0, set the level on the two consent fields. An uninstall and a
      new install make the fields again at level 0: set them again.
@@ -178,11 +179,10 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
 - **Who reads the patient's fields is your setup** (step 3), not the app's: a manifest cannot give a field a
   permission level yet. Until you take that step, everyone who reads customers reads them. After it, on our test bench
   a Desk clerk who reads customers saw none of them on the form, the list, the report view or the print, and a clerk's
-  edit of one was ignored. It does not yet hold everywhere; each is recorded for the team that owns it:
+  edit of one was ignored, and a clerk's filter on one, through the API or the Desk's list, was refused (*"Field not
+  permitted in query"*). It does not yet hold everywhere; each is recorded for the team that owns it:
   - **the form's change history:** a customer's form brings its recent changes with it, old and new values included.
     The screen hides a field the user may not read, but the values reach the clerk's browser;
-  - **a filter:** a filter on these fields is answered for anyone who reads customers, so a clerk who uses the API can
-    learn whether a field is set and, by asking enough questions (*starts with*, *before*, *after*), its value;
   - **one engine call** returns a whole record to any signed-in user, whatever its levels;
   - **the till** reads customers with its own rights: never show these fields on a till field rule, and never make
     one a customer search field;
@@ -368,10 +368,12 @@ details (default `PP RXC`).
     through the shop's installer. The fields kept level 2, the ID's new description was written, the
     pharmacist-in-charge lost *delete* on prescriptions, and the Records Officer role was made.
   - **The till and the Desk, with the fields at level 2:** all of the 0.1.0 walk above again, the controlled sale's ID
-    check included, with the service's user given nothing at that level.
+    check included, with the service's user reading at that level. Without that grant, the shop answered the service
+    neither way and the service refused the controlled sale (*"did not answer"*), as step 3 says.
   - **Who reads them:** a Desk clerk who reads customers saw none of the five fields on the form, the list, the report
-    view or the print, and a clerk's edit of one was ignored; the pharmacist read and wrote them. The form's change
-    history and a filter on *is set* still reach the clerk (*Limits*).
+    view or the print, a clerk's edit of one was ignored, and a clerk's filter on the ID was refused through the API
+    and the Desk's list; the pharmacist read and wrote them. The form's change history still reaches the clerk
+    (*Limits*).
   - **Consent:** with *Needs the patient's recorded consent* ticked, Pay was refused (*"needs the customer's consent to
     keep their records"*) until the pharmacist entered the day on the patient's form, then the sale was allowed.
   - **Deleting:** the pharmacist-in-charge and a pharmacist were refused; the Records Officer deleted an unused
