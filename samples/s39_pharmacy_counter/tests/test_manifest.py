@@ -92,8 +92,8 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(set(readers), {f"{P} Pharmacist", f"{P} Pharmacist in Charge", f"{P} Integration",
                                         f"{P} Records Officer", "System Manager"})
         # the shop's installer gives System Manager every right on a record type whose manifest names no System Manager
-        # row (PH-B1d run 1), and the framework refuses a row with no right (run 2): read alone is the least, so the
-        # site's administrator lists, exports and prints no patient
+        # row (PH-B1d run 1), and the framework refuses a row with no right (run 2): read alone is the least (the
+        # administrator still reads a patient, run 3, but cannot change or delete one)
         self.assertEqual(readers["System Manager"], {"read"})
         self.assertEqual(readers[f"{P} Integration"], {"read"})
         self.assertEqual({r for r, k in readers.items() if "delete" in k}, {f"{P} Records Officer"})

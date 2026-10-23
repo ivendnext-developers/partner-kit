@@ -93,8 +93,9 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
    **The patient's record.** A patient's national or residence ID, date of birth, authority to possess and consent go
    on their **PP RXC Patient** record, one per customer, entered on the Desk by a pharmacist. Only **PP RXC
    Pharmacist**, **PP RXC Pharmacist in Charge**, **PP RXC Records Officer** and the app's integration user read it,
-   so the clerk who serves a customer at the Desk never sees it: there is nothing to set up. Never give another role a
-   right on *PP RXC Patient*. The health and data-protection laws of the UAE, Saudi Arabia, Kenya, Jordan, Mexico and
+   so the clerk who serves a customer at the Desk never sees it: there is nothing to set up. The site's **System
+   Manager** reads them too (form, list, report view, print view) but cannot change or delete one: the shop's installer
+   gives that role a row on every record type, and a row needs at least one right, so this app gives it read alone. Never give another role a right on *PP RXC Patient*. The health and data-protection laws of the UAE, Saudi Arabia, Kenya, Jordan, Mexico and
    Nigeria limit these fields to the staff whose work needs them. ⚠ The till cannot take or show them: enter them on the
    Desk. Open the record from the *PP RXC Patient* list, filtered by the customer; it has no link on the customer's
    form, because a count there would tell everyone who reads customers that the person is a patient.
@@ -203,9 +204,9 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
 - **Who reads a patient's record.** Only the pharmacist roles, the Records Officer and the service's user (step 3).
   On our test bench a Desk clerk who reads customers was refused the record whole: its form, and so its change
   history, its list, report view and print, and every filter on its ID (the API's and the Desk's lists, the count, a
-  single value, the list's group-by count on a field, the link search). The site's *System Manager* is refused the
-  record too, but can give any role a right on it, and reads every record's change history in the **Version** list:
-  keep that role few. Three framework paths still tell a clerk something, each recorded for the team that owns it:
+  single value, the list's group-by count on a field, the link search). The site's *System Manager* reads patients'
+  records (read alone, measured: form, list, report view and print view), can give any role a right on them, and
+  reads every record's change history in the **Version** list: keep that role few. Three framework paths still tell a clerk something, each recorded for the team that owns it:
   - **an assignment:** once a patient's record is itself assigned to someone (*Assign To*), the list's group-by count
     by *Assigned To* answers a clerk's *starts with* filter on the ID, because it counts assignments without asking
     whether the clerk may read the record. Don't assign patient records; an assignment on the customer tells nothing
