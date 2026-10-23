@@ -51,7 +51,7 @@ CONNECT, DISCONNECT, SITE = shops.CONNECT, shops.DISCONNECT, shops.SITE_HEADER
 
 def verified(secrets: list, headers, raw: bytes) -> bool:
     ts, sig = headers.get("X-iVendNext-Timestamp") or "", headers.get("X-iVendNext-Signature") or ""
-    if not (ts.isascii() and ts.isdigit()) or abs(time.time() - int(ts)) > SKEW_S:   # "²" is a digit int() refuses
+    if not (ts.isascii() and ts.isdigit() and len(ts) <= 12) or abs(time.time() - int(ts)) > SKEW_S:   # "²" is a digit int() refuses; a long string is never parsed
         return False
     for secret in secrets:
         want = base64.b64encode(hmac.new(secret, ts.encode() + b"." + raw, hashlib.sha256).digest())

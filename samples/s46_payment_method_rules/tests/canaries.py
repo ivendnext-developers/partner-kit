@@ -53,6 +53,8 @@ CANARIES = [
      "if not secrets:", S + "OneShop.test_the_check_takes_only_its_own_secret"),
     ("an old timestamp is refused", "payrules.py", "abs((now or time.time()) - int(ts)) > SKEW_S", "False",
      S + "OneShop.test_an_old_timestamp_is_refused"),
+    ("a long timestamp is refused, never parsed", "payrules.py", "ts.isdigit() and len(ts) <= 12)", "ts.isdigit())",
+     "test_rules.Verify.test_the_signature_and_the_time_are_checked"),
     ("the rules are kept per shop", "service/app.py", 'return site or "", secrets, shop', 'return "-", secrets, shop',
      S + "ManyShops.test_the_rules_are_kept_per_shop"),
     ("a new key reads the rules again", "service/app.py", 'if hit and hit[1] == shop["key"] and now - hit[0] < RULES_TTL:',

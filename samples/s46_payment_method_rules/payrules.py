@@ -42,7 +42,7 @@ def verify(timestamp: str | None, signature: str | None, raw: bytes, secret: str
     """``""`` when the request is the shop's, else why not. The signature is base64 HMAC-SHA256 of
     ``<timestamp>.<raw body>`` with the subscription's secret (the installer handed it back once)."""
     ts, sig = timestamp or "", signature or ""
-    if not (ts.isascii() and ts.isdigit()) or abs((now or time.time()) - int(ts)) > SKEW_S:
+    if not (ts.isascii() and ts.isdigit() and len(ts) <= 12) or abs((now or time.time()) - int(ts)) > SKEW_S:
         return "the request's time is missing or too far from ours"
     want = base64.b64encode(hmac.new(secret.encode(), ts.encode() + b"." + raw, hashlib.sha256).digest())
     if not hmac.compare_digest(want, sig.encode()):

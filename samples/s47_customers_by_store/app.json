@@ -1,0 +1,26 @@
+{
+ "app": "customers-by-store",
+ "version": "1.0.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s47_customers_by_store/service/app.lambda_handler",
+ "package": [
+  "tools/app_template/service",
+  "samples/s47_customers_by_store/storerules.py",
+  "samples/s47_customers_by_store/service"
+ ],
+ "env": [
+  {
+   "name": "IVN_LIBRARY_APP",
+   "required": true
+  },
+  {
+   "name": "CBS_PREFIX",
+   "required": true
+  }
+ ]
+}

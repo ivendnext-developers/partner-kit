@@ -218,6 +218,7 @@ class Verify(unittest.TestCase):
         self.assertTrue(payrules.verify(ts, sig, raw, "t", now=1000))
         self.assertTrue(payrules.verify(ts, sig, raw, "s", now=1000 + 301))
         self.assertTrue(payrules.verify(None, sig, raw, "s", now=1000))
+        self.assertTrue(payrules.verify("9" * 5000, sig, raw, "s", now=1000))    # never int() on a long digit string
 
 
 if __name__ == "__main__":
