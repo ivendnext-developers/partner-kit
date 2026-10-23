@@ -16,7 +16,7 @@ verified: carried 2026-10-16 · not re-run
 Your service is asked when a new customer is added; it sends a one-time code, and the server checks the code before the customer is made.
 
 ## Limits
-- New customers only: there is no door yet when an existing customer is chosen (the card *question-on-existing-customer*).
+- New customers only: an existing customer chosen for a sale is another event of the same door (the card *question-on-existing-customer*).
 - Three wrong codes end the check, and a code lives ten minutes.
 
 ## Tell the customer
