@@ -1,0 +1,163 @@
+{
+  "format": 1,
+  "id": "eg_pharmacy",
+  "title": "Egypt: narcotics received and dispensed book",
+  "jurisdiction": "EG",
+  "vertical": "pharmacy",
+  "certified": 0,
+  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. Read from Law 182/1960 as first published (Official Gazette No. 131, 13 June 1960): six later amending laws were not traced, so confirm Art. 18 against the current text before printing into the book. The law sets no way to correct an entry: this set takes the strictest, a reversing line. The patient's age and the prescriptions-book entry number print empty until the register reads them: write them in. Art. 18 asks for the quantity of narcotic a dispensed medicine contains; the book prints the quantity dispensed in the item's unit, so put the narcotic content in the item's name. The six-monthly statement (Art. 23) is not set up yet, nor the prescriptions book (Arts. 17, 18(c)), for which the law lists no fields.",
+  "sources": [
+    "Law No. 182 of 1960 on narcotics, Official Gazette No. 131, 13 June 1960: Arts. 17, 18, 23, 31 (gazette pp. 964-966, the scan on edaegypt.gov.eg)"
+  ],
+  "details": {
+    "prescriber_address": {
+      "label": "Prescriber's address",
+      "type": "Data",
+      "own": 1
+    },
+    "patient_age": {
+      "label": "سنه",
+      "type": "Data"
+    },
+    "rx_book_entry": {
+      "label": "رقم القيد فى دفتر التذاكر الطبية",
+      "type": "Data"
+    }
+  },
+  "authority": {
+    "pos_sale_details": {
+      "authority_no": "PP RXC Rx Number",
+      "authority_issuer": "PP RXC Prescriber",
+      "authority_issuer_licence": "PP RXC Prescriber Licence"
+    },
+    "desk_fields": {
+      "authority_no": "pp_rxc_rx_number",
+      "authority_issuer": "pp_rxc_prescriber",
+      "authority_issuer_licence": "pp_rxc_prescriber_licence"
+    },
+    "dispenser_licence": {
+      "doctype": "PP RXC Pharmacist",
+      "match": "user",
+      "field": "licence_number"
+    }
+  },
+  "books": [
+    {
+      "id": "received_dispensed",
+      "title": "Narcotics received and dispensed book",
+      "form": "دفتر خاص للوارد والمصروف (المادة ١٨)",
+      "cite": "Law 182/1960 Art. 18: entered on the day received and on the day dispensed, in a book whose pages are numbered and sealed by the authority; kept 10 years from the last entry, Art. 31",
+      "classes": [
+        "EG Schedule 1"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "EG Law 182/1960 schedules"
+      },
+      "conditions": [],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "reversing_line",
+      "retention_years": 10,
+      "medium": "official_book",
+      "medium_note": "Pages numbered and sealed by the competent authority (Art. 18): print into that book, in clear letters, following its own page numbers.",
+      "required": [],
+      "columns": [
+        {
+          "label": "أولا الوارد: تاريخ الورود",
+          "value": [
+            "movement_date"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "أولا الوارد: اسم البائع وعنوانه",
+          "value": [
+            "counterparty",
+            "counterparty_address"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "نوع الجوهر المخدر",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "أولا الوارد: كميته",
+          "value": [
+            "qty",
+            "uom"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "ثانيا المصروف (ا): اسم وعنوان محرر التذكرة",
+          "value": [
+            "authority_issuer",
+            "detail:prescriber_address"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "ثانيا المصروف (ب): اسم المريض بالكامل ولقبه",
+          "value": [
+            "counterparty"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "ثانيا المصروف (ب): سنه",
+          "value": [
+            "detail:patient_age"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "ثانيا المصروف (ب): عنوانه",
+          "value": [
+            "counterparty_address"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "ثانيا المصروف (ج): التاريخ الذى صرف فيه الدواء",
+          "value": [
+            "movement_date"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "ثانيا المصروف (ج): رقم القيد فى دفتر التذاكر الطبية",
+          "value": [
+            "detail:rx_book_entry"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "ثانيا المصروف (ج): كمية الجواهر المخدرة",
+          "value": [
+            "qty",
+            "uom"
+          ],
+          "when": "Out"
+        }
+      ]
+    }
+  ],
+  "columns_from": {
+    "Purchase Receipt": {
+      "reference_no": "supplier_delivery_note"
+    },
+    "Purchase Invoice": {
+      "reference_no": "bill_no"
+    },
+    "Stock Entry": {
+      "reference_no": "custom_external_reference_no"
+    }
+  }
+}

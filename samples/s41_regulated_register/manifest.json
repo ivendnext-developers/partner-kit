@@ -3,7 +3,7 @@
  "app": "pp_rsr",
  "prefix": "PP RSR",
  "title": "Regulated stock register",
- "version": "0.1.1",
+ "version": "0.1.2",
  "publisher": "Partner Programme sample",
  "description": "A legal register for regulated stock (controlled medicine, liquor, tobacco, duty-free), its books declared per market as data. This version adds the register's own columns to the Desk sale and delivery and to the till's sale details, the approver role and the register's workspace. The books themselves are written by the register door in the POS app, once it is there.",
  "custom_fields": [
@@ -18,10 +18,17 @@
   },
   {
    "dt": "Sales Invoice",
+   "fieldname": "pp_rsr_prescriber_address",
+   "fieldtype": "Data",
+   "label": "Prescriber's address",
+   "insert_after": "pp_rsr_section"
+  },
+  {
+   "dt": "Sales Invoice",
    "fieldname": "pp_rsr_occupation",
    "fieldtype": "Data",
    "label": "Business, trade or occupation",
-   "insert_after": "pp_rsr_section"
+   "insert_after": "pp_rsr_prescriber_address"
   },
   {
    "dt": "Sales Invoice",
@@ -53,9 +60,9 @@
   },
   {
    "dt": "Sales Invoice",
-   "fieldname": "pp_rsr_prescriber_address",
+   "fieldname": "pp_rsr_rx_ingredients",
    "fieldtype": "Data",
-   "label": "Prescriber's address",
+   "label": "Ingredients of the prescription",
    "insert_after": "pp_rsr_signed_order_date"
   },
   {
@@ -69,10 +76,17 @@
   },
   {
    "dt": "Delivery Note",
+   "fieldname": "pp_rsr_prescriber_address",
+   "fieldtype": "Data",
+   "label": "Prescriber's address",
+   "insert_after": "pp_rsr_section"
+  },
+  {
+   "dt": "Delivery Note",
    "fieldname": "pp_rsr_occupation",
    "fieldtype": "Data",
    "label": "Business, trade or occupation",
-   "insert_after": "pp_rsr_section"
+   "insert_after": "pp_rsr_prescriber_address"
   },
   {
    "dt": "Delivery Note",
@@ -104,21 +118,21 @@
   },
   {
    "dt": "Delivery Note",
-   "fieldname": "pp_rsr_prescriber_address",
+   "fieldname": "pp_rsr_rx_ingredients",
    "fieldtype": "Data",
-   "label": "Prescriber's address",
+   "label": "Ingredients of the prescription",
    "insert_after": "pp_rsr_signed_order_date"
   }
  ],
  "sale_attributes": [
   {
+   "name": "PP RSR Prescriber Address"
+  },
+  {
    "name": "PP RSR Occupation"
   },
   {
    "name": "PP RSR Purpose"
-  },
-  {
-   "name": "PP RSR Prescriber Address"
   }
  ],
  "reports": [

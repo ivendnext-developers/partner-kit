@@ -1,0 +1,1095 @@
+{
+  "format": 1,
+  "id": "ng_pharmacy",
+  "title": "Nigeria: dangerous drugs registers",
+  "jurisdiction": "NG",
+  "vertical": "pharmacy",
+  "certified": 0,
+  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. The First Schedule's two parts, read off the form images, one register per class of reg. 18(1)(b). The law does not state the register's medium for a retail pharmacy: this set keeps signed printed pages. Form in which obtained or supplied prints the item's stock unit: name the unit by its form (tablet, ampoule, syrup). The ingredients of a prescription are a Desk field: a counter sale prints them empty, so write them in. Codeine, dionin, dihydrocodeine and morpholinylethylmorphine have no book here: the Modified Form Regulations (reg. 3) take them out of reg. 18 for a seller who is not a wholesale dealer (reg. 9), so never class them as other Part III drugs. Until the register door books a return by its direction, a customer's return prints in Part B and a return to the supplier in Part A, each as a movement of its own: mark it by hand.",
+  "sources": [
+    "Dangerous Drugs Act, Cap. D1, Laws of the Federation of Nigeria: s. 8(1) (the drugs to which Part III applies)",
+    "Dangerous Drugs Regulations (under Cap. D1): reg. 18 (record to be kept), reg. 26 (records kept two years), First Schedule Parts A and B (lawsofnigeria.placng.org D1.pdf, pp. 35-37)",
+    "Dangerous Drugs (Modified Form) Regulations: regs. 3 and 9 (codeine and dionin); Dangerous Drugs (Application to Alphaprodine, Amidone, etc.) Order and the other Orders applying Part III"
+  ],
+  "details": {
+    "rx_ingredients": {
+      "label": "Ingredients of the prescription",
+      "type": "Data",
+      "own": 1,
+      "till": 0
+    }
+  },
+  "authority": {
+    "pos_sale_details": {
+      "authority_no": "PP RXC Rx Number",
+      "authority_issuer": "PP RXC Prescriber",
+      "authority_issuer_licence": "PP RXC Prescriber Licence"
+    },
+    "desk_fields": {
+      "authority_no": "pp_rxc_rx_number",
+      "authority_issuer": "pp_rxc_prescriber",
+      "authority_issuer_licence": "pp_rxc_prescriber_licence"
+    },
+    "dispenser_licence": {
+      "doctype": "PP RXC Pharmacist",
+      "match": "user",
+      "field": "licence_number"
+    }
+  },
+  "books": [
+    {
+      "id": "part_a_cocaine",
+      "title": "Part A cocaine and ecgonine",
+      "form": "First Schedule, Part A: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, purchased or otherwise obtained",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part A; reg. 18(1)(b)(i) cocaine and ecgonine and substances containing them; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Cocaine and ecgonine"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "In"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance purchased or otherwise obtained",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which supply received",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm from whom obtained",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm for whom obtained",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Amount obtained",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which obtained",
+          "value": [
+            "uom"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_b_cocaine",
+      "title": "Part B cocaine and ecgonine",
+      "form": "First Schedule, Part B: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, sold or supplied",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part B; reg. 18(1)(b)(i) cocaine and ecgonine and substances containing them; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Cocaine and ecgonine"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "Out"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance sold or supplied",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which the transaction was effected",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Authority of person, body or firm to be in possession of the substance",
+          "value": [
+            "authority_no",
+            "authority_issuer"
+          ]
+        },
+        {
+          "label": "Amount sold or supplied",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which sold or supplied",
+          "value": [
+            "uom"
+          ]
+        },
+        {
+          "label": "When sale is in a prescription specify the ingredients of the prescription",
+          "value": [
+            "detail:rx_ingredients"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_a_morphine",
+      "title": "Part A morphine",
+      "form": "First Schedule, Part A: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, purchased or otherwise obtained",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part A; reg. 18(1)(b)(ii) morphine and substances containing it; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Morphine"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "In"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance purchased or otherwise obtained",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which supply received",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm from whom obtained",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm for whom obtained",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Amount obtained",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which obtained",
+          "value": [
+            "uom"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_b_morphine",
+      "title": "Part B morphine",
+      "form": "First Schedule, Part B: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, sold or supplied",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part B; reg. 18(1)(b)(ii) morphine and substances containing it; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Morphine"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "Out"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance sold or supplied",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which the transaction was effected",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Authority of person, body or firm to be in possession of the substance",
+          "value": [
+            "authority_no",
+            "authority_issuer"
+          ]
+        },
+        {
+          "label": "Amount sold or supplied",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which sold or supplied",
+          "value": [
+            "uom"
+          ]
+        },
+        {
+          "label": "When sale is in a prescription specify the ingredients of the prescription",
+          "value": [
+            "detail:rx_ingredients"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_a_diamorphine",
+      "title": "Part A diamorphine",
+      "form": "First Schedule, Part A: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, purchased or otherwise obtained",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part A; reg. 18(1)(b)(iii) diamorphine and substances containing it; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Diamorphine"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "In"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance purchased or otherwise obtained",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which supply received",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm from whom obtained",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm for whom obtained",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Amount obtained",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which obtained",
+          "value": [
+            "uom"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_b_diamorphine",
+      "title": "Part B diamorphine",
+      "form": "First Schedule, Part B: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, sold or supplied",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part B; reg. 18(1)(b)(iii) diamorphine and substances containing it; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Diamorphine"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "Out"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance sold or supplied",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which the transaction was effected",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Authority of person, body or firm to be in possession of the substance",
+          "value": [
+            "authority_no",
+            "authority_issuer"
+          ]
+        },
+        {
+          "label": "Amount sold or supplied",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which sold or supplied",
+          "value": [
+            "uom"
+          ]
+        },
+        {
+          "label": "When sale is in a prescription specify the ingredients of the prescription",
+          "value": [
+            "detail:rx_ingredients"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_a_opium",
+      "title": "Part A medical opium",
+      "form": "First Schedule, Part A: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, purchased or otherwise obtained",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part A; reg. 18(1)(b)(iv) medical opium; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Medical opium"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "In"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance purchased or otherwise obtained",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which supply received",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm from whom obtained",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm for whom obtained",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Amount obtained",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which obtained",
+          "value": [
+            "uom"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_b_opium",
+      "title": "Part B medical opium",
+      "form": "First Schedule, Part B: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, sold or supplied",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part B; reg. 18(1)(b)(iv) medical opium; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Medical opium"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "Out"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance sold or supplied",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which the transaction was effected",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Authority of person, body or firm to be in possession of the substance",
+          "value": [
+            "authority_no",
+            "authority_issuer"
+          ]
+        },
+        {
+          "label": "Amount sold or supplied",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which sold or supplied",
+          "value": [
+            "uom"
+          ]
+        },
+        {
+          "label": "When sale is in a prescription specify the ingredients of the prescription",
+          "value": [
+            "detail:rx_ingredients"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_a_hemp",
+      "title": "Part A Indian hemp",
+      "form": "First Schedule, Part A: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, purchased or otherwise obtained",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part A; reg. 18(1)(b)(v) Indian hemp; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Indian hemp"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "In"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance purchased or otherwise obtained",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which supply received",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm from whom obtained",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm for whom obtained",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Amount obtained",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which obtained",
+          "value": [
+            "uom"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_b_hemp",
+      "title": "Part B Indian hemp",
+      "form": "First Schedule, Part B: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, sold or supplied",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part B; reg. 18(1)(b)(v) Indian hemp; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Indian hemp"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "Out"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance sold or supplied",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which the transaction was effected",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Authority of person, body or firm to be in possession of the substance",
+          "value": [
+            "authority_no",
+            "authority_issuer"
+          ]
+        },
+        {
+          "label": "Amount sold or supplied",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which sold or supplied",
+          "value": [
+            "uom"
+          ]
+        },
+        {
+          "label": "When sale is in a prescription specify the ingredients of the prescription",
+          "value": [
+            "detail:rx_ingredients"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_a_s8gh",
+      "title": "Part A Act s 8-1 g and h drugs",
+      "form": "First Schedule, Part A: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, purchased or otherwise obtained",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part A; reg. 18(1)(b)(vii) drugs to which s. 8(1)(g) and (h) of the Act apply; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Act s.8(1)(g)-(h) drugs"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "In"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance purchased or otherwise obtained",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which supply received",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm from whom obtained",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm for whom obtained",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Amount obtained",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which obtained",
+          "value": [
+            "uom"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_b_s8gh",
+      "title": "Part B Act s 8-1 g and h drugs",
+      "form": "First Schedule, Part B: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, sold or supplied",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part B; reg. 18(1)(b)(vii) drugs to which s. 8(1)(g) and (h) of the Act apply; corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Act s.8(1)(g)-(h) drugs"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "Out"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance sold or supplied",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which the transaction was effected",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Authority of person, body or firm to be in possession of the substance",
+          "value": [
+            "authority_no",
+            "authority_issuer"
+          ]
+        },
+        {
+          "label": "Amount sold or supplied",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which sold or supplied",
+          "value": [
+            "uom"
+          ]
+        },
+        {
+          "label": "When sale is in a prescription specify the ingredients of the prescription",
+          "value": [
+            "detail:rx_ingredients"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_a_other",
+      "title": "Part A other Part III drugs",
+      "form": "First Schedule, Part A: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, purchased or otherwise obtained",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part A; reg. 18(1)(b) does not list them: drugs Part III applies to by Order (amidone, pethidine and others); corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Other Part III drugs"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "In"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance purchased or otherwise obtained",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which supply received",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm from whom obtained",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm for whom obtained",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Amount obtained",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which obtained",
+          "value": [
+            "uom"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part_b_other",
+      "title": "Part B other Part III drugs",
+      "form": "First Schedule, Part B: Record of raw opium, coca leaves and drugs to which Part III of the Dangerous Drugs Act applies, sold or supplied",
+      "cite": "Dangerous Drugs Regulations reg. 18(1)(a), First Schedule Part B; reg. 18(1)(b) does not list them: drugs Part III applies to by Order (amidone, pethidine and others); corrections by a dated marginal note, reg. 18(1)(f); kept 2 years, reg. 26",
+      "classes": [
+        "NG Other Part III drugs"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "NG Dangerous Drugs"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "Out"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "dated_note",
+      "retention_years": 2,
+      "medium": "printed_book",
+      "medium_note": "The Regulations do not state the medium of a retail register (reg. 18(1)(a): a register kept for the sole purpose): print each day's pages, sign them and keep them as the register. One register per premises (reg. 18(1)(d)): map all of a premises' stores to one register store.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name of substance sold or supplied",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Date on which the transaction was effected",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Name of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Address of person, body or firm to whom sold or supplied",
+          "value": [
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Authority of person, body or firm to be in possession of the substance",
+          "value": [
+            "authority_no",
+            "authority_issuer"
+          ]
+        },
+        {
+          "label": "Amount sold or supplied",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "Form in which sold or supplied",
+          "value": [
+            "uom"
+          ]
+        },
+        {
+          "label": "When sale is in a prescription specify the ingredients of the prescription",
+          "value": [
+            "detail:rx_ingredients"
+          ]
+        }
+      ]
+    }
+  ],
+  "columns_from": {
+    "Purchase Receipt": {
+      "reference_no": "supplier_delivery_note"
+    },
+    "Purchase Invoice": {
+      "reference_no": "bill_no"
+    },
+    "Stock Entry": {
+      "reference_no": "custom_external_reference_no"
+    }
+  }
+}

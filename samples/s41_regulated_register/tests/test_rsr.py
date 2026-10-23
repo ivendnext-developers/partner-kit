@@ -100,6 +100,11 @@ def cells(html):
     return out
 
 
+def declared(ref):
+    """One book's declaration, by its data set and id (the data sets build in file-name order)."""
+    return next(b for b in build.build_declaration()["register_books"] if b["book"] == ref)
+
+
 class Manifest(unittest.TestCase):
     def test_the_files_are_the_build_of_the_data_sets(self):
         self.assertEqual(json.loads((SAMPLE / "manifest.json").read_text(encoding="utf-8")), build.build_manifest())
@@ -125,12 +130,16 @@ class Manifest(unittest.TestCase):
 
     def test_every_own_column_is_a_desk_field_on_both_documents_and_a_sale_detail(self):
         m = build.build_manifest()
-        own = [k for k, d in KE["details"].items() if d.get("own")]
+        own = build.own_details(build.datasets())  # every data set's own columns, once each, in data set order
+        self.assertLessEqual({k for k, d in KE["details"].items() if d.get("own")}, set(own))
         for dt in ("Sales Invoice", "Delivery Note"):
             names = [f["fieldname"] for f in m["custom_fields"] if f["dt"] == dt]
             self.assertEqual(names, ["pp_rsr_section"] + [f"pp_rsr_{k}" for k in own])
         self.assertEqual([a["name"] for a in m["sale_attributes"]],
-                         ["PP RSR Occupation", "PP RSR Purpose", "PP RSR Prescriber Address"])  # till: 0 keeps the rest off the till
+                         [build.sale_detail(k) for k, d in own.items() if d.get("till", 1)])
+        self.assertLessEqual({"PP RSR Occupation", "PP RSR Purpose", "PP RSR Prescriber Address"},
+                             {a["name"] for a in m["sale_attributes"]})
+        self.assertNotIn("PP RSR Certificate Date", [a["name"] for a in m["sale_attributes"]])  # till: 0 keeps it off the till
         self.assertFalse(any(f.get("reqd") for f in m["custom_fields"]))  # Desk's refusal is the door's (VR-24)
 
     def test_no_report_or_workspace_names_a_field_this_manifest_adds(self):
@@ -143,24 +152,27 @@ class Manifest(unittest.TestCase):
         m = {"manifest_version": 2, "app": "pp_rsr", "prefix": "PP RSR", "title": "x", "version": "0.2.0",
              "publisher": "x", "description": "x", "print_formats": d["print_formats"]}
         self.assertEqual((validate.validate(m), validate.warnings(m)), ([], []))
-        self.assertEqual([p["name"] for p in d["print_formats"]],
-                         ["PP RSR Kenya Poisons Book", "PP RSR Kenya Prescription Book", "PP RSR Kenya NPP Ledger Book"])
+        names = [p["name"] for p in d["print_formats"]]
+        self.assertEqual(len(names), sum(len(ds["books"]) for ds in build.datasets()))  # one print per book of every set
+        self.assertLessEqual({"PP RSR Kenya Poisons Book", "PP RSR Kenya Prescription Book", "PP RSR Kenya NPP Ledger Book",
+                              "PP RSR Jordan Narcotics and psychotropics register",
+                              "PP RSR Nigeria Part B morphine"}, set(names))
         self.assertTrue(all(p["doc_type"] == "Retail Register Period" for p in d["print_formats"]))
 
     def test_the_declaration_names_where_the_receipt_columns_come_from(self):
-        d = build.build_declaration()["register_books"][2]
+        d = declared("ke_pharmacy.npp_ledger")
         self.assertEqual(d["columns_from"]["Stock Entry"], {"reference_no": "custom_external_reference_no"})  # the ERP path
         self.assertEqual(d["columns_from"]["Purchase Receipt"], {"reference_no": "supplier_delivery_note"})  # no bill_no
 
     def test_the_declaration_names_every_detail_by_its_slot_and_its_sources(self):
-        d = build.build_declaration()["register_books"][0]
+        d = declared("ke_pharmacy.poisons_book")
         self.assertEqual(d["details"]["detail_1"], {"label": "Business, trade or occupation",
                                                     "pos_sale_detail": "PP RSR Occupation", "desk_field": "pp_rsr_occupation"})
         self.assertEqual(d["required"], ["counterparty", "counterparty_address", "detail_1", "detail_2"])
         self.assertEqual(d["class_source"], {"item_table": "pp_rxc_schedules", "class_field": "schedule",
                                              "from_field": "effective_from", "group_field": "pp_rxc_schedule",
                                              "axis": "KE Poisons"})
-        self.assertEqual(build.build_declaration()["register_books"][2]["class_source"]["axis"], "KE Controlled")
+        self.assertEqual(declared("ke_pharmacy.npp_ledger")["class_source"]["axis"], "KE Controlled")
 
 
 class DataSetFormat(unittest.TestCase):
