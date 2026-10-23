@@ -108,7 +108,9 @@ def declared(ref):
 class Manifest(unittest.TestCase):
     def test_the_files_are_the_build_of_the_data_sets(self):
         self.assertEqual(json.loads((SAMPLE / "manifest.json").read_text(encoding="utf-8")), build.build_manifest())
-        self.assertEqual(json.loads((SAMPLE / "door_declaration.json").read_text(encoding="utf-8")), build.build_declaration())
+        d = json.loads((SAMPLE / "door_declaration.json").read_text(encoding="utf-8"))
+        self.assertEqual(d, build.build_declaration())
+        self.assertEqual(d["data_sets"], [ds["id"] for ds in build.datasets()])  # the catalogue, never a shop's copy
 
     def test_the_manifest_passes_the_checker_and_the_shops_two_install_refusals(self):
         m = build.build_manifest()
@@ -159,6 +161,82 @@ class Manifest(unittest.TestCase):
                               "PP RSR Nigeria Part B morphine"}, set(names))
         self.assertTrue(all(p["doc_type"] == "Retail Register Period" for p in d["print_formats"]))
 
+    def test_every_reminder_passes_the_shops_checker_and_none_shares_a_name(self):
+        d = build.build_declaration()
+        m = {"manifest_version": 2, "app": "pp_rsr", "prefix": "PP RSR", "title": "x", "version": "0.2.0",
+             "publisher": "x", "description": "x", "notifications": d["notifications"]}
+        self.assertEqual(validate.validate(m), [])
+        names = [n["name"] for n in d["notifications"]]
+        self.assertEqual(len(set(names)), len(names))
+        self.assertEqual(len(names), sum(1 for ds in build.datasets() for b in ds["books"] if b.get("period_months")))
+        self.assertTrue(all(n["date_changed"] == "return_due" and n["document_type"] == "Retail Register Period"
+                            for n in d["notifications"]))
+
+    def test_the_old_reminder_name_is_one_the_shop_refuses(self):
+        # canary: the 0.1.2 build named it by book_ref, whose dot the shop's name rule refuses
+        m = {"manifest_version": 2, "app": "pp_rsr", "prefix": "PP RSR", "title": "x", "version": "0.2.0",
+             "publisher": "x", "description": "x",
+             "notifications": [{**build.build_declaration()["notifications"][0], "name": "PP RSR Return due a.b"}]}
+        self.assertTrue(validate.validate(m))
+
+    def test_a_shop_builds_its_own_markets_and_keeps_every_field(self):
+        m, d = build.build_files(["ke_pharmacy"])
+        self.assertEqual(m, build.build_manifest())  # the manifest never narrows: an update may not drop a field
+        self.assertEqual(d["data_sets"], ["ke_pharmacy"])
+        self.assertEqual({b["data_set"] for b in d["register_books"]}, {"ke_pharmacy"})
+        self.assertEqual((len(d["register_books"]), len(d["print_formats"])), (3, 3))
+        self.assertEqual(d["notifications"], [])
+        two = build.build_files(["sa_pharmacy", "ae_abu_dhabi_pharmacy"])[1]
+        self.assertEqual([b["book"] for b in two["register_books"]],
+                         ["sa_pharmacy.drug_register", "ae_abu_dhabi_pharmacy.ph_20", "ae_abu_dhabi_pharmacy.ph_17"])
+        self.assertEqual(len(two["notifications"]), 3)
+        for bad in (["xx_pharmacy"], [], ["ke_pharmacy", "nope"], ["ke_pharmacy", "ke_pharmacy"]):
+            with self.assertRaises(SystemExit):
+                build.build_files(bad)
+        for argv in (["--set", "ke_pharmacy"], ["--sets", "ke_pharmacy"], ["--sets", "ke_pharmacy", "--out", str(SAMPLE)]):
+            with self.assertRaises(SystemExit):  # a shop's copy never lands on the sample's catalogue
+                build.main(argv)
+
+    def test_a_shops_copy_is_written_to_its_own_folder(self):
+        import tempfile
+        before = (SAMPLE / "door_declaration.json").read_bytes()
+        with tempfile.TemporaryDirectory() as tmp:
+            build.main(["--sets", "eg_pharmacy", "--out", tmp])
+            d = json.loads(Path(tmp, "door_declaration.json").read_text(encoding="utf-8"))
+            self.assertEqual(d["data_sets"], ["eg_pharmacy"])
+            self.assertEqual(json.loads(Path(tmp, "manifest.json").read_text(encoding="utf-8")), build.build_manifest())
+        self.assertEqual((SAMPLE / "door_declaration.json").read_bytes(), before)
+
+    def test_no_build_drops_a_field_or_sale_detail_the_installed_version_has(self):
+        # 0.1.2's Desk fields and sale details (partner-kit 45f228c4): a shop's update refuses a dropped field
+        v012 = ["pp_rsr_section", "pp_rsr_occupation", "pp_rsr_purpose", "pp_rsr_certificate_date",
+                "pp_rsr_certificate_by", "pp_rsr_signed_order_date", "pp_rsr_prescriber_address", "pp_rsr_rx_ingredients"]
+        m = build.build_manifest()
+        for dt in ("Sales Invoice", "Delivery Note"):
+            got = {f["fieldname"]: f["fieldtype"] for f in m["custom_fields"] if f["dt"] == dt}
+            self.assertLessEqual(set(v012), set(got), dt)
+            self.assertEqual(got["pp_rsr_certificate_date"], "Date")  # nor changes a field's type
+        self.assertLessEqual({"PP RSR Occupation", "PP RSR Purpose", "PP RSR Prescriber Address"},
+                             {a["name"] for a in m["sale_attributes"]})
+
+    def test_a_detail_read_from_the_customer_is_declared_with_its_record(self):
+        rec = {"doctype": "Customer", "match": "customer", "field": "pp_rxc_id_number"}
+        self.assertEqual(declared("sa_pharmacy.drug_register")["details"]["detail_2"], {"label": "رقم الهوية", "record": rec})
+        self.assertEqual(declared("ae_abu_dhabi_pharmacy.ph_17")["details"]["detail_2"],
+                         {"label": "Patient identifier", "record": rec})
+        # the field it names is K1's, on Customer, today (the door refuses a lookup of a field that does not exist)
+        k1 = json.loads((SAMPLE.parent / "s39_pharmacy_counter" / "manifest.json").read_text(encoding="utf-8"))
+        self.assertIn(("Customer", "pp_rxc_id_number", "Data"),
+                      {(f["dt"], f["fieldname"], f["fieldtype"]) for f in k1["custom_fields"]})
+
+    def test_a_detail_with_no_source_is_declared_with_none(self):
+        # PB-4 spec §15 R-4: the door must accept it and leave its slot empty; the age is the door's computed detail (R-3)
+        empty = sorted(f"{b['book']}:{d['label']}" for b in build.build_declaration()["register_books"]
+                       for d in b["details"].values() if set(d) == {"label"})
+        self.assertEqual(empty, ["eg_pharmacy.received_dispensed:رقم القيد فى دفتر التذاكر الطبية",
+                                 "eg_pharmacy.received_dispensed:سنه", "sa_pharmacy.drug_register:الملف الطبي",
+                                 "sa_pharmacy.drug_register:عمر المريض"])
+
     def test_the_declaration_names_where_the_receipt_columns_come_from(self):
         d = declared("ke_pharmacy.npp_ledger")
         self.assertEqual(d["columns_from"]["Stock Entry"], {"reference_no": "custom_external_reference_no"})  # the ERP path
@@ -197,9 +275,87 @@ class DataSetFormat(unittest.TestCase):
         self.refused(lambda d: d["books"][0]["conditions"].extend([{"field": "qty", "operator": ">", "value": 0}] * 2),
                      "at most 3")
 
-    def test_a_date_comparison_is_refused(self):
+    def test_a_date_value_against_a_number_column_is_refused(self):
         self.refused(lambda d: d["books"][0]["conditions"].append(
-            {"field": "movement_date", "operator": ">", "value": "2026-01-01"}), "a date is not one")
+            {"field": "qty", "operator": ">", "value": "2026-01-01"}), "a date is not one")
+
+    def test_a_date_column_compared_with_a_number_is_refused(self):
+        # the condition form reads a date as the number 0: expiry_date > 20260101 would pass the check and never hold
+        self.refused(lambda d: d["books"][0]["conditions"].append(
+            {"field": "expiry_date", "operator": ">", "value": 20260101}), "expiry_date is a date or a time")
+
+    def test_every_comparison_on_a_date_or_time_column_is_refused(self):
+        for col in build.DATE_COLUMNS:
+            for op in ("=", "!=", ">", ">=", "<", "<="):
+                self.refused(lambda d: d["books"][0]["conditions"].__setitem__(
+                    0, {"field": col, "operator": op, "value": "2026-01-01" if op in ("=", "!=") else 1}),
+                    f"{col} is a date or a time")
+
+    def test_a_declared_date_detail_is_a_date_too(self):
+        self.refused(lambda d: d["books"][0]["conditions"].__setitem__(
+            0, {"field": "detail:certificate_date", "operator": "=", "value": "2026-01-01"}), "is a date or a time")
+
+    def test_whether_a_date_is_set_may_route(self):
+        ds = copy.deepcopy(KE)
+        ds["books"][0]["conditions"][0] = {"field": "expiry_date", "operator": "is set"}
+        ds["books"][1]["conditions"][0] = {"field": "detail:certificate_date", "operator": "is not set"}
+        self.assertEqual(build.check(ds), [])
+
+    def test_a_detail_with_a_key_the_format_does_not_have_is_refused(self):
+        self.refused(lambda d: d["details"]["occupation"].__setitem__("lookup", {"doctype": "Customer"}),
+                     "lookup is not a key of a detail")
+
+    def test_a_record_lookup_takes_the_specs_three_keys(self):
+        good = {"doctype": "Customer", "match": "customer", "field": "pp_rxc_id_number"}
+        for broken in ({**good, "match": "supplier"}, {k: v for k, v in good.items() if k != "field"}, {**good, "match": "user"},
+                       {**good, "doctype": "PP RXC Patient"},
+                       {**good, "filters": "x"}, {**good, "doctype": "<b>Customer</b>"}, {**good, "field": "Bad Field"}):
+            self.refused(lambda d: d["details"].__setitem__("id_no", {"label": "ID", "type": "Data", "record": broken}),
+                         "details.id_no.record")
+
+    def test_a_detail_read_from_a_record_has_no_other_source(self):
+        rec = {"doctype": "Customer", "match": "customer", "field": "pp_rxc_id_number"}
+        self.refused(lambda d: d["details"]["occupation"].__setitem__("record", rec), "has no other source")
+        self.refused(lambda d: d["details"].__setitem__("id_no", {"label": "ID", "type": "Data", "record": rec,
+                                                                 "desk_field": "pp_rxc_id_number"}), "has no other source")
+
+    def test_a_sale_detail_or_desk_field_of_another_app_is_a_name(self):
+        self.refused(lambda d: d["details"].__setitem__("dose", {"label": "Dose", "type": "Data",
+                                                                "desk_field": "Directions"}), "details.dose")
+        self.refused(lambda d: d["details"].__setitem__("dose", {"label": "Dose", "type": "Data",
+                                                                "pos_sale_detail": "{{ x }}"}), "details.dose")
+
+    def test_an_own_detail_names_no_other_apps_source(self):
+        self.refused(lambda d: d["details"]["occupation"].__setitem__("desk_field", "pp_rxc_occupation"),
+                     "names no other")
+
+    def test_a_record_detail_takes_no_till_and_no_route(self):
+        rec = {"doctype": "Customer", "match": "customer", "field": "pp_rxc_id_number"}
+        self.refused(lambda d: d["details"].update(occupation={"label": "ID", "type": "Data", "record": rec, "till": 0}),
+                     "no till")
+
+        def route_on_it(d):
+            d["details"]["occupation"] = {"label": "ID", "type": "Data", "record": rec}
+            d["books"][0]["conditions"][0] = {"field": "detail:occupation", "operator": "is set"}
+        self.refused(route_on_it, "the door does not route on it")
+
+    def test_the_dispensers_licence_is_a_record_lookup(self):
+        self.refused(lambda d: d["authority"]["dispenser_licence"].__setitem__("match", "owner"),
+                     "authority.dispenser_licence")
+
+    def test_a_period_takes_a_month_count_that_divides_the_year_and_its_due_days(self):
+        for months in (5, 0, 24, True, "6"):
+            self.refused(lambda d: d["books"][0].update(period_months=months, return_due_days=0), "period_months")
+        for days in (-1, 367, True, None, 1.5):
+            self.refused(lambda d: d["books"][0].update(period_months=6, return_due_days=days), "return_due_days")
+        self.refused(lambda d: d["books"][0].update(period_months=6), "return_due_days")  # say 0 where the law names no day
+        self.refused(lambda d: d["books"][0].update(return_due_days=15), "period_months")  # a due day of no period
+
+    def test_a_reminder_name_over_the_shops_length_is_refused(self):
+        def long_ids(d):
+            d["id"] = "a" * 30
+            d["books"][0].update(id="b" * 20, period_months=1, return_due_days=0)
+        self.refused(long_ids, "over 61 characters")
 
     def test_a_condition_on_something_not_on_the_line_is_refused(self):
         self.refused(lambda d: d["books"][0]["conditions"].__setitem__(0, {"field": "parent.customer", "operator": "is set"}),

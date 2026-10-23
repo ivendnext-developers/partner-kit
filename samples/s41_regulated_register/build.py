@@ -1,7 +1,8 @@
 """Build the Regulated stock register from its data sets: one app for any regulated stock, each market's (and each
 vertical's) books a data set in datasets/, never code.
 
-    python3 build.py        # checks every data set, then writes manifest.json and door_declaration.json
+    python3 build.py                        # checks every data set, then writes manifest.json and door_declaration.json
+    python3 build.py --sets ke_pharmacy --out ../my_register   # a shop's copy: only the named data sets' books
 
   manifest.json           what installs today: the Desk fields and the till's sale details that carry the register's
                           own columns (one per "own" detail of every data set), the approver role (through a report on
@@ -10,6 +11,9 @@ vertical's) books a data set in datasets/, never code.
   door_declaration.json   what installs once the register door (PB-4) is in the POS app: each book's declaration (the
                           manifest kind register_books), its print format on the register period, and a reminder before
                           each return's due date. Until then the shop's checker refuses the kind and the record types.
+                          A shop's copy is built with --sets into a folder of its own (--out), never over this sample's
+                          catalogue; its manifest still carries every data set's fields, so no build drops a field an
+                          earlier one installed.
 
 A data set is a JSON file: its books, which items each takes (by class or item group), its routing conditions (at most
 three, all must hold, in the save-rule condition form), its columns and where each comes from, its numbering, balance,
@@ -20,7 +24,7 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP, PREFIX, FPREFIX, VERSION = "pp_rsr", "PP RSR", "pp_rsr_", "0.1.2"
+APP, PREFIX, FPREFIX, VERSION = "pp_rsr", "PP RSR", "pp_rsr_", "0.1.3"
 ROLE = "PP RSR Register Approver"
 LINE, STATE, PERIOD = "Retail Register Line", "Retail Register State", "Retail Register Period"  # the door's record types
 # The line's own columns (PB-4 spec §3.1). Routing and layouts may name only these, or a declared detail.
@@ -34,6 +38,10 @@ LINE_COLUMNS = (
 )
 # the line's number and tick-box columns: a condition on one compares as a number (the save-rule form does the same)
 NUMERIC_COLUMNS = ("number", "qty", "balance", "booked_late", "incomplete", "below_zero", "correction_of_number")
+# the line's date and time columns, and a declared Date detail: the condition form compares a date as text or as the
+# number 0, so a condition on one only asks whether it is set (PB-4 spec §2)
+DATE_COLUMNS = ("expiry_date", "movement_date", "movement_time", "entered_at", "entry_date", "authority_date")
+SET_OPS = ("is set", "is not set")
 DETAIL_SLOTS = 6
 # a data set may name, per document type, the field a line column is read from where the door's default does not fit
 SOURCE_TYPES = ("Purchase Receipt", "Purchase Invoice", "Subcontracting Receipt", "Stock Entry", "Sales Invoice",
@@ -49,6 +57,13 @@ CORRECTIONS = {
 }
 MEDIA = ("system_of_record", "printed_book", "official_book")  # the system · its signed printed pages · the authority's own book
 DETAIL_TYPES = ("Data", "Date", "Small Text")
+# a detail's sources: this app's own field (own), the till's sale detail and the Desk's field of another app, or one value
+# of a record (PB-4 spec §2.2): the record named by the moving document's customer (match customer: a Customer; a receipt
+# or a stock entry has none, so the column is empty), or by the line's dispenser (match user: a record named by its user)
+DETAIL_KEYS = ("label", "type", "own", "till", "pos_sale_detail", "desk_field", "record")
+LOOKUP_KEYS, LOOKUP_MATCH = ("doctype", "match", "field"), ("user", "customer")
+PERIOD_MONTHS = (1, 2, 3, 4, 6, 12)  # a period starts on 1 January, and every period_months after it (PB-4 spec §7)
+NAME_MAX = 61  # the shop's name rule for a print format or a reminder (tools/manifest/validate.py)
 _ID = re.compile(r"^[a-z][a-z0-9_]{1,39}$")
 _COLOUR = re.compile(r"^#[0-9a-fA-F]{6}$")
 _PLAIN = re.compile(r"^[^<>{}%]*$")  # text printed or shown in Desk: no markup, no template syntax
@@ -93,7 +108,22 @@ def check(ds):
             bad.append(f"details.{key}: a key, a plain label and a type of {', '.join(DETAIL_TYPES)}")
         elif d.get("till", 1) not in (0, 1) or d.get("own", 0) not in (0, 1):
             bad.append(f"details.{key}: own and till are 0 or 1")
+        elif set(d) - set(DETAIL_KEYS):
+            bad.append(f"details.{key}: {', '.join(sorted(set(d) - set(DETAIL_KEYS)))} is not a key of a detail")
+        elif "record" in d and not _lookup_ok(d["record"]):
+            bad.append(f"details.{key}.record: the record's type, match (user, or customer for a Customer) and field")
+        elif "record" in d and (d.get("own") or "pos_sale_detail" in d or "desk_field" in d or "till" in d):
+            bad.append(f"details.{key}: a detail read from a record has no other source and no till")
+        elif d.get("own") and ("pos_sale_detail" in d or "desk_field" in d):
+            bad.append(f"details.{key}: an own detail's sources are this app's: it names no other")
+        elif not (_text(d.get("pos_sale_detail", "x")) and _ID.match(d.get("desk_field", "xx") or "")):
+            bad.append(f"details.{key}: a sale detail's name in plain text, a Desk field's name in lower case")
+    dl = (ds.get("authority") or {}).get("dispenser_licence")
+    if dl is not None and not _lookup_ok(dl):
+        bad.append("authority.dispenser_licence: the record's type, match (user or customer) and field")
     known = set(LINE_COLUMNS) | {f"detail:{k}" for k in details}
+    looked_up = {f"detail:{k}" for k, d in details.items() if isinstance(d, dict) and "record" in d}
+    dated = set(DATE_COLUMNS) | {f"detail:{k}" for k, d in details.items() if isinstance(d, dict) and d.get("type") == "Date"}
     cf = ds.get("columns_from", {})
     if not (isinstance(cf, dict) and all(dt in SOURCE_TYPES and isinstance(m, dict)
                                          and all(c in SOURCE_COLUMNS and _ID.match(f or "") for c, f in m.items())
@@ -135,6 +165,11 @@ def check(ds):
                 bad.append(f"{w}.conditions[{i}]: the operator is one of {', '.join(OPERATORS)}")
             if not isinstance(c, dict) or c.get("field") not in known:
                 bad.append(f"{w}.conditions[{i}]: a condition reads a column of the line")
+            elif c["field"] in looked_up:
+                bad.append(f"{w}.conditions[{i}]: {c['field']} is read from a record: the door does not route on it")
+            elif c["field"] in dated and op not in SET_OPS:
+                bad.append(f"{w}.conditions[{i}]: {c['field']} is a date or a time: a condition on it is is set or "
+                           "is not set")
             elif op in NUMBER_OPS and not isinstance(c.get("value"), (int, float)):
                 bad.append(f"{w}.conditions[{i}]: {op} compares a number (a date is not one)")
             elif op in ("=", "!=") and not isinstance(c.get("value"), (str, int, float)):
@@ -151,9 +186,18 @@ def check(ds):
             bad.append(f"{w}.medium: one of {', '.join(MEDIA)}")
         if not (isinstance(b.get("retention_years"), int) and 1 <= b["retention_years"] <= 30):
             bad.append(f"{w}.retention_years: 1 to 30")
-        for k in ("period_months", "return_due_days", "loss_count_hours"):
-            if k in b and not (isinstance(b[k], int) and b[k] > 0):
-                bad.append(f"{w}.{k}: a whole number above 0")
+        if "loss_count_hours" in b and not (_whole(b["loss_count_hours"]) and b["loss_count_hours"] > 0):
+            bad.append(f"{w}.loss_count_hours: a whole number above 0")
+        if "period_months" in b or "return_due_days" in b:
+            if not (_whole(b.get("period_months")) and b["period_months"] in PERIOD_MONTHS):
+                bad.append(f"{w}.period_months: one of {', '.join(map(str, PERIOD_MONTHS))} (a period starts on "
+                           "1 January, and every period_months after it)")
+            if not (_whole(b.get("return_due_days")) and 0 <= b["return_due_days"] <= 366):
+                bad.append(f"{w}.return_due_days: the days after the period's last day its return is due, 0 to 366 "
+                           "(0: due on that day, where the law names no day)")
+            if len(reminder_name(ds, b)) > NAME_MAX:
+                bad.append(f"{w}: its reminder's name, '{reminder_name(ds, b)}', is over {NAME_MAX} characters: "
+                           "shorten the data set's or the book's id")
         if "in_colour" in b and not (isinstance(b["in_colour"], str) and _COLOUR.match(b["in_colour"])):
             bad.append(f"{w}.in_colour: #rrggbb")
         if "medium_note" in b and not _text(b["medium_note"]):
@@ -175,6 +219,15 @@ def check(ds):
             if r not in known:
                 bad.append(f"{w}.required: '{r}' is not a column of the line or a declared detail")
     return bad
+
+
+def _whole(v):
+    return isinstance(v, int) and not isinstance(v, bool)
+
+
+def _lookup_ok(r):
+    return isinstance(r, dict) and set(r) == set(LOOKUP_KEYS) and _text(r["doctype"]) and r["match"] in LOOKUP_MATCH \
+        and (r["match"] == "customer") == (r["doctype"] == "Customer") and _ID.match(r["field"] or "") is not None
 
 
 def _class_source_ok(cs):
@@ -199,6 +252,12 @@ def _col(ds, name):
 
 def book_ref(ds, b):
     return f"{ds['id']}.{b['id']}"
+
+
+def reminder_name(ds, b):
+    """The return's reminder: the ids, not the titles (two data sets may share a title), with a space between, which
+    an id never holds, so no two books share one; the shop's name rule takes no dot."""
+    return f"{PREFIX} Return due {ds.get('id')} {b.get('id')}"
 
 
 def book_data(ds, b):
@@ -313,6 +372,13 @@ def build_manifest(sets=None):
     }
 
 
+def _sources(key, d):
+    """Where the door reads a detail. None of the three: the column prints empty, for the shop to write in."""
+    if d.get("own"):
+        return {**({"pos_sale_detail": sale_detail(key)} if d.get("till", 1) else {}), "desk_field": FPREFIX + key}
+    return {k: d[k] for k in ("pos_sale_detail", "desk_field", "record") if k in d}
+
+
 def declaration(ds, b):
     """One book as the door's manifest kind register_books takes it (PB-4 spec §2)."""
     d = {"book": book_ref(ds, b), "title": b["title"], "data_set": ds["id"], "cite": b["cite"],
@@ -321,10 +387,7 @@ def declaration(ds, b):
          "conditions": [{**c, "field": _col(ds, c["field"])} for c in b.get("conditions", [])],
          "required": [_col(ds, r) for r in b.get("required", [])],
          "columns": [{"label": c["label"], "value": [_col(ds, v) for v in c["value"]]} for c in b["columns"]],
-         "details": {slots(ds)[k]: {"label": x["label"],
-                                    **({**({"pos_sale_detail": sale_detail(k)} if x.get("till", 1) else {}), "desk_field": FPREFIX + k}
-                                       if x.get("own") else {k2: x[k2] for k2 in ("pos_sale_detail", "desk_field") if k2 in x})}
-                     for k, x in (ds.get("details") or {}).items()},
+         "details": {slots(ds)[k]: {"label": x["label"], **_sources(k, x)} for k, x in (ds.get("details") or {}).items()},
          "authority": ds.get("authority", {}), "columns_from": ds.get("columns_from", {}), "enabled": 1}
     if b.get("classes"):
         d["items"] = {"classes": b["classes"]}
@@ -344,10 +407,11 @@ def build_declaration(sets=None):
     return {
         "waits_for": "PB-4, the register door in the POS app",
         "version": "0.2.0",
+        "data_sets": [ds["id"] for ds in sets],
         "register_books": [declaration(ds, b) for ds, b in books],
         "print_formats": [{"name": f"{PREFIX} {ds['title'].split(':')[0]} {b['title']}", "doc_type": PERIOD,
                            "print_format_type": "Jinja", "html": book_html(ds, b)} for ds, b in books],
-        "notifications": [{"name": f"{PREFIX} Return due {book_ref(ds, b)}", "document_type": PERIOD,
+        "notifications": [{"name": reminder_name(ds, b), "document_type": PERIOD,
                            "event": "Days Before", "date_changed": "return_due", "days_in_advance": 7,
                            "channel": "System Notification",
                            "subject": "The {{ doc.book }} return for {{ doc.register_store }} is due on {{ doc.return_due }}",
@@ -356,10 +420,35 @@ def build_declaration(sets=None):
     }
 
 
-def main():
-    m, d = build_manifest(), build_declaration()
+def chosen(ids, sets=None):
+    """The data sets named, in the order given; an id no data set has is refused."""
+    sets = datasets() if sets is None else sets
+    by_id = {ds.get("id"): ds for ds in sets}
+    unknown = [i for i in ids if i not in by_id]
+    if unknown or not ids or len(set(ids)) != len(ids):
+        raise SystemExit(f"--sets: {', '.join(unknown) or 'none named, or one named twice'}; the data sets are "
+                         f"{', '.join(by_id)}")
+    return [by_id[i] for i in ids]
+
+
+def build_files(ids=None):
+    """The manifest from every data set (a shop's update never drops a field an earlier version installed), and the
+    declaration from the shop's own data sets (all, when none are named)."""
+    sets = datasets()
+    return build_manifest(sets), build_declaration(sets if ids is None else chosen(ids, sets))
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv and not (len(argv) == 4 and argv[0] == "--sets" and argv[2] == "--out"):
+        raise SystemExit("usage: build.py [--sets id,id --out folder]")
+    out = os.path.abspath(argv[3]) if argv else HERE
+    if argv and out == HERE:
+        raise SystemExit("--out: a shop's copy goes in a folder of its own, never over this sample's catalogue")
+    m, d = build_files(argv[1].split(",") if argv else None)
+    os.makedirs(out, exist_ok=True)
     for name, obj in (("manifest.json", m), ("door_declaration.json", d)):
-        with open(os.path.join(HERE, name), "w", encoding="utf-8") as f:
+        with open(os.path.join(out, name), "w", encoding="utf-8") as f:
             json.dump(obj, f, indent=1, ensure_ascii=False)
             f.write("\n")
     print(f"manifest.json: {len(m['custom_fields'])} fields, {len(m['sale_attributes'])} sale details; "
