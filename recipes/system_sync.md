@@ -12,7 +12,7 @@ This recipe keeps a retailer's own **ERP, order system or warehouse system**, ru
                               sync keeps: a CURSOR · an IDENTITY MAP · the feed's SEEN-SET        nightly RECONCILE reads both sides
 ```
 
-## 1. Register the sync (iVendNext does this once)
+## 1. Register the sync (the retailer does this once)
 The retailer creates a **Registered Application** for the sync, following **POS Invoice** (`recipes/event_feed.md` §1), and an integration user with its own API key. Give that user this grant:
 - the feed's log: read + write (to mark events done);
 - POS Invoice: read;

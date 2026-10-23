@@ -25,7 +25,7 @@ A check before payment is the last word on a sale before money is taken. When th
    - `timeout_seconds`: 3 unless you raise it, 10 at most. At most three checks answer one POS Profile, ten seconds together.
    - The manifest installs it **switched off**. A manager's approval (`may_approve`) is the retailer's choice, never the manifest's. The signing secret is handed back **once**, at install.
 
-2. **What iVendNext does after install.** A System Manager opens your service (*Retail Extension Subscription*), reads what is sent (the consent text lists every field), ticks the consent, chooses the POS Profiles it answers (none = all) and switches it on.
+2. **What the retailer does after install.** A System Manager opens your service (*Retail Extension Subscription*), reads what is sent (the consent text lists every field), ticks the consent, chooses the POS Profiles it answers (none = all) and switches it on.
 
 3. **Your service checks every call is the retailer's.** One POST per Pay, body `{"point": "check/1", "context": {…}}`, with `X-iVendNext-Timestamp` and `X-iVendNext-Signature` = base64 HMAC-SHA256 of `<timestamp>.<raw body>` with the secret. Check it over the raw bytes before you decide anything, and refuse a timestamp more than five minutes from yours (`samples/s18_rule_guard/rule.py`, `verify`).
 

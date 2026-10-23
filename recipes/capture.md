@@ -36,7 +36,7 @@ This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, buildi
    - `down_answer`: `allow_and_flag` (the default: the scan goes on, or the customer may be created, and the log row is flagged) or `refuse`.
    - Both install **switched off**; each signing secret is handed back **once**.
 
-2. **What iVendNext does after install.** A System Manager reads what each service is sent, ticks the consent, chooses the POS Profiles and switches it on. For a value on the line, iVendNext keeps an **active line attribute** (*Transaction Item Attribute*) and tells you its name.
+2. **What the retailer does after install.** A System Manager reads what each service is sent, ticks the consent, chooses the POS Profiles and switches it on. For a value on the line, iVendNext keeps an **active line attribute** (*Transaction Item Attribute*) and tells you its name.
 
 3. **Check every call is the retailer's** — the same signature as every extension point (base64 HMAC-SHA256 of `<timestamp>.<raw body>`), with **each subscription's own secret**, over the raw bytes, before you parse anything (`samples/s20_capture/service/app.py`).
 

@@ -12,7 +12,7 @@ iVendNext keeps a queue of events per registered application. Your service **pul
 
 **When to use it.** Whenever your service must act on what happens in a retailer's iVendNext and cannot afford to miss an event.
 
-## 1. Register your application (iVendNext does this)
+## 1. Register your application (the retailer does this)
 The retailer's administrator creates a **Registered Application** for you: its name, the **user your service reads as** (an integration user with its own API key), and the record types you follow (POS Invoice, Sales Invoice, Customer, Item, Stock Entry …), each ticked on. A manifest can install the registration **switched off** (`registered_applications`, manifest v2); the retailer picks the user and ticks it on. From then on, every change to a followed record adds one row to your queue — **after** the change commits, so a refused save sends nothing.
 
 Changes made by your own integration user are **not** sent to you (no echo of your own writes).

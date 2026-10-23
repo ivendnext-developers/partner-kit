@@ -63,7 +63,7 @@ Pressed again, the button says *Already with its store* and changes nothing.
 
 5. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s35_call_centre_orders` (iVendNext's checker and its install's two extra refusals).
 
-## What iVendNext does
+## What the retailer does
 
 1. **Install the app.** The service and the button come in switched off. The install adds the Serving store field and makes no role.
 2. **Give the app a user**, as in the [integration user recipe](integration_user.md): tick **Is Desk User**, set no password and no User Permissions, and generate its API key. In **Role Permissions**, give a role of the retailer's own these rights, and give the user that role alone:

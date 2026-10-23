@@ -62,7 +62,7 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 
 8. **Two reports** in your manifest: the issues' lines (date, store, sale, item, quantity, amount, who rang it, day part) and the food cost lines, each with a totals row.
 
-## What iVendNext does
+## What the retailer does
 
 - Makes each dish a plain item that is not stocked, with a Bill of Materials, submitted and default (the Desk form's item picker lists stock items only: type the dish's code).
 - Gives the app's user the rights the sample's README lists, and the role allowed to book back-dated stock if Stock Settings limits it.

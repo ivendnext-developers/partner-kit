@@ -29,7 +29,7 @@ A partner page is your own screen, served from your own server, that iVendNext s
 
    Your page must be on **your own host**. A page on the retailer's own address is refused at install, in the product's words — *"A partner page cannot be on this site's own address."* — and leaves nothing behind.
 
-2. **What iVendNext does after install.** It reads what the page will receive (the consent text is built from the declaration), ticks the consent and switches the page on. Then it places the **Deliveries** key in **POS Studio → Apps** for a theme (`recipes/point_handler.md` step 4). If your address changes, the consent is cleared and the page cannot open until the retailer ticks it again: the till's key says why it cannot open. Switching the page off and on again does not bring the consent back; only ticking it does.
+2. **What the retailer does after install.** It reads what the page will receive (the consent text is built from the declaration), ticks the consent and switches the page on. Then it places the **Deliveries** key in **POS Studio → Apps** for a theme (`recipes/point_handler.md` step 4). If your address changes, the consent is cleared and the page cannot open until the retailer ticks it again: the till's key says why it cannot open. Switching the page off and on again does not bring the consent back; only ticking it does.
 
    ![the Deliveries key on a sale](../samples/s17_partner_page/screenshots/01_till_deliveries_key.png)
 

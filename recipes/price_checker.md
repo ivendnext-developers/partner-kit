@@ -33,7 +33,7 @@ A retailer wants a screen on its floor where a customer scans an item and reads 
 
 ### The kiosk record
 
-What iVendNext does after install, in its own words:
+What the retailer does after install, in its own words:
 
 - **Before install:** make the role your manifest names, unless it is under your prefix (then the install makes it). The sample's `PP Integration` is made by iVendNext.
 - Make your integration user with that role and its API key ([recipe](integration_user.md)), and choose it on your feed registration.

@@ -62,7 +62,7 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 
 6. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s38_expiry_markdown` (iVendNext's checker and its install's two extra refusals).
 
-## What iVendNext does
+## What the retailer does
 
 1. **Install the app.** The service and the button come in switched off. The install adds the four step fields, the settings record type and the app's role.
 2. **Give the app a user**, as in the [integration user recipe](integration_user.md): tick **Is Desk User**, set no password and no User Permissions, give it the app's role alone, and generate its API key. In **Role Permissions**, give the app's role these rights:

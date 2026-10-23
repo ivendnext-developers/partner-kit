@@ -37,7 +37,7 @@ A Desk action is a button on a record in iVendNext Desk. When a user presses it,
 
    ![the task under the order's Connections](../samples/s16_pick_route/screenshots/05_order_connections.png)
 
-2. **What iVendNext does after install.** A System Manager opens your service (*Retail Extension Subscription*), reads what is sent, ticks the consent and switches it on, then switches the button on (*Retail Desk Action*). The server stamps the consent (who, when, for which address and which list). A change to the address or the list clears it.
+2. **What the retailer does after install.** A System Manager opens your service (*Retail Extension Subscription*), reads what is sent, ticks the consent and switches it on, then switches the button on (*Retail Desk Action*). The server stamps the consent (who, when, for which address and which list). A change to the address or the list clears it.
 
    Once it is on, the button sits in the record's menu — here in the **Warehouse** menu of a submitted order:
 
@@ -148,4 +148,4 @@ Proven on our test bench on 2026-10-07.
 
 ### Figures beside the run that measured them
 
-All on our test bench, 2026-10-07: install → iVendNext's switch-on → S1–S4, the three refusals, the forged press → uninstall with the schema as found (the Extension Log keeps its press rows, by design) — setup 9/9, S16 **14/14**, teardown 6/6. **A press, end to end** (iVendNext's call, over HTTPS, the service writing one or three pick tasks over the record API, the answer judged): **39–207 ms**, over two runs, on the four answered presses (the Extension Log's `latency_ms`; the test site and the service on one machine, so a real network adds its own round trip). Your timeout must cover your own API writes: S16 declares 5 seconds.
+All on our test bench, 2026-10-07: install → the retailer's switch-on → S1–S4, the three refusals, the forged press → uninstall with the schema as found (the Extension Log keeps its press rows, by design) — setup 9/9, S16 **14/14**, teardown 6/6. **A press, end to end** (iVendNext's call, over HTTPS, the service writing one or three pick tasks over the record API, the answer judged): **39–207 ms**, over two runs, on the four answered presses (the Extension Log's `latency_ms`; the test site and the service on one machine, so a real network adds its own round trip). Your timeout must cover your own API writes: S16 declares 5 seconds.

@@ -96,7 +96,7 @@ A settings record type whose record *Default* holds the retailer's **hours from 
    - refuse the first marked line whose kind has no prescription valid until the retailer's today or later (not the test date: Desk stamps it by the site's time zone, so a bound on it could refuse this morning's eye test), naming the last day one ran out if it did; sentences at most 140 characters.
 4. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s42_optical_prescriptions`.
 
-## What iVendNext does
+## What the retailer does
 
 1. **Install the app.** The check comes in switched off. The install adds the records, the mark, the workflow, the job sheet, the report and the roles.
 2. **Give the optometrist role and Sales User** to whoever writes prescriptions (Sales User reads customers for the picker and holds the lab order's buttons); store staff keep **Sales User**. Whoever chooses a lab order's **Lab** (a supplier) also needs a role that can see suppliers, such as **Stock User** or **Purchase User**.
