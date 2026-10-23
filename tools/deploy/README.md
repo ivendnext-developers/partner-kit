@@ -4,6 +4,7 @@ One command installs, updates or removes your manifest on a site you administer,
 shop's **Retail Extension Package** screen. Nobody from our team takes part.
 
 1. **Make an API key** for your sandbox's administrator (Desk → your user → API Access → Generate Keys).
+   If **Generate Keys** answers *"Select at least one option: 'Is Desk User' or 'Is POS User'"*, tick **Is Desk User** on that user first (the field `custom_is_desk_user`), save, then generate. The built-in **Administrator** of a site you made on your own bench has neither tick.
 2. **See what it would do.** Nothing is installed:
 
    ```bash

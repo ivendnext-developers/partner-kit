@@ -50,7 +50,7 @@ The e-mail addresses are made up. The site also gives every user its standard ro
 ## Your first hour
 
 1. **Sign in** at your address as `admin@demo-retail.example` with the one-time password we sent. Choose your own password when the site asks.
-2. **Make your administrator's API key:** Desk → your user → Settings → API Access → **Generate Keys**. The secret is shown once; keep it in your secret store.
+2. **Make your administrator's API key:** Desk → your user → Settings → API Access → **Generate Keys**. The secret is shown once; keep it in your secret store. If the shop answers *"Select at least one option: 'Is Desk User' or 'Is POS User'"*, tick **Is Desk User** on your user first (the field `custom_is_desk_user`), save, then generate.
 3. **Check your site** with the kit's sandbox check (Python 3, plus bash, curl and jq):
 
    ```bash
