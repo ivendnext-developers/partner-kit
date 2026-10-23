@@ -15,7 +15,7 @@ Build against iVendNext **from your own server, in any language**. This folder d
 1. **Before the first run, make sure the shop has the item `PP-WRC-PHONE`**, a stock item with serial numbers. Files 05 and 06 receive it, and six more files read what those two made, so without it eight files fail (*PP-WRC-PHONE is not a stock Item*). The integration user may not make items, so make it once with your administrator's key:
 
    ```bash
-   curl -s -X POST "$BASE/api/resource/Item" -H "Authorization: token <admin key>:<admin secret>" \
+   curl -s -X POST "https://<your-sandbox-site>/api/resource/Item" -H "Authorization: token <admin key>:<admin secret>" \
      -H "Content-Type: application/json" \
      -d '{"item_code": "PP-WRC-PHONE", "item_name": "PP Warranty Phone", "item_group": "All Item Groups",
           "stock_uom": "Nos", "is_stock_item": 1, "has_serial_no": 1}'
