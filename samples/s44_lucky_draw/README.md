@@ -26,7 +26,7 @@ The **Draw winners** button is gone once the campaign is drawn, the form locks i
    | Customer Group | Read | the group tree, so a group takes the groups below it |
 
    The app's user reads every till sale on the site, with its customer: give the role to the app's user and no one else. The install gives the role read and write on the campaign itself. A service for one shop takes the key in its settings. A service for many shops receives it from the shop: choose the user as the *Application User* of the feed **PP LDW Draw feed**, then press **Connect again** on the app (*Many shops, hosted* below).
-3. **Give the manager role** to whoever runs the campaigns (marketing, the head of stores).
+3. **Give the manager role** to whoever runs the campaigns (marketing, the head of stores). In **Role Permissions**, give **PP LDW Manager** *Select* on **Company**, **POS Profile** and **Customer Group**: the campaign form's lookups for them answer nothing to the role alone (measured on our test bench).
 4. **Switch the services on** (the System Manager): **Retail Extension Subscription**, the records *Lucky draw count* and *Lucky draw*: read what each is sent, tick the consent, switch it on. Then **Retail Desk Action**, the records *Count entries* and *Draw winners*: switch them on.
 
 **Where it shows.** In Desk: the campaign's list and form, with the two buttons on the form. At the till: nothing new; the cashier adds the customer to the sale as always.
@@ -79,7 +79,7 @@ What a partner usually changes:
 
 ## Before you copy it
 
-- **A draw is never repeated by the app.** The service reads the campaign first and answers *Already drawn* when it reads *Drawn* or carries any part of a draw's record or results (a status set back to *Open* by hand does not open a second draw); the button also shows only while it is not drawn, and the shop checks that again at the press. The manager role cannot delete a campaign. Someone with write on campaigns can still change a drawn campaign outside its form, through the API; the campaign's history (its version log) shows every such change. Give the manager role only to people you trust.
+- **A draw is never repeated by the app.** The service reads the campaign first and answers *Already drawn* when it reads *Drawn* or carries any part of a draw's record or results (a status set back to *Open* by hand does not open a second draw); the button also shows only while it is not drawn, and the shop checks that again at the press. The manager role cannot delete a campaign. A person with write on campaigns can still add or remove a result row in the form, or change a drawn campaign through the API, and a System Manager can delete one and draw again; the campaign's history (its version log) shows every such change. Give the manager role only to people you trust.
 - **An edit is never overwritten.** The write carries the campaign's `modified` as read; the shop refuses a stale write (`TimestampMismatchError`), and the answer asks for another press. Two presses of *Draw winners* at once: one writes, the other is refused.
 - **A count after the draw** writes the counts only: the draw's record and the results stay as drawn.
 - **The random source** is the service's own (`secrets.randbelow`), never a seed anyone chose. Keep it so in your copy, and keep the record: the entries' fingerprint and the numbers drawn let anyone holding the sales check which sale each drawn number is.
@@ -111,6 +111,11 @@ What a partner usually changes:
 - **Till sales only.** Desk sales (Sales Invoice) and web orders do not count.
 - **The campaign's last day** ends at midnight by the campaign's *hours from UTC*; the draw is refused before. Draw once every till has sent its sales: a till that was offline sends its last day's sales when it reconnects, and a sale that arrives after the draw is not in it.
 - **One press reads the whole campaign** in one read of its sales. On our test bench the shop answered that read for 12,157 sales (2.7 MB) in under a fifth of a second, to a service beside it; a hosted service reads across the internet, which was not measured at that size. A press stops reading after 7 seconds and then writes nothing (the shop's words: *did not answer in time*): split a campaign that large into more than one, by till.
+- **Every till sale counts**, a gift card sold or a sale paid by gift card or points included: the rule is the spend.
+- **The campaign's hours from UTC:** blank reads as UTC, so a shop west of UTC that leaves it blank can draw before its last day has ended there; set it, and change it when the clocks change.
+- **A slow shop:** *did not answer in time* can come after the draw's write has landed; open the campaign before you press again (a second press finds it drawn).
+- **Where it runs:** the App library's copy runs in CitiXsys hosting's US region.
+- **The law.** A draw for customers may need a permit where you sell (a promotion permit in the UAE, for example), and some countries require a free way to enter; both are the shop's. The app counts sales only.
 - **Returns** are the till's returns made against the sale. A credit note made in Desk against the day's closing invoice does not take entries off.
 - **A customer's own entries** are not shown at the till or on the receipt; a count gives the totals.
 - **Removing the app** removes its campaigns.
