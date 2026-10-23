@@ -173,7 +173,8 @@ class ManifestTest(unittest.TestCase):
             idents = [t.string for t in toks if t.type == tokenize.NAME]
             self.assertFalse([i for i in idents if market(i)], py)
             # the strings the code holds, its docstrings left out (words to a reader may give examples)
-            strings = [t.string for t in toks if t.type == tokenize.STRING and not t.string.startswith(('"""', 'r"""'))]
+            text = {tokenize.STRING, getattr(tokenize, "FSTRING_MIDDLE", tokenize.STRING)}   # an f-string's text, 3.12+
+            strings = [t.string for t in toks if t.type in text and not t.string.startswith(('"""', 'r"""'))]
             self.assertFalse([x for x in strings if code_word.search(x) or names_re.search(x)], py)
         names = [MANIFEST["app"], MANIFEST["prefix"], MANIFEST["title"]] + [d["name"] for d in MANIFEST["doctypes"]] + \
                 [f["fieldname"] for d in MANIFEST["doctypes"] for f in d["fields"]] + \

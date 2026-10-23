@@ -105,7 +105,8 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
    1. Update the app. Customer's five fields keep their values (and any level you gave them), and show only while they
       hold a value; their labels end *(moved)*. The 0.1.1 service still reads them.
    2. As a pharmacist, filter the *Customer* list by each field *is set*, and for each customer found make their *PP
-      RXC Patient* record with the same values. Leave the customer's fields as they are for now.
+      RXC Patient* record with the same values (the birth date entered as a date). Leave the customer's fields as they
+      are for now.
    3. Deploy the 0.1.2 service. From now on it reads only the patient's record: a customer with none is refused a
       sale that needs one of the fields. ⚠ A service that answers many shops moves to 0.1.2 only once every one of
       them has done step 2: until then, a shop still on 0.1.1 is answered *"did not answer"* on each such sale.
@@ -230,8 +231,11 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
     dispensings for anyone who reads the customer. It shows that the person has had prescriptions, never which;
   - **one engine call** returns any record whole to any signed-in user, a patient's record included.
 - **The till never shows a patient's fields** and cannot take them: enter them on the Desk, never on a till field rule.
-- **Deleting or renaming a customer who has a patient record** is refused, or carried to the record, by the Desk's own
-  link check, which names the record to whoever does it: that the person is a patient, never what it holds.
+- **A customer who has a patient record** (not measured on our bench): the Desk's own link check refuses deleting
+  the customer while the record names it, and tells whoever tries that the record exists. Before merging two customers
+  who both have one, keep one record: the Records Officer deletes the other, since a customer has one patient record.
+- **Never make a patient record for a walk-in customer** (a POS Profile's own, or one on the settings' list): the
+  regulated register app reads the ID through the sale's customer, so it would print that ID on every walk-in sale.
 - **The regulated register app** ([S41](../s41_regulated_register/README.md)) prints the ID into Saudi Arabia's and
   Abu Dhabi's books from the patient's record: its register must read it with its own rights, or a line written by a
   clerk prints it empty.
@@ -276,8 +280,9 @@ Manager**: keep both few.
   in Role Permissions Manager, your own rows replace the app's, and the update cannot take delete from the
   pharmacist-in-charge. Open each in Role Permissions Manager and press **Restore Original Permissions**, then make
   your change again.
-- ⚠ **Never uninstall this app while a period runs.** An uninstall removes its record types, and every prescription and
-  dispensing with them. Take the export it offers and keep it as long as the longest period.
+- ⚠ **Never uninstall this app while a period runs.** An uninstall removes its record types, and every prescription, patient record (its consent included) and
+  dispensing with them. Take the export it offers and keep it as long as the longest period. The regulated register app's ID column
+  then has no source.
 
 **The periods the laws set for a prescription** (read from their texts, October 2026):
 
@@ -304,8 +309,8 @@ A register book's own period is the register app's.
 **After the period, the shop acts; nothing runs on a timer.**
 1. Where your law says how a record is destroyed, do that first: in Saudi Arabia a three-member committee the director
    appoints, with minutes (Executive Regulation, Arts 21(3) and 22(7)); in Jordan in the inspector's presence (Art. 74).
-2. Give a person **PP RXC Records Officer** for the act. It reads, and deletes, prescriptions and dispensings, nothing
-   else.
+2. Give a person **PP RXC Records Officer** for the act. It reads, and deletes, prescriptions, dispensings and
+   patient records, nothing else.
 3. Delete a prescription and all its dispensings in one act, the dispensings first (a prescription the dispensing names
    first cannot go before it). ⛔ Never a dispensing whose prescription stays: its fill would count again. A dispensing
    names only the first of the prescriptions its sale used; look for the others in its lines, and keep the dispensing
@@ -419,13 +424,13 @@ details (default `PP RXC`).
   - **The uninstall** left the schema as found, the sale details kept and switched off, and no permission row of the
     app's role was left.
 - **On our test bench again for 0.1.1** (2026-10-23, the same builds; 32 of 32 checks):
-  - **The update.** Version 0.1.0 was installed, the three identity fields were given level 2 as step 3 says (level 1
+  - **The update.** Version 0.1.0 was installed, the three identity fields were given level 2 as 0.1.1's step 3 said (level 1
     is held there by *Retail Cashier*, *Sales User* and *Sales Master Manager*), and the app was updated to 0.1.1
     through the shop's installer. The fields kept level 2, the ID's new description was written, the
     pharmacist-in-charge lost *delete* on prescriptions, and the Records Officer role was made.
   - **The till and the Desk, with the fields at level 2:** all of the 0.1.0 walk above again, the controlled sale's ID
     check included, with the service's user reading at that level. Without that grant, the shop answered the service
-    neither way and the service refused the controlled sale (*"did not answer"*), as step 3 says.
+    neither way and the service refused the controlled sale (*"did not answer"*), as 0.1.1's step 3 said.
   - **Who reads them:** a Desk clerk who reads customers saw none of the five fields on the form, the list, the report
     view or the print, a clerk's edit of one was ignored, and a clerk's filter on the ID was refused by the API's and
     the Desk's lists, the count and a single value; the pharmacist read and wrote them. The form's change history,

@@ -53,6 +53,7 @@ IDENTITY = (("needs_id_number", "id_number", "national or residence ID"),
             ("needs_birth_date", "birth_date", "date of birth"),
             ("needs_authority", "authority", "authority to possess"),
             ("needs_consent", "consent_date", "consent to keep their records"))
+ID_REFUSAL = "needs the customer's {words}. Add it on their patient record on the Desk."   # whole at 140 (a test)
 DATED = ("consent_date",)   # set AND on or before today: a consent dated ahead is a mis-keyed one, not a consent
 DESK_TYPES = ("Sales Order", "Delivery Note", "Sales Invoice")
 # a Desk line made from a linked parent: (the parent's name, its ROW reference). A line is linked only when the row
@@ -521,7 +522,7 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
             return _refuse(lines[i], "needs a named customer, not a walk-in sale.")
         for _tick, field, words in IDENTITY:
             if r and field in r["ids"] and not shop["customer_fields"].get(field):
-                return _refuse(lines[i], f"needs the customer's {words}. Add it on their patient record on the Desk.")
+                return _refuse(lines[i], ID_REFUSAL.format(words=words))
 
     # 6 · the quantity cap per sale, in the stock unit (VR-09)
     per_item: dict = {}

@@ -679,7 +679,8 @@ class Template(unittest.TestCase):
             self.assertFalse([i for i in idents if words.search(i)], py)
             # and no market in the strings the code holds, as S39's test since its 0.1.1: a market's name, or its code as a
             # value the code compares (docstrings left out, and the trade's words: a description gives a reader examples)
-            strings = [t.string for t in toks if t.type == tokenize.STRING and not t.string.startswith(('"""', 'r"""'))]
+            text = {tokenize.STRING, getattr(tokenize, "FSTRING_MIDDLE", tokenize.STRING)}   # an f-string's text, 3.12+
+            strings = [t.string for t in toks if t.type in text and not t.string.startswith(('"""', 'r"""'))]
             self.assertFalse([x for x in strings if markets.search(x) or codes.search(x)], py)
         m = build.build_manifest()
         names = [m["app"], m["prefix"], m["title"], build.ROLE] + [f["fieldname"] for f in m["custom_fields"]] + \
