@@ -14,6 +14,15 @@ collection's first three files. The last line is the verdict; the exit code is 0
   --connect-to HOST:PORT   send the requests to that address and keep the site's own name (a new site whose name has
                            no DNS entry yet)
   --record FILE            write the answers the checks read (they carry no key or secret) to FILE
+
+Three checks read the hosted sandbox's own data: the demo company, its three stores and the integration user. On a
+site you made yourself, name your own in the environment (each defaults to the hosted sandbox's value):
+
+    SANDBOX_COMPANY          the company                       (default: Demo Retail)
+    SANDBOX_STORE_PREFIX     the start of each store's name    (default: Demo Retail — Store )
+    SANDBOX_STORES           how many stores                   (default: 3)
+    SANDBOX_INTEGRATION_USER the integration user              (default: integration@demo-retail.example)
+    SANDBOX_INTEGRATION_ROLE the integration user's role       (default: Demo Integration)
 """
 from __future__ import annotations
 
@@ -27,6 +36,7 @@ import sys
 import tempfile
 import urllib.parse
 
+# The hosted sandbox's own data (recipes/hosted_sandbox.md); a builder's own site names its own (Shop.from_env)
 COMPANY = "Demo Retail"
 STORE_PREFIX = "Demo Retail — Store "
 STORES = 3
@@ -39,6 +49,30 @@ POINT_TYPES = ["Retail Extension Subscription", "Retail Desk Action", "Retail Sa
                "Retail Extension Log"]
 COLLECTION = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "api", "collection")
 FIRST_FILES = ["01_list_items.http", "02_get_item.http", "03_list_warehouses.http"]
+
+
+class Shop:
+    """The data three checks read: the hosted sandbox's by default, or the builder's own from SANDBOX_* variables."""
+
+    def __init__(self, company=COMPANY, store_prefix=STORE_PREFIX, stores=STORES,
+                 integration_user=INTEGRATION_USER, integration_role=INTEGRATION_ROLE):
+        self.company, self.store_prefix, self.stores = company, store_prefix, stores
+        self.integration_user, self.integration_role = integration_user, integration_role
+
+    @classmethod
+    def from_env(cls, env):
+        """Reads SANDBOX_*; an unset or empty one keeps the hosted sandbox's value. Raises ValueError on a bad count."""
+        stores = env.get("SANDBOX_STORES") or str(STORES)
+        if not stores.isdigit() or int(stores) < 1:
+            raise ValueError(f"SANDBOX_STORES is a whole number of stores, 1 or more, not {stores!r}")
+        return cls(env.get("SANDBOX_COMPANY") or COMPANY, env.get("SANDBOX_STORE_PREFIX") or STORE_PREFIX,
+                   int(stores), env.get("SANDBOX_INTEGRATION_USER") or INTEGRATION_USER,
+                   env.get("SANDBOX_INTEGRATION_ROLE") or INTEGRATION_ROLE)
+
+    @property
+    def hosted(self):
+        return (self.company, self.store_prefix, self.stores, self.integration_user, self.integration_role) == \
+            (COMPANY, STORE_PREFIX, STORES, INTEGRATION_USER, INTEGRATION_ROLE)
 
 
 def resource(doctype, name=None, **query):
@@ -103,8 +137,9 @@ def _no_v1(status, body) -> bool:
     return status == 417 and "Failed to get method" in json.dumps(body or {})
 
 
-def run_checks(site):
+def run_checks(site, shop=None):
     """Yields (passed, label, detail) for each check."""
+    shop = shop or Shop()
     status, body = site.get("/api/method/ping", auth=False)
     yield status == 200 and (body or {}).get("message") == "pong", "the site answers", f"HTTP {status}"
 
@@ -119,23 +154,24 @@ def run_checks(site):
     yield (status == 200 and not missing, "the POS apps are installed",
            OLD_RELEASE if _no_v1(status, body) else f"missing {missing}" if missing else "")
 
-    status, _ = site.get(resource("Company", COMPANY))
-    yield status == 200, "the demo company", f"{COMPANY}: HTTP {status}"
+    status, _ = site.get(resource("Company", shop.company))
+    yield status == 200, "the demo company", f"{shop.company}: HTTP {status}"
 
     status, body = site.get(resource("Warehouse", fields=["name", "warehouse_name", "company"], limit_page_length=100,
-                                     filters=[["company", "=", COMPANY], ["is_group", "=", 0]]))
-    stores = sorted(w["name"] for w in (body or {}).get("data", []) if w.get("warehouse_name", "").startswith(STORE_PREFIX))
+                                     filters=[["company", "=", shop.company], ["is_group", "=", 0]]))
+    stores = sorted(w["name"] for w in (body or {}).get("data", [])
+                    if w.get("warehouse_name", "").startswith(shop.store_prefix))
     pstatus, pbody = site.get(resource("POS Profile", fields=["name", "warehouse"], limit_page_length=100,
-                                       filters=[["company", "=", COMPANY], ["disabled", "=", 0]]))
+                                       filters=[["company", "=", shop.company], ["disabled", "=", 0]]))
     per_store = {s: [p["name"] for p in (pbody or {}).get("data", []) if p.get("warehouse") == s] for s in stores}
     bad = {s: p for s, p in per_store.items() if len(p) != 1}
-    yield (status == 200 and pstatus == 200 and len(stores) == STORES and not bad,
-           f"{STORES} stores, each with one till profile", f"found {len(stores)}" + (f"; profiles {bad}" if bad else ""))
+    yield (status == 200 and pstatus == 200 and len(stores) == shop.stores and not bad,
+           f"{shop.stores} stores, each with one till profile", f"found {len(stores)}" + (f"; profiles {bad}" if bad else ""))
 
-    status, body = site.get(resource("User", INTEGRATION_USER))
+    status, body = site.get(resource("User", shop.integration_user))
     data = (body or {}).get("data") or {}
     roles = sorted(r.get("role") for r in data.get("roles", []))
-    yield (status == 200 and data.get("enabled") == 1 and INTEGRATION_ROLE in roles and "System Manager" not in roles,
+    yield (status == 200 and data.get("enabled") == 1 and shop.integration_role in roles and "System Manager" not in roles,
            "the integration user", f"HTTP {status}, roles {roles}" if status == 200 else f"HTTP {status}")
 
     status, body = site.get(resource("DocType", fields=["name"], limit_page_length=50,
@@ -172,8 +208,16 @@ def main(argv=None, out=sys.stdout):
     if not (base and key and secret):
         print("set BASE, KEY and SECRET (your site's address and an API key and secret of its administrator)", file=out)
         return 2
+    try:
+        shop = Shop.from_env(os.environ)
+    except ValueError as e:
+        print(e, file=out)
+        return 2
+    if not shop.hosted:
+        print(f"Your own shop's data: company {shop.company!r}, {shop.stores} stores named {shop.store_prefix!r}…, "
+              f"integration user {shop.integration_user!r} with role {shop.integration_role!r}", file=out)
     site = Site(base, key, secret, a.connect_to)
-    results = list(run_checks(site))
+    results = list(run_checks(site, shop))
     ok, detail = run_collection(base, key, secret, a.connect_to)
     results.append((ok, "the request collection's first three files", detail))
     for ok, label, detail in results:
