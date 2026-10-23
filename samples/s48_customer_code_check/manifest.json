@@ -1,0 +1,223 @@
+{
+ "manifest_version": 2,
+ "app": "pp_ccc",
+ "prefix": "PP CCC",
+ "title": "Customer code check",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A one-time code to the customer's phone before they are put on a sale. A capture on customer select: when the cashier puts an existing customer on a sale, the shop's server sends the customer (their id, name, phone, email and customer group), the till's store, its POS Profile, the cashier's user, the till's language, the sale's id and a code-check id, and the service answers allow, refuse or challenge. One record of PP CCC Rule per customer group: Ask for a code or Never ask, and what to do when the customer has no mobile number. A group with no rule takes the rule of the nearest group above it, and a customer with no rule up the tree is never asked. When the rule asks, the service writes a PP CCC Code record holding a 6-digit code and the customer's mobile number; the shop's own Notification on that record texts the code through the shop's own SMS gateway, inside the same save. The till shows a code field; the code the customer reads out goes back to the service, which checks it against the record (ten minutes, used once) and clears it. Three wrong codes end the check, counted by the shop's server. The same cashier picking the same customer at the same POS Profile within 30 minutes of a right code is not asked again. The store's walk-in customer is never asked. The service reads the rules, the customer group tree and the code records, writes the code records, and never reads the customer record. The install makes the role PP CCC Integration; the shop gives it to the app's integration user, with read on Customer Group, and makes the Notification. The capture installs switched off. When the service is down the customer stays on the sale and the sale is flagged for review; a text the gateway does not send leaves the customer without a code. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/ccc/capture"
+ ],
+ "doctypes": [
+  {
+   "name": "PP CCC Rule",
+   "autoname": "field:customer_group",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "customer_group",
+     "fieldtype": "Link",
+     "label": "Customer group",
+     "options": "Customer Group",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "One rule per group, named by it. A group below this one takes this rule until it has its own."
+    },
+    {
+     "fieldname": "enabled",
+     "fieldtype": "Check",
+     "label": "Switched on",
+     "default": "1",
+     "in_list_view": 1,
+     "description": "Off: this group takes the rule of the nearest group above it that has one."
+    },
+    {
+     "fieldname": "ask",
+     "fieldtype": "Select",
+     "label": "A code",
+     "options": "Ask for a code\nNever ask",
+     "default": "Ask for a code",
+     "in_list_view": 1,
+     "description": "Never ask: lets a group below one that asks off the code."
+    },
+    {
+     "fieldname": "without_mobile",
+     "fieldtype": "Select",
+     "label": "Without a mobile number",
+     "options": "Take them off the sale\nLet them on",
+     "default": "Take them off the sale",
+     "description": "A customer of this group whose record has no mobile number."
+    },
+    {
+     "fieldname": "words",
+     "fieldtype": "Data",
+     "label": "Words the cashier reads",
+     "length": 120,
+     "description": "Shown with the code field, such as: Ask the member for the code we texted. Blank: the app's words, with the last two digits of the number."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP CCC Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP CCC Code",
+   "autoname": "field:challenge",
+   "fields": [
+    {
+     "fieldname": "challenge",
+     "fieldtype": "Data",
+     "label": "Code check",
+     "reqd": 1,
+     "unique": 1,
+     "read_only": 1,
+     "description": "The till's own id for this code check."
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "customer_name",
+     "fieldtype": "Data",
+     "label": "Customer name",
+     "read_only": 1
+    },
+    {
+     "fieldname": "mobile",
+     "fieldtype": "Data",
+     "label": "Mobile number",
+     "options": "Phone",
+     "read_only": 1,
+     "description": "The number on the customer's record when the code was made. The shop's Notification texts the code here."
+    },
+    {
+     "fieldname": "code",
+     "fieldtype": "Data",
+     "label": "Code",
+     "length": 8,
+     "read_only": 1,
+     "description": "The code the Notification texts. Cleared once the customer gives it."
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Sent\nUsed",
+     "default": "Sent",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Data",
+     "label": "Store",
+     "read_only": 1
+    },
+    {
+     "fieldname": "pos_profile",
+     "fieldtype": "Data",
+     "label": "POS Profile",
+     "read_only": 1
+    },
+    {
+     "fieldname": "operator",
+     "fieldtype": "Data",
+     "label": "Cashier",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sent_at",
+     "fieldtype": "Int",
+     "label": "Sent at (seconds, UTC)",
+     "read_only": 1
+    },
+    {
+     "fieldname": "verified_at",
+     "fieldtype": "Int",
+     "label": "Given at (seconds, UTC)",
+     "read_only": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "PP CCC Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP CCC Rule",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/customer_code_check.html#rules"
+  },
+  {
+   "doc_type": "PP CCC Code",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/customer_code_check.html#the-text-message"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP CCC Codes feed",
+   "description": "the customer code check service reads the rules and group tree and writes the code records as this user; leave the feed off",
+   "events": [
+    "PP CCC Rule"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "on_select",
+   "point": "capture",
+   "label": "Customer code check",
+   "endpoint_url": "https://host.docker.internal:8125/ccc/capture",
+   "timeout_seconds": 3,
+   "down_answer": "allow_and_flag",
+   "settings": {
+    "event": "customer_select"
+   }
+  }
+ ]
+}
