@@ -10,7 +10,7 @@ The recipe: [`recipes/field_rules.md`](../../recipes/field_rules.md).
 
 ## What the shop does
 
-1. **Choose the till theme.** The four rules belong to one till theme. The sample names `PP Partner Till`; a shop's copy names its own theme.
+1. **Choose the till theme.** The four rules belong to one till theme. The sample names `PP Partner Till`; a shop's copy names its own theme. The theme must exist before the install, or **Check** refuses every rule (*Run it*, below, says how to make it).
 2. **Tell the shop's people before you install.** Field rules have no switch: the rules are live as soon as the app is installed. The phone rule is enforced by the server at once; the other three reach each till that wears the theme at its next start.
 3. **Install the app** (the shop's administrator). It adds four rules to the theme: the sale's line heading reads *Product*, the customer's card says *Stars* where it said *points*, the new-customer sheet has no email field, and a new customer needs a phone.
 4. **Start a till afresh** to see the words and fields change. Nothing else is set: there is no switch, no consent and no role to give.
@@ -35,6 +35,8 @@ Uninstalling removes exactly these rows and leaves the theme as the shop had it.
 Field rules have **no switch**: the phone rule is enforced by the server as soon as the manifest installs, the others reach each till at its next start. Uninstalling removes exactly these rows.
 
 ## Run it
+
+**Before you install:** the manifest's four rules belong to the till theme `PP Partner Till`, our test bench's own theme. On any other site the install screen's **Check** refuses all four (*"no till theme named 'PP Partner Till' on this site (Retail POS Theme)"*). So first either make that theme (POS Studio: open a theme, press **Save as a new theme**, name the copy `PP Partner Till` and save), or replace `PP Partner Till` in `manifest.json` with the name of the shop's own theme.
 
 From the kit's root (the folder that holds `samples/`):
 
