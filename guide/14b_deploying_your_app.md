@@ -43,7 +43,7 @@ The template does all eight. Replace its `core.py` with your logic and keep the 
    IVN_POINT_SECRET=any-long-random-string docker compose up --build
    ```
 
-   For many retailers against a retailer's site on your own machine (`http://shop.localhost:8000`, say), use the template's local mode, `IVN_LOCAL=1`, and send the connect yourself ([the template's README](../tools/app_template/README.md#local-mode-many-shops-on-your-laptop)).
+   For many retailers against an iVendNext site on your own machine (`http://shop.localhost:8000`, say), use the template's local mode, `IVN_LOCAL=1`, and send the connect yourself ([the template's README](../tools/app_template/README.md#local-mode-many-retailers-on-your-laptop)).
 
 3. **Call it the way the till does** with the stand-in caller (`tools/standin_caller/`), which signs a call and judges the answer as the remote till key does.
 4. **Check the settings file and the Dockerfile:**
@@ -134,7 +134,7 @@ An app listed in the App library is installed by retailers you have never met. E
 
 ⚠ The site connects by itself only to an app hosted at one `*.ivendnext.app` address (the only such address its manifest names) and installed from the App library: from its public list, or from a customer's *Made for you* shelf. Each time you publish a hosted app to a shelf, the shelf carries that app's own key for the customer's sites that hold the shelf's key. A site the customer adds later gets its key the next time you publish that app to the shelf; a site that installed the app before its key arrived connects once you publish a higher version and the retailer takes the update. For an app on your own server, the retailer's secrets reach you by hand, and you run the template for that one retailer (`IVN_POINT_SECRET`).
 
-To switch the template to many retailers, set `IVN_LIBRARY_APP` to your app's id in the App library, give it a store (`IVN_SHOPS_FILE`, or `"shops": true` in `app.json` on CitiXsys hosting, which makes your app its own encrypted table), and name your till key in `app.py` (`KEY`). On your laptop, `IVN_LOCAL=1` lets a retailer's site on your own machine connect with a key you sign yourself, in a connect you send yourself (a site connects by itself only to an `*.ivendnext.app` address) ([local mode](../tools/app_template/README.md#local-mode-many-shops-on-your-laptop)). Sample [S22](../samples/s22_customer_loyalty/README.md) runs this way: one service for every retailer, with a feed poll for each.
+To switch the template to many retailers, set `IVN_LIBRARY_APP` to your app's id in the App library, give it a store (`IVN_SHOPS_FILE`, or `"shops": true` in `app.json` on CitiXsys hosting, which makes your app its own encrypted table), and name your till key in `app.py` (`KEY`). On your laptop, `IVN_LOCAL=1` lets an iVendNext site on your own machine connect with a key you sign yourself, in a connect you send yourself (a site connects by itself only to an `*.ivendnext.app` address) ([local mode](../tools/app_template/README.md#local-mode-many-retailers-on-your-laptop)). Sample [S22](../samples/s22_customer_loyalty/README.md) runs this way: one service for every retailer, with a feed poll for each.
 
 **Technical notes**
 

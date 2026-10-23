@@ -86,7 +86,7 @@ This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, buildi
 
 7. **When your service is down or slow.** On scan, `allow_and_flag` lets the line on and flags it; `refuse` keeps the item off. On customer add, `refuse` reads *"⟨label⟩ did not answer. The customer can't be added until it does."* The scan never fails because of you: a capture that cannot run applies your declared answer.
 
-8. **Test it.** Unit-test the core and the service with calls signed the way the retailer signs them (`samples/s20_capture/tests/`), and check every answer against the contract. Then scan and add a customer on a sandbox.
+8. **Test it.** Unit-test the core and the service with calls signed the way iVendNext signs them (`samples/s20_capture/tests/`), and check every answer against the contract. Then scan and add a customer on a sandbox.
 
 ## Technical notes
 

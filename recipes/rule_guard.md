@@ -58,7 +58,7 @@ A check before payment is the last word on a sale before money is taken. When th
 
 6. **When your service is down or slow.** The till waits your timeout, then applies your declared down answer. With `refuse` the cashier reads *"⟨label⟩ did not answer. This sale can't be paid until it does. Try again, or get a manager."*; with `allow_and_flag` the sale books and the round is flagged on the *Extension Log*. Offline, the till applies the down answer from its start-of-day snapshot and the sale is flagged when it syncs, never refused.
 
-7. **Test it.** Unit-test your rule and your service on your laptop with calls signed the way the retailer signs them (`samples/s18_rule_guard/tests/`), and check every answer against the contract. Then press Pay on a sandbox. The money kit (`recipes/money_kit.md`) rings every basket through your check: an allowed sale must book exactly as without it, and a refused one must book nothing.
+7. **Test it.** Unit-test your rule and your service on your laptop with calls signed the way iVendNext signs them (`samples/s18_rule_guard/tests/`), and check every answer against the contract. Then press Pay on a sandbox. The money kit (`recipes/money_kit.md`) rings every basket through your check: an allowed sale must book exactly as without it, and a refused one must book nothing.
 
 ## A coupon, and what the check receives for it
 

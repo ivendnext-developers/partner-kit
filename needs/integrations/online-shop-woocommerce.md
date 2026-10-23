@@ -1,9 +1,9 @@
 ---
 id: online-shop-woocommerce
-title: An web store on WooCommerce
+title: A web store on WooCommerce
 area: integrations
 topic: online-shops-and-orders
-asks: Our WooCommerce store linked to the stores
+asks: Our WooCommerce web store linked to the stores
 status: ready-with-limits
 door: our-connector
 blocked-by: -

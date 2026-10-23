@@ -14,7 +14,7 @@ Rung 2 of the ladder (chapter 3), after configuration (chapter 4): anything that
 
 ## Steps
 
-1. **Get a key.** iVendNext makes one integration user for your app, holding one narrow role (chapter 2; the recipe lists the role the bin sample needs). One app, one user. ⚠ **On a product before 2026-09-30 that key can do what an administrator can:** there every desk user also holds the Workspace Manager role, and with it a key could put content on a shared workspace that runs in the browser of whoever opens it. Since 2026-09-30 only a System Manager gets that role, and the manifest installer refuses an integration user that holds it (chapter 7). Keep the key in a secret store, never in code or chat, and rotate it at any doubt: *Generate Keys* again, and the old secret is refused at once (`401`).
+1. **Get a key.** The retailer makes one integration user for your app, holding one narrow role (chapter 2; the recipe lists the role the bin sample needs). One app, one user. ⚠ **On a product before 2026-09-30 that key can do what an administrator can:** there every desk user also holds the Workspace Manager role, and with it a key could put content on a shared workspace that runs in the browser of whoever opens it. Since 2026-09-30 only a System Manager gets that role, and the manifest installer refuses an integration user that holds it (chapter 7). Keep the key in a secret store, never in code or chat, and rotate it at any doubt: *Generate Keys* again, and the old secret is refused at once (`401`).
 2. **Make the first calls from the collection, not from a library.** Every call is a plain HTTP file; `run.sh` sends them all with `curl` and `jq`:
 
    ```bash

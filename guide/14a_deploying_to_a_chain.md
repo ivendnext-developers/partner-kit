@@ -133,7 +133,7 @@ A partner ships a warranty service, with a Desk report of warranties sold (Kind 
 5. The administrator moves the 30 till profiles of the next three stores onto the theme, then the rest. The warranty role goes to each store's staff as its tills get the key.
 6. The partner later improves the terms on its server, first for Store 1 only, by reading `store` in each call's context, then for every store.
 
-### Your own server's releases skip iVendNext's switch
+### Your own server's releases skip the retailer's switch
 Your server answers every store at once. A change you release there reaches **every till on its next call**, whatever the retailer has switched on. Roll it out on your side the same way:
 - **A call from a till names the store and the till profile.** A till key's context carries `store` and `pos_profile`, and a page opened on the till carries the till profile. Turn new behaviour on for the pilot store first, in your own code. A Desk button's call and a webhook's body carry no store.
 - **Or run the new version at a new address**, and let the retailer move store by store. ⚠ A new address **clears the customer's consent** on that service until the administrator ticks it again. That is the point: the customer agrees to where its data goes.
@@ -155,7 +155,7 @@ Your server answers every store at once. A change you release there reaches **ev
 
 We release one product to every customer. Your work keeps running because it only uses published ways in: the API, the event feed, the extension points and the manifest format (`manifest_version`). The calls for a Desk button, a check and a capture carry `X-iVendNext-Point: <point>/<version>`; a till key's call names its version in its `User-Agent` (`iVendNext-POS-AppKey/1`). How long a version keeps working is in [chapter 18](18_versioning_and_support.md). **Re-run the customer's release gate before every one of our upgrades** (chapter 14).
 
-## What the retailer sees
+## What iVendNext sees
 
 - **In the customer's site**, read by the customer's administrator:
   - every manifest install, as the install record: what was installed, which version, when it was removed. The record is kept after an uninstall as iVendNext's log;

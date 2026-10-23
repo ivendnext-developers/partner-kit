@@ -10,7 +10,7 @@ A connected app signs in to a retailer's iVendNext **from outside**, with an API
 
 The retailer's administrator does these in iVendNext Desk.
 
-1. **Give a role for this app alone the rights it needs** (Desk → Role Permissions Manager; Desk → Role → New only if no role of that name exists). If your manifest names the role in its permission rows and the role starts with your prefix, the install makes it (on a site whose POS app is at `e149dce4` or later; any other missing role is refused, so iVendNext makes it first) and a manifest can grant it rights only on **your own** record types: the rights on the retailer's own record types are the ones you add here, and a card's setup steps say so. Give it only what the app reads and writes. The bin-location sample's role, for example:
+1. **Give a role for this app alone the rights it needs** (Desk → Role Permissions Manager; Desk → Role → New only if no role of that name exists). If your manifest names the role in its permission rows and the role starts with your prefix, the install makes it (on a site whose POS app is at `e149dce4` or later; any other missing role is refused, so the retailer makes it first) and a manifest can grant it rights only on **your own** record types: the rights on the retailer's own record types are the ones you add here, and a card's setup steps say so. Give it only what the app reads and writes. The bin-location sample's role, for example:
 
    | Record type | Rights |
    |---|---|

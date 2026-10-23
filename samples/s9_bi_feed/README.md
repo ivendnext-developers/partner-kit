@@ -1,31 +1,31 @@
 # S9 — a BI feed: sales, lines, payments and returns into a warehouse file, picking up where it stopped
 
-A small program that copies the shop's sales, lines, payments and returns into a data warehouse file, and picks up where it stopped. This sample is for a retailer's analytics team that wants the shop's sales outside the shop without copying everything every night.
+A small program that copies the retailer's sales, lines, payments and returns into a data warehouse file, and picks up where it stopped. This sample is for a retailer's analytics team that wants the retailer's sales outside the retailer's iVendNext without copying everything every night.
 
-**When to use it:** reports or dashboards outside the shop need the shop's sales, kept up to date and checked against the till's own end-of-day figures.
+**When to use it:** reports or dashboards outside the retailer's iVendNext need the retailer's sales, kept up to date and checked against the till's own end-of-day figures.
 
-It runs **outside** the shop, read-only on the business, over the event feed (`recipes/event_feed.md`); written up as a recipe: `recipes/bi_feed.md`.
+It runs **outside** the retailer's iVendNext, read-only on the business, over the event feed (`recipes/event_feed.md`); written up as a recipe: `recipes/bi_feed.md`.
 
-## What the shop does
+## What the retailer does
 
-This is for the retailer's analytics team and the shop's administrator. The shop's side is two small set-up steps; the rest runs outside the shop.
+This is for the retailer's analytics team and the retailer's administrator. The retailer's side is two small set-up steps; the rest runs outside the retailer's iVendNext.
 
-1. **Make a user for the feed, read-only on the business.** The administrator makes a user for the feed with a role of its own that can read **POS Invoice** and **POS Closing Entry**, and read and write the shop's event log (so the feed can mark events done). It needs nothing else. In that user's **API Access** the administrator presses **Generate Keys** and hands the key and secret to the analytics team ([the integration user recipe](../../recipes/integration_user.md)).
+1. **Make a user for the feed, read-only on the business.** The administrator makes a user for the feed with a role of its own that can read **POS Invoice** and **POS Closing Entry**, and read and write iVendNext's event log (so the feed can mark events done). It needs nothing else. In that user's **API Access** the administrator presses **Generate Keys** and hands the key and secret to the analytics team ([the integration user recipe](../../recipes/integration_user.md)).
 2. **Register the feed in Desk.** The administrator makes a **Registered Application** (this sample calls it `PP BI`): its name, the user from step 1 as the user the feed reads as, and **POS Invoice** ticked on as the record type it follows.
-3. **Run the feed outside the shop.** The analytics team runs `run` with the key (`BI_KEY`, `BI_SECRET`). It copies each sale, return and cancellation into a warehouse file, picking up where it stopped.
-4. **Check each day with `control`.** It compares each day's total in the warehouse with the shop's own end-of-day figure, the **POS Closing Entry**, and names a closing that disagrees.
+3. **Run the feed outside the retailer's iVendNext.** The analytics team runs `run` with the key (`BI_KEY`, `BI_SECRET`). It copies each sale, return and cancellation into a warehouse file, picking up where it stopped.
+4. **Check each day with `control`.** It compares each day's total in the warehouse with the retailer's own end-of-day figure, the **POS Closing Entry**, and names a closing that disagrees.
 5. **Heal or restart if needed.** `backfill` catches up if the feed was off or the file lost its last sales; `rebuild` starts a fresh file; `export` writes the CSV files.
 
-**Where it shows.** Nowhere in the shop's screens. The shop shows only the registration in Desk and the feed's queue. The result is a warehouse file and CSV files on the analytics team's machine, for their own reports and dashboards. Nothing is added to the till, to POS Studio or to a print layout.
+**Where it shows.** Nowhere in iVendNext's screens. iVendNext shows only the registration in Desk and the feed's queue. The result is a warehouse file and CSV files on the analytics team's machine, for their own reports and dashboards. Nothing is added to the till, to POS Studio or to a print layout.
 
-**What leaves the shop.** The shop's sales: each invoice's header (kind, status, day, customer, totals, tax, discount, till profile), its lines and its payments, and the returns, are read over the API with the feed's key and copied into the warehouse file and the CSV. The feed's key can read the shop's event log for **every** application's queue, not only its own; see *Before you copy it*. The shop is read, never written, apart from marking the feed's events done.
+**What leaves the retailer's iVendNext.** The retailer's sales: each invoice's header (kind, status, day, customer, totals, tax, discount, till profile), its lines and its payments, and the returns, are read over the API with the feed's key and copied into the warehouse file and the CSV. The feed's key can read iVendNext's event log for **every** application's queue, not only its own; see *Before you copy it*. iVendNext is read, never written, apart from marking the feed's events done.
 
 ## The files
 
 | File | What |
 |---|---|
 | `bi_feed.py` | `run` (the feed, one transaction per invoice together with the seen-set) · `backfill` (by the watermark per record type) · `rebuild` (a full refresh into a fresh file) · `export` (CSV) · `control` (the day's totals beside the POS Closing Entry) |
-| `tests/test_s9.py` | 13 laptop tests against an in-memory shop and feed |
+| `tests/test_s9.py` | 13 laptop tests against an in-memory stand-in and feed |
 
 ## How to run it
 
@@ -34,7 +34,7 @@ BI_KEY=… BI_SECRET=… python3 samples/s9_bi_feed/bi_feed.py control --base ht
 ```
 
 1. **`run`**, as often as you like, picks up what is new from the event feed. Each sale is written together with the note that it was handled, so a crash leaves it copied once or not at all.
-2. **`control`** checks each day's totals in the warehouse against the shop's own end-of-day figure (the POS Closing Entry), and names a closing that disagrees.
+2. **`control`** checks each day's totals in the warehouse against the retailer's own end-of-day figure (the POS Closing Entry), and names a closing that disagrees.
 3. **`backfill`** catches up if the feed was off or the file lost its last sales. **`rebuild`** starts a fresh file.
 4. **`export`** writes the warehouse as CSV.
 
@@ -56,7 +56,7 @@ The result is a warehouse file and CSV, not a screen.
 
 | Where | What |
 |---|---|
-| `tests/test_s9.py` | 13 laptop tests against an in-memory shop and feed |
+| `tests/test_s9.py` | 13 laptop tests against an in-memory stand-in and feed |
 | *our test bench's own run (not in the kit)* | the bench tests |
 
 What our test bench's run printed (2026-10-07, 23 of 23 checks; trimmed). The result is a warehouse file and CSV, not a screen of ours:

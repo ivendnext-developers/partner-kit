@@ -13,7 +13,7 @@ request: -
 verified: run on a sandbox 2026-10-16 · POS 2.0.0.648 · a source change followed in 14 s, the retailer's pricer read the new price, a person's price held, a deleted source ended its row in 15 s, reconcile 0
 ---
 ## What you build
-An outside app follows price changes on the event feed and writes the derived list's item prices through the record API, by a rule iVendNext keeps: a factor, an offset, a rounding step and a floor.
+An outside app follows price changes on the event feed and writes the derived list's item prices through the record API, by a rule the retailer keeps: a factor, an offset, a rounding step and a floor.
 
 ## Limits
 - The new price arrives seconds after the source is saved (14 seconds on a sandbox; about a minute at worst when the retailer's background worker is busy, chapter 5); a sale in those seconds is priced at the old one, and a till takes the new price at its next sync.

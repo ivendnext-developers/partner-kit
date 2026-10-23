@@ -4,7 +4,7 @@ A till key is a button on the till, an extension point the retailer switches on.
 
 **When to use it.** Rung 3 of the build ladder, after configuration and a connected app. Use it when the cashier needs your answer at the till. The answer is a **message** for the cashier, or **sale details** the cashier applies (one value per detail per sale). It never changes a price, a total or a payment.
 
-**The shape.** Write your logic once as a **pure core**: `answer(context, your reference data) → result`, importing nothing from iVendNext. Then add a few lines around it — the **remote binding** — on your own server. Keeping the core pure lets you test it without a retailer's iVendNext (step 3).
+**The shape.** Write your logic once as a **pure core**: `answer(context, your reference data) → result`, importing nothing from iVendNext. Then add a few lines around it — the **remote binding** — on your own server. Keeping the core pure lets you test it without a running iVendNext (step 3).
 
 ## Steps
 
@@ -85,7 +85,7 @@ The till refuses in words, with **nothing added to the sale**, never a partial a
 - Step 5, **on the bench:** signed in as a cashier, enrolled a device, bound the outlet, pressed → a success message; the same press with no device was refused. Through the real press, S1 passed all six test cases, and S2's "Where is it?" named each line's bin.
 - `mpos_remote_app_allow_private` is for test benches.
 - ⚠ **What was proven where.** The remote key was released (merged) on 2026-10-03, after these tests ran. On the bench this binding was called by our stand-in caller, which follows that key's published contract (the same headers, signature, size cap and refusals), and judged by the till's own validator. Since then the released key has answered presses on our test bench, 2026-10-07, over HTTPS with a certificate trusted for the run: S1's *Warranty* through the till's own press endpoint, called from the bench's console as the cashier, not from a screen; S6's *AI tip* pressed by a cashier on the till's screen, the iVendNext POS app in a desktop browser. A press from a physical till device was not tried.
-- **The title's one binding.** This recipe covers the remote binding only. The earlier binding of the same core inside iVendNext (a hosted app inside the retailer's iVendNext, proven on our test bench on 2026-10-03) is not offered: outsiders never write Python inside a retailer's site (`samples/s1_warranty/README.md`, *The two forms*).
+- **The title's one binding.** This recipe covers the remote binding only. The earlier binding of the same core inside iVendNext (a hosted app inside it, proven on our test bench on 2026-10-03) is not offered: outsiders never write Python inside a retailer's site (`samples/s1_warranty/README.md`, *The two forms*).
 - When your service is down: the till's **stated answer** is a refusal in words, with nothing added to the sale; our stand-in caller writes the same words as the released remote key.
 - **Offline:** per the till's own documentation the key is dimmed on an offline till and the sale goes on without it; this was not run here (no offline till on the bench).
 
