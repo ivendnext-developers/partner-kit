@@ -17,6 +17,14 @@ A shop runs a *shop and win* campaign: every so much a customer spends at its ti
 3. **Draw winners**, after the last day (by the campaign's own *hours from UTC*): *"Drew 3 winners and 2 reserves from 1,036 entries. The results are on the campaign."* The campaign now reads *Drawn*; its results list each winner and reserve with their name, mobile and e-mail from the shop's own customer record, their entries, the entry number drawn and the sale holding it. Its rule can no longer change, and the button is gone.
 4. The manager calls the winners, hands over the prizes and ticks *Handed over* on each row.
 
+![A campaign made by its manager on a demo shop](../samples/s44_lucky_draw/screenshots/03_campaign.png)
+
+![Count entries on a demo shop: 3 sales by 2 customers, 6 entries so far](../samples/s44_lucky_draw/screenshots/04_count.png)
+
+![Draw winners on a demo shop: one winner and one reserve from six entries](../samples/s44_lucky_draw/screenshots/07_drawn.png)
+
+![The results on a demo shop, the winner handed over](../samples/s44_lucky_draw/screenshots/08_handed-over.png)
+
 ## Steps
 
 1. **Add the campaign record type** with three tables of its own: the tills (POS Profile), the customer groups (Customer Group), and the results (rank, winner or reserve, customer, the customer's name, mobile and e-mail fetched from the customer on save, entries, the entry number drawn, the sale, *Handed over*). Give the campaign's rule fields `read_only_depends_on: "eval:doc.status=='Drawn'"`, so the rule is locked once drawn, and make the status, the counts and the draw's record read-only: only the service writes them. See the sample's `manifest.json`.
@@ -48,7 +56,7 @@ A shop runs a *shop and win* campaign: every so much a customer spends at its ti
    - on *Count entries*, write the counts and the list's fingerprint; on *Draw winners*, draw with a cryptographic random source, one place per customer, winners then reserves, and write the results, the draw's record and *Drawn* (`PUT` with the campaign's `modified` as read);
    - answer with a message and `refresh` (the extension point's vocabulary).
 
-5. **Rights.** The manager role needs *Select* on **Company**, **POS Profile** and **Customer Group** for the campaign form's lookups (the role alone gets no answer). The app's user holds the app's integration role alone, with read on **POS Invoice**, **POS Profile** and **Customer Group** (measured on our test bench: the shop refused each until it was given; a right of *select* alone answers the names only). The manifest gives the role read and write on the campaign.
+5. **Rights.** The manager role needs *Select* on **POS Profile** and **Customer Group** for the campaign form's lookups (the role alone gets no answer), and *Read* on **Company**: the form fills the campaign's currency from the company (`fetch_from`), and a fetch needs read (*"You need Read permission to fetch values from Company"*). The app's user holds the app's integration role alone, with read on **POS Invoice**, **POS Profile** and **Customer Group** (measured on our test bench: the shop refused each until it was given; a right of *select* alone answers the names only). The manifest gives the role read and write on the campaign.
 
 ## Tell the winners
 

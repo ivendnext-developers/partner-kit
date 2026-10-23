@@ -14,6 +14,17 @@ A shop runs a *shop and win* campaign: every 200 spent at its tills during the c
 
 The **Draw winners** button is gone once the campaign is drawn, the form locks its rule, and the app never draws it again.
 
+| What the shop sees (on a demo shop, 2026-10-23) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/01_install.png) |
+| The draw's service consented and switched on | ![](screenshots/02_consent.png) |
+| A campaign made by the manager role alone: its company, days, hours from UTC, spend for one entry, winners, reserves and prize | ![](screenshots/03_campaign.png) |
+| **Count entries**: three named sales by two customers in the campaign's groups counted; the staff group and the walk-in left out | ![](screenshots/04_count.png) |
+| The question before **Draw winners** | ![](screenshots/05_confirm.png) |
+| **Draw winners** before the last day has ended at the shop: refused, nothing written | ![](screenshots/06_too-early.png) |
+| **Draw winners** after it: one winner and one reserve from six entries | ![](screenshots/07_drawn.png) |
+| The draw's record and the results, the winner handed over | ![](screenshots/08_handed-over.png) |
+
 ## What the shop does
 
 1. **Install the app** (the shop's administrator). It comes in switched off: both services have no consent and are off, and both buttons are off. The install adds the campaign record type **PP LDW Campaign** (and its three tables) and makes the roles **PP LDW Manager** and **PP LDW Integration**.
@@ -26,7 +37,7 @@ The **Draw winners** button is gone once the campaign is drawn, the form locks i
    | Customer Group | Read | the group tree, so a group takes the groups below it |
 
    The app's user reads every till sale on the site, with its customer: give the role to the app's user and no one else. The install gives the role read and write on the campaign itself. A service for one shop takes the key in its settings. A service for many shops receives it from the shop: choose the user as the *Application User* of the feed **PP LDW Draw feed**, then press **Connect again** on the app (*Many shops, hosted* below).
-3. **Give the manager role** to whoever runs the campaigns (marketing, the head of stores). In **Role Permissions**, give **PP LDW Manager** *Select* on **Company**, **POS Profile** and **Customer Group**: the campaign form's lookups for them answer nothing to the role alone (measured on our test bench).
+3. **Give the manager role** to whoever runs the campaigns (marketing, the head of stores). In **Role Permissions**, give **PP LDW Manager** *Read* on **Company** and *Select* on **POS Profile** and **Customer Group**: the campaign form's lookups for them answer nothing to the role alone (measured on our test bench), and the form fills the campaign's currency from the company, which needs *Read* (*"You need Read permission to fetch values from Company"*, measured on our demo site).
 4. **Switch the services on** (the System Manager): **Retail Extension Subscription**, the records *Lucky draw count* and *Lucky draw*: read what each is sent, tick the consent, switch it on. Then **Retail Desk Action**, the records *Count entries* and *Draw winners*: switch them on.
 
 **Where it shows.** In Desk: the campaign's list and form, with the two buttons on the form. At the till: nothing new; the cashier adds the customer to the sale as always.
