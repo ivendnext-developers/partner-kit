@@ -186,11 +186,13 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
 - **Who reads the patient's fields is your setup** (step 3), not the app's: a manifest cannot give a field a
   permission level yet. Until you take that step, everyone who reads customers reads them. After it, on our test bench
   a Desk clerk who reads customers saw none of them on the form, the list, the report view or the print, and a clerk's
-  edit of one was ignored, and a clerk's filter on one was refused (*"Field not permitted in query"*) through every
-  public call we tried: the API's and the Desk's lists, the count, a single value, the group-by count and the link
-  search. It does not yet hold everywhere; each is recorded for the team that owns it:
+  edit of one was ignored, and a clerk's filter on one was refused (*"Field not permitted in query"*) by the API's and
+  the Desk's lists, the count and a single value. It does not yet hold everywhere; each is recorded for the team that
+  owns it:
   - **the form's change history:** a customer's form brings its recent changes with it, old and new values included.
     The screen hides a field the user may not read, but the values reach the clerk's browser;
+  - **two Desk calls answer a filter:** the list's group-by count (its sidebar) and the link search answer a clerk's
+    *starts with* filter on the ID. A clerk who asks enough of them learns the value;
   - **code inside the server:** a filter made by server code with the framework's own list call is answered for the
     clerk. An app that takes a person's filters and runs them that way would let the clerk ask;
   - **one engine call** returns a whole record to any signed-in user, whatever its levels;
@@ -379,7 +381,7 @@ details (default `PP RXC`).
     sale go on.
   - **The uninstall** left the schema as found, the sale details kept and switched off, and no permission row of the
     app's role was left.
-- **On our test bench again for 0.1.1** (2026-10-23, the same builds; 27 of 27 checks):
+- **On our test bench again for 0.1.1** (2026-10-23, the same builds; 32 of 32 checks):
   - **The update.** Version 0.1.0 was installed, the three identity fields were given level 2 as step 3 says (level 1
     is held there by *Retail Cashier*, *Sales User* and *Sales Master Manager*), and the app was updated to 0.1.1
     through the shop's installer. The fields kept level 2, the ID's new description was written, the
@@ -388,13 +390,23 @@ details (default `PP RXC`).
     check included, with the service's user reading at that level. Without that grant, the shop answered the service
     neither way and the service refused the controlled sale (*"did not answer"*), as step 3 says.
   - **Who reads them:** a Desk clerk who reads customers saw none of the five fields on the form, the list, the report
-    view or the print, a clerk's edit of one was ignored, and a clerk's filter on the ID was refused through the API
-    and the Desk's list; the pharmacist read and wrote them. The form's change history still reaches the clerk
-    (*Limits*).
+    view or the print, a clerk's edit of one was ignored, and a clerk's filter on the ID was refused by the API's and
+    the Desk's lists, the count and a single value; the pharmacist read and wrote them. The form's change history,
+    the group-by count and the link search still reach the clerk (*Limits*).
   - **Consent:** with *Needs the patient's recorded consent* ticked, Pay was refused (*"needs the customer's consent to
     keep their records"*) until the pharmacist entered the day on the patient's form, then the sale was allowed.
-  - **Deleting:** the pharmacist-in-charge and a pharmacist were refused; the Records Officer deleted an unused
-    prescription, and *Deleted Documents* then held a copy.
+  - **Deleting:** the pharmacist-in-charge and a pharmacist were refused. On a dispensed prescription with an image,
+    the prescription could not go before its dispensing; the Records Officer deleted the dispensing, then it, and the
+    image went with it. A *System Manager* deleted the *Deleted Documents* copies and was refused the change history,
+    which the *Administrator* deleted.
+  - **A shop's own permission copy:** with the prescription and dispensing permissions changed on 0.1.0, the update
+    left the pharmacist-in-charge's delete in the shop's copy; *Restore Original Permissions* on each left only the
+    Records Officer deleting.
+  - **Filters:** a clerk's filter on the ID was refused by the API's and the Desk's lists, the count and a single
+    value; the group-by count and the link search answered a *starts with* filter that matched and gave nothing for
+    one that did not (*Limits*).
+  - **Timing:** the dispensary's checks took 164 ms at the median and 395 ms at the slowest, each patient field asked
+    both ways.
   - **Customize Form** on Customer refused to save with the app installed (*Limits*, step 3), so the levels were set on
     each Custom Field record.
   - **The teardown** put Customer's permission rows back exactly as found and left no setting on its fields.
