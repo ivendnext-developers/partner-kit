@@ -12,7 +12,7 @@ Before any build. The sandbox is where you try every rung of the ladder (chapter
 
 ### How to ask
 
-Fill in the iVendNext Partner form on ivendnext.com: <https://www.ivendnext.com/partner/#be-a-partner>. You do not need a GitHub account to ask. A licensed customer's IT team may use the same form, or ask its account manager; either way its account owner talks to it. Our team talks to every builder first.
+Fill in the iVendNext Partner form on ivendnext.com: <https://www.ivendnext.com/partners/apply/>. You do not need a GitHub account to ask. A licensed customer's IT team may use the same form, or ask its account manager; either way its account owner talks to it. Our team talks to every builder first.
 
 ### When access comes
 

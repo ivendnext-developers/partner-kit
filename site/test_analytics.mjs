@@ -101,7 +101,7 @@ function all(src, label) {
   t("the plan page's two copy buttons (limits, blueprint) are reported as copy, the counter's word", JSON.stringify(events(l)) === '[{"e":"plan_export","how":"copy"},{"e":"plan_export","how":"copy"}]', JSON.stringify(events(l)));
 
   const clicks = [["https://developer.ivendnext.com/sandbox.html", "sandbox_request"], ["../sandbox.html", "sandbox_request"],
-                  ["https://www.ivendnext.com/partner/#be-a-partner", "sandbox_request"],
+                  ["https://www.ivendnext.com/partners/apply/", "sandbox_request"],
                   ["https://github.com/ivendnext-developers/partner-feedback/issues/new?template=2_point_request.yml&title=Extension-point%20request%3A%20P-CAPTURE2%20%E2%80%94%20x", "request_form"],
                   ["https://library.ivendnext.app/build", "outbound"], ["https://docs.ivendnext.com/a", "outbound"], ["https://www.ivendnext.com/", "outbound"]];
   for (const [href, want] of clicks) {

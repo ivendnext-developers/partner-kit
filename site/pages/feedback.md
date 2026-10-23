@@ -2,7 +2,7 @@
 
 If you build for an iVendNext customer and find something missing or broken, four short forms are how you tell us; a fifth asks us to list an app you built, and a sixth claims a need from [our roadmap](roadmap.md).
 
-**The forms are for onboarded members:** an iVendNext Partner, a licensed customer's IT team, and the CitiXsys Consulting Team. Filing is for members, and membership comes with onboarding. **Not yet a member?** [Become an iVendNext Partner](https://www.ivendnext.com/partner/#be-a-partner) first; that form is also how you ask for a sandbox. A licensed customer's IT team may use it too, or ask its account manager.
+**The forms are for onboarded members:** an iVendNext Partner, a licensed customer's IT team, and the CitiXsys Consulting Team. Filing is for members, and membership comes with onboarding. **Not yet a member?** [Become an iVendNext Partner](https://www.ivendnext.com/partners/apply/) first; that form is also how you ask for a sandbox. A licensed customer's IT team may use it too, or ask its account manager.
 
 ## Open a form
 

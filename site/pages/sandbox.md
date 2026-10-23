@@ -8,7 +8,7 @@ Your site's address looks like `yourcompany.sandbox.ivend.co`. We tell you the a
 
 {{include guide/02_getting_started.md#How to ask}}
 
-[Open the iVendNext Partner form](https://www.ivendnext.com/partner/#be-a-partner)
+[Open the iVendNext Partner form](https://www.ivendnext.com/partners/apply/)
 
 ## When access comes
 
