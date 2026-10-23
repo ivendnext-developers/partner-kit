@@ -447,19 +447,22 @@ details (default `PP RXC`).
   - **Customize Form** on Customer refused to save with the app installed (we have reported it), so the levels were set on
     each Custom Field record.
   - **The teardown** put Customer's permission rows back exactly as found and left no setting on its fields.
-- **On our test bench again for 0.1.2** (2026-10-23, the same builds; 35 of 35 checks):
+- **On our test bench again for 0.1.2** (2026-10-23, the same builds; 35 of 35 checks, twice):
   - **0.1.1 first.** With the ID at the shop's level on Customer, a Desk clerk who reads customers was sent it in the
     customer's change history, and the list's group-by count answered a *starts with* filter on it, by customer group
     and by *Assigned To* (the customer assigned), only when the pattern matched.
-  - **The update and the move.** The level survived the update and each field's new description and show-while-set
-    were written. As step 3 says, the pharmacist found the patient by the ID being set, made their patient record with
-    the same values and cleared the customer's five fields; clearing wrote one more change-history row holding the
-    old value, which the clerk was still sent until the Administrator deleted the rows that carry the fields.
+  - **The update and the move.** The level and the values 0.1.1 held survived the update, and each field's new
+    description and show-while-set were written. As step 3 says, the pharmacist found the patient by the ID being set,
+    made their patient record with the same values and cleared the customer's five fields; clearing wrote one more
+    change-history row holding the old value, which the clerk was still sent until the Administrator deleted the rows
+    that carry the fields. Those deletes left copies in *Deleted Documents*; a System Manager deleted them, and the ID
+    was then in neither.
   - **The patient record.** Named by a code, history kept, one per customer; the pharmacist roles, the Records Officer,
     the service's role (read) and System Manager (read alone) hold a row. A clerk was refused it whole: form and change
     history, list, report view, print, its Version rows, making one, and a *starts with* filter on the ID through the
     API's and the Desk's lists, the count, a single value, the group-by count on a field and the link search. The
-    pharmacist read and wrote it; a System Manager read its form, report view and Version rows; the customer's own
+    pharmacist read and wrote it; a System Manager read its form, report view and Version rows and was refused a write
+    and a delete; the customer's own
     form carried nothing of it. The service read whether the ID is set, both ways, with no level anywhere.
   - **What still reaches the clerk** (*Limits*): with only the customer assigned, the group-by count by *Assigned To* on
     patient records answered nothing; once the patient record itself was assigned, it answered the filter (and not
@@ -468,7 +471,7 @@ details (default `PP RXC`).
   - **The till and the Desk:** all of the 0.1.0 walk again, the controlled sale's ID check read off the patient record
     (a patient with no record refused); consent refused, then sold once the pharmacist entered the day on the patient
     record; only the Records Officer deleted a patient record; the deletion steps as in 0.1.1.
-  - **Timing:** the dispensary's checks took 194 ms at the median and 494 ms at the slowest.
+  - **Timing:** the dispensary's checks took 167 ms at the median and 749 ms at the slowest (the last 50).
 
 ## Make it your own
 
