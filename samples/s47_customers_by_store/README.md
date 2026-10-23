@@ -24,6 +24,14 @@ The shop decides at which stores each group of its customers may buy: account cu
 | Trade accounts | the POS Profile *Trade Counter* |
 | Trade accounts › Key accounts | Harare, Sandton, Bulawayo (each store) |
 
+| What the shop sees (on a demo shop, 2026-10-23) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/01_install.png) |
+| A rule for a customer group: Store 1 only, with the words the cashier reads | ![](screenshots/02_rule.png) |
+| The question switched on with no POS Profile chosen, so every till asks | ![](screenshots/03_switched-on.png) |
+| At Store 3, that group's customer taken off the sale with the rule's words | ![](screenshots/04_refused.png) |
+| A customer in a group below one whose rule names Store 3 stays on the sale | ![](screenshots/05_allowed.png) |
+
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
 
 ## What the shop does
