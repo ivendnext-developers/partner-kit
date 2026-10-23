@@ -4,7 +4,7 @@ A small service that does what every deployable app does ([guide chapter 14b](..
 
 **It is for** a builder who has an outside app (chapters 5 and 6) and wants it running on a server a shop can reach. Copy this folder, replace `service/core.py` with your own logic, and keep the rest.
 
-**One shop or many.** Run it for one shop with that shop's secret (`IVN_POINT_SECRET`). Or, for an app in the App library, run it for many: each shop connects itself after its install, and every call is checked with that shop's own secret ([chapter 14b, One app, many shops](../../guide/14b_deploying_your_app.md#one-app-many-shops)). A library key works like a password for its shop: whoever holds it can connect as that shop and replace its secrets, and the shop's next install connects it again.
+**One shop or many.** Run it for one shop with that shop's secret (`IVN_POINT_SECRET`). Or, for an app in the App library, run it for many: each shop connects itself after its install, and every call is checked with that shop's own secret ([chapter 14b, One app, many shops](../../guide/14b_deploying_your_app.md#one-app-many-retailers)). A library key works like a password for its shop: whoever holds it can connect as that shop and replace its secrets, and the shop's next install connects it again.
 
 | File | What it is |
 |---|---|

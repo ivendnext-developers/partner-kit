@@ -13,7 +13,7 @@ request: -
 verified: carried 2026-10-15 · not re-run
 ---
 ## What you build
-The item's Has Serial No: the IMEI is the serial number, received with the stock. The shop needs a default Company.
+The item's Has Serial No: the IMEI is the serial number, received with the stock. iVendNext needs a default Company.
 
 ## Limits
 - A phone that also has a batch (a lot): from POS build 2.0.0.654 the till books each phone with the batch its serial number carries, and refuses one whose serial number has no batch (the card *units-as-serial-numbers*, sample S30). Before that build, it sells reliably only from the lot iVendNext picks first.

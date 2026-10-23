@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/customer_history_page.md
 sample: samples/s28_merge_and_history
 request: -
-verified: run on a sandbox 2026-10-16 · POS 2.0.0.648 · the sample's page with the context the shop signed in Desk: three sales by three people, each discount, the roll-up skipped, no sales, a reused context refused; not run: the till's own key and card (no till sign-in)
+verified: run on a sandbox 2026-10-16 · POS 2.0.0.648 · the sample's page with the context the retailer signed in Desk: three sales by three people, each discount, the roll-up skipped, no sales, a reused context refused; not run: the till's own key and card (no till sign-in)
 ---
 ## What you build
 A partner page, opened by a till key with the customer on the sale (or in Desk for a customer); your server reads the sales over the record API and shows who served and the discount on each.

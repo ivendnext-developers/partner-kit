@@ -78,7 +78,7 @@ On a sandbox, with the integration user's key in `service/.env.local` (never com
 python3 samples/s45_restaurant_back_office/service/app.py samples/s45_restaurant_back_office/service/.env.local
 ```
 
-Many shops (the app template's handshake, [chapter 14b](../../guide/14b_deploying_your_app.md#one-app-many-shops)): set `IVN_LIBRARY_APP` and a shops store; each shop's site connects itself to the app's one `*.ivendnext.app` address after its install and hands over its integration user's key once the shop presses *Connect again*. It only answers presses, so it runs as a **function**, paid per call.
+Many shops (the app template's handshake, [chapter 14b](../../guide/14b_deploying_your_app.md#one-app-many-retailers)): set `IVN_LIBRARY_APP` and a shops store; each shop's site connects itself to the app's one `*.ivendnext.app` address after its install and hands over its integration user's key once the shop presses *Connect again*. It only answers presses, so it runs as a **function**, paid per call.
 
 ## Make it your own
 

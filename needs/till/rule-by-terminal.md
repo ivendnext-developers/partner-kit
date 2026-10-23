@@ -17,7 +17,7 @@ A check before payment that reads the sale's POS day and its terminal (`pos_term
 
 ## Limits
 - A day suspended at one terminal and resumed at another moves its terminal mid-sale: the till asks you again before money moves; a sale whose card was already charged, or one synced from offline, is booked and flagged for review instead.
-- A shop's consent ticked before its site took the day and the terminal lapses: the check asks nobody until the shop ticks it again.
+- A retailer's consent ticked before its site took the day and the terminal lapses: the check asks nobody until the retailer ticks it again.
 - A service that validates the request against an older copy of the contract refuses the two new fields: take the kit's current copy.
 - No kit sample reads the terminal yet: S18 shows the check, the recipe the request.
 

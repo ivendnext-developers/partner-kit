@@ -60,7 +60,7 @@ python3 samples/s25_gift_on_spend/service/worker.py run samples/s25_gift_on_spen
 python3 samples/s25_gift_on_spend/service/app.py samples/s25_gift_on_spend/service/.env.local
 ```
 
-Many shops (the app template's handshake, [chapter 14b](../../guide/14b_deploying_your_app.md#one-app-many-shops)): set `IVN_LIBRARY_APP` and a shops store; each shop's site connects itself to the app's one `*.ivendnext.app` address in `allowed_urls` after its install (the site connects to no other address, and refuses a manifest naming two) and hands over its integration user's key (once the shop has made it and pressed *Connect again*, step 5), and the worker reads each shop's feed with that shop's key, each on its own thread. It is background work, so it runs as a **container**, never a function:
+Many shops (the app template's handshake, [chapter 14b](../../guide/14b_deploying_your_app.md#one-app-many-retailers)): set `IVN_LIBRARY_APP` and a shops store; each shop's site connects itself to the app's one `*.ivendnext.app` address in `allowed_urls` after its install (the site connects to no other address, and refuses a manifest naming two) and hands over its integration user's key (once the shop has made it and pressed *Connect again*, step 5), and the worker reads each shop's feed with that shop's key, each on its own thread. It is background work, so it runs as a **container**, never a function:
 
 ```bash
 docker build --platform linux/arm64 -f samples/s25_gift_on_spend/Dockerfile -t gift-card-on-spend:1.0.0 .

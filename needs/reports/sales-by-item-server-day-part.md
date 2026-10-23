@@ -14,7 +14,7 @@ verified: 2026-10-23 · bench
 related: recipes-off-stock, food-cost-by-recipe
 ---
 ## What you build
-Your service keeps each sale's lines on its own records as it takes the sales up (the item, quantity, amount net of tax, the user who rang it, the time and the shop's name for that part of the day), and your manifest's report lists them with totals, to filter and group in Desk.
+Your service keeps each sale's lines on its own records as it takes the sales up (the item, quantity, amount net of tax, the user who rang it, the time and the retailer's name for that part of the day), and your manifest's report lists them with totals, to filter and group in Desk.
 
 ## Limits
 - A sale shows in the report once it has been taken up by a press.

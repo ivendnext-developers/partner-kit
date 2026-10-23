@@ -1,6 +1,6 @@
 # Blueprint template — copy it into your project
 
-**See it filled first:** [the blueprint example](blueprint_example.md) (also [as a PDF](https://developer.ivendnext.com/downloads/blueprint_example.pdf)), an invented chain of phone shops with every section filled in.
+**See it filled first:** [the blueprint example](blueprint_example.md) (also [as a PDF](https://developer.ivendnext.com/downloads/blueprint_example.pdf)), an invented chain of phone stores with every section filled in.
 
 Copy this file into your project, change this heading to *Blueprint:* and the project's name, and fill it in: each section's line in italics says what goes there. [The project blueprint](https://developer.ivendnext.com/kit/blueprint.html) says how to fill each section. To fill it on paper instead, print the [blueprint form (PDF)](https://developer.ivendnext.com/downloads/blueprint_form.pdf).
 

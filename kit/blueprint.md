@@ -2,9 +2,9 @@
 
 **For:** an iVendNext Partner, a licensed customer's IT team or the CitiXsys Consulting Team starting a project for an iVendNext customer, before quoting it and before building. **Reference:** the ladder classes below, the extension-point catalogue (guide chapter 9, [The extension-point catalogue and requests](../guide/09_points_and_requests.md)), guide chapters 3 and 15 ([The ladder](../guide/03_ladder_and_never_list.md), [Customer archetypes](../guide/15_customer_archetypes.md)) and the feedback forms ([`../feedback/`](../feedback/README.md)).
 
-A blueprint is one page per project that answers six questions: what does the project do, **which door does each need use**, how big is it, what does it connect to, which extra work does it switch on, and what could go wrong. It is the same page for a three-store shop and a fifty-store chain. **The needs decide what the project gets, never the customer's size:** "Standard" and "Enterprise" describe a customer, and they route nothing.
+A blueprint is one page per project that answers six questions: what does the project do, **which door does each need use**, how big is it, what does it connect to, which extra work does it switch on, and what could go wrong. It is the same page for a three-store retailer and a fifty-store chain. **The needs decide what the project gets, never the customer's size:** "Standard" and "Enterprise" describe a customer, and they route nothing.
 
-> **Download:** [the blueprint form](https://developer.ivendnext.com/downloads/blueprint_form.pdf) (PDF, at most four A4 pages, to print) · [how to fill it](https://developer.ivendnext.com/downloads/blueprint_how_to_fill.pdf) (PDF, one page) · [the template](https://developer.ivendnext.com/downloads/blueprint_template.md) (Markdown, to fill on screen; also [as a page](blueprint_template.md)). **See it filled:** [the blueprint example](blueprint_example.md), an invented chain of phone shops ([as a PDF](https://developer.ivendnext.com/downloads/blueprint_example.pdf), in the form's own layout, to print beside the blank one; [as Markdown](https://developer.ivendnext.com/downloads/blueprint_example.md)).
+> **Download:** [the blueprint form](https://developer.ivendnext.com/downloads/blueprint_form.pdf) (PDF, at most four A4 pages, to print) · [how to fill it](https://developer.ivendnext.com/downloads/blueprint_how_to_fill.pdf) (PDF, one page) · [the template](https://developer.ivendnext.com/downloads/blueprint_template.md) (Markdown, to fill on screen; also [as a page](blueprint_template.md)). **See it filled:** [the blueprint example](blueprint_example.md), an invented chain of phone stores ([as a PDF](https://developer.ivendnext.com/downloads/blueprint_example.pdf), in the form's own layout, to print beside the blank one; [as Markdown](https://developer.ivendnext.com/downloads/blueprint_example.md)).
 
 ## How to fill it
 
@@ -78,7 +78,7 @@ Do it once for the average day and once for the busiest day. Then check it again
 
 One row per outside system. The **door** is the event feed, the API or a file. A system with two directions gets two rows.
 
-- **Our connectors first.** Where one of our connectors fits (the online shop, the ERP), name it. A connector replaces a row of your own work.
+- **Our connectors first.** Where one of our connectors fits (the web store, the ERP), name it. A connector replaces a row of your own work.
 - **Identity map.** Every sync that keeps records on both sides needs someone to hold the map of record ids. Say who holds it.
 - **If the far side is down.** Say what waits, where, and what catches up. The event feed holds what you have not collected.
 - **Who owns the far side** is a role ("the customer's IT team", "the ERP vendor"), not a person.

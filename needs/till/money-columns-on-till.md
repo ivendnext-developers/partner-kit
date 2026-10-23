@@ -14,10 +14,10 @@ verified: run by the product 2026-10-18 (POS train T12's walk, counter, phone an
 related: till-fields-shown-renamed-hidden
 ---
 ## What you build
-Two field rules on the till theme, from POS build 2.0.0.654: `cart_line · list_price · show · List price` shows each line's price before any cut, and `totals · grand_total · relabel · Total incl. VAT` gives the total the shop's word (`recipes/field_rules.md`, *The money words*). The line's price, discount and total and the totals' discount, charges, delivery and tax take a new label too. No figure changes.
+Two field rules on the till theme, from POS build 2.0.0.654: `cart_line · list_price · show · List price` shows each line's price before any cut, and `totals · grand_total · relabel · Total incl. VAT` gives the total the retailer's word (`recipes/field_rules.md`, *The money words*). The line's price, discount and total and the totals' discount, charges, delivery and tax take a new label too. No figure changes.
 
 ## Limits
-- The paper keeps its own words (*Total*, *Tax (incl.)*): for the shop's word on the receipt, name your own print format.
+- The paper keeps its own words (*Total*, *Tax (incl.)*): for the retailer's word on the receipt, name your own print format.
 - The label may not hold digits or signs, but a claim in words passes: *Price incl. VAT* is false on a profile whose prices exclude tax. Word a money label for every POS profile the theme serves.
 - On an item sold at a cross-sell offer's price, the list price is the offer's base, so that line shows no struck price.
 - The customer display, POS Studio's previews, the screens of a sale already made and the charges sheet's heading keep the shipped words.

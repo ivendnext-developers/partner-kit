@@ -1,8 +1,8 @@
 # API reference
 
-Every record call the kit's samples make to a shop, one section per address, from the kit's API description ([`api/openapi.yaml`](../../api/openapi.yaml)). This page is built from that file, so the two cannot disagree. The few calls that are not record calls are elsewhere: the `ivendnext_mpos.api.v1` methods, the shop's own functions under iVendNext names, are listed in [`api/README.md`](../../api/README.md), and the event feed is in its recipe.
+Every record call the kit's samples make to a retailer's iVendNext, one section per address, from the kit's API description ([`api/openapi.yaml`](../../api/openapi.yaml)). This page is built from that file, so the two cannot disagree. The few calls that are not record calls are elsewhere: the `ivendnext_mpos.api.v1` methods, the retailer's own functions under iVendNext names, are listed in [`api/README.md`](../../api/README.md), and the event feed is in its recipe.
 
-**How every call signs in.** Each call runs as your app's own integration user, with its key in one header: `Authorization: token <api key>:<api secret>`. It sees only what that user's role allows: a record the role cannot read answers `403`, a missing one `404`. The address is the shop's own, `https://<site>`. [Security and the handshake](security.md) says how your app gets the user and its key.
+**How every call signs in.** Each call runs as your app's own integration user, with its key in one header: `Authorization: token <api key>:<api secret>`. It sees only what that user's role allows: a record the role cannot read answers `403`, a missing one `404`. The address is the retailer's own, `https://<site>`. [Security and the handshake](security.md) says how your app gets the user and its key.
 
 **Try them.** `api/collection/run.sh` sends every call with `curl` alone, against your sandbox ([Get started](start.md), step 3).
 

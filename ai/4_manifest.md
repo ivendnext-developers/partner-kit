@@ -1,6 +1,6 @@
 # A manifest: your own records and formats, as data (way in 4)
 
-**Goal.** Add your own record types, fields, print formats, notifications and workspaces to a shop as one data file the shop's administrator installs. A manifest runs nothing of yours.
+**Goal.** Add your own record types, fields, print formats, notifications and workspaces to a retailer's iVendNext as one data file the retailer's administrator installs. A manifest runs nothing of yours.
 
 **Read.** [guide/07_manifests.md](../guide/07_manifests.md) · [recipes/manifest.md](../recipes/manifest.md) (the kinds a manifest may carry, and each rule) · [tools/deploy/README.md](../tools/deploy/README.md).
 
@@ -18,4 +18,4 @@
 
 **Done looks like.** Both checkers are green on the same file; the summary was read by the person; nothing was installed without `--consent`; the file contains no code, no script and no address the person did not list.
 
-**Never.** Put a server script, a client script or any code in a manifest; add a field that the server enforces on a shop's own record type; override a shop's own record type; use the samples' `pp_` prefix.
+**Never.** Put a server script, a client script or any code in a manifest; add a field that the server enforces on a retailer's own record type; override a retailer's own record type; use the samples' `pp_` prefix.
