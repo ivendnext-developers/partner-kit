@@ -47,11 +47,13 @@ The code reaches the customer through the shop, never through your service:
 - The shop makes one **Notification**: *Document Type* `<PREFIX> Code`, *Send Alert On* **New**, *Channel* **SMS**, a recipient *Receiver By Document Field* **mobile**, and a message with `{{ doc.code }}`. A manifest's own notification goes only to the shop's users, so this one is the shop's: put it in your setup steps.
 - The framework sends a Notification's text inside the save of the record, and never fails the save for it: a gateway that answers an error or cannot be reached is written to the shop's *Error Log* (*Failed to send Notification*), a Notification switched off sends nothing, and SMS Settings with no gateway address only print a message. In each the customer gets no code and cannot be put on the sale: a gateway fault closes the door, never opens it. Your setup's last step is a test pick; tell the shop to watch its Error Log.
 - Reading the shop's SMS log to learn whether a text went would give your role every text the shop sends: do not.
-- A shop with the WhatsApp app can send the same record by its own WhatsApp notification.
+- A shop with the WhatsApp app can likely send the same record by its own WhatsApp notification (not measured).
 
 ## Bounds
 
 - The code comes at the pick, not at the payment: a customer of a group that asks is asked whether or not they spend from their account.
+- *Cancel* on the code field takes the customer off the sale; a pick whose own call fails leaves the customer on the screen, and payment says *"This customer has not been checked. Pick them again, or sell without a customer."*
+- The till asks on every route a customer reaches a sale by: picked, scanned, matched by phone, a resumed sale, a quote turned into a sale or an order, an exchange. Not asked: a customer this cashier added in the last ten minutes while a customer-add app is on.
 - The number on the record is the number that gets the code: unless the shop locks the phone field (rule 8), a cashier who may change it can send the code elsewhere.
 - The till's own doors: a sales order or invoice made in iVendNext Desk is not asked.
 - What the customer already holds is not a new pick and is not held: a layaway plan's later payment, an order's balance, a payment on their account.
