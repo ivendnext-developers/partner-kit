@@ -60,7 +60,7 @@ The shop's workflow cannot hold a limit, and a person holding the right roles ca
 |---|---|
 | `manifest.json` | the request type (with its store), the approval-rule table, numbering, change tracking, the workflow of five states, every right written out |
 | `approvals_stores.py` | `apply` and `export` (standard library): S11's service with the store limit and the authority check |
-| `tests/test_s14.py` | 35 laptop tests against an in-memory shop |
+| `tests/test_s14.py` | 36 laptop tests against an in-memory shop |
 
 Recipe: `recipes/approvals_stores.md`. It is built on S11 (`samples/s11_approvals/`) and keeps every one of its safeguards.
 

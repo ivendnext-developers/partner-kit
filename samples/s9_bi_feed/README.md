@@ -25,7 +25,7 @@ This is for the retailer's analytics team and the shop's administrator. The shop
 | File | What |
 |---|---|
 | `bi_feed.py` | `run` (the feed, one transaction per invoice together with the seen-set) · `backfill` (by the watermark per record type) · `rebuild` (a full refresh into a fresh file) · `export` (CSV) · `control` (the day's totals beside the POS Closing Entry) |
-| `tests/test_s9.py` | 12 laptop tests against an in-memory shop and feed |
+| `tests/test_s9.py` | 13 laptop tests against an in-memory shop and feed |
 
 ## How to run it
 
@@ -56,7 +56,7 @@ The result is a warehouse file and CSV, not a screen.
 
 | Where | What |
 |---|---|
-| `tests/test_s9.py` | 12 laptop tests against an in-memory shop and feed |
+| `tests/test_s9.py` | 13 laptop tests against an in-memory shop and feed |
 | *our test bench's own run (not in the kit)* | the bench tests |
 
 What our test bench's run printed (2026-10-07, 23 of 23 checks; trimmed). The result is a warehouse file and CSV, not a screen of ours:
