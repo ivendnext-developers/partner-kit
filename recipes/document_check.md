@@ -6,7 +6,7 @@ Some back-office documents must not become final until an outside system agrees:
 
 **When to use it.** The check reads data your system holds, and the person submitting can wait a few seconds. **Back office only:** never a till sale, and never a record the till's own booking writes (a layaway's order, a delivery's invoice, the backing records of the till's quote edit and quote cancel, an offline sale reaching the server); those are logged *not asked*. For the till's sale use a check before payment ([recipe](rule_guard.md)); for a format or a limit on one record's own fields, a save rule ([recipe](save_rules.md)). On a POS app from before train T11 (2026-10-16), which has no document check, a workflow step only your service can take does the same job ([recipe](check_by_workflow.md)).
 
-**The four rules, here.** Your service's code never runs inside the shop's site: our code asks your service and applies your answer from a closed list. **No answer writes money,** and `fill` writes only the fields the subscription names, each one the shop added.
+**The four rules, here.** Your service's code never runs inside the retailer's site: our code asks your service and applies your answer from a closed list. **No answer writes money,** and `fill` writes only the fields the subscription names, each one the retailer added.
 
 ## Steps
 
@@ -23,8 +23,8 @@ Some back-office documents must not become final until an outside system agrees:
    ```
 
    - `record_type`: one record type that is submitted. A till's own record (POS Invoice, the POS day's opening and close) is refused.
-   - `send_fields`: the Desk action's grammar (40 fields, 5 tables, 500 rows a table). Send only what your check reads; the shop consents to that list.
-   - `fill_fields`: at most 10, each a field **the shop added**: a field your manifest adds counts. Text, a number, a date, a choice or a link; never money, never read-only. A standard field is refused when the subscription is saved: *"A service cannot fill schedule_date: on Purchase Order it may fill only a field the shop added, never a money field or one a total is computed from."*
+   - `send_fields`: the Desk action's grammar (40 fields, 5 tables, 500 rows a table). Send only what your check reads; the retailer consents to that list.
+   - `fill_fields`: at most 10, each a field **the retailer added**: a field your manifest adds counts. Text, a number, a date, a choice or a link; never money, never read-only. A standard field is refused when the subscription is saved: *"A service cannot fill schedule_date: on Purchase Order it may fill only a field the retailer added, never a money field or one a total is computed from."*
    - `on_validate: true` asks you at a draft's save too. Not on Sales Order, Sales Invoice, Delivery Note, Payment Entry or Journal Entry, which the till's booking also writes.
    - `down_answer`: `allow_and_flag` (the submit goes on, flagged), `refuse` (nothing is submitted unchecked) or `ask` (the user decides).
 2. **Answer.** Verify the signature (base64 HMAC-SHA256 of `<timestamp>.<raw body>` with the subscription's secret), read `context.fields` (money as minor units with its currency, quantities in thousandths), and answer within your time:
@@ -56,9 +56,9 @@ Some back-office documents must not become final until an outside system agrees:
 ### Bounds
 
 - **Asked once:** the same document, fields, user and moment within 5 minutes gets your earlier answer, so a resubmit after a refusal does not reach you again.
-- **A save rule that would refuse the submit runs first,** so a submit a house rule refuses never reaches you. After a `fill`, the shop's save rules run once more over the filled record (a flag rule can write a second row).
+- **A save rule that would refuse the submit runs first,** so a submit a house rule refuses never reaches you. After a `fill`, iVendNext's save rules run once more over the filled record (a flag rule can write a second row).
 - **The log row of a refused submit is written later:** the product queues it outside the refused transaction, and a scheduled job writes it (every 15 minutes on our sandbox), so the row's time is the job's, not the submit's. The product calls it best effort: a cache clear or a restart before the job runs loses the row (the refusal itself is not affected).
-- **Consent:** the consent text is built from the record type, the moment, the fields sent and the fields an answer may fill; a change to any of them clears the consent and stops the calls until the shop ticks it again.
+- **Consent:** the consent text is built from the record type, the moment, the fields sent and the fields an answer may fill; a change to any of them clears the consent and stops the calls until the retailer ticks it again.
 
 ### What was proven where
 

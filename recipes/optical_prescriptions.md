@@ -1,12 +1,12 @@
 # Optical prescriptions and lab orders — the recipe
 
-An optical store keeps each customer's eye prescription, sells lenses against it, and follows the glasses through the lab until the customer collects them. This recipe gives the shop its prescriptions and lab orders as its own records in Desk, with a workflow and a lab job sheet, and one check at the till: a lens line is paid only when the customer has a prescription of that kind in date. It is for an iVendNext Partner, or the CitiXsys Consulting Team, who wants an optical store's back office and its one till rule without code inside the shop.
+An optical store keeps each customer's eye prescription, sells lenses against it, and follows the glasses through the lab until the customer collects them. This recipe gives the retailer its prescriptions and lab orders as its own records in Desk, with a workflow and a lab job sheet, and one check at the till: a lens line is paid only when the customer has a prescription of that kind in date. It is for an iVendNext Partner, or the CitiXsys Consulting Team, who wants an optical store's back office and its one till rule without code inside the retailer's iVendNext.
 
 **Reference implementation:** `samples/s42_optical_prescriptions/`.
 
 **When to use it.** The store sells frames, spectacle lenses and contact lenses, and its optometrists test eyes in the store or the customer brings another practice's prescription. Many markets require a fitted prescription in date before contact lenses are sold, and a store wants the same for prescription spectacle lenses. For a medicine's prescription with fills and a pharmacist, see S39 (*Pharmacy counter rules*); for an age check, S37.
 
-**The four rules, here.** No code runs inside the shop. One address is called, your service, and only when the cashier presses Pay. The service reads two fields of a prescription (its kind and *Valid until*), never a lens value, and writes nothing. It never changes the money: it allows the sale or refuses it in the cashier's words.
+**The four rules, here.** No code runs inside the retailer's iVendNext. One address is called, your service, and only when the cashier presses Pay. The service reads two fields of a prescription (its kind and *Valid until*), never a lens value, and writes nothing. It never changes the money: it allows the sale or refuses it in the cashier's words.
 
 ## What the optometrist, the staff and the cashier see
 
@@ -15,11 +15,11 @@ An optical store keeps each customer's eye prescription, sells lenses against it
 3. Staff open **Lab Order**, choose the prescription (its customer and lens values come with it, read only), and fill the lab, frame, lenses, coatings, fitting heights, the store to collect at, the sale and the due date. They print the **job sheet** for the lab.
 4. The order moves by its buttons: **Send to lab**, **Back from lab** (*Ready to collect* is ticked), **Hand over** (*Closed*), or **Cancel**; **Send back to lab** for a remake. **Lab orders to chase** lists every open order, the oldest due first.
 
-![Pay refused on a demo shop: a pair of spectacle lenses for a customer with no spectacle prescription](../samples/s42_optical_prescriptions/screenshots/05_till_refused.png)
+![Pay refused on a demo site: a pair of spectacle lenses for a customer with no spectacle prescription](../samples/s42_optical_prescriptions/screenshots/05_till_refused.png)
 
-![The customer's spectacle prescription, entered in Desk on a demo shop](../samples/s42_optical_prescriptions/screenshots/06_prescription.png)
+![The customer's spectacle prescription, entered in Desk on a demo site](../samples/s42_optical_prescriptions/screenshots/06_prescription.png)
 
-![The lab order made from it, ready to collect, on a demo shop](../samples/s42_optical_prescriptions/screenshots/08_lab_order.png)
+![The lab order made from it, ready to collect, on a demo site](../samples/s42_optical_prescriptions/screenshots/08_lab_order.png)
 
 ![The lab order's job sheet](../samples/s42_optical_prescriptions/screenshots/09_job_sheet.png)
 
@@ -40,7 +40,7 @@ then each eye's sphere, cylinder, axis, addition, prism, base and visual acuity,
 
 ## Lab orders
 
-A second record type, numbered (`format:OPT-LAB-{#####}`), linked to its prescription. Copy the customer, the e-mail and the lens values from it with `fetch_from: "prescription.<field>"` and `read_only: 1`: the order carries what it prints (the print readers do not serve a package's own record types). Add two read-only ticks the workflow sets, *Ready to collect* and *Closed*, because a manifest's notification goes to the shop's own users only (the customer's message is the shop's own Notification on the tick) and a report is installed before the workflow's state field exists:
+A second record type, numbered (`format:OPT-LAB-{#####}`), linked to its prescription. Copy the customer, the e-mail and the lens values from it with `fetch_from: "prescription.<field>"` and `read_only: 1`: the order carries what it prints (the print readers do not serve a package's own record types). Add two read-only ticks the workflow sets, *Ready to collect* and *Closed*, because a manifest's notification goes to the retailer's own users only (the customer's message is the retailer's own Notification on the tick) and a report is installed before the workflow's state field exists:
 
 ```json
 "workflows": [{"name": "PP OPT Lab Order", "document_type": "PP OPT Lab Order",
@@ -68,7 +68,7 @@ A second record type, numbered (`format:OPT-LAB-{#####}`), linked to its prescri
 
 ## Settings
 
-A settings record type whose record *Default* holds the shop's **hours from UTC**: the shop's own day decides whether a prescription is still in date.
+A settings record type whose record *Default* holds the retailer's **hours from UTC**: the retailer's own day decides whether a prescription is still in date.
 
 ## Steps
 
@@ -93,17 +93,17 @@ A settings record type whose record *Default* holds the shop's **hours from UTC*
    - read, with the app's user: the settings *Default*, the item groups with their mark (`lft`, `rgt`), the sold items' own marks and their templates — kept a minute;
    - if no sold line is marked, allow without reading a prescription;
    - otherwise read the sale customer's prescriptions with `fields=["kind","valid_until"]` and `filters=[["customer","=",…]]`, never kept; a record without those two fields (a bare *select* right) is a 503, never a refusal, and so is an item or group answered without its mark;
-   - refuse the first marked line whose kind has no prescription valid until the shop's today or later (not the test date: Desk stamps it by the site's time zone, so a bound on it could refuse this morning's eye test), naming the last day one ran out if it did; sentences at most 140 characters.
-4. **Check it before the shop:** `python3 tools/check/check.py samples/s42_optical_prescriptions`.
+   - refuse the first marked line whose kind has no prescription valid until the retailer's today or later (not the test date: Desk stamps it by the site's time zone, so a bound on it could refuse this morning's eye test), naming the last day one ran out if it did; sentences at most 140 characters.
+4. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s42_optical_prescriptions`.
 
-## What the shop does
+## What iVendNext does
 
 1. **Install the app.** The check comes in switched off. The install adds the records, the mark, the workflow, the job sheet, the report and the roles.
 2. **Give the optometrist role and Sales User** to whoever writes prescriptions (Sales User reads customers for the picker and holds the lab order's buttons); store staff keep **Sales User**. Whoever chooses a lab order's **Lab** (a supplier) also needs a role that can see suppliers, such as **Stock User** or **Purchase User**.
 3. **Give the app a user**, as in the [integration user recipe](integration_user.md): its integration role alone, its API key, and in **Role Permissions** a plain **Read** on **Item Group** and **Item**. Choose the user on the app's feed; a hosted service: press **Connect again**.
 4. **Fill in the settings** (*Default*: hours from UTC) and **mark the lens item groups**.
 5. **Switch the check on** in **Retail Extension Subscription** for the optical stores' POS Profiles (read what it is sent, tick the consent).
-6. **Tell customers, with the shop's own Notifications** (a manifest may only notify the shop's own users; a shop's own Notification may carry a condition): *Lab Order*, **Value Change** on **Ready to collect**, condition `doc.ready_to_collect in (1, "1")` (the workflow writes the tick as text, `"0"` or `"1"`, so a bare `doc.ready_to_collect` also fires on the remake's untick), to **Customer's e-mail**; *Prescription*, **Days Before** **Valid until** (30 days), condition `doc.remind`, to **Customer's e-mail**. The e-mail is filled from the customer whenever it is empty, so untick a prescription's **E-mail reminders** to send it none; the SMS channel works the same way through the shop's SMS gateway.
+6. **Tell customers, with the retailer's own Notifications** (a manifest may only notify the retailer's own users; a retailer's own Notification may carry a condition): *Lab Order*, **Value Change** on **Ready to collect**, condition `doc.ready_to_collect in (1, "1")` (the workflow writes the tick as text, `"0"` or `"1"`, so a bare `doc.ready_to_collect` also fires on the remake's untick), to **Customer's e-mail**; *Prescription*, **Days Before** **Valid until** (30 days), condition `doc.remind`, to **Customer's e-mail**. The e-mail is filled from the customer whenever it is empty, so untick a prescription's **E-mail reminders** to send it none; the SMS channel works the same way through iVendNext's SMS gateway.
 
 ## Limits
 
@@ -121,4 +121,4 @@ A settings record type whose record *Default* holds the shop's **hours from UTC*
 ### What the service is sent and reads
 
 - **Each Pay, and each refund the till pays, sends** the priced basket: lines with their item groups, totals, store, till, the cashier's user, the customer and the sale's details. The consent the System Manager reads lists exactly these.
-- **The service reads** the settings, the item groups' and the items' marks, and the customer's prescriptions' kind and *Valid until*; it writes nothing and keeps nothing about a prescription. The app's user holds a read on the prescription record type, so its key could read a whole prescription: the service asks for two fields, and the card says so. That a customer has a spectacle or contact lens prescription, and until when, is health-related personal data: say so on the card, and host the service where the shop's rules allow.
+- **The service reads** the settings, the item groups' and the items' marks, and the customer's prescriptions' kind and *Valid until*; it writes nothing and keeps nothing about a prescription. The app's user holds a read on the prescription record type, so its key could read a whole prescription: the service asks for two fields, and the card says so. That a customer has a spectacle or contact lens prescription, and until when, is health-related personal data: say so on the card, and host the service where the retailer's rules allow.

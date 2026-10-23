@@ -4,17 +4,17 @@
 
 *A stock user presses* Assign pick route *on a Sales Order, picks a colleague, and the partner's pick task opens.*
 
-A Desk action is a button on a shop record in iVendNext Desk. When a user presses it, your service does its work on that record and tells Desk what to show. Examples: *Assign pick route* on a Sales Order, *Recheck unit barcodes* on a Batch, *Allocate cash* from a Customer. This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, building one.
+A Desk action is a button on a record in iVendNext Desk. When a user presses it, your service does its work on that record and tells Desk what to show. Examples: *Assign pick route* on a Sales Order, *Recheck unit barcodes* on a Batch, *Allocate cash* from a Customer. This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, building one.
 
 **Reference implementation:** `samples/s16_pick_route/` — *Assign pick route*.
 
-**When to use it.** It is step 3 of the screen ladder, after configuration and a connected app: use it when a user should start your work **from the record they are looking at**. The button, its dialog and the answer are the shop's own screens: **you ship no JavaScript into Desk**, ever. Your service does the work through its own API calls; the answer only tells Desk what to show.
+**When to use it.** It is step 3 of the screen ladder, after configuration and a connected app: use it when a user should start your work **from the record they are looking at**. The button, its dialog and the answer are iVendNext's own screens: **you ship no JavaScript into Desk**, ever. Your service does the work through its own API calls; the answer only tells Desk what to show.
 
 **The four rules, here.** Your answer **never writes**: your service writes before it answers, with its own key and its own rights. It never changes a submitted record except through a field the record allows after submit, or a record of your own linked to it. It is **safe to run twice** (the press carries a key for that). It never touches money.
 
 ## Steps
 
-1. **Declare it in your manifest** (`recipes/manifest.md`, `guide/07_manifests.md` § *The extension points' kinds*). Three parts: your service, the button, and — usually — a record type of your own and a Connections link, so what you make shows under the shop's record:
+1. **Declare it in your manifest** (`recipes/manifest.md`, `guide/07_manifests.md` § *The extension points' kinds*). Three parts: your service, the button, and — usually — a record type of your own and a Connections link, so what you make shows under the retailer's record:
 
    ```json
    "extension_subscriptions": [{"key": "route", "point": "desk_action", "label": "Pick route service",
@@ -30,20 +30,20 @@ A Desk action is a button on a shop record in iVendNext Desk. When a user presse
 
    - `placement`: `form`, `list` (the list's Actions menu, on several records at once) or `both`. A bulk press needs `list` or `both`.
    - `inputs`: up to 10, each of one of eight types: `Data`, `Int`, `Float`, `Date`, `Select`, `Link`, `Check`, `Small Text` ([the library page](../contracts/pages/desk_action.md) holds the list at the product's head). Any other type, `Currency` included, is refused at install (*"Input 1: choose one of the listed types."*). **An amount is typed as a `Float`.** It reaches your service as a JSON number, so read it with `Decimal(str(value))` and never add amounts up in float (S22's `money.py` does this).
-   - `send_fields` **is the shop's consent.** The shop reads it before it switches your service on: name exactly what you need, and nothing more. Money leaves as whole minor units with its currency; **a quantity leaves in thousandths** (2 units arrive as `2000`).
+   - `send_fields` **is the retailer's consent.** iVendNext reads it before it switches your service on: name exactly what you need, and nothing more. Money leaves as whole minor units with its currency; **a quantity leaves in thousandths** (2 units arrive as `2000`).
    - The manifest installs **switched off**: your service unconsented and off, the button off. The service's signing secret is handed back **once**, at install.
 
-   The Connections link is what puts your record under the shop's record. Here the pick task is listed under *Picking* on the order:
+   The Connections link is what puts your record under the retailer's record. Here the pick task is listed under *Picking* on the order:
 
    ![the task under the order's Connections](../samples/s16_pick_route/screenshots/05_order_connections.png)
 
-2. **What the shop does after install.** A System Manager opens your service (*Retail Extension Subscription*), reads what is sent, ticks the consent and switches it on, then switches the button on (*Retail Desk Action*). The server stamps the consent (who, when, for which address and which list). A change to the address or the list clears it.
+2. **What iVendNext does after install.** A System Manager opens your service (*Retail Extension Subscription*), reads what is sent, ticks the consent and switches it on, then switches the button on (*Retail Desk Action*). The server stamps the consent (who, when, for which address and which list). A change to the address or the list clears it.
 
    Once it is on, the button sits in the record's menu — here in the **Warehouse** menu of a submitted order:
 
    ![the Warehouse menu](../samples/s16_pick_route/screenshots/01_warehouse_menu.png)
 
-3. **Your service checks every press is the shop's.** The press is one POST to your address, body `{"point": "desk_action/1", "context": {…}}`, with `X-iVendNext-Timestamp` and `X-iVendNext-Signature` = base64 HMAC-SHA256 of `<timestamp>.<raw body>` with the secret. Check it **over the raw bytes, before you parse anything**, and refuse a timestamp more than five minutes from yours:
+3. **Your service checks every press is the retailer's.** The press is one POST to your address, body `{"point": "desk_action/1", "context": {…}}`, with `X-iVendNext-Timestamp` and `X-iVendNext-Signature` = base64 HMAC-SHA256 of `<timestamp>.<raw body>` with the secret. Check it **over the raw bytes, before you parse anything**, and refuse a timestamp more than five minutes from yours:
 
    ```python
    want = base64.b64encode(hmac.new(secret.encode(), ts.encode() + b"." + raw, hashlib.sha256).digest())
@@ -67,11 +67,11 @@ A Desk action is a button on a shop record in iVendNext Desk. When a user presse
 
 5. **Answer in Desk's closed vocabulary.** A `message` (title ≤ 60, body ≤ 280, level `info` · `success` · `warning`) plus **at most one** next step: `open_record` (it must exist and the user must be allowed to read it), `open_page` (an address under a partner page placed on Desk) or `refresh: true`. One bad part refuses the whole answer. The contract is `desk_action.v1.schema.json` in [`contracts/`](../contracts/README.md); S16 checks every answer it gives against it (`tests/test_contract.py`).
 
-   Desk shows your message as the shop's own:
+   Desk shows your message as the retailer's own:
 
    ![the answer](../samples/s16_pick_route/screenshots/03_route_assigned.png)
 
-6. **Press it the way Desk does.** Desk calls `ivendnext_mpos.api.desk_action.run(action, names, inputs, idempotency_key)`. The server re-checks everything the button showed, on the **saved** record. The user fills in the shop's own dialog with the inputs you declared:
+6. **Press it the way Desk does.** Desk calls `ivendnext_mpos.api.desk_action.run(action, names, inputs, idempotency_key)`. The server re-checks everything the button showed, on the **saved** record. The user fills in the retailer's own dialog with the inputs you declared:
 
    ![the dialog, filled in](../samples/s16_pick_route/screenshots/02_dialog_filled.png)
 
@@ -85,7 +85,7 @@ A Desk action is a button on a shop record in iVendNext Desk. When a user presse
 
 7. **When your service is down or slow.** Desk waits 3 seconds unless you raise it (at most 10; S16 declares 5) and then says *"⟨label⟩ did not answer in time. Check the record before you try again."* — it never claims nothing changed, because you may have written before you went quiet. A retry from the same dialog carries the **same** key, so your idempotency makes it safe. Set your timeout to cover your own API writes. We have not yet tested this case end to end.
 
-8. **Test it.** Unit-test your core and service on your laptop with presses signed the way the shop signs them (`samples/s16_pick_route/tests/`), and check your answers against the contract. Then press it on a sandbox.
+8. **Test it.** Unit-test your core and service on your laptop with presses signed the way the retailer signs them (`samples/s16_pick_route/tests/`), and check your answers against the contract. Then press it on a sandbox.
 
 ## A reason asked before a document is rejected
 
@@ -102,7 +102,7 @@ The approver must say why when rejecting (a purchase order, a price change), and
    return {"message": {"title": "Rejected", "body": "… The reason is kept on it.", "level": "success"}, "refresh": True}
    ```
 
-   A second press finds the document already rejected and says so. If the shop refuses the transition (the service's role may not take it), the service puts the two fields back and says so: a document is never left carrying a reason it was not rejected for. If the answer is lost (a timeout) the service reads the document again first, so a reject that went through keeps its reason. Sample S11's `reject`, six tests.
+   A second press finds the document already rejected and says so. If iVendNext refuses the transition (the service's role may not take it), the service puts the two fields back and says so: a document is never left carrying a reason it was not rejected for. If the answer is lost (a timeout) the service reads the document again first, so a reject that went through keeps its reason. Sample S11's `reject`, six tests.
 3. **Configuration, all at once:** take the reject transition away from the approvers' roles and give it to the service's integration user's role, switch the button on, and add **the net**: a save rule `required_when` on the reason field, condition `workflow_state = <your rejected state>`, mode `refuse`. A document rejected any other way (an import, the API) is then refused without a reason.
    ⚠ Not one without the others. The save rule alone leaves the approvers unable to reject at all: they may not write the reason in a state another role edits, and their own *Reject* is then refused. S11 ships neither the button nor the rule, because it has no press service.
 
@@ -111,16 +111,16 @@ Limits to tell the customer:
 - your service must be up: when it is down the button says so, and nothing is rejected;
 - the service's role needs write on the document in the states where it rejects (or the two fields allowed after submit, on a submitted document).
 
-## What the shop needs from you, and what it checks
+## What iVendNext needs from you, and what it checks
 
-| You give | The shop checks |
+| You give | iVendNext checks |
 |---|---|
 | an **HTTPS** address its server trusts (a real certificate) | the address is consented with the field list; a private address is refused on a customer's site |
 | a signature check on every press | — (yours to do) |
 | `send_fields`, as small as the work allows | the consent text is built from it, and a change clears the consent |
 | roles that may press | re-checked on the server at every press, with the record's state and every condition |
 
-**A service that writes the pressed record** (S35, [call-centre orders](call_centre_orders.md)) meets the shop's own save: a table is replaced whole, so send every row back as read; a sales order's save reads its customer with a rights check, so the app's user needs read on Customer; and the shop saves a draft whose lines name a group warehouse and refuses it only at submit, so check a warehouse before you write it; and a bundle's parts (`packed_items`) keep their warehouse unless you write them too.
+**A service that writes the pressed record** (S35, [call-centre orders](call_centre_orders.md)) meets iVendNext's own save: a table is replaced whole, so send every row back as read; a sales order's save reads its customer with a rights check, so the app's user needs read on Customer; and iVendNext saves a draft whose lines name a group warehouse and refuses it only at submit, so check a warehouse before you write it; and a bundle's parts (`packed_items`) keep their warehouse unless you write them too.
 
 ## Technical notes
 
@@ -148,4 +148,4 @@ Proven on our test bench on 2026-10-07.
 
 ### Figures beside the run that measured them
 
-All on our test bench, 2026-10-07: install → the shop's switch-on → S1–S4, the three refusals, the forged press → uninstall with the schema as found (the Extension Log keeps its press rows, by design) — setup 9/9, S16 **14/14**, teardown 6/6. **A press, end to end** (the shop's call, over HTTPS, the service writing one or three pick tasks over the record API, the answer judged): **39–207 ms**, over two runs, on the four answered presses (the Extension Log's `latency_ms`; the test shop and the service on one machine, so a real network adds its own round trip). Your timeout must cover your own API writes: S16 declares 5 seconds.
+All on our test bench, 2026-10-07: install → iVendNext's switch-on → S1–S4, the three refusals, the forged press → uninstall with the schema as found (the Extension Log keeps its press rows, by design) — setup 9/9, S16 **14/14**, teardown 6/6. **A press, end to end** (iVendNext's call, over HTTPS, the service writing one or three pick tasks over the record API, the answer judged): **39–207 ms**, over two runs, on the four answered presses (the Extension Log's `latency_ms`; the test site and the service on one machine, so a real network adds its own round trip). Your timeout must cover your own API writes: S16 declares 5 seconds.
