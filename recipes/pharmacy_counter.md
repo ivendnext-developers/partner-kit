@@ -42,16 +42,20 @@ answering presses keeps nothing.
        readable only by the pharmacist roles, the integration role and the records officer, with a System Manager
        row of read alone (else the install gives that role every right, and a row with no right is refused). S39
        0.1.2's *Patient*;
-     - the prescription fields on Sales Order, Delivery Note and Sales Invoice;
-   - **sale details** for the prescription number, prescriber, licence and directions. ⛔ Never `required`: a required
-     sale detail stops every sale on every till of the site;
+     - the prescription fields on Sales Order, Delivery Note and Sales Invoice, the prescription's date among them (a
+       `Date` a user can fill: never read only, fetched or levelled, or the document check may not fill it);
+   - **sale details** for the prescription number, prescriber, licence, directions and the prescription's date. ⛔ Never
+     `required`: a required sale detail stops every sale on every till of the site;
    - **two `check` subscriptions** with different down answers:
      - the dispensary's `refuse`: it sells only medicine, online only;
      - the front's `allow_and_flag`.
 
      Inside one manifest the checker counts them as one POS Profile, so they total 10 s at most (5 s + 5 s);
    - **three `doccheck` subscriptions,** one per record type (Sales Order, Delivery Note, Sales Invoice). Each is
-     `on_validate: false` (a draft check is refused on these types) and sends `stock_qty` and the lines' parent links;
+     `on_validate: false` (a draft check is refused on these types), sends `stock_qty` and the lines' parent links, and
+     names the prescription's date in `fill_fields`;
+   - **a Report Builder report on `<PREFIX> Dispensing`** for the prescriptions register, for the pharmacist roles only
+     (the readers of the dispensings are the readers of the patient record);
    - **two *Days Before* notifications** on the licences' *valid until*, to the pharmacist-in-charge's role;
    - a feed registration naming your integration user, and a help address on each record type.
 
@@ -80,10 +84,16 @@ answering presses keeps nothing.
    - the quantity cap per sale;
    - the prescription: known, this customer's, active, in validity, a fill and quantity left, unchanged since its first
      dispense (a fingerprint);
+   - the prescription's date: prescriptions written on different days in one sale are refused where a date is
+     booked or typed; at the till a typed date that is not the prescription's is refused, and an empty one where the
+     schedule ticks *Its register books the prescription's date* (the sentence shows the date to type);
    - directions and a doctor's name, where the group or schedule asks;
    - the frequency cap.
 
-   Answer `refuse` with one sentence of at most 140 characters, naming the line.
+   Answer `refuse` with one sentence of at most 140 characters, naming the line. On the Desk, an allowed document whose
+   prescriptions share one date answers `fill` with that date (`{"verdict": "fill", "fields": {"<prefix>_rx_date":
+   "2026-10-19"}}`), which writes it over whatever was typed; a fill reserves as an allow does. A till check cannot
+   write the sale, so there the cashier types it.
 
 5. **Reserve with the record's name as the lock.**
    - On allow, insert `<PREFIX> Dispensing` named `<an opaque key for the customer>~<next number>`. Never the patient's
@@ -93,6 +103,8 @@ answering presses keeps nothing.
    - If the insert fails because the name exists (409), another till took that number: read again and decide again.
    - Every dispensing of one patient is thereby decided in turn.
    - Pay pressed again for the same basket keeps its reservation. A changed basket releases it.
+   - Write on it what the prescriptions register prints: the prescriber, the directions (the dose) and the
+     pharmacist's name from their record; the patient's name is fetched from the customer.
 
 6. **Read back what the shop says, never a timer.** At the next decision for that patient:
    - **a reservation becomes *Dispensed*** when a booked POS Invoice carries its `sale_ref` (`custom_mpos_sale_ref`,
@@ -136,6 +148,12 @@ answering presses keeps nothing.
 
 ## Limits to tell the customer
 
+- **The till cannot fill the prescription's date:** the cashier types it, and a wrong one is refused. On the Desk it
+  is filled at Submit.
+- **The prescriptions register prints no age and no price:** a print or report may not read the patient's record yet,
+  and the dispensing keeps no price (S39's README).
+- **An update that changes a Desk service's field or fill list lapses its consent,** and the Desk then submits
+  unchecked until a System Manager ticks it again (S39's README, *Updating from 0.1.2*).
 - **The till cannot take or show the patient's identity:** enter it on the patient's record on the Desk. A clerk is
   refused that record whole, but an assignment on it, the customer's Connections count and one engine export still
   tell a clerk something (S39's README, *Limits*).

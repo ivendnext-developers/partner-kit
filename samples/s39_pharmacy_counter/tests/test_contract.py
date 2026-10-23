@@ -49,6 +49,29 @@ class ContractTest(unittest.TestCase):
             self.assertEqual(check.errors("doccheck", "answer", out), [], out)
             self.assertLessEqual(len(out.get("reason", "")), rxrules.TEXT_MAX)
 
+    def test_the_prescriptions_date_answers_hold_the_desks_fill_and_the_tills_refusals(self):
+        long = "X" * 200
+        c = ctx([line("A", 21)], details={"Rx Number": "RX1"}, source="desk")
+        out = decide(c, shop(c, [rule("POM")], [rx("RX1", "A", 21, written="2026-10-19")]))
+        out = {k: v for k, v in out.items() if k != "record"}
+        self.assertEqual(out["verdict"], "fill")
+        self.assertEqual(check.errors("doccheck", "answer", out), [], out)
+        refusals = []
+        for details, rules, rxs in (
+                ({"Rx Number": long, "Rx Date": "x"}, [rule("POM")], [rx(long, "A", 21, written="2026-10-19")]),
+                ({"Rx Number": "RX1"}, [rule("DATED")], [rx("RX1", "A", 21, written="2026-10-19")]),
+                ({"Rx Number": ",".join(["R" * 30 + str(i) for i in range(5)])}, [rule("DATED")],
+                 [rx("R" * 30 + str(i), "A", 21, written=f"2026-10-1{i}") for i in range(5)])):
+            for source in ("till", "desk"):
+                c = ctx([line(long, 21)], details=details, source=source)
+                refusals.append(decide(c, shop(c, rules, rxs)))
+        for out in refusals:
+            out = {k: v for k, v in out.items() if k != "record"}
+            if out["verdict"] == "refuse":
+                self.assertEqual(check.errors("partner_check", "answer", out), [], out)
+                self.assertEqual(check.errors("doccheck", "answer", out), [], out)
+        self.assertGreaterEqual(sum(o["verdict"] == "refuse" for o in refusals), 4)
+
     def test_the_desk_subscriptions_settings_are_ones_the_shop_saves(self):
         for s in MANIFEST["extension_subscriptions"]:
             if s["point"] == "doccheck":

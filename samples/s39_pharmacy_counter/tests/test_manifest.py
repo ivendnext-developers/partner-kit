@@ -61,7 +61,7 @@ class ManifestTest(unittest.TestCase):
 
     def test_the_sale_details_are_the_ones_the_service_reads_and_never_required(self):
         import rxrules
-        want = [f"{P} {s}" for s in (rxrules.RX, rxrules.PRESCRIBER, rxrules.LICENCE, rxrules.DIRECTIONS)]
+        want = [f"{P} {s}" for s in (rxrules.RX, rxrules.PRESCRIBER, rxrules.LICENCE, rxrules.DIRECTIONS, rxrules.RX_DATE)]
         self.assertEqual([a for a in MANIFEST["sale_attributes"]], [{"name": n} for n in want])
 
     def test_the_desk_fields_are_the_ones_the_service_reads_on_each_document(self):
@@ -111,12 +111,40 @@ class ManifestTest(unittest.TestCase):
             self.assertTrue(f["label"].endswith("(moved)"), name)
         self.assertFalse([f for f in MANIFEST["custom_fields"] if "permlevel" in f])
 
+    def test_the_prescriptions_date_is_a_date_the_desk_checks_fill_and_never_a_field_the_check_cannot(self):
+        for dt in ("Sales Order", "Delivery Note", "Sales Invoice"):
+            (f,) = [f for f in MANIFEST["custom_fields"] if f["dt"] == dt and f["fieldname"] == f"{PF}_rx_date"]
+            self.assertEqual(f["fieldtype"], "Date")
+            # a fill is refused on a field a user does not fill in, and a field the mapping skips would not travel
+            self.assertFalse({"read_only", "no_copy", "fetch_from", "permlevel", "hidden"} & set(f), dt)
+        for s in SUBS.values():
+            if s["point"] == "doccheck":
+                self.assertEqual(s["settings"]["fill_fields"], [f"{PF}_rx_date"], s["key"])
+                self.assertIn(f"{PF}_rx_date", s["settings"]["send_fields"], s["key"])
+
+    def test_the_prescriptions_register_is_read_only_by_who_reads_the_patient_record(self):
+        (rep,) = MANIFEST["reports"]
+        self.assertEqual((rep["ref_doctype"], rep["report_type"]), (f"{P} Dispensing", "Report Builder"))
+        dts = {d["name"]: d for d in MANIFEST["doctypes"]}
+        fields = {f["fieldname"] for f in dts[f"{P} Dispensing"]["fields"]}
+        self.assertLessEqual(set(rep["columns"]), fields)
+        readers = lambda dt: {p["role"] for p in dts[dt]["permissions"] if p.get("read")}   # noqa: E731
+        self.assertLessEqual(set(rep["roles"]), readers(f"{P} Patient"))
+        self.assertLessEqual(readers(f"{P} Dispensing"), readers(f"{P} Patient"))
+        self.assertIn(["status", "not in", ["Released", "Returned"]], rep["filters"])
+        self.assertIn(["give_back", "=", 0], rep["filters"])
+        self.assertIn(["prescription", "is", "set"], rep["filters"])
+        name = next(f for f in dts[f"{P} Dispensing"]["fields"] if f["fieldname"] == "patient_name")
+        self.assertEqual(name["fetch_from"], "customer.customer_name")
+        # no age column: a print may not read the patient's birth date yet (README, What the register prints)
+        self.assertFalse({c for c in rep["columns"] if "age" in c or "birth" in c or "price" in c})
+
     def test_the_schedule_holds_every_rule_the_service_reads(self):
         import rxrules
         fields = {f["fieldname"] for f in DT[f"{P} Drug Schedule"]["fields"]}
         for k in ("needs_prescription", "pharmacist_only", "dispensary_only", "validity_days", "max_fills", "qty_cap",
                   "freq_qty", "freq_days", "returnable", "return_gives_back", "needs_directions", "axis",
-                  "own_sale_without_rx"):
+                  "own_sale_without_rx", "register_books_rx_date"):
             self.assertIn(k, fields)
         self.assertTrue({t for t, _, _ in rxrules.IDENTITY} <= fields)
         self.assertIn("needs_consent", fields)

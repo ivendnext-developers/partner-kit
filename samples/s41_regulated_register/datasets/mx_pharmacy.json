@@ -27,12 +27,14 @@
     "pos_sale_details": {
       "authority_no": "PP RXC Rx Number",
       "authority_issuer": "PP RXC Prescriber",
-      "authority_issuer_licence": "PP RXC Prescriber Licence"
+      "authority_issuer_licence": "PP RXC Prescriber Licence",
+      "authority_date": "PP RXC Rx Date"
     },
     "desk_fields": {
       "authority_no": "pp_rxc_rx_number",
       "authority_issuer": "pp_rxc_prescriber",
-      "authority_issuer_licence": "pp_rxc_prescriber_licence"
+      "authority_issuer_licence": "pp_rxc_prescriber_licence",
+      "authority_date": "pp_rxc_rx_date"
     },
     "dispenser_licence": {
       "doctype": "PP RXC Pharmacist",
