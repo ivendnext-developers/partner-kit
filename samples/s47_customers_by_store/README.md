@@ -24,6 +24,8 @@ The shop decides at which stores each group of its customers may buy: account cu
 | Trade accounts | the POS Profile *Trade Counter* |
 | Trade accounts › Key accounts | Harare, Sandton, Bulawayo (each store) |
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 ## What the shop does
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP CBS Rule*, the role `PP CBS Integration`, the capture and the feed registration, the capture switched off. Nothing changes at the till yet.
