@@ -238,13 +238,31 @@ def need_of(group: dict, items: dict, boms: dict) -> tuple[dict, list]:
     nothing back: the food was made."""
     need, notes = {}, []
     for ln in group["lines"]:
-        if ln["qty"] <= 0 or not ln["has_recipe"]:
+        if ln["qty"] <= 0:
+            continue
+        if not ln["has_recipe"]:        # a dish rung before its recipe was made: its sale is taken, so say so
+            note = f"{ln['item_code']}: no recipe"
+            if not (items.get(ln["item_code"]) or {}).get("is_stock_item") and note not in notes:
+                notes.append(note)
             continue
         got, why = parts_of(ln["item_code"], ln["qty"], items, boms)
         for k, v in got.items():
             need[k] = need.get(k, 0.0) + v
         notes += [w for w in why if w not in notes]
     return {k: round(v, PLACES) for k, v in sorted(need.items()) if round(v, PLACES) > 0}, notes
+
+
+def taken_before(name: str, amends: dict, claimed: set) -> bool:
+    """Whether a sale amended in Desk amends, at any remove, a sale an issue already names (``amends``: sale → the
+    sale it amends, cancelled ones included). Its ingredients went with that issue; a change in quantity is the shop's
+    own stock entry."""
+    seen = set()
+    while name and name not in seen:
+        seen.add(name)
+        name = amends.get(name)
+        if name in claimed:
+            return True
+    return False
 
 
 def issue_doc(company: str, group: dict, need: dict, items: dict, notes: list) -> dict:

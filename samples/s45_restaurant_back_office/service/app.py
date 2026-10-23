@@ -39,6 +39,7 @@ RBO_PREFIX (default PP RBO; IVENDNEXT RBO for the library's app) · PORT (defaul
 from __future__ import annotations
 
 import datetime
+import hmac
 import http.client
 import json
 import os
@@ -376,11 +377,19 @@ class Service:
         today = _now_utc(self.now).date()
         days = int(bo.num(s.get("days_back")) or 7)
         since = max(bo.date_of(start), today - datetime.timedelta(days=days)).isoformat()
-        listed = door.rows("POS Invoice", ["name", "posting_date", "posting_time", "owner", "set_warehouse", "pos_profile"],
+        listed = door.rows("POS Invoice", ["name", "posting_date", "posting_time", "owner", "set_warehouse", "pos_profile",
+                                           "amended_from"],
                            [["company", "=", company], ["docstatus", "=", 1], ["posting_date", ">=", since]])
         claimed = set()
         for r in door.rows(bo.dt("Issue"), ["sales"], [["company", "=", company], ["posting_date", ">=", since]]):
             claimed |= set((r.get("sales") or "").split("\n"))
+        # a sale cancelled and amended in Desk comes back under a new name: it is taken when a sale it amends was
+        amends = {x["name"]: x["amended_from"] for x in listed if x.get("name") and x.get("amended_from")}
+        if amends:
+            amends.update((r["name"], r.get("amended_from")) for r in door.rows(
+                "POS Invoice", ["name", "amended_from"],
+                [["company", "=", company], ["docstatus", "=", 2], ["posting_date", ">=", since]]))
+        claimed |= {x for x in amends if bo.taken_before(x, amends, claimed)}
         sales = sorted((x for x in listed if x.get("name") and x["name"] not in claimed and bo.booked_from(x, start)),
                        key=lambda x: (str(x.get("posting_date")), str(x.get("posting_time")), x["name"]))
         left = len(sales) > MOST_SALES
@@ -397,10 +406,9 @@ class Service:
                                                                        [["name", "in", profiles]])} if profiles else {}
             self._recipes(door, {ln.get("item_code") for ln in lines if ln.get("item_code")}, items, boms)
             groups = bo.group_lines(sales, lines, items, stores, s.get("day_parts") or [], s.get("kitchen_store") or "")
+            to_book = []
+            # every store-day's issue first: a sale whose lines left two stores is claimed by both before any is booked
             for key in sorted(groups, key=lambda k: (k[1], k[0])):
-                if self.clock() - t0 > BUDGET_S:
-                    left = True
-                    break
                 g = groups[key]
                 try:
                     need, notes = bo.need_of(g, items, boms)
@@ -418,7 +426,12 @@ class Service:
                 elif body["status"] == "Refused":
                     out["refused"] += 1
                 else:
-                    out[self._book(door, company, dict(body, name=doc.get("name")))] += 1
+                    to_book.append(dict(body, name=doc.get("name")))
+            for issue in to_book:       # then their stock, with the time left: one not reached stays Pending (step 1)
+                if self.clock() - t0 > BUDGET_S:
+                    left = True
+                    break
+                out[self._book(door, company, issue)] += 1
         # 3. issues left Short or Refused, with what time is left, oldest first, a few a press
         stuck = door.rows(bo.dt("Issue"), ["name", "posting_date", "status"], [["company", "=", company],
                                                                     ["status", "in", ["Short", "Refused"]]])
@@ -488,9 +501,10 @@ class Service:
         counts = door.rows("Stock Reconciliation Item", ["item_code", "qty", "current_qty", "amount_difference"],
                            [["parent", "in", recos], ["warehouse", "=", store]], parent="Stock Reconciliation") \
             if recos else []
+        # the sales of the store-days whose ingredients are off stock: one still Short, Refused or Pending is not
         sold = sum(bo.num(r.get("food_sales")) for r in door.rows(
             bo.dt("Issue"), ["food_sales"], [["company", "=", company], ["issue_from", "=", store],
-                                             ["posting_date"] + span]))
+                                             ["status", "in", ["Issued", "Nothing to issue"]], ["posting_date"] + span]))
         codes = sorted({r["item_code"] for r in ledger + counts if r.get("item_code")})
         uoms = {r["name"]: r.get("stock_uom") for r in door.rows("Item", ["name", "stock_uom"],
                                                                  [["name", "in", codes]])} if codes else {}
@@ -667,7 +681,8 @@ def make_handler(svc: Service, log=sys.stderr):
                 _log(log, rid, self.path, code, t0)
 
         def do_GET(self):
-            if self.path == "/test/received" and svc.test_modes and self.headers.get("X-PP-Admin") == svc.admin:
+            admin = (self.headers.get("X-PP-Admin") or "").encode()
+            if self.path == "/test/received" and svc.test_modes and hmac.compare_digest(admin, svc.admin.encode()):
                 return self._send(200, {"received": svc.received})
             self._send(*svc.handle("GET", self.path, self.headers, b""))
 

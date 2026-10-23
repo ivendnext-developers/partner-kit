@@ -54,6 +54,12 @@ class Recipes(unittest.TestCase):
         self.assertNotIn("WATER", got)
         self.assertEqual(notes, ["WATER: no recipe"])
 
+    def test_r4b_a_recipe_row_counts_in_its_parts_stock_unit(self):
+        boms = {"BOM-ESPRESSO": {"quantity": 1, "items": [{"item_code": "BEANS", "qty": 18, "uom": "Gram",
+                                                            "stock_qty": 0.018}]}}    # 18 g of beans stocked in kg
+        got, _ = bo.parts_of("ESPRESSO", 2, dict(ITEMS, ESPRESSO={"default_bom": "BOM-ESPRESSO"}), boms)
+        self.assertEqual(got, {"BEANS": 0.036})
+
     def test_r4_a_stock_item_sold_is_never_opened(self):
         self.assertEqual(bo.parts_of("SODA", 3, ITEMS, BOMS), ({"SODA": 3}, []))
 
@@ -121,8 +127,23 @@ class Groups(unittest.TestCase):
         self.assertEqual({k: round(v, 6) for k, v in need.items()},
                          {"BUN": 3, "PATTY": 3, "MAYO": 0.06, "MUSTARD": 0.015, "FRIES": 0.15, "SODA": 1})
 
-    def test_g7_a_day_with_no_recipe_issues_nothing(self):
-        self.assertEqual(bo.need_of(self.g[("Store A", "2026-10-24")], ITEMS, BOMS), ({}, []))
+    def test_g7_a_dish_with_no_recipe_issues_nothing_and_is_named(self):
+        self.assertEqual(bo.need_of(self.g[("Store A", "2026-10-24")], ITEMS, BOMS), ({}, ["SALAD: no recipe"]))
+        self.assertEqual(bo.need_of(self.g[("Store A", "2026-10-23")], ITEMS, BOMS)[1], [])    # a stocked soda is no dish
+
+    def test_g8_a_line_sold_in_another_unit_counts_in_the_stock_unit(self):
+        sale = dict(SALES[0])
+        line = {"parent": "S1", "item_code": "BURGER", "qty": 1, "stock_qty": 6, "net_amount": 400}    # a box of six
+        g = bo.group_lines([sale], [line], ITEMS, {}, PARTS)
+        need, _ = bo.need_of(next(iter(g.values())), ITEMS, BOMS)
+        self.assertEqual((need["BUN"], need["PATTY"]), (6, 6))
+
+    def test_g9_a_sale_amended_in_desk_is_taken_when_any_sale_it_amends_was(self):
+        amends = {"S1-2": "S1-1", "S1-1": "S1", "S5-1": "S5"}
+        self.assertTrue(bo.taken_before("S1-2", amends, {"S1"}))       # two amendments on
+        self.assertTrue(bo.taken_before("S1-1", amends, {"S1"}))
+        self.assertFalse(bo.taken_before("S5-1", amends, {"S1"}))      # cancelled before any issue took it
+        self.assertFalse(bo.taken_before("A", {"A": "B", "B": "A"}, set()))   # a loop ends
 
     def test_g7b_a_time_the_shop_prints_without_its_leading_zero(self):
         self.assertEqual(bo.clock_of("11:35:9.97032"), "11:35:09")

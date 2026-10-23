@@ -209,9 +209,21 @@ class ServiceTest(unittest.TestCase):
                            "items": [{"item_code": "BURGER", "qty": 1, "stock_qty": 1, "net_amount": 80}]})
         code, out = self.issue(shop, clock=Clock(step=3.0))
         self.assertIn("press Issue ingredients again", out["message"]["body"])
-        self.assertEqual([i["posting_date"] for i in shop.issues.values()], ["2026-10-21"])     # oldest day first
+        got = {i["posting_date"]: i["status"] for i in shop.issues.values()}
+        self.assertEqual(got, {"2026-10-21": "Issued", "2026-10-22": "Pending"})       # oldest day first, both claimed
         self.issue(shop)
-        self.assertEqual(len(shop.issues), 2)
+        self.assertEqual(({i["status"] for i in shop.issues.values()}, len(shop.entries)), ({"Issued"}, 2))
+
+    def test_i14b_a_sale_whose_lines_left_two_stores_is_issued_at_both_though_the_time_runs_out(self):
+        shop = fs.FakeTenant(sales=[{"name": "S7", "posting_date": "2026-10-22", "posting_time": "12:00:00", "owner": "ana@x",
+                                     "set_warehouse": fs.STORE, "pos_profile": "Café", "company": fs.CO, "docstatus": 1,
+                                     "items": [{"item_code": "BURGER", "qty": 1, "stock_qty": 1, "net_amount": 80},
+                                               {"item_code": "COFFEE", "qty": 1, "stock_qty": 1, "net_amount": 30,
+                                                "warehouse": "Bar - CC"}]}])
+        self.issue(shop, clock=Clock(step=3.0))
+        self.assertEqual(sorted(i["store"] for i in shop.issues.values()), ["Bar - CC", fs.STORE])
+        self.issue(shop)
+        self.assertEqual(len(shop.entries), 2)
 
     def test_i15_the_shops_refusal_is_kept_on_the_issue_in_its_own_words(self):
         shop = fs.FakeTenant(refuse_entry=("UOMMustBeIntegerError", "Quantity (0.5) cannot be a fraction in row 1"))
@@ -320,6 +332,18 @@ class ServiceTest(unittest.TestCase):
         (iss,) = shop.issues.values()
         self.assertEqual(iss["sales"], "S2")
 
+    def test_i17b_a_sale_cancelled_and_amended_in_desk_is_not_issued_again(self):
+        shop = fs.FakeTenant()
+        self.issue(shop)
+        first = dict(shop.sales[0])
+        shop.sales[0]["docstatus"] = 2
+        shop.sales.append(dict(first, name="S1-1", amended_from="S1"))
+        shop.sales.append(dict(first, name="S1-2", amended_from="S1-1"))
+        shop.sales[-2]["docstatus"] = 2
+        shop.sales.append(dict(first, name="S8-1", amended_from="S8"))     # its first was cancelled before any press
+        self.issue(shop)
+        self.assertEqual(sorted(i["sales"] for i in shop.issues.values()), ["S1\nS2", "S8-1"])
+
     def test_i18_the_apps_user_refused_is_said_in_words(self):
         shop = fs.FakeTenant(refuse=("LIST POS Invoice", 403))
         code, out = self.issue(shop)
@@ -331,6 +355,12 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(self.press(svc, "/press/issue", "PP RBO Settings", [fs.CO], secret="wrong")[0], 401)
         self.assertEqual(self.press(svc, "/press/issue", "PP RBO Settings", [fs.CO], secret=SECRETS["foodcost"])[0], 401)
         self.assertEqual(svc.handle("POST", "/press/issue", {}, b"{}")[0], 401)
+
+    def test_p1b_a_press_stamped_outside_the_window_is_refused(self):
+        svc = self.svc(fs.FakeTenant())
+        for age, code in ((bo.SKEW_S + 60, 401), (bo.SKEW_S - 60, 200)):
+            h, raw = signed(body("PP RBO Settings", [fs.CO]), SECRETS["issue"], ts=time.time() - age)
+            self.assertEqual(svc.handle("POST", "/press/issue", h, raw)[0], code)
 
     def test_p2_a_press_on_the_wrong_record_is_refused_before_anything_is_read(self):
         shop = fs.FakeTenant()
@@ -356,6 +386,16 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((bun["recipe_qty"], bun["other_qty"], bun["count_qty"], bun["actual_qty"]), (2, 1, 1, 4))
         self.assertEqual((fc["food_sales"], fc["theoretical_cost"], fc["actual_cost"]), (187, 8, 16))
         self.assertIn("% actual", out["message"]["body"])
+
+    def test_f1a_sales_still_short_count_once_their_ingredients_are_off_stock(self):
+        shop = fs.FakeTenant()
+        self.issue(shop)
+        shop.issues["SHORT"] = {"name": "SHORT", "company": fs.CO, "status": "Short", "posting_date": "2026-10-22",
+                                "issue_from": fs.STORE, "food_sales": 500, "sales": "S9"}
+        shop.foodcosts["FC-3"] = {"name": "FC-3", "company": fs.CO, "store": fs.STORE, "from_date": "2026-10-22",
+                                  "to_date": "2026-10-22", "modified": "m"}
+        self.press(self.svc(shop), "/press/foodcost", "PP RBO Food Cost", ["FC-3"])
+        self.assertEqual(shop.foodcosts["FC-3"]["food_sales"], 187)
 
     def test_f1b_a_desk_copy_is_the_shops_own_and_an_entry_from_before_a_reinstall_is_the_apps(self):
         shop = fs.FakeTenant()
