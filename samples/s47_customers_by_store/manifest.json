@@ -20,7 +20,7 @@
      "label": "Store",
      "options": "Warehouse",
      "in_list_view": 1,
-     "description": "A store's own warehouse, as its tills' POS Profile names it (never a warehouse group). Blank: any store this POS Profile is used at."
+     "description": "A store's own warehouse, as its tills' POS Profile names it (never a warehouse group). Blank: this POS Profile's tills."
     },
     {
      "fieldname": "pos_profile",
