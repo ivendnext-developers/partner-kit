@@ -69,6 +69,8 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
 
 ## What the shop does
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 1. **Install the app** from the App library, or paste its manifest into **Retail Extension Package** in Desk. Read what it
    will do, and consent.
    - The install adds the record types *PP RXC Settings*, *Drug Schedule*, *Pharmacist*, *Premises Licence*, *Patient*,

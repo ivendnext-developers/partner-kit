@@ -11,6 +11,8 @@ A coupon with no rule, or with its rule switched off, is never refused; a sale w
 
 ## What the shop does
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP CPN Rule*, the role `PP CPN Integration`, the check and the feed registration, the check switched off. Nothing changes at the till yet.
 2. **Make the app's integration user** (the [integration user recipe](../../recipes/integration_user.md)): tick *Is Desk User*, give it the role **PP CPN Integration** alone and generate its API key. In *Role Permissions*, give that role **read on POS Invoice and Sales Invoice** (the first-purchase rule counts a customer's sales): a plain read, not *Only If Creator*, and give the user **no User Permissions**, or the count sees only part of a customer's sales and a returning customer can pass as new. Choose the user on the feed registration **PP CPN Rules**, then press **Connect again** on the app's record, which sends that user's key to the service.
 3. **Write a rule for each coupon to restrict** in *PP CPN Rule*: the coupon, *First purchase only*, and/or *Only for customers in this group*.

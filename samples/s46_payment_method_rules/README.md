@@ -34,6 +34,8 @@ A customer in *Retail* (under *All Customer Groups*) cannot buy on account; a cu
 
 ## What the shop does
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP PMR Rule*, the role `PP PMR Integration`, the check and the feed registration, the check switched off. Nothing changes at the till yet.
 2. **Make the app's integration user** (the [integration user recipe](../../recipes/integration_user.md)): tick *Is Desk User*, give it the role **PP PMR Integration** alone and generate its API key. In *Role Permissions*, give that role **read on Customer Group** (the service reads the group tree). Choose the user on the feed registration **PP PMR Rules feed**, then press **Connect again** on the app's record, which sends that user's key to the service.
 3. **Write the rules** in *PP PMR Rule*: one per customer group that needs one. The payment methods are the shop's own *Mode of Payment* records, as the till offers them (*Cash*, *Credit Card*, *On Account*). *Words the cashier reads* is optional: blank, the app writes *"Customers in ⟨group⟩ pay with ⟨methods⟩."* or *"Not for customers in ⟨group⟩."*

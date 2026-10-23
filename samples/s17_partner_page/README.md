@@ -37,6 +37,8 @@ The sale detail reads *PP PGE Delivery Order* because our samples carry the plac
 
 ## What the shop does
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 1. **Install the app.** It comes in switched off, and adds one sale detail, `PP PGE Delivery Order`, which the board answers with. The app names no role of its own.
 2. **Read what the page will receive.** Open **Retail Extension Subscription**, the record *Deliveries*. The consent text is built from what the page asks for: here the sale as the till holds it (that includes the cashier's login and the customer's id) and not the viewer's login.
 3. **Tick the consent and switch the page on.** If the page's address ever changes, the consent is cleared and the till's key says why it cannot open; switching the page off and on again does not bring the consent back, only ticking it does.

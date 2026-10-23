@@ -32,6 +32,8 @@ The names in the pictures are a demo shop's: a stock user, a customer's order, a
 
 ## What the shop does
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 1. **Install the app** (the shop's administrator). It comes in switched off: the service has no consent and is off, and the button is off. The install adds the pick task record, `PP PCK Pick Task`, and the role **PP PCK Integration**, with no one in it.
 2. **Make one user for the partner's service** (the shop's administrator, in Desk > **User**, as in the [integration user recipe](../../recipes/integration_user.md)): tick **Is Desk User**, set no password, and give it the role **PP PCK Integration**. Generate the user's API key. With this key the service can read and create pick tasks and nothing else. A service for one shop takes the key in its settings. A service for many shops receives it from the shop: choose the user as the *Application User* of the feed **PP PCK Pick feed**, then press **Connect again** on the app in the App library (*Many shops, hosted* below).
 3. **Switch the service on** (the System Manager). Open **Retail Extension Subscription**, the record *Pick route service*, read what it is sent, tick the consent and switch it on. A change to its address or to the list of fields clears the consent until it is ticked again.

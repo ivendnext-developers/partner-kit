@@ -28,6 +28,8 @@ Pressed again, the button writes nothing: *"2 lots already marked down."*
 
 ## What the shop does
 
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
 1. **Install the app** (the shop's administrator). It comes in switched off: the service has no consent and is off, and the button is off. The install adds the four step fields to Item Group, the settings record type **PP EXM Settings** and the role **PP EXM Integration**.
 2. **Give the app a user** (as in the [integration user recipe](../../recipes/integration_user.md)): tick **Is Desk User**, set no password and no User Permissions, give it the role **PP EXM Integration** alone, and generate its API key. In **Role Permissions**, give that role these rights (measured on our test bench: the shop refused the app's user each one until it was given):
 
