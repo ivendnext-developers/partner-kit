@@ -53,6 +53,7 @@ IDENTITY = (("needs_id_number", "id_number", "national or residence ID"),
             ("needs_birth_date", "birth_date", "date of birth"),
             ("needs_authority", "authority", "authority to possess"),
             ("needs_consent", "consent_date", "consent to keep their records"))
+DATED = ("consent_date",)   # set AND on or before today: a consent dated ahead is a mis-keyed one, not a consent
 DESK_TYPES = ("Sales Order", "Delivery Note", "Sales Invoice")
 # a Desk line made from a linked parent: (the parent's name, its ROW reference). A line is linked only when the row
 # reference is set: the engine then holds the line to that row's item; a parent name alone could be typed onto any line
@@ -516,7 +517,7 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
     # 4 · a named customer for a prescription or a frequency cap (VR-34); 5 · the patient's identity (VR-08)
     for i in sold:
         r = rules[i]
-        if r and (r["rx"] or r["freq"]) and shop["walk_in"]:
+        if r and (r["rx"] or r["freq"] or r["ids"]) and shop["walk_in"]:
             return _refuse(lines[i], "needs a named customer, not a walk-in sale.")
         for _tick, field, words in IDENTITY:
             if r and field in r["ids"] and not shop["customer_fields"].get(field):

@@ -131,8 +131,9 @@ class ManifestTest(unittest.TestCase):
         # a market's rules are its schedules, records the shop loads (README step 4): never a name in code. Its words to a
         # reader may give examples. The trade's own words (Drug Schedule, Pharmacist) are this app's, so only markets are barred
         import tokenize
-        names_re = re.compile(r"kenya|nigeria|ghana|egypt|saudi|emirat|dubai|abu_?dhabi|jordan|mexic", re.I)
-        codes = {"ke", "ng", "gh", "eg", "sa", "ae", "uae", "jo", "mx", "ksa"}
+        names_re = re.compile(r"kenya|nigeria|ghana|egypt|saudi|emirat|dubai|abu_?dhabi|jordan|mexic|nairobi|lagos|accra|"
+                              r"cairo|riyadh|amman|sfda|nafdac|mohap|cofepris|tatmeen|nphies|jfda", re.I)
+        codes = {"ke", "ng", "gh", "eg", "sa", "ae", "uae", "jo", "mx", "ksa", "dha", "doh", "eda", "ppb", "nhia", "pdpl"}
 
         def market(n):  # a market's name anywhere in a name, or its code as one part of it (KE_DAYS, pp_rxc_sa_id)
             return names_re.search(n) or any(x.lower() in codes for x in re.split(r"[_\s-]+", n))

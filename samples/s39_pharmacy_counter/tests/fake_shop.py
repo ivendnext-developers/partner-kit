@@ -38,6 +38,8 @@ class FakeShop:
                 return False
             if op == "is" and bool(have) != (v == "set"):
                 return False
+            if op == "<=" and not (have and str(have) <= v):
+                return False
         return True
 
     def get_list(self, url, key, doctype, fields, filters=None, parent=None, order_by=None, limit=0):

@@ -253,21 +253,32 @@ class Service:
                            and v["template"] not in items})
         return items, rows, units
 
-    def patient(self, shop: dict, ctx: dict, refs: list, ids: list) -> dict:
+    def patient(self, shop: dict, ctx: dict, refs: list, ids: list, today=None) -> dict:
         """The operator's Pharmacist record, WHETHER each identity field this sale needs is filled in (a filter on the
         shop's side: the value never leaves the shop), the named prescriptions and the patient's dispensings (newest
-        first), in one parallel step."""
+        first), in one parallel step. Each field is asked both ways, set and not set: a shop that answers yes to both
+        (a filter it dropped) or no to both is unreadable, never a field read as filled in. A dated field is also asked
+        whether its day has come."""
         p, cust = self.p, ctx["customer"]
-        with ThreadPoolExecutor(max_workers=4 + len(ids)) as pool:
+        on = (today or datetime.date.today()).isoformat()
+        asks = {f: {"set": [[f"{p}_{f}", "is", "set"]], "unset": [[f"{p}_{f}", "is", "not set"]],
+                    **({"due": [[f"{p}_{f}", "<=", on]]} if f in rxrules.DATED else {})} for f in ids}
+        with ThreadPoolExecutor(max_workers=4 + 3 * len(ids)) as pool:
             ph = pool.submit(self._pharmacist_rows, shop, ctx["operator"])
             known = pool.submit(self._list, shop, "Customer", ["name"], [["name", "=", cust]])
-            has = {f: pool.submit(self._list, shop, "Customer", ["name"], [["name", "=", cust], [f"{p}_{f}", "is", "set"]])
-                   for f in ids}
+            has = {f: {k: pool.submit(self._list, shop, "Customer", ["name"], [["name", "=", cust]] + c) for k, c in a.items()}
+                   for f, a in asks.items()}
             rx = pool.submit(self._rx_headers, shop, refs, cust) if refs else None
             disp = pool.submit(self._dispensings, shop, [["customer", "=", cust]])
             if not known.result():
                 raise ShopUnreadable("the customer could not be read")
-            return {"pharmacist": self._pharmacist(ph.result()), "customer_fields": {f: bool(j.result()) for f, j in has.items()},
+            filled = {}
+            for f, js in has.items():
+                got = {k: bool(j.result()) for k, j in js.items()}
+                if got["set"] == got["unset"]:
+                    raise ShopUnreadable("the shop answered a patient field both ways")
+                filled[f] = got["set"] and got.get("due", True)
+            return {"pharmacist": self._pharmacist(ph.result()), "customer_fields": filled,
                     "rx_headers": rx.result() if rx else [], "dispensings": disp.result()}
 
     def _pharmacist_rows(self, shop, operator):
@@ -395,7 +406,7 @@ class Service:
                 pat = {"pharmacist": None, "customer_fields": {}, "rx_headers": [], "dispensings": []}
                 pat["pharmacist"] = self.patient_pharmacist(shop, ctx["operator"])
             else:
-                pat = self.patient(shop, ctx, refs, ids)
+                pat = self.patient(shop, ctx, refs, ids, today)
             dispensings = rxrules.dispensings_of(pat["dispensings"])
             states, _ = self.shop_states(shop, dispensings, ctx["return_of"], today) if dispensings else (
                 {"sales": {}, "returns": {}, "closed_days": set(), "documents": {}, "newest": {}, "return_of_ref": ""}, [])

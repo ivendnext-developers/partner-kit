@@ -321,6 +321,12 @@ class Patient(unittest.TestCase):
         out = decide(c, shop(c, [rule("CD2", "POM")], [rx("RX1", "TRAM", 10)], fields={"id_number": "1", "birth_date": ""}))
         self.assertIn("date of birth", out["reason"])
 
+    def test_a_walk_in_is_refused_a_schedule_that_needs_a_patient_field(self):
+        rules = R.schedules_of([sched("EGP", axis="Prescription", needs_consent=1)])
+        c = ctx([line("PARA", 1)])
+        out = decide(c, shop(c, [R.strictest([rules["EGP"]])], walk_in=True, fields={}))
+        self.assertIn("needs a named customer, not a walk-in sale.", out["reason"])
+
     def test_a_schedule_that_needs_consent_waits_for_the_patients_dated_consent(self):
         rules = R.schedules_of([sched("EGP", axis="Prescription", needs_prescription=1, validity_days=30, needs_consent=1)])
         self.assertEqual(rules["EGP"]["ids"], ("consent_date",))
