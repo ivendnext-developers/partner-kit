@@ -7,7 +7,8 @@ sale is made on the Desk.
 
 This app checks those rules at **Pay** on the till, at a return's confirm, and when a sales order, delivery or sales
 invoice is submitted on the Desk. Each rule is a record the shop fills: its **drug schedules**, its **pharmacists**, the
-**prescriptions** its pharmacist enters and its patients' identity fields. Nothing is written in per country. The
+**prescriptions** its pharmacist enters and its **patients'** records (identity and consent). Nothing is written in per
+country. The
 recipe: [`recipes/pharmacy_counter.md`](../../recipes/pharmacy_counter.md).
 
 ## What the cashier and the clerk read
@@ -70,10 +71,11 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
 
 1. **Install the app** from the App library, or paste its manifest into **Retail Extension Package** in Desk. Read what it
    will do, and consent.
-   - The install adds the record types *PP RXC Settings*, *Drug Schedule*, *Pharmacist*, *Premises Licence*,
+   - The install adds the record types *PP RXC Settings*, *Drug Schedule*, *Pharmacist*, *Premises Licence*, *Patient*,
      *Prescription* and *Dispensing*.
-   - It adds fields on Item, Item Group, Customer, Sales Order, Delivery Note and Sales Invoice, and four sale details
-     (*PP RXC Rx Number*, *Prescriber*, *Prescriber Licence*, *Directions*).
+   - It adds fields on Item, Item Group, Sales Order, Delivery Note and Sales Invoice, and four sale details (*PP RXC Rx
+     Number*, *Prescriber*, *Prescriber Licence*, *Directions*). The five fields it adds on Customer are 0.1.1's, kept
+     empty and out of sight: an update may not remove a field.
    - It adds two licence reminders and the roles **PP RXC Integration**, **PP RXC Pharmacist**, **PP RXC Pharmacist in
      Charge** and **PP RXC Records Officer**. Nobody holds the last one until you give it ([How long to
      keep](#how-long-to-keep-and-what-happens-after)).
@@ -88,33 +90,27 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
    the premises licence. Only that role writes the list, so nobody adds themselves. A row ticked *delegate* does not
    sell pharmacist-only medicine.
 
-   **Keep the patient's fields to the pharmacists.** Until you do this, everyone who reads customers reads the ID, the
-   date of birth, the authority to possess and the consent. The health and data-protection laws of the UAE, Saudi
-   Arabia, Kenya, Jordan, Mexico and Nigeria limit them to the staff whose work needs them.
-   - In **Role Permissions Manager**, open *Customer* and note the levels its roles hold already, and in **Customize
-     Form** the levels its fields use. Choose the lowest level none of them uses. On our test bench *Retail Cashier*,
-     *Sales User* and *Sales Master Manager* hold level 1, so we chose 2: a field at level 1 would still reach a Desk
-     clerk. A level covers every field on *Customer* that sits at it: never give it to another role later.
-   - Open the **Custom Field** list, filter it to *Customer*, and on each of five fields set **Permission Level** to
-     that level and save: *National or residence ID*, *Date of birth (patient)*, *Authority to possess*, *Consent to
-     keep prescription records, given on* and *Consent given by*.
-     ⚠ Not through **Customize Form**: with this app installed, Customize Form on *Customer* lists the app's two
-     *Pharmacy* links twice and refuses to save (*"Document has been modified after you have opened it"*). We have
-     reported it.
-   - ⚠ If *Customer* has no rules of your own yet, the first one you add copies the engine's rules on *Customer* into
-     your own, and from then on yours apply instead: a later engine update of *Customer*'s permissions does not reach
-     your shop. After such an update, compare, or press **Restore Original Permissions** on *Customer* and take this
-     step again.
-   - Back in **Role Permissions Manager**, on *Customer*, give **PP RXC Pharmacist** and **PP RXC Pharmacist in
-     Charge** a *read* at level 0 (it asks for that first), then *read* and *write* at your level. The pharmacists also
-     need a role that edits customers (*Sales User* does) to fill the fields in.
-   - Give **PP RXC Integration** *read* at your level. The service asks only whether each field is set, never its
-     value, but the shop answers that question only for a field the asker may read: without the grant the service
-     reads the field as unreadable, and the dispensary stops taking payment (*"did not answer"*). The grant lets the
-     service's key read the values too, so keep that key as you would a pharmacist's password.
-   - An update of this app keeps your level: it writes only the settings its own manifest gives a field. A field a new
-     version adds arrives at level 0: updating from 0.1.0, set the level on the two consent fields. An uninstall and a
-     new install make the fields again at level 0: set them again.
+   **The patient's record.** A patient's national or residence ID, date of birth, authority to possess and consent go
+   on their **PP RXC Patient** record, one per customer, entered on the Desk by a pharmacist. Only **PP RXC
+   Pharmacist**, **PP RXC Pharmacist in Charge**, **PP RXC Records Officer** and the app's integration user read it,
+   so the clerk who serves a customer at the Desk never sees it: there is nothing to set up. Never give another role a
+   right on *PP RXC Patient*. The health and data-protection laws of the UAE, Saudi Arabia, Kenya, Jordan, Mexico and
+   Nigeria limit these fields to the staff whose work needs them. ⚠ The till cannot take or show them: enter them on the
+   Desk. Open the record from the *PP RXC Patient* list, filtered by the customer; it has no link on the customer's
+   form, because a count there would tell everyone who reads customers that the person is a patient.
+
+   **Updating from 0.1.0 or 0.1.1** (the patient's fields were on Customer):
+   - Update the app first. Customer's five fields keep their values and the level you gave them, and show only while
+     they hold a value; their labels end *(moved)*.
+   - As a pharmacist, filter the *Customer* list by each field *is set*. For each customer found, make their *PP RXC
+     Patient* record with the same values, then clear the five fields on the customer and save. Until you do, the till
+     refuses a sale that needs one of them: the app reads only the patient's record.
+   - Then, as the site's *Administrator*, open the **Version** list, filter *Document Type* = *Customer* and *Data*
+     like `%pp_rxc_%`, and delete those rows: each customer's change history still holds the values, and clearing a
+     field adds one more row holding them. Only the Administrator deletes a change history.
+   - The level and its grants on *Customer* (0.1.1's step 3) can then go: the app's integration user no longer reads
+     those fields.
+
 4. **Make your drug schedules** (*PP RXC Drug Schedule*), one per class per classification axis, each with its rules. Set
    them on your medicine items (*Drug schedules*: one row per axis, with its *effective from*) or on an item group
    (*Drug schedule*), which covers the groups below it. For items with variants, add *Drug schedules* in **Item Variant
@@ -125,10 +121,15 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
      - **Egypt:** written and explicit, for any prescription record no law requires (Law 151 of 2020, Art. 12);
      - **Mexico** and **Saudi Arabia:** for what goes beyond dispensing, such as an image kept or a history used for
        later sales (Mexico's LFPDPPP arts 8 and 9; Saudi Arabia's PDPL Art. 6(2), Implementing Regulation Art. 11(2)(a));
-     - **Kenya,** if your pharmacy is a healthcare provider under the *Digital Health Act* (s. 31), and **Jordan,**
-       unless your pharmacists count as licensed medical professionals (Law 24 of 2023, Art. 6(a)(2)).
+     - **Kenya,** if your pharmacy is a healthcare provider under the *Digital Health Act* (s. 31);
+     - **Jordan,** likely not for dispensing records: the data-protection law lets a licensed medical professional
+       keep health data without consent (Law 24 of 2023, Art. 6(a)(2)), and the Public Health Law lists pharmacy among
+       the medical and health professions a minister licenses (Art. 5(a)–(b)). That is our reading, not a ruling: the
+       law does not separate *medical* from *health*. Tick it if you want the consent anyway. Sending a claim to a
+       private insurer, or a recall trace to a manufacturer, needs the patient's consent and a record of it whatever
+       the profession (Art. 14(أ)–(ب)); those are the payer and recall apps' sends, not this app's.
 
-     The consent goes on **the patient's** Desk record, the prescription's customer, with the day it was given (a day
+     The consent goes on **the patient's** *PP RXC Patient* record (the prescription's customer's), with the day it was given (a day
      after today counts as no consent) and who gave it: the patient, or for a child their parent or guardian. Record it before you enter the prescription: the
      app checks it at Pay and on the Desk, never when a prescription is saved. Keep the signed form where *Consent given
      by* says. When a patient withdraws consent, clear the date: their next sale under that schedule is refused (a Desk
@@ -140,6 +141,23 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
    - **The UAE:** tick *Needs the customer's national or residence ID* on every schedule. The law wants the ID on every
      health record, except in emergencies and other cases a Ministry decision sets (Federal Law 2 of 2019, Art. 21).
      Those exceptions are not built in: the till refuses a sale with no ID on a schedule that needs it.
+     - A narcotic prescription never repeats, and each is kept marked with its dispensing date and its register entry
+       number (Federal Decree-Law 30 of 2021, Art. 37). On your narcotic schedule set *Most fills a prescription may
+       authorise* to **1** (⛔ never 0: 0 means no cap) and *Most dispensings of one prescription* to **1**, and have
+       the pharmacist tick *Original retained at the pharmacy* on each such prescription, which also holds it to one
+       fill. The entry number is the register's.
+     - Controlled and semi-controlled habit-forming products do not repeat either, unless the prescriber marks the
+       prescription so (Federal Decree-Law 38 of 2024, Art. 79): set *Most fills* to 1 on those schedules, and enter a
+       higher *Fills authorised* only when the prescription says so.
+   - **Saudi Arabia:** controlled prescriptions are dispensed through SFDA's **Raqeeb** platform, on paper only while it
+     is down (SFDA *Procedures and Controls*, 2026, Art. 11(1)). A prescription entered in this app is your shop's
+     working copy for the counter's rules, not the lawful record (our reading); the app does not connect to Raqeeb.
+   - **Jordan:** a special (controlled) prescription that anyone but its prescriber has struck out or amended, signed and
+     stamped, is refused (JFDA *Instructions on Medical Prescriptions and Registers*, 2025, Annex 7 (خ); read from the
+     page image). That is the pharmacist's check at the counter: the app does not see the paper.
+   - **Egypt:** Decree 44 of 2026 puts benzodiazepines, pregabalin, codeine, zolpidem and others in Schedule 3, Section
+     IV, under some of the narcotics restrictions. Make a *Schedule 3* drug schedule and set it on those items. Its
+     dispensing rules (prescription, validity, register) are not yet read from the law: set them with your adviser.
 5. **Narrow the till services before switching either on.**
    - On **Pharmacy counter rules (dispensary)**, choose the dispensary's POS Profile.
    - On **(front)**, choose the shop's other profiles.
