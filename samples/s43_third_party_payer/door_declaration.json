@@ -1,0 +1,42 @@
+{
+ "_comment": "What installs once the POS app's payer door (requested from the POS team as PB-8; the kit need card insurance-co-payment) is in the shop: the payer/1 subscription the door calls, and the claims clerk's Bill to the customer button, whose service calls the door's payer_bill_back. The shop's checker refuses the point 'payer' until then; this app's next version (0.2.0) adds both to manifest.json and both addresses to allowed_urls.",
+ "allowed_urls": [
+  "https://host.docker.internal:8142/icp/payer",
+  "https://host.docker.internal:8142/icp/press/billback"
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "payer",
+   "point": "payer",
+   "label": "Third-party payer",
+   "endpoint_url": "https://host.docker.internal:8142/icp/payer",
+   "timeout_seconds": 5,
+   "settings": {
+    "prescription_details": "PP RXC Rx Number, PP RXC Prescriber, PP RXC Prescriber Licence",
+    "bill_back_role": "PP ICP Integration"
+   }
+  },
+  {
+   "key": "billback",
+   "point": "desk_action",
+   "label": "Bill to the customer",
+   "endpoint_url": "https://host.docker.internal:8142/icp/press/billback",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP ICP Claim",
+   "label": "Bill to the customer",
+   "placement": "form",
+   "service": "billback",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Bill what the payer did not pay to the customer, on their own sale?"
+  }
+ ]
+}

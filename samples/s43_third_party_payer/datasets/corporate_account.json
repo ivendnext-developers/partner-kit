@@ -1,0 +1,21 @@
+{
+ "id": "corporate_account",
+ "title": "A company paying for its staff",
+ "notice": "A sample payer that is not an insurer: a company pays 70% of what its staff buy, up to 2,000 a sale. No price list and no formulary: it covers every item. It shows that a second payer of another kind is data, never code.",
+ "sources": ["BRD §7 item 6 and blueprint §7: a third-party payer is a cross-vertical primitive (optical plans, corporate accounts)"],
+ "payer": {
+  "code": "ACME-STAFF",
+  "title": "Acme Ltd (staff purchases)",
+  "kind": "Corporate account",
+  "customer": "Acme Ltd",
+  "claims_format": "File",
+  "claim_needs": {"member_number": 1, "card_serial": 0, "gtin": 0, "prescription": 0, "dose_frequency": 0}
+ },
+ "price_list": null,
+ "formularies": [],
+ "plans": [
+  {"title": "Acme Staff 70", "formulary": null, "covers": "Every item", "price_list": null, "copay_percent": 30,
+   "invoice_upper_limit": 2000, "max_patient_amount": 0, "discount_order": "Before the limit",
+   "copay_order": "After the discount", "no_partial_refund": 0}
+ ]
+}

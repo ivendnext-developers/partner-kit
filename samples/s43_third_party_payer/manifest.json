@@ -1,0 +1,1347 @@
+{
+ "manifest_version": 2,
+ "app": "pp_icp",
+ "prefix": "PP ICP",
+ "title": "Third-party payer",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A third party that pays part of a sale: an insurer, a company paying for its staff, an optical plan. Its payers, plans, formularies and members are records; claims are made from the sales the POS app's payer door books, sent as a file, and followed to payment. Rebuilt from the co-pay rules of an iVend Retail pharmacy add-on. The payer door is not in the POS app yet: until it is, this version keeps the records, builds claims from booked payer sales and matches remittances.",
+ "allowed_urls": [
+  "https://host.docker.internal:8142/icp/press/claims",
+  "https://host.docker.internal:8142/icp/press/file",
+  "https://host.docker.internal:8142/icp/press/remit",
+  "https://host.docker.internal:8142/icp/press/ready",
+  "https://host.docker.internal:8142/icp/press/settle"
+ ],
+ "doctypes": [
+  {
+   "name": "PP ICP Payer",
+   "autoname": "field:code",
+   "title_field": "title",
+   "search_fields": "title,kind",
+   "description": "A third party that pays part of a sale: an insurer, a company paying for its staff, an optical plan. What it owes is booked against its own Customer record.",
+   "fields": [
+    {
+     "fieldname": "code",
+     "fieldtype": "Data",
+     "label": "Code",
+     "reqd": 1,
+     "unique": 1,
+     "description": "A short code: it starts each claim's reference."
+    },
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Name",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "label": "Kind",
+     "options": "Insurer\nCorporate account\nOptical plan\nOther",
+     "default": "Insurer",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer record",
+     "options": "Customer",
+     "reqd": 1,
+     "description": "The payer's own customer record: the payer door books what the payer owes against it."
+    },
+    {
+     "fieldname": "cb1",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "active",
+     "fieldtype": "Check",
+     "label": "Active",
+     "default": "1",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "valid_from",
+     "fieldtype": "Date",
+     "label": "Valid from"
+    },
+    {
+     "fieldname": "valid_to",
+     "fieldtype": "Date",
+     "label": "Valid to"
+    },
+    {
+     "fieldname": "claims_format",
+     "fieldtype": "Select",
+     "label": "Claims sent as",
+     "options": "File",
+     "default": "File",
+     "description": "The standard version makes a claims file. A payer's own link (NHIF/SHA, NPHIES, eClaimLink, Shafafiya, NHIA) is a partner's app."
+    },
+    {
+     "fieldname": "needs_sec",
+     "fieldtype": "Section Break",
+     "label": "What a claim needs",
+     "description": "A claim missing any of these stays Incomplete and is never put in a file."
+    },
+    {
+     "fieldname": "needs_member_number",
+     "fieldtype": "Check",
+     "label": "The member number"
+    },
+    {
+     "fieldname": "needs_card_serial",
+     "fieldtype": "Check",
+     "label": "The card serial number"
+    },
+    {
+     "fieldname": "needs_prescription",
+     "fieldtype": "Check",
+     "label": "The prescription"
+    },
+    {
+     "fieldname": "cb2",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "needs_gtin",
+     "fieldtype": "Check",
+     "label": "Each line's GTIN",
+     "description": "Saudi Arabia's NPHIES bills a drug by its GTIN."
+    },
+    {
+     "fieldname": "needs_dose_frequency",
+     "fieldtype": "Check",
+     "label": "Each line's dose and frequency",
+     "description": "Abu Dhabi's Shafafiya asks for both on every line."
+    },
+    {
+     "fieldname": "notes_sec",
+     "fieldtype": "Section Break",
+     "label": "Notes"
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Notes"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Claims Clerk",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP ICP Formulary Item",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "item_code",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "item_group",
+     "fieldtype": "Link",
+     "label": "Item group",
+     "options": "Item Group",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "covered",
+     "fieldtype": "Check",
+     "label": "Covered",
+     "default": "1",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "extra_pay",
+     "fieldtype": "Currency",
+     "label": "Extra-item pay a unit",
+     "in_list_view": 1,
+     "description": "The customer always pays this for each stock unit, before the co-pay."
+    },
+    {
+     "fieldname": "max_qty",
+     "fieldtype": "Float",
+     "label": "Most units on a sale",
+     "in_list_view": 1,
+     "description": "0: no limit. Units past it are the customer's."
+    }
+   ],
+   "permissions": []
+  },
+  {
+   "name": "PP ICP Formulary",
+   "autoname": "field:title",
+   "title_field": "title",
+   "description": "What a plan covers: rows by item or item group. An item's own row wins over its group's.",
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Name",
+     "reqd": 1
+    },
+    {
+     "fieldname": "payer",
+     "fieldtype": "Link",
+     "label": "Payer",
+     "options": "PP ICP Payer",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "rows",
+     "fieldtype": "Table",
+     "label": "Items and groups",
+     "options": "PP ICP Formulary Item"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Claims Clerk",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP ICP Plan",
+   "autoname": "field:title",
+   "title_field": "title",
+   "search_fields": "payer",
+   "description": "A payer's plan: its price list, its formulary and its co-pay rules.",
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Name",
+     "reqd": 1
+    },
+    {
+     "fieldname": "payer",
+     "fieldtype": "Link",
+     "label": "Payer",
+     "options": "PP ICP Payer",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "active",
+     "fieldtype": "Check",
+     "label": "Active",
+     "default": "1",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "valid_from",
+     "fieldtype": "Date",
+     "label": "Valid from"
+    },
+    {
+     "fieldname": "valid_to",
+     "fieldtype": "Date",
+     "label": "Valid to"
+    },
+    {
+     "fieldname": "cb1",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "price_list",
+     "fieldtype": "Link",
+     "label": "Price list",
+     "options": "Price List",
+     "description": "When set, a sale on this plan is priced on it, and an item it does not carry, or carries at zero, cannot be sold on the plan."
+    },
+    {
+     "fieldname": "covers",
+     "fieldtype": "Select",
+     "label": "Covers",
+     "options": "Formulary items\nEvery item",
+     "default": "Formulary items"
+    },
+    {
+     "fieldname": "formulary",
+     "fieldtype": "Link",
+     "label": "Formulary",
+     "options": "PP ICP Formulary",
+     "depends_on": "eval:doc.covers=='Formulary items'"
+    },
+    {
+     "fieldname": "rules_sec",
+     "fieldtype": "Section Break",
+     "label": "Co-pay rules"
+    },
+    {
+     "fieldname": "copay_percent",
+     "fieldtype": "Percent",
+     "label": "Co-pay %",
+     "description": "The customer's share of the covered amount inside the limit."
+    },
+    {
+     "fieldname": "invoice_upper_limit",
+     "fieldtype": "Currency",
+     "label": "Invoice upper limit",
+     "description": "0: none. The payer covers at most this much of one sale; the rest is the customer's."
+    },
+    {
+     "fieldname": "max_patient_amount",
+     "fieldtype": "Currency",
+     "label": "Maximum co-pay",
+     "description": "0: none. The co-pay never exceeds it."
+    },
+    {
+     "fieldname": "cb2",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "discount_order",
+     "fieldtype": "Select",
+     "label": "The limit is compared with the amount",
+     "options": "Before the limit\nAfter the limit",
+     "default": "Before the limit",
+     "description": "Before the limit: after the sale's discount. After the limit: before it."
+    },
+    {
+     "fieldname": "copay_order",
+     "fieldtype": "Select",
+     "label": "The co-pay % is taken",
+     "options": "Before the discount\nAfter the discount",
+     "default": "Before the discount",
+     "description": "Before the discount: the payer keeps the whole discount. After it: the customer shares it."
+    },
+    {
+     "fieldname": "no_partial_refund",
+     "fieldtype": "Check",
+     "label": "Returned whole or not at all"
+    },
+    {
+     "fieldname": "promotions_apply",
+     "fieldtype": "Check",
+     "label": "The shop's own promotions apply on this plan",
+     "default": "1",
+     "description": "Off: a sale on this plan takes the plan's price list without the shop's promotions and coupons (the payer door switches the shop's pricing rules off for it)."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Claims Clerk",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP ICP Member",
+   "autoname": "hash",
+   "title_field": "customer",
+   "search_fields": "customer,payer",
+   "description": "A customer's cover: one record per policy. Read by the claims clerk and the payer service only.",
+   "fields": [
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "plan",
+     "fieldtype": "Link",
+     "label": "Plan",
+     "options": "PP ICP Plan",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "payer",
+     "fieldtype": "Link",
+     "label": "Payer",
+     "options": "PP ICP Payer",
+     "fetch_from": "plan.payer",
+     "read_only": 1
+    },
+    {
+     "fieldname": "active",
+     "fieldtype": "Check",
+     "label": "Active",
+     "default": "1"
+    },
+    {
+     "fieldname": "cb1",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "policy_number",
+     "fieldtype": "Data",
+     "label": "Policy number"
+    },
+    {
+     "fieldname": "member_number",
+     "fieldtype": "Data",
+     "label": "Member number",
+     "reqd": 1,
+     "description": "Exactly as on the card."
+    },
+    {
+     "fieldname": "card_serial",
+     "fieldtype": "Data",
+     "label": "Card serial number"
+    },
+    {
+     "fieldname": "valid_from",
+     "fieldtype": "Date",
+     "label": "Valid from"
+    },
+    {
+     "fieldname": "valid_to",
+     "fieldtype": "Date",
+     "label": "Valid to"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Claims Clerk",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP ICP Claim Line",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "line_id",
+     "fieldtype": "Data",
+     "label": "Sale line",
+     "read_only": 1
+    },
+    {
+     "fieldname": "item_code",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "gtin",
+     "fieldtype": "Data",
+     "label": "GTIN"
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Qty",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "uom",
+     "fieldtype": "Link",
+     "label": "Unit",
+     "options": "UOM",
+     "read_only": 1
+    },
+    {
+     "fieldname": "amount",
+     "fieldtype": "Currency",
+     "label": "Amount",
+     "read_only": 1
+    },
+    {
+     "fieldname": "payer_share",
+     "fieldtype": "Currency",
+     "label": "Payer's share",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "patient_share",
+     "fieldtype": "Currency",
+     "label": "Customer's share",
+     "read_only": 1
+    },
+    {
+     "fieldname": "dose",
+     "fieldtype": "Data",
+     "label": "Dose",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "frequency",
+     "fieldtype": "Data",
+     "label": "Frequency",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "returned_qty",
+     "fieldtype": "Float",
+     "label": "Returned",
+     "read_only": 1
+    },
+    {
+     "fieldname": "payer_back",
+     "fieldtype": "Currency",
+     "label": "Given back to the payer",
+     "read_only": 1
+    }
+   ],
+   "permissions": []
+  },
+  {
+   "name": "PP ICP Claim Batch",
+   "autoname": "format:CB-{YYYY}-{#####}",
+   "description": "A claims file: the claims put in it, and the file to send to the payer.",
+   "fields": [
+    {
+     "fieldname": "payer",
+     "fieldtype": "Link",
+     "label": "Payer",
+     "options": "PP ICP Payer",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "made_on",
+     "fieldtype": "Date",
+     "label": "Made on",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "claims",
+     "fieldtype": "Int",
+     "label": "Claims",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "payer_share",
+     "fieldtype": "Currency",
+     "label": "To claim",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "csv",
+     "fieldtype": "Long Text",
+     "label": "The file (CSV)",
+     "read_only": 1,
+     "description": "Copy it into a file named after this batch and send it to the payer."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Claims Clerk",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP ICP Claim",
+   "autoname": "field:claim_ref",
+   "title_field": "claim_ref",
+   "search_fields": "payer,customer,status",
+   "sort_field": "sale_date",
+   "sort_order": "DESC",
+   "description": "What a payer owes for one sale: made from the sale the payer door booked, sent in a claims file, followed to payment.",
+   "fields": [
+    {
+     "fieldname": "claim_ref",
+     "fieldtype": "Data",
+     "label": "Claim reference",
+     "reqd": 1,
+     "unique": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Ready\nIncomplete\nSubmitted\nAccepted\nRejected\nResubmitted\nPaid\nShort paid\nBilled to patient\nReturned",
+     "default": "Ready",
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "read_only": 1,
+     "description": "Moved by the claims file, a remittance's Match and the buttons Mark ready and Settle as it stands, never typed."
+    },
+    {
+     "fieldname": "payer",
+     "fieldtype": "Link",
+     "label": "Payer",
+     "options": "PP ICP Payer",
+     "read_only": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "plan",
+     "fieldtype": "Link",
+     "label": "Plan",
+     "options": "PP ICP Plan",
+     "read_only": 1
+    },
+    {
+     "fieldname": "member",
+     "fieldtype": "Link",
+     "label": "Member",
+     "options": "PP ICP Member",
+     "read_only": 1
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "read_only": 1
+    },
+    {
+     "fieldname": "cb1",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "sale_doctype",
+     "fieldtype": "Link",
+     "label": "Sale type",
+     "read_only": 1,
+     "options": "DocType"
+    },
+    {
+     "fieldname": "sale",
+     "fieldtype": "Dynamic Link",
+     "label": "Sale",
+     "options": "sale_doctype",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sale_date",
+     "fieldtype": "Date",
+     "label": "Sale date",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "read_only": 1
+    },
+    {
+     "fieldname": "batch",
+     "fieldtype": "Link",
+     "label": "Claims file",
+     "options": "PP ICP Claim Batch",
+     "read_only": 1
+    },
+    {
+     "fieldname": "submitted_on",
+     "fieldtype": "Date",
+     "label": "Sent on",
+     "read_only": 1
+    },
+    {
+     "fieldname": "who_sec",
+     "fieldtype": "Section Break",
+     "label": "Member and prescription"
+    },
+    {
+     "fieldname": "member_number",
+     "fieldtype": "Data",
+     "label": "Member number"
+    },
+    {
+     "fieldname": "card_serial",
+     "fieldtype": "Data",
+     "label": "Card serial number"
+    },
+    {
+     "fieldname": "policy_number",
+     "fieldtype": "Data",
+     "label": "Policy number"
+    },
+    {
+     "fieldname": "cb2",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "prescription",
+     "fieldtype": "Data",
+     "label": "Prescription"
+    },
+    {
+     "fieldname": "prescriber",
+     "fieldtype": "Data",
+     "label": "Prescriber"
+    },
+    {
+     "fieldname": "prescriber_licence",
+     "fieldtype": "Data",
+     "label": "Prescriber's licence"
+    },
+    {
+     "fieldname": "lines_sec",
+     "fieldtype": "Section Break",
+     "label": "Lines"
+    },
+    {
+     "fieldname": "lines",
+     "fieldtype": "Table",
+     "label": "Lines",
+     "options": "PP ICP Claim Line"
+    },
+    {
+     "fieldname": "money_sec",
+     "fieldtype": "Section Break",
+     "label": "Money"
+    },
+    {
+     "fieldname": "total",
+     "fieldtype": "Currency",
+     "label": "Covered lines' total",
+     "read_only": 1
+    },
+    {
+     "fieldname": "payer_share",
+     "fieldtype": "Currency",
+     "label": "Payer's share",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "patient_share",
+     "fieldtype": "Currency",
+     "label": "Customer's share",
+     "read_only": 1
+    },
+    {
+     "fieldname": "received",
+     "fieldtype": "Currency",
+     "label": "Received",
+     "read_only": 1
+    },
+    {
+     "fieldname": "billed_back",
+     "fieldtype": "Currency",
+     "label": "Billed to the customer",
+     "read_only": 1
+    },
+    {
+     "fieldname": "cb3",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "incomplete_reason",
+     "fieldtype": "Small Text",
+     "label": "Missing",
+     "read_only": 1
+    },
+    {
+     "fieldname": "rejection_reason",
+     "fieldtype": "Small Text",
+     "label": "Payer's reason"
+    },
+    {
+     "fieldname": "resubmissions",
+     "fieldtype": "Int",
+     "label": "Times sent again",
+     "read_only": 1
+    },
+    {
+     "fieldname": "returns",
+     "fieldtype": "Small Text",
+     "label": "Returns",
+     "read_only": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Claims Clerk",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP ICP Remittance Line",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "claim_ref",
+     "fieldtype": "Link",
+     "label": "Claim",
+     "options": "PP ICP Claim",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "paid",
+     "fieldtype": "Currency",
+     "label": "Paid",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "rejected",
+     "fieldtype": "Check",
+     "label": "Rejected",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "reason",
+     "fieldtype": "Data",
+     "label": "Payer's reason"
+    },
+    {
+     "fieldname": "expected",
+     "fieldtype": "Currency",
+     "label": "Expected",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "result",
+     "fieldtype": "Data",
+     "label": "Result",
+     "read_only": 1,
+     "in_list_view": 1
+    }
+   ],
+   "permissions": []
+  },
+  {
+   "name": "PP ICP Remittance",
+   "autoname": "format:REM-{YYYY}-{#####}",
+   "description": "A payer's remittance advice, line by line; Match compares each line with its claim. The money itself is the shop's own payment from the payer's customer record.",
+   "fields": [
+    {
+     "fieldname": "payer",
+     "fieldtype": "Link",
+     "label": "Payer",
+     "options": "PP ICP Payer",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "reference",
+     "fieldtype": "Data",
+     "label": "Payer's reference"
+    },
+    {
+     "fieldname": "received_on",
+     "fieldtype": "Date",
+     "label": "Received on",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "amount",
+     "fieldtype": "Currency",
+     "label": "Amount",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Open\nMatched\nPartly matched",
+     "default": "Open",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "lines",
+     "fieldtype": "Table",
+     "label": "Lines",
+     "options": "PP ICP Remittance Line"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Claims Clerk",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP ICP Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "Customer",
+   "fieldname": "pp_icp_insurance_barred",
+   "fieldtype": "Check",
+   "label": "Barred from sales a third party pays",
+   "insert_after": "customer_group",
+   "description": "Such a customer can buy only as a cash customer: no payer is asked."
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP ICP Claims",
+   "description": "the payer service reads booked and returned sales, and their payer details, to make and reduce claims",
+   "events": [
+    "POS Invoice",
+    "Sales Invoice"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "claims",
+   "point": "desk_action",
+   "label": "Build claims",
+   "endpoint_url": "https://host.docker.internal:8142/icp/press/claims",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "file",
+   "point": "desk_action",
+   "label": "Make the claims file",
+   "endpoint_url": "https://host.docker.internal:8142/icp/press/file",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "remit",
+   "point": "desk_action",
+   "label": "Match a remittance",
+   "endpoint_url": "https://host.docker.internal:8142/icp/press/remit",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "ready",
+   "point": "desk_action",
+   "label": "Mark ready",
+   "endpoint_url": "https://host.docker.internal:8142/icp/press/ready",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "settle",
+   "point": "desk_action",
+   "label": "Settle as it stands",
+   "endpoint_url": "https://host.docker.internal:8142/icp/press/settle",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP ICP Payer",
+   "label": "Build claims",
+   "placement": "list",
+   "service": "claims",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Make claims from the sales booked on a payer since the last press?"
+  },
+  {
+   "record_type": "PP ICP Payer",
+   "label": "Make the claims file",
+   "placement": "form",
+   "service": "file",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Put every Ready claim of this payer in a claims file, and mark them sent?"
+  },
+  {
+   "record_type": "PP ICP Remittance",
+   "label": "Match",
+   "placement": "form",
+   "service": "remit",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Match each line with its claim?"
+  },
+  {
+   "record_type": "PP ICP Claim",
+   "label": "Mark ready",
+   "placement": "form",
+   "service": "ready",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Mark this claim ready for the next claims file? It is refused while anything its payer needs is missing."
+  },
+  {
+   "record_type": "PP ICP Claim",
+   "label": "Settle as it stands",
+   "placement": "form",
+   "service": "settle",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Close this short-paid claim as paid? The shortfall stays on the payer's account for your accountant."
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP ICP Claims",
+   "ref_doctype": "PP ICP Claim",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "status",
+    "payer",
+    "customer",
+    "sale_date",
+    "total",
+    "patient_share",
+    "payer_share",
+    "received",
+    "billed_back"
+   ],
+   "order_by": "sale_date desc",
+   "add_total_row": 1,
+   "roles": [
+    "PP ICP Claims Clerk"
+   ]
+  },
+  {
+   "name": "PP ICP Rejected and short-paid claims",
+   "ref_doctype": "PP ICP Claim",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "status",
+    "payer",
+    "customer",
+    "sale_date",
+    "payer_share",
+    "received",
+    "rejection_reason"
+   ],
+   "filters": [
+    [
+     "status",
+     "in",
+     [
+      "Rejected",
+      "Short paid"
+     ]
+    ]
+   ],
+   "order_by": "sale_date desc",
+   "add_total_row": 1,
+   "roles": [
+    "PP ICP Claims Clerk"
+   ]
+  },
+  {
+   "name": "PP ICP Incomplete claims",
+   "ref_doctype": "PP ICP Claim",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "payer",
+    "customer",
+    "sale_date",
+    "incomplete_reason"
+   ],
+   "filters": [
+    [
+     "status",
+     "=",
+     "Incomplete"
+    ]
+   ],
+   "order_by": "sale_date desc",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ]
+  },
+  {
+   "name": "PP ICP Remittances",
+   "ref_doctype": "PP ICP Remittance",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "payer",
+    "reference",
+    "received_on",
+    "amount",
+    "status"
+   ],
+   "order_by": "received_on desc",
+   "add_total_row": 1,
+   "roles": [
+    "PP ICP Claims Clerk"
+   ]
+  }
+ ],
+ "dashboard_charts": [
+  {
+   "name": "PP ICP Payer share by month",
+   "document_type": "PP ICP Claim",
+   "chart_type": "Sum",
+   "based_on": "sale_date",
+   "value_based_on": "payer_share",
+   "timespan": "Last Year",
+   "time_interval": "Monthly",
+   "type": "Bar",
+   "filters": [
+    [
+     "status",
+     "!=",
+     "Returned"
+    ]
+   ],
+   "roles": [
+    "PP ICP Claims Clerk"
+   ]
+  },
+  {
+   "name": "PP ICP Claims by status",
+   "document_type": "PP ICP Claim",
+   "chart_type": "Group By",
+   "group_by_based_on": "status",
+   "group_by_type": "Count",
+   "type": "Donut",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ]
+  }
+ ]
+}
