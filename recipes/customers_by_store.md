@@ -13,6 +13,10 @@ A till puts any customer on any store's sale. Shops ask for less: **account cust
 - A customer put on a sale without a pick (an answer lost, a sale picked up hours later): at payment, *"This customer has not been checked. Pick them again, or sell without a customer."*
 - The store's walk-in customer: never asked.
 
+![At Store 3 on a demo shop: a customer whose group buys at Store 1 only, taken off the sale with the rule's words](../samples/s47_customers_by_store/screenshots/04_refused.png)
+
+![A customer in a group below one whose rule names Store 3 stays on the sale](../samples/s47_customers_by_store/screenshots/05_allowed.png)
+
 ## Rules
 
 1. **Declare the rule record and the capture in your manifest** (`samples/s47_customers_by_store/manifest.json`):
