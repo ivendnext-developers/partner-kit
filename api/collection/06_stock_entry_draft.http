@@ -1,3 +1,4 @@
+# Needs the shop's item PP-WRC-PHONE, a stock item with serial numbers: api/README.md, step 1, says how to make it.
 # The two-step form, step 1: create a DRAFT stock movement (docstatus 0)
 # expect: 200 .data.docstatus == 0
 # capture: SE2=.data.name
