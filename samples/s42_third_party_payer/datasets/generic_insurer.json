@@ -1,0 +1,71 @@
+{
+ "id": "generic_insurer",
+ "title": "Generic insurer",
+ "notice": "A sample payer, not a real insurer: its plans show the co-pay rules of an iVend Retail pharmacy add-on and a pharmacy's insurer price-list rule. A partner replaces it with each real payer's terms, and adds the payer's own claim link.",
+ "sources": [
+  "An iVend Retail pharmacy add-on (Egypt): co-pay %, invoice upper limit, maximum patient amount, extra-item pay, discount before or after the limit, no partial refunds, a customer barred from insurance sales",
+  "A pharmacy's insurer price-list rule (Kenya, a third party's add-on, observed): only items on the insurer's price list, none at zero"
+ ],
+ "payer": {
+  "code": "GEN-INS",
+  "title": "Generic Insurer",
+  "kind": "Insurer",
+  "customer": "Generic Insurer",
+  "claims_format": "File",
+  "claim_needs": {
+   "member_number": 1,
+   "card_serial": 0,
+   "gtin": 0,
+   "prescription": 1,
+   "dose_frequency": 0
+  }
+ },
+ "price_list": "Generic Insurer Prices",
+ "formularies": [
+  {
+   "title": "Generic Insurer Formulary",
+   "rows": [
+    {
+     "item_group": "Prescription Medicines",
+     "covered": 1
+    },
+    {
+     "item_group": "Controlled Medicines",
+     "covered": 1
+    },
+    {
+     "item_group": "Over-the-Counter Medicines",
+     "covered": 1,
+     "extra_pay": 2,
+     "max_qty": 3
+    }
+   ]
+  }
+ ],
+ "plans": [
+  {
+   "title": "Generic Gold",
+   "formulary": "Generic Insurer Formulary",
+   "covers": "Formulary items",
+   "price_list": "Generic Insurer Prices",
+   "copay_percent": 10,
+   "invoice_upper_limit": 0,
+   "max_patient_amount": 500,
+   "discount_order": "Before the limit",
+   "copay_order": "After the discount",
+   "no_partial_refund": 1
+  },
+  {
+   "title": "Generic Silver",
+   "formulary": "Generic Insurer Formulary",
+   "covers": "Formulary items",
+   "price_list": "Generic Insurer Prices",
+   "copay_percent": 20,
+   "invoice_upper_limit": 5000,
+   "max_patient_amount": 0,
+   "discount_order": "After the limit",
+   "copay_order": "Before the discount",
+   "no_partial_refund": 1
+  }
+ ]
+}
