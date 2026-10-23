@@ -69,6 +69,11 @@ CANARIES = [
     # the patient and the limits
     ("the identity fields", RX, 'if r and field in r["ids"] and not shop["customer_fields"].get(field):', "if False:",
      R + "Patient.test_a_controlled_sale_needs_the_customers_identity_fields"),
+    ("a schedule may need the patient's consent", RX, '\n            ("needs_consent", "consent_date", "consent to keep their records"))', ")",
+     R + "Patient.test_a_schedule_that_needs_consent_waits_for_the_patients_dated_consent"),
+    ("the service reads the consent tick", SV, ' "needs_authority", "needs_consent",', ' "needs_authority",',
+     S + "People.test_a_schedule_that_needs_consent_reads_only_whether_the_patients_consent_date_is_set"),
+    ("no market's name in the code", RX, "REFS_MAX = 5 ", "KE_REFS = REFS_MAX = 5 ", M + "test_no_market_in_the_apps_code_or_names"),
     ("the cap adds the item's lines", RX, 'per_item[lines[i]["item"]] = per_item.get(lines[i]["item"], 0.0) + qty[i]',
      'per_item[lines[i]["item"]] = qty[i]', R + "Patient.test_the_quantity_cap_per_sale_adds_the_items_lines"),
     ("the frequency window", RX, "since = today - datetime.timedelta(days=days - 1)", "since = today - datetime.timedelta(days=days + 5)",
@@ -189,6 +194,12 @@ CANARIES = [
      "\"permissions\": [\n    {\n     \"role\": \"PP RXC Pharmacist in Charge\",\n     \"read\": 1,\n     \"write\": 1,\n     \"create\": 1,\n     \"delete\": 1,\n     \"report\": 1,\n     \"export\": 1,\n     \"share\": 0,\n     \"print\": 1,\n     \"email\": 0\n    },\n    {\n     \"role\": \"System Manager\",\n     \"read\": 1,\n     \"write\": 0,\n     \"create\": 0,\n     \"delete\": 0,\n     \"report\": 1,\n     \"export\": 1,\n     \"share\": 0,\n     \"print\": 1,\n     \"email\": 0\n    },\n    {\n     \"role\": \"PP RXC Pharmacist\",\n     \"read\": 1,\n     \"write\": 0,\n     \"create\": 0,\n     \"delete\": 0,\n     \"report\": 1,\n     \"export\": 1,\n     \"share\": 0,\n     \"print\": 1,\n     \"email\": 0\n    },\n    {\n     \"role\": \"PP RXC Integration\",\n     \"read\": 1,\n     \"write\": 0,\n     \"create\": 0,\n     \"delete\": 0,\n     \"report\": 0,\n     \"export\": 0,\n     \"share\": 0,\n     \"print\": 0,\n     \"email\": 0\n    }\n   ",
      "\"permissions\": [\n    {\n     \"role\": \"PP RXC Pharmacist in Charge\",\n     \"read\": 1,\n     \"write\": 1,\n     \"create\": 1,\n     \"delete\": 1,\n     \"report\": 1,\n     \"export\": 1,\n     \"share\": 0,\n     \"print\": 1,\n     \"email\": 0\n    },\n    {\n     \"role\": \"System Manager\",\n     \"read\": 1,\n     \"write\": 1,\n     \"create\": 0,\n     \"delete\": 0,\n     \"report\": 1,\n     \"export\": 1,\n     \"share\": 0,\n     \"print\": 1,\n     \"email\": 0\n    },\n    {\n     \"role\": \"PP RXC Pharmacist\",\n     \"read\": 1,\n     \"write\": 0,\n     \"create\": 0,\n     \"delete\": 0,\n     \"report\": 1,\n     \"export\": 1,\n     \"share\": 0,\n     \"print\": 1,\n     \"email\": 0\n    },\n    {\n     \"role\": \"PP RXC Integration\",\n     \"read\": 1,\n     \"write\": 0,\n     \"create\": 0,\n     \"delete\": 0,\n     \"report\": 0,\n     \"export\": 0,\n     \"share\": 0,\n     \"print\": 0,\n     \"email\": 0\n    }\n   ",
      M + "test_who_writes_what"),
+    ("the pharmacist-in-charge cannot delete a prescription", "manifest.json",
+     '"role": "PP RXC Pharmacist in Charge",\n     "read": 1,\n     "write": 1,\n     "create": 1,\n     "delete": 0,',
+     '"role": "PP RXC Pharmacist in Charge",\n     "read": 1,\n     "write": 1,\n     "create": 1,\n     "delete": 1,',
+     M + "test_only_the_records_officer_destroys_a_prescription_or_a_dispensing"),
+    ("the ID's description names its readers' setup", "manifest.json", "a permission level only the pharmacists",
+     "a level only the pharmacists", M + "test_the_patient_fields_name_the_readers_setup_and_carry_no_level_the_kit_cannot_set"),
 ]
 
 

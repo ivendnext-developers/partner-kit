@@ -47,10 +47,12 @@ REFS_MAX = 5          # prescription numbers one sale may name
 # the sale details (till) and the fields (Desk) this app reads; "<prefix> <suffix>" and "<prefix>_<field>"
 RX, PRESCRIBER, LICENCE, DIRECTIONS = "Rx Number", "Prescriber", "Prescriber Licence", "Directions"
 DESK_FIELDS = {RX: "rx_number", PRESCRIBER: "prescriber", LICENCE: "prescriber_licence", DIRECTIONS: "directions"}
-# the patient's identity fields on Customer: the schedule's tick → the Customer field → the words the cashier reads
+# the patient's fields on Customer a schedule may need set: the schedule's tick → the Customer field → the words the cashier
+# reads. The last is the patient's consent to keep their prescription records, dated (who gave it is a field of its own)
 IDENTITY = (("needs_id_number", "id_number", "national or residence ID"),
             ("needs_birth_date", "birth_date", "date of birth"),
-            ("needs_authority", "authority", "authority to possess"))
+            ("needs_authority", "authority", "authority to possess"),
+            ("needs_consent", "consent_date", "consent to keep their records"))
 DESK_TYPES = ("Sales Order", "Delivery Note", "Sales Invoice")
 # a Desk line made from a linked parent: (the parent's name, its ROW reference). A line is linked only when the row
 # reference is set: the engine then holds the line to that row's item; a parent name alone could be typed onto any line

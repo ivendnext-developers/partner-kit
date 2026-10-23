@@ -21,8 +21,8 @@ How a sale is decided (``Service.decide``):
 1. the shop's settings, schedules and item groups (kept a minute), the lines' items, their schedule rows and units;
 2. a sale with no line under a schedule or a group that needs directions is allowed, after releasing any reservation the
    same sale made on an earlier press of Pay;
-3. otherwise the operator's Pharmacist record, the customer's identity fields, the named prescriptions and the patient's
-   dispensings, each dispensing's status read back from the shop (``rxrules.resolve``);
+3. otherwise the operator's Pharmacist record, the customer's identity and consent fields, the named prescriptions and the
+   patient's dispensings, each dispensing's status read back from the shop (``rxrules.resolve``);
 4. ``rxrules.decide``; on allow, the reservation is inserted as the patient's next number. The name is unique: an insert
    another till made first fails, and the decision is made again from a fresh read (at most ``TRIES`` times);
 5. this sale's earlier reservation, and every status the shop gave back, are written (best effort).
@@ -202,7 +202,7 @@ class Service:
             g = pool.submit(self._list, shop, "Item Group", ["name", "lft", "rgt", f"{p}_schedule", f"{p}_needs_directions"])
             d = pool.submit(self._list, shop, self.dt("Drug Schedule"), [
                 "name", "axis", "needs_prescription", "pharmacist_only", "dispensary_only", "validity_days", "max_fills",
-                "qty_cap", "freq_qty", "freq_days", "needs_id_number", "needs_birth_date", "needs_authority",
+                "qty_cap", "freq_qty", "freq_days", "needs_id_number", "needs_birth_date", "needs_authority", "needs_consent",
                 "returnable", "return_gives_back", "needs_directions", "own_sale_without_rx", "max_occasions",
                 "one_drug_per_rx"])
             out = (rxrules.settings_of(s.result()), rxrules.groups_of(g.result(), self.prefix),

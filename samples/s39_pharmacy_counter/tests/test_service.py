@@ -221,6 +221,17 @@ class People(Base):
         self.assertTrue(all(fields == ["name"] for *_x, fields in reads))       # only the name ever comes back
         self.assertIn([["name", "=", "Ann"], ["pp_rxc_id_number", "is", "set"]], [c[2] for c in reads])
 
+    def test_a_schedule_that_needs_consent_reads_only_whether_the_patients_consent_date_is_set(self):
+        sched = next(r for r in self.shop.rows(f"{P} Drug Schedule") if r["name"] == "POM")
+        sched["needs_consent"] = 1
+        self.shop.prescription("RX1", "Ann", "AMOX", 21)
+        self.assertIn("consent to keep their records", self.sell(("AMOX", "Rx", 21), rx="RX1")[1]["reason"])
+        reads = [c for c in self.shop.calls if c[0] == "list" and c[1] == "Customer"]
+        self.assertIn([["name", "=", "Ann"], ["pp_rxc_consent_date", "is", "set"]], [c[2] for c in reads])
+        self.assertTrue(all(fields == ["name"] for *_x, fields in reads))       # the date never leaves the shop
+        next(r for r in self.shop.rows("Customer") if r["name"] == "Ann")["pp_rxc_consent_date"] = "2026-10-01"
+        self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-2")[1], {"verdict": "allow"})
+
     def test_the_settings_walk_in_list_counts_too(self):
         self.assertIn("walk-in", self.sell(("AMOX", "Rx", 21), rx="RX1", customer="Cash Sale")[1]["reason"])
 

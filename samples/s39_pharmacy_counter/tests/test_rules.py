@@ -16,7 +16,7 @@ TODAY = datetime.date(2026, 10, 22)
 def sched(name, **k):
     base = {"name": name, "axis": k.pop("axis", name), "needs_prescription": 0, "pharmacist_only": 0, "dispensary_only": 0,
             "validity_days": 0, "max_fills": 0, "qty_cap": 0, "freq_qty": 0, "freq_days": 0, "needs_id_number": 0,
-            "needs_birth_date": 0, "needs_authority": 0, "returnable": 0, "return_gives_back": 0, "needs_directions": 0,
+            "needs_birth_date": 0, "needs_authority": 0, "needs_consent": 0, "returnable": 0, "return_gives_back": 0, "needs_directions": 0,
             "own_sale_without_rx": 0}
     base.update(k)
     return base
@@ -320,6 +320,21 @@ class Patient(unittest.TestCase):
         self.assertIn("national or residence ID", out["reason"])
         out = decide(c, shop(c, [rule("CD2", "POM")], [rx("RX1", "TRAM", 10)], fields={"id_number": "1", "birth_date": ""}))
         self.assertIn("date of birth", out["reason"])
+
+    def test_a_schedule_that_needs_consent_waits_for_the_patients_dated_consent(self):
+        rules = R.schedules_of([sched("EGP", axis="Prescription", needs_prescription=1, validity_days=30, needs_consent=1)])
+        self.assertEqual(rules["EGP"]["ids"], ("consent_date",))
+        c = ctx([line("AMOX", 21)], details={"Rx Number": "RX1"})
+        r = R.strictest([rules["EGP"]])
+        base = shop(c, [rule("POM")], [rx("RX1", "AMOX", 21)], fields={"id_number": "1", "birth_date": "x"})
+        out = decide(c, dict(base, rules=[r]))
+        self.assertEqual(out["verdict"], "refuse")
+        self.assertIn("needs the customer's consent to keep their records. Add it on their Desk record.", out["reason"])
+        ok = decide(c, dict(base, rules=[r], customer_fields={"consent_date": "2026-10-01"}))
+        self.assertEqual(ok["verdict"], "allow")
+        # a schedule without the tick never asks for it, and the strictest of two keeps it
+        self.assertEqual(decide(c, base)["verdict"], "allow")
+        self.assertIn("consent_date", R.strictest([rules["EGP"], SCHEDULES["POM"]])["ids"])
 
     def test_the_quantity_cap_per_sale_adds_the_items_lines(self):
         c = ctx([line("TRAM", 15, 1), line("TRAM", 6, 2)], details={"Rx Number": "RX1"})
