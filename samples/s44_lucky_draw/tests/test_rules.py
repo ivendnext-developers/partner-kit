@@ -42,6 +42,23 @@ class Entries(unittest.TestCase):
                               rules(), None)
         self.assertEqual(got, [("A", "C1", 2)])
 
+    def test_the_order_is_the_real_time_as_the_shop_sends_it(self):
+        # the shop sends a time with no leading zero on the hour, with or without fractions: text order is not time order
+        got = draw.entries_of([s("A", "C1", 100, time_="10:00:00"), s("B", "C2", 100, time_="9:05:00"),
+                               s("C", "C3", 100, time_="23:00:00"), s("D", "C4", 100, time_="3:00:00.250000"),
+                               s("E", "C5", 100, time_="3:00:00")], [], set(), rules(), None)
+        self.assertEqual([g[0] for g in got], ["E", "D", "B", "A", "C"])
+        self.assertEqual(draw.seconds_of("14:30:12.5"), 52212.5)
+
+    def test_the_total_is_what_the_customer_paid(self):
+        # the shop rounds 399.60 to 400 on the receipt: 2 entries at 200, as the customer was told
+        sale = dict(s("A", "C1", 399.6), base_rounded_total=400)
+        self.assertEqual(draw.entries_of([sale], [], set(), rules(spend_per_entry=200), None), [("A", "C1", 2)])
+        self.assertEqual(draw.entries_of([dict(sale, base_rounded_total=0)], [], set(), rules(spend_per_entry=200), None),
+                         [("A", "C1", 1)])                    # a shop that does not round: the total
+        back = [{"return_against": "A", "base_grand_total": -199.6, "base_rounded_total": -200}]
+        self.assertEqual(draw.entries_of([sale], back, set(), rules(spend_per_entry=200), None), [("A", "C1", 1)])
+
     def test_the_order_is_date_then_time_then_number(self):
         got = draw.entries_of([s("B", "C1", 100, time_="09:00:00"), s("A", "C2", 100, time_="09:00:00"),
                                s("Z", "C3", 100, day="2026-10-01", time_="23:00:00")], [], set(), rules(), None)
@@ -78,6 +95,7 @@ class Rules(unittest.TestCase):
         r = rules(most_entries_per_sale=None, winners=None, reserves="")
         self.assertEqual((r.most, r.winners, r.reserves), (0, 1, 0))
         for bad in ({"spend_per_entry": -1}, {"spend_per_entry": "x"}, {"winners": 1.5}, {"reserves": True},
+                    {"hours_from_utc": 24}, {"hours_from_utc": -13}, {"hours_from_utc": "4"},
                     {"to_date": "2026-09-01"}, {"company": ""}):
             self.assertIsInstance(draw.rules_of(dict({"company": "PP Co", "from_date": "2026-10-01",
                                                       "to_date": "2026-10-31", "spend_per_entry": 100}, **bad)), str, bad)
@@ -87,6 +105,15 @@ class Rules(unittest.TestCase):
         self.assertEqual(draw.today_at(4, t), datetime.date(2026, 11, 1))
         self.assertEqual(draw.today_at(None, t), datetime.date(2026, 10, 31))
         self.assertEqual(draw.today_at(-6, t), datetime.date(2026, 10, 31))
+
+
+class AlreadyDrawn(unittest.TestCase):
+    def test_a_status_set_back_by_hand_is_still_drawn(self):
+        self.assertFalse(draw.already_drawn({"status": "Open", "results": []}))
+        for c in ({"status": "Drawn"}, {"status": "Open", "drawn_on": "2026-11-01 06:00 UTC"},
+                  {"status": "Open", "draw_fingerprint": "ab"}, {"status": "Open", "drawn_numbers": "4"},
+                  {"status": "Open", "results": [{"customer": "C1"}]}):
+            self.assertTrue(draw.already_drawn(c), c)
 
 
 class Draw(unittest.TestCase):

@@ -14,7 +14,8 @@ currency, date, time and till), the returns made against them, every till's walk
 customer groups, the group tree. It counts each sale's entries (``draw.entries_of``). *Count entries* writes the counts on
 the campaign; *Draw winners* draws once, after the campaign's last day, and writes the results, the draw's record and
 *Drawn*. Every write carries the campaign's ``modified`` as read, so a press never writes over someone's edit, and a second
-draw finds *Drawn* and writes nothing.
+draw finds the campaign drawn (its status, or any part of a draw's record left on it) and writes nothing. A press reads for
+at most ``BUDGET_S`` seconds; past it, it writes nothing and the shop says the press did not answer in time.
 
 Test-only routes, ON ONLY when the process starts with ``PP_TEST_MODES=1`` in its environment and the caller sends
 the ``X-PP-Admin`` token: ``GET /test/received`` returns the last presses as received. A partner's copy deletes them.
@@ -55,9 +56,11 @@ import shops  # noqa: E402
 
 ROUTES = {"/press/count": "count", "/press/draw": "draw"}   # the manifest's extension_subscriptions[].key for each
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
-READ_S = 6                           # the sales read may take this long; the shop waits 10 seconds at most, and a
-                                     # hosted function's cold start (about 2.5 s, APPF run 9) comes first
-SALE_FIELDS = ["name", "customer", "customer_group", "base_grand_total", "posting_date", "posting_time", "pos_profile"]
+READ_S = 6                           # one read may take this long, within BUDGET_S; the shop waits 10 seconds at most,
+                                     # and a hosted function's cold start (about 2.5 s, APPF run 9) comes first
+SALE_FIELDS = ["name", "customer", "customer_group", "base_grand_total", "base_rounded_total", "posting_date",
+               "posting_time", "pos_profile"]
+BUDGET_S = 7.0                       # the whole press: past it, the press stops before it writes anything
 NOT_SET_UP = ("Lucky draw is not set up yet. Ask your manager to choose its user on the app's feed and press "
               "Connect again.")
 REFUSED = ("Lucky draw may not read the sales or write the campaign. Ask your manager to check the app's user, its role "
@@ -154,13 +157,14 @@ def _now_text(now: float) -> str:
 
 
 class Service:
-    def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, now=None, randbelow=rng.randbelow):
+    def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, now=None, randbelow=rng.randbelow,
+                 clock=time.monotonic):
         self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
         prefix = (conf.get("LDW_PREFIX") or "").strip()
         if self.app and not prefix:      # the library's record type is not the sample's: every read would 404
             raise SystemExit("IVN_LIBRARY_APP is set but LDW_PREFIX is not (IVENDNEXT LDW for the App library's app)")
         draw.use_prefix(prefix or "PP LDW")
-        self.tenants, self.now, self.randbelow = tenants, now, randbelow
+        self.tenants, self.now, self.randbelow, self.clock = tenants, now, randbelow, clock
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
@@ -183,24 +187,33 @@ class Service:
         door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
         return site or "", secrets, door
 
-    def entries(self, door, rules: draw.Rules) -> list:
+    def left(self, t0: float) -> float:
+        """The time a read may still take; past the press's budget, nothing more is read and nothing is written."""
+        rest = BUDGET_S - (self.clock() - t0)
+        if rest <= 0:
+            raise TenantError("the press ran out of time")
+        return min(READ_S, rest)
+
+    def entries(self, door, rules: draw.Rules, t0: float) -> list:
         """The campaign's entries, read from the shop as they stand now."""
         sale_filters = [["docstatus", "=", 1], ["is_return", "=", 0], ["company", "=", rules.company],
                         ["posting_date", "between", [rules.start.isoformat(), rules.end.isoformat()]]]
         if rules.tills:
             sale_filters.append(["pos_profile", "in", rules.tills])
-        sales = door.rows("POS Invoice", SALE_FIELDS, sale_filters, timeout=READ_S)
-        returns = door.rows("POS Invoice", ["return_against", "base_grand_total"],
+        sales = door.rows("POS Invoice", SALE_FIELDS, sale_filters, timeout=self.left(t0))
+        returns = door.rows("POS Invoice", ["return_against", "base_grand_total", "base_rounded_total"],
                             [["docstatus", "=", 1], ["is_return", "=", 1], ["company", "=", rules.company],
-                             ["posting_date", ">=", rules.start.isoformat()]], timeout=READ_S)
-        walk_ins = {r.get("customer") for r in door.rows("POS Profile", ["name", "customer"], [])
+                             ["posting_date", ">=", rules.start.isoformat()]], timeout=self.left(t0))
+        walk_ins = {r.get("customer") for r in door.rows("POS Profile", ["name", "customer"], [], timeout=self.left(t0))
                     if isinstance(r, dict) and r.get("customer")}
         groups = None
         if rules.groups:
-            groups = draw.groups_under(door.rows("Customer Group", ["name", "lft", "rgt"], []), rules.groups)
+            groups = draw.groups_under(door.rows("Customer Group", ["name", "lft", "rgt"], [], timeout=self.left(t0)),
+                                       rules.groups)
         return draw.entries_of(sales, returns, walk_ins, rules, groups)
 
     def run(self, door, sub: str, name: str, user: str) -> dict:
+        t0 = self.clock()
         now = self.now if self.now is not None else time.time()
         try:
             c = door.doc(draw.CAMPAIGN, name)
@@ -208,14 +221,15 @@ class Service:
             if e.code == 404:
                 return _warning(GONE)
             raise
-        if sub == "draw" and c.get("status") == draw.DRAWN:
+        if sub == "draw" and draw.already_drawn(c):
             return draw.already_answer(c.get("drawn_on"), c.get("drawn_by"))
         rules = draw.rules_of(c)
         if isinstance(rules, str):
             return _warning(rules)
         if sub == "draw" and draw.today_at(c.get("hours_from_utc"), now) <= rules.end:
             return _warning(too_soon(rules.end))
-        entries = self.entries(door, rules)
+        entries = self.entries(door, rules, t0)
+        self.left(t0)                   # out of time after the reads: nothing is written
         sales, customers, n = len(entries), len({e[1] for e in entries}), sum(e[2] for e in entries)
         mark = draw.fingerprint(entries)
         body = {"counted_on": _now_text(now), "sales_counted": sales, "customers_counted": customers,

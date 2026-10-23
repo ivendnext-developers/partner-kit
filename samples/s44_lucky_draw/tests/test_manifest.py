@@ -60,7 +60,7 @@ class ManifestTest(unittest.TestCase):
         perms = {p["role"]: p for p in self.types["PP LDW Campaign"]["permissions"]}
         self.assertEqual(sorted(perms), ["PP LDW Integration", "PP LDW Manager", "System Manager"])
         self.assertEqual(sorted(k for k, v in perms["PP LDW Integration"].items() if v == 1), ["read", "write"])
-        self.assertEqual(perms["PP LDW Manager"]["create"], 1)
+        self.assertEqual((perms["PP LDW Manager"]["create"], perms["PP LDW Manager"]["delete"]), (1, 0))   # no delete-and-redraw
 
     def test_the_addresses_are_the_services(self):
         self.assertEqual(self.m["allowed_urls"], [s["endpoint_url"] for s in self.m["extension_subscriptions"]])

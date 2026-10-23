@@ -37,7 +37,7 @@ def campaign(**k):
 
 
 def sale(name, customer, total, day="2026-10-02", till="POS-A", group="Members", time_="10:00:00", company="PP Co"):
-    return {"name": name, "customer": customer, "customer_group": group, "base_grand_total": total,
+    return {"name": name, "customer": customer, "customer_group": group, "base_grand_total": total, "base_rounded_total": total,
             "posting_date": day, "posting_time": time_, "pos_profile": till, "company": company, "docstatus": 1,
             "is_return": 0}
 
@@ -313,7 +313,7 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((dt, fields), ("POS Invoice", app.SALE_FIELDS))
         self.assertEqual(filters, [["docstatus", "=", 1], ["is_return", "=", 0], ["company", "=", "PP Co"],
                                    ["posting_date", "between", ["2026-10-01", "2026-10-31"]]])
-        self.assertEqual(rfields, ["return_against", "base_grand_total"])
+        self.assertEqual(rfields, ["return_against", "base_grand_total", "base_rounded_total"])
         self.assertIn(["docstatus", "=", 1], rfilters)
 
     def test_s20_a_shop_that_does_not_answer_is_the_shops_timeout_sentence(self):
@@ -323,6 +323,36 @@ class ServiceTest(unittest.TestCase):
 
         code, out = self.service(Down()).handle("POST", "/press/count", signed(body(), SECRETS["count"]), body())
         self.assertEqual(code, 502)
+
+    def test_s21_a_status_set_back_to_open_by_hand_draws_nothing(self):
+        t = FakeTenant()
+        svc = self.service(t)
+        self.press(svc, "draw")
+        t.c["status"] = "Open"                                  # changed outside the form, the draw's record left
+        out = self.press(svc, "draw")
+        self.assertTrue(out["message"]["body"].startswith("Already drawn on 2026-11-01 06:00 UTC"))
+        self.assertEqual(len(t.writes), 1)
+
+    def test_s22_a_press_out_of_time_writes_nothing(self):
+        class Slow:                                             # every read takes 3 s on the press's own clock
+            def __init__(self):
+                self.t = 0.0
+
+            def __call__(self):
+                return self.t
+
+        clock = Slow()
+
+        class SlowShop(FakeTenant):
+            def rows(self, *a, **k):
+                clock.t += 3
+                return super().rows(*a, **k)
+
+        t = SlowShop()
+        conf = {"PP_COUNT_SECRET": SECRETS["count"], "PP_DRAW_SECRET": SECRETS["draw"]}
+        svc = app.Service(conf, t, now=AFTER, randbelow=Picks(0, 0, 0), clock=clock)
+        code, out = svc.handle("POST", "/press/draw", signed(body(), SECRETS["draw"]), body())
+        self.assertEqual((code, t.writes), (502, []))
 
     def test_health_and_an_unknown_route(self):
         svc = self.service(FakeTenant())

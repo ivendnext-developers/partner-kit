@@ -44,7 +44,7 @@ A shop runs a *shop and win* campaign: every so much a customer spends at its ti
    - check the signature (that button's subscription's secret);
    - read the campaign (`GET /api/resource/PP LDW Campaign/<name>`); on *Draw winners*, answer *Already drawn* when it reads *Drawn*, and refuse before the campaign's last day has ended at the shop;
    - read, with the app's user, one list read each (`GET /api/resource/<type>?fields=…&filters=…&limit_page_length=0`): the submitted till sales of the campaign's company and days (and tills), the submitted returns since its first day, every POS Profile's walk-in `customer`, and, when the campaign lists groups, the Customer Group tree (`lft`, `rgt`);
-   - count each sale's entries: its `base_grand_total` less its returns, divided by the spend, rounded down, capped; leave out the walk-in customer and the groups not taking part; number the entries through the sales in order of date, time and number;
+   - count each sale's entries: what the customer paid (`base_rounded_total`, or `base_grand_total` when the shop does not round) less its returns, divided by the spend, rounded down, capped; leave out the walk-in customer and the groups not taking part; number the entries through the sales in order of date, time and number;
    - on *Count entries*, write the counts and the list's fingerprint; on *Draw winners*, draw with a cryptographic random source, one place per customer, winners then reserves, and write the results, the draw's record and *Drawn* (`PUT` with the campaign's `modified` as read);
    - answer with a message and `refresh` (the extension point's vocabulary).
 
@@ -52,13 +52,15 @@ A shop runs a *shop and win* campaign: every so much a customer spends at its ti
 
 ## Tell the winners
 
-The app writes the winners; telling them is the shop's own. A shop's **Notification** on the campaign, *Send Alert On: Value Change* of *Status*, with the condition `doc.status == "Drawn"`, channel *SMS* or *Email*, its recipient by the results' `mobile_no` or `email_id`, sends each winner the news (the manifest's own notifications go only to the shop's users). Write your text with the campaign's `prize`.
+The app writes the winners; calling them is the shop's. A shop's own Notification reads only the campaign's own fields, so it cannot send to each result's mobile: a message to each winner is a partner's version, from your own service after the draw.
 
 ## Bounds
 
 - **Till sales only**: a Desk sale (Sales Invoice) or a web order does not count.
 - **Draw once every till has sent its sales**: a sale that reaches the shop after the draw is not in it.
-- **One press reads the whole campaign.** The shop waits 10 seconds for a button; on our test bench the shop answered 12,157 sales (2.7 MB) in under a fifth of a second to a service beside it; a hosted service reads across the internet, so split a campaign of more than about 50,000 sales by till.
+- **One press reads the whole campaign.** On our test bench the shop answered 12,157 sales (2.7 MB) in under a fifth of a second to a service beside it. A press stops reading after 7 seconds and then writes nothing: split a campaign that large by till.
+- **Returns** are the till's own; a credit note made in Desk against the day's closing invoice takes no entries off.
+- **The app never draws twice**; the manager role cannot delete a campaign. Someone with write on campaigns can still change a drawn campaign outside its form, through the API; the campaign's history (its version log) shows every such change. Give the manager role only to people you trust.
 - **The customer's own entries** are not shown at the till or on the receipt.
 - **Removing the app removes its campaigns.**
 

@@ -31,6 +31,13 @@ SKEW_S = 300             # a request stamped further than this from our clock is
 BODY_MAX = 256 * 1024
 MOST_WINNERS, MOST_RESERVES = 50, 20
 DRAWN = "Drawn"
+DRAW_RECORD = ("drawn_on", "draw_fingerprint", "drawn_numbers")
+
+
+def already_drawn(c: dict) -> bool:
+    """Drawn by its status, or by any part of a draw's record or results left on it (a status set back to Open by hand
+    does not open a second draw)."""
+    return c.get("status") == DRAWN or any(c.get(k) for k in DRAW_RECORD) or bool(c.get("results"))
 
 
 def use_prefix(prefix: str):
@@ -123,10 +130,20 @@ def rules_of(c: dict) -> Rules | str:
         return f"Winners is a whole number from 1 to {MOST_WINNERS}."
     if reserves is None or not 0 <= reserves <= MOST_RESERVES:
         return f"Reserves is a whole number from 0 to {MOST_RESERVES}."
+    hours = c.get("hours_from_utc")
+    if hours not in (None, "") and (isinstance(hours, bool) or not isinstance(hours, (int, float))
+                                    or not -12 <= hours <= 14):
+        return "Hours from UTC is between -12 and 14 (4 for Dubai, -6 for Mexico City), or blank for UTC."
     tills = sorted({r.get("pos_profile") for r in c.get("tills") or [] if isinstance(r, dict) and r.get("pos_profile")})
     groups = sorted({r.get("customer_group") for r in c.get("customer_groups") or []
                      if isinstance(r, dict) and r.get("customer_group")})
     return Rules(c["company"], start, end, spend, most, winners, reserves, tills, groups)
+
+
+def paid(sale: dict) -> Decimal | None:
+    """What the customer paid, in the company's currency: the rounded total when the shop rounds, else the total."""
+    rounded = _money(sale.get("base_rounded_total"))
+    return rounded if rounded else _money(sale.get("base_grand_total"))
 
 
 def groups_under(tree: list[dict], chosen: list[str]) -> set[str]:
@@ -135,7 +152,7 @@ def groups_under(tree: list[dict], chosen: list[str]) -> set[str]:
     spans = [(l, r) for l, r in spans if isinstance(l, int) and isinstance(r, int)]
     out = set(chosen)
     for g in tree:
-        if isinstance(g, dict) and isinstance(g.get("lft"), int) and any(l <= g["lft"] and g["rgt"] <= r
+        if isinstance(g, dict) and isinstance(g.get("lft"), int) and isinstance(g.get("rgt"), int) and any(l <= g["lft"] and g["rgt"] <= r
                                                                          for l, r in spans):
             out.add(g["name"])
     return out
@@ -150,7 +167,7 @@ def entries_of(sales: list[dict], returns: list[dict], walk_ins: set[str], rules
     campaign's most per sale. A sale with no whole entry is left out."""
     back: dict[str, Decimal] = {}
     for r in returns:
-        amount = _money(r.get("base_grand_total")) if isinstance(r, dict) else None
+        amount = paid(r) if isinstance(r, dict) else None
         if amount is not None and r.get("return_against"):
             back[r["return_against"]] = back.get(r["return_against"], Decimal(0)) + amount
     out = []
@@ -164,16 +181,26 @@ def entries_of(sales: list[dict], returns: list[dict], walk_ins: set[str], rules
             continue
         if groups is not None and s.get("customer_group") not in groups:
             continue
-        total = _money(s.get("base_grand_total"))
+        total = paid(s)
         if total is None:
             continue
         n = int(((total + back.get(s["name"], Decimal(0))) / rules.spend).to_integral_value(rounding=ROUND_FLOOR))
         if rules.most:
             n = min(n, rules.most)
         if n > 0:
-            out.append((str(day), str(s.get("posting_time") or ""), s["name"], customer, n))
+            out.append((day, seconds_of(s.get("posting_time")), s["name"], customer, n))
     out.sort()
     return [(name, customer, n) for _, _, name, customer, n in out]
+
+
+def seconds_of(t) -> float:
+    """A sale's time as seconds after midnight. The shop sends it as text with no leading zero on the hour and with or
+    without fractions of a second (``9:05:00``, ``14:30:12.512``), so text order is not time order."""
+    try:
+        h, m, s = str(t or "0:0:0").split(":")
+        return int(h) * 3600 + int(m) * 60 + float(s)
+    except ValueError:
+        return 0.0
 
 
 def fingerprint(entries: list[tuple[str, str, int]]) -> str:

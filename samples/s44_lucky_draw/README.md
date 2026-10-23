@@ -12,7 +12,7 @@ A shop runs a *shop and win* campaign: every 200 spent at its tills during the c
 4. **Draw winners**, after the last day: the service counts again, draws, and writes the results (rank, winner or reserve, customer, their entries, the entry number drawn and the sale that holds it), the draw's record (when, who, the entries, their fingerprint, the numbers drawn) and *Drawn*. *"Drew 3 winners and 2 reserves from 1,036 entries. The results are on the campaign."* The shop fills in each winner's name, mobile and e-mail from its own customer record.
 5. The manager calls the winners (a reserve when a winner cannot be reached), hands over the prizes and ticks *Handed over*.
 
-The **Draw winners** button is gone once the campaign is drawn, and the campaign's rule can no longer change: a draw is never repeated.
+The **Draw winners** button is gone once the campaign is drawn, the form locks its rule, and the app never draws it again.
 
 ## What the shop does
 
@@ -73,13 +73,13 @@ What a partner usually changes:
 - **the rule:** entries per item bought or per brand; double entries on some days; entries for Desk sales or web orders too; one entry per customer per day;
 - **the prize:** issue each winner a gift card (the shop's own Gift Card, as S25 does) or loyalty points, instead of a prize the shop hands over;
 - **instant win:** a sale that wins at the till, at times the shop does not know (a check before payment answering *ask* with the news), on top of the draw;
-- **telling the customer:** the shop's own Notification on the campaign, by SMS or e-mail to the results' mobile or e-mail, when it reads *Drawn*; or each customer's entries on their receipt (a print format of yours);
+- **telling the winners:** a message to each winner from your own service after the draw (the shop's own Notification reads only the campaign's own fields, so it cannot send to each result's mobile); or each customer's entries on their receipt (a print format of yours);
 - **the prefix:** `tools/manifest/rename.py` makes your copy under your own reserved prefix in one step; the service takes its prefix from `LDW_PREFIX`;
 - **its records:** `tools/deploy/copy_records.py` moves campaigns between a test site and the shop.
 
 ## Before you copy it
 
-- **A draw is never repeated.** The service reads the campaign first and answers *Already drawn* when it reads *Drawn*; the button also shows only while it is not drawn, and the shop checks that again at the press.
+- **A draw is never repeated by the app.** The service reads the campaign first and answers *Already drawn* when it reads *Drawn* or carries any part of a draw's record or results (a status set back to *Open* by hand does not open a second draw); the button also shows only while it is not drawn, and the shop checks that again at the press. The manager role cannot delete a campaign. Someone with write on campaigns can still change a drawn campaign outside its form, through the API; the campaign's history (its version log) shows every such change. Give the manager role only to people you trust.
 - **An edit is never overwritten.** The write carries the campaign's `modified` as read; the shop refuses a stale write (`TimestampMismatchError`), and the answer asks for another press. Two presses of *Draw winners* at once: one writes, the other is refused.
 - **A count after the draw** writes the counts only: the draw's record and the results stay as drawn.
 - **The random source** is the service's own (`secrets.randbelow`), never a seed anyone chose. Keep it so in your copy, and keep the record: the entries' fingerprint and the numbers drawn let anyone holding the sales check which sale each drawn number is.
@@ -102,7 +102,7 @@ What a partner usually changes:
 ### Entries, exactly
 
 - **A sale** is a submitted POS Invoice of the campaign's company, dated inside the campaign's days, on one of its tills (every till when none is listed), by a named customer (never a till's walk-in customer, read from each POS Profile), in one of its customer groups or a group below one (every customer when none is listed). The group is the one the sale recorded, as it was at the sale.
-- **Its entries** are its total in the company's currency (`base_grand_total`), less every submitted return made against it so far, divided by the spend for one entry, rounded down, at most the campaign's *most entries per sale*. The arithmetic is exact (decimal, never a float).
+- **Its entries** are its total in the company's currency as the customer paid it (`base_rounded_total`, or `base_grand_total` when the shop does not round), less every submitted till return made against it so far, divided by the spend for one entry, rounded down, at most the campaign's *most entries per sale*. The arithmetic is exact (decimal, never a float).
 - **The numbering**: entries are numbered 1, 2, 3 … through the sales in order of date, time and number. The fingerprint is the SHA-256 of the list, one `sale<TAB>customer<TAB>entries` line each.
 - **The draw** picks one entry of those still in the pool, each with the same chance; that entry's customer takes the place, and all their entries leave the pool; then the next place. Winners first, then reserves.
 
@@ -110,6 +110,7 @@ What a partner usually changes:
 
 - **Till sales only.** Desk sales (Sales Invoice) and web orders do not count.
 - **The campaign's last day** ends at midnight by the campaign's *hours from UTC*; the draw is refused before. Draw once every till has sent its sales: a till that was offline sends its last day's sales when it reconnects, and a sale that arrives after the draw is not in it.
-- **One press reads the whole campaign** in one read of its sales. On our test bench the shop answered that read for 12,157 sales (2.7 MB) in under a fifth of a second, to a service beside it; a shop waits 10 seconds for a button, and a hosted service reads across the internet, so a campaign of more than about 50,000 sales is split into more than one campaign, by till.
+- **One press reads the whole campaign** in one read of its sales. On our test bench the shop answered that read for 12,157 sales (2.7 MB) in under a fifth of a second, to a service beside it; a hosted service reads across the internet, which was not measured at that size. A press stops reading after 7 seconds and then writes nothing (the shop's words: *did not answer in time*): split a campaign that large into more than one, by till.
+- **Returns** are the till's returns made against the sale. A credit note made in Desk against the day's closing invoice does not take entries off.
 - **A customer's own entries** are not shown at the till or on the receipt; a count gives the totals.
 - **Removing the app** removes its campaigns.
