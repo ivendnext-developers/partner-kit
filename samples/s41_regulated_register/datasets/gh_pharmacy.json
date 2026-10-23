@@ -1,0 +1,102 @@
+{
+  "format": 1,
+  "id": "gh_pharmacy",
+  "title": "Ghana: Dangerous Drugs Record",
+  "jurisdiction": "GH",
+  "vertical": "pharmacy",
+  "certified": 0,
+  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. The Act names the book and what is recorded before a Class A supply, in that order; it sets no layout, no retention period for the book and no way to correct an entry, so this set keeps it 10 years and corrects by a reversing line (the strictest). Every supply out is entered (a sale, an issue, a disposal), not a move between the shop's own stores or a loss; no column is required on the Desk, so a disposal the regulator witnesses is never refused. Until the register door books a return by its direction, a customer's return prints as a supply: mark it by hand. The book is also kept by a Class B supplier (s. 34(1)), but the Act sets no entry for a Class B supply: none is booked here.",
+  "sources": [
+    "Pharmacy Act, 1994 (Act 489): ss. 31, 32(b), 34, 35, 37 (moh.gov.gh copy)"
+  ],
+  "authority": {
+    "pos_sale_details": {
+      "authority_no": "PP RXC Rx Number",
+      "authority_issuer": "PP RXC Prescriber",
+      "authority_issuer_licence": "PP RXC Prescriber Licence"
+    },
+    "desk_fields": {
+      "authority_no": "pp_rxc_rx_number",
+      "authority_issuer": "pp_rxc_prescriber",
+      "authority_issuer_licence": "pp_rxc_prescriber_licence"
+    },
+    "dispenser_licence": {
+      "doctype": "PP RXC Pharmacist",
+      "match": "user",
+      "field": "licence_number"
+    }
+  },
+  "books": [
+    {
+      "id": "dangerous_drugs_record",
+      "title": "Dangerous Drugs Record",
+      "form": "Act 489 s. 34",
+      "cite": "Act 489 s. 34(1)-(2): recorded before each Class A supply; s. 34(3) waives the entry where the prescription is retained and referred to (not taken here: every supply is entered)",
+      "classes": [
+        "GH Class A"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "GH Act 489 classes"
+      },
+      "conditions": [
+        {
+          "field": "direction",
+          "operator": "=",
+          "value": "Out"
+        },
+        {
+          "field": "kind",
+          "operator": "!=",
+          "value": "Transfer"
+        },
+        {
+          "field": "kind",
+          "operator": "!=",
+          "value": "Loss"
+        }
+      ],
+      "numbering": "book_store",
+      "balance": 0,
+      "correction": "reversing_line",
+      "retention_years": 10,
+      "medium": "printed_book",
+      "medium_note": "A book by name (s. 34(1)); the Act says nothing of electronic records: print each day's pages, sign them and keep them as the book. The Act states no period for this book: 10 years is this set's choice (the prescription itself is kept two years, s. 32(b)).",
+      "required": [],
+      "columns": [
+        {
+          "label": "Name and quantity of the drug supplied",
+          "value": [
+            "item_name",
+            "qty",
+            "uom"
+          ]
+        },
+        {
+          "label": "Name, address, and signature or thumbprint of the person to whom it is supplied",
+          "value": [
+            "counterparty",
+            "counterparty_address"
+          ],
+          "mark": 1
+        },
+        {
+          "label": "Signature of the person who supplies the drug",
+          "value": [
+            "dispenser_name"
+          ],
+          "mark": 1
+        },
+        {
+          "label": "Date of supply",
+          "value": [
+            "movement_date"
+          ]
+        }
+      ]
+    }
+  ]
+}

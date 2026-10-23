@@ -1,0 +1,350 @@
+{
+  "format": 1,
+  "id": "mx_pharmacy",
+  "title": "Mexico: libros de control",
+  "jurisdiction": "MX",
+  "vertical": "pharmacy",
+  "certified": 0,
+  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. RIS Art. 117 lists what is recorded on filling a retained special prescription; Art. 124 VII asks for entries and exits, and the data of an entry are not listed: this set prints its date and quantity. The prescription's issue date prints empty until the counter app records it: write it in. The RIS states no retention period for the book and no way to correct it, so this set keeps it 10 years and corrects by a reversing line (the strictest). Raw materials (Art. 159 IV) and the magistral prescriptions book of a drogueria (Art. 124 VI) are not in this set.",
+  "sources": [
+    "Reglamento de Insumos para la Salud, última reforma DOF 31-05-2021: Arts. 46, 117, 124 VII, 125, 159 (Orden Jurídico Nacional text, as archived 2024-06-11)",
+    "Ley General de Salud, últimas reformas DOF 15-01-2026: Art. 226 I-III, Art. 375 IV"
+  ],
+  "details": {
+    "dose": {
+      "label": "Dosificación",
+      "type": "Data",
+      "pos_sale_detail": "PP RXC Directions",
+      "desk_field": "pp_rxc_directions"
+    },
+    "prescriber_address": {
+      "label": "Domicilio del médico",
+      "type": "Data",
+      "own": 1
+    }
+  },
+  "authority": {
+    "pos_sale_details": {
+      "authority_no": "PP RXC Rx Number",
+      "authority_issuer": "PP RXC Prescriber",
+      "authority_issuer_licence": "PP RXC Prescriber Licence"
+    },
+    "desk_fields": {
+      "authority_no": "pp_rxc_rx_number",
+      "authority_issuer": "pp_rxc_prescriber",
+      "authority_issuer_licence": "pp_rxc_prescriber_licence"
+    },
+    "dispenser_licence": {
+      "doctype": "PP RXC Pharmacist",
+      "match": "user",
+      "field": "licence_number"
+    }
+  },
+  "books": [
+    {
+      "id": "fraccion_i",
+      "title": "Libro de control fraccion I",
+      "form": "Fracción I: Medicamentos que sólo pueden adquirirse con receta o permiso especial",
+      "cite": "LGS Art. 226 I; RIS Art. 159 I: a section per product, for control and balance; Art. 117 its data; Art. 124 VII entries and exits, signed by the responsable sanitario (Art. 125)",
+      "classes": [
+        "MX Fraccion I"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "MX LGS Art. 226"
+      },
+      "conditions": [],
+      "numbering": "book_store_item",
+      "balance": 1,
+      "per_item_pages": 1,
+      "correction": "reversing_line",
+      "retention_years": 10,
+      "medium": "official_book",
+      "medium_note": "Libretas foliadas authorised by the Secretaría (RIS Art. 159; LGS Art. 375 IV): print into them, or keep the book in an authorised system (RIS Arts. 46, 117). The RIS states no period for the book (Art. 45 keeps the documents proving lawful holding 3 years): 10 years is this set's choice.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Fecha de entrada",
+          "value": [
+            "movement_date"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "Entrada: cantidad",
+          "value": [
+            "qty"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "Número de folio de la receta médica especial",
+          "value": [
+            "authority_no"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Fecha en que fue emitida",
+          "value": [
+            "authority_date"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Nombre del medicamento prescrito",
+          "value": [
+            "item_name"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Cantidad",
+          "value": [
+            "qty"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Dosificación",
+          "value": [
+            "detail:dose"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Saldo",
+          "value": [
+            "balance"
+          ]
+        },
+        {
+          "label": "Nombre, domicilio y número de cédula profesional del médico que prescribe",
+          "value": [
+            "authority_issuer",
+            "detail:prescriber_address",
+            "authority_issuer_licence"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Fecha del descargo del medicamento",
+          "value": [
+            "movement_date"
+          ],
+          "when": "Out"
+        }
+      ]
+    },
+    {
+      "id": "fraccion_ii",
+      "title": "Libro de control fraccion II",
+      "form": "Fracción II: Medicamentos que requieren para su adquisición receta médica que deberá retenerse en la farmacia que la surta",
+      "cite": "LGS Art. 226 II; RIS Art. 159 II: a section per product, for control and balance; Art. 117 its data; Art. 124 VII entries and exits, signed by the responsable sanitario (Art. 125)",
+      "classes": [
+        "MX Fraccion II"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "MX LGS Art. 226"
+      },
+      "conditions": [],
+      "numbering": "book_store_item",
+      "balance": 1,
+      "per_item_pages": 1,
+      "correction": "reversing_line",
+      "retention_years": 10,
+      "medium": "official_book",
+      "medium_note": "Libretas foliadas authorised by the Secretaría (RIS Art. 159; LGS Art. 375 IV): print into them, or keep the book in an authorised system (RIS Arts. 46, 117). The RIS states no period for the book (Art. 45 keeps the documents proving lawful holding 3 years): 10 years is this set's choice.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Fecha de entrada",
+          "value": [
+            "movement_date"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "Entrada: cantidad",
+          "value": [
+            "qty"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "Número de folio de la receta médica especial",
+          "value": [
+            "authority_no"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Fecha en que fue emitida",
+          "value": [
+            "authority_date"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Nombre del medicamento prescrito",
+          "value": [
+            "item_name"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Cantidad",
+          "value": [
+            "qty"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Dosificación",
+          "value": [
+            "detail:dose"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Saldo",
+          "value": [
+            "balance"
+          ]
+        },
+        {
+          "label": "Nombre, domicilio y número de cédula profesional del médico que prescribe",
+          "value": [
+            "authority_issuer",
+            "detail:prescriber_address",
+            "authority_issuer_licence"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Fecha del descargo del medicamento",
+          "value": [
+            "movement_date"
+          ],
+          "when": "Out"
+        }
+      ]
+    },
+    {
+      "id": "fraccion_iii",
+      "title": "Libro de control fraccion III",
+      "form": "Fracción III: Medicamentos que sólo pueden adquirirse con receta médica que se podrá surtir hasta tres veces",
+      "cite": "LGS Art. 226 III; RIS Art. 159 III: a section per product, for control and balance; Art. 117 its data; Art. 124 VII entries and exits, signed by the responsable sanitario (Art. 125)",
+      "classes": [
+        "MX Fraccion III"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "MX LGS Art. 226"
+      },
+      "conditions": [],
+      "numbering": "book_store_item",
+      "balance": 1,
+      "per_item_pages": 1,
+      "correction": "reversing_line",
+      "retention_years": 10,
+      "medium": "official_book",
+      "medium_note": "Libretas foliadas authorised by the Secretaría (RIS Art. 159; LGS Art. 375 IV): print into them, or keep the book in an authorised system (RIS Arts. 46, 117). The RIS states no period for the book (Art. 45 keeps the documents proving lawful holding 3 years): 10 years is this set's choice.",
+      "required": [],
+      "columns": [
+        {
+          "label": "Fecha de entrada",
+          "value": [
+            "movement_date"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "Entrada: cantidad",
+          "value": [
+            "qty"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "Número de folio de la receta médica especial",
+          "value": [
+            "authority_no"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Fecha en que fue emitida",
+          "value": [
+            "authority_date"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Nombre del medicamento prescrito",
+          "value": [
+            "item_name"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Cantidad",
+          "value": [
+            "qty"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Dosificación",
+          "value": [
+            "detail:dose"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Saldo",
+          "value": [
+            "balance"
+          ]
+        },
+        {
+          "label": "Nombre, domicilio y número de cédula profesional del médico que prescribe",
+          "value": [
+            "authority_issuer",
+            "detail:prescriber_address",
+            "authority_issuer_licence"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "Fecha del descargo del medicamento",
+          "value": [
+            "movement_date"
+          ],
+          "when": "Out"
+        }
+      ]
+    }
+  ],
+  "columns_from": {
+    "Purchase Receipt": {
+      "reference_no": "supplier_delivery_note"
+    },
+    "Purchase Invoice": {
+      "reference_no": "bill_no"
+    },
+    "Stock Entry": {
+      "reference_no": "custom_external_reference_no"
+    }
+  }
+}

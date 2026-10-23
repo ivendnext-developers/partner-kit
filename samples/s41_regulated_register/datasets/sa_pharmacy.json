@@ -1,0 +1,203 @@
+{
+  "format": 1,
+  "id": "sa_pharmacy",
+  "title": "Saudi Arabia: narcotics and psychotropics register",
+  "jurisdiction": "SA",
+  "vertical": "pharmacy",
+  "certified": 0,
+  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. Art. 22(3) lists the register's data, lettered; each column is headed by its letter. Item (a), the drug's scientific name, form, strength and size, heads each page: put them in the item's name. Item (b), the previous balance, is the balance on the line above. The patient's age, ID number and medical file print empty until the register reads them from the customer: write them in. Item (g) is for warehouses only. The yearly close (Art. 22(5)) and the six-monthly statement (Art. 16) are not set up yet, nor the pharmacy's prescriptions register (Art. 21(2), kept 5 years), which lists no fields.",
+  "sources": [
+    "Executive Regulation of the Narcotics and Psychotropic Substances Control Law, Council of Ministers Resolution 201 of 10/6/1431H: Arts. 16, 21, 22 (Bureau of Experts text, as archived 2026-02-09)"
+  ],
+  "details": {
+    "patient_age": {
+      "label": "عمر المريض",
+      "type": "Data"
+    },
+    "patient_id": {
+      "label": "رقم الهوية",
+      "type": "Data"
+    },
+    "medical_file_no": {
+      "label": "الملف الطبي",
+      "type": "Data"
+    }
+  },
+  "authority": {
+    "pos_sale_details": {
+      "authority_no": "PP RXC Rx Number",
+      "authority_issuer": "PP RXC Prescriber",
+      "authority_issuer_licence": "PP RXC Prescriber Licence"
+    },
+    "desk_fields": {
+      "authority_no": "pp_rxc_rx_number",
+      "authority_issuer": "pp_rxc_prescriber",
+      "authority_issuer_licence": "pp_rxc_prescriber_licence"
+    },
+    "dispenser_licence": {
+      "doctype": "PP RXC Pharmacist",
+      "match": "user",
+      "field": "licence_number"
+    }
+  },
+  "books": [
+    {
+      "id": "drug_register",
+      "title": "Narcotics and psychotropics register",
+      "form": "سجل خاص لكل دواء يحتوي على مادة مخدرة أو مؤثر عقلي (المادة 22)",
+      "cite": "Executive Regulation Art. 22(1): a register for each drug; (2) pages serially numbered; (3) its data; (4) indelible ink, an amendment signed; (6) kept 10 years",
+      "classes": [
+        "SA Narcotic",
+        "SA Psychotropic"
+      ],
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "SA Narcotics and psychotropics"
+      },
+      "conditions": [],
+      "numbering": "book_store_item",
+      "balance": 1,
+      "per_item_pages": 1,
+      "correction": "signed_amendment",
+      "retention_years": 10,
+      "medium": "printed_book",
+      "medium_note": "Written in indelible ink (Art. 22(4)); SFDA verifies any technology for recording receipts (Art. 22(8)): until it has, keep this book's printed pages, signed, as the book.",
+      "required": [],
+      "columns": [
+        {
+          "label": "(ج) الكمية الواردة",
+          "value": [
+            "qty"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "(ج) رقم التشغيل",
+          "value": [
+            "batch_no"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "(ج) تاريخ الصلاحية",
+          "value": [
+            "expiry_date"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "(د) الجهة الوارد منها",
+          "value": [
+            "counterparty"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "(د) تاريخ الورود",
+          "value": [
+            "movement_date"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "(هـ) المجموع الكلي",
+          "value": [
+            "balance"
+          ],
+          "when": "In"
+        },
+        {
+          "label": "(و) الكمية المصروفة",
+          "value": [
+            "qty"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "(و) رقم التشغيل",
+          "value": [
+            "batch_no"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "(و) تاريخ الصرف",
+          "value": [
+            "movement_date"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "(و) اسم من صرفها وتوقيعه",
+          "value": [
+            "dispenser_name"
+          ],
+          "when": "Out",
+          "mark": 1
+        },
+        {
+          "label": "(ح) اسم المريض",
+          "value": [
+            "counterparty"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "(ح) عمره",
+          "value": [
+            "detail:patient_age"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "(ح) رقم الهوية",
+          "value": [
+            "detail:patient_id"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "(ح) الملف الطبي",
+          "value": [
+            "detail:medical_file_no"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "(ح) رقم الوصفة",
+          "value": [
+            "authority_no"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "(ح) اسم من وصفها",
+          "value": [
+            "authority_issuer"
+          ],
+          "when": "Out"
+        },
+        {
+          "label": "(ط) الكمية الباقية",
+          "value": [
+            "balance"
+          ]
+        }
+      ]
+    }
+  ],
+  "columns_from": {
+    "Purchase Receipt": {
+      "reference_no": "supplier_delivery_note"
+    },
+    "Purchase Invoice": {
+      "reference_no": "bill_no"
+    },
+    "Stock Entry": {
+      "reference_no": "custom_external_reference_no"
+    }
+  }
+}

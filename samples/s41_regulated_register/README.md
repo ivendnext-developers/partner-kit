@@ -2,7 +2,7 @@
 
 A shop selling regulated stock keeps a legal register an inspector can ask for at any time: a pharmacy's poisons and controlled-drug books, a liquor or tobacco register, a duty-free ledger. Today most keep it on paper. This app keeps it for them: **one app for any regulated stock**, whose books (which book, which items, which movements, which columns, which printed layout) are a **data set** per market and vertical. A second market, or a second vertical, is a new data set file with no code change.
 
-The first data set is **Kenya's three pharmacy books**: the Poisons Book (Rules Schedule VIII Form 16), the Prescription Book (Act s. 31(1)(b)) and the NPP Ledger Book (PPB NPP Guidelines Annex II), with the routing Kenya's law asks for: a supply on prescription goes to the Prescription Book, **not** the Poisons Book (s. 31(2)); every movement of a controlled drug goes to the NPP ledger as well.
+The first data set is **Kenya's three pharmacy books**: the Poisons Book (Rules Schedule VIII Form 16), the Prescription Book (Act s. 31(1)(b)) and the NPP Ledger Book (PPB NPP Guidelines Annex II), with the routing Kenya's law asks for: a supply on prescription goes to the Prescription Book, **not** the Poisons Book (s. 31(2)); every movement of a controlled drug goes to the NPP ledger as well. Seven more markets follow as data sets, with no code change: Jordan, Nigeria, the UAE's Abu Dhabi, Saudi Arabia, Egypt, Ghana and Mexico ([the other markets](#the-other-markets)).
 
 ⚠ **Every layout here is a starting point, not certified for the country.** It is read from the instruments named in the data set, and each print says so. A partner certifies it for a market, changes it, or adds a market.
 
@@ -35,7 +35,7 @@ Until the door is there, the shop's books are kept as before. Setting this app u
 
 A column prints one or more of the line's columns (`movement_date`, `item_name`, `qty`, `counterparty`, `authority_no`, `balance` …, the door's line) or a declared detail (`detail:occupation`), joined with ` · `. `when: "In"` or `"Out"` prints it only on receipts or only on issues (the NPP ledger's two halves); `mark: 1` leaves room for a signature on the printed page; `in_colour` prints received quantities in a colour (Kenya: red ink, s. 8.1(i)).
 
-`build.py`'s `check()` is the format: it refuses `in` (a list of classes is the book's `classes`), a fourth condition, a comparison against a date (a date is not a number to the condition form), a column the line does not have, markup or template text in any label, and the rest, each in words. `routing.py` models which books a line enters, so you can test a data set before the door is installed.
+`build.py`'s `check()` is the format: it refuses `in` (a list of classes is the book's `classes`), a fourth condition, a comparison of a column against a date value (a date is not a number to the condition form; ⚠ it does not yet refuse a date column compared with a number, which never holds: don't write one), a column the line does not have, markup or template text in any label, and the rest, each in words. `routing.py` models which books a line enters, so you can test a data set before the door is installed.
 
 ## Kenya's three books
 
@@ -53,6 +53,32 @@ So a prescription supply of pethidine (a Part I poison on one axis, a controlled
 
 ⚠ **One prescription per sale.** The till's sale details belong to the whole sale, so a basket holding a poison on prescription and another sold without one would put both in the Prescription Book. The counter-rules app refuses such a line (its schedule's tick *Sold in a sale of its own when not on the prescription*): tick it on the Part I poison schedule, and the cashier sells the other as a sale of its own.
 
+## The other markets
+
+Each is one file in `datasets/`. Jordan's and Nigeria's columns are their printed forms, read off the form images; the others are the data their law lists, in its order, because no form is printed. Labels are the instrument's own words, Arabic or Spanish where the instrument is; where a label adds a word (a group, a letter, Abu Dhabi's *brand and generic name* from s. 7.7, Mexico's entry columns), the data set's notice says so.
+
+| Market | Books | Takes · routing | Numbering · balance | Correction | Kept | Medium |
+|---|---|---|---|---|---|---|
+| **Jordan** (JFDA Instructions 2025) | **Form 9** narcotics and psychotropics, 13 columns; **Form 8** Schedule 10 preparations, 9 columns | Schedules 1–9 · Schedule 10 (Law 23/2016 Art. 2) · every receipt and issue | per drug, a page each · running balance | reversing line (not stated: the strictest) | 5 years · 2 years | the book received from JFDA, or a JFDA-approved system (Art. 7, 11) |
+| **Nigeria** (Dangerous Drugs Regulations, First Schedule) | **Part A** (obtained) and **Part B** (sold or supplied) for six of reg. 18(1)(b)'s classes and one for the drugs Part III applies to by Order (amidone, pethidine …): 14 books. Codeine and dionin have none: the Modified Form Regulations take them out of reg. 18 for a retailer | Part A every movement in (`direction = In`), Part B every movement out (`direction = Out`): reg. 18(1)(a)'s *all dealings* | per store · none | dated marginal note, reg. 18(1)(f) | 2 years, reg. 26 | not stated: signed printed pages |
+| **UAE, Abu Dhabi** (DOH Standard 2021) | **PH 20** narcotic, **PH 17** psychotropic and semi-controlled | every movement (s. 3.6.1, 3.6.3) | per store · running balance | reversing line, s. 7.3 | 5 years, s. 7.4 | DOH's own book (s. 3.6) |
+| **Saudi Arabia** (Executive Regulation Art. 22) | one register **per drug**, 17 columns lettered as Art. 22(3) | narcotics and psychotropics · every movement | per drug, a page each · running balance | signed amendment, Art. 22(4) | 10 years, Art. 22(6) | signed printed pages until SFDA verifies a system (Art. 22(8)) |
+| **Egypt** (Law 182/1960, as first published) | the **received and dispensed book** | Schedule 1 · every movement (Art. 18) | per store · none | reversing line (not stated) | 10 years, Art. 31 | the authority's numbered, sealed book |
+| **Ghana** (Act 489 s. 34) | the **Dangerous Drugs Record** | Class A · every supply out: a sale, an issue, a disposal, never a move between the shop's own stores or a loss (`direction = Out`, `kind != Transfer`, `kind != Loss`); s. 34(3)'s waiver not taken | per store · none | reversing line (not stated) | 10 years (not stated: the longest cited) | a book: signed printed pages |
+| **Mexico** (RIS Arts. 117, 159) | a **libro de control** for each of LGS Art. 226's fracciones I, II and III | every entry and exit (Art. 124 VII) | per product, a page each · saldo | reversing line (not stated) | 10 years (not stated) | the authorised folioed book, or an authorised system (Art. 46) |
+
+⚠ **What a data set cannot print yet**, so the shop writes it in or waits: the patient's age, ID number and medical file (Saudi Arabia, Egypt) and the prescriptions-book entry number (Egypt) print as empty columns, because the register cannot yet read a value from the customer's record (the counter-rules app keeps the ID and the date of birth there). Mexico's prescription issue date and Jordan's special-prescription date print empty: the counter-rules app does not record a prescription's date on the sale. Nigeria's *ingredients of the prescription* is a Desk field: a counter sale prints it empty. Abu Dhabi's patient identifier (s. 7.2.1) is not printed. Jordan's Form 7, the daily prescriptions register, is a print of the counter-rules app's dispensing records, not a book here.
+
+⚠ **A return, and a loss, print as the register door prints them today.** A return follows its original's books, so a customer's return prints in a sales book (Kenya's two poisons books, Nigeria's Part B, Ghana's record) and a return to the supplier in Nigeria's Part A, each as a movement of its own; and a loss, disposal or issue prints in a dispensing half with its prescription and patient cells empty, saying nothing of what it was. Both are requested of the door (`PB-4`); until then, mark such an entry by hand.
+
+⚠ **Returns to the regulator are not set up**: Abu Dhabi's monthly and quarterly reports, Saudi Arabia's six-monthly statement and yearly close, and Egypt's six-monthly statement. A book's period gives its reminder a name the shop's install refuses, so no data set declares one yet.
+
+⚠ **Every market's books install in every shop.** The app builds one declaration from every data set, so a shop installing its next version gets every market's books (27 today), each switched on. Until a shop can choose its data set, a partner keeps only its market's file in `datasets/` and builds again.
+
+⚠ **Books the law names but these sets leave out:** Saudi Arabia's prescriptions register (Art. 21(2)) and Egypt's prescriptions book (Arts. 17, 18(ج)), whose fields the law does not list; Abu Dhabi's PH 18 (wards) and its unified prescribing platform (s. 3.9); Ghana's book for a Class B supplier, for which the Act sets no entry; Mexico's raw materials (Art. 159 IV) and a droguería's magistral book (Art. 124 VI).
+
+⚠ **Dubai** is not in the UAE set: its register book (DHA) is named in its guidelines, but its columns were not read. Cameroon and Rwanda are not researched.
+
 ## What the shop does (now)
 
 1. **Install the app** (the shop's administrator). It adds the *Register details* section to the Sales Invoice and the Delivery Note, the till's sale details, the role **PP RSR Register Approver**, the report and the workspace.
@@ -65,9 +91,11 @@ So a prescription supply of pethidine (a Part I poison on one axis, a controlled
 | File | What |
 |---|---|
 | `datasets/ke_pharmacy.json` | Kenya's three books, routing, columns and layouts, with their citations |
+| `datasets/jo_pharmacy.json`, `ng_pharmacy.json`, `ae_abu_dhabi_pharmacy.json`, `sa_pharmacy.json`, `eg_pharmacy.json`, `gh_pharmacy.json`, `mx_pharmacy.json` | the other markets' books, the same way |
 | `layouts/register.html` | the one print template every book uses: build.py writes the book's data above it. It reads the book's lines with `ivn_rows` as the person printing may read them, 200 at a time |
 | `build.py` | the format's check, and the build of `manifest.json` and `door_declaration.json` from the data sets |
 | `routing.py` | which books a line enters, as the door decides it |
+| `tests/test_markets.py` | each other market's data set: its routing, one test per cited rule; every book's printed headers pinned to its source; books rendered from fixture lines; three canaries (two for Nigeria's routing, one for Ghana's) |
 | `tests/test_rsr.py` | the manifest and its checks; each rule of the format broken once; Kenya's routing on fixture lines; each book rendered from lines shaped as the door's line; a second data set (`tests/fixtures/liquor_one_book.json`) built and rendered with no code change |
 
 ## Run it
@@ -87,7 +115,10 @@ python3 -m unittest discover -s samples/s41_regulated_register/tests -p 'test_*.
 - On the ERP's stock-entry path no supplier is carried, so the NPP ledger's *Received from* prints empty there; *Invoice no.* is the ERP's own log number.
 - The ledger's header shows the drug by its item name: put the strength in the name, as Annex II asks for it.
 - The workspace's links show only to someone who may read those record types: a System Manager alone sees none (on our bench, the links appeared once the user had the stock and accounts roles a register keeper has).
-- Dates print as the record holds them (`2026-10-20`). Labels are in English.
+- Dates print as the record holds them (`2026-10-20`). The print's own words are in English: its number column (`No.`), its notes and its footer. A data set's column labels are in its market's language.
+- A book prints left to right, one header row: a right-to-left form (Jordan, Saudi Arabia, Egypt) prints its columns in the form's order, left to right, and a form's grouped header (Jordan's *in* and *out*) is carried in each column's label.
+- A book printed into the authority's own book (Jordan, Abu Dhabi, Egypt, Mexico) does not follow that book's page and line numbers yet: print it on paper and copy, or keep the register in an approved system where the law allows one.
+- A page per drug is headed by the item's name alone: put the strength and the dosage form in the name (Jordan's and Saudi Arabia's page headers ask for both). Nigeria's *Form in which obtained* prints the item's stock unit: name the unit by its form.
 
 ## Make it your own
 
