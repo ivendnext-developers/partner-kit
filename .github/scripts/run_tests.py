@@ -7,9 +7,14 @@ It DISCOVERS the folders (any `tests/` directly under `samples/<name>/` or `tool
 sample or a tool with tests needs no edit here or in the CI workflow. The two checks that are not unittest folders are
 listed in EXTRA. Needs only Python 3.10+ and the standard library (S29's template tests also use jinja2, which CI installs and which they skip without); no network, no secret. A test that needs a private
 stand-in or a recorded bench run skips itself and says so; the skip count is printed so a rise is visible.
+
+Each folder runs through `test_counts.py run`, which is `unittest discover` with a count of each test file's tests; once
+every folder has run, each test count a sample's or tool's README states is held to what ran (test_counts.py says which
+wordings it reads).
 """
 from __future__ import annotations
 
+import json
 import os
 import pathlib
 import re
@@ -17,7 +22,12 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-EXTRA = [("tools/selfcheck --self-test", ["python3", "tools/selfcheck/selfcheck.py", "--self-test"])]
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import test_counts  # noqa: E402
+
+COUNTS = ".github/scripts/test_counts.py"
+EXTRA = [("tools/selfcheck --self-test", ["python3", "tools/selfcheck/selfcheck.py", "--self-test"]),
+         ("test_counts --self-test", ["python3", COUNTS, "--self-test"])]
 
 
 def folders() -> list[pathlib.Path]:
@@ -27,12 +37,14 @@ def folders() -> list[pathlib.Path]:
 
 def main() -> int:
     env = dict(os.environ, PARTNER_KIT=str(ROOT), PYTHONDONTWRITEBYTECODE="1")
-    bad, total = 0, 0
-    jobs = [(str(d.relative_to(ROOT)), ["python3", "-m", "unittest", "discover", "-s", str(d.relative_to(ROOT)), "-p", "test_*.py"])
-            for d in folders()] + EXTRA
+    bad, total, counts = 0, 0, {}
+    jobs = [(str(d.relative_to(ROOT)), ["python3", COUNTS, "run", str(d.relative_to(ROOT))]) for d in folders()] + EXTRA
     for name, cmd in jobs:
         r = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True)
         out = r.stdout + r.stderr
+        per_file = re.findall(r"^COUNTS (\{.*\})$", r.stdout, re.M)
+        if per_file:
+            counts[str(pathlib.Path(name).parent)] = json.loads(per_file[-1])
         ran = re.findall(r"Ran (\d+) tests?", out)
         skip = re.findall(r"skipped=(\d+)", out)
         n = int(ran[-1]) if ran else 0
@@ -42,7 +54,12 @@ def main() -> int:
         print(f"{'OK  ' if ok else 'FAIL'} {name:46} ran={n:<4} skipped={skip[-1] if skip else 0}")
         if not ok:
             print("     " + "\n     ".join(out.strip().split("\n")[-20:]))
-    print(f"\n{len(jobs)} test jobs, {total} tests: " + ("ALL GREEN" if not bad else f"{bad} FAILED"))
+    stale = test_counts.check(ROOT, counts)
+    for s in stale:
+        print(f"FAIL {s}")
+    bad += len(stale)
+    print(f"\n{len(jobs)} test jobs, {total} tests" + (f", {len(stale)} README counts that do not match" if stale else "")
+          + ": " + ("ALL GREEN" if not bad else f"{bad} FAILED"))
     return 1 if bad else 0
 
 

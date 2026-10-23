@@ -54,7 +54,7 @@ This is for a head office or franchise that wants a screen outside the shop for 
 | File | What it is |
 |---|---|
 | `portal.py` | the whole portal (standard library only): the sign-in, the page, the sign-out |
-| `tests/test_s13.py` | 32 laptop tests against a fake shop |
+| `tests/test_s13.py` | 33 laptop tests against a fake shop |
 
 The pages use the kit's own stylesheet (`ivn-kit.css`) and no colour or font of their own. The portal serves the kit's file from the kit's folder, or from next to `portal.py` if you copy it there. Recipe: `recipes/portal.md`; the sign-in itself: `recipes/sign_in.md`.
 
