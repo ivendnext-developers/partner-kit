@@ -35,8 +35,11 @@ answering presses keeps nothing.
    - **fields on the shop's record types:**
      - a schedules table on Item (one row per axis, with *effective from*);
      - a schedule on Item Group;
-     - fields for the patient's identity on Customer, and the day and giver of their consent. A manifest cannot give
-       them a permission level yet, so your README has the shop raise it (see S39's step 3);
+     - ⭐ **not** the patient's identity and consent: a field on Customer is read by everyone who reads customers, and a
+       permission level does not keep it from the form's change history, the list's group-by count or the link
+       search. Put them on a record type of your own, one per customer (a `customer` Link, unique), named by a hash,
+       readable only by the pharmacist roles, the integration role and the records officer, with a System Manager row
+       that has no right (else the install gives that role every right). S39 0.1.2's *Patient*;
      - the prescription fields on Sales Order, Delivery Note and Sales Invoice;
    - **sale details** for the prescription number, prescriber, licence and directions. ⛔ Never `required`: a required
      sale detail stops every sale on every till of the site;
@@ -129,8 +132,9 @@ answering presses keeps nothing.
 
 ## Limits to tell the customer
 
-- **The till cannot take the patient's identity at customer add:** field rules show nothing at customer create. Enter
-  it on the Desk. Until fields readable by one role exist, everyone who reads customers reads them.
+- **The till cannot take or show the patient's identity:** enter it on the patient's record on the Desk. A clerk is
+  refused that record whole, but an assignment on it, the customer's Connections count and one engine export still
+  tell a clerk something (S39's README, *Limits*).
 - **A POS Invoice made on the Desk POS screen, or through the API, is not checked:** a POS Invoice cannot be a document
   check's target.
 - **The sentence shows at Pay,** not when the line is added.

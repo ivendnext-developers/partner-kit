@@ -475,7 +475,7 @@
   },
   {
    "name": "PP RXC Patient",
-   "description": "One record per patient: the identity and consent a drug schedule may need. Only the pharmacist roles, the Records Officer and the app's integration user read it; nobody else is given it.",
+   "description": "One record per patient: the identity and consent a drug schedule may need. Only the pharmacist roles, the Records Officer and the app's integration user read it; the site's System Manager reads it alone (the shop's installer gives that role a row on every record type), with nothing to list, export or print.",
    "autoname": "hash",
    "track_changes": 1,
    "title_field": "customer",
@@ -575,7 +575,7 @@
     },
     {
      "role": "System Manager",
-     "read": 0,
+     "read": 1,
      "write": 0,
      "create": 0,
      "delete": 0,

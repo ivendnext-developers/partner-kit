@@ -100,7 +100,7 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
    form, because a count there would tell everyone who reads customers that the person is a patient.
 
    **Updating from 0.1.0 or 0.1.1** (the patient's fields were on Customer):
-   - Update the app first. Customer's five fields keep their values and the level you gave them, and show only while
+   - Update the app first. Customer's five fields keep their values (and any level you gave them), and show only while
      they hold a value; their labels end *(moved)*.
    - As a pharmacist, filter the *Customer* list by each field *is set*. For each customer found, make their *PP RXC
      Patient* record with the same values, then clear the five fields on the customer and save. Until you do, the till
@@ -177,6 +177,7 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
   - dispensings, with their status;
   - the pharmacist list and the premises licence;
   - each customer's prescriptions and dispensings, under *Pharmacy* on their record;
+  - each patient's record (*PP RXC Patient*), for the pharmacist roles only;
   - a refusal at **Submit**.
 
 **What leaves the shop.**
@@ -186,8 +187,8 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
 - **At each Desk submit,** the shop sends the fields each Desk service names.
 - **The service reads back with the integration user's key:**
   - the prescriptions named and the operator's pharmacist record;
-  - whether each patient field the sale needs is filled in. The shop answers yes or no: the ID, date of birth,
-    authority and consent values never leave it;
+  - whether each patient field the sale needs is filled in on the patient's record. The shop answers yes or no: the
+    ID, date of birth, authority and consent values never leave it;
   - the patient's dispensings (which medicine, how much, when);
   - the schedules and the items;
   - the sales, days and documents the patient's dispensings name;
@@ -199,25 +200,23 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
   reference, not clinical content.
 
 **Limits, said plainly.**
-- **The till cannot ask for the patient's ID when it adds a customer:** field rules show nothing at customer create.
-  Enter it on the customer's Desk form.
-- **Who reads the patient's fields is your setup** (step 3), not the app's: a manifest cannot give a field a
-  permission level yet. Until you take that step, everyone who reads customers reads them. After it, on our test bench
-  a Desk clerk who reads customers saw none of them on the form, the list, the report view or the print, and a clerk's
-  edit of one was ignored, and a clerk's filter on one was refused (*"Field not permitted in query"*) by the API's and
-  the Desk's lists, the count and a single value. It does not yet hold everywhere; each is recorded for the team that
-  owns it:
-  - **the form's change history:** a customer's form brings its recent changes with it, old and new values included.
-    The screen hides a field the user may not read, but the values reach the clerk's browser;
-  - **two Desk calls answer a filter:** the list's group-by count (its sidebar) and the link search answer a clerk's
-    *starts with* filter on the ID. A clerk who asks enough of them learns the value;
-  - **code inside the server:** a filter made by server code with the framework's own list call is answered for the
-    clerk. An app that takes a person's filters and runs them that way would let the clerk ask;
-  - **one engine call** returns a whole record to any signed-in user, whatever its levels;
-  - **the till** reads customers with its own rights: never show these fields on a till field rule, and never make
-    one a customer search field;
-  - **the regulated register app** ([S41](../s41_regulated_register/README.md)) prints the ID into Saudi Arabia's and
-    Abu Dhabi's books: its register must read it with its own rights, or a line written by a clerk prints it empty.
+- **Who reads a patient's record.** Only the pharmacist roles, the Records Officer and the service's user (step 3).
+  On our test bench a Desk clerk who reads customers was refused the record whole: its form, and so its change
+  history, its list, report view and print, and every filter on its ID (the API's and the Desk's lists, the count, a
+  single value, the list's group-by count on a field, the link search). The site's *System Manager* is refused the
+  record too, but can give any role a right on it, and reads every record's change history in the **Version** list:
+  keep that role few. Three framework paths still tell a clerk something, each recorded for the team that owns it:
+  - **an assignment:** once a patient's record is itself assigned to someone (*Assign To*), the list's group-by count
+    by *Assigned To* answers a clerk's *starts with* filter on the ID, because it counts assignments without asking
+    whether the clerk may read the record. Don't assign patient records; an assignment on the customer tells nothing
+    (the record is named by a code, never by its customer);
+  - **the customer's Connections:** the *Pharmacy* group on a customer's form counts their prescriptions and
+    dispensings for anyone who reads the customer. It shows that the person has had prescriptions, never which;
+  - **one engine call** returns any record whole to any signed-in user, a patient's record included.
+- **The till never shows a patient's fields** and cannot take them: enter them on the Desk, never on a till field rule.
+- **The regulated register app** ([S41](../s41_regulated_register/README.md)) prints the ID into Saudi Arabia's and
+  Abu Dhabi's books from the patient's record: its register must read it with its own rights, or a line written by a
+  clerk prints it empty.
 - **A POS Invoice made on the Desk POS screen, or through the API, is not checked:** a check before payment holds only
   at the till's own doors, and a POS Invoice cannot be a document check's target. Sell medicine at the till, or on a
   Sales Invoice.
@@ -272,6 +271,7 @@ Manager**: keep both few.
 | Ghana | 2 years (Act 489, s. 32(b)) | the full dispensing |
 | Kenya | 2 years, a prescription that is not repeatable (Rules, r. 6(6)) | not stated in the text read |
 | Nigeria | at least 2 years, the controlled-drug records (reg. 26) | the prescription's date or the last entry |
+| Jordan | at least 5 years, the narcotic records, destroyed in the inspector's presence (Law 12 of 2013, Art. 74) | the last entry |
 
 Elsewhere no prescription period was found in the laws read: keep as long as your pharmacy law and your register need,
 and no longer, since a data-protection law ends the keeping when its purpose ends. Three more rules from those laws:
@@ -292,9 +292,10 @@ A register book's own period is the register app's.
    first cannot go before it). ⛔ Never a dispensing whose prescription stays: its fill would count again. A dispensing
    names only the first of the prescriptions its sale used; look for the others in its lines, and keep the dispensing
    until the last of their periods ends. An attached image goes with its prescription.
-4. A pharmacist clears the patient's fields on their customer record: ID, date of birth, authority, consent.
+4. When the last of a patient's periods has ended, the Records Officer deletes their *PP RXC Patient* record (ID, date
+   of birth, authority, consent). No other role can.
 5. The Desk still holds copies: each deleted record in *Deleted Documents*, which a *System Manager* deletes, and
-   each record's change history, the customer's included, with its old values, which only the site's
+   each record's change history, the patient record's included, with its old values, which only the site's
    *Administrator* deletes.
 6. The prescription number, prescriber, licence and directions also stay on the sales orders, deliveries and invoices
    that carried them, and on the till's sales as sale details. They are your sales records: what your law lets you keep
@@ -308,7 +309,7 @@ no exception to erasure: ask your adviser there.
 
 | File | What it is |
 |---|---|
-| `manifest.json` | the record types, fields (the patient's identity and consent on Customer), sale details, four roles, two licence reminders, the feed registration, and five services: two checks before payment (dispensary `refuse`, front `allow_and_flag`) and three document checks (Sales Order, Delivery Note, Sales Invoice; `refuse`), each installed switched off |
+| `manifest.json` | the record types (the patient's identity and consent on *PP RXC Patient*), fields, sale details, four roles, two licence reminders, the feed registration, and five services: two checks before payment (dispensary `refuse`, front `allow_and_flag`) and three document checks (Sales Order, Delivery Note, Sales Invoice; `refuse`), each installed switched off |
 | `rxrules.py` | the pure core: the signature check (`verify`), the shapes (`sale_context`, `desk_context`), an item's schedules (`schedules_for`, `strictest`), prescriptions and fingerprints, the dispensings that count (`counts`) and their statuses (`resolve`), and the rules (`decide`) |
 | `service/app.py` | the service, standard library only: five routes, `GET /health`, the app template's handshake for many shops; one `handle` answers the web server and the function entry (`lambda_handler`) alike |
 | `Dockerfile` · `app.json` | the settings file for hosting (`"runs": "function"`: on CitiXsys hosting it is a function, paid per call) and an image for your own server (built from the kit's root) |

@@ -89,11 +89,12 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(pat.get("track_changes"), 1)
         self.assertNotIn("search_fields", pat)
         readers = {p["role"]: {k for k, v in p.items() if v == 1} for p in pat["permissions"]}
-        self.assertEqual({r for r, k in readers.items() if k}, {f"{P} Pharmacist", f"{P} Pharmacist in Charge",
-                                                               f"{P} Integration", f"{P} Records Officer"})
+        self.assertEqual(set(readers), {f"{P} Pharmacist", f"{P} Pharmacist in Charge", f"{P} Integration",
+                                        f"{P} Records Officer", "System Manager"})
         # the shop's installer gives System Manager every right on a record type whose manifest names no System Manager
-        # row (measured, PH-B1d run 1): a row with none keeps the site's administrator out of the patients by default
-        self.assertEqual(readers.get("System Manager"), set())
+        # row (PH-B1d run 1), and the framework refuses a row with no right (run 2): read alone is the least, so the
+        # site's administrator lists, exports and prints no patient
+        self.assertEqual(readers["System Manager"], {"read"})
         self.assertEqual(readers[f"{P} Integration"], {"read"})
         self.assertEqual({r for r, k in readers.items() if "delete" in k}, {f"{P} Records Officer"})
         self.assertFalse([r for r, k in readers.items() if k & {"export", "print", "email", "share"}])
