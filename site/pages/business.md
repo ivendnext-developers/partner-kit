@@ -29,7 +29,7 @@ The next retailer with the same need can buy the same version from you. When it 
 
 ## Our two promises
 
-- **The services are always yours.** We never sell implementation, customisation or support to a customer a partner covers, apart from two cases set out on [What iVendNext builds](roadmap.md).
+- **The services are always yours.** We never sell implementation, customisation or support to a customer a partner covers, apart from two cases set out on [What iVendNext builds](roadmap.md#our-two-promises).
 - **Partner first in the App library.** Where your listed app already answers a need, we build no free app against it, and we feature yours. You may claim a need from our roadmap before we start it, and we hold back from it for 90 days.
 
 **The honest limit.** A free standard app does take the product sale of that exact need off the table. We accept that because a free standard version brings more retailers to iVendNext for partners to implement. So we say in advance what we will build, what we give you a starter for and what is yours: [What iVendNext builds](roadmap.md).

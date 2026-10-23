@@ -15,7 +15,7 @@
     "build.html": "You know what you are building: the ladder of ways in, the recipe and sample for each rung, your sandbox and the tests that let an iVendNext app ship.",
     "plan.html": "Plan an iVendNext project from a customer's list of needs to a release: tick the needs, get the order to build them in and the limits to put in the quote.",
     "sandbox.html": "Request a sandbox: your own iVendNext shop with made-up demo data, hosted by us, where you build and test before you touch a customer's site.",
-    "publish.html": "Publish your app to the iVendNext App library with one command from any computer, so shops can find it and install it. We never take your source code.",
+    "publish.html": "Publish your app to the iVendNext App library with one command from any computer, so retailers can find it and install it. We never take your source code.",
     "starters.html": "Starting points for connecting a local ERP, payment gateway or wallet, loyalty provider, messaging gateway or delivery app to iVendNext.",
     "hosting.html": "Run your app's service on iVendNext App Hosting or on your own cloud: the two side by side, who can host with CitiXsys, the plans, and the builder's journey.",
     "security.html": "How a shop and your app trust each other: the shop's consent, your app's own user, the signed call and its check, rotation, and the till when your app is down.",

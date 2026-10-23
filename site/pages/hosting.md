@@ -12,7 +12,7 @@ Your app's outside service, the part a shop calls, has to run on a server the sh
 | **What it costs** | A price per app per month ([the plans](#host-with-citixsys)) | Your own hosting bill |
 | **A new version** | You send us its tag | You deploy it |
 
-Either way, you bill your customer what you choose, and nothing is shared with us ([Build your business on iVendNext's apps](business.md)).
+Either way, you bill your customer what you choose ([Build your business on iVendNext's apps](business.md)).
 
 The checks are the same on both: your app checks every call's signature, and a shop's site checks only that your app is at a public HTTPS address, then your answer's time and shape ([Security and the handshake](security.md)).
 
