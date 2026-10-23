@@ -64,8 +64,10 @@ import shops  # noqa: E402
 
 KEY, ROUTE = "on_select", "/ccc/capture"   # the subscription's key in the manifest; its secret is "<app>:sub:<key>"
 RULES_TTL = 60
-READ_TIMEOUT = 0.8     # the reads go at once, then the write: both inside the select's time to answer (6 s, the manifest)
-WRITE_TIMEOUT = 4.5    # the code record's save carries the shop's text to its gateway; CCC_WRITE_TIMEOUT changes it
+READ_TIMEOUT = 0.8     # the rules and the tree go at once, then the write: all inside the capture's 5 s (the manifest)
+WRITE_TIMEOUT = 2.5    # the code record's save carries the shop's text to its gateway: at most this long ...
+BUDGET = 3.5           # ... and never past this many seconds from the call's start (a late save still answers the field)
+VERIFY_TIMEOUT = 2.0   # the code record's read on a verify: a busy shop is not a 503 (the till lets any code in on one)
 
 
 class ShopUnreadable(Exception):
@@ -135,7 +137,7 @@ class ShopApi:
     def code(self, url: str, key: str, prefix: str, name: str) -> dict | None:
         """The code record the till's ``challenge_id`` names, or ``None`` when there is none."""
         out = self._call(url, key, f"/api/resource/{urllib.parse.quote(prefix + ' Code')}/{urllib.parse.quote(name)}",
-                         missing_ok=True)
+                         missing_ok=True, timeout=VERIFY_TIMEOUT)
         if out is None:
             return None
         rec = out.get("data") if isinstance(out, dict) else None
@@ -152,7 +154,6 @@ class ShopApi:
 class Service:
     def __init__(self, conf: dict, store=None, api=None, clock=time.monotonic, wall=time.time):
         self.prefix = (conf.get("CCC_PREFIX") or "PP CCC").strip()
-        self.write_timeout = float(conf.get("CCC_WRITE_TIMEOUT") or WRITE_TIMEOUT)
         self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
         self.api, self.clock, self.wall, self.kept, self.lock = api or ShopApi(), clock, wall, {}, threading.Lock()
         if self.app:                                    # many shops: each connects itself
@@ -180,7 +181,7 @@ class Service:
             return hit[2]
         return None
 
-    def select(self, name: str, shop: dict | None, ctx: dict) -> dict:
+    def select(self, name: str, shop: dict | None, ctx: dict, t0: float | None = None) -> dict:
         """One pick: the rules and the tree read at the same time (each read has its own timeout, so reads in a row could
         outrun the select's time); then, when the rule asks, the code record written before the challenge is answered."""
         if not shop:
@@ -197,8 +198,9 @@ class Service:
         out = codecheck.on_select(ctx, *kept)
         if out["verdict"] == "challenge":
             try:
+                left = BUDGET - (self.clock() - (self.clock() if t0 is None else t0))
                 self.api.create(shop["url"], shop["key"], self.prefix, codecheck.code_record(ctx, codecheck.new_code(), now),
-                                timeout=self.write_timeout)
+                                timeout=max(0.5, min(WRITE_TIMEOUT, left)))
             except WriteUnsure:         # saved or not, the code field fails closed: never a 503 that lets them on
                 print(json.dumps({"error": "WriteUnsure"}), file=sys.stderr, flush=True)
         return out
@@ -216,6 +218,7 @@ class Service:
     def answer(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
         if path != ROUTE:
             return 404, {"error": "not found"}
+        t0 = self.clock()
         try:
             name, secrets, shop = self.caller(headers)
         except Exception:               # noqa: BLE001 — the shops store did not answer: nothing was checked
@@ -230,7 +233,7 @@ class Service:
         try:
             if ctx["event"] == "verify":
                 return 200, self.verify(shop, ctx)
-            return 200, self.select(name, shop, ctx)
+            return 200, self.select(name, shop, ctx, t0)
         except (ShopUnreadable, ValueError) as e:       # the shop did not answer, or not with records: nothing was judged
             with self.lock:
                 self.kept.pop(name, None)               # a group the kept tree does not know is read again next time

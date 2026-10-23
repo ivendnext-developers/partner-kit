@@ -213,7 +213,7 @@
    "point": "capture",
    "label": "Customer code check",
    "endpoint_url": "https://host.docker.internal:8125/ccc/capture",
-   "timeout_seconds": 6,
+   "timeout_seconds": 5,
    "down_answer": "allow_and_flag",
    "settings": {
     "event": "customer_select"

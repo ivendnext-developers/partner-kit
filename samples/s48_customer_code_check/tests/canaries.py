@@ -68,7 +68,7 @@ CANARIES = [
     ("a long timestamp is refused, never parsed", "codecheck.py", "ts.isdigit() and len(ts) <= 12)", "ts.isdigit())",
      "test_rules.Signature.test_the_signature_and_the_time_are_checked"),
     ("the code record is written before the challenge", "service/app.py",
-     "                self.api.create(shop[\"url\"], shop[\"key\"], self.prefix, codecheck.code_record(ctx, codecheck.new_code(), now),\n                                timeout=self.write_timeout)\n",
+     "                self.api.create(shop[\"url\"], shop[\"key\"], self.prefix, codecheck.code_record(ctx, codecheck.new_code(), now),\n                                timeout=max(0.5, min(WRITE_TIMEOUT, left)))\n",
      "                pass\n", S + "OneShop.test_a_customer_whose_rule_asks_gets_a_challenge_after_the_code_record_is_written"),
     ("a code the shop cannot save is a 503", "service/app.py", "            self.api.create(", "            (lambda *a: None)(",
      S + "OneShop.test_a_code_the_shop_cannot_save_is_a_503_so_the_down_answer_applies"),
@@ -121,8 +121,10 @@ CANARIES = [
      S + "OneShop.test_a_code_record_saved_or_not_with_no_answer_in_time_is_still_the_code_field"),
     ("a late answer to a write is unsure", "service/app.py", "raise (WriteUnsure if data is not None else ShopUnreadable)(type(e).__name__) from None",
      "raise ShopUnreadable(type(e).__name__) from None", S + "ShopApi.test_a_write_with_no_answer_in_time_is_unsure_never_a_read"),
-    ("the write waits the time the settings give", "service/app.py", 'float(conf.get("CCC_WRITE_TIMEOUT") or WRITE_TIMEOUT)', "WRITE_TIMEOUT",
-     S + "OneShop.test_the_write_waits_the_time_the_settings_give_it"),
+    ("the write never runs past the budget", "service/app.py", "timeout=max(0.5, min(WRITE_TIMEOUT, left))", "timeout=WRITE_TIMEOUT",
+     S + "OneShop.test_the_write_waits_at_most_its_own_time_and_never_past_the_budget"),
+    ("a number may start with a bracket", "codecheck.py", 'r"\\+?[ (]*[0-9]', 'r"\\+?[0-9]',
+     R + "test_a_number_is_the_first_one_the_record_holds_in_the_shops_phone_shape"),
 ]
 
 

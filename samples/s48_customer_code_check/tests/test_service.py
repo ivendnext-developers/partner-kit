@@ -157,13 +157,27 @@ class OneShop(unittest.TestCase):
         code, out = self.call(context(group="Members"))
         self.assertEqual((code, out["verdict"]), (200, "challenge"))                # never a 503 that lets them on
 
-    def test_the_write_waits_the_time_the_settings_give_it(self):
+    def test_the_write_waits_at_most_its_own_time_and_never_past_the_budget(self):
         self.call(context(group="Members"))
         self.assertEqual([c[5] for c in self.api.calls if c[0] == "create"], [app.WRITE_TIMEOUT])
-        svc = app.Service(dict(ONE, CCC_WRITE_TIMEOUT="7.5"), api=self.api, clock=self.clock, wall=self.wall)
+        slow = Api()
+        orig = slow.rules
+
+        def rules(*a):                          # the shop's reads take 2.5 s of the call
+            self.clock.t += 2.5
+            return orig(*a)
+        slow.rules = rules
+        svc = app.Service(ONE, api=slow, clock=self.clock, wall=self.wall)
         raw = raw_of(context(group="Members", customer="CUST-2"))
         svc.answer("/ccc/capture", signed(raw, SECRET), raw)
-        self.assertEqual([c[5] for c in self.api.calls if c[0] == "create"][-1], 7.5)
+        self.assertEqual([c[5] for c in slow.calls if c[0] == "create"], [app.BUDGET - 2.5])
+        self.clock.t += 61                      # the reads take the whole budget: the write still gets its floor
+        slow2 = Api()
+        slow2.rules = lambda *a: (setattr(self.clock, "t", self.clock.t + 9), RECORDS)[1]
+        svc2 = app.Service(ONE, api=slow2, clock=self.clock, wall=self.wall)
+        raw = raw_of(context(group="Members", customer="CUST-3"))
+        svc2.answer("/ccc/capture", signed(raw, SECRET), raw)
+        self.assertEqual([c[5] for c in slow2.calls if c[0] == "create"], [0.5])
 
     def test_the_rules_and_the_tree_are_kept_a_minute(self):
         self.call(context(group="Retail"))

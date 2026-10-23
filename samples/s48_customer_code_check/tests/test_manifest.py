@@ -28,7 +28,7 @@ class ManifestTest(unittest.TestCase):
     def test_one_select_capture_switched_off_that_keeps_the_customer_on_when_down(self):
         (sub,) = MANIFEST["extension_subscriptions"]
         self.assertEqual((sub["key"], sub["point"], sub["down_answer"], sub["timeout_seconds"], sub["settings"]),
-                         ("on_select", "capture", "allow_and_flag", 6, {"event": "customer_select"}))
+                         ("on_select", "capture", "allow_and_flag", 5, {"event": "customer_select"}))
         self.assertFalse(any(k in sub for k in ("enabled", "consent_given", "scope", "secret", "may_approve")))
 
     def test_the_route_is_the_services_own_and_its_only_address(self):
