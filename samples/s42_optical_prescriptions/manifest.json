@@ -1,0 +1,893 @@
+{
+ "manifest_version": 2,
+ "app": "pp_opt",
+ "prefix": "PP OPT",
+ "title": "Optical prescriptions and lab orders",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "An optical store's prescriptions and lab orders, and a check at the till. A Prescription holds a customer's eye test: Spectacles or Contact lenses, the test date and Valid until, each eye's values, the distances between pupils, a contact lens's fit, notes and a scan. A Lab Order is made from a prescription (its customer and lens values copied, read only) and moves Ordered, Sent to lab, Ready to collect, Collected (or Cancelled) by a workflow; it prints as a job sheet. Each record keeps the customer's e-mail, so the shop's own Notifications can tell the customer when the glasses are ready and when an eye test is due. Item groups and items carry Sold against a prescription: Spectacles, Contact lenses or Not needed (blank: the group above). When the cashier presses Pay, the service refuses a sold line marked Spectacles or Contact lenses when the sale's customer has no prescription of that kind in date. A refund is never judged. The service reads the customer's prescriptions' kind, test date and Valid until with the app's integration user, never their values, and writes nothing. The install makes the roles PP OPT Optometrist and PP OPT Integration; the shop gives the integration role to the app's user, with a plain read on Item Group and Item. The check installs switched off; when its service is down the sale is paid and flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/opt/check"
+ ],
+ "doctypes": [
+  {
+   "name": "PP OPT Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Title",
+     "reqd": 1,
+     "unique": 1,
+     "default": "Default",
+     "description": "The service reads the record named Default."
+    },
+    {
+     "fieldname": "hours_from_utc",
+     "fieldtype": "Float",
+     "label": "Hours from UTC at the shop",
+     "description": "Your own day decides whether a prescription is still in date: 4 for Dubai, 3 for Nairobi or Riyadh, 2 for Johannesburg, -6 for Mexico City. Blank: UTC. Change it when your clocks change."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP OPT Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP OPT Prescription",
+   "autoname": "format:OPT-RX-{#####}",
+   "track_changes": 1,
+   "title_field": "customer_name",
+   "search_fields": "customer,customer_name,kind,valid_until",
+   "sort_field": "test_date",
+   "sort_order": "DESC",
+   "fields": [
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "customer_name",
+     "fieldtype": "Data",
+     "label": "Customer name",
+     "fetch_from": "customer.customer_name",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "label": "Kind",
+     "options": "Spectacles\nContact lenses",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "Spectacles answers a line marked Spectacles at the till; Contact lenses answers a line marked Contact lenses."
+    },
+    {
+     "fieldname": "col1",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "test_date",
+     "fieldtype": "Date",
+     "label": "Test date",
+     "reqd": 1,
+     "default": "Today",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "valid_until",
+     "fieldtype": "Date",
+     "label": "Valid until",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The last day the till accepts it."
+    },
+    {
+     "fieldname": "examined_by",
+     "fieldtype": "Data",
+     "label": "Examined by",
+     "description": "The optometrist's name, as on the prescription."
+    },
+    {
+     "fieldname": "registration",
+     "fieldtype": "Data",
+     "label": "Registration number"
+    },
+    {
+     "fieldname": "source",
+     "fieldtype": "Select",
+     "label": "Source",
+     "options": "Our eye test\nAnother practice",
+     "default": "Our eye test"
+    },
+    {
+     "fieldname": "r_section",
+     "fieldtype": "Section Break",
+     "label": "Right eye"
+    },
+    {
+     "fieldname": "r_sph",
+     "fieldtype": "Float",
+     "label": "Sphere (SPH)",
+     "precision": "2"
+    },
+    {
+     "fieldname": "r_cyl",
+     "fieldtype": "Float",
+     "label": "Cylinder (CYL)",
+     "precision": "2"
+    },
+    {
+     "fieldname": "r_axis",
+     "fieldtype": "Int",
+     "label": "Axis (0 to 180)"
+    },
+    {
+     "fieldname": "r_col",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "r_add",
+     "fieldtype": "Float",
+     "label": "Addition (ADD)",
+     "precision": "2"
+    },
+    {
+     "fieldname": "r_prism",
+     "fieldtype": "Float",
+     "label": "Prism",
+     "precision": "2"
+    },
+    {
+     "fieldname": "r_base",
+     "fieldtype": "Select",
+     "label": "Base",
+     "options": "\nUp\nDown\nIn\nOut"
+    },
+    {
+     "fieldname": "r_va",
+     "fieldtype": "Data",
+     "label": "Visual acuity",
+     "length": 20
+    },
+    {
+     "fieldname": "l_section",
+     "fieldtype": "Section Break",
+     "label": "Left eye"
+    },
+    {
+     "fieldname": "l_sph",
+     "fieldtype": "Float",
+     "label": "Sphere (SPH)",
+     "precision": "2"
+    },
+    {
+     "fieldname": "l_cyl",
+     "fieldtype": "Float",
+     "label": "Cylinder (CYL)",
+     "precision": "2"
+    },
+    {
+     "fieldname": "l_axis",
+     "fieldtype": "Int",
+     "label": "Axis (0 to 180)"
+    },
+    {
+     "fieldname": "l_col",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "l_add",
+     "fieldtype": "Float",
+     "label": "Addition (ADD)",
+     "precision": "2"
+    },
+    {
+     "fieldname": "l_prism",
+     "fieldtype": "Float",
+     "label": "Prism",
+     "precision": "2"
+    },
+    {
+     "fieldname": "l_base",
+     "fieldtype": "Select",
+     "label": "Base",
+     "options": "\nUp\nDown\nIn\nOut"
+    },
+    {
+     "fieldname": "l_va",
+     "fieldtype": "Data",
+     "label": "Visual acuity",
+     "length": 20
+    },
+    {
+     "fieldname": "pd_section",
+     "fieldtype": "Section Break",
+     "label": "Distance between pupils"
+    },
+    {
+     "fieldname": "pd_distance",
+     "fieldtype": "Float",
+     "label": "Distance PD (mm)",
+     "precision": "1"
+    },
+    {
+     "fieldname": "pd_col",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "pd_near",
+     "fieldtype": "Float",
+     "label": "Near PD (mm)",
+     "precision": "1"
+    },
+    {
+     "fieldname": "cl_section",
+     "fieldtype": "Section Break",
+     "label": "Contact lenses",
+     "depends_on": "eval:doc.kind=='Contact lenses'"
+    },
+    {
+     "fieldname": "r_bc",
+     "fieldtype": "Float",
+     "label": "Right base curve (BC)",
+     "precision": "2"
+    },
+    {
+     "fieldname": "r_dia",
+     "fieldtype": "Float",
+     "label": "Right diameter (DIA)",
+     "precision": "2"
+    },
+    {
+     "fieldname": "cl_col",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "l_bc",
+     "fieldtype": "Float",
+     "label": "Left base curve (BC)",
+     "precision": "2"
+    },
+    {
+     "fieldname": "l_dia",
+     "fieldtype": "Float",
+     "label": "Left diameter (DIA)",
+     "precision": "2"
+    },
+    {
+     "fieldname": "cl_lens",
+     "fieldtype": "Data",
+     "label": "Lens brand and type"
+    },
+    {
+     "fieldname": "more_section",
+     "fieldtype": "Section Break",
+     "label": "Notes and reminder"
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Notes"
+    },
+    {
+     "fieldname": "scan",
+     "fieldtype": "Attach",
+     "label": "Scan of the prescription",
+     "description": "Another practice's paper prescription. Keep Is Private ticked when you attach it."
+    },
+    {
+     "fieldname": "customer_email",
+     "fieldtype": "Data",
+     "label": "Customer's e-mail",
+     "options": "Email",
+     "fetch_from": "customer.email_id",
+     "description": "Filled from the customer, for your own eye-test reminder (a Notification on Valid until). Clear it to send none."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "PP OPT Optometrist",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales User",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP OPT Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP OPT Lab Order",
+   "autoname": "format:OPT-LAB-{#####}",
+   "track_changes": 1,
+   "title_field": "customer_name",
+   "search_fields": "customer,customer_name,lab_reference",
+   "sort_field": "due_date",
+   "sort_order": "ASC",
+   "fields": [
+    {
+     "fieldname": "prescription",
+     "fieldtype": "Link",
+     "label": "Prescription",
+     "options": "PP OPT Prescription",
+     "reqd": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "fetch_from": "prescription.customer",
+     "read_only": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "customer_name",
+     "fieldtype": "Data",
+     "label": "Customer name",
+     "fetch_from": "prescription.customer_name",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "customer_email",
+     "fieldtype": "Data",
+     "label": "Customer's e-mail",
+     "options": "Email",
+     "fetch_from": "prescription.customer_email",
+     "read_only": 1,
+     "description": "The prescription's, for your own ready-to-collect message (a Notification on Ready to collect)."
+    },
+    {
+     "fieldname": "col1",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Collect at",
+     "options": "Warehouse",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "sale",
+     "fieldtype": "Link",
+     "label": "Sale",
+     "options": "POS Invoice",
+     "description": "The till sale the customer paid or put a deposit on."
+    },
+    {
+     "fieldname": "due_date",
+     "fieldtype": "Date",
+     "label": "Due back from the lab",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "ready_to_collect",
+     "fieldtype": "Check",
+     "label": "Ready to collect",
+     "read_only": 1,
+     "description": "Set once, by Back from lab: a Notification on its change tells the customer."
+    },
+    {
+     "fieldname": "closed",
+     "fieldtype": "Check",
+     "label": "Closed",
+     "read_only": 1,
+     "in_standard_filter": 1,
+     "description": "Set by Hand over or Cancel."
+    },
+    {
+     "fieldname": "lab_section",
+     "fieldtype": "Section Break",
+     "label": "The lab"
+    },
+    {
+     "fieldname": "lab",
+     "fieldtype": "Link",
+     "label": "Lab",
+     "options": "Supplier",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "lab_reference",
+     "fieldtype": "Data",
+     "label": "Lab's reference"
+    },
+    {
+     "fieldname": "lab_col",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "frame",
+     "fieldtype": "Link",
+     "label": "Frame",
+     "options": "Item"
+    },
+    {
+     "fieldname": "lens",
+     "fieldtype": "Link",
+     "label": "Lenses",
+     "options": "Item"
+    },
+    {
+     "fieldname": "lens_type",
+     "fieldtype": "Select",
+     "label": "Lens type",
+     "options": "\nSingle vision\nBifocal\nVarifocal\nOther"
+    },
+    {
+     "fieldname": "coatings",
+     "fieldtype": "Data",
+     "label": "Coatings and tint"
+    },
+    {
+     "fieldname": "fit_section",
+     "fieldtype": "Section Break",
+     "label": "Fitting"
+    },
+    {
+     "fieldname": "r_height",
+     "fieldtype": "Float",
+     "label": "Right fitting height (mm)",
+     "precision": "1"
+    },
+    {
+     "fieldname": "l_height",
+     "fieldtype": "Float",
+     "label": "Left fitting height (mm)",
+     "precision": "1"
+    },
+    {
+     "fieldname": "fit_col",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "frame_size",
+     "fieldtype": "Data",
+     "label": "Frame size",
+     "description": "Such as 52-18-140."
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Notes for the lab"
+    },
+    {
+     "fieldname": "rx_section",
+     "fieldtype": "Section Break",
+     "label": "The prescription (copied from it)",
+     "collapsible": 1
+    },
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "label": "Kind",
+     "fetch_from": "prescription.kind",
+     "read_only": 1,
+     "options": "Spectacles\nContact lenses"
+    },
+    {
+     "fieldname": "r_sph",
+     "fieldtype": "Float",
+     "label": "Right SPH",
+     "fetch_from": "prescription.r_sph",
+     "read_only": 1,
+     "precision": "2"
+    },
+    {
+     "fieldname": "r_cyl",
+     "fieldtype": "Float",
+     "label": "Right CYL",
+     "fetch_from": "prescription.r_cyl",
+     "read_only": 1,
+     "precision": "2"
+    },
+    {
+     "fieldname": "r_axis",
+     "fieldtype": "Int",
+     "label": "Right axis",
+     "fetch_from": "prescription.r_axis",
+     "read_only": 1
+    },
+    {
+     "fieldname": "r_add",
+     "fieldtype": "Float",
+     "label": "Right ADD",
+     "fetch_from": "prescription.r_add",
+     "read_only": 1,
+     "precision": "2"
+    },
+    {
+     "fieldname": "r_prism",
+     "fieldtype": "Float",
+     "label": "Right prism",
+     "fetch_from": "prescription.r_prism",
+     "read_only": 1,
+     "precision": "2"
+    },
+    {
+     "fieldname": "r_base",
+     "fieldtype": "Data",
+     "label": "Right base",
+     "fetch_from": "prescription.r_base",
+     "read_only": 1
+    },
+    {
+     "fieldname": "l_sph",
+     "fieldtype": "Float",
+     "label": "Left SPH",
+     "fetch_from": "prescription.l_sph",
+     "read_only": 1,
+     "precision": "2"
+    },
+    {
+     "fieldname": "l_cyl",
+     "fieldtype": "Float",
+     "label": "Left CYL",
+     "fetch_from": "prescription.l_cyl",
+     "read_only": 1,
+     "precision": "2"
+    },
+    {
+     "fieldname": "l_axis",
+     "fieldtype": "Int",
+     "label": "Left axis",
+     "fetch_from": "prescription.l_axis",
+     "read_only": 1
+    },
+    {
+     "fieldname": "l_add",
+     "fieldtype": "Float",
+     "label": "Left ADD",
+     "fetch_from": "prescription.l_add",
+     "read_only": 1,
+     "precision": "2"
+    },
+    {
+     "fieldname": "l_prism",
+     "fieldtype": "Float",
+     "label": "Left prism",
+     "fetch_from": "prescription.l_prism",
+     "read_only": 1,
+     "precision": "2"
+    },
+    {
+     "fieldname": "l_base",
+     "fieldtype": "Data",
+     "label": "Left base",
+     "fetch_from": "prescription.l_base",
+     "read_only": 1
+    },
+    {
+     "fieldname": "pd_distance",
+     "fieldtype": "Float",
+     "label": "Distance PD (mm)",
+     "fetch_from": "prescription.pd_distance",
+     "read_only": 1,
+     "precision": "1"
+    },
+    {
+     "fieldname": "pd_near",
+     "fieldtype": "Float",
+     "label": "Near PD (mm)",
+     "fetch_from": "prescription.pd_near",
+     "read_only": 1,
+     "precision": "1"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "Sales User",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP OPT Optometrist",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "Item Group",
+   "fieldname": "pp_opt_needs",
+   "fieldtype": "Select",
+   "label": "Sold against a prescription",
+   "options": "\nSpectacles\nContact lenses\nNot needed",
+   "insert_after": "parent_item_group",
+   "description": "Spectacles or Contact lenses: the till sells this group's items only to a customer with a prescription of that kind in date. It covers every group below, unless a group below sets its own (Not needed frees it). Blank: the group above decides."
+  },
+  {
+   "dt": "Item",
+   "fieldname": "pp_opt_needs",
+   "fieldtype": "Select",
+   "label": "Sold against a prescription",
+   "options": "\nSpectacles\nContact lenses\nNot needed",
+   "insert_after": "stock_uom",
+   "description": "This item's own rule, when it differs from its group's. On an item with variants, set it on each variant or on their item group. Blank: its template's, else its item group's."
+  }
+ ],
+ "workflows": [
+  {
+   "name": "PP OPT Lab Order",
+   "document_type": "PP OPT Lab Order",
+   "send_email_alert": 0,
+   "states": [
+    {
+     "state": "PP OPT Ordered",
+     "allow_edit": "Sales User"
+    },
+    {
+     "state": "PP OPT Sent to lab",
+     "allow_edit": "Sales User"
+    },
+    {
+     "state": "PP OPT Ready to collect",
+     "allow_edit": "Sales User",
+     "update_field": "ready_to_collect",
+     "update_value": "1"
+    },
+    {
+     "state": "PP OPT Collected",
+     "allow_edit": "System Manager",
+     "update_field": "closed",
+     "update_value": "1"
+    },
+    {
+     "state": "PP OPT Cancelled",
+     "allow_edit": "System Manager",
+     "update_field": "closed",
+     "update_value": "1"
+    }
+   ],
+   "transitions": [
+    {
+     "state": "PP OPT Ordered",
+     "action": "PP OPT Send to lab",
+     "next_state": "PP OPT Sent to lab",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP OPT Sent to lab",
+     "action": "PP OPT Back from lab",
+     "next_state": "PP OPT Ready to collect",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP OPT Ready to collect",
+     "action": "PP OPT Hand over",
+     "next_state": "PP OPT Collected",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP OPT Ready to collect",
+     "action": "PP OPT Send back to lab",
+     "next_state": "PP OPT Sent to lab",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP OPT Ordered",
+     "action": "PP OPT Cancel",
+     "next_state": "PP OPT Cancelled",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP OPT Sent to lab",
+     "action": "PP OPT Cancel",
+     "next_state": "PP OPT Cancelled",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    }
+   ]
+  }
+ ],
+ "print_formats": [
+  {
+   "name": "PP OPT Job Sheet",
+   "doc_type": "PP OPT Lab Order",
+   "print_format_type": "Jinja",
+   "html": "<div style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n<h2 style=\"margin: 0 0 4px;\">Lab job sheet {{ doc.name }}</h2>\n<p style=\"margin: 0 0 10px;\">{{ doc.customer_name or \"\" }} · prescription {{ doc.prescription }} · due {{ doc.get_formatted(\"due_date\") }}</p>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th></th><th>SPH</th><th>CYL</th><th>Axis</th><th>ADD</th><th>Prism</th><th>Base</th></tr>\n<tr><th>Right</th><td>{{ doc.r_sph }}</td><td>{{ doc.r_cyl }}</td><td>{{ doc.r_axis }}</td><td>{{ doc.r_add }}</td><td>{{ doc.r_prism }}</td><td>{{ doc.r_base or \"\" }}</td></tr>\n<tr><th>Left</th><td>{{ doc.l_sph }}</td><td>{{ doc.l_cyl }}</td><td>{{ doc.l_axis }}</td><td>{{ doc.l_add }}</td><td>{{ doc.l_prism }}</td><td>{{ doc.l_base or \"\" }}</td></tr>\n</table>\n<p>Distance PD {{ doc.pd_distance }} mm · near PD {{ doc.pd_near }} mm · fitting heights R {{ doc.r_height }} / L {{ doc.l_height }} mm</p>\n<p>Frame {{ doc.frame or \"\" }} {{ doc.frame_size or \"\" }} · lenses {{ doc.lens or \"\" }} {{ doc.lens_type or \"\" }} · {{ doc.coatings or \"\" }}</p>\n<p>Lab {{ doc.lab or \"\" }} {{ doc.lab_reference or \"\" }} · collect at {{ doc.store or \"\" }}</p>\n<p>{{ doc.notes or \"\" }}</p>\n</div>"
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP OPT Lab Orders To Chase",
+   "ref_doctype": "PP OPT Lab Order",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "customer_name",
+    "lab",
+    "lab_reference",
+    "store",
+    "due_date",
+    "ready_to_collect"
+   ],
+   "filters": [
+    [
+     "closed",
+     "=",
+     0
+    ]
+   ],
+   "order_by": "due_date asc"
+  }
+ ],
+ "links": [
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP OPT Prescription",
+   "link_fieldname": "customer",
+   "group": "Optical"
+  },
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP OPT Lab Order",
+   "link_fieldname": "customer",
+   "group": "Optical"
+  },
+  {
+   "doctype": "PP OPT Prescription",
+   "link_doctype": "PP OPT Lab Order",
+   "link_fieldname": "prescription",
+   "group": "Lab orders"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP OPT Prescription",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/optical_prescriptions.html#prescriptions"
+  },
+  {
+   "doc_type": "PP OPT Lab Order",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/optical_prescriptions.html#lab-orders"
+  },
+  {
+   "doc_type": "PP OPT Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/optical_prescriptions.html#settings"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP OPT Check",
+   "description": "the prescription check reads the shop's settings, item groups, items and the customer's prescriptions' kind and dates",
+   "events": [
+    "PP OPT Settings"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "check",
+   "point": "check",
+   "label": "Prescription check",
+   "endpoint_url": "https://host.docker.internal:8125/opt/check",
+   "timeout_seconds": 3,
+   "down_answer": "allow_and_flag"
+  }
+ ]
+}
