@@ -2,7 +2,8 @@
 
 The install screen runs ``validate.py`` first; then, inside the shop, the installer checks the manifest against the site
 (``manifest_install._site_refusals_v2`` in the POS app) and installs in a fixed order. Two refusals come from that, and a
-manifest that passes ``validate.py`` still fails at a shop on them (found on our test bench, 2026-10-18, sample S33):
+manifest that passes ``validate.py`` still fails at a shop on them (found on our test bench, 2026-10-18, sample S33, and
+2026-10-23, sample S44):
 
 1. **A field this manifest adds cannot be used by its own report, number card or chart.** The site check reads the shop's
    record type as it is BEFORE the install, so a field the same manifest adds there is not a field yet: *"not fields of
@@ -11,6 +12,9 @@ manifest that passes ``validate.py`` still fails at a shop on them (found on our
    and ``aggregate_function_based_on``. On the manifest's own record types every field is there: never refused.
 2. **A workspace cannot link the manifest's own report.** The installer makes workspaces before reports, so a shortcut
    to a report the same manifest makes cannot be saved: *"Could not find Row #n: Link To: <report>"*.
+3. **A feed registration's description holds at most 140 characters.** The shop's Registered Application keeps its
+   description in a field of 140 characters, and a longer one stops the install: *"CharacterLengthExceededError"*
+   (found on our test bench by APPF run 12, 2026-10-23, sample S44's first manifest).
 
     python3 tools/manifest/site_rules.py samples/s33_click_and_collect/manifest.json    # exit 0 = none; 1 = refused
 
@@ -26,6 +30,7 @@ import json
 import sys
 
 CHART_FIELDS = ("based_on", "value_based_on", "group_by_based_on", "aggregate_function_based_on")
+DESCRIPTION_MAX = 140    # Registered Application's description field
 
 
 def _rows(m, kind):
@@ -65,6 +70,12 @@ def refusals(m: dict) -> list[dict]:
                 out.append({"where": f"workspaces[{i}].shortcuts[{j}]", "name": w.get("name"),
                             "reason": f"Could not find Row #{j + 1}: Link To: {s['link_to']} (the shop makes a workspace before the "
                                       "manifest's own reports: link a record type's list instead)"})
+    for i, r in enumerate(_rows(m, "registered_applications")):
+        d = r.get("description")
+        if isinstance(d, str) and len(d) > DESCRIPTION_MAX:
+            out.append({"where": f"registered_applications[{i}]", "name": r.get("name"),
+                        "reason": f"the description is {len(d)} characters; the shop keeps at most {DESCRIPTION_MAX} "
+                                  "(CharacterLengthExceededError at install)"})
     return out
 
 

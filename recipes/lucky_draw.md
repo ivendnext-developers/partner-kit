@@ -1,0 +1,67 @@
+# Lucky draw: entries by spend, and a fair draw of the winners — the recipe
+
+A shop runs a *shop and win* campaign: every so much a customer spends at its tills during the campaign is one entry, and after the last day the winners are drawn. The shop wants the entries counted by its own rule, returns taken off, the till's walk-in sales left out, and a draw that is fair and that nobody can repeat or change after it. This recipe does it with a **campaign** record of the app's own and two buttons on it. A manager presses **Count entries** during the campaign and **Draw winners** once after it. Your service reads the campaign's till sales, counts each sale's entries, draws the winners and reserves, and writes the results on the campaign. It is for an iVendNext Partner, or the CitiXsys Consulting Team, who wants a campaign without code inside the shop.
+
+**Reference implementation:** `samples/s44_lucky_draw/`.
+
+**When to use it.** The shop's customers are named on their sales (the cashier adds the customer, or a loyalty card does). The campaign's rule is about spend: so much spent, one entry. For a reward that every customer above a threshold gets, not a draw, see S25 (*Gift card on spend*); for a check at the till before payment, S23.
+
+**The four rules, here.** No code runs inside the shop. One address is called, your service, and only when someone presses a button. The service reads the shop's sales and writes only its own campaign record: it changes no sale, price or customer, and never an edit someone saved after it read the campaign. It moves no money: the prize is the shop's to hand over.
+
+## What the manager sees
+
+1. The manager makes a campaign: its company, its first and last days, the spend for one entry, the most entries a sale may give, the tills and the customer groups that take part (none listed: all), the winners, the reserves, and the prize in the shop's words.
+
+   <a id="the-campaign"></a>
+2. **Count entries**, any time: *"412 sales by 297 customers: 1,036 entries so far."* The counts are written on the campaign.
+3. **Draw winners**, after the last day (by the campaign's own *hours from UTC*): *"Drew 3 winners and 2 reserves from 1,036 entries. The results are on the campaign."* The campaign now reads *Drawn*; its results list each winner and reserve with their name, mobile and e-mail from the shop's own customer record, their entries, the entry number drawn and the sale holding it. Its rule can no longer change, and the button is gone.
+4. The manager calls the winners, hands over the prizes and ticks *Handed over* on each row.
+
+## Steps
+
+1. **Add the campaign record type** with three tables of its own: the tills (POS Profile), the customer groups (Customer Group), and the results (rank, winner or reserve, customer, the customer's name, mobile and e-mail fetched from the customer on save, entries, the entry number drawn, the sale, *Handed over*). Give the campaign's rule fields `read_only_depends_on: "eval:doc.status=='Drawn'"`, so the rule is locked once drawn, and make the status, the counts and the draw's record read-only: only the service writes them. See the sample's `manifest.json`.
+
+2. **Add the two buttons on the campaign's form**, for the app's own manager role, each sending the campaign's name only, each answered by its own service ([Desk action recipe](desk_action.md)). *Draw winners* shows only while the campaign is not drawn:
+
+   ```json
+   "extension_subscriptions": [
+     {"key": "count", "point": "desk_action", "label": "Lucky draw count",
+      "endpoint_url": "https://your-service.example/press/count", "timeout_seconds": 10},
+     {"key": "draw", "point": "desk_action", "label": "Lucky draw",
+      "endpoint_url": "https://your-service.example/press/draw", "timeout_seconds": 10}],
+   "desk_actions": [
+     {"record_type": "PP LDW Campaign", "label": "Count entries", "placement": "form", "service": "count",
+      "roles": ["PP LDW Manager"], "on_draft": 1, "on_submitted": 0, "send_fields": "name"},
+     {"record_type": "PP LDW Campaign", "label": "Draw winners", "placement": "form", "service": "draw",
+      "roles": ["PP LDW Manager"], "on_draft": 1, "on_submitted": 0, "send_fields": "name",
+      "conditions": [{"field": "status", "operator": "!=", "value": "Drawn"}],
+      "confirm_text": "Draw the winners and reserves now? A draw is never repeated, and the campaign's rule can no longer change."}]
+   ```
+
+3. **Add a feed registration** for the app's user (leave it switched off; its description at most 140 characters, the shop's own limit): a service that serves many shops receives the user's key through it on *Connect again* (guide chapter 14b).
+
+4. **Write the service** (`samples/s44_lucky_draw/draw.py` and `service/app.py`, standard library). For each press:
+   - check the signature (that button's subscription's secret);
+   - read the campaign (`GET /api/resource/PP LDW Campaign/<name>`); on *Draw winners*, answer *Already drawn* when it reads *Drawn*, and refuse before the campaign's last day has ended at the shop;
+   - read, with the app's user, one list read each (`GET /api/resource/<type>?fields=…&filters=…&limit_page_length=0`): the submitted till sales of the campaign's company and days (and tills), the submitted returns since its first day, every POS Profile's walk-in `customer`, and, when the campaign lists groups, the Customer Group tree (`lft`, `rgt`);
+   - count each sale's entries: its `base_grand_total` less its returns, divided by the spend, rounded down, capped; leave out the walk-in customer and the groups not taking part; number the entries through the sales in order of date, time and number;
+   - on *Count entries*, write the counts and the list's fingerprint; on *Draw winners*, draw with a cryptographic random source, one place per customer, winners then reserves, and write the results, the draw's record and *Drawn* (`PUT` with the campaign's `modified` as read);
+   - answer with a message and `refresh` (the extension point's vocabulary).
+
+5. **Rights.** The app's user holds the app's integration role alone, with read on **POS Invoice**, **POS Profile** and **Customer Group** (measured on our test bench: the shop refused each until it was given; a right of *select* alone answers the names only). The manifest gives the role read and write on the campaign.
+
+## Tell the winners
+
+The app writes the winners; telling them is the shop's own. A shop's **Notification** on the campaign, *Send Alert On: Value Change* of *Status*, with the condition `doc.status == "Drawn"`, channel *SMS* or *Email*, its recipient by the results' `mobile_no` or `email_id`, sends each winner the news (the manifest's own notifications go only to the shop's users). Write your text with the campaign's `prize`.
+
+## Bounds
+
+- **Till sales only**: a Desk sale (Sales Invoice) or a web order does not count.
+- **Draw once every till has sent its sales**: a sale that reaches the shop after the draw is not in it.
+- **One press reads the whole campaign.** The shop waits 10 seconds for a button; on our test bench the shop answered 12,157 sales (2.7 MB) in under a fifth of a second to a service beside it; a hosted service reads across the internet, so split a campaign of more than about 50,000 sales by till.
+- **The customer's own entries** are not shown at the till or on the receipt.
+- **Removing the app removes its campaigns.**
+
+## See also
+
+[Desk action](desk_action.md) · [Gift card on spend](gift_card_on_spend.md) · [Make it your own](make_it_your_own.md) · guide chapter 9 (the extension points)
