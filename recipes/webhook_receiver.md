@@ -4,18 +4,18 @@
 
 *A phone sold at the till; seconds later the sample's warranty service, told by a signed webhook, has put its comment on the sale in Desk.*
 
-> ⚠ **Since 2026-10-04 a webhook is the NUDGE, not the record.** To learn reliably what happened in a shop, read the **event feed** (`recipes/event_feed.md`): a queue you pull and mark done, so nothing is lost while you are down. Use a webhook only to be told to pull now (`event_feed.md` appendix A). This recipe stays for verifying a signed webhook — the nudge's signature is checked exactly as below.
+> ⚠ **Since 2026-10-04 a webhook is the NUDGE, not the record.** To learn reliably what happened in a retailer's iVendNext, read the **event feed** (`recipes/event_feed.md`): a queue you pull and mark done, so nothing is lost while you are down. Use a webhook only to be told to pull now (`event_feed.md` appendix A). This recipe stays for verifying a signed webhook — the nudge's signature is checked exactly as below.
 
-This recipe is for an iVendNext Partner whose own server, in any language, must react when something happens in a shop — a sale is booked, stock moves. The sample to copy is `samples/s1_warranty/service/receiver.py` (verify, replay) and `service/app.py` (idempotent handling, reconciliation).
+This recipe is for an iVendNext Partner whose own server, in any language, must react when something happens in a retailer's iVendNext — a sale is booked, stock moves. The sample to copy is `samples/s1_warranty/service/receiver.py` (verify, replay) and `service/app.py` (idempotent handling, reconciliation).
 
-**When to use it:** your server receives webhooks from a shop, as a nudge to pull the event feed or on their own.
+**When to use it:** your server receives webhooks from a retailer's iVendNext, as a nudge to pull the event feed or on their own.
 
 A webhook is a **doorbell, not a parcel**. Treat the call as "this sale changed", read the sale yourself over the API, and make every step safe to repeat. The five rules below follow from how iVendNext sends webhooks today.
 
 ## 1. Subscribe with a secret, and keep the payload thin
 
-A shop's administrator (it needs the System Manager role) creates a **Webhook** for the record type and event. For a booked sale, that is *Sales Invoice* and *POS Invoice* on **Submit**, with:
-- **Enable Security** on, and a long random **Webhook Secret** that only you and the shop know;
+A retailer's administrator (it needs the System Manager role) creates a **Webhook** for the record type and event. For a booked sale, that is *Sales Invoice* and *POS Invoice* on **Submit**, with:
+- **Enable Security** on, and a long random **Webhook Secret** that only you and iVendNext know;
 - **Request Structure: JSON**, with a body that names the record and when it changed, and nothing more:
 
 ```json
@@ -48,7 +48,7 @@ Nothing time-bound is signed, so a captured call stays valid for ever. Keep a **
 
 The same sale can reach you more than once: a retry, a replay that slips past a lost seen-set, and the reconciliation pull (rule 5). So:
 - keep your own record of the sales you have handled, and skip a handled one;
-- before writing anything back into the shop (a Comment, say), check over the API whether **your** earlier write is already there. That way a crash between "wrote it" and "recorded it" can never write it twice;
+- before writing anything back into the retailer's iVendNext (a Comment, say), check over the API whether **your** earlier write is already there. That way a crash between "wrote it" and "recorded it" can never write it twice;
 - make your own writes keyed and unique (e.g. one warranty per serial number).
 
 Answer within the webhook's **timeout** (our tests used 10 seconds). Slow work goes to your own queue. Answer `200` once the call is verified and recorded.

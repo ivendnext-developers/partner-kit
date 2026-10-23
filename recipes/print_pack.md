@@ -1,22 +1,22 @@
 # A layout for each customer's invoice, and a price list with photos — the recipe
 
-![The price list page made from a shop's prices and photos](../samples/s29_print_pack/screenshots/01_price_list_page.png)
+![The price list page made from a retailer's prices and photos](../samples/s29_print_pack/screenshots/01_price_list_page.png)
 
 *A price list with a photo for each item, as one page that prints to PDF.*
 
 A retailer or distributor wants the **back-office sales invoice** to look different for each of a few customers, and wants to send those customers a **price list with a photo of each item**. This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team. The sample to copy is `samples/s29_print_pack/`.
 
-**When to use it.** The customer asks for a different *layout* of figures the shop has already worked out, for a handful of named customers; or asks for a price list people can tell apart by picture. Not for the till's receipt (`recipes/receipt_format.md`), and not for a figure the invoice does not carry.
+**When to use it.** The customer asks for a different *layout* of figures iVendNext has already worked out, for a handful of named customers; or asks for a price list people can tell apart by picture. Not for the till's receipt (`recipes/receipt_format.md`), and not for a figure the invoice does not carry.
 
 ## Part 1 — the invoice
 
-It is Rung 4 of the guide's build ladder: a manifest with print formats on *Sales Invoice* (a standard record type, so the formats print; a format an app installs for its **own** record type is a different case, with a known defect on the shop's side: until the shop's release carries the product's fix, `/printview` answers 404 and Desk's preview keeps the standard layout; [guide chapter 7](../guide/07_manifests.md#a-print-format-on-your-own-record-type-a-known-defect) says more).
+It is Rung 4 of the guide's build ladder: a manifest with print formats on *Sales Invoice* (a standard record type, so the formats print; a format an app installs for its **own** record type is a different case, with a known defect on the retailer's side: until iVendNext's release carries the product's fix, `/printview` answers 404 and Desk's preview keeps the standard layout; [guide chapter 7](../guide/07_manifests.md#a-print-format-on-your-own-record-type-a-known-defect) says more).
 
-1. **Choose how the layout is picked.** Nothing in the shop picks a print format by customer: the *Customer* record has no print-format field (read on a sandbox: its 94 fields hold only *Print Language*). So either:
+1. **Choose how the layout is picked.** Nothing in the retailer picks a print format by customer: the *Customer* record has no print-format field (read on a sandbox: its 94 fields hold only *Print Language*). So either:
    - **one template that branches on the customer** (`branch_manifest.json`): the body reads `doc.customer` and prints that customer's layout, and a plain layout for anyone else. The administrator makes it the invoice's default (Desk → **Customize Form** → *Sales Invoice* → **Default Print Format**); a manifest cannot. Or
    - **one format for each customer** (`each_manifest.json`): a person picks the format in the print dialog and the e-mail dialog, every time. Nothing makes the right one print.
 2. **Copy the sample** and edit `customers.json` (the customers' record names, exactly), `logo.png` and `layouts/*.html`. Your formats' names start with your prefix (`PP PRT …` in the sample).
-3. **Read only the invoice.** A layout may use only what the invoice carries: `doc.company`, `doc.company_tax_id`, `doc.company_address_display`, `doc.customer_name`, `doc.address_display`, `doc.tax_id`, the dates, `doc.items` (each line's `item_name`, `qty`, `rate` …), `doc.taxes`, `doc.terms`, `doc.remarks`, `doc.po_no`. Print each amount as the document formats it, `doc.get_formatted("grand_total")`, and work nothing out. Read the field list of *Sales Invoice* on **your** shop first (`/api/resource/DocType/Sales Invoice`) and name only fields that exist.
+3. **Read only the invoice.** A layout may use only what the invoice carries: `doc.company`, `doc.company_tax_id`, `doc.company_address_display`, `doc.customer_name`, `doc.address_display`, `doc.tax_id`, the dates, `doc.items` (each line's `item_name`, `qty`, `rate` …), `doc.taxes`, `doc.terms`, `doc.remarks`, `doc.po_no`. Print each amount as the document formats it, `doc.get_formatted("grand_total")`, and work nothing out. Read the field list of *Sales Invoice* on **your** site first (`/api/resource/DocType/Sales Invoice`) and name only fields that exist.
 4. **Build and check:**
 
    ```bash
@@ -32,8 +32,8 @@ A print template cannot read other records on a site before POS build 2.0.0.654:
 
 ## Part 2 — the price list with photos
 
-1. **Keep the photos in the shop.** Attach each item's photo to the item **and set its *Image* field** (uploading a file does not set it, and an item without the field is a grey box). The page loads nothing from outside the shop, and the program uses only a photo the shop itself serves (a redirect to another host is refused): a PNG, JPEG, GIF or WebP up to 800 kB.
-2. **Make a key** that can read *Item Price*, *Item* and files, on your sandbox or the customer's shop.
+1. **Keep the photos in the retailer's iVendNext.** Attach each item's photo to the item **and set its *Image* field** (uploading a file does not set it, and an item without the field is a grey box). The page loads nothing from outside the retailer's iVendNext, and the program uses only a photo iVendNext itself serves (a redirect to another host is refused): a PNG, JPEG, GIF or WebP up to 800 kB.
+2. **Make a key** that can read *Item Price*, *Item* and files, on your sandbox or the customer's iVendNext.
 3. **Run the program**, once for each distributor and list:
 
    ```bash
@@ -42,14 +42,14 @@ A print template cannot read other records on a site before POS build 2.0.0.654:
    ```
 
 4. **Open the page in a browser and print it to PDF** (A4 is set by the page). The spreadsheet file holds the same rows (group, code, name, unit, currency, rate, photo yes or no).
-5. **Read the lines the program prints at the end:** each item that got a grey *No photo* box and why (no photo, a photo the shop would not give, too big, not a picture, kept outside), and each disabled item left out.
+5. **Read the lines the program prints at the end:** each item that got a grey *No photo* box and why (no photo, a photo iVendNext would not give, too big, not a picture, kept outside), and each disabled item left out.
 
-A print format on the price list is the shop's own way from POS build 2.0.0.654: it lists the price rows through `ivn_rows` (the card *price-list-with-photos* shows one). The program stays the route for a spreadsheet, a file per distributor, or a site before that build.
+A print format on the price list is the retailer's own way from POS build 2.0.0.654: it lists the price rows through `ivn_rows` (the card *price-list-with-photos* shows one). The program stays the route for a spreadsheet, a file per distributor, or a site before that build.
 
 ## Limits
 
 - The back-office sales invoice only; the till's receipt is separate.
-- A layout of your own gets none of our later fixes to the shop's own invoice format.
+- A layout of your own gets none of our later fixes to the retailer's own invoice format.
 - A draft, a cancelled invoice and a return print like any invoice (no mark, the same title); labels are English; one logo serves every company on the site.
 - Switching packages is an update at a higher version; removing the package also removes the default setting that named it.
 - Nothing picks a format by customer unless the template does; a renamed customer falls to the plain layout.
@@ -58,4 +58,4 @@ A print format on the price list is the shop's own way from POS build 2.0.0.654:
 
 ## Technical notes
 
-Proven on a sandbox, 2026-10-16, iVendNext POS app 2.0.0.650, in two passes (the second on the committed files): both packages installed and removed; one template printed layouts A, B, C and the plain layout for four draft invoices, with no tax and with two tax lines (net, tax and total equal the booked ones in every layout); the default set on the invoice made a print with no format named choose the layout by customer, and removing the package removed that default; the per-customer set printed each format on its own invoice; the price list ran against 21 prices with photos on two items and a photo file that no longer exists (a grey box and a report line, the run finishing), opened in a browser (photos loaded, no outside request) and printed to a 3-page A4 PDF; a print format on the item showed its photo in the print and in the shop's PDF. **Not run:** a submitted invoice, a return, the print and e-mail dialogs and Customize Form as screens, the invoice as the shop's own PDF, right-to-left text, a list of 500+ items. The tests and their canaries are in `samples/s29_print_pack/tests/`.
+Proven on a sandbox, 2026-10-16, iVendNext POS app 2.0.0.650, in two passes (the second on the committed files): both packages installed and removed; one template printed layouts A, B, C and the plain layout for four draft invoices, with no tax and with two tax lines (net, tax and total equal the booked ones in every layout); the default set on the invoice made a print with no format named choose the layout by customer, and removing the package removed that default; the per-customer set printed each format on its own invoice; the price list ran against 21 prices with photos on two items and a photo file that no longer exists (a grey box and a report line, the run finishing), opened in a browser (photos loaded, no outside request) and printed to a 3-page A4 PDF; a print format on the item showed its photo in the print and in the retailer's PDF. **Not run:** a submitted invoice, a return, the print and e-mail dialogs and Customize Form as screens, the invoice as the retailer's own PDF, right-to-left text, a list of 500+ items. The tests and their canaries are in `samples/s29_print_pack/tests/`.

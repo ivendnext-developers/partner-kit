@@ -1,16 +1,16 @@
-# Set a shop up with no code — the recipe (reasons, IMEI, line detail, member pricing)
+# Set iVendNext up with no code — the recipe (reasons, IMEI, line detail, member pricing)
 
 ![What the cashier meets once the configuration is applied](../samples/s5_config_pack/screenshots/s5_flow.gif)
 
 *Once the configuration is applied, the till gives a member their price, asks for reasons, checks a line detail, asks for a phone's IMEI and asks why a sale is voided.*
 
-This recipe makes the till **ask for and keep** a coded reason, **track a phone by its IMEI**, **capture one more detail per line**, and **price members differently**. It uses only what iVendNext already has, switched on by configuration. It is for an iVendNext Partner, the CitiXsys Consulting Team or a shop's own administrator. **Reference implementation:** `samples/s5_config_pack/`: `config.json` is the whole set-up, `apply_config.py` applies it over the record API, and `--remove` undoes it.
+This recipe makes the till **ask for and keep** a coded reason, **track a phone by its IMEI**, **capture one more detail per line**, and **price members differently**. It uses only what iVendNext already has, switched on by configuration. It is for an iVendNext Partner, the CitiXsys Consulting Team or a retailer's own administrator. **Reference implementation:** `samples/s5_config_pack/`: `config.json` is the whole set-up, `apply_config.py` applies it over the record API, and `--remove` undoes it.
 
-**When to use it.** Rung 1 of the build ladder: configure first, always. Nothing here runs partner code in the shop. The script is a one-time set-up run by the shop's administrator; after that it is not needed again.
+**When to use it.** Rung 1 of the build ladder: configure first, always. Nothing here runs partner code in the retailer's iVendNext. The script is a one-time set-up run by the retailer's administrator; after that it is not needed again.
 
 ## What each part is
 
-| You want | The shop's own setting | What the sample sets |
+| You want | The retailer's own setting | What the sample sets |
 |---|---|---|
 | A coded reason for a void, a return, a discount | **Reason Code Master** rows (a type each: *Void Sale, Item Return, Sale Return, Sale Discount, Item Discount, Price Override …*) and the **Retail Setting** switch for that type (`reason_void_sale`, `reason_item_return`, `reason_sale_return`, `reason_sale_discount`, `reason_item_discount`; a void reason also needs `save_voided_transaction`) | five reason codes, six switches on |
 | The IMEI of every phone sold, once | the item's **serial numbers** (Item → *Has Serial No*); the IMEI **is** the serial number, received with the stock | one tracked item, three IMEIs in stock |
@@ -20,9 +20,9 @@ This recipe makes the till **ask for and keep** a coded reason, **track a phone 
 
 ## Steps
 
-1. **Read `config.json`, and change the names, codes and numbers to the shop's.** Names start with `PP CFG` in the sample only so its test can find and remove them; use the shop's own.
+1. **Read `config.json`, and change the names, codes and numbers to the retailer's.** Names start with `PP CFG` in the sample only so its test can find and remove them; use the retailer's own.
 
-2. **Give the script a key:** a user who may edit those records. These roles together are enough: System Manager, Retail Manager, Item Manager, Stock Manager, Sales Master Manager. The key is the shop's administrator's, used once.
+2. **Give the script a key:** a user who may edit those records. These roles together are enough: System Manager, Retail Manager, Item Manager, Stock Manager, Sales Master Manager. The key is the retailer's administrator's, used once.
 
 3. **Run it:**
 
@@ -32,10 +32,10 @@ This recipe makes the till **ask for and keep** a coded reason, **track a phone 
 
    - **Run it twice and nothing doubles.** The second run says *kept* for everything, and receives no stock.
    - **Each run recomputes the member promotion's exclusion list**, so a customer group added since is excluded the next time you run it.
-   - **`--remove`** puts the switches back to what they were and deletes what the script made. A record a booked sale points at cannot be deleted, so it is *retired* (a reason code made inactive, the member disabled, the line detail switched off); a later run switches it back on. **Sample S22 shows what happens to an integration user that has taken a workflow step (check by workflow):** the shop keeps a record of each step, visible to the site's Administrator alone, so the user and its role cannot be deleted. The undo disables the user, gives it new keys that no one keeps, and disables the role; a later run switches them back on (`recipes/integration_user.md` step 6).
-   - ⚠ **It does not undo the stock.** The item, its price, the unsold serial numbers and the **submitted Material Receipt** (which posts the units' value to the books) stay. On a real shop, use your own IMEIs and quantities, or cancel the receipt if it was a trial.
+   - **`--remove`** puts the switches back to what they were and deletes what the script made. A record a booked sale points at cannot be deleted, so it is *retired* (a reason code made inactive, the member disabled, the line detail switched off); a later run switches it back on. **Sample S22 shows what happens to an integration user that has taken a workflow step (check by workflow):** iVendNext keeps a record of each step, visible to the site's Administrator alone, so the user and its role cannot be deleted. The undo disables the user, gives it new keys that no one keeps, and disables the role; a later run switches them back on (`recipes/integration_user.md` step 6).
+   - ⚠ **It does not undo the stock.** The item, its price, the unsold serial numbers and the **submitted Material Receipt** (which posts the units' value to the books) stay. On a real site, use your own IMEIs and quantities, or cancel the receipt if it was a trial.
 
-4. **Make sure the shop has a default Company.** Any shop that finished its set-up has one. A sale of a serial-tracked item builds a Serial and Batch Bundle, which takes its company from that default. Without it, the first IMEI sale fails with *"Error: Value missing for Serial and Batch Bundle: Company"*.
+4. **Make sure iVendNext has a default Company.** Any retailer that finished its set-up has one. A sale of a serial-tracked item builds a Serial and Batch Bundle, which takes its company from that default. Without it, the first IMEI sale fails with *"Error: Value missing for Serial and Batch Bundle: Company"*.
 
 5. **The cashier's side: nothing to do.** The till offers the reasons it finds, asks for the IMEI of a tracked item, offers the line detail, and applies the member promotion when the member is attached to the sale.
 
@@ -59,11 +59,11 @@ This recipe makes the till **ask for and keep** a coded reason, **track a phone 
 
    *A void asks why, and keeps the voided sale on record.*
 
-## Two more things a shop configures
+## Two more things a retailer configures
 
 ### The document's print attached to an approval e-mail
 
-A notification on the document, set up in Desk (or over the record API) by the shop's administrator: **Notification** with *Channel* Email, *Send Alert On* a value change of `workflow_state` (or the event the shop wants), its recipients by role, and **Attach Print** ticked with the print format chosen. In **Print Settings**, **Allow Print for Draft** must be on. With it off, the notification raises an error inside the document's own save, so the approval step can stop; send the first one to a test document. Checked on a sandbox (2026-10-16): a notification on Purchase Order with *Attach Print* saved as sent, switched off, then deleted. No mail was sent: the sandbox's outgoing e-mail is off.
+A notification on the document, set up in Desk (or over the record API) by the retailer's administrator: **Notification** with *Channel* Email, *Send Alert On* a value change of `workflow_state` (or the event the retailer wants), its recipients by role, and **Attach Print** ticked with the print format chosen. In **Print Settings**, **Allow Print for Draft** must be on. With it off, the notification raises an error inside the document's own save, so the approval step can stop; send the first one to a test document. Checked on a sandbox (2026-10-16): a notification on Purchase Order with *Attach Print* saved as sent, switched off, then deleted. No mail was sent: the sandbox's outgoing e-mail is off.
 
 ```json
 {"doctype": "Notification", "name": "PO approval mail", "document_type": "Purchase Order", "channel": "Email",
@@ -74,31 +74,31 @@ A notification on the document, set up in Desk (or over the record API) by the s
 Limits:
 - An uploaded file (a CSV) goes as a **link** in the message, not an attachment. The installed version has no attach-from-field, and a manifest refuses one (it could mail any private file).
 - *Allow Print for Draft* is site-wide.
-- From POS build 2.0.0.654 a package may attach its **own** print format to a notification on its **own** record types ([chapter 7](../guide/07_manifests.md), *A notification's own print*). The shop's own documents stay configuration.
+- From POS build 2.0.0.654 a package may attach its **own** print format to a notification on its **own** record types ([chapter 7](../guide/07_manifests.md), *A notification's own print*). The retailer's own documents stay configuration.
 
 ### A member rate after the promotions: the certified pricing module
 
 A rate the promotions cannot express (a member's percent on top of the day's promotion) is the pricing extension point, answered by a module we have certified (`guide/08_sandboxed_functions.md`, the contract `contracts/pages/price.md`).
 1. **The module.** A partner builds it from the kit's template (`tools/wasm_kit/template/`). Built through the kit's meters, the template is byte-identical to the product's own reference module, *price member* (register `4XSR0YJSBW8X`). CitiXsys certifies a module's SHA-256 for the extension point `price`, version 1, by hand; the certificate comes back with it.
-2. **The module record.** The shop's System Manager opens **Retail Extension Module** in Desk, then fills it in:
+2. **The module record.** The retailer's System Manager opens **Retail Extension Module** in Desk, then fills it in:
    - *Extension point* `price`, *Partner*, *Version* 1;
    - *Module file*: attach the `.wasm`;
    - *Counts its own steps* (metered) as the certificate says;
    - *Certificate*: paste it.
 
-   The shop works out the fingerprint and size itself, and refuses a file the certificate does not admit, in its words *"This module cannot be used: ⟨reason⟩"*. A saved module cannot be changed: a new build is a new version.
+   iVendNext works out the fingerprint and size itself, and refuses a file the certificate does not admit, in its words *"This module cannot be used: ⟨reason⟩"*. A saved module cannot be changed: a new build is a new version.
 3. **The subscription.** **Retail Extension Subscription**:
    - *Extension point* `price`, *Answered by* `wasm` (the form offers nothing else);
    - *Partner module*: the record above, a *Label*;
    - *Settings*: the module's rules, for example `{"rules": [{"id": "Gold 10%", "item_group": "*", "customer_group": "Gold", "percent_bp": 1000, "cap_minor": null, "min_qty_milli": 0}]}`;
-   - **Most a module may take off a line (%)**: it starts at 0, and at 0 the module is not even run. Raise it to the most the shop allows;
+   - **Most a module may take off a line (%)**: it starts at 0, and at 0 the module is not even run. Raise it to the most iVendNext allows;
    - *Only for these POS Profiles* if the rate is not for every store; *Enabled*.
 
    At most one enabled pricing subscription answers a POS Profile.
 4. **Test on one till.** A gold member's line shows the promotion and then *"Gold 10% −…"* beside it, on the phone, the counter and the tablet, online and offline. A refused or missing answer charges the platform's own price.
 
 Limits:
-- It takes money off a line only, after every promotion, never past the shop's limit;
+- It takes money off a line only, after every promotion, never past the retailer's limit;
 - a line a Pricing Rule priced, a return, a zero-rate line and a gift card are never shown to it;
 - the Desk POS does not run it.
 
@@ -114,7 +114,7 @@ Limits:
 - **A customer group created later gets the member discount until the script is run again** (it recomputes the exclusion list each run), or until the group is added to the promotion's exclusions in Desk.
 - **One unit per line** for a serial-tracked item, by the till's design.
 - **Offline** was not tested for any part.
-- Reason codes, the IMEI and the line detail each cost the cashier an extra step on every line they apply to. Switch on only what the shop will use.
+- Reason codes, the IMEI and the line detail each cost the cashier an extra step on every line they apply to. Switch on only what the retailer will use.
 
 ## Technical notes
 
