@@ -155,7 +155,7 @@ Your server answers every store at once. A change you release there reaches **ev
 
 We release one product to every customer. Your work keeps running because it only uses published ways in: the API, the event feed, the extension points and the manifest format (`manifest_version`). The calls for a Desk button, a check and a capture carry `X-iVendNext-Point: <point>/<version>`; a till key's call names its version in its `User-Agent` (`iVendNext-POS-AppKey/1`). How long a version keeps working is in [chapter 18](18_versioning_and_support.md). **Re-run the customer's release gate before every one of our upgrades** (chapter 14).
 
-## What the retailer sees
+## What iVendNext sees
 
 - **In the customer's site**, read by the customer's administrator:
   - every manifest install, as the install record: what was installed, which version, when it was removed. The record is kept after an uninstall as iVendNext's log;

@@ -52,7 +52,7 @@ A refund is never judged; an exchange is judged only for what it sells.
 | `manifest.json` | the three record types, the mark on Item Group and Item, the lab order's workflow, the job sheet, the report, the links under Customer and Prescription, the check (`extension_subscriptions`, extension point `check`), the feed whose user is the app's, three help addresses; installed **switched off** |
 | `optical.py` | **the pure core**: the signature check, the check's context, the marks on the group tree, the prescriptions in date, the refusal |
 | `service/app.py` | the HTTP service (standard library): `POST /opt/check`, `GET /health`; the record API as the app's user; one retailer or many |
-| `tests/test_rules.py` · `tests/test_service.py` | laptop tests: the rules, then the real service with a stand-in record API, calls signed as the retailer signs them, one retailer and many |
+| `tests/test_rules.py` · `tests/test_service.py` | laptop tests: the rules, then the real service with a stand-in record API, calls signed as iVendNext signs them, one retailer and many |
 | `tests/test_manifest.py` · `tests/test_contract.py` | the manifest's shape; every answer, and every call our test site recorded, against the published contract (`partner_check.v1.schema.json`) |
 | `tests/canaries.py` | each test that guards a secret, a key, a read, a mark, a date or a refusal goes RED when its check is removed |
 | `app.json` · `Dockerfile` | how CitiXsys hosting runs it (a function, paid per call), and a container for your own server |

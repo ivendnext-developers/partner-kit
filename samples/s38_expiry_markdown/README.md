@@ -1,6 +1,6 @@
 # S38 — Expiry markdown (`pp_exm`): mark down stock as its expiry date nears
 
-A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it sells before it is thrown away. The retailer sets its markdown steps once on its item groups: 25% off from 5 days before expiry, 50% off from 2 days, say. Each morning a manager ticks the lots in the Batch list and presses **Mark down**. Every ticked lot inside a step gets its own price on the retailer's selling price list, valid until its expiry date. The till already rings a lot at its own price and prints its lot label, so the cashier does nothing new. This sample is for a developer who wants a button on a Desk list whose service **writes the retailer's own records** by a rule iVendNext keeps.
+A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it sells before it is thrown away. The retailer sets its markdown steps once on its item groups: 25% off from 5 days before expiry, 50% off from 2 days, say. Each morning a manager ticks the lots in the Batch list and presses **Mark down**. Every ticked lot inside a step gets its own price on the retailer's selling price list, valid until its expiry date. The till already rings a lot at its own price and prints its lot label, so the cashier does nothing new. This sample is for a developer who wants a button on a Desk list whose service **writes the retailer's own records** by a rule the retailer keeps.
 
 **When to use it:** the retailer's rule decides a value on many records at once, a person decides when to apply it, and iVendNext already reads the value where it matters (here: a lot's own Item Price, which the till honours).
 
@@ -45,7 +45,7 @@ Pressed again, the button writes nothing: *"2 lots already marked down."*
    The role reaches every price on every list: give it to the app's user and no one else. A service for one retailer takes the key in its settings. A service for many retailers receives it from iVendNext: choose the user as the *Application User* of the feed **PP EXM Markdown feed**, then press **Connect again** on the app (*Many retailers, hosted* below).
 3. **Fill in the settings:** open **PP EXM Settings**, make the record **Default**, choose the selling **price list** your tills sell from, and the retailer's **hours from UTC** (the retailer's own day decides how many days a lot has left).
 4. **Give the steps** to your perishable item groups (Item Group form).
-5. **Switch the service on** (the System Manager): **Retail Extension Subscription**, the record *Mark down service*: read what it is sent, tick the consent, switch it on. Then **Retail Desk Action**, the record *Mark down*: switch it on. The button shows to an *Item Manager*, the engine's role that reads Batch (iVendNext checks, at every press, that the user may read each ticked lot). If your retailer's markdowns are someone else's job, add their role on the button and give that role read on Batch.
+5. **Switch the service on** (the System Manager): **Retail Extension Subscription**, the record *Mark down service*: read what it is sent, tick the consent, switch it on. Then **Retail Desk Action**, the record *Mark down*: switch it on. The button shows to an *Item Manager*, the engine's role that reads Batch (iVendNext checks, at every press, that the user may read each ticked lot). If the retailer's markdowns are someone else's job, add their role on the button and give that role read on Batch.
 
 **Where it shows.** In Desk: the four steps on the Item Group form, the settings record, and the button on the Batch list and form. At the till: nothing new; a lot rings at its own price.
 
@@ -60,7 +60,7 @@ Pressed again, the button writes nothing: *"2 lots already marked down."*
 | `manifest.json` | the settings record type, the four steps on Item Group, the service (`extension_subscriptions`, extension point `desk_action`), the button (`desk_actions`, Batch, form and list), the feed whose user is the app's, a help address; installed **switched off** |
 | `markdown.py` | **the pure core**: the signature check, the press's lots, the steps on the group tree, the percent by days left, the rounding, each lot's writes, the answer |
 | `service/app.py` | the HTTP service (standard library): `POST /press/markdown`, `GET /health`; the record API as the app's user; one retailer or many |
-| `tests/test_service.py` | laptop tests: the real service, a stand-in record API, presses signed as the retailer signs them |
+| `tests/test_service.py` | laptop tests: the real service, a stand-in record API, presses signed as iVendNext signs them |
 | `tests/test_many_shops.py` | many retailers: each retailer's own secret and key, a press before *Connect again*, the fields under the library's prefix, the record API's errors, the function entry |
 | `tests/test_manifest.py` · `tests/test_contract.py` | the manifest's shape; every answer, and every press our test site recorded, against the published contract (`desk_action.v1.schema.json`) |
 | `tests/canaries.py` | each test that guards a secret, a key, a price the retailer typed, an edit, the step chosen or the rounding goes RED when its check is removed |
@@ -98,7 +98,7 @@ What a partner usually changes:
 
 - **A price the retailer typed is never changed.** The app touches only rows whose note starts with its prefix and a colon. A lot that already has a price of the retailer's own is reported and left.
 - **An edit is never overwritten.** An update carries the row's `modified` as read; iVendNext refuses a stale write (`TimestampMismatchError`), and the answer asks for another press. A second press that created the same row a moment earlier is no failure either.
-- **The retailer's own words never reach the user.** The service branches on the error's type (`exc_type`), never shows its message.
+- **iVendNext's own words never reach the user.** The service branches on the error's type (`exc_type`), never shows its message.
 - **A press stops in time.** iVendNext waits 10 seconds at most for a Desk button; the service starts no new lot after 6 seconds and says how many are left (*Did 40 of 100 lots. Press Mark down again for the rest.*). A repeated press is harmless.
 - **Removing the app leaves the lots' prices it wrote** (they are the retailer's Item Price rows). Before you remove it, filter the Item Price list on *Note* starting with your prefix and delete them (a *Sales Master Manager* reads that list): once the app is gone nothing removes them, and while they exist the tills do not sell lot-tracked items offline.
 - **Test routes.** Delete `/test/received` from your copy.

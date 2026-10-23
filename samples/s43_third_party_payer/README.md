@@ -37,7 +37,7 @@ The plan's rules, all data (`copay.py`, the tests' 1,728 combinations):
 | **Most units on a sale** (a formulary row) | units past it are the customer's |
 | **Covers** formulary items or every item | a line the plan does not cover is the customer's |
 | **Price list** | when set, a sale on the plan is priced on it, and an item it does not carry, or carries at zero, **cannot be sold on the plan** (a row counts only as the engine applies it: in force today, in the line's unit or none, for no other customer, for no batch) |
-| **The retailer's own promotions apply** | off: the payer door prices a sale on the plan with the retailer's promotions and coupons switched off, so a retail promotion is not stacked on the payer's list (the add-on cleared them on every insured line) |
+| **The shop's own promotions apply** | off: the payer door prices a sale on the plan with the retailer's promotions and coupons switched off, so a retail promotion is not stacked on the payer's list (the add-on cleared them on every insured line) |
 
 ⭐ **The payer's share plus the customer's always equals the sale, to the cent**, and the payer's share is spread over the covered lines in proportion. **The sale's prices are never changed here**: the retailer's own pricing (the plan's price list, its pricing rules) prices the sale, and these rules only split it. So the excess over the limit carries the sale's own discount. (The original add-on re-priced each line and added a surcharge so the patient paid the excess undiscounted; a retailer wanting that sets it in its pricing.)
 

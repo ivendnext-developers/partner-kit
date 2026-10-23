@@ -1,4 +1,4 @@
-# S22 — Customer-owned loyalty (`pp_lyl`): your logic outside, the records inside the retailer's iVendNext
+# S22 — Customer-owned loyalty (`pp_lyl`): your logic outside, the records inside iVendNext
 
 A retailer that runs its **own** loyalty programme — its own tiers, its own cash back, its own rules — and wants it on iVendNext without putting any code inside the retailer's iVendNext. This sample is for a developer, or the CitiXsys Consulting Team, who would otherwise have built an app inside the customer's iVendNext for it.
 

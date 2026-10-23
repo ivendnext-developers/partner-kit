@@ -99,7 +99,7 @@ report view.
 | prescribing doctor | *Prescriber*: each prescription's, written on the dispensing when it was taken |
 | contents | *What it dispensed*: each item, its quantity and its prescription |
 | dose | *Directions (the dose)*: the prescriber's directions on the prescription, for each item; empty where the prescription carries none (the sale's or the item's own directions never stand in) |
-| date | *Day (the retailer's)*: the POS day the sale was taken under |
+| date | *Day (the shop's)*: the POS day the sale was taken under |
 | pharmacist | *Pharmacist*: the name on the seller's pharmacist record, when it is active, not a delegate and in date; else empty. On the Desk, the pharmacist who submitted the chain's first document |
 | price | ⛔ **not printed** (below) |
 
@@ -245,7 +245,7 @@ report view.
      which the register app's Mexican data set also prints in the fracción II and III books (its choice, not a cited
      field). The till then refuses such a sale until its date is in Sale details ([below](#the-prescriptions-date-and-the-prescriptions-register)).
    - **Saudi Arabia:** controlled prescriptions are dispensed through SFDA's **Raqeeb** platform, on paper only while it
-     is down (SFDA *Procedures and Controls*, 2026, Art. 11(1)). A prescription entered in this app is your retailer's
+     is down (SFDA *Procedures and Controls*, 2026, Art. 11(1)). A prescription entered in this app is the retailer's
      working copy for the counter's rules, not the lawful record (our reading; the text read does not name the decision
      that approved it); the app does not connect to Raqeeb. A prescription dispensed on paper while Raqeeb is down is
      entered in it once it is back (Art. 1).
@@ -347,7 +347,7 @@ report view.
   new ones.
 - **A reclassification** (a new schedule row on its date) starts the new schedule's frequency count from that day.
 - **Hosting:** CitiXsys hosting runs services in the United States. This app reads prescriptions and dispensing
-  history, so run it in your retailer's own region: the service is a container or a function you deploy yourself, from this
+  history, so run it in the retailer's own region: the service is a container or a function you deploy yourself, from this
   folder.
 - **A POS day left open holds its reservations,** so close every day. A Desk draft left after an allowed submit failed
   holds its fill until it is submitted or deleted.

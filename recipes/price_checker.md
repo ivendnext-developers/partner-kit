@@ -4,11 +4,11 @@ A retailer wants a screen on its floor where a customer scans an item and reads 
 
 **Reference implementation:** `samples/s24_price_checker/` — *Price-checker kiosk*.
 
-**When to use it.** A screen on the shop floor that nobody signs in to, that only **reads**, and that shows only what anyone standing in the retailer's iVendNext could see: a price checker, an *is it in stock* screen. ⛔ **Not** for a member's balance, a customer's order, a staff clock-in or anything that writes: whoever holds the address can use it, so those need a sign-in ([recipe](sign_in.md)). For a screen the cashier opens on the till, use a partner page ([recipe](partner_page.md)): the till opens it and hands it the sale.
+**When to use it.** A screen on the shop floor that nobody signs in to, that only **reads**, and that shows only what anyone standing in the store could see: a price checker, an *is it in stock* screen. ⛔ **Not** for a member's balance, a customer's order, a staff clock-in or anything that writes: whoever holds the address can use it, so those need a sign-in ([recipe](sign_in.md)). For a screen the cashier opens on the till, use a partner page ([recipe](partner_page.md)): the till opens it and hands it the sale.
 
 ## Steps
 
-1. **Declare one record per screen in your manifest** (`samples/s24_price_checker/manifest.json`): a record type `<PREFIX> Kiosk` named by the framework's random name (`"autoname": "hash"`), so each record's name is a code nobody can guess; a link to the store's till profile, and read-only fields that fetch what you need from it (`fetch_from`: company, price list, currency, walk-in customer, store). Give **System Manager** the rights to edit it and your integration role **read only**. Name that role under your prefix (`<PREFIX> Integration`) and the install makes it; a role outside your prefix must exist on the retailer's iVendNext before the install, which refuses a permission row for a role iVendNext lacks (the sample uses the kit's shared `PP Integration`, so its iVendNext makes it first). Add a feed registration naming the record type, so the retailer chooses your integration user there, and a `documentation` property setter on the record type pointing at your help page.
+1. **Declare one record per screen in your manifest** (`samples/s24_price_checker/manifest.json`): a record type `<PREFIX> Kiosk` named by the framework's random name (`"autoname": "hash"`), so each record's name is a code nobody can guess; a link to the store's till profile, and read-only fields that fetch what you need from it (`fetch_from`: company, price list, currency, walk-in customer, store). Give **System Manager** the rights to edit it and your integration role **read only**. Name that role under your prefix (`<PREFIX> Integration`) and the install makes it; a role outside your prefix must exist on the retailer's iVendNext before the install, which refuses a permission row for a role iVendNext lacks (the sample uses the kit's shared `PP Integration`, so the retailer makes it first). Add a feed registration naming the record type, so the retailer chooses your integration user there, and a `documentation` property setter on the record type pointing at your help page.
 
 2. **Serve the page from your app, and let its address name the retailer.** A partner page is opened by the till, and its call names no retailer. A kiosk is a browser: its address carries the retailer and the screen after a `#`, which never reaches a server log:
 
@@ -55,5 +55,5 @@ What the retailer does after install, in its own words:
 
 ### What was proven where
 
-- **Laptop:** the sample's tests (the core, the service over the wire with one retailer and many, the function entry, the retailer's three calls against a stand-in iVendNext that answers as iVendNext does, the manifest) and its canaries, each RED with its baseline passing.
+- **Laptop:** the sample's tests (the core, the service over the wire with one retailer and many, the function entry, the three calls to iVendNext against a stand-in that answers as iVendNext does, the manifest) and its canaries, each RED with its baseline passing.
 - **Our test bench:** see the sample's README.

@@ -2,7 +2,7 @@
 
 A retailer runs a *shop and win* campaign: every 200 spent at its tills during the campaign is one entry, say, and after the last day the winners are drawn. the retailer makes a **campaign** in Desk: its days, its tills, the spend for one entry, the customer groups that take part, how many winners and reserves, and the prize. During the campaign a manager presses **Count entries** to see how it is going. After the last day the manager presses **Draw winners** once: the app draws the winners and reserves from the entries, one prize per customer, each entry with the same chance, and writes the results and a record of the draw on the campaign. This sample is for a developer who wants buttons on a record of the app's own whose service **reads the retailer's sales and writes its answer back on that record**.
 
-**When to use it:** a rule iVendNext keeps decides something from many of its own records (here, a campaign's sales), a person decides when, and the answer belongs on one record the retailer can keep and show.
+**When to use it:** a rule the retailer keeps decides something from many of its own records (here, a campaign's sales), a person decides when, and the answer belongs on one record the retailer can keep and show.
 
 ## What happens
 
@@ -54,7 +54,7 @@ The **Draw winners** button is gone once the campaign is drawn, the form locks i
 | `manifest.json` | the campaign record type and its three tables (tills, customer groups, results), the two services (`extension_subscriptions`, extension point `desk_action`), the two buttons (`desk_actions`, on the campaign's form; *Draw winners* only while not *Drawn*), the feed whose user is the app's, a help address; installed **switched off** |
 | `draw.py` | **the pure core**: the signature check, the press's campaign, the campaign's rule, each sale's entries net of its returns, the group tree, the draw, the fingerprint, the answers |
 | `service/app.py` | the HTTP service (standard library): `POST /press/count`, `POST /press/draw`, `GET /health`; the record API as the app's user; one retailer or many |
-| `tests/test_service.py` | laptop tests: the real service, a stand-in record API, presses signed as the retailer signs them |
+| `tests/test_service.py` | laptop tests: the real service, a stand-in record API, presses signed as iVendNext signs them |
 | `tests/test_rules.py` | the core: entries, money exact, the order, the group tree, the draw's fairness (20,000 draws) and numbering, the fingerprint, the answers |
 | `tests/test_many_shops.py` | many retailers: each retailer's own secret for each button and its own key, a press before *Connect again*, the record type under the library's prefix, the record API's errors, the function entry |
 | `tests/test_manifest.py` · `tests/test_contract.py` | the manifest's shape; every answer, and every press our test site recorded, against the published contract (`desk_action.v1.schema.json`) |
@@ -97,7 +97,7 @@ What a partner usually changes:
 - **An edit is never overwritten.** The write carries the campaign's `modified` as read; iVendNext refuses a stale write (`TimestampMismatchError`), and the answer asks for another press. Two presses of *Draw winners* at once: one writes, the other is refused.
 - **A count after the draw** writes the counts only: the draw's record and the results stay as drawn.
 - **The random source** is the service's own (`secrets.randbelow`), never a seed anyone chose. Keep it so in your copy, and keep the record: the entries' fingerprint and the numbers drawn let anyone holding the sales check which sale each drawn number is.
-- **The retailer's own words never reach the user.** The service branches on the error's type (`exc_type`), never shows its message.
+- **iVendNext's own words never reach the user.** The service branches on the error's type (`exc_type`), never shows its message.
 - **Removing the app removes its campaigns** (they are the app's own records). Export a drawn campaign first if you need to keep it.
 - **Test routes.** Delete `/test/received` from your copy.
 - **Your address.** Write your own address in `allowed_urls`. The retailer's server must trust your certificate: a real one for a retailer.
@@ -124,7 +124,7 @@ What a partner usually changes:
 
 - **Till sales only.** Desk sales (Sales Invoice) and web orders do not count.
 - **The campaign's last day** ends at midnight by the campaign's *hours from UTC*; the draw is refused before. Draw once every till has sent its sales: a till that was offline sends its last day's sales when it reconnects, and a sale that arrives after the draw is not in it.
-- **One press reads the whole campaign** in one read of its sales. On our test bench iVendNext answered that read for 12,157 sales (2.7 MB) in under a fifth of a second, to a service beside it; a hosted service reads across the internet, which was not measured at that size. A press stops reading after 7 seconds and then writes nothing (the retailer's words: *did not answer in time*): split a campaign that large into more than one, by till.
+- **One press reads the whole campaign** in one read of its sales. On our test bench iVendNext answered that read for 12,157 sales (2.7 MB) in under a fifth of a second, to a service beside it; a hosted service reads across the internet, which was not measured at that size. A press stops reading after 7 seconds and then writes nothing (iVendNext's words: *did not answer in time*): split a campaign that large into more than one, by till.
 - **Every till sale counts**, a gift card sold or a sale paid by gift card or points included: the rule is the spend.
 - **The campaign's hours from UTC:** blank reads as UTC, so a retailer west of UTC that leaves it blank can draw before its last day has ended there; set it, and change it when the clocks change.
 - **A slow site:** *did not answer in time* can come after the draw's write has landed; open the campaign before you press again (a second press finds it drawn).

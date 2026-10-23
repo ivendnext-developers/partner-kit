@@ -8,7 +8,7 @@ A small service that does what every deployable app does ([guide chapter 14b](..
 
 | File | What it is |
 |---|---|
-| `service/core.py` | **your logic**: a pure function, `answer(context)`, no web code, no retailer |
+| `service/core.py` | **your logic**: a pure function, `answer(context)`, no web code, no iVendNext |
 | `service/app.py` | the web part: signature check, size cap, health address, one log line per call, clean stop, secret rotation |
 | `service/shops.py` | many retailers: the handshake (`/ivendnext/connect`, `/ivendnext/disconnect`), the library key check, and the retailers kept in a file |
 | `service/function.py` | on CitiXsys hosting, an app that only answers presses runs as a function, paid per call: this turns the load balancer's call into `handle` and back (chapter 14b, *A function or a container*) |
@@ -18,7 +18,7 @@ A small service that does what every deployable app does ([guide chapter 14b](..
 | `app.json` | the settings file: name, port, health address, size, region and the **names** of the environment variables. Never a value |
 | `validate_app.py` | checks `app.json` and the `Dockerfile` before you deploy |
 | `local_key.py` | local mode: a key pair of your own, and a library key it signs for a site on your machine |
-| `tests/` | the service, the handshake and the checker, with no cloud and no retailer; `canaries.py` removes each check of the handshake and expects its test to fail |
+| `tests/` | the service, the handshake and the checker, with no cloud and no iVendNext; `canaries.py` removes each check of the handshake and expects its test to fail |
 
 ## Run it
 
@@ -58,7 +58,7 @@ The app does not start without one of `IVN_POINT_SECRET` or `IVN_LIBRARY_APP` (w
 
 ## Local mode: many retailers on your laptop
 
-A retailer's site on your own machine (a local bench at `http://shop.localhost:8000`, say) has no certificate and a port, so the
+An iVendNext site on your own machine (a local bench at `http://shop.localhost:8000`, say) has no certificate and a port, so the
 handshake would refuse it and the app would call it back at `https://`. With `IVN_LOCAL=1` and the file store, a site
 on this machine (`localhost`, `<name>.localhost`, `127.0.0.1` or `[::1]`, with or without a port) may connect, and the
 app, and every sample built on this template, calls it back over plain `http`. Every other site keeps `https` and the two

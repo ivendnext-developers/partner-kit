@@ -48,7 +48,7 @@ Pressed again, the button changes nothing and says where the order already is.
 | `manifest.json` | the Serving store on Territory, the service (`extension_subscriptions`, extension point `desk_action`), the button (`desk_actions`, a draft's form only) and the feed whose user is the app's, installed **switched off** |
 | `route.py` | **the pure core**: the signature check, the press's one order, the walk up the territory tree, the write (the header and every line, the order's `modified` as read), the answers |
 | `service/app.py` | the HTTP service (standard library): `POST /press/route`, `GET /health`; the record API as the app's user; one retailer or many |
-| `tests/test_service.py` | laptop tests: the real service, a stand-in record API, presses signed as the retailer signs them: the store, the store above, a second press, no store, no territory, a submitted order, an edit saved in between, a refused store, a refused user |
+| `tests/test_service.py` | laptop tests: the real service, a stand-in record API, presses signed as iVendNext signs them: the store, the store above, a second press, no store, no territory, a submitted order, an edit saved in between, a refused store, a refused user |
 | `tests/test_many_shops.py` | many retailers: each retailer's own secret and key, a press before *Connect again*, the field under the library's prefix, the record API's errors, the function entry |
 | `tests/test_contract.py` | every answer, and every press our test site recorded, against the published contract (`desk_action.v1.schema.json`) |
 | `tests/canaries.py` | each test that guards a secret, a key, the order's other fields or an edit goes RED when its check is removed |
@@ -72,7 +72,7 @@ The App library's *Call-centre orders by district* runs this same `service/app.p
 1. After its install the retailer's site connects itself (the app template's handshake, guide chapter 14b): the service stores the retailer with its library key and the press's secret, `<app>:sub:route`.
 2. The retailer chooses its app user on the feed and presses *Connect again*: the service receives that user's key (`user:<email>`).
 3. Each press names its retailer (`X-iVendNext-Site`); it is checked with **that retailer's** secret and the order is read and written with **that retailer's** user's key. Another retailer's secret, or a retailer the service does not know, is refused (401).
-4. A press before step 2 is answered in words: *Send to store is not set up yet.* A retailer that refuses the user is told to check the user, its role and its API key, then press *Connect again*.
+4. A press before step 2 is answered in words: *Send to store is not set up yet.* A retailer whose iVendNext refuses the user is told to check the user, its role and its API key, then press *Connect again*.
 
 **No claim on a press is needed.** Unlike S16, which creates a record, this service gives the same answer every time: a second press, a retry or two copies of the function find the order already routed and write nothing. Two writes racing on one order are settled by iVendNext itself (below).
 
@@ -81,7 +81,7 @@ The App library's *Call-centre orders by district* runs this same `service/app.p
 - **The whole order goes back.** The record API replaces a table whole, and iVendNext never copies the header's warehouse down to the lines, so the service sends every line back as it read it, with only its warehouse changed. Our test bench compared every field of the order and its lines before and after the press: only the warehouses and what iVendNext works out from them moved, and on that untaxed order the totals were equal. The service sets no price, but iVendNext's own save works the order out again at the new warehouse: a store's own item tax, or a price limited to a warehouse, can change the total, and the answer then says so (*Its total is now … (was …)*).
 - **An edit is never overwritten.** The write carries the order's `modified` as read. If anyone saved the order since, iVendNext refuses the write (`TimestampMismatchError`, HTTP 417); the service reads it once more without writing: *Already with its store* if a second press routed it meanwhile, otherwise it asks the agent to reload. It never writes over the edit (a warehouse a person chose included).
 - **Only a draft.** The button shows on drafts, and the service reads the order again and refuses a submitted one. To move a submitted order, cancel and amend it.
-- **The retailer's own words never reach the agent raw.** The service reads iVendNext's error type (`exc_type`), never its message, and answers in its own sentences.
+- **iVendNext's own words never reach the agent raw.** The service reads iVendNext's error type (`exc_type`), never its message, and answers in its own sentences.
 - **The territory is the customer's.** An order for another district (a gift, a second address) needs its territory changed on the order before the press.
 - **Test routes.** Delete `/test/received` from your copy.
 - **Your address.** Write your own address in `allowed_urls`. The retailer's server must trust your certificate: a real one for a retailer.

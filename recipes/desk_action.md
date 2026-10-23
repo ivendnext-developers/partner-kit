@@ -71,7 +71,7 @@ A Desk action is a button on a record in iVendNext Desk. When a user presses it,
 
    ![the answer](../samples/s16_pick_route/screenshots/03_route_assigned.png)
 
-6. **Press it the way Desk does.** Desk calls `ivendnext_mpos.api.desk_action.run(action, names, inputs, idempotency_key)`. The server re-checks everything the button showed, on the **saved** record. The user fills in the retailer's own dialog with the inputs you declared:
+6. **Press it the way Desk does.** Desk calls `ivendnext_mpos.api.desk_action.run(action, names, inputs, idempotency_key)`. The server re-checks everything the button showed, on the **saved** record. The user fills in iVendNext's own dialog with the inputs you declared:
 
    ![the dialog, filled in](../samples/s16_pick_route/screenshots/02_dialog_filled.png)
 
@@ -85,7 +85,7 @@ A Desk action is a button on a record in iVendNext Desk. When a user presses it,
 
 7. **When your service is down or slow.** Desk waits 3 seconds unless you raise it (at most 10; S16 declares 5) and then says *"⟨label⟩ did not answer in time. Check the record before you try again."* — it never claims nothing changed, because you may have written before you went quiet. A retry from the same dialog carries the **same** key, so your idempotency makes it safe. Set your timeout to cover your own API writes. We have not yet tested this case end to end.
 
-8. **Test it.** Unit-test your core and service on your laptop with presses signed the way the retailer signs them (`samples/s16_pick_route/tests/`), and check your answers against the contract. Then press it on a sandbox.
+8. **Test it.** Unit-test your core and service on your laptop with presses signed the way iVendNext signs them (`samples/s16_pick_route/tests/`), and check your answers against the contract. Then press it on a sandbox.
 
 ## A reason asked before a document is rejected
 

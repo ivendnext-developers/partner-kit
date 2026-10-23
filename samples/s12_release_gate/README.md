@@ -38,7 +38,7 @@ This is for the customer's own release team (or a partner's). The site here is a
 | `baskets.norecord.json` → `baskets.json` | five baskets without, then with, their recorded answers |
 | `record_expect.py` | fills the answers from a clean run's own record |
 | `pipeline.example.yml` | the gate as a pipeline job (an example; not run by a CI service) |
-| `tests/test_s12.py` | 13 laptop tests with a stub iVendNext |
+| `tests/test_s12.py` | 13 laptop tests with a stand-in iVendNext |
 
 ## What you need
 
@@ -92,5 +92,5 @@ The money kit runs in the staging site's bench.
 
 | Where | What |
 |---|---|
-| `tests/test_s12.py` | 13 laptop tests with a stub iVendNext |
+| `tests/test_s12.py` | 13 laptop tests with a stand-in iVendNext |
 | *our test bench's own run (not in the kit)* | 16 checks on our test bench |

@@ -11,7 +11,7 @@ Before you quote a customer. Place every need on the ladder (chapter 3) first: m
 A customer's own behaviour, without changing iVendNext itself:
 - the customer's rules at the till — a warranty check, a member's balance, a refusal before payment;
 - the customer's own records in iVendNext Desk — warranties, bins, a loyalty ledger — with native screens;
-- links to the customer's own systems — an ERP, an web store, a warehouse system, a loyalty programme;
+- links to the customer's own systems — an ERP, a web store, a warehouse system, a loyalty programme;
 - reports, approvals, print formats, labels;
 - an AI assistant that works with the customer's data on the user's own key.
 

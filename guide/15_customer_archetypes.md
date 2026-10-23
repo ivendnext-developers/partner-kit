@@ -21,7 +21,7 @@ A customer's size describes it; it never decides the path. A large project's blu
 
 ## 15.1 Small — one to three stores
 
-**The shape.** One to three stores; phones and a counter till; an web store.
+**The shape.** One to three stores; phones and a counter till; a web store.
 
 **Steps.**
 1. Configure: prices, promotions and coupons; receipts with the retailer's logo and tax number (a print format set up by hand; the receipt pack sample installs one by manifest); reason codes for voids, returns and discounts; blind till counts for cashiers; sale details captured at the till; permissions by role.

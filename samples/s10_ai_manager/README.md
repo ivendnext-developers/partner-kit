@@ -58,7 +58,7 @@ This is for a store or area manager, with the retailer's administrator and whoev
 | `profile_read.json` | the read-only profile: 6 tools (with the words the assistant reads for each) and 3 record types |
 | `profile_writes.json` | the same plus one write — switch a promotion on or off, change a price-list row — start with `--writes` |
 | `assistant.py` | a scripted stand-in for the AI (standard library): the manager's sentence → tool calls → an answer; it asks before it confirms |
-| `tests/test_s10.py` | 19 laptop tests against a fake iVendNext, no AI |
+| `tests/test_s10.py` | 19 laptop tests against a stand-in iVendNext, no AI |
 
 ## Before you copy it
 
@@ -95,5 +95,5 @@ The promotion and the item are the demo site's own data (*UC-003*, AirPods; the 
 
 | Where | What |
 |---|---|
-| `tests/test_s10.py` | 19 laptop tests against a fake iVendNext, no AI |
+| `tests/test_s10.py` | 19 laptop tests against a stand-in iVendNext, no AI |
 | (our test bench) | the same flow against a real site: 25 checks, passed |

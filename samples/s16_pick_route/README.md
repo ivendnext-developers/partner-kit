@@ -11,7 +11,7 @@ A button in iVendNext Desk that hands a record to your own service, which does r
 ## What happens
 
 1. A stock user opens a submitted Sales Order and presses **Assign pick route** (menu *Warehouse*).
-2. The retailer's own dialog asks for a picker and a priority. The user fills them in and confirms.
+2. iVendNext's own dialog asks for a picker and a priority. The user fills them in and confirms.
 3. iVendNext sends the order's lines to your service, signed.
 4. Your service creates a **pick task** (`PP PCK Pick Task`, this app's own record type) over the record API, **with its own key**, then answers.
 5. The task opens. It is also listed under the order (Connections, *Picking*).
@@ -25,7 +25,7 @@ The names in the pictures are a demo site's: a stock user, a customer's order, a
 | Step | Screenshot |
 |---|---|
 | 1. A submitted Sales Order: the **Warehouse** menu holds *Assign pick route* | ![](screenshots/01_warehouse_menu.png) |
-| 2. The retailer's own dialog: *Picker* and *Priority*, filled in | ![](screenshots/02_dialog_filled.png) |
+| 2. iVendNext's own dialog: *Picker* and *Priority*, filled in | ![](screenshots/02_dialog_filled.png) |
 | 3. The partner's answer: *Route assigned — 2 lines across 2 warehouses* | ![](screenshots/03_route_assigned.png) |
 | 4. The pick task the service made, opened: the order, the picker, the priority, the lines in walking order | ![](screenshots/04_pick_task.png) |
 | 5. The order's **Connections**: the task is listed under *Picking* | ![](screenshots/05_order_connections.png) |
@@ -38,7 +38,7 @@ The names in the pictures are a demo site's: a stock user, a customer's order, a
 2. **Make one user for the partner's service** (the retailer's administrator, in Desk > **User**, as in the [integration user recipe](../../recipes/integration_user.md)): tick **Is Desk User**, set no password, and give it the role **PP PCK Integration**. Generate the user's API key. With this key the service can read and create pick tasks and nothing else. A service for one retailer takes the key in its settings. A service for many retailers receives it from iVendNext: choose the user as the *Application User* of the feed **PP PCK Pick feed**, then press **Connect again** on the app in the App library (*Many retailers, hosted* below).
 3. **Switch the service on** (the System Manager). Open **Retail Extension Subscription**, the record *Pick route service*, read what it is sent, tick the consent and switch it on. A change to its address or to the list of fields clears the consent until it is ticked again.
 4. **Switch the button on** (the System Manager). Open **Retail Desk Action**, the record *Assign pick route*, and switch it on.
-5. **Stock users press it.** Only a Stock User or a Stock Manager sees the button, and only on a submitted order that is *To Deliver and Bill* or *To Deliver*. They choose a picker (a colleague) and a priority (*Normal* or *Urgent*) in the retailer's own dialog. Stock Managers and Stock Users can open and update a pick task but not make one by hand; the System Manager can do everything with it.
+5. **Stock users press it.** Only a Stock User or a Stock Manager sees the button, and only on a submitted order that is *To Deliver and Bill* or *To Deliver*. They choose a picker (a colleague) and a priority (*Normal* or *Urgent*) in iVendNext's own dialog. Stock Managers and Stock Users can open and update a pick task but not make one by hand; the System Manager can do everything with it.
 
 **Where it shows.** In Desk only. The button sits in the **Warehouse** menu of a submitted Sales Order, and in the order list's Actions menu for several orders at once (one task each). The pick task is its own record, listed under the order in Connections, *Picking*. Nothing is added to the till, to a print layout or to a report.
 
@@ -51,7 +51,7 @@ The names in the pictures are a demo site's: a stock user, a customer's order, a
 | `manifest.json` | the pick task and its lines, the Connections link, the service (`extension_subscriptions`, extension point `desk_action`) and the button (`desk_actions`), installed **switched off** |
 | `route.py` | **the pure core**: the signature check, the press's shape, the task for one order (lines in walking order; quantities arrive in thousandths), the answer |
 | `service/app.py` | the HTTP service (standard library): `POST /press/route`, `GET /health`; the record API as the integration user |
-| `tests/test_service.py` | laptop tests: the real service, a stand-in record API, presses signed as the retailer signs them |
+| `tests/test_service.py` | laptop tests: the real service, a stand-in record API, presses signed as iVendNext signs them |
 | `tests/test_many_shops.py` | many retailers: each retailer's own secret and key, a press before *Connect again*, two copies receiving one press, the record type names under the library's prefix, the function entry |
 | `tests/canaries.py` | each test that guards a secret, a retailer or the claim goes RED when its check is removed |
 | `app.json` | how CitiXsys hosting runs it: a function, paid per call, packaging only the files it needs |
@@ -77,7 +77,7 @@ The App library's *Pick route* runs this same `service/app.py` for every retaile
 1. After its install the retailer's site connects itself (the app template's handshake, guide chapter 14b): the service stores the retailer with its library key and the press's secret, `<app>:sub:route`.
 2. The retailer chooses its integration user on the feed and presses *Connect again*: the service receives that user's key (`user:<email>`).
 3. Each press names its retailer (`X-iVendNext-Site`). It is checked with **that retailer's** secret and the task is written with **that retailer's** user's key. Another retailer's secret, or a retailer the service does not know, is refused (401).
-4. A press before step 2 is answered in words: *Pick route is not set up yet.* A retailer that refuses the user's key is told to check the user, its role and its API key. A press of more than 20 orders is told to select fewer. Nothing is written.
+4. A press before step 2 is answered in words: *Pick route is not set up yet.* A retailer whose iVendNext refuses the user's key is told to check the user, its role and its API key. A press of more than 20 orders is told to select fewer. Nothing is written.
 5. Two copies of the function can receive the same press (a user who presses again while the first is slow). The first takes a short **claim** on the press in the shops table (one conditional write, `claim` in the template's stores); the second is refused (409) and iVendNext tells the user to check the record. A claim left by a copy that stopped is taken over after a minute. After a write iVendNext never answered, the claim is kept for that minute on purpose.
 6. The uninstall says goodbye and the service forgets the retailer.
 
@@ -122,7 +122,7 @@ On our test bench the real button was pressed through `ivendnext_mpos.api.desk_a
 
 - **Aisles.** The spec's worked example routes by bin. This sample orders the lines by warehouse, then item, and says *"N lines across M warehouses"*. A partner with bin data (the S2 bin-location sample) orders by bin instead.
 - **The service's own rights.** The pick task's permission rows give the app's integration role (`PP PCK Integration`, made by the install) **read and create**, and nothing else. The integration user does **not** read the Sales Order: everything the service needs arrives in the press.
-- **A create that times out but lands later.** If the retailer's record API commits a task after the service gave up waiting (3 seconds), a retry that looks before it lands makes a second task. With many retailers the claim on the press is kept for a minute after such a write, so a retry in that minute is refused and a later one finds the task; one process keeps the rare double. iVendNext that saves the task more than a minute late still gets two.
+- **A create that times out but lands later.** If iVendNext's record API commits a task after the service gave up waiting (3 seconds), a retry that looks before it lands makes a second task. With many retailers the claim on the press is kept for a minute after such a write, so a retry in that minute is refused and a later one finds the task; one process keeps the rare double. If iVendNext saves the task more than a minute late, it still gets two.
 - **The claim relies on a press shorter than a minute.** On hosting a function stops at 10 seconds. On your own server a press can run longer (each write waits up to 3 seconds), and a press past `CLAIM_STALE` can be taken over; the file store also serves one process only. Run one process there, or raise `CLAIM_STALE`.
 - **A claim left behind.** A copy stopped mid-press, or a write with no answer, leaves its claim as a row of the shops table. It is taken over after a minute and never removed; it names the retailer's site and a hash of the press key, nothing else.
 - **What is sent.** `send_fields` follows the spec's worked example, including `customer`. The service only copies it onto the task; a partner who wants to send less can drop it and use `fetch_from: sales_order.customer` on the task's field instead.

@@ -14,7 +14,7 @@ One small app, two doors, one settings record.
 | The quantities are added | the settings say *Sum* (the default) |
 | The quantity of the latest count is kept | the settings say *Last* (latest by posting date and time) |
 | The valuation rate of the latest count that has one (a row counted at zero stores none), and the latest count's posting date and time | always |
-| *Merge counts does not run on ⟨count⟩ in this state.* (the retailer's words; the app is not called) | a submitted or cancelled count is ticked |
+| *Merge counts does not run on ⟨count⟩ in this state.* (iVendNext's words; the app is not called) | a submitted or cancelled count is ticked |
 | *Nothing merged*, with the reason | one count only, two companies, two purposes (opening stock and a count), or a row with serial numbers or with its batch or serials in a bundle |
 | The same new draft again, and no second one | the press is retried from the same dialog |
 | The customer's last sales, newest first | the page opens for a customer |
@@ -94,7 +94,7 @@ iVendNext must reach it over HTTPS with a real certificate: put it behind your o
 
 ### What was proven where
 
-- **The laptop tests** (`tests/`): everything above against a stand-in iVendNext, with presses and contexts signed as the retailer signs them.
+- **The laptop tests** (`tests/`): everything above against a stand-in iVendNext, with presses and contexts signed as iVendNext signs them.
 - **A sandbox site** (2026-10-16, POS 2.0.0.648, the service on a laptop behind a temporary HTTPS tunnel, the site's integration user): installed with `tools/deploy`, switched on as a System Manager would. Two draft counts (EARBUDS 12 at 77.40 posted 09:00, and 7 at 78.00 posted 10:30, with two other items) pressed the way Desk presses: **one new draft with EARBUDS 19 at 78.00**, the other items as counted, posted at 10:30, made by the integration user; a comment on each count; the counts unchanged. With *Last*: EARBUDS 7. A press that ran out of time, retried with its key: the same draft, no second one, one comment each. A submitted count ticked: the retailer's own refusal, the app not called. An opening-stock count beside a count, and one count alone: *Nothing merged*, with the reason. The page, opened in a real browser with the context the retailer signed for a customer in Desk: three sales by three people from two stores, newest first, each discount as stored, the roll-up invoice skipped; a customer with none: *No sales yet*; the same context again: refused; a user without the page's role: *You can't open this page for that record.*; the settings' number at 2: two sales. Everything made was removed and the site compared with its state before.
 - **The walk ran the first build.** The review's changes after it (the bundle refusal, the latest real rate, the lock, the Desk label, a return's sign) ran on the laptop only.
 - **Not run on a sandbox:** the button on the list and its dialog in Desk, and the till's own key (no one was signed in to the site's screens: every press and context came through the same server calls). The till-shaped page was opened with a context signed by the walk script with the page's secret, not by the till. Not run at all: serial-numbered counts, a batch row or a bundle, a row counted at zero, more than two counts in a press, more than 10 sales, a till sale (the sandbox has none), a till with a default walk-in customer, a return.
