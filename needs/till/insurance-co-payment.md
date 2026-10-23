@@ -14,8 +14,8 @@ verified: 2026-10-23 · tests (the rules, claims, remittances) · not run (the d
 ---
 ## What you build
 A payer service: its payers, plans, formularies and members as records in the shop; claims made from the sales the
-POS app's payer door books, filed as a file, matched to the payer's remittance. Start from [S43](../../samples/s43_third_party_payer/README.md)
-and its recipe, [Third-party payer](../../recipes/third_party_payer.md).
+POS app's payer door books, filed as a file, matched to the payer's remittance. Start from sample S43 (`samples/s43_third_party_payer`)
+and its recipe, *Third-party payer* (`recipes/third_party_payer.md`).
 
 ## Limits
 - **Waits on us:** the payer door in the POS app (request P-PAYER): the payer's share booked as owed by the payer,

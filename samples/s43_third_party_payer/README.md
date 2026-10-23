@@ -6,7 +6,7 @@ Its first data set is **one generic insurer**, with the co-pay rules of an iVend
 
 ⚠ **The generic insurer is a sample, not a real insurer.** A partner replaces it with each real payer's terms, and writes each payer's own claim link (NHIF/SHA, NPHIES, eClaimLink, Shafafiya, NHIA) against the same door.
 
-**Door:** Manifest + the payer door (⏳ requested from the POS team) + Desk buttons + the event feed
+**Door:** Manifest
 
 **When to use it:** a third party pays part of a sale, the shop claims it afterwards, and the customer pays only their share at the till.
 
