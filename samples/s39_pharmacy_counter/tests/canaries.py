@@ -79,6 +79,8 @@ CANARIES = [
      S + "People.test_a_schedule_that_needs_consent_reads_only_whether_the_patients_consent_date_has_come"),
     ("a walk-in is refused a schedule that needs a patient field", RX, 'r["rx"] or r["freq"] or r["ids"]) and shop["walk_in"]',
      'r["rx"] or r["freq"]) and shop["walk_in"]', R + "Patient.test_a_walk_in_is_refused_a_schedule_that_needs_a_patient_field"),
+    ("no market's code compared in the code", RX, 'RESERVED, DISPENSED, RELEASED, RETURNED = "Reserved",',
+     'KEEP_IN = ("AE",)\nRESERVED, DISPENSED, RELEASED, RETURNED = "Reserved",', M + "test_no_market_in_the_apps_code_or_names"),
     ("no market's name in the service's code", SV, "KEPT_TTL = ", "SFDA_TTL = KEPT_TTL = ", M + "test_no_market_in_the_apps_code_or_names"),
     ("no market's name in the manifest's names", "manifest.json", '"fieldname": "pp_rxc_consent_by"', '"fieldname": "pp_rxc_sa_consent_by"',
      M + "test_no_market_in_the_apps_code_or_names"),

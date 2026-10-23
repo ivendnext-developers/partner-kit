@@ -76,7 +76,7 @@ class ManifestTest(unittest.TestCase):
         self.assertFalse([f for f in MANIFEST["custom_fields"] if f.get("reqd")])
 
     def test_the_patient_fields_name_the_readers_setup_and_carry_no_level_the_kit_cannot_set(self):
-        # who reads them is the shop's setup step (README step 3) until a kit field can name its roles (PB-9)
+        # who reads them is the shop's setup step (README step 3) until a kit field can name its roles
         cust = {f["fieldname"]: f for f in MANIFEST["custom_fields"] if f["dt"] == "Customer"}
         self.assertFalse([f for f in MANIFEST["custom_fields"] if "permlevel" in f])
         words = cust[f"{PF}_id_number"]["description"]
@@ -137,10 +137,15 @@ class ManifestTest(unittest.TestCase):
 
         def market(n):  # a market's name anywhere in a name, or its code as one part of it (KE_DAYS, pp_rxc_sa_id)
             return names_re.search(n) or any(x.lower() in codes for x in re.split(r"[_\s-]+", n))
+        code_word = re.compile(r"\b(KE|NG|GH|EG|SA|AE|UAE|JO|MX|KSA)\b")      # a market's code as a value the code compares
         for py in ("rxrules.py", "service/app.py"):
             with open(HERE.parent / py, encoding="utf-8") as f:
-                idents = [t.string for t in tokenize.generate_tokens(f.readline) if t.type == tokenize.NAME]
+                toks = list(tokenize.generate_tokens(f.readline))
+            idents = [t.string for t in toks if t.type == tokenize.NAME]
             self.assertFalse([i for i in idents if market(i)], py)
+            # the strings the code holds, its docstrings left out (words to a reader may give examples)
+            strings = [t.string for t in toks if t.type == tokenize.STRING and not t.string.startswith(('"""', 'r"""'))]
+            self.assertFalse([x for x in strings if code_word.search(x) or names_re.search(x)], py)
         names = [MANIFEST["app"], MANIFEST["prefix"], MANIFEST["title"]] + [d["name"] for d in MANIFEST["doctypes"]] + \
                 [f["fieldname"] for d in MANIFEST["doctypes"] for f in d["fields"]] + \
                 [p["role"] for d in MANIFEST["doctypes"] for p in d.get("permissions") or []] + \

@@ -286,7 +286,7 @@ def schedules_for(item: str, group: str, items: dict, item_rows: dict, groups: d
     """The schedules an item is under today, ONE PER AXIS: the item's own row effective most recently on that axis; for an
     axis it has none on, its template's (a variant does not copy a field its Item Variant Settings do not list); for an
     axis neither has, the nearest item group's schedule. So a variant's own quantity cap never hides its template's
-    prescription class (PH-B1 review). A schedule name the shop no longer holds is left out."""
+    prescription class. A schedule name the shop no longer holds is left out."""
     def own(code):
         latest: dict = {}
         for name, since in item_rows.get(code) or []:

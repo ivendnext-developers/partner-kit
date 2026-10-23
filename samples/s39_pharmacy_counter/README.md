@@ -101,6 +101,10 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
      ⚠ Not through **Customize Form**: with this app installed, Customize Form on *Customer* lists the app's two
      *Pharmacy* links twice and refuses to save (*"Document has been modified after you have opened it"*). We have
      reported it.
+   - ⚠ If *Customer* has no rules of your own yet, the first one you add copies the engine's rules on *Customer* into
+     your own, and from then on yours apply instead: a later engine update of *Customer*'s permissions does not reach
+     your shop. After such an update, compare, or press **Restore Original Permissions** on *Customer* and take this
+     step again.
    - Back in **Role Permissions Manager**, on *Customer*, give **PP RXC Pharmacist** and **PP RXC Pharmacist in
      Charge** a *read* at level 0 (it asks for that first), then *read* and *write* at your level. The pharmacists also
      need a role that edits customers (*Sales User* does) to fill the fields in.
@@ -127,8 +131,11 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
      The consent goes on **the patient's** Desk record, the prescription's customer, with the day it was given (a day
      after today counts as no consent) and who gave it: the patient, or for a child their parent or guardian. Record it before you enter the prescription: the
      app checks it at Pay and on the Desk, never when a prescription is saved. Keep the signed form where *Consent given
-     by* says. When a patient withdraws consent, clear the date: their next sale under that schedule is refused, and what
-     you already keep stays for its period ([How long to keep](#how-long-to-keep-and-what-happens-after)). The app
+     by* says. When a patient withdraws consent, clear the date: their next sale under that schedule is refused (a Desk
+     delivery or invoice made from an order already submitted still goes through). What a law makes you keep stays for
+     its period ([How long to keep](#how-long-to-keep-and-what-happens-after)); what you kept only on their consent
+     (in Egypt, a record no law requires; in Mexico and Saudi Arabia, an image or a history kept beyond dispensing)
+     has no basis left: delete it, as *How long to keep* says. The app
      writes no consent text: yours is your own.
    - **The UAE:** tick *Needs the customer's national or residence ID* on every schedule. The law wants the ID on every
      health record, except in emergencies and other cases a Ministry decision sets (Federal Law 2 of 2019, Art. 21).
@@ -179,10 +186,13 @@ Every sale that dispenses against a prescription, or sells a schedule with a fre
 - **Who reads the patient's fields is your setup** (step 3), not the app's: a manifest cannot give a field a
   permission level yet. Until you take that step, everyone who reads customers reads them. After it, on our test bench
   a Desk clerk who reads customers saw none of them on the form, the list, the report view or the print, and a clerk's
-  edit of one was ignored, and a clerk's filter on one, through the API or the Desk's list, was refused (*"Field not
-  permitted in query"*). It does not yet hold everywhere; each is recorded for the team that owns it:
+  edit of one was ignored, and a clerk's filter on one was refused (*"Field not permitted in query"*) through every
+  public call we tried: the API's and the Desk's lists, the count, a single value, the group-by count and the link
+  search. It does not yet hold everywhere; each is recorded for the team that owns it:
   - **the form's change history:** a customer's form brings its recent changes with it, old and new values included.
     The screen hides a field the user may not read, but the values reach the clerk's browser;
+  - **code inside the server:** a filter made by server code with the framework's own list call is answered for the
+    clerk. An app that takes a person's filters and runs them that way would let the clerk ask;
   - **one engine call** returns a whole record to any signed-in user, whatever its levels;
   - **the till** reads customers with its own rights: never show these fields on a till field rule, and never make
     one a customer search field;
@@ -244,8 +254,14 @@ Manager**: keep both few.
 | Nigeria | at least 2 years, the controlled-drug records (reg. 26) | the prescription's date or the last entry |
 
 Elsewhere no prescription period was found in the laws read: keep as long as your pharmacy law and your register need,
-and no longer, since a data-protection law ends the keeping when its purpose ends. A register book's own period is the
-register app's.
+and no longer, since a data-protection law ends the keeping when its purpose ends. Three more rules from those laws:
+- **Egypt:** what you keep only because a law says so (the 10 years above) is held unreadable and not identifying,
+  and erased when the period ends (the Executive Regulation, Decision 816 of 2025, Art. 3);
+- **Nigeria:** where no law sets a period, 6 months after the purpose (GAID 2025, Art. 49(3)), so a prescription that
+  is not for a controlled drug;
+- **Kenya:** what is sent to the national Shared Health Record is kept 20 years (*Digital Health Act*, s. 25(1)).
+
+A register book's own period is the register app's.
 
 **After the period, the shop acts; nothing runs on a timer.**
 1. Where your law says how a record is destroyed, do that first: in Saudi Arabia a three-member committee the director
@@ -254,11 +270,12 @@ register app's.
    else.
 3. Delete a prescription and all its dispensings in one act, the dispensings first (a prescription the dispensing names
    first cannot go before it). ⛔ Never a dispensing whose prescription stays: its fill would count again. A dispensing
-   names only the first of the prescriptions its sale used; look for the others in its lines. An attached image goes
-   with its prescription.
+   names only the first of the prescriptions its sale used; look for the others in its lines, and keep the dispensing
+   until the last of their periods ends. An attached image goes with its prescription.
 4. A pharmacist clears the patient's fields on their customer record: ID, date of birth, authority, consent.
-5. The Desk still holds copies: each deleted record in *Deleted Documents*, and each record's change history,
-   the customer's included, with its old values. A *System Manager* deletes those too.
+5. The Desk still holds copies: each deleted record in *Deleted Documents*, which a *System Manager* deletes, and
+   each record's change history, the customer's included, with its old values, which only the site's
+   *Administrator* deletes.
 6. The prescription number, prescriber, licence and directions also stay on the sales orders, deliveries and invoices
    that carried them, and on the till's sales as sale details. They are your sales records: what your law lets you keep
    of them is yours to decide.

@@ -70,7 +70,7 @@ import shops  # noqa: E402
 KEPT_TTL = 60          # the shop's settings, schedules, item groups and profiles' customers, kept a minute per shop
 RESERVE_BY = 4.0       # seconds from the call's arrival: past it the service answers 503 rather than reserve a fill the
                        # till may already have given up on (its 5 s), which would hold the fill until the day closes
-READ_TIMEOUT = 2.0     # each read waits at most this (1.0 timed out once on the bench, PH-B1 run 6, a read queued behind
+READ_TIMEOUT = 2.0     # each read waits at most this (1.0 timed out once on our test bench, a read queued behind
                        # its parallel siblings); the till cuts the whole check at its 5 s and applies the down answer
 WRITE_BACK_MAX = 5     # statuses written back per call (the Desk list's words; every decision reads them back anyway)
 TRIES = 3              # decide again after another till took the patient's next number first
