@@ -16,7 +16,7 @@ We build something only if it is one of three things:
 
 ## Our two promises
 
-- **The services are always yours.** We never sell implementation, customisation or support to a customer a partner covers. CitiXsys works directly with a retailer only where no partner covers the country, or on an account named to partners in advance, on the partner pages you see once signed in. No account has been named, so today CitiXsys works directly only where no partner covers the country.
+- **The services are always yours.** Solution Partners do the implementation, customisation and support, and we never sell them to a customer a partner covers. CitiXsys works directly with a retailer only where no partner covers the country, or on an account named to partners in advance, on the partner pages you see once signed in. No account has been named, so today CitiXsys works directly only where no partner covers the country.
 - **Partner first in the App library.** Where your listed app already answers a need, we build no free app against it, and we feature yours. You may also claim a need from our *next* list before we start it ([Claim a need](#claim-a-need)).
 
 **The honest limit.** A free standard app does take the product sale of that exact need off the table: a software house that hoped to sell its own version of it to every retailer will find ours free. We accept that, because a free standard version brings more retailers to iVendNext for partners to implement, extend and support. What we keep to the letter: we never take the services from a customer a partner covers, we never build a customer's own version, we say here in advance what we will build, and we never build a free app against a partner's listed one.

@@ -1,6 +1,6 @@
 # Build your business on iVendNext's apps
 
-Most apps iVendNext lists in the App library start as working code in this kit, and each such app's page links that code. When your customer wants one of them to work their way, copy it, change it, put your company's name on it, and sell it. iVendNext's own products in the library, such as iVendNext POS, its payment apps and its connectors, are not kit code and are not copied. The code costs you nothing, and we take no share of what you charge.
+Most apps iVendNext lists in the App library start as working code in this kit, and each such app's page links that code. When your customer wants one of them to work their way, copy it, change it, put your company's name on it, and sell it. iVendNext's own products in the library, such as iVendNext POS, its payment apps and its connectors, are not kit code and are not copied. The code costs you nothing, and what you build is yours.
 
 [Make one of our apps your own](../../recipes/make_it_your_own.md) · [Become an iVendNext Partner](https://www.ivendnext.com/partner/#be-a-partner) · [Browse the apps you can start from](https://library.ivendnext.app)
 
