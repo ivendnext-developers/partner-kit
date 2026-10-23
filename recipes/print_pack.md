@@ -10,7 +10,7 @@ A retailer or distributor wants the **back-office sales invoice** to look differ
 
 ## Part 1 — the invoice
 
-It is Rung 4 of the guide's build ladder: a manifest with print formats on *Sales Invoice* (a standard record type, so the formats print; a format an app installs for its **own** record type is a different case, with a known defect on the shop's side: it can fail to print).
+It is Rung 4 of the guide's build ladder: a manifest with print formats on *Sales Invoice* (a standard record type, so the formats print; a format an app installs for its **own** record type is a different case, with a known defect on the shop's side: until the shop's release carries the product's fix, `/printview` answers 404 and Desk's preview keeps the standard layout; [guide chapter 7](../guide/07_manifests.md#a-print-format-on-your-own-record-type-a-known-defect) says more).
 
 1. **Choose how the layout is picked.** Nothing in the shop picks a print format by customer: the *Customer* record has no print-format field (read on a sandbox: its 94 fields hold only *Print Language*). So either:
    - **one template that branches on the customer** (`branch_manifest.json`): the body reads `doc.customer` and prints that customer's layout, and a plain layout for anyone else. The administrator makes it the invoice's default (Desk → **Customize Form** → *Sales Invoice* → **Default Print Format**); a manifest cannot. Or
