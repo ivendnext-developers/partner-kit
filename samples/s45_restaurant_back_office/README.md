@@ -17,6 +17,16 @@ A café or restaurant rings its dishes at the till as it does today. A dish is a
 | **Check allergens** writes every finding to a check record and opens it: each ticked dish that leaves out an allergen one of its recipe's ingredients carries (at every depth, a stocked sauce's own recipe included), a variant with none of its template's allergens, a dish with none typed whose recipe carries none either, and any word not on the shop's allergen list. It changes nothing on an item | the button pressed on the Item list or an item's form |
 | The till shows a dish's allergens under its line, and the shipped receipt prints them under the item | the shop adds two field rules in POS Studio to each theme its tills wear (setup step 6) |
 
+| What the shop sees (on a demo shop, 2026-10-23) | |
+|---|---|
+| A dish rung at the till: its allergens under the line | ![](screenshots/01_till_line.png) |
+| The receipt prints them under the dish | ![](screenshots/02_receipt.png) |
+| The company's settings: the start moment, the look-back, the kitchen store, the day parts | ![](screenshots/03_settings.png) |
+| After **Issue ingredients**: the store-day's issue, *Issued*, its Material Issue and the ingredients it took | ![](screenshots/04_issue.png) |
+| **Sales by item**: each sale's lines, net of tax, from the issues | ![](screenshots/05_sales_report.png) |
+| **Work out food cost** on a store and a day: cost by recipe and actual, against sales | ![](screenshots/06_food_cost.png) |
+| **Check allergens**: a dish that leaves out *Milk*, which its cheese carries | ![](screenshots/07_allergen_check.png) |
+
 **What it costs the shop.** The ingredients are booked as any issue of stock: to each ingredient's own expense account (its Item Defaults, else its Item Group's, else the company's stock adjustment account). A shop that wants them under cost of goods sold sets that account on its ingredients' Item Defaults or their group; the app sends no account of its own.
 
 **Bounds, said plainly.**

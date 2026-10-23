@@ -17,6 +17,14 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 5. At the month's end, after the stock count, the manager makes a **PP RBO Food Cost** record for the kitchen's store and the month and presses **Work out food cost**: *Food cost at Café: 31.4% by recipe and sales, 33.9% actual, on sales of 48,210.00.* The record lists each ingredient: used by recipe, sold as it is, other issues, missing at the count, and the difference in cost.
 6. The menu's owner ticks the dishes in the Item list and presses **Check allergens**: *2 dishes miss an allergen of their recipe. Open the check for every finding.* Desk opens the **PP RBO Allergen Check** record: HK4-BURGER misses *Sesame, Mustard (from HK4-BUN, HK4-MUSTARD)*, HK4-COMBO misses its burger's, HK4-COFFEE has *Diary*, not on the list.
 
+![A dish rung at the till on a demo shop, its allergens under the line](../samples/s45_restaurant_back_office/screenshots/01_till_line.png)
+
+![The store-day's issue after Issue ingredients: Issued, its Material Issue and the ingredients it took](../samples/s45_restaurant_back_office/screenshots/04_issue.png)
+
+![The food cost record after Work out food cost: cost by recipe and actual, against sales](../samples/s45_restaurant_back_office/screenshots/06_food_cost.png)
+
+![An allergen check: the dish leaves out Milk, which its cheese carries](../samples/s45_restaurant_back_office/screenshots/07_allergen_check.png)
+
 ## Steps
 
 <a id="settings"></a>
