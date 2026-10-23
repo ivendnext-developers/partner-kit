@@ -131,6 +131,66 @@ class SandboxCheck(unittest.TestCase):
         code, out = self.run_check(a)
         self.assertFails(out, "the integration user")
 
+    def own_shop(self):
+        """A builder's own site: another company, two stores of its own name, its own integration user and role."""
+        a = copy.deepcopy(GOOD)
+        del a["/api/resource/Company/Demo%20Retail"]
+        del a["/api/resource/User/integration%40demo-retail.example"]
+        a["/api/resource/Company/My%20Shop"] = [200, {"data": {"name": "My Shop", "abbr": "MS"}}]
+        a["/api/resource/Warehouse"] = [200, {"data": [
+            {"name": f"My Shop {n} - MS", "warehouse_name": f"My Shop {n}", "company": "My Shop"} for n in ("North", "South")]}]
+        a["/api/resource/POS%20Profile"] = [200, {"data": [
+            {"name": f"{n} — R1", "warehouse": f"My Shop {n} - MS"} for n in ("North", "South")]}]
+        a["/api/resource/User/app%40my-shop.example"] = [200, {"data": {
+            "name": "app@my-shop.example", "enabled": 1, "user_type": "System User", "roles": [{"role": "My App"}]}}]
+        return a
+
+    def with_env(self, env, fn):
+        saved = {k: os.environ.get(k) for k in env}
+        os.environ.update(env)
+        try:
+            return fn()
+        finally:
+            for k, v in saved.items():
+                os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+
+    OWN = {"SANDBOX_COMPANY": "My Shop", "SANDBOX_STORE_PREFIX": "My Shop ", "SANDBOX_STORES": "2",
+           "SANDBOX_INTEGRATION_USER": "app@my-shop.example", "SANDBOX_INTEGRATION_ROLE": "My App"}
+
+    def test_own_site_without_its_names_fails_the_three_hosted_checks(self):
+        code, out = self.run_check(self.own_shop())
+        self.assertEqual(code, 1)
+        for label in ("the demo company", "3 stores, each with one till profile", "the integration user"):
+            self.assertFails(out, label)
+        self.assertIn("PASS  the extension points' record types", out)
+
+    @unittest.skipUnless(shutil.which("curl") and shutil.which("jq"), "the collection's runner needs curl and jq")
+    def test_own_site_named_in_the_environment_is_green(self):
+        code, out = self.with_env(self.OWN, lambda: self.run_check(self.own_shop()))
+        self.assertEqual(code, 0, out)
+        self.assertIn("Your own shop's data: company 'My Shop', 2 stores", out)
+        self.assertIn("PASS  2 stores, each with one till profile", out)
+        self.assertEqual(out.splitlines()[-1], "SANDBOX CHECK GREEN — 9 of 9 passed")
+
+    def test_own_names_are_still_checked(self):
+        a = self.own_shop()
+        a["/api/resource/User/app%40my-shop.example"][1]["data"]["roles"] = [{"role": "Another Role"}]
+        code, out = self.with_env(self.OWN, lambda: self.run_check(a))
+        self.assertEqual(code, 1)
+        self.assertFails(out, "the integration user")
+
+    def test_empty_variables_keep_the_hosted_sandbox_values(self):
+        shop = C.Shop.from_env({"SANDBOX_COMPANY": "", "SANDBOX_STORES": ""})
+        self.assertTrue(shop.hosted)
+        self.assertEqual((shop.company, shop.stores), ("Demo Retail", 3))
+
+    def test_a_store_count_that_is_not_a_number_is_refused(self):
+        out = io.StringIO()
+        code = self.with_env({"BASE": "http://x", "KEY": "k", "SECRET": "s", "SANDBOX_STORES": "three"},
+                             lambda: C.main([], out=out))
+        self.assertEqual(code, 2)
+        self.assertIn("SANDBOX_STORES is a whole number of stores", out.getvalue())
+
     def test_record_carries_no_secret(self):
         path = os.path.join(HERE, "_record.tmp.json")
         try:

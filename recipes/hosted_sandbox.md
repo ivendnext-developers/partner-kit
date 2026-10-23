@@ -58,6 +58,16 @@ The e-mail addresses are made up. The site also gives every user its standard ro
    ```
 
    It checks that the site answers, that your key signs in, that the POS apps are installed, the demo company and its three stores, the integration user, the extension points' record types, and the request collection's first three files. The last line says `SANDBOX CHECK GREEN` or `SANDBOX CHECK RED` and names what failed. If it is red, send us its output: it never prints your key or secret.
+
+   **On a site you made yourself** (not the hosted sandbox), three checks read the hosted sandbox's own data: the demo company, its three stores and the integration user. Name your own in the environment, and the check reads those instead:
+
+   ```bash
+   SANDBOX_COMPANY="<your company>" SANDBOX_STORE_PREFIX="<the start of each store's name>" SANDBOX_STORES=<how many> \
+   SANDBOX_INTEGRATION_USER=<your integration user> SANDBOX_INTEGRATION_ROLE="<its role>" \
+   BASE=… KEY=… SECRET=… python3 tools/sandbox_check/check.py
+   ```
+
+   Each one left out keeps the hosted sandbox's value (`Demo Retail`, `Demo Retail — Store `, `3`, `integration@demo-retail.example`, `Demo Integration`). The other six checks are the same on every site.
 4. **Give your connected app its key:** open the integration user and press **Generate Keys**. Its role starts with one right, reading items; widen it to what your app needs, as `recipes/integration_user.md` and guide chapter 2 show. Use this key in your app, never the administrator's.
 5. **Sell on the till:** sign in to the till as a cashier with the till ID, password and PIN we sent, open a day, sell, and **close the day** before you stop.
 
