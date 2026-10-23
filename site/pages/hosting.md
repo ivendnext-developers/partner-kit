@@ -27,7 +27,7 @@ Anyone who builds for iVendNext, on one path: an iVendNext Partner, a licensed c
 3. **Name it.** Under your company's own first word, given once when we register your company: `ACME LOYALTY` → `acme_loyalty`. Every app you name under it is yours, with no wait on us ([Publish your app](publish.md)).
 4. **Publish.** Publishing signs your app onto your preview shelf at once. A customer's shelf follows when your publish names that customer.
 5. **Order hosting.** Build the service's image, or a function's package, and send a hosting order. We create its box and its address and switch it on.
-6. **List it for every shop.** Optional. One approval by us for its first listing, and again when a version sends data to a new address, adds an outside service with its own user or needs more Desk users, puts it on the public list with its card and its guide page.
+6. **List it for every retailer.** Optional. One approval by us for its first listing, and again when a version sends data to a new address, adds an outside service with its own user or needs more Desk users, puts it on the public list with its card and its guide page.
 
 ## Host with CitiXsys
 

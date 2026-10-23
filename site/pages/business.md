@@ -6,14 +6,14 @@ Most apps iVendNext lists in the App library start as working code in this kit, 
 
 ## What you sell
 
-Our app is the version most shops need, free to every iVendNext retailer, and often part of why a retailer chooses iVendNext. Your business is everything around the fit:
+Our app is the version most retailers need, free to every iVendNext retailer, and often part of why a retailer chooses iVendNext. Your business is everything around the fit:
 
 - **Your customer's own version.** The app working the way this customer works: their fields, their rules, their screens, their links to other systems. You set its price.
 - **Setting it up.** Installing it, filling its records, training the team, going live store by store.
 - **Changes over time.** A new store, a new rule, a new report: the customer comes back to you.
 - **Support and hosting.** You support what you deliver. Run its service yourself, or with us, and charge your customer what you choose.
 
-The next retailer with the same need can buy the same version from you. When it suits many shops, list it in the App library for every iVendNext retailer, with your company as its maker, after one review by us.
+The next retailer with the same need can buy the same version from you. When it suits many retailers, list it in the App library for every iVendNext retailer, with your company as its maker, after one review by us.
 
 ## What stays yours
 
@@ -24,16 +24,12 @@ The next retailer with the same need can buy the same version from you. When it 
 
 ## How we work with you
 
-- **We build the standard version; the customer's own version is yours.** We add to our apps what every shop with a need shares. A customer's particular way of working is your business, not ours.
+- **We build the standard version; the customer's own version is yours.** We add to our apps what every retailer with a need shares. A customer's particular way of working is your business, not ours.
 - **Local systems are yours to connect.** A local ERP or accounting system, a local payment gateway or wallet, a loyalty provider, a messaging gateway, a local delivery app: we give you a starting point for most of them ([Starters for local work](starters.md)).
-- **The partner leads the customer.** Our own development team works for you as your subcontractor when you want it. It works directly with a retailer only where no partner covers the country, or on an account named to partners in advance, on the partner pages you see once signed in. No account has been named, so today it works directly only where no partner covers the country.
-- **A registered deal is protected** for 90 days, and the protection renews while the deal moves.
-
-These are the partner programme's published terms: [iVendNext Partners](https://www.ivendnext.com/partner/).
 
 ## Our two promises
 
-- **The services are always yours.** We never sell implementation, customisation or support to a customer a partner covers, apart from the two cases above.
+- **The services are always yours.** We never sell implementation, customisation or support to a customer a partner covers, apart from two cases set out on [What iVendNext builds](roadmap.md).
 - **Partner first in the App library.** Where your listed app already answers a need, we build no free app against it, and we feature yours. You may claim a need from our roadmap before we start it, and we hold back from it for 90 days.
 
 **The honest limit.** A free standard app does take the product sale of that exact need off the table. We accept that because a free standard version brings more retailers to iVendNext for partners to implement. So we say in advance what we will build, what we give you a starter for and what is yours: [What iVendNext builds](roadmap.md).
@@ -58,12 +54,11 @@ Every command, with *Bin locations* as the worked example: [Make one of our apps
 | The kit and the code of every iVendNext library app that starts as kit code, under the Apache 2.0 licence: copy it, change it, sell it, keep your changes private; keep its licence notice | Free |
 | Becoming a partner, registering your company, your sandbox site | Free |
 | Delivering to a customer's *Made for you* shelf, or listing in the App library | Free |
-| A share of what you charge for your app, your work or your support | None: we earn from iVendNext itself, never from partners' apps |
-| Running your app's service on your own cloud | Only your cloud provider. You bill your customer; nothing is shared with us |
+| Running your app's service on your own cloud | Only your cloud provider. You bill your customer |
 | Running it on iVendNext App Hosting, when it is listed in the App library and only answers presses (a till key, a check, a button) | Free. You bill your customer what you choose |
 | Running any other app on iVendNext App Hosting, if you choose | $49, $129 or $399 per app per month, by plan ([the plans](hosting.md)). You bill your customer what you choose |
 
-Your customer pays its iVendNext subscription as usual. An Implementation Partner who resells it earns a recurring margin of 25%, or 30% once certified.
+Your customer pays its iVendNext subscription as usual.
 
 ## We keep supporting you
 

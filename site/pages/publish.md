@@ -2,7 +2,7 @@
 
 **Starting from one of our apps?** Copy it, make it your customer's, and sell it as yours: [Build your business on iVendNext's apps](business.md).
 
-This site helps you **build** an app. The **App library** (`https://library.ivendnext.app`) is where shops **find** it and install it from iVendNext Desk. You publish it yourself, with one command, from any computer: your laptop or your own build server, with or without GitHub, whatever language your app is written in.
+This site helps you **build** an app. The **App library** (`https://library.ivendnext.app`) is where retailers **find** it and install it from iVendNext Desk. You publish it yourself, with one command, from any computer: your laptop or your own build server, with or without GitHub, whatever language your app is written in.
 
 **We take only your app's files for the library:** its manifest and its card (and, if CitiXsys hosts your app, its built image). We never take or keep your source code, and your repository stays wherever you keep it.
 
@@ -24,7 +24,7 @@ This site helps you **build** an app. The **App library** (`https://library.iven
 
    It runs the kit's checks on your `library/` folder and your licence files, signs what it sends with your key, and uploads it. Nothing is sent if a check refuses.
 4. **Your preview shelf** has the version at once. Only the test sites you name see it: each one opens it with its shelf key, pasted once under *App library → Open your shelf*.
-5. **The App library, for every shop:** your app is listed with your company as its maker.
+5. **The App library, for every retailer:** your app is listed with your company as its maker.
    - **The first time**, the listing waits for one approval by us. The command says so, with the request's id.
    - **A later version** is listed at once, unless it does more than the one before: a new outside address, an outside service with its own user, or more Desk users. That waits for one approval again.
 6. **An app made for one customer** goes to that customer's own *Made for you* shelf, with **no approval by us**. Their administrator pastes the shelf key you send them, once on their test site and once on their live site, and agrees to each install.
