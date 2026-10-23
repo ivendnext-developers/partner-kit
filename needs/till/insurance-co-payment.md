@@ -8,13 +8,13 @@ status: not-yet
 door: request
 blocked-by: extension-point
 recipe: recipes/third_party_payer.md
-sample: samples/s42_third_party_payer
+sample: samples/s43_third_party_payer
 request: P-PAYER
 verified: 2026-10-23 · tests (the rules, claims, remittances) · not run (the door)
 ---
 ## What you build
 A payer service: its payers, plans, formularies and members as records in the shop; claims made from the sales the
-POS app's payer door books, filed as a file, matched to the payer's remittance. Start from [S42](../../samples/s42_third_party_payer/README.md)
+POS app's payer door books, filed as a file, matched to the payer's remittance. Start from [S43](../../samples/s43_third_party_payer/README.md)
 and its recipe, [Third-party payer](../../recipes/third_party_payer.md).
 
 ## Limits

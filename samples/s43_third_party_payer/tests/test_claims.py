@@ -1,7 +1,7 @@
-"""S42's claims (claims.py) and data sets (dataset.py): a claim from a booked sale, the claims file, the claim's flow,
+"""S43's claims (claims.py) and data sets (dataset.py): a claim from a booked sale, the claims file, the claim's flow,
 the remittance, and a second payer of another kind that loads and answers with no code change.
 
-    python3 -m unittest discover -s samples/s42_third_party_payer/tests -p 'test_*.py'
+    python3 -m unittest discover -s samples/s43_third_party_payer/tests -p 'test_*.py'
 """
 
 import csv
@@ -128,6 +128,12 @@ class ClaimsFile(unittest.TestCase):
         c = K.build_claim(booked(answer(), prescriber="=HYPERLINK(1)"), PAYER, MEMBER)
         self.assertIn("'=HYPERLINK(1)", K.claims_file([c], PAYER))
 
+    def test_a_claim_is_returned_when_the_payer_is_owed_nothing_whatever_the_units(self):
+        c = K.build_claim(booked(answer()), PAYER, MEMBER)
+        lines = [{"line_id": l["line_id"], "qty": "1", "payer_back": l["payer_share"]} for l in c["lines"]]
+        K.apply_return(c, {"lines": lines})                 # a box of ten back counted as one: the money decides
+        self.assertEqual((c["payer_share"], c["status"]), ("0.00", "Returned"))
+
     def test_a_returned_line_leaves_the_file(self):
         c = K.build_claim(booked(answer()), PAYER, MEMBER)
         split = C.return_split(c["lines"], [{"line_id": "2", "qty": 2}])
@@ -179,6 +185,38 @@ class Flow(unittest.TestCase):
             K.move(c, K.READY, payer=PAYER)
         c["prescription"] = "RX-77"
         self.assertEqual(K.move(c, K.READY, payer=PAYER)["status"], "Ready")
+
+
+class Settle(unittest.TestCase):
+    def claim(self):
+        c = K.build_claim(booked(answer()), PAYER, MEMBER)
+        return K.move(c, K.SUBMITTED)
+
+    def test_two_lines_of_one_claim_summed_pay_it(self):
+        c = self.claim()
+        self.assertEqual(K.settle(c, Decimal("228.80")), "Paid")
+        self.assertEqual(c["received"], "228.80")
+
+    def test_part_then_the_rest(self):
+        c = self.claim()
+        self.assertEqual(K.settle(c, 100), "Short paid")
+        self.assertEqual(K.settle(c, 50), "Short paid (still 78.80 due)")
+        self.assertEqual(K.settle(c, "78.80"), "Paid")
+        self.assertEqual(c["received"], "228.80")
+
+    def test_a_rejection_keeps_its_reason_and_records_nothing_received(self):
+        c = self.claim()
+        self.assertEqual(K.settle(c, 0, True, "card expired"), "Rejected")
+        self.assertEqual((c["rejection_reason"], c["received"]), ("card expired", "0"))
+
+    def test_money_on_a_claim_the_flow_cannot_move_is_kept_and_flagged(self):
+        c = K.build_claim(booked(answer()), PAYER, MEMBER)          # Ready: never filed
+        self.assertEqual(K.settle(c, 10), "Short paid recorded on a claim that is Ready: check it")
+        self.assertEqual(c["received"], "10")
+
+    def test_more_than_was_due_is_said(self):
+        c = self.claim()
+        self.assertEqual(K.settle(c, 300), "Paid (paid more than was due)")
 
 
 class Remittance(unittest.TestCase):

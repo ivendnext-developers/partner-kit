@@ -7,8 +7,8 @@
  "region": "us",
  "shops": true,
  "runs": "function",
- "handler": "samples/s42_third_party_payer/service/app.lambda_handler",
- "package": ["tools/app_template/service", "samples/s42_third_party_payer/copay.py", "samples/s42_third_party_payer/claims.py", "samples/s42_third_party_payer/service"],
+ "handler": "samples/s43_third_party_payer/service/app.lambda_handler",
+ "package": ["tools/app_template/service", "samples/s43_third_party_payer/copay.py", "samples/s43_third_party_payer/claims.py", "samples/s43_third_party_payer/service"],
  "env": [
   {"name": "IVN_LIBRARY_APP", "required": true},
   {"name": "ICP_PREFIX", "required": true}

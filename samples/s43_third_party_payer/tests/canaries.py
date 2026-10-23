@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""S42's canaries: each test that guards a co-pay rule, the price-list rule, who may buy on cover, a claim's flow, a
+"""S43's canaries: each test that guards a co-pay rule, the price-list rule, who may buy on cover, a claim's flow, a
 return, the remittance or a secret must go RED when that rule is broken. For each mutation this copies the sample (and
 the kit folders it uses) to a temporary folder, runs the one test named on the unmutated copy (it must pass, else
 BROKEN), applies ONE change (the anchor must match exactly once, and the mutant must compile), runs the test again, and
 reports RED (the test caught it) or GREEN (a dead test). The runner is S39's (``samples/s39_pharmacy_counter/tests/
 canaries.py``), itself S37's and S23's, copied: a defect there is a defect here.
 
-    python3 samples/s42_third_party_payer/tests/canaries.py      # exit 0 only when every canary is RED
+    python3 samples/s43_third_party_payer/tests/canaries.py      # exit 0 only when every canary is RED
 """
 
 from __future__ import annotations
@@ -43,14 +43,42 @@ CANARIES = [
      R + "EveryCombination.test_every_combination_splits_the_sale_exactly_and_within_the_rules"),
     ("the quantity limit", CP, "cqty = min(stock_qty, max_qty) if max_qty > 0 else stock_qty", "cqty = stock_qty",
      R + "EveryCombination.test_the_quantity_limit_covers_only_that_many_units"),
-    ("an uncovered line is the patient's", CP, "        if not covered or stock_qty <= 0:\n", "        if stock_qty <= 0:\n",
+    ("an uncovered line is the patient's", CP, "        if not covered or stock_qty <= 0 or net <= 0:", "        if stock_qty <= 0 or net <= 0:",
      R + "EveryCombination.test_every_combination_splits_the_sale_exactly_and_within_the_rules"),
     # the price-list rule
     ("an item off the list", CP, 'code = "not_on_list" if price is None else', 'code = None if price is None else',
      R + "PriceList.test_an_item_off_the_list_is_refused_in_the_payers_words"),
     ("an item at zero on the list", CP, '("zero_on_list" if D(price) <= 0 else None)', "None",
      R + "PriceList.test_an_item_at_zero_on_the_list_is_refused"),
-    ("the list is read by the service", SV, '                out[c] = r.get("price_list_rate") or 0', "                out[c] = 1", S + "Calls.test_an_item_at_zero_on_the_list_is_not_sellable_whatever_the_line_says"),
+    ("the list is read by the service", SV, '                    best = r.get("price_list_rate") or 0', "                    best = 1", S + "Calls.test_an_item_at_zero_on_the_list_is_not_sellable_whatever_the_line_says"),
+    ("a row in another unit", SV, '(r.get("uom") and l.get("uom") and r["uom"] != l["uom"])', "False",
+     S + "Calls.test_a_list_row_counts_only_as_the_engine_applies_it"),
+    ("a row for another customer", SV, '(r.get("customer") and r["customer"] != customer)', "False",
+     S + "Calls.test_a_list_row_counts_only_as_the_engine_applies_it"),
+    ("a batch's own price", SV, 'r["item_code"] != l.get("item_code") or r.get("batch_no") or', 'r["item_code"] != l.get("item_code") or',
+     S + "Calls.test_a_list_row_counts_only_as_the_engine_applies_it"),
+    ("a line's own unit first", CP, 'price = lp[line.get("line_id")] if line.get("line_id") in lp else lp.get(item)', "price = lp.get(item)",
+     S + "Calls.test_two_lines_of_one_item_in_two_units_are_judged_each_on_its_own_unit"),
+    ("a line at zero or below", CP, "if not covered or stock_qty <= 0 or net <= 0:", "if not covered or stock_qty <= 0:",
+     R + "EveryCombination.test_a_line_at_zero_or_below_is_the_patients"),
+    ("amounts at the precision", SV, 'raise ValueError("each line\'s amount is at the sale\'s precision")', "pass",
+     S + "Calls.test_a_line_not_at_the_sales_precision_or_a_repeated_line_id_is_refused"),
+    ("the answer's deadline", SV, "if t0 is not None and time.monotonic() - t0 > ANSWER_BY:", "if False:",
+     S + "Calls.test_a_slow_shop_answers_503_before_the_doors_five_seconds"),
+    ("one reference, two sales", SV, 'if held.get("sale") != name:', "if False:",
+     S + "Claims.test_two_sales_under_one_claim_reference_fail_loudly_never_silently"),
+    ("the till's own posting is not a second claim", SV, 'if doctype == "Sales Invoice" and (doc.get("is_consolidated") or any(', 'if False and (doc.get("is_consolidated") or any(',
+     S + "Claims.test_the_tills_own_posting_of_a_payer_sale_is_never_a_second_claim"),
+    ("a return before its claim", SV, '                raise ValueError("the return\'s claim is not made yet")', '                return "-"',
+     S + "Claims.test_a_return_before_its_claim_is_tried_again_never_dropped"),
+    ("lines of one claim summed", SV, "result = K.settle(c, sum((C.D(r.get(\"paid\")) for r in mine), C.ZERO),", "result = K.settle(c, C.D(mine[-1].get(\"paid\")),",
+     S + "Claims.test_several_remittance_lines_for_one_claim_are_summed_before_it_is_settled"),
+    ("a later part payment is kept", CL, '    if to == claim["status"] == SHORT:', "    if False:",
+     K + "Settle.test_part_then_the_rest"),
+    ("returned by money, not units", CL, '    if D(claim["payer_share"]) <= 0 and claim["status"] in (READY, INCOMPLETE):', "    if False:",
+     K + "ClaimsFile.test_a_claim_is_returned_when_the_payer_is_owed_nothing_whatever_the_units"),
+    ("the door's answer is read", SV, '        if not got.get("journal"):', "        if False:",
+     S + "Claims.test_a_door_that_books_nothing_leaves_the_claim_unchanged"),
     # who may buy on cover
     ("a barred customer", CP, "    if customer_barred:\n", "    if False:\n", R + "WhoMayBuyOnCover.test_a_barred_customer_is_refused_in_the_brds_words"),
     ("a member out of date", CP, "    if not member or not _in_force(member, today) or", "    if not member or",
@@ -72,7 +100,7 @@ CANARIES = [
      R + "Returns.test_three_returns_of_a_third_add_up_to_the_cent"),
     ("over-return", CP, "    over = [lid for lid, q in back.items() if q > held[lid]]", "    over = []",
      R + "Returns.test_more_than_the_sale_holds_is_refused"),
-    ("a return reduces its claim once", SV, 'if not claim or name in (claim.get("returns") or "").split("\\n"):', "if not claim:",
+    ("a return reduces its claim once", SV, 'if name in (claim.get("returns") or "").split("\\n"):', "if False:",
      S + "Claims.test_a_return_reduces_its_claim_once"),
     # claims
     ("an uncovered line is never claimed", CL, '        if D(l.get("payer_share")) <= 0:\n            continue', "        if False:\n            continue",
@@ -91,13 +119,13 @@ CANARIES = [
      K + "Flow.test_moves_the_flow_does_not_allow_are_refused_in_words"),
     ("bill back only what is due", CL, '        due = D(claim["payer_share"]) - D(claim.get("received"))', "        due = D(claim[\"payer_share\"])",
      K + "Flow.test_a_short_paid_claim_bills_back_only_the_difference"),
-    ("a claim made once", SV, '        return "-" if out.get("duplicate") else "made"', '        return "made"',
+    ("a claim made once", SV, '            return "-"\n        return "made"', '        return "made"',
      S + "Claims.test_a_booked_sale_becomes_a_ready_claim_once"),
     ("another payer's sale is not ours", SV, '        if not sale or sale["payer"] not in ours:', "        if not sale:",
      S + "Claims.test_a_sale_with_no_payer_leg_or_another_payers_is_not_ours"),
     ("a short payment", CL, "        elif paid < expected:\n            result = SHORT", "        elif paid < expected:\n            result = PAID",
      K + "Remittance.test_expected_against_received"),
-    ("a claim of another payer is never matched", SV, 'if c and c.get("payer") == remit.get("payer"):', "if c:",
+    ("a claim of another payer is never matched", SV, 'if not c or c.get("payer") != remit.get("payer"):', "if not c:",
      S + "Claims.test_a_remittance_pays_shorts_and_rejects_claims"),
     ("no door, no bill", SV, "        if got is None:\n", "        if False:\n",
      S + "Claims.test_without_the_payer_door_nothing_is_billed_and_the_claim_is_unchanged"),
@@ -118,7 +146,7 @@ CANARIES = [
 
 
 def run(name, path, anchor, mutant, test) -> tuple[str, str]:
-    tmp = tempfile.mkdtemp(prefix="s42-canary-")
+    tmp = tempfile.mkdtemp(prefix="s43-canary-")
     try:
         kit = os.path.dirname(os.path.dirname(ROOT))
         dest = os.path.join(tmp, "r", "samples", os.path.basename(ROOT))

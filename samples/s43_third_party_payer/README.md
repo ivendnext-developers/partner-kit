@@ -1,4 +1,4 @@
-# S42 — Third-party payer (`pp_icp`): an insurer, or anyone else, paying part of a sale
+# S43 — Third-party payer (`pp_icp`): an insurer, or anyone else, paying part of a sale
 
 In many markets a pharmacy cannot sell to most of its patients without their insurer: the insurer pays part of the sale and the patient pays the rest. The same shape serves an optical plan, and a company paying for what its staff buy. This app is **one payer service for any third party that pays part of a sale**. Its payers, plans, formularies and members are records the shop fills; it answers the POS app's **payer door** line by line, makes a **claim** from each sale the door books, files claims as a file, and follows each claim to payment.
 
@@ -36,7 +36,8 @@ The plan's rules, all data (`copay.py`, the tests' 1,728 combinations):
 | **Returned whole or not at all** | a sale on the plan is returned whole, or not at all |
 | **Most units on a sale** (a formulary row) | units past it are the customer's |
 | **Covers** formulary items or every item | a line the plan does not cover is the customer's |
-| **Price list** | when set, a sale on the plan is priced on it, and an item it does not carry, or carries at zero, **cannot be sold on the plan** |
+| **Price list** | when set, a sale on the plan is priced on it, and an item it does not carry, or carries at zero, **cannot be sold on the plan** (a row counts only as the engine applies it: in force today, in the line's unit or none, for no other customer, for no batch) |
+| **The shop's own promotions apply** | off: the payer door prices a sale on the plan with the shop's promotions and coupons switched off, so a retail promotion is not stacked on the payer's list (the add-on cleared them on every insured line) |
 
 ⭐ **The payer's share plus the customer's always equals the sale, to the cent**, and the payer's share is spread over the covered lines in proportion. **The sale's prices are never changed here**: the shop's own pricing (the plan's price list, its pricing rules) prices the sale, and these rules only split it. So the excess over the limit carries the sale's own discount. (The original add-on re-priced each line and added a surcharge so the patient paid the excess undiscounted; a shop wanting that sets it in its pricing.)
 
@@ -48,7 +49,7 @@ The plan's rules, all data (`copay.py`, the tests' 1,728 combinations):
 2. **Build claims** (a button on the Payer list) reads the feed and makes one **Claim** per booked sale, named by its claim reference, so a sale is never claimed twice. A return reduces its claim's lines by what it gave back to the payer, once.
 3. A claim missing what its payer needs (the payer's ticks: member number, card serial, prescription, each line's GTIN, dose and frequency) is **Incomplete**: the claims clerk fills it on the Desk and sets it **Ready**. ⚠ The pharmacy counter-rules app (S39) keeps a prescription's directions as free text, so the clerk types the dose and frequency where a payer asks for them (Abu Dhabi's Shafafiya does, on every line).
 4. **Make the claims file** (a button on a Payer) puts every Ready claim of that payer into one **Claim Batch**: a CSV, one row per claim line, the file you send to the payer. Each claim becomes **Submitted** (**Resubmitted** when it was corrected after a rejection). A cell is never written so that a spreadsheet runs it as a formula.
-5. The payer's **Remittance** is entered line by line (claim, paid, rejected, the payer's reason); **Match** compares each line with its claim: **Paid**, **Short paid**, **Rejected**, or *Unmatched* (a reference the payer sent that is not ours, or a claim of another payer). The money itself is the shop's own payment from the payer's customer record, allocated against what the door booked.
+5. The payer's **Remittance** is entered line by line (claim, paid, rejected, the payer's reason); **Match** sums every line of one claim, then compares it with what the claim is still owed, so a payer paying a claim line by line, or in parts over several remittances, is followed to the cent: **Paid**, **Short paid**, **Rejected**, or *Unmatched* (a reference the payer sent that is not ours, or a claim of another payer). The money itself is the shop's own payment from the payer's customer record, allocated against what the door booked.
 6. A rejected claim is corrected and made Ready again, or **billed to the customer**: ⏳ the *Bill to the customer* button installs with the door, which books it.
 
 Reports: *PP ICP Claims*, *PP ICP Rejected and short-paid claims*, *PP ICP Incomplete claims*, *PP ICP Remittances*; charts *PP ICP Payer share by month* and *PP ICP Claims by status*.
@@ -60,11 +61,11 @@ The service reads the shop with its integration user's key and answers the door.
 ## What the shop does (now)
 
 1. **Install the app** (the shop's administrator).
-2. **Give the role PP ICP Claims Clerk** to whoever sets up payers and files claims. Members and claims are read by that role and the service's user only, never by a till role.
+2. **Give the role PP ICP Claims Clerk** to whoever sets up payers and files claims. Members and claims are read by that role and the service's user only, never by a till role. ⚠ The *Barred* tick is on Customer, so anyone who can edit a customer can clear it; to stop a cover for certain, the clerk also switches the customer's Member off.
 3. **Make each payer**: its own **Customer record** first (what it owes is booked against it), then the Payer, its formulary, and each plan with its rules and price list. A data set file (`datasets/`) loads a payer in one go: `python3 dataset.py records datasets/generic_insurer.json` lists the records it makes.
 4. **Make each customer's cover**: a Member per policy (customer, plan, member number exactly as on the card).
 5. **Give the price list its prices**: the shop's own Item Prices on the plan's list. ⚠ Do not make the plan's list a customer group's default: it would price every sale of the member, insured or not; the door switches the sale to the plan's list when a cover is picked.
-6. **Choose the app's user on its feed, then press Connect again** (each button says so until you do). That user reads POS Invoices, Sales Invoices, Items, Item Prices and Customers, and writes the app's own records.
+6. **Choose the app's user on its feed, switch its record types on (POS Invoice, Sales Invoice), then press Connect again** (each button says so until you do). That user reads POS Invoices, Sales Invoices, Items, Item Prices and Customers, and writes the app's own records.
 
 ## Data sets
 
@@ -78,11 +79,11 @@ A data set is a JSON file: its payer (code, title, kind, its customer record, wh
 ## Run it
 
 ```bash
-python3 -m unittest discover -s samples/s42_third_party_payer/tests -p 'test_*.py'
-python3 samples/s42_third_party_payer/tests/canaries.py
-python3 tools/check/check.py samples/s42_third_party_payer
+python3 -m unittest discover -s samples/s43_third_party_payer/tests -p 'test_*.py'
+python3 samples/s43_third_party_payer/tests/canaries.py
+python3 tools/check/check.py samples/s43_third_party_payer
 ```
 
-The service: `python3 samples/s42_third_party_payer/service/app.py service/.env.local` (one shop; the file holds `IVN_SHOP_URL`, `IVN_SHOP_KEY` and `IVN_SECRET_CLAIMS`, `_FILE`, `_REMIT`), or many shops through the app template's handshake. It runs as a function: it only answers calls and presses.
+The service: `python3 samples/s43_third_party_payer/service/app.py service/.env.local` (one shop; the file holds `IVN_SHOP_URL`, `IVN_SHOP_KEY` and `IVN_SECRET_CLAIMS`, `_FILE`, `_REMIT`), or many shops through the app template's handshake. It runs as a function: it only answers calls and presses.
 
 Recipe: [`recipes/third_party_payer.md`](../../recipes/third_party_payer.md).

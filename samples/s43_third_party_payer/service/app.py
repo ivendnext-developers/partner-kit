@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""S42 — *Third-party payer*: the payer service the POS app's payer door calls (``payer/1``), and three Desk buttons
+"""S43 — *Third-party payer*: the payer service the POS app's payer door calls (``payer/1``), and three Desk buttons
 for the claims clerk (standard library only).
 
     POST /icp/payer            the payer door's two calls, ``covers`` and ``coverage`` (PB-8 spec §3; ⏳ the door is not
@@ -64,6 +64,7 @@ import shops  # noqa: E402
 BODY_MAX = 256 * 1024
 SKEW_S = 300
 READ_TIMEOUT = 2.0      # the door waits at most 5 s for an answer; each read here waits at most this
+ANSWER_BY = 4.0         # past it the service answers 503 (the door says the payer cannot be reached) rather than late
 FEED_PAGE = 50          # events read per press of *Build claims*; a press past PRESS_BY seconds stops and says so
 PRESS_BY = 8.0
 LINES_MAX = 200
@@ -168,7 +169,7 @@ class Service:
         self.prefix = (conf.get("ICP_PREFIX") or "PP ICP").strip()
         self.fp = self.prefix.lower().replace(" ", "_") + "_"
         self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
-        self.api, self.now = api or ShopApi(), now
+        self.api, self.now, self.local = api or ShopApi(), now, threading.local()
         if self.app:
             self.store = store or shops.open_store(conf)
         else:
@@ -187,10 +188,17 @@ class Service:
         users = sorted(k for k in (record or {}).get("secrets") or {} if k.startswith("user:"))
         return secrets, ({"url": record["url"], "key": record["secrets"][users[0]]} if record and users else None)
 
+    def _late(self):
+        t0 = getattr(self.local, "t0", None)       # per call: the web server answers calls on threads
+        if t0 is not None and time.monotonic() - t0 > ANSWER_BY:
+            raise ShopUnreadable("too slow")
+
     def _list(self, shop, *a, **k):
+        self._late()
         return self.api.get_list(shop["url"], shop["key"], *a, **k)
 
     def _one(self, shop, doctype, name):
+        self._late()
         return self.api.get_one(shop["url"], shop["key"], doctype, name) if name else None
 
     def today(self) -> str:
@@ -221,7 +229,8 @@ class Service:
             out.append({"member": m["name"], "payer": payer["name"], "payer_title": payer.get("title"),
                         "payer_customer": payer.get("customer"), "plan": plan["name"],
                         "plan_title": plan.get("title"), "member_label": ("…" + num[-4:]) if num else "",
-                        "valid_to": m.get("valid_to"), "price_list": plan.get("price_list")})
+                        "valid_to": m.get("valid_to"), "price_list": plan.get("price_list"),
+                        "promotions_apply": int(plan.get("promotions_apply", 1) or 0)})
         return {"covers": out, "refused": None}
 
     def coverage(self, shop, body) -> dict:
@@ -229,6 +238,13 @@ class Service:
         if not isinstance(lines, list) or not 1 <= len(lines) <= LINES_MAX:
             raise ValueError("one to 200 lines")
         customer = str(body.get("customer") or "")
+        places = int(body.get("precision", 2))
+        for l in lines:
+            if not isinstance(l, dict) or C.D(l.get("amount")) != C.D(l.get("amount")).quantize(
+                    C.Decimal(1).scaleb(-places)):
+                raise ValueError("each line's amount is at the sale's precision")
+        if len({l.get("line_id") for l in lines}) != len(lines):
+            raise ValueError("each line has its own line_id")
         req = {"sale_ref": body.get("sale_ref"), "customer": customer, "date": body.get("date") or self.today(),
                "precision": int(body.get("precision", 2)), "lines": lines}
         member = self._one(shop, self.dt("Member"), body.get("member"))
@@ -247,22 +263,30 @@ class Service:
                     shop, "Item", ["name", "item_group"], [["name", "in", missing_groups]])}
                 for l in lines:
                     l.setdefault("item_group", groups.get(l.get("item_code")))
-        prices = self.list_prices(shop, plan, lines, req["date"]) if plan and plan.get("price_list") else None
+        prices = self.list_prices(shop, plan, lines, req["date"], customer) if plan and plan.get("price_list") else None
         return C.coverage(req, plan, member, self.barred(shop, customer), prices, payer)
 
-    def list_prices(self, shop, plan, lines, today) -> dict:
-        """{item: its price on the plan's list today, or None}: read from the list itself, never from the line."""
+    def list_prices(self, shop, plan, lines, today, customer) -> dict:
+        """{line_id: that line's price on the plan's list today, or None}: read from the list itself, never from the
+        line. A row counts for a line only as the engine applies it: in force today, in no other unit, for no other
+        customer, and for no batch (a batch's own price is not the list's)."""
         codes = sorted({str(l.get("item_code")) for l in lines if l.get("item_code")})
-        rows = self._list(shop, "Item Price", ["item_code", "uom", "price_list_rate", "valid_from", "valid_upto"],
+        rows = self._list(shop, "Item Price", ["item_code", "uom", "customer", "batch_no", "price_list_rate",
+                                               "valid_from", "valid_upto"],
                           [["price_list", "=", plan["price_list"]], ["item_code", "in", codes]])
-        out = {c: None for c in codes}
-        uom = {l.get("item_code"): l.get("uom") for l in lines}
-        for r in rows:
-            if (r.get("valid_from") and r["valid_from"] > today) or (r.get("valid_upto") and r["valid_upto"] < today):
-                continue
-            c = r["item_code"]
-            if out.get(c) is None or (r.get("uom") and r.get("uom") == uom.get(c)):
-                out[c] = r.get("price_list_rate") or 0
+        out = {}
+        for l in lines:
+            best = None
+            for r in rows:
+                if r["item_code"] != l.get("item_code") or r.get("batch_no") or \
+                        (r.get("customer") and r["customer"] != customer) or \
+                        (r.get("valid_from") and r["valid_from"] > today) or \
+                        (r.get("valid_upto") and r["valid_upto"] < today) or \
+                        (r.get("uom") and l.get("uom") and r["uom"] != l["uom"]):
+                    continue
+                if best is None or (r.get("uom") and r["uom"] == l.get("uom")):
+                    best = r.get("price_list_rate") or 0
+            out[l.get("line_id")] = best
         return out
 
     # ── claims from booked sales (the event feed) ────────────────────────────
@@ -271,12 +295,15 @@ class Service:
         """The door's record of a sale (PB-8 spec §5.1), or None when no payer leg was booked on it."""
         if not doc.get(DOOR["claim_ref"]) or not doc.get(DOOR["payer"]):
             return None
+        if doctype == "Sales Invoice" and (doc.get("is_consolidated") or any(
+                it.get("pos_invoice") for it in doc.get("items") or [])):
+            return None         # the till sale's own posting: its claim is the POS sale's, made from that record
         lines = [{"line_id": it.get("name"), "item_code": it.get("item_code"), "gtin": it.get("barcode") or None,
                   "qty": it.get(DOOR["line_qty"]) or it.get("stock_qty") or it.get("qty"), "uom": it.get("uom"),
                   "amount": str(C.D(it.get(DOOR["line_payer"])) + C.D(it.get(DOOR["line_patient"]))),
                   "payer_share": it.get(DOOR["line_payer"]), "patient_share": it.get(DOOR["line_patient"]),
                   "payer_back": it.get(DOOR["line_back"]), "returned_line": it.get("pos_invoice_item")
-                  or it.get("sales_invoice_item"), "back_qty": abs(C.D(it.get("qty")))} for it in doc.get("items") or []]
+                  or it.get("sales_invoice_item"), "back_qty": abs(C.D(it.get("stock_qty") or it.get("qty")))} for it in doc.get("items") or []]
         return {"doctype": doctype, "name": doc["name"], "posting_date": doc.get("posting_date"),
                 "store": doc.get("set_warehouse") or (doc.get("items") or [{}])[0].get("warehouse"),
                 "customer": doc.get("customer"), "is_return": int(doc.get("is_return") or 0),
@@ -320,8 +347,13 @@ class Service:
             return "-"
         if sale["is_return"]:
             claim = self._one(shop, self.dt("Claim"), sale["claim_ref"])
-            if not claim or name in (claim.get("returns") or "").split("\n"):
+            if not claim:                                   # its sale's claim is not made yet: the feed tries again
+                raise ValueError("the return's claim is not made yet")
+            if name in (claim.get("returns") or "").split("\n"):
                 return "-"                                  # handled before: a return reduces its claim once
+            held = {l.get("line_id") for l in claim.get("lines") or []}
+            if any(l.get("returned_line") not in held and C.D(l.get("payer_back")) for l in sale["lines"]):
+                raise ValueError("a returned line is not on its claim")
             split = {"lines": [{"line_id": l["returned_line"], "qty": str(l["back_qty"]),
                                 "payer_back": str(abs(C.D(l["payer_back"])))} for l in sale["lines"]
                                if l.get("returned_line")]}
@@ -339,7 +371,12 @@ class Service:
         doc["lines"] = [{k: l.get(k) for k in ("line_id", "item_code", "gtin", "qty", "uom", "amount", "payer_share",
                                                "patient_share", "dose", "frequency")} for l in claim["lines"]]
         out = self.api.insert(shop["url"], shop["key"], self.dt("Claim"), doc)
-        return "-" if out.get("duplicate") else "made"
+        if out.get("duplicate"):
+            held = self._one(shop, self.dt("Claim"), claim["claim_ref"]) or {}
+            if held.get("sale") != name:      # two sales, one reference: never filed silently under the first
+                raise ValueError("a claim reference another sale already holds")
+            return "-"
+        return "made"
 
     # ── the claims file, and a remittance ────────────────────────────────────
 
@@ -366,35 +403,32 @@ class Service:
                 "batch": bname}
 
     def match(self, shop, remit_name) -> dict:
+        """A payer's remittance against its claims: every line of one claim summed first, then settled once."""
         remit = self._one(shop, self.dt("Remittance"), remit_name)
         if not remit:
             raise ValueError("no such remittance")
         rows = remit.get("lines") or []
-        claims = {}
+        per, unknown = {}, 0
         for r in rows:
-            c = self._one(shop, self.dt("Claim"), r.get("claim_ref"))
-            if c and c.get("payer") == remit.get("payer"):  # a claim of another payer is never matched here
-                claims[c["name"]] = c
-        got = K.match_remittance([{"claim_ref": r.get("claim_ref"), "paid": r.get("paid"),
-                                   "rejected": r.get("rejected"), "reason": r.get("reason")} for r in rows], claims)
-        for r, g in zip(rows, got):
-            r.update(expected=g["expected"], result=g["result"])
-            c = claims.get(g["claim_ref"])
-            if not c or g["result"] in ("Unmatched", "Over paid"):
+            per.setdefault(r.get("claim_ref"), []).append(r)
+        for ref, mine in per.items():
+            c = self._one(shop, self.dt("Claim"), ref)
+            if not c or c.get("payer") != remit.get("payer"):   # an unknown reference, or another payer's claim
+                for r in mine:
+                    r.update(expected="0", result="Unmatched")
+                unknown += len(mine)
                 continue
-            c["received"] = str(C.D(c.get("received")) + C.D(g["paid"]))
-            try:
-                K.move(c, g["result"], reason=g.get("reason") or "rejected by the payer")
-            except ValueError:
-                r["result"] = f"{g['result']} (the claim is {c['status']})"
-                continue
+            due = C.D(c["payer_share"]) - C.D(c.get("received"))
+            result = K.settle(c, sum((C.D(r.get("paid")) for r in mine), C.ZERO),
+                              all(r.get("rejected") for r in mine),
+                              next((r.get("reason") for r in mine if r.get("reason")), None))
+            for r in mine:
+                r.update(expected=str(due), result=result)
             self.api.update(shop["url"], shop["key"], self.dt("Claim"), c["name"], {
                 k: c.get(k) for k in ("status", "received", "rejection_reason")})
-        unmatched = sum(1 for r in rows if r["result"] in ("Unmatched", "Over paid"))
         self.api.update(shop["url"], shop["key"], self.dt("Remittance"), remit_name, {
-            "status": "Matched" if not unmatched else "Partly matched",
-            "lines": K.rows(rows)})
-        return {"text": f"{len(rows) - unmatched} of {len(rows)} lines matched."}
+            "status": "Matched" if not unknown else "Partly matched", "lines": K.rows(rows)})
+        return {"text": f"{len(rows) - unknown} of {len(rows)} lines matched."}
 
     def bill_back(self, shop, claim_name) -> dict:
         """What the payer did not pay, owed by the customer again (FR-K4-05): the door books it, then the claim says so."""
@@ -409,6 +443,8 @@ class Service:
                                                            "amount": c["billed_back"], "reason": "claim not paid"})
         if got is None:
             return {"text": "Your POS app has no payer door yet: nothing was billed.", "level": "warning"}
+        if not got.get("journal"):                          # the door names the journal it booked, or nothing was
+            return {"text": "The payer door booked nothing: the claim is unchanged.", "level": "warning"}
         self.api.update(shop["url"], shop["key"], self.dt("Claim"), c["name"],
                         {"status": c["status"], "billed_back": c["billed_back"]})
         return {"text": f"{c['billed_back']} is owed by the customer again, on their own sale."}
@@ -443,6 +479,7 @@ class Service:
             return (200, _message("Choose the app's user on its feed, then press Connect again.", "warning")) \
                 if point == "desk_action" else (503, {"error": "not set up"})
         try:
+            self.local.t0 = time.monotonic() if point == "payer" else None
             if point == "payer":
                 return 200, (self.covers(shop, body) if body["call"] == "covers" else self.coverage(shop, body))
             name = recs[0].get("name") or ""

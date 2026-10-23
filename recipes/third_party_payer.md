@@ -6,7 +6,7 @@ the till, and **claims** the rest from the payer afterwards. This recipe keeps t
 a payer service that answers the POS app's **payer door**, and keeps everything the shop must see (payers, plans,
 members, claims, remittances) as records in the shop. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
-**Reference implementation:** `samples/s42_third_party_payer/` — *Third-party payer*.
+**Reference implementation:** `samples/s43_third_party_payer/` — *Third-party payer*.
 
 ⚠ **The payer door is requested from the POS team and is not in the POS app yet.** Until it is, the reference
 implementation keeps the records, builds claims from booked payer sales and matches remittances; the door's
@@ -18,7 +18,7 @@ use the till's own *On Account* tender instead: there is nothing to split.
 
 ## Steps
 
-1. **Declare, in your manifest** (`samples/s42_third_party_payer/manifest.json`):
+1. **Declare, in your manifest** (`samples/s43_third_party_payer/manifest.json`):
    - **the records the shop fills:** `<PREFIX> Payer` (each linked to the payer's own Customer record: the door books
      what the payer owes against it), `<PREFIX> Plan` (the co-pay rules, a price list, a formulary), `<PREFIX>
      Formulary` (rows by item or item group: covered, extra-item pay a unit, most units on a sale), `<PREFIX> Member`

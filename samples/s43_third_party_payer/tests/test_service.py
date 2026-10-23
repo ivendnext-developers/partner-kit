@@ -1,8 +1,8 @@
-"""S42's service against a stand-in shop: the payer door's two calls, claims from the feed's booked sales and returns,
+"""S43's service against a stand-in shop: the payer door's two calls, claims from the feed's booked sales and returns,
 the claims file, a remittance, the bill-back, and every refusal (a bad signature, a down shop, another customer's
 member).
 
-    python3 -m unittest discover -s samples/s42_third_party_payer/tests -p 'test_*.py'
+    python3 -m unittest discover -s samples/s43_third_party_payer/tests -p 'test_*.py'
 """
 
 import base64
@@ -75,7 +75,8 @@ class Calls(Base):
         self.assertEqual(out["covers"][0] | {}, {"member": "m1", "payer": "GEN-INS", "payer_title": "Generic Insurer",
                                                  "payer_customer": "Generic Insurer", "plan": "Generic Silver",
                                                  "plan_title": "Generic Silver", "member_label": "…0123",
-                                                 "valid_to": "2026-12-31", "price_list": "Generic Insurer Prices"})
+                                                 "valid_to": "2026-12-31", "price_list": "Generic Insurer Prices",
+                                                 "promotions_apply": 1})
         self.assertNotIn("GEN-000123", json.dumps(out))
 
     def test_a_barred_customer_has_no_cover(self):
@@ -98,6 +99,38 @@ class Calls(Base):
     def test_an_item_at_zero_on_the_list_is_not_sellable_whatever_the_line_says(self):
         code, out = self.coverage(lines=[{"line_id": "r1", "item_code": "PHD-TRAM-50", "qty": 1, "amount": 180}])
         self.assertEqual((out["answer"], out["lines"][0]["reason"]), ("refuse", "zero_on_list"))
+
+    def test_a_list_row_counts_only_as_the_engine_applies_it(self):
+        # the plan's list carries the item only in another unit, for another customer, or for a batch: not listed
+        for extra in ({"uom": "Box"}, {"customer": "C9"}, {"batch_no": "LOT-1"}):
+            self.shop.tables["Item Price"] = [dict({"item_code": "PHD-AMOX-500", "price_list": "Generic Insurer Prices",
+                                                    "price_list_rate": 120}, **extra)]
+            out = self.coverage(lines=[dict(LINES[0])])[1]
+            self.assertEqual((out["answer"], out["lines"][0]["reason"]), ("refuse", "not_on_list"), extra)
+        self.shop.tables["Item Price"] = [{"item_code": "PHD-AMOX-500", "price_list": "Generic Insurer Prices",
+                                           "price_list_rate": 120, "customer": "C1"}]
+        self.assertEqual(self.coverage(lines=[dict(LINES[0])])[1]["answer"], "cover")   # this customer's own row
+
+    def test_two_lines_of_one_item_in_two_units_are_judged_each_on_its_own_unit(self):
+        self.shop.tables["Item Price"] = [{"item_code": "PHD-AMOX-500", "price_list": "Generic Insurer Prices",
+                                           "uom": "Nos", "price_list_rate": 120},
+                                          {"item_code": "PHD-AMOX-500", "price_list": "Generic Insurer Prices",
+                                           "uom": "Box", "price_list_rate": 0}]
+        out = self.coverage(lines=[dict(LINES[0]), dict(LINES[0], line_id="r9", uom="Box", amount=1200)])[1]
+        self.assertEqual([l["reason"] for l in out["lines"]], [None, "zero_on_list"])
+
+    def test_a_line_not_at_the_sales_precision_or_a_repeated_line_id_is_refused(self):
+        self.assertEqual(self.coverage(lines=[dict(LINES[0], amount=33.333)])[0], 400)
+        self.assertEqual(self.coverage(lines=[dict(LINES[0]), dict(LINES[1], line_id="r1")])[0], 400)
+
+    def test_a_slow_shop_answers_503_before_the_doors_five_seconds(self):
+        slow = self.shop.get_one
+        self.shop.get_one = lambda *a: (time.sleep(0.05), slow(*a))[1]
+        keep, app.ANSWER_BY = app.ANSWER_BY, 0.01
+        try:
+            self.assertEqual(self.coverage()[0], 503)
+        finally:
+            app.ANSWER_BY = keep
 
     def test_the_item_group_is_read_from_the_shop_when_the_door_does_not_send_it(self):
         out = self.coverage()[1]
@@ -155,6 +188,62 @@ class Claims(Base):
         self.shop.done.clear()                                    # the feed sends it again: the claim's name holds
         self.assertEqual(self.build()[1]["message"]["body"], "0 claims made, 0 reduced by returns, 0 failed.")
         self.assertEqual(len(self.shop.rows("PP ICP Claim")), 1)
+
+    def test_two_sales_under_one_claim_reference_fail_loudly_never_silently(self):
+        self.booked("S-1")
+        self.shop.book("S-2", [], payer_claim_ref="GEN-INS-S-1")
+        self.assertEqual(self.build()[1]["message"]["body"], "1 claims made, 0 reduced by returns, 1 failed.")
+
+    def test_the_tills_own_posting_of_a_payer_sale_is_never_a_second_claim(self):
+        self.booked("S-1")
+        self.shop.book("SINV-1", [{"name": "x", "item_code": "PHD-AMOX-500", "pos_invoice": "S-1"}],
+                       doctype="Sales Invoice", payer_claim_ref="GEN-INS-S-1")
+        self.assertEqual(self.build()[1]["message"]["body"], "1 claims made, 0 reduced by returns, 0 failed.")
+
+    def test_a_return_before_its_claim_is_tried_again_never_dropped(self):
+        out = self.coverage(sale_ref="S-1")[1]
+        self.shop.book("S-1-RET", [{"name": "x1", "item_code": "PHD-PARA-500", "qty": -2, "pos_invoice_item": "r2",
+                                    "payer_back": "45.60"}], is_return=1, payer_claim_ref=out["claim_ref"])
+        self.assertIn("1 failed", self.build()[1]["message"]["body"])
+        self.shop.book("S-1", door_lines(out))
+        self.shop.events.append(self.shop.events.pop(0))            # the failed return comes back after its sale
+        self.build()
+        self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-S-1")["payer_share"], "183.20")
+
+    def test_several_remittance_lines_for_one_claim_are_summed_before_it_is_settled(self):
+        self.booked("S-1")
+        self.build()
+        self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
+        self.shop.add("PP ICP Remittance", name="REM-9", payer="GEN-INS", lines=[
+            {"name": "a", "claim_ref": "GEN-INS-S-1", "paid": "120"},
+            {"name": "b", "claim_ref": "GEN-INS-S-1", "paid": "108.80"}])
+        self.call("/icp/press/remit", press("PP ICP Remittance", "REM-9"), "remit")
+        c = self.shop.find("PP ICP Claim", "GEN-INS-S-1")
+        self.assertEqual((c["status"], c["received"]), ("Paid", "228.80"))
+        self.assertEqual({r["result"] for r in self.shop.find("PP ICP Remittance", "REM-9")["lines"]}, {"Paid"})
+
+    def test_a_later_part_payment_of_a_short_claim_is_kept(self):
+        self.booked("S-1")
+        self.build()
+        self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
+        for i, paid in enumerate(("100", "50", "78.80")):
+            self.shop.add("PP ICP Remittance", name=f"R{i}", payer="GEN-INS",
+                          lines=[{"name": f"l{i}", "claim_ref": "GEN-INS-S-1", "paid": paid}])
+            self.call("/icp/press/remit", press("PP ICP Remittance", f"R{i}"), "remit")
+        c = self.shop.find("PP ICP Claim", "GEN-INS-S-1")
+        self.assertEqual((c["status"], c["received"]), ("Paid", "228.80"))
+
+    def test_a_door_that_books_nothing_leaves_the_claim_unchanged(self):
+        self.booked("S-1")
+        self.build()
+        self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
+        self.shop.add("PP ICP Remittance", name="R", payer="GEN-INS",
+                      lines=[{"name": "l", "claim_ref": "GEN-INS-S-1", "paid": "0", "rejected": 1, "reason": "x"}])
+        self.call("/icp/press/remit", press("PP ICP Remittance", "R"), "remit")
+        self.shop.bill_back = lambda *a: {}
+        out = self.call("/icp/press/billback", press("PP ICP Claim", "GEN-INS-S-1"), "billback")[1]
+        self.assertEqual(out["message"]["level"], "warning")
+        self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-S-1")["status"], "Rejected")
 
     def test_a_sale_with_no_payer_leg_or_another_payers_is_not_ours(self):
         self.shop.book("CASH-1", [], payer_claim_ref=None, payer_code=None)

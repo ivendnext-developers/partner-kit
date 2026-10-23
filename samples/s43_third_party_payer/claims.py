@@ -1,4 +1,4 @@
-"""S42 — claims: built from a booked sale, filed as a file, followed to payment (standard library only).
+"""S43 — claims: built from a booked sale, filed as a file, followed to payment (standard library only).
 
     build_claim(sale, payer, member)        a claim from a sale the payer door booked (PB-8 spec §5: what it stores)
     apply_return(claim, split)              a return's give-back on its claim's lines
@@ -125,8 +125,8 @@ def apply_return(claim: dict, split: dict) -> dict:
         l["returned_qty"] = str(D(l.get("returned_qty")) + D(b["qty"]))
         l["payer_back"] = str(D(l.get("payer_back")) + D(b["payer_back"]))
     claim["payer_share"] = str(sum((D(l["payer_share"]) - D(l.get("payer_back")) for l in claim["lines"]), ZERO))
-    if all(D(l.get("returned_qty")) >= D(l["qty"]) for l in claim["lines"]) and claim["status"] in (READY, INCOMPLETE):
-        claim["status"] = RETURNED
+    if D(claim["payer_share"]) <= 0 and claim["status"] in (READY, INCOMPLETE):
+        claim["status"] = RETURNED          # by what the payer is still owed, never by units (a return counts in its own)
     return claim
 
 
@@ -177,6 +177,21 @@ def claims_file(claims: list[dict], payer: dict) -> str:
 def _cell(v) -> str:
     s = "" if v is None else str(v)
     return "'" + s if s[:1] in ("=", "+", "-", "@") else s   # a spreadsheet never runs a cell as a formula
+
+
+def settle(claim: dict, paid, rejected: bool = False, reason: str | None = None) -> str:
+    """What one remittance (all its lines for this claim, summed) does to the claim. The money is always recorded on
+    ``received``; the status moves only where the flow allows, and the result says so when it cannot."""
+    claim["received"] = str(D(claim.get("received")) + D(paid))
+    due = D(claim["payer_share"]) - D(claim["received"])
+    to = REJECTED if rejected and D(paid) == 0 else (PAID if due <= 0 else SHORT)
+    if to == claim["status"] == SHORT:
+        return f"{SHORT} (still {due} due)"
+    try:
+        move(claim, to, reason=reason or "rejected by the payer")
+    except ValueError:
+        return f"{to} recorded on a claim that is {claim['status']}: check it"
+    return to + (" (paid more than was due)" if due < 0 else "")
 
 
 def match_remittance(lines: list[dict], claims: dict[str, dict]) -> list[dict]:

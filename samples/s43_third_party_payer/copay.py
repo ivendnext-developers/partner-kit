@@ -1,4 +1,4 @@
-"""S42 — a third party that pays part of a sale: the plan's rules, as pure functions (standard library only).
+"""S43 — a third party that pays part of a sale: the plan's rules, as pure functions (standard library only).
 
 The service (service/app.py) reads the shop's records and calls these; the tests call them with fixtures. Nothing here
 reads or writes the shop.
@@ -26,8 +26,12 @@ Two departures from that add-on, on purpose:
    added a surcharge so the patient paid the excess over the limit undiscounted. Here the shop's own pricing (the
    plan's price list, its pricing rules) prices the sale; these rules only split its total. So the excess carries the
    sale's own discount, and the payer's share plus the patient's always equals the sale's total, to the cent.
+3. **The shop's own promotions are the plan's choice.** The add-on cleared every promotion on an insured line and gave
+   only the insurer's own discount. Here a plan's tick *The shop's own promotions apply on this plan* says whether the
+   shop's pricing rules price a sale on it (the payer door switches them off when it is clear); whatever discount the
+   sale then carries is split by the rules below.
 2. **A return is never re-calculated.** The add-on ran the split again on negative amounts, and its 2024 generic version
-   clamped every share at zero, which gave a refund nothing back. Here a return gives back each returned line's own
+   clamped the patient's share at zero, which gave a refunded patient nothing back. Here a return gives back each returned line's own
    shares from the claim, in proportion to the quantity returned.
 
 The price-list rule is one a pharmacy customer ran (a third party's add-on: we know the rule, not its code): when the plan names a price list, an
@@ -119,7 +123,8 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
       ``amount``  what the line costs the customer, tax included, after the sale's discount (the till's line total);
       ``discount`` the discount the shop's pricing gave on it, on the same basis (0 when none).
     plan, member: the shop's records (None when there is none); payer: the payer record (its title and active tick).
-    list_prices: {item_code: price or None} read from the plan's price list (only when the plan names one).
+    list_prices: {line_id or item_code: price or None} read from the plan's price list (only when the plan names one):
+      a line's own entry first (its unit), then its item's.
 
     answer: "cover" (every line sellable on the cover), "refuse" (a line is not sellable on it: the door refuses an
     insured Pay until the line goes), or "no_cover" (the sale cannot be paid by this payer at all).
@@ -161,7 +166,8 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
         res = {"line_id": line.get("line_id"), "item_code": item, "covered": False, "sellable": True,
                "reason": None, "message": None, "covered_qty": "0", "qty_limit": None, "extra_pay": "0"}
         if plan.get("price_list"):
-            price = (list_prices or {}).get(item)
+            lp = list_prices or {}
+            price = lp[line.get("line_id")] if line.get("line_id") in lp else lp.get(item)
             code = "not_on_list" if price is None else ("zero_on_list" if D(price) <= 0 else None)
             if code:
                 refused = True
@@ -170,7 +176,7 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
                 continue
         covered = (row is not None and int(row.get("covered", 1) or 0)) or (every and (row is None or
                                                                             int(row.get("covered", 1) or 0)))
-        if not covered or stock_qty <= 0:
+        if not covered or stock_qty <= 0 or net <= 0:   # an exchange's return row, or a free line: the patient's
             res.update(reason="not_covered", message=WORDS["not_covered"].format(item=item, **names))
             out.append((res, net, ZERO, ZERO, ZERO))
             continue

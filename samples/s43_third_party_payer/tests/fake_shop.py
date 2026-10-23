@@ -1,4 +1,4 @@
-"""A stand-in shop for S42's service tests: the records the service reads and writes behind the same calls as
+"""A stand-in shop for S43's service tests: the records the service reads and writes behind the same calls as
 ``service/app.py``'s ``ShopApi`` (``get_list``, ``get_one``, ``insert``, ``update``, ``feed``, ``bill_back``). Filters
 are the shapes the service sends: ``[field, "=" | "in", value]``. An insert whose name exists answers the shop's
 duplicate. ``fail`` makes every call raise ``ShopUnreadable`` (a shop that is down); ``door`` False makes

@@ -1,4 +1,4 @@
-"""S42's manifest passes the kit's checker; it installs only what runs without the payer door (three Desk buttons, the
+"""S43's manifest passes the kit's checker; it installs only what runs without the payer door (three Desk buttons, the
 records, the barred tick on Customer, the reports); the door's subscription and the bill-back wait in
 door_declaration.json; members and claims are read by the claims clerk and the service only, never a till role; the
 record types and fields are the ones the service reads and writes."""

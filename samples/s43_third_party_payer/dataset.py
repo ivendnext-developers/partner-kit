@@ -1,4 +1,4 @@
-"""S42 — a payer's data set: one JSON file in datasets/ per payer, never code (standard library only).
+"""S43 — a payer's data set: one JSON file in datasets/ per payer, never code (standard library only).
 
     python3 dataset.py                    # checks every data set in datasets/
     python3 dataset.py records <file>     # prints the shop records a data set makes, in insert order

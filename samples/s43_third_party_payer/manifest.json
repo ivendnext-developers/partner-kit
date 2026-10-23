@@ -383,6 +383,13 @@
      "fieldname": "no_partial_refund",
      "fieldtype": "Check",
      "label": "Returned whole or not at all"
+    },
+    {
+     "fieldname": "promotions_apply",
+     "fieldtype": "Check",
+     "label": "The shop's own promotions apply on this plan",
+     "default": "1",
+     "description": "Off: a sale on this plan takes the plan's price list without the shop's promotions and coupons (the payer door switches the shop's pricing rules off for it)."
     }
    ],
    "permissions": [
@@ -758,9 +765,10 @@
     },
     {
      "fieldname": "sale_doctype",
-     "fieldtype": "Data",
+     "fieldtype": "Link",
      "label": "Sale type",
-     "read_only": 1
+     "read_only": 1,
+     "options": "DocType"
     },
     {
      "fieldname": "sale",

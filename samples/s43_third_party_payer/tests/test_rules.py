@@ -1,6 +1,6 @@
-"""S42's rules (copay.py): the add-on's co-pay rules in every combination, the price-list rule, who may buy on cover, returns.
+"""S43's rules (copay.py): the add-on's co-pay rules in every combination, the price-list rule, who may buy on cover, returns.
 
-    python3 -m unittest discover -s samples/s42_third_party_payer/tests -p 'test_*.py'
+    python3 -m unittest discover -s samples/s43_third_party_payer/tests -p 'test_*.py'
 
 The add-on-shaped fixture: two covered lines, A (gross 600, the shop's discount 60, so 540) and B (gross 400, discount 40,
 so 360, with extra-item pay of 2 a unit on 5 units). Covered before the discount 990, after it 890; the sale is 900.
@@ -163,6 +163,15 @@ class EveryCombination(unittest.TestCase):
                 p, req = grid_case(invoice_upper_limit=lim, **kw)
                 shares.append(Decimal(C.coverage(req, p, MEMBER, False)["totals"]["payer_share"]))
             self.assertLessEqual(shares[0], shares[1], kw)
+
+    def test_a_line_at_zero_or_below_is_the_patients(self):
+        p, req = grid_case(20, 0, 0, 0, C.BEFORE_LIMIT, C.BEFORE_DISCOUNT, 0, 0, 0)
+        req["lines"][0].update(amount=-200, discount=0)
+        a = C.coverage(req, p, MEMBER, False)
+        self.assertEqual(a["lines"][0]["payer_share"], "0")
+        for l in a["lines"]:
+            self.assertGreaterEqual(Decimal(l["payer_share"]), 0)
+        self.assertLessEqual(Decimal(a["totals"]["payer_share"]), Decimal("120.01"))
 
     def test_the_quantity_limit_covers_only_that_many_units(self):
         p, req = grid_case(0, 0, 0, 0, C.BEFORE_LIMIT, C.BEFORE_DISCOUNT, 0, 0, 2)
