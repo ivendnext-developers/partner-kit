@@ -123,7 +123,12 @@ CANARIES = [
      "raise ShopUnreadable(type(e).__name__) from None", S + "ShopApi.test_a_write_with_no_answer_in_time_is_unsure_never_a_read"),
     ("the write never runs past the budget", "service/app.py", "timeout=max(0.5, min(WRITE_TIMEOUT, left))", "timeout=WRITE_TIMEOUT",
      S + "OneShop.test_the_write_waits_at_most_its_own_time_and_never_past_the_budget"),
-    ("a number may start with a bracket", "codecheck.py", 'r"\\+?[ (]*[0-9]', 'r"\\+?[0-9]',
+    ("no code once the till's deadline is gone", "service/app.py", "                if spent >= DEADLINE - 0.5:", "                if False:",
+     S + "OneShop.test_the_write_waits_at_most_its_own_time_and_never_past_the_budget"),
+    ("the shops lookup counts against the budget", "service/app.py", "        t0 = self.clock()\n        try:\n            name, secrets, shop = self.caller(headers)",
+     "        try:\n            name, secrets, shop = self.caller(headers)\n            t0 = self.clock()",
+     S + "ManyShops.test_the_shops_lookup_counts_against_the_budget"),
+    ("a number may start with a bracket", "codecheck.py", 'r"[+ (]*[0-9]', 'r"\\+?[0-9]',
      R + "test_a_number_is_the_first_one_the_record_holds_in_the_shops_phone_shape"),
 ]
 

@@ -173,11 +173,18 @@ class OneShop(unittest.TestCase):
         self.assertEqual([c[5] for c in slow.calls if c[0] == "create"], [app.BUDGET - 2.5])
         self.clock.t += 61                      # the reads take the whole budget: the write still gets its floor
         slow2 = Api()
-        slow2.rules = lambda *a: (setattr(self.clock, "t", self.clock.t + 9), RECORDS)[1]
+        slow2.rules = lambda *a: (setattr(self.clock, "t", self.clock.t + 3.2), RECORDS)[1]
         svc2 = app.Service(ONE, api=slow2, clock=self.clock, wall=self.wall)
         raw = raw_of(context(group="Members", customer="CUST-3"))
         svc2.answer("/ccc/capture", signed(raw, SECRET), raw)
         self.assertEqual([c[5] for c in slow2.calls if c[0] == "create"], [0.5])
+        self.clock.t += 61                      # the till's deadline is gone: no code is written (nobody will ask for it)
+        slow3 = Api()
+        slow3.rules = lambda *a: (setattr(self.clock, "t", self.clock.t + 9), RECORDS)[1]
+        svc3 = app.Service(ONE, api=slow3, clock=self.clock, wall=self.wall)
+        raw = raw_of(context(group="Members", customer="CUST-4"))
+        self.assertEqual(svc3.answer("/ccc/capture", signed(raw, SECRET), raw)[0], 503)
+        self.assertEqual([c for c in slow3.calls if c[0] == "create"], [])
 
     def test_the_rules_and_the_tree_are_kept_a_minute(self):
         self.call(context(group="Retail"))
@@ -286,6 +293,20 @@ class ManyShops(unittest.TestCase):
     def test_a_site_the_app_does_not_know_and_no_site_are_refused(self):
         self.assertEqual(self.call("check-a", "shop-z.ivendnext.com")[0], 401)
         self.assertEqual(self.call("check-a", None)[0], 401)
+
+    def test_the_shops_lookup_counts_against_the_budget(self):
+        clock = Clock()
+        store, orig = self.store, self.store.get
+
+        def get(site):                          # a slow shops store: 2 s before the reads start
+            clock.t += 2
+            return orig(site)
+        store.get = get
+        svc = app.Service({"IVN_LIBRARY_APP": "ivendnext_ccc", "CCC_PREFIX": "IVENDNEXT CCC"}, store=store, api=self.api,
+                          clock=clock, wall=Clock(NOW))
+        raw = raw_of(context(group="Members"))
+        svc.answer("/ccc/capture", signed(raw, "check-a", site=self.A), raw)
+        self.assertEqual([c[5] for c in self.api.calls if c[0] == "create"], [app.BUDGET - 2])
 
     def test_a_shop_without_its_integration_key_is_a_503(self):
         self.assertEqual(self.call("check-c", "shop-c.ivendnext.com")[0], 503)

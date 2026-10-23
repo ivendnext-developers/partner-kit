@@ -66,8 +66,10 @@ KEY, ROUTE = "on_select", "/ccc/capture"   # the subscription's key in the manif
 RULES_TTL = 60
 READ_TIMEOUT = 0.8     # the rules and the tree go at once, then the write: all inside the capture's 5 s (the manifest)
 WRITE_TIMEOUT = 2.5    # the code record's save carries the shop's text to its gateway: at most this long ...
-BUDGET = 3.5           # ... and never past this many seconds from the call's start (a late save still answers the field)
-VERIFY_TIMEOUT = 2.0   # the code record's read on a verify: a busy shop is not a 503 (the till lets any code in on one)
+BUDGET = 3.0           # ... and its own waits end by this many seconds from the call's start (a late save still answers the
+                       # field); a connection's set-up is outside it, so the rest of the capture's 5 s covers that
+DEADLINE = 5.0         # the capture's time to answer (the manifest): past it the till has applied its down answer
+VERIFY_TIMEOUT = 2.0   # the code record's read and spend on a verify: a busy shop is not a 503 (any code passes on one)
 
 
 class ShopUnreadable(Exception):
@@ -148,7 +150,7 @@ class ShopApi:
     def used(self, url: str, key: str, prefix: str, name: str, now: int) -> None:
         """A right code, spent: *Used*, the code cleared, and when."""
         self._call(url, key, f"/api/resource/{urllib.parse.quote(prefix + ' Code')}/{urllib.parse.quote(name)}",
-                   body={"status": codecheck.USED, "code": "", "verified_at": now}, method="PUT")
+                   body={"status": codecheck.USED, "code": "", "verified_at": now}, method="PUT", timeout=VERIFY_TIMEOUT)
 
 
 class Service:
@@ -198,7 +200,10 @@ class Service:
         out = codecheck.on_select(ctx, *kept)
         if out["verdict"] == "challenge":
             try:
-                left = BUDGET - (self.clock() - (self.clock() if t0 is None else t0))
+                spent = self.clock() - (self.clock() if t0 is None else t0)
+                if spent >= DEADLINE - 0.5:     # the till has given up on this pick: text no code nobody will ask for
+                    raise ShopUnreadable("the capture's time is spent")
+                left = BUDGET - spent
                 self.api.create(shop["url"], shop["key"], self.prefix, codecheck.code_record(ctx, codecheck.new_code(), now),
                                 timeout=max(0.5, min(WRITE_TIMEOUT, left)))
             except WriteUnsure:         # saved or not, the code field fails closed: never a 503 that lets them on
