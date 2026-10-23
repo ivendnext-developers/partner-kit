@@ -21,7 +21,8 @@ A campaign record and two buttons on it: *Count entries* and *Draw winners*. You
 - Draw once every till has sent its sales: a sale that arrives after the draw is not in it.
 - One press reads the whole campaign: if a campaign is too large for one press, the press writes nothing; split it by till.
 - A credit note made in Desk after the day closed takes no entries off; the till's own returns do.
-- The app never draws a campaign twice, but someone with write on campaigns can change a drawn one outside its form; its history shows it.
+- The app never draws a campaign twice, but someone with write on campaigns can still remove a result row or change a drawn one; its history shows it.
+- A draw may need a permit where you sell, and some countries require a free way to enter: both are the shop's.
 - The customer's own entries are not shown at the till or on the receipt.
 
 ## Tell the customer

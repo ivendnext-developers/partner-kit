@@ -48,7 +48,7 @@ A shop runs a *shop and win* campaign: every so much a customer spends at its ti
    - on *Count entries*, write the counts and the list's fingerprint; on *Draw winners*, draw with a cryptographic random source, one place per customer, winners then reserves, and write the results, the draw's record and *Drawn* (`PUT` with the campaign's `modified` as read);
    - answer with a message and `refresh` (the extension point's vocabulary).
 
-5. **Rights.** The app's user holds the app's integration role alone, with read on **POS Invoice**, **POS Profile** and **Customer Group** (measured on our test bench: the shop refused each until it was given; a right of *select* alone answers the names only). The manifest gives the role read and write on the campaign.
+5. **Rights.** The manager role needs *Select* on **Company**, **POS Profile** and **Customer Group** for the campaign form's lookups (the role alone gets no answer). The app's user holds the app's integration role alone, with read on **POS Invoice**, **POS Profile** and **Customer Group** (measured on our test bench: the shop refused each until it was given; a right of *select* alone answers the names only). The manifest gives the role read and write on the campaign.
 
 ## Tell the winners
 
@@ -60,9 +60,11 @@ The app writes the winners; calling them is the shop's. A shop's own Notificatio
 - **Draw once every till has sent its sales**: a sale that reaches the shop after the draw is not in it.
 - **One press reads the whole campaign.** On our test bench the shop answered 12,157 sales (2.7 MB) in under a fifth of a second to a service beside it. A press stops reading after 7 seconds and then writes nothing: split a campaign that large by till.
 - **Returns** are the till's own; a credit note made in Desk against the day's closing invoice takes no entries off.
-- **The app never draws twice**; the manager role cannot delete a campaign. Someone with write on campaigns can still change a drawn campaign outside its form, through the API; the campaign's history (its version log) shows every such change. Give the manager role only to people you trust.
+- **The app never draws twice**; the manager role cannot delete a campaign. A person with write on campaigns can still add or remove a result row in the form, or change a drawn campaign through the API, and a System Manager can delete one and draw again; the campaign's history (its version log) shows every such change. Give the manager role only to people you trust.
 - **The customer's own entries** are not shown at the till or on the receipt.
 - **Removing the app removes its campaigns.**
+- **Blank hours from UTC** reads as UTC: a shop west of UTC sets it.
+- **The law.** A draw for customers may need a permit where you sell (a promotion permit in the UAE, for example), and some countries require a free way to enter; both are the shop's. The app counts sales only.
 
 ## See also
 
