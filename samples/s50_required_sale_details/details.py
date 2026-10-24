@@ -12,7 +12,9 @@ tree) and answers:
 - a needed detail missing or blank: ``refuse``, in the retailer's words or the app's own, naming the details missing.
 
 Only a sale is judged (``stage: "sale"``), and an exchange's new basket is one. A refund, the returned lines of an exchange
-and a return without its sale (``stage: "return"``) are allowed without reading the retailer's iVendNext. The store's
+and a return without its sale (``stage: "return"``) are allowed without reading the retailer's iVendNext; so is an exchange
+rung without its sale when nothing is owed, which the till sends as a return with its sold lines (a bound: the contract lets
+a check judge those lines, and a partner's version may). The store's
 walk-in customer is in a group like any customer: a rule on its group asks it too.
 
 ⛔ No answer moves money: no price, no line, no amount, no payment method. The cashier fills the detail on the sale and
@@ -126,6 +128,7 @@ def deciding(group: str, rules: dict, tree: dict) -> tuple[str, dict] | None:
 
 
 MARKS = "‌‍‎‏؜"   # joiners and direction marks Arabic and Persian text carries: the till keeps them
+ZERO_WIDTH = "\u200b\ufeff"                 # never a value: a detail holding only these, spaces and marks is empty
 
 
 def plain(text, n: int = TEXT_MAX) -> str:
@@ -135,8 +138,10 @@ def plain(text, n: int = TEXT_MAX) -> str:
 
 
 def missing(ctx: dict, rule: dict) -> list:
-    """The rule's details this sale has not filled (absent, empty, or spaces and marks alone), in the rule's order."""
-    filled = {a["name"] for a in ctx["sale_attributes"] if (a.get("value") or "").strip().strip(MARKS)}
+    """The rule's details this sale has not filled (absent, empty, or only spaces, marks and zero-width characters), in
+    the rule's order."""
+    filled = {a["name"] for a in ctx["sale_attributes"]
+              if any(not ch.isspace() and ch not in MARKS + ZERO_WIDTH for ch in a.get("value") or "")}
     return [d for d in rule["details"] if d not in filled]
 
 

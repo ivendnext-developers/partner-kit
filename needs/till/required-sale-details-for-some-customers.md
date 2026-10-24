@@ -20,7 +20,8 @@ A rule record per customer group naming the sale details it needs (Sale Attribut
 - Answered when the cashier presses Pay, not when the customer is chosen.
 - The detail must be filled, not checked: its shape is the Sale Attribute's own pattern.
 - The sale's details only, not a line's.
-- Refunds are not judged. An exchange's new items are, as a sale.
+- Refunds are not judged. An exchange's new items are, as a sale, except an exchange rung without its sale when nothing is owed.
+- A detail switched off, or hidden by a field rule, cannot be filled at the till.
 - A group's own rule replaces the rule above it entirely.
 - Offline sales are flagged when they reach iVendNext, never refused.
 

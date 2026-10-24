@@ -47,7 +47,7 @@ def signed(raw, secret, ts=None, site=None):
 
 
 class Api:
-    """A stand-in for the shop's reads: rules and trees from dicts keyed by the shop's address; records every call."""
+    """A stand-in for the retailer's reads: rules and trees from dicts keyed by the retailer's address; records every call."""
 
     def __init__(self, rules=None, trees=None):
         self.rules_by = rules if rules is not None else {"https://shop.example": RECORDS}

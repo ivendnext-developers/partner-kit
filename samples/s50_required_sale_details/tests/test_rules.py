@@ -69,7 +69,7 @@ class Rules(unittest.TestCase):
         self.assertEqual(check(attrs={PO: "PO-4471"}), {"verdict": "allow"})
 
     def test_a_blank_value_counts_as_empty(self):
-        for blank in ("", "   ", "‏", None):
+        for blank in ("", "   ", "‏", None, "\u200f \u200f", "\u200b", " \ufeff "):
             self.assertEqual(check(attrs={PO: blank})["verdict"], "refuse", repr(blank))
 
     def test_a_detail_the_rule_does_not_name_changes_nothing(self):

@@ -23,7 +23,8 @@ R, S, M, D = "test_rules.Rules.", "test_service.", "test_manifest.ManifestTest."
 CANARIES = [
     ("a needed detail left empty refuses", D, "    if not gaps:\n        return {\"verdict\": \"allow\"}",
      "    if True:\n        return {\"verdict\": \"allow\"}", R + "test_a_needed_detail_left_empty_refuses_the_sale_naming_it"),
-    ("a blank value counts as empty", D, '(a.get("value") or "").strip().strip(MARKS)', '(a.get("value") is not None)',
+    ("a blank value counts as empty", D, 'if any(not ch.isspace() and ch not in MARKS + ZERO_WIDTH for ch in a.get("value") or "")',
+     'if any(not ch.isspace() for ch in a.get("value") or "")',
      R + "test_a_blank_value_counts_as_empty"),
     ("only the rule's details are needed", D, "    return [d for d in rule[\"details\"] if d not in filled]",
      "    return [d for d in rule[\"details\"] if not filled]", R + "test_a_detail_the_rule_does_not_name_changes_nothing"),

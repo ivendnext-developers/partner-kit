@@ -25,7 +25,7 @@ A Sale Attribute's *Required* switch holds for every customer on every till. Ret
 
 3. **Check every call with the check's secret** (`<app>:sub:<key>`; the sample's key is `details`), and refuse a timestamp more than five minutes from yours.
 
-4. **Answer a refund at once.** `stage` is `"return"` for every refund, the returned items of an exchange and a return without its sale: allow, and read nothing. An exchange's new basket comes as `stage: "sale"` and is judged.
+4. **Answer a refund at once.** `stage` is `"return"` for every refund, the returned items of an exchange and a return without its sale: allow, and read nothing. An exchange's new basket comes as `stage: "sale"` and is judged, except an exchange rung without its sale when nothing is owed: it comes as `"return"` with its sold lines (positive `qty_milli`). The sample allows it; to judge those lines, answer with a sentence for the refund screen, never *then Pay*.
 
 5. **Read the retailer's rules and its group tree at the same time,** with your integration user's key, and keep them a minute: `GET /api/resource/<PREFIX> Rule` with `fields` `["name","customer_group","words","details.sale_attribute","profiles.pos_profile"]` (iVendNext answers one row per detail and POS Profile, a left join: count each detail once), `filters` `[["enabled","=",1]]` and `limit_page_length` 0; and `GET /api/resource/Customer Group` with `["name","lft","rgt"]`. iVendNext gives your role a plain **read on Customer Group**; the rule records are the role's own. If either read fails, answer 503 (the down answer applies), never a decision on half the rules.
 
@@ -37,7 +37,8 @@ A Sale Attribute's *Required* switch holds for every customer on every till. Ret
 
 ## Bounds
 
-- A sale only: refunds and an exchange's returned items are not judged; its new items are, as a sale.
+- A sale only: refunds and an exchange's returned items are not judged; its new items are, as a sale, except an exchange rung without its sale when nothing is owed.
+- A detail switched off, or hidden by a field rule, cannot be filled at the till: take it off the rules first.
 - The sale's details, not a line's (`line_attributes`): a line rule is your version.
 - Present, not right: the value's shape is the Sale Attribute's own *Regex Pattern*.
 - One rule per customer group; a customer's own rule is a group of their own.

@@ -12,7 +12,7 @@ The retailer decides which sale details a group of its customers must give befor
 | Every detail the group needs filled | The payment screen opens as always |
 | No rule for the customer's group or any group above it, or a till the rule does not name | The payment screen opens as always |
 | A refund, the returned items of an exchange, a return rung without its sale | Not judged: the refund choices open as always |
-| An exchange's new items | Judged as a sale |
+| An exchange's new items | Judged as a sale; but an exchange rung without its sale when nothing is owed comes as a return, and is not judged |
 | The service down, or the retailer's records unreadable | The check's down answer: the sale goes on and is flagged on *Sales to review* |
 | A sale rung offline | The till does not call the service: flagged when it reaches iVendNext, never refused |
 
@@ -24,7 +24,7 @@ The retailer decides which sale details a group of its customers must give befor
 | Contractors (under Account customers) | Purchase order number, Project | Trade Counter |
 | Staff | (none) | |
 
-A contractor buying at the trade counter gives both; at any other till, nothing (their own rule replaces the account customers' rule). The store's walk-in customer is in a group too: a rule on its group, or on *All Customer Groups*, asks every walk-in sale (for a mobile number, say).
+A contractor buying at the trade counter gives both; at any other till, nothing (their own rule replaces the account customers' rule). The store's walk-in customer is in a group too: a rule on its group asks every walk-in sale (for a mobile number, say); a rule on *All Customer Groups* asks the walk-in customer and every customer below it with no rule of its own.
 
 ## What the retailer does
 
@@ -33,7 +33,7 @@ A contractor buying at the trade counter gives both; at any other till, nothing 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP RSD Rule* with its two tables, the role `PP RSD Integration`, the check and the feed registration, the check switched off. Nothing changes at the till yet.
 2. **Make the app's integration user** (the [integration user recipe](../../recipes/integration_user.md)): tick *Is Desk User*, give it the role **PP RSD Integration** alone and generate its API key. In *Role Permissions*, give that role **read on Customer Group** (the service reads the group tree). Choose the user on the feed registration **PP RSD Rules feed**.
 3. **Stop cashiers moving a customer into another group.** The till's edit sheet lets a cashier change a customer's group: a cashier could move a customer into a group that needs nothing. In *Customize Form* for *Customer*, set **Customer Group**'s *Perm Level* to 1, and in *Role Permissions* give level 1 *Write* on Customer only to the roles that may move customers (your managers). A cashier's change then leaves the group as it was, and the till still says *Customer saved.*; a cashier can no longer give a new customer a group either (it takes the default customer group). Check the level 1 rows already there: Sales Master Manager has one by default, and no cashier's role may hold level 1 *Write*. (Measured with [S47](../s47_customers_by_store/); [S46](../s46_payment_method_rules/) gives the same step.)
-4. **Make the sale details** the rules name, in **Sale Attribute** (iVendNext's own screen): one per detail, such as *Purchase order number*, switched on (*Active*). Leave its own *Required* off: this app decides who must give it. Its *Regex Pattern* still checks the value's shape for everyone who fills it.
+4. **Make the sale details** the rules name, in **Sale Attribute** (iVendNext's own screen): one per detail, such as *Purchase order number*, with a *Sequence* of its own (no other active detail may hold it), switched on (*Active*), and no *Default Value* (a default fills the detail for the cashier, so the check passes with nothing typed). Leave its own *Required* off: this app decides who must give it. Its *Regex Pattern* still checks the value's shape for everyone who fills it. A detail switched off, or hidden by a field rule, cannot be filled at the till: take it off the rules first, or every sale for that group is refused.
 5. **Write the rules** in *PP RSD Rule*: one per customer group that needs one. *Words the cashier reads* is optional.
 6. **Switch the check on:** open *Required sale details* in *Retail Extension Subscription*, read what is sent, tick the consent, choose the POS Profiles, and switch it on. Last, press **Connect again** on the app's record, which sends the integration user's key to the service.
 
@@ -108,7 +108,7 @@ What a partner usually changes:
 
 ### Bounds, stated
 
-- **A sale only.** A refund, a return against a sale, the returned items of an exchange and a return without its sale (`stage: "return"`) are allowed without reading iVendNext. An exchange's replacement basket is `stage: "sale"` and is judged.
+- **A sale only.** A refund, a return against a sale, the returned items of an exchange and a return without its sale (`stage: "return"`) are allowed without reading iVendNext. An exchange's replacement basket is `stage: "sale"` and is judged, except an exchange rung without its sale when nothing is owed: the till sends it as a return with its sold lines, and this app allows it (the contract lets a check judge those lines by its sale rule; a partner's version may, with a sentence that does not say *then Pay*).
 - **The sale's details, not a line's.** Line details are a partner's version.
 - **A rule per customer group.** A customer's own rule is a group of their own.
 - **Offline,** the till does not call the service: the sale is flagged when it syncs, never refused.
