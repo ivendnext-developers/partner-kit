@@ -20,6 +20,18 @@ The retailer wants its customers' own word on each store. After a till sale, the
 | More sales than one press can make in its 10 seconds | It makes what fits and says *More sales wait: press again.* The next press starts where it stopped |
 | The service down | The button's own words: *Send feedback requests did not answer in time. Check the record before you try again.* Nothing is written (measured on the programme's bench) |
 
+| What the retailer and the customer see (on a demo site, 2026-10-24) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/post-sale-feedback-install.png) |
+| The Notification: channel SMS, sent to the request's mobile field, its message holding the link | ![](screenshots/post-sale-feedback-notification.png) |
+| A rule: the name customers read, the question, three answers, the days, one POS Profile | ![](screenshots/post-sale-feedback-rule.png) |
+| The service switched on, with what each press sends | ![](screenshots/post-sale-feedback-switched-on.png) |
+| The manager's press: one request made for the day's sale | ![](screenshots/post-sale-feedback-press.png) |
+| The customer's page, opened from the text's link | ![](screenshots/post-sale-feedback-page.png) |
+| The answer taken; *Stop these messages* still there | ![](screenshots/post-sale-feedback-thanks.png) |
+| The request with its answer, comment and stop | ![](screenshots/post-sale-feedback-request.png) |
+| The report of answers by store | ![](screenshots/post-sale-feedback-answers.png) |
+
 ## What iVendNext does
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. It comes in switched off: its service has no consent and is off, and its button is off. The install adds the record types *PP PSF Rule* (and its table of POS Profiles) and *PP PSF Request*, the report *PP PSF Answers*, and makes the roles **PP PSF Manager** and **PP PSF Integration**.
@@ -41,7 +53,7 @@ The retailer wants its customers' own word on each store. After a till sale, the
 | `manifest.json` | the record types `PP PSF Rule` (named by its title), its table `PP PSF Rule Profile`, and `PP PSF Request` (named by the sale; the integration role writes it, the manager reads it), the report, two help addresses, a feed registration (it names the app's one integration user), one `desk_action` service and the button *Send feedback requests* on the rule's form and list for the manager; installed **switched off** |
 | `feedback.py` | the pure core: the press's signature (`verify`) and records (`rules_of_press`), a rule (`rule_of`), whom to ask (`choose`), where the next press starts (`mark_after`), the contact (`phone_of`, `email_of`, `contacts_of`), the signed link (`link_of`, `sale_of_token`), the request (`request_of`), the press's answer (`press_answer`), the page (`page_of`) and the customer's answer (`answer_of`) |
 | `service/app.py` | the service, standard library only: `POST /psf/send` (the press), `GET /` with `page.js` and `page.css` (the customer's page), `POST /psf/open` and `/psf/answer` (its two calls), `GET /health`, and the app template's handshake for many retailers; one `handle` answers the web server and the function entry (`lambda_handler`) alike |
-| `service/page.html` · `page.js` · `page.css` | the customer's page: no inline script, no outside source; its own words in English, Arabic or Spanish by the phone's language |
+| `service/page.html` · `page.js` · `page.css` | the customer's page: no inline script, no outside source; its own words in English, Arabic or Spanish by the phone's language; the retailer's name, question and answers, and the customer's comment, keep their own direction on an Arabic page |
 | `Dockerfile` · `app.json` | the settings file for hosting (`"runs": "function"`: on CitiXsys hosting it is a function, paid per call) and an image for your own server (built from the kit's root) |
 | `tests/` | the core, the service over the wire with signed presses and the page's calls (one retailer and many), iVendNext's reads and writes against a stand-in iVendNext, every answer against the published contract, the manifest; `canaries.py` breaks each guarded rule and expects its test to fail |
 

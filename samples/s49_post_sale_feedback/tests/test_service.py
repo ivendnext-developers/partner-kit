@@ -500,6 +500,13 @@ class ServiceTest(unittest.TestCase):
             self.assertEqual(h["Referrer-Policy"], "no-referrer")
         self.assertEqual(self.svc.handle("GET", "/app.py", {}, b"")[0], 404)
 
+    def test_s25b_the_retailers_words_keep_their_own_direction_on_an_arabic_page(self):
+        # walked on the demo site: an English question on an Arabic phone read "?How was your visit today"
+        page = self.svc.handle("GET", "/", {}, b"")[1].decode()
+        for el in ('<p id="name" class="name" dir="auto">', '<h1 id="question" dir="auto">', 'id="comment" maxlength="280" rows="3" dir="auto"'):
+            self.assertIn(el, page)
+        self.assertIn('b.dir = "auto";', self.svc.handle("GET", "/page.js", {}, b"")[1].decode())
+
     def test_s26_the_retailer_down_on_the_page_is_said_and_the_page_waits(self):
         s, t = self.answered_link()
         self.shop.down_on = "doc"

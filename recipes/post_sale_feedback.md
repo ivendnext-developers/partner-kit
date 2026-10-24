@@ -12,6 +12,12 @@ Retailers ask to hear from the customer after a sale: **a message after the visi
 - The customer, a message from the retailer with a link: the retailer's name, the sale's date, the question and three answers in the retailer's words, a comment, and *Stop these messages*.
 - The manager again: each answer on its request, and the report of answers by store.
 
+![On a demo site: the manager's press makes one request for the day's sale](../samples/s49_post_sale_feedback/screenshots/post-sale-feedback-press.png)
+
+![The customer's page, opened from the text's link](../samples/s49_post_sale_feedback/screenshots/post-sale-feedback-page.png)
+
+![The request with its answer, comment and stop](../samples/s49_post_sale_feedback/screenshots/post-sale-feedback-request.png)
+
 ## Rules
 
 1. **Declare three record types, the button and its service in your manifest** (`samples/s49_post_sale_feedback/manifest.json`):
