@@ -9,7 +9,7 @@ The retailer wants its customers' own word on each store. After a till sale, the
 | When | What happens |
 |---|---|
 | A manager presses *Send feedback requests* on a rule | The service reads the rule's till sales of its days received since the last press, and makes one request per customer to ask. The press's answer says how many, and why the others were not: *already asked*, *asked us to stop*, *with no mobile number or e-mail* |
-| A request is made | The retailer's own Notification sends it by SMS, e-mail or WhatsApp, with the customer's own link |
+| A request is made | The retailer's own Notification sends it, with the customer's own link: by SMS (measured on the programme's bench), by e-mail, or by WhatsApp where the retailer has the WhatsApp app (neither measured) |
 | The customer opens the link | The retailer's name, the sale's date, the question and three answers in the retailer's words; a comment; *Stop these messages* |
 | The customer answers | The answer (kept in English: *Satisfied*, *Neutral* or *Not satisfied*), the comment and the time are written on the request, which reads *Answered*. A second answer changes nothing |
 | The customer ticks *Stop these messages* | Written on the request, with or without an answer; no press asks them again |
@@ -23,11 +23,11 @@ The retailer wants its customers' own word on each store. After a till sale, the
 ## What iVendNext does
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. It comes in switched off: its service has no consent and is off, and its button is off. The install adds the record types *PP PSF Rule* (and its table of POS Profiles) and *PP PSF Request*, the report *PP PSF Answers*, and makes the roles **PP PSF Manager** and **PP PSF Integration**.
-2. **Make the app's integration user** (the [integration user recipe](../../recipes/integration_user.md)): tick *Is Desk User*, give it the role **PP PSF Integration** alone, no User Permissions, and generate its API key. In *Role Permissions*, give that role **read on POS Invoice, POS Profile and Customer** (the service reads the till sales, each POS Profile's walk-in customer and store, and the phone and e-mail of a customer whose sale carries none). The install gives the role its rights on the app's own record types. Choose the user on the feed registration **PP PSF Feedback feed**, then press **Connect again** on the app's record, which sends that user's key to the service.
+2. **Make the app's integration user** (the [integration user recipe](../../recipes/integration_user.md)): tick *Is Desk User*, give it the role **PP PSF Integration** alone, no User Permissions, and generate its API key. In *Role Permissions*, give that role **read on POS Invoice, POS Profile and Customer** (the service reads the till sales, each POS Profile's walk-in customer and store, and the phone and e-mail of a customer whose sale carries none). The install gives the role its rights on the app's own record types. Choose the user on the feed registration **PP PSF Feedback feed** (step 6 sends its key).
 3. **Give your managers the role PP PSF Manager.** It keeps the rules, presses the button and reads the requests and the report. In *Role Permissions*, give it **Select on POS Profile**, for the rule's table of POS Profiles (a System Manager too, where the site removed it).
 4. **Let iVendNext send the message.** For a text: in **SMS Settings**, your SMS gateway's address and its parameters. Then make one **Notification**: *Document Type* **PP PSF Request**, *Send Alert On* **New**, *Channel* **SMS**, a recipient *Receiver By Document Field* **mobile**, and a message holding the link, for example `Thank you for shopping with us. How did we do? {{ doc.link }}`. For e-mail, the same with *Channel* **Email** and the field **email**; for WhatsApp, the WhatsApp app's notification on the same record. Save it switched on.
 5. **Write a rule** in *PP PSF Rule*: the name your customers read (your brand, or the store's), the question and three answers in their language, the days back a press reaches (1 to 7; 1 means yesterday's and today's sales), the days a link stays open (1 to 30) and the POS Profiles it covers (none: every POS Profile).
-6. **Switch the service and the button on:** **Retail Extension Subscription**, the record *Post-sale feedback*: read what it is sent, tick the consent, switch it on. Then **Retail Desk Action**, the record *Send feedback requests*: switch it on.
+6. **Switch the service and the button on:** **Retail Extension Subscription**, the record *Post-sale feedback*: read what it is sent, tick the consent, switch it on. Then **Retail Desk Action**, the record *Send feedback requests*: switch it on. Last, press **Connect again** on the app's record, which sends the user's key to the service.
 7. **Test it:** ring a sale for a customer with your own mobile number, open the rule and press *Send feedback requests*. A text with the link must reach your phone, and your answer must show on the request. If no text arrives, check the SMS Settings, the Notification and the Error Log.
 
 **Where it shows.** In Desk: the rules' list and form, with the button on both; the requests' list (its sidebar counts by store and answer) and form; the report *PP PSF Answers*. At the till: nothing new. The customer sees the message and the page.
@@ -78,7 +78,7 @@ What a partner usually changes:
 
 - **A press, not a schedule.** The messages go when a manager presses. On CitiXsys hosting a function has no schedule yet; when it has one, the same press handler runs on it unchanged.
 - **The phone and e-mail are the retailer's.** The sale's own contact first, else the customer's record: a customer the till creates holds its phone and e-mail in the till's own fields (`custom_phone_no`, `custom_email`), never *Mobile No*, and its sale carries no contact (measured on the programme's bench). A customer with neither is counted and never asked.
-- **The link is the key.** Anyone who has a customer's link can answer for that sale, once. Ticking the button's consent again changes the secret: links already sent stop working.
+- **The link is the key.** Anyone who has a customer's link can answer for that sale, once, and the manager role reads every request's link. Links are signed with the button's signing key. When it changes (a System Manager ticking the consent again can change it), links signed with the key before keep working until it changes once more; older ones stop.
 - **No message, and no error in Desk:** a Notification switched off sends nothing, SMS Settings with no gateway address only print a message, and a gateway that refuses is written to the *Error Log*; in each the request is made and the customer gets no message. The setup's test step catches the first two; watch the Error Log for the third.
 - **A slow gateway slows the press.** The message goes inside each request's save; the service saves eight at a time and stops starting new ones 4.5 seconds into the press. The rest wait for the next press.
 - **A new key.** A key withdrawn or a user disabled (401 or 403) is said in words at the press until the user is switched back on or given a new key, and *Connect again* sends it.
@@ -94,7 +94,7 @@ What a partner usually changes:
 | A survey tool's link in the retailer's receipt message | about 10 lines of setup | answers live outside iVendNext, by no sale or store, with no stop and no one-answer rule |
 | A container reading the event feed, sending at each sale | about the same code, and a container's monthly cost | a press once a day does the same journey at no standing cost |
 | The retailer's Notification on each sale with a value of the till's own as the link's secret | about 250 lines, no press | rests on a hidden till field no contract documents |
-| **A press that makes one request per recent sale, the retailer's Notification sending each, a signed link to a page the service serves** | about 600 lines of core, service and page with their docstrings | **picked**: kit doors only, a function paid per call; S44's press shape and S24's page reused |
+| **A press that makes one request per recent sale, the retailer's Notification sending each, a signed link to a page the service serves** | about 930 lines of core, service and page with their docstrings, and about 1,000 of tests | **picked**: kit doors only, a function paid per call; S44's press shape and S24's page reused |
 
 ### The answer, exactly
 
@@ -106,9 +106,9 @@ What a partner usually changes:
 ### Bounds, stated
 
 - **The till's sales only:** POS Invoice. A sales invoice made in iVendNext Desk is not asked.
-- **Offline sales** are asked once they reach iVendNext: the press reads by when a sale arrived.
+- **Offline sales** are asked once they reach iVendNext, while their date is within the rule's days back: the press reads by when a sale arrived. A sale that arrives later than that is not asked.
 - **Days are UTC's:** a rule's days and a link's last day are counted on UTC's date, which can differ from the store's by a few hours.
 - **A save sent whole with no answer in time** is counted *could not be made* and tried again by the next press, which finds it made.
 - **Requests stay** (the manager role and your System Manager read them) until the app is removed; the uninstall's export file keeps them. Each holds a customer's mobile number and e-mail: a System Manager can delete older ones from the list.
-- **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. The first press after a quiet spell starts the function (1 to 2.5 seconds, measured on earlier apps), inside the button's 10. The press's reads go side by side, in three rounds, so a retailer far from the US waits about three round trips before the writes.
+- **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. The first press after a quiet spell starts the function (1 to 2.5 seconds, measured on earlier apps), inside the button's 10. The press's reads go side by side (eight at a time), in three rounds for a few rules, so a retailer far from the US waits about three round trips before the writes.
 - It logs one line per call: the route, the status and the milliseconds, never a body, a link, a number or a key.

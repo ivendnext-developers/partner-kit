@@ -40,7 +40,7 @@
 
   function show(v) {
     var card = $("card");
-    card.classList.remove("done");
+    card.classList.remove("done", "stopped");
     $("name").textContent = v.name || "";
     $("date").textContent = v.date || "";
     $("question").textContent = v.question || "";
@@ -55,7 +55,9 @@
       box.appendChild(b);
     });
     var note = { answered: W.thanks, closed: W.closed, unknown: W.unknown, unavailable: W.busy }[v.state] || "";
+    card.classList.toggle("stopped", !!v.stopped || v.state === "unknown" || v.state === "unavailable");
     if (v.state !== "open") {
+      chosen = null;                                   // only Stop these messages is left to send
       card.classList.add("done");
       if (v.state === "unknown" || v.state === "unavailable") { $("question").textContent = ""; }
     }

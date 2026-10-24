@@ -66,7 +66,10 @@ def rule(**k):
 def _match(row, filters):
     for f, op, v in filters:
         x = row.get(f)
-        if op == "=" and x != v or op == "in" and x not in v or op == ">=" and not (x is not None and str(x) >= str(v)):
+        if op not in ("=", "in", ">=", "<="):
+            raise AssertionError(f"the stand-in does not know the operator {op}")
+        if op == "=" and x != v or op == "in" and x not in v or op == ">=" and not (x is not None and str(x) >= str(v)) \
+                or op == "<=" and not (x is not None and str(x) <= str(v)):
             return False
     return True
 
@@ -235,6 +238,7 @@ class ServiceTest(unittest.TestCase):
 
     def test_s6_a_rule_switched_off_or_misfilled_is_said_in_words_and_reads_no_sales(self):
         for change, words in (({"enabled": 0}, "Dubai is switched off."),
+                              ({"look_back_days": 3, "open_days": 2}, "may not be more than the days a link stays open"),
                               ({"shown_name": ""}, "fill the name your customers read"),
                               ({"look_back_days": 9}, "days back must be 1 to 7"),
                               ({"open_days": 31}, "1 to 30")):
@@ -342,6 +346,28 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(sorted(self.shop.requests), ["OLD"])
         self.assertIn("Reading your sales took the press's time, so none was made yet.", out["message"]["body"])
         self.assertIn("press again", out["message"]["body"])
+
+    def test_s30_the_press_reads_side_by_side(self):
+        import threading
+        gate = threading.Barrier(4, timeout=3)      # POS Profiles, the requests, the stops and the one rule's sales
+        real = self.shop.rows
+
+        def rows(doctype, fields, filters, *a, **k):
+            if doctype in ("POS Profile", "POS Invoice") or doctype == fb.REQUEST:
+                gate.wait()                         # passes only when all four are asked at once
+            return real(doctype, fields, filters, *a, **k)
+        self.shop.rows = rows
+        code, out = self.press()
+        self.assertEqual(code, 200)
+        self.assertIn("Made 3", out["message"]["body"])
+
+    def test_s31_a_customer_who_asked_to_stop_is_not_asked_on_another_record_with_the_same_number(self):
+        self.shop.requests["OLD"].update(mobile="+971 50 123 4567", email="Stop@Example.com")
+        self.shop.sales.append(sale("S21", "C21", mobile="", email="stop@example.com", creation="2026-10-24 11:00:00.0"))
+        code, out = self.press()
+        self.assertNotIn("S10", self.shop.requests)      # C1's sale carries the stopped number
+        self.assertNotIn("S21", self.shop.requests)      # C21's carries the stopped e-mail
+        self.assertIn("asked us to stop", out["message"]["body"])
 
     def test_s11_a_request_with_no_answer_is_tried_again_by_the_next_press(self):
         real = self.shop.insert
