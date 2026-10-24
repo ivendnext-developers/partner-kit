@@ -15,4 +15,3 @@ textarea { width: 100%; padding: 10px; font: inherit; border: 1.5px solid var(--
 .send:disabled { opacity: 0.45; }
 .note { min-height: 1.4em; margin: 16px 0 0; }
 .done .answers, .done .label, .done textarea, .stopped .stop, .stopped .send { display: none; }
-[dir="rtl"] body { text-align: right; }

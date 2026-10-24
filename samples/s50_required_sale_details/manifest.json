@@ -1,0 +1,141 @@
+{
+ "manifest_version": 2,
+ "app": "pp_rsd",
+ "prefix": "PP RSD",
+ "title": "Required sale details",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "Sale details a customer group must give before paying: an account customer's purchase order number, an insured patient's policy number. A check before payment: when the cashier presses Pay, the retailer's server sends its priced basket with the customer's group, the till's POS Profile and the sale's details as filled, and the service refuses the sale, in the rule's words, while a detail the group's rule needs is empty; the cashier fills it under the sale's details and presses Pay again. One record of PP RSD Rule per customer group: the sale details needed (a table of Sale Attribute) and the POS Profiles it holds on (none: every till); a group with no rule takes the rule of the nearest group above it, and a group's own rule replaces the rule above it. The store's walk-in customer is in a group too. Refunds are not judged. The service reads the rules and the customer group tree with the app's integration user and writes nothing. The install makes the role PP RSD Integration; the retailer gives it to the app's integration user, with read on Customer Group. The check installs switched off; the retailer reads what it is sent, ticks the consent and switches it on. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/rsd/check"
+ ],
+ "doctypes": [
+  {
+   "name": "PP RSD Rule Detail",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "sale_attribute",
+     "fieldtype": "Link",
+     "label": "Sale detail",
+     "options": "Sale Attribute",
+     "reqd": 1,
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RSD Rule Profile",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "pos_profile",
+     "fieldtype": "Link",
+     "label": "POS Profile",
+     "options": "POS Profile",
+     "reqd": 1,
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RSD Rule",
+   "autoname": "field:customer_group",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "customer_group",
+     "fieldtype": "Link",
+     "label": "Customer group",
+     "options": "Customer Group",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "One rule per group, named by it. A group below this one takes this rule until it has its own."
+    },
+    {
+     "fieldname": "enabled",
+     "fieldtype": "Check",
+     "label": "Switched on",
+     "default": "1",
+     "in_list_view": 1,
+     "description": "Off: this group takes the rule of the nearest group above it that has one."
+    },
+    {
+     "fieldname": "details",
+     "fieldtype": "Table",
+     "label": "Sale details needed",
+     "options": "PP RSD Rule Detail",
+     "description": "As named in Sale Attribute, for example Purchase order number. None: nothing is needed, so a group below a rule can be let off it."
+    },
+    {
+     "fieldname": "profiles",
+     "fieldtype": "Table",
+     "label": "Only at these POS Profiles",
+     "options": "PP RSD Rule Profile",
+     "description": "None: every till. At a till not listed, nothing is needed for this group."
+    },
+    {
+     "fieldname": "words",
+     "fieldtype": "Data",
+     "label": "Words the cashier reads",
+     "length": 140,
+     "description": "Shown when a detail is missing, such as: Account customers give their purchase order number. Blank: the app's own words, naming the details missing."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RSD Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP RSD Rule",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/required_sale_details.html#rules"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP RSD Rules feed",
+   "description": "the required sale details service reads the retailer's rules and its customer group tree as this user; leave the feed off",
+   "events": [
+    "PP RSD Rule"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "details",
+   "point": "check",
+   "label": "Required sale details",
+   "endpoint_url": "https://host.docker.internal:8125/rsd/check",
+   "timeout_seconds": 3,
+   "down_answer": "allow_and_flag"
+  }
+ ]
+}
