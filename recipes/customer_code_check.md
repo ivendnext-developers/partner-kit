@@ -13,6 +13,12 @@ A till puts any customer on a sale, and with them their loyalty points, store cr
 - A customer whose group asks, with no mobile number: off the sale with your sentence, or on, as the rule says.
 - Any other customer, and the store's walk-in customer: on the sale, nothing shown.
 
+![On a demo site: the code field, naming the last two digits of the number the code went to](../samples/s48_customer_code_check/screenshots/customer-code-check-code-field.png)
+
+![A wrong code, with the tries left](../samples/s48_customer_code_check/screenshots/customer-code-check-wrong-code.png)
+
+![A member with no mobile number taken off the sale in the rule's words](../samples/s48_customer_code_check/screenshots/customer-code-check-no-mobile.png)
+
 ## Rules
 
 1. **Declare two record types and the capture in your manifest** (`samples/s48_customer_code_check/manifest.json`):
