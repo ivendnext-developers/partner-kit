@@ -39,6 +39,7 @@ A Sale Attribute's *Required* switch holds for every customer on every till. Ret
 
 - A sale only: refunds and an exchange's returned items are not judged; its new items are, as a sale, except an exchange rung without its sale when nothing is owed.
 - A detail switched off, or hidden by a field rule, cannot be filled at the till: take it off the rules first.
+- An exchange's screen and a sale made from a quote have no place to fill a sale detail today: your refusal there is one the cashier cannot clear. Say so in your guide (fill it on the quote first; refund and ring a new sale), or let those sales through.
 - The sale's details, not a line's (`line_attributes`): a line rule is your version.
 - Present, not right: the value's shape is the Sale Attribute's own *Regex Pattern*.
 - One rule per customer group; a customer's own rule is a group of their own.

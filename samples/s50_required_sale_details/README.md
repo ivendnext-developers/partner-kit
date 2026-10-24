@@ -13,6 +13,7 @@ The retailer decides which sale details a group of its customers must give befor
 | No rule for the customer's group or any group above it, or a till the rule does not name | The payment screen opens as always |
 | A refund, the returned items of an exchange, a return rung without its sale | Not judged: the refund choices open as always |
 | An exchange's new items | Judged as a sale; but an exchange rung without its sale when nothing is owed comes as a return, and is not judged |
+| An exchange, or a sale made from a quote, whose customer's group needs a detail | ⚠ The till refuses Pay, but neither screen has a place to fill a sale detail (the exchange screen opens the sale-details sheet only for iVendNext's own required details; a sale from a quote hides it). Fill the detail on the quote before converting it; for an exchange, refund and ring a new sale. Asked of the POS app |
 | The service down, or the retailer's records unreadable | The check's down answer: the sale goes on and is flagged on *Sales to review* |
 | A sale rung offline | The till does not call the service: flagged when it reaches iVendNext, never refused |
 
@@ -110,6 +111,7 @@ What a partner usually changes:
 
 - **A sale only.** A refund, a return against a sale, the returned items of an exchange and a return without its sale (`stage: "return"`) are allowed without reading iVendNext. An exchange's replacement basket is `stage: "sale"` and is judged, except an exchange rung without its sale when nothing is owed: the till sends it as a return with its sold lines, and this app allows it (the contract lets a check judge those lines by its sale rule; a partner's version may, with a sentence that does not say *then Pay*).
 - **The sale's details, not a line's.** Line details are a partner's version.
+- **An exchange or a sale from a quote** is refused with no place at the till to fill the detail (read in the till's code, not walked): fill it on the quote first; refund and ring a new sale instead of an exchange. A sale-details entry on those two screens is asked of the POS app.
 - **A rule per customer group.** A customer's own rule is a group of their own.
 - **Offline,** the till does not call the service: the sale is flagged when it syncs, never refused.
 - **Where the check never runs:** a park to a till, a layaway deposit, an account collection (the check page, *Not in this version*) and the Desk's own POS screen.
