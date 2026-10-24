@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Your feedback</title>
+<link rel="stylesheet" href="page.css">
+</head>
+<body>
+<main id="card">
+  <p id="name" class="name"></p>
+  <p id="date" class="date"></p>
+  <h1 id="question"></h1>
+  <div id="answers" class="answers"></div>
+  <label id="comment-label" for="comment" class="label"></label>
+  <textarea id="comment" maxlength="280" rows="3"></textarea>
+  <label class="stop"><input type="checkbox" id="stop"> <span id="stop-label"></span></label>
+  <button id="send" type="button" class="send" disabled></button>
+  <p id="note" class="note" role="status" aria-live="polite"></p>
+</main>
+<script src="page.js"></script>
+</body>
+</html>

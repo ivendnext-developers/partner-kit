@@ -1,0 +1,388 @@
+{
+ "manifest_version": 2,
+ "app": "pp_psf",
+ "prefix": "PP PSF",
+ "title": "Post-sale feedback",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "After a till sale, the retailer's own message asks the customer how the visit was, with a link to a one-page answer. A rule, PP PSF Rule, holds the name customers read, the question and three answers in the retailer's words, the days back a press reaches, the days a link stays open and the POS Profiles it covers. A Desk button, Send feedback requests, on one or more rules: the service reads each rule's submitted till sales of its last days received since its last press, and writes one PP PSF Request per customer to ask, named by the sale, holding the customer's mobile number and e-mail and a signed link. Never the walk-in customer, a return, a sale already asked or a customer who asked to stop. The retailer's own Notification on the request sends the message by SMS, e-mail or WhatsApp. The customer's answer, an optional comment and stop these messages are written on the request, once. A report lists the answers. The service reads the rules, the POS Profiles, the till sales and the customers' mobile number and e-mail with its own user, and writes the requests and each rule's place. The install makes the roles PP PSF Manager and PP PSF Integration; the retailer gives the second to the app's integration user, with read on POS Invoice, POS Profile and Customer, and makes the Notification. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/psf/send"
+ ],
+ "doctypes": [
+  {
+   "name": "PP PSF Rule Profile",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "pos_profile",
+     "fieldtype": "Link",
+     "label": "POS Profile",
+     "options": "POS Profile",
+     "reqd": 1,
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP PSF Rule",
+   "autoname": "field:rule_name",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "rule_name",
+     "fieldtype": "Data",
+     "label": "Rule",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "length": 80,
+     "description": "A name for this rule, such as: Dubai stores."
+    },
+    {
+     "fieldname": "enabled",
+     "fieldtype": "Check",
+     "label": "Switched on",
+     "default": "1",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "shown_name",
+     "fieldtype": "Data",
+     "label": "Name your customers read",
+     "reqd": 1,
+     "length": 60,
+     "description": "At the top of the answer page, such as your brand or the store's name."
+    },
+    {
+     "fieldname": "question",
+     "fieldtype": "Data",
+     "label": "Question",
+     "length": 140,
+     "default": "How was your visit today?",
+     "description": "In your customers' language."
+    },
+    {
+     "fieldname": "answer_good",
+     "fieldtype": "Data",
+     "label": "First answer",
+     "length": 40,
+     "default": "Satisfied",
+     "description": "Kept on the request as Satisfied, whatever the words."
+    },
+    {
+     "fieldname": "answer_ok",
+     "fieldtype": "Data",
+     "label": "Second answer",
+     "length": 40,
+     "default": "Neutral",
+     "description": "Kept as Neutral."
+    },
+    {
+     "fieldname": "answer_bad",
+     "fieldtype": "Data",
+     "label": "Third answer",
+     "length": 40,
+     "default": "Not satisfied",
+     "description": "Kept as Not satisfied."
+    },
+    {
+     "fieldname": "look_back_days",
+     "fieldtype": "Int",
+     "label": "Days back a press reaches",
+     "default": "1",
+     "description": "1 to 7. 1: yesterday's and today's sales."
+    },
+    {
+     "fieldname": "open_days",
+     "fieldtype": "Int",
+     "label": "Days a link stays open",
+     "default": "7",
+     "description": "1 to 30, counted from the sale."
+    },
+    {
+     "fieldname": "profiles",
+     "fieldtype": "Table",
+     "label": "POS Profiles",
+     "options": "PP PSF Rule Profile",
+     "description": "None: every POS Profile."
+    },
+    {
+     "fieldname": "asked_up_to",
+     "fieldtype": "Data",
+     "label": "Asked up to",
+     "description": "Where the next press starts: the time the last sale it read reached iVendNext. Clear it to read the rule's days again."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP PSF Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP PSF Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP PSF Request",
+   "autoname": "field:sale",
+   "title_field": "customer_name",
+   "fields": [
+    {
+     "fieldname": "sale",
+     "fieldtype": "Link",
+     "label": "Sale",
+     "options": "POS Invoice",
+     "reqd": 1,
+     "unique": 1,
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "rule",
+     "fieldtype": "Link",
+     "label": "Rule",
+     "options": "PP PSF Rule",
+     "read_only": 1
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "read_only": 1
+    },
+    {
+     "fieldname": "customer_name",
+     "fieldtype": "Data",
+     "label": "Customer name",
+     "read_only": 1
+    },
+    {
+     "fieldname": "mobile",
+     "fieldtype": "Data",
+     "label": "Mobile number",
+     "options": "Phone",
+     "read_only": 1,
+     "description": "From the sale, else the customer's record. The Notification's SMS or WhatsApp goes here."
+    },
+    {
+     "fieldname": "email",
+     "fieldtype": "Data",
+     "label": "E-mail",
+     "options": "Email",
+     "read_only": 1,
+     "description": "From the sale, else the customer's record. The Notification's e-mail goes here."
+    },
+    {
+     "fieldname": "pos_profile",
+     "fieldtype": "Data",
+     "label": "POS Profile",
+     "read_only": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Data",
+     "label": "Store",
+     "read_only": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "sale_date",
+     "fieldtype": "Date",
+     "label": "Sale date",
+     "read_only": 1
+    },
+    {
+     "fieldname": "open_until",
+     "fieldtype": "Date",
+     "label": "Open until",
+     "read_only": 1
+    },
+    {
+     "fieldname": "link",
+     "fieldtype": "Small Text",
+     "label": "Link",
+     "read_only": 1,
+     "description": "The customer's own link to the answer page. Put {{ doc.link }} in the Notification's message."
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Sent\nAnswered",
+     "default": "Sent",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "answer",
+     "fieldtype": "Select",
+     "label": "Answer",
+     "options": "\nSatisfied\nNeutral\nNot satisfied",
+     "read_only": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "comment",
+     "fieldtype": "Small Text",
+     "label": "Comment",
+     "read_only": 1
+    },
+    {
+     "fieldname": "answered_at",
+     "fieldtype": "Data",
+     "label": "Answered at",
+     "read_only": 1
+    },
+    {
+     "fieldname": "asked_to_stop",
+     "fieldtype": "Check",
+     "label": "Asked us to stop",
+     "read_only": 1,
+     "description": "The customer ticked Stop these messages: no press asks them again."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP PSF Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP PSF Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP PSF Answers",
+   "ref_doctype": "PP PSF Request",
+   "report_type": "Report Builder",
+   "columns": [
+    "sale_date",
+    "store",
+    "answer",
+    "comment",
+    "customer_name",
+    "sale"
+   ],
+   "filters": [
+    [
+     "status",
+     "=",
+     "Answered"
+    ]
+   ],
+   "order_by": "sale_date desc"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP PSF Rule",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/post_sale_feedback.html#rules"
+  },
+  {
+   "doc_type": "PP PSF Request",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/post_sale_feedback.html#the-message"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP PSF Feedback feed",
+   "description": "the post-sale feedback service reads the rules and till sales and writes the requests as this user; leave the feed off",
+   "events": [
+    "PP PSF Rule"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "send",
+   "point": "desk_action",
+   "label": "Post-sale feedback",
+   "endpoint_url": "https://host.docker.internal:8125/psf/send",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP PSF Rule",
+   "label": "Send feedback requests",
+   "placement": "both",
+   "service": "send",
+   "roles": [
+    "PP PSF Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Make a feedback request for each new till sale this rule covers? Your Notification sends each one."
+  }
+ ]
+}
