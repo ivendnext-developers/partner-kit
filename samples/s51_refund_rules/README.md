@@ -19,6 +19,13 @@ The retailer decides how a refund goes back. A return against a sale goes back o
 | No settings record, or every rule off | As today |
 | The service down, or the retailer's records unreadable | The check's down answer: the refund goes on and is flagged on *Sales to review* |
 
+| What the retailer and the cashier see (on a demo site, 2026-10-24) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/refund-rules-install.png) |
+| The settings record Default: the methods rule ticked, the store credit method chosen | ![](screenshots/refund-rules-settings.png) |
+| The check switched on for one POS Profile | ![](screenshots/refund-rules-switched-on.png) |
+| The refund of a cash sale: the card dimmed with the app's reason, cash and store credit offered | ![](screenshots/refund-rules-refund-choices.png) |
+
 ## What the retailer does
 
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
