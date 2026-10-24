@@ -2,21 +2,21 @@
 
 A pharmacy must not take money for prescription medicine without a valid prescription, and only a licensed pharmacist
 may sell it. A controlled medicine needs the patient's identity, quantities are capped, and dispensed medicine is not
-taken back. Each rule differs by country and drug class. This recipe holds those rules from outside the shop: at **Pay**
+taken back. Each rule differs by country and drug class. This recipe holds those rules from outside the retailer's iVendNext: at **Pay**
 on the till, at a return's confirm, and at **Submit** of a sales order, delivery or sales invoice on the Desk. Every rule
-is a record the shop fills. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
+is a record the retailer fills. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
 **Reference implementation:** `samples/s39_pharmacy_counter/` — *Pharmacy counter rules*.
 
 **When to use it.** Use it for a rule that must hold before money is taken, and that needs state shared between tills:
 a refill that two tills must not both spend, or a cap per patient over days. The check before payment is the gate at
-the till. A document check is the gate on the Desk. The state lives in the shop as your own records, so a service
+the till. A document check is the gate on the Desk. The state lives in the retailer's iVendNext as your own records, so a service
 answering presses keeps nothing.
 
 ## Steps
 
 1. **Declare, in your manifest** (`samples/s39_pharmacy_counter/manifest.json`):
-   - **record types the shop fills:**
+   - **record types the retailer fills:**
      - `<PREFIX> Drug Schedule`: one class per axis, with its rules as fields;
      - `<PREFIX> Pharmacist`: user, licence, *valid until*;
      - `<PREFIX> Prescription`, with an item table;
@@ -29,11 +29,11 @@ answering presses keeps nothing.
      - only `<PREFIX> Pharmacist in Charge` writes the pharmacist list;
      - only pharmacists write prescriptions;
      - only `<PREFIX> Integration` writes dispensings;
-     - only `<PREFIX> Records Officer`, a role nobody holds until the shop gives it, deletes a prescription, a
+     - only `<PREFIX> Records Officer`, a role nobody holds until iVendNext gives it, deletes a prescription, a
        dispensing or a patient record: laws keep a prescription for years, and a permission row cannot say *not once dispensed*.
 
      Name the roles with your prefix and the install makes them;
-   - **fields on the shop's record types:**
+   - **fields on the retailer's record types:**
      - a schedules table on Item (one row per axis, with *effective from*);
      - a schedule on Item Group;
      - ⭐ **not** the patient's identity and consent: a field on Customer is read by everyone who reads customers, and a
@@ -42,16 +42,20 @@ answering presses keeps nothing.
        readable only by the pharmacist roles, the integration role and the records officer, with a System Manager
        row of read alone (else the install gives that role every right, and a row with no right is refused). S39
        0.1.2's *Patient*;
-     - the prescription fields on Sales Order, Delivery Note and Sales Invoice;
-   - **sale details** for the prescription number, prescriber, licence and directions. ⛔ Never `required`: a required
-     sale detail stops every sale on every till of the site;
+     - the prescription fields on Sales Order, Delivery Note and Sales Invoice, the prescription's date among them (a
+       `Date` a user can fill: never read only, fetched or levelled, or the document check may not fill it);
+   - **sale details** for the prescription number, prescriber, licence, directions and the prescription's date. ⛔ Never
+     `required`: a required sale detail stops every sale on every till of the site;
    - **two `check` subscriptions** with different down answers:
      - the dispensary's `refuse`: it sells only medicine, online only;
      - the front's `allow_and_flag`.
 
      Inside one manifest the checker counts them as one POS Profile, so they total 10 s at most (5 s + 5 s);
    - **three `doccheck` subscriptions,** one per record type (Sales Order, Delivery Note, Sales Invoice). Each is
-     `on_validate: false` (a draft check is refused on these types) and sends `stock_qty` and the lines' parent links;
+     `on_validate: false` (a draft check is refused on these types), sends `stock_qty` and the lines' parent links, and
+     names the prescription's date in `fill_fields`;
+   - **a Report Builder report on `<PREFIX> Dispensing`** for the prescriptions register, for the pharmacist roles only
+     (the readers of the dispensings are the readers of the patient record);
    - **two *Days Before* notifications** on the licences' *valid until*, to the pharmacist-in-charge's role;
    - a feed registration naming your integration user, and a help address on each record type.
 
@@ -73,17 +77,24 @@ answering presses keeps nothing.
    - on the front profile, medicine that needs a prescription, a pharmacist or the dispensary;
    - pharmacist only: the operator's `<PREFIX> Pharmacist` row, active, not a delegate, licence in date;
    - a named customer, never the walk-in (the settings' list and each POS Profile's own `customer`);
-   - the identity fields the schedule needs, on the customer's `<PREFIX> Patient` record. Ask the shop *whether* each
+   - the identity fields the schedule needs, on the customer's `<PREFIX> Patient` record. Ask iVendNext *whether* each
      is set, both ways (`filters [["customer", "=", customer], ["<field>", "is", "set"]]` and `"is", "not set"`,
      `fields ["name", "customer"]`), so the value never leaves it; no record means none is set; an answer that names
-     another customer, or answers a field of a record the shop does not list, is unreadable (503), never filled;
+     another customer, or answers a field of a record iVendNext does not list, is unreadable (503), never filled;
    - the quantity cap per sale;
    - the prescription: known, this customer's, active, in validity, a fill and quantity left, unchanged since its first
      dispense (a fingerprint);
+   - the prescription's date: prescriptions written on different days in one sale are refused where a date is
+     booked or typed; at the till a typed date that is not the prescription's is refused, and an empty one where the
+     schedule ticks *Its register books the prescription's date* (the sentence shows the date to type);
    - directions and a doctor's name, where the group or schedule asks;
    - the frequency cap.
 
-   Answer `refuse` with one sentence of at most 140 characters, naming the line.
+   Answer `refuse` with one sentence of at most 140 characters, naming the line. On the Desk, an allowed document whose
+   prescriptions share one date answers `fill` with that date (`{"verdict": "fill", "fields": {"<prefix>_rx_date":
+   "2026-10-19"}}`), which writes it over whatever was typed; a fill reserves as an allow does. Fill only a document
+   that sent the field: a subscription still on older settings does not list it to fill, and refuses the answer
+   whole. A till check cannot write the sale, so there the cashier types it.
 
 5. **Reserve with the record's name as the lock.**
    - On allow, insert `<PREFIX> Dispensing` named `<an opaque key for the customer>~<next number>`. Never the patient's
@@ -93,8 +104,11 @@ answering presses keeps nothing.
    - If the insert fails because the name exists (409), another till took that number: read again and decide again.
    - Every dispensing of one patient is thereby decided in turn.
    - Pay pressed again for the same basket keeps its reservation. A changed basket releases it.
+   - Write on it what the prescriptions register prints: the prescriber, the prescriber's directions (the dose: never
+     a default standing in) and a licensed pharmacist's name from their record; the patient's name is fetched from the
+     customer.
 
-6. **Read back what the shop says, never a timer.** At the next decision for that patient:
+6. **Read back what iVendNext says, never a timer.** At the next decision for that patient:
    - **a reservation becomes *Dispensed*** when a booked POS Invoice carries its `sale_ref` (`custom_mpos_sale_ref`,
      stripped and lower-cased);
    - **it becomes *Released*** when its booked sale is cancelled, or when it was never booked and its POS day (`POS
@@ -102,7 +116,7 @@ answering presses keeps nothing.
    - **a Desk reservation follows its document's `docstatus`:** cancelled or deleted releases it;
    - **a give-back counts only once its return is booked** (the till's return stores the refund's key in
      `custom_mpos_idempotency_key`).
-   - **A document missing from a list is asked for by name.** A 404 means gone. Any other refusal means the shop
+   - **A document missing from a list is asked for by name.** A 404 means gone. Any other refusal means iVendNext
      hides it from your user, which is never read as gone.
    - Write each status back so the Desk list reads it.
 
@@ -115,15 +129,15 @@ answering presses keeps nothing.
    - ⚠ A request that already booked a till sale leaves every later submit in it unchecked (the door's own rule,
      logged *not asked*). Test your Desk path in its own request.
 
-8. **Answer 503 when the shop cannot be read,** so the till or the Desk applies the declared down answer. Each read
+8. **Answer 503 when iVendNext cannot be read,** so the till or the Desk applies the declared down answer. Each read
    waits about 2 s; the till cuts the whole check at its 5 s.
 
 ## Proof
 
 - **Laptop:** `python3 -m unittest discover -s samples/s39_pharmacy_counter/tests -p 'test_*.py'`.
-  - It includes two tills on real threads (exactly one is allowed) and the stand-in shop's 409.
+  - It includes two tills on real threads (exactly one is allowed) and the stand-in iVendNext's 409.
   - `canaries.py` breaks each guarded rule.
-- **A bench:** install through the shop's installer, with the service's user holding your role alone plus the card's
+- **A bench:** install through iVendNext's installer, with the service's user holding your role alone plus the card's
   reads. Then run:
   - the prescription line refused for a counter assistant and booked for the pharmacist;
   - no prescription, or an expired one, refused;
@@ -136,6 +150,12 @@ answering presses keeps nothing.
 
 ## Limits to tell the customer
 
+- **The till cannot fill the prescription's date:** the cashier types it, and a wrong one is refused. On the Desk it
+  is filled at Submit.
+- **The prescriptions register prints no age and no price:** a print or report may not read the patient's record yet,
+  and the dispensing keeps no price (S39's README).
+- **An update that changes a Desk service's field or fill list lapses its consent,** and the Desk then submits
+  unchecked until a System Manager ticks it again (S39's README, *Updating from 0.1.2*).
 - **The till cannot take or show the patient's identity:** enter it on the patient's record on the Desk. A clerk is
   refused that record whole, but an assignment on it, the customer's Connections count and one engine export still
   tell a clerk something (S39's README, *Limits*).

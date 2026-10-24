@@ -1,19 +1,19 @@
 # S30 — Units as serial numbers: each pack's printed code, tracked by iVendNext itself
 
-Some shops track every pack or handset by its own printed code: supplements, phones, pharmacy packs. They need that code checked when stock is received, moved, counted and sold, in the back office as well as at the till. iVendNext already tracks a unit like this when the code is a **serial number** of an item that has both batches and serial numbers. This sample sets that up, moves an existing unit table onto it, and tells a lost unit from a sold one.
+Some retailers track every pack or handset by its own printed code: supplements, phones, pharmacy packs. They need that code checked when stock is received, moved, counted and sold, in the back office as well as at the till. iVendNext already tracks a unit like this when the code is a **serial number** of an item that has both batches and serial numbers. This sample sets that up, moves an existing unit table onto it, and tells a lost unit from a sold one.
 
-It is for an iVendNext Partner or a shop's administrator. **No code runs in the shop.** The scripts run once on the administrator's computer and use the shop's record API with the administrator's key.
+It is for an iVendNext Partner or a retailer's administrator. **No code runs in the retailer's iVendNext.** The scripts run once on the administrator's computer and use the retailer's record API with the administrator's key.
 
-**When to use it.** Each unit carries a code the shop must check on every stock document, not only at the till. When the codes live in a table of the shop's own and only the till needs to read them, a scan source is lighter: [S19](../s19_unit_codes/README.md).
+**When to use it.** Each unit carries a code the retailer must check on every stock document, not only at the till. When the codes live in a table of the retailer's own and only the till needs to read them, a scan source is lighter: [S19](../s19_unit_codes/README.md).
 
 **The doors it combines** (the kit's rule: compose doors before asking for an extension point): configuration (the item, Stock Settings, a Defective store), the record API (a migration script), and a read-only outside script (the units report). **The limit of the combination, before POS build 2.0.0.654:** the till sold a unit reliably only from the lot iVendNext picks first, and units from other lots only with a setting that changes every Desk delivery (see *Before you build on it*). From that build the till books each unit with the batch its own serial number carries, and that limit is gone.
 
-## What the shop does
+## What the retailer does
 
-The shop's administrator, or the partner working for it, does this once, in this order:
+The retailer's administrator, or the partner working for it, does this once, in this order:
 
-1. **Make the set-up the shop's own.** In `config.json`, set the company, the Defective store and its parent, the items (code, name, group, price), and for a migration, the old unit table and which old item becomes which new one. The sample's names start with `PP USN` / `PP-USN`, so they are easy to tell apart from the shop's own.
-2. **Make sure the shop has a default Company** (Setup → Global Defaults). Without one, a batch or serial sale at the till fails to book (*"Serial and Batch Bundle: company"*).
+1. **Make the set-up the retailer's own.** In `config.json`, set the company, the Defective store and its parent, the items (code, name, group, price), and for a migration, the old unit table and which old item becomes which new one. The sample's names start with `PP USN` / `PP-USN`, so they are easy to tell apart from the retailer's own.
+2. **Make sure iVendNext has a default Company** (Setup → Global Defaults). Without one, a batch or serial sale at the till fails to book (*"Serial and Batch Bundle: company"*).
 3. **Run `apply_config.py`.** It sets:
    - Stock Settings: *Allow existing Serial No* on (on by default), the serial and batch picker shown, *Pick Serial / Batch Based On* = Expiry;
    - a **Defective store** (a warehouse);
@@ -33,11 +33,11 @@ The shop's administrator, or the partner working for it, does this once, in this
    - An issue marks it *Consumed* (read from the code; not walked).
    - A unit in the Defective store cannot be sold.
 7. **After a stock count**, run `units_report.py` to see which units the count did not find. They read *Delivered*, the same status as a sold unit, and the report tells them apart.
-8. **To undo it,** run `apply_config.py --remove`. It puts Stock Settings back and undoes **only what it made or moved** on that shop: a record that was already there is never touched. It removes the price, and **retires** (*disables*) the item and the Defective store it made, because stock points at them. It cannot undo stock: received units, their batches and the receipts stay. An item's Has Serial No cannot be switched off once it has stock.
+8. **To undo it,** run `apply_config.py --remove`. It puts Stock Settings back and undoes **only what it made or moved** on that retailer's iVendNext: a record that was already there is never touched. It removes the price, and **retires** (*disables*) the item and the Defective store it made, because stock points at them. It cannot undo stock: received units, their batches and the receipts stay. An item's Has Serial No cannot be switched off once it has stock.
 
 **Where it shows.** In Desk: the item, Serial No (status, store, batch), the Defective store, and the standard *Serial No Ledger*, *Serial No Status* and *Serial and Batch Summary* reports. At the till: a sold or other-store unit refused, in the till's words below.
 
-**What leaves the shop.** Nothing but the administrator's own reads. The scripts call the shop's record API with the administrator's key. `apply_config.py` writes `.s30_⟨shop's host⟩_before.json` beside itself (the earlier Stock Settings and every record it made), so `--remove` undoes exactly that, on that shop. `units_report.py` writes a CSV only when asked (`--csv`).
+**What leaves the retailer's iVendNext.** Nothing but the administrator's own reads. The scripts call the retailer's record API with the administrator's key. `apply_config.py` writes `.s30_⟨shop's host⟩_before.json` beside itself (the earlier Stock Settings and every record it made), so `--remove` undoes exactly that, on that retailer's iVendNext. `units_report.py` writes a CSV only when asked (`--csv`).
 
 ## What the till says (walked on a sandbox, 2026-10-16)
 
@@ -53,7 +53,7 @@ The shop's administrator, or the partner working for it, does this once, in this
 
 iVendNext refuses to switch on Has Serial No for an item that already has stock or sales booked. So the units move to a **new** item that has both, and the old item's lots are counted to 0. For each lot (old item, store, batch):
 
-1. **The old stock is read** through the shop's own count: a draft Stock Reconciliation is saved, its figures are read, and it is deleted. Nothing is booked.
+1. **The old stock is read** through the retailer's own count: a draft Stock Reconciliation is saved, its figures are read, and it is deleted. Nothing is booked.
 2. **The lot moves only if its quantity equals the coded units** the table lists for it. Otherwise it is **held** and named (*"25 in stock, 1 with a code: give the other packs a code, or count them by hand first"*). Packs without a code would otherwise leave the stock unseen. A lot whose old batch has **expired** is held too: iVendNext does not receive into an expired batch.
 3. **The new item's batch is made.** Batch names are unique across items in this version, so the old batch name gets a suffix (`batch_name`, `{batch}-U` by default), and the expiry and manufacturing dates are copied. The codes are received into it as serial numbers at the old valuation rate, one receipt per store.
 4. **The old item's lot is counted to 0**, one count for every lot that moved.
@@ -85,7 +85,7 @@ A count with *Reconcile All Serial Nos / Batches* takes every unit of the store 
 | out | another outward movement |
 | not received | made but never received |
 
-It is not a Report Builder report: the answer needs the order of each unit's movements, which a saved report cannot express. It writes nothing to the shop.
+It is not a Report Builder report: the answer needs the order of each unit's movements, which a saved report cannot express. It writes nothing to iVendNext.
 
 ## The files
 
@@ -95,9 +95,9 @@ It is not a Report Builder report: the answer needs the order of each unit's mov
 | `apply_config.py` | applies it (idempotent) · `--remove` undoes it |
 | `migrate.py` | moves a unit table onto the new items · a dry run unless `--apply` |
 | `units_report.py` | what became of each unit · `--csv`, `--only "counted out"` |
-| `units.py` | the core: the migration plan and the classification, pure, no shop |
+| `units.py` | the core: the migration plan and the classification, pure, no retailer |
 | `shop.py` | the record API calls the scripts share |
-| `tests/` | the core, the migration and the set-up script against an in-memory shop · `canaries.py` |
+| `tests/` | the core, the migration and the set-up script against an in-memory stand-in · `canaries.py` |
 
 ## Run it
 
@@ -125,7 +125,7 @@ python3 samples/s30_units_as_serials/tests/canaries.py
 - **Offline,** the cashier scans the item, then the unit's code as its serial. The code is checked when the sale is sent (not walked).
 - **Till sales read *Active* until the day's sales are posted** to the back office. A site that posts each sale at once (our sandbox did) shows *Delivered* straight away. A count taken meanwhile leaves such a unit out (iVendNext reserves units sold on an open day), so it is never taken out as *counted out*.
 - **A default Company** is needed (step 2).
-- **The migration's stock read is a draft count.** If the shop has none of the listed lots in stock, it refuses the draft with *"None of the items have any change in quantity or value."* and the script reads every lot as 0. A user whose language is not English gets that sentence translated, and the script stops with it instead: run it as an English-speaking user.
+- **The migration's stock read is a draft count.** If iVendNext has none of the listed lots in stock, it refuses the draft with *"None of the items have any change in quantity or value."* and the script reads every lot as 0. A user whose language is not English gets that sentence translated, and the script stops with it instead: run it as an English-speaking user.
 - ⚠ **A later version of iVendNext names a serial number by a generated name**, with the code in its serial number field. These scripts read and write the name as the code, as today's iVendNext does. On that version, the lookups by name must read the code field instead.
 - **Undo cannot reverse stock** or switch Has Serial No off (step 8), the same bound as [S5](../s5_config_pack/README.md).
 
@@ -145,7 +145,7 @@ python3 samples/s30_units_as_serials/tests/canaries.py
   - a code whose receipt was cancelled counted as moved;
   - the receipt posting to an item's own expense account;
   - `--remove` touching a record it did not make.
-- **The sandbox** (2026-10-16; POS app 2.0.0.650, iVendNext 15.52.0, framework 15.56.1). A two-lot item, as the shop's administrator and the store manager at the till (`/pos?frame=terminal`, 1440 wide):
+- **The sandbox** (2026-10-16; POS app 2.0.0.650, iVendNext 15.52.0, framework 15.56.1). A two-lot item, as the retailer's administrator and the store manager at the till (`/pos?frame=terminal`, 1440 wide):
   - received 3 codes pasted and 3 by CSV;
   - transferred units to the second store, where a unit sent with the wrong batch was refused (*"Serial No … does not belong to Batch …"*);
   - at the till, with outward bundles on: a unit from the second lot refused; two units of the first lot booked;
@@ -156,8 +156,8 @@ python3 samples/s30_units_as_serials/tests/canaries.py
   - `units_report.py` named each unit right: 2 in stock, 1 defective, 2 sold, 1 counted out (a unit sold, returned, then missed by the count);
   - `migrate.py` dry run on a real unit table: 4 sold units skipped and 2 lots held, one with 25 in stock and 1 coded.
 - **Not walked:**
-  - `migrate.py --apply` on a shop (its laptop tests cover it), and with it the receipt naming the stock adjustment account;
-  - `apply_config.py --remove` as it is now (undoing only what it made, per shop): the walk ran the earlier version, and the laptop tests do not exercise the retire path a real shop takes, or a barcode move;
+  - `migrate.py --apply` on a retailer's iVendNext (its laptop tests cover it), and with it the receipt naming the stock adjustment account;
+  - `apply_config.py --remove` as it is now (undoing only what it made, per retailer): the walk ran the earlier version, and the laptop tests do not exercise the retire path a real retailer takes, or a barcode move;
   - an issue (*Consumed*), a unit sold again after its return, the offline scan, a Purchase Receipt (a Material Receipt was walked).
 
 ### Why this way (R6)

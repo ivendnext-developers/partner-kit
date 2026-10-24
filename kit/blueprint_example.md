@@ -4,7 +4,7 @@
 
 Print it beside the blank form: [this example as a PDF](https://developer.ivendnext.com/downloads/blueprint_example.pdf) · [the blank form (PDF)](https://developer.ivendnext.com/downloads/blueprint_form.pdf) · [the template](blueprint_template.md) to copy · [the project blueprint](blueprint.md), which says how to fill each section.
 
-A chain of nine phone and electronics stores in one country, with a web shop, on our Acumatica and WooCommerce connectors. Every handset is tracked by its IMEI. Each row of (b) names its card in the [needs catalogue](../needs/README.md), and the site's build checks each row's verdict and door against that card, so a card whose verdict or door changes fails the build until the row is updated. The limits and figures are as they stood on 2026-10-16.
+A chain of nine phone and electronics stores in one country, with a web store, on our Acumatica and WooCommerce connectors. Every handset is tracked by its IMEI. Each row of (b) names its card in the [needs catalogue](../needs/README.md), and the site's build checks each row's verdict and door against that card, so a card whose verdict or door changes fails the build until the row is updated. The limits and figures are as they stood on 2026-10-16.
 
 | Field | Your answer |
 |---|---|
@@ -18,7 +18,7 @@ A chain of nine phone and electronics stores in one country, with a web shop, on
 
 *What the customer wants, and what you will deliver. Two lines, no more.*
 
-Corvane Mobile wants its nine stores and its web shop on iVendNext, with every handset tracked by its IMEI from delivery to sale. We deliver the configuration, our Acumatica and WooCommerce connectors, two checks before payment, a warranty key, and two requests for the doors it lacks.
+Corvane Mobile wants its nine stores and its web store on iVendNext, with every handset tracked by its IMEI from delivery to sale. We deliver the configuration, our Acumatica and WooCommerce connectors, two checks before payment, a warranty key, and two requests for the doors it lacks.
 
 ## (b) Fit-gap
 
@@ -36,7 +36,7 @@ Corvane Mobile wants its nine stores and its web shop on iVendNext, with every h
 | 8 | Customers can pay for a phone in instalments with a pay-later provider | buy-now-pay-later | Not yet | Request | Ask us: a buy-now-pay-later tender in our payment connectors. |
 | 9 | Take the customer's old phone as a trade-in, valued at the till and taken off the new one | none | Not yet | Request | No card. Nearest request class: payment / tender (the trade-in as a tender, so the new phone's price never changes after the cashier has seen it, rule 1). An extension-point request to send. |
 | 10 | Every sale, stock move and purchase goes to our Acumatica | erp-acumatica | Ready, with limits | Our connector | About 2.75 complete sales a minute per connection (165 an hour): the launch-day peak is above it (risk 1); one ERP per company. |
-| 11 | Our WooCommerce web shop shows the stores' stock and prices, and its orders come in | online-shop-woocommerce | Ready, with limits | Our connector | It does not reserve stock; it takes percentage vouchers only. |
+| 11 | Our WooCommerce web store shows the stores' stock and prices, and its orders come in | online-shop-woocommerce | Ready, with limits | Our connector | It does not reserve stock; it takes percentage vouchers only. |
 | 12 | Store staff receive deliveries and count stock with a Handheld | receiving-and-counts-on-handheld | Ready, with limits | Configure | Handheld books online only; a count has no in-app approval step; Handheld offers no extension point. |
 
 ## (c) Scale profile
@@ -67,7 +67,7 @@ Corvane Mobile wants its nine stores and its web shop on iVendNext, with every h
 | System | Direction | Door | What moves | Volume (per day / peak hour) | Who owns the far side | Our connector or your app | Identity map kept by | If the far side is down |
 |---|---|---|---|---|---|---|---|---|
 | Acumatica | out | event feed | the stores' sales, stock moves, purchases and transfers | about 2,800 a day; 154 sales at the peak hour, 462 on a launch day (web orders: risk 1) | the customer's finance team and its Acumatica partner | our Acumatica connector | the connector | not covered by the kit: ask us how the connector catches up (risk 1) |
-| WooCommerce web shop | out and in | API | orders in; stock and prices out | about 140 orders a day; 420 on a launch day | the customer's e-commerce agency | our WooCommerce connector | the connector | orders wait on the shop's side; stock is not reserved meanwhile |
+| WooCommerce web store | out and in | API | orders in; stock and prices out | about 140 orders a day; 420 on a launch day | the customer's e-commerce agency | our WooCommerce connector | the connector | orders wait on the retailer's side; stock is not reserved meanwhile |
 | Airtime top-up provider | out and in | fulfil at sale | the paid top-up line out; the PIN in | about 200 a day (one sale in five carries a top-up) | the airtime provider | the partner's outside service | the outside service | the sale stands and the receipt waits; the cashier prints without the PIN and reprints it once the provider answers |
 | Phone makers' warranty services | in | till key | the warranty of a phone brought back | about 30 a day (returns and repairs, about 3% of sales) | each phone maker | the partner's outside service | — | the key says it could not finish, nothing is added, and the sale goes on |
 

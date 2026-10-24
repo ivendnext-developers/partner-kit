@@ -13,7 +13,7 @@ request: -
 verified: 2026-10-18 · bench
 ---
 ## What you build
-A manifest: a Report Builder report of the web orders still to pick, two fields on the delivery note that can be set after it is submitted, *Handed over* (a list column and filter: the Delivery Note list filtered on Status To Bill or Completed, Is Return No, % Returned less than 100, Handed over No, Customer's Purchase Order No set, the store's warehouse and a date on or after the install is the waiting list) and *Collected by*, and a workspace that opens both. A web order is an order with the web shop's order number. Nothing leaves the shop.
+A manifest: a Report Builder report of the web orders still to pick, two fields on the delivery note that can be set after it is submitted, *Handed over* (a list column and filter: the Delivery Note list filtered on Status To Bill or Completed, Is Return No, % Returned less than 100, Handed over No, Customer's Purchase Order No set, the store's warehouse and a date on or after the install is the waiting list) and *Collected by*, and a workspace that opens both. A web order is an order with the web store's order number. Nothing leaves the retailer's iVendNext.
 
 ## Limits
 - The lists are in Desk. The till's own pickup board lists till sales only, and a page on the till opens only over a sale.

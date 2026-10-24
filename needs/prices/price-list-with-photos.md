@@ -27,8 +27,8 @@ Sample S29 ships this format, general prices only and up to 1,000 rows (`price_l
 ## Limits
 - Up to 200 rows a call: a longer list takes more calls (`start` 0, 200, 400), or one print per item group.
 - The print shows what the person printing may read; a print sent from the e-mail queue or a background print shows no rows.
-- Photos must be kept in the shop, on the item's Image field; an item with none prints without one.
+- Photos must be kept in the retailer's iVendNext, on the item's Image field; an item with none prints without one.
 - Every Item Price row of the list prints: one made for a customer, a batch or (on a buying list) a supplier, one past its valid dates, and a disabled item's. For the general list add `"customer": ["is", "not set"]` and `"batch_no": ["is", "not set"]` to the filters (run with S29's format: a customer's own price was left out), and `"supplier": ["is", "not set"]` on a buying list (not run); keep expired prices and disabled items off the list.
 
 ## Tell the customer
-The shop prints each price list with a photo of each item, from its own prices and images, from the price list in Desk.
+iVendNext prints each price list with a photo of each item, from its own prices and images, from the price list in Desk.

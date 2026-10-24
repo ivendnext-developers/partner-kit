@@ -1,6 +1,6 @@
 ---
 id: receipt-own-lines
-title: The shop's own lines on its receipt
+title: The retailer's own lines on its receipt
 area: documents
 topic: receipts
 asks: Our address, tax number and returns policy on the receipt
@@ -19,4 +19,4 @@ The register's Receipt Header and Receipt Footer print on the shipped receipt wi
 None known.
 
 ## Tell the customer
-The shop's own lines print on every receipt, and the receipt keeps our later fixes.
+The retailer's own lines print on every receipt, and the receipt keeps our later fixes.

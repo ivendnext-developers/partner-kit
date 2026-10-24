@@ -1,10 +1,10 @@
 # Save rules: one tax id per customer group, and a submit kept for a role — the recipe
 
-A **save rule** is the shop's own rule on a record type, held on every save from every door (Desk, an import, the API), with no service and no code: the shop's site checks it. Your manifest can carry save rules, installed switched off; the shop switches each on. This recipe shows the two kinds the POS app added with train T11 (2026-10-16), in one manifest that installs on a sandbox as it is. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
+A **save rule** is the retailer's own rule on a record type, held on every save from every door (Desk, an import, the API), with no service and no code: the retailer's site checks it. Your manifest can carry save rules, installed switched off; the retailer switches each on. This recipe shows the two kinds the POS app added with train T11 (2026-10-16), in one manifest that installs on a sandbox as it is. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
 **Reference implementation:** the manifest below, installed on our sandbox (see *What was proven where*). The product's [save rules page](../contracts/pages/save_rules.md) lists all nine kinds, the keys each takes and every refusal in the product's words; chapter 7 says how a manifest carries them.
 
-**When to use it.** The rule reads only the record itself (its header fields, never its rows) and needs nothing from outside the shop. For a rule that needs your system's data before a document is submitted, use a document check ([recipe](document_check.md)); for the till's sale, a check before payment ([recipe](rule_guard.md)).
+**When to use it.** The rule reads only the record itself (its header fields, never its rows) and needs nothing from outside the retailer's iVendNext. For a rule that needs your system's data before a document is submitted, use a document check ([recipe](document_check.md)); for the till's sale, a check before payment ([recipe](rule_guard.md)).
 
 ## Steps
 
@@ -32,8 +32,8 @@ A **save rule** is the shop's own rule on a record type, held on every save from
    - **`unique_across`**: the value of `field` is on no other active record of the type with the same values in up to three `scope_fields`. Without `scope_fields` the value is unique across every record of the type.
    - **`role_for_action`**: the `action` (`submit` or `cancel`) is taken only by a person holding one of `bypass_roles` when every condition holds (0 to 3 conditions; none means every record). A second rule with `"action": "cancel"` keeps the cancel too.
 2. **Check it on your machine:** `python3 tools/manifest/validate.py manifest.json` takes it. A checker copy from before train T11 refuses `scope_fields` and `action`; take the kit's current copy.
-3. **Install it** on your sandbox (`tools/deploy/deploy.py manifest.json`, then `--consent`). Each rule arrives switched off: the shop opens *Retail Save Rule* and switches it on.
-4. **Test it** as the shop will meet it: a second customer with the same tax id in the same group is refused, in another group it is saved; a submit by someone without the role is refused, and by someone with it goes through.
+3. **Install it** on your sandbox (`tools/deploy/deploy.py manifest.json`, then `--consent`). Each rule arrives switched off: the retailer opens *Retail Save Rule* and switches it on.
+4. **Test it** as the retailer will meet it: a second customer with the same tax id in the same group is refused, in another group it is saved; a submit by someone without the role is refused, and by someone with it goes through.
 
 5. **A cap per store per day, and a minimum shelf life** (POS build 2.0.0.654 on). A `count_per_day` rule counts records a day per value of a field: no more than ten discount approvals a store a day is
 
@@ -45,7 +45,7 @@ A **save rule** is the shop's own rule on a record type, held on every save from
                    {"field": "status", "operator": "in", "value": "Approved, Consumed"}]}
    ```
 
-   The eleventh approval a store's managers give that day is refused at the manager's **Approve**, in the shop's words; one given offline is not counted, and an *Action* request (an action approved in person, written after it ran) is only flagged. A count rule never sits on a till sale or the day close (refused when the rule is saved). The same train added `sum_rows`, `count_rows` and `days_between` to the derived rule, a limit judged only on change (`judge_on_change`), a limit and role read from a settings record (`value_from_type`), and `parent.⟨field⟩` in a row rule's conditions: the [save rules page](../contracts/pages/save_rules.md) §8 has a minimum shelf life on a batch built from them (the card *minimum-shelf-life-at-receipt*). Walked by the product (POS train T12); not run by this recipe's sample.
+   The eleventh approval a store's managers give that day is refused at the manager's **Approve**, in the retailer's words; one given offline is not counted, and an *Action* request (an action approved in person, written after it ran) is only flagged. A count rule never sits on a till sale or the day close (refused when the rule is saved). The same train added `sum_rows`, `count_rows` and `days_between` to the derived rule, a limit judged only on change (`judge_on_change`), a limit and role read from a settings record (`value_from_type`), and `parent.⟨field⟩` in a row rule's conditions: the [save rules page](../contracts/pages/save_rules.md) §8 has a minimum shelf life on a batch built from them (the card *minimum-shelf-life-at-receipt*). Walked by the product (POS train T12); not run by this recipe's sample.
 
 ## What the user sees
 
@@ -60,7 +60,7 @@ A **save rule** is the shop's own rule on a record type, held on every save from
 
 ## When your service is down, and when the till is offline
 
-- **No service is called:** the shop's site holds the rule.
+- **No service is called:** the retailer's site holds the rule.
 - **Offline:** a write inside a till's offline sync is never refused by a save rule, only flagged for review. A submit or cancel the till's own work makes (a sale, the day close, a layaway's forfeit, the quote edit and cancel) is flagged, never refused, by a `role_for_action` rule.
 
 ## Technical notes

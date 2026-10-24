@@ -2,7 +2,7 @@
 
 Build against iVendNext **from your own server, in any language**. This folder describes the calls the samples make and gives you each one as a request you can read and send. No client library is needed.
 
-**When to use it:** your service reads or writes a shop's sales, items, customers or stock over the API.
+**When to use it:** your service reads or writes a retailer's sales, items, customers or stock over the API.
 
 | | File | What it gives you |
 |---|---|---|
@@ -12,7 +12,7 @@ Build against iVendNext **from your own server, in any language**. This folder d
 
 ## Steps
 
-1. **Before the first run, make sure the shop has the item `PP-WRC-PHONE`**, a stock item with serial numbers. Files 05 and 06 receive it, and six more files read what those two made, so without it eight files fail (*PP-WRC-PHONE is not a stock Item*). The integration user may not make items, so make it once with your administrator's key:
+1. **Before the first run, make sure iVendNext has the item `PP-WRC-PHONE`**, a stock item with serial numbers. Files 05 and 06 receive it, and six more files read what those two made, so without it eight files fail (*PP-WRC-PHONE is not a stock Item*). The integration user may not make items, so make it once with your administrator's key:
 
    ```bash
    curl -s -X POST "https://<your-sandbox-site>/api/resource/Item" -H "Authorization: token <admin key>:<admin secret>" \
@@ -39,9 +39,9 @@ Build against iVendNext **from your own server, in any language**. This folder d
 
 ## Things you must know
 
-- Calls other than records go to `/api/method/ivendnext_mpos.api.v1.<name>`: the shop's own functions under iVendNext names, with the same checks and answers. The names: `scan_barcode` · `get_item_details` · `price_check` (both in one call) · `apply_workflow` · `submit` · `bulk_update` · `get_count` · `get_password` · `get_docinfo` · `add_comment` · `generate_keys` · `get_logged_user` · `get_versions` · `get_role_permissions` · `add_role_permission` · `update_role_permission` · `reset_role_permissions` · and, from POS build 2.0.0.654: `run_report` · `prepare_report` · `get_gift_card_status` · `material_request_to_stock_entry` · `sales_order_to_delivery_note` · `sales_order_to_sales_invoice` · `get_batch_qty`. A call you need that has no name here: read and write records through `/api/resource/…`, or ask for the call with a *Recipe or document gap* form (`feedback/`).
-- **The seven names added at POS build 2.0.0.654**, each the shop's own function with the rights the shop gives it:
-  - `run_report`: run one of the shop's reports by name, with filters, as Desk runs it. ⚠ A caller who names another `user` reads **as that user**, and a prepared report's named run is read whole by its record name: [`recipes/shop_reports.md`](../recipes/shop_reports.md).
+- Calls other than records go to `/api/method/ivendnext_mpos.api.v1.<name>`: the engine's own functions under iVendNext names, with the same checks and answers. The names: `scan_barcode` · `get_item_details` · `price_check` (both in one call) · `apply_workflow` · `submit` · `bulk_update` · `get_count` · `get_password` · `get_docinfo` · `add_comment` · `generate_keys` · `get_logged_user` · `get_versions` · `get_role_permissions` · `add_role_permission` · `update_role_permission` · `reset_role_permissions` · and, from POS build 2.0.0.654: `run_report` · `prepare_report` · `get_gift_card_status` · `material_request_to_stock_entry` · `sales_order_to_delivery_note` · `sales_order_to_sales_invoice` · `get_batch_qty`. A call you need that has no name here: read and write records through `/api/resource/…`, or ask for the call with a *Recipe or document gap* form (`feedback/`).
+- **The seven names added at POS build 2.0.0.654**, each the engine's own function with the rights iVendNext gives it:
+  - `run_report`: run one of the retailer's reports by name, with filters, as Desk runs it. ⚠ A caller who names another `user` reads **as that user**, and a prepared report's named run is read whole by its record name: [`recipes/shop_reports.md`](../recipes/shop_reports.md).
   - `prepare_report`: queue a background run of a prepared report; it answers the run's record name. ⚠ It checks no right: any signed-in user may queue any report and read its output, filtered only by their own User Permissions (the same recipe).
   - `get_gift_card_status`: a gift card's status as the till reads it (its balance, whether it has expired, whether a payment has used it).
   - `material_request_to_stock_entry`, `sales_order_to_delivery_note`, `sales_order_to_sales_invoice`: an unsaved document built from its submitted source, as Desk's *Create* menu builds it; you save it as a record (`POST /api/resource/…`).

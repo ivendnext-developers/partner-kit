@@ -13,7 +13,7 @@ request: -
 verified: 2026-10-22 · bench
 ---
 ## What you build
-Markdown steps on each perishable item group (25% off from 5 days before expiry, 50% off from 2 days), and a **Mark down** button on the Batch list. A manager ticks the lots expiring this week and presses it: your service writes each lot's own price on the shop's selling price list, valid until the lot's expiry date, and changes it when the lot reaches its last step. The till already rings a lot at its own price and prints its lot label.
+Markdown steps on each perishable item group (25% off from 5 days before expiry, 50% off from 2 days), and a **Mark down** button on the Batch list. A manager ticks the lots expiring this week and presses it: your service writes each lot's own price on the retailer's selling price list, valid until the lot's expiry date, and changes it when the lot reaches its last step. The till already rings a lot at its own price and prints its lot label.
 
 ## Limits
 - A manager presses it, once a day: there is no run without a press.
@@ -21,10 +21,10 @@ Markdown steps on each perishable item group (25% off from 5 days before expiry,
 - While any lot on the site has a price of its own, the tills do not sell a lot-tracked item offline; each press removes up to 20 of the app's expired ones (a lot price you typed yourself stays until you delete it).
 - Before a line is priced, the item's tile or a scan can show another lot's price; the line and the receipt carry the right one.
 - A customer with their own price for the item pays it on a scanned lot, not the markdown.
-- An item's own barcode rings the lot the shop picks (Stock Settings); a scanned lot label rings that lot.
+- An item's own barcode rings the lot the retailer picks (Stock Settings); a scanned lot label rings that lot.
 - One set of steps per item group, one price list per site, rounded down to the currency's smallest unit; put steps only on groups whose every item may be sold below its price (price-regulated medicines too).
 - After the first press, restart the tills before they go offline.
-- A price the shop typed for a lot is never changed.
+- A price the retailer typed for a lot is never changed.
 - A new item price takes the markdown off a scanned lot label until the next press.
 - Up to 100 lots a press, and as many as the service writes in 6 seconds; press again for the rest.
 

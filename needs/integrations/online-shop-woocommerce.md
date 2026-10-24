@@ -1,9 +1,9 @@
 ---
 id: online-shop-woocommerce
-title: An online shop on WooCommerce
+title: A web store on WooCommerce
 area: integrations
 topic: online-shops-and-orders
-asks: Our WooCommerce shop linked to the stores
+asks: Our WooCommerce web store linked to the stores
 status: ready-with-limits
 door: our-connector
 blocked-by: -
@@ -20,4 +20,4 @@ Our WooCommerce connector: online orders in, stock and prices out. Ask us which 
 - It takes percentage vouchers only.
 
 ## Tell the customer
-Our connector links the WooCommerce shop; it does not hold stock for an order, and vouchers are percentages.
+Our connector links the WooCommerce store; it does not hold stock for an order, and vouchers are percentages.

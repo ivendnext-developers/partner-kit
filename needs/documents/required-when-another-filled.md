@@ -13,7 +13,7 @@ request: -
 verified: carried 2026-10-16 · not re-run
 ---
 ## What you build
-A save rule of kind *required when*, held on every save: Desk, imports and API writes. (The shop's own *mandatory depends on* is checked in the Desk form only.) From POS build 2.0.0.654 a rule on a table's rows may read its record: on Stock Entry, `items.material_request` is required when `parent.purpose = Material Transfer` (`contracts/pages/save_rules.md` §8).
+A save rule of kind *required when*, held on every save: Desk, imports and API writes. (The retailer's own *mandatory depends on* is checked in the Desk form only.) From POS build 2.0.0.654 a rule on a table's rows may read its record: on Stock Entry, `items.material_request` is required when `parent.purpose = Material Transfer` (`contracts/pages/save_rules.md` §8).
 
 ## Limits
 - On a till sale and the till close a save rule only flags, never refuses.

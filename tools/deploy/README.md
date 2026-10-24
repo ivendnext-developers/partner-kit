@@ -1,7 +1,7 @@
 # deploy — put your manifest on your own sandbox
 
 One command installs, updates or removes your manifest on a site you administer, through the same methods as the
-shop's **Retail Extension Package** screen. Nobody from our team takes part.
+retailer's **Retail Extension Package** screen. Nobody from our team takes part.
 
 1. **Make an API key** for your sandbox's administrator (Desk → your user → API Access → Generate Keys).
    If **Generate Keys** answers *"Select at least one option: 'Is Desk User' or 'Is POS User'"*, tick **Is Desk User** on that user first (the field `custom_is_desk_user`), save, then generate. The built-in **Administrator** of a site you made on your own bench has neither tick.
@@ -16,7 +16,7 @@ shop's **Retail Extension Package** screen. Nobody from our team takes part.
    install. For a higher version it also prints what changes from the installed one.
 3. **Install it:** add `--consent`. It checks again, prints the summary the site returns then, and installs with that one. It waits for the install and prints the result, each
    secret your manifest's webhooks or services were given (shown once here; each stays readable on its own record),
-   and what the shop still has to switch on.
+   and what the retailer still has to switch on.
 4. **Remove it:** `deploy.py uninstall "<app> <version>"` writes an export of your records first and prints where.
    **If a job failed or was cut off:** `deploy.py finish "<app> <version>"` completes it or takes it back.
 

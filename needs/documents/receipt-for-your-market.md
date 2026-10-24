@@ -21,7 +21,7 @@ A print format installed by a manifest (or set up by hand), then chosen on the t
 - A sale saved before the package was installed has no tax number on it; the address is the one the sale holds, from the POS Profile or the Company.
 - Two different non-zero rates under one tax account print a single VAT total.
 - Arabic on paper or PDF, a returned sale and a sale with two or more tax rows: not run.
-- A customised receipt gets none of our later fixes, and the shop's seeded receipt carries more than the sample (per-item charge rows, serial and batch lines, deposit and balance lines, offline-sale lines): copy back what your market needs.
+- A customised receipt gets none of our later fixes, and the retailer's seeded receipt carries more than the sample (per-item charge rows, serial and batch lines, deposit and balance lines, offline-sale lines): copy back what your market needs.
 
 ## Tell the customer
-The receipt carries the shop's logo, tax number, address and a line per VAT rate; we test returns and your language before go-live.
+The receipt carries the retailer's logo, tax number, address and a line per VAT rate; we test returns and your language before go-live.

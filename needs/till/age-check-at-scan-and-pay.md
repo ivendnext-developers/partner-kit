@@ -19,7 +19,7 @@ An age on each restricted item group (or item), and a service that answers two e
 - No date of birth or ID number is captured: the sale records the age band the cashier confirmed.
 - A sale whose first item is restricted is asked twice (the first scan has no sale reference to remember).
 - A later, lower ask can replace a higher one on the sale (one value per sale detail); Pay then names the higher age to enter.
-- Offline, or with the service down, the item goes on and the sale is paid, flagged; a shop can make the scan refuse a scanned restricted item, but an item picked from a list still goes on, flagged.
+- Offline, or with the service down, the item goes on and the sale is paid, flagged; a retailer can make the scan refuse a scanned restricted item, but an item picked from a list still goes on, flagged.
 - One scan service per POS Profile: where Till guard rules or Warranty capture answers the scan, only the check at Pay can be switched on. At most three checks per POS Profile, 10 seconds together.
 - One time zone and one age per item group for the whole site.
 - A notice reaches POS build 2.0.0.654 and later; on an older build the scan's sheet does not show, and the check at Pay still holds.

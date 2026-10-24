@@ -13,7 +13,7 @@ request: -
 verified: read 2026-10-16 · the setting is absent at the head the benches run
 ---
 ## What you build
-Nothing a builder can add: the shop has no setting that keeps the last sale's sales person. A product decision for the iVendNext team.
+Nothing a builder can add: iVendNext has no setting that keeps the last sale's sales person. A product decision for the iVendNext team.
 
 ## Limits
 - **Ask us:** a Retail Setting that carries the last completed sale's sales person (and splits) into the next sale.

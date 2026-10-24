@@ -14,7 +14,7 @@ verified: carried 2026-10-16 · not re-run
 popular: yes
 ---
 ## What you build
-Your service answers the check before payment and refuses a sale with a line over the limit, in your own sentence. The limit lives in one settings record the shop edits.
+Your service answers the check before payment and refuses a sale with a line over the limit, in your own sentence. The limit lives in one settings record the retailer edits.
 
 ## Limits
 - Answered when the cashier presses Pay, not when the quantity is typed.

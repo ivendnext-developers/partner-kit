@@ -1,15 +1,15 @@
-# Recipe: reading the shop's own reports
+# Recipe: reading the retailer's own reports
 
-**What it is for.** Your service needs a figure the shop already has a report for: stock by store, a stock balance over a period, sales by item. You run the shop's own report, with its filters, and read its rows, rather than rebuilding it from records. The shop's report stays the one source of the figure. From iVendNext POS build 2.0.0.654.
+**What it is for.** Your service needs a figure iVendNext already has a report for: stock by store, a stock balance over a period, sales by item. You run the retailer's own report, with its filters, and read its rows, rather than rebuilding it from records. The retailer's report stays the one source of the figure. From iVendNext POS build 2.0.0.654.
 
 **The short version.**
 - Run a report with `run_report`: the report's name and its filters. You get its columns and rows, as Desk shows them.
-- Some reports the shop runs in the background (a *prepared* report, such as *Stock Balance*). For those, `run_report` never starts a run: it answers the last finished run for those filters, or nothing. Queue a run with `prepare_report`, wait for it, then read it.
-- **What the shop must know before it gives you a key**, said plainly:
+- Some reports iVendNext runs in the background (a *prepared* report, such as *Stock Balance*). For those, `run_report` never starts a run: it answers the last finished run for those filters, or nothing. Queue a run with `prepare_report`, wait for it, then read it.
+- **What the retailer must know before it gives you a key**, said plainly:
   - `run_report` reads **as the user the call names**. A call that passes `user` reads that user's view of the report: their report rights, their filters and their User Permissions, not your service's.
   - A run named by its record name (`prepared_report_name`) is read whole, whoever made it.
   - `prepare_report` checks no right. Any signed-in user may queue any report, and the run reads with their own User Permissions only.
-  - So: never pass a `user` or a run name the shop did not choose, and give your service's user only the reports and stores it needs.
+  - So: never pass a `user` or a run name iVendNext did not choose, and give your service's user only the reports and stores it needs.
 
 ---
 
@@ -22,7 +22,7 @@ POST /api/method/ivendnext_mpos.api.v1.run_report
   {"report_name": "Total Stock Summary", "filters": {"company": "Demo Retail", "group_by": "Warehouse"}}
 ```
 
-The answer's `message` holds `columns` and `result` (the rows). The filters are the report's own, as its filter bar in Desk names them; a required filter left out is refused in the report's words. A report the shop has switched off is refused (*Report … is disabled*). Every HTTP method is accepted.
+The answer's `message` holds `columns` and `result` (the rows). The filters are the report's own, as its filter bar in Desk names them; a required filter left out is refused in the report's words. A report the retailer has switched off is refused (*Report … is disabled*). Every HTTP method is accepted.
 
 ### 2. A prepared report
 
@@ -54,7 +54,7 @@ POST /api/method/ivendnext_mpos.api.v1.run_report  { …the same as the first ca
 | `run_report` with `prepared_report_name` | the right to run the report named in the call | ⚠ that the run belongs to that report or to the caller: a named run is read whole |
 | `prepare_report` | nothing | ⚠ any signed-in user may queue any report and read its output, filtered by their own User Permissions |
 
-These are the shop's own behaviours, exposed under iVendNext names; the names add no power of their own. A report's own code may check more, as the caller.
+These are the retailer's own behaviours, exposed under iVendNext names; the names add no power of their own. A report's own code may check more, as the caller.
 
 ### What was proven where
 

@@ -21,7 +21,7 @@ Access means the kit's GitHub organisation and a sandbox site. It comes with onb
 ### What you receive
 
 We host a sandbox site for you — your own address on our sandbox domain, your own database and your own demo company — on a shared sandbox installation, the same kind of shared installation a customer's site runs on, with developer mode off as on a customer's site. One site per builder:
-- demo stores, tills, products, customers and users, in a US shop with prices in US dollars and sales tax added at checkout;
+- demo stores, tills, products, customers and users, in a US site with prices in US dollars and sales tax added at checkout;
 - outgoing e-mail switched off;
 - an administrator login for you, so you can configure anything a customer's administrator can;
 - no customer data, ever.
@@ -66,7 +66,7 @@ Nothing in this chapter runs at the till. Your service's own outage handling sta
 
 ### What has not been proven
 
-- **The hosted sandbox is built, and opens to partners when the kit does.** Its sites run with developer mode off, and the kit's sandbox check passed on two of them on 2026-10-09. `deploy` installs a manifest there only once the sandbox's POS app carries the manifest install screen (the POS app from commit `87812e14`). The five steps themselves were run on our test shop, not on a hosted sandbox site.
+- **The hosted sandbox is built, and opens to partners when the kit does.** Its sites run with developer mode off, and the kit's sandbox check passed on two of them on 2026-10-09. `deploy` installs a manifest there only once the sandbox's POS app carries the manifest install screen (the POS app from commit `87812e14`). The five steps themselves were run on our test site, not on a hosted sandbox site.
 
 ### The tests
 

@@ -200,16 +200,29 @@ class Service:
         with ThreadPoolExecutor(max_workers=3) as pool:
             s = pool.submit(self.api.get_one, shop["url"], key, self.dt("Settings"), "Default")
             g = pool.submit(self._list, shop, "Item Group", ["name", "lft", "rgt", f"{p}_schedule", f"{p}_needs_directions"])
-            d = pool.submit(self._list, shop, self.dt("Drug Schedule"), [
-                "name", "axis", "needs_prescription", "pharmacist_only", "dispensary_only", "validity_days", "max_fills",
-                "qty_cap", "freq_qty", "freq_days", "needs_id_number", "needs_birth_date", "needs_authority", "needs_consent",
-                "returnable", "return_gives_back", "needs_directions", "own_sale_without_rx", "max_occasions",
-                "one_drug_per_rx"])
+            d = pool.submit(self._schedules, shop)
             out = (rxrules.settings_of(s.result()), rxrules.groups_of(g.result(), self.prefix),
                    rxrules.schedules_of(d.result()))
         with self.lock:
             self.kept[name] = (now, key, out)
         return out
+
+    SCHEDULE_FIELDS = ["name", "axis", "needs_prescription", "pharmacist_only", "dispensary_only", "validity_days", "max_fills",
+                       "qty_cap", "freq_qty", "freq_days", "needs_id_number", "needs_birth_date", "needs_authority",
+                       "needs_consent", "returnable", "return_gives_back", "needs_directions", "own_sale_without_rx",
+                       "max_occasions", "one_drug_per_rx"]
+    NEW_SCHEDULE_FIELDS = ["register_books_rx_date"]      # 0.1.3's
+
+    def _schedules(self, shop) -> list:
+        """The drug schedules. A shop still on 0.1.2 leaves 0.1.3's tick out of its answer (measured on our bench), so
+        no schedule there books the date; one that refuses a list naming it is asked again without it. Either way this
+        service can move before every shop it answers has updated."""
+        try:
+            return self._list(shop, self.dt("Drug Schedule"), self.SCHEDULE_FIELDS + self.NEW_SCHEDULE_FIELDS)
+        except ShopUnreadable as e:
+            if not str(e).startswith("the shop answered") or "401" in str(e) or "403" in str(e):
+                raise
+            return self._list(shop, self.dt("Drug Schedule"), self.SCHEDULE_FIELDS)
 
     def profile_customers(self, name: str, shop: dict) -> set:
         """Every POS Profile's own default customer (each stands for an unnamed sale, at the till and on the Desk), kept
@@ -293,14 +306,14 @@ class Service:
                     "rx_headers": rx.result() if rx else [], "dispensings": disp.result()}
 
     def _pharmacist_rows(self, shop, operator):
-        return self._list(shop, self.dt("Pharmacist"), ["name", "user", "active", "valid_until", "delegate"],
+        return self._list(shop, self.dt("Pharmacist"), ["name", "user", "full_name", "active", "valid_until", "delegate"],
                           [["user", "=", operator or "-"]])
 
     @staticmethod
     def _pharmacist(rows):
         row = next((r for r in rows if rxrules._flag(r.get("active"))), rows[0] if rows else None)
         return {"active": rxrules._flag(row.get("active")), "valid_until": rxrules._date(row.get("valid_until")),
-                "delegate": rxrules._flag(row.get("delegate"))} if row else None
+                "delegate": rxrules._flag(row.get("delegate")), "full_name": rxrules._text(row.get("full_name"))} if row else None
 
     def _rx_headers(self, shop, refs, customer):
         fields = ["name", "reference", "customer", "date_written", "fills_authorised", "retained", "status", "prescriber"]
@@ -444,8 +457,12 @@ class Service:
                     "rxs": rxrules.prescriptions_of(pat["rx_headers"], rx_items), "dispensings": dispensings,
                     "returned_from": returned_from}
             answer = rxrules.decide(ctx, route, data, today, self.prefix)
+            ph = pat["pharmacist"] or {}
+            if answer.get("record"):     # the register's pharmacist (0.1.3): a licensed pharmacist's own name, else none
+                answer["record"]["pharmacist_name"] = rxrules.plain(ph.get("full_name") or "") if ph.get("active") \
+                    and not ph.get("delegate") and ph.get("valid_until") and ph["valid_until"] >= today else ""
             keep = None
-            if answer["verdict"] == "allow" and answer.get("record"):
+            if answer["verdict"] in ("allow", "fill") and answer.get("record"):
                 mine = [d for d in dispensings if d["sale_ref"] == ctx["sale_ref"] and d["status"] == rxrules.RESERVED]
                 keep = next((d["name"] for d in mine if rxrules.same_record(d, answer["record"])), None)
                 if not keep:
@@ -474,7 +491,8 @@ class Service:
                "operator": ctx["operator"], "give_back": 1 if give_back else 0,
                "prescription": next((x["rx"] for x in record["lines"] if x.get("rx")), ""),
                "lines_json": json.dumps({"lines": record["lines"], "fingerprints": record["fingerprints"]}),
-               "summary": rxrules.summary(record["lines"])}
+               "summary": rxrules.summary(record["lines"]), "prescriber": record.get("prescriber") or "",
+               "directions": record.get("directions") or "", "pharmacist_name": record.get("pharmacist_name") or ""}
         self.api.insert(shop["url"], shop["key"], self.dt("Dispensing"), doc)
         return name
 

@@ -22,6 +22,7 @@ from fake_shop import FakeShop  # noqa: E402
 P = "PP RXC"
 KEYS = ("dispensary", "front", "desk_order", "desk_delivery", "desk_invoice")
 CONF = dict({f"IVN_SECRET_{k.upper()}": f"secret-{k}" for k in KEYS}, IVN_SHOP_URL="https://shop.example", IVN_SHOP_KEY="k:s")
+FILLED = {"verdict": "fill", "fields": {"pp_rxc_rx_date": "2026-10-20"}}     # the Desk's answer: the prescription's date
 NOW = time.mktime((2026, 10, 22, 12, 0, 0, 0, 0, 0)) - time.timezone      # noon UTC, 22 Oct 2026
 
 
@@ -48,10 +49,11 @@ def till_body(lines, customer="Ann", rx=None, sale_ref="sale-1", operator="ph@sh
     return {"point": "check/1", "context": ctx}
 
 
-def desk_body(doctype, name, items, customer="Ann", rx="", user="ph@shop", is_return=0, against=""):
+def desk_body(doctype, name, items, customer="Ann", rx="", user="ph@shop", is_return=0, against="", rx_date=""):
     return {"point": "doccheck/1", "context": {"v": 1, "event": "submit", "doctype": doctype, "name": name, "user": user,
             "company": "Shop", "lang": "en",
-            "fields": {"name": name, "customer": customer, "pp_rxc_rx_number": rx, "is_return": is_return,
+            "fields": {"name": name, "customer": customer, "pp_rxc_rx_number": rx, "pp_rxc_rx_date": rx_date,
+                       "is_return": is_return,
                        "return_against": against, "items": items}}}
 
 
@@ -286,6 +288,65 @@ class People(Base):
         self.assertEqual(self.sell(("PARA", "OTC", 2), route="/rxc/front")[1], {"verdict": "allow"})
 
 
+class Register(Base):
+    """0.1.3: what the prescriptions register reads, written on the dispensing the service reserves (K1-c)."""
+    def test_the_reserved_dispensing_keeps_the_prescriber_the_dose_and_the_pharmacists_name(self):
+        self.shop.prescription("RX1", "Ann", "AMOX", 21, directions="1 capsule three times a day")
+        self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1")[1], {"verdict": "allow"})
+        (d,) = self.shop.dispensings()
+        self.assertEqual((d["prescriber"], d["directions"], d["pharmacist_name"]),
+                         ("Dr Who", "AMOX: 1 capsule three times a day", "P. Pharmacist"))
+
+    def test_only_a_licensed_pharmacist_is_named_never_a_delegate(self):
+        self.shop.add(f"{P} Pharmacist", name="tech@shop", user="tech@shop", full_name="T. Technician", active=1,
+                      valid_until="2027-10-22", delegate=1)
+        self.shop.add(f"{P} Drug Schedule", name="RXONLY", axis="Prescription only", needs_prescription=1, returnable=0,
+                      return_gives_back=1)
+        self.shop.add("Item", name="CREAM", stock_uom="Nos", variant_of=None, pp_rxc_directions="apply twice a day")
+        self.shop.add(f"{P} Item Schedule", parent="CREAM", schedule="RXONLY", effective_from=None)
+        self.shop.prescription("RX5", "Ann", "CREAM", 1)
+        self.assertEqual(self.sell(("CREAM", "Food", 1), rx="RX5", operator="tech@shop")[1], {"verdict": "allow"})
+        (d,) = self.shop.dispensings()
+        self.assertEqual(d["pharmacist_name"], "")
+
+    def test_a_0_1_2_shop_is_answered_as_before(self):
+        # the 0.1.3 service may move first: a shop that refuses the new tick is asked again without it, and a Desk
+        # subscription that does not send the date is answered allow, never fill
+        real = self.shop.get_list
+
+        def old_shop(url, key, doctype, fields, *a, **k):
+            if "register_books_rx_date" in fields:
+                raise app.ShopUnreadable("the shop answered 417")
+            return real(url, key, doctype, fields, *a, **k)
+        self.shop.get_list = old_shop
+        self.shop.prescription("RX1", "Ann", "AMOX", 21)
+        body = desk_body("Sales Invoice", "SI-1", [{"item_code": "AMOX", "item_group": "Rx", "stock_qty": 21000}], rx="RX1")
+        del body["context"]["fields"]["pp_rxc_rx_date"]
+        self.assertEqual(self.call("/rxc/desk/invoice", body), (200, {"verdict": "allow"}))
+        self.shop.get_list = real
+
+    def test_a_shop_that_refuses_the_key_is_not_asked_again_without_the_tick(self):
+        asked = []
+
+        def refused(url, key, doctype, fields, *a, **k):
+            asked.append(doctype)
+            raise app.ShopUnreadable("the shop answered 401")
+        self.shop.get_list = refused
+        self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1")[0], 503)
+        self.assertLessEqual(asked.count(f"{P} Drug Schedule"), 1)
+
+    def test_the_schedule_tick_is_read_and_the_till_asks_for_the_date(self):
+        self.shop.add(f"{P} Drug Schedule", name="DATED", axis="Register", needs_prescription=1, pharmacist_only=1,
+                      register_books_rx_date=1, returnable=0, return_gives_back=1)
+        self.shop.add("Item", name="MORPH", stock_uom="Nos", variant_of=None, pp_rxc_directions="")
+        self.shop.add(f"{P} Item Schedule", parent="MORPH", schedule="DATED", effective_from=None)
+        self.shop.prescription("RX9", "Ann", "MORPH", 5, written="2026-10-21")
+        out = self.sell(("MORPH", "CD", 5), rx="RX9")[1]
+        self.assertIn("needs the prescription's date in Sale details: 2026-10-21.", out["reason"])
+        out = self.sell(("MORPH", "CD", 5), rx="RX9", details={"Rx Date": "2026-10-21"})[1]
+        self.assertEqual(out, {"verdict": "allow"})
+
+
 class Desk(Base):
     def item(self, code="AMOX", group="Rx", qty=21, **parents):
         return dict({"item_code": code, "item_group": group, "stock_qty": int(qty * 1000)}, **parents)
@@ -297,14 +358,14 @@ class Desk(Base):
     def test_the_chain_spends_one_fill(self):
         self.shop.prescription("RX1", "Ann", "AMOX", 21)
         self.assertEqual(self.call("/rxc/desk/order", desk_body("Sales Order", "SO-1", [self.item()], rx="RX1"))[1],
-                         {"verdict": "allow"})
+                         FILLED)
         self.shop.add("Sales Order", name="SO-1", docstatus=1)
         dn = desk_body("Delivery Note", "DN-1", [self.item(against_sales_order="SO-1", so_detail="r1")], rx="RX1", user="clerk@shop")
-        self.assertEqual(self.call("/rxc/desk/delivery", dn)[1], {"verdict": "allow"})
+        self.assertEqual(self.call("/rxc/desk/delivery", dn)[1], FILLED)     # 0.1.3: the date filled on each document
         si = desk_body("Sales Invoice", "SI-1", [self.item(sales_order="SO-1", so_detail="r1", delivery_note="DN-1",
                                                           dn_detail="r2")], rx="RX1",
                        user="clerk@shop")
-        self.assertEqual(self.call("/rxc/desk/invoice", si)[1], {"verdict": "allow"})
+        self.assertEqual(self.call("/rxc/desk/invoice", si)[1], FILLED)
         (d,) = self.shop.dispensings()
         self.assertEqual((d["source"], d["document_type"], d["document"]), ("desk", "Sales Order", "SO-1"))
         again = desk_body("Sales Invoice", "SI-2", [self.item()], rx="RX1")
@@ -340,7 +401,7 @@ class Desk(Base):
         self.call("/rxc/desk/order", desk_body("Sales Order", "SO-1", [self.item()], rx="RX1"))
         self.shop.add("Sales Order", name="SO-1", docstatus=2)
         out = self.call("/rxc/desk/invoice", desk_body("Sales Invoice", "SI-2", [self.item()], rx="RX1"))[1]
-        self.assertEqual(out, {"verdict": "allow"})
+        self.assertEqual(out, FILLED)
         self.assertEqual(self.shop.dispensings()[0]["status"], "Released")
 
     def test_a_clerk_cannot_begin_a_chain_of_pharmacist_only_medicine(self):

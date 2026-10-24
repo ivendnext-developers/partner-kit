@@ -21,7 +21,7 @@ A manifest with a tick-box field of your own on Item and one list mark on it: De
   "conditions": [{"field": "pp_plm_on_promotion", "operator": "=", "value": "1"}, {"field": "disabled", "operator": "=", "value": "0"}]}]
 ```
 
-The shop ticks the field on the products on promotion (or your service does, over the record API), and switches the mark on in **Retail List Mark**.
+The retailer ticks the field on the products on promotion (or your service does, over the record API), and switches the mark on in **Retail List Mark**.
 
 ## Limits
 - A label, not a row colour: Desk colours the row's label, and also shows it in the form's header.

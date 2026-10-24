@@ -6,7 +6,7 @@ Why this is yours to build, and what stays yours: [Build your business on iVendN
 
 ## A local ERP or accounting system
 
-- **What you build:** an outside app that keeps the customer's own system and iVendNext in step: items, prices and stock out to the shop; booked sales and returns back, once each; a nightly report of anything the two disagree on.
+- **What you build:** an outside app that keeps the customer's own system and iVendNext in step: items, prices and stock out to iVendNext; booked sales and returns back, once each; a nightly report of anything the two disagree on.
 - **Start from:** sample [S7, a system sync](../../samples/s7_system_sync/) and its recipe, [Keep a customer's own system in step with iVendNext](../../recipes/system_sync.md).
 - **The need:** [The customer's own ERP kept in step both ways](../../needs/integrations/erp-in-step-both-ways.md), and [The customer's own order or warehouse system](../../needs/integrations/own-order-or-warehouse-system.md).
 - **The door:** an outside app, on the record API and the [event feed](../../recipes/event_feed.md).
@@ -22,7 +22,7 @@ Why this is yours to build, and what stays yours: [Build your business on iVendN
 
 ## A loyalty provider
 
-- **What you build:** an outside app between the shop and a loyalty provider: each booked sale earns in the provider's programme, members spend their balance at the till, and a one-time code where the provider asks for one. The provider's account and keys stay on your server.
+- **What you build:** an outside app between iVendNext and a loyalty provider: each booked sale earns in the provider's programme, members spend their balance at the till, and a one-time code where the provider asks for one. The provider's account and keys stay on your server.
 - **Start from:** the recipe [A loyalty provider connected to the till](../../recipes/loyalty_provider.md), built from sample [S22](../../samples/s22_customer_loyalty/) and the [wallet recipe](../../recipes/wallet.md).
 - **The need:** [The customer's loyalty provider earned and spent at the till](../../needs/customers/loyalty-provider.md).
 - **The door:** three together: the event feed (earning), the wallet (spending), and the wallet's own code field or a capture on `customer_select` (the one-time code).
@@ -38,7 +38,7 @@ Why this is yours to build, and what stays yours: [Build your business on iVendN
 
 ## A local delivery app
 
-- **What you build:** an outside app on S7's pattern: it reads each order to deliver from the event feed, sends it to the delivery company's app, and writes the delivery's status back to the shop.
+- **What you build:** an outside app on S7's pattern: it reads each order to deliver from the event feed, sends it to the delivery company's app, and writes the delivery's status back to iVendNext.
 - **Start from:** sample [S7](../../samples/s7_system_sync/) and the [event feed recipe](../../recipes/event_feed.md) (follow **Sales Order** for `order.booked`, **POS Invoice** for `sale.booked`).
 - **The need:** [A local delivery app sent the orders to deliver](../../needs/integrations/local-delivery-app.md).
 - **The door:** an outside app, on the record API and the event feed.

@@ -13,7 +13,7 @@ request: -
 verified: 2026-10-23 · bench
 ---
 ## What you build
-Eye prescriptions as the shop's own records (spectacles or contact lenses, the test date and *Valid until*, each eye's values), a mark *Sold against a prescription* on the lens item groups, and a service that answers the check before payment. A marked line is paid only when the sale's customer has a prescription of its kind in date; otherwise the cashier reads which line, and the day the last one ran out. The service reads two fields of a prescription (its kind and *Valid until*), never a lens value.
+Eye prescriptions as the retailer's own records (spectacles or contact lenses, the test date and *Valid until*, each eye's values), a mark *Sold against a prescription* on the lens item groups, and a service that answers the check before payment. A marked line is paid only when the sale's customer has a prescription of its kind in date; otherwise the cashier reads which line, and the day the last one ran out. The service reads two fields of a prescription (its kind and *Valid until*), never a lens value.
 
 ## Limits
 - Answered when the cashier presses Pay, not when the line is entered.

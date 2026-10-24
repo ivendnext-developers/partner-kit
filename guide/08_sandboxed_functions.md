@@ -3,18 +3,18 @@
 **For:** a builder whose logic must run inside a sale and give the same answer on the server and on an offline till.
 **Reference implementation:** [the kit's README](../tools/wasm_kit/README.md) and [contract](../tools/wasm_kit/CONTRACT.md) (the commands below are the README's) · the first measurements are summarised in the repository's [README](../README.md#the-webassembly-verdict).
 
-A sandboxed function is a small program you write in Rust and compile to WebAssembly. The shop runs the same file on its server and on the till, so a decision gives the same answer online and offline. This chapter shows how to build one and check it yourself with the kit.
+A sandboxed function is a small program you write in Rust and compile to WebAssembly. iVendNext runs the same file on its server and on the till, so a decision gives the same answer online and offline. This chapter shows how to build one and check it yourself with the kit.
 
-> **Package or module?** A **package** is your whole app: its records, fields, print formats, buttons, services and label layouts, sent as one manifest. The shop's administrator pastes your file, reads *What it will do*, consents and installs it; later the shop can update it or remove it, and *Connected apps* lists every one. A **module** is one small program (the sandboxed function this chapter builds) that does one job at an extension point, such as adjusting a price or checking a sale before payment. **Two extension points take a module today: the check before payment and pricing.** The shop's administrator adds your file in Desk, with a certificate our review team signs, and can withdraw it; a package cannot carry one yet. **In short:** a package is the app, and a module is one program that does one job.
+> **Package or module?** A **package** is your whole app: its records, fields, print formats, buttons, services and label layouts, sent as one manifest. The retailer's administrator pastes your file, reads *What it will do*, consents and installs it; later the retailer can update it or remove it, and *Connected apps* lists every one. A **module** is one small program (the sandboxed function this chapter builds) that does one job at an extension point, such as adjusting a price or checking a sale before payment. **Two extension points take a module today: the check before payment and pricing.** The retailer's administrator adds your file in Desk, with a certificate our review team signs, and can withdraw it; a package cannot carry one yet. **In short:** a package is the app, and a module is one program that does one job.
 >
-> *Technical note:* a package installs from the **Retail Extension Package** screen in Desk; a module is a **Retail Extension Module** record that the shop's administrator adds in Desk, at an extension point that takes one (see *Read this first*, below).
+> *Technical note:* a package installs from the **Retail Extension Package** screen in Desk; a module is a **Retail Extension Module** record that the retailer's administrator adds in Desk, at an extension point that takes one (see *Read this first*, below).
 
 ## Read this first
 
-- **Two extension points take a module, and only a module we have certified runs.** The check before payment and pricing take one; capture, save rules and every other extension point have no module leg. We sign a module's sha256 for one extension point and one version, by hand, after running this chapter's checks on it ourselves. The route for submitting one to us, and the automatic intake behind it, are planned, not built (chapter 17). A shop runs a module we have certified once its administrator adds it in Desk; a shop that adds none runs none.
-- **A certificate is not tied to one shop.** A shop's administrator can withdraw a module on that shop (its record is kept; it stops running). We cannot withdraw one certificate from every shop at once. A product release that changes the certificate key stops the shop's server running every module signed with the old one, but a till keeps running a module it already holds, offline, until the shop's administrator withdraws that module.
-- **The template has run on the product's own host.** It is the product's own pricing test module: built through the kit's meters it is byte-identical to it. On our test bench (2026-10-12) the product's host admitted it under our certificate and it took a member discount off a line on the phone, counter and tablet screens, online and offline. No module a partner built has run on a shop yet.
-- **A pricing function can only take money off a line, up to the shop's own limit.** Pricing takes money off a line after every promotion, never more than that limit, which starts at 0 (at 0 the module is not even run) until the shop raises it. A line a Pricing Rule has already priced, a return, a zero-rate line and a gift-card line are never offered to it. A function cannot raise a price, and the Desk POS does not run the pricing module: a sale rung there is priced without it. **On an exchange,** a shop that keeps the price paid gives a replacement line the returned item's own discount; a replacement line your module has priced keeps your price, and the returned discount is not carried onto it.
+- **Two extension points take a module, and only a module we have certified runs.** The check before payment and pricing take one; capture, save rules and every other extension point have no module leg. We sign a module's sha256 for one extension point and one version, by hand, after running this chapter's checks on it ourselves. The route for submitting one to us, and the automatic intake behind it, are planned, not built (chapter 17). A retailer runs a module we have certified once its administrator adds it in Desk; a retailer that adds none runs none.
+- **A certificate is not tied to one retailer.** A retailer's administrator can withdraw a module on that retailer's iVendNext (its record is kept; it stops running). We cannot withdraw one certificate from every retailer at once. A product release that changes the certificate key stops the retailer's server running every module signed with the old one, but a till keeps running a module it already holds, offline, until the retailer's administrator withdraws that module.
+- **The template has run on the product's own host.** It is the product's own pricing test module: built through the kit's meters it is byte-identical to it. On our test bench (2026-10-12) the product's host admitted it under our certificate and it took a member discount off a line on the phone, counter and tablet screens, online and offline. No module a partner built has run on a retailer's iVendNext yet.
+- **A pricing function can only take money off a line, up to the retailer's own limit.** Pricing takes money off a line after every promotion, never more than that limit, which starts at 0 (at 0 the module is not even run) until the retailer raises it. A line a Pricing Rule has already priced, a return, a zero-rate line and a gift-card line are never offered to it. A function cannot raise a price, and the Desk POS does not run the pricing module: a sale rung there is priced without it. **On an exchange,** a retailer that keeps the price paid gives a replacement line the returned item's own discount; a replacement line your module has priced keeps your price, and the returned discount is not carried onto it.
 
 ## When to use it
 
@@ -81,7 +81,7 @@ Rung 5 of the ladder (chapter 3), the last before asking for an extension point 
 
 ## When your service is down, and when the till is offline
 
-- **There is no service.** The function runs inside the shop and inside the till; nothing calls you.
+- **There is no service.** The function runs inside the retailer's iVendNext and inside the till; nothing calls you.
 - **Offline,** the till runs the same bytes from its offline copy of the module. That was walked on our test bench's three till screens (2026-10-12); a real low-end Android till's timing is still owed.
 - **A refusal, a trap or an over-budget run means no adjustment (pricing) or your declared down answer (the check), never half of one.**
 
@@ -97,10 +97,10 @@ Rung 5 of the ladder (chapter 3), the last before asking for an extension point 
 
 ### What it has not
 
-- **Against the product, beyond one module.** The product's host has run the template's module, which we certified. A module a partner built has not run on a shop.
+- **Against the product, beyond one module.** The product's host has run the template's module, which we certified. A module a partner built has not run on a retailer's iVendNext.
 - **Chrome and a real till through the kit.** The kit's browser host runs in Node; the earlier spike ran Chrome. **A real low-end Android till's timing is still owed.**
 - **The stack bound for any function shape but that one:** it counts frames and ignores deeper operand stacks and spills.
-- **A function changing a price for a real shop:** the template's module took money off a line on our test bench only.
+- **A function changing a price for a real retailer:** the template's module took money off a line on our test bench only.
 - **JavaScript on the server beyond the samples.** Languages other than Rust and JavaScript were not measured.
 - **The offline copy** carrying a partner's module on a real low-end till, and any intake check of a submission.
 

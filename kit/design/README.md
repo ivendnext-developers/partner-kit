@@ -2,7 +2,7 @@
 
 Your page opens inside iVendNext: as a sheet on the till, as a page under the Desk header, or as a customer portal. This kit makes it look like our own screens. It is one CSS file and one optional JavaScript file. Plain CSS, small plain JavaScript, no framework, no build step, no npm package, no licensed UI library.
 
-**When to use it:** any page of yours that a cashier, a back-office user or a shop's customer sees inside iVendNext.
+**When to use it:** any page of yours that a cashier, a back-office user or a retailer's customer sees inside iVendNext.
 
 ## 1. Include it
 

@@ -1,10 +1,10 @@
 # Recipe: read many records at once — invoice lines, totals and groups in one call
 
-**What it is for.** A report, a warehouse load or a reconciliation that needs hundreds or thousands of records. You never need one call per record: a single list call can bring back every line of every invoice in a date range, or the totals already grouped. Fewer calls means a faster run and less load on the shop.
+**What it is for.** A report, a warehouse load or a reconciliation that needs hundreds or thousands of records. You never need one call per record: a single list call can bring back every line of every invoice in a date range, or the totals already grouped. Fewer calls means a faster run and less load on the retailer's iVendNext.
 
 **The short version.**
 - Ask for the lines in the list call itself: `items.qty` in `fields` returns one row per invoice line.
-- Ask the shop to add up: `sum(...)`, `count(distinct ...)` and `group_by` work in the same call.
+- Ask iVendNext to add up: `sum(...)`, `count(distinct ...)` and `group_by` work in the same call.
 - Page through a large range, and never add a header figure (such as a grand total) across line rows.
 
 Sample S9 (`samples/s9_bi_feed/`) reads its backfill and rebuild this way: three list calls per page of invoices.
@@ -14,7 +14,7 @@ Sample S9 (`samples/s9_bi_feed/`) reads its backfill and rebuild this way: three
 ## Technical notes
 
 ### 1. Lines in one call
-A list call may name a child table's fields as `<table field>.<field>`. The shop joins the lines and returns one row per line, with the invoice's `name` on each. Filters on the invoice's own fields still apply:
+A list call may name a child table's fields as `<table field>.<field>`. iVendNext joins the lines and returns one row per line, with the invoice's `name` on each. Filters on the invoice's own fields still apply:
 
 ```
 GET /api/resource/Sales Invoice
@@ -63,4 +63,4 @@ You cannot follow a link from a line while listing the invoice (`items.item_code
 The key reads what its user may read: the listed record type, its child rows through it, and any linked type you follow. Field-level permissions apply to child fields as well.
 
 ### Proven and not
-Read from the framework's own code. S9's paged read (three calls per page, lines and payments as separate calls) is tested against a stand-in shop (`samples/s9_bi_feed/tests`: no per-invoice read, every line extracted in order). Not yet run against a bench or a sandbox, and no timings are measured.
+Read from the framework's own code. S9's paged read (three calls per page, lines and payments as separate calls) is tested against a stand-in iVendNext (`samples/s9_bi_feed/tests`: no per-invoice read, every line extracted in order). Not yet run against a bench or a sandbox, and no timings are measured.

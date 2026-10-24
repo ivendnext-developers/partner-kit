@@ -1,6 +1,6 @@
 # 15. Customer archetypes — worked examples by customer size
 
-This chapter walks through typical customers, from one shop to a fifty-store chain, plus three specialist trades. For each one it shows where every need lands: configuration, our apps, or your own. It is for a builder, or the salesperson beside them, sizing a project before quoting it.
+This chapter walks through typical customers, from one store to a fifty-store chain, plus three specialist trades. For each one it shows where every need lands: configuration, our apps, or your own. It is for a builder, or the salesperson beside them, sizing a project before quoting it.
 
 Each example names the samples it uses.
 
@@ -21,11 +21,11 @@ A customer's size describes it; it never decides the path. A large project's blu
 
 ## 15.1 Small — one to three stores
 
-**The shape.** One to three stores; phones and a counter till; an online shop.
+**The shape.** One to three stores; phones and a counter till; a web store.
 
 **Steps.**
-1. Configure: prices, promotions and coupons; receipts with the shop's logo and tax number (a print format set up by hand; the receipt pack sample installs one by manifest); reason codes for voids, returns and discounts; blind till counts for cashiers; sale details captured at the till; permissions by role.
-2. Our apps: the iVendNext POS on phones and on the counter; our WooCommerce connector for the online shop.
+1. Configure: prices, promotions and coupons; receipts with the retailer's logo and tax number (a print format set up by hand; the receipt pack sample installs one by manifest); reason codes for voids, returns and discounts; blind till counts for cashiers; sale details captured at the till; permissions by role.
+2. Our apps: the iVendNext POS on phones and on the counter; our WooCommerce connector for the web store.
 3. Your apps: usually none. Perhaps one outside app — a price checker (sample S24), an accounting export.
 
 **Limits.** Our WooCommerce connector does not reserve stock, and it takes percentage vouchers only. Card payments need a certified payment connector in the customer's country — ours, or one a builder has written and certified (chapter 11).
@@ -34,7 +34,7 @@ A customer's size describes it; it never decides the path. A large project's blu
 
 ## 15.2 Mid — twenty terminals on our connectors
 
-**The shape.** Six stores: 12 phones, 6 counter tills and 2 tablets, all running the iVendNext POS. Handheld does receiving and stock counts. WooCommerce runs the online shop. Acumatica is the ERP, with Sage X3 to follow.
+**The shape.** Six stores: 12 phones, 6 counter tills and 2 tablets, all running the iVendNext POS. Handheld does receiving and stock counts. WooCommerce runs the web store. Acumatica is the ERP, with Sage X3 to follow.
 
 | Need | Where it goes | Verdict · door |
 |---|---|---|
@@ -57,12 +57,12 @@ A customer's size describes it; it never decides the path. A large project's blu
 
 ## 15.3 Mid — with its own systems
 
-**The shape.** Ten to thirty stores. The customer runs its own loyalty programme, CRM, online shop and ERP, and wants iVendNext as its store system.
+**The shape.** Ten to thirty stores. The customer runs its own loyalty programme, CRM, web store and ERP, and wants iVendNext as its store system.
 
 | System | How it connects | Verdict · door |
 |---|---|---|
 | Its own ERP | your outside app on the API and the event feed, keeping its own map of record ids, its own place in the feed, and a nightly reconciliation (the enterprise sync sample) | Ready, with limits · outside app: the enterprise sync sample reads the shared feed, which the customer's administrator opens to your app; a feed scoped to your own app is an extension point (chapter 9), and the kit has not run against it yet (chapter 5) ([erp-in-step-both-ways](../needs/integrations/erp-in-step-both-ways.md)) |
-| Its own online shop | your outside app: orders in, stock and prices out | Ready, with limits · outside app: an online order cannot be edited at the till ([own-online-shop](../needs/integrations/own-online-shop.md)) |
+| Its own web store | your outside app: orders in, stock and prices out | Ready, with limits · outside app: an online order cannot be edited at the till ([own-online-shop](../needs/integrations/own-online-shop.md)) |
 | Its own CRM | your outside app reading customers and sales | Ready, with limits · outside app ([own-crm](../needs/customers/own-crm.md)) |
 | Its own loyalty — earning | the customer's service on each booked sale | Ready, with limits · outside app ([own-loyalty-earning](../needs/customers/own-loyalty-earning.md)) |
 | Its own loyalty — redeeming at the till | the wallet extension point, answered by the customer's service ([recipe](../recipes/wallet.md)) | Ready, with limits · wallet ([store-wallet-at-till](../needs/customers/store-wallet-at-till.md)) |

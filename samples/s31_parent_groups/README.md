@@ -1,8 +1,8 @@
 # S31 — Parent item groups in coupons and promotions (`pp_pgx`)
 
-A shop sets up a coupon for *Supplements* and expects it to cover every supplement. But the till's coupon and promotion engines match an item's **own** item group exactly. A row naming the parent group *Supplements* matches only items placed directly in it, never those in *Supplements › Protein*.
+A retailer sets up a coupon for *Supplements* and expects it to cover every supplement. But the till's coupon and promotion engines match an item's **own** item group exactly. A row naming the parent group *Supplements* matches only items placed directly in it, never those in *Supplements › Protein*.
 
-This sample's service, outside the shop, writes the parent out as its child groups and keeps it that way: when the coupon is saved, and when a new group is added under the parent. It is for an iVendNext Partner building for a shop whose item groups are a tree.
+This sample's service, outside the retailer's iVendNext, writes the parent out as its child groups and keeps it that way: when the coupon is saved, and when a new group is added under the parent. It is for an iVendNext Partner building for a retailer whose item groups are a tree.
 
 **The doors it combines:** an outside app on the event feed, and the record API. **The limit:** a row appears a few seconds after the save, not in the same save. A promotion's buy and get rows are reported, never written out (below).
 
@@ -22,7 +22,7 @@ This sample's service, outside the shop, writes the parent out as its child grou
 
 **Coupons have no item-group exclusions** at this version: a coupon's exclusion rows name customer groups only.
 
-## What the shop does
+## What the retailer does
 
 1. **Install the manifest** (`manifest.json`). It declares only the feed registration *PP PGX Groups* (Coupon, Promotion Bonus Buys Master, Item Group). It installs switched off.
 2. **Make the service's user.** A role with read and write on Coupon and Promotion Bonus Buys Master, and read on Item Group; an integration user with that role and its API key (`recipes/integration_user.md`). Choose that user on the feed registration.
@@ -35,13 +35,13 @@ This sample's service, outside the shop, writes the parent out as its child grou
 
 **Where it shows.** On the coupon or promotion in Desk: the added rows, in their table. At the till: the coupon or the exclusion now covers the child groups' items.
 
-**What leaves the shop.** The service reads coupons, promotions and item groups, and writes coupon and promotion rows. With these rights its key can change any coupon or promotion.
+**What leaves the retailer's iVendNext.** The service reads coupons, promotions and item groups, and writes coupon and promotion rows. With these rights its key can change any coupon or promotion.
 
 ## When the service is down or slow
 
 - **Down:** nothing is written. Coupons keep their rows as they are, and a sale meanwhile gets the old rows. When the service is back, the feed's events are read in order. `reconcile` catches up everything at once.
-- **A person saves while the service writes:** the service sends the `modified` it read, so the shop refuses its write. The event is retried on the next pass and reads the person's version. When an item group's save makes it go through every record, a refused record is rolled back alone (counted under `failed`) and the others are kept; that record catches up at its next save or at `reconcile`.
-- **Any item group save goes through every coupon and promotion** (a read of each). That is cheap for a shop with tens of them; a shop with thousands should run `reconcile` on a schedule instead and leave Item Group off the feed registration.
+- **A person saves while the service writes:** the service sends the `modified` it read, so iVendNext refuses its write. The event is retried on the next pass and reads the person's version. When an item group's save makes it go through every record, a refused record is rolled back alone (counted under `failed`) and the others are kept; that record catches up at its next save or at `reconcile`.
+- **Any item group save goes through every coupon and promotion** (a read of each). That is cheap for a retailer with tens of them; a retailer with thousands should run `reconcile` on a schedule instead and leave Item Group off the feed registration.
 
 ## Ownership
 
@@ -55,9 +55,9 @@ The rows have no marker field, so the service keeps its own list of the rows it 
 | File | What |
 |---|---|
 | `manifest.json` | the feed registration, and nothing else |
-| `groups.py` | the core: which rows a record needs, pure, no shop |
+| `groups.py` | the core: which rows a record needs, pure, no retailer |
 | `expander.py` | the service: the feed, the record API, the ownership store |
-| `tests/` | the core and the service against an in-memory shop · `canaries.py` |
+| `tests/` | the core and the service against an in-memory stand-in · `canaries.py` |
 
 ## Run it
 
@@ -86,10 +86,10 @@ python3 tools/check/check.py samples/s31_parent_groups
   - the promotion engine excludes by an exact group set;
   - each promotion buy and get row is filled separately;
   - a coupon's exclusion rows offer *Customer Group* only.
-- **Not run on a shop.** The till applying a written-out coupon was not walked.
+- **Not run on a retailer's iVendNext.** The till applying a written-out coupon was not walked.
 
 ### Why this way (R6)
 
-- *An outside app on the feed* — picked. About 260 lines (the core and the service; the tests are apart), and the shop's records stay the shop's.
+- *An outside app on the feed* — picked. About 260 lines (the core and the service; the tests are apart), and the retailer's records stay the retailer's.
 - *A person listing child groups by hand* — the null option. It works, but a group added later is missed.
 - *A change to the engines to match a group's descendants* — product work, and not needed: the kit composes it.

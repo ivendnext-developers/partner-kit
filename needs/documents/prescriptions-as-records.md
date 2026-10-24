@@ -17,7 +17,7 @@ Prescriptions as your manifest's own record type, entered by a pharmacist, with 
 
 ## Limits
 - A manifest's record type cannot be submittable: a prescription is protected by permissions, and one edited after its first dispense is refused at the till rather than locked.
-- The image is kept in the shop's site; the attach's *Is Private* tick must stay on.
+- The image is kept in the retailer's site; the attach's *Is Private* tick must stay on.
 
 ## Tell the customer
 Prescriptions are kept in iVendNext, with their own screen.

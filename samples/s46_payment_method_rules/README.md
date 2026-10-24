@@ -1,8 +1,8 @@
 # S46 — Payment method rules (`pp_pmr`): which payment methods each customer group may use
 
-The shop decides which payment methods each group of its customers may use at the till: customers who order through a delivery platform pay only by that platform's method, only account customers may buy on account, a group that settles in dollars pays only in dollars. When the cashier presses **Pay**, the app leaves every other method off that sale's payment screen, dimmed, with the shop's reason beside it.
+The retailer decides which payment methods each group of its customers may use at the till: customers who order through a delivery platform pay only by that platform's method, only account customers may buy on account, a group that settles in dollars pays only in dollars. When the cashier presses **Pay**, the app leaves every other method off that sale's payment screen, dimmed, with the retailer's reason beside it.
 
-**When to use it:** a rule about the sale's customer decides which payment methods the till may take, and the shop keeps the rule itself, in Desk.
+**When to use it:** a rule about the sale's customer decides which payment methods the till may take, and iVendNext keeps the rule itself, in Desk.
 
 ## What happens
 
@@ -13,9 +13,9 @@ The shop decides which payment methods each group of its customers may use at th
 | No rule for the customer's group, or for any group above it | The payment screen opens as always |
 | A refund, the returned items of an exchange, a return rung without its sale | Not judged: the refund choices open as always |
 | An exchange's new items | Judged as a sale. An exchange pays them with store credit: an *Only these* rule that does not list the store-credit method stops that group's exchanges |
-| The service down, or the shop's records unreadable | The check's down answer: the sale goes on with every method and is flagged on *Sales to review* |
+| The service down, or the retailer's records unreadable | The check's down answer: the sale goes on with every method and is flagged on *Sales to review* |
 
-**Which rule decides.** One rule per customer group, either *Only these payment methods* or *Every payment method but these*. A customer takes their own group's rule; a group with no rule takes the rule of the nearest group above it in the shop's customer group tree. A group's own rule replaces the rule above it entirely: a method the rule above leaves out comes back unless the group's own rule leaves it out too. So two rules cover on-account credit for account customers only:
+**Which rule decides.** One rule per customer group, either *Only these payment methods* or *Every payment method but these*. A customer takes their own group's rule; a group with no rule takes the rule of the nearest group above it in the retailer's customer group tree. A group's own rule replaces the rule above it entirely: a method the rule above leaves out comes back unless the group's own rule leaves it out too. So two rules cover on-account credit for account customers only:
 
 | Customer group | Rule | Methods |
 |---|---|---|
@@ -24,7 +24,7 @@ The shop decides which payment methods each group of its customers may use at th
 
 A customer in *Retail* (under *All Customer Groups*) cannot buy on account; a customer in *Account customers*, or a group below it, can.
 
-| What the shop sees (on a demo shop, 2026-10-23) | |
+| What the retailer sees (on a demo site, 2026-10-23) | |
 |---|---|
 | What the install will change, read before you consent | ![](screenshots/01_install.png) |
 | A rule for a customer group: every payment method but Credit Card, with the words the cashier reads | ![](screenshots/02_rule.png) |
@@ -32,29 +32,29 @@ A customer in *Retail* (under *All Customer Groups*) cannot buy on account; a cu
 | At Pay for a customer in that group: the card left out with the rule's words | ![](screenshots/04_card-left-out.png) |
 | A customer in a group with no rule of its own, below one whose rule is *Only these: Cash*: the card and the gift card left out | ![](screenshots/05_cash-only.png) |
 
-## What the shop does
+## What the retailer does
 
-**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or the shop's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP PMR Rule*, the role `PP PMR Integration`, the check and the feed registration, the check switched off. Nothing changes at the till yet.
 2. **Make the app's integration user** (the [integration user recipe](../../recipes/integration_user.md)): tick *Is Desk User*, give it the role **PP PMR Integration** alone and generate its API key. In *Role Permissions*, give that role **read on Customer Group** (the service reads the group tree). Choose the user on the feed registration **PP PMR Rules feed**, then press **Connect again** on the app's record, which sends that user's key to the service.
-3. **Stop cashiers moving a customer into another group.** The till's edit sheet lets a cashier change a customer's group, and the shop's cashier role can save customers: a cashier could move a customer into a group whose rule allows *On Account*, or into a group with no rule, and take a method the customer's own rule leaves out. In *Customize Form* for *Customer*, set **Customer Group**'s *Perm Level* to 1, and in *Role Permissions* give level 1 *Write* on Customer only to the roles that may move customers (your managers). A cashier's change then leaves the group as it was (measured with [S47](../s47_customers_by_store/) on the programme's bench, run `pp-20261023T115256Z-45139`). Two things follow: a cashier can no longer give a new customer a group either: a customer created at the till takes the default customer group (Selling Settings), or none when none is set, and a manager sets the right one (measured on the programme's bench, run `pp-20261023T162435Z-43204`, with a default group and without), and the till still says *Saved* after a group change it dropped. Check the level 1 rows already there: Sales Master Manager has one by default, and no cashier's role may hold level 1 *Write*.
-4. **Write the rules** in *PP PMR Rule*: one per customer group that needs one. The payment methods are the shop's own *Mode of Payment* records, as the till offers them (*Cash*, *Credit Card*, *On Account*). *Words the cashier reads* is optional: blank, the app writes *"Customers in ⟨group⟩ pay with ⟨methods⟩."* or *"Not for customers in ⟨group⟩."*
+3. **Stop cashiers moving a customer into another group.** The till's edit sheet lets a cashier change a customer's group, and the retailer's cashier role can save customers: a cashier could move a customer into a group whose rule allows *On Account*, or into a group with no rule, and take a method the customer's own rule leaves out. In *Customize Form* for *Customer*, set **Customer Group**'s *Perm Level* to 1, and in *Role Permissions* give level 1 *Write* on Customer only to the roles that may move customers (your managers). A cashier's change then leaves the group as it was (measured with [S47](../s47_customers_by_store/) on the programme's bench, run `pp-20261023T115256Z-45139`). Two things follow: a cashier can no longer choose a group for a new customer either (it takes the store's default group, and a manager sets the right one), and the till still says *Saved* after a group change it dropped. Check the level 1 rows already there: Sales Master Manager has one by default, and no cashier's role may hold level 1 *Write*.
+4. **Write the rules** in *PP PMR Rule*: one per customer group that needs one. The payment methods are the retailer's own *Mode of Payment* records, as the till offers them (*Cash*, *Credit Card*, *On Account*). *Words the cashier reads* is optional: blank, the app writes *"Customers in ⟨group⟩ pay with ⟨methods⟩."* or *"Not for customers in ⟨group⟩."*
 5. **Switch the check on:** open *Payment method rules* in *Retail Extension Subscription*, read what is sent, tick the consent, choose the POS Profiles, and switch it on.
 
-**Where it shows.** The rules are Desk records the shop keeps (its System Manager, or a role the shop gives the rights to in *Role Permissions*: that role also needs *Select* on **Customer Group** and **Mode of Payment**, or the rule's lookups answer nothing). At the till the cashier meets them at **Pay**: the methods left out are dimmed with the rule's words.
+**Where it shows.** The rules are Desk records the retailer keeps (its System Manager, or a role the retailer gives the rights to in *Role Permissions*: that role also needs *Select* on **Customer Group** and **Mode of Payment**, or the rule's lookups answer nothing). At the till the cashier meets them at **Pay**: the methods left out are dimmed with the rule's words.
 
-**What leaves the shop.** At **Pay**, and before each refund the till pays, the priced basket goes to the service's address: each line's item, group, quantity and amounts, the totals, the store, till, POS day and terminal, the cashier's user, the customer and their customer group, the coupons, the sale details the cashier captured and the payment methods offered; never a card. The service reads the shop's rule records and its customer group tree with the integration user's key, keeps them one minute, and keeps nothing of a sale. It writes nothing. A hosted copy holds each shop's check secret and its user's API key from *Connect again* until the shop removes the app. Say so on your card.
+**What leaves the retailer's iVendNext.** At **Pay**, and before each refund the till pays, the priced basket goes to the service's address: each line's item, group, quantity and amounts, the totals, the store, till, POS day and terminal, the cashier's user, the customer and their customer group, the coupons, the sale details the cashier captured and the payment methods offered; never a card. The service reads the retailer's rule records and its customer group tree with the integration user's key, keeps them one minute, and keeps nothing of a sale. It writes nothing. A hosted copy holds each retailer's check secret and its user's API key from *Connect again* until the retailer removes the app. Say so on your card.
 
 ## The files
 
 | File | What it is |
 |---|---|
 | `manifest.json` | the record type `PP PMR Rule` (one per customer group, named by it) and its table `PP PMR Rule Method`, a feed registration (it names the app's one integration user), a help address, and one `check`, installed switched off; when the service is down the sale goes on, flagged |
-| `payrules.py` | the pure core: the signature check (`verify`), the shape check, the shop's rules (`rules_of`) and tree (`tree_of`), the rule that decides (`deciding`) and the answer (`on_check`) |
-| `service/app.py` | the service, standard library only: `POST /pmr/check`, `GET /health`, and the app template's handshake for many shops; one `handle` answers the web server and the function entry (`lambda_handler`) alike |
+| `payrules.py` | the pure core: the signature check (`verify`), the shape check, the retailer's rules (`rules_of`) and tree (`tree_of`), the rule that decides (`deciding`) and the answer (`on_check`) |
+| `service/app.py` | the service, standard library only: `POST /pmr/check`, `GET /health`, and the app template's handshake for many retailers; one `handle` answers the web server and the function entry (`lambda_handler`) alike |
 | `Dockerfile` · `app.json` | the settings file for hosting (`"runs": "function"`: on CitiXsys hosting it is a function, paid per call) and an image for your own server (built from the kit's root) |
-| `tests/` | the rules, the service over the wire with signed calls (one shop and many), the shop's reads against a stand-in shop, every answer against the published contract, the manifest; `canaries.py` breaks each guarded rule and expects its test to fail |
+| `tests/` | the rules, the service over the wire with signed calls (one retailer and many), iVendNext's reads against a stand-in iVendNext, every answer against the published contract, the manifest; `canaries.py` breaks each guarded rule and expects its test to fail |
 
 ## Run it
 
@@ -68,11 +68,11 @@ python3 samples/s46_payment_method_rules/tests/canaries.py
 python3 samples/s46_payment_method_rules/service/app.py samples/s46_payment_method_rules/service/.env.local
 ```
 
-**Settings, one shop** (`service/.env.local`, never committed): `IVN_CHECK_SECRET` (handed back at install as `pp_pmr:sub:methods`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. `PMR_PREFIX` names the rule record type (default `PP PMR`).
+**Settings, one retailer** (`service/.env.local`, never committed): `IVN_CHECK_SECRET` (handed back at install as `pp_pmr:sub:methods`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. `PMR_PREFIX` names the rule record type (default `PP PMR`).
 
-## Many shops, hosted
+## Many retailers, hosted
 
-The service is the [app template](../../tools/app_template/README.md)'s shape: set `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`). Each shop connects itself after its install and hands over the check's secret; *Connect again* hands over its integration user's key. Until the key arrives the service answers 503 and the down answer applies. Every call names its shop (`X-iVendNext-Site`), and each shop is answered from its own rules with its own key.
+The service is the [app template](../../tools/app_template/README.md)'s shape: set `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`). Each retailer connects itself after its install and hands over the check's secret; *Connect again* hands over its integration user's key. Until the key arrives the service answers 503 and the down answer applies. Every call names its retailer (`X-iVendNext-Site`), and each retailer is answered from its own rules with its own key.
 
 ## Make it your own
 
@@ -81,18 +81,18 @@ What a partner usually changes:
 - **amounts:** cash up to a limit, a card above one, on account up to the customer's credit left (read it with the integration user);
 - **refunds:** a refund only to the methods that paid the sale (the check sends `return_of.paid_by` on a return); keep store credit open, or every exchange is refused;
 - **the prefix:** `tools/manifest/rename.py` makes your copy under your own reserved prefix in one step; the service takes its prefix from `PMR_PREFIX`;
-- **its records:** `tools/deploy/copy_records.py` moves the rules between a test site and the shop.
+- **its records:** `tools/deploy/copy_records.py` moves the rules between a test site and the retailer's iVendNext.
 
 ## Before you copy it
 
 - **The first card method.** A card terminal cannot tell a credit card from a debit card before it charges: leaving out the store's **first** card method stops card payments at the till (the check page's warning). Leave out another card method only if the cashier picks it by hand.
 - **Nothing left to pay with refuses the sale.** A rule that leaves out every method the till offers answers *refuse* with words that say why; so does a rule that would leave out more than the contract's 20 methods. Never send part of the list: a method left off the list would be taken.
-- **Down means every method.** The manifest declares `allow_and_flag`: an outage never stops a shop selling, and a sale the rules could not judge is flagged on *Sales to review*. A shop that must never take a method its rule leaves out (on-account credit, say) sets the check's down answer to `refuse`; every sale then waits on the service. A refused key (401 or 403) is the shop unreadable too, never an allow without the flag.
-- **The customer's group is the shop's.** The rule reads the group the customer record holds. Anyone who may change it (the till's edit sheet, Desk, an import) can move a customer into a group with other methods: put Customer Group at a permission level only your managers write (step 3).
+- **Down means every method.** The manifest declares `allow_and_flag`: an outage never stops a retailer selling, and a sale the rules could not judge is flagged on *Sales to review*. A retailer that must never take a method its rule leaves out (on-account credit, say) sets the check's down answer to `refuse`; every sale then waits on the service. A refused key (401 or 403) is iVendNext unreadable too, never an allow without the flag.
+- **The customer's group is the retailer's.** The rule reads the group the customer record holds. Anyone who may change it (the till's edit sheet, Desk, an import) can move a customer into a group with other methods: put Customer Group at a permission level only your managers write (step 3).
 - **A rule changed in Desk, or a new customer group,** reaches the service within a minute (it keeps the rules and the tree that long): until then a new group's customers keep every method.
-- **A new key.** A key withdrawn or a user disabled (401 or 403) is the shop unreadable: every sale goes to the down answer until the user is switched back on or given a new key, and *Connect again* sends it. The log names it `KeyRefused`, apart from an outage.
+- **A new key.** A key withdrawn or a user disabled (401 or 403) is iVendNext unreadable: every sale goes to the down answer until the user is switched back on or given a new key, and *Connect again* sends it. The log names it `KeyRefused`, apart from an outage.
 - **Exchanges.** An exchange's new items are checked as a sale, and an exchange pays them with store credit: an *Only these* rule that does not list your store-credit method (such as *Store Credit*) stops that group's exchanges.
-- **Your address.** Write your own address in `allowed_urls`. The shop's server must trust your certificate: a real one for a shop.
+- **Your address.** Write your own address in `allowed_urls`. The retailer's server must trust your certificate: a real one for a retailer.
 
 ## Technical notes
 
@@ -102,18 +102,18 @@ What a partner usually changes:
 |---|---|---|
 | Do nothing: one POS Profile per kind of customer, each with its own methods | 0 | a delivery platform's customers need their own till, and an account customer at an ordinary till is still offered *On account* |
 | A manifest only: a field on Customer Group naming its methods | ~½ day | nothing reads it at the till; a manifest cannot answer a check |
-| **A check before payment, answered by a function that leaves methods out** | ~1 day | **picked**: the rule holds at every door that takes money, on every till the shop switches it on for, in the shop's own words; S32's service shape and S44's group-tree walk reused |
+| **A check before payment, answered by a function that leaves methods out** | ~1 day | **picked**: the rule holds at every door that takes money, on every till the retailer switches it on for, in the retailer's own words; S32's service shape and S44's group-tree walk reused |
 
 ### The answer, exactly
 
-- **The reads:** `GET /api/resource/<prefix> Rule` with `fields` `["name","customer_group","kind","words","methods.mode_of_payment"]` (one row per method), `filters` `[["enabled","=",1]]`, `limit_page_length` 0; and `GET /api/resource/Customer Group` with `["name","lft","rgt"]`. Both at once (each read has its own timeout inside the check's 3 s), kept a minute per shop and per key. Either one failing answers 503: never a decision on half the shop's rules.
+- **The reads:** `GET /api/resource/<prefix> Rule` with `fields` `["name","customer_group","kind","words","methods.mode_of_payment"]` (one row per method), `filters` `[["enabled","=",1]]`, `limit_page_length` 0; and `GET /api/resource/Customer Group` with `["name","lft","rgt"]`. Both at once (each read has its own timeout inside the check's 3 s), kept a minute per retailer and per key. Either one failing answers 503: never a decision on half the retailer's rules.
 - **The rule that decides** is the customer's own group's, else the innermost group whose span (`lft`, `rgt`) holds the group's and that has a switched-on rule. A customer with no group takes the outermost group's rule. A group the tree does not know keeps every method unless it has its own rule.
 - **The methods left out** are the offered methods (`offered_tenders`, the till's own order, each once) the rule does not allow: under *Only these*, every offered method not listed; under *Every method but these*, the listed ones offered. None: `allow`. All of them, or more than 20: `refuse` in words.
 - **The words** are the rule's own (up to 120 characters), else the app's; every sentence is plain text of 1 to 140 characters.
 
 ### Bounds, stated
 
-- **A sale only.** A refund, a return against a sale, the returned items of an exchange and a return without its sale (`stage: "return"`) are allowed without reading the shop, a return without its sale that also sells included (the contract would judge its sold lines). An exchange's replacement basket is `stage: "sale"` and is judged.
+- **A sale only.** A refund, a return against a sale, the returned items of an exchange and a return without its sale (`stage: "return"`) are allowed without reading iVendNext, a return without its sale that also sells included (the contract would judge its sold lines). An exchange's replacement basket is `stage: "sale"` and is judged.
 - **Methods together.** The check answers before the cashier picks a method, so a rule cannot say *these two not in one sale*.
 - **A rule per customer group.** A customer's own rule is a group of their own.
 - **Offline,** the till does not call the service: the down answer applies and the sale is flagged when it syncs.
