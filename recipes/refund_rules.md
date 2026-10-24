@@ -12,6 +12,8 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 - None of the sale's methods offered at this till: *"This refund can't go ahead"* and the service's sentence.
 - Every sale: the payment screen as always.
 
+![On a demo site, the refund of a cash sale: the card dimmed with the app's reason, cash and store credit offered](../samples/s51_refund_rules/screenshots/refund-rules-refund-choices.png)
+
 ## Rules
 
 1. **Declare the settings record and the check in your manifest** (`samples/s51_refund_rules/manifest.json`):
