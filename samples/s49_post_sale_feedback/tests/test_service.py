@@ -506,6 +506,9 @@ class ServiceTest(unittest.TestCase):
         for el in ('<p id="name" class="name" dir="auto">', '<h1 id="question" dir="auto">', 'id="comment" maxlength="280" rows="3" dir="auto"'):
             self.assertIn(el, page)
         self.assertIn('b.dir = "auto";', self.svc.handle("GET", "/page.js", {}, b"")[1].decode())
+        # and each aligns by its own direction: a rule that pushes the page right would set an English question apart
+        # from its English answers on that phone (the walk's review)
+        self.assertNotIn("text-align: right", self.svc.handle("GET", "/page.css", {}, b"")[1].decode())
 
     def test_s26_the_retailer_down_on_the_page_is_said_and_the_page_waits(self):
         s, t = self.answered_link()

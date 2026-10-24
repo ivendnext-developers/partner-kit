@@ -3,8 +3,8 @@
 and tills, a customer asked once, a customer who asked to stop, where the next press starts, a press out of time, the
 link's signature, an answer written once, or the service's words must go RED when that check is removed. For each
 mutation this copies the sample (and the kit folders it uses) to a temporary folder, runs the one test named on the
-unmutated copy (it must pass, else BROKEN), applies ONE change (the anchor must match exactly once, and the mutant must
-compile), runs the test again, and reports RED (the test caught it) or GREEN (a dead test). The runner is S44's.
+unmutated copy (it must pass, else BROKEN), applies ONE change (the anchor must match exactly once, and a Python mutant
+must compile), runs the test again, and reports RED (the test caught it) or GREEN (a dead test). The runner is S44's.
 
     python3 samples/s49_post_sale_feedback/tests/canaries.py      # exit 0 only when every canary is RED
 """
@@ -113,6 +113,13 @@ CANARIES = [
     ("a redirect is not followed", S, "urllib.request.build_opener(_NoRedirect)", "urllib.request.build_opener()",
      "test_service.ShopApi.test_a_record_name_is_one_path_segment_and_a_redirect_is_not_followed"),
     ("an answer keeps its own direction", "service/page.js", '      b.dir = "auto";', "      b.title = '';",
+     T + "test_s25b_the_retailers_words_keep_their_own_direction_on_an_arabic_page"),
+    ("the retailer's name keeps its own direction", "service/page.html", '<p id="name" class="name" dir="auto">', '<p id="name" class="name">',
+     T + "test_s25b_the_retailers_words_keep_their_own_direction_on_an_arabic_page"),
+    ("the comment keeps its own direction", "service/page.html", 'rows="3" dir="auto">', 'rows="3">',
+     T + "test_s25b_the_retailers_words_keep_their_own_direction_on_an_arabic_page"),
+    ("the page is never pushed right", "service/page.css", ".note { min-height: 1.4em; margin: 16px 0 0; }",
+     '.note { min-height: 1.4em; margin: 16px 0 0; }\n[dir="rtl"] body { text-align: right; }',
      T + "test_s25b_the_retailers_words_keep_their_own_direction_on_an_arabic_page"),
     ("the question keeps its own direction", "service/page.html", '<h1 id="question" dir="auto">', '<h1 id="question">',
      T + "test_s25b_the_retailers_words_keep_their_own_direction_on_an_arabic_page"),

@@ -1,0 +1,26 @@
+{
+ "app": "required-sale-details",
+ "version": "1.0.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s50_required_sale_details/service/app.lambda_handler",
+ "package": [
+  "tools/app_template/service",
+  "samples/s50_required_sale_details/details.py",
+  "samples/s50_required_sale_details/service"
+ ],
+ "env": [
+  {
+   "name": "IVN_LIBRARY_APP",
+   "required": true
+  },
+  {
+   "name": "RSD_PREFIX",
+   "required": true
+  }
+ ]
+}
