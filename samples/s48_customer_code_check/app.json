@@ -1,0 +1,26 @@
+{
+ "app": "customer-code-check",
+ "version": "1.0.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s48_customer_code_check/service/app.lambda_handler",
+ "package": [
+  "tools/app_template/service",
+  "samples/s48_customer_code_check/codecheck.py",
+  "samples/s48_customer_code_check/service"
+ ],
+ "env": [
+  {
+   "name": "IVN_LIBRARY_APP",
+   "required": true
+  },
+  {
+   "name": "CCC_PREFIX",
+   "required": true
+  }
+ ]
+}
