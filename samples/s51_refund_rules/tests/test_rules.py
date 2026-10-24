@@ -59,7 +59,7 @@ def check(ctx=None, s=None):
 class SameMethods(unittest.TestCase):
     def test_a_card_sale_is_refunded_by_card_or_store_credit_only(self):
         self.assertEqual(check(), {"verdict": "allow", "exclude_tenders": [CASH, ONLINE],
-                                   "reason": "Refunded only by the methods that paid for it, and store credit."})
+                                   "reason": "Refunded only by the methods your rules keep for this sale."})
 
     def test_every_method_that_paid_the_sale_stays(self):
         out = check(context(paid_by=(CASH, CARD)))
@@ -121,6 +121,10 @@ class WithoutItsSale(unittest.TestCase):
         out = check(context(channel="none"), s=settings(without_sale=[], always_allowed=rows(CASH)))
         self.assertEqual(out["exclude_tenders"], [CARD, ONLINE])
         self.assertEqual(check(context(channel="none", offered=[CASH]), s=settings(without_sale=[]))["verdict"], "refuse")
+
+    def test_nothing_set_for_a_return_without_its_sale_refuses_in_plain_words(self):
+        out = check(context(channel="none"), s=settings(without_sale=[], store_credit=""))
+        self.assertEqual(out, {"verdict": "refuse", "reason": "No method is set for a return without its sale. Get a manager."})
 
     def test_store_credit_named_twice_is_said_once(self):
         out = check(context(channel="none"), s=settings(without_sale=rows(CREDIT)))

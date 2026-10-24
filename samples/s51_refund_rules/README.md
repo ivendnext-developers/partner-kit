@@ -8,7 +8,7 @@ The retailer decides how a refund goes back. A return against a sale goes back o
 
 | When | What the cashier sees |
 |---|---|
-| A return against a sale paid by card, with *Refund by the sale's own methods* | The card method, the store credit method and the *Always allowed* ones are offered; the rest are dimmed: *"Not for this sale: Refunded only by the methods that paid for it, and store credit."* |
+| A return against a sale paid by card, with *Refund by the sale's own methods* | The card method, the store credit method and the *Always allowed* ones are offered; the rest are dimmed: *"Not for this sale: Refunded only by the methods your rules keep for this sale."* |
 | None of the till's methods would stay (the methods offered are the POS Profile's whole payment table, a method the store switched off for returns included) | *"This refund can't go ahead"* and *"None of the methods that paid for this can take its refund here. Get a manager."* |
 | A return without its sale, with methods named | Only those and the store credit method; none of them offered here: refused, naming them |
 | A return without its sale, no methods named, *Refund by the sale's own methods* ticked | Only the *Always allowed* methods and the store credit method: a no-receipt return is no way round the rule |
@@ -25,7 +25,7 @@ The retailer decides how a refund goes back. A return against a sale goes back o
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP RFR Settings* with its table *PP RFR Method*, the role `PP RFR Integration`, the check and the feed registration, the check switched off. Nothing changes at the till yet.
 2. **Make the app's integration user** (the [integration user recipe](../../recipes/integration_user.md)): tick *Is Desk User*, give it the role **PP RFR Integration** alone and generate its API key. Choose the user on the feed registration **PP RFR Settings feed**.
-3. **Fill the settings** in *PP RFR Settings*: one record, its title **Default**. Tick *Refund by the sale's own methods*, choose your *Store credit method*: the Mode of Payment of type Store Credit the till pays exchanges with (the first enabled one), never taken off, so exchanges go on; add any *Always allowed* method, and name the methods for a return *Without its sale*. Whoever keeps the settings needs *Select* on **Mode of Payment**.
+3. **Fill the settings** in *PP RFR Settings*: one record, its title **Default**. Tick *Refund by the sale's own methods*, choose your *Store credit method*: the Mode of Payment of type Store Credit the till pays exchanges with (keep one such method enabled, and choose it here), never taken off, so exchanges go on; add any *Always allowed* method, and name the methods for a return *Without its sale*. Whoever keeps the settings needs *Select* on **Mode of Payment**.
 4. **Switch the check on:** open *Refund rules* in *Retail Extension Subscription*, read what is sent, tick the consent, choose the POS Profiles of the stores the rules hold at, and switch it on. Last, press **Connect again** on the app's record, which sends the integration user's key to the service.
 
 **Where it shows.** The settings are a Desk record the retailer keeps (its System Manager, or a role it gives the rights to). At the till the cashier meets them when a refund's choices open.
@@ -72,7 +72,7 @@ What a partner usually changes:
 ## Before you copy it
 
 - **Methods, never amounts.** The check names the methods a refund may use; the cashier chooses how much goes to each. A sale paid half by card and half in cash may be refunded all by card, or all in cash.
-- **Your store credit method.** An exchange's returned items book store credit whatever the replacement costs: the store credit method you name is never taken off. It must be the first enabled Mode of Payment of type Store Credit, the one the till books an exchange with. Leave it blank (Desk's form requires it with the tick; a write over the API does not) and every exchange is refused.
+- **Your store credit method.** An exchange's returned items book store credit whatever the replacement costs: the store credit method you name is never taken off. Keep one Mode of Payment of type Store Credit enabled, and choose it here: the till books an exchange with one of them, the most recently changed when there are several. Leave it blank (Desk's form requires it with the tick; a write over the API does not) and every exchange is refused.
 - **Down means the refund goes on.** The manifest declares `allow_and_flag`: an outage never stops a refund, and one the rules could not judge is flagged on *Sales to review*. A retailer that must never refund outside its rules sets the check's down answer to `refuse`; every refund on that POS Profile then waits on the service. A refused key (401 or 403) is iVendNext unreadable too, never an allow without the flag.
 - **Every Pay calls the service too.** The till asks every check in scope at each Pay; this one answers a sale at once, but the call is made (a paid function call) and carries the sale's whole context, its sale details included. It also takes one of the POS Profile's three checks.
 - **A change in Desk** reaches the service within a minute (it keeps the settings that long).

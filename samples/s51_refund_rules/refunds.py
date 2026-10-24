@@ -15,7 +15,8 @@ names of the payment methods that paid it). The retailer keeps one settings reco
   its receipt would be the way round the rule); with it off, as today.
 
 ``offered_tenders`` is the POS Profile's whole payment table, a method the store switched off for returns included (the
-till grades its rows, never filters them): a refusal fires only when none of those would stay.
+till grades its rows, never filters them, other than the methods no refund may use): a refusal fires only when none of
+those would stay.
 
 Which store's sales a till may refund is the retailer's own setting, not this app's: with *Use inter-store transactions*
 off (Retail Setting, the default) a till opens only its own store's sales for a return.
@@ -130,11 +131,13 @@ def on_check(ctx: dict, settings: dict | None) -> dict:
             keep = list(dict.fromkeys(settings["always"] + credit))   # would be the way round it (the review's MAJOR)
         else:
             return {"verdict": "allow"}
+        if not keep:                            # nothing set for it (a blank store credit method written over the API)
+            return {"verdict": "refuse", "reason": "No method is set for a return without its sale. Get a manager."}
         some = plain(f"Without its sale, refunded only by {_names(keep)}.")
         none = plain(f"A return without its sale is refunded only by {_names(keep)}, not offered at this till.")
     elif settings["same_methods"]:
         keep = list(ro["paid_by"]) + settings["always"] + credit
-        some = "Refunded only by the methods that paid for it, and store credit."
+        some = "Refunded only by the methods your rules keep for this sale."
         none = "None of the methods that paid for this can take its refund here. Get a manager."
     else:
         return {"verdict": "allow"}

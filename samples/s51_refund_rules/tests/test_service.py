@@ -79,7 +79,7 @@ class OneShop(unittest.TestCase):
 
     def test_a_card_sales_refund_keeps_the_card_and_store_credit(self):
         self.assertEqual(self.check(context()), (200, {"verdict": "allow", "exclude_tenders": [CASH, ONLINE],
-                                                       "reason": "Refunded only by the methods that paid for it, and store credit."}))
+                                                       "reason": "Refunded only by the methods your rules keep for this sale."}))
 
     def test_the_settings_are_read_with_the_apps_key_and_kept_a_minute(self):
         self.check(context())

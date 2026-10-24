@@ -44,7 +44,7 @@
      "fieldtype": "Check",
      "label": "Refund by the sale's own methods",
      "default": "0",
-     "description": "A return against a sale, an order or a layaway plan goes back only by the methods that paid it, the store credit method and the Always allowed ones."
+     "description": "A return against a sale, an order or a layaway plan goes back only by the methods that paid it, the store credit method and the Always allowed ones; a return without its sale, when no methods are named below, only by the Always allowed ones and store credit."
     },
     {
      "fieldname": "store_credit",
@@ -52,21 +52,21 @@
      "label": "Store credit method",
      "options": "Mode of Payment",
      "mandatory_depends_on": "same_methods",
-     "description": "Never taken off, so an exchange, whose returned items book store credit, goes on. Required with Refund by the sale's own methods; set it too when you name methods for a return without its sale."
+     "description": "Never taken off, so an exchange, whose returned items book store credit, goes on. Keep one Mode of Payment of type Store Credit enabled and choose it here. Required with Refund by the sale's own methods."
     },
     {
      "fieldname": "always_allowed",
      "fieldtype": "Table",
      "label": "Always allowed",
      "options": "PP RFR Method",
-     "description": "Methods any refund against a sale may use, for example Cash. None: only the sale's own methods and store credit."
+     "description": "Methods any refund may use, for example Cash. None: only the sale's own methods and store credit."
     },
     {
      "fieldname": "without_sale",
      "fieldtype": "Table",
      "label": "Without its sale, only these methods",
      "options": "PP RFR Method",
-     "description": "A return without its sale goes back only by these and the store credit method. None: as today."
+     "description": "A return without its sale goes back only by these and the store credit method. None: with Refund by the sale's own methods ticked, the Always allowed methods and store credit; else as today."
     }
    ],
    "permissions": [

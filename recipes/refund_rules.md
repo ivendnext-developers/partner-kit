@@ -8,7 +8,7 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 
 ## What the cashier sees
 
-- A return against a card sale: the card method and the store credit method offered, the others dimmed with *"Not for this sale: Refunded only by the methods that paid for it, and store credit."*
+- A return against a card sale: the card method and the store credit method offered, the others dimmed with *"Not for this sale: Refunded only by the methods your rules keep for this sale."*
 - None of the sale's methods offered at this till: *"This refund can't go ahead"* and the service's sentence.
 - Every sale: the payment screen as always.
 
@@ -30,7 +30,7 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 
 6. **Keep the refund to the sale's methods.** `return_of.paid_by` names the Modes of Payment that paid the sale (for an order or a layaway plan, every one that paid into it), in the same names as `offered_tenders`. Keep those, the *Always allowed* ones and the store credit method; for `return_of.channel` `none` (a return without its sale), keep the methods named and the store credit method, or, with none named and the methods rule on, the *Always allowed* ones and the store credit method, so a no-receipt return is no way round the rule. `offered_tenders` is the POS Profile's whole payment table, a method switched off for returns included: refuse only when none of those would stay. Answer `{"verdict":"allow","exclude_tenders":[…],"reason":"…"}` with every other offered method, each once. None would stay: `{"verdict":"refuse","reason":"…"}`. More than 20 to take off: refuse (the contract allows 20).
 
-7. **Never take off the store credit method.** An exchange's returned items book store credit whatever the replacement costs: leaving it out refuses every exchange (the check page, section 3). The till books it with the first enabled Mode of Payment of type Store Credit: that is the one to keep.
+7. **Never take off the store credit method.** An exchange's returned items book store credit whatever the replacement costs: leaving it out refuses every exchange (the check page, section 3). The till books it with a Mode of Payment of type Store Credit (the most recently changed, when several are enabled): have the retailer keep one enabled and name it.
 
 ## Bounds
 
