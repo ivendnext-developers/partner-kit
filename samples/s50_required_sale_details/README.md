@@ -17,6 +17,14 @@ The retailer decides which sale details a group of its customers must give befor
 | The service down, or the retailer's records unreadable | The check's down answer: the sale goes on and is flagged on *Sales to review* |
 | A sale rung offline | The till does not call the service: flagged when it reaches iVendNext, never refused |
 
+| What the retailer and the cashier see (on a demo site, 2026-10-24) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/required-sale-details-install.png) |
+| A rule for a customer group: one sale detail needed, at one POS Profile, with the words the cashier reads | ![](screenshots/required-sale-details-rule.png) |
+| The check switched on for one POS Profile, with what it is sent | ![](screenshots/required-sale-details-switched-on.png) |
+| At Pay, the detail empty: the sale refused in the rule's words | ![](screenshots/required-sale-details-refused.png) |
+| The cashier fills the detail under the sale's details, then presses Pay again | ![](screenshots/required-sale-details-sale-details.png) |
+
 **Which rule decides.** One rule per customer group: the sale details needed, and the POS Profiles it holds on (none: every till). A customer takes their own group's rule; a group with no rule takes the rule of the nearest group above it in the retailer's customer group tree. A group's own rule replaces the rule above it entirely, so a rule with no details lets a group off:
 
 | Customer group | Sale details needed | Only at these POS Profiles |

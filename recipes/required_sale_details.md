@@ -12,6 +12,10 @@ A Sale Attribute's *Required* switch holds for every customer on every till. Ret
 - The detail filled, and Pay again: the payment screen as always.
 - Any other sale: the payment screen as always. Every refund: the refund choices as always.
 
+![On a demo site: the sale refused at Pay in the rule's words](../samples/s50_required_sale_details/screenshots/required-sale-details-refused.png)
+
+![The cashier fills the detail under the sale's details, then presses Pay again](../samples/s50_required_sale_details/screenshots/required-sale-details-sale-details.png)
+
 ## Rules
 
 1. **Declare the rule record and the check in your manifest** (`samples/s50_required_sale_details/manifest.json`):
