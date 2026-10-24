@@ -1,0 +1,127 @@
+{
+ "manifest_version": 2,
+ "app": "pp_rfr",
+ "prefix": "PP RFR",
+ "title": "Refund rules",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "How the till may pay a refund back. A check before payment that judges refunds only: before the refund choices open, the retailer's server sends the refund, the methods the refund chooser offers and the sale it refunds with the methods that paid it. With Refund by the sale's own methods, the service takes off every offered method that did not pay the sale, other than the store credit method and the Always allowed ones, and refuses the refund when none would stay; and with Without its sale, only these methods, a return without its sale goes back only by those and the store credit method. One record of PP RFR Settings named Default; no record: every rule off. A sale is never judged. The service reads the settings with the app's integration user and writes nothing. The install makes the role PP RFR Integration; the retailer gives it to the app's integration user. The check installs switched off; the retailer reads what it is sent, ticks the consent, chooses its POS Profiles and switches it on. When the service is down the refund goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/rfr/check"
+ ],
+ "doctypes": [
+  {
+   "name": "PP RFR Method",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "mode_of_payment",
+     "fieldtype": "Link",
+     "label": "Payment method",
+     "options": "Mode of Payment",
+     "reqd": 1,
+     "in_list_view": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RFR Settings",
+   "autoname": "field:title",
+   "track_changes": 1,
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Title",
+     "reqd": 1,
+     "unique": 1,
+     "default": "Default",
+     "in_list_view": 1,
+     "description": "The service reads the record named Default."
+    },
+    {
+     "fieldname": "same_methods",
+     "fieldtype": "Check",
+     "label": "Refund by the sale's own methods",
+     "default": "0",
+     "description": "A return against a sale, an order or a layaway plan goes back only by the methods that paid it, the store credit method and the Always allowed ones."
+    },
+    {
+     "fieldname": "store_credit",
+     "fieldtype": "Link",
+     "label": "Store credit method",
+     "options": "Mode of Payment",
+     "mandatory_depends_on": "same_methods",
+     "description": "Never taken off, so an exchange, whose returned items book store credit, goes on. Required with Refund by the sale's own methods; set it too when you name methods for a return without its sale."
+    },
+    {
+     "fieldname": "always_allowed",
+     "fieldtype": "Table",
+     "label": "Always allowed",
+     "options": "PP RFR Method",
+     "description": "Methods any refund against a sale may use, for example Cash. None: only the sale's own methods and store credit."
+    },
+    {
+     "fieldname": "without_sale",
+     "fieldtype": "Table",
+     "label": "Without its sale, only these methods",
+     "options": "PP RFR Method",
+     "description": "A return without its sale goes back only by these and the store credit method. None: as today."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RFR Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP RFR Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/refund_rules.html#settings"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP RFR Settings feed",
+   "description": "the refund rules service reads the retailer's refund settings as this user; leave the feed off",
+   "events": [
+    "PP RFR Settings"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "refunds",
+   "point": "check",
+   "label": "Refund rules",
+   "endpoint_url": "https://host.docker.internal:8125/rfr/check",
+   "timeout_seconds": 3,
+   "down_answer": "allow_and_flag"
+  }
+ ]
+}
