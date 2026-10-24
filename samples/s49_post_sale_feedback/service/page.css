@@ -14,5 +14,5 @@ textarea { width: 100%; padding: 10px; font: inherit; border: 1.5px solid var(--
 .send { width: 100%; padding: 14px; font: inherit; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 10px; }
 .send:disabled { opacity: 0.45; }
 .note { min-height: 1.4em; margin: 16px 0 0; }
-.done .answers, .done .label, .done textarea, .done .stop, .done .send { display: none; }
+.done .answers, .done .label, .done textarea, .stopped .stop, .stopped .send { display: none; }
 [dir="rtl"] body { text-align: right; }

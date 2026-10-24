@@ -241,7 +241,8 @@ class Service:
         got = self.together(
             [lambda: door.rows("POS Profile", ["name", "customer", "warehouse"], [], timeout=self.left(t0)),
              lambda: door.rows(fb.REQUEST, ["name", "customer"], [["sale_date", ">=", first.isoformat()]], timeout=self.left(t0)),
-             lambda: door.rows(fb.REQUEST, ["customer"], [["asked_to_stop", "=", 1]], timeout=self.left(t0))]
+             lambda: door.rows(fb.REQUEST, ["customer", "mobile", "email"], [["asked_to_stop", "=", 1]],
+                               timeout=self.left(t0))]
             + [lambda r=r: sales(r) for r in rules])
         tills, done, stops, sales_of = got[0], got[1], got[2], {r.name: s for r, s in zip(rules, got[3:])}
         walk_ins = {t.get("customer") for t in tills if isinstance(t, dict) and t.get("customer")}
@@ -249,7 +250,7 @@ class Service:
         asked = set()                                   # the sales, and the customers, already asked in these days
         for q in done:
             asked.update(v for v in (q.get("name"), q.get("customer")) if v)
-        stopped = {q.get("customer") for q in stops}
+        stopped = {v for q in stops for v in (q.get("customer"), q.get("mobile"), (q.get("email") or "").lower()) if v}
         bare = sorted({s.get("customer") for ss in sales_of.values() for s in ss if isinstance(s, dict) and s.get("customer")
                        and not (fb.phone_of(s.get("contact_mobile")) or fb.email_of(s.get("contact_email")))})
         customers = {}

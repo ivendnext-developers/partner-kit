@@ -109,6 +109,8 @@ def rule_of(r: dict) -> Rule | str:
         return f"{name}: the days back must be 1 to 7."
     if days is None:
         return f"{name}: the days a link stays open must be 1 to 30."
+    if look > days:                      # a sale older than its link's life would get a link already closed
+        return f"{name}: the days back may not be more than the days a link stays open."
     answers = [_text(r.get(k), 40) or d for k, d in zip(("answer_good", "answer_ok", "answer_bad"), ANSWERS)]
     profiles = sorted({p for p in r.get("profiles") or [] if isinstance(p, str) and p})
     return Rule(name, shown, _text(r.get("question"), 140) or DEFAULT_QUESTION, answers, look, days, profiles,
@@ -157,6 +159,7 @@ def choose(sales: list, rule: Rule, walk_ins: set, asked: set, stopped: set, cus
            today: datetime.date) -> tuple[list, dict]:
     """(the sales to ask, each with its contact, and the counts of those not asked).
 
+    ``stopped`` holds the customers who asked to stop, and the mobile numbers and e-mails (lower case) they asked from.
     ``sales`` come oldest first by when the retailer's iVendNext received them (``creation``). ``asked`` holds the
     sales and the customers already asked in the press's days: a customer is asked once in a rule's days, and once a
     press (``taken`` is shared by every rule of the press); the latest sale of theirs in the list wins."""
@@ -179,7 +182,9 @@ def choose(sales: list, rule: Rule, walk_ins: set, asked: set, stopped: set, cus
             c = customers.get(customer) or {}
             mobile = phone_of(s.get("contact_mobile")) or c.get("mobile", "")
             email = email_of(s.get("contact_email")) or c.get("email", "")
-            if not (mobile or email):
+            if (mobile and mobile in stopped) or (email and email.lower() in stopped):
+                counts["stopped"] += 1           # the same number or e-mail on another customer record
+            elif not (mobile or email):
                 counts["no_contact"] += 1
             else:
                 latest[customer] = (s, mobile, email)

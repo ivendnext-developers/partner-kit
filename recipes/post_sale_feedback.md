@@ -40,7 +40,7 @@ Retailers ask to hear from the customer after a sale: **a message after the visi
 
 The request reaches the customer through iVendNext, never through your service:
 
-- iVendNext makes one **Notification**: *Document Type* `<PREFIX> Request`, *Send Alert On* **New**, and a message holding `{{ doc.link }}`. *Channel* **SMS** with a recipient *Receiver By Document Field* **mobile** (and SMS Settings for its own gateway), **Email** to the field **email**, or WhatsApp where the WhatsApp app is installed. A manifest's own notification goes only to the retailer's users, so this one is the retailer's: put it in your setup steps.
+- iVendNext makes one **Notification**: *Document Type* `<PREFIX> Request`, *Send Alert On* **New**, and a message holding `{{ doc.link }}`. *Channel* **SMS** with a recipient *Receiver By Document Field* **mobile** (and SMS Settings for its own gateway), **Email** to the field **email**, or WhatsApp where the WhatsApp app is installed (the programme's bench measured the SMS; e-mail and WhatsApp are not measured). A manifest's own notification goes only to the retailer's users, so this one is the retailer's: put it in your setup steps.
 - iVendNext sends a Notification inside the record's save and never fails the save for it: a gateway that refuses is written to the retailer's *Error Log*. The request is made; the customer gets no message. Your setup's last step is a test press; tell iVendNext to watch its Error Log.
 
 ## Bounds
@@ -48,6 +48,6 @@ The request reaches the customer through iVendNext, never through your service:
 - A press, not a schedule: the manager presses once a day (for example at closing), and the messages go then. Until functions on CitiXsys hosting have a schedule, a message at the moment of the sale is not this recipe.
 - One press makes what fits its time; more sales wait for the next press, which says so.
 - A customer is asked at most once in a rule's days, whichever rule asked.
-- When a System Manager ticks the button's consent again, the secret changes: links signed before that stop working.
+- Links are signed with the button's signing key. When it changes (a System Manager ticking the consent again can change it), links signed with the key before keep working until it changes once more; older ones stop. A retailer's manager role reads every request's link.
 - Reading every request and answer is the manager role's and the retailer's System Manager's; each request holds a customer's mobile number and e-mail.
-- Offline sales are asked once they reach iVendNext: the press reads by when a sale arrived, not when it was rung.
+- Offline sales are asked once they reach iVendNext, while their date is within the rule's days back: the press reads by when a sale arrived, not when it was rung.
