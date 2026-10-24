@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/refund_rules.md
 sample: samples/s51_refund_rules
 request: -
-verified: run on our test bench 2026-10-24 · a refund's methods kept to those that paid its sale, a return without its sale to the methods named
+verified: run on our test bench 2026-10-24 · the check's answer for a sale's return and a no-receipt return; the refund door refusing an excluded method (Store Credit) and paying a kept one
 popular: yes
 ---
 ## What you build
@@ -21,7 +21,8 @@ A settings record and a service that answers the check on every refund the till 
 - The store credit method is never taken off, or every exchange is refused.
 - At a till with a cash drawer, an exchange whose replacement costs less pays its difference in cash: refused when the rule leaves cash out.
 - A sale's Pay is never judged.
-- Offline the check is not called.
+- Offline the check is not called. A return sent to a register, or a refund made in Desk, is not checked.
+- The methods kept must be Allowed in Returns on the POS Profile.
 
 ## Tell the customer
 A refund goes back the way the customer paid: the till offers only the sale's own methods and your store credit, and a return without its receipt is no way round it.

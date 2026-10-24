@@ -25,7 +25,7 @@ The retailer decides how a refund goes back. A return against a sale goes back o
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP RFR Settings* with its table *PP RFR Method*, the role `PP RFR Integration`, the check and the feed registration, the check switched off. Nothing changes at the till yet.
 2. **Make the app's integration user** (the [integration user recipe](../../recipes/integration_user.md)): tick *Is Desk User*, give it the role **PP RFR Integration** alone and generate its API key. Choose the user on the feed registration **PP RFR Settings feed**.
-3. **Fill the settings** in *PP RFR Settings*: one record, its title **Default**. Tick *Refund by the sale's own methods*, choose your *Store credit method*: the Mode of Payment of type Store Credit the till pays exchanges with (keep one such method enabled, and choose it here), never taken off, so exchanges go on; add any *Always allowed* method, and name the methods for a return *Without its sale*. Whoever keeps the settings needs *Select* on **Mode of Payment**.
+3. **Fill the settings** in *PP RFR Settings*: one record, its title **Default**. Tick *Refund by the sale's own methods*, choose your *Store credit method*: the Mode of Payment of type Store Credit the till pays exchanges with (keep one such method enabled, and choose it here), never taken off, so exchanges go on; add any *Always allowed* method, and name the methods for a return *Without its sale*. Whoever keeps the settings needs *Select* on **Mode of Payment**. On each POS Profile the rules hold at, tick *Allowed in Returns* for your store credit method and each card method a refund may go back to: the rules only take methods away, and a till where none of the kept methods is allowed in returns leaves the cashier nothing to choose (and refuses every exchange).
 4. **Switch the check on:** open *Refund rules* in *Retail Extension Subscription*, read what is sent, tick the consent, choose the POS Profiles of the stores the rules hold at, and switch it on. Last, press **Connect again** on the app's record, which sends the integration user's key to the service.
 
 **Where it shows.** The settings are a Desk record the retailer keeps (its System Manager, or a role it gives the rights to). At the till the cashier meets them when a refund's choices open.
@@ -85,7 +85,7 @@ What a partner usually changes:
 
 | Option | Cost | Verdict |
 |---|---|---|
-| Do nothing: untick *Allowed in Returns* on every method a refund may not use | 0 | chain-wide: a card sale and a cash sale are refunded by the same list |
+| Do nothing: untick *Allowed in Returns* (on each POS Profile's payment rows) for every method a refund may not use | 0 | per profile, never per sale: a card sale and a cash sale are refunded by the same list |
 | A setting in [Payment method rules](../s46_payment_method_rules/) | ~60 lines on a listed app; no extra call at each Pay, no extra check slot | its rules key on the customer group at the sale and its retailers set it up that way today; these key on the refunded sale. A retailer who wants both apps pays one more call per Pay and one of three slots: chosen for a sample a partner copies alone |
 | **A check answered by a function, judging only refunds** | ~250 lines of core and service on S50's copy | **picked**: holds at every door that pays a refund, on the stores the retailer switches it on for |
 
@@ -103,6 +103,7 @@ What a partner usually changes:
 - **`paid_by` is the sale's tender rows.** A zero-amount row there would count as a method that paid (the till filters zero rows for an order or a plan, not for a sale; asked of the POS app).
 - **A drawered till's cheaper exchange** pays its difference in cash and is refused at its credit note when the rules leave cash out (above).
 - **Offline,** the till does not call the service; a refund needs iVendNext anyway.
-- **Where the check never runs:** a park to a till, a layaway deposit, an account collection, a gift card's balance paid out in cash (the check page, *Not in this version*) and the Desk's own POS screen.
+- **Where the check never runs:** a park to a till, a return sent to a register (it is refunded in Desk), a refund made in Desk, a layaway deposit, an account collection, a gift card's balance paid out in cash (the check page, *Not in this version*) and the Desk's own POS screen.
+- **The app's own English sentences.** The cashier reads them as written; the retailer's own words, or another language, are a partner's version.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. On CitiXsys hosting the first refund after a quiet spell starts the function; past 3 s the down answer applies, flagged.
 - It logs one line per call: the route, the status and the milliseconds, never the body.

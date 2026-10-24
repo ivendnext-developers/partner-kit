@@ -30,7 +30,7 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 
 6. **Keep the refund to the sale's methods.** `return_of.paid_by` names the Modes of Payment that paid the sale (for an order or a layaway plan, every one that paid into it), in the same names as `offered_tenders`. Keep those, the *Always allowed* ones and the store credit method; for `return_of.channel` `none` (a return without its sale), keep the methods named and the store credit method, or, with none named and the methods rule on, the *Always allowed* ones and the store credit method, so a no-receipt return is no way round the rule. `offered_tenders` is the POS Profile's whole payment table, a method switched off for returns included: refuse only when none of those would stay. Answer `{"verdict":"allow","exclude_tenders":[…],"reason":"…"}` with every other offered method, each once. None would stay: `{"verdict":"refuse","reason":"…"}`. More than 20 to take off: refuse (the contract allows 20).
 
-7. **Never take off the store credit method.** An exchange's returned items book store credit whatever the replacement costs: leaving it out refuses every exchange (the check page, section 3). The till books it with a Mode of Payment of type Store Credit (the most recently changed, when several are enabled): have the retailer keep one enabled and name it.
+7. **Never take off the store credit method.** An exchange's returned items book store credit whatever the replacement costs: leaving it out refuses every exchange (the check page, section 3). The till books it with a Mode of Payment of type Store Credit (the most recently changed, when several are enabled): have the retailer keep one enabled and name it. Your setup also tells the retailer to tick *Allowed in Returns* for it, and for each card method a refund may go back to, on each POS Profile the rules hold at: the rules only take methods away.
 
 ## Bounds
 
@@ -42,6 +42,7 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 - `return_of.paid_by` lists the sale's tender rows; a zero-amount row would count as a method that paid.
 - A layaway plan's refund is payable at any store of the company, whatever *Use inter-store transactions* says.
 - The till asks every check at each Pay too: answer a sale at once, but it is still a call, and it carries the sale's details.
+- Not checked: a return sent to a register (refunded in Desk) and a refund made in Desk.
 - At most three checks answer one POS Profile, ten seconds together.
 
 ## See also
