@@ -112,6 +112,10 @@ CANARIES = [
      M + "test_each_retailer_is_checked_with_its_own_secret_and_written_with_its_own_key_under_the_librarys_prefix"),
     ("a redirect is not followed", S, "urllib.request.build_opener(_NoRedirect)", "urllib.request.build_opener()",
      "test_service.ShopApi.test_a_record_name_is_one_path_segment_and_a_redirect_is_not_followed"),
+    ("an answer keeps its own direction", "service/page.js", '      b.dir = "auto";', "      b.title = '';",
+     T + "test_s25b_the_retailers_words_keep_their_own_direction_on_an_arabic_page"),
+    ("the question keeps its own direction", "service/page.html", '<h1 id="question" dir="auto">', '<h1 id="question">',
+     T + "test_s25b_the_retailers_words_keep_their_own_direction_on_an_arabic_page"),
     ("a record name is one path segment", S, 'urllib.parse.quote(p, safe="")', "urllib.parse.quote(p)",
      "test_service.ShopApi.test_a_record_name_is_one_path_segment_and_a_redirect_is_not_followed"),
 ]
@@ -134,7 +138,8 @@ def run(name, path, anchor, mutant, test) -> tuple[str, str]:
         if src.count(anchor) != 1:
             return "BROKEN", f"anchor found {src.count(anchor)} times"
         open(f, "w").write(src.replace(anchor, mutant))
-        py_compile.compile(f, doraise=True)
+        if f.endswith(".py"):
+            py_compile.compile(f, doraise=True)
         p = subprocess.run([sys.executable, "-m", "unittest", test], cwd=os.path.join(dest, "tests"),
                            capture_output=True, text=True, timeout=120)
         last = (p.stderr.strip().splitlines() or [""])[-1]

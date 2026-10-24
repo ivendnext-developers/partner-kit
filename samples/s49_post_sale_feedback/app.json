@@ -1,6 +1,6 @@
 {
  "app": "post-sale-feedback",
- "version": "1.0.1",
+ "version": "1.0.2",
  "port": 8080,
  "health": "/health",
  "size": "small",

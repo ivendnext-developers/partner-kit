@@ -50,6 +50,7 @@
       var b = document.createElement("button");
       b.type = "button";
       b.textContent = text;
+      b.dir = "auto";                                  // the retailer's words keep their own direction on an Arabic page
       b.setAttribute("aria-pressed", chosen === i ? "true" : "false");
       b.addEventListener("click", function () { chosen = i; show(v); });
       box.appendChild(b);
