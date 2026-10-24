@@ -79,7 +79,7 @@ class OneShop(unittest.TestCase):
 
     def test_a_card_sales_refund_keeps_the_card_and_store_credit(self):
         self.assertEqual(self.check(context()), (200, {"verdict": "allow", "exclude_tenders": [CASH, ONLINE],
-                                                       "reason": "Refunded only by the methods that paid the sale."}))
+                                                       "reason": "Refunded only by the methods that paid for it, and store credit."}))
 
     def test_the_settings_are_read_with_the_apps_key_and_kept_a_minute(self):
         self.check(context())
@@ -131,6 +131,10 @@ class OneShop(unittest.TestCase):
     def test_settings_that_are_not_a_record_are_a_503(self):
         self.api.docs = {"https://shop.example": []}
         self.assertEqual(self.check(context())[0], 503)
+
+    def test_the_library_copy_never_starts_without_its_prefix(self):
+        with self.assertRaises(SystemExit):
+            app.Service({"IVN_LIBRARY_APP": "ivendnext_rfr"}, store=object(), api=self.api)
 
     def test_the_prefix_names_the_settings_record_type(self):
         svc = app.Service(dict(ONE, RFR_PREFIX="IVENDNEXT RFR"), api=self.api, clock=self.clock)
@@ -211,6 +215,8 @@ class ShopApi(unittest.TestCase):
                               "/api/resource/Locked%20Settings/Default": (403, {"exc_type": "PermissionError"}),
                               "/api/resource/Broken%20Settings/Default": (500, {"exc_type": "x"}),
                               "/api/resource/Cut%20Settings/Default": (200, None),
+                              "/api/resource/Empty%20Settings/Default": (200, {"data": None}),
+                              "/api/resource/Odd%20Settings/Default": (200, {"message": "ok"}),
                               }[path]
                 if body is None:                 # an answer cut short: more promised than sent
                     h.send_response(code)
@@ -246,8 +252,8 @@ class ShopApi(unittest.TestCase):
     def test_no_settings_record_is_none(self):
         self.assertIsNone(self.api.settings(self.url, "k:s", "None"))
 
-    def test_a_refusal_an_error_or_a_cut_answer_is_unreadable(self):
-        for prefix in ("Locked", "Broken", "Cut"):
+    def test_a_refusal_an_error_a_cut_answer_or_a_200_without_a_record_is_unreadable(self):
+        for prefix in ("Locked", "Broken", "Cut", "Empty", "Odd"):
             with self.assertRaises(app.ShopUnreadable):
                 self.api.settings(self.url, "k:s", prefix)
 
@@ -275,7 +281,7 @@ class AsAFunction(unittest.TestCase):
         self.store = shops.FileStore(os.path.join(self.tmp, "shops.json"))
         self.store.put("shop-a.ivendnext.com", {"site": "shop-a.ivendnext.com", "url": "https://shop-a.ivendnext.com",
                                                 "secrets": {"ivendnext_rfr:sub:refunds": "check-a", "user:rfr@x": "k:s"}})
-        svc = app.Service({"IVN_LIBRARY_APP": "ivendnext_rfr"}, store=self.store,
+        svc = app.Service({"IVN_LIBRARY_APP": "ivendnext_rfr", "RFR_PREFIX": "IVENDNEXT RFR"}, store=self.store,
                           api=Api(docs={"https://shop-a.ivendnext.com": dict(DOC, store_credit="")}))
         self.entry = app.function.entry(lambda: svc, app.handle)
 

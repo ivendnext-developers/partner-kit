@@ -3,7 +3,7 @@ id: refund-by-the-sales-own-methods
 title: Refunds back by the methods that paid the sale
 area: till
 topic: cash-voids-returns
-asks: A card sale refunded to the card, never in cash; a return without its receipt only to store credit
+asks: A sale paid by card refunded to the card, never in cash; a return without its receipt only to store credit
 status: ready-with-limits
 door: check-before-payment
 blocked-by: -
@@ -19,8 +19,9 @@ A settings record and a service that answers the check on every refund the till 
 ## Limits
 - Methods, never amounts: the cashier splits the refund between the methods kept.
 - The store credit method is never taken off, or every exchange is refused.
+- At a till with a cash drawer, an exchange whose replacement costs less pays its difference in cash: refused when the rule leaves cash out.
 - A sale's Pay is never judged.
 - Offline the check is not called.
 
 ## Tell the customer
-A refund goes back the way the customer paid: the till offers only the sale's own methods and your store credit.
+A refund goes back the way the customer paid: the till offers only the sale's own methods and your store credit, and a return without its receipt is no way round it.

@@ -1,14 +1,14 @@
 # Refund rules: how the till may pay a refund back — the recipe
 
-A payment method's *Allowed in Returns* holds for every refund alike. Retailers ask for more: **a card sale refunded to the card, never in cash**, and **a return without its receipt only to store credit**. This recipe adds that from outside, through the check before payment, which runs before the refund choices open on every refund the till pays: the retailer fills one settings record in Desk, and your service takes the other methods off the refund screen, with the reason, or refuses the refund. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
+A payment method's *Allowed in Returns* holds for every refund alike. Retailers ask for more: **a sale paid by card refunded to the card, never in cash**, and **a return without its receipt only to store credit**. This recipe adds that from outside, through the check before payment, which runs before the refund choices open on every refund the till pays: the retailer fills one settings record in Desk, and your service takes the other methods off the refund screen, with the reason, or refuses the refund. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
 **Reference implementation:** `samples/s51_refund_rules/` — *Refund rules*.
 
-**When to use it.** A refund must follow the sale it refunds. A method no refund may ever use is configuration: untick its *Allowed in Returns*. Each store refunding only its own sales is configuration too: leave *Use inter-store transactions* off in Retail Setting (the default).
+**When to use it.** A refund must follow the sale it refunds. A method no refund may ever use is configuration: untick its *Allowed in Returns*. Each store refunding only its own sales is configuration too, for a return against a sale: leave *Use inter-store transactions* off in Retail Setting (the default).
 
 ## What the cashier sees
 
-- A return against a card sale: the card method and the store credit method offered, the others dimmed with *"Not for this sale: Refunded only by the methods that paid the sale."*
+- A return against a card sale: the card method and the store credit method offered, the others dimmed with *"Not for this sale: Refunded only by the methods that paid for it, and store credit."*
 - None of the sale's methods offered at this till: *"This refund can't go ahead"* and the service's sentence.
 - Every sale: the payment screen as always.
 
@@ -24,13 +24,13 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 
 3. **Check every call with the check's secret** (`<app>:sub:<key>`; the sample's key is `refunds`), and refuse a timestamp more than five minutes from yours.
 
-4. **Answer a sale at once.** Judge only `stage: "return"` with `totals.grand_minor` below 0: a sale, and an exchange that costs the same or more, are allowed without a read.
+4. **Answer a sale at once.** Judge only `stage: "return"` with `totals.grand_minor` below 0: a sale is allowed without a read. An exchange's returned items are always a return with a negative total (their credit note is checked alone, whatever the replacement costs).
 
-5. **Read the settings with your integration user's key, and keep them a minute:** `GET /api/resource/<PREFIX> Settings/Default` returns the record with both tables. A 404 is no record: every rule off. Any other failure answers 503, the down answer.
+5. **Read the settings with your integration user's key, and keep them a minute:** `GET /api/resource/<PREFIX> Settings/Default` returns the record with both tables. A 404 is no record: every rule off (log it: a wrong prefix looks the same). A 200 that holds no record, and any other failure, answers 503, the down answer.
 
-6. **Keep the refund to the sale's methods.** `return_of.paid_by` names the Modes of Payment that paid the sale (for an order or a layaway plan, every one that paid into it), in the same names as `offered_tenders`. Keep those, the *Always allowed* ones and the store credit method; for `return_of.channel` `none` (a return without its sale), keep the methods named and the store credit method. Answer `{"verdict":"allow","exclude_tenders":[…],"reason":"…"}` with every other offered method, each once. None would stay: `{"verdict":"refuse","reason":"…"}`. More than 20 to take off: refuse (the contract allows 20).
+6. **Keep the refund to the sale's methods.** `return_of.paid_by` names the Modes of Payment that paid the sale (for an order or a layaway plan, every one that paid into it), in the same names as `offered_tenders`. Keep those, the *Always allowed* ones and the store credit method; for `return_of.channel` `none` (a return without its sale), keep the methods named and the store credit method, or, with none named and the methods rule on, the *Always allowed* ones and the store credit method, so a no-receipt return is no way round the rule. `offered_tenders` is the POS Profile's whole payment table, a method switched off for returns included: refuse only when none of those would stay. Answer `{"verdict":"allow","exclude_tenders":[…],"reason":"…"}` with every other offered method, each once. None would stay: `{"verdict":"refuse","reason":"…"}`. More than 20 to take off: refuse (the contract allows 20).
 
-7. **Never take off the store credit method.** An exchange's returned items book store credit whatever the replacement costs: leaving it out refuses every exchange (the check page, section 3).
+7. **Never take off the store credit method.** An exchange's returned items book store credit whatever the replacement costs: leaving it out refuses every exchange (the check page, section 3). The till books it with the first enabled Mode of Payment of type Store Credit: that is the one to keep.
 
 ## Bounds
 
@@ -38,6 +38,10 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 - A manager's approval for a refund outside the rules is your version: an `approve` carries no methods taken off.
 - Whole sales only (every line returned) is your version: read the sale's lines with the integration user.
 - Offline, the till does not call your service. The check does not run on a park, a layaway deposit, an account collection, a gift card's balance paid out in cash or the Desk's own POS screen.
+- At a till with a cash drawer, an exchange whose replacement costs less pays its difference in cash: refused at its credit note when your rule leaves cash out. Say so in your guide: return the items, then ring the new ones.
+- `return_of.paid_by` lists the sale's tender rows; a zero-amount row would count as a method that paid.
+- A layaway plan's refund is payable at any store of the company, whatever *Use inter-store transactions* says.
+- The till asks every check at each Pay too: answer a sale at once, but it is still a call, and it carries the sale's details.
 - At most three checks answer one POS Profile, ten seconds together.
 
 ## See also

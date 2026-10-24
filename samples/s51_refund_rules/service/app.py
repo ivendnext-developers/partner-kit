@@ -103,8 +103,12 @@ class ShopApi:
         try:
             out = self._get(url, key, "/api/resource/" + urllib.parse.quote(prefix + " Settings") + "/Default", {})
         except Missing:
+            print(json.dumps({"error": "Missing"}), file=sys.stderr, flush=True)   # every rule off: said, so a wrong prefix shows
             return None
-        return out.get("data") if isinstance(out, dict) else []
+        data = out.get("data") if isinstance(out, dict) else None
+        if not isinstance(data, dict):  # a 200 that holds no record is not "no record": never every rule off, silently
+            raise ShopUnreadable("the retailer did not answer with its settings record")
+        return data
 
 
 class Service:
@@ -112,6 +116,8 @@ class Service:
         self.prefix = (conf.get("RFR_PREFIX") or "PP RFR").strip()
         self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
         self.api, self.clock, self.kept, self.lock = api or ShopApi(), clock, {}, threading.Lock()
+        if self.app and not (conf.get("RFR_PREFIX") or "").strip():   # never PP RFR on a library retailer: every read a 404
+            raise SystemExit("set RFR_PREFIX (IVENDNEXT RFR for the library's app)")
         if self.app:                                    # many retailers: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one retailer, from the settings

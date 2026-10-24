@@ -9,15 +9,19 @@ names of the payment methods that paid it). The retailer keeps one settings reco
 - **Refund by the sale's own methods** (``same_methods``): on a return against a sale, an order or a plan, the methods that
   paid it, the retailer's store credit method and its *Always allowed* methods stay; every other offered method is taken off
   (``exclude_tenders``), and when none would stay the refund is refused;
-- **Without its sale, only these methods** (``without_sale``; none: as today): on a return without its sale, the named
-  methods and the store credit method stay, every other offered method is taken off, and when none of them is offered the
-  refund is refused.
+- **Without its sale, only these methods** (``without_sale``): on a return without its sale, the named methods and the
+  store credit method stay, every other offered method is taken off, and when none of them is offered the refund is
+  refused. None named: with the methods rule on, the *Always allowed* methods and store credit stay (or a return without
+  its receipt would be the way round the rule); with it off, as today.
+
+``offered_tenders`` is the POS Profile's whole payment table, a method the store switched off for returns included (the
+till grades its rows, never filters them): a refusal fires only when none of those would stay.
 
 Which store's sales a till may refund is the retailer's own setting, not this app's: with *Use inter-store transactions*
 off (Retail Setting, the default) a till opens only its own store's sales for a return.
 
-A sale (``stage: "sale"``) and a return whose money goes nowhere (``totals.grand_minor`` 0 or more: an exchange that costs
-the same or more) are allowed without a rule. The store credit method is never taken off, so an exchange, whose returned
+A sale (``stage: "sale"``) and a return whose total is 0 or more are allowed without a rule. An exchange's returned items
+are always a return with a negative total (their credit note is checked alone), so they are judged. The store credit method is never taken off, so an exchange, whose returned
 items book store credit, goes on.
 
 ⛔ No answer moves money: no price, no line, no amount. The check names methods, never amounts.
@@ -120,15 +124,18 @@ def on_check(ctx: dict, settings: dict | None) -> dict:
     ro, offered = ctx["return_of"], ctx["offered_tenders"]
     credit = [settings["store_credit"]] if settings["store_credit"] else []     # never taken off: an exchange books it
     if ro["channel"] == "none":
-        if not settings["without_sale"]:
+        if settings["without_sale"]:
+            keep = list(dict.fromkeys(settings["without_sale"] + credit))
+        elif settings["same_methods"]:          # no methods named: the methods rule still holds, or a no-receipt return
+            keep = list(dict.fromkeys(settings["always"] + credit))   # would be the way round it (the review's MAJOR)
+        else:
             return {"verdict": "allow"}
-        keep = settings["without_sale"] + credit
         some = plain(f"Without its sale, refunded only by {_names(keep)}.")
         none = plain(f"A return without its sale is refunded only by {_names(keep)}, not offered at this till.")
     elif settings["same_methods"]:
         keep = list(ro["paid_by"]) + settings["always"] + credit
-        some = "Refunded only by the methods that paid the sale."
-        none = "None of the methods that paid this sale can take its refund here. Use Desk, or get a manager."
+        some = "Refunded only by the methods that paid for it, and store credit."
+        none = "None of the methods that paid for this can take its refund here. Get a manager."
     else:
         return {"verdict": "allow"}
     off = [t for t in dict.fromkeys(offered) if t not in keep]
@@ -137,5 +144,5 @@ def on_check(ctx: dict, settings: dict | None) -> dict:
     if len(off) == len(dict.fromkeys(offered)):
         return {"verdict": "refuse", "reason": none}
     if len(off) > EXCLUDE_MAX:
-        return {"verdict": "refuse", "reason": "This till offers more methods than the refund rules can take off. Use Desk."}
+        return {"verdict": "refuse", "reason": "This till offers more methods than the refund rules can take off. Get a manager."}
     return {"verdict": "allow", "exclude_tenders": off, "reason": some}

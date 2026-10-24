@@ -59,7 +59,7 @@ def check(ctx=None, s=None):
 class SameMethods(unittest.TestCase):
     def test_a_card_sale_is_refunded_by_card_or_store_credit_only(self):
         self.assertEqual(check(), {"verdict": "allow", "exclude_tenders": [CASH, ONLINE],
-                                   "reason": "Refunded only by the methods that paid the sale."})
+                                   "reason": "Refunded only by the methods that paid for it, and store credit."})
 
     def test_every_method_that_paid_the_sale_stays(self):
         out = check(context(paid_by=(CASH, CARD)))
@@ -76,8 +76,8 @@ class SameMethods(unittest.TestCase):
 
     def test_none_of_the_sales_methods_offered_refuses_the_refund(self):
         out = check(context(paid_by=(VOUCHER,), offered=[CASH, CARD]))
-        self.assertEqual(out, {"verdict": "refuse", "reason": "None of the methods that paid this sale can take its refund "
-                                                              "here. Use Desk, or get a manager."})
+        self.assertEqual(out, {"verdict": "refuse", "reason": "None of the methods that paid for this can take its refund "
+                                                              "here. Get a manager."})
 
     def test_nothing_to_take_off_is_a_plain_allow(self):
         self.assertEqual(check(context(paid_by=(CASH, CARD, ONLINE))), {"verdict": "allow"})
@@ -91,6 +91,9 @@ class SameMethods(unittest.TestCase):
 
     def test_the_rule_switched_off_lets_every_method_through(self):
         self.assertEqual(check(s=settings(same_methods=0)), {"verdict": "allow"})
+
+    def test_a_method_offered_twice_and_nothing_else_still_refuses(self):
+        self.assertEqual(check(context(paid_by=(VOUCHER,), offered=[CASH, CASH]))["verdict"], "refuse")
 
     def test_a_method_offered_twice_is_named_once(self):
         out = check(context(offered=[CASH, CASH, CARD]))
@@ -109,16 +112,25 @@ class WithoutItsSale(unittest.TestCase):
         self.assertEqual(out, {"verdict": "allow", "exclude_tenders": [CARD, ONLINE],
                                "reason": "Without its sale, refunded only by Cash, Store Credit."})
 
-    def test_none_named_leaves_it_as_today(self):
-        self.assertEqual(check(context(channel="none"), s=settings(without_sale=[])), {"verdict": "allow"})
+    def test_none_named_with_the_methods_rule_off_leaves_it_as_today(self):
+        self.assertEqual(check(context(channel="none"), s=settings(without_sale=[], same_methods=0)), {"verdict": "allow"})
+
+    def test_none_named_with_the_methods_rule_on_keeps_the_always_allowed_and_store_credit(self):
+        out = check(context(channel="none"), s=settings(without_sale=[]))      # never the way round the rule
+        self.assertEqual(out["exclude_tenders"], [CASH, CARD, ONLINE])
+        out = check(context(channel="none"), s=settings(without_sale=[], always_allowed=rows(CASH)))
+        self.assertEqual(out["exclude_tenders"], [CARD, ONLINE])
+        self.assertEqual(check(context(channel="none", offered=[CASH]), s=settings(without_sale=[]))["verdict"], "refuse")
+
+    def test_store_credit_named_twice_is_said_once(self):
+        out = check(context(channel="none"), s=settings(without_sale=rows(CREDIT)))
+        self.assertEqual(out["reason"], "Without its sale, refunded only by Store Credit.")
 
     def test_none_of_the_named_methods_offered_refuses(self):
         out = check(context(channel="none", offered=[CASH, CARD]), s=settings(without_sale=rows(VOUCHER), store_credit=""))
         self.assertEqual(out["verdict"], "refuse")
         self.assertIn(VOUCHER, out["reason"])
 
-    def test_the_same_methods_rule_does_not_touch_a_return_without_its_sale(self):
-        self.assertEqual(check(context(channel="none"), s=settings(without_sale=[])), {"verdict": "allow"})
 
 
 class NotJudged(unittest.TestCase):
