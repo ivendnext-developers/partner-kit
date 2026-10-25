@@ -2,7 +2,7 @@
 
 A payment method's *Allowed in Returns* holds for every refund alike. Retailers ask for more: **a sale paid by card refunded to the card, never in cash**, and **a return without its receipt only to store credit**. This recipe adds that from outside, through the check before payment, which runs before the refund choices open on every refund the till pays: the retailer fills one settings record in Desk, and your service takes the other methods off the refund screen, with the reason, or refuses the refund. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
-**Reference implementation:** `samples/s51_refund_rules/` — *Refund rules*.
+**Reference implementation:** `samples/s51_refund_rules/` — *Refund rules*. A retailer installs it, as it is, from the App library: [Refund rules](https://library.ivendnext.app/apps/ivendnext_rfr).
 
 **When to use it.** A refund must follow the sale it refunds. A method no refund may ever use is configuration: untick its *Allowed in Returns*. Each store refunding only its own sales is configuration too, for a return against a sale: leave *Use inter-store transactions* off in Retail Setting (the default).
 

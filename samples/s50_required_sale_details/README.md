@@ -4,6 +4,8 @@ The retailer decides which sale details a group of its customers must give befor
 
 **When to use it:** a sale detail matters for some customers only. A Sale Attribute's own *Required* switch holds for every customer on every till; this app holds it for the groups and tills the retailer names.
 
+**In the App library:** [Required sale details](https://library.ivendnext.app/apps/ivendnext_rsd), free, for a retailer to install as it is. This sample is the code behind it, to copy and change.
+
 ## What happens
 
 | When | What the cashier sees |
