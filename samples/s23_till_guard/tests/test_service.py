@@ -126,6 +126,14 @@ class OneShop(unittest.TestCase):
         self.shelf_service(down=True)
         self.assertEqual(self.scan(scan("MILK-1")), (200, {"verdict": "allow"}))
 
+    def test_a_shop_answer_of_the_wrong_shape_is_a_plain_allow_never_a_server_error(self):
+        self.shelf_service()
+        for bad in (TypeError("no shop"), ValueError("not a number"), OSError("reset")):
+            def batches(url, key, item, store, timeout, bad=bad):
+                raise bad
+            self.svc.batches = batches
+            self.assertEqual(self.scan(scan("MILK-1")), (200, {"verdict": "allow"}))
+
     def test_with_the_warning_off_the_scan_still_asks(self):
         self.shelf_service()
         self.reader.by_url = {"https://shop.example": SETTINGS}

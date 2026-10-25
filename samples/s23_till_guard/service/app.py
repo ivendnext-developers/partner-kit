@@ -192,7 +192,7 @@ class Service:
             if left() <= 0:                         # the answer would come too late to show: never a late warning
                 return {"verdict": "allow"}
             return guard.on_scan_shelf(ctx, dated)
-        except ShopUnreadable:
+        except Exception:                           # any failure of the read (an answer of the wrong shape included): a plain allow
             return {"verdict": "allow"}
 
     def answer(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
