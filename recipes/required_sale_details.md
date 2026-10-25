@@ -2,7 +2,7 @@
 
 A Sale Attribute's *Required* switch holds for every customer on every till. Retailers ask for less: **an account customer's purchase order number on every sale**, **an insured patient's policy number**, **a contractor's project at the trade counter**, and nothing asked of anyone else. This recipe adds that from outside, through the check before payment: the retailer writes one rule per customer group in Desk, naming the sale details that group must give, and your service refuses Pay, in the retailer's words, while one of them is empty. The cashier fills it under the sale's details and presses Pay again. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
-**Reference implementation:** `samples/s50_required_sale_details/` — *Required sale details*.
+**Reference implementation:** `samples/s50_required_sale_details/` — *Required sale details*. A retailer installs it, as it is, from the App library: [Required sale details](https://library.ivendnext.app/apps/ivendnext_rsd).
 
 **When to use it.** A detail matters for some customers or some tills only. A detail every sale needs is configuration: tick *Required* on its Sale Attribute.
 

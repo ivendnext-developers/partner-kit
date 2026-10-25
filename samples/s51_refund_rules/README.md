@@ -4,6 +4,8 @@ The retailer decides how a refund goes back. A return against a sale goes back o
 
 **When to use it:** a sale paid by card alone must not be refunded in cash, or a no-receipt return must go to store credit. A payment method's own *Allowed in Returns* holds for every refund alike; this app looks at the sale being refunded. Each store refunding only its own sales needs no app: leave *Use inter-store transactions* off in Retail Setting (the default), and a till opens only its own store's sales for a return against a sale (a layaway plan's refund is payable at any store of the company).
 
+**In the App library:** [Refund rules](https://library.ivendnext.app/apps/ivendnext_rfr), free, for a retailer to install as it is. This sample is the code behind it, to copy and change.
+
 ## What happens
 
 | When | What the cashier sees |
