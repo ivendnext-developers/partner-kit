@@ -877,7 +877,7 @@ The till cannot do this yet; it can stop the sale at Pay.
 
     def test_a_card_shows_its_door_its_run_step_and_its_links(self):
         page = (self.out / "reference_apps.html").read_text("utf-8")
-        card = page.split('href="samples/s23_till_guard/index.html"', 2)[1].split("</li>")[0]
+        card = page.split('<h4><a href="samples/s23_till_guard/index.html"', 1)[1].split("</li>")[0]   # a card with a picture has a thumbnail link first
         self.assertIn("Check before payment", card)
         self.assertIn("python3 -m unittest discover -s samples/s23_till_guard/tests", card)
         self.assertIn("index.html#run-it", card)

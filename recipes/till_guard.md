@@ -39,6 +39,10 @@ A retailer rarely wants one rule at the till. It wants a handful: a manager for 
 
 The retailer's record `Default` of `<PREFIX> Settings`, each rule off until set (0 or blank = off): *a line priced at or below this is refused* (a placeholder price such as 0.01; a free line is never refused), *most of one item on a line*, *sales of this amount or more need a manager* and *how a large sale is checked* (`ask` or `approve`), and *the question on a flagged item*. Amounts are one number for every currency, read in the sale's own currency. A change reaches the service within a minute.
 
+![On a demo site: the settings record with the warning ticked](../samples/s23_till_guard/screenshots/till-guard-rules-settings.png)
+
+![On a demo site: the cashier scans a ticked item and the till names the batch to sell first](../samples/s23_till_guard/screenshots/till-guard-rules-notice.png)
+
 ## What iVendNext needs from you
 
 | You give | iVendNext checks |
