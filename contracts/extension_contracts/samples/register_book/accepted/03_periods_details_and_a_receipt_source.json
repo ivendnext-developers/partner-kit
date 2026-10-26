@@ -1,0 +1,71 @@
+{
+  "extension_point": "register_book",
+  "contract": "declaration",
+  "about": "Six-month periods, a detail read from the Customer, a detail with no source (printed empty), and a receipt's delivery note as the reference.",
+  "payload": {
+    "book": "xx_customs.bonded_book",
+    "title": "Liquor stock book",
+    "data_set": "xx_customs",
+    "cite": "A sample, not a market's law",
+    "certified": 0,
+    "enabled": 1,
+    "items": {
+      "item_groups": [
+        "All Item Groups"
+      ]
+    },
+    "numbering": "book_store_item",
+    "balance": 1,
+    "correction": "reversing_line",
+    "retention_years": 5,
+    "count_role": "System Manager",
+    "conditions": [],
+    "columns": [
+      {
+        "label": "Date",
+        "value": [
+          "movement_date"
+        ]
+      },
+      {
+        "label": "Passenger",
+        "value": [
+          "detail_1"
+        ]
+      },
+      {
+        "label": "Seal",
+        "value": [
+          "detail_2"
+        ]
+      },
+      {
+        "label": "Delivery note",
+        "value": [
+          "reference_no"
+        ],
+        "when": "In"
+      }
+    ],
+    "period_months": 6,
+    "return_due_days": 15,
+    "details": {
+      "detail_1": {
+        "label": "Passenger name",
+        "record": {
+          "doctype": "Customer",
+          "match": "customer",
+          "field": "customer_name"
+        }
+      },
+      "detail_2": {
+        "label": "Seal number"
+      }
+    },
+    "columns_from": {
+      "Purchase Receipt": {
+        "reference_no": "supplier_delivery_note"
+      }
+    }
+  }
+}

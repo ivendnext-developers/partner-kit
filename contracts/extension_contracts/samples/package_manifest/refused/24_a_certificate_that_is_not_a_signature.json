@@ -1,0 +1,33 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A module whose certificate is not our certify service's signature in base64.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_mod",
+    "prefix": "PP MOD",
+    "version": "0.1.0",
+    "extension_modules": [
+      {
+        "key": "member_price",
+        "point": "price",
+        "version": 1,
+        "metered": true,
+        "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+        "certificate": "not-a-signature",
+        "wasm": "AGFzbQEAAAA="
+      }
+    ],
+    "extension_subscriptions": [
+      {
+        "key": "member_price",
+        "point": "price",
+        "label": "Member price",
+        "transport": "wasm",
+        "module": "member_price"
+      }
+    ]
+  },
+  "expect_refusal": "certificate is our certify service's signature",
+  "beyond_schema": true
+}

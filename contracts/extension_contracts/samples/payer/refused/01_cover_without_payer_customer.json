@@ -1,0 +1,20 @@
+{
+  "extension_point": "payer",
+  "contract": "covers_answer",
+  "about": "A cover that names no Customer record for the payer: nothing could carry the payer's share.",
+  "expect_refusal": "a cover's keys are not the ones a cover takes",
+  "payload": {
+    "covers": [
+      {
+        "member": "GLI-778812",
+        "payer": "GLI",
+        "payer_title": "Generic Insurer",
+        "plan": "GOLD",
+        "plan_title": "Gold plan",
+        "member_label": "…0123",
+        "valid_to": "2099-12-31"
+      }
+    ],
+    "refused": null
+  }
+}

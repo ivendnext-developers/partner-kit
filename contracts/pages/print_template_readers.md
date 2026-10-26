@@ -1,8 +1,8 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/print_template_readers.md @ 7d47d331a203, copied unchanged except the links and the framework's raw SQL, named by what it is: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/print_template_readers.md @ b453a68eac6c, copied unchanged except the links, the framework's raw SQL and its readers, named by what they are: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Print template readers — `ivn_rows` and `ivn_value`
 
 **Samples:** [`samples/package_manifest/`](../extension_contracts/samples/package_manifest/)
-(`accepted/07_a_print_format_reading_rows.json` · `refused/10_…` · `refused/11_…`)
+(`accepted/07_a_print_format_reading_rows.json` · `refused/10_…` · `refused/11_…` · `refused/27_…`)
 · code: `business_logic/template_readers.py` (the readers), `business_logic/template_requester.py` (who asked),
 the print-format rules in `business_logic/manifest_check.py` · tests: `tests/test_template_readers.py`.
 
@@ -83,7 +83,7 @@ value except for `in`, `not in` and `between`; two sort fields; `limit` outside 
 ## 5. The checker's print-format rules — a tripwire, not a control
 
 When a manifest installs a print format, the checker
-(installing a manifest) also:
+(see the *Installing a manifest* page) also:
 
 - **refuses** the framework's raw SQL (`db.sql`), its query builder and its outside fetchers (`make_*_request`);
 - **refuses** template syntax inside an address the print loads (`src`, `href`, `srcset`, `poster`, `background`,
@@ -93,14 +93,24 @@ When a manifest installs a print format, the checker
   followed by `=` (*Corrective action = {{ doc.remark }}*, a `data-action=` value) — a bound, never loosened;
 - **warns** on the framework's template helpers that read records without the viewer's rights (`get_all`,
   `get_list`, `get_doc`, `get_mapped_doc`, `get_value`, `get_print`, `call`, anything under `db.` …) and on
-  `receipt_partner_code` (a partner's code, printed with no rights check), naming `ivn_rows`; formatting helpers such as `format_value` are not warned. **From version 2.1.0 of the POS app the
-  warning becomes a refusal for the record types `ivn_rows` serves**; a read of a framework type it refuses
-  (Address, Contact, Letter Head …) has no replacement yet and stays a warning.
+  `receipt_partner_code` (a partner's code, printed with no rights check), naming `ivn_rows`; formatting helpers such as `format_value` are not warned;
+- **refuses**, since version 2.1.0 of the POS app, a row or value read called on the framework —
+  `get_all`, `get_list`, `db.get_value`, `db.get_all`, `db.get_list`, each called on the framework's own object — whose
+  record type, written as a quoted first argument (`'Item Price'` or `doctype='Item Price'`), is one `ivn_rows` serves
+  (`get_all('Item Price')`, `db.get_value("Company", …)` …, on that object): read it through `ivn_rows` or
+  `ivn_value`, or show the printed record's own fields. These stay a warning, because `ivn_rows` has no
+  replacement for them: a read of a type it does not serve (the framework's Address, Contact, Letter Head …, a
+  child table, a settings record); a whole-record read such as `get_doc` (its child rows are out of
+  `ivn_rows`' reach), a render, a map or a count; and a read whose record type is not one quoted name, or that
+  reaches the reader through an alias (its `db` object given another name with `{% set %}`) or a subscript (`['get_all']` on that object), or names it
+  as a later keyword (`get_all(fields=[…], doctype='Item Price')`).
+  Remember that `ivn_rows` and `ivn_value` return nothing to a share-key visitor or in a mail; a receipt that
+  must show a value there prints it from the record's own fields.
 
 It reads the template's text, so it catches the obvious only. Six known evasions pass it, each a known-pass test:
 the raw SQL reached by indexing (`db["sql"]`), the `attr` filter with a name built at render time, `render_template` on a built string, a
 whole tag printed from a string, a `<meta http-equiv=refresh>`, and an address set with `{% set %}` then printed
-as `{{ u }}`. The framework's own helpers stay available, warned; reads of its own record types stay warned after 2.1.0 too. Treat the readers as the way to read
+as `{{ u }}`. The framework's own helpers stay available, warned, for every record type `ivn_rows` does not serve. Treat the readers as the way to read
 other records with the viewer's rights, not as a guarantee about every template a site holds.
 
 On the framework our sites run, every template gets the same restricted helper set; there is no setting that

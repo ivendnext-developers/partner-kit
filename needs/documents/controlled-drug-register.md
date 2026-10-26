@@ -4,21 +4,24 @@ title: The controlled-drug register, and any register of regulated stock
 area: documents
 topic: own-records-and-fields
 asks: Keep the controlled-drug register the law asks for (or the liquor, tobacco or duty-free register)
-status: not-yet
-door: request
-blocked-by: extension-point
-recipe: none
+status: ready-with-limits
+door: register-books
+blocked-by: -
+recipe: contracts/pages/register_books.md
 sample: samples/s41_regulated_register
-request: P-REGISTER
-verified: 2026-10-22 · bench (the columns, role and workspace) · not run (the books)
+request: -
+verified: run by the product 2026-10-23 to 2026-10-26 (the register lanes' walks and POS train T17's walk, phone, counter and tablet frames and Desk: books installed from a package, a till sale writing one numbered line per book, a sale refused before the tender when the balance would go below zero, a receipt and its cancel writing a correction line); not run by a kit sample
 ---
 ## What you build
-Your market's books as a data set: which items each book takes, which sales or receipts enter it, its columns and its printed layout. Sample S41 declares the pharmacy books of eight markets (Kenya, Jordan, Nigeria, the UAE's Abu Dhabi, Saudi Arabia, Egypt, Ghana, Mexico), and installs today the register's own columns on the Desk sale and delivery and on the till, its approver role and its workspace. A retailer's copy declares its own markets' books only (every market's Desk fields stay, so an update never drops one).
+Your market's books as data in your manifest (`register_books`, POS version 2.1.0 and later): which items each book takes, which movements enter it, how its lines are numbered and corrected, and the columns it prints with the source of each. From then on every document that moves a declared item writes one line per book in the same save, numbered with no gap, with a running balance where the book keeps one, and never edited: a cancel writes a correction line. Sample S41 declares the pharmacy books of eight markets. The keys and refusals are on the register books page (`contracts/pages/register_books.md`).
 
 ## Limits
-- The book itself is a legal record written in the sale's own save, numbered without gaps and never edited: that needs the register door in our POS app (P-REGISTER), which is not there yet. Until it is, the books are kept on paper.
 - Every layout in the sample is a first draft, not certified for the country: you check it against the law before a customer relies on it.
 - A routing rule has at most three conditions, all of which must hold, on a column of the register's line.
+- An update cannot change a book: a corrected book ships under a new id, which numbers from 1.
+- The retailer maps its warehouses to each book's register store before the first sale; a manifest cannot.
+- Sample S41 was written before the door shipped: its books are in its `door_declaration.json`, not yet in its manifest, so take a book's keys from the register books page.
+- An article first stocked after its book is switched on is not checked against the balance until a count sets it.
 
 ## Tell the customer
-Your registers are kept in the system and printed in your country's layout for an inspector, once the register door is in your POS app; until then the columns are captured on every sale.
+Every sale, receipt and transfer of a controlled item writes its line in the register as it is saved, and the book prints in your country's layout for an inspector.

@@ -119,7 +119,7 @@
           }
         },
         "workspaces": {
-          "description": "The workspaces the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "description": "The workspaces the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py). A workspace is the app's page, opened from the App library; it is never added to the menu: it installs out of the Desk's menu, limited to the app's roles and System Manager.",
           "type": "array",
           "items": {
             "type": "object"
@@ -209,6 +209,55 @@
             "type": "object"
           }
         },
+        "extension_modules": {
+          "description": "The certified modules the manifest installs: each carries its bytes in base64 (wasm), the certificate our certify service gave it, its extension point and its version. The checker checks the bytes against sha256; the shop checks the certificate when it installs the module, switched off behind its service. A module's service is an extension_subscriptions entry with transport wasm that names the module's key. Page: docs/extending/package_install.md.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "key",
+              "point",
+              "version",
+              "metered",
+              "sha256",
+              "certificate",
+              "wasm"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,39}$"
+              },
+              "point": {
+                "enum": [
+                  "check",
+                  "price"
+                ]
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "metered": {
+                "const": true
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "certificate": {
+                "type": "string"
+              },
+              "wasm": {
+                "type": "string"
+              },
+              "partner_name": {
+                "type": "string"
+              }
+            }
+          }
+        },
         "extension_subscriptions": {
           "description": "The extension subscriptions the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
           "type": "array",
@@ -285,6 +334,13 @@
                 "maxItems": 3
               }
             }
+          }
+        },
+        "register_books": {
+          "description": "The regulated-stock register books the manifest installs: each element is the register_book contract (register_book.v1.schema.json), checked by the installer's checker inside the site and again by the record's own validate at install, which reads every name a book names on the site.",
+          "type": "array",
+          "items": {
+            "type": "object"
           }
         }
       }

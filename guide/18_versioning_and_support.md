@@ -11,6 +11,7 @@ Before you build on an extension point, on an API call the kit describes or on t
 ## The policy
 
 - **The general release is iVendNext POS 2.0.0.652, of 18 October 2026.**
+- **Version 2.1.0 followed it:** build 2.1.0.664 on 25 October 2026 (POS train T17) and build 2.1.0.666 on 26 October 2026 (train T18). It adds the payer and register-book extension points and more to the manifest. Several of its changes refuse what an earlier build accepted: a till sale booked around a partner's check (through the API, the Desk form or an import), a print format reading a record type `ivn_rows` serves through the framework's own reader, a recalled, expired or quarantined lot on an outgoing stock document, and a stock document that leaves a register book's required column empty or takes its balance below zero. The [changelog's 2.1.0 entry](../CHANGELOG.md) lists every change a working partner can meet, first.
 - **From the general release, each version is served for 12 months after its successor ships.** That holds for a version of an extension point's contract, of an API call the kit describes, and of the manifest format.
 
 **The general release** is iVendNext POS 2.0.0.652, released on 18 October 2026 and announced in the kit's changelog. Every POS build is numbered `2.MINOR.PATCH.BUILD`, and a build keeps its number when it is released.
@@ -33,7 +34,7 @@ A change that would break a version-1 service is a new version, published beside
 
 - **`manifest_version`** in your manifest. The checker reads versions 1 and 2; write 2 (chapter 7).
 - **The version line of the contract's page.** Every extension point's library page says *Version 1*.
-- **A header on the call.** A call to your service for a Desk action, a check, a capture, a document check or a fulfil at sale (POS build 2.0.0.654 on) carries `X-iVendNext-Point: <point>/<version>` — for example `check/1`, `capture/1`, `desk_action/1`, `doccheck/1`, `fulfil/1`. The body repeats it where the page says so (`"point": "check/1"`, and a `"v": 1` in the context). The remote till key's call carries `User-Agent: iVendNext-POS-AppKey/1` instead. A payment connector's calls (card, push or wallet) carry `X-iVendNext-Point: paygw/1` (the payments core's wire contract). Pricing sends your server no call: the certified module runs inside the retailer's iVendNext. A partner page is framed by the till, which sends your server no call: its version is the `"v": 1` in the signed context. The event feed, the save rules, the scan source, the field rules, the fiscal reader, the label layout, the receipt settings and the list marks send no call to you either: the retailer declares them, and their page's version line is the version.
+- **A header on the call.** A call to your service for a Desk action, a check, a capture, a document check or a fulfil at sale (POS build 2.0.0.654 on) carries `X-iVendNext-Point: <point>/<version>` — for example `check/1`, `capture/1`, `desk_action/1`, `doccheck/1`, `fulfil/1`, `payer/1` (2.1.0.666 on). The body repeats it where the page says so (`"point": "check/1"`, and a `"v": 1` in the context). The remote till key's call carries `User-Agent: iVendNext-POS-AppKey/1` instead. A payment connector's calls (card, push or wallet) carry `X-iVendNext-Point: paygw/1` (the payments core's wire contract). Pricing sends your server no call: the certified module runs inside the retailer's iVendNext. A partner page is framed by the till, which sends your server no call: its version is the `"v": 1` in the signed context. The event feed, the save rules, the scan source, the field rules, the fiscal reader, the label layout, the receipt settings and the list marks send no call to you either: the retailer declares them, and their page's version line is the version.
 - **The changelog**, a dated entry for every change.
 
 ## Steps
@@ -96,14 +97,14 @@ Without `_build.py` the app reports `2.1.0.0`: a build nobody stamped, which is 
 
 ### What it has not
 
-- **No contract has had a successor yet,** so the 12 months has never been exercised, and no changelog entry has announced a change to a contract.
+- **No contract has had a successor yet,** so the 12 months has never been exercised, and until 2.1.0 no changelog entry had announced a change to a contract; the 2.1.0 entry announces two line keys added to `check/1` within version 1 (`batch_no`, `serial_no`).
 - **The list of what counts as breaking is ours, written from the library's own sentences and the one example above.** It is not exhaustive.
 - **The header** is read from the code and the library pages, not from a recorded call.
 
 ### Sources
 
 - **The policy** is our decision of 2026-10-08.
-- **The library pages** read: all fourteen: `remote_till_key`, `event_feed`, `save_rules`, `desk_action`, `partner_page`, `fiscal_reader`, `partner_check`, `scan_source`, `partner_capture`, `fields`, `label_layout`, `receipt`, `price`, `wallet` (`docs/extending/` in the POS app, at `8ce9bed2`). The four added since, `doccheck`, `partner_fulfil`, `list_mark` and `print_template_readers`, read in the kit's copies at `7d47d331a` (build 2.0.0.654, `contracts/pages/`).
+- **The library pages** read: all fourteen: `remote_till_key`, `event_feed`, `save_rules`, `desk_action`, `partner_page`, `fiscal_reader`, `partner_check`, `scan_source`, `partner_capture`, `fields`, `label_layout`, `receipt`, `price`, `wallet` (`docs/extending/` in the POS app, at `8ce9bed2`). The four added since, `doccheck`, `partner_fulfil`, `list_mark` and `print_template_readers`, read in the kit's copies at `7d47d331a` (build 2.0.0.654, `contracts/pages/`). The two added with 2.1.0, `payer` and `register_books`, read in the kit's copies at `b453a68ea` (build 2.1.0.666).
 
 ## See also
 

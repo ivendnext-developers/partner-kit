@@ -28,7 +28,7 @@ def sample(path):
 class ContractsTest(unittest.TestCase):
     def test_the_folder_is_not_empty(self):
         self.assertTrue(check.available())
-        self.assertEqual(len(SCHEMAS), 17)
+        self.assertEqual(len(SCHEMAS), 19)
         self.assertGreaterEqual(len(SAMPLES), 100)
 
     def test_every_schema_names_its_draft_and_has_three_samples_each_way(self):

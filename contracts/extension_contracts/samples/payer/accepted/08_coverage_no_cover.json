@@ -1,0 +1,10 @@
+{
+  "extension_point": "payer",
+  "contract": "coverage_answer",
+  "about": "The plan was switched off: no cover today.",
+  "payload": {
+    "answer": "no_cover",
+    "code": "plan_off",
+    "message": "The Gold plan is closed. The customer pays it all."
+  }
+}

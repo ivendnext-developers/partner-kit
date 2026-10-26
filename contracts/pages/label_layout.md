@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/label_layout.md @ 7d47d331a203, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/label_layout.md @ b453a68eac6c, copied unchanged except the links, one bug id and one row id on the product's board: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Label layout
 
 **Contract:** [`label_layout.v1.schema.json`](../extension_contracts/label_layout.v1.schema.json)
@@ -20,14 +20,18 @@ its print agent, to the label printer its POS Terminal names. Either kind can in
 It fires when the cashier presses **Print label** on an item's card or on a basket line (phone, counter and
 tablet alike), picks the layout (when the store keeps several), the batch (a batch item) and how many, and
 presses **Print**. From a basket line the sheet offers that line's own lots, the first chosen (a line with no
-lot: the store's lots on hand, as the item card).
+lot: the store's lots on hand, as the item card), and the label is in **that line's unit** (a strip sold from a
+box: one strip, §3), with the details typed on the line for a layout that prints one.
 
 ## 2. Version
 
 Version 1. Kinds `html` and `zpl` (added with the basket-line entry, the lot label and the manifest kind,
 lane `plabel2`: a layout written for version 1 is unchanged). Lane `plabelscale` adds two placeholders to the
 closed list, `{weight}` and `{unit_price}`: a layout that holds neither is unchanged, and a checker copy older than
-this one refuses a layout that holds them.
+this one refuses a layout that holds them. Lane `pb10label` adds two **named** placeholders beside the list,
+`{item.<fieldname>}` and `{detail.<attribute>}`, and prints a basket line's label in that line's unit: a layout that
+holds neither is unchanged, the item card's label is unchanged, and a checker copy older than this one refuses a
+layout that holds them.
 
 ## 3. What you declare
 
@@ -46,15 +50,34 @@ Print label row is dimmed with its reason.
 
 **Placeholders:** `{item_code}` · `{item_name}` · `{barcode}` · `{barcode_svg}` (a Code-128 drawn inline, on
 the server) · `{price}` · `{currency}` · `{uom}` · `{batch_no}` · `{expiry_date}` · `{manufacturing_date}` ·
-`{weight}` · `{unit_price}` · `{store}`. Every value is escaped; none is code. Any `{…}` in the template is read as a placeholder, so a
+`{weight}` · `{unit_price}` · `{store}`, and two named ones:
+
+- **`{item.<fieldname>}`** — one of the item's own fields, by its field name (`{item.custom_strength}`,
+  `{item.custom_route}`, an allergen list): **at most three** per template, each a **Data, Select, Int or Check**
+  field open to every role (permission level 0) — the same types and the same three the till's field rules show
+  on screen and on the receipt ([`fields.md`](fields.md)). A money field (Currency, Float) is never one: the
+  label's price is `{price}`, the till's own.
+- **`{detail.<attribute>}`** — **one** detail typed on the basket line (a dispensing label's dose): the name of an
+  active **Transaction Item Attribute**, as the till records it per line (*Item details*). From the item card,
+  where there is no line, it prints nothing.
+
+Every value is escaped; none is code. Any `{…}` in the template is read as a placeholder, so a
 `<style>` block with braces is refused: style with `style="…"` attributes.
 
 **Where each value comes from:**
 
 - **`{price}`** is the till's own price for one of the unit the till sells the item in (a Pack-sold article:
   one Pack), at the cashier's store, to its cash customer: the price the till charges a walk-in today,
-  promotions included. `{currency}` is that price's currency; `{uom}` is that unit.
-- **`{barcode}`** is the item's own barcode for that unit (or its barcode with no unit). It carries no price:
+  promotions included. `{currency}` is that price's currency; `{uom}` is that unit. ⭐ **From a basket line it is
+  that line's unit** (a box-sold medicine sold by the strip: one strip, at the till's price for a strip), checked
+  as the till checks a unit change: a weighed, serial or bundle article keeps its unit, and a unit not on the
+  item's list is refused (§4). A scale label is always in the weighed article's stock unit. A line ordered from
+  another store is labelled at THIS store's price for that unit: a label is this shelf's.
+- **`{barcode}`** is the item's own barcode for that unit (or its barcode with no unit). ⭐ In a line's unit that
+  is not the one the till rings a new line in, only **that unit's own barcode** is printed: the item's barcode
+  with no unit rings the default unit when scanned (a box), so beside a strip's price it would ring another price.
+  A layout that prints a barcode, for a unit with no barcode of its own, is refused, naming the fix (§4); such a
+  label prints no lot code either (the till asks for the lot at the scan). It carries no price:
   scanned, the till prices it exactly as it prices the item, so it rings the printed price today and the
   current price after a change. ⚠ An item with a barcode mask gets its own barcode too, never one built by the
   mask: a mask's Price segment would set the price at the till for as long as the label hangs on the shelf, and
@@ -77,6 +100,15 @@ the server) · `{price}` · `{currency}` · `{uom}` · `{batch_no}` · `{expiry_
   it shows a price per unit.
 - **`{expiry_date}` · `{manufacturing_date}`** are the batch's own dates, in the site's date format.
 - **`{store}`** is the cashier's store.
+- **`{item.<fieldname>}`** is the item's field as it reads when the label prints (an Int 0 prints `0`, a Check
+  `1` or `0`). Checked when the layout is saved and read again when it prints: a field the shop deleted, retyped,
+  made virtual or limited to some roles since prints nothing in its place, with no refusal.
+- **`{detail.<attribute>}`** is the value typed on the basket line, cut at 140 characters. It prints nothing when
+  the line has none typed, when the label comes from the item card (there is no line), or when the attribute was
+  made inactive since the layout was saved: a line detail is never required. A layout that must not print without
+  one is the shop's to check before printing. ⛔ It rides only the
+  till's print request, never an address: the page the device's dialog prints comes back in that answer (an
+  address sits in server logs and the browser's history, and a dose is a patient's).
 
 ## 4. Every refusal, in the product's words
 
@@ -85,7 +117,11 @@ template takes placeholders like {item_name}, not code."* · *"A label template 
 forms or event handlers."* · *"Width must be between 10 and 150 mm."* (Height the same) · *"Labels per row
 must be between 1 and 10."* · *"A label layout needs a template."* · *"A label template holds at most 20000 characters."*
 · for `zpl`: *"A zpl label template starts with ^XA and ends with ^XZ."* · *"A zpl label template draws its barcode
-with the printer's own barcode command over {barcode}, not {barcode_svg}."*
+with the printer's own barcode command over {barcode}, not {barcode_svg}."* · named placeholders: *"A label prints at
+most 3 of the item's fields, not ⟨fields⟩."* · *"⟨field⟩ is a ⟨type⟩ field. Only Data, Select, Int and Check fields
+can be shown."* · *"Item has no field ⟨field⟩."* · *"⟨field⟩ is a field only some roles can see, so a label can't
+print it."* · *"⟨field⟩ is not stored on the item, so a label can't print it."* (a virtual field) · *"A label prints one line detail, not ⟨details⟩."* · *"⟨attribute⟩ is not a line detail the till
+records. Use the name of an active Transaction Item Attribute."*
 
 **At the till:**
 
@@ -98,6 +134,8 @@ with the printer's own barcode command over {barcode}, not {barcode_svg}."*
 | A value a `zpl` layout prints holds `^` or `~` (a command to a Zebra printer) | *"⟨value⟩ holds ^ or ~, which a Zebra label printer reads as a command. Change it in iVendNext Desk, or print a sheet label."* |
 | The label printer did not take the job | *"The label printer didn't take the labels. Check it is on and connected, then try again."* |
 | The layout prints a barcode the item does not have | *"⟨item⟩ has no barcode to print. Add one to the item in iVendNext Desk."* |
+| From a basket line in a unit with no barcode of its own (not the unit the till rings a new line in), on a layout that prints a barcode | *"⟨item⟩ has no barcode for ⟨unit⟩. Add one for that unit to the item in iVendNext Desk, or print a layout without a barcode."* |
+| From a basket line in a unit the article does not sell in (weighed, serial, a set, a unit off its list) | the till's own unit refusal, e.g. *"⟨item⟩ can't be sold in "⟨unit⟩": Sold by weight. The unit comes from the scale."* · *"⟨item⟩ isn't sold in "⟨unit⟩". Pick one of its listed units."* |
 | The item's barcode starts like a scale label, so the till would read it through a barcode mask (another item, or a price in the code) | *"The till reads ⟨item⟩'s barcode as a scale label, so it can't go on a shelf label."* |
 | A scale label (§5d) that the till would read as another weight or price than the one printed | *"⟨item⟩'s scale label would scan as ⟨weight⟩ for ⟨currency price⟩, not what was weighed. Weigh the pack again, or print a shelf label."* |
 | A scale label whose code does not read back as this item (no barcode, another item) | *"The scale label for ⟨item⟩ can't be made. Check the item's barcode and barcode mask in iVendNext Desk."* |
@@ -224,6 +262,12 @@ noise (`1998.9999999999998`) and the till reads it within a cent: the read-back 
 
 Labels are filled on the server, so the row is dimmed offline: *"Labels need a connection."*
 
+⚠ **Scanned offline.** A till that has lost its link rings an item's barcode with no unit as the item's **stock**
+unit, while a connected till rings it in the unit it sells the item in by default. So a label printed in a default
+unit that is not the stock unit (a Pack-sold article whose only barcode has no unit) scans offline at one stock
+unit's price, a known defect. A unit's own barcode (Item Barcode with that unit) scans the same online and
+offline: give a pack-sold article a barcode for its pack.
+
 ## 7. Money and limits
 
 The label prints a price; it never sets one, and its barcode carries none. The price is the till's, read
@@ -268,6 +312,20 @@ keep the barcode and the price line only.
 ^XZ
 ```
 
+**A pharmacy's dispensing label, 50 × 30 mm** (a strip sold from a box). The shop adds two Data fields to
+Item, `custom_strength` and `custom_route`, and an active Transaction Item Attribute named `Dose`; the cashier
+types the dose on the basket line (*Item details*) and prints the label from that line:
+
+```html
+<div style="font:bold 9pt sans-serif;white-space:nowrap;overflow:hidden">{item_name} {item.custom_strength}</div>
+<div style="font:8pt sans-serif">{item.custom_route} · {detail.Dose}</div>
+<div style="font:7pt sans-serif">{uom} · Batch {batch_no} · Exp {expiry_date}</div>
+<div style="font:7pt sans-serif">{store}</div>
+```
+
+It reads, for example, `Paracetamol 500 mg` · `Oral · 1 tablet three times a day` · `Strip · Batch P-2611 · Exp
+30-06-2027` and the store's name. It carries no barcode, so a strip with no barcode of its own prints.
+
 **A sheet of three across.** Labels per row 3 and 38 × 21 mm, with the code printed as text (a 21 mm label
 has no room for the 16.4 mm Code-128 and two lines):
 
@@ -284,7 +342,10 @@ has no room for the 16.4 mm Code-128 and two lines):
 > `label_layout.v1.schema.json` (`$defs/declaration`); the samples under `samples/label_layout/` are
 > known-good and known-bad records. The template is HTML with only these placeholders: {item_code}
 > {item_name} {barcode} {barcode_svg} {price} {currency} {uom} {batch_no} {expiry_date}
-> {manufacturing_date} {weight} {unit_price} {store} — never Jinja, never a script, frame, form or event handler, and no other `{…}`
+> {manufacturing_date} {weight} {unit_price} {store}, plus up to three of the item's own fields as
+> {item.<fieldname>} (Data, Select, Int or Check, stored on the item and open to every role — never a money field)
+> and one basket-line
+> detail as {detail.<attribute>} (an active Transaction Item Attribute) — never Jinja, never a script, frame, form or event handler, and no other `{…}`
 > (style with attributes, not a `<style>` block). Sizes are in millimetres, 10 to 150. {barcode_svg} draws 16.4 mm
 > tall and is never scaled, and the label hides whatever runs past its bottom edge: make the stock tall enough for
 > the barcode plus about 4 mm per 9 pt line and 5 mm per 12 pt line (a 25 mm label holds the barcode and one line).

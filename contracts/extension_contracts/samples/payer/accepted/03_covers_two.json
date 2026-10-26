@@ -1,0 +1,32 @@
+{
+  "extension_point": "payer",
+  "contract": "covers_answer",
+  "about": "The customer holds two covers; the cashier picks one.",
+  "payload": {
+    "covers": [
+      {
+        "member": "GLI-778812",
+        "payer": "GLI",
+        "payer_title": "Generic Insurer",
+        "payer_customer": "MPOS Payer Sample Insurer",
+        "plan": "GOLD",
+        "plan_title": "Gold plan",
+        "member_label": "…0123",
+        "valid_to": "2099-12-31"
+      },
+      {
+        "member": "EMP-0042",
+        "payer": "ACME",
+        "payer_title": "Acme staff scheme",
+        "payer_customer": "MPOS Payer Sample Insurer",
+        "plan": "STAFF",
+        "plan_title": "Staff purchases",
+        "member_label": "Staff …0042",
+        "valid_to": "2099-12-31",
+        "price_list": null,
+        "promotions_apply": true
+      }
+    ],
+    "refused": null
+  }
+}

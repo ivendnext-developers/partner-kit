@@ -1,0 +1,43 @@
+{
+  "extension_point": "payer",
+  "contract": "coverage_answer",
+  "about": "A share below zero.",
+  "expect_refusal": "each share is a whole number of minor units, at or above 0",
+  "payload": {
+    "answer": "cover",
+    "payer": "GLI",
+    "plan": "GOLD",
+    "member": "GLI-778812",
+    "claim_ref": "GLI-CLM-mpos-sale-7f3a",
+    "no_partial_refund": false,
+    "lines": [
+      {
+        "line_id": "L1",
+        "covered": true,
+        "sellable": true,
+        "reason": null,
+        "message": null,
+        "covered_qty": 2,
+        "qty_limit": 3,
+        "payer_share_minor": -100,
+        "patient_share_minor": 4960
+      },
+      {
+        "line_id": "L2",
+        "covered": false,
+        "sellable": true,
+        "reason": "not_covered",
+        "message": "Vitamins are not covered by this plan.",
+        "covered_qty": 0,
+        "qty_limit": null,
+        "payer_share_minor": 0,
+        "patient_share_minor": 4550
+      }
+    ],
+    "totals": {
+      "payer_share_minor": 19040,
+      "patient_share_minor": 9510,
+      "total_minor": 28550
+    }
+  }
+}

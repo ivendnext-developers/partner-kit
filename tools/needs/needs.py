@@ -30,6 +30,7 @@ DOORS = {"configure": "Configure", "outside-app": "Outside app", "event-feed": "
          "document-check": "Document check", "capture-on-event": "Capture on an event", "field-rules": "Field rules",
          "save-rules": "Save rules", "desk-action": "Desk action", "partner-page": "Partner page", "scan-source": "Scan source",
          "label-layout": "Label layout", "wallet": "Wallet", "fiscal-reader": "Fiscal reader", "fulfil-at-sale": "Fulfil at sale",
+         "payer": "Payer", "register-books": "Register books",
          "payment-connector": "Payment connector", "our-connector": "Our connector", "receipt": "Receipt settings",
          "request": "Request", "none": "None"}
 # The topics of each area (a card's `topic:` line): the headings an area's page is grouped under. At most six per area; a

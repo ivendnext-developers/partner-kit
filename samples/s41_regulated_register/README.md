@@ -6,8 +6,6 @@ The first data set is **Kenya's three pharmacy books**: the Poisons Book (Rules 
 
 ⚠ **Every layout here is a starting point, not certified for the country.** It is read from the instruments named in the data set, and each print says so. A partner certifies it for a market, changes it, or adds a market.
 
-**Door:** Manifest
-
 **When to use it:** the retailer's law names a book and its columns, and the book must hold every sale or receipt of certain stock, in order, never edited.
 
 ## The register door: what is here now, and what waits for it

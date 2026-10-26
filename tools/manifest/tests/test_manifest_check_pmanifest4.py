@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_manifest_check_pmanifest4.py,
-# at development 7d47d331a203fd8b2794f83270a4190b3c1908e8; changed: the imports, the fixture folder, a note on how the file is copied (removed), and two print formats that read through the framework's name (now through the helper's own name: warned and refused either way).
+# at development b453a68eac6cc7e039f28a94f6f37147f151ec38; changed: the imports (the list of every-kind manifests, which the product names in its own module, is written here), the fixture folder, a note on how the file is copied (removed), and three print formats that read through the framework's name (now through the helper's own name: warned and refused either way).
 # A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """A multi-select field, a settings record of the package's own (a single) and a notification's own print. Stdlib only.
 
@@ -15,6 +15,20 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 import validate as MC  # noqa: E402
 from validate import validate  # noqa: E402
+
+# the sample manifests that together hold every kind of extension (the product names them once, in its own module)
+EVERY_KIND_FIXTURES = (
+    "full_ok.json",
+    "full_v2_ok.json",
+    "kinds_v2_ok.json",
+    "fiscal_v2_ok.json",
+    "sample_s2_bins.json",
+    "waveb_v2_ok.json",
+    "waved_v2_ok.json",
+    "listmark_v2_ok.json",
+    "module_v2_ok.json",
+    "register_v2_ok.json",
+)
 
 HERE = pathlib.Path(__file__).resolve().parent
 RIGHTS = {r: 1 for r in MC.RIGHTS}
@@ -298,19 +312,6 @@ class SettingsRecord(unittest.TestCase):
         self.assertIn(f"custom_fields[3]: '{SETTINGS}' {MC.SINGLE_REASON}", reasons(m))
 
 
-# every fixture the every-kind consent test reads: together they hold every kind
-FIXTURES = (
-    "full_ok.json",
-    "full_v2_ok.json",
-    "kinds_v2_ok.json",
-    "fiscal_v2_ok.json",
-    "sample_s2_bins.json",
-    "waveb_v2_ok.json",
-    "waved_v2_ok.json",
-    "listmark_v2_ok.json",
-)
-
-
 def _swap(x, names: set, to: str):
     """Every string naming one of ``names`` becomes ``to``; (the copy, how many)."""
     if isinstance(x, dict):
@@ -325,7 +326,7 @@ def _swap(x, names: set, to: str):
 class OnlyTheAllowListNamesIt(unittest.TestCase):
     def test_every_other_kind_naming_a_settings_record_is_refused(self):
         seen = set()
-        for f in FIXTURES:
+        for f in EVERY_KIND_FIXTURES:
             base = json.loads((HERE / "fixtures" / f).read_text())
             for kind in MC.KINDS:
                 if (
@@ -436,7 +437,9 @@ class OwnPrint(unittest.TestCase):
 
     def test_the_same_format_unattached_is_only_warned(self):
         m = mf4()
-        m["print_formats"][0]["html"] = "{{ get_all('Customer') }}"
+        # in the shop, since 2.1.0, a row read of a type ivn_rows serves made through the framework's reader is refused
+        # even unattached; Address is not one (the kit's copy reads the helper by its own name, which is only warned)
+        m["print_formats"][0]["html"] = "{{ get_all('Address') }}"
         self.note(m).pop("attach_print")
         self.note(m).pop("print_format")
         self.assertEqual(validate(m), [])

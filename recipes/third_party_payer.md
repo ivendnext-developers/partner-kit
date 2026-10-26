@@ -8,9 +8,12 @@ members, claims, remittances) as records in the retailer's iVendNext. It is for 
 
 **Reference implementation:** `samples/s43_third_party_payer/` — *Third-party payer*.
 
-⚠ **The payer door is requested from the POS team and is not in the POS app yet.** Until it is, the reference
-implementation keeps the records, builds claims from booked payer sales and matches remittances; the door's
-subscription and the bill-back button wait in `door_declaration.json`.
+⚠ **The payer door ships in the POS app from version 2.1.0.666** ([the payer page](../contracts/pages/payer.md)). The
+reference implementation keeps the records, builds claims from booked payer sales and matches remittances. Its
+`door_declaration.json` was written before the door shipped and is refused as it stands (it names the prescription
+setting `prescription_details`, where the door takes `prescription`, and bills a claim back by a Desk button, where the
+door ships the API call `payer_bill_back`): build your subscription from the payer page. The steps below were written
+before the door too: where they differ from the page, the page is right.
 
 **When to use it.** Use it when a third party pays part of a sale and the retailer must claim it, or when one payer's
 link (an insurer's claims platform) must be written for a market. For a payer that pays the whole sale on account,

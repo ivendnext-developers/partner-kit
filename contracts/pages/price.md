@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/price.md @ 7d47d331a203, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/price.md @ b453a68eac6c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Pricing extension point
 
 **Contract:** [`price.v1.schema.json`](../extension_contracts/price.v1.schema.json)
@@ -31,6 +31,14 @@ is priced without your module until the platform has its own call for it.
 Version 1 (`price/1`, `v: 1` in the input). A module is admitted for this extension point only under our
 certificate (iVendNext signs a module's SHA-256, its extension point, its version and whether it is metered). A module certified by
 iVendNext runs once a System Manager adds it in iVendNext Desk; a shop that adds none runs none.
+
+**A recall.** iVendNext can recall one certified module by its SHA-256, in a release. From the shop's next
+deploy the module is refused where it is added (a package install too), the server stops running it, and the
+till's next snapshot names no module, so the till takes nothing off. A till that stays offline runs the module it
+holds until it next reads a snapshot; such a sale is never refused at the drain: it books at the platform's price
+(your module's answer is not taken, re-run or not), its row reads *recalled*, and it goes to *Sales to review*
+because the customer paid less.
+Online, every sale books at the platform's price with a flagged row until the shop removes the service.
 
 ## 3. What your module reads, and what it answers
 
@@ -113,7 +121,7 @@ At the drain the server re-prices with **the version the till used**:
    the till's own adjustments, judged by section 3's rules on the server's numbers and today's limit, then
    booked and flagged;
 3. else the platform's own price: the customer was charged less, so the sale goes to review on *Sales to
-   review*.
+   review*. A version iVendNext recalled, or one no longer signed by a key iVendNext uses, always books here.
 
 An online sale whose checkout was interrupted after the money was taken is replayed at the drain with the
 module run live; if it runs out of its clock there, that counts as no answer: the sale books at the platform's
@@ -131,8 +139,9 @@ on the till, and at the drain the server's judges undo it, so the sale goes to r
   promotion they earned), and its percent then applies to the lines it covers **after** your cut: 10% off
   the qualifying items stays 10% of those items, whichever line your module cut.
 - Your module's money never counts toward a cashier's own discount limit (the stack threshold).
-- A partner's package cannot install a pricing subscription today: the subscription is made in the back
-  office. A package kind for it is owed and will never carry the shop's limit.
+- A partner's package can carry your certified module and its pricing service
+  (installing a manifest §11). The service arrives switched off and the shop's limit stays 0
+  until the shop raises it: a manifest never carries the limit.
 - Your module sees a line's price however it was set: a list price, a price the cashier typed, or a price
   read from a weighed item's barcode. A shelf label priced at the till shows what a customer with no group
   pays, so a rule for every customer (`"*"`) is on the label and a member rule is not.

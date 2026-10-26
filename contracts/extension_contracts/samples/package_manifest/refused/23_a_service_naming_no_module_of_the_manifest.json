@@ -1,0 +1,33 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A module's service naming a module the manifest does not carry.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_mod",
+    "prefix": "PP MOD",
+    "version": "0.1.0",
+    "extension_modules": [
+      {
+        "key": "basket_check",
+        "point": "check",
+        "version": 1,
+        "metered": true,
+        "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+        "certificate": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        "wasm": "AGFzbQEAAAA="
+      }
+    ],
+    "extension_subscriptions": [
+      {
+        "key": "basket_check",
+        "point": "check",
+        "label": "Basket check",
+        "transport": "wasm",
+        "module": "another"
+      }
+    ]
+  },
+  "expect_refusal": "names no module of this manifest",
+  "beyond_schema": true
+}

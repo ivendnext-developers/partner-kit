@@ -1,0 +1,33 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "The module's bytes are not the ones its SHA-256 names.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_mod",
+    "prefix": "PP MOD",
+    "version": "0.1.0",
+    "extension_modules": [
+      {
+        "key": "member_price",
+        "point": "price",
+        "version": 1,
+        "metered": true,
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "certificate": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        "wasm": "AGFzbQEAAAA="
+      }
+    ],
+    "extension_subscriptions": [
+      {
+        "key": "member_price",
+        "point": "price",
+        "label": "Member price",
+        "transport": "wasm",
+        "module": "member_price"
+      }
+    ]
+  },
+  "expect_refusal": "is not the SHA-256 of the module's bytes",
+  "beyond_schema": true
+}

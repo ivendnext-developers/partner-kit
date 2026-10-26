@@ -1,0 +1,20 @@
+{
+  "extension_point": "payer",
+  "contract": "coverage_answer",
+  "about": "The vitamins are not on the plan's list: the payer leg waits until the line goes.",
+  "payload": {
+    "answer": "refuse",
+    "lines": [
+      {
+        "line_id": "L1",
+        "sellable": true
+      },
+      {
+        "line_id": "L2",
+        "sellable": false,
+        "reason": "not_on_list",
+        "message": "Vitamin C is not on the Gold plan's list. Remove it or sell without the payer."
+      }
+    ]
+  }
+}

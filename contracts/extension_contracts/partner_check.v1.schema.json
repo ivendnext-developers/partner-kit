@@ -21,7 +21,7 @@
       }
     },
     "context": {
-      "description": "The server's own numbers (business_logic/partner_check.py build_context). Money is a whole number of minor units with the currency's digits; quantity is in thousandths. No card data, serial or batch.",
+      "description": "The server's own numbers (business_logic/partner_check.py build_context). Money is a whole number of minor units with the currency's digits; quantity is in thousandths. No card data. Each line's lot and serial numbers only to a check whose subscription asks for them (check_send_lots).",
       "type": "object",
       "required": [
         "v",
@@ -183,6 +183,14 @@
                     }
                   }
                 }
+              },
+              "batch_no": {
+                "description": "The row's lot: the cashier's pick, a scanned pack's, or the store's own pick where its stock settings pick for the cashier; empty when the row has none, and for a line that books no unit at this store (an order's or a quotation's line, a sale's line delivered from another store), or a delivered order line whose lots sit on its stock record alone. Sent only to a check whose subscription ticks check_send_lots. Added after version 1 first shipped.",
+                "type": "string"
+              },
+              "serial_no": {
+                "description": "The row's serial numbers, one to a line (a newline between two); empty when none. Sent only to a check whose subscription ticks check_send_lots. Added after version 1 first shipped.",
+                "type": "string"
               }
             }
           }
@@ -417,6 +425,13 @@
           ]
         },
         "consent_given": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "check_send_lots": {
+          "description": "Send each line's lot and serial number (batch_no, serial_no). An address check only; a manifest cannot set it, the shop ticks it.",
           "enum": [
             0,
             1

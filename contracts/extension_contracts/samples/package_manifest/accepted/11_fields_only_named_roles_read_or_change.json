@@ -1,0 +1,36 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "Two fields on the shop's Customer limited to roles: a licence number only the pharmacists read and change, and a barred tick every role that reads Customer reads and only the claims clerks change.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_rxl",
+    "prefix": "PP RXL",
+    "version": "1.0.0",
+    "custom_fields": [
+      {
+        "dt": "Customer",
+        "fieldname": "pp_rxl_licence",
+        "fieldtype": "Data",
+        "label": "Licence number",
+        "insert_after": "customer_name",
+        "read_roles": [
+          "PP RXL Pharmacist"
+        ],
+        "write_roles": [
+          "PP RXL Pharmacist"
+        ]
+      },
+      {
+        "dt": "Customer",
+        "fieldname": "pp_rxl_barred",
+        "fieldtype": "Check",
+        "label": "Barred from the payer",
+        "insert_after": "customer_name",
+        "write_roles": [
+          "PP RXL Claims"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,464 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ivendnext.com/extending/contracts/register_book.v1.schema.json",
+  "title": "Register book, version 1",
+  "description": "One book of a regulated-stock register, as a manifest's register_books element declares it (installed as a Retail Register Book). Judged by business_logic/manifest_check.py _register_books for its shape, and by business_logic/register_book.py validate_book when the record is saved: every field, table, sale detail, record type and role a book names must exist on the site, beyond what a schema can read. Page: docs/extending/register_books.md.",
+  "$defs": {
+    "declaration": {
+      "description": "A book takes its items by classes (read per book from class_source) or by item groups; at most three routing conditions on the line's own columns, all of which must hold; a date or time column routes only on is set / is not set.",
+      "type": "object",
+      "required": [
+        "book",
+        "title",
+        "data_set",
+        "cite",
+        "certified",
+        "enabled",
+        "numbering",
+        "balance",
+        "correction",
+        "retention_years",
+        "count_role",
+        "items",
+        "columns"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "book": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,60}(\\.[a-z][a-z0-9_]{0,60})?$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "data_set": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,60}$"
+        },
+        "cite": {
+          "type": "string",
+          "minLength": 1
+        },
+        "certified": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "enabled": {
+          "description": "Installed as declared, on or off; an update never switches it.",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "medium": {
+          "description": "What the book is kept on: its printed pages (the default), this system, the authority's own numbered book (its lines print at the authority's page and line), or the authority's own system (the shop's lines are a working register).",
+          "enum": [
+            "printed_book",
+            "system_of_record",
+            "official_book",
+            "regulator_system"
+          ]
+        },
+        "numbering": {
+          "enum": [
+            "book_store",
+            "book_store_item"
+          ]
+        },
+        "balance": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "correction": {
+          "enum": [
+            "reversing_line",
+            "dated_note",
+            "signed_strike_through",
+            "signed_amendment"
+          ]
+        },
+        "retention_years": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "period_months": {
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            12
+          ]
+        },
+        "return_due_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count_role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "count_witness": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "loss_count_hours": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "items": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "classes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "item_groups": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          },
+          "oneOf": [
+            {
+              "required": [
+                "classes"
+              ],
+              "not": {
+                "required": [
+                  "item_groups"
+                ]
+              }
+            },
+            {
+              "required": [
+                "item_groups"
+              ],
+              "not": {
+                "required": [
+                  "classes"
+                ]
+              }
+            }
+          ]
+        },
+        "class_source": {
+          "type": "object"
+        },
+        "conditions": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": [
+              "field",
+              "operator"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "field": {
+                "enum": [
+                  "number",
+                  "book",
+                  "register_store",
+                  "warehouse",
+                  "item",
+                  "item_name",
+                  "item_class",
+                  "batch_no",
+                  "expiry_date",
+                  "direction",
+                  "kind",
+                  "qty",
+                  "uom",
+                  "balance",
+                  "movement_date",
+                  "movement_time",
+                  "period",
+                  "entered_at",
+                  "entry_date",
+                  "voucher_type",
+                  "voucher_no",
+                  "counterparty",
+                  "counterparty_address",
+                  "reference_no",
+                  "authority_no",
+                  "authority_issuer",
+                  "authority_issuer_licence",
+                  "authority_date",
+                  "dispenser",
+                  "dispenser_name",
+                  "dispenser_licence",
+                  "booked_late",
+                  "incomplete",
+                  "below_zero",
+                  "correction_of",
+                  "correction_of_number",
+                  "correction_note",
+                  "signed_by",
+                  "signed_by_name",
+                  "remarks",
+                  "detail_1",
+                  "detail_2",
+                  "detail_3",
+                  "detail_4",
+                  "detail_5",
+                  "detail_6"
+                ]
+              },
+              "operator": {
+                "enum": [
+                  "=",
+                  "!=",
+                  ">",
+                  ">=",
+                  "<",
+                  "<=",
+                  "is set",
+                  "is not set"
+                ]
+              },
+              "value": {}
+            },
+            "anyOf": [
+              {
+                "properties": {
+                  "field": {
+                    "not": {
+                      "enum": [
+                        "expiry_date",
+                        "movement_date",
+                        "movement_time",
+                        "entered_at",
+                        "entry_date",
+                        "authority_date"
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "operator": {
+                    "enum": [
+                      "is set",
+                      "is not set"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "number",
+              "book",
+              "register_store",
+              "warehouse",
+              "item",
+              "item_name",
+              "item_class",
+              "batch_no",
+              "expiry_date",
+              "direction",
+              "kind",
+              "qty",
+              "uom",
+              "balance",
+              "movement_date",
+              "movement_time",
+              "period",
+              "entered_at",
+              "entry_date",
+              "voucher_type",
+              "voucher_no",
+              "counterparty",
+              "counterparty_address",
+              "reference_no",
+              "authority_no",
+              "authority_issuer",
+              "authority_issuer_licence",
+              "authority_date",
+              "dispenser",
+              "dispenser_name",
+              "dispenser_licence",
+              "booked_late",
+              "incomplete",
+              "below_zero",
+              "correction_of",
+              "correction_of_number",
+              "correction_note",
+              "signed_by",
+              "signed_by_name",
+              "remarks",
+              "detail_1",
+              "detail_2",
+              "detail_3",
+              "detail_4",
+              "detail_5",
+              "detail_6"
+            ]
+          }
+        },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "label",
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "number",
+                    "book",
+                    "register_store",
+                    "warehouse",
+                    "item",
+                    "item_name",
+                    "item_class",
+                    "batch_no",
+                    "expiry_date",
+                    "direction",
+                    "kind",
+                    "qty",
+                    "uom",
+                    "balance",
+                    "movement_date",
+                    "movement_time",
+                    "period",
+                    "entered_at",
+                    "entry_date",
+                    "voucher_type",
+                    "voucher_no",
+                    "counterparty",
+                    "counterparty_address",
+                    "reference_no",
+                    "authority_no",
+                    "authority_issuer",
+                    "authority_issuer_licence",
+                    "authority_date",
+                    "dispenser",
+                    "dispenser_name",
+                    "dispenser_licence",
+                    "booked_late",
+                    "incomplete",
+                    "below_zero",
+                    "correction_of",
+                    "correction_of_number",
+                    "correction_note",
+                    "signed_by",
+                    "signed_by_name",
+                    "remarks",
+                    "detail_1",
+                    "detail_2",
+                    "detail_3",
+                    "detail_4",
+                    "detail_5",
+                    "detail_6",
+                    "balance_before"
+                  ]
+                }
+              },
+              "when": {
+                "enum": [
+                  "In",
+                  "Out"
+                ]
+              },
+              "mark": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "group": {
+                "description": "The band printed over the column (a received or an issued half).",
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "detail_1": {
+              "type": "object",
+              "required": [
+                "label"
+              ]
+            },
+            "detail_2": {
+              "type": "object",
+              "required": [
+                "label"
+              ]
+            },
+            "detail_3": {
+              "type": "object",
+              "required": [
+                "label"
+              ]
+            },
+            "detail_4": {
+              "type": "object",
+              "required": [
+                "label"
+              ]
+            },
+            "detail_5": {
+              "type": "object",
+              "required": [
+                "label"
+              ]
+            },
+            "detail_6": {
+              "type": "object",
+              "required": [
+                "label"
+              ]
+            }
+          }
+        },
+        "authority": {
+          "type": "object"
+        },
+        "columns_from": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

@@ -329,7 +329,7 @@ def judge_receipt(fields: dict, items: dict, batches: dict, bundle_lots: dict, s
         if not isinstance(line, dict):
             continue
         if line.get(f("lou")) and (whole(line.get(f("lou_days"))) or 0) <= 0:
-            out.append(f"Row {i}: a Letter of Undertaking needs its days.")      # Good Life: whenever it is ticked
+            out.append(f"Row {i}: a Letter of Undertaking needs its days.")      # whenever it is ticked
             continue
         if isinstance(line.get("qty"), (int, float)) and line["qty"] <= 0 and line.get("rejected_qty"):
             continue                                       # every unit rejected: nothing of the lot is received

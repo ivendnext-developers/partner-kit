@@ -1,0 +1,60 @@
+{
+ "manifest_version": 2,
+ "app": "pp_reg",
+ "prefix": "PP REG",
+ "version": "0.1.0",
+ "publisher": "PP REG",
+ "title": "Register sample",
+ "register_books": [
+  {
+   "book": "xx_liquor.stock_book",
+   "title": "Liquor stock book",
+   "data_set": "xx_liquor",
+   "cite": "A sample: not a market's law",
+   "certified": 0,
+   "enabled": 0,
+   "items": {
+    "item_groups": [
+     "All Item Groups"
+    ]
+   },
+   "numbering": "book_store_item",
+   "balance": 1,
+   "correction": "reversing_line",
+   "retention_years": 5,
+   "count_role": "PP REG Register Approver",
+   "conditions": [
+    {
+     "field": "direction",
+     "operator": "=",
+     "value": "Out"
+    }
+   ],
+   "required": [],
+   "columns": [
+    {
+     "label": "Date",
+     "value": [
+      "movement_date"
+     ]
+    },
+    {
+     "label": "Quantity",
+     "value": [
+      "qty",
+      "uom"
+     ]
+    },
+    {
+     "label": "Balance",
+     "value": [
+      "balance"
+     ]
+    }
+   ],
+   "details": {},
+   "authority": {},
+   "columns_from": {}
+  }
+ ]
+}

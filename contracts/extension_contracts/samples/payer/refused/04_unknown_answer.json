@@ -1,0 +1,10 @@
+{
+  "extension_point": "payer",
+  "contract": "coverage_answer",
+  "about": "An answer that is none of cover, refuse or no_cover.",
+  "expect_refusal": "answer is cover, refuse or no_cover",
+  "payload": {
+    "answer": "maybe",
+    "message": "Try later."
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "extension_point": "register_book",
+  "contract": "declaration",
+  "about": "A warehouse map: the shop's own setup, never a manifest's.",
+  "payload": {
+    "book": "xx_liquor.stock_book",
+    "title": "Liquor stock book",
+    "data_set": "xx_liquor",
+    "cite": "A sample, not a market's law",
+    "certified": 0,
+    "enabled": 1,
+    "items": {
+      "item_groups": [
+        "All Item Groups"
+      ]
+    },
+    "numbering": "book_store_item",
+    "balance": 1,
+    "correction": "reversing_line",
+    "retention_years": 5,
+    "count_role": "System Manager",
+    "conditions": [],
+    "columns": [
+      {
+        "label": "Date",
+        "value": [
+          "movement_date"
+        ]
+      },
+      {
+        "label": "Received",
+        "value": [
+          "qty"
+        ],
+        "when": "In"
+      },
+      {
+        "label": "Issued",
+        "value": [
+          "qty"
+        ],
+        "when": "Out"
+      },
+      {
+        "label": "Balance",
+        "value": [
+          "balance"
+        ]
+      }
+    ],
+    "register_stores": {
+      "Stores - XX": "Main"
+    }
+  },
+  "expect_refusal": "register_stores is the shop's own setup"
+}

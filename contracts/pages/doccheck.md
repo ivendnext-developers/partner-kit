@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/doccheck.md @ 7d47d331a203, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/doccheck.md @ b453a68eac6c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Document check
 
 **Contract:** [`doccheck.v1.schema.json`](../extension_contracts/doccheck.v1.schema.json)
@@ -104,9 +104,11 @@ type may take at most 10 seconds together.*
 
 ## 5. Consent, and when your service is down
 
-The consent text a System Manager ticks is built from the settings: the record type, the moment and the
-fields that leave the shop. A change to any of them clears the consent and stops the calls until it is
-ticked again.
+The consent text a System Manager ticks is built from the settings. It names the record type, the moment
+(submitted, or saved as a draft too), what is sent with every call — the user's login (usually an email
+address) and language, the company, the record's type and name — the fields that leave the shop (money as
+minor units with its currency, quantities in thousandths), and, when the settings have any, the fields an
+answer may fill. A change to the settings (the record type, the moment, the fields that leave the shop, the fields an answer may fill) or to the address clears the consent and stops the calls until it is ticked again.
 
 No answer in time, an address that cannot be reached, or an answer refused whole: the subscription's
 declared down answer applies — `allow_and_flag` (the default: the submit goes on and the log row is

@@ -1,0 +1,37 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A module's service that also gives an address: it runs inside the shop.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_mod",
+    "prefix": "PP MOD",
+    "version": "0.1.0",
+    "extension_modules": [
+      {
+        "key": "basket_check",
+        "point": "check",
+        "version": 1,
+        "metered": true,
+        "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+        "certificate": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        "wasm": "AGFzbQEAAAA="
+      }
+    ],
+    "extension_subscriptions": [
+      {
+        "key": "basket_check",
+        "point": "check",
+        "label": "Basket check",
+        "transport": "wasm",
+        "module": "basket_check",
+        "endpoint_url": "https://partner.example/check"
+      }
+    ],
+    "allowed_urls": [
+      "https://partner.example/check"
+    ]
+  },
+  "expect_refusal": "has no address",
+  "beyond_schema": true
+}
