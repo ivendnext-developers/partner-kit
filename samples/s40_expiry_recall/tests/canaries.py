@@ -108,7 +108,7 @@ CANARIES = [
      W + "test_w4b_a_no_expiry_lot_on_a_recall_notice_is_marked"),
     ("a schedule not yet in force does not count", C, "        if frm is None or on is None or frm <= on:", "        if True:",
      CK + "Disposal.test_d11_a_schedule_not_yet_in_force_does_not_count"),
-    # wave 2: the re-grade and the critic
+    # the review's second round
     ("the visit is not after the posting date", C, "        if visit is not None and visit > posting:", "        if False:",
      CK + "Disposal.test_d8h_a_visit_after_a_backdated_disposal_is_refused"),
     ("a consumption writes off", C, '        written_off = not line.get("t_warehouse") and not made', "        written_off = False",

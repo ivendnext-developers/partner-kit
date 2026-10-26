@@ -1,0 +1,25 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A field limited to the roles that read it, naming no roles that change it.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_rxl",
+    "prefix": "PP RXL",
+    "version": "1.0.0",
+    "custom_fields": [
+      {
+        "dt": "Customer",
+        "fieldname": "pp_rxl_licence",
+        "fieldtype": "Data",
+        "label": "Licence number",
+        "insert_after": "customer_name",
+        "read_roles": [
+          "PP RXL Pharmacist"
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "names write_roles",
+  "beyond_schema": true
+}

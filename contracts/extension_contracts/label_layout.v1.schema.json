@@ -52,7 +52,7 @@
           "maximum": 10
         },
         "template": {
-          "description": "HTML. Placeholders: {item_code} {item_name} {barcode} {barcode_svg} {price} {currency} {uom} {batch_no} {expiry_date} {manufacturing_date} {weight} {unit_price} {store}. No script, frame, form, object, embed, link, meta or base tag, no javascript: and no on…= handler (the product also reads the template with HTML entities decoded and tab / CR / LF removed). A zpl template starts with ^XA and ends with ^XZ, and draws its barcode with the printer's own barcode command over {barcode}, never {barcode_svg} (the record checks it; the schema cannot say it).",
+          "description": "HTML. Placeholders: {item_code} {item_name} {barcode} {barcode_svg} {price} {currency} {uom} {batch_no} {expiry_date} {manufacturing_date} {weight} {unit_price} {store}, and, named, up to three of the item's own fields {item.<fieldname>} (a Data, Select, Int or Check field, open to every role) and one line detail {detail.<attribute>} (an active Transaction Item Attribute, the basket line's value; the record checks the field, the attribute and the counts, the schema only their shape). No script, frame, form, object, embed, link, meta or base tag, no javascript: and no on…= handler (the product also reads the template with HTML entities decoded and tab / CR / LF removed). A zpl template starts with ^XA and ends with ^XZ, and draws its barcode with the printer's own barcode command over {barcode}, never {barcode_svg} (the record checks it; the schema cannot say it).",
           "type": "string",
           "minLength": 1,
           "maxLength": 20000,
@@ -60,7 +60,7 @@
           "allOf": [
             {
               "not": {
-                "pattern": "\\{(?!(?:item_code|item_name|barcode|barcode_svg|price|currency|uom|batch_no|expiry_date|manufacturing_date|weight|unit_price|store)\\})[^{}]*\\}"
+                "pattern": "\\{(?!(?:item_code|item_name|barcode|barcode_svg|price|currency|uom|batch_no|expiry_date|manufacturing_date|weight|unit_price|store|item\\.[a-z][a-z0-9_]{0,139}|detail\\.[^{}]+)\\})[^{}]*\\}"
               }
             },
             {

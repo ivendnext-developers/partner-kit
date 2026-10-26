@@ -1,0 +1,59 @@
+{
+  "extension_point": "register_book",
+  "contract": "declaration",
+  "about": "A date column compared with a number: it reads as 0 and never holds.",
+  "payload": {
+    "book": "xx_liquor.stock_book",
+    "title": "Liquor stock book",
+    "data_set": "xx_liquor",
+    "cite": "A sample, not a market's law",
+    "certified": 0,
+    "enabled": 1,
+    "items": {
+      "item_groups": [
+        "All Item Groups"
+      ]
+    },
+    "numbering": "book_store_item",
+    "balance": 1,
+    "correction": "reversing_line",
+    "retention_years": 5,
+    "count_role": "System Manager",
+    "conditions": [
+      {
+        "field": "expiry_date",
+        "operator": ">",
+        "value": 20260101
+      }
+    ],
+    "columns": [
+      {
+        "label": "Date",
+        "value": [
+          "movement_date"
+        ]
+      },
+      {
+        "label": "Received",
+        "value": [
+          "qty"
+        ],
+        "when": "In"
+      },
+      {
+        "label": "Issued",
+        "value": [
+          "qty"
+        ],
+        "when": "Out"
+      },
+      {
+        "label": "Balance",
+        "value": [
+          "balance"
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "is a date: a condition on it uses \"is set\" or \"is not set\""
+}

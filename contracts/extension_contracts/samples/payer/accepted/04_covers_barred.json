@@ -1,0 +1,12 @@
+{
+  "extension_point": "payer",
+  "contract": "covers_answer",
+  "about": "The customer is barred today: no cover, and the payer's sentence.",
+  "payload": {
+    "covers": [],
+    "refused": {
+      "code": "barred",
+      "message": "This member is barred. Ask them to call their insurer."
+    }
+  }
+}

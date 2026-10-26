@@ -1,4 +1,4 @@
-# Source: ivendnext/iVendNext_PWA apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/standins/voucher_service.py @ 7d47d331a203, copied unchanged: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board.
+# Source: ivendnext/iVendNext_PWA apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/standins/voucher_service.py @ b453a68eac6c, copied unchanged: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board.
 # Copyright (c) 2026, CitiXsys Technologies and contributors
 # For license information, please see license.txt
 """A stand-in voucher service for extension point ``fulfil`` (P-FULFIL) — the two promises

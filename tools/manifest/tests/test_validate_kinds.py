@@ -1,7 +1,8 @@
 """The extension-point kinds (row KINDS) — stdlib only, no bench:  python3 -m unittest discover -s tools/manifest/tests -v
 
 Save rules, Desk actions, extension subscriptions (Desk action and page) and the fiscal reader install from a manifest;
-a package cannot install a module yet, so a manifest that carries one is refused, with the reason that says where a module goes. Each fixture passes; each forbidden element, planted
+a package may carry a certified module only for an extension point that runs one (what a module must carry is
+test_manifest_check_modules.py's). Each fixture passes; each forbidden element, planted
 into it, is refused with its own reason and nothing else; the fiscal reader's warnings name what the shop must do."""
 
 import copy
@@ -84,7 +85,9 @@ FORBIDDEN = [
      "one of the extension points"),
     ("page settings on a Desk action subscription", KINDS, at("extension_subscriptions", page_height=50), "page subscription"),
     ("a subscription choosing the stores", KINDS, at("extension_subscriptions", scope=["Store 1"]), "which stores"),
-    ("a subscription answered by a module", KINDS, at("extension_subscriptions", transport="wasm"), "sandboxed"),
+    ("a Desk action answered by a module", KINDS,
+     lambda m: (m["extension_subscriptions"][0].update(transport="wasm"), m["extension_subscriptions"][0].pop("endpoint_url")),
+     "the desk_action extension point runs no module"),
     ("a key a subscription may not carry", KINDS, at("extension_subscriptions", settings="{}"), "keys this kind may not carry"),
     ("a page opened to visitors", KINDS, at("extension_subscriptions", 1, page_roles=["Guest"]), "visitors"),
     ("a page opened to every staff user", KINDS, at("extension_subscriptions", 1, page_roles=["Desk User"]), "Desk User"),
@@ -130,7 +133,7 @@ FORBIDDEN = [
         "dt": "Customer", "fieldname": "pp_knd_note", "fieldtype": "Data", "label": "Note", "permlevel": 2}]),
      "keys a field may not carry"),
     # coverage: every remaining refusal the new kinds add
-    ("a subscription naming a module", KINDS, at("extension_subscriptions", module="PP KND mod"), "sandboxed"),
+    ("a subscription naming a module", KINDS, at("extension_subscriptions", module="PP KND mod"), "so its transport is wasm"),
     ("Desk action conditions that are not objects", KINDS, at("desk_actions", conditions=["customer_name"]), "list of objects"),
     ("Desk action inputs that are not objects", KINDS, at("desk_actions", inputs=["note"]), "list of objects"),
     ("a Desk action input of a type the product refuses", KINDS,
@@ -142,7 +145,6 @@ FORBIDDEN = [
     ("one writer user named twice", FISCAL, at("fiscal_readers", writer_users=["fbr_service", "fbr_service"]), "writer_users is"),
     ("a QR field the manifest does not add", FISCAL, at("fiscal_readers", qr_field="pp_fbr_qr"), "qr_field names"),
     # the kinds still waiting, and the placeholder that was renamed
-    ("a module", KINDS, lambda m: m.update(extension_modules=[{"point": "desk_action"}]), "cannot install a sandboxed module"),
     ("the old placeholder name", KINDS, lambda m: m.update(point_subscriptions=[{}]), "extension_subscriptions"),
 ]
 

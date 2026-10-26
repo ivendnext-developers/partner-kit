@@ -1,0 +1,20 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A print format reading the Company through the framework's own reader, which skips the viewer's rights: a record type ivn_rows serves is read through ivn_rows or ivn_value (2.1.0).",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_plc",
+    "prefix": "PP PLC",
+    "version": "1.0.0",
+    "print_formats": [
+      {
+        "name": "PP PLC Receipt",
+        "doc_type": "POS Invoice",
+        "html": "{{ db.get_value('Company', doc.company, 'tax_id') }}"
+      }
+    ]
+  },
+  "expect_refusal": "may not read Company through the framework's own helpers",
+  "beyond_schema": true
+}

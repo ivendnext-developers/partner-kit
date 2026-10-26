@@ -27,10 +27,12 @@ TITLE_DOOR = {
     "List mark": "manifest",           # a manifest kind (list_marks): any ready manifest card satisfies this door
     "Partner fulfil — a code your service makes for a paid sale line": "fulfil-at-sale",
     "Partner page": "partner-page",
+    "Payer — your service pays part of a sale for someone else": "payer",
     "The iVendNext Remote Gateway Contract — `paygw/1` (Payment Gateway Interface 1)": "payment-connector",
     "Pricing extension point": "sandboxed-function",
     "Print template readers — `ivn_rows` and `ivn_value`": "manifest",   # read by a manifest's print format: as above
     "Receipt: the shop's own lines, WhatsApp, a checked layout": "receipt",
+    "Register books": "register-books",
     "Remote till key": "till-key",
     "Save rules": "save-rules",
     "Scan source": "scan-source",

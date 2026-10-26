@@ -21,7 +21,8 @@ import validate  # noqa: E402
 PAGES = HERE.parents[2] / "contracts" / "pages"
 
 # The longest time to answer, in seconds, as each page says it (the figures are read from the pages' own sentences below).
-LONGEST = {"desk_action": 10, "page": 10, "check": 10, "capture": 10, "doccheck": 10, "fulfil": 10}
+# The price page states the module's one-second clock, not its service's 10: that figure is the checker's alone.
+LONGEST = {"desk_action": 10, "page": 10, "check": 10, "capture": 10, "doccheck": 10, "fulfil": 10, "price": 10, "payer": 5}
 CAPTURE = {"scan": 3, "customer_add": 10, "customer_select": 10, "qty_change": 3}
 
 
@@ -45,6 +46,7 @@ class TimeLimits(unittest.TestCase):
         self.assertIn("On a quantity change (1.5 seconds unless raised, 3 at most)", capture)
         self.assertIn("the time to answer (3 seconds unless raised, at most 10)", page("doccheck"))
         self.assertIn("a time to answer (5 seconds unless raised, at most 10)", page("partner_fulfil"))
+        self.assertIn("(at most 5 seconds; 3 when left empty)", page("payer"))
 
 
 if __name__ == "__main__":

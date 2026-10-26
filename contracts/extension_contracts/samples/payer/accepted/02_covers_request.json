@@ -1,0 +1,18 @@
+{
+  "extension_point": "payer",
+  "contract": "covers_request",
+  "about": "The cashier pressed Payer on a sale to a named customer.",
+  "payload": {
+    "point": "payer/1",
+    "context": {
+      "v": 1,
+      "point": "payer",
+      "call": "covers",
+      "customer": "Amal Hassan",
+      "date": "2026-10-25",
+      "store": "Main Store - MTC",
+      "pos_profile": "Main Till",
+      "operator": "cashier@shop.example"
+    }
+  }
+}

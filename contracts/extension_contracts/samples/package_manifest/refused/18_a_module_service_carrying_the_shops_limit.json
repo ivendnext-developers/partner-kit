@@ -1,0 +1,34 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A pricing service that sets the most its module may take off: that limit is the shop's, installed at 0.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_mod",
+    "prefix": "PP MOD",
+    "version": "0.1.0",
+    "extension_modules": [
+      {
+        "key": "member_price",
+        "point": "price",
+        "version": 1,
+        "metered": true,
+        "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+        "certificate": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        "wasm": "AGFzbQEAAAA="
+      }
+    ],
+    "extension_subscriptions": [
+      {
+        "key": "member_price",
+        "point": "price",
+        "label": "Member price",
+        "transport": "wasm",
+        "module": "member_price",
+        "max_discount_percent": 10
+      }
+    ]
+  },
+  "expect_refusal": "installed at 0 and the shop raises it",
+  "beyond_schema": true
+}

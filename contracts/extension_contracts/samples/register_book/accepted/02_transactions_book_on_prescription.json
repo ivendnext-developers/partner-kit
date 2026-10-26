@@ -1,0 +1,59 @@
+{
+  "extension_point": "register_book",
+  "contract": "declaration",
+  "about": "A book of transactions (no balance) for sales on a prescription, numbered per store.",
+  "payload": {
+    "book": "xx_poisons.sales_book",
+    "title": "Sales on prescription",
+    "data_set": "xx_poisons",
+    "cite": "A sample, not a market's law",
+    "certified": 0,
+    "enabled": 1,
+    "items": {
+      "item_groups": [
+        "All Item Groups"
+      ]
+    },
+    "numbering": "book_store",
+    "balance": 0,
+    "correction": "signed_strike_through",
+    "retention_years": 5,
+    "count_role": "System Manager",
+    "conditions": [
+      {
+        "field": "kind",
+        "operator": "=",
+        "value": "Sale"
+      },
+      {
+        "field": "authority_no",
+        "operator": "is set"
+      }
+    ],
+    "columns": [
+      {
+        "label": "Date",
+        "value": [
+          "movement_date"
+        ]
+      },
+      {
+        "label": "Supplied to",
+        "value": [
+          "counterparty",
+          "counterparty_address"
+        ]
+      },
+      {
+        "label": "Prescription",
+        "value": [
+          "authority_no"
+        ]
+      }
+    ],
+    "required": [
+      "counterparty",
+      "counterparty_address"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "extension_point": "payer",
+  "contract": "covers_answer",
+  "about": "The member number in full on the receipt's label: only its last four digits may show.",
+  "expect_refusal": "member_label shows more than the member number's last four digits",
+  "payload": {
+    "covers": [
+      {
+        "member": "GLI-778812",
+        "payer": "GLI",
+        "payer_title": "Generic Insurer",
+        "payer_customer": "MPOS Payer Sample Insurer",
+        "plan": "GOLD",
+        "plan_title": "Gold plan",
+        "member_label": "7788120123",
+        "valid_to": "2099-12-31"
+      }
+    ],
+    "refused": null
+  }
+}

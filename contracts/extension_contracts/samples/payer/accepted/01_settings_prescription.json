@@ -1,0 +1,13 @@
+{
+  "extension_point": "payer",
+  "contract": "settings",
+  "about": "A pharmacy's payer service: the prescription's three sale details, and a claims clerk's role that may bill a claim back.",
+  "payload": {
+    "prescription": {
+      "reference": "PP RXC Rx Number",
+      "prescriber": "PP RXC Prescriber",
+      "prescriber_licence": "PP RXC Prescriber Licence"
+    },
+    "bill_back_role": "PP ICP Claims Clerk"
+  }
+}

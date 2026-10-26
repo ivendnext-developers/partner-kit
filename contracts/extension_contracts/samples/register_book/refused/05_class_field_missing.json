@@ -1,0 +1,57 @@
+{
+  "extension_point": "register_book",
+  "contract": "declaration",
+  "about": "A class read from an Item field that does not exist on the site: refused at setup, never at the first sale.",
+  "payload": {
+    "book": "xx_liquor.stock_book",
+    "title": "Liquor stock book",
+    "data_set": "xx_liquor",
+    "cite": "A sample, not a market's law",
+    "certified": 0,
+    "enabled": 1,
+    "items": {
+      "classes": [
+        "XX Schedule 1"
+      ]
+    },
+    "numbering": "book_store_item",
+    "balance": 1,
+    "correction": "reversing_line",
+    "retention_years": 5,
+    "count_role": "System Manager",
+    "conditions": [],
+    "columns": [
+      {
+        "label": "Date",
+        "value": [
+          "movement_date"
+        ]
+      },
+      {
+        "label": "Received",
+        "value": [
+          "qty"
+        ],
+        "when": "In"
+      },
+      {
+        "label": "Issued",
+        "value": [
+          "qty"
+        ],
+        "when": "Out"
+      },
+      {
+        "label": "Balance",
+        "value": [
+          "balance"
+        ]
+      }
+    ],
+    "class_source": {
+      "item_field": "pp_nope_schedule"
+    }
+  },
+  "expect_refusal": "The field Item.pp_nope_schedule named in this declaration does not exist.",
+  "beyond_schema": true
+}

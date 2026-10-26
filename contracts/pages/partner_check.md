@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ 7d47d331a203, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ b453a68eac6c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner check
 
 **Contract:** [`partner_check.v1.schema.json`](../extension_contracts/partner_check.v1.schema.json)
@@ -14,7 +14,10 @@ the basket itself and asks your HTTPS service: allow it, allow it without some t
 cashier a question, or call a manager. Your answer is stored against a fingerprint of that priced basket,
 and **every door that moves money prices the basket again and compares before anything is charged** (all
 but those section 7 lists): the card push, each split leg, the refunds and the bookings. A basket changed after your answer is refused until
-the cashier presses Pay again, which asks you again.
+the cashier presses Pay again, which asks you again. **And no other door books around you:** for a POS
+Profile with your check in scope, a sale booked on the iVendNext Desk POS screen, through the API or from the
+Desk form is refused for every user — *"This sale needs a partner's check before it is paid. Ring it up on a
+till."* (section 7).
 
 It fires when the cashier presses Pay, before the payment sheet opens (`stage: "sale"`); before the refund
 choices open on every refund the till pays (`stage: "return"`): a return against its sale, a return without
@@ -38,7 +41,8 @@ and `"layaway"` were added): treat one you do not know as a return you did not e
 iVendNext Desk: your HTTPS address, a signing secret, the label the cashier sees, the time to answer (3
 seconds unless raised, 10 at most; the form shows both and stops a longer one before the save), what the
 till does when you are down (`allow_and_flag`, the default · `refuse` · `ask`), the POS Profiles it serves
-(none = all), its order (`sequence`) and **May ask for a manager's approval** (off by default). At most three
+(none = all), its order (`sequence`), **May ask for a manager's approval** (off by default) and **Send each
+line's lot and serial number** (off by default; an address check only, below). At most three
 checks answer one POS Profile, ten seconds together (the form shows one check's limit; the save adds up the
 checks of each POS Profile). Then they tick the consent (section 5).
 
@@ -73,6 +77,10 @@ checks of each POS Profile). Then they tick the consent (section 5).
   review instead.
   ⚠ Added after version 1 first shipped: a service that validates the request against an older copy of
   this contract (`additionalProperties: false`) refuses them until it takes this copy.
+- `operator` is not part of the fingerprint, but your answer pays only for the cashier it was asked for: the
+  cashier who answers your question, and the one whose sale is booked, is the `operator` you were sent. Another
+  cashier taking over the sale (a held sale resumed, a teammate on the same POS day) is asked again; a sale
+  whose card was already charged, or one synced from offline, is booked and flagged for review instead.
 - On a return, `sale_ref` is the refund attempt's own key, not a sale id.
 - On a return, `return_of`: `{"invoice", "channel", "paid_by": [tender types]}`. `channel` is `"pos"` for
   a return against a sale · `"order"` for an order's refund (`invoice` is the order; `paid_by` every tender
@@ -86,7 +94,25 @@ checks of each POS Profile). Then they tick the consent (section 5).
   their `qty_milli` is positive — judge them by your sale rule. A plan's or an order's credit paid back has
   no lines: its `totals.grand_minor` is the amount going back. ⚠ A cancelled plan's refund sends the cancel return's
   lines and their full value; the till pays back less where the plan keeps a cancellation fee.
-- No card data is sent, and no serial or batch from the item's own fields. ⚠ A unit's code can still arrive: a
+- No card data is sent. A line's lot and serial numbers are sent only to a check whose subscription ticks
+  **Send each line's lot and serial number** (`check_send_lots`): each line then also carries `batch_no` (its
+  lot, `""` when none) and `serial_no` (its serial numbers, one to a line, `""` when none), on a sale and on a
+  return. The lot is the one the sale books: the cashier's pick, a scanned pack's, or the store's own pick
+  where its stock settings pick for the cashier (a pick from two lots is two lines, one lot each); nothing
+  tells you which of the three it was. On a store that does not pick for the cashier, the till asks for the
+  lot at Checkout, before you are asked. A set's parts are not sent: a set is one line, with no lot of its
+  own. A line that books no unit at this store is sent `""`: an order's or a quotation's line, and a sale's
+  line delivered from another store (that store picks the lot when the goods leave); so is a delivered
+  order line whose lots sit on its stock record alone (an order delivered from two lots). A check without the tick receives each line
+  exactly as before. Each line's lot is **part of the fingerprint** whether or not it is sent: a lot
+  changed after your answer is asked again before money moves (on a store that picks lots for the
+  cashier, another till can take the last of the picked lot in between); a sale whose card was already
+  charged, or one synced from offline, is booked and flagged for review instead.
+  ⚠ Added after version 1 first shipped: a service that validates the request against an older copy of
+  this contract refuses `batch_no` and `serial_no` until it takes this copy.
+- A scanned GS1 pack's lot reaches you as `batch_no` when the item tracks lots, and its own serial as
+  `serial_no` when the item tracks serial numbers ([scan source](scan_source.md) section 10, units as
+  serial numbers). ⚠ A unit's code can also arrive another way: a
   scan source set to **Record the code as** a line value puts the scanned code on the line, and it reaches you in
   that line's `line_attributes`.
 
@@ -129,7 +155,7 @@ cashier makes when iVendNext refuses a carried detail is booked after your answe
 | The services are being asked | *"Checking this sale"* |
 | You refused | *"This sale can't be paid"* and your `reason`, then *Back to the basket*; on a refund *"This refund can't go ahead"*, then *Back to the return* (or *Back to the plan*, *Back to the order*, or *Back to the basket* when the refund began on the selling screen); an exchange's returned lines keep the sale's words |
 | A tender you excluded | *"Not for this sale: ⟨reason⟩"* on its row (dimmed) |
-| The basket changed after your answer, or no answer is stored for it | *"The sale changed after the check. Press Pay again."* |
+| The basket changed after your answer, no answer is stored for it, or your answer was for another cashier | *"The sale changed after the check. Press Pay again."* |
 | A cashier tried to approve their own sale | *"A cashier never approves their own sale."* |
 | Nobody can approve | *"Nobody can approve this sale. A manager needs May Approve a Partner's Check on their Retail Permission and write access to Retail Override Request."* |
 | The approvers could not be read | *"The manager approval could not be checked. Press Pay again."* |
@@ -166,8 +192,13 @@ The System Manager's tick records who ticked it, when, for which address and for
 > each line's row number, item_code, item_group, quantity, unit, price, amount, discount and captured
 > values · the sale's net, tax, discount and grand totals · the tenders offered · on a return, the original
 > sale (none for a return without its sale; the plan's order for a layaway plan's refund), whether it was
-> an order or a layaway plan, and its tender types. No card data, and no serial or batch from the item's own
-> fields; a unit's code a scan source records as a line value is among the captured values.
+> an order or a layaway plan, and its tender types. No card data, serial or batch is sent.
+
+A unit's code a scan source records as a line value is among the captured values. For a check that ticks
+**Send each line's lot and serial number**, the list's last sentence reads instead: *"Each line's lot
+(batch_no) and serial numbers (serial_no) are sent. No card data is sent."* Ticking or clearing that box
+changes the list, so that check's consent lapses until it is ticked again; a check that never ticks it keeps
+the words above, and its consent.
 
 Adding `pos_opening` and `pos_terminal` changed this list, so a consent ticked before it lapses: a check
 asks nobody until a System Manager ticks it again.
@@ -192,10 +223,15 @@ shop, on the server online and on the till offline. It has no network: nothing i
   its module picker lists only that partner's newest `check` modules), with no address and no secret (an
   address typed in is cleared on save), and the same label, down answer, POS Profiles and `sequence` as a
   remote check. The consent lists what the module reads and says it is not sent anywhere.
-  A new version is a new module record; the subscription names the newest.
-- **What it reads.** The same `check/1` context as section 3 (`offered_tenders` is empty on the till
-  offline; a line priced above its list reads `discount_minor` 0, where a remote service is sent the
-  negative figure iVendNext books), written as canonical JSON: keys sorted, no spaces, raw UTF-8, whole
+  A new version is a new module record; the subscription names the newest. A package can carry the module and
+  its subscription instead (installing a manifest §11), installed switched off.
+- **A recall.** iVendNext can recall one certified module by its SHA-256, in a release. From the shop's next
+  deploy the module is refused where it is added, the server stops running it, and the till's next snapshot
+  names no module, so the check takes your down answer on every till. A till that stays offline runs the
+  module it holds until it next reads a snapshot; such a sale syncs flagged, never refused.
+- **What it reads.** The same `check/1` context as section 3, never a line's `batch_no` or `serial_no` (`offered_tenders` is empty on the till
+  offline; a line priced above its list reads `discount_minor` 0; a remote service reads 0 for a price
+  typed above the list too, since the typed price is the line's list, as in iVendNext Desk), written as canonical JSON: keys sorted, no spaces, raw UTF-8, whole
   numbers only from 0 to 2⁵³−1, nested at most 32 deep. Server and till write the same bytes for the same
   sale.
 - **What it answers.** `run()` reads the context with `read_input`, writes one answer with `write_output`
@@ -218,7 +254,7 @@ shop, on the server online and on the till offline. It has no network: nothing i
   ran — only if that version was active for the sale, judged by the time the till rang the sale, which the
   server checks against the open POS day — and writes on the flagged row whether they agreed, disagreed
   (both answers), or why it could not run it (never admitted, not active for this sale, withdrawn or its
-  file gone, or no answer from the till), and what the current version says when the till ran an older one
+  file gone, recalled by iVendNext, or no answer from the till), and what the current version says when the till ran an older one
   and they answer differently.
 
 **Measured:** the till starts a module in 21.3 ms on a throttled stand-in (6× CPU slow-down) against a
@@ -232,7 +268,23 @@ payment, and a door that already charged a card never refuses.
 Limits: texts 1 to 140 · `exclude_tenders` 1 to 20 · 500 lines sent · answer 64 KB · 3 seconds unless
 raised, at most 10 · at most 3 checks per POS Profile, 10 seconds together.
 
-**Not in this version:** parks to a till, layaway deposits, account collections and a gift card's balance
+**A sale with a third-party payer is checked again on the plan's prices.** Your check is asked at Pay on the
+sale's own prices (the customer's price list, else the store's), and again whenever the sale's payer changes:
+when the payer's answer lands (the plan prices the lines on its own list), when the payer is asked again or
+removed, and when the cashier comes back to the split from the payment screen. Expect more than one round per
+sale; each answers for the figures it was asked about. ⚠ `price_list` stays the sale's header list (the
+customer's own) on a plan-priced round: the lines' rates are the plan's. A refusal, the cashier's No or no
+manager's approval on the plan's prices takes the payer off the sale.
+
+**Every door that books a sale or a return, on any screen.** At a POS Profile with your check in scope, a
+sale or return booked anywhere but the till's own doors (the iVendNext Desk POS screen, the API, the Desk
+form, a held sale submitted from either, an import) is refused for every user. Outside the till a line
+leaving another store's stock also takes that store's checks. ⚠ **A check is per POS Profile:** a profile
+of the same store left out of your scope sells unchecked — on its till and on the Desk alike. Scope your
+check to every profile on that store's warehouse, or leave it unlimited (no profile rows).
+
+**Not in this version:** parks to a till, layaway deposits, an order (its placement, a change and its
+delivery), a layaway plan's final payment and pickup, account collections and a gift card's balance
 paid out in cash are not checked. An
 order's change takes no money: what it leaves owed goes back through the order's pay-back, which is
 checked. Two finishes move no money at the till, so nothing is checked: a cancelled layaway plan whose

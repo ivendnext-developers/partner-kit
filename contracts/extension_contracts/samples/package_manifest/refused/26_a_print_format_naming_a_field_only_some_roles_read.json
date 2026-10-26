@@ -1,0 +1,35 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A print format on Customer that prints a field only the pharmacists read: whoever prints it would see it.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_rxl",
+    "prefix": "PP RXL",
+    "version": "1.0.0",
+    "custom_fields": [
+      {
+        "dt": "Customer",
+        "fieldname": "pp_rxl_licence",
+        "fieldtype": "Data",
+        "label": "Licence number",
+        "insert_after": "customer_name",
+        "read_roles": [
+          "PP RXL Pharmacist"
+        ],
+        "write_roles": [
+          "PP RXL Pharmacist"
+        ]
+      }
+    ],
+    "print_formats": [
+      {
+        "name": "PP RXL Card",
+        "doc_type": "Customer",
+        "html": "<p>{{ doc.pp_rxl_licence }}</p>"
+      }
+    ]
+  },
+  "expect_refusal": "a field only some roles read",
+  "beyond_schema": true
+}

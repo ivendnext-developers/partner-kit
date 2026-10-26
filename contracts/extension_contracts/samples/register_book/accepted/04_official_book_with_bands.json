@@ -1,0 +1,77 @@
+{
+  "extension_point": "register_book",
+  "contract": "declaration",
+  "about": "A ledger printed into the authority's own numbered book, page per drug, its received and issued columns under two bands, with the balance before each line.",
+  "payload": {
+    "book": "xx_narcotics.official_ledger",
+    "title": "Narcotics ledger",
+    "data_set": "xx_narcotics",
+    "cite": "A sample, not a market's law",
+    "certified": 0,
+    "enabled": 1,
+    "medium": "official_book",
+    "items": {
+      "item_groups": [
+        "All Item Groups"
+      ]
+    },
+    "numbering": "book_store_item",
+    "balance": 1,
+    "correction": "reversing_line",
+    "retention_years": 5,
+    "count_role": "System Manager",
+    "conditions": [],
+    "columns": [
+      {
+        "label": "Date",
+        "value": [
+          "movement_date"
+        ]
+      },
+      {
+        "label": "Previous balance",
+        "value": [
+          "balance_before"
+        ]
+      },
+      {
+        "label": "Quantity",
+        "value": [
+          "qty"
+        ],
+        "when": "In",
+        "group": "Received"
+      },
+      {
+        "label": "From",
+        "value": [
+          "counterparty"
+        ],
+        "when": "In",
+        "group": "Received"
+      },
+      {
+        "label": "Quantity",
+        "value": [
+          "qty"
+        ],
+        "when": "Out",
+        "group": "Issued"
+      },
+      {
+        "label": "Prescription",
+        "value": [
+          "authority_no"
+        ],
+        "when": "Out",
+        "group": "Issued"
+      },
+      {
+        "label": "Balance",
+        "value": [
+          "balance"
+        ]
+      }
+    ]
+  }
+}

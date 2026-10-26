@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/save_rules.md @ 7d47d331a203, copied unchanged except the links, the framework's own calls (named by what they do), a customer's name and a reference to our board: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/save_rules.md @ b453a68eac6c, copied unchanged except the links, the framework's own calls (named by what they do), a customer's name and a reference to our board: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Save rules
 
 **Contract:** [`save_rules.v1.schema.json`](../extension_contracts/save_rules.v1.schema.json)
@@ -21,7 +21,7 @@ when a row of a ruled table is saved on its own (a row deleted on its own is che
 check returns after one cached read and no query.
 
 A `role_for_action` rule fires at the **submit** or the **cancel** it names — on every door: the Desk's
-Submit and Cancel, an import that submits, the API's submit (`ivendnext_mpos.api.v1.submit`), a cancel through the API, and the REST API — and
+Submit and Cancel, an import that submits, the API's submit (`ivendnext_mpos.api.v1.submit`), the API's cancel and the REST API — and
 nowhere else; a draft's save never asks it. Every other kind fires at the save, as above, and not again
 at the submit or the cancel, so a flag rule writes one row for one submit — ⚠ except where a partner's
 document check fills fields at the submit ([doccheck](doccheck.md)): every kind but `role_for_action` then
@@ -36,9 +36,9 @@ held.
 
 Version 1: the ten kinds below (`unique_across` and `role_for_action` added 2026-10-16, `count_per_day` and
 the `in` condition later the same day). A new kind is added in version 1; an existing kind never changes what it
-checks — with one dated exception: on 2026-10-17 (lane `prules3`) `derived` gained `sum_rows` and `count_rows`,
+checks — with one dated exception: on 2026-10-17 `derived` gained `sum_rows` and `count_rows`,
 began running at the submit, and its money check tightened (§7), so a rule saved before may stop writing (it is
-listed at the upgrade's migrate). Later on 2026-10-17 (lane `prules4`) `percent` began clearing its figure when
+listed at the upgrade's migrate). Later on 2026-10-17 `percent` began clearing its figure when
 a source is empty or its base is 0 (it kept the last one), and three kinds gained optional keys, each changing nothing for a rule
 that does not use it: `derived` the formula `days_between`, `threshold`
 `judge_on_change` and a limit read from a settings record (`value_from_type` …), and `required_when` on a
@@ -212,7 +212,7 @@ the save goes on: a figure guards nothing (a total of rows, or any rule on a mon
 was removed reads as a refused field: it writes nothing and logs once, with no flag). A rule saved before this check tightened, whose field it now
 refuses, writes nothing — on the record's save and on a row saved on its own alike — (the figure freezes) and
 logs one error until any rule is saved again (or the cache is cleared); such a rule
-can still be switched off, and the upgrade's migrate lists them per site (`prules3 offender: …`).
+can still be switched off, and the upgrade's migrate lists them per site.
 
 Limits: message 140 · written pattern 100 characters, at most 2 repeats or choices, and it reads at most
 140 characters of a value · 1 to 3 conditions (0 to 3 for `role_for_action`) · decimals 0 to 6 · 3 scope

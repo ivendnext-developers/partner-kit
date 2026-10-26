@@ -1,0 +1,14 @@
+{
+  "_about": "One entry of a Made for you shelf's list (the `apps` of an applib-shelf-list) for an app hosted by CitiXsys. `app_keys` maps each site the shelf serves, by its key address in lower case, to that app's own App library key for that site: an IVN1- applib-key of kind paid whose `app` is the entry's and whose `host` is that address. A site keeps and sends only the key under its own address, after the same checks as a pasted key (withdrawn: the public catalogue's `revoked`). An entry without `app_keys`, or without this site's address in it, installs as before and does not connect itself. Written by the library's publish (Partner board LIB20), read by the site (`app_library.entry_app_key`); both test against this file. The key texts here are placeholders, and the entry shows only what this contract adds: a real entry also carries the card's other fields (`summary`, `maker`, `reaches`, `read_from_outside`, `desk_users`, …), which the site checks against the manifest.",
+  "app": "pp_bln",
+  "title": {"en": "Bins"},
+  "version": "0.1.0",
+  "door": "library",
+  "access": "key",
+  "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "for": "Chain A",
+  "app_keys": {
+    "chain-a-test.ivendnext.com": "IVN1-cGF5bG9hZC1mb3ItY2hhaW4tYS10ZXN0.c2lnbmF0dXJl",
+    "chain-a.ivendnext.com": "IVN1-cGF5bG9hZC1mb3ItY2hhaW4tYQ.c2lnbmF0dXJl"
+  }
+}

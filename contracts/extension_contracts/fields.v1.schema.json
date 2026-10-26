@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ivendnext.com/extending/contracts/fields.v1.schema.json",
   "title": "Field rules, version 1",
-  "description": "A POS Studio theme's field rules (Retail POS Theme, table field_rules), as a shop or a partner declares them in Desk, the REST API or an import. Checked at save by business_logic/pos_fields.py validate_field_rules; what the schema cannot see (that a shown field exists and is Data, Select, Int or Check; that a sale attribute is active and not required; at most three more Item and three more Customer fields) is checked there too. Page: docs/extending/fields.md.",
+  "description": "A POS Studio theme's field rules (Retail POS Theme, table field_rules), as a shop or a partner declares them in Desk, the REST API or an import. Checked at save by business_logic/pos_fields.py validate_field_rules; what the schema cannot see (that a shown field exists and is Data, Select, Int or Check; that a sale attribute is active and not required; at most three more Item and three more Customer fields) is checked there too; and a field asked for at customer add (show on customer_create) is one the shop or an app added, Data, Select, Int or Date, at most three. Page: docs/extending/fields.md.",
   "$defs": {
     "declaration": {
       "type": "object",
@@ -118,6 +118,7 @@
             },
             "surface": {
               "enum": [
+                "customer_create",
                 "customer_card",
                 "cart_line",
                 "item_result",
@@ -155,6 +156,10 @@
           "maximum": 3
         }
       }
+    },
+    "input_limit": {
+      "description": "at most this many of the shop's own Customer fields a theme may ask for at customer add and edit (show on customer_create), counted apart from the shown fields.",
+      "maximum": 3
     }
   }
 }

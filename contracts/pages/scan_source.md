@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/scan_source.md @ 7d47d331a203, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/scan_source.md @ b453a68eac6c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Scan source
 
 **Contract:** [`scan_source.v1.schema.json`](../extension_contracts/scan_source.v1.schema.json)
@@ -73,7 +73,9 @@ AI the reader knows is stepped over; any other AI ends the read, keeping what ca
 
 **When the source is saved:** *"Choose the table the unit codes are kept in."* · *"⟨record type⟩ cannot hold
 unit codes."* · *"⟨record type⟩ has no field ⟨field⟩."* · *"⟨field⟩ is a password field and is never read at
-the till."* · *"Set ⟨field⟩ unique on ⟨record type⟩ first, so one code names one unit."* · *"parent means the
+the till."* · *"⟨field⟩ is a field only some roles can see and is never read at the till."* (a scan answers
+any cashier; a source saved before its field was put at a level keeps answering until it is saved again) ·
+*"Set ⟨field⟩ unique on ⟨record type⟩ first, so one code names one unit."* · *"parent means the
 Batch a row belongs to, so the table must sit on Batch."* · *"⟨field⟩ must link to ⟨Item / Batch / Serial No /
 Warehouse⟩."* · *"Name at least one status a unit can be sold in."* · *"Recording the code needs a status
 field, so a returned unit can be sold again."* · *"⟨attribute⟩ is not an active line attribute."*
@@ -151,8 +153,8 @@ Nothing is declared and no code is installed.
   not on a set's components, at the till and in iVendNext Desk alike): keep expired stock off the shelf.
 - A promotion restricted to named units of a batch-and-serial item must name both the units' serials and
   their batches: the promotion checks each, and the till books every unit with its batch.
-- Delivering an order, or handing over a layaway, that holds serial or batch stock is refused at the till,
-  as for every serial or batch item.
+- Delivering an order, or handing over a layaway, that holds serial or batch stock asks the till to scan
+  the unit or pick the lot, as for every serial or batch item.
 - A code sold at the till and then received again on a purchase receipt, instead of coming back as a
   return, stays refused.
 - A stock count that removes units marks them *Delivered*, the same status as sold, and there is no

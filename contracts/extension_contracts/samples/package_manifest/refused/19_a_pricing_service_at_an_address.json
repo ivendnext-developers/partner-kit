@@ -1,0 +1,35 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A pricing service at a partner's address: a price cannot wait on a network, so only a module answers it.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_mod",
+    "prefix": "PP MOD",
+    "version": "0.1.0",
+    "extension_modules": [
+      {
+        "key": "member_price",
+        "point": "price",
+        "version": 1,
+        "metered": true,
+        "sha256": "93a44bbb96c751218e4c00d479e4c14358122a389acca16205b1e4d0dc5f9476",
+        "certificate": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        "wasm": "AGFzbQEAAAA="
+      }
+    ],
+    "extension_subscriptions": [
+      {
+        "key": "member_price",
+        "point": "price",
+        "label": "Member price",
+        "endpoint_url": "https://partner.example/price"
+      }
+    ],
+    "allowed_urls": [
+      "https://partner.example/price"
+    ]
+  },
+  "expect_refusal": "takes a module only",
+  "beyond_schema": true
+}

@@ -137,8 +137,12 @@ FORBIDDEN = [
     ("a rule a field cannot take", at("field_rules", 2, surface="cart_line", field="qty", action="require"),
      "qty on cart_line can't take this rule."),
     ("a price on a screen", at("field_rules", 1, surface="cart_line", field="rate"), "rate on cart_line can't take this rule."),
-    ("showing more on a screen with no record type", at("field_rules", 2, action="show"),
-     "Nothing more can be shown on customer_create."),
+    ("showing more on a screen with no record type", at("field_rules", 2, surface="totals", action="show"),
+     "Nothing more can be shown on totals."),
+    ("asking for four customer fields at customer add", lambda m: m["field_rules"].extend(
+        {"theme": "PP Partner Till", "surface": "customer_create", "field": f, "action": "show"}
+        for f in ("pp_a", "pp_b", "pp_c", "pp_d")),
+     "Up to 3 customer fields can be asked for. This theme asks for 4."),
     ("showing four more Item fields", lambda m: m["field_rules"].extend(
         {"theme": "PP Partner Till", "surface": "item_result", "field": f, "action": "show"}
         for f in ("item_name", "brand", "stock_uom", "item_group")),
@@ -148,7 +152,6 @@ FORBIDDEN = [
     ("a key a field rule may not carry", at("field_rules", formula="x"), "keys this kind may not carry"),
     # what stays refused, and why
     ("a receipt block", lambda m: m.update(receipt_blocks=[{}]), "Receipt Header and Footer"),
-    ("a module", lambda m: m.update(extension_modules=[{"point": "check"}]), "cannot install a sandboxed module"),
 ]
 
 

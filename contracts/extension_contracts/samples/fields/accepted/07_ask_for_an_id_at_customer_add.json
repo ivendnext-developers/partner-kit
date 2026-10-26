@@ -1,0 +1,20 @@
+{
+  "extension_point": "fields",
+  "contract": "declaration",
+  "about": "the new-customer sheet and the till's customer edit ask for the shop's own ID-number field; a Save Rule makes it required.",
+  "payload": {
+    "doctype": "Retail POS Theme",
+    "theme_name": "LIB1 Fields A7",
+    "layout": "Summer Breeze",
+    "palette": "Standard",
+    "field_rules": [
+      {
+        "surface": "customer_create",
+        "field": "custom_lib_id_number",
+        "action": "show",
+        "label": "ID number",
+        "sequence": 1
+      }
+    ]
+  }
+}

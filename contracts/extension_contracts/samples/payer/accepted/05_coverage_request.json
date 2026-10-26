@@ -1,0 +1,57 @@
+{
+  "extension_point": "payer",
+  "contract": "coverage_request",
+  "about": "Two lines asked before the tender, with the prescription's details.",
+  "payload": {
+    "point": "payer/1",
+    "context": {
+      "v": 1,
+      "point": "payer",
+      "call": "coverage",
+      "sale_ref": "mpos-sale-7f3a",
+      "customer": "Amal Hassan",
+      "member": "GLI-778812",
+      "date": "2026-10-25",
+      "currency": "ZAR",
+      "currency_exponent": 2,
+      "store": "Main Store - MTC",
+      "pos_profile": "Main Till",
+      "operator": "cashier@shop.example",
+      "price_list": "Generic Insurer Prices",
+      "tax_included": false,
+      "prescription": {
+        "reference": "RX-20211",
+        "prescriber": "Dr N. Khumalo",
+        "prescriber_licence": "MP0123456"
+      },
+      "lines": [
+        {
+          "line_id": "L1",
+          "item_code": "AMOX-500",
+          "item_group": "Antibiotics",
+          "gtin": "06291100000017",
+          "qty": 2,
+          "uom": "Nos",
+          "conversion_factor": 1,
+          "rate_minor": 12000,
+          "discount_minor": 0,
+          "amount_minor": 24000
+        },
+        {
+          "line_id": "L2",
+          "item_code": "VIT-C",
+          "item_group": "Vitamins",
+          "gtin": null,
+          "qty": 1,
+          "uom": "Nos",
+          "conversion_factor": 1,
+          "rate_minor": 4550,
+          "discount_minor": 0,
+          "amount_minor": 4550
+        }
+      ],
+      "total_minor": 28550,
+      "rounding_minor": 0
+    }
+  }
+}
