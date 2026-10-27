@@ -35,6 +35,13 @@ def resolve(node, spec, depth=0):
     return node
 
 
+def _title(op: dict, write: bool) -> str:
+    """The name a client shows in its approval prompt. A write keeps its whole summary: what follows the dash says
+    what the write does, and the person approving it must see that. A read keeps the part before its dash or example."""
+    summary = (op.get("summary") or "").strip() or op["operationId"]
+    return summary if write else summary.split(" — ")[0].split(" (e.g.")[0].strip() or op["operationId"]
+
+
 def build(spec: dict) -> dict:
     tools = []
     for path, ops in spec["paths"].items():
@@ -67,13 +74,13 @@ def build(spec: dict) -> dict:
             desc = op.get("summary", "")
             if op.get("description"):
                 desc += "\n\n" + op["description"].strip()
-            desc += ("\n\nWRITES to the shop (needs confirm: true, and a server started with --writes)." if write else
+            desc += ("\n\nWrites to the shop (needs confirm: true, and a server started with --writes)." if write else
                      "\n\nRead-only.")
             tools.append({
                 "name": op["operationId"], "description": desc,
                 "inputSchema": {"type": "object", "properties": props, "required": required,
                                 "additionalProperties": False},
-                "annotations": {"title": op.get("summary", op["operationId"])[:80], "readOnlyHint": not write,
+                "annotations": {"title": _title(op, write), "readOnlyHint": not write,
                                 "destructiveHint": write, "idempotentHint": method in ("get", "put"),
                                 "openWorldHint": False},
                 "_http": {"method": method.upper(), "path": path, "path_params": path_params, "query": query},

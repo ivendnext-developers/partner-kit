@@ -14,8 +14,8 @@
 **Steps.**
 1. Decide what the service reacts to. Prefer the event feed (it catches up after downtime and reconciles) over a bare webhook; a webhook carries only a thin body and the service reads the record itself.
 2. Give the service its own **integration user** with only the rights it needs (the recipe says how). The key comes from the environment; never from a file you write.
-3. Write the logic as a **pure core** that imports nothing from iVendNext, with unit tests that need no retailer. Copy the shape of the sample's core and of its tests where it has them (S1, S7 and S9 do; S3's core is `outside/core.py` and it has no tests folder); keep their shape, not their names.
-4. Add the thin part: the feed client or the signed-webhook check, and the API calls you need. Take each call from `api/openapi.yaml`; do not invent a call.
+3. Write the logic as a **pure core** that imports nothing from iVendNext, with unit tests that need no retailer. Copy the shape of the sample's core and of its tests (S1, S3, S7 and S9 each have a `tests` folder; S3's core is `outside/core.py`); keep their shape, not their names.
+4. Add the thin part: the feed client or the signed-webhook check, and the API calls you need. Take each call from `api/openapi.yaml`, or from the `/api/method/ivendnext_mpos.api.v1.<name>` names `api/README.md` lists; do not invent a call.
 5. Make it safe to run twice: handle each event once, note failures, reconcile every night (the feed client does this; use it).
 6. Read-only calls may run on a sandbox with the person's key. Any call that writes goes to the person's own sandbox and needs their yes; show the request first. A write to any other retailer is never yours to make.
 

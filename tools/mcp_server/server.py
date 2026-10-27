@@ -174,7 +174,7 @@ class Server:
         row["path"] = h["path"]          # the TEMPLATE: a record's name is an argument value, never logged
         if write and args.get("confirm") is not True:
             self.audit(**row, outcome="refused: not confirmed (preview returned)")
-            return self._text({"refused": "This call WRITES to the shop and was not confirmed. Nothing was sent. Show "
+            return self._text({"refused": "This call writes to the shop and was not confirmed. Nothing was sent. Show "
                                           "the person this preview; call again with confirm: true only if they agree.",
                                "would_send": {"method": h["method"], "path": path, "body": args.get("body")}}, True)
         data = json.dumps(args["body"]).encode() if "body" in args else (b"{}" if write else None)
@@ -189,7 +189,7 @@ class Server:
         except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
             if write:            # sent, but no answer: it may have been written — never let the assistant blindly retry
                 self.audit(**row, outcome=f"unknown: no answer ({type(e).__name__})")
-                return self._text("No answer from the shop. The write MAY have been made: check the record before "
+                return self._text("No answer from the shop. The write may have been made: check the record before "
                                   "trying again.", True)
             self.audit(**row, outcome=f"unreachable: {type(e).__name__}")
             return self._text("The shop could not be reached.", True)

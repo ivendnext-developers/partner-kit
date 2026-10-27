@@ -11,6 +11,6 @@ One recipe per way into iVendNext, plus one for building a whole reference app f
 | 5. Sandboxed function | [5_sandboxed_function.md](5_sandboxed_function.md) |
 | A reference app from a brief | [6_build_from_a_brief.md](6_build_from_a_brief.md) |
 
-Before choosing a recipe, find the need's card in the needs catalogue: `python3 tools/needs/needs.py search <the customer's words>` gives its verdict and its door, and the door picks the recipe below (AGENTS.md, step 0). A need with no card is placed on the ladder by hand.
+Before choosing a recipe, find the need's card in the needs catalogue: `python3 tools/needs/needs.py search <the customer's words>` gives its verdict and its door, and the door picks the recipe below (AGENTS.md, step 2). A need with no card is placed on the ladder by hand.
 
 Start any of them by telling the assistant: *"Read AGENTS.md, then follow the recipe in the ai folder that matches this need: …"*.

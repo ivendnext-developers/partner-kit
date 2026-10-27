@@ -20,7 +20,7 @@
     "idempotentHint": true,
     "openWorldHint": false,
     "readOnlyHint": true,
-    "title": "List booked sales \u2014 the reconciliation pull filters on `modified` after a waterm"
+    "title": "List booked sales"
    },
    "description": "List booked sales \u2014 the reconciliation pull filters on `modified` after a watermark\n\nRead-only.",
    "inputSchema": {
@@ -40,10 +40,12 @@
       "type": "integer"
      },
      "limit_start": {
+      "description": "How many records to skip before the page starts (default 0); with `limit_page_length`, pages through a list. Set `order_by` too, on a field that does not change with `name` as a tie-break (e.g. `creation asc, name asc`), or the pages have no fixed order.",
       "minimum": 0,
       "type": "integer"
      },
      "order_by": {
+      "description": "One or more fields, each with a direction, comma-separated, e.g. `modified asc` or `posting_date desc, posting_time desc`.",
       "type": "string"
      }
     },
@@ -121,6 +123,7 @@
       "type": "integer"
      },
      "order_by": {
+      "description": "One or more fields, each with a direction, comma-separated, e.g. `modified asc` or `posting_date desc, posting_time desc`.",
       "type": "string"
      }
     },
@@ -178,7 +181,7 @@
     "idempotentHint": true,
     "openWorldHint": false,
     "readOnlyHint": true,
-    "title": "List items \u2014 e.g. `fields=[\"name\",\"item_group\"]` and a `name in [...]` filter"
+    "title": "List items"
    },
    "description": "List items \u2014 e.g. `fields=[\"name\",\"item_group\"]` and a `name in [...]` filter\n\nRead-only.",
    "inputSchema": {
@@ -198,6 +201,7 @@
       "type": "integer"
      },
      "order_by": {
+      "description": "One or more fields, each with a direction, comma-separated, e.g. `modified asc` or `posting_date desc, posting_time desc`.",
       "type": "string"
      }
     },
@@ -336,7 +340,7 @@
     "idempotentHint": true,
     "openWorldHint": false,
     "readOnlyHint": true,
-    "title": "List serial numbers \u2014 e.g. by `item_code` or `status`"
+    "title": "List serial numbers"
    },
    "description": "List serial numbers \u2014 e.g. by `item_code` or `status`\n\nRead-only.",
    "inputSchema": {
@@ -478,9 +482,9 @@
     "idempotentHint": false,
     "openWorldHint": false,
     "readOnlyHint": false,
-    "title": "Create a stock movement \u2014 with `docstatus` 1 it is created AND booked in one cal"
+    "title": "Create a stock movement \u2014 with `docstatus` 1 it is created and booked in one call"
    },
-   "description": "Create a stock movement \u2014 with `docstatus` 1 it is created AND booked in one call\n\nWRITES to the shop (needs confirm: true, and a server started with --writes).",
+   "description": "Create a stock movement \u2014 with `docstatus` 1 it is created and booked in one call\n\nWrites to the shop (needs confirm: true, and a server started with --writes).",
    "inputSchema": {
     "additionalProperties": false,
     "properties": {
@@ -578,7 +582,7 @@
     "idempotentHint": true,
     "openWorldHint": false,
     "readOnlyHint": true,
-    "title": "Read one stock movement \u2014 its lines name the Serial and Batch Bundle that holds "
+    "title": "Read one stock movement"
    },
    "description": "Read one stock movement \u2014 its lines name the Serial and Batch Bundle that holds their serials\n\nRead-only.",
    "inputSchema": {
@@ -612,7 +616,7 @@
     "readOnlyHint": false,
     "title": "Book (submit) a draft stock movement \u2014 the two-step alternative"
    },
-   "description": "Book (submit) a draft stock movement \u2014 the two-step alternative\n\nWRITES to the shop (needs confirm: true, and a server started with --writes).",
+   "description": "Book (submit) a draft stock movement \u2014 the two-step alternative\n\nWrites to the shop (needs confirm: true, and a server started with --writes).",
    "inputSchema": {
     "additionalProperties": false,
     "properties": {
@@ -648,7 +652,7 @@
     "idempotentHint": true,
     "openWorldHint": false,
     "readOnlyHint": true,
-    "title": "List comments on a record \u2014 how a service finds its own earlier comment"
+    "title": "List comments on a record"
    },
    "description": "List comments on a record \u2014 how a service finds its own earlier comment\n\nRead-only.",
    "inputSchema": {
@@ -687,7 +691,7 @@
     "readOnlyHint": false,
     "title": "Write a comment on a record \u2014 visible to staff on that record in iVendNext Desk"
    },
-   "description": "Write a comment on a record \u2014 visible to staff on that record in iVendNext Desk\n\nWRITES to the shop (needs confirm: true, and a server started with --writes).",
+   "description": "Write a comment on a record \u2014 visible to staff on that record in iVendNext Desk\n\nWrites to the shop (needs confirm: true, and a server started with --writes).",
    "inputSchema": {
     "additionalProperties": false,
     "properties": {
@@ -784,7 +788,7 @@
     "idempotentHint": true,
     "openWorldHint": false,
     "readOnlyHint": true,
-    "title": "Read one till profile \u2014 its `warehouse` is where a till sale takes stock from"
+    "title": "Read one till profile"
    },
    "description": "Read one till profile \u2014 its `warehouse` is where a till sale takes stock from\n\nRead-only.",
    "inputSchema": {
@@ -818,9 +822,9 @@
     "idempotentHint": true,
     "openWorldHint": false,
     "readOnlyHint": true,
-    "title": "Read stock balances (the engine's own figures) \u2014 `actual_qty` per item and wareh"
+    "title": "Read stock balances (iVendNext's own figures)"
    },
-   "description": "Read stock balances (the engine's own figures) \u2014 `actual_qty` per item and warehouse\n\nRead-only.",
+   "description": "Read stock balances (iVendNext's own figures) \u2014 `actual_qty` per item and warehouse\n\nRead-only.",
    "inputSchema": {
     "additionalProperties": false,
     "properties": {
@@ -861,7 +865,7 @@
     "idempotentHint": true,
     "openWorldHint": false,
     "readOnlyHint": true,
-    "title": "List records of a type the partner's manifest installed (e.g. `PP BLN Item In Bi"
+    "title": "List records of a type the partner's manifest installed"
    },
    "description": "List records of a type the partner's manifest installed (e.g. `PP BLN Item In Bin`)\n\nThe same record API as every other type. Only types whose permissions grant the integration role may be read.\n\nRead-only.",
    "inputSchema": {
@@ -908,7 +912,7 @@
     "readOnlyHint": false,
     "title": "Create a record of a manifest-installed type"
    },
-   "description": "Create a record of a manifest-installed type\n\nWRITES to the shop (needs confirm: true, and a server started with --writes).",
+   "description": "Create a record of a manifest-installed type\n\nWrites to the shop (needs confirm: true, and a server started with --writes).",
    "inputSchema": {
     "additionalProperties": false,
     "properties": {
@@ -987,9 +991,9 @@
     "idempotentHint": true,
     "openWorldHint": false,
     "readOnlyHint": false,
-    "title": "Change fields on that record \u2014 a child table sent here REPLACES its rows, so sen"
+    "title": "Change fields on one record \u2014 a child table sent here replaces its rows, so send the existing rows too"
    },
-   "description": "Change fields on that record \u2014 a child table sent here REPLACES its rows, so send the existing rows too\n\nWRITES to the shop (needs confirm: true, and a server started with --writes).",
+   "description": "Change fields on one record \u2014 a child table sent here replaces its rows, so send the existing rows too\n\nWrites to the shop (needs confirm: true, and a server started with --writes).",
    "inputSchema": {
     "additionalProperties": false,
     "properties": {
