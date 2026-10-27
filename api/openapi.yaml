@@ -175,7 +175,7 @@ paths:
     post:
       tags: [Stock]
       operationId: createStockEntry
-      summary: Create a stock movement — with `docstatus` 1 it is created AND booked in one call
+      summary: Create a stock movement — with `docstatus` 1 it is created and booked in one call
       requestBody:
         required: true
         content:
@@ -247,7 +247,7 @@ paths:
     get:
       tags: [Stock]
       operationId: listStockBalances
-      summary: Read stock balances (the engine's own figures) — `actual_qty` per item and warehouse
+      summary: Read stock balances (iVendNext's own figures) — `actual_qty` per item and warehouse
       parameters: [{ $ref: "#/components/parameters/fields" }, { $ref: "#/components/parameters/filters" },
                    { $ref: "#/components/parameters/limit_page_length" }]
       responses:
@@ -290,7 +290,7 @@ paths:
     put:
       tags: [Partner records]
       operationId: updatePartnerRecord
-      summary: Change fields on that record — a child table sent here REPLACES its rows, so send the existing rows too
+      summary: Change fields on one record — a child table sent here replaces its rows, so send the existing rows too
       parameters: [{ $ref: "#/components/parameters/record_type" }, { $ref: "#/components/parameters/name" }]
       requestBody:
         required: true
@@ -335,6 +335,7 @@ components:
     order_by:
       name: order_by
       in: query
+      description: One or more fields, each with a direction, comma-separated, e.g. `modified asc` or `posting_date desc, posting_time desc`.
       schema: { type: string }
       example: modified asc
     limit_page_length:
@@ -345,6 +346,7 @@ components:
     limit_start:
       name: limit_start
       in: query
+      description: How many records to skip before the page starts (default 0); with `limit_page_length`, pages through a list. Set `order_by` too, on a field that does not change with `name` as a tie-break (e.g. `creation asc, name asc`), or the pages have no fixed order.
       schema: { type: integer, minimum: 0 }
   responses:
     List:

@@ -93,7 +93,7 @@ A record type that posts to stock or the accounts cannot be yours. Your server c
 | **4. Manifest** | 2 | its records and fields are present in the whole site and reached through roles; what it declares (keys, buttons, pages) follows the rows above | the customer's administrator installs it |
 | **Label layout** | 2 | on for the whole site once switched on; whoever holds the Print right on *Retail Label Layout* prints | extension point |
 | **Receipt lines** | — (settings) | set on each register, so store by store | settings |
-| **5. Sandboxed function** | 3 | as for its extension point | the customer's administrator adds it in Desk, once we have certified it |
+| **5. Sandboxed function** | 3 | as for its extension point | the customer's administrator adds it in Desk or, from POS build 2.0.0.660, your package carries it; either way once we have certified it |
 
 **What has no store switch.** These apply to the whole site the moment they are installed or switched on, so plan them as a site-wide step, at a quiet hour:
 - a **manifest's webhooks and notifications**, which are installed **switched on**, its **workflows**, which are installed active, and its **sale details**, which every till starts asking for at once;

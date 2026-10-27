@@ -143,7 +143,7 @@ class T(unittest.TestCase):
         listed = {t["name"]: t for t in A.Assistant(url, "manager", SECRETS["manager"]).rpc("tools/list")["tools"]}
         self.assertIn("updatePartnerRecord", listed)
         self.assertNotIn("createStockEntry", listed)
-        self.assertIn("WITHOUT confirm first", listed["updatePartnerRecord"]["description"])
+        self.assertIn("without confirm first", listed["updatePartnerRecord"]["description"])
         self.assertNotEqual(listed["updatePartnerRecord"]["description"], srv.tools["updatePartnerRecord"]["description"])
 
     def test_a_profile_naming_a_tool_the_server_lacks_is_refused_at_start(self):

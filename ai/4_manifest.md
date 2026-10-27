@@ -1,6 +1,6 @@
 # A manifest: your own records and formats, as data (way in 4)
 
-**Goal.** Add your own record types, fields, print formats, notifications and workspaces to a retailer's iVendNext as one data file the retailer's administrator installs. A manifest runs nothing of yours.
+**Goal.** Add your own record types, fields, print formats, notifications and workspaces, and the other kinds the recipe lists (among them reports and dashboards, workflows, webhooks, a remote till key, Desk buttons, save rules and label layouts), to a retailer's iVendNext as one data file the retailer's administrator installs. A manifest runs nothing of yours, except a certified module it carries, which runs in our sandbox (chapter 7).
 
 **Read.** [guide/07_manifests.md](../guide/07_manifests.md) · [recipes/manifest.md](../recipes/manifest.md) (the kinds a manifest may carry, and each rule) · [tools/deploy/README.md](../tools/deploy/README.md).
 

@@ -99,6 +99,14 @@ class T(unittest.TestCase):
         r = subprocess.run([str(venv), str(ROOT / "generate.py"), "--check"], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
 
+    def test_every_title_is_whole_and_a_write_title_says_what_it_does(self):
+        # the title is what the person sees when asked to approve a call, so a write's title is its whole summary
+        for t in json.loads((ROOT / "tools.json").read_text())["tools"]:
+            title = t["annotations"]["title"]
+            self.assertTrue(title.strip(), t["name"])
+            if not t["annotations"]["readOnlyHint"]:
+                self.assertEqual(title, t["description"].split("\n\n")[0], t["name"])
+
     def test_read_only_by_default_lists_no_write_tool_and_refuses_one(self):
         srv = self.srv()
         names = {t["name"] for t in srv.handle({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}, None, "t")
