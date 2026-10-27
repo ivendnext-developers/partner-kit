@@ -56,7 +56,7 @@ The till is closed to your JavaScript, not to your screens (rule 4, chapter 3). 
 
 Some things a retailer calls a screen need none of yours. A choice offered when an item is scanned, such as three extended warranties to pick from, is the till's own item options or cross-sell suggestion, set up as configuration (the cards *extended-warranty-as-item* and *offer-add-on-at-scan*).
 
-A need that fits no moment is a request for an extension point (chapter 9). Two are being specified now, and are not available today: a capture that offers the cashier a choice, and a partner page opened at a moment of the sale without a key.
+A need that fits no moment is a request for an extension point (chapter 9). Two doors a developer asked for are not available today: a capture that offers the cashier a choice, and a partner page that opens on its own at a moment of the sale instead of from a key.
 
 ## Steps
 
