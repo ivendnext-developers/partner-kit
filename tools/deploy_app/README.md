@@ -1,8 +1,9 @@
-# deploy_app — see what CitiXsys hosting would run for your app
+# deploy_app — plan, order and run your app on CitiXsys App Hosting
 
 If you would rather not run a server, CitiXsys can host your app for you. This command checks your app the way the
-hosting service does, and shows what it would create: the address, the size, what your plan includes. **It changes
-nothing.** CitiXsys reviews the request and puts the app live.
+hosting service does, and shows what it would create: the address, the size, what your plan includes. **Planning
+changes nothing.** Then `deploy_app.py order …` orders it online, signed with your publishing key and paid through
+Stripe, and the hosting builds it with no person ([Order online](#order-online)).
 
 **It is for** a builder whose app follows the template in [`../app_template/`](../app_template/README.md) (guide
 [chapter 14b](../../guide/14b_deploying_your_app.md)) and who wants it hosted by CitiXsys instead of on their own cloud.
@@ -22,6 +23,25 @@ nothing.** CitiXsys reviews the request and puts the app live.
    **An app that only answers presses** (its `app.json` says `"runs": "function"`) is hosted as a function, paid per call: give `--zip <file>` instead of `--image`, and this writes the package to send us (`--root <folder>` when its `package` paths start above the app's folder). Chapter 14b, *A function or a container*.
 
 It prints `PLANNED:` and what would be created, or one `REFUSED:` line per problem. Exit code: 0 planned · 1 refused · 2 usage.
+
+## Order online
+
+```bash
+python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --partner <your code> --github <owner>/<repo> --accept-schedule
+python3 tools/deploy_app/deploy_app.py status --partner <your code>
+python3 tools/deploy_app/deploy_app.py secret --partner <your code> --order <id> --name IVN_POINT_SECRET   # value on stdin
+python3 tools/deploy_app/deploy_app.py cancel --partner <your code> --order <id>
+```
+
+- `order` runs the planning checks, then sends one request signed with your App library key (`tools/publish`
+  `keygen`, default `~/.ivendnext/library-signing.key`, or `--key`, or `IVN_LIBRARY_KEY`). It prints a Stripe checkout
+  address, or with `--invoice --email <address>` says an invoice is on its way. Plain settings: `--set NAME=VALUE`, each
+  one your `app.json` names. A copy: `--env staging`. A branch other than `main`: `--branch`. `--dry-run` sends nothing.
+- Your app's name starts with your maker word (`acme` → `acme-points`).
+- Once it is paid, the hosting builds the app; `status` shows how far, the address, where your GitHub pushes to and the
+  role it uses. Copy [`hosting-workflow.yml`](hosting-workflow.yml) into your repository's `.github/workflows/`.
+- Exit code: 0 done · 1 refused · 2 usage. The signed request uses its own signing domain
+  (`ivendnext-hosting-order/1`), so it can never be replayed as a library upload, nor an upload as an order.
 
 ## The plans
 
@@ -47,5 +67,5 @@ What each plan includes, and what is not offered yet, is in [`plans.json`](plans
 - Secrets you mark `"required": true` are asked for when the app is put live; an optional one (such as `IVN_POINT_SECRET_PREVIOUS`) is added when you rotate.
 - The root filesystem is read-only. If your app writes temporary files, say so in your request.
 - A function gets the same address, Python 3.13 on ARM64 with 512 MB, at most 10 copies at once, its own shops table, and no other rights. The block it prints uses the hosting's `modules/function`; the package is copied into the hosting's code bucket as `<app>/<version>.zip`, never overwritten.
-- The last thing it prints is the block CitiXsys adds to its hosting infrastructure; you do not need it.
+- The last thing planning prints is the block CitiXsys adds to its hosting infrastructure for an app put live by hand; an online order needs none of it.
 - Standard library only. It reuses the template's checker (`../app_template/validate_app.py`), never a copy.

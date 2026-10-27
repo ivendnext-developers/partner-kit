@@ -95,9 +95,9 @@ If you would rather not run a server, CitiXsys runs your app for you on our own 
 python3 tools/deploy_app/deploy_app.py <your app folder> --image <registry>/<repository>:1.0.0 --plan starter --partner <your name>
 ```
 
-**Order it** from your CitiXsys partner manager. A licensed customer's IT team and CitiXsys's own teams, such as the CitiXsys Consulting Team, order hosting the same way. Not an iVendNext Partner yet? Start with the [iVendNext Partner form](https://www.ivendnext.com/partners/apply/).
+**Order it online** (below), or from your CitiXsys partner manager. A licensed customer's IT team and CitiXsys's own teams, such as the CitiXsys Consulting Team, order hosting the same way. Not an iVendNext Partner yet? Start with the [iVendNext Partner form](https://www.ivendnext.com/partners/apply/).
 
-**What it costs:** a price per app per month, in US dollars (below), covering the copies the plan runs (sandbox, staging). It is billed monthly, in whole months from the month the app goes live, with no minimum term: either side can stop at any month end. Whoever orders the hosting pays: you, or the customer the app is built for when that customer orders it. App Hosting is billed on its own, never as a line on an iVendNext subscription invoice. An app that only answers presses and is listed in the App library carries no hosting charge. The managed database, when it is offered, is priced separately.
+**What it costs:** a price per app per month, in US dollars (below), covering the copies the plan runs (sandbox, staging). It is billed monthly, in whole months from the month the app goes live, with no minimum term: either side can stop at any month end. Whoever orders the hosting pays: you, or the customer the app is built for when that customer orders it. App Hosting is sold online by CitiXsys Singapore, through Stripe, with its own invoices and receipts, and is never a line on an iVendNext subscription invoice. An app that only answers presses and is listed in the App library carries no hosting charge. The managed database, when it is offered, is priced separately.
 
 **What you get** (for a container; a function's list is in [A function or a container](14b_deploying_your_app.md#a-function-or-a-container)): the address `https://<app>.ivendnext.app` with its certificate; your secrets kept in our secret store (we ask you for them when the app goes live; they are never in a file); a restart when the health check fails; a firewall that lets in only our load balancer; and no rights in our cloud for your app's code. Your app's log lines are kept for the plan's days, and we send them to you when you ask.
 
@@ -111,7 +111,38 @@ python3 tools/deploy_app/deploy_app.py <your app folder> --image <registry>/<rep
 
 **An app that only answers presses runs as a function**, paid per call, not as an always-on container: see [A function or a container](14b_deploying_your_app.md#a-function-or-a-container) in this chapter.
 
-**A new version:** send the new version's tag on the same order.
+**A new version:** push it from your GitHub ([Updates from your GitHub](14b_deploying_your_app.md#updates-from-your-github)), or, for an app we put live by hand, send the new version's tag on the same order.
+
+## Order and pay online
+
+One command orders the hosting, signed with the key you already publish to the App library with (`tools/publish`, `keygen`). Self-serve ordering opens maker by maker: your partner manager registers your hosting account once, with its monthly spending cap and how many apps it holds.
+
+```bash
+python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --partner <your code> \
+    --github <owner>/<repository> --github-subject <its sign-in subject prefix> --accept-schedule
+```
+
+1. **It checks your app** exactly as planning does (above), and refuses what the hosting refuses.
+2. **Name your app under your maker word.** Your app's name is your first word in the App library, or that word and a hyphen: `acme-points` for the maker word `acme`.
+3. **You accept the App Hosting Schedule** with `--accept-schedule`: the terms that hosting runs under. The order carries the Schedule's version.
+4. **You pay.** It prints a Stripe checkout address: pay monthly by card. With `--invoice --email <address>` you get an invoice with payment terms instead; the app is built once the invoice is paid. An app that only answers presses and is listed in the App library carries no charge, so its order needs no payment.
+5. **We build it, with no person.** Once it is paid, the hosting makes the app's address, its own registry or package folder, its secret store and its firewall, and tells you how far it is: `deploy_app.py status --partner <your code>`.
+6. **Put each secret** your `app.json` marks `"secret": true` (a container): `deploy_app.py secret --partner <your code> --order <id> --name <NAME>`, with the value on standard input. It is never shown, never in a file, and kept only in your app's own secret store.
+7. **Push the first version** from your GitHub (below). The app goes live once its image or package and its secrets are there, and its health check answers.
+
+Plain (not secret) settings go on the order: `--set LOG_LEVEL=info`. Each must be a setting your `app.json` names.
+
+**Stopping.** `deploy_app.py cancel --partner <your code> --order <id>` stops the app at the end of the month you paid for. If a payment fails and Stripe gives up retrying, the app stops then too. A stopped app keeps what you supplied and its data for 30 days, then is removed.
+
+**If the build fails after you paid,** the payment is refunded, nothing is left half-built, and CitiXsys is told.
+
+## Updates from your GitHub
+
+Copy [`tools/deploy_app/hosting-workflow.yml`](../tools/deploy_app/hosting-workflow.yml) to `.github/workflows/` in your app's repository and set the variable it names (`IVN_HOSTING_ROLE`, from `status`). Each push to the branch your order names pushes the version in your `app.json`, and the hosting puts it live through the same checks as the first one. No secret is stored in GitHub: GitHub signs each run in to one role of ours, which can push only your app's new version.
+
+- **Raise the version for every release.** A version is never overwritten. To go back, release the earlier code under a new version number.
+- **A version above your plan's limits is refused** (a package over 50 MB).
+- **The role trusts your repository and branch exactly.** A repository made since 2025 signs in to AWS with a subject that carries its owner's and its own numeric ids: give it with the order, `--github-subject "$(gh api repos/<owner>/<repo>/actions/oidc/customization/sub --jq .sub_claim_prefix)"`. Then a repository deleted and made again under the same name can never push your app. Without it, the role trusts the older subject, `repo:<owner>/<name>`. If your organisation has changed the subject's other parts, set them back for this repository, or the sign-in is refused.
 
 **The part inside the retailer's iVendNext is separate.** Your manifest reaches each customer's site through its administrator's install screen, with the customer's consent (chapter 14a); `tools/deploy` puts it on your own sandbox. Hosting runs only your outside service. An app that is not a container in this template's shape is a Managed job: ask us.
 
