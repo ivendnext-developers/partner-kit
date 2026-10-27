@@ -26,7 +26,7 @@ A choice such as an extended warranty needs no screen of yours: the till's item 
 - The page opens from a key, never by itself, and answers once, with a message and sale details, never an item or a price.
 - Online only: the key is dimmed offline. Not on the phone frame, which shows no app keys.
 - Not on Handheld, which offers no extension point for a screen (the card *extend-handheld*).
-- A page that opens at a moment, and a capture that offers a choice, are being specified: not available.
+- A page that opens on its own at a moment, and a capture that offers a choice, are not available today.
 - Your JavaScript inside the till stays refused (rule 4, chapter 3).
 
 ## Tell the customer
