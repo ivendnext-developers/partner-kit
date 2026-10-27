@@ -27,7 +27,7 @@ This sample's service, outside the retailer's iVendNext, writes the parent out a
 ## What the retailer does
 
 1. **Install the manifest** (`manifest.json`). It declares only the feed registration *PP PGX Groups* (Coupon, Promotion Bonus Buys Master, Item Group). It installs switched off.
-2. **Make the service's user.** A role with read and write on Coupon and Promotion Bonus Buys Master, and read on Item Group; an integration user with that role and its API key (`recipes/integration_user.md`). Choose that user on the feed registration.
+2. **Make the service's user.** A role with read and write on Coupon and Promotion Bonus Buys Master, and read on Item Group; an integration user with that role and its API key (`recipes/integration_user.md`). Ask iVendNext support to set that user as the *Application User* of the feed registration (a user made for the app alone, never a person's).
 3. **Run the service** where the partner runs services (`recipes/event_feed.md`):
 
    ```bash

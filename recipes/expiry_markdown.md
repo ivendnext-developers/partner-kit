@@ -77,7 +77,7 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
    | Item Price | Read, Write, Create, Delete | the item's price, and each lot's own price |
 
    The role reaches every price on every list: give it to the app's user and no one else.
-3. **Choose the user** on the app's feed. A hosted service: press **Connect again** on the app.
+3. **Ask iVendNext support** to set the user as the Application User of *PP EXM Markdown feed* (a user made for the app alone, never a person's). A hosted service: press **Connect again** on the app.
 4. **Fill in the settings** (*Default*: the price list, the hours from UTC) and **give the steps** to the perishable item groups.
 
    ![The steps on an item group on a demo site: 25% off from 5 days before expiry, 50% off from 2 days](../samples/s38_expiry_markdown/screenshots/03_item_group_steps.png)

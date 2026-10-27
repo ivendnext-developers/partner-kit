@@ -123,7 +123,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
      python3 tools/deploy_app/deploy_app.py apps/acme_bins --zip acme-bins.zip --root . --plan starter --partner acme
      ```
 
-     It builds the package and prints the order we run. Your app answers at `https://acme-bins.ivendnext.app`, with `BLN_PREFIX=ACME BINS` and `IVN_LIBRARY_APP=acme_bins`. Each retailer's site connects itself after its install. Once the retailer chooses the app's user on the feed (step 4) and presses **Connect again** on your app's record, your service has that retailer's user. An app that only answers presses, listed on the App library's public list, carries no hosting charge.
+     It builds the package and prints the order we run. Your app answers at `https://acme-bins.ivendnext.app`, with `BLN_PREFIX=ACME BINS` and `IVN_LIBRARY_APP=acme_bins`. Each retailer's site connects itself after its install. Once the retailer has asked iVendNext support to set the app's user on the feed (step 4) and presses **Connect again** on your app's record, your service has that retailer's user. An app that only answers presses, listed on the App library's public list, carries no hosting charge.
    - **On your own server, for one customer:** set the retailer's three values (S2's `service/where.py` names them):
      - `IVN_POINT_SECRET`, the till key's secret, which the install shows once in Desk, on the till key's record;
      - `IVN_SHOP_URL`, the retailer's address;

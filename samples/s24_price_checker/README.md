@@ -29,7 +29,7 @@ A tablet or screen stands on the shop floor. A customer scans an item and reads 
 ## What the retailer does to set it up
 
 0. **Before install:** make the role **PP Integration** if iVendNext does not have it. The install makes an app's own roles only when they are named under its prefix (`PP PRC …`); `PP Integration` is the kit's shared role, so iVendNext makes it.
-1. Make the app's integration user (the [integration user recipe](../../recipes/integration_user.md)), give it the role PP Integration, generate its API key, and choose it on the feed registration *PP PRC Kiosk feed*. The service reads with that key and writes nothing.
+1. Make the app's integration user (the [integration user recipe](../../recipes/integration_user.md)), give it the role PP Integration, generate its API key, and ask iVendNext support to set it as the *Application User* of *PP PRC Kiosk feed* (a user made for the app alone, never a person's). The service reads with that key and writes nothing.
 2. Make one **PP PRC Kiosk** record per screen: where it stands, and the store's till profile. The record's name is the kiosk's code.
 3. On the tablet, open the app's address with `#shop=` and the retailer's site, then `&kiosk=` and the record's name, in full screen. A barcode scanner connected to the tablet as a keyboard (USB or Bluetooth) scans into the page.
 
