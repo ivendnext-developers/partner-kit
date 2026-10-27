@@ -58,7 +58,7 @@ Use the kit before you quote a customer or start a build.
 | 5 | A sandboxed function compiled to WebAssembly, at an extension point that offers one | a sandbox we run | [guide ch. 8](guide/08_sandboxed_functions.md) |
 | 6 | Compose doors, then request an extension point only when no combination meets the need | — | [guide ch. 9](guide/09_points_and_requests.md) |
 
-**The four rules every build keeps** ([guide ch. 3](guide/03_ladder_and_never_list.md)): money enters the sale visibly, before payment; never override or patch iVendNext; your code runs on your server, and inside a customer's site you ship data, not code; your screens use the extension points iVendNext offers (a Desk action, a partner page, a native screen from a manifest), never your JavaScript inside Desk or the till.
+**The four rules every build keeps** ([guide ch. 3](guide/03_ladder_and_never_list.md)): money enters the sale visibly, before payment; never override or patch iVendNext; your code runs on your server, and inside a customer's site you ship data, not code; your screens come through our doors (on the till, your page as a sheet over the sale, the till's own sheets when an item is scanned, a customer is picked or a quantity changes, and extra fields; in Desk, buttons, your pages and native screens), and what you can't do is put your JavaScript inside our screens.
 
 ## What is in this repository
 

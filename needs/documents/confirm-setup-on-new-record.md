@@ -17,7 +17,7 @@ A short text field, *Setup confirmed by*, that your manifest adds to the record 
 
 ## Limits
 - Initials, not a tick: the rule counts an empty text field as missing, but it does not count an unticked tick as missing (the tick is 0, which is a value). Do not build it on a tick.
-- A field on the form, not a pop-up: your code cannot show a question inside Desk (rule 4). Typed once, it stays, so nothing asks again.
+- A field on the form, not a pop-up: no extension point asks a question when a record is first saved (a document check asks only before a back-office document is submitted). Typed once, it stays, so nothing asks again.
 - It holds on every save until filled, not only the first: records saved before the rule existed need the initials at their next save.
 - On a till sale and the till close a save rule only flags, never refuses (card required-when-another-filled).
 - Not run: the condition on a tick field (batch tracking) was not run on a retailer's iVendNext.
