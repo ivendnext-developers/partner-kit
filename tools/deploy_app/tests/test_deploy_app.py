@@ -274,6 +274,19 @@ class Functions(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("a function needs --zip", out)
 
+    def test_a_scheduled_function_prints_its_schedule_and_timeout(self):
+        code, out = run(str(self.KIT / "samples" / "s25_gift_on_spend"), "--zip", str(self.zip), "--root", str(self.KIT),
+                        "--plan", "starter", "--partner", "citixsys")
+        self.assertEqual(code, 0, out)
+        self.assertIn('  timeout     = 120\n  schedule    = { pass = "rate(1 minute)" }\n', out)
+        self.assertIn("run only when called or on its schedule", out)
+        self.assertIn("a schedule pass: the function runs rate(1 minute) (UTC)", out)
+
+    def test_a_press_only_function_prints_no_schedule(self):
+        out = self.plan()[1]
+        self.assertNotIn("schedule    =", out)
+        self.assertNotIn("timeout     =", out)
+
     def test_the_package_paths_must_exist_from_the_root(self):
         code, out = run(str(self.S18), "--zip", str(self.zip), "--plan", "starter", "--partner", "citixsys")
         self.assertEqual(code, 1)

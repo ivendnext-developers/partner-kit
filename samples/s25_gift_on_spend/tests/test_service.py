@@ -11,7 +11,9 @@ import os
 import sys
 import threading
 import time
+import tempfile
 import unittest
+from unittest import mock
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -230,6 +232,51 @@ class Health(unittest.TestCase):
             self.assertEqual((cards.CARD, cards.SETTINGS), ("IVENDNEXT GCS Card", "IVENDNEXT GCS Settings"))
         finally:
             cards.use_prefix("PP GCS")
+
+
+
+class Scheduled(unittest.TestCase):
+    """PAYWHENUSED: hosted as a function on a schedule. Each call is one pass (the feed, then the releases due) of the
+    shops it claims; a shop another call holds is left to it, so two calls never release one card twice."""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp(prefix="s25-fn-")
+        import shops
+        self.store = shops.FileStore(os.path.join(self.dir, "shops.json"))
+        self.svc = app.Service({"IVN_LIBRARY_APP": "ivendnext_gcs", "PP_STATE": self.dir}, store=self.store, scheduled=True)
+        self.shops, self.feeds = {}, {}
+        for site in ("a.example", "b.example"):
+            self.shops[site] = shop()
+            sale(self.shops[site], "S1")
+            self.feeds[site] = FakeFeed([ev(1, "sale.booked", "S1")])
+            self.store.put(site, {"url": f"https://{site}", "secrets": {"user:gcs@x": "k:s"}})
+
+    def run_pass(self):
+        with mock.patch.object(worker, "open_shop", lambda r: (self.shops[r["url"][8:]], self.feeds[r["url"][8:]])), \
+                mock.patch("sys.stdout", io.StringIO()):
+            return app.scheduled(self.svc, "pass")
+
+    def claims(self):
+        with open(os.path.join(self.dir, "shops.json")) as f:
+            return sorted(n for n in json.load(f) if "|" in n)
+
+    def test_a_call_passes_each_claimed_shop_and_frees_its_claim(self):
+        out = self.run_pass()
+        self.assertEqual(sorted(out), ["a.example", "b.example"])
+        self.assertEqual(sorted(self.shops["a.example"].db["PP GCS Card"]), ["S1:1"])
+        self.assertEqual(self.claims(), [])
+
+    def test_canary_a_shop_another_call_holds_is_left_to_it(self):
+        self.assertTrue(self.store.claim("pass|a.example", time.time(), app.CLAIM_STALE_S))
+        self.assertEqual(sorted(self.run_pass()), ["b.example"])
+        self.assertNotIn("PP GCS Card", {k for k, v in self.shops["a.example"].db.items() if v})
+        self.assertEqual(self.claims(), ["pass|a.example"])
+
+    def test_health_answers_200_as_a_function(self):
+        self.svc.started -= app.HEALTH_GRACE_S + 1
+        worker.HEARTBEAT[0] = 0.0
+        self.assertEqual(app.handle(self.svc, "GET", "/health", {}, b""), (200, {"ok": 1}))
+        self.assertEqual(app.handle(self.svc, "POST", "/anything", {}, b"{}")[0], 404)
 
 
 if __name__ == "__main__":

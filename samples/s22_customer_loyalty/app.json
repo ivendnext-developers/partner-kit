@@ -1,11 +1,16 @@
 {
  "app": "loyalty",
- "version": "1.1.0",
+ "version": "1.2.0",
  "port": 8080,
  "health": "/health",
  "size": "small",
  "region": "us",
  "shops": true,
+ "runs": "function",
+ "handler": "samples/s22_customer_loyalty/service/app.lambda_handler",
+ "package": ["tools/app_template/service", "tools/feed_client/feed_client.py", "samples/s22_customer_loyalty/service"],
+ "schedule": {"pass": "rate(1 minute)"},
+ "timeout": 120,
  "env": [
   {"name": "IVN_LIBRARY_APP", "required": true},
   {"name": "LYL_PREFIX", "required": true},

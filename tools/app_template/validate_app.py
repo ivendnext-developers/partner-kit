@@ -6,7 +6,8 @@
 The settings file says what the app is and what it needs, and holds **no value**: names only. A host (your own, or ours) reads it to
 know the port, the health address, the size, the region, which environment variables to supply and whether the app
 keeps a shops table (`shops`: many shops, each connecting itself), and whether it runs as an always-on container or as a
-function paid per call (`runs`; a function also names its `handler` and the `package` it is zipped from). Refused, with the reason:
+function paid per call (`runs`; a function also names its `handler` and the `package` it is zipped from, and, for
+background work, a `schedule` of named runs and a `timeout` of up to 900 seconds). Refused, with the reason:
 an unknown key, a bad name or port, a size or region not on the list, an environment variable with a value in the file, a variable
 whose name looks like a secret but is not marked secret; and a Dockerfile that runs as root, has no health check, exposes a
 different port from the file, or sets a secret-looking variable with ENV. A function needs no Dockerfile (one present is
@@ -19,12 +20,16 @@ import pathlib
 import re
 import sys
 
-KEYS = {"app", "version", "port", "health", "size", "region", "env", "shops", "runs", "handler", "package"}
+KEYS = {"app", "version", "port", "health", "size", "region", "env", "shops", "runs", "handler", "package", "schedule",
+        "timeout"}
 ENV_KEYS = {"name", "secret", "required"}
 SIZES = ("small", "medium", "large")
 RUNS = ("container", "function")
 HANDLER = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_/]*\.[A-Za-z_][A-Za-z0-9_]*")     # service/app.lambda_handler
 PART = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]*")                              # one piece of a package path
+SCHEDULE_NAME = re.compile(r"[a-z][a-z0-9-]{0,11}")
+# EventBridge Scheduler's two forms, in UTC: rate(<n> minute(s)|hour(s)|day(s)) or cron(<six fields>)
+WHEN = re.compile(r"rate\([1-9][0-9]* (minute|minutes|hour|hours|day|days)\)|cron\([^()]+\)")
 SECRETISH = re.compile(r"(SECRET|TOKEN|PASSWORD|PASSWD|API_?KEY|PRIVATE|CREDENTIAL)", re.I)
 
 
@@ -82,8 +87,17 @@ def check_form(m: dict) -> list[str]:
     if runs not in RUNS:
         return [f"runs: one of {', '.join(RUNS)} (leave it out for a container)"]
     if runs == "container":
-        return [f"{k}: only a function has one (\"runs\": \"function\")" for k in ("handler", "package") if k in m]
+        return [f"{k}: only a function has one (\"runs\": \"function\")" for k in ("handler", "package", "schedule", "timeout")
+                if k in m]
     bad = []
+    sched = m.get("schedule", {})
+    if not isinstance(sched, dict) or not all(isinstance(k, str) and SCHEDULE_NAME.fullmatch(k) and isinstance(v, str)
+                                              and WHEN.fullmatch(v) for k, v in sched.items()):
+        bad.append("schedule: names (1 to 12 lower-case letters, digits, hyphens) and when each runs, in UTC: "
+                   "\"rate(1 minute)\", \"rate(6 hours)\" or \"cron(0 2 * * ? *)\"")
+    timeout = m.get("timeout", 10)
+    if not isinstance(timeout, int) or isinstance(timeout, bool) or not 1 <= timeout <= 900:
+        bad.append("timeout: whole seconds from 1 to 900, how long one call may run (a longer job is a container's)")
     if not isinstance(m.get("handler"), str) or not HANDLER.fullmatch(m["handler"]) or ".." in m["handler"]:
         bad.append("handler: the file and its function, like service/app.lambda_handler")
     pkg = m.get("package")

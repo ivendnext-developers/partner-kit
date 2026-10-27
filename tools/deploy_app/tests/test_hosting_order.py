@@ -120,6 +120,19 @@ class Order(Base):
         self.assertIn("not_open", out)
 
 
+class ScheduledFunction(Base):
+    def test_an_app_on_a_schedule_is_refused_before_anything_is_sent(self):
+        m = json.loads((self.app / "app.json").read_text())
+        m.update(runs="function", handler="service/app.lambda_handler", package=["service"], shops=True,
+                 schedule={"pass": "rate(1 minute)"}, timeout=120,
+                 env=[e for e in m["env"] if not e.get("secret")])
+        (self.app / "app.json").write_text(json.dumps(m))
+        with self.fake_send({"order": "x"}):
+            code, out = self.order("--accept-schedule")
+        self.assertEqual((code, self.sent), (1, []))
+        self.assertIn("put live by CitiXsys, not ordered online yet", out)
+
+
 class Secret(Base):
     def test_the_value_is_sent_signed_and_never_printed(self):
         with self.fake_send({"order": "0123456789abcdef", "secret": "IVN_POINT_SECRET", "set": True}):

@@ -91,6 +91,9 @@ def order_payload(folder, partner: str, plan: str, env: str, github: str, branch
     m = json.loads((pathlib.Path(folder) / "app.json").read_text("utf-8"))
     image = "" if deploy_app.is_function(m) else f"hosting.ivendnext.app/partner-apps/{m.get('app')}:{m.get('version')}"
     bad, m = deploy_app.check(folder, image, plan, partner, env, customer, root)
+    if m.get("schedule") or "timeout" in m:      # the order carries neither: the app would run with no schedule
+        bad.append("schedule: an app that runs on a schedule is put live by CitiXsys, not ordered online yet: "
+                   "ask through your partner contact (guide 14b, A function on a schedule)")
     if not REPO.fullmatch(github or ""):
         bad.append("github: your repository as owner/name (the one your workflow pushes from)")
     sm = SUBJECT.fullmatch(subject or "") if subject else None
