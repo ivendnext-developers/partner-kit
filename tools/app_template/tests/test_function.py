@@ -197,11 +197,9 @@ class Scheduled(unittest.TestCase):
             def delete(self, name):
                 self.store.delete(name)
 
-        run = function.Claimed(Flaky(self.store), 120)
         with self.assertRaises(RuntimeError):
-            run.sites()
-        run.release(sorted([A, B])[0])
-        self.assertEqual(sorted(function.Claimed(self.store, 120).sites()), sorted([A, B]))
+            function.Claimed(Flaky(self.store), 120).sites()
+        self.assertEqual(sorted(function.Claimed(self.store, 120).sites()), sorted([A, B]))   # nothing left held
 
     def test_a_days_jobs_run_once_whichever_run_claims_the_day_first(self):
         day = __import__("datetime").datetime(2026, 10, 28, 3, 0)

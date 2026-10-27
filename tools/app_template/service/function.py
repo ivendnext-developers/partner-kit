@@ -95,9 +95,15 @@ class Claimed:
         # store takes a claim over when that value is at most (its own value - stale_s), i.e. once the expiry has
         # passed, so the HOLDER's life decides, never the life of the call that asks.
         expires = self.clock() + self.stale_s
-        for s in self.store.sites():            # one at a time: a store error part-way still frees what was taken
-            if self.store.claim(f"{self.kind}|{s}", expires, self.stale_s):
-                self.taken.append(s)
+        try:
+            for s in self.store.sites():
+                if self.store.claim(f"{self.kind}|{s}", expires, self.stale_s):
+                    self.taken.append(s)
+        except Exception:
+            for s in list(self.taken):          # a store error part-way: free what was taken, then fail the pass
+                self.release(s)
+            self.taken.clear()
+            raise
         return list(self.taken)
 
     def get(self, site: str):
