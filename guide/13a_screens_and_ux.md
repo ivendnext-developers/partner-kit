@@ -31,6 +31,33 @@ Use a rung only when the one above cannot do the job.
 
 *Rung 4 on the till: a cashier presses **Deliveries**, the partner's board opens as a sheet over the sale in the till's own look, and the till puts the delivery number on the sale.*
 
+## Screens on the till
+
+The till is closed to your JavaScript, not to your screens (rule 4, chapter 3). This table is the main moments of a sale where a partner can show something today, and the door for each. Find the moment first; the door follows.
+
+| The moment | What you can show | The door | The recipe |
+|---|---|---|---|
+| **A key press** | your page as a sheet over the sale, in the till's own look; it answers once, with a message and sale details. Counter and tablet frames, online only: the key is dimmed offline, and the phone shows no app keys | a partner page (rung 4) | [partner page](../recipes/partner_page.md) |
+| **A key press, no page** | the till's own message, with details added to the sale and values for its lines | a till key | [till key](../recipes/point_handler.md) |
+| **An item scanned** | the till's own sheet with your question (a beep and a yes or no), a refusal, a notice, or values on the line | a capture on an event | [capture](../recipes/capture.md) |
+| **A customer added or picked** | the till's own sheet with a one-time code to enter, a refusal (a new customer is not made; a picked one is taken off the sale), or a notice | a capture on an event | [capture](../recipes/capture.md) |
+| **A quantity changed** | the till's own sheet with your question, a refusal that puts the last allowed quantity back, or a notice (POS build 2.0.0.654 on) | a capture on an event | [capture](../recipes/capture.md) |
+| **Extra fields on the till's screens** | up to three more item fields and three more customer fields on the sale's lines, the item search, the customer's card and the new-customer sheet, each called by the retailer's own word | field rules | [field rules](../recipes/field_rules.md) |
+| **Before Pay** | a question, a refusal in your own sentence, or a manager's approval | a check before payment | [till guard](../recipes/till_guard.md) |
+| **After the sale** | nothing on the till: your own app on the event feed, or a code printed under the line on the receipt | the event feed; fulfil at sale | [event feed](../recipes/event_feed.md) |
+
+![The order board on the till, as a sheet over the sale](../samples/s17_partner_page/screenshots/02_board_on_till.png)
+
+*A key press: the partner's page, drawn with the till's own tokens.*
+
+![The till's own sheet asking for a warranty reference at the scan](../samples/s20_capture/screenshots/01_warranty_capture_sheet.png)
+
+*An item scanned: the till's own sheet, with the partner's question.*
+
+Some things a retailer calls a screen need none of yours. A choice offered when an item is scanned, such as three extended warranties to pick from, is the till's own item options or cross-sell suggestion, set up as configuration (the cards *extended-warranty-as-item* and *offer-add-on-at-scan*).
+
+A need that fits no moment is a request for an extension point (chapter 9). Two are being specified now, and are not available today: a capture that offers the cashier a choice, and a partner page opened at a moment of the sale without a key.
+
 ## Steps
 
 1. **List every screen the project needs**, and put each on the lowest rung that does the job. Most land on rungs 1 and 2.
@@ -83,7 +110,7 @@ A standalone app signs the user in with iVendNext (authorisation code with PKCE)
 
 ## What is refused, and why
 
-- **Your JavaScript inside Desk forms, lists or the till.** It would run in every user's browser, administrators included.
+- **Your JavaScript inside our screens** (Desk forms and lists, the till). It would run in every user's browser, administrators included. Your screens come through our doors: the table in *Screens on the till*, and the rungs above for Desk.
 - **A screen of your own for data that lives in the customer's site**, when a native one would do. The customer's people already know the native screens, and the data stays reportable.
 - **Your own colours and fonts** outside the kit's tokens. One product, one look.
 - **A page that reaches our screen or the user's session.** Your page gets the signed context and nothing else.

@@ -208,7 +208,7 @@ class SiteTests(unittest.TestCase):
     def test_a_card_that_changes_or_a_row_naming_no_card_fails_the_site_build(self):
         kit = self.planted_kit("example_card", also=("kit",))
         self.assertEqual(self.build_in(kit), 0)
-        card = kit / "needs" / "prices" / "extended-warranty-as-item.md"
+        card = kit / "needs" / "documents" / "gift-receipt.md"
         card.write_text(card.read_text("utf-8").replace("status: ready\n", "status: ready-with-limits\n"), "utf-8")
         real = build.ROOT
         build.ROOT = kit
@@ -230,7 +230,7 @@ class SiteTests(unittest.TestCase):
             finally:
                 build.ROOT = real
             self.assertTrue(any(("does not name" in e) if "Till key" in said else ("is not one of the four" in e) for e in errors), errors)
-        example.write_text(original.replace("| extended-warranty-as-item |", "| no-such-card |"), "utf-8")
+        example.write_text(original.replace("| gift-receipt |", "| no-such-card |"), "utf-8")
         self.assertEqual(self.build_in(kit), 1)
         build.ROOT = kit
         try:

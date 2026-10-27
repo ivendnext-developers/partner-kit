@@ -28,7 +28,7 @@ Corvane Mobile wants its nine stores and its web store on iVendNext, with every 
 |---|---|---|---|---|---|
 | 1 | Every phone we sell is recorded by its IMEI, and the same IMEI can never be sold twice | imei-per-phone-sold | Ready, with limits | Configure | Offline: not run. The IMEI is the item's serial number, received with the stock. |
 | 2 | Scan the IMEI label on the box, and the till refuses a handset already sold | unit-code-at-scan | Ready, with limits | Scan source | A unit sold on another till a moment before: not run in the kit (the product's own tests cover it). |
-| 3 | Sell our two-year care plan alongside a phone | extended-warranty-as-item | Ready | Configure | The care plan is an item of its own; checked on the sandbox. |
+| 3 | A phone bought as a present goes with a receipt that shows no price | gift-receipt | Ready | Configure | A print layout set up in iVendNext Desk; nothing of ours to build. |
 | 4 | When a customer brings a phone back, the cashier sees whether it is still under the maker's warranty | warranty-check-at-till | Ready, with limits | Till key | Online only: the key is dimmed on an offline till; when the service is down the sale goes on; the key's request carries no serial numbers (risk 3). |
 | 5 | A manager approves any sale over 1,500 before it is paid | manager-for-large-sale | Ready, with limits | Check before payment | Answered at Pay, not when the line is entered; the manager signs in on the till (no approval by e-mail). |
 | 6 | No more than two of a new launch phone in one sale | line-quantity-cap | Ready, with limits | Check before payment | Answered at Pay, not when the quantity is typed; the card's check is per line (risk 5). |

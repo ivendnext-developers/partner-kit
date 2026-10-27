@@ -19,7 +19,7 @@ Two kinds: configuration, our connectors and outside apps; then an extension poi
 - Money enters the sale visibly, before payment, and is never changed after the cashier has seen it; on a back-office document, before it is submitted.
 - Don't override or patch iVendNext.
 - Your code runs on your server; inside the customer's site you ship data.
-- Your screens use our doors — never your JavaScript inside Desk forms or the till.
+- Your screens come through our doors — on the till your page as a sheet over the sale, the till's own sheets when an item is scanned, a customer is picked or a quantity changes, and extra fields; in Desk buttons, your pages and native screens. You can't put your JavaScript inside our screens.
 
 The reasons and the alternatives are in chapter 3.
 

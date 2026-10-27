@@ -156,7 +156,7 @@ def c_overrides(app: App):
 
 # --- scripts of yours inside the shop's site (rules 3 and 4) ---
 # Rule 3: inside a customer's site you ship data, not code (a Server Script is code). Rule 4: never your JavaScript
-# inside Desk forms or the till (a Client Script, a form script hooked in, or a .js beside your own record type).
+# inside our screens, Desk or the till (a Client Script, a form script hooked in, or a .js beside your own record type).
 # The kit already says intake refuses web pages, web templates, custom HTML blocks and script print formats (guide
 # chapter 7, recipes/hosted_sandbox.md); the self-check refuses the same records.
 # STATED BOUND: other places that can carry a script are not read here, and the person who reviews the app reads them:
@@ -168,9 +168,9 @@ def c_overrides(app: App):
 SERVER_SCRIPT = ("your code running inside the shop's site (rule 3: inside a customer's site you ship data, not code). "
                  "Instead: a till key, a manifest or a sandboxed function inside the site, or an outside app on your "
                  "own server")
-DESK_SCRIPT = ("your JavaScript running in every Desk user's browser, administrators included (rule 4: never your "
-               "JavaScript inside Desk forms or the till). Instead: a declared button, a Desk action, or your page "
-               "inside our frame")
+DESK_SCRIPT = ("your JavaScript running in every Desk user's browser, administrators included (rule 4: your screens come "
+               "through our doors; never your JavaScript inside our screens). Instead: a declared button, a Desk "
+               "action, or your page inside our frame")
 PARTNER_MARKUP = ("partner markup or script placed on the shop's own pages (the kit's manifest checker refuses it too). "
                   "Instead: native screens, declared buttons, or your page inside our frame")
 SCRIPT_RECORDS = {"Server Script": SERVER_SCRIPT, "Client Script": DESK_SCRIPT, "Custom Script": DESK_SCRIPT,

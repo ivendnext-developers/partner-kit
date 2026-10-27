@@ -31,7 +31,7 @@ These are copied from `guide/03_ladder_and_never_list.md`. Every build keeps all
 1. **Money enters the sale visibly, before payment.** A price or discount may come from your service, but never change a price, tax or total after the cashier has seen it. On a back-office document (a purchase order, a receipt), a price from your service shows on the document before it is submitted, and is never changed after.
 2. **Don't override or patch iVendNext.**
 3. **Your code runs on your server.** Inside the customer's site you ship data, not code — no server code of yours, no server scripts.
-4. **Your screens use our doors.** Never your JavaScript inside Desk forms or the till.
+4. **Your screens come through our doors.** On the till: your page as a sheet over the sale, the till's own sheets when an item is scanned, a customer is picked or a quantity changes, and extra fields. In Desk: buttons, your pages and native screens. What you can't do is put your JavaScript inside our screens.
 
 What this means for what you write:
 
