@@ -73,15 +73,20 @@ def refuse_new_prefix(prefix: str, old: str) -> None:
 
 def texts(root: pathlib.Path):
     for p in sorted(root.rglob("*")):
-        if p.is_file() and p.suffix.lower() in rename.TEXT:
+        if p.is_file() and (p.suffix.lower() in rename.TEXT or p.name in rename.TEXT_NAMES):
             yield p
 
 
-def old_names(m: dict) -> re.Pattern:
-    """Every spelling of the sample's prefix and app name, any case: spaced, hyphened (a naming series), snake."""
+def old_names(m: dict, sample: str = "") -> re.Pattern:
+    """Every spelling of the sample's prefix and app name, any case: spaced, hyphened (a naming series), snake. With the
+    sample's folder name, also its path in the kit (``samples/s34_po_check``): a container recipe built from the repository's
+    root would otherwise still build the kit's sample."""
     o, a = m["prefix"], m["app"]
-    return re.compile("|".join([rf"\b{re.escape(o)}\b", rf"(?<![A-Za-z0-9]){re.escape(o.replace(' ', '-'))}(?=-|\b)",
-                                rf"(?<![A-Za-z0-9]){re.escape(a)}(?=_|\b)"]), re.I)
+    forms = [rf"\b{re.escape(o)}\b", rf"(?<![A-Za-z0-9]){re.escape(o.replace(' ', '-'))}(?=-|\b)",
+             rf"(?<![A-Za-z0-9]){re.escape(a)}(?=_|\b)"]
+    if sample:
+        forms.append(rf"samples/{re.escape(sample)}\b")
+    return re.compile("|".join(forms), re.I)
 
 
 def roles(m: dict) -> set:
@@ -164,7 +169,7 @@ def finish(src, target, m, mrel, prefix, sample, app, into, test, out) -> int:
                 and other_pkg["prefix"] != prefix and p.relative_to(target) != mrel):
             raise Refused(f"{p.relative_to(target).as_posix()} is a second package with its own prefix ({other_pkg['prefix']}): "
                           "one prefix cannot rename two packages, so copy this sample by hand as its README says")
-    left = leftovers(target, m)
+    left = leftovers(target, m, sample)
     if left:
         raise Refused("a name of the sample is still in the copy, so it is not finished:\n  " + "\n  ".join(left))
     for p in sorted(q for q in target.rglob("*") if q.is_file()):
@@ -185,7 +190,8 @@ def finish(src, target, m, mrel, prefix, sample, app, into, test, out) -> int:
     if test:
         t = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], cwd=target,
                            capture_output=True, text=True,
-                           env=dict(os.environ, PARTNER_KIT=str(into), PYTHONDONTWRITEBYTECODE="1"))
+                           env=dict({k: v for k, v in os.environ.items() if not k.startswith(("IVN_", "LIBRARY_"))},
+                                    PARTNER_KIT=str(into), PYTHONDONTWRITEBYTECODE="1"))      # no key of yours reaches the tests
         ran = (re.findall(r"^Ran (\d+) tests?", t.stderr, re.M) or ["0"])[-1]
         print(f"the copied tests: ran {ran}, {'OK' if t.returncode == 0 else 'FAILED'}", file=out)
         if t.returncode:
@@ -197,8 +203,8 @@ def finish(src, target, m, mrel, prefix, sample, app, into, test, out) -> int:
     return 0
 
 
-def leftovers(target: pathlib.Path, m: dict) -> list[str]:
-    pat = old_names(m)
+def leftovers(target: pathlib.Path, m: dict, sample: str) -> list[str]:
+    pat = old_names(m, sample)
     found = [f"{p.relative_to(target).as_posix()}: the file's own name" for p in target.rglob("*")
              if pat.search(p.relative_to(target).as_posix())]
     for p in texts(target):
@@ -222,6 +228,9 @@ def main(argv=None) -> int:
         return run(a.sample, a.prefix, a.into, a.test, sys.stdout)
     except Refused as e:
         print(f"REFUSED: {e}")
+        return 1
+    except UnicodeDecodeError as e:
+        print(f"REFUSED: a file of the sample is not UTF-8 text ({e.reason}); nothing was left behind: copy this sample by hand")
         return 1
 
 

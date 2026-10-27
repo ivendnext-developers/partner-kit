@@ -25,7 +25,7 @@ import start  # noqa: E402
 
 PREFIX = "ACME TST"
 KINDS = [("s11_approvals", "a manifest and code"), ("s16_pick_route", "a hosting order and a service"),
-         ("s4_receipt_pack", "a print format")]
+         ("s4_receipt_pack", "a print format"), ("s34_po_check", "a container recipe")]
 
 
 def fingerprint(*roots) -> dict:
@@ -38,9 +38,10 @@ def fingerprint(*roots) -> dict:
 
 
 def repository(d: str) -> pathlib.Path:
-    """A repository made from the kit: it holds the kit's tools (linked, so nothing is copied)."""
+    """A repository made from the kit: it holds the kit's tools and contracts (linked, so nothing is copied)."""
     root = pathlib.Path(d)
     (root / "tools").symlink_to(KIT / "tools")
+    (root / "contracts").symlink_to(KIT / "contracts")
     return root
 
 
@@ -59,7 +60,7 @@ class Started(unittest.TestCase):
                 rc, out = run(sample, "--prefix", PREFIX, "--into", str(repo), "--test")
                 self.assertEqual(rc, 0, out)
                 target = repo / "apps" / "acme_tst"
-                old = start.old_names(json.loads(start.manifest_of(KIT / "samples" / sample).read_text()))
+                old = start.old_names(json.loads(start.manifest_of(KIT / "samples" / sample).read_text()), sample)
                 left = [p for p in start.texts(target) for l in p.read_text().splitlines() if old.search(l)]
                 self.assertEqual(left, [])
                 self.assertFalse((target / "screenshots").exists())
@@ -84,6 +85,25 @@ class Started(unittest.TestCase):
             repo = repository(d)
             self.assertEqual(run("s11_approvals", "--prefix", PREFIX, "--into", str(repo))[0], 0)
             self.assertIn("ACME-TST-.YYYY.-", (repo / "apps" / "acme_tst" / "manifest.json").read_text())
+
+
+class Container(unittest.TestCase):
+    def test_a_container_recipe_builds_your_app_not_ours(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = repository(d)
+            self.assertEqual(run("s34_po_check", "--prefix", PREFIX, "--into", str(repo))[0], 0)
+            recipe = (repo / "apps" / "acme_tst" / "Dockerfile").read_text()
+            self.assertIn("apps/acme_tst/service/app.py", recipe)
+            self.assertNotIn("samples/s34_po_check", recipe)
+
+    def test_canary_a_recipe_left_naming_our_folder_turns_the_check_red(self):
+        real = start.rewrite
+        with tempfile.TemporaryDirectory() as d:
+            repo = repository(d)
+            with mock.patch.object(start, "rewrite", lambda t, m, p, s, a: real(t, m, p, s, a).replace(f"apps/{a}/", f"samples/{s}/")):
+                rc, out = run("s34_po_check", "--prefix", PREFIX, "--into", str(repo))
+            self.assertEqual(rc, 1, out)
+            self.assertIn("Dockerfile", out)
 
 
 class Refused(unittest.TestCase):
@@ -156,10 +176,10 @@ class Writes(unittest.TestCase):
     def test_nothing_is_written_outside_the_new_folder(self):
         with tempfile.TemporaryDirectory() as d:
             repo = repository(d)
-            kit_before = fingerprint(KIT / "samples", KIT / "tools")
+            kit_before = fingerprint(KIT / "samples", KIT / "tools", KIT / "contracts")
             self.assertEqual(run("s16_pick_route", "--prefix", PREFIX, "--into", str(repo), "--test")[0], 0)
-            self.assertEqual(fingerprint(KIT / "samples", KIT / "tools"), kit_before)
-            self.assertEqual(sorted(p.name for p in repo.iterdir()), ["apps", "tools"])
+            self.assertEqual(fingerprint(KIT / "samples", KIT / "tools", KIT / "contracts"), kit_before)
+            self.assertEqual(sorted(p.name for p in repo.iterdir()), ["apps", "contracts", "tools"])
             self.assertEqual(sorted(p.name for p in (repo / "apps").iterdir()), ["acme_tst"])
 
     def test_a_refusal_after_the_copy_removes_it(self):
@@ -169,7 +189,7 @@ class Writes(unittest.TestCase):
                 rc, out = run("s11_approvals", "--prefix", PREFIX, "--into", str(repo))
             self.assertEqual(rc, 1)
             self.assertIn("stand-in refusal", out)
-            self.assertEqual(sorted(p.name for p in repo.iterdir()), ["tools"])      # no apps/, no half-made copy
+            self.assertEqual(sorted(p.name for p in repo.iterdir()), ["contracts", "tools"])      # no apps/, no half-made copy
 
 
 class Canary(unittest.TestCase):

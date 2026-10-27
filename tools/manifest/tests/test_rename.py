@@ -97,6 +97,24 @@ class Refusals(unittest.TestCase):
             self.assertEqual(p.read_text(), before)
 
 
+class HyphenedNames(unittest.TestCase):
+    def test_a_series_a_style_class_and_a_service_user_follow_in_the_case_they_were_written(self):
+        m = {"app": "pp_stn", "prefix": "PP STN", "series": "PP-STN-.YYYY.-", "css": ".pp-stn-label { }", "user": "pp-stn-service@x"}
+        new, left = rename.rename(m, "ACME BINS")
+        self.assertEqual((new["series"], new["css"], new["user"]), ("ACME-BINS-.YYYY.-", ".acme-bins-label { }", "acme-bins-service@x"))
+        self.assertEqual(left, [])
+
+    def test_a_manifest_in_a_plain_folder_never_pulls_in_the_hosting_order_above_it(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            (root / "app.json").write_text('{"app": "mine", "handler": "samples/s2_bins/x.py"}')
+            (root / "apps").mkdir()
+            shutil.copy(S2 / "manifest.json", root / "apps" / "manifest.json")
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(rename.main([str(root / "apps" / "manifest.json"), "--prefix", "ACME BINS", "--write"]), 0)
+            self.assertEqual((root / "app.json").read_text(), '{"app": "mine", "handler": "samples/s2_bins/x.py"}')
+
+
 class InACopyOfTheKit(unittest.TestCase):
     """Your app in its own folder of a repository made from the kit: the manifest and the hosting order both become yours."""
 

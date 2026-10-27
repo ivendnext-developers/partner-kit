@@ -296,6 +296,16 @@ def main(argv=None) -> int:
         named = _explicit("LIBRARY_DELIVERIES", a.deliveries)
         pl = payload(project, a.partner, given, _json_from("LIBRARY_KEYS", a.keys))
         mem = remembered_path(a.partner, str(pl["card"].get("app") or pl["manifest"].get("app") or "app"))
+        if named:
+            try:
+                had = recall(mem)
+            except Stop:
+                had = []
+            kept = {d.get("customer") for d in pl["deliveries"] if isinstance(d, dict)}
+            gone = [d for d in had if not isinstance(d, dict) or d.get("customer") not in kept]
+            if gone:
+                print(f"this list leaves out {len(gone)} of the {len(had)} customers remembered for this app: it replaces "
+                      "them, and later updates with no list will not go to them")
         if not named and not a.no_remembered_deliveries:
             pl["deliveries"] = recall(mem)
             if pl["deliveries"]:
@@ -317,12 +327,8 @@ def main(argv=None) -> int:
         print("\n".join(report(out, pathlib.Path(a.out))))
         if named:   # only a publish the library accepted changes what is remembered
             try:
-                had = recall(mem)
-                if had and len(had) > len(pl["deliveries"]):
-                    print(f"this list replaces the {len(had)} customers remembered for this app: later updates with no "
-                          f"list go to these {len(pl['deliveries'])} only")
                 remember(mem, pl["deliveries"])
-            except (OSError, Stop) as e:
+            except OSError as e:
                 print(f"published; but the customers could not be remembered for next time ({type(e).__name__}): "
                       "name them again next time")
         return 0

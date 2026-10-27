@@ -43,6 +43,7 @@ from validate import RESERVED_PREFIX_WORDS, _PREFIX_RE, app_for, validate  # noq
 
 TEXT = {".py", ".js", ".mjs", ".ts", ".json", ".md", ".html", ".txt", ".yml", ".yaml", ".toml", ".cfg", ".ini", ".env",
         ".sh", ".j2", ".jinja", ".css", ".zpl", ".sql"}
+TEXT_NAMES = {"Dockerfile", "Procfile"}      # text files with no extension: a sample's container recipe names its own folder
 
 
 def _walk(o, f):
@@ -124,7 +125,7 @@ def mentions(folder: pathlib.Path, skip: set, old_p: str, old_a: str) -> list[st
                      rf"|(?<![A-Za-z0-9]){re.escape(old_p.replace(' ', '-'))}(?=-|\b)", re.I)
     hits = []
     for p in sorted(folder.rglob("*")):
-        if not p.is_file() or p in skip or p.suffix.lower() not in TEXT or "__pycache__" in p.parts:
+        if not p.is_file() or p in skip or (p.suffix.lower() not in TEXT and p.name not in TEXT_NAMES) or "__pycache__" in p.parts:
             continue
         try:
             lines = p.read_text(encoding="utf-8").splitlines()

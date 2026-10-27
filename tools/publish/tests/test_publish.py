@@ -379,12 +379,24 @@ class PublishTests(unittest.TestCase):
             mem = d / "mem"
             self.publish_with(d, mem, shops=self.SHOPS)
             code, out = self.publish_with(d, mem, shops=self.SHOPS[1:])
-            self.assertIn("this list replaces the 2 customers remembered", out)
+            self.assertIn("this list leaves out 1 of the 2 customers remembered", out)
             self.assertNotIn("shop-", out)
             self.publish_with(d, mem, shops=self.SHOPS)
             (d / "blank.json").write_text("\n")
             code, out = self.publish_with(d, mem, "--deliveries", str(d / "blank.json"))
             self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS)         # the blank file did not wipe it
+
+    def test_a_swapped_list_and_a_dry_run_both_say_who_is_left_out(self):
+        Library.seen, Library.reply = [], (200, self.OK)
+        swap = [self.SHOPS[0], {"customer": "shop-c", "name": "Shop C", "sites": ["shop-c.ivendnext.com"]}]
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            mem = d / "mem"
+            self.publish_with(d, mem, shops=self.SHOPS)
+            code, out = self.publish_with(d, mem, "--dry-run", shops=swap)         # same length, one customer different
+            self.assertIn("this list leaves out 1 of the 2 customers remembered", out)
+            self.assertNotIn("shop-", out)
+            self.assertEqual(json.loads(next(mem.glob("*.json")).read_text()), self.SHOPS)
 
     def test_a_memory_that_cannot_be_written_does_not_fail_a_publish_the_library_accepted(self):
         Library.seen, Library.reply = [], (200, self.OK)
