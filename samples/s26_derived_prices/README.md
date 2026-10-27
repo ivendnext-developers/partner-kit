@@ -32,7 +32,7 @@ iVendNext keeps one price list worked out from another: the selling list is 1.5 
 1. Install `manifest.json` (the retailer's administrator, on the install screen; on your sandbox, `tools/deploy/deploy.py`). It adds `PP DPL Rule`, the feed registration *PP DPL Prices* (switched off) and the role **PP DPL Integration** (empty).
 2. In **Role Permissions**, give PP DPL Integration **read** on Price List, and **read, create and write** on Item Price. A manifest grants rights only on its own record types ([the integration user recipe](../../recipes/integration_user.md)). ⚠ With these rights the key can change **any** item price in the retailer's iVendNext: give the role to this app's user alone.
 3. Make the app's integration user with that role and generate its API key.
-4. Choose that user on the feed registration *PP DPL Prices* and tick **Item Price**.
+4. Tick **Item Price** on the feed registration *PP DPL Prices* and save. Ask iVendNext support to set that user as its *Application User* (a user made for the app alone, never a person's).
 5. Run the service with the user's key (below).
 6. Add a **PP DPL Rule**: a short name, the source and target price lists, the factor, an amount to add, the rounding step and direction, the floor, the decimal places; tick **Enabled**. The next pass writes every target price that no person has set.
 

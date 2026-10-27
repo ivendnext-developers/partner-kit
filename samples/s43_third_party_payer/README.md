@@ -67,7 +67,7 @@ The service reads iVendNext with its integration user's key and answers the door
 3. **Make each payer**: its own **Customer record** first (what it owes is booked against it), then the Payer, its formulary, and each plan with its rules and price list. A data set file (`datasets/`) loads a payer in one go: `python3 dataset.py records datasets/generic_insurer.json` lists the records it makes.
 4. **Make each customer's cover**: a Member per policy (customer, plan, member number exactly as on the card).
 5. **Give the price list its prices**: the retailer's own Item Prices on the plan's list. ⚠ Do not make the plan's list a customer group's default: it would price every sale of the member, insured or not; the door switches the sale to the plan's list when a cover is picked.
-6. **Choose the app's user on its feed, switch its record types on (POS Invoice, Sales Invoice), then press Connect again** (each button says so until you do). That user reads POS Invoices, Sales Invoices, Items, Item Prices, Price Lists and Customers, and writes the app's own records.
+6. **Switch its record types on (POS Invoice, Sales Invoice) and save, ask iVendNext support to set the app's user as its Application User (a user made for the app alone, never a person's), then press Connect again** (each button says so until you do). That user reads POS Invoices, Sales Invoices, Items, Item Prices, Price Lists and Customers, and writes the app's own records.
 
 ## Data sets
 

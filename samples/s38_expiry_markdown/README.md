@@ -44,7 +44,7 @@ Pressed again, the button writes nothing: *"2 lots already marked down."*
    | Currency | Read | the currency's smallest unit, for the rounding |
    | Item Price | Read, Write, Create, Delete | the item's own price, and each lot's own price |
 
-   The role reaches every price on every list: give it to the app's user and no one else. A service for one retailer takes the key in its settings. A service for many retailers receives it from iVendNext: choose the user as the *Application User* of the feed **PP EXM Markdown feed**, then press **Connect again** on the app (*Many retailers, hosted* below).
+   The role reaches every price on every list: give it to the app's user and no one else. A service for one retailer takes the key in its settings. A service for many retailers receives it from iVendNext: ask iVendNext support to set the user as the *Application User* of **PP EXM Markdown feed** (a user made for the app alone, never a person's), then press **Connect again** on the app (*Many retailers, hosted* below).
 3. **Fill in the settings:** open **PP EXM Settings**, make the record **Default**, choose the selling **price list** your tills sell from, and the retailer's **hours from UTC** (the retailer's own day decides how many days a lot has left).
 4. **Give the steps** to your perishable item groups (Item Group form).
 5. **Switch the service on** (the System Manager): **Retail Extension Subscription**, the record *Mark down service*: read what it is sent, tick the consent, switch it on. Then **Retail Desk Action**, the record *Mark down*: switch it on. The button shows to an *Item Manager*, the engine's role that reads Batch (iVendNext checks, at every press, that the user may read each ticked lot). If the retailer's markdowns are someone else's job, add their role on the button and give that role read on Batch.
@@ -84,7 +84,7 @@ python3 service/app.py service/.env.local      # PP_BASE, PP_KEY, PP_SECRET, PP_
 The App library's *Expiry markdown* runs this same `service/app.py` for every retailer that installs it, as a function on CitiXsys hosting (`app.json`): it costs nothing between presses. Set `IVN_LIBRARY_APP` (the library's id), a shops store (`IVN_SHOPS_TABLE` on hosting, `IVN_SHOPS_FILE` on your own server) and `EXM_PREFIX` (`IVENDNEXT EXM`: the step fields are then `ivendnext_exm_days_1` and so on, and the note *IVENDNEXT EXM: …*).
 
 1. After its install the retailer's site connects itself (the app template's handshake, guide chapter 14b): the service stores the retailer with its library key and the press's secret, `<app>:sub:markdown`.
-2. The retailer chooses its app user on the feed and presses *Connect again*: the service receives that user's key (`user:<email>`).
+2. The retailer asks iVendNext support to set its app user on the feed, then presses *Connect again*: the service receives that user's key (`user:<email>`).
 3. Each press names its retailer (`X-iVendNext-Site`); it is checked with **that retailer's** secret and the prices are read and written with **that retailer's** user's key. Another retailer's secret, or a retailer the service does not know, is refused (401).
 4. A press before step 2 is answered in words: *Mark down is not set up yet.*
 
