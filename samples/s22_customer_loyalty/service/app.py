@@ -25,6 +25,10 @@ worker runs beside it, one poll per connected shop (worker.py). The shop's setti
 ``… Settings`` record, read with its key). LYL_PREFIX names the record types (PP LYL; IVENDNEXT LYL for the library's
 app). Member cash stays ONE shop's (PP_WALLET_*): the payments app calls it with the connector's own id and secret, not
 the shop's site (README, Bounds).
+
+On CitiXsys hosting, many shops run as a FUNCTION (app.json "runs": "function", "schedule"; ``lambda_handler`` below): a
+press is one call, and each scheduled call is one feed pass of the shops it can claim, with each shop's daily jobs taken
+once a day by whichever call claims that day first. Nothing is billed while no shop presses or has a sale to read.
 """
 
 from __future__ import annotations
@@ -43,6 +47,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 KIT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 sys.path.insert(0, HERE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
+import function  # noqa: E402
 import loyalty  # noqa: E402
 import receipts  # noqa: E402
 import shops  # noqa: E402
@@ -120,8 +125,9 @@ def shop_client(record: dict) -> Shop:
 
 
 class Service:
-    def __init__(self, conf: dict, shop=None, store=None, client=None, keys=None):
+    def __init__(self, conf: dict, shop=None, store=None, client=None, keys=None, scheduled: bool = False):
         self.conf, self.client, self.keys, self.started = conf, client or shop_client, keys, time.monotonic()
+        self.scheduled = scheduled          # a function: each scheduled call is its own pass, logged as it ends
         self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
         if conf.get("LYL_PREFIX"):
             use_prefix(conf["LYL_PREFIX"].strip())
@@ -187,6 +193,41 @@ class Service:
             return 503, {"error": "too late: nothing was taken"}
 
 
+def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
+    """One request, for the web server and the function alike."""
+    if method == "POST":
+        if len(raw) > BODY_MAX:
+            return 413, {"error": "too large"}
+        if svc.app and path in (shops.CONNECT, shops.DISCONNECT):
+            return shops.handle(svc.store, svc.app, path, headers, raw, svc.keys)
+        if path.startswith(WALLET_PREFIX):
+            return svc.wallet_answer(path[len(WALLET_PREFIX):], headers, raw)
+        return svc.press(headers, raw) if path == "/lyl/member" else (404, {"error": "not found"})
+    if path != "/health":
+        return 404, {"error": "not found"}
+    if (svc.app and not svc.scheduled and time.monotonic() - svc.started > HEALTH_GRACE_S
+            and time.monotonic() - worker.HEARTBEAT[0] > HEALTH_GRACE_S):
+        return 503, {"ok": 0, "why": "the feed worker has not finished a pass"}   # restart me
+    return 200, {"ok": 1}
+
+
+def scheduled(svc: Service, name: str, seconds: float = 900, now: datetime.datetime | None = None) -> dict:
+    """One scheduled pass (the function's worker): the shops this call claims, each to its end (the feed, then its daily
+    jobs if this call is the first to claim that day), each claim freed as its shop finishes. A shop stuck past the
+    call's limit ends the call; its claim is taken over once stale (``function.Claimed``). The day stays claimed: as in
+    the container, a day's jobs are tried once, and a chain whose daily jobs outgrow the 15-minute limit needs the
+    container form (guide 14b)."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    store = function.Claimed(svc.store, seconds)
+    state = svc.conf.get("PP_STATE") or os.path.join(HERE, "state")
+    # the wait outlasts the call: a shop still at work when the limit comes ends with the call, never thawed into the next
+    return worker.pass_all(store, state, function.OncePerDay(svc.store, now), now=now, opener=worker.open_shop,
+                           deadline=seconds + 60, finished=store.release)
+
+
+lambda_handler = function.entry(lambda: Service(dict(os.environ), scheduled=True), handle, scheduled)
+
+
 def make_handler(svc: Service):
     class Handler(BaseHTTPRequestHandler):
         timeout = 10
@@ -203,19 +244,10 @@ def make_handler(svc: Service):
             n = int(self.headers.get("Content-Length") or 0)
             if n < 0 or n > BODY_MAX:
                 return self._send(413, {"error": "too large"})
-            raw = self.rfile.read(n)
-            if svc.app and self.path in (shops.CONNECT, shops.DISCONNECT):
-                return self._send(*shops.handle(svc.store, svc.app, self.path, self.headers, raw, svc.keys))
-            if self.path.startswith(WALLET_PREFIX):
-                return self._send(*svc.wallet_answer(self.path[len(WALLET_PREFIX):], self.headers, raw))
-            self._send(*svc.press(self.headers, raw)) if self.path == "/lyl/member" else self._send(404, {"error": "not found"})
+            self._send(*handle(svc, "POST", self.path, self.headers, self.rfile.read(n)))
 
         def do_GET(self):
-            if self.path != "/health":
-                return self._send(404, {"error": "not found"})
-            if svc.app and time.monotonic() - svc.started > HEALTH_GRACE_S and time.monotonic() - worker.HEARTBEAT[0] > HEALTH_GRACE_S:
-                return self._send(503, {"ok": 0, "why": "the feed worker has not finished a pass"})   # restart me
-            self._send(200, {"ok": 1})
+            self._send(*handle(svc, "GET", self.path, self.headers, b""))
 
         def log_message(self, fmt, *args):
             sys.stderr.write("s22 %s\n" % (fmt % args))   # the request line only: no header, no body, no secret

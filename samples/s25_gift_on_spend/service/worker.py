@@ -95,7 +95,7 @@ def open_shop(record: dict):
 
 
 def pass_all(store, state: str, log=sys.stdout, opener=open_shop, busy: dict | None = None,
-             deadline: float = PASS_DEADLINE_S, clock=now_utc) -> dict | None:
+             deadline: float = PASS_DEADLINE_S, finished=None, clock=now_utc) -> dict | None:
     busy = {} if busy is None else busy
     out = {}
     try:
@@ -121,13 +121,20 @@ def pass_all(store, state: str, log=sys.stdout, opener=open_shop, busy: dict | N
         log.write(json.dumps({"site": site, **{k: (v if k == "error" else "done") for k, v in out.get(site, {}).items()}}) + "\n")
         log.flush()
 
+    def run(site):
+        try:
+            one(site)
+        finally:
+            if finished is not None:             # the shop's work is over (the function form frees its claim here)
+                finished(site)
+
     started = []
     for site in sites:
         th, since = busy.get(site) or (None, 0.0)
         if th is not None and th.is_alive():
             out[site] = {"busy": True, "stuck": time.monotonic() - max(since, PROGRESS.get(site, since)) > STUCK_S}
             continue
-        th = threading.Thread(target=one, args=(site,), daemon=True)
+        th = threading.Thread(target=run, args=(site,), daemon=True)
         busy[site] = (th, time.monotonic())
         th.start()
         started.append(th)

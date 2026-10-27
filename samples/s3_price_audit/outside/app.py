@@ -8,6 +8,9 @@
 The shop never calls this service with a sale: it has no till key, no check and no webhook. Everything it does starts
 from each shop's event feed, which it pulls (worker.py).
 
+On CitiXsys hosting it runs as a FUNCTION on a schedule (app.json "runs": "function", "schedule"; ``lambda_handler``
+below): each scheduled call is one pass of the shops it can claim, so nothing is billed while no shop has a sale to read.
+
 Settings, from the environment (names only in ``app.json``): IVN_LIBRARY_APP (the App library's id, ``ivendnext_pda``),
 PDO_PREFIX (``IVENDNEXT PDA`` for the library's app), PP_STATE (a folder for each shop's handled-events note), and a
 store: IVN_SHOPS_TABLE on CitiXsys hosting, else IVN_SHOPS_FILE. For one shop on your own server, run ``service.py``.
@@ -27,6 +30,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 KIT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 sys.path.insert(0, HERE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
+import function  # noqa: E402
 import service  # noqa: E402
 import shops  # noqa: E402
 import worker  # noqa: E402
@@ -36,8 +40,8 @@ HEALTH_GRACE_S = 180
 
 
 class Service:
-    def __init__(self, conf: dict, store=None, keys=None):
-        self.conf, self.keys, self.started = conf, keys, time.monotonic()
+    def __init__(self, conf: dict, store=None, keys=None, scheduled: bool = False):
+        self.conf, self.keys, self.started, self.scheduled = conf, keys, time.monotonic(), scheduled
         self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
         if not self.app:
             raise SystemExit("IVN_LIBRARY_APP is not set: for one shop, run service.py")
@@ -53,8 +57,38 @@ class Service:
             raise SystemExit(f"PP_STATE {state} is not writable ({type(e).__name__}): set it to the scratch folder")
 
     def healthy(self) -> bool:
+        if self.scheduled:                       # a function: each scheduled call is its own pass, logged as it ends
+            return True
         stale = time.monotonic() - worker.HEARTBEAT[0] > HEALTH_GRACE_S
         return not (time.monotonic() - self.started > HEALTH_GRACE_S and stale)
+
+
+def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
+    """One request, for the web server and the function alike."""
+    if method == "POST":
+        if len(raw) > BODY_MAX:
+            return 413, {"error": "too large"}
+        if path in (shops.CONNECT, shops.DISCONNECT):
+            return shops.handle(svc.store, svc.app, path, headers, raw, svc.keys)
+        return 404, {"error": "not found"}
+    if path != "/health":
+        return 404, {"error": "not found"}
+    if not svc.healthy():
+        return 503, {"ok": 0, "why": "the feed worker has not finished a pass"}
+    return 200, {"ok": 1}
+
+
+def scheduled(svc: Service, name: str, seconds: float = 900) -> dict:
+    """One scheduled pass (the function's worker): the shops this call claims, each to its end, each claim freed as its
+    shop finishes. A shop stuck past the call's limit ends the call; its claim is taken over once stale
+    (``function.Claimed``)."""
+    store = function.Claimed(svc.store, seconds)
+    state = svc.conf.get("PP_STATE") or os.path.join(HERE, "state")
+    # the wait outlasts the call: a shop still at work when the limit comes ends with the call, never thawed into the next
+    return worker.pass_all(store, state, opener=worker.open_shop, deadline=seconds + 60, finished=store.release) or {}
+
+
+lambda_handler = function.entry(lambda: Service(dict(os.environ), scheduled=True), handle, scheduled)
 
 
 def make_handler(svc: Service):
@@ -73,17 +107,10 @@ def make_handler(svc: Service):
             n = int(self.headers.get("Content-Length") or 0)
             if n < 0 or n > BODY_MAX:
                 return self._send(413, {"error": "too large"})
-            raw = self.rfile.read(n)
-            if self.path in (shops.CONNECT, shops.DISCONNECT):
-                return self._send(*shops.handle(svc.store, svc.app, self.path, self.headers, raw, svc.keys))
-            self._send(404, {"error": "not found"})
+            self._send(*handle(svc, "POST", self.path, self.headers, self.rfile.read(n)))
 
         def do_GET(self):
-            if self.path != "/health":
-                return self._send(404, {"error": "not found"})
-            if not svc.healthy():
-                return self._send(503, {"ok": 0, "why": "the feed worker has not finished a pass"})
-            self._send(200, {"ok": 1})
+            self._send(*handle(svc, "GET", self.path, self.headers, b""))
 
         def log_message(self, fmt, *args):
             sys.stderr.write("s3 %s\n" % (fmt % args))   # the request line only: no header, no body, no secret

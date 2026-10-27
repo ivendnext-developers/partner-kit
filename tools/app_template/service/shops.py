@@ -245,7 +245,8 @@ class FileStore:
             return sorted(n for n in self._read() if CLAIM_MARK not in n and (self.local or not is_local(n)))
 
     def claim(self, name: str, now: float, stale_s: float) -> bool:
-        """Take ``name`` unless another call took it less than ``stale_s`` seconds ago (``TableStore.claim``)."""
+        """Take ``name`` unless another call took it less than ``stale_s`` seconds ago (``TableStore.claim``; an expiry
+        passed as ``now`` works the same way, ``function.Claimed``)."""
         with self._lock:
             data = self._read()
             if (data.get(name) or {}).get("at", 0) > now - stale_s:

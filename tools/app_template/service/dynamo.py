@@ -136,7 +136,9 @@ class TableStore:
     def claim(self, name: str, now: float, stale_s: float) -> bool:
         """Take ``name`` (a claim's name holds a "|", which no site's does) unless another call took it less than
         ``stale_s`` seconds ago: one conditional write, so of two copies of the app racing for it exactly one wins. The
-        caller deletes it when done; a copy stopped before that leaves it, and it is taken over once stale."""
+        caller deletes it when done; a copy stopped before that leaves it, and it is taken over once stale. A caller may
+        pass an EXPIRY as ``now`` (``function.Claimed``: its time + ``stale_s``), and the claim is then taken over once
+        that expiry has passed; one name is always claimed one way."""
         try:
             self._call("PutItem", {"TableName": self.table, "Item": {"site": {"S": name}, "at": {"N": str(now)}},
                                    "ConditionExpression": "attribute_not_exists(site) OR #at <= :stale",

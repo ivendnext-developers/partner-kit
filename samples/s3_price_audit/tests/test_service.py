@@ -14,6 +14,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -471,6 +472,69 @@ class Manifest(unittest.TestCase):
         self.assertEqual(self.m["allowed_urls"], ["https://pdo.partner.example"])
         for k in ("webhooks", "remote_actions", "extension_subscriptions", "pos_actions"):
             self.assertFalse(self.m.get(k), k)
+
+
+
+class Scheduled(unittest.TestCase):
+    """PAYWHENUSED: hosted as a function on a schedule. Each call is one pass of the shops it claims; a shop another call
+    holds is left to it."""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp(prefix="s3-fn-")
+        conf = {"IVN_LIBRARY_APP": "ivendnext_pda", "IVN_SHOPS_FILE": os.path.join(self.dir, "shops.json"),
+                "PP_STATE": self.dir}
+        self.svc = app.Service(conf, scheduled=True)
+        self.shops = {"ka": FakeShop(threshold=10), "kb": FakeShop(threshold=10)}
+        self.feeds = {k: FakeFeed([ev(1, "S1")]) for k in self.shops}
+        for k, t in self.shops.items():
+            t.sale("S1", [CASE])
+            site = f"{k[1]}.example"
+            self.svc.store.put(site, {"url": f"https://{site}", "secrets": {f"user:pda@{site}": f"{k}:s"}})
+
+    def run_pass(self):
+        def opener(record):
+            key = worker.api_credentials(record)[1]
+            return self.shops[key], self.feeds[key]
+        with mock.patch.object(worker, "open_shop", opener), mock.patch("sys.stdout", io.StringIO()):
+            return app.scheduled(self.svc, "pass")
+
+    def claims(self):
+        with open(os.path.join(self.dir, "shops.json")) as f:
+            return sorted(n for n in json.load(f) if "|" in n)
+
+    def test_a_call_passes_each_claimed_shop_and_frees_its_claim(self):
+        out = self.run_pass()
+        self.assertEqual((out["a.example"]["handled"], out["b.example"]["handled"]), (1, 1))
+        self.assertEqual((recorded(self.shops["ka"]), recorded(self.shops["kb"])), (["S1-0"], ["S1-0"]))
+        self.assertEqual(self.claims(), [])
+
+    def test_canary_a_shop_another_call_holds_is_left_to_it(self):
+        self.assertTrue(self.svc.store.claim("pass|a.example", time.time() + 1000, 1000))
+        self.assertEqual(sorted(self.run_pass()), ["b.example"])
+        self.assertEqual(recorded(self.shops["ka"]), [])
+        self.assertEqual(self.claims(), ["pass|a.example"])
+
+    def test_a_shop_that_finished_is_freed_while_a_slow_one_still_works(self):
+        seen_free = []
+
+        def opener(record):
+            key = worker.api_credentials(record)[1]
+            if key == "ka":                                  # A is slow: it waits for B's claim to be freed
+                end = time.monotonic() + 3
+                while time.monotonic() < end and "pass|b.example" in self.claims():
+                    time.sleep(0.02)
+                seen_free.append("pass|b.example" not in self.claims())
+            return self.shops[key], self.feeds[key]
+
+        with mock.patch.object(worker, "open_shop", opener), mock.patch("sys.stdout", io.StringIO()):
+            app.scheduled(self.svc, "pass")
+        self.assertEqual(seen_free, [True])
+        self.assertEqual(self.claims(), [])
+
+    def test_health_answers_200_as_a_function(self):
+        self.svc.started -= app.HEALTH_GRACE_S + 1
+        worker.HEARTBEAT[0] = time.monotonic() - app.HEALTH_GRACE_S - 1      # stale, whatever the machine's uptime
+        self.assertEqual(app.handle(self.svc, "GET", "/health", {}, b""), (200, {"ok": 1}))
 
 
 if __name__ == "__main__":

@@ -7,7 +7,8 @@ would create; then `order` it, pay, and run it (`order`, `status`, `secret`, `ca
     python3 tools/deploy_app/deploy_app.py <app folder> --zip <out.zip> [--root <folder>] --plan starter --partner <you> …
 
 An app whose `app.json` says `"runs": "function"` (a press-only app: a till key, a check, a webhook; chapter 14b) is
-hosted as a function paid per call, not an always-on container: it takes `--zip`, where this tool writes the package
+hosted as a function paid per call, not an always-on container (an app with background work too, when its `schedule`
+runs it: a feed pass, a daily job, each call at most its `timeout`, 900 seconds): it takes `--zip`, where this tool writes the package
 (the `package` paths of `app.json`, read from `--root`, by default the app's folder; never a file whose name starts with
 a dot, never `__pycache__`), and no `--image`. An app that says nothing about `runs` is a container, exactly as before.
 
@@ -184,13 +185,15 @@ def describe_function(m: dict, plan: str, partner: str, env: str, customer: str,
     return {
         "address": f"https://{ident}.{PLANS['domain']}",
         "app": ident, "partner": partner, "customer": customer or None, "plan": plan, "env": env, "runs": "function",
-        "package": package or None, "region": PLANS["regions"][m["region"]],
+        "package": package or None, "region": PLANS["regions"][m["region"]], "schedule": m.get("schedule") or {},
         "size": {"name": m["size"], "memory_mb": FUNCTION_MB, "cpu_architecture": "ARM64"},
         "enforced": p["enforced"], "includes": FUNCTION_INCLUDES,
         "secrets_to_supply": [], "secrets_added_when_used": [], "settings_to_supply": plain,
         "creates": [
             f"a function {ident}, {FUNCTION_MB} MB, ARM64, run only when called (paid per call), "
-            f"handler {m['handler']}, its code the package {key}",
+            f"handler {m['handler']}, its code the package {key}, each call at most {m.get('timeout', 10)} seconds",
+            *[f"a schedule {n}: the function runs {w} (UTC), with a role that may call this function and nothing else"
+              for n, w in sorted((m.get("schedule") or {}).items())],
             f"logs kept {p['enforced']['log_days']} days",
             f"a shops table for the shops that connect to the app, encrypted at rest, readable and writable by this "
             f"function alone (IVN_SHOPS_TABLE)",
@@ -210,6 +213,9 @@ def describe_function(m: dict, plan: str, partner: str, env: str, customer: str,
 def function_block(m: dict, plan: str, partner: str, env: str, plain: list[str], customer: str) -> str:
     """The function's module block for the infrastructure repository's foundation/apps.tf."""
     extra = f'  customer    = "{customer}"\n' if customer else ""
+    extra += f"  timeout     = {m['timeout']}\n" if "timeout" in m else ""
+    if m.get("schedule"):
+        extra += "  schedule    = { " + ", ".join(f"{n} = {json.dumps(w)}" for n, w in sorted(m["schedule"].items())) + " }\n"
     extra += f"  # plain settings to supply in plain_env: {', '.join(plain)}\n" if plain else ""
     return (f'module "{module_label(m, env)}" {{\n'
             f'  source      = "../modules/function"\n'
@@ -293,7 +299,8 @@ def main(argv=None) -> int:
     print(f"  address  {d['address']}")
     if d.get("runs") == "function":
         print(f"  package  {d['package']}")
-        print(f"  size     a function of {d['size']['memory_mb']} MB, ARM64, region {d['region']}, run only when called")
+        print(f"  size     a function of {d['size']['memory_mb']} MB, ARM64, region {d['region']}, run only when called"
+              + (" or on its schedule" if d.get("schedule") else ""))
     else:
         print(f"  image    {d['image']}")
         print(f"  size     {d['size']['name']}: {d['size']['vcpu']} vCPU, {d['size']['memory_mb']} MB, ARM64, region {d['region']}")

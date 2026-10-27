@@ -104,6 +104,24 @@ class FunctionForm(unittest.TestCase):
         for got, want in cases:
             self.assertTrue(any(want in b for b in got), (want, got))
 
+    def test_a_schedule_and_a_timeout_are_a_functions_and_checked(self):
+        fn = {**self.FN, "schedule": {"pass": "rate(1 minute)", "daily": "cron(0 2 * * ? *)"}, "timeout": 120}
+        self.assertEqual(bad(**fn), [])
+        cases = [
+            (bad(**{**fn, "schedule": {"pass": "every minute"}}), "schedule:"),
+            (bad(**{**fn, "schedule": {"Pass": "rate(1 minute)"}}), "schedule:"),
+            (bad(**{**fn, "schedule": {"twelve-chars": "rate(1 minute)"}}), "schedule:"),
+            (bad(**{**fn, "schedule": {"pass": "rate(0 minutes)"}}), "schedule:"),
+            (bad(**{**fn, "schedule": ["rate(1 minute)"]}), "schedule:"),
+            (bad(**{**fn, "timeout": 901}), "timeout:"),
+            (bad(**{**fn, "timeout": 0}), "timeout:"),
+            (bad(**{**fn, "timeout": True}), "timeout:"),
+            (bad(schedule={"pass": "rate(1 minute)"}), "schedule: only a function"),
+            (bad(timeout=60), "timeout: only a function"),
+        ]
+        for got, want in cases:
+            self.assertTrue(any(want in b for b in got), (want, got))
+
     def test_a_function_needs_no_dockerfile(self):
         import tempfile
         with tempfile.TemporaryDirectory() as d:

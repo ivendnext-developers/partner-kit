@@ -12,12 +12,14 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "service"))
 sys.path.insert(0, str(HERE))
 import app  # noqa: E402
 import function  # noqa: E402
+import shops  # noqa: E402
 from test_shops import A, APP, B, KEYS, NAME, make_key, sign  # noqa: E402
 
 SECRET = "function-secret-for-tests"
@@ -127,6 +129,88 @@ class ManyShops(unittest.TestCase):
         body = json.dumps({"key": make_key(host=A), "site": A}).encode()
         self.assertEqual(answer(self.fn(event("/ivendnext/disconnect", body, {"X-iVendNext-Site": A})))[0], 200)
         self.assertEqual(answer(self.fn(event("/point/hello", self.raw, signed(self.raw, "secret-of-a", A))))[0], 401)
+
+
+class Scheduled(unittest.TestCase):
+    """PAYWHENUSED: a function on a schedule. The hosting calls it with {"ivn_schedule": name}; the entry hands the name
+    to the app's scheduled entry, never to ``handle``. Claims keep two runs off one shop, and one day's jobs to one run."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.store = shops.FileStore(str(pathlib.Path(self.tmp.name) / "shops.json"))
+        for site in (A, B):
+            self.store.put(site, {"url": f"https://{site}", "secrets": {}})
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_a_scheduled_call_reaches_the_scheduled_entry_and_not_handle(self):
+        seen, loads = [], []
+        fn = function.entry(lambda: loads.append(1) or {"c": 1},
+                            lambda *a: self.fail("handle must not answer a schedule"),
+                            lambda conf, name, seconds: seen.append((conf, name, seconds)) or {A: {}, B: {}})
+
+        class Context:                                               # the call's own clock: 117.5 s left
+            def get_remaining_time_in_millis(self):
+                return 117500
+
+        with mock.patch("sys.stdout", io.StringIO()) as log:
+            self.assertEqual(fn({"ivn_schedule": "pass"}, Context()), {"schedule": "pass", "shops": 2})
+            fn({"ivn_schedule": "pass"})                             # no context (a laptop): the 15-minute ceiling
+        self.assertEqual((seen, len(loads)), ([({"c": 1}, "pass", 117.5), ({"c": 1}, "pass", 900)], 1))
+        self.assertIn('"schedule": "pass"', log.getvalue())
+
+    def test_canary_an_app_with_no_scheduled_entry_answers_a_schedule_with_an_error(self):
+        fn = function.entry(lambda: {}, lambda *a: self.fail("handle must not answer a schedule"))
+        with mock.patch("sys.stdout", io.StringIO()):
+            self.assertEqual(fn({"ivn_schedule": "pass"}), {"schedule": "pass", "error": "no scheduled entry"})
+
+    def test_two_runs_never_work_one_shop_and_a_released_shop_is_free_again(self):
+        first, second = function.Claimed(self.store, 120), function.Claimed(self.store, 120)
+        self.assertEqual(sorted(first.sites()), sorted([A, B]))
+        self.assertEqual(second.sites(), [])                         # both held by the first run
+        self.assertEqual(sorted(self.store.sites()), sorted([A, B]))  # a claim is never listed as a shop
+        first.release(A)                                             # A finished, B did not
+        second.release(B)                                            # never this run's: freeing it does nothing
+        self.assertEqual(function.Claimed(self.store, 120).sites(), [A])
+
+    def test_canary_a_claim_is_taken_over_only_after_its_call_is_gone(self):
+        now = 1000.0
+        function.Claimed(self.store, 120, clock=lambda: now).sites()        # a call with 120 s left, stopped by its limit
+        self.assertEqual(function.Claimed(self.store, 900, clock=lambda: now + 149).sites(), [])   # 120 + the margin
+        self.assertEqual(sorted(function.Claimed(self.store, 900, clock=lambda: now + 151).sites()), sorted([A, B]))
+
+    def test_a_store_error_part_way_still_frees_what_was_taken(self):
+        class Flaky:
+            def __init__(self, store):
+                self.store, self.n = store, 0
+
+            def sites(self):
+                return self.store.sites()
+
+            def claim(self, *a):
+                self.n += 1
+                if self.n == 2:
+                    raise RuntimeError("throttled")
+                return self.store.claim(*a)
+
+            def delete(self, name):
+                self.store.delete(name)
+
+        with self.assertRaises(RuntimeError):
+            function.Claimed(Flaky(self.store), 120).sites()
+        self.assertEqual(sorted(function.Claimed(self.store, 120).sites()), sorted([A, B]))   # nothing left held
+
+    def test_a_days_jobs_run_once_whichever_run_claims_the_day_first(self):
+        day = __import__("datetime").datetime(2026, 10, 28, 3, 0)
+        function.OncePerDay(self.store, day - __import__("datetime").timedelta(days=1)).get(A)
+        once = function.OncePerDay(self.store, day)
+        self.assertIsNone(once.get(A))                               # this run takes A's day: run the jobs
+        once[A] = "2026-10-28"                                       # a container's write: ignored, the claim is the record
+        self.assertEqual(function.OncePerDay(self.store, day).get(A), "2026-10-28")    # another run: skip
+        self.assertIsNone(function.OncePerDay(self.store, day).get(B))
+        names = json.loads((pathlib.Path(self.tmp.name) / "shops.json").read_text())
+        self.assertNotIn(f"daily|{A}|2026-10-27", names)             # yesterday's claim removed
 
 
 if __name__ == "__main__":

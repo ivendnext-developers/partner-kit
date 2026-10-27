@@ -15,6 +15,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 import urllib.error
 import urllib.request
 
@@ -270,6 +271,67 @@ class Prefix(unittest.TestCase):
         finally:
             app.use_prefix("PP LYL")
         self.assertEqual(left, [])
+
+
+class Scheduled(unittest.TestCase):
+    """PAYWHENUSED: hosted as a function on a schedule. Each call is one feed pass of the shops it claims; a shop another
+    call holds is left to it; a shop's daily jobs run once a day, whichever call claims the day first."""
+    NOW = datetime.datetime(2026, 10, 13, 3, 0, tzinfo=datetime.timezone.utc)
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp(prefix="s22-fn-")
+        conf = {"IVN_LIBRARY_APP": APP, "IVN_SHOPS_FILE": os.path.join(self.dir, "shops.json"), "PP_STATE": self.dir}
+        self.svc = app.Service(conf, scheduled=True)
+        self.fakes = {A: shop(), B: shop()}
+        for site in (A, B):
+            sale(self.fakes[site], "S1", "C1", "400.00")
+            self.svc.store.put(site, {"site": site, "url": f"https://{site}", "secrets": {"user:u": "k:s"}})
+        self.feeds = {s: Worker.Feed([{"id": "e1", "event": "sale.booked", "doc_type": "POS Invoice", "doc_name": "S1"}])
+                      for s in (A, B)}
+
+    def run_pass(self, now=NOW):
+        with mock.patch.object(worker, "open_shop", lambda r: (self.fakes[r["site"]], self.feeds[r["site"]])), \
+                mock.patch("sys.stdout", io.StringIO()):
+            return app.scheduled(self.svc, "pass", now=now)
+
+    def claims(self):
+        with open(os.path.join(self.dir, "shops.json")) as f:
+            return sorted(n for n in json.load(f) if "|" in n)
+
+    def test_a_call_passes_each_claimed_shop_runs_its_day_once_and_frees_the_pass(self):
+        out = self.run_pass()
+        for site in (A, B):
+            earn = [r for r in self.fakes[site].db[loyalty.LEDGER].values() if r["entry_type"] == "Earn"]
+            self.assertEqual([str(r["amount"]) for r in earn], ["8.00"])
+            self.assertIn("credited", out[site])
+        self.assertEqual(self.claims(), [f"daily|{A}|2026-10-13", f"daily|{B}|2026-10-13"])   # the pass claims freed
+        self.assertNotIn("credited", self.run_pass()[A])                                     # the day, once
+        self.assertIn("credited", self.run_pass(self.NOW + datetime.timedelta(days=1))[A])
+
+    def test_canary_a_shop_another_call_holds_is_left_to_it(self):
+        self.assertTrue(self.svc.store.claim(f"pass|{A}", time.time() + 1000, 1000))
+        out = self.run_pass()
+        self.assertEqual(sorted(out), [B])
+        self.assertEqual(self.feeds[A].backlog(), 1)                                         # A untouched
+        self.assertIn(f"pass|{A}", self.claims())
+
+    def test_a_daily_job_that_fails_is_tried_once_that_day_and_the_feed_goes_on(self):
+        with mock.patch.object(loyalty, "credit_due", side_effect=app.ShopError(503, "down")):
+            self.assertEqual(self.run_pass()[A], {"error": "ShopError"})
+        self.feeds[A] = Worker.Feed([{"id": "e2", "event": "sale.booked", "doc_type": "POS Invoice", "doc_name": "S1"}])
+        again = self.run_pass()[A]
+        self.assertEqual(sorted(again), ["feed"])                                           # no daily retry that day
+        self.assertIn("credited", self.run_pass(self.NOW + datetime.timedelta(days=1))[A])  # the next day runs
+
+    def test_health_answers_200_as_a_function_and_the_web_server_shares_the_routes(self):
+        self.svc.started -= app.HEALTH_GRACE_S + 1
+        worker.HEARTBEAT[0] = time.monotonic() - app.HEALTH_GRACE_S - 1      # stale, whatever the machine's uptime
+        self.assertEqual(app.handle(self.svc, "GET", "/health", {}, b""), (200, {"ok": 1}))
+        self.assertEqual(app.handle(self.svc, "GET", "/nope", {}, b"")[0], 404)
+        container = app.Service({"IVN_LIBRARY_APP": APP, "IVN_SHOPS_FILE": os.path.join(self.dir, "shops.json"),
+                                 "PP_STATE": self.dir})
+        container.started -= app.HEALTH_GRACE_S + 1
+        self.assertEqual(app.handle(container, "GET", "/health", {}, b"")[0], 503)          # a stalled container
 
 
 if __name__ == "__main__":
