@@ -36,7 +36,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
 
    Keep the kit's `LICENSE` and `NOTICE` for the parts you copied (Apache 2.0). Put your own licence for your changes beside your app, and list the components your app ships in `THIRD_PARTY.md`. Your repository can stay private.
 
-   **Shortcut for steps 2 and 3:** `python3 tools/manifest/start.py s2_bins --prefix "ACME BINS"` makes `apps/acme_bins` from the sample, renames it and also rewrites the code, tests and README that the rename below only lists, and finishes only when no name of ours is left and the kit's checks pass (add `--test` to run the copied tests). It needs your repository made from the kit, as step 2 sets up. The steps below are what it does for the manifest.
+   **Shortcut for steps 2 and 3:** `python3 tools/manifest/start.py s2_bins --prefix "ACME BINS"` makes `apps/acme_bins` from the sample, renames it and also rewrites the code, tests and README that the rename below only lists, and finishes only when no copy of the sample's prefix, app name or folder is left and the kit's checks pass (add `--test` to run the copied tests). It needs your repository made from the kit, as step 2 sets up. The steps below are what it does for the manifest.
 
 3. **Rename it to your company's prefix, in one command.**
 
