@@ -1,5 +1,7 @@
 # S31 — Parent item groups in coupons and promotions (`pp_pgx`)
 
+*Start from this sample: `python3 tools/manifest/start.py s31_parent_groups --prefix "ACME PGX"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A retailer sets up a coupon for *Supplements* and expects it to cover every supplement. But the till's coupon and promotion engines match an item's **own** item group exactly. A row naming the parent group *Supplements* matches only items placed directly in it, never those in *Supplements › Protein*.
 
 This sample's service, outside the retailer's iVendNext, writes the parent out as its child groups and keeps it that way: when the coupon is saved, and when a new group is added under the parent. It is for an iVendNext Partner building for a retailer whose item groups are a tree.

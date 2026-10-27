@@ -2,6 +2,8 @@
 
 Some systems a retailer uses are local to a country or a region: its accounting system, its payment gateway or wallet, its loyalty provider, its messaging gateway, its delivery company. Connecting them is a partner's business, not ours: you know the market, and the customer stays yours. This page gives you a starting point for each, where the kit has one: the sample and the recipe to copy, the need it answers in the [needs catalogue](../../needs/README.md), the door it uses, and what usually changes from one market to the next.
 
+**Starting from one of our samples?** Run `python3 tools/manifest/start.py <sample> --prefix "ACME <SHORT>"` in your copy of the kit (for example `s11_approvals`). It copies the sample into `apps/` of your repository under your own prefix, changes every name that carries ours, in the manifest, the code, the tests and the page, and checks the result. Details: [Make one of our apps your own](../../recipes/make_it_your_own.md).
+
 Why this is yours to build, and what stays yours: [Build your business on iVendNext's apps](business.md).
 
 ## A local ERP or accounting system

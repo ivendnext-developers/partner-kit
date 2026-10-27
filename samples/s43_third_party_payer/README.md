@@ -1,5 +1,7 @@
 # S43 — Third-party payer (`pp_icp`): an insurer, or anyone else, paying part of a sale
 
+*Start from this sample: `python3 tools/manifest/start.py s43_third_party_payer --prefix "ACME ICP"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 In many markets a pharmacy cannot sell to most of its patients without their insurer: the insurer pays part of the sale and the patient pays the rest. The same shape serves an optical plan, and a company paying for what its staff buy. This app is **one payer service for any third party that pays part of a sale**. Its payers, plans, formularies and members are records the retailer fills; it answers the POS app's **payer door** line by line, makes a **claim** from each sale the door books, files claims as a file, and follows each claim to payment.
 
 Its first data set is **one generic insurer**, with the co-pay rules of an iVend Retail add-on we built for a pharmacy chain and an insurer price-list rule a pharmacy customer ran. A second data set, **a company paying 70% of what its staff buy**, loads and answers with no code change.

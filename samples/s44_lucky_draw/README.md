@@ -1,5 +1,7 @@
 # S44 — Lucky draw (`pp_ldw`): entries by spend, and a fair draw of the winners
 
+*Start from this sample: `python3 tools/manifest/start.py s44_lucky_draw --prefix "ACME LDW"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A retailer runs a *shop and win* campaign: every 200 spent at its tills during the campaign is one entry, say, and after the last day the winners are drawn. the retailer makes a **campaign** in Desk: its days, its tills, the spend for one entry, the customer groups that take part, how many winners and reserves, and the prize. During the campaign a manager presses **Count entries** to see how it is going. After the last day the manager presses **Draw winners** once: the app draws the winners and reserves from the entries, one prize per customer, each entry with the same chance, and writes the results and a record of the draw on the campaign. This sample is for a developer who wants buttons on a record of the app's own whose service **reads the retailer's sales and writes its answer back on that record**.
 
 **When to use it:** a rule the retailer keeps decides something from many of its own records (here, a campaign's sales), a person decides when, and the answer belongs on one record the retailer can keep and show.

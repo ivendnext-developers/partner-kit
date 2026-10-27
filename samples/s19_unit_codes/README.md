@@ -1,5 +1,7 @@
 # S19 — Unit codes at the scan (a scan source)
 
+*Start from this sample: `python3 tools/manifest/start.py s19_unit_codes --prefix "ACME UNC"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![A unit's code scanned onto a sale with its batch and its code, and a sold unit refused](screenshots/s19_flow.gif)
 
 *A scanned unit lands as its item with its batch and its code on the line; a unit already sold is refused.*

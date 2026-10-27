@@ -1,5 +1,7 @@
 # S1 — warranty check (`pp_wrc`), connected leg
 
+*Start from this sample: `python3 tools/manifest/start.py s1_warranty --prefix "ACME WRC"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![A covered phone sold at the till, and the warranty service's comment on the sale](screenshots/s1_flow.gif)
 
 *A phone is sold at the till with its serial number scanned; seconds later the warranty service's comment is on the sale in Desk.*

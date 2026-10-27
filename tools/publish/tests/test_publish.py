@@ -188,7 +188,8 @@ class PublishTests(unittest.TestCase):
                 publish.main(["keygen", "--key", str(key)])
         Library.public = ed25519.public_key(publish.load_key(str(key)))
         out = io.StringIO()
-        with mock.patch.dict(os.environ, {"IVN_LIBRARY_URL": self.url}), contextlib.redirect_stdout(out):
+        with mock.patch.dict(os.environ, {"IVN_LIBRARY_URL": self.url, "LIBRARY_DELIVERIES": ""}), \
+                mock.patch.object(publish, "REMEMBER_DIR", d / "mem"), contextlib.redirect_stdout(out):
             code = publish.main(["publish", str(proj), "--partner", "standin", "--key", str(key),
                                  "--out", str(d / "library-keys.json"), *extra])
         return code, out.getvalue()
@@ -269,6 +270,140 @@ class PublishTests(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("DRY RUN: pp_stn 1.2.0", out)
         self.assertEqual(Library.seen, [])
+
+
+    # ── the customers a publish remembers for the next one ──────────────────────
+
+    SHOPS = [{"customer": "shop-a", "name": "Shop A", "sites": ["shop-a-test.staging.ivendnext.com", "shop-a.ivendnext.com"]},
+             {"customer": "shop-b", "name": "Shop B", "sites": ["shop-b.ivendnext.com"]}]
+    OK = {"upload": "U", "partner": "standin", "app": "pp_stn", "version": "1.2.0", "preview": {"shelf": "S", "serial": 1},
+          "preview_keys": [], "delivered": [], "keys": [], "public": "unchanged"}
+
+    def publish_with(self, d, mem, *extra, shops=None):
+        if shops is not None:
+            (d / "shops.json").write_text(json.dumps(shops))
+            extra = (*extra, "--deliveries", str(d / "shops.json"))
+        with mock.patch.object(publish, "REMEMBER_DIR", mem):
+            return self.run_publish(d, d / "proj" if (d / "proj").exists() else project(d), *extra)
+
+    def test_a_publish_that_names_customers_is_remembered_for_the_next_one(self):
+        Library.seen, Library.reply = [], (200, self.OK)
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            mem = d / "mem"
+            code, out = self.publish_with(d, mem, shops=self.SHOPS)
+            self.assertEqual(code, 0, out)
+            [f] = list(mem.glob("*.json"))
+            self.assertEqual(stat.S_IMODE(f.stat().st_mode), 0o600)          # shop addresses: yours to read, nobody else's
+            self.assertEqual(json.loads(f.read_text()), self.SHOPS)           # each entry as given: customer, name, sites
+            self.assertNotIn("shop-a.ivendnext.com", out)                    # never printed
+            code, out = self.publish_with(d, mem)                              # an update, no list given
+            self.assertEqual(code, 0, out)
+            self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS)
+            self.assertIn("including 2 customers remembered from your last publish", out)
+            self.assertNotIn("shop-a.ivendnext.com", out)
+
+    def test_a_list_you_give_replaces_the_remembered_one(self):
+        Library.seen, Library.reply = [], (200, self.OK)
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            mem = d / "mem"
+            self.publish_with(d, mem, shops=self.SHOPS)
+            self.publish_with(d, mem, shops=self.SHOPS[1:])
+            self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS[1:])
+            self.publish_with(d, mem)
+            self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS[1:])
+            self.publish_with(d, mem, shops=[])                                # an empty list, given: none, and forgotten
+            self.assertEqual(Library.seen[-1]["deliveries"], [])
+            self.publish_with(d, mem)
+            self.assertEqual(Library.seen[-1]["deliveries"], [])
+
+    def test_the_flag_publishes_to_none_and_keeps_what_is_remembered(self):
+        Library.seen, Library.reply = [], (200, self.OK)
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            mem = d / "mem"
+            self.publish_with(d, mem, shops=self.SHOPS)
+            code, out = self.publish_with(d, mem, "--no-remembered-deliveries")
+            self.assertEqual(code, 0, out)
+            self.assertEqual(Library.seen[-1]["deliveries"], [])
+            self.assertNotIn("remembered", out)
+            self.publish_with(d, mem)
+            self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS)
+
+    def test_a_dry_run_writes_nothing_and_names_the_count_not_an_address(self):
+        Library.seen, Library.reply = [], (200, self.OK)
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            mem = d / "mem"
+            code, out = self.publish_with(d, mem, "--dry-run", shops=self.SHOPS)
+            self.assertEqual(code, 0, out)
+            self.assertFalse(mem.exists())                                     # nothing remembered from a dry run
+            self.publish_with(d, mem, shops=self.SHOPS[:1])
+            before = [(f.name, f.read_bytes()) for f in mem.glob("*")]
+            code, out = self.publish_with(d, mem, "--dry-run")
+            self.assertIn("including 1 customer remembered", out)
+            self.assertIn("1 customer(s)", out)
+            self.assertNotIn("shop-a", out)
+            self.assertEqual([(f.name, f.read_bytes()) for f in mem.glob("*")], before)
+            code, out = self.publish_with(d, mem, "--dry-run", shops=self.SHOPS)
+            self.assertEqual([(f.name, f.read_bytes()) for f in mem.glob("*")], before)
+
+    def test_a_publish_the_library_refuses_remembers_nothing_new(self):
+        Library.seen, Library.reply = [], (403, {"refused": "not_your_app", "words": "no"})
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            mem = d / "mem"
+            code, out = self.publish_with(d, mem, shops=self.SHOPS)
+            self.assertEqual(code, 1)
+            self.assertFalse(mem.exists())
+
+    def test_a_remembered_file_that_cannot_be_read_stops_the_publish_instead_of_dropping_customers(self):
+        Library.seen, Library.reply = [], (200, self.OK)
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            mem = d / "mem"
+            self.publish_with(d, mem, shops=self.SHOPS)
+            [f] = list(mem.glob("*.json"))
+            f.write_text("{not json")
+            Library.seen = []
+            code, out = self.publish_with(d, mem)
+            self.assertEqual(code, 1)
+            self.assertIn("--no-remembered-deliveries", out)
+            self.assertEqual(Library.seen, [])
+
+    def test_a_smaller_list_says_it_replaces_the_remembered_one_and_a_blank_file_names_no_one(self):
+        Library.seen, Library.reply = [], (200, self.OK)
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            mem = d / "mem"
+            self.publish_with(d, mem, shops=self.SHOPS)
+            code, out = self.publish_with(d, mem, shops=self.SHOPS[1:])
+            self.assertIn("this list replaces the 2 customers remembered", out)
+            self.assertNotIn("shop-", out)
+            self.publish_with(d, mem, shops=self.SHOPS)
+            (d / "blank.json").write_text("\n")
+            code, out = self.publish_with(d, mem, "--deliveries", str(d / "blank.json"))
+            self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS)         # the blank file did not wipe it
+
+    def test_a_memory_that_cannot_be_written_does_not_fail_a_publish_the_library_accepted(self):
+        Library.seen, Library.reply = [], (200, self.OK)
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d)
+            (d / "mem").write_text("a file where the folder should be")
+            code, out = self.publish_with(d, d / "mem", shops=self.SHOPS)
+            self.assertEqual(code, 0, out)
+            self.assertIn("could not be remembered", out)
+
+    def test_canary_without_the_write_the_next_publish_misses_the_customers(self):
+        """If the write is dropped, the scenario of the first test above goes red: the second publish carries nobody."""
+        Library.seen, Library.reply = [], (200, self.OK)
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(publish, "remember", lambda *a: None):
+            d = pathlib.Path(d)
+            self.publish_with(d, d / "mem", shops=self.SHOPS)
+            self.publish_with(d, d / "mem")
+            self.assertEqual(Library.seen[-1]["deliveries"], [])
+            self.assertNotEqual(Library.seen[-1]["deliveries"], self.SHOPS)
 
 
 if __name__ == "__main__":

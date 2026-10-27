@@ -1,5 +1,7 @@
 # S27 — Stock alerts and a draft transfer request
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it carries a second package with a prefix of its own ([how](../../recipes/make_it_your_own.md)).*
+
 ## What the retailer does
 
 The retailer is told when a store's stock falls below its reorder level, or when a batch is close to its expiry date, and finds a **draft** stock transfer request already made from those alerts: one per store and day, for a person to check, change and submit. The app never submits anything. iVendNext's own automatic reorder makes a request too, but submits it at once, and it has no expiry alert; this app is for the retailer that wants a person in between.

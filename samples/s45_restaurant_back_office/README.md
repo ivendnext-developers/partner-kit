@@ -1,5 +1,7 @@
 # S45 — Restaurant back office (recipes off stock, allergens, food cost, sales by day part)
 
+*Start from this sample: `python3 tools/manifest/start.py s45_restaurant_back_office --prefix "ACME RBO"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ## What the retailer does
 
 A café or restaurant rings its dishes at the till as it does today. A dish is a plain item that is not stocked, with the retailer's own **recipe** on it: the engine's bill of materials, the parts and how much of each makes one dish (a recipe may hold another, such as a sauce made per portion). Once a day, after the close, the manager presses **Issue ingredients** on the app's settings record, and the ingredients of everything sold come off the kitchen's stock.

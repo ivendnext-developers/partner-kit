@@ -1,5 +1,7 @@
 # S7 — a system sync: a customer's own ERP, order system or warehouse system in step with iVendNext
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it builds its own manifests ([how](../../recipes/make_it_your_own.md)).*
+
 This sample keeps a customer's own back-office system in step with iVendNext. Items, prices and stock go out to iVendNext; booked sales and returns come back, once each; a nightly report names anything the two disagree on. It is for a developer who connects a large customer's ERP, order system or warehouse system to their stores.
 
 Runs **outside** the retailer's iVendNext, over the record API and the event feed ([`recipes/event_feed.md`](../../recipes/event_feed.md)); written up as a recipe: [`recipes/system_sync.md`](../../recipes/system_sync.md).

@@ -1,5 +1,7 @@
 # S10 — the manager's AI assistant
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it builds its own manifests ([how](../../recipes/make_it_your_own.md)).*
+
 ![The till's price for AirPods before and after the manager's yes, and the promotion on in Desk](screenshots/s10_flow.gif)
 
 *The manager asks the assistant to switch a promotion on and says yes; the till's price drops from R 3,999.00 to R 3,599.10, and the promotion reads Active in Desk.*

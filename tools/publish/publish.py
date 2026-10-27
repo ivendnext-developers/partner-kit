@@ -3,7 +3,7 @@
 
     python3 tools/publish/publish.py keygen [--key FILE]
     python3 tools/publish/publish.py publish <project folder> --partner <your code> [--key FILE]
-                                     [--deliveries FILE] [--keys FILE] [--out FILE] [--dry-run]
+                                     [--deliveries FILE] [--no-remembered-deliveries] [--keys FILE] [--out FILE] [--dry-run]
 
 `keygen` makes your company's signing key on this machine and prints the line to send iVendNext once, when you join:
 we register it with your sealing key (`library/recipient.pem`). The private half never leaves your machine.
@@ -18,6 +18,9 @@ never printed.
 
 Your customers' site addresses and the keys you ask for are never in the kit or your project: they come from the
 environment (`LIBRARY_DELIVERIES`, `LIBRARY_KEYS`, as JSON) or from a file you name (`--deliveries`, `--keys`).
+After a publish that names customers, this machine remembers them for that app in `~/.ivendnext/deliveries/` (a file
+only you can read, outside every project), and the next publish with no list includes them, so an update cannot leave
+a customer behind by omission. A list you give replaces the remembered one; `--no-remembered-deliveries` publishes to none.
 The signing key is read from `--key`, else `IVN_LIBRARY_KEY` (the key's line, for a CI secret), else
 `~/.ivendnext/library-signing.key`.
 
@@ -49,6 +52,7 @@ URL = "https://library.ivendnext.app/v1/publish"
 DOMAIN = b"ivendnext-library-upload/1\n"   # the library signs nothing else with your key: an upload is only an upload
 PUBLIC_PREFIX, SECRET_PREFIX = "ivn-ed25519:", "ivn-ed25519-secret:"
 DEFAULT_KEY = pathlib.Path.home() / ".ivendnext" / "library-signing.key"
+REMEMBER_DIR = DEFAULT_KEY.parent / "deliveries"   # beside the signing key, never in a project, never in git
 PARTNER_RE = re.compile(r"[a-z0-9][a-z0-9-]{1,39}")
 FILES = ("app.json", "manifest.json", "library.json")
 
@@ -133,6 +137,46 @@ def _json_from(env: str, file: str | None):
         return json.loads(raw) if raw.strip() else []
     except (OSError, ValueError) as e:
         raise Stop(f"{file or env} is not readable JSON ({type(e).__name__})") from None
+
+
+def _explicit(env: str, file: str | None) -> bool:
+    """True when this publish names its customers itself (a list, even an empty one), so none are remembered in its place."""
+    if file:
+        try:
+            return bool(pathlib.Path(file).read_text("utf-8").strip())   # a blank file names no one, as a blank variable does
+        except OSError:
+            return True
+    return bool(os.environ.get(env, "").strip())
+
+
+def remembered_path(partner: str, app: str) -> pathlib.Path:
+    return REMEMBER_DIR / (re.sub(r"[^A-Za-z0-9_-]", "_", partner) + "." + re.sub(r"[^A-Za-z0-9_-]", "_", app) + ".json")
+
+
+def recall(path: pathlib.Path) -> list:
+    """The customers remembered for this app, or none. A file that cannot be read stops the publish: skipping it would
+    leave those customers on the old version without a word."""
+    if not path.is_file():
+        return []
+    try:
+        found = json.loads(path.read_text("utf-8"))
+    except (OSError, ValueError):
+        found = None
+    if not isinstance(found, list):
+        raise Stop(f"{path} is not a list of customers: mend or delete it, or publish with --no-remembered-deliveries")
+    return found
+
+
+def remember(path: pathlib.Path, deliveries: list) -> None:
+    """Keep the customers just published to, as given, in a file only you can read (written whole, then moved into place)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    if hasattr(os, "fchmod"):
+        os.fchmod(fd, 0o600)
+    with os.fdopen(fd, "w") as f:
+        json.dump(deliveries, f, indent=1)
+    os.replace(tmp, path)
 
 
 def payload(project: pathlib.Path, partner: str, deliveries=(), keys=(), at: int | None = None) -> dict:
@@ -221,6 +265,8 @@ def main(argv=None) -> int:
     p.add_argument("--partner", required=True, help="your company's code, as iVendNext registered it")
     p.add_argument("--key", help="your signing key file (default: IVN_LIBRARY_KEY, then the keygen default)")
     p.add_argument("--deliveries", help="a JSON file of customers' shelves (else LIBRARY_DELIVERIES)")
+    p.add_argument("--no-remembered-deliveries", action="store_true",
+                   help="publish to no customer unless you give a list (the ones remembered from your last publish are left out)")
     p.add_argument("--keys", help="a JSON file of keys to issue for your apps (else LIBRARY_KEYS)")
     p.add_argument("--out", default="library-keys.json", help="where sealed keys are written (default library-keys.json)")
     p.add_argument("--dry-run", action="store_true", help="check and sign, print what would be sent, send nothing")
@@ -246,8 +292,18 @@ def main(argv=None) -> int:
             print(f"{len(bad)} refusal(s) from the kit's checks; nothing was sent")
             return 1
         secret = load_key(a.key)
-        pl = payload(project, a.partner, _json_from("LIBRARY_DELIVERIES", a.deliveries),
-                     _json_from("LIBRARY_KEYS", a.keys))
+        given = _json_from("LIBRARY_DELIVERIES", a.deliveries)
+        named = _explicit("LIBRARY_DELIVERIES", a.deliveries)
+        pl = payload(project, a.partner, given, _json_from("LIBRARY_KEYS", a.keys))
+        mem = remembered_path(a.partner, str(pl["card"].get("app") or pl["manifest"].get("app") or "app"))
+        if not named and not a.no_remembered_deliveries:
+            pl["deliveries"] = recall(mem)
+            if pl["deliveries"]:
+                n = len(pl["deliveries"])
+                print(f"including {n} customer{'s' if n != 1 else ''} remembered from your last publish "
+                      "(--no-remembered-deliveries leaves them out)")
+            if pl["deliveries"] and not (project / "library" / "recipient.pem").is_file():
+                raise Stop("library/recipient.pem is missing: keys are sealed to it (see tools/publish/README.md)")
         data = envelope(pl, secret)
         if a.dry_run:
             print(f"DRY RUN: {pl['card'].get('app')} {pl['version']}, {len(data)} bytes, key {key_id(ed25519.public_key(secret))}"
@@ -259,6 +315,16 @@ def main(argv=None) -> int:
             print(f"REFUSED by the library ({status}): {out['refused']}" + (f" — {out['words']}" if out.get("words") else ""))
             return 1
         print("\n".join(report(out, pathlib.Path(a.out))))
+        if named:   # only a publish the library accepted changes what is remembered
+            try:
+                had = recall(mem)
+                if had and len(had) > len(pl["deliveries"]):
+                    print(f"this list replaces the {len(had)} customers remembered for this app: later updates with no "
+                          f"list go to these {len(pl['deliveries'])} only")
+                remember(mem, pl["deliveries"])
+            except (OSError, Stop) as e:
+                print(f"published; but the customers could not be remembered for next time ({type(e).__name__}): "
+                      "name them again next time")
         return 0
     except Stop as e:
         print("REFUSED: " + str(e))

@@ -1,5 +1,7 @@
 # S42 — Optical prescriptions and lab orders (`pp_opt`)
 
+*Start from this sample: `python3 tools/manifest/start.py s42_optical_prescriptions --prefix "ACME OPT"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 The worked sample for an optical store: eye tests, lab jobs and one rule at the till. This sample gives the retailer its **prescriptions** and **lab orders** as its own records in Desk, with a workflow, a lab job sheet and the fields the retailer's own messages need. At the till, a check refuses a lens line when the customer has no prescription of that kind in date. It is for a developer who wants a retailer's own records with a workflow, and one rule at the till that asks for **only the two fields it needs** of them.
 
 **When to use it:** a store keeps a record about its customers that decides whether some items may be sold, and the till must hold the rule while the record's contents stay in the retailer's iVendNext.

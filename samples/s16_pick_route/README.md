@@ -1,5 +1,7 @@
 # S16 — *Assign pick route* (`pp_pck`): a Desk action
 
+*Start from this sample: `python3 tools/manifest/start.py s16_pick_route --prefix "ACME PCK"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![Assign pick route, end to end in Desk](screenshots/s16_flow.gif)
 
 *A stock user presses **Warehouse → Assign pick route** on a Sales Order, picks a colleague and a priority, and the partner's service opens a pick task listed under the order.*

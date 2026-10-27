@@ -1,5 +1,7 @@
 # S41 — Regulated stock register (`pp_rsr`): each market's books as data
 
+*Start from this sample: `python3 tools/manifest/start.py s41_regulated_register --prefix "ACME RSR"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A retailer selling regulated stock keeps a legal register an inspector can ask for at any time: a pharmacy's poisons and controlled-drug books, a liquor or tobacco register, a duty-free ledger. Today most keep it on paper. This app keeps it for them: **one app for any regulated stock**, whose books (which book, which items, which movements, which columns, which printed layout) are a **data set** per market and vertical. A second market, or a second vertical, is a new data set file with no code change.
 
 The first data set is **Kenya's three pharmacy books**: the Poisons Book (Rules Schedule VIII Form 16), the Prescription Book (Act s. 31(1)(b)) and the NPP Ledger Book (PPB NPP Guidelines Annex II), with the routing Kenya's law asks for: a supply on prescription goes to the Prescription Book, **not** the Poisons Book (s. 31(2)); every movement of a controlled drug goes to the NPP ledger as well. Seven more markets follow as data sets, with no code change: Jordan, Nigeria, the UAE's Abu Dhabi, Saudi Arabia, Egypt, Ghana and Mexico ([the other markets](#the-other-markets)).

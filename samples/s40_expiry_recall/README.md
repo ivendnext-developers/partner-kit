@@ -1,5 +1,7 @@
 # S40 — Expiry and recall (`pp_rcl`): recalls, disposal on the record, goods-in
 
+*Start from this sample: `python3 tools/manifest/start.py s40_expiry_recall --prefix "ACME RCL"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A pharmacy, a grocery or any retailer that sells lots with an expiry date. Four jobs, one small service:
 
 - **A recall.** The regulator names lots. A Recall Officer enters the notice and presses **Block these batches**: each lot is switched off at every till and store at once, each store's stock of it is found, and, at consumer depth, so is every customer it already reached.

@@ -1,5 +1,7 @@
 # S26 — Derived price lists (a price list worked out from another, kept in step)
 
+*Start from this sample: `python3 tools/manifest/start.py s26_derived_prices --prefix "ACME DPL"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ## What the retailer does
 
 iVendNext keeps one price list worked out from another: the selling list is 1.5 times the buying list, or the wholesale list is 0.9 of the retail list. When someone changes a price on the source list, the app changes the derived price within seconds. Nothing changes at the till: the cashier sells at the list's price as before.

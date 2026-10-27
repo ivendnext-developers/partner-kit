@@ -76,23 +76,33 @@ def refuse_prefix(prefix: str, old: str) -> str | None:
     return None
 
 
+def case_like(new: str):
+    """A substitution that writes ``new`` in the case the match was written in (CSS classes and user names are lower case)."""
+    return lambda m: new.lower() if m.group(0).islower() else new
+
+
 def rename(m: dict, prefix: str) -> tuple[dict, list[str]]:
     """The manifest under ``prefix``, and every string of it that still names the old prefix or app."""
     old_p, old_a, new_a = m["prefix"], m["app"], app_for(prefix)
     names = re.compile(rf"\b{re.escape(old_p)}\b")
     fields = re.compile(rf"(?<![A-Za-z0-9]){re.escape(old_a)}(?=_|\b)")
+    # a naming series, a style class or a service user carries the prefix with hyphens ("PP-APR-.YYYY.-", "pp-apr-label"):
+    # it becomes yours too, in the case it was written in
+    series = re.compile(rf"(?<![A-Za-z0-9]){re.escape(old_p.replace(' ', '-'))}(?=-|\b)", re.I)
+    new_s = case_like(prefix.replace(" ", "-"))
     # A sample's shared role ("PP Integration") starts with the prefix's first word only: it becomes yours too
     # ("ACME BINS Integration"), as the App library's own copy names it ("IVENDNEXT BLN Integration").
     first = re.compile(rf"^{re.escape(old_p.split()[0])} (?!{re.escape(' '.join(old_p.split()[1:]))}\b)") \
         if len(old_p.split()) > 1 else None
 
     def one(s: str) -> str:
-        s = fields.sub(new_a, names.sub(prefix, s))
+        s = series.sub(new_s, fields.sub(new_a, names.sub(prefix, s)))
         return first.sub(prefix + " ", s) if first else s
 
     out = _walk(m, one)
     out["app"], out["prefix"] = new_a, prefix
-    left = sorted({s for s in _strings(out) if names.search(s) or fields.search(s) or (first and first.search(s))})
+    left = sorted({s for s in _strings(out) if names.search(s) or fields.search(s) or series.search(s)
+                                                   or (first and first.search(s))})
     return out, left
 
 
@@ -110,7 +120,8 @@ def addresses(m: dict) -> list[str]:
 
 def mentions(folder: pathlib.Path, skip: set, old_p: str, old_a: str) -> list[str]:
     """``file:line: text`` for each line outside the manifest that still names the old prefix or app."""
-    pat = re.compile(rf"\b{re.escape(old_p)}\b|(?<![A-Za-z0-9]){re.escape(old_a)}(?=_|\b)")
+    pat = re.compile(rf"\b{re.escape(old_p)}\b|(?<![A-Za-z0-9]){re.escape(old_a)}(?=_|\b)"
+                     rf"|(?<![A-Za-z0-9]){re.escape(old_p.replace(' ', '-'))}(?=-|\b)", re.I)
     hits = []
     for p in sorted(folder.rglob("*")):
         if not p.is_file() or p in skip or p.suffix.lower() not in TEXT or "__pycache__" in p.parts:
@@ -178,7 +189,8 @@ def main(argv=None) -> int:
     print(f"{m['app']} → {new['app']}: {before} name(s) renamed from '{m['prefix']}' to '{a.prefix}'; the shop's checker "
           "and the install's extra refusals pass on the result")
     # the hosting order beside the manifest, or one folder up when the manifest sits in a folder of its own (S3's outside/)
-    aj = next((p for p in (a.manifest.parent / "app.json", a.manifest.parent.parent / "app.json") if p.is_file()),
+    up = a.manifest.parent.parent / "app.json" if a.manifest.parent.name == "outside" else a.manifest.parent / "app.json"
+    aj = next((p for p in (a.manifest.parent / "app.json", up) if p.is_file()),
               a.manifest.parent / "app.json")
     app_json, notes = None, []
     if aj.is_file():

@@ -1,5 +1,7 @@
 # S34 — Purchase orders checked by your ERP (a document check)
 
+*Start from this sample: `python3 tools/manifest/start.py s34_po_check --prefix "ACME POC"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A distributor's ERP knows things iVendNext does not: which suppliers are on hold, and how much of its monthly purchasing budget the company has left. This app asks it before every purchase order is submitted, from Desk, an import or the API:
 
 | The ERP says | The buyer sees |

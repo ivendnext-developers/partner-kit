@@ -59,6 +59,7 @@ The shapes, the template and the exact words are in the manifest recipe, [*What 
 Never in your project or the kit: give them to the command from the environment or from a file you name.
 
 - **A customer's shelf:** `LIBRARY_DELIVERIES` (or `--deliveries <file>`), for example `[{"customer": "shop-a", "name": "Shop A", "sites": ["shop-a-test.staging.ivendnext.com", "shop-a.ivendnext.com"]}]`.
+- **Remembered for the next update:** after a publish that names customers, your computer keeps that list for the app (in `~/.ivendnext/deliveries/`, beside your signing key, readable by you only), and a later publish with no list includes those customers and says how many. A list you give replaces it; `--no-remembered-deliveries` publishes to none. So an update cannot leave a customer on the old version because you forgot to name them. A build server has no such folder between runs: keep the customers in `LIBRARY_DELIVERIES` there.
 - **Keys:** every app is free unless you choose `access: key`; a retailer then presses *Get a free key* in its Desk. For an app that needs a key, `LIBRARY_KEYS` (or `--keys <file>`), for example `[{"app": "acme_bins", "host": "shop-a.ivendnext.com", "to": "customer:shop-a", "expires": "2027-10-31"}]`. Keys are issued for your own apps only.
 - **Keys and shelf keys come back sealed** to your `recipient.pem`, in `library-keys.json` (readable by you only), never on the screen. Open each with your private key; `tools/publish/README.md` has the command. Send each to its customer.
 

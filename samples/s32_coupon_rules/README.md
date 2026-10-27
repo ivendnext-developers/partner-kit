@@ -1,5 +1,7 @@
 # S32 — Coupon rules (a check before payment that refuses a coupon the retailer restricted)
 
+*Start from this sample: `python3 tools/manifest/start.py s32_coupon_rules --prefix "ACME CPN"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 Rules a retailer adds to its own coupons, checked when the cashier presses **Pay**. One rule record per coupon, written in Desk; each rule is **off until ticked or set**:
 
 | Rule | What the cashier sees |

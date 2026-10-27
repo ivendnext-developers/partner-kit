@@ -1,5 +1,7 @@
 # S13 — a standalone portal with "Sign in with iVendNext"
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it builds its own manifests ([how](../../recipes/make_it_your_own.md)).*
+
 ![A retailer user signs in to a portal outside the retailer's iVendNext, allows it, sees their store's sales and opens one in the retailer's iVendNext; a user with no right is told so](screenshots/s13_flow.gif)
 
 *A portal on the partner's own server: a person signs in with their iVendNext account, allows the app, and sees only what that account may see in the retailer's iVendNext. The last frame is a different person, whose account has no right to sales.*

@@ -1,5 +1,7 @@
 # S18 — Members-only rule guard (a check before payment)
 
+*Start from this sample: `python3 tools/manifest/start.py s18_rule_guard --prefix "ACME RGD"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![A sale of a members-only item refused at Pay, then a member's sale above the ID limit asking for ID, then paid](screenshots/s18_flow.gif)
 
 *The till's Pay on a members-only item: refused in the service's own words for a walk-in, a question for a member's larger sale, then the sale paid and booked.*

@@ -1,5 +1,7 @@
 # S47 — Customers by store (`pp_cbs`): at which stores each customer group may buy
 
+*Start from this sample: `python3 tools/manifest/start.py s47_customers_by_store --prefix "ACME CBS"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 The retailer decides at which stores each group of its customers may buy: account customers only at the store that holds their account, a trade group only at the trade counters, staff only at the staff store. When the cashier puts a customer on a sale at any other store, the till takes the customer off the sale with the retailer's reason, and no door that charges or books a new sale takes payment for that customer there.
 
 **When to use it:** a rule about the customer decides where they may buy, and iVendNext keeps the rule itself, in Desk.

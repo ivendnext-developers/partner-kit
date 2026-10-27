@@ -1,5 +1,7 @@
 # S29 — a layout of its own for each distributor's invoice, and a price list with photos
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it builds its own manifests ([how](../../recipes/make_it_your_own.md)).*
+
 A distributor sells to four or five other distributors, and each of them wants its own invoice layout. The distributor also sends each one a price list with a photo of every item, so that nearly identical products can be told apart. This sample does both without touching the till: **part 1** is two ways to give the back-office sales invoice a layout for each customer, and **part 2** is the photo price list two ways: a print format on the price list itself (POS build 2.0.0.654 on), and a small program that makes it as one page that prints to PDF.
 
 ## What the retailer does

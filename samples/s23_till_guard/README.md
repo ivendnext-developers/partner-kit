@@ -1,5 +1,7 @@
 # S23 — Till guard rules (a check before payment and a capture on scan, one app)
 
+*Start from this sample: `python3 tools/manifest/start.py s23_till_guard --prefix "ACME TGR"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 The common checks a retailer wants before money is taken, in one app. Each rule is **off until the retailer sets it**, in its own settings record in Desk:
 
 | Rule | When | What the cashier sees |

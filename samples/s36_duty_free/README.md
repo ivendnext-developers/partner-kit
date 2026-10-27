@@ -1,5 +1,7 @@
 # S36 — Duty-free allowance and boarding pass (a check before payment for an airport store)
 
+*Start from this sample: `python3 tools/manifest/start.py s36_duty_free --prefix "ACME DFA"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 An airport store sells only to passengers with a valid boarding pass, and only up to each passenger's customs allowance. The cashier scans the customer's boarding pass into **Sale details** on the basket; when the cashier presses **Pay**, the app reads the pass and the basket:
 
 | The sale | What the cashier sees (*"This sale can't be paid"* and …) |

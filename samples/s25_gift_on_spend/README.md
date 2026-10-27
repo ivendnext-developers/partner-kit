@@ -1,5 +1,7 @@
 # S25 — Gift card on spend (a big sale earns the retailer's own gift card, spendable after a hold)
 
+*Start from this sample: `python3 tools/manifest/start.py s25_gift_on_spend --prefix "ACME GCS"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ## What the retailer does
 
 A customer's sale reaches the retailer's threshold. Within the next half a minute the app gives them the retailer's **own** gift card, of the value the retailer chose, from the retailer's own gift card item. The card can be spent once the hold has passed (24 hours by default), at the till, like any other gift card. Nothing changes at the till: the cashier rings the sale as before.

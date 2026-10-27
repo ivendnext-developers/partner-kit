@@ -1,5 +1,7 @@
 # S6 — the AI till key: a short hint from the customer's own AI model
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it builds its own manifests ([how](../../recipes/make_it_your_own.md)).*
+
 ![The AI tip key pressed on a real till, the hint in the till's own sheet](screenshots/s6_flow.gif)
 
 *A cashier presses **AI tip** on a sale, and a short hint comes back in the till's own sheet; then the key's record in Desk.*

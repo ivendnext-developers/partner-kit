@@ -1,5 +1,7 @@
 # S49 — Post-sale feedback (`pp_psf`): ask each customer how their visit was
 
+*Start from this sample: `python3 tools/manifest/start.py s49_post_sale_feedback --prefix "ACME PSF"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 The retailer wants its customers' own word on each store. After a till sale, the retailer's own message asks the customer how the visit was, with a link to a one-page answer: three answers in the retailer's words, an optional comment, and *Stop these messages*. Each answer lands on the retailer's own record of that sale's request, once, and a report lists the answers by store.
 
 **When to use it:** the retailer wants answers kept in iVendNext, by sale and store, sent through its own SMS gateway, e-mail account or WhatsApp app.

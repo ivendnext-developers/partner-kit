@@ -1,5 +1,7 @@
 # S14 — price-change approvals across stores
 
+*Start from this sample: `python3 tools/manifest/start.py s14_approvals_stores --prefix "ACME APS"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![Two stores' price-change requests: a store manager sees only their store's, approves one within their limit, an over-limit one waits for head office, and the price row ends at the approved price](screenshots/s14_flow.gif)
 
 *A store manager sees only their own store's requests and approves; within their limit the outside service applies the change, above it the request waits for head office, which approves and the price row follows.*
