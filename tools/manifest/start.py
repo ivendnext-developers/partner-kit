@@ -78,14 +78,19 @@ def texts(root: pathlib.Path):
 
 
 def old_names(m: dict, sample: str = "") -> re.Pattern:
-    """Every spelling of the sample's prefix and app name, any case: spaced, hyphened (a naming series), snake. With the
+    """Every spelling of the sample's prefix and app name, any case: spaced, hyphened (a naming series), as a web address
+    writes it (``PP%20RFR``), snake. With the
     sample's folder name, also its path in the kit (``samples/s34_po_check``): a container recipe built from the repository's
     root would otherwise still build the kit's sample."""
     o, a = m["prefix"], m["app"]
     forms = [rf"\b{re.escape(o)}\b", rf"(?<![A-Za-z0-9]){re.escape(o.replace(' ', '-'))}(?=-|\b)",
              rf"(?<![A-Za-z0-9]){re.escape(a)}(?=_|\b)"]
+    if rename.encoded(o):
+        forms.append(rename.encoded(o))
     if sample:
         forms.append(rf"samples/{re.escape(sample)}\b")
+    # the roles and themes named with the prefix's first word alone ("PP Integration"), wherever a line names them
+    forms += [rf"(?<![A-Za-z0-9]){re.escape(r)}(?![A-Za-z0-9])" for r in roles(m)]
     return re.compile("|".join(forms), re.I)
 
 
@@ -106,6 +111,8 @@ def rewrite(text: str, m: dict, prefix: str, sample: str, app: str) -> str:
     text = re.sub(rf"\b{re.escape(old_p)}\b", rename.case_like(prefix), text, flags=re.I)          # a note, "pp exm: ..."
     text = re.sub(rf"(?<![A-Za-z0-9]){re.escape(old_p.replace(' ', '-'))}(?=-|\b)",
                   rename.case_like(prefix.replace(" ", "-")), text, flags=re.I)
+    if rename.encoded(old_p):                                                                 # a stand-in's path, "PP%20RFR"
+        text = re.sub(rename.encoded(old_p), rename.case_like(prefix.replace(" ", "%20")), text, flags=re.I)
     text = re.sub(rf"(?<![A-Za-z0-9]){re.escape(old_a)}(?=_|\b)", rename.case_like(app), text, flags=re.I)
     for old in sorted(roles(m), key=len, reverse=True):
         text = re.sub(rf"(?<![A-Za-z0-9]){re.escape(old)}(?![A-Za-z0-9])", re.sub(r"^\S+", prefix, old, count=1), text)
