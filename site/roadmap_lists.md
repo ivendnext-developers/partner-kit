@@ -4,17 +4,17 @@ Generated from iVendNext's own boards by our roadmap generator, for the page *Wh
 
 ## Listed
 
-In the App library now, 33 apps, free or with a key:
+In the App library now, 44 apps, free or with a key:
 
 - **AI:** [AI Gateway](https://library.ivendnext.app/apps/ivendnext_ai_gateway) · [CoPilot](https://library.ivendnext.app/apps/ivendnext_copilot) · [Foresight](https://library.ivendnext.app/apps/ivendnext_foresight)
 - **Approvals:** [Price change approvals](https://library.ivendnext.app/apps/ivendnext_apr) · [Price change approvals across stores](https://library.ivendnext.app/apps/ivendnext_aps)
-- **Compliance:** [UAE tax invoice receipt](https://library.ivendnext.app/apps/ivendnext_rcp)
-- **Customers:** [iVendNext Loyalty](https://library.ivendnext.app/apps/ivend_loyality) · [WhatsApp messages](https://library.ivendnext.app/apps/ivend_whatsapp) · [Gift card on spend](https://library.ivendnext.app/apps/ivendnext_gcs) · [Customer-owned loyalty](https://library.ivendnext.app/apps/ivendnext_lyl)
+- **Compliance:** [UAE tax invoice receipt](https://library.ivendnext.app/apps/ivendnext_rcp) · [Pharmacy counter rules](https://library.ivendnext.app/apps/ivendnext_rxc) · [Expiry and recall](https://library.ivendnext.app/apps/ivendnext_rcl)
+- **Customers:** [iVendNext Loyalty](https://library.ivendnext.app/apps/ivend_loyality) · [WhatsApp messages](https://library.ivendnext.app/apps/ivend_whatsapp) · [Gift card on spend](https://library.ivendnext.app/apps/ivendnext_gcs) · [Customer-owned loyalty](https://library.ivendnext.app/apps/ivendnext_lyl) · [Lucky draw](https://library.ivendnext.app/apps/ivendnext_ldw) · [Customers by store](https://library.ivendnext.app/apps/ivendnext_cbs) · [Customer code check](https://library.ivendnext.app/apps/ivendnext_ccc) · [Post-sale feedback](https://library.ivendnext.app/apps/ivendnext_psf)
 - **Integrations:** [SAP Business One](https://library.ivendnext.app/apps/sap_business_one_integration) · [WooCommerce](https://library.ivendnext.app/apps/ivendnext_woocommerce) · [Acumatica](https://library.ivendnext.app/apps/ivendnext_acumatica)
-- **Payments:** [Card payments on Stripe Terminal](https://library.ivendnext.app/apps/ivendnext_pay_stripe_terminal) · [Partner payment gateways](https://library.ivendnext.app/apps/ivendnext_pay_remote)
+- **Payments:** [Card payments on Stripe Terminal](https://library.ivendnext.app/apps/ivendnext_pay_stripe_terminal) · [Partner payment gateways](https://library.ivendnext.app/apps/ivendnext_pay_remote) · [Payment method rules](https://library.ivendnext.app/apps/ivendnext_pmr)
 - **Reports:** [Price-deviation audit](https://library.ivendnext.app/apps/ivendnext_pda)
-- **Selling:** [Warranty terms](https://library.ivendnext.app/apps/ivendnext_wrc) · [Till field rules](https://library.ivendnext.app/apps/ivendnext_fld) · [iVendNext POS](https://library.ivendnext.app/apps/ivendnext_mpos) · [Counter hardware](https://library.ivendnext.app/apps/hw_integration) · [Price-checker kiosk](https://library.ivendnext.app/apps/ivendnext_prc) · [Members-only check before payment](https://library.ivendnext.app/apps/ivendnext_rgd) · [Till guard rules](https://library.ivendnext.app/apps/ivendnext_tgr) · [Coupon rules](https://library.ivendnext.app/apps/ivendnext_cpn) · [Click and collect](https://library.ivendnext.app/apps/ivendnext_ccb) · [Call-centre orders by district](https://library.ivendnext.app/apps/ivendnext_cco) · [Duty-free allowance and boarding pass](https://library.ivendnext.app/apps/ivendnext_dfa) · [Age-restricted sale check](https://library.ivendnext.app/apps/ivendnext_age) · [Expiry markdown](https://library.ivendnext.app/apps/ivendnext_exm)
-- **Stock:** [Unit codes at the scan](https://library.ivendnext.app/apps/ivendnext_unc) · [Bin locations](https://library.ivendnext.app/apps/ivendnext_bln) · [iVendNext Handheld](https://library.ivendnext.app/apps/ivendnext_handheld) · [Pick route](https://library.ivendnext.app/apps/ivendnext_pck)
+- **Selling:** [Warranty terms](https://library.ivendnext.app/apps/ivendnext_wrc) · [Till field rules](https://library.ivendnext.app/apps/ivendnext_fld) · [iVendNext POS](https://library.ivendnext.app/apps/ivendnext_mpos) · [Counter hardware](https://library.ivendnext.app/apps/hw_integration) · [Price-checker kiosk](https://library.ivendnext.app/apps/ivendnext_prc) · [Members-only check before payment](https://library.ivendnext.app/apps/ivendnext_rgd) · [Till guard rules](https://library.ivendnext.app/apps/ivendnext_tgr) · [Coupon rules](https://library.ivendnext.app/apps/ivendnext_cpn) · [Click and collect](https://library.ivendnext.app/apps/ivendnext_ccb) · [Call-centre orders by district](https://library.ivendnext.app/apps/ivendnext_cco) · [Duty-free allowance and boarding pass](https://library.ivendnext.app/apps/ivendnext_dfa) · [Age-restricted sale check](https://library.ivendnext.app/apps/ivendnext_age) · [Expiry markdown](https://library.ivendnext.app/apps/ivendnext_exm) · [Optical prescriptions and lab orders](https://library.ivendnext.app/apps/ivendnext_opt) · [Required sale details](https://library.ivendnext.app/apps/ivendnext_rsd) · [Refund rules](https://library.ivendnext.app/apps/ivendnext_rfr)
+- **Stock:** [Unit codes at the scan](https://library.ivendnext.app/apps/ivendnext_unc) · [Bin locations](https://library.ivendnext.app/apps/ivendnext_bln) · [iVendNext Handheld](https://library.ivendnext.app/apps/ivendnext_handheld) · [Pick route](https://library.ivendnext.app/apps/ivendnext_pck) · [Restaurant back office](https://library.ivendnext.app/apps/ivendnext_rbo)
 
 ## Being built
 
@@ -25,6 +25,8 @@ In the App library now, 33 apps, free or with a key:
 - **[Talabat](https://library.ivendnext.app/apps/talabat)**: Talabat orders arrive as sales in your store's stock, and your stock decides what Talabat shows as available.
 - **[Careem](https://library.ivendnext.app/apps/careem)**: Careem orders arrive as sales in your store's stock, and your stock decides what Careem shows as available.
 - **[Noon](https://library.ivendnext.app/apps/noon)**: Noon orders arrive as sales in your store's stock.
+- **[Regulated stock register](https://library.ivendnext.app/apps/ivendnext_rsr)**: Your market's legal stock books: each sale or receipt of controlled stock written once, numbered, never edited, and printed in a starting layout your partner certifies. Pharmacy books first, for Kenya, Jordan, Nigeria, Abu Dhabi, Saudi Arabia, Egypt, Ghana and Mexico.
+- **[Third-party payer](https://library.ivendnext.app/apps/ivendnext_icp)**: An insurer or a plan paying part of a sale: the customer pays their share at the till, and the payer's share is claimed from each sale, sent as a file and followed to payment.
 - **Avalara sales tax**: US and Canadian sales tax worked out by Avalara AvaTax, on the till and in Desk.
 - **Amazon**: Amazon orders arrive in iVendNext as sales against your stores' stock, and your stock levels go back to Amazon.
 - **NetSuite**: Connects iVendNext to NetSuite: items, prices and customers come from NetSuite, and your stores' sales, returns and payments go back to it.
@@ -32,10 +34,15 @@ In the App library now, 33 apps, free or with a key:
 
 ## Next
 
-- Staff time clock
-- Optical prescriptions and lab orders
-- Pharmacy, the standard version: Pharmacy counter rules · Expiry and recall · Regulated stock register · Insurance co-payment
-- Hospitality, the standard version: Kitchen display · Front of house · Guest ordering · Restaurant back office · Room charge
+- Alterations and made-to-measure ticket
+- Size-run and sell-through report
+- Donation intake with a donor receipt
+- Repair and service history by serial, and recall by serial
+- Project quotes with staged delivery
+- Consignment payouts
+- Liquor excise report
+- Pharmacy, the standard version (an app with a link is listed or being built): [Pharmacy counter rules](https://library.ivendnext.app/apps/ivendnext_rxc) · [Expiry and recall](https://library.ivendnext.app/apps/ivendnext_rcl) · [Regulated stock register](https://library.ivendnext.app/apps/ivendnext_rsr) · [Third-party payer](https://library.ivendnext.app/apps/ivendnext_icp)
+- Hospitality, the standard version (an app with a link is listed or being built): Kitchen display · Front of house · Guest ordering · [Restaurant back office](https://library.ivendnext.app/apps/ivendnext_rbo) · Room charge
 
 ## Starters
 
