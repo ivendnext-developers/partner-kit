@@ -40,6 +40,10 @@ done; echo
 
 It prints `{"host": …, "to": …, "key": …}`: the site the key is for, who it names, and the key to send that site's administrator.
 
+## From the web page
+
+The same publish runs with no command at `https://library.ivendnext.app/publish` ([*Publish your app*, From the web page](../../site/pages/publish.md#from-the-web-page)). Give it the same `library/` files, your licence files, your partner code, `library-signing.key` and, when keys will come back, `recipient-private.pem` (unencrypted, as `openssl genpkey` made it). It signs and opens the keys in your browser and sends only the signed upload; it shows each key once, with a copy button, instead of writing `library-keys.json`. It keeps nothing between publishes: on an update, give it this app's remembered customers file, `~/.ivendnext/deliveries/<partner>.<app>.json`, so it can name any customer you leave out, and save the updated file it offers as that same file (`chmod 600` it, as the command does), so the command and the page keep one list. Without that file it cannot tell, and says so. The page's code is served by the App library and holds your keys while you publish; the command is the way for anyone who would rather no served code held them.
+
 ## On Windows
 
 Run it with `py -3` where these pages say `python3`. `openssl` comes with Git for Windows (`C:\Program Files\Git\usr\bin\openssl.exe`) or WSL. Windows does not take the Unix file modes the command sets, so keep `library-signing.key`, `recipient-private.pem` and `library-keys.json` in your own user folder.
