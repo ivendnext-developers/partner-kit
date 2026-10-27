@@ -1,5 +1,7 @@
 # S22 — Customer-owned loyalty (`pp_lyl`): your logic outside, the records inside iVendNext
 
+*Start from this sample: `python3 tools/manifest/start.py s22_customer_loyalty --prefix "ACME LYL"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A retailer that runs its **own** loyalty programme — its own tiers, its own cash back, its own rules — and wants it on iVendNext without putting any code inside the retailer's iVendNext. This sample is for a developer, or the CitiXsys Consulting Team, who would otherwise have built an app inside the customer's iVendNext for it.
 
 **When to use it:** the customer owns the rules (you write them in your own service), but staff should see the members, tiers and cash back on iVendNext's own screens, and the till should show a member's status.

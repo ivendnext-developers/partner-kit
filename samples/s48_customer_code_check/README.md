@@ -1,5 +1,7 @@
 # S48 — Customer code check (`pp_ccc`): a one-time code before a customer's account is used
 
+*Start from this sample: `python3 tools/manifest/start.py s48_customer_code_check --prefix "ACME CCC"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 The retailer decides which groups of its customers must prove they are at the counter before a sale can use their account: loyalty members before their points are spent, account customers before they buy on account. When the cashier puts such a customer on a sale, iVendNext texts a one-time code to the mobile number on the customer's record, and the cashier types the code the customer reads out. Until the code is right, no door that takes payment takes that customer.
 
 **When to use it:** a customer's points, store credit or account must not be used by someone who only knows their name or number, and iVendNext sends text messages through its own SMS gateway.

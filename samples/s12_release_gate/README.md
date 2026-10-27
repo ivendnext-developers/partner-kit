@@ -1,5 +1,7 @@
 # S12 — the customer's release gate
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it builds its own manifests ([how](../../recipes/make_it_your_own.md)).*
+
 One script that says red or green before a change reaches a live site. This sample is for a licensed customer's team (or an iVendNext Partner's) who ship changes to a retailer's iVendNext — an app, a manifest, a price or tax rule — and want a pass or fail in their pipeline before every release.
 
 **When to use it:** before every release, in your pipeline, against a **staging** site.

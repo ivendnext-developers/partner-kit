@@ -1,5 +1,7 @@
 # S28 — Merge counts, and a customer's history on the till
 
+*Start from this sample: `python3 tools/manifest/start.py s28_merge_and_history --prefix "ACME MHS"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ## What the retailer does
 
 One small app, two doors, one settings record.

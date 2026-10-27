@@ -1,5 +1,7 @@
 # S17 — an order board (`pp_pge`): a partner page
 
+*Start from this sample: `python3 tools/manifest/start.py s17_partner_page --prefix "ACME PGE"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![The order board on the till, end to end](screenshots/s17_flow.gif)
 
 *A cashier presses **Deliveries** on a sale, the partner's board opens over the sale in the till's own look, and after *Attach to sale* the delivery number is on the sale.*

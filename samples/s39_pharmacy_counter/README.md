@@ -1,5 +1,7 @@
 # S39 — Pharmacy counter rules (a check before payment and document checks)
 
+*Start from this sample: `python3 tools/manifest/start.py s39_pharmacy_counter --prefix "ACME RXC"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A pharmacy sells medicine under a licence. A prescription line is paid only against a valid prescription for this
 customer. A controlled or prescription-only line is sold only by a pharmacist whose licence is in date. A controlled sale
 needs the patient's identity. Quantity caps hold, and dispensed medicine is not taken back. The same rules hold when a

@@ -1,5 +1,7 @@
 # S46 — Payment method rules (`pp_pmr`): which payment methods each customer group may use
 
+*Start from this sample: `python3 tools/manifest/start.py s46_payment_method_rules --prefix "ACME PMR"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 The retailer decides which payment methods each group of its customers may use at the till: customers who order through a delivery platform pay only by that platform's method, only account customers may buy on account, a group that settles in dollars pays only in dollars. When the cashier presses **Pay**, the app leaves every other method off that sale's payment screen, dimmed, with the retailer's reason beside it.
 
 **When to use it:** a rule about the sale's customer decides which payment methods the till may take, and iVendNext keeps the rule itself, in Desk.

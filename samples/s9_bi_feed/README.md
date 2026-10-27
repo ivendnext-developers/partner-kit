@@ -1,5 +1,7 @@
 # S9 — a BI feed: sales, lines, payments and returns into a warehouse file, picking up where it stopped
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it builds its own manifests ([how](../../recipes/make_it_your_own.md)).*
+
 A small program that copies the retailer's sales, lines, payments and returns into a data warehouse file, and picks up where it stopped. This sample is for a retailer's analytics team that wants the retailer's sales outside the retailer's iVendNext without copying everything every night.
 
 **When to use it:** reports or dashboards outside the retailer's iVendNext need the retailer's sales, kept up to date and checked against the till's own end-of-day figures.

@@ -1,5 +1,7 @@
 # S35 — Call-centre orders by district (`pp_cco`): a button that routes a phone order
 
+*Start from this sample: `python3 tools/manifest/start.py s35_call_centre_orders --prefix "ACME CCO"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A customer phones the call centre; the agent enters the order once, in Desk, and presses **Send to store**. The order then ships from the store that serves the customer's district, and appears on that store's own list. This sample is for a developer who wants a button on a Desk record whose service **changes that same record**: here, the warehouse of a draft Sales Order and of every line on it.
 
 **When to use it:** you want a press in Desk to decide something about the record from data iVendNext already holds, and write the answer back onto it.

@@ -1,5 +1,7 @@
 # S3 — price-deviation audit: every line sold below list by more than a threshold
 
+*Start from this sample: `python3 tools/manifest/start.py s3_price_audit --prefix "ACME PDO"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![A sale with two offers, and the one line the audit records](screenshots/s3_flow.gif)
 
 *A sale with two offers; after the sale, the audit records the one line sold too far below its list price.*

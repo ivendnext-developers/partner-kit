@@ -1,5 +1,7 @@
 # S4 — the receipt pack: a UAE tax invoice on the till sale
 
+*Start from this sample: `python3 tools/manifest/start.py s4_receipt_pack --prefix "ACME RCP"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![A sale at two VAT rates, and its tax invoice in the till's Print sheet](screenshots/s4_flow.gif)
 
 *A sale at two VAT rates, and its tax invoice, in English and Arabic, in the till's Print sheet.*

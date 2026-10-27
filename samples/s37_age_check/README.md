@@ -1,5 +1,7 @@
 # S37 — Age-restricted sale check (a capture on scan and a check before payment)
 
+*Start from this sample: `python3 tools/manifest/start.py s37_age_check --prefix "ACME AGE"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A retailer that sells alcohol, tobacco, vapes, knives or some medicines must see the customer's ID before it sells them. This app gives each restricted item group (or item) its age. When the cashier scans a restricted item, the till shows the date of birth the customer must be born on or before. One tap records the check on the sale. At **Pay**, a restricted line the sale's check does not cover is refused:
 
 | When | What the cashier sees |

@@ -19,7 +19,7 @@ python3 tools/publish/publish.py publish <your project> --partner <your company'
 ```
 
 1. It runs the kit's checks over `<your project>/library` (`tools/check/check.py`) and the licence check over the project (`tools/check/licence.py`). A refusal stops it: nothing is sent.
-2. It reads `library/app.json`, `manifest.json`, `library.json` and `recipient.pem`, and your customers' sites and key requests from `LIBRARY_DELIVERIES` / `LIBRARY_KEYS` or `--deliveries` / `--keys` (JSON; never from your project).
+2. It reads `library/app.json`, `manifest.json`, `library.json` and `recipient.pem`, and your customers' sites and key requests from `LIBRARY_DELIVERIES` / `LIBRARY_KEYS` or `--deliveries` / `--keys` (JSON; never from your project). After a publish that names customers, the command remembers them for that app in `~/.ivendnext/deliveries/` (beside your signing key, readable by you only, never in a project or in git), and the next publish with no list includes them and says so (*including N customers remembered from your last publish*). A list you give replaces the remembered one; `--no-remembered-deliveries` publishes to none; `--dry-run` writes nothing.
 3. It signs the exact bytes it sends, with a time and a one-time number inside them, and uploads them. The library checks the signature before it reads anything, refuses an upload sent twice or more than 5 minutes old, and then applies its own rules.
 4. It prints what the library did: your preview shelf, each customer's shelf, the public list (`WAITING for iVendNext's approval` the first time, or when a version does more than the last), the keys. **Keys are written to `library-keys.json`, readable by you only, never printed.**
 

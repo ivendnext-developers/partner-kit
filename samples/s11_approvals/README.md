@@ -1,5 +1,7 @@
 # S11 — price-change approvals with a nightly export
 
+*Start from this sample: `python3 tools/manifest/start.py s11_approvals --prefix "ACME APR"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![A price-change request moving Requested, Approved, Applied, and the price row it changed](screenshots/s11_flow.gif)
 
 *A price-change request is made, approved by a manager and applied once by an outside service; the retailer's price row then shows the approved price.*

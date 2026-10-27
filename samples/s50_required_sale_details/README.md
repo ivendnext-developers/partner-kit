@@ -1,5 +1,7 @@
 # S50 — Required sale details (`pp_rsd`): the details a customer group gives before paying
 
+*Start from this sample: `python3 tools/manifest/start.py s50_required_sale_details --prefix "ACME RSD"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 The retailer decides which sale details a group of its customers must give before they pay: an account customer's purchase order number, an insured patient's policy number, a contractor's project. When the cashier presses **Pay** and a detail the customer's group needs is empty, the till refuses the sale in the retailer's words. The cashier fills the detail under the sale's details and presses Pay again.
 
 **When to use it:** a sale detail matters for some customers only. A Sale Attribute's own *Required* switch holds for every customer on every till; this app holds it for the groups and tills the retailer names.

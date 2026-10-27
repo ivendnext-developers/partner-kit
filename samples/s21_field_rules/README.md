@@ -1,5 +1,7 @@
 # S21 — Field rules for one till theme
 
+*Start from this sample: `python3 tools/manifest/start.py s21_field_rules --prefix "ACME FLD"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![The till's words changed by field rules: the line heading reads Product, the card says Stars, the new-customer sheet has no email and needs a phone](screenshots/s21_flow.gif)
 
 *Field rules on one till theme: the sale's line reads "Product", the customer's card says "Stars", the new-customer sheet has no email, and a new customer needs a phone.*

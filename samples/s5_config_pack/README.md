@@ -1,5 +1,7 @@
 # S5 — the configuration pack: reasons, IMEI, a line detail, member pricing
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it builds its own manifests ([how](../../recipes/make_it_your_own.md)).*
+
 ![What the cashier meets once the pack is applied: member price, reasons, a line detail, an IMEI, a void reason](screenshots/s5_flow.gif)
 
 *What the cashier meets once the pack is applied: a member's price, a reason for a markdown, a checked line detail, a phone's IMEI and a reason for a void.*

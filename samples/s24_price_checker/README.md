@@ -1,5 +1,7 @@
 # S24 — Price-checker kiosk (a page on the shop floor, priced by iVendNext)
 
+*Start from this sample: `python3 tools/manifest/start.py s24_price_checker --prefix "ACME PRC"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ## What the retailer does
 
 A tablet or screen stands on the shop floor. A customer scans an item and reads its name, its picture and its **price**. The price is the retailer's own: the store's price list price for one unit, in the scanned unit, found and converted by iVendNext itself (the same price list lookup the till starts a sale from). Nobody signs in on the tablet; the retailer switches each kiosk on and off in Desk.

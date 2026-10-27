@@ -1,5 +1,7 @@
 # S38 — Expiry markdown (`pp_exm`): mark down stock as its expiry date nears
 
+*Start from this sample: `python3 tools/manifest/start.py s38_expiry_markdown --prefix "ACME EXM"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it sells before it is thrown away. The retailer sets its markdown steps once on its item groups: 25% off from 5 days before expiry, 50% off from 2 days, say. Each morning a manager ticks the lots in the Batch list and presses **Mark down**. Every ticked lot inside a step gets its own price on the retailer's selling price list, valid until its expiry date. The till already rings a lot at its own price and prints its lot label, so the cashier does nothing new. This sample is for a developer who wants a button on a Desk list whose service **writes the retailer's own records** by a rule the retailer keeps.
 
 **When to use it:** the retailer's rule decides a value on many records at once, a person decides when to apply it, and iVendNext already reads the value where it matters (here: a lot's own Item Price, which the till honours).

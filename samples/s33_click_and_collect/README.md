@@ -1,5 +1,7 @@
 # S33 — Click and collect (`pp_ccb`): a Desk board for web orders
 
+*Start from this sample: `python3 tools/manifest/start.py s33_click_and_collect --prefix "ACME CCB"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 A store's board for the web orders it must pick and hand over, in Desk, from a manifest alone. A report lists the web orders still to pick; two fields on the delivery note record the hand-over, and the Delivery Note list filtered on one of them lists the orders waiting for their customer. Nothing leaves the retailer's iVendNext: no service, no outside address.
 
 It uses the manifest's `custom_fields`, `reports` and `workspaces`. **When to use it:** a retailer sells on the web and its customers collect in store, and you want every store to see the same lists without building a screen.

@@ -1,5 +1,7 @@
 # S20 — Warranty capture and a member code (capture)
 
+*Start from this sample: `python3 tools/manifest/start.py s20_capture --prefix "ACME CAP"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![A warranty reference captured when a handset is scanned, and a one-time code asked before a new customer is made](screenshots/s20_flow.gif)
 
 *A handset scanned asks the service for a warranty reference and the cashier confirms it; a new customer needs the code just sent, and a wrong code is counted.*

@@ -1,5 +1,7 @@
 # S2 — bin locations (`pp_bln`): where stock sits inside a store
 
+*Start from this sample: `python3 tools/manifest/start.py s2_bins --prefix "ACME BLN"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+
 ![The bin locations workspace, the bins and what is in each](screenshots/s2_flow.gif)
 
 *The bin locations workspace in Desk: the bins on their aisles, and what is in each bin.*

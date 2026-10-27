@@ -1,5 +1,7 @@
 # S30 — Units as serial numbers: each pack's printed code, tracked by iVendNext itself
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it builds its own manifests ([how](../../recipes/make_it_your_own.md)).*
+
 Some retailers track every pack or handset by its own printed code: supplements, phones, pharmacy packs. They need that code checked when stock is received, moved, counted and sold, in the back office as well as at the till. iVendNext already tracks a unit like this when the code is a **serial number** of an item that has both batches and serial numbers. This sample sets that up, moves an existing unit table onto it, and tells a lost unit from a sold one.
 
 It is for an iVendNext Partner or a retailer's administrator. **No code runs in the retailer's iVendNext.** The scripts run once on the administrator's computer and use the retailer's record API with the administrator's key.

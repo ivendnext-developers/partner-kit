@@ -1,5 +1,7 @@
 # S8 — an estate roll-out as code: fifty stores and three regions from one file
 
+*Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it builds its own manifests ([how](../../recipes/make_it_your_own.md)).*
+
 Your whole estate — regions, prices, stores, tills, cashiers — written down in one file, and a script that makes iVendNext match it. This sample is for an iVendNext Partner or head office that sets up many stores and wants each change previewed, applied and checked, not clicked through store by store.
 
 **When to use it:** you open or change stores in numbers, and need to see what will change before it does and prove afterwards that iVendNext matches the file.
