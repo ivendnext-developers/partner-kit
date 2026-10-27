@@ -86,7 +86,7 @@ def open_shop(record: dict):
 
 
 def pass_all(store, state: str, last_daily: dict, now=None, log=sys.stdout, opener=open_shop, busy: dict | None = None,
-             deadline: float = PASS_DEADLINE_S) -> dict:
+             deadline: float = PASS_DEADLINE_S, finished=None) -> dict:
     """One pass over every connected shop, each on its own thread: its feed, then its daily jobs once a day. A shop
     still busy from an earlier pass is skipped, so a slow or stuck shop never holds up another. Returns {site: what
     happened} for the shops that finished within ``deadline`` seconds."""
@@ -124,12 +124,19 @@ def pass_all(store, state: str, last_daily: dict, now=None, log=sys.stdout, open
         log.write(json.dumps({"site": site, **said}) + "\n")
         log.flush()
 
+    def run(site):
+        try:
+            one(site)
+        finally:
+            if finished is not None:             # the shop's work is over (the function form frees its claim here)
+                finished(site)
+
     started = []
     for site in sites:
         if busy.get(site) is not None and busy[site].is_alive():
             out[site] = {"busy": True}               # its last pass has not finished: never two at once for one shop
             continue
-        busy[site] = threading.Thread(target=one, args=(site,), daemon=True)
+        busy[site] = threading.Thread(target=run, args=(site,), daemon=True)
         busy[site].start()
         started.append(busy[site])
     end = time.monotonic() + deadline

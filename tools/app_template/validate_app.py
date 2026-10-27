@@ -27,7 +27,7 @@ SIZES = ("small", "medium", "large")
 RUNS = ("container", "function")
 HANDLER = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_/]*\.[A-Za-z_][A-Za-z0-9_]*")     # service/app.lambda_handler
 PART = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]*")                              # one piece of a package path
-SCHEDULE_NAME = re.compile(r"[a-z][a-z0-9-]{0,11}")
+SCHEDULE_NAME = re.compile(r"[a-z][a-z0-9-]{0,10}")   # 1 to 11: the hosting's schedule name stays within 64
 # EventBridge Scheduler's two forms, in UTC: rate(<n> minute(s)|hour(s)|day(s)) or cron(<six fields>)
 WHEN = re.compile(r"rate\([1-9][0-9]* (minute|minutes|hour|hours|day|days)\)|cron\([^()]+\)")
 SECRETISH = re.compile(r"(SECRET|TOKEN|PASSWORD|PASSWD|API_?KEY|PRIVATE|CREDENTIAL)", re.I)
@@ -93,7 +93,7 @@ def check_form(m: dict) -> list[str]:
     sched = m.get("schedule", {})
     if not isinstance(sched, dict) or not all(isinstance(k, str) and SCHEDULE_NAME.fullmatch(k) and isinstance(v, str)
                                               and WHEN.fullmatch(v) for k, v in sched.items()):
-        bad.append("schedule: names (1 to 12 lower-case letters, digits, hyphens) and when each runs, in UTC: "
+        bad.append("schedule: names (1 to 11 lower-case letters, digits, hyphens) and when each runs, in UTC: "
                    "\"rate(1 minute)\", \"rate(6 hours)\" or \"cron(0 2 * * ? *)\"")
     timeout = m.get("timeout", 10)
     if not isinstance(timeout, int) or isinstance(timeout, bool) or not 1 <= timeout <= 900:

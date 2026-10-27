@@ -267,7 +267,7 @@ class Scheduled(unittest.TestCase):
         self.assertEqual(self.claims(), [])
 
     def test_canary_a_shop_another_call_holds_is_left_to_it(self):
-        self.assertTrue(self.store.claim("pass|a.example", time.time(), app.CLAIM_STALE_S))
+        self.assertTrue(self.store.claim("pass|a.example", time.time() + 1000, 1000))
         self.assertEqual(sorted(self.run_pass()), ["b.example"])
         self.assertNotIn("PP GCS Card", {k for k, v in self.shops["a.example"].db.items() if v})
         self.assertEqual(self.claims(), ["pass|a.example"])

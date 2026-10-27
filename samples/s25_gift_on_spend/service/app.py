@@ -44,7 +44,6 @@ from shop import ShopError  # noqa: E402
 
 BODY_MAX = 64 * 1024
 HEALTH_GRACE_S = 180
-CLAIM_STALE_S = 150    # above the function's timeout (app.json "timeout": 120): a pass stopped by it frees its shops
 
 
 def api_credentials(record: dict) -> tuple[str, str, str]:
@@ -86,14 +85,14 @@ def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[i
     return 200, {"ok": 1}
 
 
-def scheduled(svc: Service, name: str) -> dict:
-    """One scheduled pass (the function's worker): the shops this call claims, each to its end, then their claims freed.
-    A shop stuck past the function's timeout ends the call; its claim goes stale in CLAIM_STALE_S."""
-    store = function.Claimed(svc.store, CLAIM_STALE_S)
+def scheduled(svc: Service, name: str, seconds: float = 900) -> dict:
+    """One scheduled pass (the function's worker): the shops this call claims, each to its end, each claim freed as its
+    shop finishes. A shop stuck past the call's limit ends the call; its claim is taken over once stale
+    (``function.Claimed``)."""
+    store = function.Claimed(svc.store, seconds)
     state = svc.conf.get("PP_STATE") or os.path.join(HERE, "state")
-    out = worker.pass_all(store, state, opener=worker.open_shop, deadline=900.0) or {}   # to its end
-    store.release(out)
-    return out
+    # the wait outlasts the call: a shop still at work when the limit comes ends with the call, never thawed into the next
+    return worker.pass_all(store, state, opener=worker.open_shop, deadline=seconds + 60, finished=store.release) or {}
 
 
 lambda_handler = function.entry(lambda: Service(dict(os.environ), scheduled=True), handle, scheduled)

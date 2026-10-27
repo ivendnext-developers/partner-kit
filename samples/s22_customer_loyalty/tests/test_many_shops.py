@@ -309,11 +309,19 @@ class Scheduled(unittest.TestCase):
         self.assertIn("credited", self.run_pass(self.NOW + datetime.timedelta(days=1))[A])
 
     def test_canary_a_shop_another_call_holds_is_left_to_it(self):
-        self.assertTrue(self.svc.store.claim(f"pass|{A}", time.time(), app.CLAIM_STALE_S))
+        self.assertTrue(self.svc.store.claim(f"pass|{A}", time.time() + 1000, 1000))
         out = self.run_pass()
         self.assertEqual(sorted(out), [B])
         self.assertEqual(self.feeds[A].backlog(), 1)                                         # A untouched
         self.assertIn(f"pass|{A}", self.claims())
+
+    def test_a_daily_job_that_fails_is_tried_once_that_day_and_the_feed_goes_on(self):
+        with mock.patch.object(loyalty, "credit_due", side_effect=app.ShopError(503, "down")):
+            self.assertEqual(self.run_pass()[A], {"error": "ShopError"})
+        self.feeds[A] = Worker.Feed([{"id": "e2", "event": "sale.booked", "doc_type": "POS Invoice", "doc_name": "S1"}])
+        again = self.run_pass()[A]
+        self.assertEqual(sorted(again), ["feed"])                                           # no daily retry that day
+        self.assertIn("credited", self.run_pass(self.NOW + datetime.timedelta(days=1))[A])  # the next day runs
 
     def test_health_answers_200_as_a_function_and_the_web_server_shares_the_routes(self):
         self.svc.started -= app.HEALTH_GRACE_S + 1

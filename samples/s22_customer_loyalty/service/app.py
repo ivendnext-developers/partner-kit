@@ -59,7 +59,6 @@ from shop import Shop, ShopError  # noqa: E402
 SKEW_S, BODY_MAX = 300, 256 * 1024
 HEALTH_GRACE_S = 180   # many shops: /health is 503 once no feed pass has finished for this long
 WALLET_PREFIX, WALLET_BODY_MAX = "/paygw/1/", 64 * 1024
-CLAIM_STALE_S = 150    # above the function's timeout (app.json "timeout": 120): a pass stopped by it frees its shops
 
 
 def verify(timestamp, signature, raw: bytes, secret: str, now=None) -> str:
@@ -212,17 +211,18 @@ def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[i
     return 200, {"ok": 1}
 
 
-def scheduled(svc: Service, name: str, now: datetime.datetime | None = None) -> dict:
+def scheduled(svc: Service, name: str, seconds: float = 900, now: datetime.datetime | None = None) -> dict:
     """One scheduled pass (the function's worker): the shops this call claims, each to its end (the feed, then its daily
-    jobs if this call is the first to claim that day), then their claims freed. A shop stuck past the function's
-    timeout ends the call; its claim goes stale in CLAIM_STALE_S."""
+    jobs if this call is the first to claim that day), each claim freed as its shop finishes. A shop stuck past the
+    call's limit ends the call; its claim is taken over once stale (``function.Claimed``). The day stays claimed: as in
+    the container, a day's jobs are tried once, and a chain whose daily jobs outgrow the 15-minute limit needs the
+    container form (guide 14b)."""
     now = now or datetime.datetime.now(datetime.timezone.utc)
-    store = function.Claimed(svc.store, CLAIM_STALE_S)
+    store = function.Claimed(svc.store, seconds)
     state = svc.conf.get("PP_STATE") or os.path.join(HERE, "state")
-    out = worker.pass_all(store, state, function.OncePerDay(svc.store, now), now=now, opener=worker.open_shop,
-                          deadline=900.0)
-    store.release(out)
-    return out
+    # the wait outlasts the call: a shop still at work when the limit comes ends with the call, never thawed into the next
+    return worker.pass_all(store, state, function.OncePerDay(svc.store, now), now=now, opener=worker.open_shop,
+                           deadline=seconds + 60, finished=store.release)
 
 
 lambda_handler = function.entry(lambda: Service(dict(os.environ), scheduled=True), handle, scheduled)

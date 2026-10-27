@@ -148,11 +148,16 @@ class Scheduled(unittest.TestCase):
         seen, loads = [], []
         fn = function.entry(lambda: loads.append(1) or {"c": 1},
                             lambda *a: self.fail("handle must not answer a schedule"),
-                            lambda conf, name: seen.append((conf, name)) or {A: {}, B: {}})
+                            lambda conf, name, seconds: seen.append((conf, name, seconds)) or {A: {}, B: {}})
+
+        class Context:                                               # the call's own clock: 117.5 s left
+            def get_remaining_time_in_millis(self):
+                return 117500
+
         with mock.patch("sys.stdout", io.StringIO()) as log:
-            self.assertEqual(fn({"ivn_schedule": "pass"}), {"schedule": "pass", "shops": 2})
-            fn({"ivn_schedule": "pass"})
-        self.assertEqual((seen, len(loads)), ([({"c": 1}, "pass")] * 2, 1))
+            self.assertEqual(fn({"ivn_schedule": "pass"}, Context()), {"schedule": "pass", "shops": 2})
+            fn({"ivn_schedule": "pass"})                             # no context (a laptop): the 15-minute ceiling
+        self.assertEqual((seen, len(loads)), ([({"c": 1}, "pass", 117.5), ({"c": 1}, "pass", 900)], 1))
         self.assertIn('"schedule": "pass"', log.getvalue())
 
     def test_canary_an_app_with_no_scheduled_entry_answers_a_schedule_with_an_error(self):
@@ -161,18 +166,42 @@ class Scheduled(unittest.TestCase):
             self.assertEqual(fn({"ivn_schedule": "pass"}), {"schedule": "pass", "error": "no scheduled entry"})
 
     def test_two_runs_never_work_one_shop_and_a_released_shop_is_free_again(self):
-        first, second = function.Claimed(self.store, 150), function.Claimed(self.store, 150)
+        first, second = function.Claimed(self.store, 120), function.Claimed(self.store, 120)
         self.assertEqual(sorted(first.sites()), sorted([A, B]))
         self.assertEqual(second.sites(), [])                         # both held by the first run
         self.assertEqual(sorted(self.store.sites()), sorted([A, B]))  # a claim is never listed as a shop
-        first.release({A: {}})                                       # A finished, B did not
-        self.assertEqual(function.Claimed(self.store, 150).sites(), [A])
+        first.release(A)                                             # A finished, B did not
+        second.release(B)                                            # never this run's: freeing it does nothing
+        self.assertEqual(function.Claimed(self.store, 120).sites(), [A])
 
-    def test_canary_a_claim_left_by_a_stopped_run_is_taken_over_once_stale(self):
-        now = [1000.0]
-        function.Claimed(self.store, 150, clock=lambda: now[0]).sites()     # never released
-        self.assertEqual(function.Claimed(self.store, 150, clock=lambda: now[0] + 100).sites(), [])
-        self.assertEqual(sorted(function.Claimed(self.store, 150, clock=lambda: now[0] + 151).sites()), sorted([A, B]))
+    def test_canary_a_claim_is_taken_over_only_after_its_call_is_gone(self):
+        now = 1000.0
+        function.Claimed(self.store, 120, clock=lambda: now).sites()        # a call with 120 s left, stopped by its limit
+        self.assertEqual(function.Claimed(self.store, 900, clock=lambda: now + 149).sites(), [])   # 120 + the margin
+        self.assertEqual(sorted(function.Claimed(self.store, 900, clock=lambda: now + 151).sites()), sorted([A, B]))
+
+    def test_a_store_error_part_way_still_frees_what_was_taken(self):
+        class Flaky:
+            def __init__(self, store):
+                self.store, self.n = store, 0
+
+            def sites(self):
+                return self.store.sites()
+
+            def claim(self, *a):
+                self.n += 1
+                if self.n == 2:
+                    raise RuntimeError("throttled")
+                return self.store.claim(*a)
+
+            def delete(self, name):
+                self.store.delete(name)
+
+        run = function.Claimed(Flaky(self.store), 120)
+        with self.assertRaises(RuntimeError):
+            run.sites()
+        run.release(sorted([A, B])[0])
+        self.assertEqual(sorted(function.Claimed(self.store, 120).sites()), sorted([A, B]))
 
     def test_a_days_jobs_run_once_whichever_run_claims_the_day_first(self):
         day = __import__("datetime").datetime(2026, 10, 28, 3, 0)

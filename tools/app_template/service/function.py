@@ -15,9 +15,10 @@ on the first call of each copy, and kept while the copy lives.
 
 An app with background work (a feed reader, a daily job) runs as a function too, on a SCHEDULE (app.json ``"schedule"``,
 e.g. ``{"pass": "rate(1 minute)"}``, and a ``"timeout"`` of up to 900 seconds): the hosting calls it with
-``{"ivn_schedule": "<name>"}`` and this entry hands the name to the app's ``scheduled(conf, name)``. A container's worker
-skipped a shop whose last pass was still running; across copies of a function that is a claim in the shops table
-(``Claimed``), and a container's "once a day" is one too (``OncePerDay``).
+``{"ivn_schedule": "<name>"}`` and this entry hands the name, and the seconds this call has left, to the app's
+``scheduled(conf, name, seconds)``. A container's worker skipped a shop whose last pass was still running; across copies
+of a function that is a claim in the shops table (``Claimed``), and a container's "once a day" is one too
+(``OncePerDay``).
 """
 
 from __future__ import annotations
@@ -52,7 +53,8 @@ def response(status: int, answer: dict) -> dict:
 
 def entry(load, handle, scheduled=None):
     """The function's handler: ``load()`` gives the settings once per copy; ``handle`` answers each call, and
-    ``scheduled(conf, name)`` each scheduled run (an app with no schedule passes none)."""
+    ``scheduled(conf, name, seconds)`` each scheduled run, with the seconds the call has left (an app with no schedule
+    passes none)."""
     kept = {}
 
     def lambda_handler(event, context=None):
@@ -64,7 +66,8 @@ def entry(load, handle, scheduled=None):
                 print(json.dumps({"schedule": name, "error": "this app has no scheduled entry"}), flush=True)
                 return {"schedule": name, "error": "no scheduled entry"}
             started = time.monotonic()
-            out = scheduled(kept["conf"], name)
+            left = context.get_remaining_time_in_millis() / 1000 if hasattr(context, "get_remaining_time_in_millis") else 900
+            out = scheduled(kept["conf"], name, left)
             print(json.dumps({"schedule": name, "seconds": round(time.monotonic() - started, 2),
                               "shops": len(out or {})}), flush=True)
             return {"schedule": name, "shops": len(out or {})}
@@ -76,27 +79,36 @@ def entry(load, handle, scheduled=None):
 
 class Claimed:
     """The shops one scheduled pass may work: each site whose claim ``<kind>|<site>`` this call took in the shops table
-    (``store.claim``), so two copies never work one shop at once. ``release(done)`` frees the claims of the shops that
-    finished; a call stopped mid-pass (its timeout) leaves its claims, taken over once ``stale_s`` old. Set ``stale_s``
-    above the function's timeout. Reads go to the store unchanged."""
+    (``store.claim``), so two copies never work one shop at once. ``release(site)`` frees one shop's claim as soon as its
+    work ends, so a slow shop never holds the others. A call stopped by its limit leaves the claims of the shops still
+    being worked; another call takes them over once they are ``seconds`` old plus a margin, where ``seconds`` is the time
+    this call had left when it took them: the copy that took a claim is gone before anyone else may take it, whatever the
+    function's timeout. Reads go to the store unchanged."""
 
-    def __init__(self, store, stale_s: float, kind: str = "pass", clock=time.time):
-        self.store, self.stale_s, self.kind, self.clock, self.taken = store, stale_s, kind, clock, []
+    MARGIN_S = 30
+
+    def __init__(self, store, seconds: float, kind: str = "pass", clock=time.time):
+        self.store, self.stale_s, self.kind, self.clock, self.taken = store, seconds + self.MARGIN_S, kind, clock, []
 
     def sites(self) -> list[str]:
-        self.taken = [s for s in self.store.sites() if self.store.claim(f"{self.kind}|{s}", self.clock(), self.stale_s)]
+        # The claim records its EXPIRY (now + this call's life + the margin) where ``store.claim`` records a time: the
+        # store takes a claim over when that value is at most (its own value - stale_s), i.e. once the expiry has
+        # passed, so the HOLDER's life decides, never the life of the call that asks.
+        expires = self.clock() + self.stale_s
+        for s in self.store.sites():            # one at a time: a store error part-way still frees what was taken
+            if self.store.claim(f"{self.kind}|{s}", expires, self.stale_s):
+                self.taken.append(s)
         return list(self.taken)
 
     def get(self, site: str):
         return self.store.get(site)
 
-    def release(self, done) -> None:
-        for site in self.taken:
-            if site in done:
-                try:
-                    self.store.delete(f"{self.kind}|{site}")
-                except Exception:        # noqa: BLE001 — a claim left behind goes stale in stale_s
-                    pass
+    def release(self, site: str) -> None:
+        if site in self.taken:
+            try:
+                self.store.delete(f"{self.kind}|{site}")
+            except Exception:            # noqa: BLE001 — a claim left behind goes stale in stale_s
+                pass
 
 
 class OncePerDay:

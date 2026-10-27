@@ -509,10 +509,27 @@ class Scheduled(unittest.TestCase):
         self.assertEqual(self.claims(), [])
 
     def test_canary_a_shop_another_call_holds_is_left_to_it(self):
-        self.assertTrue(self.svc.store.claim("pass|a.example", time.time(), app.CLAIM_STALE_S))
+        self.assertTrue(self.svc.store.claim("pass|a.example", time.time() + 1000, 1000))
         self.assertEqual(sorted(self.run_pass()), ["b.example"])
         self.assertEqual(recorded(self.shops["ka"]), [])
         self.assertEqual(self.claims(), ["pass|a.example"])
+
+    def test_a_shop_that_finished_is_freed_while_a_slow_one_still_works(self):
+        seen_free = []
+
+        def opener(record):
+            key = worker.api_credentials(record)[1]
+            if key == "ka":                                  # A is slow: it waits for B's claim to be freed
+                end = time.monotonic() + 3
+                while time.monotonic() < end and "pass|b.example" in self.claims():
+                    time.sleep(0.02)
+                seen_free.append("pass|b.example" not in self.claims())
+            return self.shops[key], self.feeds[key]
+
+        with mock.patch.object(worker, "open_shop", opener), mock.patch("sys.stdout", io.StringIO()):
+            app.scheduled(self.svc, "pass")
+        self.assertEqual(seen_free, [True])
+        self.assertEqual(self.claims(), [])
 
     def test_health_answers_200_as_a_function(self):
         self.svc.started -= app.HEALTH_GRACE_S + 1

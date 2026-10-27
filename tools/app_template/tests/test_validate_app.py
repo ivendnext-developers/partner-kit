@@ -110,6 +110,7 @@ class FunctionForm(unittest.TestCase):
         cases = [
             (bad(**{**fn, "schedule": {"pass": "every minute"}}), "schedule:"),
             (bad(**{**fn, "schedule": {"Pass": "rate(1 minute)"}}), "schedule:"),
+            (bad(**{**fn, "schedule": {"twelve-chars": "rate(1 minute)"}}), "schedule:"),
             (bad(**{**fn, "schedule": {"pass": "rate(0 minutes)"}}), "schedule:"),
             (bad(**{**fn, "schedule": ["rate(1 minute)"]}), "schedule:"),
             (bad(**{**fn, "timeout": 901}), "timeout:"),
