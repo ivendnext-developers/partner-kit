@@ -53,6 +53,21 @@ The retailer's administrator does these in iVendNext Desk.
 6. **Rotate or revoke the key.** To rotate it (a person who saw it leaves, or on a schedule), press **Generate Keys** again. The old secret is refused (`401`) at once, and the new one works (`200`). Update your service's secret store in the same change. To switch the app off, the retailer **deletes the user**, or generates new keys and keeps the secret to itself. Disabling the user is not enough: its key still signs in.
    ⚠ **A user that has taken a workflow step cannot be deleted.** iVendNext keeps a record of every step taken (a *Workflow Action*), naming the user and the role that took it; a completed one is visible to the site's Administrator alone, so no partner key can find and clear them, and iVendNext answers *"linked with Workflow Action"*. For such a user, switch the app off by disabling the user, generating new keys that no one keeps, and disabling the role. A later setup run switches them back on. The site's Administrator can delete them if the retailer wants them gone.
 
+## Who sets the app's user
+
+An app that reads the retailer's data through its own user (a feed registration naming it) needs that user set as the **Application User** on the app's *Registered Application* record. The field is locked in Desk, so the retailer's administrator cannot choose it: the retailer asks **iVendNext support**, naming the user (the e-mail from step 2), and then presses **Connect again** on the app's record. Until it is set, **Connect again** sends no key and the app seems to do nothing.
+
+The user must be one made for this app alone: its own e-mail, only its own role. Never a person's user (a cashier, a manager), never the Administrator, and never a user already named on another app's registration: the app would then read and write as that person, or the two apps would share one key.
+
+A developer on their own sandbox, signed in as the site's administrator, sets it with one request (the record's name and the user's e-mail filled in):
+
+```
+PUT /api/resource/Registered%20Application/<registration name>
+{"application_user": "<the app's user e-mail>"}
+```
+
+Then press **Connect again**. Its message says it sent that user's API key.
+
 ## What is refused, and why
 
 - **An API-only user.** A user must be a desk user or a POS user, so a connected app takes a desk user and its licence. That is deliberate: the licence is how a connected app is counted.

@@ -36,7 +36,7 @@ A retailer wants a screen on its floor where a customer scans an item and reads 
 What the retailer does after install, in its own words:
 
 - **Before install:** make the role your manifest names, unless it is under your prefix (then the install makes it). The sample's `PP Integration` is made by iVendNext.
-- Make your integration user with that role and its API key ([recipe](integration_user.md)), and choose it on your feed registration.
+- Make your integration user with that role and its API key ([recipe](integration_user.md)), and ask iVendNext support to set it on your feed registration (a user made for the app alone, never a person's).
 - Make one Kiosk record per screen: where it stands, and the store's till profile. The record's name is the screen's code. Changed the profile's price list later? Save the Kiosk again: its fields are fetched when it is saved.
 - On the tablet, open your app's address with `#shop=` and the retailer's site and `&kiosk=` and the record's name, in full screen. A barcode scanner connected to the tablet as a keyboard (USB or Bluetooth) scans into the page.
 - To stop a screen, switch its record off or delete it.

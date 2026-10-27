@@ -76,7 +76,7 @@ Pressed again, the button says *Already with its store* and changes nothing.
    | Warehouse | Read | the store is checked before the write |
 
    The role reaches every sales order (read and write) and every customer, territory and warehouse (read): give it to the app's user and no one else. *Sales User* also works, but it reaches further than the app uses: it creates and submits orders.
-3. **Choose the user** as the *Application User* of the feed *PP CCO Routing feed*. A hosted service: press **Connect again** on the app.
+3. **Ask iVendNext support** to set the user as the *Application User* of the feed *PP CCO Routing feed* (a user made for the app alone, never a person's). A hosted service: press **Connect again** on the app.
 4. **Switch the service on** in **Retail Extension Subscription** (*Send to store service*: read what it is sent, tick the consent), then the button in **Retail Desk Action** (*Send to store*).
 5. **Set a Serving store on the districts** (a Sales Master Manager): a store warehouse of the same company, never a group. A governorate's store serves its districts that have none.
 
