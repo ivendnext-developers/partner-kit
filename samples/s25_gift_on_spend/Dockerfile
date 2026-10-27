@@ -1,6 +1,6 @@
 # S25's service on a server, serving many shops (the app template's handshake). Built from the KIT'S ROOT, because it
 # uses the template's handshake and the feed client, never copies of them (S22's Dockerfile, the same shape):
-#   docker build --platform linux/arm64 -f samples/s25_gift_on_spend/Dockerfile -t gift-card-on-spend:1.0.0 .
+#   docker build --platform linux/arm64 -f samples/s25_gift_on_spend/Dockerfile -t gift-card-on-spend:1.1.0 .
 FROM python:3.12-slim
 
 # Never root: the app needs no rights.

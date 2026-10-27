@@ -28,7 +28,7 @@ A customer's sale reaches the retailer's threshold. Within the next half a minut
 - A return **without the receipt** (an *Item Return*, which names no sale) cannot be matched to the sale that earned a card, so it voids nothing. A cancelled return gives no card back.
 - A partial return counts at its whole value, even when part of the sale was paid with a gift card.
 - A void reads the card, then sets it to 0: a customer spending it in that same second keeps what they spent, and the card is marked *Voided* (or *Review*, if the service restarted between the two writes; the card is at 0 either way).
-- Run the service as one container: two running at once (an overlapping deploy) could each release the same card. On CitiXsys hosting the app is planned with its scratch folder, with which a deploy stops the old copy before the new one starts.
+- Never let two copies work one retailer at once: each could release the same card. On your own server, run one container. On CitiXsys hosting it runs as a function on a schedule, and each run claims each retailer in the shops table before working it, freeing it when done (`function.Claimed`).
 - Switching the app off stops **new** cards only: cards already held are still released after their hold. Release or void held cards before you uninstall: the uninstall removes the Card records, and a card still held stays at 0.
 
 ## What the retailer does to set it up
@@ -62,10 +62,10 @@ python3 samples/s25_gift_on_spend/service/worker.py run samples/s25_gift_on_spen
 python3 samples/s25_gift_on_spend/service/app.py samples/s25_gift_on_spend/service/.env.local
 ```
 
-Many retailers (the app template's handshake, [chapter 14b](../../guide/14b_deploying_your_app.md#one-app-many-retailers)): set `IVN_LIBRARY_APP` and a shops store; each retailer's site connects itself to the app's one `*.ivendnext.app` address in `allowed_urls` after its install (the site connects to no other address, and refuses a manifest naming two) and hands over its integration user's key (once the retailer has made it and pressed *Connect again*, step 5), and the worker reads each retailer's feed with that retailer's key, each on its own thread. It is background work, so it runs as a **container**, never a function:
+Many retailers (the app template's handshake, [chapter 14b](../../guide/14b_deploying_your_app.md#one-app-many-retailers)): set `IVN_LIBRARY_APP` and a shops store; each retailer's site connects itself to the app's one `*.ivendnext.app` address in `allowed_urls` after its install (the site connects to no other address, and refuses a manifest naming two) and hands over its integration user's key (once the retailer has made it and pressed *Connect again*, step 5), and the worker reads each retailer's feed with that retailer's key, each on its own thread. On CitiXsys hosting it runs as a **function on a schedule** (`app.json`: `"runs": "function"`, a pass each minute, [chapter 14b](../../guide/14b_deploying_your_app.md#a-function-or-a-container)); on your own server, as one container:
 
 ```bash
-docker build --platform linux/arm64 -f samples/s25_gift_on_spend/Dockerfile -t gift-card-on-spend:1.0.0 .
+docker build --platform linux/arm64 -f samples/s25_gift_on_spend/Dockerfile -t gift-card-on-spend:1.1.0 .
 ```
 
 ## Technical notes

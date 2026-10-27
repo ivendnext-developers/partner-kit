@@ -55,7 +55,7 @@ To take it out, `apply_config.py remove` puts the permission rows back first, th
 | `service/worker.py` | reads the feed (the kit's `tools/feed_client`) and runs the daily jobs |
 | `service/wallet.py` | Member cash: the wallet's answers to the till (preview, authorise, status, reverse, refund) |
 | `service/app.py` | the member key (`POST /lyl/member`), the wallet's signed route (`POST /paygw/1/<verb>`) and, for many retailers, the template's handshake |
-| `Dockerfile`, `app.json` | the service as a container serving many retailers (built from the kit's root) |
+| `Dockerfile`, `app.json` | the service serving many retailers: on CitiXsys hosting a function on a schedule (`app.json`: a feed pass each minute, each retailer's daily jobs once a day; [chapter 14b](../../guide/14b_deploying_your_app.md#a-function-or-a-container)); on your own server, the `Dockerfile` as a container (built from the kit's root) |
 | `tests/` | laptop tests, and `canaries.py`: each money, replay, permission and many-retailers test goes red when its rule is broken |
 
 ## Run it
