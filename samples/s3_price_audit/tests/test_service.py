@@ -533,7 +533,7 @@ class Scheduled(unittest.TestCase):
 
     def test_health_answers_200_as_a_function(self):
         self.svc.started -= app.HEALTH_GRACE_S + 1
-        worker.HEARTBEAT[0] = 0.0
+        worker.HEARTBEAT[0] = time.monotonic() - app.HEALTH_GRACE_S - 1      # stale, whatever the machine's uptime
         self.assertEqual(app.handle(self.svc, "GET", "/health", {}, b""), (200, {"ok": 1}))
 
 

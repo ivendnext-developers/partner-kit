@@ -49,7 +49,7 @@ A retailer that wants every line sold well below its list price recorded for the
 
 ```bash
 python3 tools/manifest/validate.py samples/s3_price_audit/outside/manifest.json
-python3 -m unittest discover -s samples/s3_price_audit/tests -p 'test_*.py'     # 25 tests
+python3 -m unittest discover -s samples/s3_price_audit/tests -p 'test_*.py'     # 29 tests
 python3 samples/s3_price_audit/tests/canaries.py                                 # 30 canaries, each must go RED
 ```
 
