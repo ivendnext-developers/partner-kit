@@ -1,4 +1,4 @@
-# A coupon for a first purchase only, for one customer group, or needing a sale of a given size (coupon rules) — the recipe
+# Coupons for a first purchase, one customer group, or a sale of a given size — the recipe
 
 A retailer's coupons already carry dates, stores, week days and a cap per store. Three rules retailers ask for are not there: **a coupon only a new customer may use** (a welcome coupon), **a coupon only one group of customers may use** (staff, members of a campaign) and **a coupon that needs a sale of a given size for each use** (one coupon of 100 for each 1,000 spent). This recipe adds them from outside, through the check before payment: the retailer writes one rule per coupon in Desk, and your service refuses a coupon the rule does not allow when the cashier presses Pay. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
