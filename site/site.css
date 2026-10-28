@@ -287,5 +287,8 @@ tr:last-child td { border-block-end: 0; }
 .hosting-copy code { overflow-wrap: anywhere; }
 .hosting-bad { color: #a4262c; font-weight: 600; }
 .hosting-ok { color: #107c10; }
+.hosting-before { margin-block-end: var(--ivn-s4); }
+.hosting-before summary { font-weight: 600; cursor: pointer; }
+.hosting-tool label:has(input:disabled) { color: var(--ivn-text-muted); }   /* a copy that cannot be chosen reads as such */
 .hosting-tool button:focus-visible, .hosting-tool input:focus-visible, .hosting-tool select:focus-visible,
 .hosting-tool textarea:focus-visible { outline: 2px solid var(--site-focus); outline-offset: 2px; }

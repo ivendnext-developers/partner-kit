@@ -22,7 +22,7 @@ import sys
 
 KEYS = {"app", "version", "port", "health", "size", "region", "env", "shops", "runs", "handler", "package", "schedule",
         "timeout"}
-ENV_KEYS = {"name", "secret", "required"}
+ENV_KEYS = {"name", "secret", "required", "about"}   # about: one line the hosting page shows under the setting
 SIZES = ("small", "medium", "large")
 RUNS = ("container", "function")
 HANDLER = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_/]*\.[A-Za-z_][A-Za-z0-9_]*")     # service/app.lambda_handler
@@ -76,6 +76,8 @@ def check_settings(m) -> list[str]:
         for flag in ("secret", "required"):
             if flag in e and not isinstance(e[flag], bool):
                 bad.append(f"{w}: {flag} is true or false")
+        if "about" in e and (not isinstance(e["about"], str) or not 0 < len(e["about"]) <= 300 or "\n" in e["about"]):
+            bad.append(f"{w}: about is one line of up to 300 characters, what the setting is")
         if SECRETISH.search(name) and e.get("secret") is not True:
             bad.append(f"{w}: {name} looks like a secret: mark it \"secret\": true")
     return bad
