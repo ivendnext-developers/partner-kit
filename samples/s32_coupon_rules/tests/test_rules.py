@@ -192,8 +192,8 @@ class Cap(unittest.TestCase):
                          "Coupon MIN50 needs a sale of AED 50.005; this sale is AED 49.500. Remove a coupon, or add to the sale.")
 
     def test_a_capped_coupon_on_a_refund_is_refused_whatever_the_total(self):
-        """Only a no-receipt exchange that sells reaches the return stage with a coupon (the till clears a return's own);
-        its total is paid back, so a capped coupon there would pay its discount out as money."""
+        """A backstop: no coupon reaches a return at today's till (a return's coupons are cleared, and a coupon cannot ride
+        beside a returned item); should one arrive, its total is paid back, so a capped coupon there is refused."""
         for minor in (-150000, 0, 500000):
             out = coupons.on_check(capped(["C100"], minor, stage="return"), CAPPED, Counter())
             self.assertEqual(out, {"verdict": "refuse", "reason": "Coupon C100 needs a sale of AED 1,000.00 and cannot be "

@@ -9,18 +9,19 @@ record per coupon (``<prefix> Rule``, named by the coupon). ``on_check`` refuses
 - **first purchase only**, when the customer has bought before (``prior_sales``: the service counts the customer's
   submitted sales in the shop), or when the sale names no customer. The till always names one (its walk-in customer
   when the cashier has added none, who has usually bought before), so the refusal says to add the new customer;
-- **a sale needed for each use** (1.1.0): on a sale (``stage`` ``sale``), every coupon whose rule names an amount takes
-  that much of the sale's total (``totals.grand_minor``: as rounded for payment, after its discounts, the coupons' own
-  included, tax included; an exchange's is the difference the customer pays); when their sum is more than the total, the
-  coupons are refused. The amount is read in the sale's own currency, rounded up to its minor unit. The check sees each coupon once (``coupon_codes`` is a
-  set of names) and never a coupon's own amount, so the cap is per coupon: a coupon of 100 for each 1,000 spent is a rule
-  of 1,000 on each such coupon, and two of them need a sale of 2,000.
+- **a sale needed for each use** (1.1.0): on a sale (``stage`` ``sale``), every coupon whose rule names an amount
+  takes that much of the sale's total (``totals.grand_minor``: as rounded for payment, after its discounts, the
+  coupons' own included, tax included; an exchange's replacement is its own sale, judged at its own total); when their
+  sum is more than the total, the coupons are refused. The amount is read in the sale's own currency, rounded up to
+  its minor unit. The check sees each coupon once (``coupon_codes`` is a set of names) and never a coupon's own
+  amount, so the cap is per coupon: a coupon of 100 for each 1,000 spent is a rule of 1,000 on each such coupon, and
+  two of them need a sale of 2,000.
 
 A coupon with no rule record, or with its rule switched off, is never refused; a sale with no coupon is allowed without
-reading the shop. The group and first-purchase rules apply on every stage: an exchange rung without its sale carries the
-coupons of what it sells. A coupon that needs a sale is refused on the ``return`` stage (a no-receipt exchange the customer
-is paid back on: its sold lines would carry the coupon's discount into the money paid out); a return against its sale
-carries no coupon (the till clears them).
+reading the shop. The group and first-purchase rules are judged on whatever stage the check sends. No coupon reaches a
+return at the till today: a return's coupons are cleared, and a coupon cannot ride beside a returned item
+(``item_return.py``). Should one arrive on the ``return`` stage, a coupon that needs a sale is refused there (a
+backstop: on a refund its discount would be paid out as money).
 
 ⛔ No answer moves money: no price, no line, no payment. A refused sale is not paid: the till goes back to the basket,
 the cashier removes the coupon and presses Pay again. The door before any money refuses a sale without an allowing answer
@@ -125,7 +126,7 @@ def money(minor: int, exponent: int, currency: str = "") -> str:
 
 def over_cap(ctx: dict, rules: dict, mine: list) -> dict | None:
     """The refusal when the sale's capped coupons need more of its total than it has, else ``None``. On the ``return``
-    stage a capped coupon is always refused: only a no-receipt exchange that sells reaches it with a coupon, and its total
+    stage a capped coupon is always refused, a backstop: no coupon reaches a return at today's till, and there the total
     is what the customer is paid back, never a sale."""
     capped = [c for c in mine if rules[c].get("spend")]
     if not capped:
