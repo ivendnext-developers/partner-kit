@@ -11,8 +11,8 @@ vertical's) books a data set in datasets/, never code.
                           the register's lists, its open-tasks cards and the register's workspace.
                           This sample's catalogue installs every data set's books switched off: the shop switches its
                           own market's on. A shop's copy, built with --sets into a folder of its own (--out), holds only
-                          its own markets' books, switched on; its manifest still carries every data set's fields, so no
-                          build drops a field an earlier one installed.
+                          its own markets' books, also switched off (give it a version of its own); its manifest still
+                          carries every data set's fields, so no build drops a field an earlier one installed.
 
 A data set is a JSON file: its books, which items each takes (by class or item group), its routing conditions (at most
 three, all must hold, in the save-rule condition form), its columns and where each comes from, its numbering, balance,

@@ -1015,6 +1015,14 @@ class FormatFolds(unittest.TestCase):
         self.refused(lambda d: d["books"][0].__setitem__("id", "a_very_long_book_identifier_that_runs_on_and_on"),
                      "over 61 characters")
 
+    def test_every_name_still_fits_under_the_library_prefix(self):
+        # the App library lists this app renamed to IVENDNEXT RSR (7 letters longer): every name the prefix starts must
+        # still fit the shop's 61 characters, or the renamed copy is refused
+        m = build.build_manifest()
+        grow = len("IVENDNEXT RSR") - len(build.PREFIX)
+        names = [p["name"] for p in m["print_formats"]] + [n["name"] for n in m["notifications"]]
+        self.assertLessEqual(max(map(len, names)) + grow, build.NAME_MAX, max(names, key=len))
+
     def test_the_build_runs_the_shops_checker_before_it_writes(self):
         self.assertEqual(build.refusals(build.build_manifest()), [])
         m = build.build_manifest()
