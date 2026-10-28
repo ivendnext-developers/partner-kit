@@ -1,0 +1,9 @@
+{
+  "extension_point": "open_check",
+  "contract": "send_request",
+  "about": "Send every line not yet sent to its kitchen; a kitchen with no printer answers failed and marks nothing.",
+  "payload": {
+    "check": "CHECK-1",
+    "key": "k-0104"
+  }
+}

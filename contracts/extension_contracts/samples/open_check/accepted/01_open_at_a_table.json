@@ -1,0 +1,14 @@
+{
+  "extension_point": "open_check",
+  "contract": "open_request",
+  "about": "Table 12 for four, from a reservation.",
+  "payload": {
+    "store": "Main Store - MTC",
+    "pos_profile": "MPOS-TEST-OPEN",
+    "key": "k-0001",
+    "place": "TABLE-12",
+    "covers": 4,
+    "source": "front_of_house",
+    "source_ref": "RES-2210"
+  }
+}

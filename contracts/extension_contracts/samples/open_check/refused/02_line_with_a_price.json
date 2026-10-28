@@ -1,0 +1,17 @@
+{
+  "extension_point": "open_check",
+  "contract": "add_request",
+  "about": "A line that carries a rate: a check never holds a price.",
+  "expect_refusal": "A check holds what was ordered, never a price.",
+  "payload": {
+    "check": "CHECK-1",
+    "key": "k-0102",
+    "lines": [
+      {
+        "item_code": "MPOS-PLAIN-A",
+        "qty": 1,
+        "rate": 4.5
+      }
+    ]
+  }
+}

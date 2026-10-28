@@ -14,7 +14,7 @@ Rung 2 of the ladder (chapter 3), after configuration (chapter 4): anything that
 
 ## Steps
 
-1. **Get a key.** The retailer makes one integration user for your app, holding one narrow role (chapter 2; the recipe lists the role the bin sample needs). One app, one user. ⚠ **On a product before 2026-09-30 that key can do what an administrator can:** there every desk user also holds the Workspace Manager role, and with it a key could put content on a shared workspace that runs in the browser of whoever opens it. Since 2026-09-30 only a System Manager gets that role, and the manifest installer refuses an integration user that holds it (chapter 7). Keep the key in a secret store, never in code or chat, and rotate it at any doubt: *Generate Keys* again, and the old secret is refused at once (`401`).
+1. **Get a key.** The retailer makes one integration user for your app, holding one narrow role (chapter 2; the recipe lists the role the bin sample needs). One app, one user. **An app installed from a manifest with an event feed gets its own user from the install, from POS version 2.1.0.667** (step 5): use that one, and ask the retailer for no other. ⚠ **On a product before 2026-09-30 that key can do what an administrator can:** there every desk user also holds the Workspace Manager role, and with it a key could put content on a shared workspace that runs in the browser of whoever opens it. Since 2026-09-30 only a System Manager gets that role, and the manifest installer refuses an integration user that holds it (chapter 7). Keep the key in a secret store, never in code or chat, and rotate it at any doubt: *Generate Keys* again, and the old secret is refused at once (`401`).
 2. **Make the first calls from the collection, not from a library.** Every call is a plain HTTP file; `run.sh` sends them all with `curl` and `jq`:
 
    ```bash
@@ -31,7 +31,16 @@ Rung 2 of the ladder (chapter 3), after configuration (chapter 4): anything that
    ```
 
    Book the movement first, then update your own records with its name as the reason. ⚠ A booking call that times out may still have booked: look for it (a reference in its remarks, say) before you send it again.
-5. **Learn what happened from the event feed, not from webhooks.** The retailer's administrator registers your application: its name, the user your service reads as, and the record types you follow. From then on every change to a followed record adds one row to **your** queue, after the change commits. Your own writes are not sent back to you. Nothing is pushed, so nothing is lost while you are down: the rows wait. Your loop, in this order:
+5. **Learn what happened from the event feed, not from webhooks.** List the feed in your manifest under `registered_applications` (chapter 7): **one feed per app**, with every record type your app follows in that feed's `events`; a manifest with a second feed is refused. From POS version 2.1.0.667 the install makes the feed's record, switched off, and **your app's own user**, `<app>@integration.invalid`, named on it as the user your service reads as:
+   - it holds one role, `<PREFIX> Integration` (made empty if your manifest does not declare it); the retailer gives that role the reads your app needs, and nobody can give the user a password or another role;
+   - it works **through the API only**: it can never sign in to iVendNext Desk, even with a password;
+   - **its key:** an app hosted by CitiXsys is sent it by the retailer's site itself, after the install or an update (*Connect again* only when a key is lost); for an app you host yourself, the retailer makes it on that user (User, *Generate Keys*) and hands it to you;
+   - the uninstall removes the feed, then the user and its key;
+   - ⚠ **disabling the user does not stop its key** (a request signed with a key does not check it). To cut your app off, the retailer uninstalls it. A new key made on its user stops the old one, but an app hosted by CitiXsys is sent the newest key again at its next update;
+   - **the retailer's user licence:** the product marks this user as an app's, never a person's, by its address. Whether a site's own user licence counts it is the hosting's, not yet confirmed: until it is, a site at its user limit refuses the install with *"This site's licence has no room for another user, so the app's own user ⟨email⟩ could not be made. Ask iVendNext support to raise the site's user count, then install again."*, and removes what it made;
+   - an app installed before 2.1.0.667 gets its own user at its next version only if its feed still names no user (a user the retailer already named on the feed is kept, with its key), or when it is installed again.
+
+   The retailer ticks each record type on. From then on every change to a followed record adds one row to **your** queue, after the change commits. Your own writes are not sent back to you. Nothing is pushed, so nothing is lost while you are down: the rows wait. Your loop, in this order:
    - ask for the oldest events not yet done;
    - for each, skip it if you have seen it; otherwise, in **one transaction of your own**, act on it and record its id in your seen-set;
    - mark the page done.
@@ -82,7 +91,8 @@ The same shape (a cursor, a map of record ids, an idempotency key, a reconciliat
 - **Code inside the retailer's iVendNext.** Your server runs your logic; server scripts are switched off for partners. Logic during a sale means a till key answered by your server (chapter 6) or a sandboxed function (chapter 8).
 - **Changing money.** Prices, discounts, taxes and totals come from the retailer's own data; a connected app never writes them onto a sale.
 - **Your own copy of stock.** Your records may say *where* stock sits, never *how much* the retailer owns.
-- **A shared key, or an API-only user.** Every app has its own desk user, which is how it is meant to be counted and switched off. There is no sign-in grant between servers and no scoped key today: the role is the boundary, so keep it narrow.
+- **A shared key.** Every app has its own user: the one its install makes for its event feed (API only, from POS version 2.1.0.667), or, for an app with no feed, the integration user the retailer makes for it. There is no sign-in grant between servers and no scoped key today: the role is the boundary, so keep it narrow.
+- **A second event feed in one app** (from POS version 2.1.0.667): *"an app has one event feed: list every record type it follows in the first one's events"*.
 
 ## When your service is down, and when the till is offline
 
@@ -106,7 +116,7 @@ The same shape (a cursor, a map of record ids, an idempotency key, a reconciliat
 - **The nudge** (a webhook that tells you to pull) was not run; only its signature check was.
 - **Till-sale webhooks** were not exercised, and **disabling** an app's user to switch it off was not run (rotation was).
 - **Volume:** a few sales per run. Chapter 10's recipes ran larger, still sequentially. Nothing is measured near a large retailer's day.
-- **The licence count:** whether the retailer's user count counts an enabled app user is not confirmed.
+- **The licence count:** the product marks an app's own user by its address, never as a person's; whether a site's own user licence counts it is the hosting's and is not confirmed (on 2026-10-27 a hosted test site counted every user, and refused a new one at its limit). The kit has not installed an app with a feed on 2.1.0.667 yet.
 - **The sample bin service's `/pick`** is not retry-safe when its booking call times out; check first, as step 4 says.
 
 ### The pictures

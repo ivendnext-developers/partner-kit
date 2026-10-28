@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/save_rules.md @ b453a68eac6c, copied unchanged except the links, the framework's own calls (named by what they do), a customer's name and a reference to our board: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/save_rules.md @ 60147699cce4, copied unchanged except the links, the framework's own calls (named by what they do), a customer's name and a reference to our board: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Save rules
 
 **Contract:** [`save_rules.v1.schema.json`](../extension_contracts/save_rules.v1.schema.json)

@@ -1,0 +1,11 @@
+{
+  "extension_point": "open_check",
+  "contract": "open_request",
+  "about": "No request key: a lost answer could not be retried safely.",
+  "expect_refusal": "The request key is needed.",
+  "payload": {
+    "store": "Main Store - MTC",
+    "pos_profile": "MPOS-TEST-OPEN",
+    "label": "Window seat"
+  }
+}

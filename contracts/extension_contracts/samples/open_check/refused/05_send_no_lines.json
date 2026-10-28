@@ -1,0 +1,11 @@
+{
+  "extension_point": "open_check",
+  "contract": "send_request",
+  "about": "A send that names an empty list of lines.",
+  "expect_refusal": "Pick the lines to send.",
+  "payload": {
+    "check": "CHECK-1",
+    "key": "k-0105",
+    "line_ids": []
+  }
+}

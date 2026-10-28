@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ b453a68eac6c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ 60147699cce4, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Payer — your service pays part of a sale for someone else
 
 **Contract:** [`payer.v1.schema.json`](../extension_contracts/payer.v1.schema.json)
@@ -174,12 +174,13 @@ whose claim reference moved between two asks for the same sale reads as no cover
   The journal names its sale in `custom_mpos_payer_pos_invoice`. Read them with your integration user when the
   event feed says a sale was booked.
 - **A cancel in iVendNext Desk:** a sale the day has not posted yet takes its journal with it. Once a sale is
-  posted, its journal goes when its posted Sales Invoice is cancelled (or the day's closing is, on a shop that
-  posts each sale at once); the sale's own cancel alone leaves the journal, because its invoice still stands.
+  posted, its own cancel is refused while its Sales Invoice stands; cancelling that invoice takes the journal and
+  cancels the sale with it (or the day's closing is cancelled, on a shop that posts each sale at once: the journal
+  goes and the sale stays, no longer posted).
   Once a payment or another journal references your journal, the cancel is refused: *"⟨payer⟩'s share of this sale
   has moved since: return it instead."*
-- **A submitted sale with an empty `_payer_journal`** is a sale whose posted invoice was cancelled after it was
-  booked: its journal was cancelled with that invoice, and the sale keeps naming you (`_payer_customer` and the
+- **A submitted sale with an empty `_payer_journal`** is a sale whose day's closing was cancelled after it was
+  booked, on a shop that posts each sale at once: its journal was cancelled with that closing, and the sale keeps naming you (`_payer_customer` and the
   rest stay set). ⛔ It is no claim: you owe the shop nothing for it, it is not billed back, and the till does not
   return it (the books no longer hold the sale; a manager settles it in iVendNext Desk). The cancelled journal still names the sale.
 - **Your customer record must be billable** when the cashier asks and when the sale is booked: in use, not

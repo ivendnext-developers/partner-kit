@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/register_books.md @ b453a68eac6c, copied unchanged except the links and one decision id on the product's board: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/register_books.md @ 60147699cce4, copied unchanged except the links, one decision id and three framework asks on the product's board, and the framework's own readers (named by whose they are): its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Register books
 
 **Contract:** [`register_book.v1.schema.json`](../extension_contracts/register_book.v1.schema.json)
@@ -45,10 +45,10 @@ keeps each book's periods, and prints the book (section 7). Section 6 names what
 | `correction` | how a correction prints: `reversing_line`, `dated_note`, `signed_strike_through` or `signed_amendment` |
 | `required` | the columns a person's Desk submit may not leave empty (the till is never refused) |
 | `columns` | the printed columns: a label and the line columns it prints (`when`: `In` or `Out`; `group`: the band printed over the column, such as a received or an issued half, which a market's own layout prints (the door's plain print has fixed columns); `mark`); besides the line's own columns a column may print `balance_before`, the balance before the line, which the print works out (a condition or a required column cannot name it) |
-| `details` | up to six slots `detail_1` … `detail_6`, each a label and a source: a sale detail, a Desk field, or a record lookup `{"doctype", "match", "field"}` — `match` is `customer` (the Customer the movement names), `customer_link` (the one record of `doctype` whose `customer` field names that Customer, such as the pharmacy counter app's patient record) or `user` (the record named by the line's dispenser); a slot with no source prints empty for the shop to write in. A slot's `type` is `Data`, `Date` (it routes as a date) or `Age`: whole years at the movement's date from the date of birth its source gives (a date field, or text written `YYYY-MM-DD`), empty when the date is missing, is written any other way, or comes after the movement. A `customer_link` lookup that finds two records of one customer reads neither; the store's walk-in customer (a warehouse's cash customer or a till's default customer) reads none, so a patient record linked to it by mistake never reaches an anonymous sale |
+| `details` | up to six slots `detail_1` … `detail_6`, each a label and a source: a sale detail, a Desk field, or a record lookup `{"doctype", "match", "field"}` — `match` is `customer` (the Customer the movement names), `customer_link` (the one record of `doctype` whose `customer` field names that Customer, such as the pharmacy counter app's patient record) or `user` (the record named by the line's dispenser); a slot with no source prints empty for the shop to write in. A slot's `type` is `Data`, `Date` (it routes as a date) or `Age`: whole years at the movement's date from the date of birth its source gives (a date field, or text written `YYYY-MM-DD`), empty when the date is missing, is written any other way, or comes after the movement. A slot's `person` (`0` or `1`) says whether it holds a person's details, which are erased once the book's retention has passed (§8); not declared, a slot read from the customer or its linked record (`customer`, `customer_link`), or an `Age`, is a person's and any other is not (a dose, a prescriber's address). A `customer_link` lookup that finds two records of one customer reads neither; the store's walk-in customer (a warehouse's cash customer or a till's default customer) reads none, so a patient record linked to it by mistake never reaches an anonymous sale |
 | `authority` | where the prescription, permit or pass is read: `pos_sale_details`, `desk_fields`, `dispenser_licence` |
 | `columns_from` | per document type, the field `counterparty`, `counterparty_address` or `reference_no` is read from |
-| `retention_years` | lines are kept at least this long after the book's last entry |
+| `retention_years` | each line is kept whole at least this long after its period's last day (in a book without periods, after its entry); then a person's details may be erased from it (§8). A line is never removed. A law that keeps a person's details longer (the UAE: 25 years for health data) is this number |
 | `period_months`, `return_due_days` | both or neither: periods of 1, 2, 3, 4, 6 or 12 months from 1 January, the return due that many days after |
 | `count_role`, `count_witness`, `loss_count_hours` | who approves a register count, whether it needs a second signer, and the hours after a loss within which a full count is due (a book that keeps a balance only) |
 
@@ -174,10 +174,9 @@ document is not submitted, and no number is used.
   `detail_6`) is hashed as a digest under its own random salt, kept in the line's `person_seal`: such
   a column can be blanked, its salt replaced by its digest, and the chain still holds — the one edit
   that does. *Verify book* and the print's chain line then say how many entries had a person's
-  details erased, so an erasure is never silent. The door does not erase anything itself yet (the
-  shop's act once the law's period ends, with its record, is a later version's). A version-1 line
-  hashes those values themselves and is never blanked. Neither column is a register column a book
-  prints or routes on.
+  details erased, so an erasure is never silent, and an erased column that no act of erasure
+  recorded breaks the book (§8). A version-1 line hashes those values themselves and is never
+  blanked. Neither column is a register column a book prints or routes on.
 
 A print reads the lines and the book's state rows through `ivn_rows` by their own field names; the
 contract test `test_every_field_the_kits_register_prints_read_is_a_field_of_the_line_or_state` holds the
@@ -267,8 +266,7 @@ kit's prints to them.
   database (rolled back whole, never a gap).
 - A record lookup matches the customer, the record linked to the customer, or the user; matching
   the prescription's own patient (`match: "prescription"`) is refused: a carer buying for a patient
-  fills the line from the carer's own record, or none. A book read by role (who may read a line's
-  personal columns) is not declared yet.
+  fills the line from the carer's own record, or none.
 - A kept book is adopted at a reinstall with its stored declaration, not the new version's.
 - A book cannot change in an update, not even its title, cite or a column label: a corrected
   book ships under a new id, which numbers from 1. Changing the printed words in place is a later
@@ -278,6 +276,24 @@ kit's prints to them.
   value (`KE Controlled`) are not checked: a misnamed one matches no item and the book takes no
   line.
 - The register stores mapping is not checked against a premises: the shop maps it.
+- A person's columns are held back by their permission level, which the framework does not apply
+  everywhere: the Desk's group-by count on a list's sidebar and a link search still answer on a field
+  above a reader's level (asked of the framework, as for any role-limited field). System
+  Manager reads them only when a book names it its count role (Administrator always does).
+- Two *Erase persons' details* run at once on one store may list an entry in both records; each
+  record is still true.
+- A print format typed on *Retail Register Line* itself prints the line as the user rendering it may
+  read it (the line empties a person's columns before any print); a print mailed or queued carries
+  its sender's view, as every print does. A template that reads a line by itself
+  (the framework's own `get_doc` or `db.get_value`) reads it whole: print the book through the period
+  (`ivn_register_print`), never that way.
+- A book's `retention_years` cannot be shortened once it has lines, a mistyped one included: the
+  shop switches that book off and declares a new one (numbering from 1), the old book kept.
+- A book switched off before this version keeps its count role without the person columns' level
+  until it is saved switched on again (no shop ran the door before it).
+- A register store whose chain is broken can never be erased from: the act will not blank a line a
+  change may have touched, and a line is never rewritten. The shop takes the broken book to its
+  inspector.
 
 ## 7. The count, the period and the print
 
@@ -393,3 +409,55 @@ kit's prints to them.
   entry where the chain breaks; every print carries the same verdict for its store's whole chain, never
   only its own dates. A correction of an entry printed in an earlier period prints as a note naming
   that entry.
+
+## 8. Who reads a person's details, and when they are erased
+
+- **Who reads them.** A line's person columns — `counterparty`, `counterparty_address`,
+  `correction_note`, `detail_1` … `detail_6` — and its `person_seal` sit at permission level 1.
+  Saving a switched-on book gives its count role that level's read on the lines (System Manager too,
+  when a book names it); any other role reads a line without them, unless the shop gives it the
+  level in the core's *Role Permissions Manager*. The framework leaves them out of the line's form,
+  its lists and report, *Data Export* and `ivn_rows`; the record API returns them empty when it
+  reads one line (keys kept: an event-feed application's user reads `counterparty: null`) and leaves
+  them out of a list (an integration that copies the register elsewhere is given the level, or
+  knows an empty or missing column may be a hidden one). A print through `ivn_rows` or
+  `ivn_register_print(doc)` (every print of the book from its period) shows only what its viewer may
+  read, and the plain
+  print says *"A person's details are not shown: your role may not read them."* A level belongs to
+  the record type, not to a book: a role that reads one book's people reads every book's.
+- **When they are erased.** During a book's retention the register is kept whole, whatever a
+  person asks. After it, *Erase persons' details* on the book's form (its count role; never on a
+  schedule) asks a register store, an optional cut-off date (*entered up to*) and the shop's own
+  reference to the destruction record its market asks for (a committee's minutes, the inspector who
+  was present). It closes a volume at the last day whose retention has passed — today less
+  `retention_years`, or the shop's earlier cut-off — and blanks the person's columns of the lines
+  entered up to that day; in a book with periods, only a line whose period is signed off and ended
+  that long ago. A person's columns are the party columns on the line of a customer's document (a POS
+  sale, a Desk sale or credit note, a delivery: never a supplier's or another store's) and each detail
+  the book declares a person's: declare `person: 1` on a detail that names the person supplied or a
+  third person (Kenya's purchaser's occupation and purpose, the name and address of the person giving
+  a certificate) — the default reads only the customer's own record and an age as a person's.
+  A line is erased together with every correction of it, and only when all of them are due; a line
+  written before version 2 is never erased (the act says how many it kept). The quantities, the
+  balance and the chain stay: each erased column's digest is what the hash covers, so the line and a
+  signed-off period's sealed anchors still verify. An act erases at most 5,000 entries; run it again
+  for the rest (it says so). It refuses a book whose chain is broken, and a register store that is
+  not the book's. A book's `retention_years` is never shortened once it has lines (lengthened, for
+  the UAE's 25 years, it may be).
+- **The record of it.** Each act writes one *Retail Register Erasure*: the book, the register store,
+  the day its volume closed, the retention in force, who and when, the shop's reference, how many
+  entries it erased and kept, the erased entries as the printed book numbers them (*Entry numbers*,
+  per item where each item numbers from 1) and each erased line with its columns. It is never changed
+  or deleted. *Verify book* checks every erased column against these records: one no record names
+  reads *"Broken at entry N of … : a person's details were erased with no record of the erasure."*,
+  so a blanking made outside the act reads broken. The record is not hashed or anchored: whoever can
+  write the database can write a record too, so the market's own signed destruction record is the
+  anchor outside it. A printed erased entry says *"A person's details erased after the retention."*
+  in its name cell; a print format reads `erased` on each line from `ivn_register_print(doc)`, and
+  may read the records through `ivn_rows`.
+- **Backups.** An erased value stays in the site's backups and the database's own logs until they
+  rotate out; the shop's backup retention is part of its destruction record.
+- **What it does not erase.** The sale, delivery or receipt the line was written from keeps its own
+  customer, and the pharmacy app's patient record its own details: each is erased by its owner's
+  process. The staff columns (`dispenser`, `signed_by` and their names) and the prescription or
+  permit number (`authority_no`, which routing reads) are not a person's columns here.

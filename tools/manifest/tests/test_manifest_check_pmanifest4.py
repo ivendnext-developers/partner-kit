@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_manifest_check_pmanifest4.py,
-# at development b453a68eac6cc7e039f28a94f6f37147f151ec38; changed: the imports (the list of every-kind manifests, which the product names in its own module, is written here), the fixture folder, a note on how the file is copied (removed), and three print formats that read through the framework's name (now through the helper's own name: warned and refused either way).
+# at development 60147699cce4f7bd35f73e111649ce108eb2dcc2; changed: the imports (the list of every-kind manifests, which the product names in its own module, is written here), the fixture folder, a note on how the file is copied (removed), and three print formats that read through the framework's name (now through the helper's own name: warned and refused either way).
 # A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """A multi-select field, a settings record of the package's own (a single) and a notification's own print. Stdlib only.
 

@@ -1,0 +1,22 @@
+{
+  "extension_point": "open_check",
+  "contract": "add_request",
+  "about": "A round: two of one dish with a note, one with a choice.",
+  "payload": {
+    "check": "CHECK-1",
+    "key": "k-0003",
+    "lines": [
+      {
+        "item_code": "MPOS-PLAIN-A",
+        "qty": 2,
+        "note": "No ice"
+      },
+      {
+        "item_code": "MPOS-PLAIN-B",
+        "qty": 1,
+        "seat": "2",
+        "course": "main"
+      }
+    ]
+  }
+}

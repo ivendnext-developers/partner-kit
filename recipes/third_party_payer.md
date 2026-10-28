@@ -89,7 +89,7 @@ use the till's own *On Account* tender instead: there is nothing to split.
    mode and, in the same transaction, a journal moving it to `payer_customer`; the sale stores your answer and each
    line's shares (payer page §4b). On each booked sale the feed names, read the POS Invoice (never the posted Sales
    Invoice, which may merge several sales) with your integration user and make its claim. A submitted sale with an
-   empty `custom_mpos_payer_journal` is no claim: its invoice was cancelled after it was booked.
+   empty `custom_mpos_payer_journal` is no claim: its day's closing was cancelled after it was booked, on a shop that posts each sale at once (from POS version 2.1.0.667 a posted sale's own cancel is refused while its Sales Invoice stands, and cancelling that invoice cancels the sale with it).
 7. **A return gives your share back, never the customer** (payer page §4c): the till's Returns works out each
    returned line's share and books a `Return` journal. Read the return from the feed and reduce the claim's lines by
    `custom_mpos_payer_back`, once.

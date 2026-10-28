@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ b453a68eac6c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ 60147699cce4, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner check
 
 **Contract:** [`partner_check.v1.schema.json`](../extension_contracts/partner_check.v1.schema.json)
@@ -231,7 +231,7 @@ shop, on the server online and on the till offline. It has no network: nothing i
   module it holds until it next reads a snapshot; such a sale syncs flagged, never refused.
 - **What it reads.** The same `check/1` context as section 3, never a line's `batch_no` or `serial_no` (`offered_tenders` is empty on the till
   offline; a line priced above its list reads `discount_minor` 0; a remote service reads 0 for a price
-  typed above the list too, since the typed price is the line's list, as in iVendNext Desk), written as canonical JSON: keys sorted, no spaces, raw UTF-8, whole
+  typed above or below the list too, since the typed price is the line's list, as in iVendNext Desk), written as canonical JSON: keys sorted, no spaces, raw UTF-8, whole
   numbers only from 0 to 2⁵³−1, nested at most 32 deep. Server and till write the same bytes for the same
   sale.
 - **What it answers.** `run()` reads the context with `read_input`, writes one answer with `write_output`

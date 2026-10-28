@@ -25,6 +25,7 @@ TITLE_DOOR = {
     "Fiscal reader": "fiscal-reader",
     "Label layout": "label-layout",
     "List mark": "manifest",           # a manifest kind (list_marks): any ready manifest card satisfies this door
+    "Open check — a table's running order, paid once (`open_check/1`)": "open-check",
     "Partner fulfil — a code your service makes for a paid sale line": "fulfil-at-sale",
     "Partner page": "partner-page",
     "Payer — your service pays part of a sale for someone else": "payer",

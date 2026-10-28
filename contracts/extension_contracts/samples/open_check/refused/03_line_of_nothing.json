@@ -1,0 +1,16 @@
+{
+  "extension_point": "open_check",
+  "contract": "add_request",
+  "about": "A quantity of zero.",
+  "expect_refusal": "A quantity must be more than nothing.",
+  "payload": {
+    "check": "CHECK-1",
+    "key": "k-0103",
+    "lines": [
+      {
+        "item_code": "MPOS-PLAIN-A",
+        "qty": 0
+      }
+    ]
+  }
+}
