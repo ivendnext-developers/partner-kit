@@ -12,6 +12,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path[:0] = [str(HERE.parent), str(HERE)]
 import coupons  # noqa: E402
+from decimal import Decimal  # noqa: E402
 
 RECORDS = [{"name": "WELCOME10", "coupon": "WELCOME10", "enabled": 1, "first_purchase_only": 1, "customer_group": None},
            {"name": "STAFF15", "coupon": "STAFF15", "enabled": 1, "first_purchase_only": 0, "customer_group": "Staff"},
@@ -134,15 +135,107 @@ class Rules(unittest.TestCase):
             self.assertTrue(out["reason"].endswith(("Remove it, or add the new customer.", "Add the customer to the sale first.")), out)
 
 
+CAPPED = coupons.rules_of([{"coupon": "C100", "enabled": 1, "spend_per_use": 1000},
+                           {"coupon": "C100B", "enabled": 1, "spend_per_use": 1000},
+                           {"coupon": "C100C", "enabled": 1, "spend_per_use": 1000},
+                           {"coupon": "MIN50", "enabled": 1, "spend_per_use": "50.005"},
+                           {"coupon": "FIRSTCAP", "enabled": 1, "first_purchase_only": 1, "spend_per_use": 1000},
+                           {"coupon": "GRPCAP", "enabled": 1, "customer_group": "Staff", "spend_per_use": 1000}])
+
+
+def total(minor, exp=2):
+    ctx = context()
+    ctx["totals"] = dict(ctx["totals"], grand_minor=minor)
+    ctx["currency_exponent"] = exp
+    return ctx
+
+
+def capped(codes, minor, exp=2, stage="sale", group="Retail"):
+    ctx = total(minor, exp)
+    ctx.update(coupon_codes=sorted(codes), stage=stage, customer_group=group)
+    return ctx
+
+
+class Cap(unittest.TestCase):
+    """One coupon for each so much spent: the coupons on a sale may take at most floor(total / slice) uses."""
+
+    def test_one_coupon_needs_its_sale(self):
+        out = coupons.on_check(capped(["C100"], 99999), CAPPED, Counter())
+        self.assertEqual(out, {"verdict": "refuse", "reason": "Coupon C100 needs a sale of AED 1,000.00; this sale is "
+                                                              "AED 999.99. Remove a coupon, or add to the sale."})
+
+    def test_exactly_the_sale_needed_is_allowed(self):
+        self.assertEqual(coupons.on_check(capped(["C100"], 100000), CAPPED, Counter()), {"verdict": "allow"})
+
+    def test_two_coupons_need_twice_the_sale(self):
+        out = coupons.on_check(capped(["C100", "C100B"], 150000), CAPPED, Counter())
+        self.assertEqual(out["reason"], "Coupons C100, C100B need a sale of AED 2,000.00; this sale is AED 1,500.00. "
+                                        "Remove a coupon, or add to the sale.")
+        self.assertEqual(coupons.on_check(capped(["C100", "C100B"], 200000), CAPPED, Counter()), {"verdict": "allow"})
+
+    def test_floor_of_the_total_over_the_slice(self):
+        for n, minor, verdict in ((3, 299999, "refuse"), (3, 300000, "allow"), (2, 299999, "allow")):
+            codes = ["C100", "C100B", "C100C"][:n]
+            self.assertEqual(coupons.on_check(capped(codes, minor), CAPPED, Counter())["verdict"], verdict, (n, minor))
+
+    def test_an_uncapped_coupon_beside_takes_nothing(self):
+        self.assertEqual(coupons.on_check(capped(["C100", "PLAIN", "NOTRULED"], 100000), dict(CAPPED, **RULES), Counter()),
+                         {"verdict": "allow"})
+
+    def test_the_amount_rounds_half_up_in_the_sales_currency(self):
+        self.assertEqual(coupons.on_check(capped(["MIN50"], 5000), CAPPED, Counter())["verdict"], "refuse")
+        self.assertEqual(coupons.on_check(capped(["MIN50"], 5001), CAPPED, Counter()), {"verdict": "allow"})
+        self.assertEqual(coupons.on_check(capped(["MIN50"], 50, exp=0), CAPPED, Counter()), {"verdict": "allow"})  # no minor unit
+        self.assertEqual(coupons.on_check(capped(["MIN50"], 49, exp=0), CAPPED, Counter())["reason"],
+                         "Coupon MIN50 needs a sale of AED 50; this sale is AED 49. Remove a coupon, or add to the sale.")
+        self.assertEqual(coupons.on_check(capped(["MIN50"], 49500, exp=3), CAPPED, Counter())["reason"],
+                         "Coupon MIN50 needs a sale of AED 50.005; this sale is AED 49.500. Remove a coupon, or add to the sale.")
+
+    def test_a_return_is_never_capped(self):
+        self.assertEqual(coupons.on_check(capped(["C100"], 100, stage="return"), CAPPED, Counter()), {"verdict": "allow"})
+
+    def test_the_cap_reads_nothing_and_comes_before_the_count(self):
+        n = Counter({"CUST-1": 0})
+        out = coupons.on_check(capped(["FIRSTCAP"], 500), CAPPED, n)
+        self.assertIn("needs a sale of", out["reason"])
+        self.assertEqual(n.calls, [])
+        self.assertEqual(coupons.on_check(capped(["FIRSTCAP"], 100000), CAPPED, n), {"verdict": "allow"})
+        self.assertEqual(n.calls, ["CUST-1"])
+
+    def test_the_group_rule_comes_first(self):
+        self.assertIn("only for customers in Staff", coupons.on_check(capped(["GRPCAP"], 500), CAPPED, Counter())["reason"])
+        self.assertIn("needs a sale of", coupons.on_check(capped(["GRPCAP"], 500, group="Staff"), CAPPED, Counter())["reason"])
+
+    def test_a_switched_off_capped_rule_caps_nothing(self):
+        rules = coupons.rules_of([{"coupon": "OFF", "enabled": 0, "spend_per_use": 1000}])
+        self.assertEqual(coupons.on_check(capped(["OFF"], 1), rules, Counter()), {"verdict": "allow"})
+
+    def test_long_names_keep_the_amounts_and_the_instruction(self):
+        names = ["N" * 60 + str(i) for i in range(5)]
+        rules = coupons.rules_of([{"coupon": c, "enabled": 1, "spend_per_use": 999999999} for c in names])
+        for codes in (names[:1], names):
+            out = coupons.on_check(capped(codes, 1), rules, Counter())
+            self.assertTrue(len(out["reason"]) <= 140, out["reason"])
+            self.assertTrue(out["reason"].endswith("this sale is AED 0.01. Remove a coupon, or add to the sale."), out)
+            self.assertFalse(set("<>") & set(out["reason"]))
+
+
 class RulesOf(unittest.TestCase):
     def test_only_switched_on_records_that_name_a_coupon(self):
         self.assertEqual(sorted(RULES), ["PLAIN", "STAFF15", "VIPNEW", "WELCOME10"])
-        self.assertEqual(RULES["WELCOME10"], {"first": True, "group": ""})
-        self.assertEqual(RULES["STAFF15"], {"first": False, "group": "Staff"})
+        self.assertEqual(RULES["WELCOME10"], {"first": True, "group": "", "spend": 0})
+        self.assertEqual(RULES["STAFF15"], {"first": False, "group": "Staff", "spend": 0})
 
     def test_a_record_without_a_coupon_or_with_a_bad_group_is_harmless(self):
         out = coupons.rules_of([{"enabled": 1, "first_purchase_only": 1}, {"coupon": "X", "enabled": 1, "customer_group": 7}])
-        self.assertEqual(out, {"X": {"first": False, "group": ""}})
+        self.assertEqual(out, {"X": {"first": False, "group": "", "spend": 0}})
+
+    def test_a_sale_needed_is_a_positive_amount_or_nothing(self):
+        for value, want in ((1000, 1000), (1000.5, Decimal("1000.5")), ("250", 250), (0, 0), (None, 0), (-5, 0),
+                            (True, 0), ("abc", 0), ("NaN", 0), ("Infinity", 0), ([1], 0)):
+            out = coupons.rules_of([{"coupon": "C", "enabled": 1, "spend_per_use": value}])
+            self.assertEqual(out["C"]["spend"], want, value)
+        self.assertEqual(coupons.rules_of([{"coupon": "C", "enabled": 1}])["C"]["spend"], 0)   # a record from 1.0.1
 
     def test_anything_but_a_list_of_records_is_refused(self):
         for bad in (None, {"data": []}, ["x"], "[]"):
@@ -160,7 +253,11 @@ class Context(unittest.TestCase):
                     {"point": "check/1", "context": dict(context(), coupon_codes="WELCOME10")},
                     {"point": "check/1", "context": dict(context(), coupon_codes=[1])},
                     {"point": "check/1", "context": dict(context(), customer=5)},
-                    {"point": "check/1", "context": dict(context(), stage="layaway")}, []):
+                    {"point": "check/1", "context": dict(context(), stage="layaway")},
+                    {"point": "check/1", "context": dict(context(), currency_exponent=True)},
+                    {"point": "check/1", "context": dict(context(), currency_exponent=5)},
+                    {"point": "check/1", "context": dict(context(), totals={"grand_minor": "1250"})},
+                    {"point": "check/1", "context": dict(context(), totals=None)}, []):
             with self.assertRaises(ValueError):
                 coupons.check_context(bad)
 
