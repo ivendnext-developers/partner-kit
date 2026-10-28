@@ -55,6 +55,8 @@ check("an empty setting is left out; a card order sends no e-mail", JSON.stringi
 check("the order carries the folder it is built from", p.github.folder === "services/a");
 check("no folder given, none sent (never \".\" over one set by hand)",
   !("folder" in h.orderPayload({ appJson: "{}", copies: [], folder: "." }, "order", "x").github));
+check("a required plain setting left empty is named, a secret is not",
+  JSON.stringify(h.missingRequired({ env: [{ name: "A", required: true }, { name: "B", required: true, secret: true }, { name: "C" }] }, { A: " " })) === '["A"]');
 check("a schedule is read as the hosting reads it", h.scheduled({ schedule: { pass: "x" } }) && !h.scheduled({ schedule: {} }) && h.scheduled({ timeout: 0 }));
 check("a scheduled app's schedule reaches the hosting, which refuses it",
   "schedule" in h.appSettings({ app: "a", schedule: { pass: "rate(1 minute)" } }) && "timeout" in h.appSettings({ app: "a", timeout: 120 }));
