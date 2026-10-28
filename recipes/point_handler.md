@@ -73,7 +73,7 @@ The till refuses in words, with **nothing added to the sale**, never a partial a
 
 ## What is coming
 
-- **Keys declared from data:** a System Manager adds the Retail Remote App Key record by hand (step 6), or your manifest declares it (`remote_keys`: `recipes/manifest.md`). **From the release that carries it,** a key your manifest declares is ready in POS Studio > Apps once the app is installed: the consent on the install screen is the key's consent, and the store switches the key on there. Until then it installs switched off with consent not given.
+- **Keys declared from data:** a System Manager adds the Retail Remote App Key record by hand (step 6), or your manifest declares it (`remote_keys`: `recipes/manifest.md`). **From POS build 2.0.0.646** a key your manifest declares is ready in POS Studio > Apps once the app is installed: the consent on the install screen is the key's consent, and the store switches the key on there. On an older build it installs switched off with consent not given.
 - **Shipped since:** a check before tender that may allow, refuse with a reason, or ask the cashier, before payment: its own door ([the till guard recipe](till_guard.md), `samples/s23_till_guard/`).
 
 ## Technical notes

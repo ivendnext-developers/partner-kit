@@ -16,7 +16,7 @@ verified: 2026-10-18 · bench
 A manifest: a Report Builder report of the web orders still to pick, two fields on the delivery note that can be set after it is submitted, *Handed over* (a list column and filter: the Delivery Note list filtered on Status To Bill or Completed, Is Return No, % Returned less than 100, Handed over No, Customer's Purchase Order No set, the store's warehouse and a date on or after the install is the waiting list) and *Collected by*, and a workspace that opens both. A web order is an order with the web store's order number. Nothing leaves the retailer's iVendNext.
 
 ## Limits
-- The lists are in Desk. The till's own pickup board lists till sales only, and a page on the till opens only over a sale.
+- The lists are in Desk. From POS version 2.1.0 the workspace is never in the Desk's menu: the retailer's administrator opens it from the App library, and store staff find it with the search bar. The till's own pickup board lists till sales only, and a page on the till opens only over a sale.
 - Who handed an order over, and when, is the delivery note's own history, not a field.
 - The waiting list is a filtered list, not a report: a report cannot use a field its own manifest adds.
 - An order returned before collection stays on the list (a return does not yet update its original): cancel its note instead.

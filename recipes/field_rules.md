@@ -22,7 +22,7 @@ Field rules give a retailer its own say over the fields the till shows, per till
      {"theme": "PP Partner Till", "surface": "customer_create", "field": "phone", "action": "require"}]
    ```
 
-   The screens and what each takes: `customer_create` (hide phone, email, more details; relabel name, phone, email; require phone, email), `customer_card` (hide or relabel member since, lifetime, visits, points; hide phone; show Customer fields), `cart_line` (relabel item name, quantity; show Item fields), `item_result` (hide or relabel the item code; show Item fields), `sale_details` (hide or relabel an optional sale detail). One action per screen and field; a label is at most 40 characters.
+   The screens and what each takes: `customer_create` (hide phone, email, more details; relabel name, phone, email; require phone, email; from POS version 2.1.0, show up to three of the shop's own Customer fields, asked for on the new-customer sheet and the till's customer edit: the field rules page, §7e), `customer_card` (hide or relabel member since, lifetime, visits, points; hide phone; show Customer fields), `cart_line` (relabel item name, quantity; show Item fields), `item_result` (hide or relabel the item code; show Item fields), `sale_details` (hide or relabel an optional sale detail). One action per screen and field; a label is at most 40 characters.
 
 2. **They are live at install.** Field rules have **no switch**: a *require* rule is enforced by the server as soon as the manifest installs, and the others reach each till that wears the theme at its next start. Tell iVendNext before you install.
 

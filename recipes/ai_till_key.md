@@ -69,7 +69,7 @@ The service writes one line per request: the request id, the status and the mill
 
 ## What we would like to improve
 
-- A partner who ships only data needs no hand step: a manifest declares the **Retail Remote App Key** record (`remote_keys`, [the manifest recipe](manifest.md)), and from the release that carries it the key is ready in POS Studio > Apps once the app is installed.
+- A partner who ships only data needs no hand step: a manifest declares the **Retail Remote App Key** record (`remote_keys`, [the manifest recipe](manifest.md)), and from POS build 2.0.0.646 the key is ready in POS Studio > Apps once the app is installed.
 
 ## Technical notes
 

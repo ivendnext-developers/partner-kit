@@ -56,6 +56,8 @@ The till is closed to your JavaScript, not to your screens (rule 4, chapter 3). 
 
 Some things a retailer calls a screen need none of yours. A choice offered when an item is scanned, such as three extended warranties to pick from, is the till's own item options or cross-sell suggestion, set up as configuration (the cards *extended-warranty-as-item* and *offer-add-on-at-scan*).
 
+The screen a till opens on is the store's choice, not a partner's: from POS version 2.1.0 a till theme's *Opens to* (POS Studio) names it, *Layaway* the one offered today, and the till opens there only where the POS Profile's own switch for that screen is on and the cashier may use it. A theme never gives a capability, and your own screen cannot be chosen.
+
 A need that fits no moment is a request for an extension point (chapter 9). Two doors a developer asked for are not available today: a capture that offers the cashier a choice, and a partner page that opens on its own at a moment of the sale instead of from a key.
 
 ## Steps
