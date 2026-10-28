@@ -29,8 +29,8 @@ Two departures from that add-on, on purpose:
    sale's own discount, and the payer's share plus the patient's always equals the sale's total, to the cent.
 3. **The shop's own promotions are the plan's choice.** The add-on cleared every promotion on an insured line and gave
    only the insurer's own discount. Here a plan's tick *The shop's own promotions apply on this plan* says whether the
-   shop's pricing rules price a sale on it (the payer door switches them off when it is clear); whatever discount the
-   sale then carries is split by the rules below.
+   shop's promotions price a sale on it (the payer door switches them off when it is clear; a coupon, a staff discount
+   and an old-style pricing rule still apply); whatever discount the sale then carries is split by the rules below.
 2. **A return is never re-calculated.** The add-on ran the split again on negative amounts, and its 2024 generic version
    clamped the patient's share at zero, which gave a refunded patient nothing back. Here a return gives back each returned line's own
    shares from the claim, in proportion to the quantity returned.
@@ -57,6 +57,7 @@ WORDS = {
     "no_member": "{customer} has no cover with {payer} today.",
     "plan_off": "{plan} is not active today.",
     "plan_currency": "{plan} is priced in another currency than this sale.",
+    "plan_list": "{plan} prices its sales on {plan_list}: put the invoice on that price list, then ask the payer again.",
     "not_on_list": "{item} is not covered by {payer}'s price list.",          # VR-29
     "zero_on_list": "{item} has no price on {payer}'s price list.",           # VR-36
     "not_covered": "{item} is not covered by {plan}: the customer pays it.",  # informational, never a refusal
@@ -126,7 +127,8 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
              list_prices: dict | None = None, payer: dict | None = None) -> dict:
     """The payer door's coverage answer in the sale's own decimals (``door_coverage`` turns it into ``payer/1``'s answer).
 
-    request: {sale_ref, customer, date (YYYY-MM-DD), currency, precision, prescription?, payer_cap? (the most the payer pays),
+    request: {sale_ref, customer, date (YYYY-MM-DD), currency, price_list? (the list the sale is priced on), precision,
+              prescription?, payer_cap? (the most the payer pays),
               lines: [{line_id, item_code, item_group, gtin, qty, uom, conversion_factor, rate, amount, discount}]}
       ``amount``  what the line costs the customer, tax included, after the sale's discount (the till's line total);
       ``discount`` the discount the shop's pricing gave on it, on the same basis (0 when none).
@@ -141,7 +143,8 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
     places = int(request.get("precision", 2))
     payer_title = (payer or {}).get("title") or (plan or {}).get("payer") or "the payer"
     names = {"customer": request.get("customer") or "The customer", "payer": payer_title,
-             "plan": (plan or {}).get("title") or (plan or {}).get("name") or "The plan"}
+             "plan": (plan or {}).get("title") or (plan or {}).get("name") or "The plan",
+             "plan_list": (plan or {}).get("price_list") or ""}
     base = {"contract": CONTRACT, "sale_ref": request.get("sale_ref"), "payer": (plan or {}).get("payer"),
             "plan": (plan or {}).get("name"), "member": (member or {}).get("name"),
             "claim_ref": claim_ref(request.get("sale_ref"), (plan or {}).get("payer")),
@@ -160,6 +163,10 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
         return no_cover("plan_off")
     if plan.get("currency") and request.get("currency") and plan["currency"] != request["currency"]:
         return no_cover("plan_currency")    # its limits and its list are in its own currency, never converted here
+    if plan.get("price_list") and request.get("price_list") and plan["price_list"] != request["price_list"]:
+        # the till prices a plan's sale on the plan's list; a Desk invoice keeps its own (payer.md §7): never split
+        # the store's price as if it were the payer's tariff
+        return no_cover("plan_list")
 
     p = D(plan.get("copay_percent")) / 100
     limit = D(plan.get("invoice_upper_limit"))
@@ -291,7 +298,8 @@ def door_coverage(context: dict, plan: dict | None, member: dict | None, custome
         lines.append(dict(l, amount=amount, discount=discount, rate=rate))
     total = major(context["total_minor"])
     request = {"sale_ref": context.get("sale_ref"), "customer": context.get("customer"), "date": context.get("date"),
-               "currency": context.get("currency"), "precision": exp, "lines": lines,
+               "currency": context.get("currency"), "price_list": context.get("price_list"), "precision": exp,
+               "lines": lines,
                "payer_cap": total + min(major(context.get("rounding_minor") or 0), ZERO)}
     out = coverage(request, plan, member, customer_barred, list_prices, payer)
     if out["answer"] == "no_cover":

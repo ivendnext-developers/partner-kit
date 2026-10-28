@@ -52,7 +52,7 @@ use the till's own *On Account* tender instead: there is nothing to split.
     "down_answer": "no_cover",
     "settings": {"prescription": {"reference": "ACME RXC Rx Number", "prescriber": "ACME RXC Prescriber",
                                   "prescriber_licence": "ACME RXC Prescriber Licence"},
-                 "bill_back_role": "ACME ICP Claims Clerk"}}
+                 "bill_back_role": "ACME ICP Integration"}}
    ```
 
    - list the address in `allowed_urls`; `timeout_seconds` is at most 5 (3 when left out); the only down answer is

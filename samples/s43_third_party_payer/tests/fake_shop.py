@@ -130,7 +130,7 @@ class FakeShop:
     def book(self, name, lines, doctype="POS Invoice", **kw):
         """A sale as the payer door books it (payer.md §4b: its fields' own names, from ``app.DOOR``), with its feed
         event. The tests write the short names below; each is stored under the door's name."""
-        doc = {"name": name, "customer": "C1", "posting_date": "2026-10-23", "set_warehouse": "Pharmacy Dispensary",
+        doc = {"name": name, "docstatus": 1, "customer": "C1", "posting_date": "2026-10-23", "set_warehouse": "Pharmacy Dispensary",
                "is_return": 0, "payer_code": "GEN-INS", "payer_plan": "Generic Silver", "payer_member": "m1",
                "payer_claim_ref": f"GEN-INS-{name}", "payer_prescription": "RX-77", "payer_prescriber": "Dr A",
                "payer_prescriber_licence": "L-1", "payer_journal": f"JV-{name}", "items": lines}

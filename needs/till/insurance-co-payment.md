@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/third_party_payer.md
 sample: samples/s43_third_party_payer
 request: -
-verified: run by the product 2026-10-25 and 2026-10-26 (POS train T18's lane and train walks, phone, counter and tablet frames: the Payer tile, a cover taken, the payer's share billed to it and the rest paid in cash or by card, a line the payer refuses, the plan's prices, a return giving the payer's share back, the day closed); not run by a kit sample
+verified: run by the product 2026-10-25 and 2026-10-26 (POS train T18's lane and train walks, phone, counter and tablet frames: the Payer tile, a cover taken, the payer's share billed to it and the rest paid in cash or by card, a line the payer refuses, the plan's prices, a return giving the payer's share back, the day closed); and by kit sample S43 0.2.0 on a POS 2.1.0 site (2026-10-28: an unlisted and a zero-priced line refused in the payer's words, a covered sale, a return giving the payer's share back, a rejected claim billed to the customer)
 ---
 ## What you build
 A service for the *payer* extension point (`payer/1`, POS version 2.1.0.666 and later). When the cashier presses **Payer** on a named customer's sale, the till asks your service which covers the customer holds, then what you pay on each line. Your share is booked as owed by your own customer record on the retailer's books, never taken as a payment, and the customer pays the rest with the till's other tenders. A return gives your share back, and `ivendnext_mpos.api.v1.payer_bill_back` bills a rejected claim back to the customer. Sample S43 (`samples/s43_third_party_payer`) keeps the payers, plans, members and claims as records; the contract and its sixteen samples are on the payer page (`contracts/pages/payer.md`).

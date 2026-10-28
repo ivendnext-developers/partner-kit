@@ -80,7 +80,7 @@ class Base(unittest.TestCase):
         lines = [door_line(l) for l in kw.pop("lines", LINES)]
         body = {"call": "coverage", "sale_ref": "PHD-26-0001", "customer": "C1", "member": "m1", "date": "2026-10-23",
                 "currency": "KES", "currency_exponent": 2, "store": "Pharmacy Dispensary", "pos_profile": "PHD",
-                "operator": "cashier@example.com", "price_list": "Standard Selling", "tax_included": True,
+                "operator": "cashier@example.com", "price_list": "Generic Insurer Prices", "tax_included": True,
                 "prescription": None, "lines": lines, "total_minor": sum(l["amount_minor"] for l in lines),
                 "rounding_minor": 0}
         body.update(kw)
@@ -310,6 +310,13 @@ class Door(Base):
         out = self.coverage(lines=[line], tax_included=False)[1]
         self.assertEqual(out["totals"]["patient_share_minor"], 2100)
 
+    def test_a_desk_invoice_not_priced_on_the_plans_list_is_no_cover_in_words(self):
+        # a Desk invoice keeps its own list (payer.md §7); split on the store's price it would claim the wrong tariff
+        out = self.coverage(price_list="Standard Selling")[1]
+        self.assertEqual((out["answer"], out["code"]), ("no_cover", "plan_list"))
+        self.assertIn("put the invoice on that price list", out["message"])
+        self.assertEqual(contract_errors("coverage_answer", out), [])
+
     def test_the_old_wire_is_refused(self):
         old = {"contract": "payer/1", "call": "covers", "customer": "C1"}
         self.assertEqual(self.call("/icp/payer", old, "payer")[0], 400)
@@ -474,6 +481,16 @@ class Claims(Base):
         line = self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0010")["lines"][0]
         self.assertEqual((float(line["qty"]), float(line["returned_qty"])), (1.0, 1.0))
 
+    def test_a_claim_whose_sale_was_cancelled_after_it_was_built_never_goes_in_a_file(self):
+        self.booked("PHD-26-0011")
+        self.booked("PHD-26-0012")
+        self.build()
+        self.shop.find("POS Invoice", "PHD-26-0012").update(docstatus=2, custom_mpos_payer_journal=None)
+        code, out = self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
+        self.assertIn("1 taken out: their sale was cancelled.", out["message"]["body"])
+        self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0012")["status"], "Returned")
+        self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0011")["status"], "Submitted")
+
     def test_the_claims_file_puts_ready_claims_in_one_batch_and_marks_them_sent(self):
         self.booked()
         self.booked("PHD-26-0002")
@@ -596,3 +613,53 @@ class Claims(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ManyShops(unittest.TestCase):
+    """The App library's hosted copy: one service, many shops (tools/app_template/service/shops.py), the prefix
+    IVENDNEXT ICP. A COPY of samples/s51_refund_rules/tests/test_service.py ManyShops' shape (a defect there is a
+    defect here)."""
+    A, B = "shop-a.ivendnext.com", "shop-b.ivendnext.com"
+
+    def setUp(self):
+        import shops
+        import tempfile
+        self.store = shops.FileStore(os.path.join(tempfile.mkdtemp(), "shops.json"))
+        for site, n in ((self.A, "a"), (self.B, "b")):
+            self.store.put(site, {"site": site, "url": f"https://{site}", "secrets": {
+                "ivendnext_icp:sub:payer": f"payer-{n}", "user:icp@x": f"key-{n}:sec-{n}"}})
+        self.store.put("shop-c.ivendnext.com", {"site": "shop-c.ivendnext.com", "url": "https://shop-c.ivendnext.com",
+                                                "secrets": {"ivendnext_icp:sub:payer": "payer-c"}})   # no user key
+        self.shop = FakeShop().generic()
+        for c in self.shop.rows("Customer"):
+            if "pp_icp_insurance_barred" in c:
+                c["ivendnext_icp_insurance_barred"] = c.pop("pp_icp_insurance_barred")
+        for dt in [d for d in list(self.shop.tables) if d.startswith("PP ICP ")]:
+            self.shop.tables["IVENDNEXT ICP " + dt[len("PP ICP "):]] = self.shop.tables.pop(dt)
+        self.svc = app.Service({"IVN_LIBRARY_APP": "ivendnext_icp", "ICP_PREFIX": "IVENDNEXT ICP"}, store=self.store,
+                               api=self.shop, now=lambda: NOW)
+
+    def covers(self, secret, site, customer="C2"):
+        body = {"point": "payer/1", "context": {"v": 1, "point": "payer", "call": "covers", "customer": customer,
+                                                "date": "2026-10-23"}}
+        raw = json.dumps(body).encode()
+        ts = str(int(time.time()))
+        sig = base64.b64encode(hmac.new(secret.encode(), ts.encode() + b"." + raw, hashlib.sha256).digest()).decode()
+        headers = {"X-iVendNext-Timestamp": ts, "X-iVendNext-Signature": sig}
+        if site:
+            headers[app.shops.SITE_HEADER] = site
+        return self.svc.handle("POST", "/icp/payer", headers, raw)
+
+    def test_each_shop_is_read_with_its_own_key_and_the_librarys_prefix(self):
+        # C2 is barred under the library's field name (ivendnext_icp_insurance_barred), on either shop's own secret
+        self.assertEqual(self.covers("payer-a", self.A)[1]["refused"]["code"], "barred")
+        self.assertEqual(self.covers("payer-b", self.B)[1]["refused"]["code"], "barred")
+        self.assertEqual(self.covers("payer-a", self.A, customer="C1")[1]["covers"][0]["plan"], "Generic Silver")
+
+    def test_another_shops_secret_an_unknown_site_and_no_site_are_refused(self):
+        self.assertEqual(self.covers("payer-b", self.A)[0], 401)
+        self.assertEqual(self.covers("payer-a", "shop-z.ivendnext.com")[0], 401)
+        self.assertEqual(self.covers("payer-a", None)[0], 401)
+
+    def test_a_shop_without_its_integration_key_is_a_503_the_door_reads_as_no_cover(self):
+        self.assertEqual(self.covers("payer-c", "shop-c.ivendnext.com")[0], 503)

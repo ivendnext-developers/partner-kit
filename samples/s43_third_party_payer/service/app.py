@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""S43 — *Third-party payer*: the payer service the POS app's payer door calls (``payer/1``), and three Desk buttons
+"""S43 — *Third-party payer*: the payer service the POS app's payer door calls (``payer/1``), and six Desk buttons
 for the claims clerk (standard library only).
 
     POST /icp/payer            the payer door's two calls, ``covers`` and ``coverage`` (``payer/1``: the POS app's
@@ -440,9 +440,14 @@ class Service:
         names = [r["name"] for r in self._list(shop, self.dt("Claim"), ["name"],
                                                [["payer", "=", payer_name], ["status", "=", K.READY]])]
         claims = [self._one(shop, self.dt("Claim"), n) for n in names]
-        claims = [c for c in claims if c]
+        claims, gone = [c for c in claims if c and self.sale_stands(shop, c)], [c for c in claims if c and
+                                                                                 not self.sale_stands(shop, c)]
+        for c in gone:          # its sale was cancelled since the claim was built: nothing is owed (payer.md §4b)
+            K.move(c, K.RETURNED)
+            self.api.update(shop["url"], shop["key"], self.dt("Claim"), c["name"], {"status": c["status"]})
+        out_text = f" {len(gone)} taken out: their sale was cancelled." if gone else ""
         if not claims:
-            return {"text": f"No claim of {payer.get('title') or payer_name} is ready."}
+            return {"text": f"No claim of {payer.get('title') or payer_name} is ready.{out_text}"}
         text = K.claims_file(claims, {"code": payer_name})
         total = sum((C.D(c["payer_share"]) for c in claims), C.ZERO)
         batch = self.api.insert(shop["url"], shop["key"], self.dt("Claim Batch"), {
@@ -452,8 +457,13 @@ class Service:
         for c in claims:
             self.api.update(shop["url"], shop["key"], self.dt("Claim"), c["name"],
                             {"status": K.filed_as(c), "batch": bname, "submitted_on": self.today()})
-        return {"text": f"{len(claims)} claims in {bname}, {total} to claim. Send its file to the payer.",
+        return {"text": f"{len(claims)} claims in {bname}, {total} to claim. Send its file to the payer.{out_text}",
                 "batch": bname}
+
+    def sale_stands(self, shop, claim) -> bool:
+        """The claim's sale is still booked with its payer journal: cancelled since, it owes the payer nothing."""
+        doc = self._one(shop, claim.get("sale_doctype") or "POS Invoice", claim.get("sale"))
+        return bool(doc) and int(doc.get("docstatus") or 0) == 1 and bool(doc.get(DOOR["journal"]))
 
     def match(self, shop, remit_name) -> dict:
         """A payer's remittance against its claims: every line of one claim summed first, then settled once."""
