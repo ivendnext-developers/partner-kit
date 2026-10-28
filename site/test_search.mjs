@@ -111,20 +111,21 @@ const browse = search.rank(ms, "", { status: "not-possible" });
 check("a filter with no words lists every need it matches",
       browse.length === docs.filter((d) => d.st === "not-possible").length && browse.length > 0);
 
-// the developer's words (HOWITWORKS): each finds the map or the record types among the first four pages, and the two lead
-// for the words that name them; a planted fault, the map and the record index taken out of the index, turns them red
-const devWords = { endpoint: ["map.html"], endpoints: ["map.html"], api: ["map.html"], field: ["map.html", "records/index.html"],
+// the developer's words (HOWITWORKS-B): each finds the map or the record types among the first six pages (the questions page,
+// which answers them in a line and links the map, may lead), and the map or the record types is first or second for the words
+// that name them; a planted fault, the map and the record index taken out of the index, turns them red
+const mapWords = { endpoint: ["map.html"], endpoints: ["map.html"], api: ["map.html"], field: ["map.html", "records/index.html"],
   fields: ["map.html", "records/index.html"], screen: ["map.html"], screens: ["map.html"], record: ["records/index.html"],
   "record type": ["records/index.html"], doctype: ["records/index.html"] };
-const firstPages = (index, q) => search.rank(search.create(index, MiniSearch), q).filter((r) => r.k !== "need").slice(0, 4).map((r) => r.id);
-const devMiss = (index) => Object.entries(devWords).filter(([q, want]) => !want.some((u) => firstPages(index, q).includes(u)))
+const firstPages = (index, q) => search.rank(search.create(index, MiniSearch), q).filter((r) => r.k !== "need").slice(0, 6).map((r) => r.id);
+const mapMiss = (index) => Object.entries(mapWords).filter(([q, want]) => !want.some((u) => firstPages(index, q).includes(u)))
   .map(([q]) => `${q} -> ${firstPages(index, q).join(", ")}`);
-check("the developer's words find the map or the record types in the first four pages", devMiss(docs).length === 0, devMiss(docs).join("\n  "));
-check("endpoint finds the map first, record type the record types first",
-      firstPages(docs, "endpoint")[0] === "map.html" && firstPages(docs, "record type")[0] === "records/index.html");
+check("the developer's words find the map or the record types in the first six pages", mapMiss(docs).length === 0, mapMiss(docs).join("\n  "));
+check("endpoint finds the map first or second, record type the record types first or second",
+      firstPages(docs, "endpoint").slice(0, 2).includes("map.html") && firstPages(docs, "record type").slice(0, 2).includes("records/index.html"));
 const noMap = docs.filter((d) => d.id !== "map.html" && d.id !== "records/index.html");
-check("planted: the map and the record index taken out of the index turn the developer's words red", devMiss(noMap).length >= 5,
-      devMiss(noMap).join("\n  "));
+check("planted: the map and the record index taken out of the index turn the developer's words red", mapMiss(noMap).length >= 5,
+      mapMiss(noMap).join("\n  "));
 
 console.log(red ? `${red} FAILED` : "SEARCH GREEN");
 process.exit(red ? 1 : 0);

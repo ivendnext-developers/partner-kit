@@ -75,12 +75,13 @@ duplicate, twice, unique, repeated
 redeem, redemption, spend, burn
 docker, container, containerised, containerized, kubernetes, k8s
 tenant, multi-tenant, multitenant, instance, customer environment
-endpoint, callback, callback url, webhook url, api, api call, api method, web service, rest api
+endpoint, callback, callback url, webhook url
 conflict, collide, collision, clash, race condition
 outside system, external system, third-party system, third party system, other system, outside application
 telecom, telco, mobile operator, network operator, mobile network, carrier
 data flow, dataflow, data travels, data path, sequence diagram, hop by hop
 integration, integrate, integrating, interface, link to another system
 mobile plan, phone plan, tariff plan, airtime plan, sim plan
+api, api call, api method, web service, rest api
 screen, user interface, ui, front end, frontend
 record type, doctype, data model, entity

@@ -1,4 +1,4 @@
-# What you can use: endpoints, record types, fields and screens
+# What you can use: API endpoints, record types, fields and screens
 
 The developer's map. One page answers the questions a developer asks before building on iVendNext: **which API endpoints can my app call, which record types and fields can it read and write, what does iVendNext call on my service, what can a manifest add, and which screens can I make?** Each part is a table that links to its detail, and each is built from the kit file that defines it: when a name or a quoted sentence leaves its source, the site's build fails until the map follows.
 

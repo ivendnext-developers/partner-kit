@@ -1446,6 +1446,8 @@ class MapTests(unittest.TestCase):
         spec.write_text(spec.read_text("utf-8").replace("\npaths:\n", "\npaths:\n  /api/resource/Shipping%20Rule:\n    get:\n"
                                                         "      summary: List shipping rules\n      responses: {}\n", 1), "utf-8")
         self.assertTrue(any("Shipping Rule, which has no record page" in f for f in self.faults(root)), self.faults(root))
+        spec.write_text(spec.read_text("utf-8").replace("/api/resource/Shipping%20Rule:", "/api/v2/document/Loyalty%20Ledger/{name}/method/submit/:"), "utf-8")
+        self.assertTrue(any("Loyalty Ledger, which has no record page" in f for f in self.faults(root)), self.faults(root))
 
     def test_canary_a_new_method_name_without_its_line_is_red(self):
         root = self.kit()

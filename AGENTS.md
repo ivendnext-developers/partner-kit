@@ -4,7 +4,7 @@ This is the iVendNext partner kit. A person is using you to build something for 
 
 ## When the person asks how iVendNext apps work
 
-Where an app runs, whether it is Docker, where the customer's data lives, whether two customers collide, how many apps or containers to build, what publishing and hosting hand over: answer from `guide/01a_how_it_all_works.md` (the plain answers, each proved in its Technical notes) and the questions page, `site/pages/questions.md`, never from what another platform does. How the data travels through a link to an outside system is chapter 1c, [`guide/01c_how_the_data_travels.md`](guide/01c_how_the_data_travels.md). One app end to end, with every command: `guide/01b_one_app_end_to_end.md`.
+Where an app runs, whether it is Docker, where the customer's data lives, whether two customers collide, how many apps or containers to build, what publishing and hosting hand over: answer from `guide/01a_how_it_all_works.md` (the plain answers, each proved in its Technical notes) and the questions page, `site/pages/questions.md`, never from what another platform does. How the data travels through a link to an outside system is chapter 1c, [`guide/01c_how_the_data_travels.md`](guide/01c_how_the_data_travels.md). One app end to end, with every command: `guide/01b_one_app_end_to_end.md`. What an app can call, change and add (every endpoint in both directions, every manifest kind, every screen, every record type with its fields): the developer's map, `site/pages/map.md`, and `api/records/`.
 
 ## What you may rely on
 
