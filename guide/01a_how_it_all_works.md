@@ -33,10 +33,10 @@ You choose one of three:
 
 - **On your own server.** Any language, any cloud, your own machines. A Docker container is fine, and the kit's template ships one: one image runs the same on your laptop, on a test copy and in production. You connect each chain to it by hand ([chapter 14b](14b_deploying_your_app.md#where-it-can-run)).
 - **On iVendNext App Hosting, run by CitiXsys.** We run your service at `https://<app>.ivendnext.app`, in one of two ways, with the same code:
-  - **as a function**, for an app that answers presses (a till key, a check at Pay, a webhook) or works in short runs on a schedule (reading the event feed every minute, a daily job). It runs only when called, and you pay per call;
+  - **as a function**, for an app that answers presses (a till key, a check at Pay, a webhook) or works in short runs on a schedule (reading the event feed every minute, a daily job). It runs only when called;
   - **as a container**, for an app that needs a process that stays up (a connection it holds open, a queue it serves) or a job longer than 15 minutes. It runs all the time.
   
-  Each chain that installs your app from the App library connects to it by itself ([chapter 14b](14b_deploying_your_app.md#let-citixsys-host-it)).
+  Either way it is priced per app per month, and an app that runs as a function and is listed in the App library carries no hosting charge (section 7). Each chain that installs your app from the App library connects to it by itself ([chapter 14b](14b_deploying_your_app.md#let-citixsys-host-it)).
 - **Nowhere.** An app that is only settings and records has no service.
 
 ## 4. Where the customer's data lives
@@ -45,7 +45,7 @@ You choose one of three:
 
 **The chain's data stays in the chain's iVendNext.** Your app reaches it through the API, as your app's own user, with only the rights the chain gives that user.
 
-- **A till-key or check calculation keeps nothing.** iVendNext sends your service the sale it needs to judge; your service answers and forgets it.
+- **A till-key or check calculation keeps nothing of the sale.** iVendNext sends your service the sale it needs to judge; your service answers and forgets it. What your service caches between calls, it keeps per chain (S18 keeps each chain's rule for a minute).
 - **A link to an outside system declares what leaves.** Each address your app sends data to is in your manifest, and each service that sends data is switched off until the chain's administrator reads exactly which fields go there and ticks consent.
 - **Your app's own data** lives in the chain's own records (the record types your manifest adds), or in a store you run yourself. A store of your own is yours to declare and to look after.
 - **What App Hosting keeps:** for each chain your hosted app serves, only its connection (its address, the secrets its install made and its key's id), in your app's own encrypted table. Hosting gives your app no database and no lasting disk of its own for anything else.
@@ -94,7 +94,7 @@ A customer asks you for four things. Do you build four apps in four containers, 
 ## 8. How your app reaches the customer's iVendNext
 
 - **The install creates your records.** The chain's administrator installs your manifest; iVendNext creates each record type, field, role and button it lists. A new version is an update, not a schema migration you run.
-- **The install makes your app's own user.** If your manifest has an event feed, the install makes your app's own user, `<app>@integration.invalid`, which works through the API only and holds one role, `<PREFIX> Integration`. The chain grants that role the reads your app needs.
+- **The install makes your app's own user.** If your manifest has an event feed, the install makes your app's own user, `<app>@integration.invalid`, which works through the API only and holds one role, `<PREFIX> Integration`. The chain grants that role the reads your app needs. An app with no event feed that still calls the API is given a user the chain makes for it ([chapter 2](02_getting_started.md)).
 - **The site connects to your service.** For an app hosted on App Hosting and installed from the App library, the chain's site connects by itself once it is installed: it sends your service its library key, its address and the secrets the install made, including your app's user's key. For a service on your own server, the chain sends you those by hand.
 - **Then the three directions run.** Your service calls the API; the till calls your service at a till key or at Pay; and the event feed tells your service what changed (a sale, a return, a record), when your service reads it.
 
@@ -128,8 +128,6 @@ Publishing and hosting are **two separate steps**, and neither hands over your s
 | webhook, callback | a till key, a check, a Desk button, a webhook, or the event feed |
 | API credentials, service account | your app's own user and its key |
 
-**Next:** [1b. One app from your laptop to the till](01b_one_app_end_to_end.md), sample S18 followed step by step.
-
 ## Technical notes
 
 Each claim above, with the page or code that proves it:
@@ -150,3 +148,5 @@ Each claim above, with the page or code that proves it:
 - **Consent and declared addresses:** `allowed_urls` and each service's consent ([chapter 7](07_manifests.md); [chapter 14a](14a_deploying_to_a_chain.md)).
 - **What the cashier reads:** [chapter 6](06_till_keys.md#when-your-service-is-down-and-when-the-till-is-offline); a check's `down_answer` ([chapter 7](07_manifests.md); sample [S18](../samples/s18_rule_guard/README.md), *Where it shows*).
 - **Publishing and hosting:** [Publish your app](../site/pages/publish.md); [chapter 14b](14b_deploying_your_app.md#order-and-pay-online).
+
+**Next:** [1b. One app from your laptop to the till](01b_one_app_end_to_end.md), sample S18 followed step by step.

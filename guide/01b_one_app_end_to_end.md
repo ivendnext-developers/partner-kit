@@ -30,7 +30,7 @@ python3 samples/s18_rule_guard/tests/canaries.py
 
 The tests run the rule, the service over the wire with signed calls, every answer against the published contract, and **two retailers at once, each judged by its own records**. No iVendNext site is needed. The canaries break the code on purpose and show each test catching it.
 
-![The S18 tests run on a laptop: 61 tests, OK](img/1b-01-tests.png)
+![The S18 tests run on a laptop: 61 tests, OK, one of them skipped](img/1b-01-tests.png)
 
 To run the service itself on your laptop, as one retailer: `python3 service/app.py service/.env.local` from the sample's folder, with the settings its README lists.
 
@@ -140,8 +140,6 @@ For a service on your own server, the site does not connect by itself: the chain
 
 ![Uninstall: the app's records saved to a private file first, then everything the install added removed](img/1b-08-uninstall.png)
 
-**Next:** *Get started* gives you your own sandbox site to do all of this on: [Get started in five steps](../site/pages/start.md).
-
 ## Technical notes
 
 - **The tests and canaries:** `samples/s18_rule_guard/tests/` (61 tests, one of them skipped on a laptop: it reads a test-bench run's recorded calls; 15 canaries, each RED on its planted fault). The two-retailer test is `test_shop_rules.py`.
@@ -153,3 +151,5 @@ For a service on your own server, the site does not connect by itself: the chain
 - **The app's own user:** made by the install of a manifest with an event feed, from POS version 2.1.0.667 ([chapter 5](05_outside_apps_and_event_feed.md), step 5).
 - **The till pictures** (step 7): S18's own, taken on the programme's test site on the counter frame; the sample's README says how.
 - **Update and removal:** [chapter 14a](14a_deploying_to_a_chain.md).
+
+**Next:** *Get started* gives you your own sandbox site to do all of this on: [Get started in five steps](../site/pages/start.md).

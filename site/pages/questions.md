@@ -12,7 +12,7 @@ The part inside the retail chain's iVendNext is only data (your manifest), never
 
 ### What is the difference between a function and a container on App Hosting?
 
-A function runs only when a till or a schedule calls it, for an app that answers presses or works in runs of 15 minutes or less, and you pay per call. A container runs all the time, for an app that holds a connection open, serves a queue or runs a longer job. Your code is the same in both. [Chapter 14b, *A function or a container*](../../guide/14b_deploying_your_app.md#a-function-or-a-container).
+A function runs only when a till or a schedule calls it, for an app that answers presses or works in runs of 15 minutes or less, priced per app per month like any hosted app (free when it is listed in the App library). A container runs all the time, for an app that holds a connection open, serves a queue or runs a longer job. Your code is the same in both. [Chapter 14b, *A function or a container*](../../guide/14b_deploying_your_app.md#a-function-or-a-container).
 
 ### Is anything of mine installed on the customer's servers?
 
@@ -144,11 +144,11 @@ The administrator finds your app in the App library, reads its card, installs it
 
 ### How do I roll back a bad version?
 
-Release the earlier code under a new, higher version number: a version is never overwritten. For your service on App Hosting, push it (or run the previous tag on your own server); for your manifest, publish the earlier content as a higher version, which each chain takes as an update. [Chapter 14b, *Updates from your GitHub*](../../guide/14b_deploying_your_app.md#updates-from-your-github) · [Chapter 14a](../../guide/14a_deploying_to_a_chain.md).
+Release the earlier code under a new, higher version number: a version is never overwritten. For your service on App Hosting, push the earlier code under the new version (on your own server, run the previous tag); for your manifest, publish the earlier content as a higher version, which each chain takes as an update. [Chapter 14b, *Updates from your GitHub*](../../guide/14b_deploying_your_app.md#updates-from-your-github) · [Chapter 14a](../../guide/14a_deploying_to_a_chain.md).
 
 ### How do I test my app on my laptop before I touch a customer?
 
-Run the template's and your app's tests with no iVendNext at all, call your service the way the till does with the kit's stand-in caller, and run many retailers against an iVendNext site on your own machine with the template's local mode (`IVN_LOCAL=1`). Then install on your own sandbox site, which we host for you. [Chapter 14b, *Steps*](../../guide/14b_deploying_your_app.md#steps) · [Chapter 14](../../guide/14_testing_and_release.md) · [Request a sandbox](sandbox.md).
+Run the template's and your app's tests with no iVendNext at all, call your service the way the till does with the kit's stand-in caller (`tools/standin_caller/`), and run many retailers against an iVendNext site on your own machine with the template's local mode (`IVN_LOCAL=1`). Then install on your own sandbox site, which we host for you. [Chapter 14b, *Steps*](../../guide/14b_deploying_your_app.md#steps) · [Chapter 14](../../guide/14_testing_and_release.md) · [Request a sandbox](sandbox.md).
 
 ## Cost and day to day
 
@@ -158,9 +158,11 @@ The kit, a sandbox site, publishing and listing in the App library are free. App
 
 ### Where do I see my app's logs?
 
-On your own server, wherever you send them. On App Hosting your app's log lines are kept for the plan's days (14, 30 or 90) and sent to you when you ask. Log one line per call, never the sale, the customer or a secret. [Chapter 14b](../../guide/14b_deploying_your_app.md#let-citixsys-host-it).
+On your own server, wherever you send them. On App Hosting your app's log lines are kept for the plan's days (14 on Starter, 30 on Standard, 90 on Managed) and sent to you when you ask. Log one line per call, never the sale, the customer or a secret. [Chapter 14b](../../guide/14b_deploying_your_app.md#let-citixsys-host-it).
 
 ### What does the cashier see when my service is slow or down?
+
+The till keeps selling. For a till key, chapter 6 publishes these words (*Warranty* is the example key's name):
 
 {{include guide/06_till_keys.md#When your service is down, and when the till is offline}}
 
