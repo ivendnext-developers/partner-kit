@@ -1,6 +1,6 @@
 # Host your app from the web page, screen by screen — the recipe
 
-You can have CitiXsys run your app's outside service with no command: on the developer site's hosting page you sign in with GitHub, say which repository and app, name the customer, choose a plan, pay, and watch the app go live. This recipe walks every screen of that page with a real example, so you know what each box wants before you reach it. It is for anyone whose company has a hosting account with CitiXsys: an iVendNext Partner, a licensed customer's IT team, CitiXsys's own teams.
+You can have CitiXsys run your app's outside service with no command: on the developer site's hosting page you sign in with GitHub, say which repository and app, name the customer, choose a plan, pay, and watch the app go live. This recipe walks every screen of that page with a real example, so you know what each box wants before you reach it. It is for anyone who builds for iVendNext: an iVendNext Partner, a licensed customer's IT team, CitiXsys's own teams. You sign in with your own GitHub account; you never need to join our GitHub organisation.
 
 **The example.** A company whose maker word is `acme` hosts the kit's S18 sample, started as `ACME RLG`, for its customer `acme-stores`. Put your own names where the example has `acme`.
 
@@ -17,9 +17,9 @@ Have these four things ready. The page asks for each one.
    It makes the folder `apps/acme_rlg` in your repository, with the app's `app.json` in it.
 2. **Your app in a GitHub repository made from the kit** (your copy of the kit, where `start.py` put the app), with the kit's workflow copied in: `tools/deploy_app/hosting-workflow.yml` goes to `.github/workflows/` in that repository. For the example, the repository is `acme/acme-apps`.
 3. **The iVendNext App Hosting GitHub App installed on that repository:** open `https://github.com/apps/ivendnext-app-hosting/installations/new`, choose your account or organisation, choose *Only select repositories*, tick the repository, and press **Install**. The App can write the repository's Actions variables and nothing else; it never reads your code. With it, the page lists your repository, fills in its sign-in subject and sets its Variables for you.
-4. **Your settings' values and the customer's code.** Your `app.json` names your app's plain settings; the page shows each with a line saying what it is. The customer's code is the one its *Made for you* shelf goes by in the App library: the code you name when you publish to that customer. Ask your account team if you do not have it.
+4. **Your settings' values and the customer's code.** Your `app.json` names your app's plain settings; the page shows each with a line saying what it is. The customer's code is the one on the customer's *Made for you* shelf in the App library: the code you name when you publish to that customer. Ask your account team if you do not have it.
 
-If your GitHub login is not yet linked to your company's hosting account, the page says so when you sign in: ask your partner manager to link it.
+No hosting account yet? Sign in all the same: the page offers **Request access**, and a CitiXsys person approves it on the same page (below).
 
 ## The page, screen by screen
 
@@ -29,6 +29,8 @@ Open `https://developer.ivendnext.com/hosting`. The form is at the top, under *O
 
 1. Press **Sign in with GitHub**. The first time, GitHub asks you to authorise *iVendNext App Hosting*: press **Authorize**.
 2. Back on the page, the box says **Signed in as** your GitHub login **for** your company. If your login orders for more than one company, choose it under **You order for** and press **Use this one**. What you pay is that company's price.
+
+**The first time, with no hosting account yet,** the box shows **Request access**. Fill in **Company name** (`Acme Stores`), **Work email** (`dev@acme.example`) and **What you build** (`Rule apps for retail chains`), and press **Request access**. A CitiXsys person sees it on this page and presses **Approve**: your company's hosting account is made, with its own first word from the company's name (`acme`, so the example's app names start `acme-`). Press **Check again**: the box now says **Signed in as** your login **for** your company, and the steps below open. You never join our GitHub organisation. (CitiXsys's own people skip this step: they come straight in.)
 
 ### 1. Your app
 
@@ -66,7 +68,7 @@ Open `https://developer.ivendnext.com/hosting`. The form is at the top, under *O
 18. **Your GitHub workflow:** press **Set them on your repository**. The page sets the Variables your workflow needs on the order's repository. If it cannot (the App is not installed there), it lists each one with a **Copy** button: set them under *Settings > Secrets and variables > Actions > Variables* in your repository.
 19. **Your app's secrets** (a container's `"secret": true` settings): type each value in its box for each copy and press **Set**. The value is sent once and never shown again.
 20. Push to your branch. Each copy gets the version in your `app.json` and goes **live**.
-21. Once every copy is live, the page shows the **Publish** button and the `publish.py` command: put the app on your customer's shelf from there. The hosting page itself never publishes.
+21. Once every copy is live, the page shows the **Publish** button and the `publish.py` command: put the app on your customer's shelf from there. The hosting page itself never publishes. Then the customer's administrator installs it from *Made for you* on the customer's site, and your app answers there at its address.
 
 ## Later
 
@@ -78,6 +80,6 @@ Open `https://developer.ivendnext.com/hosting`. The form is at the top, under *O
 - **An app that runs on a schedule:** CitiXsys puts it live; ask through your partner contact.
 - **A required setting left empty:** the app would not start; give it a value.
 - **Production for a customer, ordered by one of CitiXsys's own teams:** the customer orders and pays for it, through the account team.
-- **A GitHub login with no hosting account, or not in your company's team in the iVendNext Developers organisation:** ask your partner manager.
+- **A GitHub login with no hosting account:** press **Request access** on the page and wait for the answer there. If it is declined, **Check again** says so: ask your CitiXsys contact.
 
 The same order with the kit's command, and every rule behind these steps: [chapter 14b](../guide/14b_deploying_your_app.md#order-and-pay-online).

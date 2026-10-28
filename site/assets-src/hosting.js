@@ -158,6 +158,12 @@
     return cmd + " --plan " + (s.plan || "starter") + " --partner " + maker;
   }
 
+  function customersFrom(orders) {   // the customers this account's earlier orders named, for the customer field
+    var seen = {};
+    (orders || []).forEach(function (o) { if (o && typeof o.customer === "string" && o.customer) seen[o.customer] = true; });
+    return Object.keys(seen).sort();
+  }
+
   function publishCommand(maker) {
     return "python3 <the kit>/tools/publish/publish.py publish . --partner " + maker;
   }
@@ -166,7 +172,7 @@
               readReturn: readReturn, subjectFor: subjectFor, appSettings: appSettings, plainNames: plainNames, scheduled: scheduled,
               missingRequired: missingRequired, prefill: prefill, subjectNames: subjectNames,
               planCopies: planCopies, orderPayload: orderPayload, copyWords: copyWords, settled: settled,
-              checkCommand: checkCommand, publishCommand: publishCommand, PAGE: PAGE, API: API };
+              checkCommand: checkCommand, publishCommand: publishCommand, customersFrom: customersFrom, PAGE: PAGE, API: API };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -284,7 +290,7 @@
       return box;
     }
     if (!session) {
-      box.appendChild(p("Sign in with the GitHub account you use in the iVendNext Developers organisation. It tells us who you are; your hosting account (set up by iVendNext when your company signed) says which company you order for and what it pays."));
+      box.appendChild(p("Sign in with your own GitHub account. It tells us who you are; your company's hosting account says which company you order for and what it pays. CitiXsys's own people come straight in. Anyone else asks for access once, on this page, and is answered here: you never need to join our GitHub organisation."));
       box.appendChild(button("Sign in with GitHub", signIn));
       return box;
     }
@@ -301,9 +307,78 @@
     }
     if (who.maker) {
       box.appendChild(p("Your hosting account holds " + who.apps_held + " of its " + who.max_apps + " apps." +
-        (who.open ? "" : " Self-serve hosting is open only to iVendNext's own teams while it is tested.")));
+        (who.open ? "" : " Self-serve hosting is not open to this account yet while it is tested: ask your CitiXsys contact.")));
+    } else if (!who.makers.length && who.staff) {
+      box.appendChild(p("Your team's hosting account is not open at the moment: ask the hosting's owner at CitiXsys."));
+    } else if (!who.makers.length) {
+      box.appendChild(requestPanel());
     }
     box.appendChild(button("Sign out", signOut, true));
+    return box;
+  }
+
+  // ── access: ask once; CitiXsys's own people answer on this page ──
+
+  function requestPanel() {
+    var box = el("div", {}, el("h4", { text: "Request access" }));
+    if (who.request) {
+      box.appendChild(p("You asked for " + who.request.company + " on " + new Date(who.request.at * 1000).toISOString().slice(0, 10) +
+        ". A CitiXsys person answers it on this page, and then this page opens your hosting account. You do not need to sign in again."));
+      box.appendChild(button("Check again", function () {
+        call("GET", "/whoami").then(function (w) {
+          who = w;
+          say(w.maker ? "Approved: your hosting account is " + (w.name || w.maker) + "." :
+            w.request ? "Not answered yet." : "Your request is no longer waiting: it was declined. Ask your CitiXsys contact, or ask again below.");
+          if (w.maker) { ownSteps(); refreshApps(); loadRepos(); }
+          render();
+        }, fail);
+      }, true));
+      return box;
+    }
+    box.appendChild(p("Your GitHub account has no hosting account yet. Tell us who you are, once: a CitiXsys person approves it here, and your company's hosting account is made for you."));
+    var company = el("input", { type: "text", maxlength: "80", autocomplete: "organization" });
+    var email = el("input", { type: "email", maxlength: "254", autocomplete: "email" });
+    var about = el("input", { type: "text", maxlength: "300" });
+    box.appendChild(field("Company name", company));
+    box.appendChild(field("Work email", email));
+    box.appendChild(field("What you build", about, "One line, for example: loyalty apps for retail chains."));
+    box.appendChild(button("Request access", function (ev) {
+      ev.target.disabled = true;
+      call("POST", "/request", { company: company.value.trim(), email: email.value.trim(), about: about.value.trim() }).then(function (r) {
+        who.request = r.request; say("Asked. A CitiXsys person answers it on this page."); render();
+      }, function (e) { ev.target.disabled = false; fail(e); });
+    }));
+    return box;
+  }
+
+  var asked = null;
+  function loadRequests() {
+    if (!session || !who || !who.staff) return;
+    call("GET", "/requests").then(function (r) { asked = r.requests; redraw(); }, function () {});
+  }
+
+  function requestsPanel() {
+    var box = el("div", { "class": "hosting-step" }, el("h3", { text: "Access requests" }));
+    box.appendChild(button("Refresh", function () { asked = null; render(); loadRequests(); }, true));
+    if (!asked) { box.appendChild(p("Reading the requests.")); return box; }
+    if (!asked.length) { box.appendChild(p("No one is waiting.")); return box; }
+    box.appendChild(p("Approve makes the company's hosting account (its own code and first word, from its name; a partner's price; open for test orders) and links the person who asked. Decline removes the request."));
+    var ul = el("ul", {});
+    asked.forEach(function (r) {
+      var li = el("li", {}, el("strong", { text: r.company }), " (" + r.login + ", " + r.email + "): " + r.about + " ");
+      li.appendChild(button("Approve", function (ev) {
+        ev.target.disabled = true;
+        call("POST", "/approve", { uid: r.uid }).then(function (a) {
+          say("Approved: " + a.name + " has the hosting account " + a.partner + "; its apps are named " + a.word + "-…"); loadRequests();
+        }, function (e) { ev.target.disabled = false; fail(e); });
+      }, true));
+      li.appendChild(button("Decline", function () {
+        if (!root.confirm("Decline the request from " + r.company + "?")) return;
+        call("POST", "/decline", { uid: r.uid }).then(function () { say("Declined."); loadRequests(); }, fail);
+      }, true));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
     return box;
   }
 
@@ -439,14 +514,17 @@
     var box = el("div", { "class": "hosting-step" }, el("h3", { text: "2. Your customer" }));
     var no = el("input", { type: "radio", name: "h-cust", checked: !s.forCustomer });
     var yes = el("input", { type: "radio", name: "h-cust", checked: !!s.forCustomer });
-    var codeIn = el("input", { type: "text", value: s.customer || "", spellcheck: "false", placeholder: "the customer's code" });
+    var known = customersFrom(mine), listId = "h-customers";
+    var codeIn = el("input", { type: "text", value: s.customer || "", spellcheck: "false", placeholder: "the customer's code", list: listId });
+    var options = el("datalist", { id: listId });
+    known.forEach(function (c) { options.appendChild(el("option", { value: c })); });
     no.addEventListener("change", function () { s.forCustomer = false; save(); render(); });
     yes.addEventListener("change", function () { s.forCustomer = true; save(); render(); });
     codeIn.addEventListener("change", function () { s.customer = codeIn.value.trim().toLowerCase(); save(); render(); });
     box.appendChild(el("p", {}, el("label", {}, no, " Not for a customer")));
-    box.appendChild(el("p", {}, el("label", {}, yes, " Built for a customer: "), codeIn));
-    box.appendChild(p("The customer's code is the one its Made for you shelf in the App library goes by: the same code you name when you publish to that customer. Lower-case letters, digits and hyphens, like ",
-      code("acme-stores"), ". Ask your account team if you do not have it."));
+    box.appendChild(el("p", {}, el("label", {}, yes, " Built for a customer. Customer (their code): "), codeIn, options));
+    box.appendChild(p("The code on the customer's Made for you shelf in the App library; the site you publish to is that customer's tenant. Lower-case letters, digits and hyphens, like ",
+      code("acme-stores"), "." + (known.length ? " Your earlier orders named: " + known.join(", ") + "." : "") + " Ask your account team if you do not have it."));
     box.appendChild(p("Whoever orders the hosting pays: you, or the customer the app is built for when that customer orders it."));
     box.appendChild(nav("app", (!s.forCustomer || /^[a-z][a-z0-9-]{1,30}$/.test(s.customer || "")) ? "plan" : null));
     return box;
@@ -596,6 +674,8 @@
       box.appendChild(el("p", { "class": "hero-cta" }, el("a", { "class": "site-btn", href: tool.getAttribute("data-publish"), text: "Publish" })));
       box.appendChild(copyable(publishCommand(who.maker)));
       box.appendChild(p("This page does not publish: the App library takes only what you sign."));
+      box.appendChild(p(o.customer ? "Next, for " + o.customer + ": publish the app to its shelf, then its administrator installs it from Made for you on the customer's site, and your app answers there at the address above."
+                                   : "Next: publish the app to your preview shelf, install it on your sandbox site from there, and try it against the address above."));
     }
     box.appendChild(nav(null, null, true));
     return box;
@@ -713,6 +793,7 @@
   function render() {
     view.textContent = "";
     view.appendChild(signInPanel());
+    if (session && who && who.staff) view.appendChild(requestsPanel());
     if (session && who && who.maker && who.open) {
       var step = { app: appStep, customer: customerStep, plan: planStep, pay: payStep, follow: followStep }[s.step] || appStep;
       if (step === appStep) view.appendChild(beforeYouStart());
@@ -736,6 +817,7 @@
     return call("POST", "/signin", { code: arrival.code, verifier: arrival.verifier, redirect_uri: PAGE }).then(function (r) {
       session = r.session; who = r; delete who.session; say("");
       if (who.maker) ownSteps();
+      loadRequests();
       var back = root.sessionStorage.getItem(FOLLOW);
       if (back && who.maker) { root.sessionStorage.removeItem(FOLLOW); s.order = back; s.step = "follow"; keep(); }
       render();
