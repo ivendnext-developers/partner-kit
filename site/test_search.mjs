@@ -85,6 +85,9 @@ const unanswered = (index) => {
 const devMiss = unanswered(docs);
 check(`a developer's words find How it works, its example or the questions in the header's six (${DEV_WORDS.length} words)`,
       devMiss.length === 0, devMiss.join(", "));
+const each = (q, id) => search.instant(search.rank(ms, q), 6).some((r) => r.id === id);
+check("each of the three pages is found by a developer's word: docker finds How it works and its example, field the questions",
+      each("docker", "guide/01a_how_it_all_works.html") && each("docker", "guide/01b_one_app_end_to_end.html") && each("field", "questions.html"));
 // planted fault 3: the docker group taken out of the pages' words turns "kubernetes" red
 const dock = "docker container containerised containerized kubernetes k8s";
 const planted3 = unanswered(docs.map((d) => ({ ...d, s: d.s.replace(dock, "") })));

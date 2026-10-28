@@ -11,7 +11,7 @@ A small service that does what every deployable app does ([guide chapter 14b](..
 | `service/core.py` | **your logic**: a pure function, `answer(context)`, no web code, no iVendNext |
 | `service/app.py` | the web part: signature check, size cap, health address, one log line per call, clean stop, secret rotation |
 | `service/shops.py` | many retailers: the handshake (`/ivendnext/connect`, `/ivendnext/disconnect`), the library key check, and the retailers kept in a file |
-| `service/function.py` | on CitiXsys hosting, an app that only answers presses runs as a function, paid per call: this turns the load balancer's call into `handle` and back (chapter 14b, *A function or a container*) |
+| `service/function.py` | on CitiXsys hosting, an app that only answers presses runs as a function, run only when called: this turns the load balancer's call into `handle` and back (chapter 14b, *A function or a container*) |
 | `service/dynamo.py` | on CitiXsys hosting: the retailers kept in the app's own encrypted table, with the standard library only |
 | `service/ed25519.py` | the key's signature check (RFC 8032's reference code), so the template needs no package |
 | `Dockerfile` · `docker-compose.yml` | the container, and a one-command run on your laptop |

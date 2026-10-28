@@ -20,7 +20,7 @@ Stripe, and the hosting builds it with no person ([Order online](#order-online))
 
    A staging copy: add `--env staging`. As JSON: add `--json`.
 
-   **An app that only answers presses** (its `app.json` says `"runs": "function"`) is hosted as a function, paid per call: give `--zip <file>` instead of `--image`, and this writes the package to send us (`--root <folder>` when its `package` paths start above the app's folder). Chapter 14b, *A function or a container*.
+   **An app that only answers presses** (its `app.json` says `"runs": "function"`) is hosted as a function, run only when called: give `--zip <file>` instead of `--image`, and this writes the package to send us (`--root <folder>` when its `package` paths start above the app's folder). Chapter 14b, *A function or a container*.
 
 It prints `PLANNED:` and what would be created, or one `REFUSED:` line per problem. Exit code: 0 planned · 1 refused · 2 usage.
 

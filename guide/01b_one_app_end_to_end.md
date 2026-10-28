@@ -131,10 +131,10 @@ No command: the cashier presses a button.
 
 ## 8. An update, then a removal
 
-**An update.** Raise the version in `manifest.json` and `app.json` and publish again (step 3); push the new code (step 4). Each chain's administrator sees the higher version, reads what changes, consents again and updates in place. An update adds and changes, and removes nothing while it runs; a service the update changes arrives switched off again, for its consent. To go back, release the earlier code under a new, higher version.
+**An update.** Raise the version in `manifest.json` and `app.json`, publish again (`python3 tools/publish/publish.py publish <your project> --partner acme`, step 3) and push the new code to the branch your hosting order names (step 4). Each chain's administrator sees the higher version, reads what changes, consents again and updates in place. An update adds and changes, and removes nothing while it runs; a service the update changes arrives switched off again, for its consent. To go back, release the earlier code under a new, higher version.
 
 
-**A removal.** The administrator uninstalls the app. The site first saves the app's records to a private file, then removes the record type, field, role, check, event feed and your app's user with its key. The chain's own records stay. The site tells your service goodbye (`POST /ivendnext/disconnect`), and your service forgets that chain and its secrets.
+**A removal.** No command: the administrator uninstalls the app in Desk. The site first saves the app's records to a private file, then removes the record type, field, role, check, event feed and your app's user with its key (an app with a sale detail that booked sales use, or a workflow state another workflow uses, keeps that one, switched off). The chain's own records stay. The site tells your service goodbye (`POST /ivendnext/disconnect`), and your service forgets that chain and its secrets.
 
 
 ## Technical notes
