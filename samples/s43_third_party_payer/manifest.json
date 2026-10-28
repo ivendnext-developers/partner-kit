@@ -1104,6 +1104,50 @@
    "description": "Such a customer can buy only as a cash customer: no payer is asked."
   }
  ],
+ "property_setters": [
+  {
+   "doc_type": "PP ICP Payer",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#what-the-retailer-does-now"
+  },
+  {
+   "doc_type": "PP ICP Formulary",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#how-a-sale-is-split"
+  },
+  {
+   "doc_type": "PP ICP Plan",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#how-a-sale-is-split"
+  },
+  {
+   "doc_type": "PP ICP Member",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#what-the-retailer-does-now"
+  },
+  {
+   "doc_type": "PP ICP Claim Batch",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#claims"
+  },
+  {
+   "doc_type": "PP ICP Claim",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#claims"
+  },
+  {
+   "doc_type": "PP ICP Remittance",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#claims"
+  }
+ ],
  "registered_applications": [
   {
    "name": "PP ICP Claims",

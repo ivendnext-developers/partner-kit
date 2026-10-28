@@ -42,6 +42,7 @@ store's list without a word (``ivendnext_mpos`` business_logic/mpos_cart.py), so
 """
 from __future__ import annotations
 
+import unicodedata
 from decimal import ROUND_HALF_UP, Decimal
 
 CONTRACT = "payer/1"
@@ -64,6 +65,9 @@ WORDS = {
     "pays_nothing": "{plan} pays nothing on this sale: the customer pays it all.",
 }
 MESSAGE_MAX = 140           # the door takes a message of at most 140 characters
+# what the door refuses in a text (and with it the whole answer): markup, control and bidirectional-control characters
+_REFUSED_CHARS = set("<>\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069")
+_REFUSED_KINDS = {"Cc", "Zl", "Zp", "Co", "Cs"}
 
 
 def D(v) -> Decimal:
@@ -182,7 +186,7 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
                 continue
         covered = (row is not None and int(row.get("covered", 1) or 0)) or (every and (row is None or
                                                                             int(row.get("covered", 1) or 0)))
-        if not covered or stock_qty <= 0 or net <= 0:   # an exchange's return row, or a free line: the patient's
+        if not covered or stock_qty <= 0 or net <= 0:   # a free line: the patient's (the door asks no negative line)
             res.update(reason="not_covered", message=WORDS["not_covered"].format(item=item, **names))
             out.append((res, net, ZERO, ZERO, ZERO))
             continue
@@ -244,8 +248,16 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
                        "copay": str(_q(copay, places))})
 
 
-def _message(text):
-    return None if not text else (text if len(text) <= MESSAGE_MAX else text[:MESSAGE_MAX - 1] + "…")
+def plain(text):
+    """A text the door takes: what it refuses taken out, at most 140 characters (None when nothing is left)."""
+    text = "".join(c for c in str(text or "") if c not in _REFUSED_CHARS and
+                   unicodedata.category(c) not in _REFUSED_KINDS).strip()
+    if not text:
+        return None
+    return text if len(text) <= MESSAGE_MAX else text[:MESSAGE_MAX - 1] + "…"
+
+
+_message = plain
 
 
 def door_coverage(context: dict, plan: dict | None, member: dict | None, customer_barred: bool,
@@ -254,9 +266,12 @@ def door_coverage(context: dict, plan: dict | None, member: dict | None, custome
     units of the sale's currency (``currency_exponent`` digits), quantities in each line's own unit, only the keys the
     contract carries. The split is ``coverage``'s, on the same amounts in decimals.
 
-    ``amount_minor`` is what a line costs, tax included; ``discount_minor`` is on the price's basis, so where the prices
-    exclude tax (``tax_included`` false) the discount is put on the amount's basis by the line's own tax rate before the
-    rules read it. The payer's share is never more than the sale's rounded total (``rounding_minor`` is the patient's).
+    ``amount_minor`` is what a line costs, tax included; ``discount_minor`` is on the price's basis. Where the prices
+    exclude tax (``tax_included`` false) the discount is put on the amount's basis by ``amount / (rate x qty)``, never
+    by less than 1: exact for a line's own discount; with a discount on the whole sale the ratio cannot be known from
+    what the door sends, and the discount is then read with less of its tax, at worst none (a bound: the rules that read
+    the amount before the discount, a co-pay taken before it or a limit after it, see a little less than it was).
+    The payer's share is never more than the sale's rounded total (``rounding_minor`` is the patient's).
     An answer that would pay nothing is ``no_cover``: the door refuses a cover that pays nothing."""
     exp = int(context["currency_exponent"])
 
@@ -272,7 +287,7 @@ def door_coverage(context: dict, plan: dict | None, member: dict | None, custome
         amount, discount, rate = major(l["amount_minor"]), major(l["discount_minor"]), major(l["rate_minor"])
         paid = rate * D(l.get("qty"))
         if not context.get("tax_included") and paid > 0:
-            discount = _q(discount * amount / paid, exp)
+            discount = _q(discount * max(amount / paid, Decimal(1)), exp)
         lines.append(dict(l, amount=amount, discount=discount, rate=rate))
     total = major(context["total_minor"])
     request = {"sale_ref": context.get("sale_ref"), "customer": context.get("customer"), "date": context.get("date"),

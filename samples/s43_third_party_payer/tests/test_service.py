@@ -267,6 +267,49 @@ class Door(Base):
         self.shop.find("PP ICP Payer", "GEN-INS")["customer"] = "C1"
         self.assertEqual(self.payer({"call": "covers", "customer": "C1", "date": "2026-10-23"})[1]["covers"], [])
 
+    def test_every_exponent_the_door_sends_gets_an_answer_it_takes(self):
+        for exp in range(5):                       # JPY 0 · a 1-digit currency · USD 2 · KWD 3 · a 4-digit unit
+            f = 10 ** exp
+            lines = [{"line_id": "r1", "item_code": "PHD-AMOX-500", "item_group": "", "gtin": None, "qty": 3,
+                      "uom": "Nos", "conversion_factor": 1, "rate_minor": 120 * f, "discount_minor": 0,
+                      "amount_minor": 360 * f + (1 if exp else 0)},
+                     {"line_id": "r2", "item_code": "PHD-PARA-500", "item_group": "", "gtin": None, "qty": 2,
+                      "uom": "Nos", "conversion_factor": 1, "rate_minor": 25 * f, "discount_minor": 0,
+                      "amount_minor": 50 * f}]
+            out = self.coverage(lines=lines, currency_exponent=exp, rounding_minor=-1 if exp else 0)[1]
+            self.assertEqual(contract_errors("coverage_answer", out), [], exp)
+            self.assertEqual(out["answer"], "cover", exp)
+            for l in out["lines"]:
+                sent = next(x for x in lines if x["line_id"] == l["line_id"])
+                self.assertEqual(l["payer_share_minor"] + l["patient_share_minor"], sent["amount_minor"], exp)
+            self.assertEqual(out["totals"]["total_minor"], sum(x["amount_minor"] for x in lines), exp)
+            self.assertGreaterEqual(out["totals"]["patient_share_minor"] + (-1 if exp else 0), 0, exp)
+
+    def test_a_disabled_payer_customer_leaves_that_cover_out_not_the_answer(self):
+        self.shop.find("Customer", "Generic Insurer")["disabled"] = 1
+        code, out = self.payer({"call": "covers", "customer": "C1", "date": "2026-10-23"})
+        self.assertEqual((code, out["covers"], out["refused"]), (200, [], None))
+        self.assertEqual(contract_errors("covers_answer", out), [])
+
+    def test_a_title_with_markup_is_sent_as_text_the_door_takes(self):
+        self.shop.find("PP ICP Plan", "Generic Silver")["title"] = "Silver <Rx>\u202e plan"
+        covers = self.payer({"call": "covers", "customer": "C1", "date": "2026-10-23"})[1]
+        self.assertEqual(covers["covers"][0]["plan_title"], "Silver Rx plan")
+        out = self.coverage(lines=LINES + [{"line_id": "r3", "item_code": "PHD-VITC", "qty": 1, "amount": 30}])[1]
+        for l in out["lines"]:
+            self.assertFalse(set(l.get("message") or "") & set("<>\u202e"), l)
+
+    def test_a_sales_discount_on_prices_without_tax_is_read_with_at_most_its_tax(self):
+        # one line at 100.00 before tax, a 50.00 discount on the whole sale, 10% tax: the line costs 55.00, and the
+        # door sends discount_minor 5000 on the price's basis. The ratio is then 55/100 < 1: the discount is read as
+        # sent (the bound), never with less than itself (a co-pay of 20% before the discount: 21.00, never 16.50)
+        plan = self.shop.find("PP ICP Plan", "Generic Silver")
+        plan.update(copay_percent=20, copay_order="Before the discount", invoice_upper_limit=0, max_patient_amount=0)
+        line = {"line_id": "r1", "item_code": "PHD-AMOX-500", "item_group": "", "gtin": None, "qty": 1, "uom": "Nos",
+                "conversion_factor": 1, "rate_minor": 10000, "discount_minor": 5000, "amount_minor": 5500}
+        out = self.coverage(lines=[line], tax_included=False)[1]
+        self.assertEqual(out["totals"]["patient_share_minor"], 2100)
+
     def test_the_old_wire_is_refused(self):
         old = {"contract": "payer/1", "call": "covers", "customer": "C1"}
         self.assertEqual(self.call("/icp/payer", old, "payer")[0], 400)
@@ -411,6 +454,26 @@ class Claims(Base):
         c = self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0001")
         self.assertEqual((c["payer_share"], c["returns"]), ("183.20", "PHD-26-0001-RET"))
 
+    def test_a_sale_whose_booking_journal_was_cancelled_is_no_claim(self):
+        # payer.md §4b: its day's closing cancelled on a shop that posts each sale at once took its journal with it
+        out = self.coverage(sale_ref="PHD-26-0009")[1]
+        self.shop.book("PHD-26-0009", door_lines(out), payer_journal=None)
+        self.build()
+        self.assertIsNone(self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0009"))
+
+    def test_a_returned_line_counts_back_in_its_own_unit(self):
+        # a box of 10 sold and returned: the claim line and its return are both counted in boxes
+        self.shop.book("PHD-26-0010", [{"name": "b1", "item_code": "PHD-AMOX-500", "qty": 1, "stock_qty": 10,
+                                        "uom": "Box", "payer_share": "96.00", "patient_share": "24.00",
+                                        "payer_covered_qty": 1}])
+        self.build()
+        self.shop.book("PHD-26-0010-RET", [{"name": "x1", "item_code": "PHD-AMOX-500", "qty": -1, "stock_qty": -10,
+                                            "uom": "Box", "pos_invoice_item": "b1", "payer_back": "-96.00"}],
+                       is_return=1, return_against="PHD-26-0010", payer_claim_ref="GEN-INS-PHD-26-0010")
+        self.build()
+        line = self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0010")["lines"][0]
+        self.assertEqual((float(line["qty"]), float(line["returned_qty"])), (1.0, 1.0))
+
     def test_the_claims_file_puts_ready_claims_in_one_batch_and_marks_them_sent(self):
         self.booked()
         self.booked("PHD-26-0002")
@@ -494,6 +557,34 @@ class Claims(Base):
         self.assertEqual(app._refusal(err), "Say why the claim is billed back.")
         err = urllib.error.HTTPError("https://shop.example/x", 417, "Expectation Failed", {}, io.BytesIO(b"<html>"))
         self.assertEqual(app._refusal(err), "The payer door refused it.")
+
+    def test_a_long_refusal_fits_the_doors_answer_and_a_broken_body_is_read_as_a_refusal(self):
+        import urllib.error
+
+        class Broken(io.BytesIO):
+            def read(self, *a):
+                raise OSError("timed out")
+        long = json.dumps({"_server_messages": json.dumps([json.dumps({"message": "x" * 900})])}).encode()
+        text = app._refusal(urllib.error.HTTPError("https://shop.example/x", 417, "E", {}, io.BytesIO(long)))
+        self.assertLessEqual(len("Nothing was billed: " + text), 280)
+        err = urllib.error.HTTPError("https://shop.example/x", 417, "E", {}, Broken())
+        self.assertEqual(app._refusal(err), "The payer door refused it.")
+
+    def test_the_shops_417_on_a_bill_back_comes_back_as_the_doors_words(self):
+        import urllib.error
+        import urllib.request
+        body = json.dumps({"_server_messages": json.dumps([json.dumps({"message": "Bill back an amount above zero."})])})
+
+        class Opener:
+            def open(self, req, timeout=None):
+                raise urllib.error.HTTPError(req.full_url, 417, "E", {}, io.BytesIO(body.encode()))
+        keep = urllib.request.build_opener
+        urllib.request.build_opener = lambda *a: Opener()
+        try:
+            got = app.ShopApi().bill_back("https://shop.example", "k:s", {"sale": "S"})
+        finally:
+            urllib.request.build_opener = keep
+        self.assertEqual(got, {"refused": "Bill back an amount above zero."})
 
     def test_a_ready_claim_cannot_be_billed_back(self):
         self.booked()

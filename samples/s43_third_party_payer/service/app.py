@@ -64,6 +64,7 @@ import function  # noqa: E402
 import shops  # noqa: E402
 
 BODY_MAX = 256 * 1024
+REFUSAL_MAX = 250       # the door's words in a press's answer, whose body the door takes up to 280 characters
 SKEW_S = 300
 READ_TIMEOUT = 2.0      # the door waits at most 5 s for an answer; each read here waits at most this
 ANSWER_BY = 4.0         # past it the service answers 503 (the door says the payer cannot be reached) rather than late
@@ -87,7 +88,7 @@ DOOR = {"payer": "custom_mpos_payer_code", "plan": "custom_mpos_payer_plan", "me
         "prescriber": "custom_mpos_payer_prescriber", "prescriber_licence": "custom_mpos_payer_prescriber_licence",
         "line_payer": "custom_mpos_payer_share", "line_patient": "custom_mpos_patient_share",
         "line_qty": "custom_mpos_payer_covered_qty", "line_gtin": "custom_mpos_payer_gtin",
-        "line_back": "custom_mpos_payer_back"}
+        "line_back": "custom_mpos_payer_back", "journal": "custom_mpos_payer_journal"}
 NO_END = "9999-12-31"   # a cover with no end date: the door takes a date
 SALES = {"sale.booked": "POS Invoice", "return.booked": "POS Invoice", "invoice.booked": "Sales Invoice"}
 
@@ -180,11 +181,11 @@ def _refusal(err) -> str:
         raw = json.loads(err.read(BODY_MAX) or b"{}")
         msgs = json.loads(raw.get("_server_messages") or "[]")
         text = json.loads(msgs[0]).get("message") if msgs else raw.get("exception")
-    except (ValueError, TypeError, AttributeError, IndexError):
+    except (ValueError, TypeError, AttributeError, IndexError, OSError, http.client.HTTPException):
         text = None
     finally:
         err.close()
-    return str(text or "The payer door refused it.")[:300]
+    return str(text or "The payer door refused it.")[:REFUSAL_MAX]
 
 
 class Service:
@@ -249,16 +250,23 @@ class Service:
             plan = self._one(shop, self.dt("Plan"), m.get("plan"))
             payer = self._one(shop, self.dt("Payer"), (plan or {}).get("payer"))
             if not (plan and payer and all(C._in_force(r, today) for r in (m, plan, payer))) or \
-                    not payer.get("customer") or payer["customer"] == customer:
+                    not payer.get("customer") or payer["customer"] == customer or \
+                    not self.billable(shop, payer["customer"]):
                 continue
             num = str(m.get("member_number") or "")
             ends = [str(r["valid_to"]) for r in (m, plan, payer) if r.get("valid_to")]
-            out.append({"member": m["name"], "payer": payer["name"], "payer_title": payer.get("title") or payer["name"],
+            out.append({"member": m["name"], "payer": payer["name"],
+                        "payer_title": C.plain(payer.get("title")) or payer["name"],
                         "payer_customer": payer["customer"], "plan": plan["name"],
-                        "plan_title": plan.get("title") or plan["name"], "member_label": "…" + num[-4:],
+                        "plan_title": C.plain(plan.get("title")) or plan["name"], "member_label": "…" + num[-4:],
                         "valid_to": min(ends) if ends else NO_END, "price_list": plan.get("price_list") or None,
                         "promotions_apply": bool(int(plan.get("promotions_apply", 1) or 0))})
         return {"covers": out[:10], "refused": None}
+
+    def billable(self, shop, name) -> bool:
+        """The payer's own Customer record exists and is in use: the door refuses the WHOLE covers answer otherwise."""
+        rows = self._list(shop, "Customer", ["name", "disabled"], [["name", "=", name]])
+        return bool(rows) and not int(rows[0].get("disabled") or 0)
 
     def coverage(self, shop, body) -> dict:
         lines = body.get("lines")
@@ -338,15 +346,17 @@ class Service:
         """The door's record of a sale (payer.md §4b), or None when no payer leg was booked on it."""
         if not doc.get(DOOR["claim_ref"]) or not doc.get(DOOR["payer"]):
             return None
+        if not int(doc.get("is_return") or 0) and not doc.get(DOOR["journal"]):
+            return None         # its booking was cancelled with its day's closing: no claim, nothing owed (payer.md §4b)
         if doctype == "Sales Invoice" and (doc.get("is_consolidated") or any(
                 it.get("pos_invoice") for it in doc.get("items") or [])):
             return None         # the till sale's own posting: its claim is the POS sale's, made from that record
         lines = [{"line_id": it.get("name"), "item_code": it.get("item_code"), "gtin": it.get(DOOR["line_gtin"]) or it.get("barcode") or None,
-                  "qty": it.get(DOOR["line_qty"]) or it.get("stock_qty") or it.get("qty"), "uom": it.get("uom"),
+                  "qty": it.get(DOOR["line_qty"]) or it.get("qty"), "uom": it.get("uom"),
                   "amount": str(C.D(it.get(DOOR["line_payer"])) + C.D(it.get(DOOR["line_patient"]))),
                   "payer_share": it.get(DOOR["line_payer"]), "patient_share": it.get(DOOR["line_patient"]),
                   "payer_back": it.get(DOOR["line_back"]), "returned_line": it.get("pos_invoice_item")
-                  or it.get("sales_invoice_item"), "back_qty": abs(C.D(it.get("stock_qty") or it.get("qty")))} for it in doc.get("items") or []]
+                  or it.get("sales_invoice_item"), "back_qty": abs(C.D(it.get("qty")))} for it in doc.get("items") or []]
         return {"doctype": doctype, "name": doc["name"], "posting_date": doc.get("posting_date"),
                 "store": doc.get("set_warehouse") or (doc.get("items") or [{}])[0].get("warehouse"),
                 "customer": doc.get("customer"), "is_return": int(doc.get("is_return") or 0),

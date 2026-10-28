@@ -18,7 +18,7 @@ SHORT = {"payer_code": app.DOOR["payer"], "payer_plan": app.DOOR["plan"], "payer
          "payer_prescriber": app.DOOR["prescriber"], "payer_prescriber_licence": app.DOOR["prescriber_licence"],
          "payer_share": app.DOOR["line_payer"], "patient_share": app.DOOR["line_patient"],
          "payer_covered_qty": app.DOOR["line_qty"], "payer_gtin": app.DOOR["line_gtin"],
-         "payer_back": app.DOOR["line_back"]}
+         "payer_back": app.DOOR["line_back"], "payer_journal": app.DOOR["journal"]}
 
 
 class FakeShop:
@@ -110,6 +110,7 @@ class FakeShop:
         for r in dataset.records(ds):
             dt = r.pop("doctype")
             self.add(dt, name=r.get("code") or r["title"], **r)
+        self.add("Customer", name="Generic Insurer", disabled=0)     # the payer's own record (the data set's)
         self.add("Customer", name="C1", **{"pp_icp_insurance_barred": 0})
         self.add("Customer", name="C2", **{"pp_icp_insurance_barred": 1})
         self.add(f"{P} Member", name="m1", customer="C1", plan="Generic Silver", payer="GEN-INS", active=1,
@@ -132,7 +133,7 @@ class FakeShop:
         doc = {"name": name, "customer": "C1", "posting_date": "2026-10-23", "set_warehouse": "Pharmacy Dispensary",
                "is_return": 0, "payer_code": "GEN-INS", "payer_plan": "Generic Silver", "payer_member": "m1",
                "payer_claim_ref": f"GEN-INS-{name}", "payer_prescription": "RX-77", "payer_prescriber": "Dr A",
-               "payer_prescriber_licence": "L-1", "items": lines}
+               "payer_prescriber_licence": "L-1", "payer_journal": f"JV-{name}", "items": lines}
         doc.update(kw)
         doc = {SHORT.get(k, k): v for k, v in doc.items()}
         doc["items"] = [{SHORT.get(k, k): v for k, v in it.items()} for it in doc.get("items") or []]
