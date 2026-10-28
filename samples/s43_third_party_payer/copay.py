@@ -186,7 +186,7 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
                 continue
         covered = (row is not None and int(row.get("covered", 1) or 0)) or (every and (row is None or
                                                                             int(row.get("covered", 1) or 0)))
-        if not covered or stock_qty <= 0 or net <= 0:   # a free line: the patient's (the door asks no negative line)
+        if not covered or stock_qty <= 0 or net <= 0:   # a free line: the patient's (a negative line cannot be answered under payer/1)
             res.update(reason="not_covered", message=WORDS["not_covered"].format(item=item, **names))
             out.append((res, net, ZERO, ZERO, ZERO))
             continue
@@ -268,7 +268,7 @@ def door_coverage(context: dict, plan: dict | None, member: dict | None, custome
 
     ``amount_minor`` is what a line costs, tax included; ``discount_minor`` is on the price's basis. Where the prices
     exclude tax (``tax_included`` false) the discount is put on the amount's basis by ``amount / (rate x qty)``, never
-    by less than 1: exact for a line's own discount; with a discount on the whole sale the ratio cannot be known from
+    by less than 1: exact for a line's own discount when the sale has none and its prices are at the currency's places; with a discount on the whole sale the ratio cannot be known from
     what the door sends, and the discount is then read with less of its tax, at worst none (a bound: the rules that read
     the amount before the discount, a co-pay taken before it or a limit after it, see a little less than it was).
     The payer's share is never more than the sale's rounded total (``rounding_minor`` is the patient's).
