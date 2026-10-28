@@ -86,6 +86,9 @@ check("a removed copy is not said to be running", !/running/.test(h.copyWords({ 
 check("an order is settled once every copy is live, or it ended",
   h.settled({ copies: [{ status: "live" }, { status: "live" }] }) && !h.settled({ copies: [{ status: "live" }, { status: "waiting" }] })
   && h.settled({ copies: [{ status: "failed" }] }));
+check("the customer field offers the customers earlier orders named, once each",
+  JSON.stringify(h.customersFrom([{ customer: "b-shop" }, { customer: "" }, {}, { customer: "a-stores" }, { customer: "b-shop" }])) === '["a-stores","b-shop"]'
+  && h.customersFrom(null).length === 0);
 
 // 4. the page
 const policies = page.match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/g) || [];
