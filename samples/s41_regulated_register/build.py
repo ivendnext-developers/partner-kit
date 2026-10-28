@@ -97,6 +97,14 @@ def _read(path):
         return f.read()
 
 
+def _layout(name):
+    """A layout as a print format carries it: its comment blocks and each line's indent left out. Every book carries its
+    own copy, and the App library takes a manifest of at most 256 KB (a shop installs a larger one from a file). Whitespace
+    only: what the print shows is unchanged."""
+    text = re.sub(r"\{#.*?#\}\n?", "", _read(os.path.join("layouts", name)), flags=re.S)
+    return "\n".join(line.strip() for line in text.splitlines() if line.strip())
+
+
 def datasets(folder="datasets"):
     return [json.loads(_read(os.path.join(folder, n))) for n in sorted(os.listdir(os.path.join(HERE, folder)))
             if n.endswith(".json")]
@@ -359,7 +367,7 @@ def _literal(v):
 
 
 def book_html(ds, b):
-    return "{%- set book = " + _literal(book_data(ds, b)) + " -%}\n" + _read("layouts/register.html")
+    return "{%- set book = " + _literal(book_data(ds, b)) + " -%}\n" + _layout("register.html")
 
 
 def _all_checked(sets):
@@ -444,7 +452,7 @@ def slips(ds, b):
     Desk, on the till's sale (POS Invoice) or the Desk's (Sales Invoice)."""
     data = {"ref": book_ref(ds, b), "title": b["title"], "form": b.get("form", ""), "cite": b["cite"],
             "certified": ds["certified"]}
-    html = "{%- set book = " + _literal(data) + " -%}\n" + _read("layouts/purchaser_slip.html")
+    html = "{%- set book = " + _literal(data) + " -%}\n" + _layout("purchaser_slip.html")
     return [{"name": n, "doc_type": dt, "print_format_type": "Jinja", "html": html}
             for n, dt in zip(slip_names(ds, b), ("POS Invoice", "Sales Invoice"))]
 
