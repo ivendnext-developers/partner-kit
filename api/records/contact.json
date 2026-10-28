@@ -1,0 +1,443 @@
+{
+ "area": "Customers and groups",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "first_name",
+   "hidden": 0,
+   "label": "First Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "middle_name",
+   "hidden": 0,
+   "label": "Middle Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "last_name",
+   "hidden": 0,
+   "label": "Last Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "full_name",
+   "hidden": 1,
+   "label": "Full Name",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "email_id",
+   "hidden": 0,
+   "label": "Email Address",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "user",
+   "hidden": 0,
+   "label": "User Id",
+   "links_to": "User",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "address",
+   "hidden": 0,
+   "label": "Address",
+   "links_to": "Address",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "sync_with_google_contacts",
+   "hidden": 0,
+   "label": "Sync with Google Contacts",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Passive",
+    "Open",
+    "Replied"
+   ],
+   "description": "",
+   "fieldname": "status",
+   "hidden": 0,
+   "label": "Status",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "salutation",
+   "hidden": 0,
+   "label": "Salutation",
+   "links_to": "Salutation",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "designation",
+   "hidden": 0,
+   "label": "Designation",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "gender",
+   "hidden": 0,
+   "label": "Gender",
+   "links_to": "Gender",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "phone",
+   "hidden": 0,
+   "label": "Phone",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "mobile_no",
+   "hidden": 0,
+   "label": "Mobile No",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "company_name",
+   "hidden": 0,
+   "label": "Company Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "image",
+   "hidden": 1,
+   "label": "Image",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Attach Image"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "google_contacts",
+   "hidden": 0,
+   "label": "Google Contacts",
+   "links_to": "Google Contacts",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "google_contacts_id",
+   "hidden": 0,
+   "label": "Google Contacts Id",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "pulled_from_google_contacts",
+   "hidden": 0,
+   "label": "Pulled from Google Contacts",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "email_ids",
+   "hidden": 0,
+   "label": "Email IDs",
+   "links_to": "Contact Email",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "phone_nos",
+   "hidden": 0,
+   "label": "Contact Numbers",
+   "links_to": "Contact Phone",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "links",
+   "hidden": 0,
+   "label": "Links",
+   "links_to": "Dynamic Link",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_primary_contact",
+   "hidden": 0,
+   "label": "Is Primary Contact",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_billing_contact",
+   "hidden": 0,
+   "label": "Is Billing Contact",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "department",
+   "hidden": 0,
+   "label": "Department",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "unsubscribed",
+   "hidden": 0,
+   "label": "Unsubscribed",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  }
+ ],
+ "lede": "A person to reach at a customer or a supplier, with their phone and email.",
+ "name": "Contact",
+ "single": 0,
+ "slug": "contact",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Contact Email": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "email_id",
+     "hidden": 0,
+     "label": "Email ID",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "is_primary",
+     "hidden": 0,
+     "label": "Is Primary",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    }
+   ]
+  },
+  "Contact Phone": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "phone",
+     "hidden": 0,
+     "label": "Number",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "is_primary_phone",
+     "hidden": 0,
+     "label": "Is Primary Phone",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "is_primary_mobile_no",
+     "hidden": 0,
+     "label": "Is Primary Mobile",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    }
+   ]
+  },
+  "Dynamic Link": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "link_doctype",
+     "hidden": 0,
+     "label": "Link Document Type",
+     "links_to": "DocType",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "link_name",
+     "hidden": 0,
+     "label": "Link Name",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Dynamic Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "link_title",
+     "hidden": 0,
+     "label": "Link Title",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Read Only"
+    }
+   ]
+  }
+ },
+ "why": "retail core",
+ "written_elsewhere": ""
+}

@@ -1,0 +1,162 @@
+{
+ "area": "Stock and stores",
+ "description": "A register book's period at one register store: its dates and its return due date, and the establishment's name and address copied when it is made. Every line carries the period it was written into. The book prints from it.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "book",
+   "hidden": 0,
+   "label": "Book",
+   "links_to": "Retail Register Book",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "register_store",
+   "hidden": 0,
+   "label": "Register store",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "from_date",
+   "hidden": 0,
+   "label": "From",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "to_date",
+   "hidden": 0,
+   "label": "To",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "return_due",
+   "hidden": 0,
+   "label": "Return due",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Open",
+    "Signed off"
+   ],
+   "description": "",
+   "fieldname": "status",
+   "hidden": 0,
+   "label": "Status",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "signed_off_by",
+   "hidden": 0,
+   "label": "Signed off by",
+   "links_to": "User",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "signed_off_at",
+   "hidden": 0,
+   "label": "Signed off at",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "chain_status",
+   "hidden": 0,
+   "label": "Chain",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Small Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Each sequence's last entry number and hash when the period was signed off: Verify book checks them.",
+   "fieldname": "sealed",
+   "hidden": 0,
+   "label": "Sealed at sign-off",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Code"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "establishment",
+   "hidden": 0,
+   "label": "Establishment",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "establishment_address",
+   "hidden": 0,
+   "label": "Establishment address",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Small Text"
+  }
+ ],
+ "lede": "A period of a register book, closed with its count.",
+ "name": "Retail Register Period",
+ "single": 0,
+ "slug": "retail_register_period",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "guide chapter 07; recipe regulated_register; sample S41",
+ "written_elsewhere": "iVendNext writes it when a period is signed off."
+}

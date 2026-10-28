@@ -1,0 +1,218 @@
+{
+ "area": "Customers and groups",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "customer_group_name",
+   "hidden": 0,
+   "label": "Customer Group Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "parent_customer_group",
+   "hidden": 0,
+   "label": "Parent Customer Group",
+   "links_to": "Customer Group",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Only leaf nodes are allowed in transaction",
+   "fieldname": "is_group",
+   "hidden": 0,
+   "label": "Is Group",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "default_price_list",
+   "hidden": 0,
+   "label": "Default Price List",
+   "links_to": "Price List",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "payment_terms",
+   "hidden": 0,
+   "label": "Default Payment Terms Template",
+   "links_to": "Payment Terms Template",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "lft",
+   "hidden": 1,
+   "label": "lft",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "rgt",
+   "hidden": 1,
+   "label": "rgt",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "old_parent",
+   "hidden": 1,
+   "label": "old_parent",
+   "links_to": "Customer Group",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Mention if non-standard receivable account applicable",
+   "fieldname": "accounts",
+   "hidden": 0,
+   "label": "Accounts",
+   "links_to": "Party Account",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "credit_limits",
+   "hidden": 0,
+   "label": "Credit Limit",
+   "links_to": "Customer Credit Limit",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "A branch of the retailer's customer tree, such as Members under All Customer Groups, which prices and rules use.",
+ "name": "Customer Group",
+ "single": 0,
+ "slug": "customer_group",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Customer Credit Limit": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "company",
+     "hidden": 0,
+     "label": "Company",
+     "links_to": "Company",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "credit_limit",
+     "hidden": 0,
+     "label": "Credit Limit",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Currency"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "bypass_credit_limit_check",
+     "hidden": 0,
+     "label": "Bypass Credit Limit Check at Sales Order",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    }
+   ]
+  },
+  "Party Account": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "company",
+     "hidden": 0,
+     "label": "Company",
+     "links_to": "Company",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "account",
+     "hidden": 0,
+     "label": "Default Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "advance_account",
+     "hidden": 0,
+     "label": "Advance Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "guide chapter 04; recipe configure_no_code; recipe coupon_rules; recipe customer_code_check; recipe customer_owned_loyalty; recipe customers_by_store; recipe gift_card_on_spend; recipe lucky_draw; recipe payment_method_rules; recipe required_sale_details; recipe rule_guard; sample S46; sample S47; sample S48; sample S50; retail core",
+ "written_elsewhere": ""
+}

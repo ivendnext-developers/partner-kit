@@ -1,0 +1,177 @@
+{
+ "area": "Customers and groups",
+ "description": "Classification of Customers by region",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "territory_name",
+   "hidden": 0,
+   "label": "Territory Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "parent_territory",
+   "hidden": 0,
+   "label": "Parent Territory",
+   "links_to": "Territory",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_group",
+   "hidden": 0,
+   "label": "Is Group",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "For reference",
+   "fieldname": "territory_manager",
+   "hidden": 0,
+   "label": "Territory Manager",
+   "links_to": "Sales Person",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "lft",
+   "hidden": 1,
+   "label": "lft",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "rgt",
+   "hidden": 1,
+   "label": "rgt",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "old_parent",
+   "hidden": 1,
+   "label": "old_parent",
+   "links_to": "Territory",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "targets",
+   "hidden": 0,
+   "label": "Targets",
+   "links_to": "Target Detail",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "A region the retailer sells in, used to route orders and in reports.",
+ "name": "Territory",
+ "single": 0,
+ "slug": "territory",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Target Detail": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "item_group",
+     "hidden": 0,
+     "label": "Item Group",
+     "links_to": "Item Group",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "fiscal_year",
+     "hidden": 0,
+     "label": "Fiscal Year",
+     "links_to": "Fiscal Year",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "target_qty",
+     "hidden": 0,
+     "label": "Target Qty",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "target_amount",
+     "hidden": 0,
+     "label": "Target Amount",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "distribution_id",
+     "hidden": 0,
+     "label": "Target Distribution",
+     "links_to": "Monthly Distribution",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "recipe call_centre_orders; sample S35; retail core",
+ "written_elsewhere": ""
+}

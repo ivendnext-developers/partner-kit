@@ -1,0 +1,203 @@
+{
+ "area": "Your app: its install, its user and its doors",
+ "description": "How a country's tax clearance is read from sale fields. The receipt prints as a tax document only once the sale is cleared. System Manager only.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Who writes the result: an installed fiscal app (for example zatca_erpgulf), or Outside service via the API.",
+   "fieldname": "source",
+   "hidden": 0,
+   "label": "Source",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enabled",
+   "hidden": 0,
+   "label": "Enabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Each company needs a fiscal regime row with Clearance Required, or its receipts print with no tax receipt number.",
+   "fieldname": "companies",
+   "hidden": 0,
+   "label": "Companies",
+   "links_to": "Allowed To Transact With",
+   "read_only": 0,
+   "required": 1,
+   "type": "Table MultiSelect"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The POS Invoice field holding the clearance status.",
+   "fieldname": "status_field",
+   "hidden": 0,
+   "label": "Status field",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The POS Invoice field holding the tax receipt number the authority gave the sale.",
+   "fieldname": "ref_field",
+   "hidden": 0,
+   "label": "Tax receipt number field",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Optional. POS Invoice field with the authority's QR code. Printed as stored once cleared.",
+   "fieldname": "qr_field",
+   "hidden": 0,
+   "label": "QR field",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Optional. POS Invoice field with the authority's seal or signature. Printed as stored once cleared.",
+   "fieldname": "signature_field",
+   "hidden": 0,
+   "label": "Seal field",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The only role allowed to write the results: the outside service's own role. Nobody can type a cleared status.",
+   "fieldname": "writer_role",
+   "hidden": 0,
+   "label": "Writer role",
+   "links_to": "Role",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The service's integration users: the only users who may hold the writer role.",
+   "fieldname": "writer_users",
+   "hidden": 0,
+   "label": "Writer users",
+   "links_to": "User Group Member",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table MultiSelect"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "What each value the source writes means for the receipt. Unlisted values change nothing.",
+   "fieldname": "status_map",
+   "hidden": 0,
+   "label": "Status values",
+   "links_to": "Retail Fiscal Reader Status",
+   "read_only": 0,
+   "required": 1,
+   "type": "Table"
+  }
+ ],
+ "lede": "Which sale fields hold a fiscal service's result, and what each status means. A manifest installs it.",
+ "name": "Retail Fiscal Reader",
+ "single": 0,
+ "slug": "retail_fiscal_reader",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Allowed To Transact With": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "company",
+     "hidden": 0,
+     "label": "Company",
+     "links_to": "Company",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    }
+   ]
+  },
+  "Retail Fiscal Reader Status": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "source_value",
+     "hidden": 0,
+     "label": "Value the source writes",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "CLEARED",
+      "REPORTED",
+      "PENDING"
+     ],
+     "description": "CLEARED or REPORTED: prints with the tax receipt number. PENDING: the receipt waits.",
+     "fieldname": "status",
+     "hidden": 0,
+     "label": "Means",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Select"
+    }
+   ]
+  },
+  "User Group Member": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "user",
+     "hidden": 0,
+     "label": "User",
+     "links_to": "User",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "contract fiscal_reader",
+ "written_elsewhere": ""
+}

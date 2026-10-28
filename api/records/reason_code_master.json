@@ -1,0 +1,87 @@
+{
+ "area": "Sales and returns",
+ "description": "Code denoting the reason for an override action.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_active",
+   "hidden": 0,
+   "label": "Is Active",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "id",
+   "hidden": 0,
+   "label": "ID",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "description",
+   "hidden": 0,
+   "label": "Description",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Cash In",
+    "Cash Out",
+    "Open Cash Drawer",
+    "Void Sale",
+    "Item Return",
+    "Sale Return",
+    "Sale Discount",
+    "Item Discount",
+    "Price Override",
+    "Suspend Transaction",
+    "Delete Suspended Transation"
+   ],
+   "description": "",
+   "fieldname": "reason_type",
+   "hidden": 0,
+   "label": "Reason Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "comment_required",
+   "hidden": 0,
+   "label": "Comment Required",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  }
+ ],
+ "lede": "A reason a cashier picks: for a markdown, a void, a return or a cash movement.",
+ "name": "Reason Code Master",
+ "single": 0,
+ "slug": "reason_code_master",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "guide chapter 04; recipe configure_no_code",
+ "written_elsewhere": ""
+}

@@ -1,0 +1,51 @@
+{
+ "area": "Items",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enabled",
+   "hidden": 0,
+   "label": "Enabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "uom_name",
+   "hidden": 0,
+   "label": "UOM Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Check this to disallow fractions. (for Nos)",
+   "fieldname": "must_be_whole_number",
+   "hidden": 0,
+   "label": "Must be Whole Number",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  }
+ ],
+ "lede": "A unit an item is counted or sold in: each, box, kilogram.",
+ "name": "UOM",
+ "single": 0,
+ "slug": "uom",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "retail core",
+ "written_elsewhere": ""
+}

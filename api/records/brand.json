@@ -1,0 +1,213 @@
+{
+ "area": "Items",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "brand",
+   "hidden": 0,
+   "label": "Brand Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "image",
+   "hidden": 1,
+   "label": "Image",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Attach Image"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "description",
+   "hidden": 0,
+   "label": "Description",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "brand_defaults",
+   "hidden": 0,
+   "label": "Brand Defaults",
+   "links_to": "Item Default",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "A brand an item belongs to.",
+ "name": "Brand",
+ "single": 0,
+ "slug": "brand",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Item Default": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "company",
+     "hidden": 0,
+     "label": "Company",
+     "links_to": "Company",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "default_warehouse",
+     "hidden": 0,
+     "label": "Default Warehouse",
+     "links_to": "Warehouse",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "default_price_list",
+     "hidden": 0,
+     "label": "Default Price List",
+     "links_to": "Price List",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "default_discount_account",
+     "hidden": 0,
+     "label": "Default Discount Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "buying_cost_center",
+     "hidden": 0,
+     "label": "Default Buying Cost Center",
+     "links_to": "Cost Center",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "default_supplier",
+     "hidden": 0,
+     "label": "Default Supplier",
+     "links_to": "Supplier",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "expense_account",
+     "hidden": 0,
+     "label": "Default Expense Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "default_provisional_account",
+     "hidden": 0,
+     "label": "Default Provisional Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "selling_cost_center",
+     "hidden": 0,
+     "label": "Default Selling Cost Center",
+     "links_to": "Cost Center",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "income_account",
+     "hidden": 0,
+     "label": "Default Income Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "deferred_expense_account",
+     "hidden": 0,
+     "label": "Deferred Expense Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "deferred_revenue_account",
+     "hidden": 0,
+     "label": "Deferred Revenue Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "retail core",
+ "written_elsewhere": ""
+}

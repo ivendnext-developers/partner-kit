@@ -1,0 +1,132 @@
+{
+ "area": "The retailer's setup",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [
+    "Open",
+    "Completed"
+   ],
+   "description": "",
+   "fieldname": "status",
+   "hidden": 0,
+   "label": "Status",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "reference_name",
+   "hidden": 0,
+   "label": "Reference Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Dynamic Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "reference_doctype",
+   "hidden": 0,
+   "label": "Reference Document Type",
+   "links_to": "DocType",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "workflow_state",
+   "hidden": 1,
+   "label": "Workflow State",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "completed_by_role",
+   "hidden": 0,
+   "label": "Completed By Role",
+   "links_to": "Role",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "completed_by",
+   "hidden": 0,
+   "label": "Completed By User",
+   "links_to": "User",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "permitted_roles",
+   "hidden": 0,
+   "label": "Permitted Roles",
+   "links_to": "Workflow Action Permitted Role",
+   "read_only": 1,
+   "required": 0,
+   "type": "Table MultiSelect"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "user",
+   "hidden": 1,
+   "label": "User",
+   "links_to": "User",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  }
+ ],
+ "lede": "A step taken in a workflow: who took it, with which role, on which record.",
+ "name": "Workflow Action",
+ "single": 0,
+ "slug": "workflow_action",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Workflow Action Permitted Role": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "role",
+     "hidden": 0,
+     "label": "Role",
+     "links_to": "Role",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "recipe integration_user",
+ "written_elsewhere": "iVendNext writes it with each workflow step (`apply_workflow`)."
+}

@@ -1,0 +1,686 @@
+{
+ "area": "Coupons and promotions",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "id",
+   "hidden": 0,
+   "label": "Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "has_valid_date",
+   "hidden": 0,
+   "label": "Has Effective Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "start_date",
+   "hidden": 0,
+   "label": "Start Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "end_date",
+   "hidden": 0,
+   "label": "End Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "coupon_code",
+   "hidden": 0,
+   "label": "Coupon Code",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Percent",
+    "Amount"
+   ],
+   "description": "",
+   "fieldname": "discount_type",
+   "hidden": 0,
+   "label": "Discount Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "trigger_quantity",
+   "hidden": 0,
+   "label": "Trigger Quantity",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "minimum_bill_amount",
+   "hidden": 1,
+   "label": "Minimum Bill Amount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "maximum_redemption_count",
+   "hidden": 0,
+   "label": "Maximum Redemption Count Per Store",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Bonus Buys",
+    "Fixed Price"
+   ],
+   "description": "",
+   "fieldname": "promotion_type",
+   "hidden": 1,
+   "label": "Promotion Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "active",
+   "hidden": 0,
+   "label": "Active",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "lowest_value",
+   "hidden": 1,
+   "label": "Lowest Value",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "sequence_number",
+   "hidden": 1,
+   "label": "Sequence Number",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "description",
+   "hidden": 0,
+   "label": "Description",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "has_valid_time",
+   "hidden": 0,
+   "label": "Has Effective Time",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "start_time",
+   "hidden": 0,
+   "label": "Start Time",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Time"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "end_time",
+   "hidden": 0,
+   "label": "End Time",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Time"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "discount_percent",
+   "hidden": 0,
+   "label": "Discount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "applicable_quantity",
+   "hidden": 0,
+   "label": "Applicable Quantity",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "can_repeat_in_transaction",
+   "hidden": 1,
+   "label": "Can Repeat In Transaction",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "exclude_discounted_items",
+   "hidden": 1,
+   "label": "Exclude Discounted Items",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "apply_on_item_scan",
+   "hidden": 1,
+   "label": "Apply On Item Scan",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_apply_once",
+   "hidden": 1,
+   "label": "Apply Once Per Customer",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "total_redemption_count",
+   "hidden": 1,
+   "label": "Total Redemption Count",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_serial_managed",
+   "hidden": 0,
+   "label": "Is Serial Managed",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_get_items",
+   "hidden": 0,
+   "label": "Coupon Items",
+   "links_to": "Coupon Get Side",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_applicable_source",
+   "hidden": 0,
+   "label": "Applicable Source",
+   "links_to": "Coupon Applicability Detail",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_applicability",
+   "hidden": 0,
+   "label": "Duration",
+   "links_to": "Coupon Applicability",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_customer_special_days",
+   "hidden": 1,
+   "label": "Customer Special Days",
+   "links_to": "Coupon Customer Special Days",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_promotion_exclusion_list",
+   "hidden": 0,
+   "label": "Coupon Exclusion List",
+   "links_to": "Coupon Exclude Item",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "A coupon the retailer issues, with what it takes off and when it can be used.",
+ "name": "Coupon",
+ "single": 0,
+ "slug": "coupon",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Coupon Applicability": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+     ],
+     "description": "",
+     "fieldname": "day",
+     "hidden": 0,
+     "label": "Day",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "enabled",
+     "hidden": 0,
+     "label": "Enabled",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "start_time",
+     "hidden": 0,
+     "label": "Start Time",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Time"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "end_time",
+     "hidden": 0,
+     "label": "End Time",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Time"
+    }
+   ]
+  },
+  "Coupon Applicability Detail": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Warehouse"
+     ],
+     "description": "",
+     "fieldname": "source_type",
+     "hidden": 0,
+     "label": "Source Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "source",
+     "hidden": 0,
+     "label": "Source",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Dynamic Link"
+    }
+   ]
+  },
+  "Coupon Customer Special Days": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Birthday",
+      "Anniversary"
+     ],
+     "description": "",
+     "fieldname": "special_days_type",
+     "hidden": 0,
+     "label": "Special Days Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Day",
+      "Week",
+      "Month",
+      "DaysBackwardForward"
+     ],
+     "description": "",
+     "fieldname": "special_days_duration",
+     "hidden": 0,
+     "label": "Duration",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "backward_day",
+     "hidden": 0,
+     "label": "Backward Day",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "forward_day",
+     "hidden": 0,
+     "label": "Forward Day",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    }
+   ]
+  },
+  "Coupon Exclude Item": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Customer Group"
+     ],
+     "description": "",
+     "fieldname": "source_type",
+     "hidden": 0,
+     "label": "Source Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "source",
+     "hidden": 0,
+     "label": "Source",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Dynamic Link"
+    }
+   ]
+  },
+  "Coupon Get Side": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Item",
+      "Item Group",
+      "Brand"
+     ],
+     "description": "",
+     "fieldname": "source_type",
+     "hidden": 0,
+     "label": "Product Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "source_key",
+     "hidden": 0,
+     "label": "Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Dynamic Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "description",
+     "hidden": 0,
+     "label": "Description",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "uom",
+     "hidden": 1,
+     "label": "UOM",
+     "links_to": "UOM",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "quantity",
+     "hidden": 1,
+     "label": "Quantity",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Amount",
+      "Percent"
+     ],
+     "description": "",
+     "fieldname": "discount_type",
+     "hidden": 1,
+     "label": "Discount Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "discount",
+     "hidden": 1,
+     "label": "Discount",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "is_mandatory",
+     "hidden": 1,
+     "label": "Mandatory",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "auto_add_in_transaction",
+     "hidden": 1,
+     "label": "Show Prompt",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    }
+   ]
+  }
+ },
+ "why": "recipe coupon_rules; recipe rule_guard; sample S31; retail core",
+ "written_elsewhere": ""
+}

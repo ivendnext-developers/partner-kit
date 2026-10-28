@@ -1,0 +1,524 @@
+{
+ "about": "The words of the developer's map (site/pages/map.md) that no other kit file holds, read by site/devmap.py. The build holds each part to its source by name and by quote: every method name in api/README.md has a line here and none is extra; every contract page is a row of part (b) and every quoted cell is on that page; every key of the manifest schema is a row of part (c) or a key that describes the app; every screenshot exists. What it does not hold: the hand-written lines (a method's one line, a manifest key's words), which a reviewer checks against chapter 7 and api/README.md; a quote's section; a cell marked none.",
+ "methods": {
+  "scan_barcode": "Find the item a barcode, serial number or lot number belongs to, as the till's scan finds it.",
+  "get_item_details": "Price one line as the shop prices it: the item's rate, discounts and taxes for a customer, price list, store and quantity.",
+  "price_check": "Both in one call: the scan, then the price of what it found (nothing found: no price).",
+  "apply_workflow": "Move a record to its workflow's next state, as a user pressing the workflow's button, with that user's rights.",
+  "submit": "Submit (book) a saved draft record. A till sale at a register with a partner's check in scope is refused here: book it from a till.",
+  "bulk_update": "Change several records in one call, each with the caller's rights.",
+  "get_count": "Count the records of a type that match your filters, without reading them.",
+  "get_password": "Read a password field of a record. Only a user with System Manager may: your app's own user is refused.",
+  "get_docinfo": "A record's comments, attachments, assignments and change history, as its page in Desk shows them.",
+  "add_comment": "Write a comment on a record, shown on its page in Desk.",
+  "generate_keys": "Make a new API key and secret for a user. The retailer's administrator uses it to give a user a key; it replaces the old secret.",
+  "get_logged_user": "The user your call runs as: check whose key you hold.",
+  "get_versions": "The versions of the apps installed on the site, to check a feature's build before you use it.",
+  "get_role_permissions": "Read the rights each role has on a record type.",
+  "add_role_permission": "Add a role's row of rights on a record type.",
+  "update_role_permission": "Change one right of a role's row on a record type.",
+  "reset_role_permissions": "Put a record type's rights back to the product's own.",
+  "run_report": "Run one of the retailer's reports by name, with its filters (`report_name`, `filters`), and read its columns and rows as Desk shows them. Watch for: a call that names another `user` reads as that user, and a report the retailer switched off is refused.",
+  "prepare_report": "Queue a background run of a prepared report (such as Stock Balance); it answers the run's record name (a Prepared Report), which you read when it is done. Watch for: it checks no right.",
+  "get_gift_card_status": "One gift card's status as the till reads it, by its number (`gift_card_no`): its balance, whether it has expired, whether a payment has used it. A Gift Card record names no customer: find a customer's cards in your own records.",
+  "material_request_to_stock_entry": "A stock movement built from a submitted request for goods, as Desk's Create menu builds it, unsaved: you save it.",
+  "sales_order_to_delivery_note": "A delivery note built from a submitted order, as Desk's Create menu builds it, unsaved: you save it.",
+  "sales_order_to_sales_invoice": "A sale built from a submitted order, as Desk's Create menu builds it, unsaved: you save it.",
+  "get_batch_qty": "A lot's quantity in a store, or a store's lots of an item with stock.",
+  "payer_coverage": "On a draft Sales Invoice in Desk: the customer's covers, then what one cover pays, sealed into the invoice.",
+  "payer_bill_back": "Bill a claim the payer rejected back to the customer; it answers the journal booked, once per sale, claim and reason.",
+  "check_open": "Open a check at a place, or a tab or pre-order named by its label; it answers the check at version 1.",
+  "check_add_lines": "Add lines to an open check, with no price: the shop prices the check when the table pays at a till.",
+  "check_change_line": "Change an unsent line nobody is paying, such as its quantity, choices or note (your own lines, or any line with the right to change any).",
+  "check_remove_line": "Remove a line not yet sent to the kitchen and that nobody is paying.",
+  "check_move": "Move a check to another place, or to a tab's label.",
+  "check_move_lines": "Move some lines to another check.",
+  "check_merge": "Merge a check into another.",
+  "check_split_line": "Split part of a line's quantity off.",
+  "check_transfer_server": "Hand a check to another server, at a shift's handover.",
+  "check_edit": "Change a check's covers, label, suggested customer or service mode (the mode only until a line has gone to the kitchen).",
+  "check_close": "Close a check with no open line.",
+  "check_mark_sent": "Send: the unsent lines (or the named ones) go to their kitchens on the till's kitchen tickets.",
+  "check_void_line": "Void a whole line the kitchen already has (the kitchen's manager right); a VOID ticket tells the kitchen to stop.",
+  "check_comp_line": "Take a line off the check free (the Manager preset's right); it is never on the sale.",
+  "check_get": "Read one check with its lines; locks nothing.",
+  "floor_status": "The store's sections, places with their status (free, seated, ordered, paying) and tabs.",
+  "check_preview": "The shop's own price of the open lines at your register, computed when asked, never stored.",
+  "check_claim": "A till's own, when a check is paid. Refused to your app whatever it is granted.",
+  "check_release": "A till's own, when a check is paid. Refused to your app whatever it is granted.",
+  "check_note_pending": "A till's own, when a check is paid. Refused to your app whatever it is granted.",
+  "check_clear_pending": "A till's own, when a check is paid. Refused to your app whatever it is granted.",
+  "check_break_claim": "A till's own: end another till's payment of a check. Refused to your app whatever it is granted.",
+  "check_print": "A till's own: the printed check for the table. Refused to your app whatever it is granted."
+ },
+ "other_calls": [
+  {
+   "address": "/api/method/ivendnext_mpos.api.feed.events",
+   "what": "The event feed: your app's oldest events not yet done, oldest first.",
+   "detail": "../../recipes/event_feed.md"
+  },
+  {
+   "address": "/api/method/ivendnext_mpos.api.feed.done",
+   "what": "The event feed: mark up to 500 of your events done.",
+   "detail": "../../contracts/pages/event_feed.md"
+  },
+  {
+   "address": "/api/method/ivendnext_mpos.api.feed.failed",
+   "what": "The event feed: mark one event failed, with your note; it comes back on the next read.",
+   "detail": "../../contracts/pages/event_feed.md"
+  },
+  {
+   "address": "/api/method/ivendnext_mpos.api.page.submit",
+   "what": "A partner page's answer: your server posts the cashier's choice, signed, and the till applies it.",
+   "detail": "../../contracts/pages/partner_page.md"
+  },
+  {
+   "address": "/api/method/ivendnext_pay_remote.api.callback",
+   "what": "A payment connector's callback: the result of a payment your connector started.",
+   "detail": "../../recipes/payment_connector.md"
+  }
+ ],
+ "manifest": {
+  "doctypes": [
+   "Record types of your own",
+   "Your own record types, each with its fields, permissions and Desk form and list. A settings record is one of them with `issingle`."
+  ],
+  "custom_fields": [
+   "Fields on existing records",
+   "A field your app adds to one of the retailer's record types, such as a warranty reference on a sale's line."
+  ],
+  "property_setters": [
+   "Changes to how your own fields show",
+   "A change to how a field your app added shows on one of the retailer's record types; never a change to the retailer's own fields, and never making a field mandatory, read-only or hidden."
+  ],
+  "print_formats": [
+   "Print formats",
+   "A printed layout of a record: a receipt, a label, a price list page."
+  ],
+  "workflows": [
+   "Workflows",
+   "Approval states and the buttons that move a record between them, each limited to a role."
+  ],
+  "notifications": [
+   "Notifications",
+   "An email or a system message sent when a record changes or on a date."
+  ],
+  "reports": [
+   "Reports",
+   "A report on the retailer's records, built from a query you declare, run in Desk."
+  ],
+  "workspaces": [
+   "Workspaces",
+   "Your app's page in Desk, opened from the App library: its shortcuts, lists and reports."
+  ],
+  "number_cards": [
+   "Number cards",
+   "A figure on a workspace, such as today's sales."
+  ],
+  "dashboard_charts": [
+   "Dashboard charts",
+   "A chart on a dashboard or workspace."
+  ],
+  "dashboards": [
+   "Dashboards",
+   "A page of number cards and charts."
+  ],
+  "list_settings": [
+   "List settings",
+   "The columns and order a Desk list opens with."
+  ],
+  "naming_rules": [
+   "Naming rules",
+   "How your records are numbered."
+  ],
+  "links": [
+   "Connections links",
+   "Your records listed under one of the retailer's, such as pick tasks under a sales order."
+  ],
+  "sale_attributes": [
+   "Sale details",
+   "Extra details carried on a sale, such as a delivery number or a boarding pass."
+  ],
+  "webhooks": [
+   "Webhooks",
+   "A signed call to your service when a record changes."
+  ],
+  "registered_applications": [
+   "The event feed",
+   "Your app's event feed, one per app: the record types it follows. The install makes your app's own user with it."
+  ],
+  "remote_keys": [
+   "Till keys",
+   "A key on the till that calls your service and shows its answer."
+  ],
+  "extension_subscriptions": [
+   "Extension points",
+   "Your service at one of the till's or Desk's extension points: a check before payment, a capture, a partner page, and the rest of part (b)."
+  ],
+  "extension_modules": [
+   "Sandboxed functions",
+   "A certified WebAssembly module at an extension point that takes one (the check before payment and pricing)."
+  ],
+  "desk_actions": [
+   "Desk buttons",
+   "A button on a record's form or a list, which sends the record to your service and shows its answer."
+  ],
+  "save_rules": [
+   "Save rules",
+   "Rules the retailer's records must meet when saved, applied by iVendNext itself: required fields, limits, sums."
+  ],
+  "fiscal_readers": [
+   "Fiscal readers",
+   "Fields a fiscal service may read from a sale and write back, such as a signature."
+  ],
+  "list_marks": [
+   "List marks",
+   "A coloured label on a row of a Desk list."
+  ],
+  "register_books": [
+   "Register books",
+   "The books of a regulated-stock register, such as a controlled-drug register."
+  ],
+  "allowed_urls": [
+   "Your addresses",
+   "The addresses your service is reached at; the retailer sees them at install, and every call your app's points make goes only there."
+  ]
+ },
+ "app_keys": [
+  "manifest_version",
+  "app",
+  "prefix",
+  "version",
+  "title",
+  "publisher",
+  "description"
+ ],
+ "screens": [
+  {
+   "where": "On the till",
+   "screen": "A sheet over the sale",
+   "show": "Your page as a sheet over the sale, in the till's own look; it answers once, with a message and sale details",
+   "door": "partner page",
+   "recipe": "../../recipes/partner_page.md",
+   "shot": "../../samples/s17_partner_page/screenshots/02_board_on_till.png",
+   "alt": "The order board on the till, as a sheet over the sale",
+   "sample": "S17"
+  },
+  {
+   "where": "On the till",
+   "screen": "The till's message at a key",
+   "show": "The till's own message from your service, with details added to the sale",
+   "door": "till key",
+   "recipe": "../../recipes/point_handler.md",
+   "shot": "../../samples/s6_ai_till_key/screenshots/02_hint_in_the_tills_sheet.png",
+   "alt": "The till's own sheet showing the service's answer to a key press",
+   "sample": "S6"
+  },
+  {
+   "where": "On the till",
+   "screen": "A sheet at the scan",
+   "show": "The till's own sheet with your question, a refusal, a notice, or values on the line",
+   "door": "capture",
+   "recipe": "../../recipes/capture.md",
+   "shot": "../../samples/s20_capture/screenshots/01_warranty_capture_sheet.png",
+   "alt": "The till's own sheet asking for a warranty reference at the scan",
+   "sample": "S20"
+  },
+  {
+   "where": "On the till",
+   "screen": "A sheet when a customer is added",
+   "show": "The till's own sheet with a one-time code to enter, a refusal or a notice",
+   "door": "capture",
+   "recipe": "../../recipes/capture.md",
+   "shot": "../../samples/s20_capture/screenshots/03_member_code_sheet.png",
+   "alt": "The till's own sheet asking for the member's one-time code",
+   "sample": "S20"
+  },
+  {
+   "where": "On the till",
+   "screen": "A sheet when a quantity changes",
+   "show": "The till's own sheet with your question, a refusal that puts back the last allowed quantity, or a notice",
+   "door": "capture",
+   "recipe": "../../recipes/capture.md",
+   "shot": "../../guide/img/till_quantity_question.png",
+   "alt": "The till's own sheet asking a question when the quantity of a line goes past 3",
+   "sample": "",
+   "credit": "the product's own walk of the capture door (POS build 2.0.0.654, tablet frame); S20's quantity service asks through the same sheet"
+  },
+  {
+   "where": "On the till",
+   "screen": "Extra fields",
+   "show": "Up to three more item fields and three more customer fields on the till's screens, each called by the retailer's own word",
+   "door": "field rules",
+   "recipe": "../../recipes/field_rules.md",
+   "shot": "../../samples/s21_field_rules/screenshots/02_stars_on_the_customers_card.png",
+   "alt": "An extra field on the customer's card at the till",
+   "sample": "S21"
+  },
+  {
+   "where": "On the till",
+   "screen": "A question or a refusal before Pay",
+   "show": "A question, a refusal in your own sentence, or a manager's approval, before the sale is paid",
+   "door": "check before payment",
+   "recipe": "../../recipes/till_guard.md",
+   "shot": "../../samples/s18_rule_guard/screenshots/04_asks_for_id.png",
+   "alt": "The till asking for the customer's ID before payment",
+   "sample": "S18"
+  },
+  {
+   "where": "In Desk",
+   "screen": "A button and its dialog",
+   "show": "A button on a form or a list; the inputs you declare in the native dialog; your answer in our dialog",
+   "door": "Desk action",
+   "recipe": "../../recipes/desk_action.md",
+   "shot": "../../samples/s16_pick_route/screenshots/02_dialog_filled.png",
+   "alt": "The Assign pick route dialog on a sales order in Desk",
+   "sample": "S16"
+  },
+  {
+   "where": "In Desk",
+   "screen": "Your own page",
+   "show": "Your page inside Desk's page frame, with a signed one-time context",
+   "door": "partner page",
+   "recipe": "../../recipes/partner_page.md",
+   "shot": "../../samples/s17_partner_page/screenshots/05_board_as_desk_page.png",
+   "alt": "The order board as a page in Desk",
+   "sample": "S17"
+  },
+  {
+   "where": "In Desk",
+   "screen": "Native screens for your records",
+   "show": "A form, a list, reports and print for every record type your manifest installs, exactly as Desk draws its own",
+   "door": "manifest",
+   "recipe": "../../recipes/manifest.md",
+   "shot": "../../samples/s2_bins/screenshots/02_bins.png",
+   "alt": "The bin locations list in Desk",
+   "sample": "S2"
+  },
+  {
+   "where": "In Desk",
+   "screen": "Your workspace",
+   "show": "Your app's page of shortcuts, lists and figures, opened from the App library",
+   "door": "manifest",
+   "recipe": "../../recipes/manifest.md",
+   "shot": "../../samples/s33_click_and_collect/screenshots/01_workspace.png",
+   "alt": "The click and collect workspace in Desk",
+   "sample": "S33"
+  },
+  {
+   "where": "On its own",
+   "screen": "A standalone page",
+   "show": "Your own app, with Sign in with iVendNext and links that open records in Desk",
+   "door": "your own app",
+   "recipe": "../../recipes/portal.md",
+   "shot": "../../samples/s13_portal/screenshots/04_sales_list.png",
+   "alt": "A partner's portal listing the retailer's sales",
+   "sample": "S13"
+  }
+ ],
+ "points": [
+  {
+   "page": "desk_action",
+   "table": "calls",
+   "when": "It fires when a user presses it. The server then **re-checks everything the button showed** on the record as SAVED (never the form's copy)",
+   "sends": "Only then does it send exactly the declared fields to your service and judge your answer.",
+   "answer": "**The answer** — HTTP 2xx, a JSON object of at most 64 KB: a `message`",
+   "limit": "3 seconds to answer unless the subscription allows more, 10 at most. No retry.",
+   "sees": "down, slow or unreachable — *\"⟨label⟩ did not answer in time. Check the record before you try again.\"*"
+  },
+  {
+   "page": "doccheck",
+   "table": "calls",
+   "when": "It fires **when the document is submitted**, from every door: the iVendNext Desk form or list, a data import, and the API.",
+   "sends": "what is sent with every call — the user's login (usually an email address) and language, the company, the record's type and name — the fields that leave the shop",
+   "answer": [
+    "**The answer** — HTTP 2xx, a JSON object of at most 64 KB, one of five:",
+    "`allow`",
+    "`refuse`",
+    "`ask`",
+    "`approve`",
+    "`fill`"
+   ],
+   "limit": "the time to answer (3 seconds unless raised, at most 10)",
+   "sees": "`allow_and_flag` (the default: the submit goes on and the log row is flagged), `refuse` (*did not answer, so this document can't be submitted yet*), or `ask` (*did not answer. Submit anyway?*)"
+  },
+  {
+   "page": "event_feed",
+   "table": "declared",
+   "what": "List the feed under `registered_applications` in your manifest: one feed per app, with every record type it follows in its `events`.",
+   "when": "The engine writes one event per **document step** a change runs, per registered application that follows that record type, after the change commits (a background job, so seconds later).",
+   "sees": "you pull, so a service that is down simply stops pulling. Your events wait, undone, for as long as you are away."
+  },
+  {
+   "page": "fields",
+   "table": "declared",
+   "what": "**Hide** a field nobody uses, **relabel** it in the shop's own word, **require** it on a new customer, or **show** up to three more Item fields and three more Customer fields",
+   "when": "They fire when the till lights up: the rules ride the theme the till reads at boot, and each screen asks them as it draws.",
+   "sees": "The new-customer sheet has no email field, and adding a customer without a phone at the till is refused with *\"Phone is required here.\"*"
+  },
+  {
+   "page": "fiscal_reader",
+   "table": "declared",
+   "what": "A **Retail Fiscal Reader** tells the POS which POS Invoice fields hold that result and what each status value means, so a new country needs no release.",
+   "when": "It fires when a submitted sale changes (the sale's own change hook, after every app's submit), and again whenever the till re-reads a sale that is still waiting",
+   "sees": "**Down:** the sale waits PENDING and the receipt is held."
+  },
+  {
+   "page": "label_layout",
+   "table": "declared",
+   "what": "A **Retail Label Layout** is data: HTML with placeholders from a closed list.",
+   "when": "It fires when the cashier presses **Print label** on an item's card or on a basket line (phone, counter and tablet alike)",
+   "sees": "The till fills it on the server and opens it in the device's own print dialog, so it prints on any printer the phone, tablet or counter can already reach."
+  },
+  {
+   "page": "list_mark",
+   "table": "declared",
+   "what": "A coloured label on a row of a shop's Desk list, shown when the row's values say so",
+   "when": "The marks travel with the user's boot info (read at each Desk page load; the declarations themselves are one cached read)",
+   "sees": "to every Desk user who may read the record type — **and only the marks whose every condition field the user may read**."
+  },
+  {
+   "page": "open_check",
+   "table": "declared",
+   "what": "Every verb is a call on the partner API: `/api/method/ivendnext_mpos.api.v1.<verb>`, `POST` (the two reads take `GET` too).",
+   "when": "The register's **Table Service** switch (POS Profile, off by default) turns the whole thing on.",
+   "sees": "The till's own floor reads `floor_status` again on each message, polls every 30 seconds while its live link is down, and says *\"Not live. Last updated 20:41.\"* after 90 seconds without one."
+  },
+  {
+   "page": "partner_capture",
+   "table": "calls",
+   "when": "**On scan** — when the cashier scans an item your filter names (its item group, a group below it, or an item field that is set), after the item is found and **before** its line goes on the sale.",
+   "sends": "line: its item_code, item_group, quantity, unit, batch, serial and the code scanned.",
+   "answer": "*allow* (nothing shown), *confirm* (a beep and a yes / no;",
+   "limit": "on scan or a quantity change 1.5 seconds unless raised, 3 at most · on customer add or select 3 seconds unless raised, 10 at most",
+   "sees": "*\"⟨label⟩ did not answer. The item can't be added until it does.\"*"
+  },
+  {
+   "page": "partner_check",
+   "table": "calls",
+   "when": "It fires when the cashier presses Pay, before the payment sheet opens (`stage: \"sale\"`); before the refund choices open on every refund the till pays (`stage: \"return\"`)",
+   "sends": "The numbers are the **server's**, never the till's echo. Money is a whole number of minor units with the currency's own digits (`currency_exponent`: 2 for AED, 3 for KWD, 0 for JPY); quantity is in thousandths.",
+   "answer": "allow it, allow it without some tenders, refuse it, ask the cashier a question, or call a manager.",
+   "limit": "3 seconds unless raised, at most 10 · at most 3 checks per POS Profile, 10 seconds together.",
+   "sees": "*\"⟨label⟩ did not answer. This sale can't be paid until it does. Try again, or get a manager.\"*"
+  },
+  {
+   "page": "partner_fulfil",
+   "table": "calls",
+   "when": "iVendNext writes one *Pending* record per sold line inside the sale's own booking, then asks you after the booking commits.",
+   "sends": "the sale's number, the store, the till's POS Profile, the company, the currency, the language, the customer's id, and the line's item code, item group, unit, face value and amount",
+   "answer": "{\"verdict\": \"issued\", \"ref\": \"GZ-77120\", \"lines\": [\"PIN 4821 0937 5521\", \"Valid until 16 Oct 2027\"]}",
+   "limit": "a time to answer (5 seconds unless raised, at most 10)",
+   "sees": "The cashier sees *Waiting for ⟨your label⟩'s code for ⟨item⟩*, with **Try again** and **Print without it**."
+  },
+  {
+   "page": "partner_page",
+   "table": "calls",
+   "when": "It fires when the cashier presses the page's key on the till, or when a Desk user opens the page",
+   "sends": "Your page learns who is looking at what from a **signed, one-time, five-minute context** in its address",
+   "answer": "on the till your server may **answer once** — a message, Sale Attribute rows, or both — which the cashier confirms like any till key",
+   "limit": "a page that has not loaded in 10 seconds",
+   "sees": "A page that does not load in 10 seconds shows *\"⟨label⟩ isn't answering.\"* with Close; nothing is added to the sale."
+  },
+  {
+   "page": "payer",
+   "table": "calls",
+   "when": "On a sale to a named customer the cashier presses **Payer**; we ask your service which covers the customer holds (`covers`) and the cashier picks one (the only one is taken).",
+   "sends": "We send the customer's record name, the date, the store, the POS Profile and the cashier.",
+   "answer": "you answer each line's two shares: yours and the customer's (`coverage`)",
+   "limit": "the time to answer (at most 5 seconds; 3 when left empty)",
+   "sees": "a service that does not answer in time, errs, fails its signature or answers wrongly means **no cover**: *\"⟨label⟩ cannot be reached: the customer can pay it all, or hold the sale.\"*"
+  },
+  {
+   "page": "paygw",
+   "table": "calls",
+   "when": "**Every call is a signed POST** to `https://<connector>/paygw/1/<verb>`",
+   "sends": "`{v, site, reference, merchant, amount_minor, currency, currency_exponent, rail, device, payer{phone,email,name,party} (may be empty), payer_code?}`",
+   "answer": "**An Answer** (`authorise`, `status`): `{v, site, reference, outcome, amount_minor?, currency, auth_ref?, correlation_id?, capture_state?, reason?, exists?, instrument?}`",
+   "limit": "every rail's `authorise` has the one 60 s deadline.",
+   "sees": "A preview that times out, is refused or is malformed dims the wallet at the till for that sale; it never raises at the till."
+  },
+  {
+   "page": "price",
+   "table": "declared",
+   "what": "answered by **your sandboxed module** (a WebAssembly function, see the partner check's section 6 and the Wasm kit). It may only take money **off** a line.",
+   "when": "on the iVendNext POS server, **after every promotion** (item-level and whole-sale), on the promotion-adjusted line, before the line's tax is worked out",
+   "sees": "the basket line names it beside the promotion, *\"Member 5% −R 5.00\"*, on the phone, the counter and the tablet"
+  },
+  {
+   "page": "print_template_readers",
+   "table": "declared",
+   "what": "Two readers a print template may call do that, with the rights of the person viewing the print",
+   "when": "Both readers read as the person viewing the print, the way a Desk list does",
+   "sees": "A refused call answers an empty list (or nothing) and the print renders."
+  },
+  {
+   "page": "receipt",
+   "table": "declared",
+   "what": "Lines under the store's name (an address, a tax number, a slogan) and lines at the very end (a returns policy, a thank-you in a second language).",
+   "when": "They print on every receipt of that register, on every print route and in the Print sheet's preview, in every frame.",
+   "sees": "The shipped receipt (`mPOS Receipt`)** prints the register's header and footer."
+  },
+  {
+   "page": "register_books",
+   "table": "declared",
+   "what": "A book says which items it takes, which movements enter it, how its lines are numbered and corrected, and which columns it prints, with the source of each.",
+   "when": "Each movement of an item a book takes writes **one Retail Register Line per book it enters, per document row, per batch**, in the same save as the document",
+   "sees": "**the till checks before the tender** and stops a basket that would go below zero, naming who settles it (a count of the book by its count role)."
+  },
+  {
+   "page": "remote_till_key",
+   "table": "calls",
+   "when": "It fires on a press, and only then: never before payment, never at booking, never on a schedule.",
+   "sends": "When the cashier presses it, the iVendNext POS server sends your service a read-only picture of the sale in progress.",
+   "answer": "You answer with a message for the cashier, Sale Attribute rows for the sale, values for its lines (Transaction Item Attributes), or any of them together.",
+   "limit": "time to answer 3 seconds unless raised, at most 10",
+   "sees": "*\"⟨label⟩ did not answer in time. Nothing was added to the sale.\"*"
+  },
+  {
+   "page": "save_rules",
+   "table": "declared",
+   "what": "A **Retail Save Rule** record names the record type (and the table, for a rule on rows), one of ten kinds, and whether a broken rule **refuses** the save or **flags** it to the *Sales to review* report.",
+   "when": "It fires at **every save** of that record type — a Desk form, an import and an API write alike",
+   "sees": "pattern: *\"⟨Field⟩: use letters and digits only.\"*"
+  },
+  {
+   "page": "scan_source",
+   "table": "declared",
+   "what": "declares that table once, and the till's scan finds the unit: its item, its batch, its serial, and whether it can be sold.",
+   "when": "It fires **only on a miss**: an item barcode, a serial or a batch is found exactly as before and no source is read.",
+   "sees": "A source that cannot be read is logged and skipped, so a misconfigured table can cost a *Not found*, never a sale."
+  },
+  {
+   "page": "wallet",
+   "table": "calls",
+   "when": "The cashier taps the wallet's tile with a customer on the sale, sees the balance and the most this sale may use",
+   "sends": "`{v, customer, customer_name, amount_due_minor, currency, currency_exponent, store, sale_ref, lang}`",
+   "answer": "`{eligible, balance_minor, max_redeemable_minor, label, currency, otp_required, reason}` within 3 s",
+   "limit": "within 3 s",
+   "sees": "A wallet that cannot be used is dimmed with its reason (*\"Wallet isn't installed on this site.\"*, *\"Add the customer first.\"*), never hidden; a wallet that does not answer its preview says so in the opened sheet."
+  }
+ ],
+ "more_points": [
+  {
+   "name": "Webhooks",
+   "source": "recipes/webhook_receiver.md",
+   "table": "calls",
+   "when": "For a booked sale, that is *Sales Invoice* and *POS Invoice* on **Submit**",
+   "sends": "a body that names the record and when it changed, and nothing more",
+   "answer": "none",
+   "limit": "none",
+   "sees": "none"
+  },
+  {
+   "name": "The connect, after an install",
+   "source": "guide/14b_deploying_your_app.md",
+   "table": "calls",
+   "when": "After the install, the retailer's site connects itself.",
+   "sends": "It sends your app its library key, its own address and the secrets the install made.",
+   "answer": "`200 {\"connected\": \"<site>\"}`",
+   "limit": "none",
+   "sees": "none"
+  }
+ ]
+}

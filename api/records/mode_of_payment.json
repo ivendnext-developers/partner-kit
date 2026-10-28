@@ -1,0 +1,466 @@
+{
+ "area": "Payments and payment methods",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "mode_of_payment",
+   "hidden": 0,
+   "label": "Mode of Payment",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_description",
+   "hidden": 1,
+   "label": "Description",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enabled",
+   "hidden": 0,
+   "label": "Enabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Cash",
+    "Credit Card",
+    "Debit Card",
+    "Gift Certificate",
+    "On Account",
+    "Cheque",
+    "Custom",
+    "Store Credit",
+    "Loyalty",
+    "Payment Gateway"
+   ],
+   "description": "",
+   "fieldname": "type",
+   "hidden": 0,
+   "label": "Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "accounts",
+   "hidden": 0,
+   "label": "Accounts",
+   "links_to": "Mode of Payment Account",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "payment_fieldname",
+   "hidden": 1,
+   "label": "Payment Fieldname",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_currency_denomination",
+   "hidden": 0,
+   "label": "Currency Denomination",
+   "links_to": "Currency Denomination",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_min_amount",
+   "hidden": 0,
+   "label": "Min Amount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_max_amount",
+   "hidden": 0,
+   "label": "Max Amount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_check_credit_limit",
+   "hidden": 0,
+   "label": "Check Credit Limit",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_counted",
+   "hidden": 0,
+   "label": "Counted",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [
+    "Summary",
+    "Detail"
+   ],
+   "description": "",
+   "fieldname": "custom_count_type",
+   "hidden": 0,
+   "label": "Count Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_print_payment_receipt",
+   "hidden": 0,
+   "label": "Print Payment Receipt",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_payment_receipt_format",
+   "hidden": 0,
+   "label": "Payment Receipt Format",
+   "links_to": "Print Format",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_open_cash_drawer",
+   "hidden": 0,
+   "label": "Open Cash Drawer",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [
+    "No Rounding",
+    "Round to Five Hundredth",
+    "Round to One Hundredth",
+    "Round to One",
+    "Round to Ten",
+    "Round to Fifty",
+    "Round to Hundred"
+   ],
+   "description": "",
+   "fieldname": "custom_rounding_method",
+   "hidden": 0,
+   "label": "Rounding Method",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_allow_over_tender",
+   "hidden": 0,
+   "label": "Allow Over Tender",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [
+    "Amount",
+    "Percentage"
+   ],
+   "description": "",
+   "fieldname": "custom_over_tender_rate_type",
+   "hidden": 0,
+   "label": "Over Tender Rate Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_over_tender_rate",
+   "hidden": 0,
+   "label": "Over Tender Rate",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_affects_tipple_point",
+   "hidden": 0,
+   "label": "Affects Tipple Point",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_enable_tender_discount",
+   "hidden": 0,
+   "label": "Enable Tender Discount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [
+    "Percentage",
+    "Amount"
+   ],
+   "description": "",
+   "fieldname": "custom_tender_discount_type",
+   "hidden": 0,
+   "label": "Discount Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_tender_discount_value",
+   "hidden": 0,
+   "label": "Discount Value",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "Applicable only when Discount Type is Percentage. The discount granted never exceeds this amount, regardless of the row's tendered value.",
+   "fieldname": "custom_tender_discount_max_amount",
+   "hidden": 0,
+   "label": "Maximum Discount Amount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "Discount applies only when the transaction amount being settled via this payment mode is at least this amount. Leave blank for no minimum.",
+   "fieldname": "custom_tender_discount_min_txn_amount",
+   "hidden": 0,
+   "label": "Minimum Transaction Amount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "Discount applies only when the transaction amount being settled via this payment mode is at most this amount. Leave blank for no maximum.",
+   "fieldname": "custom_tender_discount_max_txn_amount",
+   "hidden": 0,
+   "label": "Maximum Transaction Amount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_tender_discount_valid_from",
+   "hidden": 0,
+   "label": "Valid From",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_tender_discount_valid_upto",
+   "hidden": 0,
+   "label": "Valid Upto",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 1,
+   "choices": [
+    "Holder, number and expiry",
+    "Last four digits only",
+    "Not required"
+   ],
+   "description": "What a card payment must record. Choose less when cards are taken on the bank's own machine and the store does not keep the card holder's details.",
+   "fieldname": "custom_card_details_required",
+   "hidden": 0,
+   "label": "Card Details Required",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  }
+ ],
+ "lede": "A payment method the till and the back office accept: cash, a card, a voucher, a wallet.",
+ "name": "Mode of Payment",
+ "single": 0,
+ "slug": "mode_of_payment",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Currency Denomination": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "code",
+     "hidden": 0,
+     "label": "Code",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "description",
+     "hidden": 0,
+     "label": "Description",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "value",
+     "hidden": 0,
+     "label": "Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Float"
+    }
+   ]
+  },
+  "Mode of Payment Account": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "company",
+     "hidden": 0,
+     "label": "Company",
+     "links_to": "Company",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "Default account will be automatically updated in POS Invoice when this mode is selected.",
+     "fieldname": "default_account",
+     "hidden": 0,
+     "label": "Default Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "recipe payment_method_rules; recipe refund_rules; retail core",
+ "written_elsewhere": ""
+}

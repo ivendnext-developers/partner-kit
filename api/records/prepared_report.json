@@ -1,0 +1,128 @@
+{
+ "area": "Your app: its install, its user and its doors",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [
+    "Error",
+    "Queued",
+    "Completed",
+    "Started"
+   ],
+   "description": "",
+   "fieldname": "status",
+   "hidden": 1,
+   "label": "Status",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "report_name",
+   "hidden": 0,
+   "label": "Report Name",
+   "links_to": "",
+   "read_only": 1,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "queued_by",
+   "hidden": 0,
+   "label": "Queued By",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "job_id",
+   "hidden": 0,
+   "label": "Job ID",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "queued_at",
+   "hidden": 0,
+   "label": "Queued At",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "report_end_time",
+   "hidden": 0,
+   "label": "Finished At",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "peak_memory_usage",
+   "hidden": 0,
+   "label": "Peak Memory Usage",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "error_message",
+   "hidden": 0,
+   "label": "Error Message",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "filters",
+   "hidden": 1,
+   "label": "Filters",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Small Text"
+  }
+ ],
+ "lede": "One run of a report prepared in the background, and its result.",
+ "name": "Prepared Report",
+ "single": 0,
+ "slug": "prepared_report",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "recipe shop_reports",
+ "written_elsewhere": "`prepare_report` makes it."
+}

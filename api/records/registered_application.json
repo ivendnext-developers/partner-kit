@@ -1,0 +1,93 @@
+{
+ "area": "Your app: its install, its user and its doors",
+ "description": "This registry is site-wide and carries no company dimension: every registered application receives document change events for every company on this site.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "application_name",
+   "hidden": 0,
+   "label": "Application Name",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "application_user",
+   "hidden": 0,
+   "label": "Application User",
+   "links_to": "User",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "application_description",
+   "hidden": 0,
+   "label": "Application Description",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "registered_application_events",
+   "hidden": 0,
+   "label": "Registered Application Events",
+   "links_to": "Registered Application Events",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "An app's event feed: the record types it follows. A manifest installs it.",
+ "name": "Registered Application",
+ "single": 0,
+ "slug": "registered_application",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Registered Application Events": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "doc_type",
+     "hidden": 0,
+     "label": "DocType",
+     "links_to": "DocType",
+     "read_only": 1,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "enable",
+     "hidden": 0,
+     "label": "Enable",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    }
+   ]
+  }
+ },
+ "why": "contract event_feed; recipe event_feed; recipe integration_user; recipe system_sync",
+ "written_elsewhere": "your manifest installs it (`registered_applications`)."
+}

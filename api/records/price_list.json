@@ -1,0 +1,117 @@
+{
+ "area": "Prices and price lists",
+ "description": "A Price List is a collection of Item Prices either Selling, Buying, or both",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enabled",
+   "hidden": 0,
+   "label": "Enabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "price_list_name",
+   "hidden": 0,
+   "label": "Price List Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "currency",
+   "hidden": 0,
+   "label": "Currency",
+   "links_to": "Currency",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "buying",
+   "hidden": 0,
+   "label": "Buying",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "selling",
+   "hidden": 0,
+   "label": "Selling",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "price_not_uom_dependent",
+   "hidden": 0,
+   "label": "Price Not UOM Dependent",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "countries",
+   "hidden": 0,
+   "label": "Applicable for Countries",
+   "links_to": "Price List Country",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "A set of prices, for selling or buying, in one currency: a store's or a channel's prices.",
+ "name": "Price List",
+ "single": 0,
+ "slug": "price_list",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Price List Country": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "country",
+     "hidden": 0,
+     "label": "Country",
+     "links_to": "Country",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "card price-list-with-photos; guide chapter 07; recipe approvals; recipe estate_rollout; sample S29; retail core",
+ "written_elsewhere": ""
+}

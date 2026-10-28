@@ -1,0 +1,123 @@
+{
+ "area": "Till sales",
+ "description": "One change to an open check: who, at which till, what. Written once by the till, never changed.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "check",
+   "hidden": 0,
+   "label": "Check",
+   "links_to": "Retail Open Check",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "verb",
+   "hidden": 0,
+   "label": "What",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "user",
+   "hidden": 0,
+   "label": "Who",
+   "links_to": "User",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "till",
+   "hidden": 0,
+   "label": "Till",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "source",
+   "hidden": 0,
+   "label": "From",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "version",
+   "hidden": 0,
+   "label": "Check Version After",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "write_key",
+   "hidden": 1,
+   "label": "Request Key",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "detail",
+   "hidden": 0,
+   "label": "Detail",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Long Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "result",
+   "hidden": 1,
+   "label": "Answer",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Long Text"
+  }
+ ],
+ "lede": "One step in a check's life (opened, lines added, sent, paid), written by the open check's calls.",
+ "name": "Retail Open Check Event",
+ "single": 0,
+ "slug": "retail_open_check_event",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "guide chapter 07",
+ "written_elsewhere": "only the open check's calls write it."
+}

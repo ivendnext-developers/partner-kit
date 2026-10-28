@@ -78,6 +78,7 @@ import needs as catalogue  # noqa: E402  (the needs tool's own loader and checke
 import gallery  # noqa: E402  (the sample cards, read from the sample READMEs)
 import check_links  # noqa: E402  (its ALLOWED_HOSTS list is also the content policy below)
 import seo  # noqa: E402  (titles, descriptions, structured data, preview images, dates, llms.txt, redirects)
+import devmap  # noqa: E402  (the developer's map, {{map: …}}, and the record-type pages, from the kit's own files)
 REPO_URL = "https://github.com/ivendnext-developers/partner-kit"
 ORG_URL = "https://github.com/ivendnext-developers"
 PUBLISH_PAGE = "https://library.ivendnext.app/publish"   # the App library's Publish page: {{publish: button}}
@@ -86,9 +87,8 @@ SEO_JSON = SITE / "seo.json"                        # the hand-written descripti
 REDIRECTS = SITE / "redirects.txt"                  # one "old new" pair a line; the build writes a stub at each old address
 IMAGE_EXT = {".png", ".gif", ".jpg", ".jpeg", ".svg", ".webp"}
 
-NAV = [("How it works", "guide/01a_how_it_all_works.html"), ("Needs", "needs/index.html"), ("Get started", "start.html"),
-       ("Guide", "guide/index.html"),
-       ("Recipes", "recipes/index.html"), ("Samples", "samples/index.html"),
+NAV = [("How it works", "guide/01a_how_it_all_works.html"), ("What you can use", "map.html"), ("Needs", "needs/index.html"),
+       ("Get started", "start.html"), ("Guide", "guide/index.html"), ("Recipes", "recipes/index.html"), ("Samples", "samples/index.html"),
        ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("Roadmap", "roadmap.html"),
        ("Feedback", "feedback.html")]
 CORP = "https://www.ivendnext.com"
@@ -98,7 +98,8 @@ FOOT_CORP = [("ivendnext.com", CORP + "/"), ("Documentation", "https://docs.iven
 FOOT_LEGAL = [("Legal", "https://legal.ivend.com/"), ("Privacy policy", "https://ivend.com/privacy-policy/")]
 FOOT_COUNT = ('This site counts visits without cookies or personal data, and counts nothing if your browser says Do Not Track. '
               f'See the <a href="{FOOT_LEGAL[1][1]}">privacy policy</a>.')
-GROUPS = {"guide": "Guide", "recipes": "Recipes", "samples": "Samples", "feedback": "Feedback", "needs": "Needs"}
+GROUPS = {"guide": "Guide", "recipes": "Recipes", "samples": "Samples", "feedback": "Feedback", "needs": "Needs",
+          "records": "Record types"}
 
 
 # ── the page registry ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -262,6 +263,7 @@ def render(text: str, ctx: Ctx, seen: dict, toc: list | None, depth: int = 0) ->
     text = re.sub(r"^\{\{include(\??) (.+?)\}\}\s*$", include, text, flags=re.M)
     text = re.sub(r"^\{\{needs: ([a-z-]+)\}\}\s*$", lambda m: generated(m.group(1), ctx), text, flags=re.M)
     text = re.sub(r"^\{\{api: reference\}\}\s*$", lambda m: api_reference(ctx), text, flags=re.M)
+    text = re.sub(r"^\{\{map: (calls|points|manifest|screens)\}\}\s*$", lambda m: map_part(m.group(1), ctx), text, flags=re.M)
 
     def raw(piece: str) -> str:                  # a piece of HTML the build wrote, set in after the Markdown is rendered
         includes[f"@@INCLUDE{len(includes)}@@"] = piece
@@ -465,6 +467,14 @@ def sidebar(page, pages: list[Page], lists: list[ListPage], up: str) -> str:
                for a, name in catalogue.AREAS.items()]
         li += [f'<li><a href="{up}needs/not-possible.html"{cur("needs/not-possible.html")}>What is not possible</a></li>']
         return f'<nav class="side" aria-label="Needs"><ul>{"".join(li)}</ul></nav>'
+    if page.group == "records":                  # the record types' sidebar: the index, then each record type A to Z
+        cur = lambda out: ' aria-current="page"' if out == page.out else ""
+        recs = sorted(devmap.record_index()["records"], key=lambda r: r["name"].lower())
+        li = [f'<li><a href="{up}records/index.html"{cur("records/index.html")}><strong>Record types: all</strong></a></li>']
+        for r in recs:
+            out = f"records/{r['slug']}.html"
+            li.append(f'<li><a href="{up}{out}"{cur(out)}>{html.escape(r["name"])}</a></li>')
+        return f'<nav class="side" aria-label="Record types"><ul>{"".join(li)}</ul></nav>'
     idx = f"{page.group}/index.html"
     items = [p for p in pages if p.group == page.group and p.out != idx]
     cur = lambda out: ' aria-current="page"' if out == page.out else ""
@@ -636,6 +646,13 @@ def api_reference(ctx: "Ctx", spec_path: str = API_SPEC) -> str:
                 answers.setdefault(cell(deref(r)[0].get("description")), []).append(f"`{code}`")
             out.append("**Answers:** " + " · ".join(f"{', '.join(c)} {t}" for t, c in answers.items()) + "\n")
     return "\n".join(out)
+
+
+# ── the developer's map: the Markdown each `{{map: …}}` line stands for (site/devmap.py writes it from its source) ──────
+def map_part(kind: str, ctx: "Ctx") -> str:
+    if kind == "calls":
+        return devmap.calls({r["slug"] for r in devmap.record_index()["records"]}, ctx.src)
+    return {"points": devmap.points, "manifest": devmap.manifest}[kind](ctx.src) if kind != "screens" else devmap.screens(ctx.src)
 
 
 # ── what next: the steps under every card, written by rule from its verdict and door ──────────────────────────────────
@@ -1052,7 +1069,7 @@ ASKED_PAGES = {"questions.html"}                   # pages whose ### headings ar
                                                    # the page's asks line, as a card's does (Questions developers ask)
 
 
-def search_docs(pages: list, cards: list, groups: list[list[str]]) -> list[dict]:
+def search_docs(pages: list, cards: list, groups: list[list[str]], records: list = ()) -> list[dict]:
     """The documents search.js ranks: one per card, then one per guide, recipe and sample page (the home page and the site's
     own catalogue lists are not in it: every card is). Short keys keep the file small: k kind · t title · a asks · s synonyms ·
     tp topic · l limits · c tell the customer · b body · u the page · v verdict · ar area · d door · st status."""
@@ -1071,6 +1088,11 @@ def search_docs(pages: list, cards: list, groups: list[list[str]]) -> list[dict]
         docs.append({"id": p.out, "k": SEARCH_GROUPS.get(p.group, "guide"), "t": p.title, "a": asks,
                      "s": expand(p.title + " " + " ".join(heads), groups), "tp": "", "l": "", "c": "",
                      "b": " · ".join(heads) + " " + first, "u": p.out, "v": "", "ar": "", "d": "", "st": ""})
+    for g in records:                              # a record type: its name, its area and its first paragraph, not its fields
+        area = re.search(r"\*\*Area:\*\* ([^·]+)", g.text)
+        first = page_words(g.text)[1]
+        docs.append({"id": g.out, "k": "guide", "t": g.title, "a": "", "s": expand(f"{g.title} {area.group(1) if area else ''} record type fields", groups),
+                     "tp": "", "l": "", "c": "", "b": first, "u": g.out, "v": "", "ar": "", "d": "", "st": ""})
     return docs
 
 
@@ -1134,6 +1156,7 @@ def build(out_dir: pathlib.Path) -> int:
     related = related_needs(need_cards, named_together())
     by_id = {c.id: c for c in need_cards}
     gen = [card_page(c, titles, related[c.id], by_id) for c in need_cards] + catalogue_pages(need_cards, titles)
+    rec_pages = [GenPage(src, out, title, text, desc, "records") for src, out, title, text, desc in devmap.record_pages()]
     registry = {p.src: p for p in pages}
     registry.update({p.src: p for p in gen if p.src.startswith("needs/") and p.out.count("/") == 2 and not p.out.endswith("index.html")})
     registry.update({"needs/README.md": gen[len(need_cards)], "needs": gen[len(need_cards)]})       # the catalogue
@@ -1147,6 +1170,7 @@ def build(out_dir: pathlib.Path) -> int:
     ctx.cards = need_cards
     errors += [f"needs: {e}" for e in catalogue.check(ROOT)]
     errors += order_errors()
+    errors += devmap.errors()
     errors += label_errors(pages) + example_errors(need_cards)
     groups = synonyms()
     errors += synonym_errors(groups)
@@ -1251,10 +1275,21 @@ def build(out_dir: pathlib.Path) -> int:
         meta = make_meta(g.out, g.title, g.group, g.desc, srcs)
         write(g.out, shell(g.title, g.html, g.out, side=sidebar(g, pages, lists, up), toc=toc, foot=src_link, sha=sha, meta=meta,
                            crumbs=seo.crumbs_html(meta.trail, up), verify=seo_data))
+    for g in rec_pages:                                             # the record types, from api/records/ (tools/records/)
+        ctx.src, ctx.out = g.src, g.out
+        toc = []
+        g.html = render(g.text, ctx, {}, toc)
+        up = up_of(g.out)
+        data = g.src.removesuffix(".md") + ".json"
+        srcs = [data, "tools/records/records.py"] if (ROOT / data).exists() else ["api/records/", "tools/records/records.py"]
+        src_link = f'<p class="src"><a href="{REPO_URL}/blob/main/{data}">This record type in the kit</a></p>' if (ROOT / data).exists() else ""
+        meta = make_meta(g.out, g.title, g.group, g.desc, srcs)
+        write(g.out, shell(g.title, g.html, g.out, side=sidebar(g, pages, lists, up), toc=toc, foot=src_link, sha=sha, meta=meta,
+                           crumbs=seo.crumbs_html(meta.trail, up), verify=seo_data))
     proof_pages = {k: v.out for k, v in registry.items() if isinstance(v, (Page, ListPage)) and k != "recipes" and k != "samples"}
     write("catalogue.json", catalogue_json(need_cards, titles, proof_pages, related))
     import json
-    write("search-index.json", json.dumps(search_docs(pages, need_cards, groups), ensure_ascii=False, separators=(",", ":")) + "\n")
+    write("search-index.json", json.dumps(search_docs(pages, need_cards, groups, rec_pages), ensure_ascii=False, separators=(",", ":")) + "\n")
     write("search.html", shell("Search", search_page(), "search.html", sha=sha, noindex=True,
                                desc="Search the iVendNext Developers site: the needs catalogue first, then the recipes, samples and guide."))
 
@@ -1317,7 +1352,7 @@ def build(out_dir: pathlib.Path) -> int:
     write("sitemap.xml", seo.sitemap({canonical(o): m.modified for o, m in metas.items()}))
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: https://{DOMAIN}/sitemap.xml\n")
 
-    START = ["index.html", "start.html", "build.html", "plan.html", "sandbox.html", "security.html", "api.html", "hosting.html",
+    START = ["index.html", "start.html", "build.html", "plan.html", "sandbox.html", "security.html", "map.html", "api.html", "hosting.html",
              "publish.html",
              "reference_apps.html", "feedback.html"]
 
@@ -1332,6 +1367,7 @@ def build(out_dir: pathlib.Path) -> int:
         ("Guide", rows(lambda o, m: o.startswith("guide/") or o == "kit/blueprint.html")),
         ("Recipes", rows(lambda o, m: o.startswith("recipes/"))),
         ("Samples", rows(lambda o, m: o.startswith("samples/"))),
+        ("Record types", rows(lambda o, m: o.startswith("records/"))),
         ("Machine-readable", [("The needs catalogue as JSON", f"https://{DOMAIN}/catalogue.json",
                                "Every need card with its verdict, door, recipes, samples and limits, for an assistant."),
                               ("The AI chapter", canonical("guide/13_ai.html"), ai.desc if ai else "How to use an assistant with the kit."),

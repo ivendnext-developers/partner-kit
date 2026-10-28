@@ -1,0 +1,305 @@
+{
+ "area": "The retailer's setup",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "webhook_doctype",
+   "hidden": 0,
+   "label": "DocType",
+   "links_to": "DocType",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "after_insert",
+    "on_update",
+    "on_submit",
+    "on_cancel",
+    "on_trash",
+    "on_update_after_submit",
+    "on_change"
+   ],
+   "description": "",
+   "fieldname": "webhook_docevent",
+   "hidden": 0,
+   "label": "Doc Event",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enabled",
+   "hidden": 0,
+   "label": "Enabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The webhook will be triggered if this expression is true",
+   "fieldname": "condition",
+   "hidden": 0,
+   "label": "Condition",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Small Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "request_url",
+   "hidden": 0,
+   "label": "Request URL",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Small Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "On checking this option, URL will be treated like a jinja template string",
+   "fieldname": "is_dynamic_url",
+   "hidden": 0,
+   "label": "Is Dynamic URL?",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The number of seconds until the request expires",
+   "fieldname": "timeout",
+   "hidden": 0,
+   "label": "Request Timeout",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "background_jobs_queue",
+   "hidden": 0,
+   "label": "Background Jobs Queue",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Autocomplete"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "POST",
+    "PUT",
+    "DELETE"
+   ],
+   "description": "",
+   "fieldname": "request_method",
+   "hidden": 0,
+   "label": "Request Method",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Form URL-Encoded",
+    "JSON"
+   ],
+   "description": "",
+   "fieldname": "request_structure",
+   "hidden": 0,
+   "label": "Request Structure",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enable_security",
+   "hidden": 0,
+   "label": "Enable Security",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "webhook_secret",
+   "hidden": 0,
+   "label": "Webhook Secret",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Password"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "webhook_headers",
+   "hidden": 0,
+   "label": "Headers",
+   "links_to": "Webhook Header",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "webhook_data",
+   "hidden": 0,
+   "label": "Data",
+   "links_to": "Webhook Data",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "To add dynamic values from the document, use jinja tags like <div> <pre><code>{ \"id\": \"{{ doc.name }}\" }</code> </pre> </div>",
+   "fieldname": "webhook_json",
+   "hidden": 0,
+   "label": "JSON Request Body",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Code"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "preview_document",
+   "hidden": 0,
+   "label": "Select Document",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Dynamic Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "meets_condition",
+   "hidden": 0,
+   "label": "Meets Condition?",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "preview_request_body",
+   "hidden": 0,
+   "label": "Request Body",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Code"
+  }
+ ],
+ "lede": "A signed call to your service when a record changes. A manifest can install one.",
+ "name": "Webhook",
+ "single": 0,
+ "slug": "webhook",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Webhook Data": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "fieldname",
+     "hidden": 0,
+     "label": "Fieldname",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "key",
+     "hidden": 0,
+     "label": "Key",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Data"
+    }
+   ]
+  },
+  "Webhook Header": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "key",
+     "hidden": 0,
+     "label": "Key",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Small Text"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "value",
+     "hidden": 0,
+     "label": "Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Small Text"
+    }
+   ]
+  }
+ },
+ "why": "recipe webhook_receiver",
+ "written_elsewhere": ""
+}

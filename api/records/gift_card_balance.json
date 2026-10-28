@@ -1,0 +1,51 @@
+{
+ "area": "Gift cards",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "gift_card",
+   "hidden": 0,
+   "label": "Gift Card",
+   "links_to": "Gift Card",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "balance",
+   "hidden": 0,
+   "label": "Balance",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "amended_from",
+   "hidden": 0,
+   "label": "Amended From",
+   "links_to": "Gift Card Balance",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  }
+ ],
+ "lede": "A gift card's balance, booked as a document: the card and the amount on it (sample S25's app submits one when it issues a card).",
+ "name": "Gift Card Balance",
+ "single": 0,
+ "slug": "gift_card_balance",
+ "submittable": 1,
+ "table": 0,
+ "tables": {},
+ "why": "recipe gift_card_on_spend",
+ "written_elsewhere": ""
+}

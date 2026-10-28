@@ -1,0 +1,514 @@
+{
+ "area": "Till sales",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "period_start_date",
+   "hidden": 0,
+   "label": "Period Start Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "period_end_date",
+   "hidden": 0,
+   "label": "Period End Date",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Draft",
+    "Open",
+    "Closed",
+    "Cancelled"
+   ],
+   "description": "",
+   "fieldname": "status",
+   "hidden": 1,
+   "label": "Status",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "posting_date",
+   "hidden": 0,
+   "label": "Posting Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "set_posting_date",
+   "hidden": 0,
+   "label": "Set Posting Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "company",
+   "hidden": 0,
+   "label": "Company",
+   "links_to": "Company",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "pos_profile",
+   "hidden": 0,
+   "label": "POS Profile",
+   "links_to": "POS Profile",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "interface_profile",
+   "hidden": 0,
+   "label": "Interface Profile",
+   "links_to": "Interface Profile",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_active_pos_terminal",
+   "hidden": 0,
+   "label": "Active POS Terminal",
+   "links_to": "POS Terminal",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "pos_closing_entry",
+   "hidden": 0,
+   "label": "POS Closing Entry",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "user",
+   "hidden": 0,
+   "label": "Cashier",
+   "links_to": "User",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_current_cashier",
+   "hidden": 0,
+   "label": "Current Cashier",
+   "links_to": "User",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_team",
+   "hidden": 0,
+   "label": "Team",
+   "links_to": "Team",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [
+    "Cash Drawer 1",
+    "Cash Drawer 2"
+   ],
+   "description": "",
+   "fieldname": "custom_cash_drawer",
+   "hidden": 0,
+   "label": "Cash Drawer",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "balance_details",
+   "hidden": 0,
+   "label": "Opening Balance Details",
+   "links_to": "POS Opening Entry Detail",
+   "read_only": 0,
+   "required": 1,
+   "type": "Table"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_currency_denomination_count",
+   "hidden": 0,
+   "label": "Currency Denomination Count",
+   "links_to": "Currency Denomination Count",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_cash_in_out_detail",
+   "hidden": 0,
+   "label": "Cash In Out Detail",
+   "links_to": "Cash In Out",
+   "read_only": 1,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "amended_from",
+   "hidden": 0,
+   "label": "Amended From",
+   "links_to": "POS Opening Entry",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_shift_start_on_terminal",
+   "hidden": 0,
+   "label": "Shift start on Terminal",
+   "links_to": "POS Terminal",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_shift_suspended_on",
+   "hidden": 0,
+   "label": "Shift suspended on",
+   "links_to": "POS Terminal",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_suspended_by",
+   "hidden": 0,
+   "label": "Suspended By",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_suspend_date_time",
+   "hidden": 0,
+   "label": "Suspend Date Time",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "Marks a day opened on the POS with a cash drawer. Set once, so day-end totals stay stable.",
+   "fieldname": "custom_mpos_drawered_open",
+   "hidden": 0,
+   "label": "POS Drawered Open",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "Where this day was opened: the POS or iVendNext Desk. Set once at submit, never changed.",
+   "fieldname": "custom_origin_channel",
+   "hidden": 0,
+   "label": "Origin Channel",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  }
+ ],
+ "lede": "A till's day opened by a cashier, with the cash in the drawer at the start.",
+ "name": "POS Opening Entry",
+ "single": 0,
+ "slug": "pos_opening_entry",
+ "submittable": 1,
+ "table": 0,
+ "tables": {
+  "Cash In Out": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Cash In",
+      "Cash Out",
+      "Expense"
+     ],
+     "description": "",
+     "fieldname": "transaction_type",
+     "hidden": 0,
+     "label": "Transaction Type",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Reason Code Master",
+      "Store Expense Type"
+     ],
+     "description": "",
+     "fieldname": "master_type",
+     "hidden": 1,
+     "label": "Master Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "reason_code",
+     "hidden": 0,
+     "label": "Reason Code",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Dynamic Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "manager_override",
+     "hidden": 0,
+     "label": "Manager Override",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "comment",
+     "hidden": 0,
+     "label": "Comment",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "amount",
+     "hidden": 0,
+     "label": "Amount",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "created_by",
+     "hidden": 0,
+     "label": "Created By",
+     "links_to": "User",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "terminal",
+     "hidden": 0,
+     "label": "Terminal",
+     "links_to": "POS Terminal",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  },
+  "Currency Denomination Count": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "currency",
+     "hidden": 0,
+     "label": "Currency",
+     "links_to": "Currency",
+     "read_only": 1,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "denomination_type",
+     "hidden": 0,
+     "label": "Denomination Type",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "denomination_value",
+     "hidden": 0,
+     "label": "Denomination Value",
+     "links_to": "",
+     "read_only": 1,
+     "required": 1,
+     "type": "Currency"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "count",
+     "hidden": 0,
+     "label": "Count",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "amount",
+     "hidden": 0,
+     "label": "Amount",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Currency"
+    }
+   ]
+  },
+  "POS Opening Entry Detail": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "mode_of_payment",
+     "hidden": 0,
+     "label": "Mode of Payment",
+     "links_to": "Mode of Payment",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "opening_amount",
+     "hidden": 0,
+     "label": "Opening Amount",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Currency"
+    }
+   ]
+  }
+ },
+ "why": "retail core",
+ "written_elsewhere": ""
+}

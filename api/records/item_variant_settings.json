@@ -1,0 +1,69 @@
+{
+ "area": "The retailer's setup",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Fields will be copied over only at time of creation.",
+   "fieldname": "do_not_update_variants",
+   "hidden": 0,
+   "label": "Do not update variants on save",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Rename Attribute Value in Item Attribute.",
+   "fieldname": "allow_rename_attribute_value",
+   "hidden": 0,
+   "label": "Allow Rename Attribute Value",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "fields",
+   "hidden": 0,
+   "label": "Fields",
+   "links_to": "Variant Field",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "Which fields a variant item copies from its template: one record.",
+ "name": "Item Variant Settings",
+ "single": 1,
+ "slug": "item_variant_settings",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Variant Field": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "field_name",
+     "hidden": 0,
+     "label": "Field Name",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Autocomplete"
+    }
+   ]
+  }
+ },
+ "why": "recipe age_check; recipe restaurant_back_office",
+ "written_elsewhere": ""
+}

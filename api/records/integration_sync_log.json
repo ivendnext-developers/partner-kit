@@ -1,0 +1,99 @@
+{
+ "area": "Your app: its install, its user and its doors",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "application_name",
+   "hidden": 0,
+   "label": "Application Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "doc_type",
+   "hidden": 0,
+   "label": "DocType",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "doc_name",
+   "hidden": 0,
+   "label": "Doc Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "operation_type",
+   "hidden": 0,
+   "label": "Operation Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "flag",
+   "hidden": 0,
+   "label": "Flag",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "status",
+   "hidden": 0,
+   "label": "Status",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "error",
+   "hidden": 0,
+   "label": "Error",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Long Text"
+  }
+ ],
+ "lede": "The event feed every retailer has today: one row per change to a record type your app follows, read and marked done by your app.",
+ "name": "Integration Sync Log",
+ "single": 0,
+ "slug": "integration_sync_log",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "guide chapter 05; recipe event_feed",
+ "written_elsewhere": "iVendNext writes it for each change your feed follows; your app only marks rows done."
+}

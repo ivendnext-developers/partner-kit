@@ -1,0 +1,5574 @@
+{
+ "about": "Every record type on an iVendNext site at this release (the product's own, without a site's custom ones): any of them is read and written at /api/resource/<name>, as its rights allow.",
+ "record_types": [
+  {
+   "module": "Website",
+   "name": "About Us Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "About Us Team Member",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Access Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Account",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Account Closing Balance",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Accounting Dimension",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Accounting Dimension Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Accounting Dimension Filter",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Accounting Period",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Accounts Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Projects",
+   "name": "Activity Cost",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Activity Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Projects",
+   "name": "Activity Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Contacts",
+   "name": "Address",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Contacts",
+   "name": "Address Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Advance Payment Ledger Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Advance Tax",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Advance Taxes and Charges",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Allowed Dimension",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Allowed To Transact With",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Amended Document Naming Settings",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Applicable On Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "CRM",
+   "name": "Appointment",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Appointment Booking Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Appointment Booking Slots",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Apriori Algo Configuration",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Apriori Recommendation Data",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Activity",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Capitalization",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Capitalization Asset Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Capitalization Service Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Capitalization Stock Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Category",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Category Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Depreciation Schedule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Finance Book",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Maintenance",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Maintenance Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Maintenance Task",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Maintenance Team",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Movement",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Movement Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Repair",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Repair Consumed Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Shift Allocation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Shift Factor",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Asset Value Adjustment",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Automation",
+   "name": "Assignment Rule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Automation",
+   "name": "Assignment Rule Day",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Automation",
+   "name": "Assignment Rule User",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Audit Trail",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Authorization Control",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Authorization Rule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Auto Email Report",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Automation",
+   "name": "Auto Repeat",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Automation",
+   "name": "Auto Repeat Day",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "CRM",
+   "name": "Availability Of Slots",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Balance Stock",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Account",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Account Subtype",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Account Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Clearance",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Clearance Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Guarantee",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Reconciliation Tool",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Statement Import",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Transaction",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Transaction Mapping",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Bank Transaction Payments",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Barcode Mask",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Barcode Mask Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Batch",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Bin",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bisect Accounting Statements",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Bisect Nodes",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Blanket Order",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Blanket Order Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Block Module",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Blog Category",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Blog Post",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Blog Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Blogger",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Branch",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Brand",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Budget",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Budget Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Bulk Transaction",
+   "name": "Bulk Transaction Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Bulk Transaction",
+   "name": "Bulk Transaction Log Detail",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Bulk Update",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Button Group Panel",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Button Group Panel Child",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Button Panel Control",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Button Panel Control Properties",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Buying",
+   "name": "Buying Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Calendar View",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Telephony",
+   "name": "Call Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Campaign",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Campaign Email Schedule",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Campaign Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Card View Control",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Card View Control Properties",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Card View Group Control",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Card View Group Control Properties",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Cash Drawer Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Cash In Out",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Cashier Closing",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Cashier Closing Payments",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Changelog Feed",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Chart of Accounts Importer",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Cheque Print Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Custom",
+   "name": "Client Script",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Closed Document",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Closing Stock Balance",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "EDI",
+   "name": "Code List",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Color",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Comment",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "EDI",
+   "name": "Common Code",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Communication",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Communication Link",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Communication",
+   "name": "Communication Medium",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Communication",
+   "name": "Communication Medium Timeslot",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Company",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Company History",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "CRM",
+   "name": "Competitor",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Competitor Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Integrations",
+   "name": "Connected App",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Console Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Contacts",
+   "name": "Contact",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Contacts",
+   "name": "Contact Email",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Contacts",
+   "name": "Contact Phone",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Contact Us Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Contract",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Contract Fulfilment Checklist",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "CRM",
+   "name": "Contract Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Contract Template Fulfilment Terms",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Control Panel Settings",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Cost Center",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Cost Center Allocation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Cost Center Allocation Percentage",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Geo",
+   "name": "Country",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Coupon",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Coupon Applicability",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Coupon Applicability Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Coupon Buy Side",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Coupon Code",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Coupon Customer Special Days",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Coupon Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Coupon Exclude Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Coupon Get Side",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Coupon Ledger",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Cross Selling Product Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Geo",
+   "name": "Currency",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Currency Denomination",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Currency Denomination Count",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Currency Exchange",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Currency Exchange Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Currency Exchange Settings Details",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Currency Exchange Settings Result",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Custom Display Control",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Custom DocPerm",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Custom",
+   "name": "Custom Field",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Custom HTML Block",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Custom Role",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Customer",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Customer Credit Limit",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Customer Feedback Question",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Customer Group",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Customer Group Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Customer Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Custom",
+   "name": "Customize Form",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Custom",
+   "name": "Customize Form Field",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Customs Tariff Number",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Dashboard",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Dashboard Chart",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Dashboard Chart Field",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Dashboard Chart Link",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Dashboard Chart Source",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Dashboard Settings",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Data Export",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Data Grid Control",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Data Grid Properties",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Data Import",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Data Import Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "DefaultValue",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Deleted Document",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Delivery Note",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Delivery Note Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Delivery Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Delivery Stop",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Delivery Trip",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Department",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Projects",
+   "name": "Dependent Task",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Assets",
+   "name": "Depreciation Schedule",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Designation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Desktop Icon",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Discounted Invoice",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Discussion Reply",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Discussion Topic",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "DocField",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "DocPerm",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "DocShare",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "DocType",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "DocType Action",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Custom",
+   "name": "DocType Layout",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Custom",
+   "name": "DocType Layout Field",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "DocType Link",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "DocType State",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Email",
+   "name": "Document Follow",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Document Naming Rule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Document Naming Rule Condition",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Document Naming Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Document Share Key",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Domain",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Domain Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Downtime Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Driver",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Driving License Category",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Integrations",
+   "name": "Dropbox Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Dunning",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Dunning Letter Text",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Dunning Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Dynamic Link",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Email",
+   "name": "Email Account",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Email Campaign",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Email Digest",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Email Digest Recipient",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Email",
+   "name": "Email Domain",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Email Flag Queue",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Email Group",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Email Group Member",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Email Queue",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Email Queue Recipient",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Email",
+   "name": "Email Rule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Email Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Email Unsubscribe",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Employee",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Employee Education",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Employee External Work History",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Employee Group",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Employee Group Table",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Employee Internal Work History",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Social",
+   "name": "Energy Point Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Social",
+   "name": "Energy Point Rule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Social",
+   "name": "Energy Point Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Error Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Event",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Event Participants",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Exchange Rate Revaluation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Exchange Rate Revaluation Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Feedback Submission",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "File",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Finance Book",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Fiscal Year",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Fiscal Year Company",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Form Number Card",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Form Tour",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Form Tour Step",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Fulfillment Charges",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Fulfillment Plan",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Fulfillment Plan Details",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Contacts",
+   "name": "Gender",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Gift Card",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Gift Card Balance",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Gift Card Master",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Global Defaults",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Global Search DocType",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Global Search Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "Google Calendar",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "Google Contacts",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "Google Drive",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "Google Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "HW Integration",
+   "name": "Hardware Profile",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "HW Integration",
+   "name": "Hardware Testing",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Has Domain",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Has Role",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Help Article",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Help Category",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Holiday",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Holiday List",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Portal",
+   "name": "Homepage",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Portal",
+   "name": "Homepage Section",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Portal",
+   "name": "Homepage Section Card",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Regional",
+   "name": "Import Supplier Invoice",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Telephony",
+   "name": "Incoming Call Handling Schedule",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Telephony",
+   "name": "Incoming Call Settings",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Incoterm",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Industry Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Information Control",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Information Control Properties",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Input Control",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Installation Note",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Installation Note Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Installed Application",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Installed Applications",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "Integration Request",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Integration Sync Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Interface Controls",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Interface Profile",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Inventory Dimension",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Invoice Discounting",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Support",
+   "name": "Issue",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Support",
+   "name": "Issue Priority",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Support",
+   "name": "Issue Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Item",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Item Alternative",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Item Attribute",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Item Attribute Value",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Item Barcode",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Item Customer Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Item Default",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Item Group",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Item Label Printing",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Item Label Printing Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Item Manufacturer",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Item Price",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Item Quality Inspection Parameter",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Item Reason Code",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Item Reorder",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Item Supplier",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Item Surcharge",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Item Tax",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Item Tax Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Item Tax Template Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Item Variant",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Item Variant Attribute",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Item Variant Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Item Website Specification",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Ivend Font",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Job Card",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Job Card Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Job Card Operation",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Job Card Scheduled Time",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Job Card Scrap Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Job Card Time Log",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Journal Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Journal Entry Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Journal Entry Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Journal Entry Template Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Kanban Board",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Kanban Board Column",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Landed Cost Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Landed Cost Purchase Receipt",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Landed Cost Taxes and Charges",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Landed Cost Voucher",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Language",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Lead",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Lead Source",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Ledger Health",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Ledger Health Monitor",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Ledger Health Monitor Company",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Ledger Merge",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Ledger Merge Accounts",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Printing",
+   "name": "Letter Head",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Linked Location",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "List Filter",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "List View Settings",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Assets",
+   "name": "Location",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Log Setting User",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Log Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Logs To Clear",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Look Up Control",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Look Up Type Properties",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "CRM",
+   "name": "Lost Reason Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Lost Sale",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Regional",
+   "name": "Lower Deduction Certificate",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Journal",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Level",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Plan",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Plan Applicability",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Plan Applicable Stores",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Plan Details",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Plan Exception Rule",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Plan Special Days",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Loyalty Point Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Loyalty Point Entry Redemption",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Point Expiry Setup",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Loyalty Program",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Loyalty Program Collection",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Referal Setup",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Setup",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVend Loyality",
+   "name": "Loyalty Special Days",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Maintenance",
+   "name": "Maintenance Schedule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Maintenance",
+   "name": "Maintenance Schedule Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Maintenance",
+   "name": "Maintenance Schedule Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Assets",
+   "name": "Maintenance Team Member",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Maintenance",
+   "name": "Maintenance Visit",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Maintenance",
+   "name": "Maintenance Visit Purpose",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Manager Override Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Manufacturer",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Manufacturing Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Market Segment",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Marketing Campaign",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Material Request",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Material Request Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Material Request Plan Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Media Control",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Media Image",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Automation",
+   "name": "Milestone",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Automation",
+   "name": "Milestone Tracker",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Mode of Payment",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Mode of Payment Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Module Def",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Module Onboarding",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Module Profile",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Monthly Distribution",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Monthly Distribution Percentage",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Navbar Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Navbar Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Printing",
+   "name": "Network Printer Settings",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Newsletter",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Newsletter Attachment",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Email",
+   "name": "Newsletter Email Group",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Quality Management",
+   "name": "Non Conformance",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Note",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Note Seen By",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Email",
+   "name": "Notification",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Notification Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Notification Recipient",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Notification Settings",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Notification Subscribed Document",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Number Card",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Number Card Link",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Integrations",
+   "name": "OAuth Authorization Code",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "OAuth Bearer Token",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "OAuth Client",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "OAuth Client Role",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Integrations",
+   "name": "OAuth Provider Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "OAuth Scope",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Onboarding Permission",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Onboarding Step",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Onboarding Step Map",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Opening Invoice Creation Tool",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Opening Invoice Creation Tool Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Operation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Opportunity",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Opportunity Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "CRM",
+   "name": "Opportunity Lost Reason",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Opportunity Lost Reason Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "CRM",
+   "name": "Opportunity Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Overdue Payment",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Closing Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Closing Entry Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Closing Entry Taxes",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "POS Command",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Customer Group",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Field",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "POS Interface Custom Theme",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Invoice",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Invoice Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Invoice Merge Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Invoice Reference",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "POS Invoice Sale Attribute",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "POS Invoice Transaction Item Attribute",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Item Group",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Opening Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Opening Entry Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Payment Method",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Profile",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "POS Profile Team",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Profile User",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Search Fields",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "POS Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "POS Shift Profile",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "POS Terminal",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "POS Transaction Mode",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Package",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Package Import",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Package Release",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Packed Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Packing Slip",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Packing Slip Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Page",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Page Config",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Page Config Column",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Page Config Filter",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Party Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Party Link",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Party Specific Item",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Party Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Patch Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Support",
+   "name": "Pause SLA On Status",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Payments Core",
+   "name": "Payment Account",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Payments Core",
+   "name": "Payment Account Credential",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Payments Core",
+   "name": "Payment Connection",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Payments Core",
+   "name": "Payment Connection Test",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Payments Core",
+   "name": "Payment Device",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Payments Core",
+   "name": "Payment Device Field",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Entry Deduction",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Entry Reference",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Gateway Account",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Ledger Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Order",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Order Reference",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Reconciliation",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Reconciliation Allocation",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Reconciliation Invoice",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Reconciliation Payment",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Payments Core",
+   "name": "Payment Refund",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Request",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Schedule",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Payment Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Payment Template Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Term",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Terms Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Payment Terms Template Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Period Closing Voucher",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Permission Inspector",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Personal Data Deletion Request",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Personal Data Deletion Step",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Personal Data Download Request",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Pick List",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Pick List Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Plant Floor",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Portal Menu Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Portal Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Utilities",
+   "name": "Portal User",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Prepared Report",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Price List",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Price List Country",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Pricing Rule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Pricing Rule Brand",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Pricing Rule Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Pricing Rule Item Code",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Pricing Rule Item Group",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Printing",
+   "name": "Print Format",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Printing",
+   "name": "Print Format Field Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Print Heading",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Printing",
+   "name": "Print Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Printing",
+   "name": "Print Style",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Process Deferred Accounting",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Process Payment Reconciliation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Process Payment Reconciliation Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Process Payment Reconciliation Log Allocations",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Process Statement Of Accounts",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Process Statement Of Accounts CC",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Process Statement Of Accounts Customer",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Process Subscription",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Product Bundle",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Product Bundle Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Production Plan",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Production Plan Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Production Plan Item Reference",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Production Plan Material Request",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Production Plan Material Request Warehouse",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Production Plan Sales Order",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Production Plan Sub Assembly Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Projects",
+   "name": "Project",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Projects",
+   "name": "Project Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Projects",
+   "name": "Project Template Task",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Projects",
+   "name": "Project Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Projects",
+   "name": "Project Update",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Projects",
+   "name": "Project User",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Projects",
+   "name": "Projects Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Applicability",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Applicability Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Bonus Buys Hierarchy",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Bonus Buys Hierarchy Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Bonus Buys Master",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Buy Side",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Customer Special Days",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Exclude Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Get Side",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Promotion Product Details",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Promotional Scheme",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Promotional Scheme Price Discount",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Promotional Scheme Product Discount",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Custom",
+   "name": "Property Setter",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Prospect",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Prospect Lead",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "CRM",
+   "name": "Prospect Opportunity",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Purchase Invoice",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Purchase Invoice Advance",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Purchase Invoice Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Buying",
+   "name": "Purchase Order",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Buying",
+   "name": "Purchase Order Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Buying",
+   "name": "Purchase Order Item Supplied",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Purchase Receipt",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Purchase Receipt Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Buying",
+   "name": "Purchase Receipt Item Supplied",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Purchase Taxes and Charges",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Purchase Taxes and Charges Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "Push Notification Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Putaway Rule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Action",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Action Resolution",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Feedback",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Feedback Parameter",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Feedback Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Feedback Template Parameter",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Goal",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Goal Objective",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Quality Inspection",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Quality Inspection Parameter",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Quality Inspection Parameter Group",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Quality Inspection Reading",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Quality Inspection Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Meeting",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Meeting Agenda",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Meeting Minutes",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Procedure",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Procedure Process",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Review",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Quality Management",
+   "name": "Quality Review Objective",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Integrations",
+   "name": "Query Parameters",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Question Data",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Question List",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Question Options",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Quick Stock Balance",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Quotation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Quotation Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Quotation Lost Reason",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Quotation Lost Reason Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Reason Code Master",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Recorder",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Recorder Query",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Recorder Suggested Index",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Registered Application",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Registered Application Events",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Automation",
+   "name": "Reminder",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Utilities",
+   "name": "Rename Tool",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Report",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Report Column",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Report Filter",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Repost Accounting Ledger",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Repost Accounting Ledger Items",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Repost Accounting Ledger Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Repost Allowed Types",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Repost Item Valuation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Repost Payment Ledger",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Repost Payment Ledger Items",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Reprint Transaction Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Buying",
+   "name": "Request for Quotation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Buying",
+   "name": "Request for Quotation Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Buying",
+   "name": "Request for Quotation Supplier",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail App Library",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail App Library Shelf",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Badge Credential",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Badge Event",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Payments Core",
+   "name": "Retail Card Terminal Txn",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Coupon Draw",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Coupon Draw Winner",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Desk Action",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Desk Action Input",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Device Trust",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Extension Install",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Extension Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Extension Module",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Extension Package",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Extension Subscription",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Extension Subscription Profile",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Fiscal Reader",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Fiscal Reader Status",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Fiscal Regime Config",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Floor Place",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Floor Section",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Item Availability",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Item Option Group",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Kitchen Order",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Kitchen Order Line",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Kitchen Printer",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Kitchen Station",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Label Layout",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Layaway Plan",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Layaway Schedule",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail License Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail List Mark",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Open Check",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Open Check Claim",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Open Check Event",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Open Check Line",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Option Choice",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Option Group",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Override Request",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail PIN Event",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail POS Profile Store",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail POS Theme",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail POS Theme Caption",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail POS Theme Field",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail POS Theme Key Colour",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Partner Code",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Retail Permission",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Provisional Series",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Provisional Series Row",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Register Book",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Register Count",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Register Count Row",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Register Erasure",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Register Line",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Register Period",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Register Sequence",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Register State",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Remote App Key",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Save Rule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Save Rule Condition",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Save Rule Count",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Scan Source",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Service Mode",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Retail Setting",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail UX Metric",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Social",
+   "name": "Review Level",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Role",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Role Permission for Page and Report",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Role Profile",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Route History",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Routing",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Sale Attribute",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Sales Invoice",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Sales Invoice Advance",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Sales Invoice Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Sales Invoice Payment",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Sales Invoice Timesheet",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Selling",
+   "name": "Sales Order",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Sales Order Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Sales Partner",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Sales Partner Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Selling",
+   "name": "Sales Partner Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Sales Person",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "CRM",
+   "name": "Sales Stage",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Sales Taxes and Charges",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Sales Taxes and Charges Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Selling",
+   "name": "Sales Team",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Contacts",
+   "name": "Salutation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Scheduled Job Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Scheduled Job Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Scheduler Event",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Search Sequence",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Selling",
+   "name": "Selling Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Serial No",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Serial and Batch Bundle",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Serial and Batch Entry",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Server Script",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Support",
+   "name": "Service Day",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Support",
+   "name": "Service Level Agreement",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Support",
+   "name": "Service Level Priority",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Session Default",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Session Default Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Session Lock",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Share Balance",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Share Transfer",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Share Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Shareholder",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Shell Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Shipment",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Shipment Delivery Note",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Shipment Parcel",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Shipment Parcel Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Shipping Rule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Shipping Rule Condition",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Shipping Rule Country",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Integrations",
+   "name": "Slack Webhook URL",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Slideshow Photos",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Social Link Settings",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Integrations",
+   "name": "Social Login Key",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "South Africa VAT Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Regional",
+   "name": "South Africa VAT Settings",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Status Bar Control",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Status Bar Controls Properties",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Stock Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Stock Entry Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Stock Entry Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Stock Ledger Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Stock Reconciliation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Stock Reconciliation Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Stock Reposting Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Stock Reservation Entry",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Stock Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Store Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Store Expense",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Store Expense Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Store Expense Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Store Expense Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Sub Operation",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Subcontracting",
+   "name": "Subcontracting BOM",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Subcontracting",
+   "name": "Subcontracting Order",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Subcontracting",
+   "name": "Subcontracting Order Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Subcontracting",
+   "name": "Subcontracting Order Service Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Subcontracting",
+   "name": "Subcontracting Order Supplied Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Subcontracting",
+   "name": "Subcontracting Receipt",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Subcontracting",
+   "name": "Subcontracting Receipt Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Subcontracting",
+   "name": "Subcontracting Receipt Supplied Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "Submission Queue",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Subscription",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Subscription Invoice",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Subscription Plan",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Subscription Plan Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Subscription Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Success Action",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Supplier Group",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Supplier Group Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Supplier Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier Quotation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier Quotation Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier Scorecard",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier Scorecard Criteria",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier Scorecard Period",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier Scorecard Scoring Criteria",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier Scorecard Scoring Standing",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier Scorecard Scoring Variable",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier Scorecard Standing",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Buying",
+   "name": "Supplier Scorecard Variable",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Support",
+   "name": "Support Search Source",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Support",
+   "name": "Support Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Surcharge",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Surcharge Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Surcharge List",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "System Console",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "System Health Report",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "System Health Report Errors",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "System Health Report Failing Jobs",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "System Health Report Queue",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "System Health Report Tables",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "System Health Report Workers",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "System Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Tag",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Tag Link",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Target Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Projects",
+   "name": "Task",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Projects",
+   "name": "Task Depends On",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Projects",
+   "name": "Task Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Tax Category",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Tax Rule",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Tax Withheld Vouchers",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Tax Withholding Account",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Accounts",
+   "name": "Tax Withholding Category",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Tax Withholding Rate",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Team",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Telephony",
+   "name": "Telephony Call Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Tender Count Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Terms and Conditions",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "Territory",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Territory Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Theme Settings Hide Layout Pages",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Theme Settings Languages",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Thermal Label",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Projects",
+   "name": "Timesheet",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Projects",
+   "name": "Timesheet Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "ToDo",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "Token Cache",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Top Bar Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Transaction Coupon",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Transaction Deletion Record",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Transaction Deletion Record Details",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Transaction Deletion Record Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Transaction Item Attribute",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Transaction Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Transaction Promotion Bonus Buys Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "Transaction Promotion Detail",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Translation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Setup",
+   "name": "UOM",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "UOM Category",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "UOM Conversion Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "UOM Conversion Factor",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Email",
+   "name": "Unhandled Email",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Unreconcile Payment",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Accounts",
+   "name": "Unreconcile Payment Entries",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "User",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "User Detail",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "User Document Type",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "User Email",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "iVendNext POS",
+   "name": "User Face Maps",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "User Group",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "User Group Member",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "User Permission",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "User Select Document Type",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "User Social Login",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Core",
+   "name": "User Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "User Type Module",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Stock",
+   "name": "Variant Field",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Vehicle",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "Version",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Utilities",
+   "name": "Video",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Utilities",
+   "name": "Video Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Core",
+   "name": "View Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Telephony",
+   "name": "Voice Call Settings",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Warehouse",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Stock",
+   "name": "Warehouse Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Support",
+   "name": "Warranty Claim",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Web Form",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Web Form Field",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Web Form List Column",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Web Page",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Web Page Block",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Web Page View",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Web Template",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Web Template Field",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Integrations",
+   "name": "Webhook",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Integrations",
+   "name": "Webhook Data",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Integrations",
+   "name": "Webhook Header",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Integrations",
+   "name": "Webhook Request Log",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Portal",
+   "name": "Website Attribute",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Portal",
+   "name": "Website Filter Field",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Setup",
+   "name": "Website Item Group",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Website Meta Tag",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Website Route Meta",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Website Route Redirect",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Website Script",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Website Settings",
+   "single": 1,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Website Sidebar",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Website Sidebar Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Website Slideshow",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Website Slideshow Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Website",
+   "name": "Website Theme",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Website",
+   "name": "Website Theme Ignore App",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Work Order",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Work Order Item",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Work Order Operation",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Workflow",
+   "name": "Workflow",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Workflow",
+   "name": "Workflow Action",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Workflow",
+   "name": "Workflow Action Master",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Workflow",
+   "name": "Workflow Action Permitted Role",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Workflow",
+   "name": "Workflow Document State",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Workflow",
+   "name": "Workflow State",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Workflow",
+   "name": "Workflow Transition",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Workspace",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Desk",
+   "name": "Workspace Chart",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Workspace Custom Block",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Workspace Link",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Workspace Number Card",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Workspace Quick List",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Desk",
+   "name": "Workspace Shortcut",
+   "single": 0,
+   "table": 1
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Workstation",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Workstation Type",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "Manufacturing",
+   "name": "Workstation Working Hour",
+   "single": 0,
+   "table": 1
+  }
+ ],
+ "release": "POS 2.1.0.667 (till app 60147699c)"
+}
