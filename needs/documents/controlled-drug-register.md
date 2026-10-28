@@ -22,6 +22,8 @@ Your market's books as data in your manifest (`register_books`, POS version 2.1.
 - The retailer maps its warehouses to each book's register store before the first sale; a manifest cannot.
 - Sample S41 (0.2.0) installs eight markets' pharmacy books on the door from data sets, Kenya's three first: start from it, or build a book from the regulated register recipe and the register books page.
 - An article first stocked after its book is switched on is not checked against the balance until a count sets it.
+- From POS version 2.1.0.667 a book's `retention_years` cannot be shortened once it has lines, a mistyped one included: a corrected book ships under a new id, which numbers from 1.
+- From POS version 2.1.0.667 a line's person details (the party, its address, the correction note, each detail) are read only by the book's count role and the roles the retailer gives their level; after the retention, the book's *Erase persons' details* may blank them, with a record of the erasure.
 
 ## Tell the customer
 Every sale, receipt and transfer of a controlled item writes its line in the register as it is saved, and the book prints in your country's layout for an inspector.

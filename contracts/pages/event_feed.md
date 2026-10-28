@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/event_feed.md @ b453a68eac6c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/event_feed.md @ 60147699cce4, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Event feed
 
 **Contract:** [`event_feed.v1.schema.json`](../extension_contracts/event_feed.v1.schema.json)
@@ -20,14 +20,23 @@ that record type, after the change commits (a background job, so seconds later).
 rest done. A change saved by your own application's user
 writes no event for you: you never receive an echo of your own writes.
 
-**Setting it up.** In iVendNext Desk a **Registered Application** record names your application, the
-user whose API key you call with (`application_user`), and the record types you follow (its event rows).
-One user, one registration: a key registered to two applications is answered *"not registered"*.
+**Setting it up.** List the feed under `registered_applications` in your manifest: one feed per app,
+with every record type it follows in its `events`. The install makes the **Registered Application**
+record, switched off, and **your app's own user**, `<app>@integration.invalid`, named on it as the user
+whose API key you call with (`application_user`). That user holds one role, `<PREFIX> Integration` (made
+empty if your manifest does not declare it), works through the API only (it can never sign in to Desk,
+even with a password) and takes no seat. A hosted app receives its key at connect (`user:<email>`); for
+an app you host yourself, the shop makes the key on that user (User, Generate Keys). The uninstall
+removes the feed, then the user and its key. The shop ticks each record type on. Nobody can give
+that user a password or another role; the shop gives the `<PREFIX> Integration` role the reads the
+app needs. ⚠ Disabling the user does not stop its key (a key request does not check it): to cut the
+app off, uninstall it, or make a new key on its user and do not press *Connect again*. One user, one
+registration: a key registered to two applications is answered *"not registered"*.
 
 Any record type can be followed, the till's own included: a registration that follows **Retail Override
 Request** receives each manager approval as `retail_override_request.on_update` (requested, approved,
 denied, used by a sale), with no code — for a partner that reports on approvals. The application's user
-needs read access on Retail Override Request, which the shop grants.
+needs read access on Retail Override Request, which the shop grants (to the `<PREFIX> Integration` role).
 
 ## 2. Version
 

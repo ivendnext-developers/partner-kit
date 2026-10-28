@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_manifest_check_modules.py,
-# at development b453a68eac6cc7e039f28a94f6f37147f151ec38; changed: the import, the fixture folder, and a row id in a comment.
+# at development 60147699cce4f7bd35f73e111649ce108eb2dcc2; changed: the import, the fixture folder, and a row id in a comment.
 # A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """A package that carries a certified module — stdlib only, no bench.
 

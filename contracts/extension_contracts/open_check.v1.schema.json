@@ -1,0 +1,1655 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://ivendnext.com/extending/contracts/open_check.v1.schema.json",
+ "title": "Open check, version 1",
+ "description": "The open check door (open_check/1): a table's, a bar seat's or a named tab's running order, written by any till of the store and by a kit's integration user through the partner API (/api/method/ivendnext_mpos.api.v1.<verb>). It holds order state only, never a price. Requests are judged by business_logic/open_check.py; each verb asks its own Retail Permission right. A refusal's exc_type is its stable code (TableServiceOffError, CheckNotOpenError, CheckChangedError, LineClaimedError, LineSentError, LineNotOpenError, LineNotSentError, ItemRefusedError, ServiceModeMismatchError, CheckHasOpenLinesError, CheckRequestError, WrittenOutsideDoorError, DeviceRequiredError, ProfileNotAssignedError, AssignedProfileDisabledError, DuplicateStoreAssignmentError, StoreAssignmentIncompleteError, the engine's UOMMustBeIntegerError, PermissionError; and, to a till paying a check, ClaimRefusedError, PaymentInProgressError, ConfirmPendingError, CheckBasketMismatchError, CheckCartError, OpeningRequiredError; to a till or Desk closing a day, CheckPaymentOpenError, ChecksOpenAtCloseError; and, in a till's offline review of a queued sale for a check, OfflineCheckSaleError).",
+ "$defs": {
+  "open_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_open: a place, or a label for a tab or a pre-order (one at least). key is one per press: a retry with the same key returns the first answer and opens nothing twice.",
+   "required": [
+    "store",
+    "pos_profile",
+    "key"
+   ],
+   "anyOf": [
+    {
+     "required": [
+      "place"
+     ]
+    },
+    {
+     "required": [
+      "label"
+     ]
+    }
+   ],
+   "properties": {
+    "store": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "pos_profile": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "key": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "place": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "label": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "covers": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 999
+    },
+    "server": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "service_mode": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "suggested_customer": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "source": {
+     "type": "string",
+     "pattern": "^[a-z0-9_]{1,20}$"
+    },
+    "source_ref": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    }
+   }
+  },
+  "add_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_add_lines: an append; two callers adding at once both land. key is one per press.",
+   "required": [
+    "check",
+    "lines",
+    "key"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "key": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "lines": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 50,
+     "items": {
+      "$ref": "#/$defs/line_in"
+     }
+    }
+   }
+  },
+  "option": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "item_code"
+   ],
+   "properties": {
+    "item_code": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "option_group": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "item_name": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "In an answer: the choice's name (for drawing its line)."
+    },
+    "per": {
+     "type": "number",
+     "minimum": 0,
+     "description": "In an answer: how many of the choice go with one of its dish (the master's)."
+    }
+   }
+  },
+  "line_in": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "item_code"
+   ],
+   "description": "One line to add. ⛔ No price, rate, amount or discount key: a check holds what was ordered, never a price (the engine prices the line at Pay). concession_note is a till's only: a kit sending one is refused.",
+   "properties": {
+    "item_code": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "qty": {
+     "type": "number",
+     "minimum": 0.001,
+     "maximum": 9999
+    },
+    "uom": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "options": {
+     "type": "array",
+     "maxItems": 20,
+     "items": {
+      "$ref": "#/$defs/option"
+     }
+    },
+    "note": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "concession_note": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "seat": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "course": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    }
+   }
+  },
+  "line": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "line_id",
+    "item_code",
+    "qty",
+    "state",
+    "sent"
+   ],
+   "properties": {
+    "line_id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "item_code": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "item_name": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "qty": {
+     "type": "number"
+    },
+    "uom": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "options": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/option"
+     }
+    },
+    "note": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "concession_note": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "removal_reason": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "seat": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "course": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "sent": {
+     "type": "boolean"
+    },
+    "state": {
+     "enum": [
+      "open",
+      "paid",
+      "removed",
+      "voided"
+     ]
+    },
+    "ordered_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "added_by": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "changed_at_version": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "being_paid": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "till": {
+         "anyOf": [
+          {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 140
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "user": {
+         "anyOf": [
+          {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 140
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "since": {
+         "anyOf": [
+          {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 140
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "user_name": {
+         "anyOf": [
+          {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 140
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "description": "The paying user's name; a till only, never a kit."
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  "check": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "A check as check_get, floor_status and every write return it. ⛔ No claim token, no sale key, ever; suggested_customer is present only for a till or the kit user that opened the check, and concession_note / removal_reason only for a till.",
+   "required": [
+    "check",
+    "version",
+    "status",
+    "store",
+    "lines"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "changed_at_version": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "status": {
+     "enum": [
+      "open",
+      "closed",
+      "merged"
+     ]
+    },
+    "merged_into": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "store": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "pos_profile": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "place": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "place_label": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "label": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "covers": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "server": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "service_mode": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "suggested_customer": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "source": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "source_ref": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "opened_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "opened_by": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "printed_count": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "added": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140
+     }
+    },
+    "sent": {
+     "type": "array",
+     "description": "check_mark_sent: the lines marked sent by this send.",
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140
+     }
+    },
+    "results": {
+     "type": "array",
+     "description": "check_mark_sent and check_void_line: each kitchen's answer.",
+     "items": {
+      "$ref": "#/$defs/station_result"
+     }
+    },
+    "check_kitchen_order": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "check_mark_sent and check_void_line: the kitchen order the tickets printed on (a till reports an agent ticket on it with check_ack); named so a till never keeps it as a sale's kitchen order."
+    },
+    "approval": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "check_void_line and check_comp_line: the approval record, written for every void and comp (naming the manager who approved in person, or the user who held the right)."
+    },
+    "lines": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/line"
+     }
+    },
+    "offline_flag": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "staff only: set when a sale for this check was queued on a till without a connection and refused at the drain"
+    }
+   }
+  },
+  "move_answer": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "check",
+    "into"
+   ],
+   "description": "check_move_lines and check_merge return both checks as they are now.",
+   "properties": {
+    "check": {
+     "$ref": "#/$defs/check"
+    },
+    "into": {
+     "$ref": "#/$defs/check"
+    }
+   }
+  },
+  "floor": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "store",
+    "sections",
+    "places",
+    "tabs"
+   ],
+   "description": "floor_status: the store's active places with their status derived from their open checks, and the tabs. A kit's summaries carry no server.",
+   "properties": {
+    "store": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "table_service": {
+     "type": "boolean"
+    },
+    "sections": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "section": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 140
+       },
+       "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 140
+       }
+      }
+     }
+    },
+    "places": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "place": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 140
+       },
+       "section": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 140
+       },
+       "label": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 140
+       },
+       "kind": {
+        "enum": [
+         "table",
+         "bar_seat",
+         "room",
+         "other"
+        ]
+       },
+       "default_covers": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "status": {
+        "enum": [
+         "free",
+         "seated",
+         "ordered",
+         "paying"
+        ]
+       },
+       "checks": {
+        "type": "array",
+        "items": {
+         "$ref": "#/$defs/check_summary"
+        }
+       }
+      }
+     }
+    },
+    "tabs": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/check_summary"
+     }
+    },
+    "servers": {
+     "anyOf": [
+      {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "user"
+        ],
+        "properties": {
+         "user": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+         },
+         "name": {
+          "anyOf": [
+           {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140
+           },
+           {
+            "type": "null"
+           }
+          ]
+         }
+        }
+       }
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "Who a check can be handed to: the store's operators working its tills now. Absent to a kit."
+    },
+    "realtime": {
+     "anyOf": [
+      {
+       "type": "object"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "The live wiring a till listens on (event mpos_open_check). Absent to a kit, which polls."
+    }
+   }
+  },
+  "check_summary": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "check",
+    "version",
+    "status",
+    "lines"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "label": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "covers": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "opened_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "service_mode": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "status": {
+     "enum": [
+      "seated",
+      "ordered",
+      "paying"
+     ]
+    },
+    "lines": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "server": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "server_active": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "flagged": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "last_write_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "When the check was last written, by any till or app (the floor's Updated 20:41)."
+    },
+    "last_write_till": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "The till of that last write; a till only, never a kit."
+    },
+    "server_name": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "The server's name; a till only, never a kit."
+    }
+   }
+  },
+  "send_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_mark_sent (layer 2): send the check's unsent lines, or the named ones (each named once), to their kitchens on the till's kitchen tickets; each line whose kitchen took its ticket is marked sent. A kitchen with no printer, or whose printer refused, marks nothing (send again). counter_till: this till has a print agent for a printer cabled to it. key is one per press.",
+   "required": [
+    "check",
+    "key"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "key": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "line_ids": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 50,
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140
+     }
+    },
+    "counter_till": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "enum": [
+        0,
+        1
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "void_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_void_line (layer 2): void a whole line the kitchen has, with the right void-sent-line or a manager in person (approver_user + passwd); a VOID ticket goes to the line's kitchen, on the order it was sent on, unless its every ticket failed at the till's agent (the kitchen never had it). One approval record either way. Refused for an unsent line (LineNotSentError: remove it instead) and while the line is being paid. reason (optional) is kept on the line.",
+   "required": [
+    "check",
+    "line_id",
+    "version"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "line_id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "key": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "approver_user": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "passwd": {
+     "type": "string",
+     "minLength": 1
+    },
+    "counter_till": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "enum": [
+        0,
+        1
+       ]
+      }
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    }
+   }
+  },
+  "comp_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_comp_line (layer 2): comp a line, sent or not, with the right check-comp or a manager in person (approver_user + passwd). The line is removed with reason comp and is never on the sale; no void ticket (a comped dish is still served). One approval record either way. reason (optional, e.g. birthday) is kept on the check's history; the line's reason is comp.",
+   "required": [
+    "check",
+    "line_id",
+    "version"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "line_id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "key": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "approver_user": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "passwd": {
+     "type": "string",
+     "minLength": 1
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    }
+   }
+  },
+  "station_result": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "One kitchen's answer to a send or a void: handed (sent to its network printer), agent (text returned for this till's print agent, which acks it), or failed with its reason. A kit reads only station, lines, state and ticket.",
+   "required": [
+    "station",
+    "lines",
+    "state"
+   ],
+   "properties": {
+    "station": {
+     "type": "string",
+     "maxLength": 140
+    },
+    "lines": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "state": {
+     "enum": [
+      "handed",
+      "agent",
+      "failed"
+     ]
+    },
+    "ticket": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "printer": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "text": {
+     "type": "string"
+    },
+    "reason": {
+     "type": "string"
+    },
+    "retry": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "ack_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_ack (a till only, never a kit): its print agent printed an agent ticket (ok) or could not; kitchen_order is the order the ticket printed on, as the send or void answer named it (check_kitchen_order) — required: ticket numbers are per order.",
+   "required": [
+    "check",
+    "ticket",
+    "ok",
+    "kitchen_order"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "ticket": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "ok": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "enum": [
+        0,
+        1
+       ]
+      }
+     ]
+    },
+    "kitchen_order": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    }
+   }
+  },
+  "claim_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_claim (a till only, never a kit, the payer's POS day open): claim the open lines (or the named ones) for this till, all or none; a retry with the same key from the same device and day re-issues the token.",
+   "required": [
+    "check",
+    "key"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "key": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "line_ids": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 50,
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140
+     }
+    }
+   }
+  },
+  "claim_answer": {
+   "type": "object",
+   "description": "check_claim's answer: the check as check states it, the claim, the lines it holds and the token — the ONLY answer that ever carries the token.",
+   "required": [
+    "check",
+    "claim",
+    "claim_lines",
+    "token",
+    "lines"
+   ],
+   "properties": {
+    "claim": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "claim_lines": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140
+     }
+    },
+    "token": {
+     "type": "string",
+     "minLength": 16
+    },
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "lines": {
+     "type": "array"
+    }
+   }
+  },
+  "release_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_release (Back): the claim and its token.",
+   "required": [
+    "claim",
+    "token"
+   ],
+   "properties": {
+    "claim": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "token": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "note_pending_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_note_pending: money about to be taken on the bank's own machine or as a cheque or other reference — noted before the slip runs. ref names the slip (the split leg's key); one entry per slip.",
+   "required": [
+    "claim",
+    "token",
+    "tender",
+    "amount"
+   ],
+   "properties": {
+    "claim": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "token": {
+     "type": "string",
+     "minLength": 1
+    },
+    "tender": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "amount": {
+     "type": "number",
+     "minimum": 0.01
+    },
+    "ref": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    }
+   }
+  },
+  "break_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_break_claim (a manager's right): end another till's payment, with a reason; confirm once the guest was not charged on the bank's machine.",
+   "required": [
+    "claim",
+    "reason"
+   ],
+   "properties": {
+    "claim": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "confirm": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "enum": [
+        0,
+        1
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "preview_answer": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_preview: the shop's own price of the open lines at the caller's register, with no customer — never stored, never booked.",
+   "required": [
+    "check",
+    "version",
+    "rows",
+    "total"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "version": {
+     "type": "integer"
+    },
+    "total": {
+     "type": "number"
+    },
+    "currency": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "item_code",
+       "qty",
+       "rate",
+       "amount"
+      ],
+      "properties": {
+       "item_code": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 140
+       },
+       "qty": {
+        "type": "number"
+       },
+       "rate": {
+        "type": "number"
+       },
+       "amount": {
+        "type": "number"
+       }
+      }
+     }
+    }
+   }
+  },
+  "clear_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_clear_pending: the slip that was not paid on the bank's machine (ref; required when two are open). A clear re-sent after a lost answer is answered, not refused.",
+   "required": [
+    "claim",
+    "token"
+   ],
+   "properties": {
+    "claim": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "token": {
+     "type": "string",
+     "minLength": 1
+    },
+    "ref": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    }
+   }
+  },
+  "print_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_print (a till's only): the check, and the version the till shows (optional).",
+   "required": [
+    "check"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "paper": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "check_print's paper: the shop's price of the open lines at the till's register, in the store's language — never stored, never a concession note.",
+   "required": [
+    "title",
+    "place",
+    "rows",
+    "charges",
+    "total",
+    "total_text",
+    "note",
+    "printed_count",
+    "total_label"
+   ],
+   "properties": {
+    "title": {
+     "type": "string"
+    },
+    "place": {
+     "type": "string"
+    },
+    "server": {
+     "type": "string"
+    },
+    "covers": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "printed_at": {
+     "type": "string"
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "item_name",
+       "qty",
+       "amount",
+       "amount_text"
+      ],
+      "properties": {
+       "item_name": {
+        "type": "string"
+       },
+       "qty": {
+        "type": "number"
+       },
+       "uom": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "amount": {
+        "type": "number"
+       },
+       "amount_text": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "charges": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "amount_text"
+      ],
+      "properties": {
+       "description": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "amount_text": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "total": {
+     "type": "number"
+    },
+    "total_text": {
+     "type": "string"
+    },
+    "currency": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "note": {
+     "type": "string"
+    },
+    "printed_count": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "covers_text": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "total_label": {
+     "type": "string"
+    }
+   }
+  },
+  "print_answer": {
+   "type": "object",
+   "description": "check_print's answer: the check as check states it, the paper, and what the till's printer did (state: sent, failed or skipped, with its words).",
+   "required": [
+    "check",
+    "paper",
+    "print"
+   ],
+   "properties": {
+    "check": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "paper": {
+     "$ref": "#/$defs/paper"
+    },
+    "print": {
+     "type": "object",
+     "required": [
+      "state"
+     ],
+     "properties": {
+      "state": {
+       "type": "string"
+      },
+      "detail": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      }
+     }
+    }
+   }
+  }
+ }
+}

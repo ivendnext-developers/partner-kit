@@ -1,0 +1,12 @@
+{
+  "extension_point": "open_check",
+  "contract": "open_request",
+  "about": "Neither a place nor a name: nobody could find the check.",
+  "expect_refusal": "A name for the check is needed.",
+  "payload": {
+    "store": "Main Store - MTC",
+    "pos_profile": "MPOS-TEST-OPEN",
+    "key": "k-0101",
+    "covers": 2
+  }
+}

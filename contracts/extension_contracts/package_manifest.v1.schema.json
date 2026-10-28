@@ -196,7 +196,8 @@
           }
         },
         "registered_applications": {
-          "description": "The registered applications the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py).",
+          "description": "The event feed the manifest installs (one per app: list every record type it follows in its events): checked by the installer's checker inside the site (business_logic/manifest_check.py). The install makes the app's own user, <app>@integration.invalid, with the role <PREFIX> Integration alone, and names it on the feed.",
+          "maxItems": 1,
           "type": "array",
           "items": {
             "type": "object"

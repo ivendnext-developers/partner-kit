@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_manifest_check_rolefields.py,
-# at development b453a68eac6cc7e039f28a94f6f37147f151ec38; changed: the import, the row and lane ids in the docstring, and one print format that reads through the framework's name (now through the helper's own name: the field is refused either way).
+# at development 60147699cce4f7bd35f73e111649ce108eb2dcc2; changed: the import, the row and lane ids in the docstring, and one print format that reads through the framework's name (now through the helper's own name: the field is refused either way).
 # A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """A field the manifest adds may name the roles that read it (``read_roles``) and
 the roles that change it (``write_roles``). Stdlib only. The installer's half (the level, the rows,

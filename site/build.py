@@ -671,6 +671,7 @@ DOOR_NEXT = {
     "manifest": "Install it on your sandbox the way the shop's administrator will; the checker refuses a manifest that declares code.",
     "payer": "Test it with your service stopped: the cashier reads that the payer cannot be reached, and the customer pays it all or the sale is held.",
     "register-books": "Install the books on your sandbox, then submit a stock document of an item a book takes: one line per book, numbered, never edited.",
+    "open-check": "Send every write twice with the same key: it is written once. Send that key again with other lines: it is refused.",
     "sandboxed-function": "Run it on the till offline as well as online: it must give the same answer.",
 }
 # The order a shortlist is built in (Plan a project): the ladder's order (guide chapter 3), with one change: your own
@@ -678,7 +679,7 @@ DOOR_NEXT = {
 # write those records. Every door is in exactly one step (build() refuses a door that is not).
 EXTENSION_DOORS = {"check-before-payment", "document-check", "capture-on-event", "field-rules", "save-rules", "desk-action",
                    "partner-page", "scan-source", "label-layout", "wallet", "fiscal-reader", "payment-connector",
-                   "fulfil-at-sale", "payer", "register-books"}
+                   "fulfil-at-sale", "payer", "register-books", "open-check"}
 BUILD_ORDER = [
     ({"configure", "receipt"}, "Configure first: the settings in iVendNext Desk that everything after them relies on."),
     ({"manifest"}, "Then your own records and fields: the services and screens built after them read and write them."),

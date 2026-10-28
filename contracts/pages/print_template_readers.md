@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/print_template_readers.md @ b453a68eac6c, copied unchanged except the links, the framework's raw SQL and its readers, named by what they are: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/print_template_readers.md @ 60147699cce4, copied unchanged except the links, the framework's raw SQL and its readers, named by what they are: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Print template readers — `ivn_rows` and `ivn_value`
 
 **Samples:** [`samples/package_manifest/`](../extension_contracts/samples/package_manifest/)
