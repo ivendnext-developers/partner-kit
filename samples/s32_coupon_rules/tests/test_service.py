@@ -114,6 +114,22 @@ class OneShop(unittest.TestCase):
         self.assertEqual(self.check(context(["WELCOME10"]))[1]["verdict"], "refuse")
         self.assertEqual(sorted(c[3] for c in self.api.calls if c[0] == "count"), ["POS Invoice", "Sales Invoice"])
 
+    def test_a_capped_coupon_is_refused_over_the_wire_and_reads_no_count(self):
+        self.api.rules_by = {"https://shop.example": RECORDS + [
+            {"name": "C100", "coupon": "C100", "enabled": 1, "first_purchase_only": 0, "customer_group": None,
+             "spend_per_use": 1000.0}]}
+        code, out = self.check(context(["C100"]))                       # one line of 12.50
+        self.assertEqual((code, out["verdict"]), (200, "refuse"))
+        self.assertEqual(out["reason"], "Coupon C100 needs a sale of AED 1,000.00; this sale is AED 12.50. "
+                                        "Remove a coupon, or add to the sale.")
+        self.assertEqual([c[0] for c in self.api.calls], ["rules"])
+
+    def test_a_retailer_on_1_0_1_is_answered_as_before(self):
+        old = [{k: v for k, v in r.items() if k != "spend_per_use"} for r in RECORDS]   # its Rule has no such field
+        self.api.rules_by = {"https://shop.example": old}
+        self.assertEqual(self.check(context(["STAFF15"], group="Staff")), (200, {"verdict": "allow"}))
+        self.assertEqual(self.check(context(["STAFF15"], group="Retail"))[1]["verdict"], "refuse")
+
     def test_the_count_alone_refused_refuses_the_coupon_in_words(self):
         self.api.refuse_count = True
         self.assertEqual(self.check(context(["WELCOME10"])), (200, {"verdict": "refuse", "reason": app.KEY_REFUSED}))
@@ -304,7 +320,7 @@ class ShopApi(unittest.TestCase):
         self.assertEqual(auth, "token k:s")
         args = dict(urllib.parse.parse_qsl(path.split("?", 1)[1]))
         self.assertEqual((json.loads(args["filters"]), args["limit_page_length"]), ([["enabled", "=", 1]], "0"))
-        self.assertEqual(json.loads(args["fields"]), list(app.coupons.RULE_FIELDS))
+        self.assertEqual(json.loads(args["fields"]), ["*"])     # every field: a retailer on 1.0.1 has no spend_per_use
 
     def test_counts_through_the_shops_ivendnext_name(self):
         self.assertEqual(self.api.count(self.url, "k:s", "POS Invoice", [["customer", "=", "CUST-1"]]), 4)

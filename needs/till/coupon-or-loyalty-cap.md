@@ -11,6 +11,7 @@ recipe: recipes/rule_guard.md
 sample: samples/s18_rule_guard
 request: -
 verified: carried 2026-10-16 · not re-run
+related: coupon-sale-needed-per-use
 ---
 ## What you build
 Your service answers the check before payment and refuses, or leaves out the payment method, when the coupon or balance would pay over the cap. For a wallet you run yourself, the wallet's own answer carries the cap (the card *store-wallet-at-till*).

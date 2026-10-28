@@ -97,9 +97,10 @@ class ShopApi:
             raise ShopUnreadable(type(e).__name__) from None             # connection; HTTPException: a cut answer
 
     def rules(self, url: str, key: str, prefix: str) -> list:
-        """The shop's switched-on Rule records (every one: ``limit_page_length`` 0)."""
+        """The shop's switched-on Rule records (every one: ``limit_page_length`` 0), each with all its fields: a retailer
+        still on 1.0.1 has no *Sale needed for each use*, and a read naming that field would fail for it."""
         out = self._get(url, key, "/api/resource/" + urllib.parse.quote(prefix + " Rule"),
-                        {"fields": json.dumps(list(coupons.RULE_FIELDS)), "filters": json.dumps([["enabled", "=", 1]]),
+                        {"fields": json.dumps(["*"]), "filters": json.dumps([["enabled", "=", 1]]),
                          "limit_page_length": 0})
         return out.get("data") if isinstance(out, dict) else None
 

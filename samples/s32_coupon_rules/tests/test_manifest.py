@@ -38,6 +38,12 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(fields["customer_group"]["options"], "Customer Group")
         self.assertEqual(set(coupons.RULE_FIELDS) - {"name"}, set(fields))
 
+    def test_the_sale_needed_is_an_optional_amount(self):
+        (dt,) = MANIFEST["doctypes"]
+        f = next(f for f in dt["fields"] if f["fieldname"] == "spend_per_use")
+        self.assertEqual(f["fieldtype"], "Currency")
+        self.assertFalse(f.get("reqd") or f.get("default") or f.get("mandatory_depends_on"))   # blank: no cap, so 1.0.1's rules stand
+
     def test_the_integration_role_only_reads_the_rules(self):
         (dt,) = MANIFEST["doctypes"]
         row = next(p for p in dt["permissions"] if p["role"] != "System Manager")
