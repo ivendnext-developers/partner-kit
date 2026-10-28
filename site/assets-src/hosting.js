@@ -448,9 +448,6 @@
     box.appendChild(p("The customer's code is the one its Made for you shelf in the App library goes by: the same code you name when you publish to that customer. Lower-case letters, digits and hyphens, like ",
       code("acme-stores"), ". Ask your account team if you do not have it."));
     box.appendChild(p("Whoever orders the hosting pays: you, or the customer the app is built for when that customer orders it."));
-    if (who.internal) {
-      box.appendChild(p("Our own teams' copies are free: your own apps, and a customer's sandbox and staging copies before it goes live. A customer's production copy is ordered and paid by that customer, through the account team."));
-    }
     box.appendChild(nav("app", (!s.forCustomer || /^[a-z][a-z0-9-]{1,30}$/.test(s.customer || "")) ? "plan" : null));
     return box;
   }
@@ -502,7 +499,7 @@
     if (!ready) box.lastChild.disabled = true;
     if (s.checked) {
       box.appendChild(p("The hosting takes it: " + s.checked.app + ", " + s.checked.addresses.join(", ") + ". " +
-        (s.checked.pays_usd === 0 ? "No charge to you" + (s.checked.price_usd ? ": our own teams' copies." : ".") : "USD " + s.checked.pays_usd + " a month, for every copy together.")));
+        (s.checked.pays_usd === 0 ? "No charge to you." : "USD " + s.checked.pays_usd + " a month, for every copy together.")));
     }
     box.appendChild(nav("customer", s.checked ? "pay" : null));
     return box;
