@@ -1023,6 +1023,14 @@ class FormatFolds(unittest.TestCase):
         names = [p["name"] for p in m["print_formats"]] + [n["name"] for n in m["notifications"]]
         self.assertLessEqual(max(map(len, names)) + grow, build.NAME_MAX, max(names, key=len))
 
+    def test_the_app_librarys_three_markets_fit_its_manifest_size(self):
+        # the App library lists this app for Mexico, Nigeria and Ghana (where its counter-rules key is issued), renamed to
+        # IVENDNEXT RSR, and takes a manifest of at most 262,144 bytes
+        m = build.build_files(["mx_pharmacy", "ng_pharmacy", "gh_pharmacy"])
+        text = json.dumps(m, ensure_ascii=False, separators=(",", ":"))
+        grown = len(text.encode()) + text.count(build.PREFIX) * (len("IVENDNEXT RSR") - len(build.PREFIX))
+        self.assertLess(grown, 262_144 - 8_000)  # a margin for the counter app's longer names and the description
+
     def test_the_build_runs_the_shops_checker_before_it_writes(self):
         self.assertEqual(build.refusals(build.build_manifest()), [])
         m = build.build_manifest()
