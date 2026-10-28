@@ -69,7 +69,7 @@ What a partner usually changes:
 
 ## Before you copy it
 
-- **A Desk document that names a blocked lot by hand is not refused yet.** The till's automatic lot read drops a disabled lot, so the online till never offers it; a Desk delivery or invoice typed with it still submits until the POS app refuses disabled lots on every stock document (requested of the POS app). Tell iVendNext.
+- **A Desk document that names a blocked lot by hand is refused from POS version 2.1.0.666.** The till's automatic lot read drops a disabled lot, so the online till never offers it; from 2.1.0.666 the POS app also refuses a disabled (recalled) lot, and an expired one while the retailer's *Allow Selling an Expired Batch* is off, on every outgoing stock document, from Desk, an import or the API: a Delivery Note, a Sales Invoice that moves stock, a Stock Entry, a POS Invoice submitted outside the till. A Material Issue, a move into a quarantine store and a return to the supplier still pass, so the disposal check above still guards the disposal. On an older POS app such a Desk document still submits ([chapter 9](../../guide/09_points_and_requests.md), *A lot that may not leave the shop*).
 - **An offline till keeps a blocked lot until it next syncs**, and a sale it made offline is traced at the next press.
 - **A lot with no expiry date is never blocked by the app.** Enter the date printed on the pack, then press again.
 - **The customers supplied are health data.** The notice is readable by the Recall Officer and System Manager only; the store's staff work their Store Progress record.

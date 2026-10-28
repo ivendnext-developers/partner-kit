@@ -34,7 +34,7 @@ A retailer that wants to know which bin an item sits in does this, in the order 
 4. **Add the aisles.** A System Manager adds each aisle as a `PP BLN Aisle` (search for it): its name and its location.
 5. **Add the bins.** In **Bin locations > Bins** a System Manager adds each bin: **Bin** (its code) and its **Aisle**; the location follows from the aisle. The bin label is the `PP BLN Bin Label` print format on a bin; a Retail Manager may print it. ⚠ On a retailer's iVendNext whose release lacks the product's fix, the label does not print yet: `/printview` answers 404 and Desk's preview keeps the standard layout ([guide chapter 7](../../guide/07_manifests.md#a-print-format-on-your-own-record-type-a-known-defect)).
 6. **Put stock in the bins.** Nobody types what is in a bin: **What is in each bin** is kept by the service, from putaways, picks and booked sales. Stock must already be received into the back room's warehouse; the service's putaway puts it in a back-room bin, and its pick moves it to a shop-floor bin of the till's own store. A booked sale then takes its items off the shop-floor bins of the store it sold from. A Retail Manager reads all of it and changes none of it.
-7. **The till key.** From the release that carries it, a till key the manifest declares is ready in **POS Studio > Apps** as soon as the app is installed: the consent the administrator reads on the install screen is the key's consent, and the store switches the key on there and places it on its till. Until then it installs switched off with consent not given, and the retailer's administrator ticks both in Desk (**Retail Remote App Key**). The cashier then presses **Where is it?** on a sale.
+7. **The till key.** From POS build 2.0.0.646 a till key the manifest declares is ready in **POS Studio > Apps** as soon as the app is installed: the consent the administrator reads on the install screen is the key's consent, and the store switches the key on there and places it on its till. On an older build it installs switched off with consent not given, and the retailer's administrator ticks both in Desk (**Retail Remote App Key**). The cashier then presses **Where is it?** on a sale.
 
 **Where it shows.** In Desk: the **Bin locations** workspace (Locations, Bins, What is in each bin), the bin label print format, and a **Default bin (bin locations)** field on each Item. At the till: the *"Where is it?"* key, which answers with a short message naming the bin of each item on the sale (the shop floor first, else the back room). In POS Studio: the key, under **Apps**. No report or number card.
 
@@ -68,10 +68,10 @@ The App library's *Bin locations* is this sample. To give a customer its own ver
 
 | Piece | What |
 |---|---|
-| `manifest.json` (**v2**) | the data: five record types, the `Item.pp_bln_default_bin` field, display setters, a bin label, a workspace, two signed webhooks to the service — and **the till key as a remote key** (`remote_keys`: "Where is it?", calling the partner's own service over HTTPS; on our test bench it installed switched off with consent not given, and from the release that carries the change it is ready in POS Studio > Apps once the app is installed: see below) |
+| `manifest.json` (**v2**) | the data: five record types, the `Item.pp_bln_default_bin` field, display setters, a bin label, a workspace, two signed webhooks to the service — and **the till key as a remote key** (`remote_keys`: "Where is it?", calling the partner's own service over HTTPS; on our test bench, before POS build 2.0.0.646, it installed switched off with consent not given; from that build it is ready in POS Studio > Apps once the app is installed: see below) |
 | `service/` · `core.py` | the partner's own service: keeps the bins up to date from booked sales and answers the remote key from the pure core |
 
-The "Where is it?" key: what it does on install, today and from the release that carries the change, is step 7 of *What the retailer does*. It has not yet been pressed on a till; the same kind of key has been, for S1 (through the till's press endpoint) and S6 (on the till's screen).
+The "Where is it?" key: what it does on install, before and from POS build 2.0.0.646, is step 7 of *What the retailer does*. It has not yet been pressed on a till; the same kind of key has been, for S1 (through the till's press endpoint) and S6 (on the till's screen).
 
 ## What is refused, and why
 
@@ -94,13 +94,13 @@ The env file (never committed), kept at `samples/s2_bins/service/.env.local`, ho
 
 ### The walk
 
-The GIF shows what the manifest installs, as staff see it in Desk: the workspace, the bins with their aisles, and what is in each bin — the quantities the partner's service keeps up to date from booked sales. Frame: Desk, 1440 wide. Walked on our test bench on 2026-10-10, iVendNext POS app at `87812e141`. Built from the same screens as the stills below, uncropped.
+The GIF shows what the manifest installs, as staff see it in Desk: the workspace, the bins with their aisles, and what is in each bin — the quantities the partner's service keeps up to date from booked sales. Frame: Desk, 1440 wide. Walked on our test bench on 2026-10-10, iVendNext POS app at `87812e141`. Built from the same screens as the stills below, uncropped. ⚠ From POS version 2.1.0 the workspace is never in the Desk's menu as the GIF shows it: the retailer's administrator opens it from the App library, and the app's users find it with the search bar ([chapter 7](../../guide/07_manifests.md), *Your Desk page is never in the menu*).
 
 In step 3, one row: 6 units put away in the back-room bin. The workspace still (step 1) is from the earlier walk on 2026-10-07; it shows no retailer name.
 
 ### What was proven where
 
-**On our test bench** the manifest now installs **with** its remote key, switched off and with no consent, as a retailer receives it until the release that carries the change (before the bench's POS app had the released key, the installer refused it, and that refusal is tested); the till key was driven by our stand-in caller with the till's real context and the till's real validator. **UNPROVEN:** a press of *Where is it?* on a till. The released key has answered presses for S1 (through the till's own press endpoint, called from the bench's console as the cashier) and S6 (pressed on the till's screen, the iVendNext POS app in a desktop browser); a physical till device was not tried. The release's other behaviour, the key ready in POS Studio > Apps as soon as the app is installed, is not among the things proven here.
+**On our test bench** the manifest now installs **with** its remote key, switched off and with no consent, as a retailer on a POS app before build 2.0.0.646 receives it (before the bench's POS app had the released key, the installer refused it, and that refusal is tested); the till key was driven by our stand-in caller with the till's real context and the till's real validator. **UNPROVEN:** a press of *Where is it?* on a till. The released key has answered presses for S1 (through the till's own press endpoint, called from the bench's console as the cashier) and S6 (pressed on the till's screen, the iVendNext POS app in a desktop browser); a physical till device was not tried. Build 2.0.0.646's behaviour, the key ready in POS Studio > Apps as soon as the app is installed, is not among the things proven here.
 
 ### The reconciliation pass reads 200 sales at a time
 

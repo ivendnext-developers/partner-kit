@@ -16,6 +16,7 @@ verified: carried 2026-10-15 · not re-run
 A manifest declares your record types, fields, print formats, notifications and workspaces, with native screens; they can be listed under ours.
 
 ## Limits
+- From POS version 2.1.0 your workspace is never in the Desk's menu: the retailer's administrator opens it from the App library, and your app's users find it with the search bar.
 - From POS build 2.0.0.654 a manifest may carry a multi-select field and a settings record of its own (one record, no list) (`guide/07_manifests.md`). Before that build, a settings record is an ordinary record type read by name (the record named `Default`, sample S22).
 
 ## Tell the customer

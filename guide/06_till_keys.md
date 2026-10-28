@@ -84,7 +84,7 @@ Every failure ends in a refusal in words, with **nothing added to the sale**. Th
 ### Sources for the plain layer
 
 - **The refusal words:** the stand-in caller below writes the same words the remote till key publishes.
-- **The manifest-declared key (step 5):** installed switched off, consent not given, and read back on the test site (2026-10-07). From the release that carries the change, it is ready in POS Studio > Apps once the app is installed; that has not been walked with a kit sample.
+- **The manifest-declared key (step 5):** installed switched off, consent not given, and read back on the test site (2026-10-07). From POS build 2.0.0.646 it is ready in POS Studio > Apps once the app is installed; that has not been walked with a kit sample.
 - **Offline:** by the till's own documentation the key is dimmed on an offline till and the sale goes on without it. **This was not run:** the test site had no offline till.
 
 ### What the kit has proven

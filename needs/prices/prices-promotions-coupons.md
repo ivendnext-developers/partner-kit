@@ -18,7 +18,7 @@ Set up in iVendNext Desk: price lists, promotions and coupons. No code.
 ## Limits
 - Combined discounts follow the promotion rules.
 - Offline, pricing rules are not applied.
-- A coupon or promotion row naming a parent item group matches only items placed directly in it. Sample S31's service writes a coupon's get rows and a promotion's exclusion rows out as the child groups; a promotion's buy and get rows are reported, never changed, as a child row there would change the offer.
+- A coupon or promotion row naming a parent item group matches only items placed directly in it. An outside app can write a coupon's get rows and a promotion's exclusion rows out as the child groups: the card *coupon-on-parent-group*.
 
 ## Tell the customer
 Prices, promotions and coupons are set up in iVendNext; how discounts combine follows its promotion rules.

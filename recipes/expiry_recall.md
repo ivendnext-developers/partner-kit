@@ -47,7 +47,7 @@ A regulator recalls a batch; a delivery arrives with six weeks of shelf life; ex
 
 ## Limits to tell the customer
 
-- **A Desk document naming a blocked lot by hand is not refused yet.** The online till never offers a disabled lot; a Desk delivery or invoice typed with it submits until the POS app refuses disabled lots on every stock document.
+- **A Desk document naming a blocked lot by hand is refused from POS version 2.1.0.666.** The online till never offers a disabled lot, and from 2.1.0.666 the POS app refuses a disabled lot, and an expired one while *Allow Selling an Expired Batch* is off, on every outgoing stock document (chapter 9, *A lot that may not leave the shop*); a Material Issue, a move into a quarantine store and a return to the supplier still pass, so the disposal check still guards them. On an older POS app such a Desk document still submits.
 - **An offline till keeps a blocked lot until it syncs.** Press again after the tills sync: a sale they made offline is then traced.
 - **A schedule set only on an item group is not read.** Give each controlled item its own schedule, or choose *Every disposal*.
 - **A refused draft submitted again unchanged within 5 minutes gets the same answer** (the document check's *asked once*): after the visit is recorded, the clerk submits the issue again after 5 minutes.
