@@ -50,7 +50,8 @@ TOPICS = {
                   "checks-on-save": "Numbering and checks on save", "own-records-and-fields": "Your own records, fields and buttons"},
     "reports": {"reports-and-bi": "Reports and BI", "scheduled-jobs": "Scheduled jobs"},
     "integrations": {"erp": "ERP", "online-shops-and-orders": "Online shops and order systems",
-                     "payments-and-fiscal": "Payments and fiscal", "events": "Events from the shop"},
+                     "payments-and-fiscal": "Payments and fiscal", "events": "Events from the shop",
+                     "outside-systems": "Outside systems at the till"},
     "setup": {"companies-and-servers": "Companies, countries and servers", "roles-and-data-rules": "Roles, lists and data rules"},
 }
 BLOCKED = {"extension-point", "product-work"}

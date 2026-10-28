@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 560" width="820" height="560" role="img" aria-labelledby="t d" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title id="t">Two chains, one telecom app, the same second</title><desc id="d">Two chains use the same telecom app in the same second. Chain A&#x27;s cashier and chain B&#x27;s cashier each press Plans. Chain A&#x27;s call names chain A&#x27;s site and is signed with chain A&#x27;s secret; chain B&#x27;s names chain B&#x27;s site and is signed with chain B&#x27;s secret. Two copies of your one service answer them at once. Each copy finds the chain in its shops store by the site the call names, checks the signature with that chain&#x27;s own secret, reads that chain&#x27;s telecom account from that chain&#x27;s own settings record with that chain&#x27;s key, and calls the telecom company with that account. Chain A gets account A&#x27;s plans and prices back on chain A&#x27;s till; chain B gets account B&#x27;s on chain B&#x27;s. The service keeps nothing between calls but the shops store, one row per chain.</desc>
+<rect width="820" height="560" rx="16" fill="#ffffff"/>
+<text x="24" y="38" font-size="22" font-weight="800" fill="#0b1029">Two chains, one telecom app, the same second</text>
+<text x="24" y="60" font-size="14" font-weight="500" fill="#59607a">Each call carries its own chain. Nothing is shared but your code.</text>
+<rect x="16" y="80" width="378.0" height="300" rx="14" fill="#eef2f8" stroke="#cfd6e4" stroke-width="1.3"/>
+<text x="30" y="104" font-size="12" font-weight="800" fill="#0b1029" text-anchor="start">CHAIN A&#x27;S CASHIER PRESSES PLANS</text>
+<rect x="30" y="116" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#0b6bcb" stroke-width="1.3"/>
+<text x="42" y="134" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">1  POST /tel/plans  X-iVendNext-Site: chain-a</text>
+<rect x="30" y="147" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#0b6bcb" stroke-width="1.3"/>
+<text x="42" y="165" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">2  signed with chain A&#x27;s Plans secret</text>
+<rect x="30" y="178" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#0b6bcb" stroke-width="1.3"/>
+<text x="42" y="196" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">3  your service: chain A&#x27;s row in the shops store</text>
+<rect x="30" y="209" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#0b6bcb" stroke-width="1.3"/>
+<text x="42" y="227" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">4  GET PP TEL Settings with chain A&#x27;s key</text>
+<rect x="30" y="240" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#a15c00" stroke-width="1.3"/>
+<text x="42" y="258" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">5  telecom account A and its key</text>
+<rect x="30" y="271" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#a15c00" stroke-width="1.3"/>
+<text x="42" y="289" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">6  POST /v1/offers as account A</text>
+<rect x="30" y="302" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#a15c00" stroke-width="1.3"/>
+<text x="42" y="320" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">7  account A&#x27;s plans and prices</text>
+<rect x="30" y="333" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#0b6bcb" stroke-width="1.3"/>
+<text x="42" y="351" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">8  back on chain A&#x27;s till, nowhere else</text>
+<rect x="416" y="80" width="378.0" height="300" rx="14" fill="#eef2f8" stroke="#cfd6e4" stroke-width="1.3"/>
+<text x="430" y="104" font-size="12" font-weight="800" fill="#0b1029" text-anchor="start">CHAIN B&#x27;S CASHIER PRESSES PLANS</text>
+<rect x="430" y="116" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#0b6bcb" stroke-width="1.3"/>
+<text x="442" y="134" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">1  POST /tel/plans  X-iVendNext-Site: chain-b</text>
+<rect x="430" y="147" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#0b6bcb" stroke-width="1.3"/>
+<text x="442" y="165" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">2  signed with chain B&#x27;s Plans secret</text>
+<rect x="430" y="178" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#0b6bcb" stroke-width="1.3"/>
+<text x="442" y="196" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">3  your service: chain B&#x27;s row in the shops store</text>
+<rect x="430" y="209" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#0b6bcb" stroke-width="1.3"/>
+<text x="442" y="227" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">4  GET PP TEL Settings with chain B&#x27;s key</text>
+<rect x="430" y="240" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#a15c00" stroke-width="1.3"/>
+<text x="442" y="258" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">5  telecom account B and its key</text>
+<rect x="430" y="271" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#a15c00" stroke-width="1.3"/>
+<text x="442" y="289" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">6  POST /v1/offers as account B</text>
+<rect x="430" y="302" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#a15c00" stroke-width="1.3"/>
+<text x="442" y="320" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">7  account B&#x27;s plans and prices</text>
+<rect x="430" y="333" width="350.0" height="26" rx="8" fill="#ffffff" stroke="#0b6bcb" stroke-width="1.3"/>
+<text x="442" y="351" font-size="12.3" font-weight="600" fill="#0b1029" text-anchor="start">8  back on chain B&#x27;s till, nowhere else</text>
+<rect x="300.0" y="392" width="220" height="40" rx="10" fill="#ffffff" stroke="#13794a" stroke-width="1.6"/>
+<text x="410.0" y="417" font-size="13.5" font-weight="800" fill="#13794a" text-anchor="middle">One service, two copies at once</text>
+<text x="32" y="458" font-size="12.5" font-weight="800" fill="#0b1029" text-anchor="start">What differs per call</text>
+<text x="290" y="458" font-size="12.5" font-weight="800" fill="#0b1029" text-anchor="start">Chain A</text>
+<text x="560" y="458" font-size="12.5" font-weight="800" fill="#0b1029" text-anchor="start">Chain B</text>
+<text x="32" y="478" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">the site the call names</text>
+<text x="290" y="478" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">chain A&#x27;s site</text>
+<text x="560" y="478" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">chain B&#x27;s site</text>
+<text x="32" y="498" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">the secret that signs it</text>
+<text x="290" y="498" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">chain A&#x27;s secret</text>
+<text x="560" y="498" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">chain B&#x27;s secret</text>
+<text x="32" y="518" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">the telecom account used</text>
+<text x="290" y="518" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">account A (chain A&#x27;s settings)</text>
+<text x="560" y="518" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">account B (chain B&#x27;s settings)</text>
+<text x="32" y="538" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">where the answer goes</text>
+<text x="290" y="538" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">chain A&#x27;s till</text>
+<text x="560" y="538" font-size="12.5" font-weight="500" fill="#3b4256" text-anchor="start">chain B&#x27;s till</text>
+</svg>

@@ -2,7 +2,7 @@
 
 A ten-minute read for a developer meeting iVendNext for the first time: what an app is, where it runs (Docker, a container, a function, or nowhere), where a retail chain's data lives, how one app serves many customers (multi-tenant) without a conflict, how many apps and boxes you need, which endpoints call which, and what publishing and hosting cost you. Each section starts with a picture.
 
-**Download:** [How iVendNext apps work](https://developer.ivendnext.com/downloads/how_ivendnext_apps_work.pdf) (PDF, this chapter to read offline or in a meeting). **Have one question?** [Questions developers ask](../site/pages/questions.md).
+**Download:** [How iVendNext apps work](https://developer.ivendnext.com/downloads/how_ivendnext_apps_work.pdf) (PDF, this chapter to read offline or in a meeting); chapter 1c as [How the data travels](https://developer.ivendnext.com/downloads/how_the_data_travels.pdf). **Have one question?** [Questions developers ask](../site/pages/questions.md).
 
 **For:** anyone about to build for an iVendNext customer: an iVendNext Partner's developer, a licensed customer's IT team, the CitiXsys Consulting Team. No iVendNext knowledge needed.
 

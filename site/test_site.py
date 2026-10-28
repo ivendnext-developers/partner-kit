@@ -158,7 +158,8 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(linked, {"downloads/blueprint_form.pdf", "downloads/blueprint_how_to_fill.pdf", "downloads/blueprint_template.md",
                                   "downloads/blueprint_example.pdf", "downloads/blueprint_example.md",
                                   "downloads/ladder_and_four_rules.pdf", "downloads/needs_at_a_glance.pdf",
-                                  "downloads/how_ivendnext_apps_work.pdf"})
+                                  "downloads/how_ivendnext_apps_work.pdf",
+                                  "downloads/how_the_data_travels.pdf"})
         copy = self.tmp / "missing_download"
         shutil.copytree(self.out, copy)
         page = copy / "kit" / "blueprint.html"

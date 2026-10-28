@@ -11,7 +11,7 @@ One recipe per way into iVendNext, plus one for building a whole reference app f
 | 5. Sandboxed function | [5_sandboxed_function.md](5_sandboxed_function.md) |
 | A reference app from a brief | [6_build_from_a_brief.md](6_build_from_a_brief.md) |
 
-Before any recipe, if the person asks how an iVendNext app runs, where the data lives, whether customers collide or how many apps to build, answer from [`guide/01a_how_it_all_works.md`](../guide/01a_how_it_all_works.md) and [`site/pages/questions.md`](../site/pages/questions.md); how data travels through an outside system is chapter 1c, `guide/01c_how_the_data_travels.md`.
+Before any recipe, if the person asks how an iVendNext app runs, where the data lives, whether customers collide or how many apps to build, answer from [`guide/01a_how_it_all_works.md`](../guide/01a_how_it_all_works.md) and [`site/pages/questions.md`](../site/pages/questions.md); how data travels through an outside system is chapter 1c, [`guide/01c_how_the_data_travels.md`](../guide/01c_how_the_data_travels.md).
 
 Before choosing a recipe, find the need's card in the needs catalogue: `python3 tools/needs/needs.py search <the customer's words>` gives its verdict and its door, and the door picks the recipe below (AGENTS.md, step 2). A need with no card is placed on the ladder by hand.
 

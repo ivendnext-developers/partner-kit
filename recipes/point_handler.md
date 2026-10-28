@@ -4,6 +4,8 @@ A till key is a button on the till, an extension point the retailer switches on.
 
 **When to use it.** Rung 3 of the build ladder, after configuration and a connected app. Use it when the cashier needs your answer at the till. The answer is a **message** for the cashier, or **sale details** the cashier applies (one value per detail per sale). It never changes a price, a total or a payment.
 
+**A till key that asks an outside system:** [guide chapter 1c](../guide/01c_how_the_data_travels.md) traces two (a chain's loyalty system, and a telecom company's plans with sample S52) hop by hop, with each chain's own account for the outside system.
+
 **The shape.** Write your logic once as a **pure core**: `answer(context, your reference data) → result`, importing nothing from iVendNext. Then add a few lines around it — the **remote binding** — on your own server. Keeping the core pure lets you test it without a running iVendNext (step 3).
 
 ## Steps

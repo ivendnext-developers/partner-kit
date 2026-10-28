@@ -22,9 +22,11 @@ import contextlib
 import datetime as _dt
 import fcntl
 import hashlib
+import json
 import os
 
 import money
+import outside
 from shop import Duplicate, ShopError
 
 LEDGER, MEMBER, PLAN, SETTINGS = "PP LYL Ledger", "PP LYL Member", "PP LYL Plan", "PP LYL Settings"
@@ -81,6 +83,9 @@ class Settings:
         self.wallet_mode = raw.get("wallet_mode_of_payment") or ""
         self.max_redemption_percent = money.D(raw.get("max_redemption_percent") or 0)
         self.earn_on_redemption = bool(int(raw.get("earn_on_redemption") or 0))
+        # the opt-in adapter to the chain's own loyalty system (service/outside.py): off while the address is empty
+        self.loyalty_api = (raw.get("loyalty_api") or "").strip()
+        self.loyalty_key = (raw.get("loyalty_api_key") or "").strip()
 
     @classmethod
     def load(cls, t) -> "Settings":
@@ -142,7 +147,20 @@ def on_sale(t, s: Settings, invoice: str, today: str) -> dict:
         "entry_type": "Earn", "status": "Pending" if amount > 0 else "Cancelled", "amount": amount,
         "earned_amount": amount, "sale_base": value, "against_sale": invoice,
         "posting_date": posted, "credit_on": day(posted, s.return_days + 1)})
+    tell_outside(s, inv["customer"], invoice, value, amount, key("POS Invoice", invoice, "earn"))
     return {"result": "earned" if amount > 0 else "nothing to earn", "earned": str(amount), "row_made": made}
+
+
+def tell_outside(s: Settings, customer: str, ref: str, value, earned, idem: str):
+    """The opt-in adapter (``outside.py``): the chain's own loyalty system hears each change of what the customer earned,
+    once (``idem`` is the ledger row's unique key). Down: raises, so the feed retries the event. Refused for good: noted by
+    its status, and the event is done."""
+    if not s.loyalty_api:
+        return
+    try:
+        outside.of(s).post_earned(customer, ref, str(value), str(earned), s.currency, idem=idem)
+    except outside.LoyaltyRefused as e:
+        print(json.dumps({"loyalty_system": "refused", "status": e.status}), flush=True)
 
 
 def _paid_with_wallet(s: Settings, inv: dict) -> bool:
@@ -195,6 +213,7 @@ def on_return(t, s: Settings, ret: dict) -> dict:
     this = abs(money.D(ret.get("grand_total")))
     amount = money.reversal(earn["earned_amount"], earn["sale_base"], returned_before, this, already, s.places)
     made = _take_back(t, sale, this_key, "Return", amount, this, ret.get("customer"), str(ret.get("posting_date"))[:10])
+    tell_outside(s, ret.get("customer"), ret["name"], -this, -amount, this_key)
     return {"result": "reversed", "amount": str(amount), "row_made": made}
 
 
@@ -211,6 +230,7 @@ def on_cancel(t, s: Settings, invoice: str, today: str) -> dict:
     base = max(money.D(earn["sale_base"]) - returned, money.D(0))
     amount = money.cancellation(earn["earned_amount"], already, s.places)
     made = _take_back(t, invoice, this_key, "Cancel", amount, base, earn["customer"], today)
+    tell_outside(s, earn["customer"], invoice, -base, -amount, this_key)
     return {"result": "reversed in full", "amount": str(amount), "row_made": made}
 
 

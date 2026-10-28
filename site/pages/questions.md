@@ -1,6 +1,6 @@
 # Questions developers ask — Docker, tenants, data, endpoints, fields, screens, cost
 
-The questions a developer from a conventional background asks first, each answered in a few sentences with a link to the page that proves it. New to iVendNext? Read [1a. How it all works](../../guide/01a_how_it_all_works.md) first, ten minutes with a picture per section, or download it as a [PDF](https://developer.ivendnext.com/downloads/how_ivendnext_apps_work.pdf).
+The questions a developer from a conventional background asks first, each answered in a few sentences with a link to the page that proves it. New to iVendNext? Read [1a. How it all works](../../guide/01a_how_it_all_works.md) first, ten minutes with a picture per section, or download it as a [PDF](https://developer.ivendnext.com/downloads/how_ivendnext_apps_work.pdf). Linking the till to an outside system? Read [1c. How the data travels](../../guide/01c_how_the_data_travels.md), also as a [PDF](https://developer.ivendnext.com/downloads/how_the_data_travels.pdf).
 
 **Jump to:** [Where it runs](#where-it-runs) · [Data](#data) · [Many customers](#many-customers) · [Talking to iVendNext](#talking-to-ivendnext) · [Outside systems](#outside-systems) · [What you can use](#what-you-can-use) · [Publishing and hosting](#publishing-and-hosting) · [Cost and day to day](#cost-and-day-to-day)
 
@@ -96,11 +96,11 @@ A till key waits 3 seconds unless the manifest raises it, 10 at most; a check at
 
 ### My app links the till to an outside system, such as a loyalty or telecom system. How does the data travel?
 
-Till, then the chain's iVendNext, then your service (signed for that chain), then the outside system with that chain's own account, then back onto the sale before payment. After payment, the event feed tells your service, which updates the outside system. The worked examples, hop by hop with two chains at once, are chapter 1c, *How the data travels* (`guide/01c_how_the_data_travels.html`); until it is published, read [Recipe: link to a system](../../recipes/system_sync.md) and sample [S22](../../samples/s22_customer_loyalty/README.md).
+Till, then the chain's iVendNext, then your service (signed for that chain), then the outside system with that chain's own account, then back onto the sale before payment. After payment, the event feed tells your service, which updates the outside system. The worked examples, hop by hop with two chains at once, are [chapter 1c, *How the data travels*](../../guide/01c_how_the_data_travels.md), on samples [S22](../../samples/s22_customer_loyalty/README.md) (a chain's own loyalty system) and [S52](../../samples/s52_phone_plans/README.md) (a telecom company's plans).
 
 ### Where does each chain's account at the outside system go?
 
-Each chain's own account details stay with that chain, never shared between chains: a chain's call carries that chain's site, so your service picks that chain's account and no other. Chapter 1c, *How the data travels* (`guide/01c_how_the_data_travels.html`), shows the route the kit proves for keeping them.
+Each chain's own account details stay with that chain, never shared between chains: a chain's call carries that chain's site, so your service picks that chain's account and no other. They are kept in the chain's own iVendNext, in the app's settings record, which only the System Manager and the app's own role read, and your service reads them there with that chain's key at each call ([chapter 1c, *How the data travels*](../../guide/01c_how_the_data_travels.md), proved on our test bench).
 
 ### What does the chain see about an outside system before it installs?
 

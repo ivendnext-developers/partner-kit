@@ -52,6 +52,7 @@ import loyalty  # noqa: E402
 import receipts  # noqa: E402
 import shops  # noqa: E402
 import money  # noqa: E402
+import outside  # noqa: E402
 import wallet  # noqa: E402
 import worker  # noqa: E402
 from shop import Shop, ShopError  # noqa: E402
@@ -94,6 +95,12 @@ def member_key(t, s: loyalty.Settings, body: dict, today: str) -> dict:
         text += f" {s.money(gap)} more reaches {nxt['name']} (spend over the last {s.window_days} days)."
     else:
         text += " The top plan."
+    if s.loyalty_api:                            # the opt-in adapter: the chain's own loyalty system, asked at the press
+        try:
+            got = outside.of(s).lookup(customer)
+            text += f" Loyalty points: {int(got.get('points') or 0):,}." + (f" Offer: {got['offer']}." if got.get("offer") else "")
+        except (outside.LoyaltyDown, outside.LoyaltyRefused, ValueError, TypeError, AttributeError):
+            text += " The loyalty system is not answering."
     disc = plan.get("discount_percent") or 0
     title = f"{m.get('plan')} member" + (f" · {disc:g}% off" if disc else "")
     return {"message": {"title": _plain(title, 60), "body": _plain(text, 280), "level": "success"}}

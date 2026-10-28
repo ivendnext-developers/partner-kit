@@ -1,0 +1,248 @@
+{
+ "manifest_version": 2,
+ "app": "pp_tel",
+ "prefix": "PP TEL",
+ "title": "Phone plans from a telecom company",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A phone retailer sells mobile plans from a telecom company at its tills. The cashier scans a phone and presses Plans: the partner's service asks the telecom company, with this retailer's own telecom account, for the plans and prices that fit the phone and the customer, and the till shows them. The cashier adds the chosen plan as an item, priced from the retailer's price list, which the service keeps in step with the telecom company. At Pay the check confirms each plan, its phone and its price with the telecom company for this customer, and refuses the sale if they no longer hold. After payment the service reads the event feed, activates the plan and writes the activation number to a PP TEL Activation row listed under the sale. The retailer keeps its telecom account in PP TEL Settings, which only the System Manager and the app's own role read. The check and the feed install switched off; the Plans key is ready in POS Studio > Apps with the install's consent, to be placed on the till. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/tel/plans",
+  "https://host.docker.internal:8125/tel/check"
+ ],
+ "doctypes": [
+  {
+   "name": "PP TEL Settings",
+   "autoname": "field:title",
+   "track_changes": 0,
+   "description": "The retailer's own telecom account, read by the app's service at every call. Make one record named Default.",
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Title",
+     "reqd": 1,
+     "unique": 1
+    },
+    {
+     "fieldname": "telecom_account",
+     "fieldtype": "Data",
+     "label": "Telecom account",
+     "description": "Your account at the telecom company, as the telecom company names it."
+    },
+    {
+     "fieldname": "telecom_key",
+     "fieldtype": "Data",
+     "label": "Telecom account key",
+     "description": "The key the telecom company gave you for that account. Only the System Manager and the app's own role read this record."
+    },
+    {
+     "fieldname": "plan_item_group",
+     "fieldtype": "Link",
+     "label": "Item group of the plans",
+     "options": "Item Group",
+     "description": "The plans are items in this group, each with the telecom company's plan code as its item code."
+    },
+    {
+     "fieldname": "price_list",
+     "fieldtype": "Link",
+     "label": "Price list the plans are sold from",
+     "options": "Price List",
+     "description": "The app keeps each plan's price on this list in step with the telecom company's price for your account."
+    },
+    {
+     "fieldname": "walk_in_customers",
+     "fieldtype": "Small Text",
+     "label": "Walk-in customers, one per line",
+     "description": "The customer each till puts on a sale with none (its POS Profile's default customer). A plan is never sold to one: the till asks for the real customer."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP TEL Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP TEL Activation",
+   "autoname": "field:activation_key",
+   "track_changes": 1,
+   "description": "One row per plan sold: the telecom company's activation, made after payment by the app's service.",
+   "fields": [
+    {
+     "fieldname": "activation_key",
+     "fieldtype": "Data",
+     "label": "Sale line",
+     "reqd": 1,
+     "unique": 1
+    },
+    {
+     "fieldname": "sale",
+     "fieldtype": "Link",
+     "label": "Sale",
+     "options": "POS Invoice",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "label": "Status",
+     "options": "Pending\nActivated\nFailed",
+     "default": "Pending",
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "activation_number",
+     "fieldtype": "Data",
+     "label": "Activation number",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "plan",
+     "fieldtype": "Link",
+     "label": "Plan",
+     "options": "Item"
+    },
+    {
+     "fieldname": "phone",
+     "fieldtype": "Link",
+     "label": "Phone",
+     "options": "Item"
+    },
+    {
+     "fieldname": "serial_no",
+     "fieldtype": "Data",
+     "label": "Phone serial number"
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer"
+    },
+    {
+     "fieldname": "message",
+     "fieldtype": "Small Text",
+     "label": "What the telecom company said"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales User",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP TEL Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "links": [
+  {
+   "doctype": "POS Invoice",
+   "link_doctype": "PP TEL Activation",
+   "link_fieldname": "sale",
+   "group": "Phone plans"
+  },
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP TEL Activation",
+   "link_fieldname": "customer",
+   "group": "Phone plans"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP TEL Sales",
+   "description": "the phone plans service activates each paid plan",
+   "events": [
+    "POS Invoice"
+   ]
+  }
+ ],
+ "remote_keys": [
+  {
+   "key": "pp_tel_plans",
+   "label": "Plans",
+   "partner_name": "Partner Programme sample",
+   "endpoint_url": "https://host.docker.internal:8125/tel/plans",
+   "returns_message": 1,
+   "returns_sale_attributes": 0,
+   "timeout_seconds": 3
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "plans",
+   "point": "check",
+   "label": "Phone plan check",
+   "endpoint_url": "https://host.docker.internal:8125/tel/check",
+   "timeout_seconds": 3,
+   "down_answer": "allow_and_flag"
+  }
+ ]
+}

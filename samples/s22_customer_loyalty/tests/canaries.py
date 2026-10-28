@@ -127,8 +127,8 @@ CANARIES = [
      "    except Exception as e:                       # noqa: BLE001 — the shops store did not answer",
      "    except ZeroDivisionError as e:  # the shops store did not answer",
      "test_many_shops.Worker.test_a_shops_store_that_does_not_answer_ends_the_pass_never_the_worker"),
-    ("health says when the feed worker stalls", "service/app.py", "            if svc.app and time.monotonic()",
-     "            if False and time.monotonic()", "test_many_shops.Health.test_health_is_503_once_the_feed_worker_stalls"),
+    ("health says when the feed worker stalls", "service/app.py", "    if (svc.app and not svc.scheduled and time.monotonic()",
+     "    if (False and time.monotonic()", "test_many_shops.Health.test_health_is_503_once_the_feed_worker_stalls"),
     ("one shop's failure never stops the others", "service/worker.py",
      "        except Exception as e:                   # noqa: BLE001 — one shop's failure never stops the others\n"
      "            out[site] = {\"error\": type(e).__name__}\n",
@@ -164,7 +164,7 @@ CANARIES = [
      '        if False:\n            return 401, {"error": why}\n        try:\n            body = json.loads(raw or b"{}")',
      "test_wallet.Route.test_the_route_is_signed_and_off_until_the_secret_is_set"),
     ("the web handler sends the wallet's path to the wallet", "service/app.py",
-     "            if self.path.startswith(WALLET_PREFIX):", "            if False:",
+     "        if path.startswith(WALLET_PREFIX):", "        if False:",
      "test_wallet.Route.test_the_web_handler_sends_the_wallet_path_to_the_wallet"),
     ("the service may submit a receipt's batch bundle", "config.json",
      '    "write",\n    "submit"\n   ],\n   "why": "the Verify step submits the receipt; for',
@@ -215,6 +215,33 @@ CANARIES = [
     ("every call to the shop names the service", "service/shop.py",
      '            "User-Agent": USER_AGENT})', '            })',
      "test_service.ShopClient.test_every_call_to_the_shop_names_the_service_not_the_librarys_default"),
+    # the opt-in adapter to the chain's own loyalty system (service/outside.py)
+    ("off, the chain's system is never called", "service/loyalty.py",
+     'self.loyalty_api = (raw.get("loyalty_api") or "").strip()',
+     'self.loyalty_api = (raw.get("loyalty_api") or "http://127.0.0.1:9").strip()',
+     "test_adapter.Adapter.test_off_the_member_key_and_the_earning_are_exactly_as_shipped"),
+    ("on, each sale is posted to the chain's system", "service/loyalty.py",
+     "    if not s.loyalty_api:\n        return\n    try:", "    if True:\n        return\n    try:",
+     "test_adapter.Adapter.test_on_each_sale_is_posted_to_the_chains_system_once"),
+    ("a sale is posted once, by its unique key", "service/outside.py",
+     '            headers["Idempotency-Key"] = idem', '            headers["Idempotency-Key"] = __import__("uuid").uuid4().hex',
+     "test_adapter.Adapter.test_on_each_sale_is_posted_to_the_chains_system_once"),
+    ("down, the key says so", "service/app.py",
+     '            text += " The loyalty system is not answering."', "            pass",
+     "test_adapter.Adapter.test_down_the_key_says_so_and_the_sale_is_retried_by_the_feed"),
+    ("a return takes back in the chain's system", "service/loyalty.py",
+     '    tell_outside(s, ret.get("customer"), ret["name"], -this, -amount, this_key)\n', "",
+     "test_adapter.Adapter.test_a_return_and_a_cancellation_take_back_in_the_chains_system_too_once"),
+    ("a refusal for good is noted, not retried", "service/loyalty.py",
+     "    except outside.LoyaltyRefused as e:\n", "    except ZeroDivisionError as e:\n",
+     "test_adapter.Adapter.test_a_refusal_for_good_is_noted_and_the_event_is_done_not_retried_every_pass"),
+    ("each chain asks with its own key", "service/outside.py", "LoyaltySystem(s.loyalty_api, s.loyalty_key)",
+     'LoyaltySystem(s.loyalty_api, "chain-loyalty-key")',
+     "test_adapter.Adapter.test_two_chains_at_once_each_ask_their_own_loyalty_system_with_their_own_key"),
+    ("never an address inside a network", "service/outside.py", "        return local or ip.is_global", "        return True",
+     "test_adapter.Adapter.test_an_address_is_https_with_no_query_and_plain_http_only_to_this_machine_in_local_mode"),
+    ("plain http only in local mode", "service/outside.py", "        return u.hostname in LOCAL and local", "        return u.hostname in LOCAL",
+     "test_adapter.Adapter.test_an_address_is_https_with_no_query_and_plain_http_only_to_this_machine_in_local_mode"),
 ]
 
 
@@ -250,9 +277,11 @@ def run(name, path, anchor, mutant, test) -> tuple[str, str]:
 
 if __name__ == "__main__":
     bad = 0
-    for c in CANARIES:
+    only = sys.argv[1:]                  # optional: run only the canaries whose test names one of these words
+    for c in [c for c in CANARIES if not only or any(w in c[4] for w in only)]:
         verdict, last = run(*c)
         bad += verdict != "RED"
         print(f"{verdict:6} {c[0]} — {c[4]} — {last}")
-    print(f"{len(CANARIES) - bad} of {len(CANARIES)} canaries RED")
+    ran = len([c for c in CANARIES if not only or any(w in c[4] for w in only)])
+    print(f"{ran - bad} of {ran} canaries RED")
     sys.exit(1 if bad else 0)

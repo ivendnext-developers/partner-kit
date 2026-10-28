@@ -4,6 +4,7 @@
     CHROME=/path/to/chrome python3 site/test_pdfs.py        # needs headless Chrome, as the build does; run in the Site workflow
 
 Each planted fault turns its check red; the real PDFs, built from the kit, pass every check."""
+import html
 import pathlib
 import re
 import shutil
@@ -33,6 +34,7 @@ class PdfTests(unittest.TestCase):
         cls.ladder = (cls.out / "downloads" / "ladder_and_four_rules.pdf").read_bytes()
         cls.glance = (cls.out / "downloads" / "needs_at_a_glance.pdf").read_bytes()
         cls.howitworks = (cls.out / "downloads" / "how_ivendnext_apps_work.pdf").read_bytes()
+        cls.travels = (cls.out / "downloads" / "how_the_data_travels.pdf").read_bytes()
 
     @classmethod
     def tearDownClass(cls):
@@ -73,6 +75,22 @@ class PdfTests(unittest.TestCase):
             self.assertTrue(data.rstrip().endswith(b"%%EOF"))
             self.assertIn(b"/URI", data)                       # the link check has links to read, so it is not vacuous
             self.assertRegex(data, rb"/FontName\s*/[A-Z]{6}\+Inter")
+
+    def test_how_the_data_travels_is_chapter_1c_whole_with_its_pictures_and_a_picture_gone_is_red(self):
+        doc = next(d for d in build_pdfs.DOCS if d.name == "how_the_data_travels.pdf")
+        self.assertEqual((doc.pages, doc.exact, doc.home), (13, False, "guide/01c_how_the_data_travels.html"))   # measured 2026-10-28: 13
+        self.assertEqual(build_pdfs.pdf_problems(self.travels, doc.pages), [])
+        self.assertRegex(self.travels, rb"/FontName\s*/[A-Z]{6}\+Inter")
+        body = build_pdfs.data_travels_body([])
+        self.assertEqual(body.count("<svg "), 3)                                             # the three pictures, in the page
+        self.assertNotIn("Download:", body)                                                  # the PDF does not link itself
+        for words in ("Example 1: a chain's own loyalty system", "Every hop of the telecom link", "Two chains, same app, same second"):
+            self.assertIn(words, html.unescape(body))
+        kit = self.planted("guide/01c_how_the_data_travels.md", lambda t: re.sub(r"!\[[^\]]*\]\(img/data-travels-[^)]*\)", "", t))
+        errors = []
+        with mock.patch.object(build_pdfs.build, "ROOT", kit):
+            build_pdfs.data_travels_body(errors)
+        self.assertTrue(any("no picture" in e for e in errors), errors)
 
     def test_the_form_shows_every_status_word_and_a_renamed_status_is_red(self):
         form = build_pdfs.form_body([])

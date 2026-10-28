@@ -102,3 +102,7 @@ h2.area { font-size: 13pt; margin: 4.5mm 0 1.5mm; }
 .chapter svg text { font-family: "Inter" !important; }
 .chapter code, .chapter pre { font-family: "Inter"; font-weight: 600; font-size: 8.5pt; }
 .chapter h2 { break-after: avoid; }
+/* chapter 1c printed whole (How the data travels): its screenshots as wide as the column, its commands wrapped, its seven-column tables smaller */
+.travels img { display: block; width: 100%; height: auto; margin: 2mm 0 3mm; break-inside: avoid; }
+.travels pre, .travels code { font-family: "Inter"; font-weight: 600; font-size: 8pt; white-space: pre-wrap; overflow-wrap: anywhere; }
+.travels table { font-size: 7.5pt; line-height: 1.28; }
