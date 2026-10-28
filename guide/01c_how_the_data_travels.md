@@ -195,7 +195,7 @@ For two retailers on your laptop, run the service in the app template's local mo
 - **The outside account is the chain's, kept in the chain's own iVendNext** and read with that chain's key at the moment of each call.
 - **After payment is the event feed's job.** Your service pulls the sale, does the outside work once (an idempotency key it derives from the sale), and writes the result to the chain's own records. S52's key also names the retailer's site, because one telecom company serves many retailers; S22's names the ledger row only, because the loyalty system is the chain's own and hears from one chain. A loyalty service shared by several chains would need the site in its key too.
 
-**Next:** *What you can use*, the developer's map of every endpoint, record type and screen (`map.html` on developer.ivendnext.com).
+**Next:** [*What you can use*](../site/pages/map.md), the developer's map of every endpoint, record type and screen.
 
 ## Technical notes
 
