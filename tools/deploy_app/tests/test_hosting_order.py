@@ -160,5 +160,57 @@ class PlanningUnchanged(Base):
         self.assertIn("deploy_app.py order", out)
 
 
+class Copies(Base):
+    """One order runs the plan's copies at one price (HOSTCOPIES): the order names them, each is checked, and each is
+    shown with where it stands."""
+
+    ANSWER = {"order": "0123456789abcdef", "id": "my-till-key", "plan": "starter", "status": "pending", "kind": "card",
+              "checkout_url": "https://checkout.stripe.com/c/x", "secrets": ["IVN_POINT_SECRET"], "stops_at": 1798353203,
+              "copies": [
+                  {"order": "0123456789abcdef", "env": "prod", "id": "my-till-key", "status": "building", "building": "create",
+                   "address": "https://my-till-key.ivendnext.app",
+                   "upload": {"image": "x/partner-apps/my-till-key", "github_role": "arn:aws:iam::1:role/partner-app-my-till-key-github"}},
+                  {"order": "fedcba9876543210", "env": "sandbox", "id": "my-till-key-sandbox", "status": "waiting",
+                   "waiting_for": ["IVN_POINT_SECRET"], "push_refused": "9.9.9", "address": "https://my-till-key-sandbox.ivendnext.app",
+                   "upload": {"image": "x/partner-apps/my-till-key-sandbox",
+                              "github_role": "arn:aws:iam::1:role/partner-app-my-till-key-sandbox-github"}}]}
+
+    def test_an_order_names_the_plans_copies(self):
+        with self.fake_send(self.ANSWER):
+            code, out = self.order("--accept-schedule")
+        self.assertEqual((code, self.body()["copies"]), (0, ["prod", "sandbox"]), out)
+        self.assertNotIn("env", self.body())
+
+    def test_fewer_copies_and_the_older_one_copy_form(self):
+        with self.fake_send(self.ANSWER):
+            self.order("--accept-schedule", "--copies", "sandbox")
+            self.order("--accept-schedule", "--env", "sandbox")
+        self.assertEqual([self.body(0)["copies"], self.body(1)["copies"]], [["sandbox"], ["sandbox"]])
+
+    def test_a_copy_the_plan_does_not_run_or_one_named_twice_is_refused_before_sending(self):
+        for copies in ("prod,staging", "prod,prod"):
+            with self.fake_send(self.ANSWER):
+                code, out = self.order("--accept-schedule", "--copies", copies)
+            self.assertEqual(code, 1, out)
+        self.assertEqual(self.sent, [])
+
+    def test_each_copy_is_shown_with_where_it_stands_and_the_roles_to_set(self):
+        with self.fake_send(self.ANSWER):
+            code, out = self.order("--accept-schedule")
+        self.assertIn("2 copies", out)
+        self.assertIn("building (create)", out)
+        self.assertIn("waiting for its secrets: IVN_POINT_SECRET", out)
+        self.assertIn("version 9.9.9 was refused", out)
+        self.assertIn("stops    at the end of the paid month (2026-12-27)", out)
+        self.assertIn('IVN_HOSTING_ROLES to ["arn:aws:iam::1:role/partner-app-my-till-key-github",'
+                      '"arn:aws:iam::1:role/partner-app-my-till-key-sandbox-github"]', out)
+
+    def test_a_secret_names_its_copy(self):
+        with self.fake_send({"order": "0123456789abcdef", "secret": "IVN_POINT_SECRET", "set": True}):
+            run("secret", "--partner", "acme", "--order", "0123456789abcdef", "--env", "sandbox", "--name",
+                "IVN_POINT_SECRET", "--key", str(self.key), stdin="v")
+        self.assertEqual(self.body()["env"], "sandbox")
+
+
 if __name__ == "__main__":
     unittest.main()

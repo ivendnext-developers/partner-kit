@@ -1,6 +1,6 @@
 {
   "_about": "The three plans of CitiXsys partner app hosting, as data. 'enforced' is what the platform sets for every app on the plan; 'includes' is what the plan promises, each with whether it is live today. 'price_usd_month' is CitiXsys's price per app per month, in US dollars, set by CitiXsys; 'billing' says how it is billed and what carries no charge.",
-  "billing": "Per app per month; the price covers the copies the plan runs (sandbox, staging). Monthly, in whole months from the month the app goes live; no minimum term, and either side can stop at any month end. Whoever orders the hosting pays: the partner, or the customer the app is built for when that customer orders it. App Hosting is ordered and paid online from CitiXsys Singapore, through Stripe, with its own invoices and receipts: monthly by card, or by an invoice with payment terms. It is never a line on an iVendNext invoice or part of an iVendNext subscription. An app that only answers presses and is listed in the App library carries no hosting charge. The managed database is priced separately, when it is offered.",
+  "billing": "Per app per month; the price covers the copies the plan runs (sandbox, staging), ordered together in one order. Monthly, in whole months from the month the app goes live; no minimum term, and either side can stop at any month end. Whoever orders the hosting pays: the partner, or the customer the app is built for when that customer orders it. App Hosting is ordered and paid online from CitiXsys Singapore, through Stripe, with its own invoices and receipts: monthly by card, or by an invoice with payment terms. It is never a line on an iVendNext invoice or part of an iVendNext subscription. An app that only answers presses and is listed in the App library carries no hosting charge. The managed database is priced separately, when it is offered.",
   "domain": "ivendnext.app",
   "regions": {"us": "us-east-1"},
   "regions_on_request": "Other countries' AWS regions are added when a customer needs its data there.",
@@ -22,7 +22,7 @@
         {"what": "logs", "live": true},
         {"what": "automatic restart on a failed health check", "live": true},
         {"what": "a notice before each iVendNext upgrade", "live": true},
-        {"what": "a sandbox copy for your sandbox shop, run as a second app", "live": true},
+        {"what": "a sandbox copy for your sandbox shop, in the same order at the same price", "live": true},
         {"what": "daily backup of the app's data", "live": false}
       ]
     },

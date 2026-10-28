@@ -29,17 +29,22 @@ It prints `PLANNED:` and what would be created, or one `REFUSED:` line per probl
 ```bash
 python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --partner <your code> --github <owner>/<repo> --accept-schedule
 python3 tools/deploy_app/deploy_app.py status --partner <your code>
-python3 tools/deploy_app/deploy_app.py secret --partner <your code> --order <id> --name IVN_POINT_SECRET   # value on stdin
+python3 tools/deploy_app/deploy_app.py secret --partner <your code> --order <id> --env sandbox --name IVN_POINT_SECRET   # value on stdin
 python3 tools/deploy_app/deploy_app.py cancel --partner <your code> --order <id>
 ```
 
 - `order` runs the planning checks, then sends one request signed with your App library key (`tools/publish`
   `keygen`, default `~/.ivendnext/library-signing.key`, or `--key`, or `IVN_LIBRARY_KEY`). It prints a Stripe checkout
   address, or with `--invoice --email <address>` says an invoice is on its way. Plain settings: `--set NAME=VALUE`, each
-  one your `app.json` names. A copy: `--env staging`. A branch other than `main`: `--branch`. `--dry-run` sends nothing.
+  one your `app.json` names. One order runs every copy the plan has (production and its sandbox, and staging on
+  Standard and Managed) at the plan's one price; fewer: `--copies prod,sandbox`. A branch other than `main`:
+  `--branch`. `--dry-run` sends nothing.
 - Your app's name starts with your maker word (`acme` → `acme-points`).
-- Once it is paid, the hosting builds the app; `status` shows how far, the address, where your GitHub pushes to and the
-  role it uses. Copy [`hosting-workflow.yml`](hosting-workflow.yml) into your repository's `.github/workflows/`.
+- Once it is paid, the hosting builds each copy; `status` shows each copy's state (building, waiting for its
+  secrets, live, a version refused or one that did not start, held, stopped), its address, where your GitHub pushes to,
+  and the line to set as the variable `IVN_HOSTING_ROLES`. Copy [`hosting-workflow.yml`](hosting-workflow.yml) into your
+  repository's `.github/workflows/`: it pushes each version to every copy that line lists. Secrets are set per copy
+  (`secret --env <copy>`).
 - Exit code: 0 done · 1 refused · 2 usage. The signed request uses its own signing domain
   (`ivendnext-hosting-order/1`), so it can never be replayed as a library upload, nor an upload as an order.
 

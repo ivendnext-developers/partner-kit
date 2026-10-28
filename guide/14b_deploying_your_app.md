@@ -125,20 +125,21 @@ python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --
 1. **It checks your app** exactly as planning does (above), and refuses what the hosting refuses.
 2. **Name your app under your maker word.** Your app's name is your first word in the App library, or that word and a hyphen: `acme-points` for the maker word `acme`.
 3. **You accept the App Hosting Schedule** with `--accept-schedule`: the terms that hosting runs under. The order carries the Schedule's version.
-4. **You pay.** It prints a Stripe checkout address: pay monthly by card. With `--invoice --email <address>` you get an invoice with payment terms instead; the app is built once the invoice is paid. An app that only answers presses and is listed in the App library carries no charge, so its order needs no payment.
-5. **We build it, with no person.** Once it is paid, the hosting makes the app's address, its own registry or package folder, its secret store and its firewall, and tells you how far it is: `deploy_app.py status --partner <your code>`.
-6. **Put each secret** your `app.json` marks `"secret": true` (a container): `deploy_app.py secret --partner <your code> --order <id> --name <NAME>`, with the value on standard input. It is never shown, never in a file, and kept only in your app's own secret store.
-7. **Push the first version** from your GitHub (below). The app goes live once its image or package and its secrets are there, and its health check answers.
+4. **One order covers the plan's copies, at one price.** Production and its sandbox on Starter, and staging too on Standard and Managed: one subscription at the plan's price, not one per copy. To run fewer, name them: `--copies prod,sandbox`.
+5. **You pay.** It prints a Stripe checkout address: pay monthly by card. With `--invoice --email <address>` you get an invoice with payment terms instead; the app is built once the invoice is paid. An app that only answers presses and is listed in the App library carries no charge, so its order needs no payment.
+6. **We build it, with no person.** Once it is paid, the hosting makes each copy's address, its own registry or package folder, its secret store and its firewall. `deploy_app.py status --partner <your code>` shows where each copy stands: building, waiting for its secrets, live, held, or stopped, with the reason when one of your versions was refused or did not start, and the date the hosting stops if you cancelled.
+7. **Put each secret** your `app.json` marks `"secret": true` (a container), on each copy: `deploy_app.py secret --partner <your code> --order <id> --env sandbox --name <NAME>`, with the value on standard input. Each copy has its own values. It is never shown, never in a file, and kept only in that copy's own secret store.
+8. **Push the first version** from your GitHub (below). The app goes live once its image or package and its secrets are there, and its health check answers.
 
 Plain (not secret) settings go on the order: `--set LOG_LEVEL=info`. Each must be a setting your `app.json` names.
 
-**Stopping.** `deploy_app.py cancel --partner <your code> --order <id>` stops the app at the end of the month you paid for. If a payment fails and Stripe gives up retrying, the app stops then too. A stopped app keeps what you supplied and its data for 30 days, then is removed.
+**Stopping.** `deploy_app.py cancel --partner <your code> --order <id>` stops the app, every copy, at the end of the month you paid for. If a payment fails and Stripe gives up retrying, the app stops then too. A stopped app keeps what you supplied and its data for 30 days, then is removed.
 
 **If the build fails after you paid,** the payment is refunded, nothing is left half-built, and CitiXsys is told.
 
 ## Updates from your GitHub
 
-Copy [`tools/deploy_app/hosting-workflow.yml`](../tools/deploy_app/hosting-workflow.yml) to `.github/workflows/` in your app's repository and set the variable it names (`IVN_HOSTING_ROLE`, from `status`). Each push to the branch your order names pushes the version in your `app.json`, and the hosting puts it live through the same checks as the first one. No secret is stored in GitHub: GitHub signs each run in to one role of ours, which can push only your app's new version.
+Copy [`tools/deploy_app/hosting-workflow.yml`](../tools/deploy_app/hosting-workflow.yml) to `.github/workflows/` in your app's repository and set the variable it names (`IVN_HOSTING_ROLES`, the line `status` prints: one role per copy). Each push to the branch your order names pushes the version in your `app.json` to every copy listed, and the hosting puts it live on each through the same checks as the first one. Each copy gets its own build of the same commit. To try a version on the sandbox first, list only the sandbox's role; when it is right, add the others and run the workflow again by hand: a copy that already has that version is left as it is. No secret is stored in GitHub: GitHub signs each run in to one role of ours, which can push only your app's new version.
 
 - **Raise the version for every release.** A version is never overwritten. To go back, release the earlier code under a new version number.
 - **A version above your plan's limits is refused** (a package over 50 MB).
