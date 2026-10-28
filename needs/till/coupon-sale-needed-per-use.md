@@ -18,9 +18,10 @@ Your service answers the check before payment. iVendNext keeps one rule per coup
 
 ## Limits
 - Answered when the cashier presses Pay, not when the coupon is entered.
-- The sale's total is after its discounts, the coupons' own included, and tax included.
+- The sale's total is as rounded for payment, after its discounts (the coupons' own included), tax included; an exchange's is the difference the customer pays.
+- One amount per coupon, read in each sale's own currency.
 - The check sees each coupon once, so a coupon allowed to repeat on one sale counts once.
-- Judged on a sale, not on a return or an exchange with nothing owed.
+- On a refund (a no-receipt exchange the customer is paid back on) a coupon with this rule is refused.
 - Offline, the till does not ask the service: the coupon applies and the sale is flagged when it syncs.
 
 ## Tell the customer

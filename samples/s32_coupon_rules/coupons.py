@@ -10,13 +10,17 @@ record per coupon (``<prefix> Rule``, named by the coupon). ``on_check`` refuses
   submitted sales in the shop), or when the sale names no customer. The till always names one (its walk-in customer
   when the cashier has added none, who has usually bought before), so the refusal says to add the new customer;
 - **a sale needed for each use** (1.1.0): on a sale (``stage`` ``sale``), every coupon whose rule names an amount takes
-  that much of the sale's total (``totals.grand_minor``: after its discounts, the coupons' own included, tax included);
-  when their sum is more than the total, the coupons are refused. The check sees each coupon once (``coupon_codes`` is a
+  that much of the sale's total (``totals.grand_minor``: as rounded for payment, after its discounts, the coupons' own
+  included, tax included; an exchange's is the difference the customer pays); when their sum is more than the total, the
+  coupons are refused. The amount is read in the sale's own currency, rounded up to its minor unit. The check sees each coupon once (``coupon_codes`` is a
   set of names) and never a coupon's own amount, so the cap is per coupon: a coupon of 100 for each 1,000 spent is a rule
   of 1,000 on each such coupon, and two of them need a sale of 2,000.
 
 A coupon with no rule record, or with its rule switched off, is never refused; a sale with no coupon is allowed without
-reading the shop. The rules apply on every stage: an exchange rung without its sale carries the coupons of what it sells.
+reading the shop. The group and first-purchase rules apply on every stage: an exchange rung without its sale carries the
+coupons of what it sells. A coupon that needs a sale is refused on the ``return`` stage (a no-receipt exchange the customer
+is paid back on: its sold lines would carry the coupon's discount into the money paid out); a return against its sale
+carries no coupon (the till clears them).
 
 ⛔ No answer moves money: no price, no line, no payment. A refused sale is not paid: the till goes back to the basket,
 the cashier removes the coupon and presses Pay again. The door before any money refuses a sale without an allowing answer
@@ -31,12 +35,12 @@ import base64
 import hashlib
 import hmac
 import time
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from decimal import ROUND_CEILING, Decimal, InvalidOperation
 
 SKEW_S = 300          # a request stamped further than this from our clock is refused (a replay window, not a clock)
 BODY_MAX = 256 * 1024
 TEXT_MAX = 140        # every sentence the till shows: plain text, 1 to 140 characters (the extension points' rule)
-RULE_FIELDS = ("name", "coupon", "enabled", "first_purchase_only", "customer_group", "spend_per_use")   # what rules_of reads
+RULE_FIELDS = ("name", "coupon", "enabled", "first_purchase_only", "customer_group", "spend_per_use")   # the manifest's fields (test_manifest pins them); the read takes every field
 
 
 def verify(timestamp: str | None, signature: str | None, raw: bytes, secret: str, now: float | None = None) -> str:
@@ -120,21 +124,28 @@ def money(minor: int, exponent: int, currency: str = "") -> str:
 
 
 def over_cap(ctx: dict, rules: dict, mine: list) -> dict | None:
-    """The refusal when the sale's capped coupons need more of its total than it has, else ``None``. On a sale only."""
+    """The refusal when the sale's capped coupons need more of its total than it has, else ``None``. On the ``return``
+    stage a capped coupon is always refused: only a no-receipt exchange that sells reaches it with a coupon, and its total
+    is what the customer is paid back, never a sale."""
     capped = [c for c in mine if rules[c].get("spend")]
-    if ctx["stage"] != "sale" or not capped:
+    if not capped:
         return None
     exp = ctx["currency_exponent"]
-    need = sum(int((rules[c]["spend"] * 10 ** exp).to_integral_value(ROUND_HALF_UP)) for c in capped)
+    need = sum(int((rules[c]["spend"] * 10 ** exp).to_integral_value(ROUND_CEILING)) for c in capped)   # a minimum: up
     total = ctx["totals"]["grand_minor"]
-    if need <= total:
+    refund = ctx["stage"] != "sale"
+    if not refund and need <= total:
         return None
     cur = ctx.get("currency") or ""
-    tail = f" a sale of {money(need, exp, cur)}; this sale is {money(total, exp, cur)}. Remove a coupon, or add to the sale."
+    one = len(capped) == 1
+    if refund:
+        tail = f" a sale of {money(need, exp, cur)} and cannot be used on a refund. Remove {'it' if one else 'them'}."
+    else:
+        tail = f" a sale of {money(need, exp, cur)}; this sale is {money(total, exp, cur)}. Remove a coupon, or add to the sale."
     names = ", ".join(plain(c, 20) for c in capped)
-    lead = f"Coupon {names} needs" if len(capped) == 1 else f"Coupons {names} need"
+    lead = f"Coupon {names} needs" if one else f"Coupons {names} need"
     if len(lead + tail) > TEXT_MAX:     # long names: the amounts and the instruction stay whole
-        lead = "This coupon needs" if len(capped) == 1 else f"These {len(capped)} coupons need"
+        lead = "This coupon needs" if one else f"These {len(capped)} coupons need"
     return {"verdict": "refuse", "reason": plain(lead + tail)}
 
 

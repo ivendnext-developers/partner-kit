@@ -182,17 +182,35 @@ class Cap(unittest.TestCase):
         self.assertEqual(coupons.on_check(capped(["C100", "PLAIN", "NOTRULED"], 100000), dict(CAPPED, **RULES), Counter()),
                          {"verdict": "allow"})
 
-    def test_the_amount_rounds_half_up_in_the_sales_currency(self):
+    def test_the_amount_rounds_up_in_the_sales_currency(self):
         self.assertEqual(coupons.on_check(capped(["MIN50"], 5000), CAPPED, Counter())["verdict"], "refuse")
         self.assertEqual(coupons.on_check(capped(["MIN50"], 5001), CAPPED, Counter()), {"verdict": "allow"})
-        self.assertEqual(coupons.on_check(capped(["MIN50"], 50, exp=0), CAPPED, Counter()), {"verdict": "allow"})  # no minor unit
-        self.assertEqual(coupons.on_check(capped(["MIN50"], 49, exp=0), CAPPED, Counter())["reason"],
-                         "Coupon MIN50 needs a sale of AED 50; this sale is AED 49. Remove a coupon, or add to the sale.")
+        self.assertEqual(coupons.on_check(capped(["MIN50"], 51, exp=0), CAPPED, Counter()), {"verdict": "allow"})  # no minor unit
+        self.assertEqual(coupons.on_check(capped(["MIN50"], 50, exp=0), CAPPED, Counter())["reason"],   # 50.005 needs 51, not 50
+                         "Coupon MIN50 needs a sale of AED 51; this sale is AED 50. Remove a coupon, or add to the sale.")
         self.assertEqual(coupons.on_check(capped(["MIN50"], 49500, exp=3), CAPPED, Counter())["reason"],
                          "Coupon MIN50 needs a sale of AED 50.005; this sale is AED 49.500. Remove a coupon, or add to the sale.")
 
-    def test_a_return_is_never_capped(self):
-        self.assertEqual(coupons.on_check(capped(["C100"], 100, stage="return"), CAPPED, Counter()), {"verdict": "allow"})
+    def test_a_capped_coupon_on_a_refund_is_refused_whatever_the_total(self):
+        """Only a no-receipt exchange that sells reaches the return stage with a coupon (the till clears a return's own);
+        its total is paid back, so a capped coupon there would pay its discount out as money."""
+        for minor in (-150000, 0, 500000):
+            out = coupons.on_check(capped(["C100"], minor, stage="return"), CAPPED, Counter())
+            self.assertEqual(out, {"verdict": "refuse", "reason": "Coupon C100 needs a sale of AED 1,000.00 and cannot be "
+                                                                  "used on a refund. Remove it."}, minor)
+        out = coupons.on_check(capped(["C100", "C100B"], 0, stage="return"), CAPPED, Counter())
+        self.assertTrue(out["reason"].endswith("cannot be used on a refund. Remove them."), out)
+        self.assertEqual(coupons.on_check(capped(["PLAIN"], 0, stage="return"), dict(CAPPED, **RULES), Counter()),
+                         {"verdict": "allow"})          # an uncapped coupon on a refund: as before
+
+    def test_a_refusal_names_only_the_capped_coupons(self):
+        out = coupons.on_check(capped(["C100", "PLAIN"], 500), dict(CAPPED, **RULES), Counter())
+        self.assertEqual(out["reason"], "Coupon C100 needs a sale of AED 1,000.00; this sale is AED 5.00. "
+                                        "Remove a coupon, or add to the sale.")
+
+    def test_a_negative_total_keeps_its_sign(self):
+        self.assertEqual(coupons.money(-1250, 2, "AED"), "AED -12.50")
+        self.assertIn("this sale is AED -0.01.", coupons.on_check(capped(["C100"], -1), CAPPED, Counter())["reason"])
 
     def test_the_cap_reads_nothing_and_comes_before_the_count(self):
         n = Counter({"CUST-1": 0})
