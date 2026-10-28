@@ -2,6 +2,10 @@
 
 From nothing to your first working call against an iVendNext site. You need git, curl, jq and Python 3; your own editor and language do the rest. Everything here is a first look: the guide's [chapter 2](../../guide/02_getting_started.md) and its [recipes](../../recipes/hosted_sandbox.md) go further.
 
+## 0. Read how it all works
+
+Ten minutes before you start: what an iVendNext app is (data in the customer's iVendNext, plus one optional web service), where it runs, where the customer's data lives, and why two customers never collide: [1a. How it all works](../../guide/01a_how_it_all_works.md). Then one app end to end, with every command: [1b](../../guide/01b_one_app_end_to_end.md). One question? [Questions developers ask](questions.md).
+
 ## 1. Request a sandbox site
 
 A sandbox site is your own iVendNext site, hosted by us and full of made-up demo data, where you build and test before you touch a customer's site. You receive an address in your name, an administrator login, and logins for the retailer's people. You never receive the software or a server.

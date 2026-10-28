@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 537" width="760" height="537" role="img" aria-labelledby="t d" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title id="t">How an iVendNext app is put together</title><desc id="d">Three pieces: the retail chain's own iVendNext, which CitiXsys runs for that chain; your app; and the App library. Your app is a data part, installed from your manifest into the chain's iVendNext, plus an optional web service that serves every chain and reaches the chain only through its front door. A chain's administrator installs your app from the App library, with consent. No app connects to the store data directly.</desc>
+<rect width="760" height="537" rx="16" fill="#0d1120"/>
+<text x="24" y="38" font-size="22" font-weight="800" fill="#eef1f8" text-anchor="start">How an iVendNext app is put together</text>
+<text x="24" y="60" font-size="14" font-weight="500" fill="#a3abc0" text-anchor="start">Three pieces. Your app is data in the chain's iVendNext, plus one optional web service.</text>
+<rect x="16" y="80" width="350" height="101.6" rx="10" fill="#151a2c" stroke="#5fd39a" stroke-width="1.5"/>
+<text x="28" y="106" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Your app's service</text>
+<text x="28" y="128" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">Optional. One web service for every chain</text>
+<text x="28" y="146.8" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">that installs your app. On your own server,</text>
+<text x="28" y="165.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">on iVendNext App Hosting, or nowhere.</text>
+<rect x="394" y="80" width="350" height="101.6" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="406" y="106" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">The App library</text>
+<text x="406" y="128" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">library.ivendnext.app. Where a chain's</text>
+<text x="406" y="146.8" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">administrator finds your app and installs it.</text>
+<path d="M56,189.6 L56,257.6" stroke="#5fd39a" stroke-width="3" fill="none"/>
+<path d="M49,255.6 L56,265.6 L63,255.6 z" fill="#5fd39a"/>
+<path d="M63,191.6 L56,181.6 L49,191.6 z" fill="#5fd39a"/>
+<text x="72" y="219.1" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">Through the front door: API calls,</text>
+<text x="72" y="237.1" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">till presses, the event feed</text>
+<path d="M440,181.6 L440,257.6" stroke="#5fd39a" stroke-width="3" fill="none"/>
+<path d="M433,255.6 L440,265.6 L447,255.6 z" fill="#5fd39a"/>
+<text x="456" y="228.1" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">Install, with consent</text>
+<rect x="16" y="265.6" width="728" height="254.8" rx="14" fill="#16294a" stroke="#4aa6ff" stroke-width="1.5"/>
+<text x="32" y="295.6" font-size="12.5" font-weight="800" fill="#4aa6ff" text-anchor="start" letter-spacing="1.2">THE RETAIL CHAIN'S OWN iVENDNEXT</text>
+<text x="32" y="315.6" font-size="13.2" font-weight="500" fill="#a3abc0" text-anchor="start">Run by CitiXsys for that chain. Its business only.</text>
+<rect x="32" y="331.6" width="150" height="82.8" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="44" y="357.6" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Desk</text>
+<text x="44" y="379.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">The back office</text>
+<rect x="198" y="331.6" width="150" height="82.8" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="210" y="357.6" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Tills</text>
+<text x="210" y="379.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">Counter, tablet,</text>
+<text x="210" y="398.4" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">phone</text>
+<rect x="364" y="331.6" width="364" height="82.8" rx="10" fill="#251d45" stroke="#b9a3ff" stroke-width="1.5"/>
+<text x="376" y="357.6" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Your app's data part</text>
+<text x="376" y="379.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">Record types, fields, roles, till keys, checks,</text>
+<text x="376" y="398.4" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">print formats: installed from your manifest</text>
+<rect x="32" y="432.4" width="696" height="72" rx="12" fill="#050812"/>
+<g transform="translate(62 456.4)"><rect x="-13" y="0" width="26" height="21" rx="4" fill="none" stroke="#e8ecf6" stroke-width="2.4"/><path d="M-7,0 v-7 a7,7 0 0 1 14,0 v7" fill="none" stroke="#e8ecf6" stroke-width="2.4"/></g>
+<text x="94" y="462.4" font-size="17" font-weight="800" fill="#e8ecf6" text-anchor="start">Store data</text>
+<text x="94" y="485.4" font-size="13.5" font-weight="500" fill="#e8ecf6" text-anchor="start">Sales · stock · customers · money. No app connects to it directly.</text>
+</svg>

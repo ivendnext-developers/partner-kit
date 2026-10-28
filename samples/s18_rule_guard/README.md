@@ -34,7 +34,7 @@ The recipe: [`recipes/rule_guard.md`](../../recipes/rule_guard.md).
 | `manifest.json` | one `check` service, installed switched off, `refuse` when the service is down; the **PP RGD Rule** record type and its feed |
 | `rule.py` | the pure core: the signature check (`verify`), the shape check (`context_of`), the retailer's rule from its records (`rules_of`), the answer (`decide`) |
 | `service/app.py` | the service, standard library only: `POST /rgd/check`, `GET /health`; for one retailer, or for many through the app template's handshake (`POST /ivendnext/connect`, `/disconnect`) |
-| `app.json` | how CitiXsys hosts it: as a **function**, paid per call, since it only answers a press (guide chapter 14b, *A function or a container*), at `https://rule-guard.ivendnext.app` |
+| `app.json` | how CitiXsys hosts it: as a **function**, run only when called, since it only answers a press (guide chapter 14b, *A function or a container*), at `https://rule-guard.ivendnext.app` |
 | `tests/` | the rule, the service over the wire with signed calls, every answer against the published contract, two retailers each judged by its own records (`test_shop_rules.py`) |
 
 **Many retailers** (the App library's `ivendnext_rgd`): set `IVN_LIBRARY_APP=ivendnext_rgd`, `RGD_PREFIX=IVENDNEXT RGD` and a store (`IVN_SHOPS_FILE`, or the hosting's table) instead of `PP_POINT_SECRET`. Each retailer connects itself after its install; each check is verified with that retailer's own secret, `ivendnext_rgd:sub:guard`, and judged by that retailer's own Rule records, read with the key of the app's own user that the retailer's site handed over.

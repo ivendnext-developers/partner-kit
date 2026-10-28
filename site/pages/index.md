@@ -2,6 +2,8 @@
 
 For iVendNext Partners, developers and licensed customers' IT teams. This guide shows how to build a customer's own behaviour on iVendNext without changing iVendNext itself. It is for anyone who builds for an iVendNext customer: an iVendNext Partner, a licensed customer's IT team, and the CitiXsys Consulting Team, our own team, which uses this same guide.
 
+**New here? [How it all works](../../guide/01a_how_it_all_works.md)**: where your app runs, where the data lives, and why customers never collide, in ten minutes. · [Questions developers ask](questions.md)
+
 [A customer sent me a list of needs](../../needs/README.md) · [I know what I'm building](build.md) · [I'm new](start.md) · [Build your business on iVendNext's apps](business.md)
 
 > Every page on this site is built from the kit's own guide. Chapter 9 lists each extension point, and every chapter says what the kit has proven and what it has not.

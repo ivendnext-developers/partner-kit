@@ -1,6 +1,6 @@
 # Host with CitiXsys or run your own
 
-Your app's outside service, the part iVendNext calls, has to run on a server iVendNext can reach. CitiXsys can run it for you on iVendNext App Hosting, or you can run it on your own cloud. Your code is the same either way and stays in your own repository: we run the image you build, never your source.
+Your app's outside service, the part iVendNext calls, has to run on a server iVendNext can reach. CitiXsys can run it for you on iVendNext App Hosting, or you can run it on your own cloud. Your code is the same either way and stays in your own repository: we run the image you build, or your function's package of the files it runs, never your repository.
 
 ## Order hosting from this page
 

@@ -2,7 +2,7 @@
 
 **What this is.** The guide for everyone who builds for an iVendNext customer — iVendNext Partners, licensed customers' IT teams, and the CitiXsys Consulting Team. Its outline is the build ladder. Every chapter is written; each says what the kit has proven and what it has not.
 
-Read it before you quote a customer: chapters 1 and 3 first, then the chapter for each rung your project needs.
+New to iVendNext? Start with [1a. How it all works](01a_how_it_all_works.md), a ten-minute read, and [1b](01b_one_app_end_to_end.md), one app end to end. Read the guide before you quote a customer: chapters 1 and 3 first, then the chapter for each rung your project needs.
 
 **The guide's own rules.** iVendNext names only; no customer named. Each chapter is a plain guide first: what it does and who it is for, a picture where a sample was walked, when to use it, the steps with their commands, what is refused, and what happens when the builder's service is down and when the till is offline. A *Technical notes* section at the end keeps every technical fact: the tests, what the kit has proven and what it has not, run ids, pins and design choices.
 
@@ -11,6 +11,8 @@ Read it before you quote a customer: chapters 1 and 3 first, then the chapter fo
 | # | Chapter | Recipe · sample |
 |---|---|---|
 | 1 | [Welcome and the one path](01_welcome.md) | — |
+| 1a | [How it all works — where your app runs, where the data lives, why customers never collide](01a_how_it_all_works.md) | [Questions developers ask](../site/pages/questions.md) |
+| 1b | [One app from your laptop to the till — sample S18, step by step](01b_one_app_end_to_end.md) | `samples/s18_rule_guard/` · `tools/manifest/start.py`, `tools/publish/`, `tools/deploy_app/` |
 | 2 | [Getting started — sandbox, keys, the first call](02_getting_started.md) | `recipes/integration_user.md`, `recipes/connected_app.md` · `api/collection/`, `api/openapi.yaml` |
 | 3 | [The ladder and the four rules](03_ladder_and_never_list.md) | one recipe per rung (linked in the chapter) |
 | 4 | [Configure first](04_configure_first.md) | `recipes/configure_no_code.md`, `recipes/receipt_format.md` · `samples/s5_config_pack/`, `samples/s4_receipt_pack/` |

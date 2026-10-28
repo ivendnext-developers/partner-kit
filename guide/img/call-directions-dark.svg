@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 584" width="900" height="584" role="img" aria-labelledby="t d" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title id="t">Calls go three ways</title><desc id="d">Calls go three ways. One: your service calls the iVendNext API at the chain's own address, with your app's key, as your app's own user. Two: the chain's iVendNext calls your service, for a till key, a check at Pay or a Desk button, at your one address, signed with that chain's own secret. Three: your service calls an outside system, such as a loyalty or telecom system, with that chain's own account for it.</desc>
+<rect width="900" height="584" rx="16" fill="#0d1120"/>
+<text x="24" y="38" font-size="22" font-weight="800" fill="#eef1f8" text-anchor="start">Calls go three ways</text>
+<text x="24" y="60" font-size="14" font-weight="500" fill="#a3abc0" text-anchor="start">Each call has its own address, and its own key or secret.</text>
+<rect x="16" y="80" width="200" height="82.8" rx="10" fill="#16294a" stroke="#4aa6ff" stroke-width="1.5"/>
+<text x="28" y="117.4" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">The chain's</text>
+<text x="28" y="136.4" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">iVendNext</text>
+<rect x="350" y="80" width="200" height="82.8" rx="10" fill="#151a2c" stroke="#5fd39a" stroke-width="1.5"/>
+<text x="362" y="126.9" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Your service</text>
+<rect x="684" y="80" width="200" height="82.8" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.5"/>
+<text x="696" y="106" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">The outside system</text>
+<text x="696" y="128" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">e.g. a loyalty or</text>
+<text x="696" y="146.8" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">telecom system</text>
+<text x="132" y="196.8" font-size="13.6" font-weight="800" fill="#eef1f8" text-anchor="start">Your service calls the iVendNext API</text>
+<text x="132" y="217.8" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">At the chain's own address:</text>
+<text x="132" y="235.8" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">https://&lt;chain site&gt;/api/...</text>
+<text x="132" y="253.8" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">With your app's key, as your app's own user</text>
+<path d="M438,279.8 L124,279.8" stroke="#4aa6ff" stroke-width="3" fill="none"/>
+<path d="M126,272.8 L116,279.8 L126,286.8 z" fill="#4aa6ff"/>
+<circle cx="450" cy="279.8" r="12" fill="#4aa6ff"/>
+<text x="450" y="284.8" font-size="14" font-weight="800" fill="#0d1120" text-anchor="middle">1</text>
+<text x="132" y="323.8" font-size="13.6" font-weight="800" fill="#eef1f8" text-anchor="start">iVendNext calls your service</text>
+<text x="132" y="344.8" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">A till key, a check at Pay, a Desk button</text>
+<text x="132" y="362.8" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">At your one address:</text>
+<text x="132" y="380.8" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">https://&lt;app&gt;.ivendnext.app</text>
+<text x="132" y="398.8" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">Signed with that chain's own secret</text>
+<path d="M128,424.8 L442,424.8" stroke="#b9a3ff" stroke-width="3" fill="none"/>
+<path d="M440,431.8 L450,424.8 L440,417.8 z" fill="#b9a3ff"/>
+<circle cx="116" cy="424.8" r="12" fill="#b9a3ff"/>
+<text x="116" y="429.8" font-size="14" font-weight="800" fill="#0d1120" text-anchor="middle">2</text>
+<text x="466" y="468.8" font-size="13.6" font-weight="800" fill="#eef1f8" text-anchor="start">Your service calls the outside system</text>
+<text x="466" y="489.8" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">At its address</text>
+<text x="466" y="507.8" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">With that chain's own account for it</text>
+<path d="M462,533.8 L776,533.8" stroke="#5fd39a" stroke-width="3" fill="none"/>
+<path d="M774,540.8 L784,533.8 L774,526.8 z" fill="#5fd39a"/>
+<circle cx="450" cy="533.8" r="12" fill="#5fd39a"/>
+<text x="450" y="538.8" font-size="14" font-weight="800" fill="#0d1120" text-anchor="middle">3</text>
+<path d="M116,162.8 L116,563.8" stroke="#2f3752" stroke-width="1.5" fill="none" stroke-dasharray="4 5"/>
+<path d="M450,162.8 L450,563.8" stroke="#2f3752" stroke-width="1.5" fill="none" stroke-dasharray="4 5"/>
+<path d="M784,162.8 L784,563.8" stroke="#2f3752" stroke-width="1.5" fill="none" stroke-dasharray="4 5"/>
+</svg>

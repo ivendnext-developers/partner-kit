@@ -7,10 +7,11 @@ How to run your own service so a retailer can reach it: what it must do, how to 
 
 ## The short answer
 
+- **The one idea:** an iVendNext app is data that goes into the customer's iVendNext, plus, if it needs one, a single web service that serves every customer ([1a. How it all works](01a_how_it_all_works.md)).
 - **Your app runs on a server you choose,** in any cloud or on your own machines. Nothing of yours is installed in the customer's iVendNext (chapter 3, rule 3).
 - **iVendNext calls your app over HTTPS** (a till key, a Desk button, a webhook) and **your app calls iVendNext's API** with the key you were given. Till keys and Desk buttons are extension points (chapter 9).
 - **Package it as a container.** One image runs the same on your laptop, on a test copy and in production.
-- **Or let CitiXsys host it.** Send us the image and its settings file, never your source; we run it at `https://<app>.ivendnext.app` ([below](#let-citixsys-host-it)).
+- **Or let CitiXsys host it.** Send us the image, or a function's package (the files it runs), and its settings file, never your repository; we run it at `https://<app>.ivendnext.app` ([below](#let-citixsys-host-it)).
 - **iVendNext checks nothing about where you run it.** It checks your answers: the signature, the time to answer and the shape of the reply.
 
 ## When to use it
@@ -77,7 +78,7 @@ A managed container service in your own cloud account is the least work. A small
 
 ## Let CitiXsys host it
 
-If you would rather not run a server, CitiXsys runs your app for you on our own cloud, beside iVendNext. **Your code stays in your own repository.** We never need your source code or access to your code repository: we run the image you build.
+If you would rather not run a server, CitiXsys runs your app for you on our own cloud, beside iVendNext. **Your code stays in your own repository.** We never need access to your code repository: we run the image you build, or your function's package, which holds only the files the function runs.
 
 **Build the image for ARM64** (`docker build --platform linux/arm64 …`). Our hosting runs ARM processors; an image built only for x86 does not start.
 
@@ -97,7 +98,7 @@ python3 tools/deploy_app/deploy_app.py <your app folder> --image <registry>/<rep
 
 **Order it online** (below), or from your CitiXsys partner manager. A licensed customer's IT team and CitiXsys's own teams, such as the CitiXsys Consulting Team, order hosting the same way. Not an iVendNext Partner yet? Start with the [iVendNext Partner form](https://www.ivendnext.com/partners/apply/).
 
-**What it costs:** a price per app per month, in US dollars (below), covering the copies the plan runs (sandbox, staging). It is billed monthly, in whole months from the month the app goes live, with no minimum term: either side can stop at any month end. Whoever orders the hosting pays: you, or the customer the app is built for when that customer orders it. App Hosting is sold online by CitiXsys Singapore, through Stripe, with its own invoices and receipts, and is never a line on an iVendNext subscription invoice. An app that only answers presses and is listed in the App library carries no hosting charge. The managed database, when it is offered, is priced separately.
+**What it costs:** a price per app per month, in US dollars (below), covering the copies the plan runs (sandbox, staging). It is billed monthly, in whole months from the month the app goes live, with no minimum term: either side can stop at any month end. Whoever orders the hosting pays: you, or the customer the app is built for when that customer orders it. App Hosting is sold online by CitiXsys Singapore, through Stripe, with its own invoices and receipts, and is never a line on an iVendNext subscription invoice. An app that runs as a function (it only answers presses, or works in short runs) and is listed in the App library carries no hosting charge; a container is always charged. The managed database, when it is offered, is priced separately.
 
 **What you get** (for a container; a function's list is in [A function or a container](14b_deploying_your_app.md#a-function-or-a-container)): the address `https://<app>.ivendnext.app` with its certificate; your secrets kept in our secret store (we ask you for them when the app goes live; they are never in a file); a restart when the health check fails; a firewall that lets in only our load balancer; and no rights in our cloud for your app's code. Your app's log lines are kept for the plan's days, and we send them to you when you ask.
 
@@ -107,9 +108,9 @@ python3 tools/deploy_app/deploy_app.py <your app folder> --image <registry>/<rep
 | **Standard** | $129 | a connected app | small or medium · one instance · logs kept 30 days · a staging copy |
 | **Managed** | $399 | apps built by the CitiXsys Consulting Team, and anyone who wants us to run it | any size · two instances · logs kept 90 days · we check the app before it is connected and test it before each iVendNext upgrade, and patch the apps whose source we hold |
 
-**What hosting runs:** your app's service. A hosted app has no database or disk of its own: keep its data in the retailer's own records (your manifest's record types), or in a store of your own.
+**What hosting runs:** your app's service. A hosted app has no database or lasting disk of its own for its data: keep its data in the retailer's own records (your manifest's record types), or in a store of your own. The one table a hosted app has (always for a function; for a container with `"shops": true`) holds each retailer's connection, its address, its secrets and its key's id, encrypted, and a scheduled run's short claims; no retailer's records ([One app, many retailers](14b_deploying_your_app.md#one-app-many-retailers)).
 
-**An app that only answers presses runs as a function**, paid per call, not as an always-on container: see [A function or a container](14b_deploying_your_app.md#a-function-or-a-container) in this chapter.
+**An app that only answers presses runs as a function**, run only when called, not as an always-on container: see [A function or a container](14b_deploying_your_app.md#a-function-or-a-container) in this chapter.
 
 **A new version:** push it from your GitHub ([Updates from your GitHub](14b_deploying_your_app.md#updates-from-your-github)), or, for an app we put live by hand, send the new version's tag on the same order.
 
@@ -126,7 +127,7 @@ python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --
 2. **Name your app under your maker word.** Your app's name is your first word in the App library, or that word and a hyphen: `acme-points` for the maker word `acme`.
 3. **You accept the App Hosting Schedule** with `--accept-schedule`: the terms that hosting runs under: [Schedule 1 of the iVendNext Developer Terms](https://legal.ivend.com/ivendnext-developer-terms/), version 1.0 of 2026-10-21. The order carries the Schedule's version.
 4. **One order covers the plan's copies, at one price.** Production and its sandbox on Starter, and staging too on Standard and Managed: one subscription at the plan's price, not one per copy. To run fewer, name them: `--copies prod,sandbox`.
-5. **You pay.** It prints a Stripe checkout address: pay monthly by card. With `--invoice --email <address>` you get an invoice with payment terms instead; the app is built once the invoice is paid. An app that only answers presses and is listed in the App library carries no charge, so its order needs no payment.
+5. **You pay.** It prints a Stripe checkout address: pay monthly by card. With `--invoice --email <address>` you get an invoice with payment terms instead; the app is built once the invoice is paid. An app that runs as a function and is listed in the App library carries no charge, so its order needs no payment.
 6. **We build it, with no person.** Once it is paid, the hosting makes each copy's address, its own registry or package folder, its secret store and its firewall. `deploy_app.py status --partner <your code>` shows where each copy stands: building, waiting for its secrets, live, held, or stopped, with the reason when one of your versions was refused or did not start, and the date the hosting stops if you cancelled.
 7. **Put each secret** your `app.json` marks `"secret": true` (a container), on each copy: `deploy_app.py secret --partner <your code> --order <id> --env sandbox --name <NAME>`, with the value on standard input. Each copy has its own values. It is never shown, never in a file, and kept only in that copy's own secret store.
 8. **Push the first version** from your GitHub (below). The app goes live once its image or package and its secrets are there, and its health check answers.
@@ -205,7 +206,7 @@ When CitiXsys hosts your app, it runs in one of two ways. Your code is the same 
 
 **How to choose:** if every piece of work your app does fits in a call of 15 minutes or less, it is a function, on a schedule if it has work of its own. Otherwise it is a container. Sample [S18](../samples/s18_rule_guard/README.md), the members-only rule guard, answers presses as a function. Samples [S22](../samples/s22_customer_loyalty/README.md) (customer-owned loyalty), [S25](../samples/s25_gift_on_spend/README.md) (gift card on spend) and [S3](../samples/s3_price_audit/README.md) (price-deviation audit) read the feed as functions on a schedule.
 
-**A function on a schedule** names its runs in `app.json`: `"schedule": {"pass": "rate(1 minute)"}` runs it once a minute, and `"timeout": 120` lets each run take up to two minutes (900 seconds at most; you are billed for the time a run takes, not its limit). Each run is one pass of your work. Two runs can overlap, so a run takes a claim on each retailer it works in the shops table first, frees it as soon as that retailer is done, and leaves a retailer another run is still working. Give a daily job the full 900 seconds (S22 does): a run stopped by its limit does not try that day again. A scheduled app is put live by CitiXsys: ordering online does not carry a schedule yet, so `deploy_app.py order` refuses one.
+**A function on a schedule** names its runs in `app.json`: `"schedule": {"pass": "rate(1 minute)"}` runs it once a minute, and `"timeout": 120` lets each run take up to two minutes (900 seconds at most). Each run is one pass of your work. Two runs can overlap, so a run takes a claim on each retailer it works in the shops table first, frees it as soon as that retailer is done, and leaves a retailer another run is still working. Give a daily job the full 900 seconds (S22 does): a run stopped by its limit does not try that day again. A scheduled app is put live by CitiXsys: ordering online does not carry a schedule yet, so `deploy_app.py order` refuses one.
 
 **A function serves many retailers** (the handshake above) and keeps no secret of its own: each retailer hands over its own when it connects, whether it installed your app from the public list or from its *Made for you* shelf. An app that needs its own secret runs as a container.
 

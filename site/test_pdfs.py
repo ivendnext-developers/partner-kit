@@ -32,6 +32,7 @@ class PdfTests(unittest.TestCase):
         cls.example = (cls.out / "downloads" / "blueprint_example.pdf").read_bytes()
         cls.ladder = (cls.out / "downloads" / "ladder_and_four_rules.pdf").read_bytes()
         cls.glance = (cls.out / "downloads" / "needs_at_a_glance.pdf").read_bytes()
+        cls.howitworks = (cls.out / "downloads" / "how_ivendnext_apps_work.pdf").read_bytes()
 
     @classmethod
     def tearDownClass(cls):
@@ -65,6 +66,8 @@ class PdfTests(unittest.TestCase):
         self.assertEqual(self.pages(self.guide), 1)
         self.assertEqual(self.pages(self.ladder), 2)
         self.assertLessEqual(self.pages(self.glance), 6)
+        self.assertEqual(build_pdfs.pdf_problems(self.howitworks, 10), [])
+        self.assertLessEqual(self.pages(self.howitworks), 10)                                     # measured 2026-10-28: 10 pages
         for data in (self.form, self.guide, self.example, self.ladder, self.glance):
             self.assertTrue(data.startswith(b"%PDF-"))
             self.assertTrue(data.rstrip().endswith(b"%%EOF"))
@@ -253,6 +256,18 @@ class PdfTests(unittest.TestCase):
         self.assertEqual(build_pdfs.word_problems("<p>Ask for a new extension point.</p>"), [])
 
     # Chrome
+    def test_how_apps_work_draws_every_picture_of_chapter_1a_inline_and_a_linked_one_is_red(self):
+        names = build_pdfs.chapter_pictures(build_pdfs.HOWITWORKS)
+        self.assertGreaterEqual(len(names), 7)                                              # chapter 1a's six and where-your-app-runs
+        errors: list = []
+        body = build_pdfs.howitworks_body(errors)
+        self.assertEqual(errors, [])
+        self.assertEqual(body.count("<svg "), len(names))
+        self.assertNotIn("guide/img/", body)
+        self.assertEqual(build_pdfs.fetched(build_pdfs.page("How iVendNext apps work", body)), [])
+        linked = body + f'<img src="{build_pdfs.BASE}guide/img/{names[0]}" alt="">'      # a picture left as a link would be fetched
+        self.assertEqual(build_pdfs.fetched(build_pdfs.page("How iVendNext apps work", linked)), [f"{build_pdfs.BASE}guide/img/{names[0]}"])
+
     def test_no_chrome_fails_and_says_how_to_set_it(self):
         with mock.patch.dict("os.environ", {"CHROME": "/no/such/chrome"}):
             with self.assertRaises(SystemExit) as caught:

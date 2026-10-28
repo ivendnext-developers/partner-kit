@@ -2,6 +2,10 @@
 
 This is the iVendNext partner kit. A person is using you to build something for an iVendNext customer: a retailer that runs iVendNext, a retail system with a till (the point of sale), a back office called Desk, and an API. Your job is to build it **without changing iVendNext itself**. This file is short on purpose. The guide in `guide/` is the full text; when this file and the guide disagree, the guide is right and the person should be told.
 
+## When the person asks how iVendNext apps work
+
+Where an app runs, whether it is Docker, where the customer's data lives, whether two customers collide, how many apps or containers to build, what publishing and hosting hand over: answer from `guide/01a_how_it_all_works.md` (the plain answers, each proved in its Technical notes) and the questions page, `site/pages/questions.md`, never from what another platform does. How the data travels through a link to an outside system is chapter 1c, `guide/01c_how_the_data_travels.md`. One app end to end, with every command: `guide/01b_one_app_end_to_end.md`.
+
 ## What you may rely on
 
 - You work on the person's own laptop and, when they say so, their own **sandbox** site. A customer's live site is the person's to touch, not yours: see "Ask the person before any write to a live site" below.

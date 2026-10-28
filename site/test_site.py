@@ -157,7 +157,8 @@ class SiteTests(unittest.TestCase):
         linked = {m.group(1) for text in page_texts(self.out).values() for m in DOWNLOAD.finditer(text)}
         self.assertEqual(linked, {"downloads/blueprint_form.pdf", "downloads/blueprint_how_to_fill.pdf", "downloads/blueprint_template.md",
                                   "downloads/blueprint_example.pdf", "downloads/blueprint_example.md",
-                                  "downloads/ladder_and_four_rules.pdf", "downloads/needs_at_a_glance.pdf"})
+                                  "downloads/ladder_and_four_rules.pdf", "downloads/needs_at_a_glance.pdf",
+                                  "downloads/how_ivendnext_apps_work.pdf"})
         copy = self.tmp / "missing_download"
         shutil.copytree(self.out, copy)
         page = copy / "kit" / "blueprint.html"

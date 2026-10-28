@@ -96,3 +96,9 @@ h2.area { font-size: 13pt; margin: 4.5mm 0 1.5mm; }
 .ladder th:nth-child(1) { width: 12mm; } .ladder th:nth-child(2) { width: 24mm; } .ladder th:nth-child(3) { width: 68mm; }
 .ladder th:nth-child(4) { width: 30mm; } .ladder th:nth-child(5) { width: 36mm; }
 .rules th:nth-child(1) { width: 58mm; } .rules th:nth-child(2) { width: 60mm; } .rules th:nth-child(3) { width: 52mm; }
+
+/* a guide chapter printed whole (How iVendNext apps work): its pictures fit the column and stay on one page */
+.chapter svg { display: block; width: 100%; height: auto; margin: 3mm 0; break-inside: avoid; }
+.chapter svg text { font-family: "Inter" !important; }
+.chapter code, .chapter pre { font-family: "Inter"; font-weight: 600; font-size: 8.5pt; }
+.chapter h2 { break-after: avoid; }

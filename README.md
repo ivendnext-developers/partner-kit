@@ -30,7 +30,7 @@ Then read [that sample's README](samples/s32_coupon_rules/README.md): what the r
   <img src="guide/img/where-your-app-runs.svg" alt="Three choices for where your app's code runs: your own server, iVendNext App Hosting, or nowhere when the app is only settings and records. Every one reaches the retail chain's cloud only through its front door; no app connects to the store data directly.">
 </picture>
 
-Full version, with every way an app runs: [library.ivendnext.app/how-apps-run](https://library.ivendnext.app/how-apps-run).
+Full version, with every way an app runs: [library.ivendnext.app/how-apps-run](https://library.ivendnext.app/how-apps-run). For a developer, in ten minutes, with a picture per answer: [1a. How it all works](guide/01a_how_it_all_works.md).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="guide/img/how-you-play-dark.svg">
@@ -43,9 +43,10 @@ The same path, step by step, is on [developer.ivendnext.com](https://developer.i
 
 Use the kit before you quote a customer or start a build.
 
-1. Read [the guide](guide/README.md), starting with [1. Welcome and the one path](guide/01_welcome.md) and [3. The ladder and the four rules](guide/03_ladder_and_never_list.md).
-2. Fill in [the blueprint](kit/blueprint.md) for your project before you quote or build.
-3. For each need, take the highest rung of the ladder that does the job, and follow its recipe.
+1. New to iVendNext? Read [1a. How it all works](guide/01a_how_it_all_works.md) first: where your app runs (Docker, a container, a function or nowhere), where the customer's data lives, why two customers never collide, and what publishing and hosting hand over. Then [1b](guide/01b_one_app_end_to_end.md), one app from your laptop to the till, and [Questions developers ask](https://developer.ivendnext.com/questions.html).
+2. Read [the guide](guide/README.md), starting with [1. Welcome and the one path](guide/01_welcome.md) and [3. The ladder and the four rules](guide/03_ladder_and_never_list.md).
+3. Fill in [the blueprint](kit/blueprint.md) for your project before you quote or build.
+4. For each need, take the highest rung of the ladder that does the job, and follow its recipe.
 
 ## The ladder — the order in which you try the ways in
 
