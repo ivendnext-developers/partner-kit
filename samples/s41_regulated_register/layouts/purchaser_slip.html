@@ -1,0 +1,36 @@
+{#- The purchaser's slip of a book whose law asks the purchaser to sign the entry (purchaser_slip: 1 in the data set):
+    printed from the sale (the till's POS Invoice or the Desk's Sales Invoice) in Desk, it lists this sale's entries in
+    that book, read through ivn_rows as the person printing may read them, with a line for the purchaser's signature. The
+    shop keeps the signed slip with the book's printed pages. build.py writes the book's data above this line. -#}
+{%- set lines = ivn_rows("Retail Register Line", filters=[["voucher_type", "=", doc.doctype], ["voucher_no", "=", doc.name], ["book", "=", book.ref]], fields=["number", "item_name", "qty", "uom", "batch_no", "entry_date", "register_store"], order_by="number asc", limit=200) -%}
+<style>
+  .rss { font-family: Arial, sans-serif; font-size: 10pt; color: #111; }
+  .rss h1 { font-size: 13pt; margin: 0; }
+  .rss .fine { color: #555; font-size: 8pt; }
+  .rss .notice { border: 1px solid #b26b00; color: #7a4a00; padding: 3px 6px; margin: 4px 0 8px; }
+  .rss table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+  .rss th, .rss td { border: 1px solid #555; padding: 3px 4px; text-align: start; vertical-align: top; }
+  .rss th { background: #eee; }
+  .rss .sign { margin-top: 24px; }
+</style>
+<div class="rss" dir="{{ 'rtl' if is_rtl() else 'ltr' }}">
+  <h1>{{ book.title|e }}{% if book.form %} <span class="fine">({{ book.form|e }})</span>{% endif %}: purchaser's slip</h1>
+  <div class="fine">{{ book.cite|e }}</div>
+  {%- if not book.certified %}<div class="notice">{{ _("A starting point, not certified for the country. Check each column against the instrument before you rely on it.")|e }}</div>{% endif %}
+  <p>{{ (doc.company or "")|e }} · {{ doc.name|e }} · {{ (doc.posting_date or "")|e }} · {{ (doc.customer_name or doc.customer or "")|e }}</p>
+  {%- if lines %}
+  <table>
+    <thead><tr><th>{{ _("No.")|e }}</th><th>{{ _("Item")|e }}</th><th>{{ _("Lot")|e }}</th><th>{{ _("Quantity")|e }}</th><th>{{ _("Date")|e }}</th></tr></thead>
+    <tbody>
+    {%- for l in lines %}
+      <tr><td>{{ l.number }}</td><td>{{ (l.item_name or "")|e }}</td><td>{{ (l.batch_no or "")|e }}</td><td>{{ l.qty }} {{ (l.uom or "")|e }}</td><td>{{ (l.entry_date or "")|e }}</td></tr>
+    {%- endfor %}
+    </tbody>
+  </table>
+  <p>I received the items above, entered in the {{ book.title|e }} under the numbers shown.</p>
+  <p class="sign">Signature of purchaser ______________________________ Date ______________</p>
+  <p class="sign">Supplied by (name and signature) ______________________________</p>
+  {%- else %}
+  <p>This sale has no entry in the {{ book.title|e }} that you may read. A slip is printed for a sale the book took, signed in, after the sale is submitted.</p>
+  {%- endif %}
+</div>

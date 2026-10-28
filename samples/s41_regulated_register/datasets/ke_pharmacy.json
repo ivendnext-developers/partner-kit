@@ -15,12 +15,14 @@
     "occupation": {
       "label": "Business, trade or occupation",
       "type": "Data",
-      "own": 1
+      "own": 1,
+      "person": 1
     },
     "purpose": {
       "label": "Purpose for which required",
       "type": "Data",
-      "own": 1
+      "own": 1,
+      "person": 1
     },
     "certificate_date": {
       "label": "Date of certificate",
@@ -32,7 +34,8 @@
       "label": "Certificate given by (name and address)",
       "type": "Data",
       "own": 1,
-      "till": 0
+      "till": 0,
+      "person": 1
     },
     "signed_order_date": {
       "label": "Date of signed order",
@@ -160,7 +163,8 @@
           ],
           "mark": 1
         }
-      ]
+      ],
+      "purchaser_slip": 1
     },
     {
       "id": "prescription_book",
@@ -250,7 +254,6 @@
       "conditions": [],
       "numbering": "book_store_item",
       "balance": 1,
-      "per_item_pages": 1,
       "correction": "signed_strike_through",
       "retention_years": 5,
       "loss_count_hours": 48,
