@@ -268,6 +268,7 @@ def render(text: str, ctx: Ctx, seen: dict, toc: list | None, depth: int = 0) ->
 
     here = posixpath.dirname(ctx.out)
     text = re.sub(r"^\{\{plan: shortlist\}\}\s*$", lambda m: raw(plan_tool(here)), text, flags=re.M)
+    text = re.sub(r"^\{\{hosting: order\}\}\s*$", lambda m: raw(hosting_tool(here)), text, flags=re.M)
     text = re.sub(r"^\{\{publish: button\}\}\s*$", lambda m: raw(  # the App library's Publish page (PUBLISHWEB)
         f'<p class="hero-cta"><a class="site-btn" href="{PUBLISH_PAGE}">Publish</a></p>'), text, flags=re.M)
     text = re.sub(r"^\{\{samples: cards\}\}\s*$", lambda m: raw(gallery.grouped(
@@ -380,6 +381,7 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
           absolute: bool = False, sha: str = "", desc: str = "", noindex: bool = False, hero: str = "",
           meta: "seo.PageMeta | None" = None, crumbs: str = "", verify: dict | None = None) -> str:
     up = "/" if absolute else up_of(out)
+    own = out in OWN_POLICY
     nav = "".join(f'<li><a href="{up}{href}"{" aria-current=\"page\"" if href == out else ""}>{html.escape(label)}</a></li>'
                   for label, href in NAV)
     li = lambda items: "".join(f'<li><a href="{h}">{html.escape(t)}</a></li>' for t, h in items)
@@ -407,15 +409,15 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="{content_policy()}">
-{analytics_meta()}
+<meta http-equiv="Content-Security-Policy" content="{page_policy() if own else content_policy()}">
+{'<meta name="referrer" content="no-referrer">' if own else analytics_meta()}
 <title>{html.escape(full_title)}</title>
 {head_meta}
 <link rel="icon" href="{up}assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="{up}assets/ivn-kit.css">
 <link rel="stylesheet" href="{up}assets/site.css">
-<script src="{up}assets/analytics.js" defer></script>
-<script src="{up}assets/search.js" defer></script>
+{"" if own else f'''<script src="{up}assets/analytics.js" defer></script>
+<script src="{up}assets/search.js" defer></script>'''}
 </head>
 <body class="ivn">
 <a class="skip" href="#main">Skip to the content</a>
@@ -969,6 +971,27 @@ def plan_tool(here: str) -> str:
             '<ul id="plan-found" class="plan-list" aria-live="polite"></ul>'
             '<div id="plan-out" aria-live="polite"></div></section>'
             f'<script src="{up}assets/plan.js" defer></script>')
+
+
+HOSTING_API = "https://hosting.ivendnext.app"            # the hosting's web door: hosting.js calls only this
+OWN_POLICY = {"hosting.html"}                              # pages that carry their own content policy, no site-wide scripts
+
+
+def hosting_tool(here: str) -> str:
+    """Host your app from the page (HOSTWEB): site/assets-src/hosting.js fills it. Hidden until the script shows it, so
+    without script the page is its text and the kit's command."""
+    up = "../" * (here.count("/") + 1) if here else ""
+    return (f'<section id="hosting-tool" class="hosting-tool" data-publish="{PUBLISH_PAGE}" hidden></section>'
+            f'<script src="{up}assets/hosting.js" defer></script>')
+
+
+def page_policy() -> str:
+    """The hosting page's own content policy, in place of the site-wide one: its one script, and the one address it may
+    reach (the hosting's web door). No counter and no search script on it: the page that holds a sign-in runs nothing
+    else. A meta tag cannot send frame-ancestors: hosting.js refuses to run inside a frame."""
+    return "; ".join(["default-src 'self'", "script-src 'self'", f"connect-src {HOSTING_API}", "img-src 'self' data:",
+                      "font-src 'self'", "style-src 'self'", "object-src 'none'", "base-uri 'self'",
+                      "form-action 'self'"])
 
 
 # ── the search index ───────────────────────────────────────────────────────────────────────────────────────────────

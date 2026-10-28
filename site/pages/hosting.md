@@ -2,6 +2,12 @@
 
 Your app's outside service, the part iVendNext calls, has to run on a server iVendNext can reach. CitiXsys can run it for you on iVendNext App Hosting, or you can run it on your own cloud. Your code is the same either way and stays in your own repository: we run the image you build, never your source.
 
+## Order hosting from this page
+
+Sign in with GitHub, pick your repository and your customer, pick a plan and its copies, pay, and follow your app to live, all on this page. It does what the kit's `deploy_app.py order` does, with no command ([how it works](#host-with-citixsys)).
+
+{{hosting: order}}
+
 ## Two ways, side by side
 
 | | Host with CitiXsys | Run your own |
