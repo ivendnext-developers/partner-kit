@@ -1,0 +1,99 @@
+{
+ "area": "The retailer's setup",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "role_name",
+   "hidden": 0,
+   "label": "Role Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Route: Example \"/app\"",
+   "fieldname": "home_page",
+   "hidden": 0,
+   "label": "Home Page",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "restrict_to_domain",
+   "hidden": 0,
+   "label": "Restrict To Domain",
+   "links_to": "Domain",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "If disabled, this role will be removed from all users.",
+   "fieldname": "disabled",
+   "hidden": 0,
+   "label": "Disabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_custom",
+   "hidden": 0,
+   "label": "Is Custom",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "desk_access",
+   "hidden": 0,
+   "label": "Desk Access",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "two_factor_auth",
+   "hidden": 0,
+   "label": "Two Factor Authentication",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  }
+ ],
+ "lede": "A role: a set of rights given to users. The install makes your app's own.",
+ "name": "Role",
+ "single": 0,
+ "slug": "role",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "",
+ "written_elsewhere": ""
+}

@@ -1,0 +1,111 @@
+{
+ "area": "Stock and stores",
+ "description": "A register book's running balance per register store and item, and whether its opening line exists. Written by the register door only.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "book",
+   "hidden": 0,
+   "label": "Book",
+   "links_to": "Retail Register Book",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "register_store",
+   "hidden": 0,
+   "label": "Register store",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "item",
+   "hidden": 0,
+   "label": "Item",
+   "links_to": "Item",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "item_name",
+   "hidden": 0,
+   "label": "Item name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "balance",
+   "hidden": 0,
+   "label": "Balance",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "has_opening",
+   "hidden": 0,
+   "label": "Opening line written",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "A loss in this book at this store makes a count of every item due by then; a register count of the item made at or after the loss clears it.",
+   "fieldname": "count_due_by",
+   "hidden": 0,
+   "label": "Count due by",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "When the last loss in this book at this store was written: a count made at or after it settles the count due.",
+   "fieldname": "last_loss_at",
+   "hidden": 0,
+   "label": "Last loss at",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  }
+ ],
+ "lede": "A register book's running balance, per item and store.",
+ "name": "Retail Register State",
+ "single": 0,
+ "slug": "retail_register_state",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "sample S41",
+ "written_elsewhere": "iVendNext keeps it with each line."
+}

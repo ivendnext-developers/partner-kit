@@ -15,4 +15,6 @@ Before any recipe, if the person asks how an iVendNext app runs, where the data 
 
 Before choosing a recipe, find the need's card in the needs catalogue: `python3 tools/needs/needs.py search <the customer's words>` gives its verdict and its door, and the door picks the recipe below (AGENTS.md, step 2). A need with no card is placed on the ladder by hand.
 
+**What you can use.** Before designing, read the developer's map ([`site/pages/map.md`](../site/pages/map.md), live at [developer.ivendnext.com/map.html](https://developer.ivendnext.com/map.html)): every endpoint in both directions, everything a manifest can add and every screen. A record type's fields, which are required and which read-only, are in [`api/records/`](../api/records/) (one file per record type). Answer *is there an endpoint for X* or *can I add a field to Y* from those, never from memory.
+
 Start any of them by telling the assistant: *"Read AGENTS.md, then follow the recipe in the ai folder that matches this need: …"*.

@@ -1,0 +1,51 @@
+{
+ "area": "The retailer's setup",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "server_ip",
+   "hidden": 0,
+   "label": "Server IP",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "port",
+   "hidden": 0,
+   "label": "Port",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "printer_name",
+   "hidden": 0,
+   "label": "Printer Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  }
+ ],
+ "lede": "A network label printer's address, which the till prints labels to from every frame.",
+ "name": "Network Printer Settings",
+ "single": 0,
+ "slug": "network_printer_settings",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "contract label_layout",
+ "written_elsewhere": ""
+}

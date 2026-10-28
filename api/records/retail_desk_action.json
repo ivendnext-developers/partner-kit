@@ -1,0 +1,354 @@
+{
+ "area": "Your app: its install, its user and its doors",
+ "description": "A partner's button on a Desk form or list: who sees it, when, what it asks and which fields it sends. System Manager only.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The shop record whose form (and list) shows the button, for example Sales Order.",
+   "fieldname": "record_type",
+   "hidden": 0,
+   "label": "Record type",
+   "links_to": "DocType",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The button's words, for example Assign pick route. At most 40 characters.",
+   "fieldname": "label",
+   "hidden": 0,
+   "label": "Label",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Optional: the form's button menu it sits in, for example Warehouse.",
+   "fieldname": "group",
+   "hidden": 0,
+   "label": "Menu",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enabled",
+   "hidden": 0,
+   "label": "Enabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "form",
+    "list",
+    "both"
+   ],
+   "description": "form: a button on a saved record. list: in the Actions menu, for up to 100 ticked records.",
+   "fieldname": "placement",
+   "hidden": 0,
+   "label": "Shown on",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The partner service that answers this button. Its consent covers exactly the fields below.",
+   "fieldname": "service",
+   "hidden": 0,
+   "label": "Partner service",
+   "links_to": "Retail Extension Subscription",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Only a user with one of these roles sees the button, and the server refuses anyone else.",
+   "fieldname": "roles",
+   "hidden": 0,
+   "label": "Roles",
+   "links_to": "Has Role",
+   "read_only": 0,
+   "required": 1,
+   "type": "Table MultiSelect"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "on_draft",
+   "hidden": 0,
+   "label": "On a draft",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "on_submitted",
+   "hidden": 0,
+   "label": "On a submitted record",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "on_cancelled",
+   "hidden": 0,
+   "label": "On a cancelled record",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Optional, one per line: workflow states, or statuses if the record type has no workflow.",
+   "fieldname": "states",
+   "hidden": 0,
+   "label": "Only in these states",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Small Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Optional: up to three field conditions, all of which must hold.",
+   "fieldname": "conditions",
+   "hidden": 0,
+   "label": "Only when",
+   "links_to": "Retail Save Rule Condition",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Up to ten typed inputs the dialog asks for before sending.",
+   "fieldname": "inputs",
+   "hidden": 0,
+   "label": "Inputs",
+   "links_to": "Retail Desk Action Input",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Optional: a sentence the user reads before the button sends.",
+   "fieldname": "confirm_text",
+   "hidden": 0,
+   "label": "Confirm sentence",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Comma-separated, a table's fields in brackets: name, items(item_code, qty). Money is in minor units with currency. A change asks for consent again.",
+   "fieldname": "send_fields",
+   "hidden": 0,
+   "label": "Fields sent",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Small Text"
+  }
+ ],
+ "lede": "A button on a form or a list that calls your service. A manifest installs it.",
+ "name": "Retail Desk Action",
+ "single": 0,
+ "slug": "retail_desk_action",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Has Role": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "role",
+     "hidden": 0,
+     "label": "Role",
+     "links_to": "Role",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  },
+  "Retail Desk Action Input": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "Lower case letters, digits and _; the key the service receives.",
+     "fieldname": "fieldname",
+     "hidden": 0,
+     "label": "Field name",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "label",
+     "hidden": 0,
+     "label": "Label",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Data",
+      "Int",
+      "Float",
+      "Date",
+      "Select",
+      "Link",
+      "Check",
+      "Small Text"
+     ],
+     "description": "",
+     "fieldname": "fieldtype",
+     "hidden": 0,
+     "label": "Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "Select: one choice per line. Link: the record type.",
+     "fieldname": "options",
+     "hidden": 0,
+     "label": "Options",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Small Text"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "reqd",
+     "hidden": 0,
+     "label": "Required",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "default",
+     "hidden": 0,
+     "label": "Default",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    }
+   ]
+  },
+  "Retail Save Rule Condition": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "field",
+     "hidden": 0,
+     "label": "Field",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "=",
+      "!=",
+      ">",
+      ">=",
+      "<",
+      "<=",
+      "is set",
+      "is not set",
+      "in"
+     ],
+     "description": "",
+     "fieldname": "operator",
+     "hidden": 0,
+     "label": "Operator",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "For in: up to 10 values, separated by commas (count_per_day rules only).",
+     "fieldname": "value",
+     "hidden": 0,
+     "label": "Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    }
+   ]
+  }
+ },
+ "why": "contract desk_action; recipe call_centre_orders; recipe desk_action; recipe expiry_markdown",
+ "written_elsewhere": ""
+}

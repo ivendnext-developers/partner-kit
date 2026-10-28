@@ -110,7 +110,7 @@ The App library card names every address your app sends data to, and the install
 
 ### Is there a list of all the iVendNext endpoints, fields and screens an app can use?
 
-Yes, in four places today: the [API reference](api.md) for the record calls, [`api/README.md`](../../api/README.md) for the `ivendnext_mpos.api.v1` methods, [chapter 9](../../guide/09_points_and_requests.md) for every extension point iVendNext calls on your service, and [chapter 13a](../../guide/13a_screens_and_ux.md) for the screens. The developer's map, *What you can use* (`map.html`), puts them on one page with every record type and its fields.
+Yes, in four places today: the [API reference](api.md) for the record calls, [`api/README.md`](../../api/README.md) for the `ivendnext_mpos.api.v1` methods, [chapter 9](../../guide/09_points_and_requests.md) for every extension point iVendNext calls on your service, and [chapter 13a](../../guide/13a_screens_and_ux.md) for the screens. [The developer's map, *What you can use*](map.md), puts them on one page with [every record type and its fields](site:records/index.html).
 
 ### Can my app add a field to the sale, or its own record types and fields?
 

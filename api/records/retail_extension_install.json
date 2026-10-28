@@ -1,0 +1,116 @@
+{
+ "area": "Your app: its install, its user and its doors",
+ "description": "The installer's own record of everything it made for one app, in order. Written by the installer only.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "app",
+   "hidden": 0,
+   "label": "App",
+   "links_to": "",
+   "read_only": 1,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "prefix",
+   "hidden": 0,
+   "label": "Prefix",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "version",
+   "hidden": 0,
+   "label": "Version",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "installing",
+    "installed",
+    "failed",
+    "uninstalled"
+   ],
+   "description": "",
+   "fieldname": "status",
+   "hidden": 0,
+   "label": "Status",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "export_file",
+   "hidden": 0,
+   "label": "Export saved as",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "items",
+   "hidden": 0,
+   "label": "Created (JSON, in order)",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Long Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "manifest",
+   "hidden": 0,
+   "label": "Manifest (JSON)",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Long Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "log",
+   "hidden": 0,
+   "label": "Log",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Long Text"
+  }
+ ],
+ "lede": "The record of one install: every element it made, so an uninstall removes exactly those. Written only by the install.",
+ "name": "Retail Extension Install",
+ "single": 0,
+ "slug": "retail_extension_install",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "",
+ "written_elsewhere": "only the install writes it."
+}

@@ -1,0 +1,1091 @@
+{
+ "areas": [
+  "Sales and returns",
+  "Till sales",
+  "Items",
+  "Prices and price lists",
+  "Customers and groups",
+  "Stock and stores",
+  "Batches and serial numbers",
+  "Loyalty",
+  "Gift cards",
+  "Coupons and promotions",
+  "Payments and payment methods",
+  "Purchase and transfer documents",
+  "The retailer's setup",
+  "Your app: its install, its user and its doors"
+ ],
+ "records": [
+  {
+   "area": "Sales and returns",
+   "fields": 172,
+   "name": "Sales Invoice",
+   "single": 0,
+   "slug": "sales_invoice",
+   "submittable": 1,
+   "tables": 10,
+   "why": "openapi.yaml; api/validate.sh; guide chapter 02; recipe bulk_reads; recipe customer_history_page; recipe price_checker; recipe print_pack; recipe webhook_receiver; sample S2; sample S29; sample S3; sample S39; sample S41; sample S43; the MCP server; the request collection; retail core"
+  },
+  {
+   "area": "Sales and returns",
+   "fields": 104,
+   "name": "Sales Order",
+   "single": 0,
+   "slug": "sales_order",
+   "submittable": 1,
+   "tables": 7,
+   "why": "recipe call_centre_orders; recipe click_and_collect; sample S16; sample S33; sample S35; sample S39; retail core"
+  },
+  {
+   "area": "Sales and returns",
+   "fields": 107,
+   "name": "Delivery Note",
+   "single": 0,
+   "slug": "delivery_note",
+   "submittable": 1,
+   "tables": 5,
+   "why": "recipe click_and_collect; sample S33; sample S39; sample S41; retail core"
+  },
+  {
+   "area": "Sales and returns",
+   "fields": 81,
+   "name": "Quotation",
+   "single": 0,
+   "slug": "quotation",
+   "submittable": 1,
+   "tables": 7,
+   "why": "retail core"
+  },
+  {
+   "area": "Till sales",
+   "fields": 219,
+   "name": "POS Invoice",
+   "single": 0,
+   "slug": "pos_invoice",
+   "submittable": 1,
+   "tables": 19,
+   "why": "openapi.yaml; contract fiscal_reader; guide chapter 01c; guide chapter 10; recipe customer_history_page; recipe duty_free_allowance; recipe gift_card_on_spend; recipe loyalty_provider; recipe lucky_draw; recipe portal; recipe post_sale_feedback; recipe receipt_format; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe webhook_receiver; sample S13; sample S2; sample S22; sample S25; sample S3; sample S36; sample S4; sample S41; sample S43; sample S49; sample S52; sample S9; the MCP server; the feed client; the request collection; retail core"
+  },
+  {
+   "area": "Till sales",
+   "fields": 92,
+   "name": "POS Profile",
+   "single": 0,
+   "slug": "pos_profile",
+   "submittable": 0,
+   "tables": 8,
+   "why": "openapi.yaml; contract receipt; guide chapter 04; recipe approvals_stores; recipe configure_no_code; recipe connected_app; recipe customers_by_store; recipe lucky_draw; recipe post_sale_feedback; recipe receipt_format; recipe required_sale_details; sample S49; the MCP server; the request collection; retail core"
+  },
+  {
+   "area": "Till sales",
+   "fields": 24,
+   "name": "POS Opening Entry",
+   "single": 0,
+   "slug": "pos_opening_entry",
+   "submittable": 1,
+   "tables": 3,
+   "why": "retail core"
+  },
+  {
+   "area": "Till sales",
+   "fields": 30,
+   "name": "POS Closing Entry",
+   "single": 0,
+   "slug": "pos_closing_entry",
+   "submittable": 1,
+   "tables": 6,
+   "why": "recipe ai_manager; recipe bi_feed; sample S9; retail core"
+  },
+  {
+   "area": "Till sales",
+   "fields": 24,
+   "name": "Retail Open Check",
+   "single": 0,
+   "slug": "retail_open_check",
+   "submittable": 0,
+   "tables": 1,
+   "why": "guide chapter 07"
+  },
+  {
+   "area": "Till sales",
+   "fields": 4,
+   "name": "Retail Floor Section",
+   "single": 0,
+   "slug": "retail_floor_section",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 07"
+  },
+  {
+   "area": "Till sales",
+   "fields": 7,
+   "name": "Retail Floor Place",
+   "single": 0,
+   "slug": "retail_floor_place",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 07"
+  },
+  {
+   "area": "Items",
+   "fields": 104,
+   "name": "Item",
+   "single": 0,
+   "slug": "item",
+   "submittable": 0,
+   "tables": 11,
+   "why": "openapi.yaml; api/README.md; contract fields; guide chapter 02; guide chapter 07; recipe age_check; recipe bulk_reads; recipe duty_free_allowance; recipe integration_user; recipe optical_prescriptions; recipe print_pack; recipe stock_alerts; recipe system_sync; sample S2; sample S23; sample S27; sample S36; sample S37; sample S39; sample S40; sample S42; sample S45; the MCP server; the kit's tool sign_in; the request collection; retail core"
+  },
+  {
+   "area": "Items",
+   "fields": 12,
+   "name": "Item Group",
+   "single": 0,
+   "slug": "item_group",
+   "submittable": 0,
+   "tables": 2,
+   "why": "recipe age_check; recipe duty_free_allowance; recipe optical_prescriptions; sample S31; sample S36; sample S37; sample S38; sample S39; sample S42; retail core"
+  },
+  {
+   "area": "Items",
+   "fields": 3,
+   "name": "UOM",
+   "single": 0,
+   "slug": "uom",
+   "submittable": 0,
+   "tables": 0,
+   "why": "retail core"
+  },
+  {
+   "area": "Items",
+   "fields": 4,
+   "name": "Brand",
+   "single": 0,
+   "slug": "brand",
+   "submittable": 0,
+   "tables": 1,
+   "why": "retail core"
+  },
+  {
+   "area": "Prices and price lists",
+   "fields": 19,
+   "name": "Item Price",
+   "single": 0,
+   "slug": "item_price",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 01c; guide chapter 07; recipe approvals; recipe approvals_stores; recipe derived_price_lists; recipe estate_rollout; recipe expiry_markdown; recipe print_pack; recipe system_sync; sample S11; sample S14; sample S23; sample S26; retail core"
+  },
+  {
+   "area": "Prices and price lists",
+   "fields": 7,
+   "name": "Price List",
+   "single": 0,
+   "slug": "price_list",
+   "submittable": 0,
+   "tables": 1,
+   "why": "card price-list-with-photos; guide chapter 07; recipe approvals; recipe estate_rollout; sample S29; retail core"
+  },
+  {
+   "area": "Prices and price lists",
+   "fields": 61,
+   "name": "Pricing Rule",
+   "single": 0,
+   "slug": "pricing_rule",
+   "submittable": 0,
+   "tables": 3,
+   "why": "retail core"
+  },
+  {
+   "area": "Customers and groups",
+   "fields": 60,
+   "name": "Customer",
+   "single": 0,
+   "slug": "customer",
+   "submittable": 0,
+   "tables": 5,
+   "why": "openapi.yaml; contract fields; recipe customer_code_check; recipe customer_history_page; recipe loyalty_provider; recipe optical_prescriptions; recipe print_pack; sample S22; sample S25; sample S39; sample S42; sample S43; sample S49; sample S52; the MCP server; the request collection; retail core"
+  },
+  {
+   "area": "Customers and groups",
+   "fields": 10,
+   "name": "Customer Group",
+   "single": 0,
+   "slug": "customer_group",
+   "submittable": 0,
+   "tables": 2,
+   "why": "guide chapter 04; recipe configure_no_code; recipe coupon_rules; recipe customer_code_check; recipe customer_owned_loyalty; recipe customers_by_store; recipe gift_card_on_spend; recipe lucky_draw; recipe payment_method_rules; recipe required_sale_details; recipe rule_guard; sample S46; sample S47; sample S48; sample S50; retail core"
+  },
+  {
+   "area": "Customers and groups",
+   "fields": 8,
+   "name": "Territory",
+   "single": 0,
+   "slug": "territory",
+   "submittable": 0,
+   "tables": 1,
+   "why": "recipe call_centre_orders; sample S35; retail core"
+  },
+  {
+   "area": "Customers and groups",
+   "fields": 16,
+   "name": "Address",
+   "single": 0,
+   "slug": "address",
+   "submittable": 0,
+   "tables": 1,
+   "why": "guide chapter 04; recipe receipt_format; retail core"
+  },
+  {
+   "area": "Customers and groups",
+   "fields": 25,
+   "name": "Contact",
+   "single": 0,
+   "slug": "contact",
+   "submittable": 0,
+   "tables": 3,
+   "why": "retail core"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 31,
+   "name": "Warehouse",
+   "single": 0,
+   "slug": "warehouse",
+   "submittable": 0,
+   "tables": 0,
+   "why": "openapi.yaml; guide chapter 04; recipe customers_by_store; recipe desk_action; recipe estate_rollout; the MCP server; the request collection; retail core"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 15,
+   "name": "Bin",
+   "single": 0,
+   "slug": "bin",
+   "submittable": 0,
+   "tables": 0,
+   "why": "openapi.yaml; recipe connected_app; recipe restaurant_back_office; recipe stock_alerts; the MCP server; the request collection; retail core"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 53,
+   "name": "Stock Entry",
+   "single": 0,
+   "slug": "stock_entry",
+   "submittable": 1,
+   "tables": 2,
+   "why": "openapi.yaml; api/README.md; guide chapter 05; recipe connected_app; sample S40; sample S45; the MCP server; the request collection; retail core"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 14,
+   "name": "Stock Reconciliation",
+   "single": 0,
+   "slug": "stock_reconciliation",
+   "submittable": 1,
+   "tables": 1,
+   "why": "recipe merge_documents; sample S28; sample S41; retail core"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 31,
+   "name": "Stock Ledger Entry",
+   "single": 0,
+   "slug": "stock_ledger_entry",
+   "submittable": 0,
+   "tables": 0,
+   "why": "recipe restaurant_back_office; retail core"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 22,
+   "name": "Material Request",
+   "single": 0,
+   "slug": "material_request",
+   "submittable": 1,
+   "tables": 1,
+   "why": "retail core"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 83,
+   "name": "Company",
+   "single": 0,
+   "slug": "company",
+   "submittable": 0,
+   "tables": 0,
+   "why": "recipe lucky_draw; retail core"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 52,
+   "name": "Retail Register Line",
+   "single": 0,
+   "slug": "retail_register_line",
+   "submittable": 1,
+   "tables": 0,
+   "why": "contract register_books; sample S41"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 12,
+   "name": "Retail Register Period",
+   "single": 0,
+   "slug": "retail_register_period",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 07; recipe regulated_register; sample S41"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 8,
+   "name": "Retail Register State",
+   "single": 0,
+   "slug": "retail_register_state",
+   "submittable": 0,
+   "tables": 0,
+   "why": "sample S41"
+  },
+  {
+   "area": "Batches and serial numbers",
+   "fields": 18,
+   "name": "Batch",
+   "single": 0,
+   "slug": "batch",
+   "submittable": 0,
+   "tables": 0,
+   "why": "recipe expiry_markdown; recipe stock_alerts; sample S23; sample S40; retail core"
+  },
+  {
+   "area": "Batches and serial numbers",
+   "fields": 24,
+   "name": "Serial No",
+   "single": 0,
+   "slug": "serial_no",
+   "submittable": 0,
+   "tables": 0,
+   "why": "openapi.yaml; recipe units_as_serials; the MCP server; the request collection; retail core"
+  },
+  {
+   "area": "Batches and serial numbers",
+   "fields": 21,
+   "name": "Serial and Batch Bundle",
+   "single": 0,
+   "slug": "serial_and_batch_bundle",
+   "submittable": 1,
+   "tables": 1,
+   "why": "openapi.yaml; api/README.md; recipe stock_alerts; the MCP server; the request collection; retail core"
+  },
+  {
+   "area": "Loyalty",
+   "fields": 17,
+   "name": "Loyalty Plan",
+   "single": 0,
+   "slug": "loyalty_plan",
+   "submittable": 0,
+   "tables": 5,
+   "why": "retail core"
+  },
+  {
+   "area": "Loyalty",
+   "fields": 11,
+   "name": "Loyalty Journal",
+   "single": 0,
+   "slug": "loyalty_journal",
+   "submittable": 0,
+   "tables": 0,
+   "why": "retail core"
+  },
+  {
+   "area": "Gift cards",
+   "fields": 18,
+   "name": "Gift Card",
+   "single": 0,
+   "slug": "gift_card",
+   "submittable": 0,
+   "tables": 0,
+   "why": "recipe gift_card_on_spend; retail core"
+  },
+  {
+   "area": "Gift cards",
+   "fields": 14,
+   "name": "Gift Card Master",
+   "single": 0,
+   "slug": "gift_card_master",
+   "submittable": 0,
+   "tables": 0,
+   "why": "retail core"
+  },
+  {
+   "area": "Coupons and promotions",
+   "fields": 30,
+   "name": "Coupon",
+   "single": 0,
+   "slug": "coupon",
+   "submittable": 0,
+   "tables": 5,
+   "why": "recipe coupon_rules; recipe rule_guard; sample S31; retail core"
+  },
+  {
+   "area": "Coupons and promotions",
+   "fields": 35,
+   "name": "Promotion Bonus Buys Master",
+   "single": 0,
+   "slug": "promotion_bonus_buys_master",
+   "submittable": 0,
+   "tables": 7,
+   "why": "sample S31; retail core"
+  },
+  {
+   "area": "Coupons and promotions",
+   "fields": 11,
+   "name": "Retail Coupon Draw",
+   "single": 0,
+   "slug": "retail_coupon_draw",
+   "submittable": 1,
+   "tables": 1,
+   "why": "guide chapter 07"
+  },
+  {
+   "area": "Payments and payment methods",
+   "fields": 29,
+   "name": "Mode of Payment",
+   "single": 0,
+   "slug": "mode_of_payment",
+   "submittable": 0,
+   "tables": 2,
+   "why": "recipe payment_method_rules; recipe refund_rules; retail core"
+  },
+  {
+   "area": "Payments and payment methods",
+   "fields": 68,
+   "name": "Payment Entry",
+   "single": 0,
+   "slug": "payment_entry",
+   "submittable": 1,
+   "tables": 3,
+   "why": "retail core"
+  },
+  {
+   "area": "Payments and payment methods",
+   "fields": 49,
+   "name": "Journal Entry",
+   "single": 0,
+   "slug": "journal_entry",
+   "submittable": 1,
+   "tables": 1,
+   "why": "recipe integration_user; the request collection"
+  },
+  {
+   "area": "Purchase and transfer documents",
+   "fields": 38,
+   "name": "Supplier",
+   "single": 0,
+   "slug": "supplier",
+   "submittable": 0,
+   "tables": 3,
+   "why": "retail core"
+  },
+  {
+   "area": "Purchase and transfer documents",
+   "fields": 100,
+   "name": "Purchase Order",
+   "single": 0,
+   "slug": "purchase_order",
+   "submittable": 1,
+   "tables": 5,
+   "why": "sample S34; retail core"
+  },
+  {
+   "area": "Purchase and transfer documents",
+   "fields": 95,
+   "name": "Purchase Receipt",
+   "single": 0,
+   "slug": "purchase_receipt",
+   "submittable": 1,
+   "tables": 4,
+   "why": "recipe expiry_recall; sample S22; sample S40; retail core"
+  },
+  {
+   "area": "Purchase and transfer documents",
+   "fields": 130,
+   "name": "Purchase Invoice",
+   "single": 0,
+   "slug": "purchase_invoice",
+   "submittable": 1,
+   "tables": 8,
+   "why": "retail core"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 26,
+   "name": "Retail Register Book",
+   "single": 0,
+   "slug": "retail_register_book",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract register_books; guide chapter 07; recipe manifest"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 8,
+   "name": "Retail Register Count",
+   "single": 0,
+   "slug": "retail_register_count",
+   "submittable": 1,
+   "tables": 1,
+   "why": "contract register_books; recipe regulated_register"
+  },
+  {
+   "area": "Stock and stores",
+   "fields": 12,
+   "name": "Retail Register Erasure",
+   "single": 0,
+   "slug": "retail_register_erasure",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract register_books; guide chapter 07"
+  },
+  {
+   "area": "Purchase and transfer documents",
+   "fields": 50,
+   "name": "Subcontracting Receipt",
+   "single": 0,
+   "slug": "subcontracting_receipt",
+   "submittable": 1,
+   "tables": 3,
+   "why": ""
+  },
+  {
+   "area": "Till sales",
+   "fields": 17,
+   "name": "Retail Open Check Claim",
+   "single": 0,
+   "slug": "retail_open_check_claim",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 07"
+  },
+  {
+   "area": "Till sales",
+   "fields": 9,
+   "name": "Retail Open Check Event",
+   "single": 0,
+   "slug": "retail_open_check_event",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 07"
+  },
+  {
+   "area": "Till sales",
+   "fields": 8,
+   "name": "Retail Kitchen Order",
+   "single": 0,
+   "slug": "retail_kitchen_order",
+   "submittable": 0,
+   "tables": 1,
+   "why": "contract open_check"
+  },
+  {
+   "area": "Till sales",
+   "fields": 11,
+   "name": "POS Terminal",
+   "single": 0,
+   "slug": "pos_terminal",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract label_layout"
+  },
+  {
+   "area": "Gift cards",
+   "fields": 3,
+   "name": "Gift Card Balance",
+   "single": 0,
+   "slug": "gift_card_balance",
+   "submittable": 1,
+   "tables": 0,
+   "why": "recipe gift_card_on_spend"
+  },
+  {
+   "area": "Sales and returns",
+   "fields": 9,
+   "name": "Sale Attribute",
+   "single": 0,
+   "slug": "sale_attribute",
+   "submittable": 0,
+   "tables": 0,
+   "why": "recipe required_sale_details"
+  },
+  {
+   "area": "Sales and returns",
+   "fields": 7,
+   "name": "Transaction Item Attribute",
+   "single": 0,
+   "slug": "transaction_item_attribute",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract label_layout; guide chapter 04; recipe capture; recipe configure_no_code"
+  },
+  {
+   "area": "Sales and returns",
+   "fields": 5,
+   "name": "Reason Code Master",
+   "single": 0,
+   "slug": "reason_code_master",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 04; recipe configure_no_code"
+  },
+  {
+   "area": "Loyalty",
+   "fields": 11,
+   "name": "Loyalty Point Entry",
+   "single": 0,
+   "slug": "loyalty_point_entry",
+   "submittable": 0,
+   "tables": 0,
+   "why": ""
+  },
+  {
+   "area": "Payments and payment methods",
+   "fields": 19,
+   "name": "Payment Ledger Entry",
+   "single": 0,
+   "slug": "payment_ledger_entry",
+   "submittable": 0,
+   "tables": 0,
+   "why": ""
+  },
+  {
+   "area": "Payments and payment methods",
+   "fields": 11,
+   "name": "Payment Account",
+   "single": 0,
+   "slug": "payment_account",
+   "submittable": 0,
+   "tables": 1,
+   "why": "recipe payment_connector; recipe wallet"
+  },
+  {
+   "area": "Payments and payment methods",
+   "fields": 27,
+   "name": "Payment Connection",
+   "single": 0,
+   "slug": "payment_connection",
+   "submittable": 0,
+   "tables": 0,
+   "why": "recipe payment_connector; recipe wallet"
+  },
+  {
+   "area": "Payments and payment methods",
+   "fields": 23,
+   "name": "Payment Refund",
+   "single": 0,
+   "slug": "payment_refund",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract paygw"
+  },
+  {
+   "area": "Items",
+   "fields": 5,
+   "name": "Item Label Printing",
+   "single": 0,
+   "slug": "item_label_printing",
+   "submittable": 0,
+   "tables": 1,
+   "why": "guide chapter 12"
+  },
+  {
+   "area": "Items",
+   "fields": 7,
+   "name": "Barcode Mask",
+   "single": 0,
+   "slug": "barcode_mask",
+   "submittable": 0,
+   "tables": 1,
+   "why": "contract label_layout"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 73,
+   "name": "Retail Setting",
+   "single": 1,
+   "slug": "retail_setting",
+   "submittable": 0,
+   "tables": 0,
+   "why": "card staff-discount-monthly-allowance; guide chapter 04; recipe configure_no_code"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 8,
+   "name": "Currency",
+   "single": 0,
+   "slug": "currency",
+   "submittable": 0,
+   "tables": 0,
+   "why": "recipe desk_action"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 25,
+   "name": "Print Format",
+   "single": 0,
+   "slug": "print_format",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract receipt; recipe receipt_format"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 24,
+   "name": "Notification",
+   "single": 0,
+   "slug": "notification",
+   "submittable": 0,
+   "tables": 1,
+   "why": "recipe configure_no_code; recipe customer_code_check; recipe event_feed; recipe post_sale_feedback"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 20,
+   "name": "Auto Email Report",
+   "single": 0,
+   "slug": "auto_email_report",
+   "submittable": 0,
+   "tables": 0,
+   "why": ""
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 39,
+   "name": "Process Statement Of Accounts",
+   "single": 0,
+   "slug": "process_statement_of_accounts",
+   "submittable": 0,
+   "tables": 4,
+   "why": "card debtors-statement; guide chapter 04"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 18,
+   "name": "Webhook",
+   "single": 0,
+   "slug": "webhook",
+   "submittable": 0,
+   "tables": 2,
+   "why": "recipe webhook_receiver"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 8,
+   "name": "Webhook Request Log",
+   "single": 0,
+   "slug": "webhook_request_log",
+   "submittable": 0,
+   "tables": 0,
+   "why": "recipe webhook_receiver"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 9,
+   "name": "Workflow",
+   "single": 0,
+   "slug": "workflow",
+   "submittable": 0,
+   "tables": 2,
+   "why": ""
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 3,
+   "name": "Workflow State",
+   "single": 0,
+   "slug": "workflow_state",
+   "submittable": 0,
+   "tables": 0,
+   "why": ""
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 8,
+   "name": "Workflow Action",
+   "single": 0,
+   "slug": "workflow_action",
+   "submittable": 0,
+   "tables": 1,
+   "why": "recipe integration_user"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 7,
+   "name": "Role",
+   "single": 0,
+   "slug": "role",
+   "submittable": 0,
+   "tables": 0,
+   "why": ""
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 3,
+   "name": "Network Printer Settings",
+   "single": 0,
+   "slug": "network_printer_settings",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract label_layout"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 41,
+   "name": "Stock Settings",
+   "single": 1,
+   "slug": "stock_settings",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 04"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 3,
+   "name": "Item Variant Settings",
+   "single": 1,
+   "slug": "item_variant_settings",
+   "submittable": 0,
+   "tables": 1,
+   "why": "recipe age_check; recipe restaurant_back_office"
+  },
+  {
+   "area": "The retailer's setup",
+   "fields": 11,
+   "name": "OAuth Client",
+   "single": 0,
+   "slug": "oauth_client",
+   "submittable": 0,
+   "tables": 1,
+   "why": "recipe portal; recipe sign_in"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 28,
+   "name": "Retail Extension Package",
+   "single": 0,
+   "slug": "retail_extension_package",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 07; guide chapter 08; guide chapter 14a; recipe approvals; recipe manifest"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 8,
+   "name": "Retail Extension Install",
+   "single": 0,
+   "slug": "retail_extension_install",
+   "submittable": 0,
+   "tables": 0,
+   "why": ""
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 28,
+   "name": "Retail Extension Subscription",
+   "single": 0,
+   "slug": "retail_extension_subscription",
+   "submittable": 0,
+   "tables": 2,
+   "why": "contract desk_action; contract partner_capture; contract partner_check; contract partner_fulfil; contract partner_page; contract payer; contract price; guide chapter 09; recipe call_centre_orders; recipe configure_no_code; recipe desk_action; recipe expiry_markdown; recipe optical_prescriptions; recipe rule_guard"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 20,
+   "name": "Retail Extension Log",
+   "single": 0,
+   "slug": "retail_extension_log",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract desk_action; contract doccheck; contract partner_capture; contract partner_check; guide chapter 09; recipe document_check"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 13,
+   "name": "Retail Extension Module",
+   "single": 0,
+   "slug": "retail_extension_module",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract partner_check; contract price; guide chapter 07; guide chapter 08; guide chapter 09; recipe configure_no_code; recipe manifest"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 15,
+   "name": "Retail Desk Action",
+   "single": 0,
+   "slug": "retail_desk_action",
+   "submittable": 0,
+   "tables": 3,
+   "why": "contract desk_action; recipe call_centre_orders; recipe desk_action; recipe expiry_markdown"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 16,
+   "name": "Retail Remote App Key",
+   "single": 0,
+   "slug": "retail_remote_app_key",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract remote_till_key; guide chapter 06; guide chapter 13; recipe ai_till_key; recipe point_handler"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 36,
+   "name": "Retail Save Rule",
+   "single": 0,
+   "slug": "retail_save_rule",
+   "submittable": 0,
+   "tables": 1,
+   "why": "contract save_rules; recipe event_feed; recipe save_rules"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 29,
+   "name": "Retail Override Request",
+   "single": 0,
+   "slug": "retail_override_request",
+   "submittable": 0,
+   "tables": 0,
+   "why": "recipe till_guard"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 12,
+   "name": "Retail Scan Source",
+   "single": 0,
+   "slug": "retail_scan_source",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract scan_source; recipe unit_codes"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 6,
+   "name": "Retail List Mark",
+   "single": 0,
+   "slug": "retail_list_mark",
+   "submittable": 0,
+   "tables": 1,
+   "why": "card products-on-promotion-colour; contract list_mark; guide chapter 07"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 7,
+   "name": "Retail Label Layout",
+   "single": 0,
+   "slug": "retail_label_layout",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract label_layout; guide chapter 14a"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 10,
+   "name": "Retail Fiscal Reader",
+   "single": 0,
+   "slug": "retail_fiscal_reader",
+   "submittable": 0,
+   "tables": 3,
+   "why": "contract fiscal_reader"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 8,
+   "name": "Retail Fiscal Regime Config",
+   "single": 0,
+   "slug": "retail_fiscal_regime_config",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract fiscal_reader"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 24,
+   "name": "Retail Partner Code",
+   "single": 0,
+   "slug": "retail_partner_code",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract partner_fulfil"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 54,
+   "name": "Retail Permission",
+   "single": 0,
+   "slug": "retail_permission",
+   "submittable": 0,
+   "tables": 0,
+   "why": "contract open_check; recipe open_check"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 77,
+   "name": "User",
+   "single": 0,
+   "slug": "user",
+   "submittable": 0,
+   "tables": 6,
+   "why": "recipe customer_history_page; recipe integration_user"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 7,
+   "name": "User Permission",
+   "single": 0,
+   "slug": "user_permission",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 04; recipe approvals; recipe approvals_stores; recipe estate_rollout; recipe portal"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 11,
+   "name": "Comment",
+   "single": 0,
+   "slug": "comment",
+   "submittable": 0,
+   "tables": 0,
+   "why": "openapi.yaml; recipe merge_documents; the MCP server; the request collection"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 4,
+   "name": "Registered Application",
+   "single": 0,
+   "slug": "registered_application",
+   "submittable": 0,
+   "tables": 1,
+   "why": "contract event_feed; recipe event_feed; recipe integration_user; recipe system_sync"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 7,
+   "name": "Integration Sync Log",
+   "single": 0,
+   "slug": "integration_sync_log",
+   "submittable": 0,
+   "tables": 0,
+   "why": "guide chapter 05; recipe event_feed"
+  },
+  {
+   "area": "Your app: its install, its user and its doors",
+   "fields": 9,
+   "name": "Prepared Report",
+   "single": 0,
+   "slug": "prepared_report",
+   "submittable": 0,
+   "tables": 0,
+   "why": "recipe shop_reports"
+  }
+ ],
+ "release": "POS 2.1.0.667 (till app 60147699c)"
+}

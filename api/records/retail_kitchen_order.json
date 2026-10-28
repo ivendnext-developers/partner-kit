@@ -1,0 +1,305 @@
+{
+ "area": "Till sales",
+ "description": "What one sale sent to the kitchen, ticket by ticket. Written by the till.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "pos_profile",
+   "hidden": 0,
+   "label": "Register",
+   "links_to": "POS Profile",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "terminal",
+   "hidden": 0,
+   "label": "Till",
+   "links_to": "POS Terminal",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "sale_ref",
+   "hidden": 0,
+   "label": "Sale",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "service_mode",
+   "hidden": 0,
+   "label": "Service Mode",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "call_number",
+   "hidden": 0,
+   "label": "Call Number",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "last_ticket",
+   "hidden": 0,
+   "label": "Tickets",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "held_lines",
+   "hidden": 1,
+   "label": "Held Back",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Long Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "lines",
+   "hidden": 0,
+   "label": "Lines",
+   "links_to": "Retail Kitchen Order Line",
+   "read_only": 1,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "What one sale sent to the kitchen, ticket by ticket. Written by the till.",
+ "name": "Retail Kitchen Order",
+ "single": 0,
+ "slug": "retail_kitchen_order",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Retail Kitchen Order Line": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Send",
+      "Void"
+     ],
+     "description": "",
+     "fieldname": "kind",
+     "hidden": 0,
+     "label": "Kind",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "ticket",
+     "hidden": 0,
+     "label": "Ticket",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "station",
+     "hidden": 0,
+     "label": "Station",
+     "links_to": "Retail Kitchen Station",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "item_code",
+     "hidden": 0,
+     "label": "Item",
+     "links_to": "Item",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "item_name",
+     "hidden": 0,
+     "label": "Item Name",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "uom",
+     "hidden": 0,
+     "label": "Unit",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "qty",
+     "hidden": 0,
+     "label": "Quantity",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "note",
+     "hidden": 0,
+     "label": "Note",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Small Text"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "option_of",
+     "hidden": 0,
+     "label": "Option Of",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Small Text"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "signature",
+     "hidden": 0,
+     "label": "Line",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Small Text"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "handed",
+      "agent",
+      "failed",
+      "window"
+     ],
+     "description": "window = handed to the till's own print window while it was offline",
+     "fieldname": "state",
+     "hidden": 0,
+     "label": "State",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "sent_at",
+     "hidden": 0,
+     "label": "Sent At",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Datetime"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "sent_by",
+     "hidden": 0,
+     "label": "Sent By",
+     "links_to": "User",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "The till's id for a ticket line it printed while offline (each is written once)",
+     "fieldname": "mark",
+     "hidden": 0,
+     "label": "Offline mark",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "The open check's line this ticket line carried (empty for a sale's ticket).",
+     "fieldname": "check_line",
+     "hidden": 0,
+     "label": "Check Line",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    }
+   ]
+  }
+ },
+ "why": "contract open_check",
+ "written_elsewhere": "the till writes it."
+}

@@ -1,0 +1,122 @@
+{
+ "area": "The retailer's setup",
+ "description": "Currency list stores the currency value, its symbol and fraction unit",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "currency_name",
+   "hidden": 0,
+   "label": "Currency Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enabled",
+   "hidden": 0,
+   "label": "Enabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Sub-currency. For e.g. \"Cent\"",
+   "fieldname": "fraction",
+   "hidden": 0,
+   "label": "Fraction",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "1 Currency = [?] Fraction For e.g. 1 USD = 100 Cent",
+   "fieldname": "fraction_units",
+   "hidden": 0,
+   "label": "Fraction Units",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Smallest circulating fraction unit (coin). For e.g. 1 cent for USD and it should be entered as 0.01",
+   "fieldname": "smallest_currency_fraction_value",
+   "hidden": 0,
+   "label": "Smallest Currency Fraction Value",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "A symbol for this currency. For e.g. $",
+   "fieldname": "symbol",
+   "hidden": 0,
+   "label": "Symbol",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "symbol_on_right",
+   "hidden": 0,
+   "label": "Show Currency Symbol on Right Side",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "#,###.##",
+    "#.###,##",
+    "# ###.##",
+    "# ###,##",
+    "#'###.##",
+    "#, ###.##",
+    "#,##,###.##",
+    "#,###.###",
+    "#.###",
+    "#,###"
+   ],
+   "description": "How should this currency be formatted? If not set, will use system defaults",
+   "fieldname": "number_format",
+   "hidden": 0,
+   "label": "Number Format",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  }
+ ],
+ "lede": "A currency, with its symbol and the number of decimals.",
+ "name": "Currency",
+ "single": 0,
+ "slug": "currency",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "recipe desk_action",
+ "written_elsewhere": ""
+}

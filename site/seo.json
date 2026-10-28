@@ -22,6 +22,8 @@
     "starters.html": "Starting points for connecting a local ERP, payment gateway or wallet, loyalty provider, messaging gateway or delivery app to iVendNext.",
     "hosting.html": "Run your app's service on iVendNext App Hosting or on your own cloud: the two side by side, who can host with CitiXsys, the plans, and the builder's journey.",
     "security.html": "How a retailer and your app trust each other: its consent, your app's own user, the signed call and its check, rotation, and the till when your app is down.",
+    "map.html": "Every iVendNext API endpoint your app calls and every call iVendNext makes to your service, everything a manifest can add, and every screen you can build.",
+    "records/index.html": "Every record type a partner app reads or writes in a retailer's iVendNext, with its fields: which are required, which are read-only, and what each links to.",
     "api.html": "Every record call the kit's samples make to an iVendNext site: each address with its method, purpose, parameters, sign-in and answers, from the kit's API file.",
     "reference_apps.html": "Working code to start from: samples that show one way into iVendNext with their tests, and reference apps that combine several, with the door each one uses.",
     "samples/index.html": "Small working examples of each way into iVendNext, with their tests: pick the nearest to your project, run it against your sandbox and change it.",

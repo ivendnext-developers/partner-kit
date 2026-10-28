@@ -1,0 +1,393 @@
+{
+ "area": "Your app: its install, its user and its doors",
+ "description": "One partner service answering one extension point, with the shop's consent. Only a System Manager keeps these records.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "What this service does. Pick from the list.",
+   "fieldname": "point",
+   "hidden": 0,
+   "label": "Extension point",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Autocomplete"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "partner_name",
+   "hidden": 0,
+   "label": "Partner",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Autocomplete"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "What a cashier or a Desk user sees. At most 40 characters.",
+   "fieldname": "label",
+   "hidden": 0,
+   "label": "Label",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enabled",
+   "hidden": 0,
+   "label": "Enabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "When several services answer one extension point, the lower number is asked first.",
+   "fieldname": "sequence",
+   "hidden": 0,
+   "label": "Order",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Empty: every POS Profile.",
+   "fieldname": "scope",
+   "hidden": 0,
+   "label": "Only for these POS Profiles",
+   "links_to": "Retail Extension Subscription Profile",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table MultiSelect"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "remote",
+    "wasm"
+   ],
+   "description": "remote: the partner's service at the address below. wasm: a partner module in iVendNext.",
+   "fieldname": "transport",
+   "hidden": 0,
+   "label": "Answered by",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The admitted module that answers this extension point inside the shop.",
+   "fieldname": "module",
+   "hidden": 0,
+   "label": "Partner module",
+   "links_to": "Retail Extension Module",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The partner's HTTPS address. One signed request per call, and redirects are not followed.",
+   "fieldname": "endpoint_url",
+   "hidden": 0,
+   "label": "Address",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Shared with the partner to sign each request. Never shown on the till or in an error log.",
+   "fieldname": "secret",
+   "hidden": 0,
+   "label": "Signing secret",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Password"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Each extension point sets its own default and maximum.",
+   "fieldname": "timeout_seconds",
+   "hidden": 0,
+   "label": "Time to answer (seconds)",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "If the service can't be reached: an answer the extension point allows. Empty: its first.",
+   "fieldname": "down_answer",
+   "hidden": 0,
+   "label": "When the service is down",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Autocomplete"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Some extension points only. Scan: {\"event\": \"scan\", \"item_groups\": [\"Restricted\"]}; a quantity change: the same with \"qty_change\". Customer: {\"event\": \"customer_add\"} or \"customer_select\". A partner's code (fulfil): {\"item_groups\": [\"Vouchers\"]}.",
+   "fieldname": "settings",
+   "hidden": 0,
+   "label": "Settings for this extension point",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Code"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Lets a check answer approve. Off by default. Needs a manager, not the cashier, with May Approve a Partner's Check and Retail Override Request write.",
+   "fieldname": "may_approve",
+   "hidden": 0,
+   "label": "May ask for a manager's approval",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "For a check that verifies each pack, such as a national track-and-trace service. Off by default. Ticking or clearing it changes what is sent, so tick the consent again.",
+   "fieldname": "check_send_lots",
+   "hidden": 0,
+   "label": "Send each line's lot and serial number",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Cap on a module's cut, as % of the line after promotions. 0 (default): the module does not run. Set only by a System Manager, never by a package.",
+   "fieldname": "max_discount_percent",
+   "hidden": 0,
+   "label": "Most a module may take off a line (%)",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Percent"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Till key",
+    "Desk page",
+    "Till key and Desk page"
+   ],
+   "description": "",
+   "fieldname": "page_placement",
+   "hidden": 0,
+   "label": "Where it opens",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "page_roles",
+   "hidden": 0,
+   "label": "Who may open the Desk page",
+   "links_to": "Has Role",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table MultiSelect"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "page_send_user",
+   "hidden": 0,
+   "label": "Send the signed-in user's id",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "page_send_sale",
+   "hidden": 0,
+   "label": "Send the sale as the till holds it",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "page_returns_message",
+   "hidden": 0,
+   "label": "The page may answer with a message",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "page_returns_sale_attributes",
+   "hidden": 0,
+   "label": "The page may answer with sale details",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Page height as % of the till screen, 40 to 100 (default 100). Tablets show it full height.",
+   "fieldname": "page_height",
+   "hidden": 0,
+   "label": "Height on the till (%)",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The shop's consent. Each extension point's details show here once ticked. A new address, or a release changing the list, clears it.",
+   "fieldname": "consent_given",
+   "hidden": 0,
+   "label": "The shop agrees to send these details to this address",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "consent_by",
+   "hidden": 0,
+   "label": "Recorded by",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "consent_on",
+   "hidden": 0,
+   "label": "Recorded on",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "consent_url",
+   "hidden": 0,
+   "label": "Address consented to",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "consent_fields",
+   "hidden": 0,
+   "label": "Details consented to",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Small Text"
+  }
+ ],
+ "lede": "Your service at one extension point: its address, time limit, down answer, consent and the registers it answers. A manifest installs it switched off.",
+ "name": "Retail Extension Subscription",
+ "single": 0,
+ "slug": "retail_extension_subscription",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Has Role": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "role",
+     "hidden": 0,
+     "label": "Role",
+     "links_to": "Role",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  },
+  "Retail Extension Subscription Profile": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "pos_profile",
+     "hidden": 0,
+     "label": "POS Profile",
+     "links_to": "POS Profile",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "contract desk_action; contract partner_capture; contract partner_check; contract partner_fulfil; contract partner_page; contract payer; contract price; guide chapter 09; recipe call_centre_orders; recipe configure_no_code; recipe desk_action; recipe expiry_markdown; recipe optical_prescriptions; recipe rule_guard",
+ "written_elsewhere": ""
+}

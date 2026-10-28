@@ -1,0 +1,609 @@
+{
+ "area": "The retailer's setup",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [
+    "General Ledger",
+    "Accounts Receivable"
+   ],
+   "description": "",
+   "fieldname": "report",
+   "hidden": 0,
+   "label": "Report",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "from_date",
+   "hidden": 0,
+   "label": "From Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "posting_date",
+   "hidden": 0,
+   "label": "Posting Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "company",
+   "hidden": 0,
+   "label": "Company",
+   "links_to": "Company",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "account",
+   "hidden": 0,
+   "label": "Account",
+   "links_to": "Account",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Group by Voucher",
+    "Group by Voucher (Consolidated)"
+   ],
+   "description": "",
+   "fieldname": "group_by",
+   "hidden": 0,
+   "label": "Group By",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "cost_center",
+   "hidden": 0,
+   "label": "Cost Center",
+   "links_to": "PSOA Cost Center",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table MultiSelect"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "territory",
+   "hidden": 0,
+   "label": "Territory",
+   "links_to": "Territory",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "ignore_exchange_rate_revaluation_journals",
+   "hidden": 0,
+   "label": "Ignore Exchange Rate Revaluation Journals",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "ignore_cr_dr_notes",
+   "hidden": 0,
+   "label": "Ignore System Generated Credit / Debit Notes",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "to_date",
+   "hidden": 0,
+   "label": "To Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "finance_book",
+   "hidden": 0,
+   "label": "Finance Book",
+   "links_to": "Finance Book",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "currency",
+   "hidden": 0,
+   "label": "Currency",
+   "links_to": "Currency",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "project",
+   "hidden": 0,
+   "label": "Project",
+   "links_to": "PSOA Project",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table MultiSelect"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "payment_terms_template",
+   "hidden": 0,
+   "label": "Payment Terms Template",
+   "links_to": "Payment Terms Template",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "sales_partner",
+   "hidden": 0,
+   "label": "Sales Partner",
+   "links_to": "Sales Partner",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "sales_person",
+   "hidden": 0,
+   "label": "Sales Person",
+   "links_to": "Sales Person",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "show_remarks",
+   "hidden": 0,
+   "label": "Show Remarks",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "based_on_payment_terms",
+   "hidden": 0,
+   "label": "Based On Payment Terms",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Customer Group",
+    "Territory",
+    "Sales Partner",
+    "Sales Person"
+   ],
+   "description": "",
+   "fieldname": "customer_collection",
+   "hidden": 0,
+   "label": "Select Customers By",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "collection_name",
+   "hidden": 0,
+   "label": "Recipient",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Dynamic Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "A customer must have primary contact email.",
+   "fieldname": "primary_mandatory",
+   "hidden": 0,
+   "label": "Send To Primary Contact",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "show_net_values_in_party_account",
+   "hidden": 0,
+   "label": "Show Net Values in Party Account",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "customers",
+   "hidden": 0,
+   "label": "Customers",
+   "links_to": "Process Statement Of Accounts Customer",
+   "read_only": 0,
+   "required": 1,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Landscape",
+    "Portrait"
+   ],
+   "description": "",
+   "fieldname": "orientation",
+   "hidden": 0,
+   "label": "Orientation",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "include_break",
+   "hidden": 0,
+   "label": "Page Break After Each SoA",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "include_ageing",
+   "hidden": 0,
+   "label": "Include Ageing Summary",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Due Date",
+    "Posting Date"
+   ],
+   "description": "",
+   "fieldname": "ageing_based_on",
+   "hidden": 0,
+   "label": "Ageing Based On",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "letter_head",
+   "hidden": 0,
+   "label": "Letter Head",
+   "links_to": "Letter Head",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "terms_and_conditions",
+   "hidden": 0,
+   "label": "Terms and Conditions",
+   "links_to": "Terms and Conditions",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enable_auto_email",
+   "hidden": 0,
+   "label": "Enable Auto Email",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "sender",
+   "hidden": 0,
+   "label": "Sender",
+   "links_to": "Email Account",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Weekly",
+    "Monthly",
+    "Quarterly"
+   ],
+   "description": "",
+   "fieldname": "frequency",
+   "hidden": 0,
+   "label": "Frequency",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "filter_duration",
+   "hidden": 0,
+   "label": "Filter Duration (Months)",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "start_date",
+   "hidden": 0,
+   "label": "Start Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "pdf_name",
+   "hidden": 0,
+   "label": "PDF Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "subject",
+   "hidden": 0,
+   "label": "Subject",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "cc_to",
+   "hidden": 0,
+   "label": "CC To",
+   "links_to": "Process Statement Of Accounts CC",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table MultiSelect"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "body",
+   "hidden": 0,
+   "label": "Body",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Text Editor"
+  }
+ ],
+ "lede": "Customer statements, printed or sent on a schedule.",
+ "name": "Process Statement Of Accounts",
+ "single": 0,
+ "slug": "process_statement_of_accounts",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "PSOA Cost Center": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "cost_center_name",
+     "hidden": 0,
+     "label": "Cost Center",
+     "links_to": "Cost Center",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    }
+   ]
+  },
+  "PSOA Project": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "project_name",
+     "hidden": 0,
+     "label": "Project",
+     "links_to": "Project",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  },
+  "Process Statement Of Accounts CC": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "cc",
+     "hidden": 0,
+     "label": "CC",
+     "links_to": "User",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  },
+  "Process Statement Of Accounts Customer": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "customer",
+     "hidden": 0,
+     "label": "Customer",
+     "links_to": "Customer",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "customer_name",
+     "hidden": 0,
+     "label": "Customer Name",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "billing_email",
+     "hidden": 0,
+     "label": "Billing Email",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "primary_email",
+     "hidden": 0,
+     "label": "Primary Contact Email",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Read Only"
+    }
+   ]
+  }
+ },
+ "why": "card debtors-statement; guide chapter 04",
+ "written_elsewhere": ""
+}

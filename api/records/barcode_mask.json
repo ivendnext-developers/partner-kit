@@ -1,0 +1,164 @@
+{
+ "area": "Items",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "mask_id",
+   "hidden": 0,
+   "label": "Mask ID",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "description",
+   "hidden": 0,
+   "label": "Description",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Fixed Length",
+    "Delimiter"
+   ],
+   "description": "",
+   "fieldname": "mask_type",
+   "hidden": 0,
+   "label": "Mask Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "start_sentinel",
+   "hidden": 0,
+   "label": "Start Sentinel",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Total barcode body length excluding the 2-char Start Sentinel. Required for Fixed Length type.",
+   "fieldname": "barcode_length",
+   "hidden": 0,
+   "label": "Barcode Length",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Single delimiter character. Required for Delimiter type.",
+   "fieldname": "delimiter",
+   "hidden": 0,
+   "label": "Delimiter",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "mask_details",
+   "hidden": 0,
+   "label": "Mask Segments",
+   "links_to": "Barcode Mask Detail",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "A barcode's layout: which segments carry the item code and, on a scale's label, the price or the weight.",
+ "name": "Barcode Mask",
+ "single": 0,
+ "slug": "barcode_mask",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Barcode Mask Detail": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "mask_order",
+     "hidden": 0,
+     "label": "Order",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Item Barcode",
+      "Item Code",
+      "Price",
+      "Quantity",
+      "Serial or Batch",
+      "Expiry Date",
+      "Skip Characters"
+     ],
+     "description": "",
+     "fieldname": "value_type",
+     "hidden": 0,
+     "label": "Value Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "Character length of this segment. Required for Fixed Length masks.",
+     "fieldname": "segment_length",
+     "hidden": 0,
+     "label": "Length",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "Scale factor: encoding multiplies by this value, decoding divides by it (e.g. factor=100 means barcode stores cents; decoded: 250 ÷ 100 = 2.50).",
+     "fieldname": "factor",
+     "hidden": 0,
+     "label": "Factor",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Float"
+    }
+   ]
+  }
+ },
+ "why": "contract label_layout",
+ "written_elsewhere": ""
+}

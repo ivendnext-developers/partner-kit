@@ -4,7 +4,7 @@ This is the iVendNext partner kit. A person is using you to build something for 
 
 ## When the person asks how iVendNext apps work
 
-Where an app runs, whether it is Docker, where the customer's data lives, whether two customers collide, how many apps or containers to build, what publishing and hosting hand over: answer from `guide/01a_how_it_all_works.md` (the plain answers, each proved in its Technical notes) and the questions page, `site/pages/questions.md`, never from what another platform does. How the data travels through a link to an outside system is chapter 1c, [`guide/01c_how_the_data_travels.md`](guide/01c_how_the_data_travels.md). One app end to end, with every command: `guide/01b_one_app_end_to_end.md`.
+Where an app runs, whether it is Docker, where the customer's data lives, whether two customers collide, how many apps or containers to build, what publishing and hosting hand over: answer from `guide/01a_how_it_all_works.md` (the plain answers, each proved in its Technical notes) and the questions page, `site/pages/questions.md`, never from what another platform does. How the data travels through a link to an outside system is chapter 1c, [`guide/01c_how_the_data_travels.md`](guide/01c_how_the_data_travels.md). One app end to end, with every command: `guide/01b_one_app_end_to_end.md`. What an app can call, change and add (every endpoint in both directions, every manifest kind, every screen, every record type with its fields): the developer's map, `site/pages/map.md`, and `api/records/`.
 
 ## What you may rely on
 
@@ -96,6 +96,8 @@ It prints one verdict line and exits non-zero on any refusal. **Report that line
 | A worked, tested sample per recipe | `samples/` (each has a README; the tests are in `samples/<name>/tests`) |
 | What each extension point accepts and refuses, as a schema with accepted and refused examples | `contracts/` |
 | The API: every call the samples make | `api/openapi.yaml`, `api/collection/` |
+| **Everything you can use on one map:** every endpoint your app calls and every one iVendNext calls on your service, everything a manifest can add, every screen | the developer's map, `site/pages/map.md` ([developer.ivendnext.com/map.html](https://developer.ivendnext.com/map.html)); read it before you design |
+| Every record type an app reads or writes, with its fields: type, required, read-only, what it links to | `api/records/<record type>.json` (one per record type; the list and why each is on it: `tools/records/records.py`), shown at [developer.ivendnext.com/records/](https://developer.ivendnext.com/records/index.html) |
 | The project blueprint to fill in first | `kit/blueprint.md` (how to fill it), `kit/blueprint_template.md` (the copy you fill) |
 | The extension points that exist today | `guide/09_points_and_requests.md` |
 | Sign in with iVendNext, receiving webhooks, the integration user | `recipes/sign_in.md`, `recipes/webhook_receiver.md`, `recipes/integration_user.md` |

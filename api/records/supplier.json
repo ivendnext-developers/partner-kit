@@ -1,0 +1,557 @@
+{
+ "area": "Purchase and transfer documents",
+ "description": "Supplier of Goods or Services.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [
+    "SUP-.YYYY.-"
+   ],
+   "description": "",
+   "fieldname": "naming_series",
+   "hidden": 0,
+   "label": "Series",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "supplier_name",
+   "hidden": 0,
+   "label": "Supplier Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "country",
+   "hidden": 0,
+   "label": "Country",
+   "links_to": "Country",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "supplier_group",
+   "hidden": 0,
+   "label": "Supplier Group",
+   "links_to": "Supplier Group",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Company",
+    "Individual",
+    "Partnership"
+   ],
+   "description": "",
+   "fieldname": "supplier_type",
+   "hidden": 0,
+   "label": "Supplier Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_transporter",
+   "hidden": 0,
+   "label": "Is Transporter",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "image",
+   "hidden": 1,
+   "label": "Image",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Attach Image"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "default_currency",
+   "hidden": 0,
+   "label": "Billing Currency",
+   "links_to": "Currency",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "default_bank_account",
+   "hidden": 0,
+   "label": "Default Company Bank Account",
+   "links_to": "Bank Account",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "default_price_list",
+   "hidden": 0,
+   "label": "Price List",
+   "links_to": "Price List",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_internal_supplier",
+   "hidden": 0,
+   "label": "Is Internal Supplier",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "represents_company",
+   "hidden": 0,
+   "label": "Represents Company",
+   "links_to": "Company",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "companies",
+   "hidden": 0,
+   "label": "Allowed To Transact With",
+   "links_to": "Allowed To Transact With",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Statutory info and other general information about your Supplier",
+   "fieldname": "supplier_details",
+   "hidden": 0,
+   "label": "Supplier Details",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "website",
+   "hidden": 0,
+   "label": "Website",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "language",
+   "hidden": 0,
+   "label": "Print Language",
+   "links_to": "Language",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "tax_id",
+   "hidden": 0,
+   "label": "Tax ID",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "tax_category",
+   "hidden": 0,
+   "label": "Tax Category",
+   "links_to": "Tax Category",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "tax_withholding_category",
+   "hidden": 0,
+   "label": "Tax Withholding Category",
+   "links_to": "Tax Withholding Category",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Reselect, if the chosen address is edited after save",
+   "fieldname": "supplier_primary_address",
+   "hidden": 0,
+   "label": "Supplier Primary Address",
+   "links_to": "Address",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "primary_address",
+   "hidden": 0,
+   "label": "Primary Address",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Reselect, if the chosen contact is edited after save",
+   "fieldname": "supplier_primary_contact",
+   "hidden": 0,
+   "label": "Supplier Primary Contact",
+   "links_to": "Contact",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "mobile_no",
+   "hidden": 0,
+   "label": "Mobile No",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Read Only"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "email_id",
+   "hidden": 0,
+   "label": "Email Id",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Read Only"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "payment_terms",
+   "hidden": 0,
+   "label": "Default Payment Terms Template",
+   "links_to": "Payment Terms Template",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Mention if non-standard payable account",
+   "fieldname": "accounts",
+   "hidden": 0,
+   "label": "Accounts",
+   "links_to": "Party Account",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "allow_purchase_invoice_creation_without_purchase_order",
+   "hidden": 0,
+   "label": "Allow Purchase Invoice Creation Without Purchase Order",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "allow_purchase_invoice_creation_without_purchase_receipt",
+   "hidden": 0,
+   "label": "Allow Purchase Invoice Creation Without Purchase Receipt",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_frozen",
+   "hidden": 0,
+   "label": "Is Frozen",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "disabled",
+   "hidden": 0,
+   "label": "Disabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "warn_rfqs",
+   "hidden": 1,
+   "label": "Warn RFQs",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "warn_pos",
+   "hidden": 1,
+   "label": "Warn POs",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "prevent_rfqs",
+   "hidden": 1,
+   "label": "Prevent RFQs",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "prevent_pos",
+   "hidden": 1,
+   "label": "Prevent POs",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "on_hold",
+   "hidden": 0,
+   "label": "Block Supplier",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "All",
+    "Invoices",
+    "Payments"
+   ],
+   "description": "",
+   "fieldname": "hold_type",
+   "hidden": 0,
+   "label": "Hold Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Leave blank if the Supplier is blocked indefinitely",
+   "fieldname": "release_date",
+   "hidden": 0,
+   "label": "Release Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "portal_users",
+   "hidden": 0,
+   "label": "Supplier Portal Users",
+   "links_to": "Portal User",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "A business the retailer buys from.",
+ "name": "Supplier",
+ "single": 0,
+ "slug": "supplier",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Allowed To Transact With": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "company",
+     "hidden": 0,
+     "label": "Company",
+     "links_to": "Company",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    }
+   ]
+  },
+  "Party Account": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "company",
+     "hidden": 0,
+     "label": "Company",
+     "links_to": "Company",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "account",
+     "hidden": 0,
+     "label": "Default Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "advance_account",
+     "hidden": 0,
+     "label": "Advance Account",
+     "links_to": "Account",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  },
+  "Portal User": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "user",
+     "hidden": 0,
+     "label": "User",
+     "links_to": "User",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "retail core",
+ "written_elsewhere": ""
+}

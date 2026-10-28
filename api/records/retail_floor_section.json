@@ -1,0 +1,63 @@
+{
+ "area": "Till sales",
+ "description": "A part of a store's floor (the terrace, the bar). Its tables and seats are Floor Places.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "store",
+   "hidden": 0,
+   "label": "Store",
+   "links_to": "Warehouse",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "section_name",
+   "hidden": 0,
+   "label": "Section",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Lower numbers show first.",
+   "fieldname": "sort_order",
+   "hidden": 0,
+   "label": "Order",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "active",
+   "hidden": 0,
+   "label": "Active",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  }
+ ],
+ "lede": "An area of a restaurant's floor, such as the terrace, holding its tables.",
+ "name": "Retail Floor Section",
+ "single": 0,
+ "slug": "retail_floor_section",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "guide chapter 07",
+ "written_elsewhere": ""
+}

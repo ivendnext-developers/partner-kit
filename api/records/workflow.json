@@ -1,0 +1,342 @@
+{
+ "area": "The retailer's setup",
+ "description": "Defines workflow states and rules for a document.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "workflow_name",
+   "hidden": 0,
+   "label": "Workflow Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "DocType on which this Workflow is applicable.",
+   "fieldname": "document_type",
+   "hidden": 0,
+   "label": "Document Type",
+   "links_to": "DocType",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "If checked, all other workflows become inactive.",
+   "fieldname": "is_active",
+   "hidden": 0,
+   "label": "Is Active",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "If Checked workflow status will not override status in list view",
+   "fieldname": "override_status",
+   "hidden": 0,
+   "label": "Don't Override Status",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Emails will be sent with next possible workflow actions",
+   "fieldname": "send_email_alert",
+   "hidden": 0,
+   "label": "Send Email Alert",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "All possible Workflow States and roles of the workflow. Docstatus Options: 0 is \"Saved\", 1 is \"Submitted\" and 2 is \"Cancelled\"",
+   "fieldname": "states",
+   "hidden": 0,
+   "label": "Document States",
+   "links_to": "Workflow Document State",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Rules defining transition of state in the workflow.",
+   "fieldname": "transitions",
+   "hidden": 0,
+   "label": "Transitions",
+   "links_to": "Workflow Transition",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Field that represents the Workflow State of the transaction (if field is not present, a new hidden Custom Field will be created)",
+   "fieldname": "workflow_state_field",
+   "hidden": 0,
+   "label": "Workflow State Field",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "workflow_data",
+   "hidden": 1,
+   "label": "Workflow Data",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "JSON"
+  }
+ ],
+ "lede": "The approval states of a record type and who may move a record between them. A manifest can install one.",
+ "name": "Workflow",
+ "single": 0,
+ "slug": "workflow",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Workflow Document State": {
+   "description": "Represents the states allowed in one document and role assigned to change the state.",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "state",
+     "hidden": 0,
+     "label": "State",
+     "links_to": "Workflow State",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "0",
+      "1",
+      "2"
+     ],
+     "description": "0 - Draft; 1 - Submitted; 2 - Cancelled",
+     "fieldname": "doc_status",
+     "hidden": 0,
+     "label": "Doc Status",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "update_field",
+     "hidden": 0,
+     "label": "Update Field",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "update_value",
+     "hidden": 0,
+     "label": "Update Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "Workflow Action is not created for optional states",
+     "fieldname": "is_optional_state",
+     "hidden": 0,
+     "label": "Is Optional State",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "If Checked workflow status will not override status in list view",
+     "fieldname": "avoid_status_override",
+     "hidden": 0,
+     "label": "Don't Override Status",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "next_action_email_template",
+     "hidden": 0,
+     "label": "Next Action Email Template",
+     "links_to": "Email Template",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "allow_edit",
+     "hidden": 0,
+     "label": "Only Allow Edit For",
+     "links_to": "Role",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "message",
+     "hidden": 0,
+     "label": "Message",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Text"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "workflow_builder_id",
+     "hidden": 1,
+     "label": "Workflow Builder ID",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    }
+   ]
+  },
+  "Workflow Transition": {
+   "description": "Defines actions on states and the next step and allowed roles.",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "state",
+     "hidden": 0,
+     "label": "State",
+     "links_to": "Workflow State",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "action",
+     "hidden": 0,
+     "label": "Action",
+     "links_to": "Workflow Action Master",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "next_state",
+     "hidden": 0,
+     "label": "Next State",
+     "links_to": "Workflow State",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "allowed",
+     "hidden": 0,
+     "label": "Allowed",
+     "links_to": "Role",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "Allow approval for creator of the document",
+     "fieldname": "allow_self_approval",
+     "hidden": 0,
+     "label": "Allow Self Approval",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "condition",
+     "hidden": 0,
+     "label": "Condition",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Code"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "workflow_builder_id",
+     "hidden": 1,
+     "label": "Workflow Builder ID",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    }
+   ]
+  }
+ },
+ "why": "",
+ "written_elsewhere": ""
+}

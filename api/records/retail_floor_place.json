@@ -1,0 +1,104 @@
+{
+ "area": "Till sales",
+ "description": "A table, a bar seat or a room a check can be opened at.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "section",
+   "hidden": 0,
+   "label": "Section",
+   "links_to": "Retail Floor Section",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "store",
+   "hidden": 0,
+   "label": "Store",
+   "links_to": "Warehouse",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "What the floor shows, e.g. Table 12.",
+   "fieldname": "label",
+   "hidden": 0,
+   "label": "Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "table",
+    "bar_seat",
+    "room",
+    "other"
+   ],
+   "description": "",
+   "fieldname": "kind",
+   "hidden": 0,
+   "label": "Kind",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "default_covers",
+   "hidden": 0,
+   "label": "Usual Party Size",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Lower numbers show first.",
+   "fieldname": "sort_order",
+   "hidden": 0,
+   "label": "Order",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "active",
+   "hidden": 0,
+   "label": "Active",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  }
+ ],
+ "lede": "One table or seat on the floor, where a check is opened.",
+ "name": "Retail Floor Place",
+ "single": 0,
+ "slug": "retail_floor_place",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "guide chapter 07",
+ "written_elsewhere": ""
+}

@@ -1,0 +1,851 @@
+{
+ "area": "Till sales",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "period_start_date",
+   "hidden": 0,
+   "label": "Period Start Date",
+   "links_to": "",
+   "read_only": 1,
+   "required": 1,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "period_end_date",
+   "hidden": 0,
+   "label": "Period End Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "posting_date",
+   "hidden": 0,
+   "label": "Posting Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "posting_time",
+   "hidden": 0,
+   "label": "Posting Time",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Time"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "pos_opening_entry",
+   "hidden": 0,
+   "label": "POS Opening Entry",
+   "links_to": "POS Opening Entry",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Draft",
+    "Submitted",
+    "Queued",
+    "Failed",
+    "Cancelled"
+   ],
+   "description": "",
+   "fieldname": "status",
+   "hidden": 1,
+   "label": "Status",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "company",
+   "hidden": 0,
+   "label": "Company",
+   "links_to": "Company",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_pos_terminal",
+   "hidden": 0,
+   "label": "POS Terminal",
+   "links_to": "POS Terminal",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "pos_profile",
+   "hidden": 0,
+   "label": "POS Profile",
+   "links_to": "POS Profile",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "user",
+   "hidden": 0,
+   "label": "Cashier",
+   "links_to": "User",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "pos_transactions",
+   "hidden": 0,
+   "label": "POS Transactions",
+   "links_to": "POS Invoice Reference",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "payment_reconciliation",
+   "hidden": 0,
+   "label": "Payment Reconciliation",
+   "links_to": "POS Closing Entry Detail",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_currency_denomination_count",
+   "hidden": 0,
+   "label": "Currency Denomination Count",
+   "links_to": "Currency Denomination Count",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_tender_count_detail",
+   "hidden": 0,
+   "label": "Tender Count Detail",
+   "links_to": "Tender Count Detail",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_cash_in_out_detail",
+   "hidden": 0,
+   "label": "Cash In Out Detail",
+   "links_to": "Cash In Out",
+   "read_only": 1,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "grand_total",
+   "hidden": 0,
+   "label": "Grand Total",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "net_total",
+   "hidden": 0,
+   "label": "Net Total",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "total_quantity",
+   "hidden": 0,
+   "label": "Total Quantity",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_opening_amount",
+   "hidden": 0,
+   "label": "Opening Amount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_expected_drawer",
+   "hidden": 0,
+   "label": "Expected Drawer",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_cashin_cashout",
+   "hidden": 0,
+   "label": "Cash In/Cash Out",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_expenses",
+   "hidden": 0,
+   "label": "Expenses",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_sales",
+   "hidden": 0,
+   "label": "Sales",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_refunds",
+   "hidden": 0,
+   "label": "Refunds",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_gc_sales",
+   "hidden": 0,
+   "label": "Gift Card Sales",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_transaction_total",
+   "hidden": 0,
+   "label": "Transaction Total",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_total_no_of_transactions",
+   "hidden": 0,
+   "label": "Total Number of Transactions",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "taxes",
+   "hidden": 0,
+   "label": "Taxes",
+   "links_to": "POS Closing Entry Taxes",
+   "read_only": 1,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "error_message",
+   "hidden": 0,
+   "label": "Error",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Small Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "amended_from",
+   "hidden": 0,
+   "label": "Amended From",
+   "links_to": "POS Closing Entry",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  }
+ ],
+ "lede": "A till's day closed: the sales of the day counted, each payment method's takings compared with what the till recorded.",
+ "name": "POS Closing Entry",
+ "single": 0,
+ "slug": "pos_closing_entry",
+ "submittable": 1,
+ "table": 0,
+ "tables": {
+  "Cash In Out": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Cash In",
+      "Cash Out",
+      "Expense"
+     ],
+     "description": "",
+     "fieldname": "transaction_type",
+     "hidden": 0,
+     "label": "Transaction Type",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Reason Code Master",
+      "Store Expense Type"
+     ],
+     "description": "",
+     "fieldname": "master_type",
+     "hidden": 1,
+     "label": "Master Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "reason_code",
+     "hidden": 0,
+     "label": "Reason Code",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Dynamic Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "manager_override",
+     "hidden": 0,
+     "label": "Manager Override",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "comment",
+     "hidden": 0,
+     "label": "Comment",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "amount",
+     "hidden": 0,
+     "label": "Amount",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "created_by",
+     "hidden": 0,
+     "label": "Created By",
+     "links_to": "User",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "terminal",
+     "hidden": 0,
+     "label": "Terminal",
+     "links_to": "POS Terminal",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  },
+  "Currency Denomination Count": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "currency",
+     "hidden": 0,
+     "label": "Currency",
+     "links_to": "Currency",
+     "read_only": 1,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "denomination_type",
+     "hidden": 0,
+     "label": "Denomination Type",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "denomination_value",
+     "hidden": 0,
+     "label": "Denomination Value",
+     "links_to": "",
+     "read_only": 1,
+     "required": 1,
+     "type": "Currency"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "count",
+     "hidden": 0,
+     "label": "Count",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "amount",
+     "hidden": 0,
+     "label": "Amount",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Currency"
+    }
+   ]
+  },
+  "POS Closing Entry Detail": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "mode_of_payment",
+     "hidden": 0,
+     "label": "Mode of Payment",
+     "links_to": "Mode of Payment",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 1,
+     "choices": [],
+     "description": "",
+     "fieldname": "custom_currency",
+     "hidden": 0,
+     "label": "Currency",
+     "links_to": "Currency",
+     "read_only": 1,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "opening_amount",
+     "hidden": 0,
+     "label": "Opening Amount",
+     "links_to": "",
+     "read_only": 1,
+     "required": 1,
+     "type": "Currency"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "expected_amount",
+     "hidden": 0,
+     "label": "Expected Amount",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Currency"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "closing_amount",
+     "hidden": 0,
+     "label": "Closing Amount",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Currency"
+    },
+    {
+     "added": 1,
+     "choices": [],
+     "description": "Set when this tender's count is saved on the POS, so a counted zero is kept on reopening.",
+     "fieldname": "custom_mpos_counted",
+     "hidden": 0,
+     "label": "POS Counted",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "difference",
+     "hidden": 0,
+     "label": "Difference",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Currency"
+    },
+    {
+     "added": 1,
+     "choices": [],
+     "description": "",
+     "fieldname": "custom_count",
+     "hidden": 0,
+     "label": "Count",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 1,
+     "choices": [],
+     "description": "Set when the cashier submits a count for this tender, including a count of zero",
+     "fieldname": "custom_is_counted",
+     "hidden": 1,
+     "label": "Is Counted",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Check"
+    }
+   ]
+  },
+  "POS Closing Entry Taxes": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "account_head",
+     "hidden": 0,
+     "label": "Account Head",
+     "links_to": "Account",
+     "read_only": 1,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "rate",
+     "hidden": 0,
+     "label": "Tax Rate",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Percent"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "amount",
+     "hidden": 0,
+     "label": "Amount",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Currency"
+    }
+   ]
+  },
+  "POS Invoice Reference": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "pos_invoice",
+     "hidden": 0,
+     "label": "POS Invoice",
+     "links_to": "POS Invoice",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "posting_date",
+     "hidden": 0,
+     "label": "Date",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Date"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "customer",
+     "hidden": 0,
+     "label": "Customer",
+     "links_to": "Customer",
+     "read_only": 1,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "grand_total",
+     "hidden": 0,
+     "label": "Amount",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Currency"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "is_return",
+     "hidden": 0,
+     "label": "Is Return",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "return_against",
+     "hidden": 0,
+     "label": "Return Against",
+     "links_to": "POS Invoice",
+     "read_only": 1,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  },
+  "Tender Count Detail": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "mode_of_payment",
+     "hidden": 0,
+     "label": "Mode of Payment",
+     "links_to": "Mode of Payment",
+     "read_only": 1,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "transaction_id",
+     "hidden": 0,
+     "label": "Transaction ID",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "account_number",
+     "hidden": 0,
+     "label": "Card/Account Number",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "amount",
+     "hidden": 0,
+     "label": "Amount",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "verified",
+     "hidden": 0,
+     "label": "Verified",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    }
+   ]
+  }
+ },
+ "why": "recipe ai_manager; recipe bi_feed; sample S9; retail core",
+ "written_elsewhere": ""
+}

@@ -1,0 +1,925 @@
+{
+ "area": "Coupons and promotions",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "id",
+   "hidden": 0,
+   "label": "Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "has_valid_date",
+   "hidden": 0,
+   "label": "Has Effective Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "start_date",
+   "hidden": 0,
+   "label": "Start Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "end_date",
+   "hidden": 0,
+   "label": "End Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "minimum_bill_amount",
+   "hidden": 0,
+   "label": "Minimum Bill Amount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Percent",
+    "Amount"
+   ],
+   "description": "",
+   "fieldname": "discount_type",
+   "hidden": 0,
+   "label": "Discount Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "maximum_redemption_count",
+   "hidden": 0,
+   "label": "Maximum Redemption Count Per Store",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Bonus Buys",
+    "Fixed Price"
+   ],
+   "description": "",
+   "fieldname": "promotion_type",
+   "hidden": 0,
+   "label": "Promotion Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "active",
+   "hidden": 0,
+   "label": "Active",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "lowest_value",
+   "hidden": 0,
+   "label": "Lowest Value",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "sequence_number",
+   "hidden": 1,
+   "label": "Sequence Number",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "description",
+   "hidden": 0,
+   "label": "Description",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "has_valid_time",
+   "hidden": 0,
+   "label": "Has Effective Time",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "start_time",
+   "hidden": 0,
+   "label": "Start Time",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Time"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "end_time",
+   "hidden": 0,
+   "label": "End Time",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Time"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "minimum_quantity",
+   "hidden": 0,
+   "label": "Minimum Quantity",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "discount_percent",
+   "hidden": 0,
+   "label": "Discount",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "promotion_applicability_count",
+   "hidden": 0,
+   "label": "Promotion Applicability Count",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "can_repeat_in_transaction",
+   "hidden": 0,
+   "label": "Can Repeat In Transaction",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "exclude_discounted_items",
+   "hidden": 0,
+   "label": "Exclude Discounted Items",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "apply_on_item_scan",
+   "hidden": 0,
+   "label": "Apply On Item Scan",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "is_apply_once",
+   "hidden": 0,
+   "label": "Apply Once Per Customer",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "total_redemption_count",
+   "hidden": 1,
+   "label": "Total Redemption Count",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "buy_optional_count",
+   "hidden": 0,
+   "label": "Buy Optional Count",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_buy_items",
+   "hidden": 0,
+   "label": "Buy Items",
+   "links_to": "Promotion Buy Side",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "get_optional_count",
+   "hidden": 0,
+   "label": "Get Optional Count",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "get_item_at_fixed_price",
+   "hidden": 0,
+   "label": "Get Item At Fixed Price",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_get_items",
+   "hidden": 0,
+   "label": "Get Items",
+   "links_to": "Promotion Get Side",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "The supplier who pays back part of this promotion's discount on each sale line.",
+   "fieldname": "custom_mpos_funding_supplier",
+   "hidden": 0,
+   "label": "Funded By Supplier",
+   "links_to": "Supplier",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_applicable_source",
+   "hidden": 0,
+   "label": "Applicable Source",
+   "links_to": "Promotion Applicability Detail",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_applicability",
+   "hidden": 0,
+   "label": "Duration",
+   "links_to": "Promotion Applicability",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_customer_special_days",
+   "hidden": 0,
+   "label": "Customer Special Days",
+   "links_to": "Promotion Customer Special Days",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_promotion_exclusion_list",
+   "hidden": 0,
+   "label": "Promotion Exclusion List",
+   "links_to": "Promotion Exclude Item",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_serials_batches",
+   "hidden": 0,
+   "label": "Serial Batch List",
+   "links_to": "Promotion Product Details",
+   "read_only": 1,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "Part of each line's promotional discount the supplier pays back. Not sale-level discounts.",
+   "fieldname": "custom_mpos_funding_share",
+   "hidden": 0,
+   "label": "Supplier's Share",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Percent"
+  }
+ ],
+ "lede": "A promotion: what the customer buys, what they get, in which stores and when.",
+ "name": "Promotion Bonus Buys Master",
+ "single": 0,
+ "slug": "promotion_bonus_buys_master",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Promotion Applicability": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+     ],
+     "description": "",
+     "fieldname": "day",
+     "hidden": 0,
+     "label": "Day",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "enabled",
+     "hidden": 0,
+     "label": "Enabled",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "start_time",
+     "hidden": 0,
+     "label": "Start Time",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Time"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "end_time",
+     "hidden": 0,
+     "label": "End Time",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Time"
+    }
+   ]
+  },
+  "Promotion Applicability Detail": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Warehouse"
+     ],
+     "description": "",
+     "fieldname": "source_type",
+     "hidden": 0,
+     "label": "Source Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "source",
+     "hidden": 0,
+     "label": "Source",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Dynamic Link"
+    }
+   ]
+  },
+  "Promotion Buy Side": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Item",
+      "Item Group"
+     ],
+     "description": "",
+     "fieldname": "source_type",
+     "hidden": 0,
+     "label": "Product Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "source_key",
+     "hidden": 0,
+     "label": "Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Dynamic Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "description",
+     "hidden": 0,
+     "label": "Description",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "uom",
+     "hidden": 0,
+     "label": "UOM",
+     "links_to": "UOM",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "quantity",
+     "hidden": 0,
+     "label": "Quantity",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "amount",
+     "hidden": 0,
+     "label": "Amount",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "is_mandatory",
+     "hidden": 0,
+     "label": "Mandatory",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Amount",
+      "Percent"
+     ],
+     "description": "",
+     "fieldname": "discount_type",
+     "hidden": 0,
+     "label": "Discount Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "discount",
+     "hidden": 0,
+     "label": "Discount",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Float"
+    }
+   ]
+  },
+  "Promotion Customer Special Days": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Birthday",
+      "Anniversary"
+     ],
+     "description": "",
+     "fieldname": "special_days_type",
+     "hidden": 0,
+     "label": "Special Days Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Day",
+      "Week",
+      "Month",
+      "DaysBackwardForward"
+     ],
+     "description": "",
+     "fieldname": "special_days_duration",
+     "hidden": 0,
+     "label": "Duration",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "backward_day",
+     "hidden": 0,
+     "label": "Backward Day",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "forward_day",
+     "hidden": 0,
+     "label": "Forward Day",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    }
+   ]
+  },
+  "Promotion Exclude Item": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Item",
+      "Item Group",
+      "Customer Group"
+     ],
+     "description": "",
+     "fieldname": "source_type",
+     "hidden": 0,
+     "label": "Source Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "source",
+     "hidden": 0,
+     "label": "Source",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Dynamic Link"
+    }
+   ]
+  },
+  "Promotion Get Side": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Item",
+      "Item Group",
+      "Coupon",
+      "Gift Card"
+     ],
+     "description": "",
+     "fieldname": "source_type",
+     "hidden": 0,
+     "label": "Product Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Item",
+      "Item Group",
+      "Coupon"
+     ],
+     "description": "",
+     "fieldname": "source_type_internal",
+     "hidden": 1,
+     "label": "Source Type Internal",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "source_key",
+     "hidden": 0,
+     "label": "Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Dynamic Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "description",
+     "hidden": 0,
+     "label": "Description",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "uom",
+     "hidden": 0,
+     "label": "UOM",
+     "links_to": "UOM",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "quantity",
+     "hidden": 0,
+     "label": "Quantity",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Amount",
+      "Percent"
+     ],
+     "description": "",
+     "fieldname": "discount_type",
+     "hidden": 0,
+     "label": "Discount Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "discount",
+     "hidden": 0,
+     "label": "Discount",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "is_mandatory",
+     "hidden": 0,
+     "label": "Mandatory",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "auto_add_in_transaction",
+     "hidden": 1,
+     "label": "Show Prompt",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    }
+   ]
+  },
+  "Promotion Product Details": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "item_code",
+     "hidden": 0,
+     "label": "Item Code",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "serial_number",
+     "hidden": 0,
+     "label": "Serial Number",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "batch_number",
+     "hidden": 0,
+     "label": "Batch Number",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    }
+   ]
+  }
+ },
+ "why": "sample S31; retail core",
+ "written_elsewhere": ""
+}

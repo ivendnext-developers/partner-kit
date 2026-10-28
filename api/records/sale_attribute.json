@@ -1,0 +1,126 @@
+{
+ "area": "Sales and returns",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "attribute_name",
+   "hidden": 0,
+   "label": "Attribute Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "No Validation",
+    "DocType"
+   ],
+   "description": "",
+   "fieldname": "validation_type",
+   "hidden": 0,
+   "label": "Validation Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "doctype_name",
+   "hidden": 0,
+   "label": "DocType Name",
+   "links_to": "DocType",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "regex_pattern",
+   "hidden": 0,
+   "label": "RegEx Pattern",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "sequence",
+   "hidden": 0,
+   "label": "Sequence",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "default_value",
+   "hidden": 0,
+   "label": "Default Value",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "required",
+   "hidden": 0,
+   "label": "Required",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "active",
+   "hidden": 0,
+   "label": "Active",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "Prints this detail and its value on the standard receipt when a sale carries it.",
+   "fieldname": "custom_mpos_print_on_receipt",
+   "hidden": 0,
+   "label": "Print on the receipt",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  }
+ ],
+ "lede": "A detail the retailer collects on a sale, such as a delivery number or a boarding pass; a till sale carries its values in its *Sale Attributes* table.",
+ "name": "Sale Attribute",
+ "single": 0,
+ "slug": "sale_attribute",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "recipe required_sale_details",
+ "written_elsewhere": ""
+}

@@ -82,3 +82,6 @@ telecom, telco, mobile operator, network operator, mobile network, carrier
 data flow, dataflow, data travels, data path, sequence diagram, hop by hop
 integration, integrate, integrating, interface, link to another system
 mobile plan, phone plan, tariff plan, airtime plan, sim plan
+api, api call, api method, web service, rest api
+screen, user interface, ui, front end, frontend
+record type, doctype, data model, entity

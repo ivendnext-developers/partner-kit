@@ -1,0 +1,208 @@
+{
+ "area": "Items",
+ "description": "Print labels with item information, prices, and barcodes.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "format",
+   "hidden": 0,
+   "label": "Format",
+   "links_to": "Thermal Label",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "None",
+    "Stock Entry",
+    "Purchase Receipt"
+   ],
+   "description": "",
+   "fieldname": "source",
+   "hidden": 1,
+   "label": "Source",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "warehouse",
+   "hidden": 0,
+   "label": "Store",
+   "links_to": "Warehouse",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "image_url",
+   "hidden": 0,
+   "label": "Preview",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Attach Image"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_printing_detail",
+   "hidden": 0,
+   "label": "table_printing_detail",
+   "links_to": "Item Label Printing Detail",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "A list of item labels waiting to be printed, filled by a handheld and printed from the back office.",
+ "name": "Item Label Printing",
+ "single": 0,
+ "slug": "item_label_printing",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Item Label Printing Detail": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "item",
+     "hidden": 0,
+     "label": "Item",
+     "links_to": "Item",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "description",
+     "hidden": 0,
+     "label": "Description",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "quantity_to_print",
+     "hidden": 0,
+     "label": "Quantity To Print",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "price",
+     "hidden": 0,
+     "label": "Price",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Currency"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "serial_batch_number",
+     "hidden": 0,
+     "label": "Serial / Batch Number",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Dynamic Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "bar_code",
+     "hidden": 0,
+     "label": "Bar Code",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "weight",
+     "hidden": 0,
+     "label": "Weight",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "uom",
+     "hidden": 0,
+     "label": "UOM",
+     "links_to": "UOM",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "store",
+     "hidden": 1,
+     "label": "Store",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Serial No",
+      "Batch"
+     ],
+     "description": "",
+     "fieldname": "serial_batch_doctype",
+     "hidden": 1,
+     "label": "Serial / Batch DocType",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    }
+   ]
+  }
+ },
+ "why": "guide chapter 12",
+ "written_elsewhere": ""
+}

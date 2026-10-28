@@ -1,0 +1,102 @@
+{
+ "area": "Your app: its install, its user and its doors",
+ "description": "A shelf or item label the till prints, its placeholders filled in by iVendNext (price, barcode, batch dates). Grant Print to who may print labels.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The name the till shows, for example: Shelf label 50 x 25.",
+   "fieldname": "label_name",
+   "hidden": 0,
+   "label": "Layout name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "html",
+    "zpl"
+   ],
+   "description": "html: printed via the device's print dialog, to any printer it reaches. zpl: Zebra commands for the counter till's label printer (POS Terminal).",
+   "fieldname": "kind",
+   "hidden": 0,
+   "label": "Kind",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enabled",
+   "hidden": 0,
+   "label": "Enabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "One label's width, 10 to 150 mm.",
+   "fieldname": "width_mm",
+   "hidden": 0,
+   "label": "Width (mm)",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "One label's height, 10 to 150 mm.",
+   "fieldname": "height_mm",
+   "hidden": 0,
+   "label": "Height (mm)",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Float"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "1 for a roll. More for a sheet with labels side by side (up to 10).",
+   "fieldname": "per_row",
+   "hidden": 0,
+   "label": "Labels per row",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Placeholders such as {item_code} {item_name} {barcode} {price} {uom}. No scripts or forms. Full list and zpl rules: the label layouts guide.",
+   "fieldname": "template",
+   "hidden": 0,
+   "label": "Template",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Code"
+  }
+ ],
+ "lede": "A label's layout, filled by the till and printed on any printer it can reach.",
+ "name": "Retail Label Layout",
+ "single": 0,
+ "slug": "retail_label_layout",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "contract label_layout; guide chapter 14a",
+ "written_elsewhere": ""
+}

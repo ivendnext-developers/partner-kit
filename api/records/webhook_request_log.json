@@ -1,0 +1,111 @@
+{
+ "area": "The retailer's setup",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "webhook",
+   "hidden": 0,
+   "label": "Webhook",
+   "links_to": "Webhook",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "reference_document",
+   "hidden": 0,
+   "label": "Reference Document",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "headers",
+   "hidden": 0,
+   "label": "Headers",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Code"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "data",
+   "hidden": 0,
+   "label": "Data",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Code"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "user",
+   "hidden": 0,
+   "label": "User",
+   "links_to": "User",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "url",
+   "hidden": 0,
+   "label": "URL",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "response",
+   "hidden": 0,
+   "label": "Response",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Code"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "error",
+   "hidden": 0,
+   "label": "Error",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Text"
+  }
+ ],
+ "lede": "One try of a webhook's call, with the answer it got.",
+ "name": "Webhook Request Log",
+ "single": 0,
+ "slug": "webhook_request_log",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "recipe webhook_receiver",
+ "written_elsewhere": "iVendNext writes it for each try of a webhook."
+}

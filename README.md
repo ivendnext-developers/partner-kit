@@ -44,6 +44,7 @@ The same path, step by step, is on [developer.ivendnext.com](https://developer.i
 Use the kit before you quote a customer or start a build.
 
 1. New to iVendNext? Read [1a. How it all works](guide/01a_how_it_all_works.md) first: where your app runs (Docker, a container, a function or nowhere), where the customer's data lives, why two customers never collide, and what publishing and hosting hand over. Then [1b](guide/01b_one_app_end_to_end.md), one app from your laptop to the till, and [Questions developers ask](https://developer.ivendnext.com/questions.html).
+   Then [What you can use](site/pages/map.md): every endpoint your app can call and every one iVendNext calls on your service, everything a manifest can add, every screen, and [every record type with its fields](tools/records/README.md).
 2. Read [the guide](guide/README.md), starting with [1. Welcome and the one path](guide/01_welcome.md) and [3. The ladder and the four rules](guide/03_ladder_and_never_list.md).
 3. Fill in [the blueprint](kit/blueprint.md) for your project before you quote or build.
 4. For each need, take the highest rung of the ladder that does the job, and follow its recipe.

@@ -1,0 +1,560 @@
+{
+ "area": "Loyalty",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "code",
+   "hidden": 0,
+   "label": "Code",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "description",
+   "hidden": 0,
+   "label": "Description",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "start_date",
+   "hidden": 0,
+   "label": "Start Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "end_date",
+   "hidden": 0,
+   "label": "End Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "transaction_days_before",
+   "hidden": 0,
+   "label": "Transaction Days Before",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "birth_date",
+   "hidden": 0,
+   "label": "Birth Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "anniversary_date",
+   "hidden": 0,
+   "label": "Anniversary Date",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "active",
+   "hidden": 0,
+   "label": "Active",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "loyalty_program",
+   "hidden": 0,
+   "label": "Loyalty Program",
+   "links_to": "Loyalty Setup",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Normal",
+    "Special Days",
+    "Special Days for Customers"
+   ],
+   "description": "",
+   "fieldname": "plan_type",
+   "hidden": 0,
+   "label": "Plan Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "start_time",
+   "hidden": 0,
+   "label": "Start Time",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Time"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "end_time",
+   "hidden": 0,
+   "label": "End Time",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Time"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_plan_details",
+   "hidden": 0,
+   "label": "Plan Details",
+   "links_to": "Loyalty Plan Details",
+   "read_only": 0,
+   "required": 1,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_applicable_stores",
+   "hidden": 0,
+   "label": "Applicable Stores",
+   "links_to": "Loyalty Plan Applicable Stores",
+   "read_only": 0,
+   "required": 1,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_loyalty_plan_applicability",
+   "hidden": 0,
+   "label": "Duration",
+   "links_to": "Loyalty Plan Applicability",
+   "read_only": 0,
+   "required": 1,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_loyalty_exception_rule",
+   "hidden": 0,
+   "label": "Loyalty Exception Rule",
+   "links_to": "Loyalty Plan Exception Rule",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "table_loyalty_special_days",
+   "hidden": 0,
+   "label": "Special Days",
+   "links_to": "Loyalty Plan Special Days",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  }
+ ],
+ "lede": "A loyalty scheme: how points are earned and spent, and in which stores.",
+ "name": "Loyalty Plan",
+ "single": 0,
+ "slug": "loyalty_plan",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Loyalty Plan Applicability": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+     ],
+     "description": "",
+     "fieldname": "day",
+     "hidden": 0,
+     "label": "Day",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "enabled",
+     "hidden": 0,
+     "label": "Enabled",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "start_time",
+     "hidden": 0,
+     "label": "Start Time",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Time"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "end_time",
+     "hidden": 0,
+     "label": "End Time",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Time"
+    }
+   ]
+  },
+  "Loyalty Plan Applicable Stores": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "store",
+     "hidden": 0,
+     "label": "Store",
+     "links_to": "Warehouse",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    }
+   ]
+  },
+  "Loyalty Plan Details": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Include",
+      "Exclude"
+     ],
+     "description": "",
+     "fieldname": "applicable",
+     "hidden": 0,
+     "label": "Applicable",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Customer",
+      "Customer Group"
+     ],
+     "description": "",
+     "fieldname": "customer_type",
+     "hidden": 0,
+     "label": "Customer Type",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "customer_value",
+     "hidden": 0,
+     "label": "Customer Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Dynamic Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "level",
+     "hidden": 0,
+     "label": "Level",
+     "links_to": "Loyalty Level",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Item",
+      "Item Group",
+      "Bill Value",
+      "Bill Quantity"
+     ],
+     "description": "",
+     "fieldname": "criteria_group",
+     "hidden": 0,
+     "label": "Criteria Group",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "criteria_value1",
+     "hidden": 0,
+     "label": "Criteria Value1",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Dynamic Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "criteria_value2",
+     "hidden": 0,
+     "label": "Criteria Value2",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "tender",
+     "hidden": 0,
+     "label": "Tender",
+     "links_to": "Mode of Payment",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Every",
+      "Equal",
+      "Greater"
+     ],
+     "description": "",
+     "fieldname": "transaction_criteria",
+     "hidden": 1,
+     "label": "Transaction Criteria",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "transaction_count",
+     "hidden": 1,
+     "label": "Transaction Count",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Amount",
+      "Quantity"
+     ],
+     "description": "",
+     "fieldname": "calculation_basis",
+     "hidden": 0,
+     "label": "Calculation Basis",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "Every",
+      "Greater Or Equal"
+     ],
+     "description": "",
+     "fieldname": "calculation_on",
+     "hidden": 0,
+     "label": "Calculation On",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "calculation_value",
+     "hidden": 0,
+     "label": "Calculation Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "award_value",
+     "hidden": 0,
+     "label": "Award Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "Simple Python Expression, Example: grand_total < 1000",
+     "fieldname": "condition",
+     "hidden": 0,
+     "label": "Condition",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Code"
+    }
+   ]
+  },
+  "Loyalty Plan Exception Rule": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [
+      "Exclude items on promotion",
+      "Exclude all items with Discount Override",
+      "Exclude all items with Discount greater than X Percent",
+      "Exclude all items with Price Override",
+      "Exclude all items with Price Override greater than X amount"
+     ],
+     "description": "",
+     "fieldname": "exception",
+     "hidden": 0,
+     "label": "Exception",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "value",
+     "hidden": 0,
+     "label": "Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Int"
+    }
+   ]
+  },
+  "Loyalty Plan Special Days": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "special_days",
+     "hidden": 0,
+     "label": "Special Days",
+     "links_to": "Loyalty Special Days",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "retail core",
+ "written_elsewhere": ""
+}

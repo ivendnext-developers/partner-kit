@@ -1,0 +1,225 @@
+{
+ "area": "Coupons and promotions",
+ "description": "A draw of the winning coupon(s) a campaign issued in a period, picked fairly at submit and recorded.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The coupon the campaign issued. Every issued coupon of it in the period is one entry.",
+   "fieldname": "coupon",
+   "hidden": 0,
+   "label": "Coupon",
+   "links_to": "Coupon",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "from_date",
+   "hidden": 0,
+   "label": "From",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "to_date",
+   "hidden": 0,
+   "label": "To",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Date"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "number_of_winners",
+   "hidden": 0,
+   "label": "Number of winners",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "entries_count",
+   "hidden": 0,
+   "label": "Coupons drawn from",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "random_source",
+   "hidden": 0,
+   "label": "Random source",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "SHA-256 of the drawn-from serial numbers in serial order, one per line.",
+   "fieldname": "entries_digest",
+   "hidden": 0,
+   "label": "Entries digest",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "drawn_by",
+   "hidden": 0,
+   "label": "Drawn by",
+   "links_to": "User",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "drawn_on",
+   "hidden": 0,
+   "label": "Drawn on",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "winners",
+   "hidden": 0,
+   "label": "Winners",
+   "links_to": "Retail Coupon Draw Winner",
+   "read_only": 1,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "amended_from",
+   "hidden": 0,
+   "label": "Amended From",
+   "links_to": "Retail Coupon Draw",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  }
+ ],
+ "lede": "A draw of coupon codes from a coupon, made for a campaign.",
+ "name": "Retail Coupon Draw",
+ "single": 0,
+ "slug": "retail_coupon_draw",
+ "submittable": 1,
+ "table": 0,
+ "tables": {
+  "Retail Coupon Draw Winner": {
+   "description": "One coupon a draw picked.",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "rank",
+     "hidden": 0,
+     "label": "Rank",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Int"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "serial_number",
+     "hidden": 0,
+     "label": "Serial number",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "customer",
+     "hidden": 0,
+     "label": "Customer",
+     "links_to": "Customer",
+     "read_only": 1,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "The submitted sale that issued the coupon. park-link-allow: only a submitted sale writes a Coupon Ledger row, so this never holds a suspended park.",
+     "fieldname": "issuing_sale",
+     "hidden": 0,
+     "label": "Issuing sale",
+     "links_to": "POS Invoice",
+     "read_only": 1,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "posting_date",
+     "hidden": 0,
+     "label": "Sale date",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Date"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "position",
+     "hidden": 0,
+     "label": "Position in the drawn-from list",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Int"
+    }
+   ]
+  }
+ },
+ "why": "guide chapter 07",
+ "written_elsewhere": ""
+}

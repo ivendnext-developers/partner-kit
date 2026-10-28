@@ -1,0 +1,220 @@
+{
+ "area": "Payments and payment methods",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Your name for this account — for example 'Nairobi — Safaricom'. This is the name that appears as a payment method at the till.",
+   "fieldname": "display_name",
+   "hidden": 0,
+   "label": "Display name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The payment provider for this account. The list shows the providers installed on this site; if yours is not installed yet, you can still type its key. Cannot be changed once the account is in use.",
+   "fieldname": "provider_key",
+   "hidden": 0,
+   "label": "Provider",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Autocomplete"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The company whose contract this is. Cannot be changed once the account is in use.",
+   "fieldname": "company",
+   "hidden": 0,
+   "label": "Company",
+   "links_to": "Company",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "One currency per account — to take a second currency, add a second account. Filled in from the company, or from the ledger account if you choose one. Cannot be changed once the account is in use.",
+   "fieldname": "currency",
+   "hidden": 0,
+   "label": "Currency",
+   "links_to": "Currency",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "test",
+    "live"
+   ],
+   "description": "Test uses your provider's sandbox keys. A test account cannot be taken live on a production site. Cannot be changed once the account is in use.",
+   "fieldname": "environment",
+   "hidden": 0,
+   "label": "Environment",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Configured",
+    "Live",
+    "Suspended"
+   ],
+   "description": "Set for you when you take the connection live, suspend it or resume it.",
+   "fieldname": "state",
+   "hidden": 0,
+   "label": "State",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Set if your provider stops accepting these credentials after go-live — for example if they were revoked. The payment method stays available at the till and the problem is reported; nothing is switched off without you.",
+   "fieldname": "failing_since",
+   "hidden": 0,
+   "label": "Failing since",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Every payment taken through this account is posted here. Required before you can go live — without it the sale cannot be posted at the till.",
+   "fieldname": "gl_account",
+   "hidden": 0,
+   "label": "Ledger account for this payment method",
+   "links_to": "Account",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The payment method created when you go live. One payment method per account.",
+   "fieldname": "mode_of_payment",
+   "hidden": 0,
+   "label": "Mode of Payment",
+   "links_to": "Mode of Payment",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "One row for each value your provider asks for. Values marked secret are stored encrypted and are never shown again.",
+   "fieldname": "credentials",
+   "hidden": 0,
+   "label": "Credential values",
+   "links_to": "Payment Account Credential",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Give this address to your provider so they can confirm payments back to this site. It is worked out for you and updated every time you save. A payment cannot be confirmed until this site can be reached at this address, and you will be told if it cannot.",
+   "fieldname": "callback_url",
+   "hidden": 0,
+   "label": "Callback URL",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  }
+ ],
+ "lede": "A payment provider account of the retailer's company: its provider, currency, test or live, and whether it is working.",
+ "name": "Payment Account",
+ "single": 0,
+ "slug": "payment_account",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Payment Account Credential": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "The name your provider uses for this value. It must match exactly.",
+     "fieldname": "fieldname",
+     "hidden": 0,
+     "label": "Field",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "label",
+     "hidden": 0,
+     "label": "Label",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "Secret values are stored encrypted and are never shown again — not on screen, in a test result, in an error message, or in an export.",
+     "fieldname": "secret",
+     "hidden": 0,
+     "label": "Secret",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Check"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "For values that are not secret, such as a merchant id or an account number. Leave empty on a secret row.",
+     "fieldname": "value",
+     "hidden": 0,
+     "label": "Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "Stored encrypted, and masked whenever it is read back.",
+     "fieldname": "secret_value",
+     "hidden": 0,
+     "label": "Secret value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Password"
+    }
+   ]
+  }
+ },
+ "why": "recipe payment_connector; recipe wallet",
+ "written_elsewhere": ""
+}

@@ -1,0 +1,111 @@
+{
+ "area": "Your app: its install, its user and its doors",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Company country. A country with no row has no clearance and no B2B buyer tax ID rule.",
+   "fieldname": "country",
+   "hidden": 0,
+   "label": "Country",
+   "links_to": "Country",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The regime's name, printed on the receipt. Other screens just say \"clearance regime\".",
+   "fieldname": "regime_label",
+   "hidden": 0,
+   "label": "Regime Label",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Holds each receipt until the fiscal app records the sale cleared or reported. The POS never calls the tax authority. Live at once.",
+   "fieldname": "clearance_required",
+   "hidden": 0,
+   "label": "Clearance Required",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "A full tax invoice to a business buyer needs their tax registration, taken at payment.",
+   "fieldname": "require_buyer_tax_id_on_account",
+   "hidden": 0,
+   "label": "Require Buyer Tax ID On Account",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Lets goods leave once paid while the sale clears. Unticked: goods wait until it clears.",
+   "fieldname": "release_goods_before_cleared",
+   "hidden": 0,
+   "label": "Release Goods Before Cleared",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Where clearance applies. Ticked: a deposit waits for a tax receipt number like a sale. Unticked: not fiscal.",
+   "fieldname": "deposit_is_fiscal_event",
+   "hidden": 0,
+   "label": "Deposit Is a Fiscal Event",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "Lets tills sell offline in this clearance regime and report later. Blocked by default. Tick only on legal or compliance advice.",
+   "fieldname": "allow_offline_capture",
+   "hidden": 0,
+   "label": "Allow Offline Capture",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "note",
+   "hidden": 0,
+   "label": "Note",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Small Text"
+  }
+ ],
+ "lede": "A country's fiscal settings for the fiscal reader.",
+ "name": "Retail Fiscal Regime Config",
+ "single": 0,
+ "slug": "retail_fiscal_regime_config",
+ "submittable": 0,
+ "table": 0,
+ "tables": {},
+ "why": "contract fiscal_reader",
+ "written_elsewhere": ""
+}

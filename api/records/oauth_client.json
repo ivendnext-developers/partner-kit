@@ -1,0 +1,171 @@
+{
+ "area": "The retailer's setup",
+ "description": "",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "client_id",
+   "hidden": 0,
+   "label": "App Client ID",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "app_name",
+   "hidden": 0,
+   "label": "App Name",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "user",
+   "hidden": 1,
+   "label": "User",
+   "links_to": "User",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "allowed_roles",
+   "hidden": 0,
+   "label": "Allowed Roles",
+   "links_to": "OAuth Client Role",
+   "read_only": 0,
+   "required": 0,
+   "type": "Table MultiSelect"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "client_secret",
+   "hidden": 0,
+   "label": "App Client Secret",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "If checked, users will not see the Confirm Access dialog.",
+   "fieldname": "skip_authorization",
+   "hidden": 0,
+   "label": "Skip Authorization",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "A list of resources which the Client App will have access to after the user allows it.<br> e.g. project",
+   "fieldname": "scopes",
+   "hidden": 0,
+   "label": "Scopes",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "redirect_uris",
+   "hidden": 0,
+   "label": "Redirect URIs",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Text"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "default_redirect_uri",
+   "hidden": 0,
+   "label": "Default Redirect URI",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Authorization Code",
+    "Implicit"
+   ],
+   "description": "",
+   "fieldname": "grant_type",
+   "hidden": 0,
+   "label": "Grant Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Code",
+    "Token"
+   ],
+   "description": "",
+   "fieldname": "response_type",
+   "hidden": 0,
+   "label": "Response Type",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Select"
+  }
+ ],
+ "lede": "Your app's entry for *Sign in with iVendNext*: its address and what it may ask for. The retailer's administrator makes it.",
+ "name": "OAuth Client",
+ "single": 0,
+ "slug": "oauth_client",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "OAuth Client Role": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "role",
+     "hidden": 0,
+     "label": "Role",
+     "links_to": "Role",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "recipe portal; recipe sign_in",
+ "written_elsewhere": ""
+}

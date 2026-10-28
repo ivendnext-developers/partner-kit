@@ -1,0 +1,146 @@
+{
+ "area": "Your app: its install, its user and its doors",
+ "description": "A coloured label on a Desk list row, shown when a record's fields match. System Manager only.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The shop record whose list rows carry the mark, for example Item. Not a submitted record type, and not one with a workflow.",
+   "fieldname": "record_type",
+   "hidden": 0,
+   "label": "Record type",
+   "links_to": "DocType",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "The words on the row, for example On promotion. At most 24 characters, plain text.",
+   "fieldname": "label",
+   "hidden": 0,
+   "label": "Label",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "green",
+    "blue",
+    "orange",
+    "red",
+    "gray",
+    "purple"
+   ],
+   "description": "",
+   "fieldname": "colour",
+   "hidden": 0,
+   "label": "Colour",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "enabled",
+   "hidden": 0,
+   "label": "Enabled",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "When two marks match a row, the lower number shows. A record type holds at most five marks.",
+   "fieldname": "sequence",
+   "hidden": 0,
+   "label": "Sequence",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "One to three field conditions, all of which must hold. A user who may not read a field never sees its mark.",
+   "fieldname": "conditions",
+   "hidden": 0,
+   "label": "Only when",
+   "links_to": "Retail Save Rule Condition",
+   "read_only": 0,
+   "required": 1,
+   "type": "Table"
+  }
+ ],
+ "lede": "A coloured label on rows of a Desk list. A manifest installs it.",
+ "name": "Retail List Mark",
+ "single": 0,
+ "slug": "retail_list_mark",
+ "submittable": 0,
+ "table": 0,
+ "tables": {
+  "Retail Save Rule Condition": {
+   "description": "",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "field",
+     "hidden": 0,
+     "label": "Field",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Data"
+    },
+    {
+     "added": 0,
+     "choices": [
+      "=",
+      "!=",
+      ">",
+      ">=",
+      "<",
+      "<=",
+      "is set",
+      "is not set",
+      "in"
+     ],
+     "description": "",
+     "fieldname": "operator",
+     "hidden": 0,
+     "label": "Operator",
+     "links_to": "",
+     "read_only": 0,
+     "required": 1,
+     "type": "Select"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "For in: up to 10 values, separated by commas (count_per_day rules only).",
+     "fieldname": "value",
+     "hidden": 0,
+     "label": "Value",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Data"
+    }
+   ]
+  }
+ },
+ "why": "card products-on-promotion-colour; contract list_mark; guide chapter 07",
+ "written_elsewhere": ""
+}

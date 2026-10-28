@@ -1395,5 +1395,114 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertIsNotNone(seo.image_size(build.ROOT / "samples/s5_config_pack/screenshots/s5_flow.gif"))
 
 
+class MapTests(unittest.TestCase):
+    """The developer's map (site/devmap.py) cannot drift from its sources: each source changed alone turns the build red."""
+    import devmap                                                          # noqa: E402
+
+    def kit(self) -> pathlib.Path:
+        """A copy of what the map is built from, to plant a fault in."""
+        root = pathlib.Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, root)
+        for d in ("api", "contracts", "site", "tools/records"):
+            shutil.copytree(build.ROOT / d, root / d, ignore=shutil.ignore_patterns("_out", "__pycache__"))
+        for d in ("samples", "recipes", "guide"):
+            (root / d).symlink_to(build.ROOT / d)
+        return root
+
+    def faults(self, root: pathlib.Path) -> list[str]:
+        return self.devmap.errors(root, self.devmap.data(root / "site" / "map.json"))
+
+    def test_the_map_holds_every_item_of_its_sources(self):
+        self.assertEqual(self.devmap.errors(), [])
+
+    def test_part_a_names_every_operation_and_every_method(self):
+        have = {r["slug"] for r in self.devmap.record_index()["records"]}
+        text = self.devmap.calls(have)
+        for _, path, _ in self.devmap.operations():
+            self.assertIn(f"[`{path}`]", text)
+        names = self.devmap.methods()
+        self.assertEqual(len(names), len({n for n, _ in names}))
+        for name, _ in names:
+            self.assertIn(f"| `{name}` |", text)
+        self.assertIn("ivendnext_mpos.api.feed.events", text)
+
+    def test_part_b_has_every_contract_page_in_one_of_its_two_tables(self):
+        text = self.devmap.points()
+        for stem in self.devmap.contract_pages():
+            self.assertEqual(text.count(f"(../../contracts/pages/{stem}.md)"), 1, stem)
+        self.assertIn("### Calls on your service", text)
+        self.assertIn("### Declared, not called", text)
+
+    def test_part_c_has_every_manifest_key_or_names_it_as_the_apps_own(self):
+        text = self.devmap.manifest()
+        for key in self.devmap.schema_keys():
+            self.assertIn(f"`{key}`", text, key)
+        self.assertIn("| Roles |", text)
+        self.assertIn("| Settings |", text)
+
+    def test_canary_a_new_operation_without_a_record_page_is_red(self):
+        root = self.kit()
+        spec = root / "api" / "openapi.yaml"
+        spec.write_text(spec.read_text("utf-8").replace("\npaths:\n", "\npaths:\n  /api/resource/Shipping%20Rule:\n    get:\n"
+                                                        "      summary: List shipping rules\n      responses: {}\n", 1), "utf-8")
+        self.assertTrue(any("Shipping Rule, which has no record page" in f for f in self.faults(root)), self.faults(root))
+        spec.write_text(spec.read_text("utf-8").replace("/api/resource/Shipping%20Rule:", "/api/v2/document/Loyalty%20Ledger/{name}/method/submit/:"), "utf-8")
+        self.assertTrue(any("Loyalty Ledger, which has no record page" in f for f in self.faults(root)), self.faults(root))
+
+    def test_canary_a_new_method_name_without_its_line_is_red(self):
+        root = self.kit()
+        readme = root / "api" / "README.md"
+        readme.write_text(readme.read_text("utf-8").replace("`scan_barcode` ·", "`scan_barcode` · `new_name` ·", 1), "utf-8")
+        self.assertIn("site/map.json: no line for the method new_name (api/README.md lists it)", self.faults(root))
+
+    def test_canary_a_new_contract_page_outside_both_tables_is_red(self):
+        root = self.kit()
+        (root / "contracts" / "pages" / "new_point.md").write_text("# New point\n", "utf-8")
+        self.assertIn("site/map.json: contracts/pages/new_point.md is in neither table of part (b)", self.faults(root))
+
+    def test_canary_a_contract_sentence_changed_under_its_quote_is_red(self):
+        root = self.kit()
+        page = root / "contracts" / "pages" / "partner_check.md"
+        text = self.devmap.squash(page.read_text("utf-8"))                  # one line, so the sentence is found whatever its wrapping
+        self.assertIn("3 seconds unless raised, at most 10", text)
+        page.write_text(text.replace("3 seconds unless raised, at most 10", "4 seconds unless raised, at most 10"), "utf-8")
+        self.assertTrue(any(f.startswith("site/map.json: partner_check's 'limit' is not on") for f in self.faults(root)), self.faults(root))
+
+    def test_canary_a_new_manifest_key_outside_part_c_is_red(self):
+        root = self.kit()
+        schema = root / self.devmap.SCHEMA
+        data = json.loads(schema.read_text("utf-8"))
+        data["$defs"]["manifest"]["properties"]["new_kind"] = {"type": "array"}
+        schema.write_text(json.dumps(data), "utf-8")
+        self.assertIn("site/map.json: the manifest key new_kind is in neither part (c) nor the keys that describe the app", self.faults(root))
+
+    def test_canary_a_screen_without_its_picture_is_red(self):
+        root = self.kit()
+        d = self.devmap.data(root / "site" / "map.json")
+        d["screens"][0]["shot"] = "../../samples/s17_partner_page/screenshots/no_such_picture.png"
+        self.assertTrue(any("has no picture" in f for f in self.devmap.errors(root, d)))
+
+    def test_canary_a_missing_record_snapshot_is_red(self):
+        root = self.kit()
+        (root / "api" / "records" / "item.json").unlink()
+        self.assertIn("api/records/item.json is missing", self.faults(root))
+
+    def test_the_map_is_in_the_menu_and_the_record_pages_are_built(self):
+        self.assertIn(("What you can use", "map.html"), build.NAV)
+        out = pathlib.Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, out)
+        self.assertEqual(build.build(out), 0)
+        recs = self.devmap.record_index()["records"]
+        index = (out / "records" / "index.html").read_text("utf-8")
+        self.assertIn(f"<strong>{len(recs)} record types.</strong>", index)       # the count on the index is the census's
+        for r in recs:
+            self.assertTrue((out / "records" / f"{r['slug']}.html").is_file(), r["slug"])
+            self.assertIn(f'href="{r["slug"]}.html"', index)
+        api = (out / "api.html").read_text("utf-8")
+        self.assertIn('href="map.html"', api)
+        self.assertIn('href="records/index.html"', api)
+        self.assertEqual(check_links.check(out), [])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

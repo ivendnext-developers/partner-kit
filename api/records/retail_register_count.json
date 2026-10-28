@@ -1,0 +1,192 @@
+{
+ "area": "Stock and stores",
+ "description": "A count of a register book's items at one register store, against the register's own balance. Approved by the book's count role.",
+ "fields": [
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "book",
+   "hidden": 0,
+   "label": "Book",
+   "links_to": "Retail Register Book",
+   "read_only": 0,
+   "required": 1,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "register_store",
+   "hidden": 0,
+   "label": "Register store",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [
+    "Count",
+    "Opening"
+   ],
+   "description": "",
+   "fieldname": "count_kind",
+   "hidden": 0,
+   "label": "Kind",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Select"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "counted_at",
+   "hidden": 0,
+   "label": "Counted at",
+   "links_to": "",
+   "read_only": 0,
+   "required": 1,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "witness",
+   "hidden": 0,
+   "label": "Witness",
+   "links_to": "User",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "witnessed_at",
+   "hidden": 0,
+   "label": "Witnessed at",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "rows",
+   "hidden": 0,
+   "label": "Items",
+   "links_to": "Retail Register Count Row",
+   "read_only": 0,
+   "required": 1,
+   "type": "Table"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "amended_from",
+   "hidden": 0,
+   "label": "Amended From",
+   "links_to": "Retail Register Count",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  }
+ ],
+ "lede": "A count of a register book's stock, which settles a book that would go below zero.",
+ "name": "Retail Register Count",
+ "single": 0,
+ "slug": "retail_register_count",
+ "submittable": 1,
+ "table": 0,
+ "tables": {
+  "Retail Register Count Row": {
+   "description": "One item counted in a register count.",
+   "fields": [
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "item",
+     "hidden": 0,
+     "label": "Item",
+     "links_to": "Item",
+     "read_only": 0,
+     "required": 1,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "batch_no",
+     "hidden": 0,
+     "label": "Batch",
+     "links_to": "Batch",
+     "read_only": 0,
+     "required": 0,
+     "type": "Link"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "counted_qty",
+     "hidden": 0,
+     "label": "Counted",
+     "links_to": "",
+     "read_only": 0,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "register_balance",
+     "hidden": 0,
+     "label": "Register balance",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "difference",
+     "hidden": 0,
+     "label": "Difference",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Float"
+    },
+    {
+     "added": 0,
+     "choices": [],
+     "description": "",
+     "fieldname": "reconciliation",
+     "hidden": 0,
+     "label": "Used by reconciliation",
+     "links_to": "Stock Reconciliation",
+     "read_only": 1,
+     "required": 0,
+     "type": "Link"
+    }
+   ]
+  }
+ },
+ "why": "contract register_books; recipe regulated_register",
+ "written_elsewhere": ""
+}
