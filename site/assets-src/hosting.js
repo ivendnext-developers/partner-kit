@@ -522,8 +522,7 @@
     var box = el("div", {}, el("h4", { text: "Your GitHub workflow" }));
     var roles = JSON.stringify((o.copies || [o]).map(function (c) { return c.upload.github_role; }));
     box.appendChild(p("Copy ", code("tools/deploy_app/hosting-workflow.yml"), " to ", code(".github/workflows/"),
-      " in your repository. It needs ", code("IVN_HOSTING_ROLES"), " and, when app.json is not at the repository's root, ",
-      code("IVN_APP_FOLDER"), "."));
+      " in your repository, and give it these Variables."));
     box.appendChild(button("Set them on your repository", function (ev) {
       ev.target.disabled = true;
       call("POST", "/variables", { order: o.order }).then(function (r) {
@@ -536,8 +535,8 @@
       Object.keys(left).forEach(function (k) { box.appendChild(copyable(k + " = " + left[k])); });
     } else if (!s.variables) {
       box.appendChild(p("Or set them yourself:"));
-      box.appendChild(copyable("IVN_HOSTING_ROLES = " + roles));
-      if ((o.github || {}).folder) box.appendChild(copyable("IVN_APP_FOLDER = " + o.github.folder));
+      var want = o.variables || { IVN_HOSTING_ROLES: roles };   // the hosting's list for this order
+      Object.keys(want).forEach(function (k) { box.appendChild(copyable(k + " = " + want[k])); });
     }
     box.appendChild(p("Then push to " + ((o.github || {}).branch || "main") + " on " + ((o.github || {}).repo || "your repository") +
       ": each copy gets the version in your app.json."));
