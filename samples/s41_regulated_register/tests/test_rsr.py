@@ -1,6 +1,6 @@
 """The Regulated stock register's laptop tests, before the register door exists: the manifest is the build of the data
 sets and passes the kit's checks; a data set the format refuses is refused, case by case; Kenya's routing sends each
-fixture line to the right books; each book renders from fixture lines shaped as the door's line (PB-4 spec §3.1), read
+fixture line to the right books; each book renders from fixture lines shaped as the door's line (the register books page, §5), read
 through a stand-in ivn_rows; and a second data set, a one-book liquor register, loads, adds its own column and renders
 with no code change. The rendering tests need jinja2 (the kit's CI installs it; RSR_REQUIRE_JINJA makes them fail, not
 skip, without it).
@@ -27,6 +27,7 @@ import validate  # noqa: E402
 
 try:
     import jinja2
+    from jinja2 import DebugUndefined
     from jinja2.sandbox import SandboxedEnvironment
 except ImportError:
     if os.environ.get("RSR_REQUIRE_JINJA") or os.environ.get("S29_REQUIRE_JINJA"):
@@ -39,7 +40,7 @@ LIQUOR = json.loads((HERE / "fixtures" / "liquor_one_book.json").read_text(encod
 
 
 def line(n, **kw):
-    """A line as the door writes it (PB-4 spec §3.1)."""
+    """A line as the door writes it (the register books page, §5)."""
     base = dict(number=n, book="ke_pharmacy.poisons_book", register_store="Pharmacy Dispensary - ICG", item="PHD-TRAM-50",
                 item_name="Tramadol 50 mg capsules", item_class="KE Part I Poison", direction="Out", kind="Sale", qty=10,
                 uom="Nos", balance=None, movement_date="2026-10-20", entry_date="2026-10-20",
@@ -121,11 +122,55 @@ def _page(decl, lines, item_name, brought):
             "rows": rows}
 
 
-def door_print(decl, doc, lines, states=(), **extra):
+def official_place(starts, number):
+    """The door's official_place: where entry `number` lands in the authority's book, (volume, page, line)."""
+    start = None
+    for st in starts:
+        if number >= st["from"]:
+            start = st
+    if not start:
+        return None
+    i = start["line"] - 1 + number - start["from"]
+    return start["volume"], start["page"] + i // start["lines"], i % start["lines"] + 1
+
+
+def _sheets(page, starts):
+    """The door's _sheets: each entry one row (its own note rides in it), a sheet per page of the authority's book, blank
+    rows for the lines before; entries before the shop's first start print apart, at no place."""
+    rows = []
+    for r in page["rows"]:
+        last = rows[-1] if rows else None
+        if last and r["kind"] == "note" and last["kind"] == "row" and last["line"]["number"] == r["line"]["number"]:
+            last["note"] = f"{last.get('note', '')} {r['text']}".strip()
+            continue
+        rows.append(dict(r))
+    rows.sort(key=lambda r: (str(r["line"].get("sequence") or ""), r["line"]["number"]))
+    head = {k: v for k, v in page.items() if k != "rows"}
+    sheets, key = [], object()
+    for r in rows:
+        seq = str(r["line"].get("sequence") or "")
+        place = official_place(starts.get(seq, []), r["line"]["number"])
+        if not sheets or (seq, place[:2] if place else None) != key:
+            key = (seq, place[:2] if place else None)
+            sheets.append({**head, "place": "Volume {0}, page {1}".format(*key[1]) if key[1] else None, "rows": []})
+            head["brought"], head["brought_text"] = None, ""
+        sheet = sheets[-1]
+        if place:
+            at = sheet["rows"][-1]["place_line"] if sheet["rows"] else 0
+            sheet["rows"] += [{"kind": "blank", "line": {}, "struck": False, "text": "", "place_line": k}
+                              for k in range(at + 1, place[2])]
+            r["place_line"] = place[2]
+        sheet["rows"].append(r)
+    return sheets or [{**head, "place": None, "rows": []}]
+
+
+def door_print(decl, doc, lines, states=(), starts=None, **extra):
     """A stand-in for the register door's ivn_register_print(doc), the dict every book's print renders: a COPY of its
     shape and row rules (repo ivendnext/iVendNext_PWA, business_logic/register_print.py ivn_register_print, _page and
     _shown at development 60147699c), with the door's words in English and no official book's sheets, which the door
-    works out from the shop's own page starts. A defect here is a defect there: report it with the Kit defect form."""
+    works out from the shop's own page starts (`starts`, {sequence: [start]}, as the door reads them); the period's close
+    and the drugs' balances brought forward come in `extra`. A defect here is a defect there: report it with the Kit
+    defect form."""
     calls.append(doc["book"])
     where = [ln for ln in lines if ln["book"] == doc["book"] and ln["register_store"] == doc["register_store"]
              and doc["from_date"] <= ln["entry_date"] <= doc["to_date"]]
@@ -134,7 +179,7 @@ def door_print(decl, doc, lines, states=(), **extra):
                     "correction": decl["correction"], "retention_years": decl["retention_years"],
                     "medium": decl["medium"], "medium_words": MEDIUM_WORDS.get(decl["medium"], "")},
            "pages": [], "count": 0, "cut": False, "items_cut": False, "brought_cut": False, "from": doc["from_date"],
-           "to": doc["to_date"], "signed": True, "total": len(where), "persons_hidden": False, **extra}
+           "to": doc["to_date"], "signed": True, "total": len(where), "persons_hidden": False}
     official = decl["medium"] == "official_book"
     one_run = official and decl["numbering"] == "book_store"  # an official book numbered per store: one run
     if (decl["balance"] or (official and decl["numbering"] == "book_store_item")) and not one_run:
@@ -152,7 +197,11 @@ def door_print(decl, doc, lines, states=(), **extra):
         out["count"] = len(where)
     if not out["pages"]:
         out["pages"].append(_page(decl, [], None, None))
-    return out
+    if official:
+        out["pages"] = [sheet for page in out["pages"] for sheet in _sheets(page, starts or {})]
+    if one_run and decl["balance"] and extra.get("brought_items"):
+        out["pages"][0]["brought_items"] = extra.pop("brought_items")
+    return {**out, **extra}
 
 
 calls = []
@@ -164,13 +213,19 @@ def period(book, **kw):
             **kw}
 
 
+def shop_env():
+    """The shop renders a print in a sandbox with autoescape off (the template escapes) and DebugUndefined: a key the
+    reader may not read prints as the framework's own debug text unless the template guards it."""
+    return SandboxedEnvironment(autoescape=False, undefined=DebugUndefined)
+
+
 def render(ds, book_id, doc, lines, states=(), rtl=False, html=None, **extra):
     """The book's print in K3's layout, over the door's print (door_print), as the shop renders it: autoescape off (the
     template escapes), the translator the identity, the direction asked."""
     b = next(x for x in ds["books"] if x["id"] == book_id)
     decl = build.declaration(ds, b)
     calls.clear()
-    env = SandboxedEnvironment(autoescape=False)
+    env = shop_env()
     out = env.from_string(html or build.book_html(ds, b)).render(
         doc=doc, ivn_register_print=lambda d: door_print(decl, d, lines, states, **extra),
         _=lambda s, **k: s, is_rtl=lambda: rtl)
@@ -215,12 +270,12 @@ class Manifest(unittest.TestCase):
         self.assertEqual({f["dt"] for f in m["custom_fields"]}, {"Sales Invoice", "Delivery Note"})
         self.assertEqual([r["name"] for r in m["reports"]],
                          ["PP RSR Stock counts to watch", "PP RSR Register entries", "PP RSR Losses and disposals",
-                          "PP RSR Counts due after a loss", "PP RSR Returns due"])
+                          "PP RSR Counts due after a loss", "PP RSR Periods open"])
         self.assertEqual({c["document_type"] for c in m["number_cards"]},
                          {"Retail Register Line", "Retail Register State", "Retail Register Period"})
         self.assertEqual(m["dashboards"][0]["cards"], [c["name"] for c in m["number_cards"]])
         self.assertEqual(m["reports"][2]["filters"], [["kind", "in", ["Loss", "Disposal"]]])
-        self.assertEqual(m["reports"][3]["filters"], [["count_due_by", "is", "set"]])  # hand-off line 4
+        self.assertEqual(m["reports"][3]["filters"], [["count_due_by", "is", "set"]])  # the count a loss makes due
 
     def test_the_workspace_says_what_no_manifest_kind_can_carry(self):
         text = build.build_manifest()["workspaces"][0]["blocks"][1]["data"]["text"]
@@ -259,15 +314,17 @@ class Manifest(unittest.TestCase):
         self.assertEqual((validate.validate(m), validate.warnings(m)), ([], []))
         names = [p["name"] for p in d["print_formats"]]
         slips = [n for n in names if " slip " in n]
-        self.assertEqual(slips, ["PP RSR Kenya Poisons Book slip till", "PP RSR Kenya Poisons Book slip Desk"])
+        self.assertEqual(slips, ["PP RSR ke_pharmacy poisons_book slip till", "PP RSR ke_pharmacy poisons_book slip Desk"])
         self.assertEqual(len(names) - len(slips), sum(len(ds["books"]) for ds in build.datasets()))  # a print per book
-        self.assertLessEqual({"PP RSR Kenya Poisons Book", "PP RSR Kenya Prescription Book", "PP RSR Kenya NPP Ledger Book",
-                              "PP RSR Jordan Narcotics and psychotropics register",
-                              "PP RSR Nigeria Part B morphine"}, set(names))
+        # named by ids, never titles: a corrected book (a new id, the old kept with its entries) never takes the old one's
+        self.assertLessEqual({"PP RSR ke_pharmacy poisons_book", "PP RSR ke_pharmacy prescription_book",
+                              "PP RSR ke_pharmacy npp_ledger", "PP RSR jo_pharmacy form_9",
+                              "PP RSR ng_pharmacy part_b_morphine"}, set(names))
         self.assertTrue(all(p["doc_type"] == "Retail Register Period" for p in d["print_formats"] if " slip " not in p["name"]))
         self.assertEqual([p["doc_type"] for p in d["print_formats"] if " slip " in p["name"]], ["POS Invoice", "Sales Invoice"])
         arabic = {p["name"] for p in d["print_formats"] if p.get("default_print_language") == "ar"}
-        self.assertEqual({n.split()[2] for n in arabic}, {"Jordan", "Saudi", "Egypt", "UAE"})  # hand-off line 12
+        self.assertEqual({n.split()[2] for n in arabic}, {"jo_pharmacy", "sa_pharmacy", "eg_pharmacy",
+                                                          "ae_abu_dhabi_pharmacy"})  # their print language
 
     def test_every_reminder_passes_the_shops_checker_and_none_shares_a_name(self):
         d = build.build_manifest()
@@ -293,7 +350,7 @@ class Manifest(unittest.TestCase):
         for k in ("custom_fields", "sale_attributes"):  # the fields never narrow: an update may not drop one
             self.assertEqual(m[k], whole[k])
         self.assertEqual({b["data_set"] for b in m["register_books"]}, {"ke_pharmacy"})
-        self.assertEqual({b["enabled"] for b in m["register_books"]}, {1})  # a shop's own books install switched on
+        self.assertEqual({b["enabled"] for b in m["register_books"]}, {0})  # switched off too: no build flips a book
         self.assertEqual((len(m["register_books"]), len(m["print_formats"])), (3, 5))  # three books, the slip twice
         self.assertEqual(m["notifications"], [])
         self.assertEqual(validate.validate(m), [])
@@ -348,7 +405,7 @@ class Manifest(unittest.TestCase):
                           if "pp_rxc_id_number" in json.dumps(b)])
 
     def test_every_authority_source_is_a_sale_detail_and_a_desk_field_the_counter_rules_app_installs(self):
-        # the door refuses a declaration naming a sale detail the shop does not have (PB-4 layer 2): every authority source
+        # the door refuses a declaration naming a sale detail the shop does not have (at install): every authority source
         # is K1's, and the prescription's date (K1 0.1.3, PH-B1e) is named where the book prints it (Jordan, Mexico)
         k1 = json.loads((SAMPLE.parent / "s39_pharmacy_counter" / "manifest.json").read_text(encoding="utf-8"))
         details = {a["name"] for a in k1["sale_attributes"]}
@@ -367,12 +424,12 @@ class Manifest(unittest.TestCase):
                 self.assertEqual(fields["pp_rxc_rx_date"], "Date")
 
     def test_a_detail_with_no_source_is_declared_with_none(self):
-        # PB-4 spec §15 R-4: the door must accept it and leave its slot empty; the age is the door's computed detail (R-3)
+        # the door accepts it and leaves its slot empty for the shop to write in
         empty = sorted(f"{b['book']}:{d['label']}" for b in build.build_manifest()["register_books"]
                        for d in b["details"].values() if set(d) == {"label"})
         self.assertEqual(empty, ["eg_pharmacy.received_dispensed:رقم القيد فى دفتر التذاكر الطبية",
                                  "eg_pharmacy.received_dispensed:سنه", "sa_pharmacy.drug_register:الملف الطبي"])
-        age = declared("sa_pharmacy.drug_register")["details"]["detail_1"]  # hand-off line 1: the door works the age out
+        age = declared("sa_pharmacy.drug_register")["details"]["detail_1"]  # the door works the age out
         self.assertEqual(age, {"label": "عمر المريض", "type": "Age",
                                "record": {"doctype": "PP RXC Patient", "match": "customer_link", "field": "birth_date"}})
 
@@ -385,7 +442,7 @@ class Manifest(unittest.TestCase):
         d = declared("ke_pharmacy.poisons_book")
         self.assertEqual(d["details"]["detail_1"], {"label": "Business, trade or occupation", "person": 1,
                                                     "pos_sale_detail": "PP RSR Occupation", "desk_field": "pp_rsr_occupation"})
-        # hand-off line 22: the purchaser's occupation and purpose and the certificate's giver are a person's
+        # the purchaser's occupation and purpose and the certificate's giver are a person's
         self.assertEqual([s for s, x in d["details"].items() if x.get("person")], ["detail_1", "detail_2", "detail_4"])
         self.assertEqual(d["details"]["detail_3"]["type"], "Date")  # the door routes it as a date
         self.assertEqual((d["medium"], declared("ke_pharmacy.npp_ledger")["medium"]), ("printed_book", "system_of_record"))
@@ -785,7 +842,7 @@ class KenyaLayouts(unittest.TestCase):
         ar = {"No.": "رقم", "Entry chain: {0}": "سلسلة القيود: {0}"}
         b = next(x for x in KE["books"] if x["id"] == "poisons_book")
         decl = build.declaration(KE, b)
-        out = SandboxedEnvironment().from_string(build.book_html(KE, b)).render(
+        out = shop_env().from_string(build.book_html(KE, b)).render(
             doc=period("ke_pharmacy.poisons_book", chain_status="holds"),
             ivn_register_print=lambda d: door_print(decl, d, [line(1)]), _=lambda s, **k: ar.get(s, s), is_rtl=lambda: True)
         self.assertIn('dir="rtl"', out)
@@ -847,6 +904,124 @@ class Canaries(unittest.TestCase):
         self.assertNotEqual(cells(good), cells(bad))
 
 
+def rows_reader(lines):
+    """ivn_rows on Retail Register Line as the slip reads it: filters of =, one sort field."""
+    def ivn_rows(dt, filters=None, fields=None, order_by=None, limit=50, start=0):
+        assert dt == "Retail Register Line" and limit <= 200
+        rows = [r for r in lines if all(r.get(f) == v for f, op, v in filters or [] if op == "=")]
+        assert all(op == "=" for _f, op, _v in filters or [])
+        rows = sorted(rows, key=lambda r: r["number"])
+        return [{k: r.get(k) for k in fields} for r in rows[start:start + limit]]
+    return ivn_rows
+
+
+@NEED_JINJA
+class ReviewFolds(unittest.TestCase):
+    """What the 0.2.0 review found, each pinned (lane pb32regkit)."""
+
+    def test_a_reader_without_the_person_level_gets_empty_cells_never_the_frameworks_debug_text(self):
+        # the framework leaves a column above the reader's level out of a list read: the door's rows lack those keys
+        hidden = ("counterparty", "counterparty_address", "correction_note", "detail_1", "detail_2", "detail_3",
+                  "detail_4", "detail_5", "detail_6")
+        ln = {k: v for k, v in line(1).items() if k not in hidden}
+        out, _ = render(KE, "poisons_book", period("ke_pharmacy.poisons_book"), [ln], persons_hidden=True)
+        self.assertNotIn("no such element", out)
+        self.assertEqual(cells(out)[0][3:7], ["", "", "", ""])
+        self.assertIn("A person&#39;s details are not shown", out.replace("'", "&#39;"))
+
+    def slip(self, doc, lines):
+        b = next(x for x in KE["books"] if x["id"] == "poisons_book")
+        html = build.slips(KE, b)[0]["html"]
+        return shop_env().from_string(html).render(doc=doc, ivn_rows=rows_reader(lines), _=lambda s, **k: s,
+                                                   is_rtl=lambda: False)
+
+    def test_the_slip_lists_the_sales_entries_only_and_none_for_a_cancel_or_a_return(self):
+        sale = {"doctype": "POS Invoice", "name": "S-1", "docstatus": 1, "company": "Demo Chemists Ltd",
+                "posting_date": "2026-10-20", "customer_name": "A. Buyer"}
+        lines = [line(9, voucher_type="POS Invoice", voucher_no="S-1", qty=1.0),
+                 line(12, voucher_type="POS Invoice", voucher_no="S-1", kind="Correction", direction="In", qty=1.0,
+                      correction_of_number=9)]
+        out = self.slip(sale, lines)
+        self.assertEqual([r[0] for r in cells(out)], ["9"])  # the cancel's correction never reads as received
+        self.assertIn("<td>1 Nos</td>", out)  # the quantity as the book prints it, never 1.0
+        self.assertIn("This sale was cancelled", self.slip({**sale, "docstatus": 2}, lines))
+        self.assertNotIn("Signature of purchaser", self.slip({**sale, "docstatus": 2}, lines))
+        self.assertIn("A return has no purchaser", self.slip({**sale, "is_return": 1}, lines))
+
+    def test_a_late_entry_says_so_once_where_the_book_prints_its_remarks(self):
+        b = "jo_pharmacy.form_9"
+        from test_markets import JO, page_state  # noqa: E402
+        ln = line(1, book=b, item_class="JO Schedule 2", direction="In", kind="Receipt", balance=10, booked_late=1,
+                  entered_at="2026-10-21 08:00:00", remarks="Entered late.")
+        out, _ = render(JO, "form_9", period(b), [ln], page_state(b))
+        self.assertEqual(out.count("Entered late."), 1)
+
+    def test_an_official_book_prints_each_entry_at_its_line_and_its_reversal_in_its_own_row(self):
+        from test_markets import JO, page_state  # noqa: E402
+        b = "jo_pharmacy.form_9"
+        common = dict(book=b, item_class="JO Schedule 2", sequence="SEQ-1")
+        lines = [line(1, **common, balance=5), line(2, **common, kind="Correction", direction="In", qty=10, balance=15,
+                                                    correction_of_number=1, signed_by_name="P. Pharmacist")]
+        starts = {"SEQ-1": [{"from": 1, "volume": 1, "page": 12, "line": 3, "lines": 20}]}
+        out, _ = render(JO, "form_9", period(b), lines, page_state(b), starts=starts)
+        self.assertIn("Volume 1, page 12", out)
+        rows = cells(out)
+        self.assertEqual([r[:2] for r in rows[:4]], [["", "1"], ["", "2"], ["1", "3"], ["2Correction", "4"]])  # blank lines 1-2
+        self.assertIn("Entry 2 reverses entry 1.", rows[3][-1])  # one entry, one line of the book: its note rides in it
+        self.assertNotIn('<tr class="note">', out)
+
+    def test_a_signed_off_period_prints_its_close_and_its_seals(self):
+        out, _ = render(KE, "poisons_book", period("ke_pharmacy.poisons_book", name="P-1", status="Signed off"),
+                        [line(1)], closing=True, sealed=["Pharmacy Dispensary - ICG entry 1: 9f86d081"],
+                        signed_off="Signed off by P. Pharmacist on 01-11-2026.")
+        self.assertIn("Sealed at sign-off: Pharmacy Dispensary - ICG entry 1: 9f86d081", out)
+        self.assertIn("Signed off by P. Pharmacist on 01-11-2026.", out)
+        self.assertIn("The period&#39;s close: signed", out.replace("'", "&#39;"))
+
+    def test_an_official_book_kept_in_one_run_names_each_drugs_balance_brought_forward(self):
+        from test_markets import AE  # noqa: E402
+        b = "ae_abu_dhabi_pharmacy.ph_20"
+        out, _ = render(AE, "ph_20", period(b), [line(1, book=b, item_class="AE Narcotic", balance=30)],
+                        brought_items=[("Morphine 10 mg", "5")])
+        self.assertIn("Balance brought forward: Morphine 10 mg 5.", out)
+
+
+class FormatFolds(unittest.TestCase):
+    """Each way a data set passed check() and was refused by the shop's checker or the door, now refused here."""
+
+    def refused(self, change, words):
+        ds = copy.deepcopy(KE)
+        change(ds)
+        self.assertTrue([b for b in build.check(ds) if words in b], (words, build.check(ds)))
+
+    def test_an_unknown_key_is_refused_never_left_out(self):
+        self.refused(lambda d: d["books"][2].__setitem__("per_item_pages", 1), "per_item_pages is not a key of a book")
+        self.refused(lambda d: d["books"][0].__setitem__("period_month", 6), "period_month is not a key of a book")
+        self.refused(lambda d: d.__setitem__("data_sets", []), "data_sets: not a key of a data set")
+        self.refused(lambda d: d["books"][0]["columns"][0].__setitem__("colour", "red"), "colour is not a key of a column")
+
+    def test_the_doors_own_refusals(self):
+        self.refused(lambda d: d["books"][0].__setitem__("loss_count_hours", 24), "loss_count_hours")  # no balance
+        self.refused(lambda d: d["books"][0]["conditions"].append({"field": "booked_late", "operator": "=", "value": True}),
+                     "never true or false")
+        self.refused(lambda d: d["books"][0]["conditions"].append(
+            {"field": "kind", "operator": "=", "value": "Sale", "note": "x"}), "a field, an operator and a value")
+        self.refused(lambda d: d["details"].__setitem__("free_text", {"label": "Free", "type": "Data"})
+                     or d["books"][0]["required"].append("detail:free_text"), "has no source to fill it")
+        self.refused(lambda d: d["authority"].__setitem__("permit", {}), "its sources go under")
+        self.refused(lambda d: d["authority"]["pos_sale_details"].__setitem__("permit_no", "X"), "maps authority_no")
+        self.refused(lambda d: d["books"][0]["columns"].append({"label": "Hash", "value": ["line_hash"]}),
+                     "'line_hash' is not a column")
+        self.refused(lambda d: d["books"][0].__setitem__("id", "a_very_long_book_identifier_that_runs_on_and_on"),
+                     "over 61 characters")
+
+    def test_the_build_runs_the_shops_checker_before_it_writes(self):
+        self.assertEqual(build.refusals(build.build_manifest()), [])
+        m = build.build_manifest()
+        m["print_formats"][0]["name"] = "PP RSR " + "x" * 70
+        self.assertTrue(build.refusals(m))
+
+
 class Template(unittest.TestCase):
     def test_the_book_reads_only_the_doors_print_and_the_slip_only_ivn_rows(self):
         def calls_in(name):
@@ -857,7 +1032,7 @@ class Template(unittest.TestCase):
         self.assertLessEqual(calls_in("register.html"),
                              {"value", "ivn_register_print", "_", "is_rtl", "namespace", "format", "split", "strip", "map", "join"})
         self.assertNotIn("ivn_rows", calls_in("register.html"))  # every line, note and page is the door's
-        self.assertLessEqual(calls_in("purchaser_slip.html"), {"ivn_rows", "_", "is_rtl"})
+        self.assertLessEqual(calls_in("purchaser_slip.html"), {"ivn_rows", "_", "is_rtl", "format"})
 
     def test_no_market_or_vertical_in_the_apps_code_or_names(self):
         words = re.compile(r"kenya|nigeria|\bKE\b|pharma|poison|drug|medic|liquor|tobacco|npp", re.I)

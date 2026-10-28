@@ -33,7 +33,8 @@
   {%- elif k == "balance" -%}{{ l.balance_text or "" }}
   {%- elif k == "qty" -%}{{ l.qty_text or "" }}
   {%- elif k == "counterparty_address" -%}{{ (l.address_lines or [])|join(", ") }}
-  {%- elif l[k] is not none -%}{{ l[k] }}
+  {#- a column the reader may not read (a person's, for a role without its level) is left out of the door's rows: empty -#}
+  {%- elif l[k] is defined and l[k] is not none -%}{{ l[k] }}
   {%- endif -%}
 {%- endmacro -%}
 {%- set official = data.book and data.book.medium == "official_book" -%}
@@ -90,7 +91,7 @@
               {%- endfor -%}
             {%- endif -%}
           <td class="cell{% if c.mark %} mark{% endif %}"{% if book.in_colour and c.when == "In" and l.direction == "In" and l.kind not in ("Opening", "Count") %} style="color: {{ book.in_colour }}"{% endif %}>{{ cell.s|e }}
-            {%- if loop.last and l.booked_late %} <span class="fine">{{ _("Entered late.")|e }} {{ l.entered_at|e }}</span>{% endif -%}
+            {%- if loop.last and l.booked_late and not book.prints_remarks %} <span class="fine">{{ _("Entered late.")|e }} {{ l.entered_at|e }}</span>{% endif -%}
             {%- if loop.last and l.erased %} <span class="fine">{{ _("A person's details erased after the retention.")|e }}</span>{% endif -%}
             {%- if loop.last and r.note %} {{ r.note|e }}{% endif -%}
           </td>

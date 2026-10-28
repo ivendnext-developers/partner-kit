@@ -16,7 +16,9 @@ vertical's) books a data set in datasets/, never code.
 
 A data set is a JSON file: its books, which items each takes (by class or item group), its routing conditions (at most
 three, all must hold, in the save-rule condition form), its columns and where each comes from, its numbering, balance,
-correction mode and retention. check() below is the whole format: a data set it passes builds with no code change."""
+correction mode and retention. check() below is the format: a data set it passes builds with no code change, and the
+build runs the shop's own checker (tools/manifest/validate.py) on the manifest before it writes it. What only the shop's
+site can know (a field, a sale detail or a record type it names) the door checks at install."""
 import json
 import os
 import re
@@ -26,19 +28,19 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 APP, PREFIX, FPREFIX, VERSION = "pp_rsr", "PP RSR", "pp_rsr_", "0.2.0"
 ROLE = "PP RSR Register Approver"
 LINE, STATE, PERIOD = "Retail Register Line", "Retail Register State", "Retail Register Period"  # the door's record types
-# The line's own columns (PB-4 spec §3.1). Routing and layouts may name only these, or a declared detail.
+# The line's own columns (the door's REGISTER_LINE_COLUMNS). Routing and layouts may name only these, or a declared detail.
 LINE_COLUMNS = (
     "number", "book", "register_store", "warehouse", "item", "item_name", "item_class", "batch_no", "expiry_date",
     "direction", "kind", "qty", "uom", "balance", "movement_date", "movement_time", "entered_at", "entry_date",
     "voucher_type", "voucher_no", "counterparty", "counterparty_address", "reference_no", "authority_no",
     "authority_issuer", "authority_issuer_licence", "authority_date", "dispenser", "dispenser_name", "dispenser_licence",
     "booked_late", "incomplete", "below_zero", "correction_of", "correction_of_number", "correction_note", "signed_by",
-    "signed_by_name", "remarks", "period", "prev_hash", "line_hash",
+    "signed_by_name", "remarks", "period",
 )
 # the line's number and tick-box columns: a condition on one compares as a number (the save-rule form does the same)
 NUMERIC_COLUMNS = ("number", "qty", "balance", "booked_late", "incomplete", "below_zero", "correction_of_number")
 # the line's date and time columns, and a declared Date detail: the condition form compares a date as text or as the
-# number 0, so a condition on one only asks whether it is set (PB-4 spec §2)
+# number 0, so a condition on one only asks whether it is set (the door's rule)
 DATE_COLUMNS = ("expiry_date", "movement_date", "movement_time", "entered_at", "entry_date", "authority_date")
 SET_OPS = ("is set", "is not set")
 DETAIL_SLOTS = 6
@@ -59,7 +61,7 @@ MEDIA = ("system_of_record", "printed_book", "official_book", "regulator_system"
 # Age: whole years at the movement's date, worked out by the door from a date of birth its record lookup reads
 DETAIL_TYPES = ("Data", "Date", "Small Text", "Age")
 # a detail's sources: this app's own field (own), the till's sale detail and the Desk's field of another app, or one value
-# of a record (PB-4 spec §2.2): the record named by the moving document's customer (match customer: a Customer; a receipt
+# of a record (the door's lookup): the record named by the moving document's customer (match customer: a Customer; a receipt
 # or a stock entry has none, so the column is empty), the one record of another type whose Link field `customer` names
 # that customer (match customer_link: a record the customer's own readers cannot read, such as the counter-rules app's
 # patient record; none, the column is empty), or by the line's dispenser (match user: a record named by its user)
@@ -67,12 +69,23 @@ DETAIL_TYPES = ("Data", "Date", "Small Text", "Age")
 # retention has passed; not given, the door counts only a detail read from the customer's records, or an Age, a person's
 DETAIL_KEYS = ("label", "type", "own", "till", "pos_sale_detail", "desk_field", "record", "person")
 LOOKUP_KEYS, LOOKUP_MATCH = ("doctype", "match", "field"), ("user", "customer", "customer_link")
-PERIOD_MONTHS = (1, 2, 3, 4, 6, 12)  # a period starts on 1 January, and every period_months after it (PB-4 spec §7)
+PERIOD_MONTHS = (1, 2, 3, 4, 6, 12)  # a period starts on 1 January, and every period_months after it (the door's)
 NAME_MAX = 61  # the shop's name rule for a print format or a reminder (tools/manifest/validate.py)
 _ID = re.compile(r"^[a-z][a-z0-9_]{1,39}$")
 _LANG = re.compile(r"^[a-z]{2,3}(-[A-Z]{2})?$")  # a print's language, as the shop names it (ar, pt-BR)
 # a column may print the balance before its line, which the door's print works out (never routed on, never required)
 PRINTED_ONLY = ("balance_before",)
+# every key a data set, a book, a column and a condition may carry: an unknown one (a typo, a key a later version dropped)
+# is refused, never silently left out of the book
+SET_KEYS = ("format", "id", "title", "jurisdiction", "vertical", "sources", "certified", "notice", "details", "authority",
+            "columns_from", "books", "print_language")
+BOOK_KEYS = ("id", "title", "form", "cite", "classes", "item_groups", "class_source", "conditions", "numbering", "balance",
+             "correction", "retention_years", "medium", "medium_note", "loss_count_hours", "period_months",
+             "return_due_days", "in_colour", "required", "columns", "purchaser_slip")
+COLUMN_KEYS = ("label", "value", "when", "mark", "group")
+CONDITION_KEYS = ("field", "operator", "value")
+AUTHORITY_KEYS = ("pos_sale_details", "desk_fields", "dispenser_licence")
+AUTHORITY_COLUMNS = ("authority_no", "authority_issuer", "authority_issuer_licence", "authority_date")
 _COLOUR = re.compile(r"^#[0-9a-fA-F]{6}$")
 _PLAIN = re.compile(r"^[^<>{}%]*$")  # text printed or shown in Desk: no markup, no template syntax
 # insert_after on each record type: the last field before its Connections tab (read on the bench, 2026-10-22)
@@ -98,6 +111,8 @@ def check(ds):
     bad = []
     if ds.get("format") != 1:
         bad.append("format: 1")
+    if set(ds) - set(SET_KEYS):
+        bad.append(f"{', '.join(sorted(set(ds) - set(SET_KEYS)))}: not a key of a data set")
     for k in ("id",):
         if not (isinstance(ds.get(k), str) and _ID.match(ds[k])):
             bad.append(f"{k}: lower-case letters, digits and _")
@@ -130,9 +145,16 @@ def check(ds):
             bad.append(f"details.{key}: an own detail's sources are this app's: it names no other")
         elif not (_text(d.get("pos_sale_detail", "x")) and _ID.match(d.get("desk_field", "xx") or "")):
             bad.append(f"details.{key}: a sale detail's name in plain text, a Desk field's name in lower case")
-    dl = (ds.get("authority") or {}).get("dispenser_licence")
-    if dl is not None and (not _lookup_ok(dl) or dl.get("match") == "customer_link"):
-        bad.append("authority.dispenser_licence: the record's type, match (user or customer) and field")
+    auth = ds.get("authority") or {}
+    if not isinstance(auth, dict) or set(auth) - set(AUTHORITY_KEYS):
+        bad.append(f"authority: its sources go under {', '.join(AUTHORITY_KEYS)}")
+        auth = {}
+    for k in ("pos_sale_details", "desk_fields"):
+        if not (isinstance(auth.get(k, {}), dict) and set(auth.get(k, {})) <= set(AUTHORITY_COLUMNS)):
+            bad.append(f"authority.{k}: maps {', '.join(AUTHORITY_COLUMNS)} to their sources")
+    dl = auth.get("dispenser_licence")
+    if dl is not None and (not _lookup_ok(dl) or dl.get("match") != "user"):
+        bad.append("authority.dispenser_licence: a record named by the line's dispensing user: its type, match user and field")
     known = set(LINE_COLUMNS) | {f"detail:{k}" for k in details}
     looked_up = {f"detail:{k}" for k, d in details.items() if isinstance(d, dict) and "record" in d}
     dated = set(DATE_COLUMNS) | {f"detail:{k}" for k, d in details.items() if isinstance(d, dict) and d.get("type") == "Date"}
@@ -150,6 +172,8 @@ def check(ds):
         bad.append("books: an id twice")
     for b in books:
         w = f"books.{b.get('id')}"
+        if set(b) - set(BOOK_KEYS):
+            bad.append(f"{w}: {', '.join(sorted(set(b) - set(BOOK_KEYS)))} is not a key of a book")
         if not (isinstance(b.get("id"), str) and _ID.match(b["id"])):
             bad.append(f"{w}.id: lower-case letters, digits and _")
         for k in ("title", "cite"):
@@ -173,6 +197,8 @@ def check(ds):
             conds = []
         for i, c in enumerate(conds):
             op = c.get("operator") if isinstance(c, dict) else None
+            if isinstance(c, dict) and set(c) - set(CONDITION_KEYS):
+                bad.append(f"{w}.conditions[{i}]: a condition is a field, an operator and a value")
             if op not in OPERATORS:
                 bad.append(f"{w}.conditions[{i}]: the operator is one of {', '.join(OPERATORS)}")
             if not isinstance(c, dict) or c.get("field") not in known:
@@ -182,6 +208,8 @@ def check(ds):
             elif c["field"] in dated and op not in SET_OPS:
                 bad.append(f"{w}.conditions[{i}]: {c['field']} is a date or a time: a condition on it is is set or "
                            "is not set")
+            elif isinstance(c.get("value"), bool):
+                bad.append(f"{w}.conditions[{i}]: a tick-box column compares 0 or 1, never true or false")
             elif op in NUMBER_OPS and not isinstance(c.get("value"), (int, float)):
                 bad.append(f"{w}.conditions[{i}]: {op} compares a number (a date is not one)")
             elif op in ("=", "!=") and not isinstance(c.get("value"), (str, int, float)):
@@ -192,17 +220,19 @@ def check(ds):
             bad.append(f"{w}.balance: 0 or 1")
         if b.get("purchaser_slip", 0) not in (0, 1):
             bad.append(f"{w}.purchaser_slip: 0 or 1 (1: a slip the purchaser signs, printed from the sale)")
-        for n in slip_names(ds, b):
+        for n in [print_name(ds, b)] + slip_names(ds, b):
             if len(n) > NAME_MAX:
-                bad.append(f"{w}: its slip's name, '{n}', is over {NAME_MAX} characters: shorten the book's title")
+                bad.append(f"{w}: its print's name, '{n}', is over {NAME_MAX} characters: shorten the data set's or "
+                           "the book's id")
         if b.get("correction") not in CORRECTIONS:
             bad.append(f"{w}.correction: one of {', '.join(CORRECTIONS)}")
         if b.get("medium") not in MEDIA:
             bad.append(f"{w}.medium: one of {', '.join(MEDIA)}")
         if not (isinstance(b.get("retention_years"), int) and 1 <= b["retention_years"] <= 30):
             bad.append(f"{w}.retention_years: 1 to 30")
-        if "loss_count_hours" in b and not (_whole(b["loss_count_hours"]) and b["loss_count_hours"] > 0):
-            bad.append(f"{w}.loss_count_hours: a whole number above 0")
+        if "loss_count_hours" in b and not (_whole(b["loss_count_hours"]) and b["loss_count_hours"] > 0
+                                            and b.get("balance") == 1):
+            bad.append(f"{w}.loss_count_hours: a whole number above 0, on a book that keeps a balance (a count needs one)")
         if "period_months" in b or "return_due_days" in b:
             if not (_whole(b.get("period_months")) and b["period_months"] in PERIOD_MONTHS):
                 bad.append(f"{w}.period_months: one of {', '.join(map(str, PERIOD_MONTHS))} (a period starts on "
@@ -231,11 +261,17 @@ def check(ds):
                                + (" (balance_before: a book that keeps a balance)" if v in PRINTED_ONLY else ""))
             if c.get("when") not in (None, "In", "Out"):
                 bad.append(f"{w}.columns[{i}].when: In or Out")
+            if set(c) - set(COLUMN_KEYS):
+                bad.append(f"{w}.columns[{i}]: {', '.join(sorted(set(c) - set(COLUMN_KEYS)))} is not a key of a column")
             if "group" in c and not _text(c["group"]):
                 bad.append(f"{w}.columns[{i}].group: plain text (the band printed over the column)")
+        sourced = {f"detail:{k}" for k, d in details.items() if isinstance(d, dict)
+                   and (d.get("own") or {"pos_sale_detail", "desk_field", "record"} & set(d))}
         for r in b.get("required", []):
             if r not in known:
                 bad.append(f"{w}.required: '{r}' is not a column of the line or a declared detail")
+            elif r.startswith("detail:") and r not in sourced:
+                bad.append(f"{w}.required: {r} has no source to fill it")
     return bad
 
 
@@ -272,11 +308,17 @@ def book_ref(ds, b):
     return f"{ds['id']}.{b['id']}"
 
 
+def print_name(ds, b):
+    """A book's print format: named by the data set's and the book's ids, never by its title, so a corrected book
+    (a new id, the old book kept switched off with its lines) never takes the old book's print."""
+    return f"{PREFIX} {ds.get('id')} {b.get('id')}"
+
+
 def slip_names(ds, b):
     """A book's purchaser's slip: one print format on the till's sale, one on the Desk's (a print format has one type)."""
     if not b.get("purchaser_slip"):
         return []
-    return [f"{PREFIX} {_market(ds)} {b.get('title')} slip {where}" for where in ("till", "Desk")]
+    return [f"{print_name(ds, b)} slip {where}" for where in ("till", "Desk")]
 
 
 def _market(ds):
@@ -297,6 +339,8 @@ def book_data(ds, b):
     out = {"ref": book_ref(ds, b), "title": b["title"], "form": b.get("form", ""), "cite": b["cite"],
            "data_set_title": ds["title"], "certified": ds["certified"], "notice": ds["notice"], "columns": cols,
            "groups": any(c.get("group") for c in cols), "correction_words": CORRECTIONS[b["correction"]],
+           # the door writes "Entered late." into a late line's remarks: a book printing remarks says it already
+           "prints_remarks": any("remarks" in c["value"] for c in cols),
            "medium_note": b.get("medium_note", "")}
     if b.get("in_colour"):
         out["in_colour"] = b["in_colour"]
@@ -363,8 +407,9 @@ def _detail(key, d):
     return out
 
 
-def declaration(ds, b, enabled=1):
-    """One book as the door's manifest kind register_books takes it (PB-4 spec §2)."""
+def declaration(ds, b):
+    """One book as the door's manifest kind register_books takes it. Every book installs switched off: the shop switches
+    its own market's on, and an update never switches a book (the door's rule), so no build ever flips one."""
     d = {"book": book_ref(ds, b), "title": b["title"], "data_set": ds["id"], "cite": b["cite"],
          "certified": ds["certified"], "medium": b["medium"], "numbering": b["numbering"], "balance": b["balance"],
          "correction": b["correction"], "retention_years": b["retention_years"], "count_role": ROLE,
@@ -373,7 +418,7 @@ def declaration(ds, b, enabled=1):
          "columns": [{**{k: c[k] for k in ("label", "group", "when", "mark") if k in c},
                       "value": [_col(ds, v) for v in c["value"]]} for c in b["columns"]],
          "details": {slots(ds)[k]: _detail(k, x) for k, x in (ds.get("details") or {}).items()},
-         "authority": ds.get("authority", {}), "columns_from": ds.get("columns_from", {}), "enabled": enabled}
+         "authority": ds.get("authority", {}), "columns_from": ds.get("columns_from", {}), "enabled": 0}
     if b.get("classes"):
         d["items"] = {"classes": b["classes"]}
         d["class_source"] = b["class_source"]
@@ -386,7 +431,7 @@ def declaration(ds, b, enabled=1):
 
 
 def print_format(ds, b):
-    pf = {"name": f"{PREFIX} {_market(ds)} {b['title']}", "doc_type": PERIOD, "print_format_type": "Jinja",
+    pf = {"name": print_name(ds, b), "doc_type": PERIOD, "print_format_type": "Jinja",
           "html": book_html(ds, b)}
     if ds.get("print_language"):
         pf["default_print_language"] = ds["print_language"]
@@ -425,9 +470,9 @@ LISTS = [
     {"name": f"{PREFIX} Counts due after a loss", "ref_doctype": STATE, "report_type": "Report Builder",
      "columns": ["book", "register_store", "item", "item_name", "balance", "last_loss_at", "count_due_by"],
      "filters": [["count_due_by", "is", "set"]], "order_by": "count_due_by asc", "roles": [ROLE]},
-    {"name": f"{PREFIX} Returns due", "ref_doctype": PERIOD, "report_type": "Report Builder",
+    {"name": f"{PREFIX} Periods open", "ref_doctype": PERIOD, "report_type": "Report Builder",
      "columns": ["book", "register_store", "from_date", "to_date", "return_due", "status"],
-     "filters": [["status", "=", "Open"], ["return_due", "is", "set"]], "order_by": "return_due asc", "roles": [ROLE]},
+     "filters": [["status", "=", "Open"]], "order_by": "return_due asc", "roles": [ROLE]},
 ]
 CARDS = [
     {"name": f"{PREFIX} Entries entered late", "document_type": LINE, "filters": [["booked_late", "=", 1]], "color": "#b26b00"},
@@ -435,8 +480,8 @@ CARDS = [
     {"name": f"{PREFIX} Entries below zero", "document_type": LINE, "filters": [["below_zero", "=", 1]], "color": "#8a1c1c"},
     {"name": f"{PREFIX} Counts due after a loss", "document_type": STATE, "filters": [["count_due_by", "is", "set"]],
      "color": "#8a1c1c"},
-    {"name": f"{PREFIX} Returns due", "document_type": PERIOD,
-     "filters": [["status", "=", "Open"], ["return_due", "is", "set"]], "color": "#b26b00"},
+    {"name": f"{PREFIX} Periods open", "document_type": PERIOD,
+     "filters": [["status", "=", "Open"]], "color": "#b26b00"},
 ]
 CHART = {"name": f"{PREFIX} Register entries a day", "document_type": LINE, "chart_type": "Count", "based_on": "entry_date",
          "timespan": "Last Month", "time_interval": "Daily", "type": "Bar", "roles": [ROLE]}
@@ -444,19 +489,21 @@ DASHBOARD = {"name": f"{PREFIX} Register", "charts": [CHART["name"]], "cards": [
 
 WORKSPACE_TEXT = (
     f"Open tasks: search Desk for the dashboard {PREFIX} Register, whose cards count the entries entered late, incomplete "
-    f"or below zero, the counts due after a loss and the returns due; each card opens its list. The saved lists: "
-    f"{PREFIX} Register entries, {PREFIX} Losses and disposals, {PREFIX} Counts due after a loss and {PREFIX} Returns due "
-    "(search Desk for each; filter a list by book, store and dates). The books are on "
-    "Retail Register Book: switch on your market's books, map their register stores before the first sale, and count "
-    "each book's opening balances. Each day at close, print the day's pages of each book (Print book on the book, "
-    "today's dates) and keep them at the store, for an outage. Once a book's retention has passed, Erase persons' "
-    "details on the book takes a person's details out of its oldest entries; the book says what is due.")
+    f"or below zero, the counts due after a loss and the periods not yet signed off (a return is sent for each); each "
+    f"card opens its list. The saved lists: {PREFIX} Register entries, {PREFIX} Losses and disposals, {PREFIX} Counts "
+    f"due after a loss and {PREFIX} Periods open (search Desk for each; filter a list by book, store and dates). The "
+    "books are on Retail Register Book: switch on your market's books, map their register stores before the first sale, "
+    "and count each item's opening balance before its first receipt or sale. At each sale of a book that asks for it, "
+    "print the purchaser's slip from the sale for the purchaser to sign. Each day at close, print the day's pages of "
+    "each book (Print book on the book, today's dates) and keep them at the store, for an outage. Once a book's "
+    "retention has passed, Erase persons' details on the book erases a person's details from the entries then due "
+    "and says what still waits; it has no preview.")
 
 
-def build_manifest(sets=None, books=None, enabled=0):
+def build_manifest(sets=None, books=None):
     """The app's manifest: the Desk fields and sale details of every data set (a shop's update never drops a field an
     earlier version installed); the books, prints and reminders of `books` (every data set's, when none are named),
-    installed switched on or off (`enabled`)."""
+    each installed switched off."""
     sets = datasets() if sets is None else sets
     _all_checked(sets)
     books = sets if books is None else books
@@ -486,7 +533,7 @@ def build_manifest(sets=None, books=None, enabled=0):
                        "pharmacy counter app's drug schedules, prescriptions and patients: install that app first.",
         "custom_fields": fields,
         "sale_attributes": [{"name": sale_detail(k)} for k, d in own.items() if d.get("till", 1)],
-        "register_books": [declaration(ds, b, enabled) for ds, b in pairs],
+        "register_books": [declaration(ds, b) for ds, b in pairs],
         "print_formats": [print_format(ds, b) for ds, b in pairs] + [s for ds, b in pairs for s in slips(ds, b)],
         "notifications": [reminder(ds, b) for ds, b in pairs if b.get("period_months")],
         "reports": [{
@@ -533,12 +580,20 @@ def chosen(ids, sets=None):
 
 
 def build_files(ids=None):
-    """This sample's catalogue (every data set's books, switched off), or a shop's own copy (only its data sets' books,
-    switched on). Either way the manifest carries every data set's fields."""
+    """This sample's catalogue (every data set's books), or a shop's own copy (only its data sets' books). Either way the
+    manifest carries every data set's fields, and every book installs switched off."""
     sets = datasets()
-    if ids is None:
-        return build_manifest(sets)
-    return build_manifest(sets, chosen(ids, sets), enabled=1)
+    return build_manifest(sets, None if ids is None else chosen(ids, sets))
+
+
+def refusals(m):
+    """The shop's own checker on the manifest, where the kit's copy is beside this sample (tools/manifest); [] elsewhere."""
+    kit = os.path.join(HERE, "..", "..", "tools", "manifest")
+    if not os.path.exists(os.path.join(kit, "validate.py")):
+        return []
+    sys.path.insert(0, kit)
+    import validate  # noqa: E402  (the kit's copy of the shop's checker)
+    return validate.validate(m)
 
 
 def main(argv=None):
@@ -549,6 +604,9 @@ def main(argv=None):
     if argv and out == HERE:
         raise SystemExit("--out: a shop's copy goes in a folder of its own, never over this sample's catalogue")
     m = build_files(argv[1].split(",") if argv else None)
+    refused = refusals(m)
+    if refused:
+        raise SystemExit("the shop's checker refuses this manifest: " + "; ".join(f"{r['where']}: {r['reason']}" for r in refused))
     os.makedirs(out, exist_ok=True)
     with open(os.path.join(out, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(m, f, indent=1, ensure_ascii=False)

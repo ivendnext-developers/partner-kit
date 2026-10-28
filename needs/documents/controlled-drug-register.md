@@ -20,7 +20,7 @@ Your market's books as data in your manifest (`register_books`, POS version 2.1.
 - A routing rule has at most three conditions, all of which must hold, on a column of the register's line.
 - An update cannot change a book: a corrected book ships under a new id, which numbers from 1.
 - The retailer maps its warehouses to each book's register store before the first sale; a manifest cannot.
-- Sample S41 was written before the door shipped: its books are in its `door_declaration.json`, not yet in its manifest, so build a book from the regulated register recipe and the register books page.
+- Sample S41 (0.2.0) installs eight markets' pharmacy books on the door from data sets, Kenya's three first: start from it, or build a book from the regulated register recipe and the register books page.
 - An article first stocked after its book is switched on is not checked against the balance until a count sets it.
 
 ## Tell the customer

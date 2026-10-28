@@ -1,7 +1,7 @@
 """The markets after Kenya, each a data set with no code change: Jordan (Forms 8 and 9), Nigeria (the First Schedule's
 Parts A and B, one register per class), the UAE's Abu Dhabi (PH 17, PH 20), Ghana (the Dangerous Drugs Record), Saudi
 Arabia (a register per drug), Egypt (the received and dispensed book) and Mexico (the libros de control). Each routing test names the clause it follows; each book
-renders from lines shaped as the door's line (PB-4 spec §3.1), through the stand-in print reader of test_rsr.
+renders from lines shaped as the door's line (the register books page, §5), through the stand-in print reader of test_rsr.
 
     python3 -m unittest discover -s samples/s41_regulated_register/tests -p 'test_*.py'
 """
@@ -61,7 +61,7 @@ class EveryMarket(unittest.TestCase):
                 self.assertIn(b["medium"], ("printed_book", "official_book"), f"{ds['id']}.{b['id']}")
 
     def test_an_uncited_correction_takes_the_strictest_mode(self):
-        # PB-4 spec §5: EG, GH, JO and MX are uncited and take a reversing line; NG, AE and SA follow their clause
+        # the door's correction modes: EG, GH, JO and MX are uncited and take a reversing line; NG, AE and SA follow their clause
         want = {"jo_pharmacy": "reversing_line", "gh_pharmacy": "reversing_line", "mx_pharmacy": "reversing_line",
                 "ae_abu_dhabi_pharmacy": "reversing_line", "ng_pharmacy": "dated_note", "sa_pharmacy": "signed_amendment",
                 "eg_pharmacy": "reversing_line"}
@@ -74,7 +74,7 @@ class EveryMarket(unittest.TestCase):
         self.assertEqual(got["jo_pharmacy.form_8"], 2)  # Instructions Art. 7(b); Law 23/2016 Art. 25(a)(2)
         self.assertEqual({v for k, v in got.items() if k.startswith("ng_")}, {2})  # reg. 26
         # DOH s. 7.4 keeps the record 5 years; the UAE keeps health data 25 (Law 2/2019 Art. 20), and the door keeps a
-        # person's details as long as the entry (PB-4 hand-off line 21)
+        # person's details as long as the entry (the register books page, §8)
         self.assertEqual({got["ae_abu_dhabi_pharmacy.ph_17"], got["ae_abu_dhabi_pharmacy.ph_20"]}, {25})
         self.assertEqual(got["sa_pharmacy.drug_register"], 10)  # Art. 22(6)
         self.assertEqual(got["eg_pharmacy.received_dispensed"], 10)  # Law 182/1960 Art. 31
@@ -95,7 +95,7 @@ class EveryMarket(unittest.TestCase):
         self.assertEqual(own["rx_ingredients"].get("till"), 0)
 
     def test_a_book_that_takes_more_than_sales_requires_no_column_on_the_desk(self):
-        # PB-4 spec §3.4: a person's Desk submit with a required column empty is refused, so a book that takes an
+        # the door: a person's Desk submit with a required column empty is refused, so a book that takes an
         # issue, a disposal or a transfer (a stock entry: no customer, no address) must require nothing, or the
         # regulator-witnessed disposal itself would be refused
         for ds in MARKETS:
@@ -407,7 +407,7 @@ class JordanLayouts(unittest.TestCase):
         self.assertNotIn("Loss or theft", cells(out)[0])
 
     def test_form_8_prints_no_invoice_number_on_a_dispensing(self):
-        # the column is the supplier's or the stock movement's number (reference_no, PB-4 spec §3.1); the notice says so
+        # the column is the supplier's or the stock movement's number (reference_no, the door's line); the notice says so
         b = "jo_pharmacy.form_8"
         out, _ = render(JO, "form_8", period(b), [row(book=b, item_class="JO Schedule 10", balance=4,
                                                       counterparty="Patient J")], page_state(b))
@@ -506,7 +506,7 @@ class FieldListLayouts(unittest.TestCase):
                       counterparty="Patient S")]
         st = page_state(b, "PHD-MORPH-10", common["item_name"])
         out, _ = render(SA, "drug_register", period(b), lines, st)
-        # (ب) the balance before the entry, which the door works out (PB-4 hand-off line 11)
+        # (ب) the balance before the entry, which the door works out (the door's balance_before)
         self.assertEqual(cells(out)[0], ["1", "0", "20", "B-77", "2027-06-30", "NUPCO", "2026-10-20", "20", "", "", "", "", "",
                                          "", "", "", "", "", "20"])
         self.assertEqual(cells(out)[1], ["2", "20", "", "", "", "", "", "", "1", "B-77", "2026-10-20", "P. Pharmacist",
