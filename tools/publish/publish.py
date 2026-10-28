@@ -24,6 +24,9 @@ a customer behind by omission. A list you give replaces the remembered one; `--n
 The signing key is read from `--key`, else `IVN_LIBRARY_KEY` (the key's line, for a CI secret), else
 `~/.ivendnext/library-signing.key`.
 
+The App library's Publish page (`https://library.ivendnext.app/publish.js`, kept in the hosting repository as
+`library/functions/site/publish.js`) builds the same payload in a browser: a change here is a change there.
+
 Exit code: 0 published (or waiting for the approval) · 1 refused (by the checks or by the library) · 2 usage.
 Standard library only.
 """
