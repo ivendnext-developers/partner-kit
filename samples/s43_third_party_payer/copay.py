@@ -57,7 +57,7 @@ WORDS = {
     "no_member": "{customer} has no cover with {payer} today.",
     "plan_off": "{plan} is not active today.",
     "plan_currency": "{plan} is priced in another currency than this sale.",
-    "plan_list": "{plan} prices its sales on {plan_list}: put the invoice on that price list, then ask the payer again.",
+    "plan_list": "{plan} prices its sales on {plan_list}: pick the cover again, or put the invoice on that list.",
     "not_on_list": "{item} is not covered by {payer}'s price list.",          # VR-29
     "zero_on_list": "{item} has no price on {payer}'s price list.",           # VR-36
     "not_covered": "{item} is not covered by {plan}: the customer pays it.",  # informational, never a refusal
@@ -163,7 +163,7 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
         return no_cover("plan_off")
     if plan.get("currency") and request.get("currency") and plan["currency"] != request["currency"]:
         return no_cover("plan_currency")    # its limits and its list are in its own currency, never converted here
-    if plan.get("price_list") and request.get("price_list") and plan["price_list"] != request["price_list"]:
+    if plan.get("price_list") and request.get("price_list") is not None and request["price_list"] != plan["price_list"]:
         # the till prices a plan's sale on the plan's list; a Desk invoice keeps its own (payer.md §7): never split
         # the store's price as if it were the payer's tariff
         return no_cover("plan_list")
@@ -298,7 +298,7 @@ def door_coverage(context: dict, plan: dict | None, member: dict | None, custome
         lines.append(dict(l, amount=amount, discount=discount, rate=rate))
     total = major(context["total_minor"])
     request = {"sale_ref": context.get("sale_ref"), "customer": context.get("customer"), "date": context.get("date"),
-               "currency": context.get("currency"), "price_list": context.get("price_list"), "precision": exp,
+               "currency": context.get("currency"), "price_list": context.get("price_list") or "", "precision": exp,
                "lines": lines,
                "payer_cap": total + min(major(context.get("rounding_minor") or 0), ZERO)}
     out = coverage(request, plan, member, customer_barred, list_prices, payer)

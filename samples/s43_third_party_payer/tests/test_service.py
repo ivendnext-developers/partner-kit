@@ -310,11 +310,14 @@ class Door(Base):
         out = self.coverage(lines=[line], tax_included=False)[1]
         self.assertEqual(out["totals"]["patient_share_minor"], 2100)
 
+    def test_an_ask_naming_no_list_on_a_plan_with_one_is_no_cover(self):
+        self.assertEqual(self.coverage(price_list="")[1]["code"], "plan_list")
+
     def test_a_desk_invoice_not_priced_on_the_plans_list_is_no_cover_in_words(self):
         # a Desk invoice keeps its own list (payer.md §7); split on the store's price it would claim the wrong tariff
         out = self.coverage(price_list="Standard Selling")[1]
         self.assertEqual((out["answer"], out["code"]), ("no_cover", "plan_list"))
-        self.assertIn("put the invoice on that price list", out["message"])
+        self.assertIn("put the invoice on that list", out["message"])
         self.assertEqual(contract_errors("coverage_answer", out), [])
 
     def test_the_old_wire_is_refused(self):
@@ -488,8 +491,18 @@ class Claims(Base):
         self.shop.find("POS Invoice", "PHD-26-0012").update(docstatus=2, custom_mpos_payer_journal=None)
         code, out = self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
         self.assertIn("1 taken out: their sale was cancelled.", out["message"]["body"])
-        self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0012")["status"], "Returned")
+        gone = self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0012")
+        self.assertEqual((gone["status"], gone["payer_share"]), ("Returned", "0"))     # owed nothing, as the books say
         self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0011")["status"], "Submitted")
+
+    def test_an_incomplete_claim_of_a_cancelled_sale_is_retired_too(self):
+        out = self.coverage(sale_ref="PHD-26-0013")[1]
+        self.shop.book("PHD-26-0013", door_lines(out), payer_prescription=None)     # the insurer needs one: Incomplete
+        self.build()
+        self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0013")["status"], "Incomplete")
+        self.shop.find("POS Invoice", "PHD-26-0013").update(docstatus=2)
+        self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
+        self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0013")["status"], "Returned")
 
     def test_the_claims_file_puts_ready_claims_in_one_batch_and_marks_them_sent(self):
         self.booked()
