@@ -44,7 +44,7 @@ import publish  # noqa: E402  (the signing key: keygen, load_key, key_id)
 
 URL = "https://hosting.ivendnext.app/v1/order"
 DOMAIN = b"ivendnext-hosting-order/1\n"   # never the library upload's: an order cannot be replayed as an upload
-SCHEDULE_VERSION = "2026-10-27"            # the App Hosting Schedule you accept by ordering (guide 14b)
+SCHEDULE_VERSION = "2026-10-21"            # the App Hosting Schedule you accept by ordering: Schedule 1 of the iVendNext Developer Terms, version 1.0 (guide 14b)
 SETTING = re.compile(r"([A-Z][A-Z0-9_]{0,63})=(.*)", re.S)
 REPO = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}/[A-Za-z0-9._-]{1,100}")
 SUBJECT = re.compile(r"repo:([A-Za-z0-9][A-Za-z0-9-]{0,38})@[0-9]{1,15}/([A-Za-z0-9._-]{1,100})@[0-9]{1,15}")
@@ -204,7 +204,7 @@ def main(argv) -> int:
     try:
         if a.cmd == "order":
             if not a.accept_schedule:
-                raise Stop(f"read the App Hosting Schedule (version {SCHEDULE_VERSION}, guide 14b) and add --accept-schedule")
+                raise Stop(f"read the App Hosting Schedule (dated {SCHEDULE_VERSION}, guide 14b) and add --accept-schedule")
             copies = [e.strip() for e in (a.copies or a.env).split(",") if e.strip()]
             fields = order_payload(a.folder, a.partner, a.plan, copies, a.github, a.branch, a.customer, a.set,
                                    a.invoice, a.email, a.root or None, a.github_subject)

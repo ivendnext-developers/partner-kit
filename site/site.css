@@ -274,3 +274,18 @@ tr:last-child td { border-block-end: 0; }
 .crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .25rem .5rem; }
 .crumbs li + li::before { content: "›"; margin-inline-end: .5rem; color: var(--ivn-text-muted, #5b6b78); }
 .crumbs [aria-current="page"] { color: var(--ivn-text); }
+
+/* Host your app from the page (site/assets-src/hosting.js, HOSTWEB) */
+.hosting-tool { margin-block: var(--ivn-s5); padding: var(--ivn-s4); border: 1px solid var(--site-line); border-radius: var(--site-radius-card); background: var(--ivn-surface); }
+.hosting-step { margin-block-end: var(--ivn-s5); }
+.hosting-step h3 { margin-block-start: 0; }
+.hosting-field { display: flex; flex-direction: column; gap: 0.25rem; max-inline-size: 40rem; }
+.hosting-field input[type=text], .hosting-field input[type=email], .hosting-field input[type=password], .hosting-field select,
+.hosting-field textarea { font: inherit; padding: 0.5rem; border: 1px solid var(--site-line); border-radius: var(--ivn-radius); }
+.hosting-hint { font-size: 0.875rem; color: var(--ivn-text-muted); }
+.hosting-nav, .hosting-copy { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.hosting-copy code { overflow-wrap: anywhere; }
+.hosting-bad { color: #a4262c; font-weight: 600; }
+.hosting-ok { color: #107c10; }
+.hosting-tool button:focus-visible, .hosting-tool input:focus-visible, .hosting-tool select:focus-visible,
+.hosting-tool textarea:focus-visible { outline: 2px solid var(--site-focus); outline-offset: 2px; }

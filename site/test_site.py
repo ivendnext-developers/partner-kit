@@ -361,6 +361,11 @@ class SiteTests(unittest.TestCase):
             m = tag.search(f.read_text("utf-8"))
             self.assertTrue(m, f"{f}: no content policy")
             self.assertIn("script-src 'self'", m.group(1))
+            if f.relative_to(self.out).as_posix() in build.OWN_POLICY:   # its own, in place of the site's: one address
+                self.assertEqual(m.group(1), build.page_policy(), f.name)
+                self.assertEqual(re.findall(r"https://[^\s;]+", m.group(1)), [build.HOSTING_API], f.name)
+                self.assertEqual(len(tag.findall(f.read_text("utf-8"))), 1, f.name)
+                continue
             self.assertEqual(set(re.findall(r"https://[^\s;]+", m.group(1))), {f"https://{h}" for h in check_links.ALLOWED_HOSTS}, f.name)
         with mock.patch.object(check_links, "ALLOWED_HOSTS", ("stats.example.com",)), mock.patch.object(check_links, "ANALYTICS_HOST", "stats.example.com"):
             policy = tag.search(build.shell("T", "<p>x</p>", "x.html", noindex=True)).group(1)
@@ -376,8 +381,12 @@ class SiteTests(unittest.TestCase):
         want = f'<meta name="ivn-analytics" content="https://{check_links.ANALYTICS_HOST}">'
         for f in self.out.rglob("*.html"):
             t = f.read_text("utf-8")
-            self.assertEqual(t.count(want), 1, f.name)
-            self.assertLess(t.index('assets/analytics.js" defer'), t.index('assets/search.js" defer'), f.name)
+            if f.relative_to(self.out).as_posix() in build.OWN_POLICY:   # no counter on the page that holds a sign-in
+                self.assertNotIn("ivn-analytics", t, f.name)
+                self.assertNotIn("assets/analytics.js", t, f.name)
+            else:
+                self.assertEqual(t.count(want), 1, f.name)
+                self.assertLess(t.index('assets/analytics.js" defer'), t.index('assets/search.js" defer'), f.name)
             self.assertIn("counts visits without cookies or personal data", t, f.name)
             self.assertIn('href="https://ivend.com/privacy-policy/">privacy policy</a>', t, f.name)
             self.assertNotIn("<script>", t.replace('<script type="application/ld+json">', ""), f.name)      # still no inline script
@@ -441,6 +450,9 @@ class SiteTests(unittest.TestCase):
             text = f.read_text("utf-8")
             up = "/" if f.name == "404.html" else "../" * f.relative_to(self.out).as_posix().count("/")
             self.assertIn(f'<form class="site-search" role="search" action="{up}needs/all.html" method="get" data-root="{up}">', text, f.name)
+            if f.relative_to(self.out).as_posix() in build.OWN_POLICY:   # the hosting page runs only its own script
+                self.assertNotIn("assets/search.js", text, f.name)
+                continue
             self.assertIn(f'<script src="{up}assets/search.js" defer></script>', text, f.name)
         self.assertTrue((self.out / "needs/all.html").exists())
         self.assertIn('href="index.html#a-to-z"', (self.out / "needs/all.html").read_text("utf-8"))
