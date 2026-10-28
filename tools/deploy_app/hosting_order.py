@@ -1,20 +1,24 @@
 """Order CitiXsys App Hosting online, and run it: `deploy_app.py order | status | secret | cancel`.
 
     python3 tools/deploy_app/deploy_app.py order <app folder> --plan starter --partner <you> --github <owner>/<repo>
-                                           [--branch main] [--env prod] [--customer <name>] [--set NAME=VALUE …]
+                                           [--branch main] [--copies prod,sandbox] [--customer <name>] [--set NAME=VALUE …]
                                            [--invoice --email <address>] --accept-schedule [--root <folder>] [--dry-run]
     python3 tools/deploy_app/deploy_app.py status --partner <you> [--order <id>]
-    python3 tools/deploy_app/deploy_app.py secret --partner <you> --order <id> --name <NAME>   (the value from stdin)
+    python3 tools/deploy_app/deploy_app.py secret --partner <you> --order <id> [--env sandbox] --name <NAME>   (stdin)
     python3 tools/deploy_app/deploy_app.py cancel --partner <you> --order <id>
 
 `order` runs the same checks as planning (`deploy_app.check`), then sends one request signed with the key you publish
-with (`tools/publish`, `keygen`): the app's settings, the plan, the copy, your GitHub repository and branch, the plain
+with (`tools/publish`, `keygen`): the app's settings, the plan, its copies, your GitHub repository and branch, the plain
 settings you give with `--set`, and the App Hosting Schedule's version you accept. It prints a Stripe checkout address
 to pay monthly by card, or, with `--invoice`, says an invoice with payment terms goes to `--email`. An app that only
 answers presses and is listed in the App library needs no payment. Once paid, CitiXsys's hosting builds the app with no
 person, and each version your GitHub workflow pushes (`hosting-workflow.yml`) is put live the same way.
 
-`secret` puts one secret's value (a container's `"secret": true` settings), read from standard input and never shown.
+One order runs the plan's copies (production and its sandbox, and staging on the plans that have it) at the plan's one
+price; `--copies` names fewer. Each copy has its own address, its own secrets and its own role your workflow pushes with.
+
+`secret` puts one secret's value (a container's `"secret": true` settings) on one copy, read from standard input and
+never shown.
 The signed request is sent over HTTPS; the value is kept only in the app's own secret store.
 
 Exit code: 0 done · 1 refused · 2 usage. Standard library only.
@@ -85,12 +89,23 @@ def app_settings(m: dict) -> dict:
     return out
 
 
-def order_payload(folder, partner: str, plan: str, env: str, github: str, branch: str, customer: str = "",
+def plan_copies(plan: str) -> list[str]:
+    """The copies a plan runs, production first (plans.json `enforced.envs`)."""
+    import deploy_app
+    p = deploy_app.PLANS["plans"].get(plan)
+    return [e for e in deploy_app.PLANS["envs"] if p and e in p["enforced"]["envs"]]
+
+
+def order_payload(folder, partner: str, plan: str, copies, github: str, branch: str, customer: str = "",
                   settings=(), invoice: bool = False, email: str = "", root=None, subject: str = "") -> dict:
     import deploy_app  # the planning tool's checks, reused
     m = json.loads((pathlib.Path(folder) / "app.json").read_text("utf-8"))
     image = "" if deploy_app.is_function(m) else f"hosting.ivendnext.app/partner-apps/{m.get('app')}:{m.get('version')}"
-    bad, m = deploy_app.check(folder, image, plan, partner, env, customer, root)
+    copies = list(copies) or plan_copies(plan)
+    bad = [f"--copies: {e} is named twice" for e in sorted({e for e in copies if copies.count(e) > 1})]
+    for env in dict.fromkeys(copies) or ["prod"]:  # each copy as planning checks it; a problem shared by all, once
+        b, m = deploy_app.check(folder, image, plan, partner, env, customer, root)
+        bad += [x for x in b if x not in bad]
     if m.get("schedule") or "timeout" in m:      # the order carries neither: the app would run with no schedule
         bad.append("schedule: an app that runs on a schedule is put live by CitiXsys, not ordered online yet: "
                    "ask through your partner contact (guide 14b, A function on a schedule)")
@@ -112,20 +127,41 @@ def order_payload(folder, partner: str, plan: str, env: str, github: str, branch
     if bad:
         raise Stop("\n".join("REFUSED: " + b for b in bad))
     gh = {"repo": github, "branch": branch, **({"subject": subject} if subject else {})}
-    return {"app": app_settings(m), "plan": plan, "env": env, "customer": customer, "github": gh,
+    return {"app": app_settings(m), "plan": plan, "copies": copies, "customer": customer, "github": gh,
             "plain_env": plain, "invoice": invoice, "email": email, "schedule_version": SCHEDULE_VERSION}
 
 
+REASONS = (("held", "held: {}"), ("waiting_for", "waiting for its secrets: {}"), ("roll_failed", "version {} did not start"),
+           ("push_refused", "version {} was refused (its size, or not a version)"), ("stopped", "stopped: {}"))
+
+
+def _state(c: dict) -> str:
+    st = f"building ({c['building']})" if c.get("status") == "building" else c.get("status", "")
+    if c.get("live_version"):
+        st += f", running {c['live_version']}"
+    return "; ".join([st] + [w.format(", ".join(c[k]) if isinstance(c[k], list) else c[k]) for k, w in REASONS if c.get(k)])
+
+
 def show(out: dict) -> list[str]:
-    lines = [f"ORDER {out['order']}: {out['id']} on {out['plan']}, {out['status']} ({out['kind']})", f"  address  {out['address']}"]
+    copies = out.get("copies") or [out]  # a hosting from before copies answers with one
+    name = copies[0]["id"] if len(copies) == 1 else out["id"]
+    lines = [f"ORDER {out['order']}: {name} on {out['plan']} ({out['kind']}), {len(copies)} cop{'y' if len(copies) == 1 else 'ies'}"
+             + (f" for {out['customer']}" if out.get("customer") else "")]
     if out.get("checkout_url"):
-        lines.append(f"  pay      {out['checkout_url']}  (monthly by card; the hosting starts building once it is paid)")
+        lines.append(f"  pay      {out['checkout_url']}  (monthly by card, one price for every copy; the hosting starts "
+                     "building once it is paid)")
     elif out.get("kind") == "invoice" and out.get("status") == "pending":
         lines.append("  pay      an invoice with payment terms is sent to your e-mail; the hosting builds the app once it is paid")
-    up = out.get("upload") or {}
-    lines.append(f"  upload   {up.get('image') or up.get('package')}  from GitHub, role {up.get('github_role')}")
+    if out.get("stops_at"):
+        lines.append(f"  stops    at the end of the paid month ({time.strftime('%Y-%m-%d', time.gmtime(out['stops_at']))})")
+    for c in copies:
+        up = c.get("upload") or {}
+        lines += [f"  {c.get('env', 'prod'):<8} {c['address']}  {_state(c)}",
+                  f"           upload {up.get('image') or up.get('package')}"]
+    roles = [(c.get("upload") or {}).get("github_role") for c in copies]
+    lines.append(f"  github   set the variable IVN_HOSTING_ROLES to {json.dumps(roles, separators=(',', ':'))}")
     if out.get("secrets"):
-        lines.append(f"  secrets  {', '.join(out['secrets'])}: put each with `deploy_app.py secret`")
+        lines.append(f"  secrets  {', '.join(out['secrets'])}: put each on each copy with `deploy_app.py secret --env <copy>`")
     return lines
 
 
@@ -135,7 +171,9 @@ def main(argv) -> int:
     o = sub.add_parser("order", help="check, sign and send a hosting order")
     o.add_argument("folder")
     o.add_argument("--plan", required=True)
-    o.add_argument("--env", default="prod")
+    o.add_argument("--copies", default="", metavar="ENV,ENV",
+                   help="the copies to run, from the plan's (default: all of them): prod, staging, sandbox")
+    o.add_argument("--env", default="", help=argparse.SUPPRESS)  # an older form: one copy
     o.add_argument("--customer", default="")
     o.add_argument("--github", required=True, help="the repository your workflow pushes from: owner/name")
     o.add_argument("--branch", default="main")
@@ -155,6 +193,7 @@ def main(argv) -> int:
         p.add_argument("--order", default="" if name == "status" else None, required=name != "status")
         if name == "secret":
             p.add_argument("--name", required=True)
+            p.add_argument("--env", default="", help="the copy: prod, staging or sandbox (needed when the order has several)")
     for p in sub.choices.values():
         p.add_argument("--partner", required=True, help="your company's code, as iVendNext registered it")
         p.add_argument("--key", help="your signing key file (default: IVN_LIBRARY_KEY, then the keygen default)")
@@ -166,16 +205,18 @@ def main(argv) -> int:
         if a.cmd == "order":
             if not a.accept_schedule:
                 raise Stop(f"read the App Hosting Schedule (version {SCHEDULE_VERSION}, guide 14b) and add --accept-schedule")
-            fields = order_payload(a.folder, a.partner, a.plan, a.env, a.github, a.branch, a.customer, a.set,
+            copies = [e.strip() for e in (a.copies or a.env).split(",") if e.strip()]
+            fields = order_payload(a.folder, a.partner, a.plan, copies, a.github, a.branch, a.customer, a.set,
                                    a.invoice, a.email, a.root or None, a.github_subject)
         elif a.cmd == "secret":
             value = getpass.getpass(f"{a.name}: ") if sys.stdin.isatty() else sys.stdin.read().rstrip("\n")
-            fields = {"order": a.order, "name": a.name, "value": value}
+            fields = {"order": a.order, "name": a.name, "value": value, **({"env": a.env} if a.env else {})}
         else:
             fields = {"order": a.order} if a.order else {}
         data = envelope(payload(a.cmd, a.partner, **fields), publish.load_key(a.key))
         if getattr(a, "dry_run", False):
-            print(f"DRY RUN: {fields['app']['app']} {fields['app']['version']} on {a.plan}, {len(data)} bytes. Nothing was sent.")
+            print(f"DRY RUN: {fields['app']['app']} {fields['app']['version']} on {a.plan}, copies {', '.join(fields['copies'])}, "
+                  f"{len(data)} bytes. Nothing was sent.")
             return 0
         status, out = send(data)
         if "refused" in out:
@@ -187,8 +228,11 @@ def main(argv) -> int:
             print(f"order {out['order']}: stops at the end of the paid month" if out.get("stops_at") else
                   f"order {out['order']}: {out['status']}")
         else:
-            for o_ in out.get("orders") or [out]:
+            orders = out["orders"] if "orders" in out else [out]
+            for o_ in orders:
                 print("\n".join(show(o_)))
+            if not orders:
+                print("no hosting orders yet")
         return 0
     except (Stop, publish.Stop) as e:
         print(str(e) if str(e).startswith("REFUSED") else "REFUSED: " + str(e))

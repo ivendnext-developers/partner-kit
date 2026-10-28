@@ -47,7 +47,7 @@ FUNCTION_INCLUDES = [{"what": "an HTTPS address, answered only when a shop calls
                      {"what": "each shop's secrets kept in the app's own encrypted table", "live": True},
                      {"what": "logs", "live": True},
                      {"what": "a notice before each iVendNext upgrade", "live": True},
-                     {"what": "a sandbox copy for your sandbox shop, run as a second app", "live": True}]
+                     {"what": "a sandbox copy for your sandbox shop, in the same order at the same price", "live": True}]
 SKIP = re.compile(r"(^|/)(\.[^/]*|__pycache__)(/|$)|\.pyc$")
 IMAGE = re.compile(r"(?P<repo>[a-z0-9.-]+(?::[0-9]+)?/[a-z0-9._/-]+):(?P<tag>[A-Za-z0-9._-]+)")
 
