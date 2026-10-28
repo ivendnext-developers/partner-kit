@@ -57,6 +57,21 @@ check("no folder given, none sent (never \".\" over one set by hand)",
   !("folder" in h.orderPayload({ appJson: "{}", copies: [], folder: "." }, "order", "x").github));
 check("a required plain setting left empty is named, a secret is not",
   JSON.stringify(h.missingRequired({ env: [{ name: "A", required: true }, { name: "B", required: true, secret: true }, { name: "C" }] }, { A: " " })) === '["A"]');
+{
+  const s0 = { repo: "acme/apps", subject: "", subjectSet: true };                       // the person emptied the box
+  const found = { found: true, can_push: true, repo: "acme/apps", subject: "repo:acme@1/apps@2" };
+  check("an emptied subject (the plain name) is never refilled", h.prefill(s0, "acme/apps", found).subject === "");
+  check("an empty, untouched subject is filled in", h.prefill({ repo: "acme/apps" }, "acme/apps", found).subject === "repo:acme@1/apps@2");
+  const moved = h.prefill({ repo: "acme/old", subject: "repo:acme@1/old@2", subjectSet: true }, "acme/old",
+                          { found: true, can_push: true, repo: "acme/new", subject: "repo:acme@1/new@3" });
+  check("a renamed repository takes GitHub's name and drops the old one's subject", moved.repo === "acme/new" && moved.subject === "repo:acme@1/new@3");
+  check("GitHub's letter case wins", h.prefill({ repo: "Acme/Apps" }, "Acme/Apps", found).repo === "acme/apps");
+  const stranger = h.prefill({ repo: "x/apps" }, "x/apps", { found: true, can_push: false, repo: "x/apps", subject: "repo:x@9/apps@8" });
+  check("someone else's repository is not filled in", stranger.subject === undefined || stranger.subject === "");
+  check("GitHub saying nothing about access is not read as cannot", h.prefill({ repo: "a/b" }, "a/b", { found: true, repo: "a/b", subject: "repo:a@1/b@2" }).subject === "repo:a@1/b@2");
+  check("a late answer for another repository changes nothing", h.prefill({ repo: "a/c" }, "a/b", found).repo === "a/c");
+  check("a subject names its repository in either form", h.subjectNames("repo:a@1/b@2", "A/B") && h.subjectNames("repo:a/b", "a/b") && !h.subjectNames("repo:a@1/c@2", "a/b"));
+}
 check("a schedule is read as the hosting reads it", h.scheduled({ schedule: { pass: "x" } }) && !h.scheduled({ schedule: {} }) && h.scheduled({ timeout: 0 }));
 check("a scheduled app's schedule reaches the hosting, which refuses it",
   "schedule" in h.appSettings({ app: "a", schedule: { pass: "rate(1 minute)" } }) && "timeout" in h.appSettings({ app: "a", timeout: 120 }));
@@ -67,6 +82,7 @@ check("the order records the Schedule only when it was accepted, at that version
 check("the check sends no command", !("cmd" in h.orderPayload({ appJson: "{}", copies: [] }, "check", "x")));
 check("a repository from the list signs in with its ids unless told otherwise",
   h.subjectFor({ subject: "repo:a@1/b@2" }, false) === "repo:a@1/b@2" && h.subjectFor({ subject: "repo:a@1/b@2" }, true) === "");
+check("a removed copy is not said to be running", !/running/.test(h.copyWords({ status: "removed", live_version: "1.1.2" })));
 check("an order is settled once every copy is live, or it ended",
   h.settled({ copies: [{ status: "live" }, { status: "live" }] }) && !h.settled({ copies: [{ status: "live" }, { status: "waiting" }] })
   && h.settled({ copies: [{ status: "failed" }] }));

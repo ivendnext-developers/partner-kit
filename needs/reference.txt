@@ -6,6 +6,7 @@ recipes/bulk_reads.md — a technique every outside app uses
 recipes/common_custom_projects.md — the catalogue's front door, not a need
 recipes/estate_rollout.md — rolling a set-up out to many stores (chapter 14a)
 recipes/hosted_sandbox.md — the builder's own sandbox (chapter 2)
+recipes/host_from_the_web_page.md — ordering CitiXsys App Hosting from the developer site, screen by screen (chapter 14b)
 recipes/integration_user.md — the app's user and key (chapter 2)
 recipes/money_kit.md — testing money on recorded baskets (chapter 14)
 recipes/make_it_your_own.md — a partner's own version of one of our apps, for any need an app of ours answers

@@ -116,7 +116,7 @@
       failed: "failed to build (the payment is refunded)"
     }[st] || st;
     if (st === "building" && c.building) w = { create: "being built", roll: "putting a new version live", stop: "being stopped", remove: "being removed" }[c.building] || w;
-    if (c.live_version) w += ", running " + c.live_version;
+    if (c.live_version && ["removed", "expired", "failed", "removing"].indexOf(st) < 0) w += ", running " + c.live_version;
     if (c.held) w += " (" + c.held + ")";
     if (c.waiting_for) w += " (waiting for " + [].concat(c.waiting_for).join(", ") + ")";
     if (c.roll_failed) w += " (version " + c.roll_failed + " did not start)";
@@ -128,6 +128,28 @@
     var cs = order.copies || [order];
     return cs.every(function (c) { return c.status === "live" && !c.building; }) ||
       cs.some(function (c) { return ["failed", "expired", "removed", "stopped"].indexOf(c.status) >= 0; });
+  }
+
+  function ended(o) {   // every copy has ended, as My apps reads it
+    return (o.copies || [o]).every(function (c) { return ["expired", "removed", "failed"].indexOf(c.status) >= 0; });
+  }
+
+  // A lookup's answer applied to the steps (pure, tested): GitHub's own spelling of the name wins; a subject the person
+  // typed or emptied (subjectSet) is never replaced; one that names an earlier repository is cleared.
+  function prefill(s, asked, r) {
+    var out = Object.assign({}, s);
+    if (out.repo !== asked) return out;                           // the person has moved on: a late answer changes nothing
+    var mine = r.found && r.can_push !== false;
+    if (mine && r.repo !== asked) out.repo = r.repo;              // renamed, moved, or typed in other letter case
+    if (out.subject && !subjectNames(out.subject, out.repo)) { out.subject = ""; out.subjectSet = false; }
+    if (mine && !out.subjectSet) out.subject = r.subject;
+    out.looked = Object.assign({}, r, { asked: out.repo });
+    return out;
+  }
+
+  function subjectNames(subject, repo) {   // the subject's owner/name (either form) is this repository
+    var m = /^repo:([^@/]+)(?:@\d+)?\/([^@:]+)(?:@\d+)?$/.exec(subject || "");
+    return !!m && (m[1] + "/" + m[2]).toLowerCase() === String(repo || "").toLowerCase();
   }
 
   function checkCommand(s, maker, m) {
@@ -142,7 +164,7 @@
 
   var api = { b64u: b64u, randomString: randomString, challengeOf: challengeOf, authorizeUrl: authorizeUrl,
               readReturn: readReturn, subjectFor: subjectFor, appSettings: appSettings, plainNames: plainNames, scheduled: scheduled,
-              missingRequired: missingRequired,
+              missingRequired: missingRequired, prefill: prefill, subjectNames: subjectNames,
               planCopies: planCopies, orderPayload: orderPayload, copyWords: copyWords, settled: settled,
               checkCommand: checkCommand, publishCommand: publishCommand, PAGE: PAGE, API: API };
   if (typeof module === "object" && module.exports) {
@@ -163,6 +185,7 @@
   }
 
   // 2. Take the code and the state (or the paid order) out of the address before anything else.
+  var FOLLOW = "ivn-hosting-follow";   // an order Stripe sent this tab back for: followed once you sign in here
   var pending = null;
   try { pending = JSON.parse(root.sessionStorage.getItem(PENDING) || "null"); } catch (e) { pending = null; }
   root.sessionStorage.removeItem(PENDING);   // one use, whatever the address says
@@ -284,14 +307,27 @@
     return box;
   }
 
-  // ── step 1: your app ──
+  // ── before you start, then step 1: your app ──
+
+  function beforeYouStart() {
+    var kit = "https://github.com/ivendnext-developers/partner-kit/blob/main/";
+    return el("details", { "class": "hosting-before", open: !s.repo },
+      el("summary", { text: "Before you start: four things to have ready" }),
+      el("ol", {},
+        el("li", {}, "Your app, made with the kit: a sample started with ", code("tools/manifest/start.py"), " or the ",
+          el("a", { href: kit + "tools/app_template/README.md", text: "app template" }),
+          ". Its folder holds ", code("app.json"), ", which this page asks for."),
+        el("li", {}, "Your app in a GitHub repository, with the kit's ", code("tools/deploy_app/hosting-workflow.yml"),
+          " copied to ", code(".github/workflows/"), " in it."),
+        el("li", {}, "The ", el("a", { href: cfg.install_url, text: "iVendNext App Hosting GitHub App" }),
+          " installed on that repository. Then this page lists it, finds its sign-in subject and sets its Variables for you. It writes the repository's Actions variables and nothing else: it never reads your code."),
+        el("li", {}, "The values of your app's settings (the plain ones in ", code("app.json"), "), and for a customer's app, the customer's code.")),
+      p("The whole page, screen by screen, with a real sample: ",
+        el("a", { href: "recipes/host_from_the_web_page.html", text: "Host your app from the web page" }), "."));
+  }
 
   function appStep() {
     var box = el("div", { "class": "hosting-step" }, el("h3", { text: "1. Your app" }));
-    var install = cfg.install_url;
-    box.appendChild(p("To pick your repository from a list and let this page set its Variables, install the ",
-      el("a", { href: install, text: "iVendNext App Hosting GitHub App" }),
-      " on it. It can write that repository's Actions variables and nothing else: it never reads your code. You can also type the repository and set the Variables yourself."));
     var repoIn = el("input", { type: "text", value: s.repo || "", placeholder: "owner/name", autocomplete: "off", spellcheck: "false" });
     var list = el("select", {}, el("option", { value: "", text: repos ? "Choose from your list" : "Loading your list" }));
     (repos || []).forEach(function (r) { list.appendChild(el("option", { value: r.repo, text: r.repo + (r.private ? " (private)" : "") })); });
@@ -301,7 +337,9 @@
       if (r) { s.repo = r.repo; s.branch = r.branch; }
       save(); render();
     });
-    repoIn.addEventListener("change", function () { s.repo = repoIn.value.trim(); save(); render(); });
+    repoIn.addEventListener("change", function () {
+      s.repo = repoIn.value.trim(); s.subject = ""; s.subjectSet = false; s.looked = null; save(); render(); lookUp(true);
+    });
     box.appendChild(field("Repository", list));
     box.appendChild(field("Or type it", repoIn, "The repository your GitHub workflow pushes each version from."));
     var branch = el("input", { type: "text", value: s.branch || "main", spellcheck: "false" });
@@ -322,9 +360,22 @@
       box.appendChild(p("Not sure? Ask GitHub: ", code("gh api repos/" + r.repo + "/actions/oidc/customization/sub --jq .sub_claim_prefix"),
         " prints the first form if your repository uses it."));
     } else if (s.repo) {
+      var lk = s.looked && s.looked.asked === s.repo ? s.looked : null;
+      if (!lk) {
+        box.appendChild(p("Looking for ", code(s.repo), " on GitHub."));
+      } else if (lk.found && lk.can_push === false) {
+        box.appendChild(el("p", { "class": "hosting-bad", text: "You cannot push to " + lk.repo + " on GitHub: check the repository's name. An order trusts only the repository you push your app from." }));
+      } else if (lk.found) {
+        box.appendChild(p("Found ", code(lk.repo), " on GitHub. Its sign-in subject is filled in below."));
+      } else {
+        box.appendChild(p("This page cannot see ", code(s.repo), ". Check the name. If the repository is private, ",
+          el("a", { href: cfg.install_url, text: "install the GitHub App on it" }), " and press Look again, or paste below the line this command prints on your computer:"));
+        box.appendChild(copyable("gh api repos/" + s.repo + "/actions/oidc/customization/sub --jq .sub_claim_prefix"));
+      }
+      box.appendChild(button("Look again", function () { s.looked = null; keep(); render(); lookUp(true); }, true));
       var subj = el("input", { type: "text", value: s.subject || "", spellcheck: "false", placeholder: "repo:owner@id/name@id" });
-      subj.addEventListener("change", function () { s.subject = subj.value.trim(); save(); });
-      box.appendChild(field("Its sign-in subject", subj, "From gh api repos/" + s.repo + "/actions/oidc/customization/sub --jq .sub_claim_prefix. Leave it empty for an older repository."));
+      subj.addEventListener("change", function () { s.subject = subj.value.trim(); s.subjectSet = true; save(); });
+      box.appendChild(field("Its sign-in subject", subj, "How GitHub signs your workflow in: repo: then the owner and the repository, each with its number. Empty means the plain name, for a repository made before 2025."));
     }
 
     var file = el("input", { type: "file", accept: ".json,application/json" });
@@ -351,17 +402,29 @@
       names.forEach(function (n) {
         var v = el("input", { type: "text", value: s.settings[n] || "", spellcheck: "false" });
         v.addEventListener("change", function () { s.settings[n] = v.value; save(); render(); });
+        var about = ((m.env || []).filter(function (e) { return e && e.name === n; })[0] || {}).about;
         box.appendChild(field("Setting " + n + (need.indexOf(n) >= 0 ? " (required)" : ""), v,
-          need.indexOf(n) >= 0 ? "A plain setting, not a secret. Your app needs a value here to start." :
-                                 "A plain setting, not a secret. Leave it empty to leave it out."));
+          (about ? about + " " : "") + (need.indexOf(n) >= 0 ? "Your app needs a value here to start." : "Leave it empty to leave it out.")));
       });
       var gap = missingRequired(m, s.settings);
       if (gap.length) box.appendChild(el("p", { "class": "hosting-bad", text: "Give a value for " + gap.join(", ") + ": your app.json marks it required." }));
       box.appendChild(p("The page checks app.json with the hosting. The Dockerfile, the licence files and the package need your repository: check them on your computer first, as the hosting will."));
       box.appendChild(copyable(checkCommand(s, who.maker, m)));
     }
-    box.appendChild(nav(null, (s.repo && m && !scheduled(m) && !missingRequired(m, s.settings).length) ? "customer" : null));
+    var lkd = s.looked && s.looked.asked === s.repo ? s.looked : null;
+    var notYours = lkd && lkd.found && lkd.can_push === false;
+    var waiting = s.repo && !pick(s.repo) && !lkd;   // the lookup has not answered yet
+    box.appendChild(nav(null, (s.repo && m && !scheduled(m) && !missingRequired(m, s.settings).length && !notYours && !waiting) ? "customer" : null));
     return box;
+  }
+
+  function lookUp(again) {   // a typed repository: its sign-in subject, found by the hosting with your own GitHub access
+    if (!s.repo || pick(s.repo) || (!again && s.looked && s.looked.asked === s.repo)) return;
+    var asked = s.repo;
+    call("POST", "/repo", { repo: asked }).then(function (r) {
+      if (s.repo !== asked) return;
+      s = prefill(s, asked, r); keep(); redraw();
+    }, function (e) { if (s.repo === asked) { s.looked = { asked: asked, found: false, failed: true }; keep(); } fail(e); });
   }
 
   function pick(name) { return (repos || []).filter(function (r) { return r.repo === name; })[0] || null; }
@@ -382,6 +445,8 @@
     codeIn.addEventListener("change", function () { s.customer = codeIn.value.trim().toLowerCase(); save(); render(); });
     box.appendChild(el("p", {}, el("label", {}, no, " Not for a customer")));
     box.appendChild(el("p", {}, el("label", {}, yes, " Built for a customer: "), codeIn));
+    box.appendChild(p("The customer's code is the one its Made for you shelf in the App library goes by: the same code you name when you publish to that customer. Lower-case letters, digits and hyphens, like ",
+      code("acme-stores"), ". Ask your account team if you do not have it."));
     box.appendChild(p("Whoever orders the hosting pays: you, or the customer the app is built for when that customer orders it."));
     if (who.internal) {
       box.appendChild(p("Our own teams' copies are free: your own apps, and a customer's sandbox and staging copies before it goes live. A customer's production copy is ordered and paid by that customer, through the account team."));
@@ -449,6 +514,11 @@
 
   function payStep() {
     var box = el("div", { "class": "hosting-step" }, el("h3", { text: "4. Pay" }));
+    if (s.order && current && current.order === s.order && ended(current)) {
+      box.appendChild(p("Order ", code(s.order), " has ended (" + current.status + "). Start a new one."));
+      box.appendChild(button("A new order", newOrder));
+      return box;
+    }
     if (!s.order && s.accepted !== cfg.schedule_version) {
       box.appendChild(p("Accept the App Hosting Schedule first (step 3)."));
     } else if (!s.order) {
@@ -457,7 +527,7 @@
       box.appendChild(button("Order", function (ev) {
         ev.target.disabled = true;
         call("POST", "/order", orderPayload(s, "order", cfg.schedule_version)).then(function (r) {
-          s.order = r.order; s.checkout = r.checkout_url || null; keep(); say(""); render(); follow();
+          s.order = r.order; s.checkout = r.checkout_url || null; keep(); say(""); render(); follow(); refreshApps();
         }, function (e) { ev.target.disabled = false; fail(e); });
       }));
     } else {
@@ -496,7 +566,11 @@
       if (!settled(o)) poller = root.setTimeout(function () { follow(true); }, Date.now() - since < 120000 ? 5000 : 30000);
       else refreshApps();
     }, function (e) {
-      if (["not_signed_in", "no_order"].indexOf(e.code) < 0) poller = root.setTimeout(function () { follow(true); }, 30000);
+      if (e.code === "no_order") {   // not this account's order: let it go, and say where orders are
+        s.order = null; s.step = "app"; current = null; keep();
+        say("That order is not one of this hosting account's. Your orders are under My apps.", true); render(); return;
+      }
+      if (e.code !== "not_signed_in") poller = root.setTimeout(function () { follow(true); }, 30000);
       fail(e);
     });
   }
@@ -578,12 +652,13 @@
   // ── My apps ──
 
   function loadRepos() {
-    call("GET", "/repos").then(function (x) { repos = x.repos; redraw(); }, function () { repos = []; redraw(); });
+    call("GET", "/repos").then(function (x) { repos = x.repos; redraw(); lookUp(); }, function () { repos = []; redraw(); lookUp(); });
   }
 
   var mine = null;
   function refreshApps() {
     if (!session || !who || !who.maker) return;
+    call("GET", "/whoami").then(function (w) { who = w; redraw(); }, function () {});
     call("POST", "/order", { cmd: "status" }).then(function (r) { mine = r.orders; redraw(); }, function () {});
   }
 
@@ -591,13 +666,14 @@
     var box = el("div", { "class": "hosting-step" }, el("h3", { text: "My apps" }));
     if (!mine) { box.appendChild(p("Reading your hosting.")); return box; }
     if (!mine.length) { box.appendChild(p("No hosting yet.")); return box; }
-    var ul = el("ul", {});
+    var ul = el("ul", {}), old = el("ul", {});
     mine.forEach(function (o) {
+      var gone = (o.copies || [o]).every(function (c) { return ["expired", "removed", "failed"].indexOf(c.status) >= 0; });
       var li = el("li", {}, el("strong", { text: o.name || o.id }), " on " + o.plan + (o.customer ? ", for " + o.customer : "") +
         (o.stops_at ? ", stops at the end of the paid month (" + new Date(o.stops_at * 1000).toISOString().slice(0, 10) + ")" : "") + ": " +
         (o.copies || [o]).map(function (c) { return COPY_WORDS[c.env] + " " + copyWords(c); }).join("; ") + " ");
       li.appendChild(button("Follow", function () {
-        s.order = o.order; s.checkout = null; s.invoice = o.kind === "invoice"; s.variables = null; s.step = "follow";
+        toTop(); s.order = o.order; s.checkout = null; s.invoice = o.kind === "invoice"; s.variables = null; s.step = "follow";
         keep(); current = null; render(); follow();
       }, true));
       var unpaid = o.status === "pending";
@@ -610,12 +686,11 @@
           }, fail);
         }, true));
       }
-      ul.appendChild(li);
+      (gone ? old : ul).appendChild(li);
     });
-    box.appendChild(ul);
-    box.appendChild(button("A new order", function () {
-      s = { step: "app", maker: s.maker, login: s.login, repo: s.repo, branch: s.branch, folder: s.folder }; current = null; stopPolling(); keep(); render();
-    }, true));
+    if (ul.childNodes.length) box.appendChild(ul); else box.appendChild(p("Nothing running or on order."));
+    if (old.childNodes.length) box.appendChild(el("details", {}, el("summary", { text: "Ended orders (" + old.childNodes.length + ")" }), old));
+    box.appendChild(button("A new order", newOrder, true));
     return box;
   }
 
@@ -623,10 +698,18 @@
 
   function nav(back, next, last) {
     var row = el("p", { "class": "hosting-nav" });
-    if (back) row.appendChild(button("Back", function () { s.step = back; keep(); render(); }, true));
-    if (next) row.appendChild(button("Next", function () { s.step = next; keep(); render(); if (next === "follow") follow(); }));
-    if (last) row.appendChild(button("Back to the order's steps", function () { s.step = "pay"; keep(); render(); }, true));
+    if (back) row.appendChild(button("Back", function () { s.step = back; keep(); render(); toTop(); }, true));
+    if (next) row.appendChild(button("Next", function () { s.step = next; keep(); render(); toTop(); if (next === "follow") follow(); }));
+    if (last) row.appendChild(button("Back to the order's steps", function () { s.step = "pay"; keep(); render(); toTop(); }, true));
     return row;
+  }
+
+  function toTop() { tool.scrollIntoView({ block: "start" }); }   // a shorter step must not leave the reader below the form
+
+  function newOrder() {   // a fresh order: the repository and its folder stay, the rest starts again
+    s = { step: "app", maker: s.maker, login: s.login, repo: s.repo, branch: s.branch, folder: s.folder, subject: s.subject,
+          subjectSet: s.subjectSet, plainSubject: s.plainSubject };
+    current = null; stopPolling(); keep(); render(); toTop(); lookUp(true);
   }
 
   var view = el("div", {});
@@ -635,6 +718,7 @@
     view.appendChild(signInPanel());
     if (session && who && who.maker && who.open) {
       var step = { app: appStep, customer: customerStep, plan: planStep, pay: payStep, follow: followStep }[s.step] || appStep;
+      if (step === appStep) view.appendChild(beforeYouStart());
       view.appendChild(step());
       view.appendChild(appsPanel());
     }
@@ -647,18 +731,21 @@
   call("GET", "/config").then(function (c) {
     cfg = c;
     if (arrival.kind === "refused") say(arrival.why, true);
-    if (arrival.kind === "back") say("Stripe sent you back for order " + arrival.order + ". Go back to the tab you ordered in: it shows whether the payment arrived and follows the order to live. You can close this one.");
+    if (arrival.kind === "back" || arrival.kind === "left") root.sessionStorage.setItem(FOLLOW, arrival.order);
+    if (arrival.kind === "back") say("Stripe sent you back for order " + arrival.order + ". Go back to the tab you ordered in, or sign in here: this page then shows whether the payment arrived and follows the order to live.");
     if (arrival.kind === "left") say("You left Stripe's checkout for order " + arrival.order + " without paying. Pay or cancel it under My apps once you sign in, or with the kit's deploy_app.py cancel.");
     if (arrival.kind !== "signin") { render(); return; }
     say("Signing you in.");
     return call("POST", "/signin", { code: arrival.code, verifier: arrival.verifier, redirect_uri: PAGE }).then(function (r) {
       session = r.session; who = r; delete who.session; say("");
       if (who.maker) ownSteps();
+      var back = root.sessionStorage.getItem(FOLLOW);
+      if (back && who.maker) { root.sessionStorage.removeItem(FOLLOW); s.order = back; s.step = "follow"; keep(); }
       render();
       if (who.maker) {
         refreshApps();
         loadRepos();
-        if (s.order && s.step === "follow") follow();
+        if (s.order) follow();   // the saved order's state, so an order that has ended offers a new one
       }
     }, fail);
   }, function (e) { cfg = { ready: false, failed: true }; say(e.message, true); render(); });

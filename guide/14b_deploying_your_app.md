@@ -139,7 +139,7 @@ Plain (not secret) settings go on the order: `--set LOG_LEVEL=info`. Each must b
 
 ## From the web page
 
-The same order runs with no command on the developer site's hosting page, `https://developer.ivendnext.com/hosting`.
+The same order runs with no command on the developer site's hosting page, `https://developer.ivendnext.com/hosting`. Every screen of it, with a real example: [Host your app from the web page](../recipes/host_from_the_web_page.md).
 
 1. **Sign in with GitHub,** with the account you use in the iVendNext Developers organisation. Your hosting account says which company you order for and what it pays; your team in the organisation lets you in. If your GitHub account is linked to more than one hosting account, you choose one, and you pay that account's price. Not linked yet? Ask your partner manager to add your GitHub login to your company's hosting account.
 2. **Your app:** pick your repository from your list, or type it, with its branch and the folder that holds `app.json`, and drop in your `app.json`. The page checks it with the hosting and shows the command that checks the Dockerfile, the licence files and the package on your computer.
