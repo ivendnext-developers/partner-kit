@@ -84,6 +84,12 @@
     return (m.env || []).filter(function (e) { return e && e.name && !e.secret; }).map(function (e) { return e.name; });
   }
 
+  function missingRequired(m, settings) {   // the hosting refuses an order that leaves one of these empty
+    return (m.env || []).filter(function (e) {
+      return e && e.name && e.required && !e.secret && !String((settings || {})[e.name] || "").trim();
+    }).map(function (e) { return e.name; });
+  }
+
   function planCopies(plans, plan) {
     var p = plans && plans.plans && plans.plans[plan];
     return p ? ENVS.filter(function (e) { return p.enforced.envs.indexOf(e) >= 0; }) : [];
@@ -136,6 +142,7 @@
 
   var api = { b64u: b64u, randomString: randomString, challengeOf: challengeOf, authorizeUrl: authorizeUrl,
               readReturn: readReturn, subjectFor: subjectFor, appSettings: appSettings, plainNames: plainNames, scheduled: scheduled,
+              missingRequired: missingRequired,
               planCopies: planCopies, orderPayload: orderPayload, copyWords: copyWords, settled: settled,
               checkCommand: checkCommand, publishCommand: publishCommand, PAGE: PAGE, API: API };
   if (typeof module === "object" && module.exports) {
@@ -340,15 +347,20 @@
         (m.runs === "function" ? "a function (it answers presses)" : "a container (its service)") + ", size " + (m.size || "?") + "."));
       var names = plainNames(m);
       s.settings = s.settings || {};
+      var need = (m.env || []).filter(function (e) { return e && e.required; }).map(function (e) { return e.name; });
       names.forEach(function (n) {
         var v = el("input", { type: "text", value: s.settings[n] || "", spellcheck: "false" });
-        v.addEventListener("change", function () { s.settings[n] = v.value; save(); });
-        box.appendChild(field("Setting " + n, v, "A plain setting, not a secret. Leave it empty to leave it out."));
+        v.addEventListener("change", function () { s.settings[n] = v.value; save(); render(); });
+        box.appendChild(field("Setting " + n + (need.indexOf(n) >= 0 ? " (required)" : ""), v,
+          need.indexOf(n) >= 0 ? "A plain setting, not a secret. Your app needs a value here to start." :
+                                 "A plain setting, not a secret. Leave it empty to leave it out."));
       });
+      var gap = missingRequired(m, s.settings);
+      if (gap.length) box.appendChild(el("p", { "class": "hosting-bad", text: "Give a value for " + gap.join(", ") + ": your app.json marks it required." }));
       box.appendChild(p("The page checks app.json with the hosting. The Dockerfile, the licence files and the package need your repository: check them on your computer first, as the hosting will."));
       box.appendChild(copyable(checkCommand(s, who.maker, m)));
     }
-    box.appendChild(nav(null, (s.repo && m && !scheduled(m)) ? "customer" : null));
+    box.appendChild(nav(null, (s.repo && m && !scheduled(m) && !missingRequired(m, s.settings).length) ? "customer" : null));
     return box;
   }
 
