@@ -477,8 +477,8 @@ def prev_next(page: Page, pages: list[Page], up: str) -> str:
         return ""
     seq = [p for p in pages if p.out.startswith("guide/") and not p.out.endswith("index.html")]
     i = seq.index(page)
-    a = f'<a rel="prev" href="{up}{seq[i-1].out}">← {html.escape(seq[i-1].short)}</a>' if i else "<span></span>"
-    b = f'<a rel="next" href="{up}{seq[i+1].out}">{html.escape(seq[i+1].short)} →</a>' if i + 1 < len(seq) else "<span></span>"
+    a = f'<a rel="prev" href="{up}{seq[i-1].out}">Previous: {html.escape(seq[i-1].short)}</a>' if i else "<span></span>"
+    b = f'<a rel="next" href="{up}{seq[i+1].out}">Next: {html.escape(seq[i+1].short)}</a>' if i + 1 < len(seq) else "<span></span>"
     return f'<nav class="pn" aria-label="Chapters">{a}{b}</nav>'
 
 
