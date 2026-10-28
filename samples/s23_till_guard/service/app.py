@@ -18,6 +18,15 @@ rules read are used for up to ten minutes (``SETTINGS_STALE``); after that the s
 the subscription's down answer (``allow_and_flag`` in this manifest: the sale goes on and is flagged). No record yet =
 every rule off. The service writes nothing to the shop.
 
+*Lowest prices* (the settings record names one of the retailer's price lists) reads the shop at a check that sells a
+priced line and is not refused: that list's Item Price rows of the basket's items in the sale's currency that name no
+customer, supplier or batch, about ``PRICE_CHUNK`` bytes of item codes a call, none started once less than ``READ_LEAST`` is left of
+``CHECK_BUDGET`` (counted from the call's arrival, the settings read included, inside the check's 3 s); each
+item's rows kept one minute and standing in for ten while the shop cannot be read, as the settings are. After that a large
+sale is still sent to its approval, saying its lowest prices could not be checked; any other sale gets 503, and the till
+applies the down answer. The refusals are worked out first, so a price list that cannot be read never stops one. The integration user
+needs read on Item Price (given in Role Permissions, as for Batch).
+
 *Warn of a shorter-dated batch* reads the shop at each scan: one call to ``ivendnext_mpos.api.v1.get_batch_qty`` for the
 store's batches of the item with stock, and each batch's expiry date from its Batch record, kept a day (a batch's expiry
 does not change). The answer aims at SCAN_BUDGET (1 s, inside the scan's 1.5 s): each read is given only the time left, a
@@ -41,6 +50,7 @@ TGR_PREFIX (default PP TGR; IVENDNEXT TGR for the library's app) · PORT (defaul
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import signal
@@ -63,6 +73,9 @@ import shops  # noqa: E402
 
 SETTINGS_TTL, SETTINGS_STALE, READ_TIMEOUT = 60, 600, 1.0   # each step of the read inside the scan's 1.5 s (per step, not a wall clock)
 SCAN_BUDGET, EXPIRY_TTL, EXPIRY_MAX = 1.0, 86400, 5000       # the shelf-life answer's whole time; a batch's expiry, kept a day
+PRICE_FIELDS = ["item_code", "uom", "price_list_rate", "currency", "valid_from", "valid_upto"]
+PRICE_CHUNK = 2000                            # the item codes' bytes per read, as sent (a request line stays under 4 KB)
+CHECK_BUDGET, READ_LEAST = 2.0, 0.2           # a check's own time, from its arrival, inside the till's 3 s; the least a read is given
 #        route          (secret key, read the context,     answer)
 ROUTES = {"/tgr/check": ("guard", guard.check_context, guard.on_check),
           "/tgr/scan": ("on_scan", guard.scan_context, guard.on_scan)}
@@ -70,6 +83,17 @@ ROUTES = {"/tgr/check": ("guard", guard.check_context, guard.on_check),
 
 class ShopUnreadable(Exception):
     pass
+
+
+READ_ERRORS = (urllib.error.URLError, OSError, http.client.HTTPException, ValueError)   # a cut answer or TLS too
+
+
+def _object(raw: bytes) -> dict:
+    """The answer's JSON object; anything else (a list, a proxy's page) is unreadable, never a crash."""
+    data = json.loads(raw)                      # an empty body is not an answer either
+    if not isinstance(data, dict):
+        raise ValueError("the answer is not an object")
+    return data
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -84,14 +108,17 @@ def read_settings(url: str, key: str, prefix: str, timeout: float = READ_TIMEOUT
     req = urllib.request.Request(url.rstrip("/") + path, headers={"Authorization": f"token {key}", "Accept": "application/json"})
     try:
         with urllib.request.build_opener(_NoRedirect).open(req, timeout=timeout) as r:
-            return (json.loads(r.read() or b"{}") or {}).get("data") or None
+            data = _object(r.read()).get("data")
+            if not isinstance(data, dict) or not data:
+                raise ValueError("the answer carries no record")    # a missing record is the 404 above, never a 200
+            return data
     except urllib.error.HTTPError as e:
         body = e.read() or b""
         e.close()
         if e.code == 404 and f"{prefix} Settings Default".encode() in body:
             return None
         raise ShopUnreadable(f"the shop answered {e.code}") from None
-    except (urllib.error.URLError, TimeoutError, ConnectionError, ValueError) as e:
+    except READ_ERRORS as e:
         raise ShopUnreadable(type(e).__name__) from None
 
 
@@ -99,11 +126,11 @@ def _get(url: str, key: str, path: str, timeout: float):
     req = urllib.request.Request(url.rstrip("/") + path, headers={"Authorization": f"token {key}", "Accept": "application/json"})
     try:
         with urllib.request.build_opener(_NoRedirect).open(req, timeout=timeout) as r:
-            return json.loads(r.read() or b"{}") or {}
+            return _object(r.read())
     except urllib.error.HTTPError as e:
         e.close()
         raise ShopUnreadable(f"the shop answered {e.code}") from None
-    except (urllib.error.URLError, TimeoutError, ConnectionError, ValueError) as e:
+    except READ_ERRORS as e:
         raise ShopUnreadable(type(e).__name__) from None
 
 
@@ -121,13 +148,45 @@ def read_expiry(url: str, key: str, batch: str, timeout: float) -> str:
     return str(data.get("expiry_date") or "")[:10]
 
 
+def read_lowest(url: str, key: str, price_list: str, items: list[str], currency: str,
+                timeout: float = READ_TIMEOUT) -> list[dict]:
+    """The retailer's Item Price rows of its *Lowest prices* list for these items, in the sale's currency, naming no customer,
+    supplier or batch (``guard.lowest_prices`` picks from them, and would skip such a row if one came)."""
+    q = urllib.parse.urlencode({"fields": json.dumps(PRICE_FIELDS), "limit_page_length": 0, "filters": json.dumps(
+        [["price_list", "=", price_list], ["item_code", "in", items], ["currency", "=", currency],
+         ["customer", "is", "not set"], ["supplier", "is", "not set"], ["batch_no", "is", "not set"]])})
+    rows = _get(url, key, "/api/resource/" + urllib.parse.quote("Item Price") + "?" + q, timeout).get("data")
+    if not isinstance(rows, list):
+        raise ShopUnreadable("the shop's prices are not a list")
+    return [r for r in rows if isinstance(r, dict)]
+
+
+def utc_today() -> str:
+    return time.strftime("%Y-%m-%d", time.gmtime())
+
+
+def _chunks(items: list[str]):
+    """The items in reads whose codes, as ``read_lowest``'s query string carries them, stay within PRICE_CHUNK bytes."""
+    chunk, size = [], 0
+    for it in items:
+        n = len(urllib.parse.quote_plus(json.dumps(it))) + 4          # the code and its ", " as urlencode sends them
+        if chunk and size + n > PRICE_CHUNK:
+            yield chunk
+            chunk, size = [], 0
+        chunk.append(it)
+        size += n
+    if chunk:
+        yield chunk
+
+
 class Service:
     def __init__(self, conf: dict, store=None, reader=read_settings, clock=time.monotonic,
-                 batches=read_batches, expiry=read_expiry):
+                 batches=read_batches, expiry=read_expiry, prices=read_lowest, today=utc_today):
         self.prefix = (conf.get("TGR_PREFIX") or "PP TGR").strip()
         self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
         self.reader, self.clock, self.cache, self.lock = reader, clock, {}, threading.Lock()
         self.batches, self.expiry, self.expiries = batches, expiry, {}
+        self.prices, self.today, self.lowest_cache = prices, today, {}
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
@@ -163,6 +222,47 @@ class Service:
         with self.lock:
             self.cache[name] = (now, rules)
         return rules
+
+    def lowest(self, name: str, shop: dict | None, ctx: dict, rules: dict, t0: float) -> dict:
+        """*Lowest prices*: ``{(item, unit): price}`` for the basket's priced sold items, read in chunks (``_chunks``) for the
+        items not read in the last SETTINGS_TTL; an item's last rows stand in for SETTINGS_STALE while the shop cannot be read."""
+        plist = rules["lowest_list"]
+        items = sorted({ln["item_code"] for ln in guard.sold_lines(ctx) if ln["rate_minor"] > 0 and ln.get("item_code")})
+        if not plist or not items:
+            return {}
+        now, rows, missing, mine_key = self.clock(), [], [], (name, plist)      # per shop: two shops may name one list
+        with self.lock:
+            hits = {it: self.lowest_cache.get(mine_key + (it,)) for it in items}
+        for it in items:
+            if hits[it] and now - hits[it][0] < SETTINGS_TTL:
+                rows += hits[it][1]
+            else:
+                missing.append(it)
+        if missing:
+            todo = list(missing)
+            try:
+                if not shop:
+                    raise ShopUnreadable("the shop has not handed over its integration user's key")
+                for chunk in _chunks(missing):
+                    left = CHECK_BUDGET - (self.clock() - t0)
+                    if left < READ_LEAST:
+                        raise ShopUnreadable("the prices took too long")
+                    read = self.prices(shop["url"], shop["key"], plist, chunk, ctx.get("currency") or "",
+                                       min(READ_TIMEOUT, left))
+                    with self.lock:                 # each chunk kept as it comes: the next press reads only the rest
+                        if len(self.lowest_cache) >= EXPIRY_MAX:
+                            self.lowest_cache.clear()
+                        for it in chunk:
+                            mine = [r for r in read if r.get("item_code") == it]
+                            self.lowest_cache[mine_key + (it,)] = (now, mine)
+                            rows += mine
+                            todo.remove(it)
+            except ShopUnreadable:
+                for it in todo:
+                    if not (hits[it] and now - hits[it][0] < SETTINGS_STALE):
+                        raise
+                    rows += hits[it][1]
+        return guard.lowest_prices(rows, ctx.get("currency") or "", self.today())
 
     def shelf(self, name: str, shop: dict, ctx: dict, t0: float) -> dict:
         """*Warn of a shorter-dated batch*: read the store's batches and their expiry dates inside SCAN_BUDGET, counted
@@ -219,6 +319,18 @@ class Service:
             return 503, {"error": "the shop's settings cannot be read"}
         if path == "/tgr/scan" and rules["shelf_warning"]:
             return 200, self.shelf(name, shop, ctx, t0)
+        if path == "/tgr/check":
+            refused = guard.refusal(ctx, rules)          # first, and from the settings alone: never lost to a price read
+            if refused:
+                return 200, refused
+            try:
+                lowest = self.lowest(name, shop, ctx, rules, t0)
+            except ShopUnreadable:
+                plain = guard.on_check(ctx, rules, {}, unchecked=True)   # a large sale still goes to its approval, saying so
+                if plain["verdict"] != "allow":
+                    return 200, plain
+                return 503, {"error": "the shop's lowest prices cannot be read"}
+            return 200, guard.on_check(ctx, rules, lowest)
         return 200, decide(ctx, rules)
 
     def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, dict]:
