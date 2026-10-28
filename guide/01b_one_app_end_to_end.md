@@ -1,6 +1,6 @@
 # 1b. One app from your laptop to the till — sample S18, step by step
 
-One real app followed from a clone on your laptop to a cashier's press at the till: run its tests, read its manifest, publish it, order its hosting as a function (not a Docker container), install it on a retail chain's site with consent, connect, press Pay, then update and remove it. Every step has its exact command and a picture of what you see.
+One real app followed from a clone on your laptop to a cashier's press at the till: run its tests, read its manifest, publish it, order its hosting as a function (not a Docker container), install it on a retail chain's site with consent, connect, press Pay, then update and remove it. Every step has its exact command, and the laptop, web and till steps have a picture of what you see.
 
 **For:** a developer who learns by example, after [1a. How it all works](01a_how_it_all_works.md).
 
@@ -87,14 +87,12 @@ Once it is live, each push to your repository's branch puts the new version live
 
 No command: this step is the administrator's, in Desk. The chain's administrator opens the App library in Desk, finds the app on the public list or on the chain's *Made for you* shelf, and presses **Install**. Before anything is installed, iVendNext shows *What it will do*, written from your manifest: the record type and role it adds, the event feed, the check at Pay and the address it calls. The administrator ticks the consent and installs.
 
-![The install screen: What installing it changes, written by iVendNext from the app's manifest, with the check at Pay, the event feed and the address it may call](img/1b-05-install.png)
 
 The install makes the record type *ACME RGD Rule*, the role *ACME RGD Integration*, the event feed, and your app's own user, `acme_rgd@integration.invalid`, with that role alone. The check arrives **switched off**. The administrator then:
 
 1. writes the chain's rule in *ACME RGD Rule* records;
 2. opens the check, reads exactly which details of the sale it is sent, ticks its consent, chooses the stores it answers and switches it on.
 
-![The check's consent: the address it calls and the sale details it is sent, ticked by the chain's administrator](img/1b-05-consent.png)
 
 ## 6. The site connects
 
@@ -108,7 +106,6 @@ X-iVendNext-Site: chain-a.ivendnext.com
 
 Your service (the template's handshake, already in S18) checks that the key was signed by the App library for your app and for that site, and keeps the chain in its shops table: its address, its secrets, its key's id. From now on, every call from that chain names its site and is signed with that chain's secret. A second chain that installs the app makes a second row, with its own secrets.
 
-![Connected apps on the chain's site: the app hosted by CitiXsys, connected](img/1b-06-connected.png)
 
 For a service on your own server, the site does not connect by itself: the chain's administrator gives you the check's secret and *Generate Keys* on your app's user, by hand ([chapter 14b](14b_deploying_your_app.md#one-app-many-retailers)).
 
@@ -136,11 +133,9 @@ No command: the cashier presses a button.
 
 **An update.** Raise the version in `manifest.json` and `app.json` and publish again (step 3); push the new code (step 4). Each chain's administrator sees the higher version, reads what changes, consents again and updates in place. An update adds and changes, and removes nothing while it runs; a service the update changes arrives switched off again, for its consent. To go back, release the earlier code under a new, higher version.
 
-![Updating to a higher version in Desk: what changes from the installed version, and the consent again](img/1b-08-update.png)
 
 **A removal.** The administrator uninstalls the app. The site first saves the app's records to a private file, then removes the record type, field, role, check, event feed and your app's user with its key. The chain's own records stay. The site tells your service goodbye (`POST /ivendnext/disconnect`), and your service forgets that chain and its secrets.
 
-![Uninstall: the app's records saved to a private file first, then everything the install added removed](img/1b-08-uninstall.png)
 
 ## Technical notes
 
@@ -151,6 +146,7 @@ No command: the cashier presses a button.
 - **The function:** `samples/s18_rule_guard/app.json` (`"runs": "function"`, `"handler"`, `"package"`); what App Hosting runs and the package's `--root`: [chapter 14b](14b_deploying_your_app.md#a-function-or-a-container).
 - **The connect:** `tools/app_template/service/shops.py`; the call table: [chapter 14b](14b_deploying_your_app.md#one-app-many-retailers). The secrets' names are the install's own: a check's `<app>:sub:<key>`, a user's `user:<email>`.
 - **The app's own user:** made by the install of a manifest with an event feed, from POS version 2.1.0.667 ([chapter 5](05_outside_apps_and_event_feed.md), step 5).
+- **Steps 5, 6 and 8** happen in the chain's Desk; their words here follow [chapter 14a](14a_deploying_to_a_chain.md) and S18's README.
 - **The till pictures** (step 7): S18's own, taken on the programme's test site on the counter frame; the sample's README says how.
 - **Update and removal:** [chapter 14a](14a_deploying_to_a_chain.md).
 
