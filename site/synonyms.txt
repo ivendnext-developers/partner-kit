@@ -73,3 +73,7 @@ colour, color, highlight, coloured, colored
 merge, combine, consolidate
 duplicate, twice, unique, repeated
 redeem, redemption, spend, burn
+docker, container, containerised, containerized, kubernetes, k8s
+tenant, multi-tenant, multitenant, instance, customer environment
+endpoint, callback, callback url, webhook url
+conflict, collide, collision, clash, race condition

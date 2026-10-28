@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 647" width="900" height="647" role="img" aria-labelledby="t d" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title id="t">Who sends what to whom</title><desc id="d">Who sends what to whom. One: you publish your manifest and its card to the App library, signed with your key. Two, only if CitiXsys runs your service: you send iVendNext App Hosting a hosting order with your app.json and an image or a function's package, never your source code. Three: the App library shows your app on its public list or on one chain's Made for you shelf. Four: the chain's administrator reads What it will do, ticks consent and installs. Five: the chain's iVendNext connects to your service, handing over its address, its key and the secrets the install made. Your code stays in your own repository.</desc>
+<rect width="900" height="647" rx="16" fill="#0d1120"/>
+<text x="24" y="38" font-size="22" font-weight="800" fill="#eef1f8" text-anchor="start">Who sends what to whom</text>
+<text x="24" y="60" font-size="14" font-weight="500" fill="#a3abc0" text-anchor="start">Publishing and hosting are two separate steps. Neither hands over your source code.</text>
+<rect x="16" y="84" width="260" height="60" rx="10" fill="#151a2c" stroke="#5fd39a" stroke-width="1.5"/>
+<text x="28" y="119.5" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">You, the builder</text>
+<rect x="624" y="84" width="260" height="60" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="636" y="119.5" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">The App library</text>
+<path d="M276,114 L616,114" stroke="#4aa6ff" stroke-width="3" fill="none"/>
+<path d="M614,121 L624,114 L614,107 z" fill="#4aa6ff"/>
+<circle cx="300" cy="114" r="12" fill="#4aa6ff"/>
+<text x="300" y="119" font-size="14" font-weight="800" fill="#0d1120" text-anchor="middle">1</text>
+<text x="290" y="144" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">Publish: your manifest and its card, signed</text>
+<text x="290" y="162" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">with your key</text>
+<rect x="624" y="248" width="260" height="60" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="636" y="283.5" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">The chain's administrator</text>
+<rect x="624" y="412" width="260" height="82.8" rx="10" fill="#16294a" stroke="#4aa6ff" stroke-width="1.5"/>
+<text x="636" y="458.9" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">The chain's iVendNext</text>
+<rect x="16" y="412" width="260" height="82.8" rx="10" fill="#151a2c" stroke="#b9a3ff" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text x="28" y="438" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">iVendNext App Hosting</text>
+<text x="28" y="460" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">Only if CitiXsys runs your</text>
+<text x="28" y="478.8" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">service</text>
+<path d="M754,144 L754,240" stroke="#4aa6ff" stroke-width="3" fill="none"/>
+<path d="M747,238 L754,248 L761,238 z" fill="#4aa6ff"/>
+<circle cx="754" cy="168" r="12" fill="#4aa6ff"/>
+<text x="754" y="173" font-size="14" font-weight="800" fill="#0d1120" text-anchor="middle">3</text>
+<text x="726" y="191.5" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="end">Your app on the public list, or on that</text>
+<text x="726" y="209.5" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="end">chain's Made for you shelf</text>
+<path d="M754,308 L754,404" stroke="#5fd39a" stroke-width="3" fill="none"/>
+<path d="M747,402 L754,412 L761,402 z" fill="#5fd39a"/>
+<circle cx="754" cy="332" r="12" fill="#5fd39a"/>
+<text x="754" y="337" font-size="14" font-weight="800" fill="#0d1120" text-anchor="middle">4</text>
+<text x="726" y="355.5" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="end">Install, after reading What it will do and</text>
+<text x="726" y="373.5" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="end">ticking consent</text>
+<path d="M146,144 L146,404" stroke="#b9a3ff" stroke-width="3" fill="none" stroke-dasharray="7 6"/>
+<path d="M139,402 L146,412 L153,402 z" fill="#b9a3ff"/>
+<circle cx="146" cy="168" r="12" fill="#b9a3ff"/>
+<text x="146" y="173" font-size="14" font-weight="800" fill="#0d1120" text-anchor="middle">2</text>
+<rect x="162" y="256" width="77.8" height="20" rx="10" fill="#251d45"/>
+<text x="200.9" y="270" font-size="11" font-weight="800" fill="#b9a3ff" text-anchor="middle" letter-spacing="0.6">OPTIONAL</text>
+<text x="162" y="296" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">A hosting order: app.json and an image</text>
+<text x="162" y="314" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">or a function's package. Never</text>
+<text x="162" y="332" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">your source.</text>
+<path d="M624,453.4 L284,453.4" stroke="#5fd39a" stroke-width="3" fill="none"/>
+<path d="M286,446.4 L276,453.4 L286,460.4 z" fill="#5fd39a"/>
+<circle cx="600" cy="453.4" r="12" fill="#5fd39a"/>
+<text x="600" y="458.4" font-size="14" font-weight="800" fill="#0d1120" text-anchor="middle">5</text>
+<text x="290" y="483.4" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">Connect: its address, its key, the secrets</text>
+<text x="290" y="501.4" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">the install made</text>
+<text x="290" y="519.4" font-size="13.2" font-weight="500" fill="#a3abc0" text-anchor="start">On your own server, the chain hands these</text>
+<text x="290" y="537.4" font-size="13.2" font-weight="500" fill="#a3abc0" text-anchor="start">over by hand</text>
+<rect x="16" y="565.4" width="868" height="65" rx="12" fill="#050812"/>
+<text x="32" y="591.4" font-size="14.5" font-weight="800" fill="#e8ecf6" text-anchor="start">Your code stays in your own repository.</text>
+<text x="32" y="612.4" font-size="13.2" font-weight="500" fill="#e8ecf6" text-anchor="start">On your own server, you send nothing to App Hosting.</text>
+</svg>

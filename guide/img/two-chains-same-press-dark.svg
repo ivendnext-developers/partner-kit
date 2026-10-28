@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 606" width="900" height="606" role="img" aria-labelledby="t d" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title id="t">Two chains press the same key at the same moment</title><desc id="d">Two retail chains press the same key at the same moment. Each press is its own call: chain A's names chain A and is signed with A's secret, chain B's names chain B and is signed with B's secret. Two copies of your one service answer them at once. Each copy checks the call with that chain's own secret, taken from the retailers' connections, and answers from that chain's data only. A call signed with another chain's secret is refused. Your service keeps nothing between calls, or keeps it by retailer.</desc>
+<rect width="900" height="606" rx="16" fill="#0d1120"/>
+<text x="24" y="38" font-size="22" font-weight="800" fill="#eef1f8" text-anchor="start">Two chains press the same key at the same moment</text>
+<text x="24" y="60" font-size="14" font-weight="500" fill="#a3abc0" text-anchor="start">Two calls, two copies of your service, nothing shared between them.</text>
+<rect x="540" y="80" width="344" height="326" rx="14" fill="#1b2136" stroke="#2f3752" stroke-width="1.5"/>
+<text x="556" y="108" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Your service</text>
+<text x="556" y="128" font-size="13.2" font-weight="500" fill="#a3abc0" text-anchor="start">(one app, several copies)</text>
+<rect x="16" y="146" width="220" height="112" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="28" y="172" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Chain A's till</text>
+<text x="28" y="194" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">A cashier presses Pay</text>
+<rect x="556" y="146" width="312" height="112" rx="10" fill="#151a2c" stroke="#5fd39a" stroke-width="1.5"/>
+<text x="568" y="207.5" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Copy 1</text>
+<path d="M236,188 L548,188" stroke="#4aa6ff" stroke-width="3" fill="none"/>
+<path d="M546,195 L556,188 L546,181 z" fill="#4aa6ff"/>
+<text x="252" y="174" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">Names chain-a · signed with A's secret</text>
+<path d="M556,218 L244,218" stroke="#5fd39a" stroke-width="3" fill="none"/>
+<path d="M246,211 L236,218 L246,225 z" fill="#5fd39a"/>
+<text x="252" y="243" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">A's answer, from A's data only</text>
+<rect x="16" y="278" width="220" height="112" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="28" y="304" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Chain B's till</text>
+<text x="28" y="326" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">A cashier presses Pay, the</text>
+<text x="28" y="344.8" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">same second</text>
+<rect x="556" y="278" width="312" height="112" rx="10" fill="#151a2c" stroke="#5fd39a" stroke-width="1.5"/>
+<text x="568" y="339.5" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Copy 2</text>
+<path d="M236,320 L548,320" stroke="#4aa6ff" stroke-width="3" fill="none"/>
+<path d="M546,327 L556,320 L546,313 z" fill="#4aa6ff"/>
+<text x="252" y="306" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">Names chain-b · signed with B's secret</text>
+<path d="M556,350 L244,350" stroke="#5fd39a" stroke-width="3" fill="none"/>
+<path d="M246,343 L236,350 L246,357 z" fill="#5fd39a"/>
+<text x="252" y="375" font-size="13.2" font-weight="500" fill="#c3c9d8" text-anchor="start">B's answer, from B's data only</text>
+<rect x="540" y="422" width="344" height="82.8" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="552" y="448" font-size="15.5" font-weight="800" fill="#eef1f8" text-anchor="start">Each retailer's connection</text>
+<text x="552" y="470" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">chain-a: A's address and secrets</text>
+<text x="552" y="488.8" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">chain-b: B's address and secrets</text>
+<rect x="16" y="524.8" width="868" height="65" rx="12" fill="#050812"/>
+<text x="32" y="550.8" font-size="14.5" font-weight="800" fill="#e8ecf6" text-anchor="start">A call signed with another chain's secret is refused (401).</text>
+<text x="32" y="571.8" font-size="13.2" font-weight="500" fill="#e8ecf6" text-anchor="start">Your service keeps nothing between calls, or keeps it by retailer.</text>
+</svg>

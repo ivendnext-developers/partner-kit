@@ -10,6 +10,9 @@
   },
   "descriptions": {
     "index.html": "Guide, recipes, samples and a needs catalogue for building custom retail POS apps, integrations and extensions on iVendNext without changing the product.",
+    "guide/01a_how_it_all_works.html": "What an iVendNext app is, where it runs (Docker, a container, a function or nowhere), where customer data lives, and why two customers never collide.",
+    "guide/01b_one_app_end_to_end.html": "One iVendNext app from a laptop to the till: run its tests, read its manifest, publish it, host it as a function, install with consent, press Pay.",
+    "questions.html": "The first questions a developer asks about iVendNext apps: Docker, containers, tenants, data, endpoints, fields, screens, publishing, hosting and cost.",
     "start.html": "Five steps from nothing to your first working call against an iVendNext sandbox: request a site, get the kit, make your app's user and key, run a sample.",
     "needs/index.html": "What retailers ask for, in their own words, and whether you can build it on iVendNext today: the verdict, the door, the recipe and the limits to state.",
     "build.html": "You know what you are building: the ladder of ways in, the recipe and sample for each rung, your sandbox and the tests that let an iVendNext app ship.",

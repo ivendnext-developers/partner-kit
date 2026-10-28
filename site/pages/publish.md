@@ -4,7 +4,7 @@
 
 This site helps you **build** an app. The **App library** (`https://library.ivendnext.app`) is where retailers **find** it and install it from iVendNext Desk. You publish it yourself, with one command from any computer (your laptop or your own build server, with or without GitHub, whatever language your app is written in), or [from the web page](#from-the-web-page) in your browser, with no command at all.
 
-**We take only your app's files for the library:** its manifest and its card (and, if CitiXsys hosts your app, its built image). We never take or keep your source code, and your repository stays wherever you keep it.
+**Publishing and hosting are two separate steps.** Publishing sends the library only your app's manifest and its card. Hosting, only if CitiXsys runs your service, is a separate order that sends App Hosting your app's built image or its function's package ([Host with CitiXsys or run your own](hosting.md)). We never take or keep your source code, and your repository stays wherever you keep it ([How it all works, section 9](../../guide/01a_how_it_all_works.md#9-publishing-is-not-handing-us-your-code)).
 
 ## How it works
 

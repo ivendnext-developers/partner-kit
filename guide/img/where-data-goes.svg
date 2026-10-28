@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 687" width="640" height="687" role="img" aria-labelledby="t d" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title id="t">Where the chain's data lives</title><desc id="d">Where the chain's data lives. It stays in the chain's own iVendNext: sales, stock, customers, money, and your app's own record types, which your service reads through the API. Your service keeps nothing between calls by default. On App Hosting it keeps only each retailer's connection, its address, secrets and key id, in the app's own encrypted table. Anything you keep in a store of your own, or send to an outside system, is declared in your manifest and shown to the chain before it installs. App Hosting and the App library run in AWS us-east-1; other regions are added when a customer needs its data there.</desc>
+<rect width="640" height="687" rx="16" fill="#ffffff"/>
+<text x="24" y="38" font-size="22" font-weight="800" fill="#0b1029" text-anchor="start">Where the chain's data lives</text>
+<text x="24" y="60" font-size="14" font-weight="500" fill="#59607a" text-anchor="start">It stays in the chain's iVendNext unless your app declares otherwise.</text>
+<rect x="16" y="80" width="608" height="82.8" rx="10" fill="#e6f1ff" stroke="#0067c7" stroke-width="1.5"/>
+<text x="28" y="106" font-size="15.5" font-weight="800" fill="#0b1029" text-anchor="start">The chain's iVendNext</text>
+<text x="28" y="128" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">Sales, stock, customers, money. Your app's own record types live here too. Your</text>
+<text x="28" y="146.8" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">service reads them through the API.</text>
+<path d="M120,170.8 L120,224.8" stroke="#13794a" stroke-width="3" fill="none"/>
+<path d="M113,222.8 L120,232.8 L127,222.8 z" fill="#13794a"/>
+<path d="M127,172.8 L120,162.8 L113,172.8 z" fill="#13794a"/>
+<text x="136" y="202.3" font-size="13.2" font-weight="500" fill="#3b4256" text-anchor="start">API, with your app's key</text>
+<rect x="16" y="232.8" width="608" height="187.6" rx="14" fill="#ffffff" stroke="#13794a" stroke-width="1.5"/>
+<text x="28" y="260.8" font-size="15.5" font-weight="800" fill="#0b1029" text-anchor="start">Your service</text>
+<text x="28" y="282.8" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">Keeps nothing between calls by default. A till-key answer is calculated and</text>
+<text x="28" y="301.6" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">forgotten.</text>
+<rect x="32" y="321.6" width="576" height="82.8" rx="10" fill="#eef2f8" stroke="#cfd6e4" stroke-width="1.3"/>
+<text x="44" y="347.6" font-size="15.5" font-weight="800" fill="#0b1029" text-anchor="start">On App Hosting</text>
+<text x="44" y="369.6" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">Only each retailer's connection: its address, its secrets, its key's id. In</text>
+<text x="44" y="388.4" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">the app's own encrypted table.</text>
+<path d="M164,420.4 L164,476.4" stroke="#59607a" stroke-width="3" fill="none" stroke-dasharray="7 6"/>
+<path d="M157,474.4 L164,484.4 L171,474.4 z" fill="#59607a"/>
+<path d="M420,420.4 L420,476.4" stroke="#13794a" stroke-width="3" fill="none"/>
+<path d="M413,474.4 L420,484.4 L427,474.4 z" fill="#13794a"/>
+<text x="436" y="456.9" font-size="13.2" font-weight="500" fill="#3b4256" text-anchor="start">declared fields only</text>
+<rect x="16" y="484.4" width="296" height="101.6" rx="10" fill="#ffffff" stroke="#59607a" stroke-width="1.3" stroke-dasharray="6 5"/>
+<text x="28" y="510.4" font-size="15.5" font-weight="800" fill="#0b1029" text-anchor="start">Your own store</text>
+<text x="28" y="532.4" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">Optional. Anything you keep yourself,</text>
+<text x="28" y="551.2" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">you declare; the chain sees it at</text>
+<text x="28" y="570" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">install.</text>
+<rect x="328" y="484.4" width="296" height="101.6" rx="10" fill="#ffffff" stroke="#cfd6e4" stroke-width="1.3"/>
+<text x="340" y="510.4" font-size="15.5" font-weight="800" fill="#0b1029" text-anchor="start">An outside system</text>
+<text x="340" y="532.4" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">Only the fields your manifest</text>
+<text x="340" y="551.2" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">declares. The chain reads them before</text>
+<text x="340" y="570" font-size="13.6" font-weight="500" fill="#3b4256" text-anchor="start">it installs.</text>
+<rect x="16" y="606" width="608" height="65" rx="12" fill="#0b1029"/>
+<text x="32" y="632" font-size="13.6" font-weight="800" fill="#f2f5fb" text-anchor="start">App Hosting and the App library run in AWS us-east-1.</text>
+<text x="32" y="653" font-size="13.2" font-weight="500" fill="#f2f5fb" text-anchor="start">Other regions are added when a customer needs its data there.</text>
+</svg>

@@ -65,6 +65,7 @@ EXAMPLE = build.EXAMPLE
 LADDER = "guide/03_ladder_and_never_list.md"
 LADDER_SECTIONS = ("The ladder", "The four rules — what every build keeps, and why")
 GUIDE = "kit/blueprint.md"
+HOWITWORKS = "guide/01a_how_it_all_works.md"          # chapter 1a, How it all works: the whole chapter, its pictures beside it
 CHROME_PLACES = ("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/usr/bin/google-chrome",
                  "/usr/bin/google-chrome-stable", "/usr/bin/chromium", "/usr/bin/chromium-browser")
 LINK_HOSTS = {"developer.ivendnext.com": "/", "github.com": "/ivendnext-developers/"}     # host: the path a link must start with
@@ -249,6 +250,32 @@ def ladder_body(errors: list) -> str:
     return band("The ladder and the four rules", lede) + "".join(parts)
 
 
+def chapter_pictures(src: str) -> list[str]:
+    """The pictures a kit chapter shows from its own img/ folder (drawn inline in its print HTML, never fetched)."""
+    return re.findall(r"!\[[^\]]*\]\(img/([\w.-]+\.svg)\)", (build.ROOT / src).read_text("utf-8"))
+
+
+def howitworks_body(errors: list) -> str:
+    """How iVendNext apps work: guide chapter 1a whole, its pictures printed from the print folder, never fetched."""
+    ctx = kit_ctx(errors)
+    ctx.src, ctx.out = HOWITWORKS, "guide/01a_how_it_all_works.html"
+    text = (build.ROOT / HOWITWORKS).read_text("utf-8")
+    head, _, rest = text.partition("\n## ")
+    if not rest:
+        errors.append(f"{HOWITWORKS}: no sections")
+    body = absolute(build.render("## " + rest, ctx, {}, None), ctx.out)
+    for name in chapter_pictures(HOWITWORKS):                  # each picture drawn in the page itself, so its words print in Inter
+        svg = (build.ROOT / "guide" / "img" / name).read_text("utf-8")
+        tag = name.removesuffix(".svg")
+        svg = svg.replace('id="t"', f'id="{tag}-t"').replace('id="d"', f'id="{tag}-d"').replace(
+            'aria-labelledby="t d"', f'aria-labelledby="{tag}-t {tag}-d"')
+        body = re.sub(rf'<img src="{re.escape(BASE)}guide/img/{re.escape(name)}"[^>]*>', lambda m: svg, body)
+    lede = (f'Guide chapter 1a: what an iVendNext app is, where it runs, where the customer\'s data lives, why customers never '
+            f'collide, and what publishing and hosting hand over. Online, with every link: '
+            f'<a href="{BASE}{ctx.out}">developer.ivendnext.com/{ctx.out}</a>.')
+    return band("How iVendNext apps work", lede) + f'<div class="chapter">{body}</div>'
+
+
 def glance_body(errors: list) -> str:
     """Every card, by area and A to Z in the customer's words: the verdict and the door's name. Each row carries its card's id."""
     cards = catalogue.load(build.ROOT)
@@ -340,7 +367,8 @@ DOCS = [Doc("blueprint_form.pdf", "Project blueprint", 4, False, form_body, land
         Doc("blueprint_how_to_fill.pdf", "How to fill the project blueprint", 1, True, guide_body, cls="guide"),
         Doc("blueprint_example.pdf", "Blueprint example", 5, False, example_body, landscape=1, home="kit/blueprint_example.html"),
         Doc("ladder_and_four_rules.pdf", "The ladder and the four rules", 2, True, ladder_body, home="guide/03_ladder_and_never_list.html"),
-        Doc("needs_at_a_glance.pdf", "Needs at a glance", 6, False, glance_body, home="needs/index.html")]
+        Doc("needs_at_a_glance.pdf", "Needs at a glance", 6, False, glance_body, home="needs/index.html"),
+        Doc("how_ivendnext_apps_work.pdf", "How iVendNext apps work", 10, False, howitworks_body, home="guide/01a_how_it_all_works.html")]
 FORMS = (form_body, example_body)                                 # the documents whose Status boxes must be every verdict word
 
 

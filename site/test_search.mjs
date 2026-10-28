@@ -73,6 +73,23 @@ check("the header's list: six at most, needs first, four needs and the two best 
       feed.length === 6 && kinds(feed) === "need need need need " + feed.slice(4).map((r) => r.k).join(" ") && feed.slice(4).every((r) => r.k !== "need")
       && hook.length === 6 && needsFirst(hook) && nonly.length === 1 && needsFirst(feed),
       `event feed: ${kinds(feed)} · webhook: ${kinds(hook)} · bnpl: ${kinds(nonly)}`);
+// a developer's own words find the pages that answer them (How it all works, One app end to end, Questions developers ask)
+// among the header's six; the last four words are on none of those pages, so only their synonym groups find them
+const HOW = new Set(["guide/01a_how_it_all_works.html", "guide/01b_one_app_end_to_end.html", "questions.html"]);
+const DEV_WORDS = ["docker", "container", "tenant", "multi-tenant", "endpoint", "field", "screen", "data", "conflict", "publish",
+                   "image", "cost", "kubernetes", "multitenant", "clash", "callback url"];
+const unanswered = (index) => {
+  const m = search.create(index, MiniSearch);
+  return DEV_WORDS.filter((q) => !search.instant(search.rank(m, q), 6).some((r) => HOW.has(r.id)));
+};
+const devMiss = unanswered(docs);
+check(`a developer's words find How it works, its example or the questions in the header's six (${DEV_WORDS.length} words)`,
+      devMiss.length === 0, devMiss.join(", "));
+// planted fault 3: the docker group taken out of the pages' words turns "kubernetes" red
+const dock = "docker container containerised containerized kubernetes k8s";
+const planted3 = unanswered(docs.map((d) => ({ ...d, s: d.s.replace(dock, "") })));
+check("planted: the docker synonym group removed turns a developer's word red", planted3.includes("kubernetes"), planted3.join(", "));
+
 const filtered = search.rank(ms, "approval", { area: "till" });
 check("a filter narrows the results to needs of that area", filtered.length > 0 && filtered.every((r) => r.k === "need" && r.ar === "till"));
 const browse = search.rank(ms, "", { status: "not-possible" });

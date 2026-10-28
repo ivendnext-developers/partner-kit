@@ -86,7 +86,8 @@ SEO_JSON = SITE / "seo.json"                        # the hand-written descripti
 REDIRECTS = SITE / "redirects.txt"                  # one "old new" pair a line; the build writes a stub at each old address
 IMAGE_EXT = {".png", ".gif", ".jpg", ".jpeg", ".svg", ".webp"}
 
-NAV = [("Needs", "needs/index.html"), ("Get started", "start.html"), ("Guide", "guide/index.html"),
+NAV = [("How it works", "guide/01a_how_it_all_works.html"), ("Needs", "needs/index.html"), ("Get started", "start.html"),
+       ("Guide", "guide/index.html"),
        ("Recipes", "recipes/index.html"), ("Samples", "samples/index.html"),
        ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("Roadmap", "roadmap.html"),
        ("Feedback", "feedback.html")]
@@ -1047,6 +1048,10 @@ def page_words(text: str) -> tuple[list[str], str]:
     return heads, " ".join(paras)[:600]
 
 
+ASKED_PAGES = {"questions.html"}                   # pages whose ### headings are questions in the asker's own words: they count as
+                                                   # the page's asks line, as a card's does (Questions developers ask)
+
+
 def search_docs(pages: list, cards: list, groups: list[list[str]]) -> list[dict]:
     """The documents search.js ranks: one per card, then one per guide, recipe and sample page (the home page and the site's
     own catalogue lists are not in it: every card is). Short keys keep the file small: k kind · t title · a asks · s synonyms ·
@@ -1062,7 +1067,8 @@ def search_docs(pages: list, cards: list, groups: list[list[str]]) -> list[dict]
         if p.out == "index.html":
             continue
         heads, first = page_words(p.text)
-        docs.append({"id": p.out, "k": SEARCH_GROUPS.get(p.group, "guide"), "t": p.title, "a": "",
+        asks = " ".join(plain(q) for q in re.findall(r"^### (.+)$", p.text, re.M)) if p.out in ASKED_PAGES else ""
+        docs.append({"id": p.out, "k": SEARCH_GROUPS.get(p.group, "guide"), "t": p.title, "a": asks,
                      "s": expand(p.title + " " + " ".join(heads), groups), "tp": "", "l": "", "c": "",
                      "b": " · ".join(heads) + " " + first, "u": p.out, "v": "", "ar": "", "d": "", "st": ""})
     return docs
