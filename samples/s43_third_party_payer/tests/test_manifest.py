@@ -1,7 +1,7 @@
-"""S43's manifest passes the kit's checker; it installs only what runs without the payer door (three Desk buttons, the
-records, the barred tick on Customer, the reports); the door's subscription and the bill-back wait in
-door_declaration.json; members and claims are read by the claims clerk and the service only, never a till role; the
-record types and fields are the ones the service reads and writes."""
+"""S43's manifest passes the kit's checker; it installs the payer door's subscription, the claims clerk's six Desk
+buttons (Bill to the customer among them), the records, the barred tick on Customer and the reports; members and claims
+are read by the claims clerk and the service only, never a till role; the record types and fields are the ones the
+service reads and writes."""
 import json
 import sys
 import unittest
@@ -13,7 +13,6 @@ import app  # noqa: E402
 import validate  # noqa: E402
 
 MANIFEST = json.loads((HERE.parent / "manifest.json").read_text())
-LATER = json.loads((HERE.parent / "door_declaration.json").read_text())
 P = MANIFEST["prefix"]
 DT = {d["name"]: d for d in MANIFEST["doctypes"]}
 
@@ -31,19 +30,25 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(validate.validate(MANIFEST), [])
         self.assertEqual(validate.warnings(MANIFEST), [])
 
-    def test_now_five_desk_buttons_and_the_door_s_two_later(self):
-        self.assertEqual({s["key"]: s["point"] for s in MANIFEST["extension_subscriptions"]},
-                         {k: "desk_action" for k in ("claims", "file", "remit", "ready", "settle")})
-        self.assertEqual({s["key"]: s["point"] for s in LATER["extension_subscriptions"]},
-                         {"payer": "payer", "billback": "desk_action"})
-        self.assertEqual(sorted(app.NOW), sorted(s["key"] for s in MANIFEST["extension_subscriptions"]))
-        for s in MANIFEST["extension_subscriptions"] + LATER["extension_subscriptions"]:
+    def test_the_payer_door_s_subscription_and_six_desk_buttons(self):
+        subs = {s["key"]: s for s in MANIFEST["extension_subscriptions"]}
+        self.assertEqual({k: s["point"] for k, s in subs.items()},
+                         {"payer": "payer", **{k: "desk_action" for k in ("claims", "file", "remit", "ready", "settle",
+                                                                           "billback")}})
+        self.assertEqual(sorted(app.NOW), sorted(subs))
+        for s in subs.values():
             self.assertEqual(app.ROUTES[s["endpoint_url"].split("8142", 1)[1]][0], s["key"])
+            self.assertIn(s["endpoint_url"], MANIFEST["allowed_urls"])
+        self.assertEqual(MANIFEST["version"], "0.2.0")
 
-    def test_the_door_s_point_is_refused_by_the_shop_s_checker_today(self):
-        m = dict(MANIFEST, extension_subscriptions=MANIFEST["extension_subscriptions"] + LATER[
-            "extension_subscriptions"][:1])
-        self.assertTrue(validate.validate(m))
+    def test_the_payer_service_carries_only_settings_the_door_takes_and_never_a_clearing_mode(self):
+        payer = next(s for s in MANIFEST["extension_subscriptions"] if s["point"] == "payer")
+        self.assertEqual(set(payer.get("settings") or {}) - {"prescription", "bill_back_role"}, set())
+        self.assertNotIn("clearing_mode", payer.get("settings") or {})
+        self.assertLessEqual(payer["timeout_seconds"], 5)
+        bill = next(a for a in MANIFEST["desk_actions"] if a["service"] == "billback")
+        self.assertEqual((bill["record_type"], bill["placement"], bill["roles"]),
+                         (f"{P} Claim", "form", [f"{P} Claims Clerk"]))
 
     def test_members_and_claims_are_never_a_till_roles(self):
         for dt in (f"{P} Member", f"{P} Claim", f"{P} Claim Batch", f"{P} Remittance"):
@@ -57,7 +62,8 @@ class ManifestTest(unittest.TestCase):
     def test_a_claims_status_is_never_typed(self):
         status = next(f for f in DT[f"{P} Claim"]["fields"] if f["fieldname"] == "status")
         self.assertEqual(status.get("read_only"), 1)
-        self.assertEqual(LATER["extension_subscriptions"][0]["settings"]["bill_back_role"], f"{P} Integration")
+        payer = next(s for s in MANIFEST["extension_subscriptions"] if s["point"] == "payer")
+        self.assertEqual(payer["settings"]["bill_back_role"], f"{P} Integration")
 
     def test_a_claims_name_is_its_reference_so_a_second_insert_is_refused(self):
         self.assertEqual(DT[f"{P} Claim"]["autoname"], "field:claim_ref")

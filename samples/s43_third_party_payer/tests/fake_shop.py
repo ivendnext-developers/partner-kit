@@ -2,7 +2,7 @@
 ``service/app.py``'s ``ShopApi`` (``get_list``, ``get_one``, ``insert``, ``update``, ``feed``, ``bill_back``). Filters
 are the shapes the service sends: ``[field, "=" | "in", value]``. An insert whose name exists answers the shop's
 duplicate. ``fail`` makes every call raise ``ShopUnreadable`` (a shop that is down); ``door`` False makes
-``bill_back`` answer as a POS app with no payer door."""
+``bill_back`` answer as a POS app with no payer door; ``refuse`` makes the door refuse it in those words."""
 
 from __future__ import annotations
 
@@ -13,6 +13,12 @@ import app
 import dataset
 
 P = "PP ICP"
+SHORT = {"payer_code": app.DOOR["payer"], "payer_plan": app.DOOR["plan"], "payer_member": app.DOOR["member"],
+         "payer_claim_ref": app.DOOR["claim_ref"], "payer_prescription": app.DOOR["prescription"],
+         "payer_prescriber": app.DOOR["prescriber"], "payer_prescriber_licence": app.DOOR["prescriber_licence"],
+         "payer_share": app.DOOR["line_payer"], "patient_share": app.DOOR["line_patient"],
+         "payer_covered_qty": app.DOOR["line_qty"], "payer_gtin": app.DOOR["line_gtin"],
+         "payer_back": app.DOOR["line_back"], "payer_journal": app.DOOR["journal"]}
 
 
 class FakeShop:
@@ -25,6 +31,7 @@ class FakeShop:
         self.billed: list = []
         self.fail = False
         self.door = True
+        self.refuse = None
         self.seq = itertools.count(1)
 
     def add(self, doctype, **rec):
@@ -91,6 +98,8 @@ class FakeShop:
         self._down(("bill_back", body.get("claim_ref")))
         if not self.door:
             return None
+        if self.refuse:                         # the door's own words, as ShopApi reads them from its 417
+            return {"refused": self.refuse}
         self.billed.append(body)
         return {"journal": f"JV-{len(self.billed)}"}
 
@@ -101,6 +110,7 @@ class FakeShop:
         for r in dataset.records(ds):
             dt = r.pop("doctype")
             self.add(dt, name=r.get("code") or r["title"], **r)
+        self.add("Customer", name="Generic Insurer", disabled=0)     # the payer's own record (the data set's)
         self.add("Customer", name="C1", **{"pp_icp_insurance_barred": 0})
         self.add("Customer", name="C2", **{"pp_icp_insurance_barred": 1})
         self.add(f"{P} Member", name="m1", customer="C1", plan="Generic Silver", payer="GEN-INS", active=1,
@@ -118,12 +128,15 @@ class FakeShop:
         return self
 
     def book(self, name, lines, doctype="POS Invoice", **kw):
-        """A sale as the payer door books it (PB-8 spec §5.1), with its feed event."""
-        doc = {"name": name, "customer": "C1", "posting_date": "2026-10-23", "set_warehouse": "Pharmacy Dispensary",
+        """A sale as the payer door books it (payer.md §4b: its fields' own names, from ``app.DOOR``), with its feed
+        event. The tests write the short names below; each is stored under the door's name."""
+        doc = {"name": name, "docstatus": 1, "customer": "C1", "posting_date": "2026-10-23", "set_warehouse": "Pharmacy Dispensary",
                "is_return": 0, "payer_code": "GEN-INS", "payer_plan": "Generic Silver", "payer_member": "m1",
                "payer_claim_ref": f"GEN-INS-{name}", "payer_prescription": "RX-77", "payer_prescriber": "Dr A",
-               "payer_prescriber_licence": "L-1", "items": lines}
+               "payer_prescriber_licence": "L-1", "payer_journal": f"JV-{name}", "items": lines}
         doc.update(kw)
+        doc = {SHORT.get(k, k): v for k, v in doc.items()}
+        doc["items"] = [{SHORT.get(k, k): v for k, v in it.items()} for it in doc.get("items") or []]
         self.add(doctype, **doc)
         ev = {"POS Invoice": "return.booked" if doc["is_return"] else "sale.booked",
               "Sales Invoice": "invoice.booked"}[doctype]

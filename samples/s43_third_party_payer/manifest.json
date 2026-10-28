@@ -3,15 +3,17 @@
  "app": "pp_icp",
  "prefix": "PP ICP",
  "title": "Third-party payer",
- "version": "0.1.0",
+ "version": "0.2.0",
  "publisher": "Partner Programme sample",
- "description": "A third party that pays part of a sale: an insurer, a company paying for its staff, an optical plan. Its payers, plans, formularies and members are records; claims are made from the sales the POS app's payer door books, sent as a file, and followed to payment. Rebuilt from the co-pay rules of an iVend Retail pharmacy add-on. The payer door is not in the POS app yet: until it is, this version keeps the records, builds claims from booked payer sales and matches remittances.",
+ "description": "A third party that pays part of a sale: an insurer, a company paying for its staff, an optical plan. Its payers, plans, formularies and members are records; it answers the till's Payer button line by line, makes a claim from each sale booked on a payer, sends claims as a file, follows each to payment, and bills a rejected claim back to the customer. Rebuilt from the co-pay rules of an iVend Retail pharmacy add-on.",
  "allowed_urls": [
+  "https://host.docker.internal:8142/icp/payer",
   "https://host.docker.internal:8142/icp/press/claims",
   "https://host.docker.internal:8142/icp/press/file",
   "https://host.docker.internal:8142/icp/press/remit",
   "https://host.docker.internal:8142/icp/press/ready",
-  "https://host.docker.internal:8142/icp/press/settle"
+  "https://host.docker.internal:8142/icp/press/settle",
+  "https://host.docker.internal:8142/icp/press/billback"
  ],
  "doctypes": [
   {
@@ -391,7 +393,7 @@
      "fieldtype": "Check",
      "label": "The shop's own promotions apply on this plan",
      "default": "1",
-     "description": "Off: a sale on this plan takes the plan's price list without the shop's promotions and coupons (the payer door switches the shop's pricing rules off for it)."
+     "description": "Off: a sale on this plan takes the plan's price list without the shop's promotions; a coupon or a staff discount the cashier chose still applies, and so can an old-style pricing rule."
     }
    ],
    "permissions": [
@@ -731,7 +733,7 @@
      "in_list_view": 1,
      "in_standard_filter": 1,
      "read_only": 1,
-     "description": "Moved by the claims file, a remittance's Match and the buttons Mark ready and Settle as it stands, never typed."
+     "description": "Moved by the claims file, a remittance's Match, a return, and the buttons Mark ready, Settle as it stands and Bill to the customer, never typed."
     },
     {
      "fieldname": "payer",
@@ -1102,6 +1104,50 @@
    "description": "Such a customer can buy only as a cash customer: no payer is asked."
   }
  ],
+ "property_setters": [
+  {
+   "doc_type": "PP ICP Payer",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#what-the-retailer-does-now"
+  },
+  {
+   "doc_type": "PP ICP Formulary",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#how-a-sale-is-split"
+  },
+  {
+   "doc_type": "PP ICP Plan",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#how-a-sale-is-split"
+  },
+  {
+   "doc_type": "PP ICP Member",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#what-the-retailer-does-now"
+  },
+  {
+   "doc_type": "PP ICP Claim Batch",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#claims"
+  },
+  {
+   "doc_type": "PP ICP Claim",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#claims"
+  },
+  {
+   "doc_type": "PP ICP Remittance",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#claims"
+  }
+ ],
  "registered_applications": [
   {
    "name": "PP ICP Claims",
@@ -1113,6 +1159,16 @@
   }
  ],
  "extension_subscriptions": [
+  {
+   "key": "payer",
+   "point": "payer",
+   "label": "Third-party payer",
+   "endpoint_url": "https://host.docker.internal:8142/icp/payer",
+   "timeout_seconds": 5,
+   "settings": {
+    "bill_back_role": "PP ICP Integration"
+   }
+  },
   {
    "key": "claims",
    "point": "desk_action",
@@ -1146,6 +1202,13 @@
    "point": "desk_action",
    "label": "Settle as it stands",
    "endpoint_url": "https://host.docker.internal:8142/icp/press/settle",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "billback",
+   "point": "desk_action",
+   "label": "Bill to the customer",
+   "endpoint_url": "https://host.docker.internal:8142/icp/press/billback",
    "timeout_seconds": 10
   }
  ],
@@ -1214,6 +1277,19 @@
    "on_submitted": 0,
    "send_fields": "name",
    "confirm_text": "Close this short-paid claim as paid? The shortfall stays on the payer's account for your accountant."
+  },
+  {
+   "record_type": "PP ICP Claim",
+   "label": "Bill to the customer",
+   "placement": "form",
+   "service": "billback",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Bill what the payer did not pay to the customer, on their own sale?"
   }
  ],
  "reports": [
