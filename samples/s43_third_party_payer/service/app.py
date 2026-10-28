@@ -2,8 +2,8 @@
 """S43 — *Third-party payer*: the payer service the POS app's payer door calls (``payer/1``), and three Desk buttons
 for the claims clerk (standard library only).
 
-    POST /icp/payer            the payer door's two calls, ``covers`` and ``coverage`` (PB-8 spec §3; ⏳ the door is not
-                               in the POS app yet: until it is, nothing calls this route but a test)
+    POST /icp/payer            the payer door's two calls, ``covers`` and ``coverage`` (``payer/1``: the POS app's
+                               docs/extending/payer.md and its contract, contracts/extension_contracts/payer.v1.schema.json)
     POST /icp/press/claims     Desk button *Build claims* on the Payer list (``desk_action/1``): reads the event feed's
                                booked sales and returns once, and makes or reduces each sale's claim
     POST /icp/press/file       Desk button *Make the claims file* on a Payer (``desk_action/1``): every Ready claim of
@@ -13,7 +13,7 @@ for the claims clerk (standard library only).
     POST /icp/press/settle     Desk button *Settle as it stands* on a short-paid Claim: Paid, the shortfall left
     POST /icp/press/billback   Desk button *Bill to the customer* on a rejected or short-paid Claim (``desk_action/1``):
                                the payer door's ``payer_bill_back`` moves what the payer did not pay back to the
-                               customer (PB-8 spec §5.2; ⏳ the button installs with the door, door_declaration.json)
+                               customer, on their own sale (payer.md §4c)
     GET  /health               200 {"status": "ok"}
     POST /ivendnext/connect · /ivendnext/disconnect   many shops: the app template's handshake (shops.py)
 
@@ -25,8 +25,8 @@ integration key. ⚠ Members and claims are health data for a pharmacy: run it i
 Each route is checked with ITS OWN secret, the one the install made for that subscription (``<app>:sub:<key>``).
 
 ONE SHOP (env or an env file):
-    IVN_SECRET_<KEY>   each subscription's secret, for the keys CLAIMS, FILE, REMIT, READY, SETTLE (and PAYER, BILLBACK once the
-                       payer door is in the POS app: a route without its secret refuses every call)
+    IVN_SECRET_<KEY>   each subscription's secret, for the keys PAYER, CLAIMS, FILE, REMIT, READY, SETTLE, BILLBACK (a route
+                       without its secret refuses every call)
     IVN_SHOP_URL       the shop's address · IVN_SHOP_KEY  the app's integration user's key, "<api key>:<api secret>"
 MANY SHOPS: IVN_LIBRARY_APP (ivendnext_icp) with IVN_SHOPS_TABLE or IVN_SHOPS_FILE (tools/app_template/service/shops.py)
 ICP_PREFIX (default PP ICP; IVENDNEXT ICP for the library's app) · PORT (default 8080)
@@ -78,14 +78,17 @@ ROUTES = {"/icp/payer": ("payer", "payer"),
           "/icp/press/ready": ("ready", "desk_action"),
           "/icp/press/settle": ("settle", "desk_action"),
           "/icp/press/billback": ("billback", "desk_action")}
-NOW = ("claims", "file", "remit", "ready", "settle")       # the subscriptions this version installs; payer and billback wait for the door
+NOW = ("payer", "claims", "file", "remit", "ready", "settle", "billback")      # the subscriptions this version installs
 DOOR_METHOD = "/api/method/ivendnext_mpos.api.v1.payer_bill_back"
-# What the payer door stores on a sale (PB-8 spec §5.1, working names: the door's builder may rename them, and only this
-# table changes). A payer service reads them through the event feed.
-DOOR = {"payer": "payer_code", "plan": "payer_plan", "member": "payer_member", "claim_ref": "payer_claim_ref",
-        "prescription": "payer_prescription", "prescriber": "payer_prescriber",
-        "prescriber_licence": "payer_prescriber_licence", "line_payer": "payer_share", "line_patient": "patient_share",
-        "line_qty": "payer_covered_qty", "line_back": "payer_back"}
+# What the payer door stores on a sale and its lines (payer.md §4b; a return's give-back, §4c). A payer service reads
+# them through the event feed.
+DOOR = {"payer": "custom_mpos_payer_code", "plan": "custom_mpos_payer_plan", "member": "custom_mpos_payer_member",
+        "claim_ref": "custom_mpos_payer_claim_ref", "prescription": "custom_mpos_payer_prescription",
+        "prescriber": "custom_mpos_payer_prescriber", "prescriber_licence": "custom_mpos_payer_prescriber_licence",
+        "line_payer": "custom_mpos_payer_share", "line_patient": "custom_mpos_patient_share",
+        "line_qty": "custom_mpos_payer_covered_qty", "line_gtin": "custom_mpos_payer_gtin",
+        "line_back": "custom_mpos_payer_back"}
+NO_END = "9999-12-31"   # a cover with no end date: the door takes a date
 SALES = {"sale.booked": "POS Invoice", "return.booked": "POS Invoice", "invoice.booked": "Sales Invoice"}
 
 
@@ -118,7 +121,7 @@ def _message(body: str, level: str = "info") -> dict:
 class ShopApi:
     """The shop's record API with the app's own key. Swapped for a stand-in in the tests."""
 
-    def _call(self, url, key, method, path, query=None, body=None, missing=False):
+    def _call(self, url, key, method, path, query=None, body=None, missing=False, refusal=False):
         q = f"?{urllib.parse.urlencode(query)}" if query else ""
         data = json.dumps(body).encode() if body is not None else None
         req = urllib.request.Request(f"{url.rstrip('/')}{path}{q}", data=data, method=method,
@@ -129,11 +132,14 @@ class ShopApi:
                 return json.loads(r.read() or b"{}") or {}
         except urllib.error.HTTPError as e:
             code = e.code
-            e.close()
+            if not (refusal and code == 417):
+                e.close()
             if missing and code == 404:
                 return None
             if method == "POST" and code == 409:
                 return {"duplicate": True}
+            if refusal and code == 417:
+                return {"refused": _refusal(e)}
             raise ShopUnreadable(f"the shop answered {code}") from None
         except (OSError, http.client.HTTPException, ValueError) as e:
             raise ShopUnreadable(type(e).__name__) from None
@@ -163,9 +169,22 @@ class ShopApi:
             "message") or {}
 
     def bill_back(self, url, key, body):
-        """The payer door's bill-back (PB-8 spec §5.2). None when the shop's POS app has no such door yet."""
-        out = self._call(url, key, "POST", DOOR_METHOD, body=body, missing=True)
-        return None if out is None else (out.get("message") or {})
+        """The payer door's bill-back (payer.md §4c). None when the shop's POS app has no such door yet."""
+        out = self._call(url, key, "POST", DOOR_METHOD, body=body, missing=True, refusal=True)
+        return None if out is None else out if "refused" in out else (out.get("message") or {})
+
+
+def _refusal(err) -> str:
+    """The door's own words when it refuses a bill-back (a 417 whose body carries the shop's messages)."""
+    try:
+        raw = json.loads(err.read(BODY_MAX) or b"{}")
+        msgs = json.loads(raw.get("_server_messages") or "[]")
+        text = json.loads(msgs[0]).get("message") if msgs else raw.get("exception")
+    except (ValueError, TypeError, AttributeError, IndexError):
+        text = None
+    finally:
+        err.close()
+    return str(text or "The payer door refused it.")[:300]
 
 
 class Service:
@@ -215,6 +234,8 @@ class Service:
         return bool(rows and int(rows[0].get(f"{self.fp}insurance_barred") or 0))
 
     def covers(self, shop, body) -> dict:
+        """Every cover the customer holds today, in the shape the door takes (a cover the door could not book, with no
+        payer customer or the sale's own customer as the payer, is left out)."""
         customer, today = str(body.get("customer") or ""), str(body.get("date") or self.today())
         if not customer:
             raise ValueError("no customer")
@@ -227,31 +248,36 @@ class Service:
         for m in members:
             plan = self._one(shop, self.dt("Plan"), m.get("plan"))
             payer = self._one(shop, self.dt("Payer"), (plan or {}).get("payer"))
-            if not (plan and payer and all(C._in_force(r, today) for r in (m, plan, payer))):
+            if not (plan and payer and all(C._in_force(r, today) for r in (m, plan, payer))) or \
+                    not payer.get("customer") or payer["customer"] == customer:
                 continue
             num = str(m.get("member_number") or "")
-            out.append({"member": m["name"], "payer": payer["name"], "payer_title": payer.get("title"),
-                        "payer_customer": payer.get("customer"), "plan": plan["name"],
-                        "plan_title": plan.get("title"), "member_label": ("…" + num[-4:]) if num else "",
-                        "valid_to": m.get("valid_to"), "price_list": plan.get("price_list"),
-                        "promotions_apply": int(plan.get("promotions_apply", 1) or 0)})
-        return {"covers": out, "refused": None}
+            ends = [str(r["valid_to"]) for r in (m, plan, payer) if r.get("valid_to")]
+            out.append({"member": m["name"], "payer": payer["name"], "payer_title": payer.get("title") or payer["name"],
+                        "payer_customer": payer["customer"], "plan": plan["name"],
+                        "plan_title": plan.get("title") or plan["name"], "member_label": "…" + num[-4:],
+                        "valid_to": min(ends) if ends else NO_END, "price_list": plan.get("price_list") or None,
+                        "promotions_apply": bool(int(plan.get("promotions_apply", 1) or 0))})
+        return {"covers": out[:10], "refused": None}
 
     def coverage(self, shop, body) -> dict:
         lines = body.get("lines")
         if not isinstance(lines, list) or not 1 <= len(lines) <= LINES_MAX:
             raise ValueError("one to 200 lines")
         customer = str(body.get("customer") or "")
-        places = int(body.get("precision", 2))
+        if not isinstance(body.get("currency_exponent"), int) or not all(
+                isinstance(body.get(k), int) and not isinstance(body.get(k), bool) for k in ("total_minor",
+                                                                                         "rounding_minor")):
+            raise ValueError("the sale's money is whole minor units")
         for l in lines:
-            if not isinstance(l, dict) or C.D(l.get("amount")) != C.D(l.get("amount")).quantize(
-                    C.Decimal(1).scaleb(-places)):
-                raise ValueError("each line's amount is at the sale's precision")
+            if not isinstance(l, dict) or not all(isinstance(l.get(k), int) and not isinstance(l.get(k), bool)
+                                                  for k in ("amount_minor", "discount_minor", "rate_minor")):
+                raise ValueError("each line's money is whole minor units")
         if len({l.get("line_id") for l in lines}) != len(lines):
             raise ValueError("each line has its own line_id")
-        req = {"sale_ref": body.get("sale_ref"), "customer": customer, "date": body.get("date") or self.today(),
-               "currency": body.get("currency"),
-               "precision": int(body.get("precision", 2)), "lines": lines}
+        if sum(l["amount_minor"] for l in lines) != body["total_minor"]:
+            raise ValueError("the lines do not add up to the sale's total")
+        body = dict(body, date=body.get("date") or self.today())
         member = self._one(shop, self.dt("Member"), body.get("member"))
         if member and member.get("customer") != customer:
             member = None                                   # a member reference of another customer is no cover
@@ -269,9 +295,10 @@ class Service:
                 groups = {r["name"]: r["item_group"] for r in self._list(
                     shop, "Item", ["name", "item_group"], [["name", "in", missing_groups]])}
                 for l in lines:
-                    l.setdefault("item_group", groups.get(l.get("item_code")))
-        prices = self.list_prices(shop, plan, lines, req["date"], customer) if plan and plan.get("price_list") else None
-        return C.coverage(req, plan, member, self.barred(shop, customer), prices, payer)
+                    if not l.get("item_group"):        # the door sends an empty group as ""
+                        l["item_group"] = groups.get(l.get("item_code"))
+        prices = self.list_prices(shop, plan, lines, body["date"], customer) if plan and plan.get("price_list") else None
+        return C.door_coverage(body, plan, member, self.barred(shop, customer), prices, payer)
 
     def list_prices(self, shop, plan, lines, today, customer) -> dict:
         """{line_id: that line's price on the plan's list today, or None}: read from the list itself, never from the
@@ -308,13 +335,13 @@ class Service:
     # ── claims from booked sales (the event feed) ────────────────────────────
 
     def payer_sale(self, doc: dict, doctype: str) -> dict | None:
-        """The door's record of a sale (PB-8 spec §5.1), or None when no payer leg was booked on it."""
+        """The door's record of a sale (payer.md §4b), or None when no payer leg was booked on it."""
         if not doc.get(DOOR["claim_ref"]) or not doc.get(DOOR["payer"]):
             return None
         if doctype == "Sales Invoice" and (doc.get("is_consolidated") or any(
                 it.get("pos_invoice") for it in doc.get("items") or [])):
             return None         # the till sale's own posting: its claim is the POS sale's, made from that record
-        lines = [{"line_id": it.get("name"), "item_code": it.get("item_code"), "gtin": it.get("payer_gtin") or it.get("barcode") or None,
+        lines = [{"line_id": it.get("name"), "item_code": it.get("item_code"), "gtin": it.get(DOOR["line_gtin"]) or it.get("barcode") or None,
                   "qty": it.get(DOOR["line_qty"]) or it.get("stock_qty") or it.get("qty"), "uom": it.get("uom"),
                   "amount": str(C.D(it.get(DOOR["line_payer"])) + C.D(it.get(DOOR["line_patient"]))),
                   "payer_share": it.get(DOOR["line_payer"]), "patient_share": it.get(DOOR["line_patient"]),
@@ -477,6 +504,8 @@ class Service:
                                                            "amount": c["billed_back"], "reason": "claim not paid"})
         if got is None:
             return {"text": "Your POS app has no payer door yet: nothing was billed.", "level": "warning"}
+        if got.get("refused"):                              # the door's own words: e.g. bill it back after the day's close
+            return {"text": f"Nothing was billed: {got['refused']}", "level": "warning"}
         if not got.get("journal"):                          # the door names the journal it booked, or nothing was
             return {"text": "The payer door booked nothing: the claim is unchanged.", "level": "warning"}
         self.api.update(shop["url"], shop["key"], self.dt("Claim"), c["name"],
@@ -505,8 +534,11 @@ class Service:
                 recs = (ctx or {}).get("records")
                 if not isinstance(recs, list) or not recs or not isinstance(recs[0], dict):
                     raise ValueError("no records")
-            elif body.get("contract") != C.CONTRACT or body.get("call") not in ("covers", "coverage"):
-                raise ValueError("not a payer/1 call")
+            else:
+                ctx = body.get("context") if body.get("point") == C.CONTRACT else None
+                if not isinstance(ctx, dict) or ctx.get("v") != 1 or ctx.get("point") != "payer" or \
+                        ctx.get("call") not in ("covers", "coverage"):
+                    raise ValueError("not a payer/1 call")
         except ValueError as e:
             return 400, {"error": str(e)}
         if shop is None:
@@ -515,7 +547,7 @@ class Service:
         try:
             self.local.t0 = time.monotonic() if point == "payer" else None
             if point == "payer":
-                return 200, (self.covers(shop, body) if body["call"] == "covers" else self.coverage(shop, body))
+                return 200, (self.covers(shop, ctx) if ctx["call"] == "covers" else self.coverage(shop, ctx))
             name = recs[0].get("name") or ""
             if route_key == "claims":
                 return 200, _message(self.build_claims(shop)["text"])

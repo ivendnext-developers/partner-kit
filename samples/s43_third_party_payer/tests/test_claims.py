@@ -34,7 +34,7 @@ def plan_from(ds, title):
 
 
 def booked(answer, **kw):
-    """A sale as the payer door books it (PB-8 spec §5): each line's payer share is the coverage answer's."""
+    """A sale as the payer door books it (payer.md §4b): each line's payer share is the coverage answer's."""
     s = {"doctype": "POS Invoice", "name": "PHD-26-0001", "posting_date": "2026-10-23", "store": "Pharmacy Dispensary",
          "customer": "C1", "claim_ref": answer["claim_ref"], "payer": "GEN-INS", "plan": answer["plan"],
          "member": "M1", "prescription": "RX-77", "prescriber": "Dr A", "prescriber_licence": "L-1",

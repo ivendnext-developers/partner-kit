@@ -19,7 +19,9 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 SAMPLE = os.path.dirname(HERE)
 sys.path[:0] = [os.path.join(SAMPLE, "service"), SAMPLE, HERE]
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(SAMPLE)), "contracts"))
 import app  # noqa: E402
+import extension_contract_check as contract  # noqa: E402
 from fake_shop import FakeShop  # noqa: E402
 
 SECRETS = {k: f"s-{k}" for k in ("payer", "claims", "file", "remit", "ready", "settle", "billback")}
@@ -49,6 +51,16 @@ LINES = [{"line_id": "r1", "item_code": "PHD-AMOX-500", "qty": 2, "uom": "Nos", 
          {"line_id": "r2", "item_code": "PHD-PARA-500", "qty": 2, "uom": "Nos", "amount": 50, "discount": 0}]
 
 
+def door_line(l):
+    if "amount" not in l:
+        return dict(l)
+    out = {k: v for k, v in l.items() if k not in ("amount", "discount")}
+    amount, disc = round(float(l["amount"]) * 100), round(float(l.get("discount") or 0) * 100)
+    out = dict({"item_group": "", "gtin": None, "uom": "Nos", "conversion_factor": 1}, **out)
+    out.update(amount_minor=amount, discount_minor=disc, rate_minor=round(amount / float(out.get("qty") or 1)))
+    return out
+
+
 class Base(unittest.TestCase):
     def setUp(self):
         self.shop = FakeShop().generic()
@@ -59,12 +71,18 @@ class Base(unittest.TestCase):
         return self.svc.handle("POST", path, headers, raw)
 
     def payer(self, body):
-        return self.call("/icp/payer", dict({"contract": "payer/1"}, **body), "payer")
+        """A signed call as the door sends it: ``{"point": "payer/1", "context": {v, point, call, …}}``."""
+        return self.call("/icp/payer", {"point": "payer/1", "context": dict({"v": 1, "point": "payer"}, **body)},
+                         "payer")
 
     def coverage(self, **kw):
+        """The door's coverage ask; a test line's ``amount`` and ``discount`` (in KES) are sent in minor units."""
+        lines = [door_line(l) for l in kw.pop("lines", LINES)]
         body = {"call": "coverage", "sale_ref": "PHD-26-0001", "customer": "C1", "member": "m1", "date": "2026-10-23",
-                "currency": "KES",
-                "precision": 2, "lines": [dict(l) for l in LINES]}
+                "currency": "KES", "currency_exponent": 2, "store": "Pharmacy Dispensary", "pos_profile": "PHD",
+                "operator": "cashier@example.com", "price_list": "Standard Selling", "tax_included": True,
+                "prescription": None, "lines": lines, "total_minor": sum(l["amount_minor"] for l in lines),
+                "rounding_minor": 0}
         body.update(kw)
         return self.payer(body)
 
@@ -77,7 +95,7 @@ class Calls(Base):
                                                  "payer_customer": "Generic Insurer", "plan": "Generic Silver",
                                                  "plan_title": "Generic Silver", "member_label": "…0123",
                                                  "valid_to": "2026-12-31", "price_list": "Generic Insurer Prices",
-                                                 "promotions_apply": 1})
+                                                 "promotions_apply": True})
         self.assertNotIn("GEN-000123", json.dumps(out))
 
     def test_a_barred_customer_has_no_cover(self):
@@ -86,12 +104,13 @@ class Calls(Base):
 
     def test_coverage_answers_the_contract(self):
         code, out = self.coverage()
-        self.assertEqual((code, out["contract"], out["answer"], out["claim_ref"]),
-                         (200, "payer/1", "cover", "GEN-INS-PHD-26-0001"))
-        self.assertEqual((out["totals"]["payer_share"], out["totals"]["patient_share"]), ("228.80", "61.20"))
+        self.assertEqual((code, out["answer"], out["claim_ref"]), (200, "cover", "GEN-INS-PHD-26-0001"))
+        self.assertEqual(out["totals"], {"payer_share_minor": 22880, "patient_share_minor": 6120, "total_minor": 29000})
+        self.assertEqual(set(out), {"answer", "payer", "plan", "member", "claim_ref", "no_partial_refund", "lines",
+                                    "totals"})
         for l in out["lines"]:
-            self.assertEqual(set(l) >= {"line_id", "covered", "sellable", "payer_share", "patient_share",
-                                        "covered_qty", "qty_limit", "reason"}, True)
+            self.assertEqual(set(l), {"line_id", "covered", "sellable", "payer_share_minor", "patient_share_minor",
+                                      "covered_qty", "qty_limit", "reason", "message"})
 
     def test_an_item_off_the_insurers_list_is_not_sellable_on_the_cover(self):
         code, out = self.coverage(lines=LINES + [{"line_id": "r3", "item_code": "PHD-VITC", "qty": 1, "amount": 30}])
@@ -135,7 +154,7 @@ class Calls(Base):
                                                    amount=120)])[1]["lines"][0]["reason"], "zero_on_list")
 
     def test_a_line_not_at_the_sales_precision_or_a_repeated_line_id_is_refused(self):
-        self.assertEqual(self.coverage(lines=[dict(LINES[0], amount=33.333)])[0], 400)
+        self.assertEqual(self.coverage(lines=[dict(door_line(LINES[0]), amount_minor=3333.0)], total_minor=3333)[0], 400)
         self.assertEqual(self.coverage(lines=[dict(LINES[0]), dict(LINES[1], line_id="r1")])[0], 400)
 
     def test_a_slow_shop_answers_503_before_the_doors_five_seconds(self):
@@ -148,8 +167,8 @@ class Calls(Base):
             app.ANSWER_BY = keep
 
     def test_the_item_group_is_read_from_the_shop_when_the_door_does_not_send_it(self):
-        out = self.coverage()[1]
-        self.assertEqual(out["lines"][1]["extra_pay"], "4.00")       # OTC: 2 a unit, by its item group
+        out = self.coverage()[1]       # the door sends item_group "": OTC carries 2 a unit of extra-item pay
+        self.assertEqual(out["lines"][1]["patient_share_minor"], 1320)     # 4.00 + 20% of 46.00; uncovered: 5000
 
     def test_another_customers_member_reference_is_no_cover(self):
         out = self.coverage(member="m2")[1]
@@ -178,10 +197,92 @@ class Calls(Base):
         self.assertEqual(self.svc.handle("GET", "/health", {}, b""), (200, {"status": "ok"}))
 
 
-def door_lines(answer):
-    return [{"name": l["line_id"], "item_code": l["item_code"], "qty": float(l["covered_qty"]), "stock_qty":
+SCHEMA = contract._schema("payer")
+
+
+def contract_errors(kind, answer):
+    """What the payer door's own contract (the kit's copy, equal to the POS app's) finds wrong with an answer."""
+    return contract._errors(SCHEMA["$defs"][kind], answer, SCHEMA)
+
+
+class Door(Base):
+    """Every answer this service gives the door is one the door's contract takes, and its arithmetic the door's."""
+
+    def test_every_answer_is_one_the_doors_contract_takes(self):
+        answers = [self.payer({"call": "covers", "customer": "C1", "date": "2026-10-23", "store": "S",
+                               "pos_profile": "PHD", "operator": "o"})[1],
+                   self.payer({"call": "covers", "customer": "C2", "date": "2026-10-23", "store": "S",
+                               "pos_profile": "PHD", "operator": "o"})[1]]
+        for a in answers:
+            self.assertEqual(contract_errors("covers_answer", a), [], a)
+        for kw in ({}, {"lines": LINES + [{"line_id": "r3", "item_code": "PHD-VITC", "qty": 1, "amount": 30}]},
+                   {"currency": "USD"}, {"member": "m2"}):
+            out = self.coverage(**kw)[1]
+            self.assertEqual(contract_errors("coverage_answer", out), [], (kw, out))
+        self.assertEqual([self.coverage(**kw)[1]["answer"] for kw in ({}, {"lines": LINES + [
+            {"line_id": "r3", "item_code": "PHD-VITC", "qty": 1, "amount": 30}]}, {"member": "m2"})],
+                         ["cover", "refuse", "no_cover"])
+
+    def test_a_cover_answers_each_line_once_its_shares_adding_up_to_the_line(self):
+        ask = self.coverage()[1]
+        sent = {l["line_id"]: door_line(l) for l in LINES}
+        for l in ask["lines"]:
+            self.assertEqual(l["payer_share_minor"] + l["patient_share_minor"], sent[l["line_id"]]["amount_minor"])
+        self.assertEqual(sorted(l["line_id"] for l in ask["lines"]), sorted(sent))
+
+    def test_a_pack_lines_covered_quantity_is_in_the_lines_own_unit(self):
+        self.shop.tables["Item Price"] = [{"item_code": "PHD-AMOX-500", "price_list": "Generic Insurer Prices",
+                                           "uom": "Nos", "price_list_rate": 12}]
+        out = self.coverage(lines=[dict(LINES[0], uom="Box", conversion_factor=10, qty=1, amount=120)])[1]
+        self.assertEqual((out["answer"], out["lines"][0]["covered_qty"]), ("cover", 1.0))   # 10 tablets: 1 box
+
+    def test_the_payers_share_never_passes_the_rounded_total(self):
+        plan = self.shop.find("PP ICP Plan", "Generic Silver")
+        plan.update(copay_percent=0, invoice_upper_limit=0)
+        self.shop.find("PP ICP Formulary", plan["formulary"])["rows"] = [{"item_group": "Prescription Medicines",
+                                                                         "covered": 1}]
+        line = [dict(LINES[0], amount=240.03)]
+        full = self.coverage(lines=line)[1]
+        self.assertEqual(full["totals"]["patient_share_minor"], 0)
+        down = self.coverage(lines=line, rounding_minor=-3)[1]                  # the till rounds 240.03 to 240.00
+        self.assertEqual((down["totals"]["payer_share_minor"], down["totals"]["patient_share_minor"]), (24000, 3))
+
+    def test_a_tax_excluded_sales_discount_is_read_with_its_tax(self):
+        plan = self.shop.find("PP ICP Plan", "Generic Silver")
+        plan.update(copay_percent=20, copay_order="Before the discount", invoice_upper_limit=0, max_patient_amount=0)
+        # 2 x 100 before tax, 20 off, 16% tax: the line costs 208.80; the discount on the amount's basis is 23.20
+        line = {"line_id": "r1", "item_code": "PHD-AMOX-500", "item_group": "", "gtin": None, "qty": 2, "uom": "Nos",
+                "conversion_factor": 1, "rate_minor": 9000, "discount_minor": 2000, "amount_minor": 20880}
+        inc = self.coverage(lines=[dict(line)], tax_included=True)[1]
+        exc = self.coverage(lines=[dict(line)], tax_included=False)[1]
+        self.assertEqual(inc["totals"]["patient_share_minor"], round(0.2 * (20880 + 2000)))
+        self.assertEqual(exc["totals"]["patient_share_minor"], round(0.2 * (20880 + 2320)))
+
+    def test_a_cover_that_would_pay_nothing_is_no_cover(self):
+        out = self.coverage(lines=[{"line_id": "r1", "item_code": "PHD-PARA-500", "qty": 1, "amount": 2}])[1]
+        self.assertEqual((out["answer"], out["code"]), ("no_cover", "pays_nothing"))
+        self.assertEqual(contract_errors("coverage_answer", out), [])
+
+    def test_a_payer_whose_customer_is_the_sales_own_is_never_offered(self):
+        self.shop.find("PP ICP Payer", "GEN-INS")["customer"] = "C1"
+        self.assertEqual(self.payer({"call": "covers", "customer": "C1", "date": "2026-10-23"})[1]["covers"], [])
+
+    def test_the_old_wire_is_refused(self):
+        old = {"contract": "payer/1", "call": "covers", "customer": "C1"}
+        self.assertEqual(self.call("/icp/payer", old, "payer")[0], 400)
+        self.assertEqual(self.coverage(lines=[dict(LINES[0])], total_minor=1)[0], 400)   # lines not adding up
+        ctx = {"v": 1, "point": "payer", "call": "covers", "customer": "C1", "date": "2026-10-23"}
+        self.assertEqual(self.call("/icp/payer", {"point": "check/1", "context": ctx}, "payer")[0], 400)
+        self.assertEqual(self.call("/icp/payer", {"point": "payer/1", "context": ctx}, "payer")[0], 200)
+
+
+def door_lines(answer, asked=LINES):
+    """The lines the door stores from a cover answer: each share in the sale's currency (the answer is in minor
+    units)."""
+    code = {l["line_id"]: l["item_code"] for l in asked}
+    return [{"name": l["line_id"], "item_code": code[l["line_id"]], "qty": float(l["covered_qty"]), "stock_qty":
              float(l["covered_qty"]), "uom": "Nos", "barcode": "0612345678901", "warehouse": "Pharmacy Dispensary",
-             "payer_share": l["payer_share"], "patient_share": l["patient_share"],
+             "payer_share": f"{l['payer_share_minor'] / 100:.2f}", "patient_share": f"{l['patient_share_minor'] / 100:.2f}",
              "payer_covered_qty": float(l["covered_qty"])} for l in answer["lines"]]
 
 
@@ -371,6 +472,28 @@ class Claims(Base):
         code, out = self.call("/icp/press/billback", press("PP ICP Claim", "GEN-INS-PHD-26-0001"), "billback")
         self.assertEqual(out["message"]["level"], "warning")
         self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0001")["status"], "Rejected")
+
+    def test_a_bill_back_the_door_refuses_says_why_and_leaves_the_claim(self):
+        self.booked()
+        self.build()
+        self.call("/icp/press/file", press("PP ICP Payer", "GEN-INS"), "file")
+        self.shop.add("PP ICP Remittance", name="REM-1", payer="GEN-INS", lines=[
+            {"name": "l1", "claim_ref": "GEN-INS-PHD-26-0001", "paid": "0", "rejected": 1, "reason": "x"}])
+        self.call("/icp/press/remit", press("PP ICP Remittance", "REM-1"), "remit")
+        self.shop.refuse = "This sale is posted at the day's close. Bill it back after the close."
+        code, out = self.call("/icp/press/billback", press("PP ICP Claim", "GEN-INS-PHD-26-0001"), "billback")
+        self.assertEqual((out["message"]["level"], out["message"]["body"]),
+                         ("warning", "Nothing was billed: This sale is posted at the day's close. Bill it back after "
+                                     "the close."))
+        self.assertEqual(self.shop.find("PP ICP Claim", "GEN-INS-PHD-26-0001")["status"], "Rejected")
+
+    def test_the_doors_refusal_is_read_from_the_shops_answer(self):
+        import urllib.error
+        body = json.dumps({"_server_messages": json.dumps([json.dumps({"message": "Say why the claim is billed back."})])})
+        err = urllib.error.HTTPError("https://shop.example/x", 417, "Expectation Failed", {}, io.BytesIO(body.encode()))
+        self.assertEqual(app._refusal(err), "Say why the claim is billed back.")
+        err = urllib.error.HTTPError("https://shop.example/x", 417, "Expectation Failed", {}, io.BytesIO(b"<html>"))
+        self.assertEqual(app._refusal(err), "The payer door refused it.")
 
     def test_a_ready_claim_cannot_be_billed_back(self):
         self.booked()

@@ -9,14 +9,10 @@ members, claims, remittances) as records in the retailer's iVendNext. It is for 
 **The door:** the payer extension point (`payer/1`), in the POS app from version 2.1.0.666 ([the payer page](../contracts/pages/payer.md)).
 The page is the contract; this recipe is the order to build it in.
 
-**Reference implementation:** `samples/s43_third_party_payer/` — *Third-party payer*: the records, the claims built
-from booked payer sales, the claims file and the remittance match, and a service whose rules split a sale. ⚠ **S43
-was written before the door shipped, and speaks its working names, not the shipped contract:** its
-`door_declaration.json` names the setting `prescription_details` (the door takes `prescription`), its service reads
-and answers shares as decimal amounts with an `extra_pay` key (the door sends and takes whole minor units and refuses
-an unknown key, so it would read every answer as no cover), and its claims read the stored fields without their
-`custom_mpos_` prefix. Take the rules from S43 (`copay.py`, `claims.py`), and the wire format, the settings and the
-field names from the payer page and the steps below, until the sample's next version moves onto the door.
+**Reference implementation:** [`samples/s43_third_party_payer/`](../samples/s43_third_party_payer/README.md) —
+*Third-party payer* 0.2.0: the payer service on the door (both calls answered in the shipped contract: whole minor
+units, the stored fields' own names, a subscription with no clearing mode), the records, the claims built from booked
+payer sales, the claims file, the remittance match and *Bill to the customer*.
 
 **When to use it.** Use it when a third party pays part of a sale and the retailer must claim it, or when one payer's
 link (an insurer's claims platform) must be written for a market. For a payer that pays the whole sale on account,

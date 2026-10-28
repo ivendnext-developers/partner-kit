@@ -1,6 +1,6 @@
 """S43 — claims: built from a booked sale, filed as a file, followed to payment (standard library only).
 
-    build_claim(sale, payer, member)        a claim from a sale the payer door booked (PB-8 spec §5: what it stores)
+    build_claim(sale, payer, member)        a claim from a sale the payer door booked (payer.md §4b: what it stores)
     apply_return(claim, split)              a return's give-back on its claim's lines
     claims_file(claims, payer)              the generic payer's claims file (CSV), one row per claim line
     move(claim, to, **why)                  a status change, refused in words when the flow does not allow it
@@ -67,7 +67,7 @@ FILE_COLUMNS = ("claim_ref", "sale_date", "store", "member_number", "card_serial
 def build_claim(sale: dict, payer: dict, member: dict) -> dict:
     """A claim from a booked payer sale.
 
-    sale (the door's record of the sale, PB-8 spec §5): {doctype, name, posting_date, store, customer, claim_ref,
+    sale (the door's record of the sale, payer.md §4b): {doctype, name, posting_date, store, customer, claim_ref,
       payer, plan, member, prescription, prescriber, prescriber_licence, is_return,
       lines: [{line_id, item_code, gtin, qty, uom, amount, payer_share, patient_share, dose?, frequency?}]}
     payer: the payer record (its needs_* ticks); member: the member record.

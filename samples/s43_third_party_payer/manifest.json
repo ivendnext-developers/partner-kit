@@ -3,15 +3,17 @@
  "app": "pp_icp",
  "prefix": "PP ICP",
  "title": "Third-party payer",
- "version": "0.1.0",
+ "version": "0.2.0",
  "publisher": "Partner Programme sample",
- "description": "A third party that pays part of a sale: an insurer, a company paying for its staff, an optical plan. Its payers, plans, formularies and members are records; claims are made from the sales the POS app's payer door books, sent as a file, and followed to payment. Rebuilt from the co-pay rules of an iVend Retail pharmacy add-on. The payer door is not in the POS app yet: until it is, this version keeps the records, builds claims from booked payer sales and matches remittances.",
+ "description": "A third party that pays part of a sale: an insurer, a company paying for its staff, an optical plan. Its payers, plans, formularies and members are records; it answers the POS app's payer door line by line, makes a claim from each sale the door books, sends claims as a file, follows each to payment, and bills a rejected claim back to the customer. Rebuilt from the co-pay rules of an iVend Retail pharmacy add-on.",
  "allowed_urls": [
+  "https://host.docker.internal:8142/icp/payer",
   "https://host.docker.internal:8142/icp/press/claims",
   "https://host.docker.internal:8142/icp/press/file",
   "https://host.docker.internal:8142/icp/press/remit",
   "https://host.docker.internal:8142/icp/press/ready",
-  "https://host.docker.internal:8142/icp/press/settle"
+  "https://host.docker.internal:8142/icp/press/settle",
+  "https://host.docker.internal:8142/icp/press/billback"
  ],
  "doctypes": [
   {
@@ -1114,6 +1116,16 @@
  ],
  "extension_subscriptions": [
   {
+   "key": "payer",
+   "point": "payer",
+   "label": "Third-party payer",
+   "endpoint_url": "https://host.docker.internal:8142/icp/payer",
+   "timeout_seconds": 5,
+   "settings": {
+    "bill_back_role": "PP ICP Integration"
+   }
+  },
+  {
    "key": "claims",
    "point": "desk_action",
    "label": "Build claims",
@@ -1146,6 +1158,13 @@
    "point": "desk_action",
    "label": "Settle as it stands",
    "endpoint_url": "https://host.docker.internal:8142/icp/press/settle",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "billback",
+   "point": "desk_action",
+   "label": "Bill to the customer",
+   "endpoint_url": "https://host.docker.internal:8142/icp/press/billback",
    "timeout_seconds": 10
   }
  ],
@@ -1214,6 +1233,19 @@
    "on_submitted": 0,
    "send_fields": "name",
    "confirm_text": "Close this short-paid claim as paid? The shortfall stays on the payer's account for your accountant."
+  },
+  {
+   "record_type": "PP ICP Claim",
+   "label": "Bill to the customer",
+   "placement": "form",
+   "service": "billback",
+   "roles": [
+    "PP ICP Claims Clerk"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Bill what the payer did not pay to the customer, on their own sale?"
   }
  ],
  "reports": [

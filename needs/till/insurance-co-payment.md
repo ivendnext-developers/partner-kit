@@ -21,7 +21,6 @@ A service for the *payer* extension point (`payer/1`, POS version 2.1.0.666 and 
 - A sale whose total carries a charge on the whole sale (a service mode's charge) is never asked about: the cashier is told to take the charge off.
 - The retailer picks the clearing mode, a mode of payment of its own; a manifest cannot carry it.
 - No deductible or limit carried across sales, and no pre-authorisation: those are your service's to do.
-- Sample S43 was written before the door shipped: its door declaration is refused as it stands, so take the subscription's settings from the payer page.
 
 ## Tell the customer
 The cashier presses Payer, the insurer's share is billed to the insurer on your books, and the customer pays only their own share.

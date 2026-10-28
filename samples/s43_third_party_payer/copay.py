@@ -3,7 +3,8 @@
 The service (service/app.py) reads the shop's records and calls these; the tests call them with fixtures. Nothing here
 reads or writes the shop.
 
-    coverage(request, plan, member, customer_barred, list_prices)   the payer door's answer for one sale (PB-8 spec §3)
+    door_coverage(context, plan, member, customer_barred, list_prices)   the payer door's answer, as ``payer/1`` takes it
+    coverage(request, plan, member, customer_barred, list_prices)   the same split in the sale's own decimals
     return_split(claim_lines, returned, earlier_returns)            what a return gives back to the payer and the patient
     check_plan(plan)                                                a plan's settings, refused in words
 
@@ -60,7 +61,9 @@ WORDS = {
     "not_covered": "{item} is not covered by {plan}: the customer pays it.",  # informational, never a refusal
     "over_limit": "{plan} covers {limit} of {item} on one sale: the customer pays the rest.",
     "partial_return": "A sale {payer} paid part of is returned whole: return every line of it.",
+    "pays_nothing": "{plan} pays nothing on this sale: the customer pays it all.",
 }
+MESSAGE_MAX = 140           # the door takes a message of at most 140 characters
 
 
 def D(v) -> Decimal:
@@ -117,9 +120,9 @@ def _in_force(rec: dict, today: str) -> bool:
 
 def coverage(request: dict, plan: dict | None, member: dict | None, customer_barred: bool,
              list_prices: dict | None = None, payer: dict | None = None) -> dict:
-    """The payer door's coverage answer (``payer/1``, PB-8 spec §3) for one sale.
+    """The payer door's coverage answer in the sale's own decimals (``door_coverage`` turns it into ``payer/1``'s answer).
 
-    request: {sale_ref, customer, date (YYYY-MM-DD), currency, precision, prescription?,
+    request: {sale_ref, customer, date (YYYY-MM-DD), currency, precision, prescription?, payer_cap? (the most the payer pays),
               lines: [{line_id, item_code, item_group, gtin, qty, uom, conversion_factor, rate, amount, discount}]}
       ``amount``  what the line costs the customer, tax included, after the sale's discount (the till's line total);
       ``discount`` the discount the shop's pricing gave on it, on the same basis (0 when none).
@@ -210,6 +213,8 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
         copay = min(copay, cap)
     copay = min(copay, in_n)
     payer_total = _q(in_n - copay, places)
+    if request.get("payer_cap") is not None:      # never more than the sale's rounded total: the rounding is the patient's
+        payer_total = max(min(payer_total, _q(D(request["payer_cap"]), places)), ZERO)
     total = _q(sum((o[1] for o in out), ZERO), places)
 
     # the payer's share spread over the covered lines in proportion to each one's covered amount, to the cent
@@ -237,6 +242,68 @@ def coverage(request: dict, plan: dict | None, member: dict | None, customer_bar
                        "max_patient_amount": str(cap), "covered_net": str(_q(w_n, places)),
                        "inside_limit": str(_q(in_n, places)), "over_limit": str(_q(w_n - in_n, places)),
                        "copay": str(_q(copay, places))})
+
+
+def _message(text):
+    return None if not text else (text if len(text) <= MESSAGE_MAX else text[:MESSAGE_MAX - 1] + "…")
+
+
+def door_coverage(context: dict, plan: dict | None, member: dict | None, customer_barred: bool,
+                  list_prices: dict | None = None, payer: dict | None = None) -> dict:
+    """The answer the payer door takes for its ``coverage`` ask (``payer/1``, its ``context``): money in whole minor
+    units of the sale's currency (``currency_exponent`` digits), quantities in each line's own unit, only the keys the
+    contract carries. The split is ``coverage``'s, on the same amounts in decimals.
+
+    ``amount_minor`` is what a line costs, tax included; ``discount_minor`` is on the price's basis, so where the prices
+    exclude tax (``tax_included`` false) the discount is put on the amount's basis by the line's own tax rate before the
+    rules read it. The payer's share is never more than the sale's rounded total (``rounding_minor`` is the patient's).
+    An answer that would pay nothing is ``no_cover``: the door refuses a cover that pays nothing."""
+    exp = int(context["currency_exponent"])
+
+    def major(n):
+        return Decimal(int(n)).scaleb(-exp)
+
+    def minor(v):
+        return int(D(v).scaleb(exp))
+
+    asked = context["lines"]
+    lines = []
+    for l in asked:
+        amount, discount, rate = major(l["amount_minor"]), major(l["discount_minor"]), major(l["rate_minor"])
+        paid = rate * D(l.get("qty"))
+        if not context.get("tax_included") and paid > 0:
+            discount = _q(discount * amount / paid, exp)
+        lines.append(dict(l, amount=amount, discount=discount, rate=rate))
+    total = major(context["total_minor"])
+    request = {"sale_ref": context.get("sale_ref"), "customer": context.get("customer"), "date": context.get("date"),
+               "currency": context.get("currency"), "precision": exp, "lines": lines,
+               "payer_cap": total + min(major(context.get("rounding_minor") or 0), ZERO)}
+    out = coverage(request, plan, member, customer_barred, list_prices, payer)
+    if out["answer"] == "no_cover":
+        return {"answer": "no_cover", "code": out["code"], "message": _message(out["message"])}
+    head = {k: out[k] for k in ("payer", "plan", "member", "claim_ref") if out.get(k)}
+    unit = {l["line_id"]: D(l.get("conversion_factor")) or Decimal(1) for l in asked}
+
+    def line(r, shares):
+        cf = unit[r["line_id"]]
+        x = {"line_id": r["line_id"], "covered": bool(r["covered"]), "sellable": bool(r["sellable"]),
+             "reason": r["reason"], "message": _message(r["message"]),
+             "covered_qty": float(D(r["covered_qty"]) / cf),
+             "qty_limit": None if r["qty_limit"] is None else float(D(r["qty_limit"]) / cf)}
+        if shares:
+            x.update(payer_share_minor=minor(r["payer_share"]), patient_share_minor=minor(r["patient_share"]))
+        return x
+
+    if out["answer"] == "refuse":
+        return dict(head, answer="refuse", lines=[line(r, False) for r in out["lines"]])
+    if minor(out["totals"]["payer_share"]) <= 0:
+        names = {"plan": (plan or {}).get("title") or (plan or {}).get("name") or "The plan"}
+        return {"answer": "no_cover", "code": "pays_nothing", "message": _message(WORDS["pays_nothing"].format(**names))}
+    rows = [line(r, True) for r in out["lines"]]
+    pay = sum(r["payer_share_minor"] for r in rows)
+    return dict(head, answer="cover", no_partial_refund=out["no_partial_refund"], lines=rows,
+                totals={"payer_share_minor": pay, "patient_share_minor": sum(r["patient_share_minor"] for r in rows),
+                        "total_minor": pay + sum(r["patient_share_minor"] for r in rows)})
 
 
 def claim_ref(sale_ref, payer) -> str | None:
