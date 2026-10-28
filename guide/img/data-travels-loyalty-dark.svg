@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 818" width="820" height="818" role="img" aria-labelledby="t d" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<title id="t">How the data travels: a chain&#x27;s own loyalty system</title><desc id="d">Example 1, a chain&#x27;s own loyalty system, as a sequence across four parties: the till, the chain&#x27;s iVendNext, your service (sample S22) and the chain&#x27;s own loyalty system outside iVendNext. Before payment: the cashier puts the customer on the sale, and the till prices the member&#x27;s discount itself, from a promotion for the customer&#x27;s group. The cashier presses Member: the till sends the sale&#x27;s lines and customer, with no price; the chain&#x27;s iVendNext calls your service at POST /lyl/member, signed with this chain&#x27;s own secret; your service reads the member, the ledger and the settings with the app&#x27;s own key; it asks the chain&#x27;s loyalty system at POST /v1/members/lookup with this chain&#x27;s own loyalty account; the customer&#x27;s points and offer come back, and the till shows them in a message, adding nothing to the sale. At Pay, the till&#x27;s payments app asks your service through the wallet door what the member may spend. After payment, your service pulls the sale from the event feed, writes the Earn row named by its unique key, and posts the earning to the chain&#x27;s loyalty system once, with an Idempotency-Key.</desc>
+<rect width="820" height="818" rx="16" fill="#0d1120"/>
+<text x="24" y="38" font-size="22" font-weight="800" fill="#eef1f8">How the data travels: a chain&#x27;s own loyalty system</text>
+<text x="24" y="60" font-size="14" font-weight="500" fill="#a3abc0">Sample S22 with its loyalty adapter switched on.</text>
+<path d="M110.0,126 V802" stroke="#3a4462" stroke-width="1.5" stroke-dasharray="3 5"/>
+<rect x="18.0" y="80" width="184" height="46" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="110.0" y="106" font-size="13.5" font-weight="800" fill="#eef1f8" text-anchor="middle">The till</text>
+<path d="M310.0,126 V802" stroke="#3a4462" stroke-width="1.5" stroke-dasharray="3 5"/>
+<rect x="218.0" y="80" width="184" height="46" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="310.0" y="99" font-size="13.5" font-weight="800" fill="#eef1f8" text-anchor="middle">The chain&#x27;s</text>
+<text x="310.0" y="116" font-size="13.5" font-weight="800" fill="#eef1f8" text-anchor="middle">iVendNext</text>
+<path d="M510.0,126 V802" stroke="#3a4462" stroke-width="1.5" stroke-dasharray="3 5"/>
+<rect x="418.0" y="80" width="184" height="46" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="510.0" y="99" font-size="13.5" font-weight="800" fill="#eef1f8" text-anchor="middle">Your service</text>
+<text x="510.0" y="116" font-size="13.5" font-weight="800" fill="#eef1f8" text-anchor="middle">(sample S22)</text>
+<path d="M710.0,126 V802" stroke="#3a4462" stroke-width="1.5" stroke-dasharray="3 5"/>
+<rect x="618.0" y="80" width="184" height="46" rx="10" fill="#151a2c" stroke="#2f3752" stroke-width="1.3"/>
+<text x="710.0" y="99" font-size="13.5" font-weight="800" fill="#eef1f8" text-anchor="middle">The chain&#x27;s own</text>
+<text x="710.0" y="116" font-size="13.5" font-weight="800" fill="#eef1f8" text-anchor="middle">loyalty system</text>
+<rect x="16" y="148" width="788" height="24" rx="6" fill="#1b2136"/>
+<text x="28" y="164" font-size="11.5" font-weight="800" fill="#eef1f8" text-anchor="start">AT THE TILL, BEFORE PAYMENT</text>
+<rect x="24" y="186" width="328.0" height="24" rx="12" fill="#151a2c" stroke="#3ccf8e" stroke-width="1.4"/>
+<text x="188.0" y="202" font-size="12" font-weight="700" fill="#3ccf8e" text-anchor="middle">1  The cashier puts the customer on the sale</text>
+<rect x="24" y="222" width="349.0" height="24" rx="12" fill="#151a2c" stroke="#3ccf8e" stroke-width="1.4"/>
+<text x="198.5" y="238" font-size="12" font-weight="700" fill="#3ccf8e" text-anchor="middle">2  The till prices the member&#x27;s discount itself</text>
+<path d="M110.0,276 H302.0" stroke="#5aa9ff" stroke-width="2" fill="none"/><path d="M310.0,276 L301.0,271 L301.0,281 z" fill="#5aa9ff"/>
+<text x="210.0" y="268" font-size="12.5" font-weight="700" fill="#eef1f8" text-anchor="middle">3  The cashier presses Member</text>
+<text x="210.0" y="293" font-size="11.2" font-weight="500" fill="#a3abc0" text-anchor="middle">the sale&#x27;s lines and customer, no price</text>
+<path d="M310.0,324 H502.0" stroke="#5aa9ff" stroke-width="2" fill="none"/><path d="M510.0,324 L501.0,319 L501.0,329 z" fill="#5aa9ff"/>
+<text x="410.0" y="316" font-size="12.5" font-weight="700" fill="#eef1f8" text-anchor="middle">4  POST /lyl/member</text>
+<text x="410.0" y="341" font-size="11.2" font-weight="500" fill="#a3abc0" text-anchor="middle">signed with this chain&#x27;s own secret</text>
+<path d="M510.0,372 H318.0" stroke="#5aa9ff" stroke-width="2" fill="none"/><path d="M310.0,372 L319.0,367 L319.0,377 z" fill="#5aa9ff"/>
+<text x="410.0" y="364" font-size="12.5" font-weight="700" fill="#eef1f8" text-anchor="middle">5  GET members, ledger, settings</text>
+<text x="410.0" y="389" font-size="11.2" font-weight="500" fill="#a3abc0" text-anchor="middle">the app&#x27;s own key, this chain&#x27;s address</text>
+<path d="M510.0,420 H702.0" stroke="#f0b252" stroke-width="2" fill="none"/><path d="M710.0,420 L701.0,415 L701.0,425 z" fill="#f0b252"/>
+<text x="610.0" y="412" font-size="12.5" font-weight="700" fill="#eef1f8" text-anchor="middle">6  POST /v1/members/lookup</text>
+<text x="610.0" y="437" font-size="11.2" font-weight="500" fill="#a3abc0" text-anchor="middle">this chain&#x27;s own loyalty account and key</text>
+<path d="M710.0,468 H518.0" stroke="#f0b252" stroke-width="2" stroke-dasharray="5 4" fill="none"/><path d="M510.0,468 L519.0,463 L519.0,473 z" fill="#f0b252"/>
+<text x="610.0" y="460" font-size="12.5" font-weight="700" fill="#eef1f8" text-anchor="middle">7  points and today&#x27;s offer</text>
+<path d="M510.0,504 H118.0" stroke="#5aa9ff" stroke-width="2" stroke-dasharray="5 4" fill="none"/><path d="M110.0,504 L119.0,499 L119.0,509 z" fill="#5aa9ff"/>
+<text x="310.0" y="496" font-size="12.5" font-weight="700" fill="#eef1f8" text-anchor="middle">8  message: tier, cash back, points, offer</text>
+<text x="310.0" y="521" font-size="11.2" font-weight="500" fill="#a3abc0" text-anchor="middle">shown on the till; nothing added to the sale</text>
+<rect x="16" y="530" width="788" height="24" rx="6" fill="#1b2136"/>
+<text x="28" y="546" font-size="11.5" font-weight="800" fill="#eef1f8" text-anchor="start">AT PAY</text>
+<path d="M310.0,586 H502.0" stroke="#5aa9ff" stroke-width="2" fill="none"/><path d="M510.0,586 L501.0,581 L501.0,591 z" fill="#5aa9ff"/>
+<text x="410.0" y="578" font-size="12.5" font-weight="700" fill="#eef1f8" text-anchor="middle">9  Member cash: what may this member spend?</text>
+<text x="410.0" y="603" font-size="11.2" font-weight="500" fill="#a3abc0" text-anchor="middle">the till&#x27;s payments app, through the wallet door</text>
+<rect x="16" y="612" width="788" height="24" rx="6" fill="#1b2136"/>
+<text x="28" y="628" font-size="11.5" font-weight="800" fill="#eef1f8" text-anchor="start">AFTER PAYMENT</text>
+<path d="M510.0,668 H318.0" stroke="#3ccf8e" stroke-width="2" fill="none"/><path d="M310.0,668 L319.0,663 L319.0,673 z" fill="#3ccf8e"/>
+<text x="410.0" y="660" font-size="12.5" font-weight="700" fill="#eef1f8" text-anchor="middle">10  the event feed: sale booked</text>
+<text x="410.0" y="685" font-size="11.2" font-weight="500" fill="#a3abc0" text-anchor="middle">your service pulls it with the app&#x27;s key</text>
+<path d="M510.0,716 H318.0" stroke="#3ccf8e" stroke-width="2" fill="none"/><path d="M310.0,716 L319.0,711 L319.0,721 z" fill="#3ccf8e"/>
+<text x="410.0" y="708" font-size="12.5" font-weight="700" fill="#eef1f8" text-anchor="middle">11  write the Earn row, named by its key</text>
+<text x="410.0" y="733" font-size="11.2" font-weight="500" fill="#a3abc0" text-anchor="middle">a second row for the same sale is refused</text>
+<path d="M510.0,764 H702.0" stroke="#f0b252" stroke-width="2" fill="none"/><path d="M710.0,764 L701.0,759 L701.0,769 z" fill="#f0b252"/>
+<text x="610.0" y="756" font-size="12.5" font-weight="700" fill="#eef1f8" text-anchor="middle">12  POST /v1/earn, Idempotency-Key</text>
+<text x="610.0" y="781" font-size="11.2" font-weight="500" fill="#a3abc0" text-anchor="middle">posted once, even when the feed delivers it again</text>
+</svg>

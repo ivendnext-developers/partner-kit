@@ -3,7 +3,7 @@
  "app": "pp_lyl",
  "prefix": "PP LYL",
  "title": "Customer-owned loyalty",
- "version": "0.3.0",
+ "version": "0.4.0",
  "publisher": "Partner Programme sample",
  "description": "A customer's own loyalty programme, run by the partner's service OUTSIDE the shop, with its records kept INSIDE the shop: plans, settings, members and a cash-back ledger whose every row is named by its unique key, so the shop itself refuses a duplicate. Tiers are customer groups (each priced by a promotion, set by configuration). The service reads the event feed with one integration user (role PP LYL Integration, which the shop makes first), answers the member till key and, once the shop registers it as a remote wallet, lets a member spend the cash back at the till (Member cash). The feed registration and the till key install switched off. Every right a role has is written out (read, write, create, delete, report, export, share, print, email). allowed_urls is an example address; a partner writes its own.",
  "allowed_urls": [
@@ -69,6 +69,18 @@
      "fieldname": "earn_on_redemption",
      "fieldtype": "Check",
      "label": "Earn cash back on a sale paid with Member cash"
+    },
+    {
+     "fieldname": "loyalty_api",
+     "fieldtype": "Data",
+     "label": "Your own loyalty system's address (optional)",
+     "description": "Leave empty unless the chain runs its own loyalty system outside iVendNext. Set (https), the app also shows that system's points and offer on the Member key and posts each sale's earning to it."
+    },
+    {
+     "fieldname": "loyalty_api_key",
+     "fieldtype": "Data",
+     "label": "Your own loyalty system's key",
+     "description": "The key your loyalty system gave for this chain. Only the System Manager and the app's own role read this record."
     }
    ],
    "permissions": [

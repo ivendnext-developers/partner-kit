@@ -66,6 +66,7 @@ LADDER = "guide/03_ladder_and_never_list.md"
 LADDER_SECTIONS = ("The ladder", "The four rules — what every build keeps, and why")
 GUIDE = "kit/blueprint.md"
 HOWITWORKS = "guide/01a_how_it_all_works.md"          # chapter 1a, How it all works: the whole chapter, its pictures beside it
+DATA_TRAVELS = "guide/01c_how_the_data_travels.md"
 CHROME_PLACES = ("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/usr/bin/google-chrome",
                  "/usr/bin/google-chrome-stable", "/usr/bin/chromium", "/usr/bin/chromium-browser")
 LINK_HOSTS = {"developer.ivendnext.com": "/", "github.com": "/ivendnext-developers/"}     # host: the path a link must start with
@@ -276,6 +277,35 @@ def howitworks_body(errors: list) -> str:
     return band("How iVendNext apps work", lede) + f'<div class="chapter">{body}</div>'
 
 
+def inline_svg(m) -> str:
+    """A guide picture written into the page itself, so its words are set in the page's own Inter (an image's are not) and it
+    is as wide as the column; its title and description stay, for a reader that cannot see it."""
+    svg = re.sub(r"^<\?xml[^>]*\?>\s*", "", (build.ROOT / "guide" / "img" / m.group(1)).read_text("utf-8"))
+    svg = re.sub(r'font-family="[^"]*"', 'font-family="Inter"', svg, count=1)
+    k = m.group(1).rsplit(".", 1)[0]                       # three pictures in one page: their title and description ids apart
+    svg = svg.replace('aria-labelledby="t d"', f'aria-labelledby="t-{k} d-{k}"').replace('id="t"', f'id="t-{k}"').replace('id="d"', f'id="d-{k}"')
+    return re.sub(r'\swidth="[\d.]+" height="[\d.]+"', ' width="100%"', svg, count=1)
+
+
+def data_travels_body(errors: list) -> str:
+    """Guide chapter 1c whole, its pictures written into the page (inline_svg: the light ones, as print is light); the chapter's
+    own *Download* line is left out (the PDF does not link itself)."""
+    ctx = kit_ctx(errors)
+    ctx.src, ctx.out = DATA_TRAVELS, "guide/01c_how_the_data_travels.html"
+    text = (build.ROOT / DATA_TRAVELS).read_text("utf-8")
+    title, _, rest = text.partition("\n")
+    rest = re.sub(r"^\*\*Download:\*\*.*$", "", rest, flags=re.M)
+    body = absolute(build.render(rest, ctx, {}, None), ctx.out)
+    body, n = re.subn(r'<img src="' + re.escape(BASE) + r'guide/img/([\w.-]+\.svg)"[^>]*>', inline_svg, body)
+    body = re.sub(r'src="' + re.escape(BASE) + r'guide/img/(1c-[\w.-]+\.png)"', r'src="\1"', body)   # its screenshots: stage()
+    if not n:
+        errors.append(f"{DATA_TRAVELS}: no picture of the chapter's in its print")
+    lede = (f'Guide chapter 1c: two links to outside systems, a chain\'s own loyalty system and a telecom company, traced hop by '
+            f'hop, with two chains in the same second. Online, with its samples: '
+            f'<a href="{BASE}{ctx.out}">developer.ivendnext.com/{ctx.out}</a>.')
+    return band("How the data travels", lede) + f'<section class="chapter travels">{body}</section>'
+
+
 def glance_body(errors: list) -> str:
     """Every card, by area and A to Z in the customer's words: the verdict and the door's name. Each row carries its card's id."""
     cards = catalogue.load(build.ROOT)
@@ -368,7 +398,9 @@ DOCS = [Doc("blueprint_form.pdf", "Project blueprint", 4, False, form_body, land
         Doc("blueprint_example.pdf", "Blueprint example", 5, False, example_body, landscape=1, home="kit/blueprint_example.html"),
         Doc("ladder_and_four_rules.pdf", "The ladder and the four rules", 2, True, ladder_body, home="guide/03_ladder_and_never_list.html"),
         Doc("needs_at_a_glance.pdf", "Needs at a glance", 6, False, glance_body, home="needs/index.html"),
-        Doc("how_ivendnext_apps_work.pdf", "How iVendNext apps work", 10, False, howitworks_body, home="guide/01a_how_it_all_works.html")]
+        Doc("how_ivendnext_apps_work.pdf", "How iVendNext apps work", 10, False, howitworks_body, home="guide/01a_how_it_all_works.html"),
+        Doc("how_the_data_travels.pdf", "How the data travels", 13, False, data_travels_body,
+            home="guide/01c_how_the_data_travels.html")]
 FORMS = (form_body, example_body)                                 # the documents whose Status boxes must be every verdict word
 
 
@@ -417,6 +449,8 @@ def stage(tmp: pathlib.Path) -> None:
     (tmp / "logo-band.svg").write_text(re.sub(r'fill="#(?:0089ff|fff)"', lambda m: swap[m.group()], on_dark), "utf-8")
     logo = (build.SITE / "assets-src" / "logo.svg").read_text("utf-8")
     (tmp / "logo-header.svg").write_text(re.sub(r'width="[\d.]+" height="[\d.]+"', 'width="84" height="15.1"', logo, count=1), "utf-8")
+    for shot in (build.ROOT / "guide" / "img").glob("1c-*.png"):         # chapter 1c's screenshots, loaded from the print folder
+        shutil.copy(shot, tmp / shot.name)
 
 
 PROBE = """<style>body{width:170mm}.wide{width:257mm}</style><script>(function () {

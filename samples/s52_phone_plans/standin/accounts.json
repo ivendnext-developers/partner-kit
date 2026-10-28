@@ -1,0 +1,23 @@
+{
+ "ACC-NORTH": {
+  "key": "north-standin-key-not-a-secret",
+  "currency": "USD",
+  "exponent": 2,
+  "refused_customers": ["PP TEL Refused"],
+  "plans": [
+   {"code": "PP-TEL-S", "name": "S 20 GB", "price_minor": 2500, "phones": ["PP-TEL-PHONE-X1", "PP-TEL-PHONE-X2"]},
+   {"code": "PP-TEL-M", "name": "M 50 GB", "price_minor": 3500, "phones": ["PP-TEL-PHONE-X1", "PP-TEL-PHONE-X2"]},
+   {"code": "PP-TEL-L", "name": "L Unlimited", "price_minor": 5000, "phones": ["PP-TEL-PHONE-X2"]}
+  ]
+ },
+ "ACC-SOUTH": {
+  "key": "south-standin-key-not-a-secret",
+  "currency": "USD",
+  "exponent": 2,
+  "refused_customers": [],
+  "plans": [
+   {"code": "PP-TEL-S", "name": "S 25 GB", "price_minor": 2200, "phones": ["PP-TEL-PHONE-X1"]},
+   {"code": "PP-TEL-M", "name": "M 60 GB", "price_minor": 3900, "phones": ["PP-TEL-PHONE-X1", "PP-TEL-PHONE-X2"]}
+  ]
+ }
+}

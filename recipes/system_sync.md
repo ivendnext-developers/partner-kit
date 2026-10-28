@@ -4,6 +4,8 @@ This recipe keeps a retailer's own **ERP, order system or warehouse system**, ru
 
 **When to use it:** an outside system owns items, prices or stock, and must also hold every sale and return iVendNext books.
 
+**How the data travels, hop by hop:** [guide chapter 1c](../guide/01c_how_the_data_travels.md) traces two links to outside systems (a chain's own loyalty system, and a phone retailer's telecom company): every endpoint, what data crosses it, what signs it, where each chain's account is kept, and two chains in the same second.
+
 ## The picture
 
 ```

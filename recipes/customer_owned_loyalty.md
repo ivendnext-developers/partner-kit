@@ -6,6 +6,8 @@ Many retailers run their own loyalty programme: their own tiers, their own cash 
 
 **When to use it.** The customer owns the rules and will keep changing them; staff must still see members and cash back on iVendNext's own screens, reports and audit; the till must price members offline. If iVendNext's own loyalty does the job, configure it instead (chapter 4).
 
+**How the data travels, hop by hop:** [guide chapter 1c](../guide/01c_how_the_data_travels.md), example 1, follows this recipe's sample from the till to the chain's own loyalty system and back (S22's opt-in adapter), with two chains in the same second.
+
 ## If you would have built an app inside the retailer's iVendNext, do this instead
 
 | Inside the retailer's iVendNext, the old way | Here |

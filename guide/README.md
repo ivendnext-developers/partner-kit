@@ -13,6 +13,7 @@ New to iVendNext? Start with [1a. How it all works](01a_how_it_all_works.md), a 
 | 1 | [Welcome and the one path](01_welcome.md) | — |
 | 1a | [How it all works — where your app runs, where the data lives, why customers never collide](01a_how_it_all_works.md) | [Questions developers ask](../site/pages/questions.md) |
 | 1b | [One app from your laptop to the till — sample S18, step by step](01b_one_app_end_to_end.md) | `samples/s18_rule_guard/` · `tools/manifest/start.py`, `tools/publish/`, `tools/deploy_app/` |
+| 1c | [How the data travels: loyalty and telecom plan integrations, hop by hop with two chains at once](01c_how_the_data_travels.md) | `samples/s22_customer_loyalty/` (its loyalty adapter) · `samples/s52_phone_plans/` |
 | 2 | [Getting started — sandbox, keys, the first call](02_getting_started.md) | `recipes/integration_user.md`, `recipes/connected_app.md` · `api/collection/`, `api/openapi.yaml` |
 | 3 | [The ladder and the four rules](03_ladder_and_never_list.md) | one recipe per rung (linked in the chapter) |
 | 4 | [Configure first](04_configure_first.md) | `recipes/configure_no_code.md`, `recipes/receipt_format.md` · `samples/s5_config_pack/`, `samples/s4_receipt_pack/` |

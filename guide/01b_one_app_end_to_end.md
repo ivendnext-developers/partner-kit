@@ -150,4 +150,4 @@ No command: the cashier presses a button.
 - **The till pictures** (step 7): S18's own, taken on the programme's test site on the counter frame; the sample's README says how.
 - **Update and removal:** [chapter 14a](14a_deploying_to_a_chain.md).
 
-**Next:** *Get started* gives you your own sandbox site to do all of this on: [Get started in five steps](../site/pages/start.md).
+**Next:** [1c. How the data travels](01c_how_the_data_travels.md): two links to outside systems, a chain's own loyalty system and a telecom company, followed hop by hop with two chains at once. Then *Get started* gives you your own sandbox site to do all of this on: [Get started in five steps](../site/pages/start.md).
