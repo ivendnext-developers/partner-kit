@@ -82,7 +82,7 @@ Your service calls the chain's API at `https://<chain site>/api/…` with your a
 
 ### Where does my app's user and key come from?
 
-From POS version 2.1.0.667, installing a manifest with an event feed makes your app's own user, `<app>@integration.invalid`, which works through the API only, with one role. A hosted app receives its key when the chain connects; for a service on your own server, the chain's administrator generates the key on that user and gives it to you. [Chapter 5](../../guide/05_outside_apps_and_event_feed.md).
+From POS version 2.1.0.667, installing a manifest with an event feed makes your app's own user, `<app>@integration.invalid`, which works through the API only, with one role. A hosted app receives its key when the chain connects; for a service on your own server, the chain's administrator generates the key on that user and gives it to you. An app with no event feed is given a user the chain makes by hand. [Chapter 5](../../guide/05_outside_apps_and_event_feed.md).
 
 ### Is there a webhook when something changes?
 
