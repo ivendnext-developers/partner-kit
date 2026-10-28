@@ -60,7 +60,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
    Bin locations' service takes its prefix from a setting, `BLN_PREFIX`, so its code needs no change for the name.
 
 4. **Give it the shape of the app you started from.** A library app is its sample with a few edits for our hosting, and the sample's README names them. For *Bin locations* (S2's README, *The till key alone, hosted by CitiXsys*), there are two:
-   - **Its feed.** The feed is how **Connect again** hands your service the retailer's user:
+   - **Its feed.** The feed is what gets your service its user: the install makes the app's own user and names it on the feed, and the retailer's site hands your service its key:
 
      ```json
      "registered_applications": [{"name": "ACME BINS Bins feed",
@@ -123,7 +123,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
      python3 tools/deploy_app/deploy_app.py apps/acme_bins --zip acme-bins.zip --root . --plan starter --partner acme
      ```
 
-     It builds the package and prints the order we run. Your app answers at `https://acme-bins.ivendnext.app`, with `BLN_PREFIX=ACME BINS` and `IVN_LIBRARY_APP=acme_bins`. Each retailer's site connects itself after its install. Once the retailer has asked iVendNext support to set the app's user on the feed (step 4) and presses **Connect again** on your app's record, your service has that retailer's user. An app that only answers presses, listed on the App library's public list, carries no hosting charge.
+     It builds the package and prints the order we run. Your app answers at `https://acme-bins.ivendnext.app`, with `BLN_PREFIX=ACME BINS` and `IVN_LIBRARY_APP=acme_bins`. Each retailer's site connects itself after its install and hands your service the key of the app's own user (the install makes that user and names it on the feed, step 4); the retailer presses **Connect again** on your app's record only if the site could not reach the app, or a key was lost or changed. An app that only answers presses, listed on the App library's public list, carries no hosting charge.
    - **On your own server, for one customer:** set the retailer's three values (S2's `service/where.py` names them):
      - `IVN_POINT_SECRET`, the till key's secret, which the install shows once in Desk, on the till key's record;
      - `IVN_SHOP_URL`, the retailer's address;

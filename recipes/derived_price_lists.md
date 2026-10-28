@@ -25,7 +25,7 @@ One record per derived list, of your own type `⟨PREFIX⟩ Rule`, named by a sh
 ## What iVendNext needs from you
 
 - **The role's rights on the retailer's own record types** (a manifest grants rights only on its own): read on Price List; read, create and write on Item Price ([the integration user recipe](integration_user.md)). Say what they reach: the key can change **any** item price in the retailer's iVendNext.
-- **The integration user set on the feed registration** (by iVendNext support, on the retailer's request; a user made for the app alone, never a person's), with Item Price ticked. A key registered to two applications is refused.
+- **The app's own user on the feed registration** (from POS version 2.1.0.667 the install makes it, `<app>@integration.invalid`, and names it; the retailer ticks Item Price and gives its role the rights above). A key registered to two applications is refused.
 - **The rule filled in and enabled**, after the service runs: its first pass writes every target price no person has set. A target list that already has prices keeps them (each is a person's price): to hand a list to the rule, end those prices first, or derive into a new list.
 
 ## Bounds — tell the customer

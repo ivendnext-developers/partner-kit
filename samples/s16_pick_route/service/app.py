@@ -24,7 +24,7 @@ ONE SHOP (an env file):
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
     IVN_LIBRARY_APP    the App library's id (ivendnext_pck), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
                        Each shop connects itself after its install and hands over the press's secret
-                       (<app>:sub:route) and, once the shop has chosen it on the app's feed, its integration user's key
+                       (<app>:sub:route) and the key of the app's own user (the install made it)
                        ("user:<email>"); every call names its shop (X-iVendNext-Site).
 PCK_PREFIX (default PP PCK; IVENDNEXT PCK for the library's app) · PORT (default 8080)
 
@@ -59,8 +59,8 @@ SUB = "route"           # the manifest's extension_subscriptions[].key; its secr
 CLAIM_STALE = 60        # a press's claim older than this is taken over: a function copy lives at most 10 s
 ORDERS_MAX = 20         # orders one press may carry here: one find and a create each fit the function's 10 s
 TOO_MANY = f"Pick route takes at most {ORDERS_MAX} orders at a time. Select fewer orders and press again."
-NOT_SET_UP = ("Pick route is not set up yet. Ask your manager to choose its user on the app's feed and press "
-              "Connect again.")
+NOT_SET_UP = ("Pick route is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
+              "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
 REFUSED = "Pick route may not write pick tasks. Ask your manager to check the app's user, its role and its API key."
 CONNECT_AGAIN = " Then press Connect again on the app."    # many shops: a new key reaches the service only that way
 
@@ -116,7 +116,7 @@ class Tenant:
 
 
 def tenant_of(url: str, key: str) -> Tenant:
-    """A shop's door from the key it handed over on Connect again ("<api key>:<api secret>")."""
+    """A shop's door from the key the shop's site handed over ("<api key>:<api secret>")."""
     api_key, _, api_secret = key.partition(":")
     return Tenant(url, api_key, api_secret)
 

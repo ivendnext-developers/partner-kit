@@ -77,8 +77,8 @@ RULE_FIELDS = ["name", "enabled", "shown_name", "question", "answer_good", "answ
 CUSTOMER_FIELDS = ["name", "mobile_no", "email_id", "custom_phone_no", "custom_email"]
 STATIC = {"/": ("page.html", "text/html; charset=utf-8"), "/page.js": ("page.js", "text/javascript; charset=utf-8"),
           "/page.css": ("page.css", "text/css; charset=utf-8")}
-NOT_SET_UP = ("Post-sale feedback is not set up yet. Ask your manager to choose its user on the app's feed and press "
-              "Connect again.")
+NOT_SET_UP = ("Post-sale feedback is not set up yet: no key from this shop has reached it. Ask your manager to check that "
+              "the app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
 REFUSED = ("Post-sale feedback may not read the sales or write the requests. Ask your manager to check the app's user, "
            "its role and its API key.")
 CONNECT_AGAIN = " Then press Connect again on the app."    # many retailers: a new key reaches the service only that way
@@ -157,7 +157,7 @@ class Tenant:
 
 
 def tenant_of(url: str, key: str) -> Tenant:
-    """A retailer's door from the key it handed over on Connect again ("<api key>:<api secret>")."""
+    """A retailer's door from the key the retailer's site handed over ("<api key>:<api secret>")."""
     api_key, _, api_secret = key.partition(":")
     return Tenant(url, api_key, api_secret)
 

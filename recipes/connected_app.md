@@ -12,7 +12,7 @@ A connected app is your own service, on **its own server, in any language**, tha
 
 ## Steps
 
-1. **Get a key.** The retailer makes one integration user for your app, with one narrow role (`recipes/integration_user.md`). Every request carries `Authorization: token <api key>:<api secret>`.
+1. **Get a key.** The retailer makes one integration user for your app, with one narrow role (`recipes/integration_user.md`), for an app with no event feed; an app with a feed gets its own user from its install (guide chapter 5). Every request carries `Authorization: token <api key>:<api secret>`.
 
 2. **Start from the request collection, not from a library.** `api/collection/NN_*.http` holds every call the samples make, as plain HTTP files. Any tool can send them, and `run.sh` sends them all with `curl` and `jq` alone:
 

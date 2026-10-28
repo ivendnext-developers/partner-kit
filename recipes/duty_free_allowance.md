@@ -13,7 +13,7 @@ An airport store sells only to passengers, and only up to what customs lets each
    - a settings record type `<PREFIX> Settings` (the record `Default`): the retailer's airports, *departing* or *arriving*, the airport's hours from UTC, and whether earlier sales count. Give **System Manager** the rights to edit it and your integration role **read only**; name the role `<PREFIX> Integration`, so the install makes it;
    - **two fields on Item Group**, the allowance and the word it is counted in, and **one on Item**, how much one stock unit counts (0.75 for a 75 cl bottle, 200 for a carton of cigarettes). A group's allowance covers every group below it, so a retailer sets it once on *Spirits*;
    - one `check` subscription at your service's address, and that address alone in `allowed_urls`;
-   - a feed registration naming your one integration user, so the retailer's *Connect again* hands that user's key to your service;
+   - a feed registration, one per app, with no user named: from POS version 2.1.0.667 the install makes your app's own user, `<app>@integration.invalid`, and names it, and the retailer's site hands that user's key to your hosted service after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed);
    - a help address on the settings record type (a `documentation` property setter).
 
 2. **Choose what happens when your service is down.** The sample declares `allow_and_flag`: an outage never stops an airport store selling, and the sale is flagged on *Sales to review*. A retailer whose customs rules forbid selling unchecked changes its subscription to `refuse`.
@@ -78,7 +78,7 @@ The retailer's record `Default` of `<PREFIX> Settings`: *This shop's airports* (
 - **A phone's camera** cannot fill *Sale details* on the till yet: a keyboard scanner, or typing, fills it.
 - **Where the check never runs:** a park to a till, a layaway deposit, an account collection (the check page, *Not in this version*), nor a sale rung in the Desk's own POS screen.
 - **A cold start:** on CitiXsys hosting the first Pay after a quiet spell starts the function; past the check's time the down answer applies, flagged.
-- **Hosting:** the service is the app template's shape, so it serves many retailers through the template's handshake (guide chapter 14b); each retailer's site hands over the check's secret when it connects after the install, and its integration user's key on *Connect again*. It only answers presses, so on CitiXsys hosting it runs as a function, paid per call (`app.json` `"runs": "function"`). Until a retailer's user key arrives the service answers 503, so your down answer applies.
+- **Hosting:** the service is the app template's shape, so it serves many retailers through the template's handshake (guide chapter 14b); each retailer's site hands over the check's secret, and the key of the app's own user, when it connects after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed). It only answers presses, so on CitiXsys hosting it runs as a function, paid per call (`app.json` `"runs": "function"`). Until a retailer's user key arrives the service answers 503, so your down answer applies.
 
 ### What was proven where
 

@@ -12,13 +12,13 @@ iVendNext keeps a queue of events per registered application. Your service **pul
 
 **When to use it.** Whenever your service must act on what happens in a retailer's iVendNext and cannot afford to miss an event.
 
-## 1. Register your application (the retailer does this)
-The retailer's administrator creates a **Registered Application** for you: its name, the **user your service reads as** (an integration user with its own API key), and the record types you follow (POS Invoice, Sales Invoice, Customer, Item, Stock Entry …), each ticked on. A manifest can install the registration **switched off** (`registered_applications`, manifest v2); the retailer picks the user and ticks it on. From then on, every change to a followed record adds one row to your queue — **after** the change commits, so a refused save sends nothing.
+## 1. Register your application (the install does this)
+A manifest installs your **Registered Application** (`registered_applications`, manifest v2), **switched off**, with **one feed per app**. From POS version 2.1.0.667 the install also makes your app's own user, `<app>@integration.invalid`, and names it on the registration as the **user your service reads as**. That user holds one role, `<PREFIX> Integration`, and works through the API only. The retailer's administrator gives the role the reads your app needs and ticks each record type you follow (POS Invoice, Sales Invoice, Customer, Item, Stock Entry …) on. A hosted app is then connected by the site itself, after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed); an app you host yourself gets its key when the retailer presses *Generate Keys* on that user. An app installed before 2.1.0.667 gets its user at its next version, if its feed names no user. From then on, every change to a followed record adds one row to your queue — **after** the change commits, so a refused save sends nothing.
 
 Changes made by your own integration user are **not** sent to you (no echo of your own writes).
 
-**Switching it on by script.** A partner who sets iVendNext up from a configuration script does three things, not one:
-1. **Set the registration's user** to the integration user.
+**Switching it on by script.** A partner who sets a site up from a configuration script, for an app whose registration the install did not make, does three things, not one:
+1. **Set the registration's user** to the integration user (a registration the install made already names the app's own user).
 2. **Tick each record type** on the registration: `registered_application_events[].enable` is `1` on every row you follow. The installer leaves every row unticked, and iVendNext writes a feed row only for a ticked record type. A feed with the user set and no row ticked reads empty.
 3. **Expect the row a moment after the save commits.** iVendNext writes it in a background job. A worker that polls every few seconds is fine; a script that saves a record and reads the feed at once finds nothing. In a test, poll until the feed has been quiet for two passes. (Sample S22's `switch-on` does the first two parts.)
 

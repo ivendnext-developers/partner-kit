@@ -44,7 +44,7 @@ Pressed again, the button says *Already with its store* and changes nothing.
       "confirm_text": "Send this order to the store that serves its territory? Its warehouse changes on every line."}]
    ```
 
-3. **Add a feed registration** for the app's user (it follows Sales Order; leave it switched off (it installs off): switched on, it would record every sales order's saves for the app's user). A service that serves many retailers receives the user's key through it on *Connect again* (guide chapter 14b):
+3. **Add a feed registration** for the app's user (it follows Sales Order; leave it switched off (it installs off): switched on, it would record every sales order's saves for the app's user). Name no user: from POS version 2.1.0.667 the install makes the app's own user and names it. A hosted service that serves many retailers is handed that user's key by the retailer's site after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed; guide chapter 14b):
 
    ```json
    "registered_applications": [
@@ -65,8 +65,8 @@ Pressed again, the button says *Already with its store* and changes nothing.
 
 ## What the retailer does
 
-1. **Install the app.** The service and the button come in switched off. The install adds the Serving store field and makes no role.
-2. **Give the app a user**, as in the [integration user recipe](integration_user.md): tick **Is Desk User**, set no password and no User Permissions, and generate its API key. In **Role Permissions**, give a role of the retailer's own these rights, and give the user that role alone:
+1. **Install the app.** The service and the button come in switched off. The install adds the Serving store field and the app's own user, `pp_cco@integration.invalid` (from POS version 2.1.0.667), which holds the role *PP CCO Integration*, made empty, and works through the API only.
+2. **Give that role its reads.** In **Role Permissions**, give *PP CCO Integration* these rights:
 
    | Record type | Right | Why |
    |---|---|---|
@@ -75,8 +75,8 @@ Pressed again, the button says *Already with its store* and changes nothing.
    | Customer | Read | the order's own save reads its customer with a rights check |
    | Warehouse | Read | the store is checked before the write |
 
-   The role reaches every sales order (read and write) and every customer, territory and warehouse (read): give it to the app's user and no one else. *Sales User* also works, but it reaches further than the app uses: it creates and submits orders.
-3. **Ask iVendNext support** to set the user as the *Application User* of the feed *PP CCO Routing feed* (a user made for the app alone, never a person's). A hosted service: press **Connect again** on the app.
+   The role reaches every sales order (read and write) and every customer, territory and warehouse (read): it belongs to the app's user alone.
+3. **Tick the record types on** the feed *PP CCO Routing feed*. A hosted service is connected by the site itself after the install or an update, and handed the user's key (**Connect again** on the app only if the site could not reach the app, or a key was lost or changed).
 4. **Switch the service on** in **Retail Extension Subscription** (*Send to store service*: read what it is sent, tick the consent), then the button in **Retail Desk Action** (*Send to store*).
 5. **Set a Serving store on the districts** (a Sales Master Manager): a store warehouse of the same company, never a group. A governorate's store serves its districts that have none.
 

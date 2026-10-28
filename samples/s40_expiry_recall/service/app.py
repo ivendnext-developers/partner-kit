@@ -61,8 +61,8 @@ ROUTES = {"/press/block": "block", "/press/worklist": "worklist", "/check/receip
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
 ENTRY = "`tabSerial and Batch Entry`"   # a bundle's lot rows, read beside the bundle (the record API's child columns)
 APP_NAME = "Expiry and recall"
-NOT_SET_UP = (f"{APP_NAME} is not set up yet. Ask your manager to choose its user on the app's feed and press "
-              "Connect again.")
+NOT_SET_UP = (f"{APP_NAME} is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
+              "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
 REFUSED = f"{APP_NAME} may not read or change what it needs. Ask your manager to check the app's user and its role."
 CONNECT_AGAIN = " Then press Connect again on the app."
 NO_SETTINGS = f"{APP_NAME} has no settings yet. Ask your manager to fill the settings record Default."

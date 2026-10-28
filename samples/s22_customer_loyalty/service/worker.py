@@ -6,7 +6,7 @@
                                                                       # and move members between tiers
 
 Settings (``service/.env.local``, never committed): PP_BASE (the shop's address), PP_KEY / PP_SECRET (the integration
-user's API key — one connected app, one user, one licence), PP_STATE (a folder for the handled-events note).
+user's API key — one connected app, one user), PP_STATE (a folder for the handled-events note).
 
 Many shops (``serve_all``, started by app.py when IVN_LIBRARY_APP is set): every PP_WATCH seconds (default 30), one feed
 poll for each connected shop, each on its own thread, with that shop's own key and its own handled-events note

@@ -24,7 +24,7 @@ ONE SHOP (an env file):
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
     IVN_LIBRARY_APP    the App library's id (ivendnext_cco), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
                        Each shop connects itself after its install and hands over the press's secret
-                       (<app>:sub:route) and, once the shop has chosen it on the app's feed, its integration user's key
+                       (<app>:sub:route) and the key of the app's own user (the install made it)
                        ("user:<email>"); every call names its shop (X-iVendNext-Site).
 CCO_PREFIX (default PP CCO; IVENDNEXT CCO for the library's app) · PORT (default 8080)
 
@@ -56,8 +56,8 @@ import shops  # noqa: E402
 SUB = "route"           # the manifest's extension_subscriptions[].key; its secret is "<app>:sub:route"
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the order's own
 APP_NAME = "Send to store"
-NOT_SET_UP = (f"{APP_NAME} is not set up yet. Ask your manager to choose its user on the app's feed and press "
-              "Connect again.")
+NOT_SET_UP = (f"{APP_NAME} is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
+              "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
 REFUSED = f"{APP_NAME} may not read or change this order. Ask your manager to check the app's user, its role and its API key."
 CONNECT_AGAIN = " Then press Connect again on the app."    # many shops: a new key reaches the service only that way
 NO_TERRITORY = "This order has no territory. Choose the customer's territory on the order, save it, and press Send to store again."
@@ -143,7 +143,7 @@ class Tenant:
 
 
 def tenant_of(url: str, key: str) -> Tenant:
-    """A shop's door from the key it handed over on Connect again ("<api key>:<api secret>")."""
+    """A shop's door from the key the shop's site handed over ("<api key>:<api secret>")."""
     api_key, _, api_secret = key.partition(":")
     return Tenant(url, api_key, api_secret)
 

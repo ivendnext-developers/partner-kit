@@ -1,6 +1,6 @@
 """S35's manifest: the one field it adds is the Serving store on Territory (a link to Warehouse), the button is on a
 draft Sales Order's form only and sends no more than the order's name and territory, and the feed whose user a service
-serving many shops receives on Connect again follows sales orders and installs switched off (the shop leaves it off).
+serving many shops receives when its site connects follows sales orders and installs switched off (the shop leaves it off).
 
     python3 -m unittest discover -s samples/s35_call_centre_orders/tests -p 'test_*.py'
 """

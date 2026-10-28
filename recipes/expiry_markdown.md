@@ -49,7 +49,7 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
       "confirm_text": "Mark down these lots by your item groups' steps? Each lot's own price changes until its expiry date."}]
    ```
 
-4. **Add a feed registration** for the app's user (leave it switched off): a service that serves many retailers receives the user's key through it on *Connect again* (guide chapter 14b).
+4. **Add a feed registration** for the app's user (leave it switched off): name no user: from POS version 2.1.0.667 the install makes the app's own user and names it, and a hosted service that serves many retailers is handed that user's key by the retailer's site after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed; guide chapter 14b).
 
 5. **Write the service** (`samples/s38_expiry_markdown/markdown.py` and `service/app.py`, standard library). For each press:
    - check the signature (the subscription's secret);
@@ -64,8 +64,8 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 
 ## What the retailer does
 
-1. **Install the app.** The service and the button come in switched off. The install adds the four step fields, the settings record type and the app's role.
-2. **Give the app a user**, as in the [integration user recipe](integration_user.md): tick **Is Desk User**, set no password and no User Permissions, give it the app's role alone, and generate its API key. In **Role Permissions**, give the app's role these rights:
+1. **Install the app.** The service and the button come in switched off. The install adds the four step fields, the settings record type, the app's role and the app's own user, `pp_exm@integration.invalid`, which holds that role alone and works through the API only (from POS version 2.1.0.667; no one makes a user or a key).
+2. **Give the role its reads.** In **Role Permissions**, give the app's role these rights:
 
    | Record type | Right | Why |
    |---|---|---|
@@ -76,8 +76,8 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
    | Currency | Read | the currency's smallest unit |
    | Item Price | Read, Write, Create, Delete | the item's price, and each lot's own price |
 
-   The role reaches every price on every list: give it to the app's user and no one else.
-3. **Ask iVendNext support** to set the user as the Application User of *PP EXM Markdown feed* (a user made for the app alone, never a person's). A hosted service: press **Connect again** on the app.
+   The role reaches every price on every list: it belongs to the app's user alone.
+3. **Tick the record types on** the feed *PP EXM Markdown feed*. A hosted service is connected by the site itself after the install or an update, and handed the user's key (**Connect again** on the app only if the site could not reach the app, or a key was lost or changed). A service for one retailer takes the key the retailer makes on that user (User, **Generate Keys**).
 4. **Fill in the settings** (*Default*: the price list, the hours from UTC) and **give the steps** to the perishable item groups.
 
    ![The steps on an item group on a demo site: 25% off from 5 days before expiry, 50% off from 2 days](../samples/s38_expiry_markdown/screenshots/03_item_group_steps.png)
@@ -104,7 +104,7 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 ### What the service sends and writes
 
 - **Each press sends** the ticked lots' names, items and expiry dates, the pressing user (an e-mail address) and the language. The consent the System Manager reads lists exactly these.
-- **The service reads** the settings, the price list and its currency, the lots, their items' groups, the item group tree and those items' prices on the list, **and writes** each lot's own Item Price. It keeps nothing of a press; a hosted copy holds each retailer's press secret and its user's API key from *Connect again* until the retailer removes the app.
+- **The service reads** the settings, the price list and its currency, the lots, their items' groups, the item group tree and those items' prices on the list, **and writes** each lot's own Item Price. It keeps nothing of a press; a hosted copy holds each retailer's press secret and its user's API key, handed over by the retailer's site, until the retailer removes the app.
 - **The rounding** is down, to the currency's own digits from its number format (`#,###.##` → 2, `#,###.###` → 3, `#,###` → 0; the yen counts 100 sen and shows none), so the customer never pays more than the step promises at that grain. The rounding is to the currency's own digits (its number format); a site whose currency precision is set to fewer digits rounds the line again, which can add up to half of its smallest unit.
 - **An edit saved meanwhile is never overwritten:** an update carries the row's `modified` as read, and iVendNext refuses a stale one (`TimestampMismatchError`); the answer asks for another press. Two presses that create the same lot's row at once: iVendNext refuses the second as a duplicate, and its answer asks for another press, which finds the row right.
 - **iVendNext's own words never reach the user.** The service branches on the error's type (`exc_type`), never shows its message.

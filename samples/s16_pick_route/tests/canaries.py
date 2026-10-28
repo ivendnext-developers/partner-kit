@@ -32,7 +32,7 @@ CANARIES = [
      T + "test_a_shop_whose_secret_changed_is_accepted_with_the_previous_one_while_it_moves"),
     ("each shop's own user key", S, 'if k.startswith("user:") and k != "user:Administrator")', 'if ":" in k)',
      T + "test_each_shop_is_written_with_its_own_key_under_the_librarys_names"),
-    ("a press before Connect again is answered in words", S, "        if door is None:\n            return 200, _warning(NOT_SET_UP)\n",
+    ("a press before the shop's key arrives is answered in words", S, "        if door is None:\n            return 200, _warning(NOT_SET_UP)\n",
      "", T + "test_a_press_before_connect_again_is_answered_in_words_and_writes_nothing"),
     ("a refused user is named in words", S, "            if e.code in (401, 403):", "            if False:",
      T + "test_a_shop_that_refuses_the_apps_user_is_told_so_in_words"),

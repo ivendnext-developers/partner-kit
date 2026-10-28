@@ -19,7 +19,7 @@ It runs in one of two ways:
     IVN_SHOP_URL and IVN_SHOP_KEY (the integration user's "<api key>:<api secret>").
   MANY SHOPS — each connects itself after it installs the app from the App library:
     IVN_LIBRARY_APP (the app's id in the library, e.g. ivendnext_rgd; a call is checked with that shop's secret
-    "<IVN_LIBRARY_APP>:sub:guard", and the rule read with the user key that shop handed over on *Connect again*,
+    "<IVN_LIBRARY_APP>:sub:guard", and the rule read with the key of the app's own user that shop's site handed over,
     "user:<email>"), and IVN_SHOPS_TABLE (on CitiXsys hosting) or IVN_SHOPS_FILE (elsewhere).
     On CitiXsys hosting it runs as a FUNCTION, paid per call (app.json "runs": "function"; ``lambda_handler`` below).
   Either way: RGD_PREFIX (PP RGD; IVENDNEXT RGD for the library's app), the prefix of the shop's Rule record type.
@@ -50,7 +50,7 @@ import shops  # noqa: E402
 
 KEY, ROUTE = "guard", "/rgd/check"     # the subscription's key in the manifest; its secret is "<app>:sub:<key>"
 RULES_TTL, READ_TIMEOUT = 60, 2.0      # a shop's rule is kept a minute; one read must leave time inside the check's 3 s
-NOT_SET_UP = "Member rule guard is not set up yet. Ask your administrator to choose its user and press Connect again."
+NOT_SET_UP = "Member rule guard is not set up yet: its key has not arrived. Ask your administrator to press Connect again."
 KEY_REFUSED = "Member rule guard cannot read your rules: your shop refused its key. Ask your administrator to press Connect again."
 
 

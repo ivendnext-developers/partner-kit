@@ -1,5 +1,5 @@
 """S40 for many shops (the app template's handshake): each call checked with its own shop's and its own door's secret,
-read and written with that shop's own key under the library's prefix, a call before Connect again answered, and the
+read and written with that shop's own key under the library's prefix, a call before the shop's key arrives answered, and the
 function entry answering the same."""
 
 import os

@@ -8,8 +8,8 @@ fails is logged (its site and the error's class) and the others go on; a shop st
 never run twice at once. ``/health`` answers 503 when no HEALTHY pass (the shops store answered, no shop stuck) has
 finished for three minutes, so the platform restarts the service.
 
-A shop's site hands over its integration user's key ("user:<email>": "<api key>:<api secret>") on *Connect again*, once
-that user has its key and is chosen on the feed registration (guide chapter 14b). Until then the shop is skipped with
+A shop's site hands over the key of the app's own user ("user:<email>": "<api key>:<api secret>") when it connects, after
+the install or an update (guide chapter 14b). Until then the shop is skipped with
 ``no_user``. ⚠ ``api_credentials`` takes the first ``user:`` key a shop handed over; the manifest registers one feed user,
 so there is one. The note of handled events is only a cache: each deviation is named by its sale line, so the shop
 itself refuses a second one after a restart loses the note.

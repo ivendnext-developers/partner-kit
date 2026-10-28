@@ -22,7 +22,7 @@ Many retailers already run their loyalty programme with an outside provider (Pun
 
 1. **Map the customer to the member.** Keep your own map of the retailer's customer id to the provider's member id. Fill it when a customer is created (`customer.created` on the feed: look the member up by the phone or e-mail iVendNext holds) and when a member first shows at the till. A customer with no member is simply not a member: the wallet answers *not eligible*, and the sale earns nothing.
 
-2. **Register your app and its user** (the retailer's administrator): one integration user for your service ([integration user](integration_user.md)), and a registered application on the feed that follows **POS Invoice** and **Customer**, each record type ticked on ([event feed](event_feed.md), step 1).
+2. **Register your app** (the retailer's administrator): the install makes the app's own user ([integration user](integration_user.md)) and its registered application on the feed that follows **POS Invoice** and **Customer**; the administrator ticks each record type on and gives the user's role its reads ([event feed](event_feed.md), step 1).
 
 3. **Earn on the feed.** Pull your events; on `sale.booked` read the sale over the API and send the provider what earns. Key every provider call on the retailer's sale number, so a replayed event earns once (the feed delivers at least once). On `return.booked` and `sale.cancelled`, take back that sale's share, never more than it earned (S22's recipe, step 6, has the money rules). Mark every other event done.
 

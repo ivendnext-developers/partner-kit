@@ -33,7 +33,7 @@ Pressed again, the button writes nothing: *"2 lots already marked down."*
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
 
 1. **Install the app** (the retailer's administrator). It comes in switched off: the service has no consent and is off, and the button is off. The install adds the four step fields to Item Group, the settings record type **PP EXM Settings** and the role **PP EXM Integration**.
-2. **Give the app a user** (as in the [integration user recipe](../../recipes/integration_user.md)): tick **Is Desk User**, set no password and no User Permissions, give it the role **PP EXM Integration** alone, and generate its API key. In **Role Permissions**, give that role these rights (measured on our test bench: iVendNext refused the app's user each one until it was given):
+2. **Give the app's user its reads.** From POS 2.1.0.667 the install made the app's own user, `pp_exm@integration.invalid`, and named it on **PP EXM Markdown feed**. It holds the role **PP EXM Integration** alone, works through the API only and can never sign in to Desk, so there is no user to make; give it no User Permissions. In **Role Permissions**, give that role these rights (measured on our test bench: iVendNext refused the app's user each one until it was given):
 
    | Record type | Right | Why |
    |---|---|---|
@@ -44,14 +44,14 @@ Pressed again, the button writes nothing: *"2 lots already marked down."*
    | Currency | Read | the currency's smallest unit, for the rounding |
    | Item Price | Read, Write, Create, Delete | the item's own price, and each lot's own price |
 
-   The role reaches every price on every list: give it to the app's user and no one else. A service for one retailer takes the key in its settings. A service for many retailers receives it from iVendNext: ask iVendNext support to set the user as the *Application User* of **PP EXM Markdown feed** (a user made for the app alone, never a person's), then press **Connect again** on the app (*Many retailers, hosted* below).
+   The role reaches every price on every list: give it to the app's user and no one else. A service for one retailer: press *Generate Keys* on that user (User, API Access) and put the key in the service's settings. A service for many retailers is handed the key by the retailer's site itself, after the install or an update (*Many retailers, hosted* below); press **Connect again** on the app only if the site could not reach the app, or a key was lost or changed.
 3. **Fill in the settings:** open **PP EXM Settings**, make the record **Default**, choose the selling **price list** your tills sell from, and the retailer's **hours from UTC** (the retailer's own day decides how many days a lot has left).
 4. **Give the steps** to your perishable item groups (Item Group form).
 5. **Switch the service on** (the System Manager): **Retail Extension Subscription**, the record *Mark down service*: read what it is sent, tick the consent, switch it on. Then **Retail Desk Action**, the record *Mark down*: switch it on. The button shows to an *Item Manager*, the engine's role that reads Batch (iVendNext checks, at every press, that the user may read each ticked lot). If the retailer's markdowns are someone else's job, add their role on the button and give that role read on Batch.
 
 **Where it shows.** In Desk: the four steps on the Item Group form, the settings record, and the button on the Batch list and form. At the till: nothing new; a lot rings at its own price.
 
-**What leaves the retailer's iVendNext.** One address: your service (the manifest ships a test address; you write your own). Each press sends the ticked lots' names, items and expiry dates, the pressing user (an e-mail address) and the language. Your service then reads the lots, their items' groups, the steps, the price list and those items' prices on it, and writes the lots' prices. It keeps nothing of a press; a hosted copy holds each retailer's press secret and its user's API key from *Connect again* until the retailer removes the app. Say so on your card.
+**What leaves the retailer's iVendNext.** One address: your service (the manifest ships a test address; you write your own). Each press sends the ticked lots' names, items and expiry dates, the pressing user (an e-mail address) and the language. Your service then reads the lots, their items' groups, the steps, the price list and those items' prices on it, and writes the lots' prices. It keeps nothing of a press; a hosted copy holds each retailer's press secret and the API key of the app's user until the retailer removes the app. Say so on your card.
 
 ⚠ **The till offline.** The till's offline price list has no lot in it, so while **any** lot on the site has a price of its own (expired ones and buying lists' included), the retailer's tills do not sell a lot-tracked item offline: they refuse it rather than promise one price and book another. Each press removes up to 20 of the app's prices whose date has passed, so once no markdown is left and the last expired one is removed by a press, the tills sell lots offline again from their next start. A till that started before the first markdown keeps selling lots offline until its next start, at the item's own price.
 
@@ -63,7 +63,7 @@ Pressed again, the button writes nothing: *"2 lots already marked down."*
 | `markdown.py` | **the pure core**: the signature check, the press's lots, the steps on the group tree, the percent by days left, the rounding, each lot's writes, the answer |
 | `service/app.py` | the HTTP service (standard library): `POST /press/markdown`, `GET /health`; the record API as the app's user; one retailer or many |
 | `tests/test_service.py` | laptop tests: the real service, a stand-in record API, presses signed as iVendNext signs them |
-| `tests/test_many_shops.py` | many retailers: each retailer's own secret and key, a press before *Connect again*, the fields under the library's prefix, the record API's errors, the function entry |
+| `tests/test_many_shops.py` | many retailers: each retailer's own secret and key, a press before the shop's key arrives, the fields under the library's prefix, the record API's errors, the function entry |
 | `tests/test_manifest.py` · `tests/test_contract.py` | the manifest's shape; every answer, and every press our test site recorded, against the published contract (`desk_action.v1.schema.json`) |
 | `tests/canaries.py` | each test that guards a secret, a key, a price the retailer typed, an edit, the step chosen or the rounding goes RED when its check is removed |
 | `app.json` | how CitiXsys hosting runs it: a function, paid per call, packaging only the files it needs |
@@ -84,7 +84,7 @@ python3 service/app.py service/.env.local      # PP_BASE, PP_KEY, PP_SECRET, PP_
 The App library's *Expiry markdown* runs this same `service/app.py` for every retailer that installs it, as a function on CitiXsys hosting (`app.json`): it costs nothing between presses. Set `IVN_LIBRARY_APP` (the library's id), a shops store (`IVN_SHOPS_TABLE` on hosting, `IVN_SHOPS_FILE` on your own server) and `EXM_PREFIX` (`IVENDNEXT EXM`: the step fields are then `ivendnext_exm_days_1` and so on, and the note *IVENDNEXT EXM: …*).
 
 1. After its install the retailer's site connects itself (the app template's handshake, guide chapter 14b): the service stores the retailer with its library key and the press's secret, `<app>:sub:markdown`.
-2. The retailer asks iVendNext support to set its app user on the feed, then presses *Connect again*: the service receives that user's key (`user:<email>`).
+2. The install made the app's own user, and the retailer's site hands the service that user's key (`user:<email>`) when it connects, after the install or an update. *Connect again* is only for when the site could not reach the app, or a key was lost or changed.
 3. Each press names its retailer (`X-iVendNext-Site`); it is checked with **that retailer's** secret and the prices are read and written with **that retailer's** user's key. Another retailer's secret, or a retailer the service does not know, is refused (401).
 4. A press before step 2 is answered in words: *Mark down is not set up yet.*
 

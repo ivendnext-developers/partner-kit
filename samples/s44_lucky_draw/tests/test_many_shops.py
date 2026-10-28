@@ -1,5 +1,5 @@
 """S44 for many shops (the app template's handshake): each press checked with its own shop's secret for its own button,
-read and written with that shop's own integration key under the library's prefix, a press before Connect again answered
+read and written with that shop's own integration key under the library's prefix, a press before the shop's key arrives answered
 in words, the record API's errors, and the function entry answering the same.
 
     python3 -m unittest discover -s samples/s44_lucky_draw/tests -p 'test_*.py'

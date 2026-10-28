@@ -20,7 +20,7 @@ A retailer sets up a coupon for *Supplements* and expects it to cover every supp
 ## Steps
 
 1. **Declare the feed registration in your manifest** (S31's `manifest.json`): one registration on Coupon, Promotion Bonus Buys Master and Item Group. It installs switched off.
-2. **Make the service's user** ([the integration user recipe](integration_user.md)): a role with read and write on Coupon and Promotion Bonus Buys Master and read on Item Group, a user made for the app alone, and its API key. iVendNext support sets that user on the registration; the retailer's administrator switches it on.
+2. **Name the role the service needs** ([the integration user recipe](integration_user.md)): `<PREFIX> Integration`, with read and write on Coupon and Promotion Bonus Buys Master and read on Item Group. From POS version 2.1.0.667 the install makes the app's own user (`<app>@integration.invalid`, that role alone, API only) and names it on the registration, and the site hands a hosted app its key; the retailer's administrator gives the role those rights and switches the registration on.
 3. **Run the service** where you run services ([the event feed recipe](event_feed.md)): `reconcile` once for what exists, then `run`, which reads the feed's events in order.
 4. **Write with the row as read.** Send the `modified` you read, so iVendNext refuses your write when a person saved meanwhile; the event is retried on the next pass and reads the person's version.
 5. **Keep a list of the rows you added**, in the same transaction as the event (S31 keeps it in its own state file). The rows carry no marker field: a row not on your list is a person's, and is never removed; a row you added that a person removed is recorded and not added back.

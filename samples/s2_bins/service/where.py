@@ -28,9 +28,9 @@ ONE SHOP (env or an env file):
     IVN_SHOP_KEY       the app's integration user's key, "<api key>:<api secret>"
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
     IVN_LIBRARY_APP    the App library's id (ivendnext_bln), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
-                       Each shop connects itself after its install and hands over the till key's secret and, once the
-                       shop has chosen it on the app's feed, its integration user's key ("user:<email>"); every call names
-                       its shop (X-iVendNext-Site).
+                       Each shop connects itself after its install and hands over the till key's secret and the key
+                       of the app's own user (the install made it; "user:<email>"); every call names its shop
+                       (X-iVendNext-Site).
 BLN_PREFIX (default PP BLN; IVENDNEXT BLN for the library's app) · PORT (default 8080)
 
     python3 service/where.py [service/.env.local]
@@ -65,7 +65,8 @@ ROUTE, KEY = "/point/where_is_it", "where_is_it"       # the manifest's remote_k
 BODY_MAX, SKEW_S = 64 * 1024, 300
 READ_TIMEOUT, DEADLINE = 0.8, 2.2      # each read, and all of them together: inside the till's 3 seconds
 CODES_MAX, ROWS_MAX = 30, 1000      # items looked up; rows one read may return
-NOT_SET_UP = "Bin locations is not set up yet. Ask your manager to choose its user and press Connect again."
+NOT_SET_UP = ("Bin locations is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
+              "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
 REFUSED = "Bin locations cannot read your bins. Ask your manager to check the app's user and press Connect again."
 NO_RIGHTS = ("Bin locations' user may not read your bins. Ask your manager to let its role read Locations and "
              "What is in each bin.")
