@@ -228,8 +228,11 @@ def main(argv) -> int:
             print(f"order {out['order']}: stops at the end of the paid month" if out.get("stops_at") else
                   f"order {out['order']}: {out['status']}")
         else:
-            for o_ in out.get("orders") or [out]:
+            orders = out["orders"] if "orders" in out else [out]
+            for o_ in orders:
                 print("\n".join(show(o_)))
+            if not orders:
+                print("no hosting orders yet")
         return 0
     except (Stop, publish.Stop) as e:
         print(str(e) if str(e).startswith("REFUSED") else "REFUSED: " + str(e))

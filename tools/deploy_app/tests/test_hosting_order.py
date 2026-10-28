@@ -205,6 +205,11 @@ class Copies(Base):
         self.assertIn('IVN_HOSTING_ROLES to ["arn:aws:iam::1:role/partner-app-my-till-key-github",'
                       '"arn:aws:iam::1:role/partner-app-my-till-key-sandbox-github"]', out)
 
+    def test_status_with_no_orders_says_so(self):
+        with self.fake_send({"orders": []}):
+            code, out = run("status", "--partner", "acme", "--key", str(self.key))
+        self.assertEqual((code, out.strip()), (0, "no hosting orders yet"))
+
     def test_a_secret_names_its_copy(self):
         with self.fake_send({"order": "0123456789abcdef", "secret": "IVN_POINT_SECRET", "set": True}):
             run("secret", "--partner", "acme", "--order", "0123456789abcdef", "--env", "sandbox", "--name",
