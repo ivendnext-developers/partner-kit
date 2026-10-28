@@ -1,7 +1,7 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/business_logic/manifest_check.py,
-# at development b453a68eac6cc7e039f28a94f6f37147f151ec38. The shop's own checker (the install screen runs it) is the source;
+# at development 60147699cce4f7bd35f73e111649ce108eb2dcc2. The shop's own checker (the install screen runs it) is the source;
 # this copy lets you check a manifest before you send it, and refuses the same manifests in the same words. Everything
-# below this header equals the source, except sixteen comments reworded in plain words (they named the product's
+# below this header equals the source, except seventeen comments reworded in plain words (they named the product's
 # internal row and lane ids, a train, or the framework's own readers). A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """The companion manifest — the VALIDATOR. Pure Python: no framework import, no network.
 
@@ -564,12 +564,15 @@ PRINT_SERVED_TYPES = frozenset(
             "Reprint Transaction Log|Request for Quotation|Retail Badge Credential|Retail Coupon Draw",
             "Retail Desk Action|Retail Device Trust|Retail Extension Install",
             "Retail Extension Module|Retail Fiscal Reader|Retail Fiscal Regime Config",
+            "Retail Floor Place|Retail Floor Section",
             "Retail Item Availability|Retail Kitchen Order|Retail Kitchen Station",
             "Retail Label Layout|Retail Layaway Plan|Retail List Mark",
+            "Retail Open Check|Retail Open Check Claim|Retail Open Check Event",
             "Retail Option Group|Retail Override Request|Retail PIN Event|Retail POS Theme",
             "Retail Permission|Retail Provisional Series|Retail Register Book",
-            "Retail Register Count|Retail Register Line|Retail Register Period",
-            "Retail Register Sequence|Retail Register State|Retail Save Rule",
+            "Retail Register Count|Retail Register Erasure|Retail Register Line",
+            "Retail Register Period|Retail Register Sequence|Retail Register State",
+            "Retail Save Rule",
             "Retail Save Rule Count|Retail Scan Source|Retail UX Metric|Routing|SMS Log",
             "Sale Attribute|Sales Invoice|Sales Order|Sales Partner|Sales Partner Type",
             "Sales Person|Sales Stage|Sales Taxes and Charges Template|Serial No",
@@ -2006,9 +2009,16 @@ def _registered_applications(v: _V):
                 v.refuse(
                     w,
                     name,
-                    "the shop chooses the user the application reads as and switches it on; a manifest "
-                    "installs the registration switched off",
+                    "the install makes the user the application reads as and the shop switches it on; "
+                    "a manifest installs the registration switched off",
                 )
+        # The app's own user serves one feed (the feed's door: one user, one registration)
+        if i:
+            v.refuse(
+                w,
+                name,
+                "an app has one event feed: list every record type it follows in the first one's events",
+            )
 
 
 REMOTE_KEYS = {

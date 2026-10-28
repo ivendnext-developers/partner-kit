@@ -1,7 +1,7 @@
 """The markets after Kenya, each a data set with no code change: Jordan (Forms 8 and 9), Nigeria (the First Schedule's
 Parts A and B, one register per class), the UAE's Abu Dhabi (PH 17, PH 20), Ghana (the Dangerous Drugs Record), Saudi
 Arabia (a register per drug), Egypt (the received and dispensed book) and Mexico (the libros de control). Each routing test names the clause it follows; each book
-renders from lines shaped as the door's line (PB-4 spec §3.1), through the stand-in print reader of test_rsr.
+renders from lines shaped as the door's line (the register books page, §5), through the stand-in print reader of test_rsr.
 
     python3 -m unittest discover -s samples/s41_regulated_register/tests -p 'test_*.py'
 """
@@ -33,7 +33,15 @@ def enters(ds, item_class, **kw):
 
 
 def heads(html):
-    return [h.replace("&#39;", "'") for h in re.findall(r"<th>(.*?)</th>", html)]
+    """The printed headers, a column under a band read as "band: label" (Jordan's received and dispensed halves)."""
+    thead = re.search(r"<thead>(.*?)</thead>", html, flags=re.S).group(1)
+    rows = re.findall(r"<tr>(.*?)</tr>", thead, flags=re.S)
+    labels = [h.replace("&#39;", "'") for h in re.findall(r"<th>(.*?)</th>", rows[-1])]
+    if len(rows) == 1:
+        return labels
+    bands = [text for span, text in re.findall(r'<th(?: colspan="(\d+)")?>(.*?)</th>', rows[0], flags=re.S)
+             for _ in range(int(span or 1))]
+    return [f"{b}: {lab}" if b else lab for b, lab in zip(bands, labels)]
 
 
 class EveryMarket(unittest.TestCase):
@@ -53,7 +61,7 @@ class EveryMarket(unittest.TestCase):
                 self.assertIn(b["medium"], ("printed_book", "official_book"), f"{ds['id']}.{b['id']}")
 
     def test_an_uncited_correction_takes_the_strictest_mode(self):
-        # PB-4 spec §5: EG, GH, JO and MX are uncited and take a reversing line; NG, AE and SA follow their clause
+        # the door's correction modes: EG, GH, JO and MX are uncited and take a reversing line; NG, AE and SA follow their clause
         want = {"jo_pharmacy": "reversing_line", "gh_pharmacy": "reversing_line", "mx_pharmacy": "reversing_line",
                 "ae_abu_dhabi_pharmacy": "reversing_line", "ng_pharmacy": "dated_note", "sa_pharmacy": "signed_amendment",
                 "eg_pharmacy": "reversing_line"}
@@ -65,7 +73,9 @@ class EveryMarket(unittest.TestCase):
         self.assertEqual(got["jo_pharmacy.form_9"], 5)  # Instructions Art. 7(c); Law 12/2013 Art. 74
         self.assertEqual(got["jo_pharmacy.form_8"], 2)  # Instructions Art. 7(b); Law 23/2016 Art. 25(a)(2)
         self.assertEqual({v for k, v in got.items() if k.startswith("ng_")}, {2})  # reg. 26
-        self.assertEqual({got["ae_abu_dhabi_pharmacy.ph_17"], got["ae_abu_dhabi_pharmacy.ph_20"]}, {5})  # DOH s. 7.4
+        # DOH s. 7.4 keeps the record 5 years; the UAE keeps health data 25 (Law 2/2019 Art. 20), and the door keeps a
+        # person's details as long as the entry (the register books page, §8)
+        self.assertEqual({got["ae_abu_dhabi_pharmacy.ph_17"], got["ae_abu_dhabi_pharmacy.ph_20"]}, {25})
         self.assertEqual(got["sa_pharmacy.drug_register"], 10)  # Art. 22(6)
         self.assertEqual(got["eg_pharmacy.received_dispensed"], 10)  # Law 182/1960 Art. 31
 
@@ -85,7 +95,7 @@ class EveryMarket(unittest.TestCase):
         self.assertEqual(own["rx_ingredients"].get("till"), 0)
 
     def test_a_book_that_takes_more_than_sales_requires_no_column_on_the_desk(self):
-        # PB-4 spec §3.4: a person's Desk submit with a required column empty is refused, so a book that takes an
+        # the door: a person's Desk submit with a required column empty is refused, so a book that takes an
         # issue, a disposal or a transfer (a stock entry: no customer, no address) must require nothing, or the
         # regulator-witnessed disposal itself would be refused
         for ds in MARKETS:
@@ -220,7 +230,7 @@ class SaudiRouting(unittest.TestCase):
 
     def test_its_register_is_per_drug_with_a_balance(self):
         b = SA["books"][0]
-        self.assertEqual((b["numbering"], b["balance"], b["per_item_pages"]), ("book_store_item", 1, 1))
+        self.assertEqual((b["numbering"], b["balance"]), ("book_store_item", 1))  # the door prints a page per drug
 
 
 class MexicoRouting(unittest.TestCase):
@@ -326,7 +336,7 @@ HEADS = {
         "Name and quantity of the drug supplied",
         "Name, address, and signature or thumbprint of the person to whom it is supplied",
         "Signature of the person who supplies the drug", "Date of supply"],  # s. 34(2)(a)-(d)
-    "sa_pharmacy.drug_register": ["(ج) الكمية الواردة", "(ج) رقم التشغيل", "(ج) تاريخ الصلاحية", "(د) الجهة الوارد منها",
+    "sa_pharmacy.drug_register": ["(ب) الرصيد السابق", "(ج) الكمية الواردة", "(ج) رقم التشغيل", "(ج) تاريخ الصلاحية", "(د) الجهة الوارد منها",
                                   "(د) تاريخ الورود", "(هـ) المجموع الكلي", "(و) الكمية المصروفة", "(و) رقم التشغيل",
                                   "(و) تاريخ الصرف", "(و) اسم من صرفها وتوقيعه", "(ح) اسم المريض", "(ح) عمره",
                                   "(ح) رقم الهوية", "(ح) الملف الطبي", "(ح) رقم الوصفة", "(ح) اسم من وصفها",
@@ -361,7 +371,8 @@ class EveryBookPrints(unittest.TestCase):
                 ref = f"{ds['id']}.{b['id']}"
                 cls = b["classes"][0]
                 out, _ = render(ds, b["id"], period(ref), [row(book=ref, item_class=cls)], page_state(ref))
-                self.assertEqual(heads(out), ["No."] + expected_heads(ref), ref)
+                place = ["Line in the book"] if b["medium"] == "official_book" else []  # the door's place column
+                self.assertEqual(heads(out), ["No."] + place + expected_heads(ref), ref)
                 self.assertIn("A starting point, not certified for the country.", out, ref)
                 self.assertIn("Kept as the book: signed", out, ref)
 
@@ -383,9 +394,9 @@ class JordanLayouts(unittest.TestCase):
                       entry_date="2026-10-21")]
         out, _ = render(JO, "form_9", period(b), lines, page_state(b, "PHD-MORPH-10", "Morphine 10 mg"))
         rows = cells(out)
-        self.assertEqual(rows[0], ["1", "2026-10-20", "INV-9", "50", "Drug Store Co.", "", "2026-10-20",
-                                   "", "", "", "", "", "50"])
-        self.assertEqual(rows[1], ["2", "2026-10-21", "", "", "", "", "", "SRX-7", "2026-10-19", "2",
+        self.assertEqual(rows[0], ["1", "", "2026-10-20", "INV-9", "50", "Drug Store Co.", "", "2026-10-20",
+                                   "", "", "", "", "", "50"])  # the second cell: the line in JFDA's book (none set)
+        self.assertEqual(rows[1], ["2", "", "2026-10-21", "", "", "", "", "", "SRX-7", "2026-10-19", "2",
                                    "Dr. Haddad", "Patient A", "48"])  # the out date is the special prescription's
         self.assertIn("النموذج رقم (9)", out)
 
@@ -396,18 +407,19 @@ class JordanLayouts(unittest.TestCase):
         self.assertNotIn("Loss or theft", cells(out)[0])
 
     def test_form_8_prints_no_invoice_number_on_a_dispensing(self):
-        # the column is the supplier's or the stock movement's number (reference_no, PB-4 spec §3.1); the notice says so
+        # the column is the supplier's or the stock movement's number (reference_no, the door's line); the notice says so
         b = "jo_pharmacy.form_8"
         out, _ = render(JO, "form_8", period(b), [row(book=b, item_class="JO Schedule 10", balance=4,
                                                       counterparty="Patient J")], page_state(b))
-        self.assertEqual(cells(out)[0], ["1", "2026-10-20", "", "", "10", "Patient J", "P. Pharmacist", "4", ""])
+        self.assertEqual(cells(out)[0], ["1", "", "2026-10-20", "", "", "10", "Patient J", "P. Pharmacist", "4", ""])
 
     def test_form_8_prints_an_issues_reference_and_signs_the_pharmacist_line(self):
         b = "jo_pharmacy.form_8"
         out, _ = render(JO, "form_8", period(b), [row(book=b, item_class="JO Schedule 10", kind="Transfer",
                                                       reference_no="STE-4", counterparty="Ward pharmacy",
                                                       balance=9)], page_state(b))
-        self.assertEqual(cells(out)[0], ["1", "2026-10-20", "STE-4", "", "10", "Ward pharmacy", "P. Pharmacist", "9", ""])
+        self.assertEqual(cells(out)[0], ["1Transfer", "", "2026-10-20", "STE-4", "", "10", "Ward pharmacy", "P. Pharmacist",
+                                         "9", ""])  # a non-sale entry names its kind
         self.assertIn('class="cell mark"', out)
 
     def test_a_jordan_correction_is_a_reversing_line_never_a_strike(self):
@@ -455,9 +467,10 @@ class NigeriaLayouts(unittest.TestCase):
                  line(2, book=b, item_class="NG Morphine", kind="Correction", direction="In", correction_of_number=1,
                       signed_by_name="P. Pharmacist", correction_note="address is 3 Broad St", entry_date="2026-10-22")]
         out, _ = render(NG, "part_b_morphine", period(b), lines)
-        self.assertIn("Note dated 2026-10-22 to entry 1: address is 3 Broad St.", out)  # reg. 18(1)(f)
+        self.assertIn("Note dated 2026-10-22 to entry 1: address is 3 Broad St P. Pharmacist (entry 2).", out)  # reg. 18(1)(f)
         self.assertNotIn('class="struck"', out)
-        self.assertEqual([r[0] for r in cells(out)], ["1", ""])
+        self.assertEqual([r[0] for r in cells(out)], ["1", "2"])
+        self.assertIn('<tr class="note"><td class="no">2</td>', out)
 
 
 @NEED_JINJA
@@ -470,10 +483,10 @@ class FieldListLayouts(unittest.TestCase):
                 detail_2="784-1980-1234567-1", balance=30),
             line(2, book=b, item_class="AE Narcotic", direction="In", kind="Receipt", counterparty="Supplier LLC",
                  reference_no="INV-2", balance=40)])
-        self.assertEqual(cells(out)[0], ["1", "RX-3", "Tramadol 50 mg capsules", "1 tablet twice daily", "10 · Nos", "30",
+        self.assertEqual(cells(out)[0], ["1", "", "RX-3", "Tramadol 50 mg capsules", "1 tablet twice daily", "10 · Nos", "30",
                                          "Dr. Ali · DOH-1", "P. Pharmacist · PH-9", "A. Buyer · 1 Moi Avenue, Nairobi",
                                          "784-1980-1234567-1", "2026-10-20", "", "", ""])
-        self.assertEqual(cells(out)[1], ["2", "", "Tramadol 50 mg capsules", "", "10 · Nos", "40", "", "", "", "", "",
+        self.assertEqual(cells(out)[1], ["2", "", "", "Tramadol 50 mg capsules", "", "10 · Nos", "40", "", "", "", "", "",
                                          "Supplier LLC", "2026-10-20", "INV-2"])
 
     def test_ghana_prints_section_34s_four_particulars_with_two_signatures(self):
@@ -493,9 +506,10 @@ class FieldListLayouts(unittest.TestCase):
                       counterparty="Patient S")]
         st = page_state(b, "PHD-MORPH-10", common["item_name"])
         out, _ = render(SA, "drug_register", period(b), lines, st)
-        self.assertEqual(cells(out)[0], ["1", "20", "B-77", "2027-06-30", "NUPCO", "2026-10-20", "20", "", "", "", "", "",
+        # (ب) the balance before the entry, which the door works out (the door's balance_before)
+        self.assertEqual(cells(out)[0], ["1", "0", "20", "B-77", "2027-06-30", "NUPCO", "2026-10-20", "20", "", "", "", "", "",
                                          "", "", "", "", "", "20"])
-        self.assertEqual(cells(out)[1], ["2", "", "", "", "", "", "", "1", "B-77", "2026-10-20", "P. Pharmacist",
+        self.assertEqual(cells(out)[1], ["2", "20", "", "", "", "", "", "", "1", "B-77", "2026-10-20", "P. Pharmacist",
                                          "Patient S", "45", "1012345678", "MRN-9", "RX-11", "Dr. Saad", "19"])
         fix = line(3, **common, kind="Correction", direction="In", qty=0, balance=19, correction_of_number=2,
                    signed_by_name="X", correction_note="patient file 123")
@@ -509,9 +523,9 @@ class FieldListLayouts(unittest.TestCase):
                          line(2, book=b, item_class="EG Schedule 1", qty=1, authority_issuer="Dr. Farid",
                               detail_1="Giza", detail_2="54", detail_3="331", counterparty="M. Hassan",
                               counterparty_address="Alexandria")])
-        self.assertEqual(cells(out)[0], ["1", "2026-10-20", "Pharco · Cairo", "Tramadol 50 mg capsules", "10 · Nos",
+        self.assertEqual(cells(out)[0], ["1", "", "2026-10-20", "Pharco · Cairo", "Tramadol 50 mg capsules", "10 · Nos",
                                          "", "", "", "", "", "", ""])
-        self.assertEqual(cells(out)[1], ["2", "", "", "Tramadol 50 mg capsules", "", "Dr. Farid · Giza", "M. Hassan", "54",
+        self.assertEqual(cells(out)[1], ["2", "", "", "", "Tramadol 50 mg capsules", "", "Dr. Farid · Giza", "M. Hassan", "54",
                                          "Alexandria", "2026-10-20", "331", "1 · Nos"])
 
     def test_mexico_prints_article_117s_data_on_a_dispensing(self):
@@ -520,7 +534,7 @@ class FieldListLayouts(unittest.TestCase):
                         [row(book=b, item_name="Clonazepam 2 mg", item_class="MX Fraccion II", authority_no="F-0042",
                              authority_date="2026-10-18", authority_issuer="Dra. Ruiz", authority_issuer_licence="CP 123456",
                              detail_1="1 diaria", detail_2="Av. Juárez 10", balance=28)], page_state(b))
-        self.assertEqual(cells(out)[0], ["1", "", "", "F-0042", "2026-10-18", "Clonazepam 2 mg", "10", "1 diaria", "28",
+        self.assertEqual(cells(out)[0], ["1", "", "", "", "F-0042", "2026-10-18", "Clonazepam 2 mg", "10", "1 diaria", "28",
                                          "Dra. Ruiz · Av. Juárez 10 · CP 123456", "2026-10-20"])
 
 if __name__ == "__main__":

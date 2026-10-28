@@ -5,7 +5,7 @@
   "jurisdiction": "JO",
   "vertical": "pharmacy",
   "certified": 0,
-  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. Forms 8 and 9 read off the form images in the JFDA Instructions 2025; the corrections mode is not stated there, so this set takes the strictest (a reversing line). Form 9 has three date columns and does not say which is which: this set reads the first as the entry's date, the receiving one as the receipt's and the dispensing one as the special prescription's, which prints empty until the counter app records a prescription's date: write it in. Form 8's invoice number is the supplier's or the stock movement's, so a dispensing prints it empty. Form 7, the daily prescriptions register, is a print of the counter-rules app's dispensing records, not a book of this set.",
+  "notice": "A starting point, not certified for the country. Check each column against the instrument before you rely on it. Forms 8 and 9 read off the form images in the JFDA Instructions 2025; the corrections mode is not stated there, so this set takes the strictest (a reversing line). Form 9 has three date columns and does not say which is which: this set reads the first as the entry's date, the receiving one as the receipt's and the dispensing one as the special prescription's (the counter-rules app's prescription's date). Form 8's invoice number is the supplier's or the stock movement's, so a dispensing prints it empty. Each form's received and dispensed halves print under their own band. Form 7, the daily prescriptions register, is a print of the counter-rules app's dispensing records, not a book of this set.",
   "sources": [
     "JFDA, Instructions on Medical Prescriptions and Registers 2025 (under Drug and Pharmacy Law No. 12/2013 Art. 73(c)): Art. 7(b)-(c), Art. 11, Forms 8 and 9 (pp. 28-29)",
     "Drug and Pharmacy Law No. 12/2013, Art. 74 (narcotic records kept at least 5 years from the last entry)",
@@ -57,11 +57,10 @@
       "conditions": [],
       "numbering": "book_store_item",
       "balance": 1,
-      "per_item_pages": 1,
       "correction": "reversing_line",
       "retention_years": 5,
       "medium": "official_book",
-      "medium_note": "Received from JFDA with the approved dispensing annex printed in it (Instructions 2025 Art. 7(b)-(c)): print into it, or keep this book in a JFDA-approved electronic system (Art. 11). The form reads right to left; this print reads left to right, each column headed by its group (in, out) and its own words.",
+      "medium_note": "Received from JFDA with the approved dispensing annex printed in it (Instructions 2025 Art. 7(b)-(c)): print into it, or keep this book in a JFDA-approved electronic system (Art. 11). The form reads right to left, and so does this print, each column under its band (in, out).",
       "required": [],
       "columns": [
         {
@@ -71,70 +70,80 @@
           ]
         },
         {
-          "label": "الوارد: رقم الفاتورة",
+          "label": "رقم الفاتورة",
+          "group": "الوارد",
           "value": [
             "reference_no"
           ],
           "when": "In"
         },
         {
-          "label": "الوارد: الكمية",
+          "label": "الكمية",
+          "group": "الوارد",
           "value": [
             "qty"
           ],
           "when": "In"
         },
         {
-          "label": "الوارد: المستودع",
+          "label": "المستودع",
+          "group": "الوارد",
           "value": [
             "counterparty"
           ],
           "when": "In"
         },
         {
-          "label": "الوارد: ملاحظات",
+          "label": "ملاحظات",
+          "group": "الوارد",
           "value": [
             "remarks"
           ],
           "when": "In"
         },
         {
-          "label": "الوارد: التاريخ",
+          "label": "التاريخ",
+          "group": "الوارد",
           "value": [
             "movement_date"
           ],
           "when": "In"
         },
         {
-          "label": "الصادر: رقم الوصفة الخاصة",
+          "label": "رقم الوصفة الخاصة",
+          "group": "الصادر",
           "value": [
             "authority_no"
           ],
           "when": "Out"
         },
         {
-          "label": "الصادر: التاريخ",
+          "label": "التاريخ",
+          "group": "الصادر",
           "value": [
             "authority_date"
           ],
           "when": "Out"
         },
         {
-          "label": "الصادر: الكمية",
+          "label": "الكمية",
+          "group": "الصادر",
           "value": [
             "qty"
           ],
           "when": "Out"
         },
         {
-          "label": "الصادر: اسم الطبيب",
+          "label": "اسم الطبيب",
+          "group": "الصادر",
           "value": [
             "authority_issuer"
           ],
           "when": "Out"
         },
         {
-          "label": "الصادر: اسم المريض",
+          "label": "اسم المريض",
+          "group": "الصادر",
           "value": [
             "counterparty"
           ],
@@ -166,11 +175,10 @@
       "conditions": [],
       "numbering": "book_store_item",
       "balance": 1,
-      "per_item_pages": 1,
       "correction": "reversing_line",
       "retention_years": 2,
       "medium": "official_book",
-      "medium_note": "Received from JFDA with the approved dispensing annex printed in it (Instructions 2025 Art. 7(b)-(c)): print into it, or keep this book in a JFDA-approved electronic system (Art. 11). The form reads right to left; this print reads left to right, each column headed by its group (in, out) and its own words.",
+      "medium_note": "Received from JFDA with the approved dispensing annex printed in it (Instructions 2025 Art. 7(b)-(c)): print into it, or keep this book in a JFDA-approved electronic system (Art. 11). The form reads right to left, and so does this print, each column under its band (in, out).",
       "required": [],
       "columns": [
         {
@@ -238,5 +246,6 @@
     "Stock Entry": {
       "reference_no": "custom_external_reference_no"
     }
-  }
+  },
+  "print_language": "ar"
 }

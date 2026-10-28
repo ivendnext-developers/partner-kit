@@ -1,4 +1,4 @@
-"""Which books a line enters: a model of the register door's own rule (PB-4 spec §2, §3.2, §3.3), so a partner can test a
+"""Which books a line enters: a model of the register door's own rule (the register books page, §2, §5), so a partner can test a
 data set's routing before the door is installed. The door evaluates conditions with the POS app's save-rule code; this
 model follows that code: a number or tick-box column compares as a number, any other column as trimmed text (= and !=),
 and is set / is not set test for a value.

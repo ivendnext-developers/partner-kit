@@ -161,5 +161,6 @@
     "Stock Entry": {
       "reference_no": "custom_external_reference_no"
     }
-  }
+  },
+  "print_language": "ar"
 }
