@@ -80,6 +80,7 @@ import check_links  # noqa: E402  (its ALLOWED_HOSTS list is also the content po
 import seo  # noqa: E402  (titles, descriptions, structured data, preview images, dates, llms.txt, redirects)
 REPO_URL = "https://github.com/ivendnext-developers/partner-kit"
 ORG_URL = "https://github.com/ivendnext-developers"
+PUBLISH_PAGE = "https://library.ivendnext.app/publish"   # the App library's Publish page: {{publish: button}}
 DOMAIN = seo.DOMAIN
 SEO_JSON = SITE / "seo.json"                        # the hand-written descriptions and the verification values
 REDIRECTS = SITE / "redirects.txt"                  # one "old new" pair a line; the build writes a stub at each old address
@@ -267,6 +268,8 @@ def render(text: str, ctx: Ctx, seen: dict, toc: list | None, depth: int = 0) ->
 
     here = posixpath.dirname(ctx.out)
     text = re.sub(r"^\{\{plan: shortlist\}\}\s*$", lambda m: raw(plan_tool(here)), text, flags=re.M)
+    text = re.sub(r"^\{\{publish: button\}\}\s*$", lambda m: raw(  # the App library's Publish page (PUBLISHWEB)
+        f'<p class="hero-cta"><a class="site-btn" href="{PUBLISH_PAGE}">Publish</a></p>'), text, flags=re.M)
     text = re.sub(r"^\{\{samples: cards\}\}\s*$", lambda m: raw(gallery.grouped(
         ctx.samples, here, REPO_URL, catalogue.DOORS, ctx.door_pages, slug)), text, flags=re.M)
     text = re.sub(r"(?:^\{\{reference-app: .+\}\}\s*$\n?)+", lambda m: raw('<ul class="cards">' + "".join(

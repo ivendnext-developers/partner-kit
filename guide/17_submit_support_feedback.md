@@ -6,7 +6,7 @@ You will need [the feedback channel and its six forms](../feedback/README.md) an
 
 ## Read this first
 
-A finished app reaches customers through the iVendNext App library: you publish it with `tools/publish/publish.py` from any computer, its first listing waits for one approval by us, and each customer's site installs it from its App library with the checks of chapter 7 ([*Publish your app*](../site/pages/publish.md)). A manifest for one customer goes to that customer's site, whose administrator installs it. Tell us about anything missing or wrong with the feedback forms, GitHub issue forms in a private repository, `ivendnext-developers/partner-feedback`, for onboarded members: an iVendNext Partner, a licensed customer's IT team and the CitiXsys Consulting Team.
+A finished app reaches customers through the iVendNext App library: you publish it with `tools/publish/publish.py` from any computer, or from the App library's Publish page in your browser (`https://library.ivendnext.app/publish`), its first listing waits for one approval by us, and each customer's site installs it from its App library with the checks of chapter 7 ([*Publish your app*](../site/pages/publish.md)). A manifest for one customer goes to that customer's site, whose administrator installs it. Tell us about anything missing or wrong with the feedback forms, GitHub issue forms in a private repository, `ivendnext-developers/partner-feedback`, for onboarded members: an iVendNext Partner, a licensed customer's IT team and the CitiXsys Consulting Team.
 
 ## When to use it
 
@@ -22,7 +22,7 @@ When your work has passed the checks in chapter 14 and you want it in front of a
    ```
 
    Also: the local admission check for a sandboxed function (chapter 8), and the customer's release gate in the customer's own pipeline (chapter 14).
-3. **Submit.** A manifest is **not** submitted to us: it goes to iVendNext, whose administrator installs it from the install screen, checked by our code (chapter 7); on your sandbox you install it yourself with `deploy`. An app for many customers is published to the App library with `tools/publish/publish.py` ([*Publish your app*](../site/pages/publish.md)). A sandboxed module is certified by us by hand today. Of the two checks planned for a submission, the screen check against the design kit is built as a script you can run yourself (chapter 13a); running it on a submission waits on this step. The check of a remote endpoint is not built.
+3. **Submit.** A manifest is **not** submitted to us: it goes to iVendNext, whose administrator installs it from the install screen, checked by our code (chapter 7); on your sandbox you install it yourself with `deploy`. An app for many customers, or for one customer's own shelf, is published to the App library with `tools/publish/publish.py`, or from the App library's Publish page, `https://library.ivendnext.app/publish`, with no command ([*Publish your app*](../site/pages/publish.md#from-the-web-page)). The page signs with your key and opens the keys that come back in your browser; it remembers no customers between publishes, so give it your remembered customers file on an update. A sandboxed module is certified by us by hand today. Of the two checks planned for a submission, the screen check against the design kit is built as a script you can run yourself (chapter 13a); running it on a submission waits on this step. The check of a remote endpoint is not built.
 4. **Choose a feedback form.** Go down this list and send the first that fits:
 
    | If… | Send |
