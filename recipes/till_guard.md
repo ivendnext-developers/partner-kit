@@ -1,6 +1,6 @@
 # Several till rules in one app, with the retailer's own settings (till guard rules) — the recipe
 
-A retailer rarely wants one rule at the till. It wants a handful: a manager for a large sale, no line at a placeholder price, a most-per-line quantity, a beep on a flagged item. This recipe puts them in **one app**: a check before payment for the rules at Pay, a capture on scan for the rule at the scan, and **one settings record the retailer edits in Desk**, which your service reads. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
+A retailer rarely wants one rule at the till. It wants a handful: a manager for a large sale or a price below an item's lowest, no line at a placeholder price, a most-per-line quantity, a most lines per sale, a beep on a flagged item. This recipe puts them in **one app**: a check before payment for the rules at Pay, a capture on scan for the rule at the scan, and **one settings record the retailer edits in Desk**, which your service reads. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
 **Reference implementation:** `samples/s23_till_guard/` — *Till guard rules*.
 
@@ -21,12 +21,14 @@ A retailer rarely wants one rule at the till. It wants a handful: a manager for 
 
 4. **Read the retailer's settings with your integration user's key, and keep them a minute.** `GET /api/resource/<PREFIX> Settings/Default`. No record yet: every rule off. iVendNext cannot be read: use the last rules you read for a short while (S23: ten minutes, kept by each running copy of the service, so a copy that has just started has none), then answer 503 so the till applies your down answer. Never follow a redirect with the key.
 
-5. **Answer.** At Pay, the first refusal wins (`refuse` + `reason`); then a large sale gets `ask` (a yes/no; S23's default, it needs nothing more) or `approve` (a manager who is not the cashier signs in). At the scan, `confirm` + `question`: the till beeps and asks. What a sale or a return takes back is never judged; what a return sells (an exchange rung without its sale: lines with a positive quantity) is judged by the line rules, and the large-sale rule reads the total the customer pays (on an exchange, net of what it takes back), so an exchange cannot dodge it. On a return the till's headline is *This refund can't go ahead*. Every sentence is plain text of 1 to 140 characters.
+5. **Answer.** At Pay, the first refusal wins (`refuse` + `reason`); then a line below its lowest price, or a large sale, gets `ask` (a yes/no; S23's default, it needs nothing more) or `approve` (a manager who is not the cashier signs in). At the scan, `confirm` + `question`: the till beeps and asks. What a sale or a return takes back is never judged; what a return sells (an exchange rung without its sale: lines with a positive quantity) is judged by the line rules, and the large-sale rule reads the total the customer pays (on an exchange, net of what it takes back), so an exchange cannot dodge it. On a return the till's headline is *This refund can't go ahead*. Every sentence is plain text of 1 to 140 characters.
 
    | Rule | Answer |
    |---|---|
    | a line priced above 0 and at or below the retailer's placeholder price | `{"verdict": "refuse", "reason": "Line 2: PEN-01 is priced 0.01 AED. Correct its price before the sale is paid."}` |
    | a line holding more than the retailer's most (line by line: a promotion may split one item across lines) | `{"verdict": "refuse", "reason": "Line 1: 60 of WATER-24. The most on one line is 50."}` |
+   | more lines sold than the retailer's most lines on one sale | `{"verdict": "refuse", "reason": "This sale has 41 lines. The most on one sale is 40. Ring the rest as a second sale."}` |
+   | a line priced above 0 and below its lowest price, in the retailer's price list of lowest prices (the line's own unit; `approve` chosen) | `{"verdict": "approve", "reason": "Line 2: CEMENT-50 is 18.00 SAR, below its lowest price of 20.00 SAR. It needs a manager's approval."}` |
    | a sale at or above the approval amount (the retailer's default, `ask`) | `{"verdict": "ask", "question": "This sale is 5,000.00 AED or more. Has a manager agreed to it?"}` |
    | the same, when the retailer chose `approve` | `{"verdict": "approve", "reason": "Sales of 5,000.00 AED or more need a manager's approval."}` |
    | a flagged item scanned | `{"verdict": "confirm", "question": "PEN-01: Check this item before it goes on the sale. Add it?"}` |
@@ -37,7 +39,7 @@ A retailer rarely wants one rule at the till. It wants a handful: a manager for 
 
 ### Settings
 
-The retailer's record `Default` of `<PREFIX> Settings`, each rule off until set (0 or blank = off): *a line priced at or below this is refused* (a placeholder price such as 0.01; a free line is never refused), *most of one item on a line*, *sales of this amount or more need a manager* and *how a large sale is checked* (`ask` or `approve`), and *the question on a flagged item*. Amounts are one number for every currency, read in the sale's own currency. A change reaches the service within a minute.
+The retailer's record `Default` of `<PREFIX> Settings`, each rule off until set (0 or blank = off): *a line priced at or below this is refused* (a placeholder price such as 0.01; a free line is never refused), *lowest prices* (a price list of the retailer's, one Item Price row per item and unit, in the sale's currency; the service reads those rows for the basket's items after the refusals, so a list that cannot be read never stops a refusal; the integration role needs read on Item Price, given before the list is named), *most of one item on a line*, *most lines on one sale*, *sales of this amount or more need a manager* and *how a sale needing a manager is checked* (`ask` or `approve`, for a large sale and a line below its lowest price), and *the question on a flagged item*. Amounts are one number for every currency, read in the sale's own currency. A change reaches the service within a minute.
 
 ![On a demo site: the settings record with the warning ticked](../samples/s23_till_guard/screenshots/till-guard-rules-settings.png)
 
@@ -54,5 +56,6 @@ The retailer's record `Default` of `<PREFIX> Settings`, each rule off until set 
 
 ## Technical notes
 
+- **Configure before you code a price rule.** iVendNext already refuses a price below cost (Selling Settings, *Validate Selling Price*), holds a cashier's price change inside a share of the list price unless a manager approves (Retail Permission, *price override lower and upper limit*), and caps a line's discount (the item's *Max Discount (%)*). A lowest price per item and unit is what those leave open.
 - **Offline,** the till does not call you: each service's declared down answer applies, and the sale is flagged when it syncs.
 - **Hosting:** the service is the app template's shape, so it serves many retailers through the template's handshake (guide chapter 14b, *One app, many retailers*); each retailer's site hands over the two secrets when it connects after the install, and its integration user's key on *Connect again*. It only answers presses, so on CitiXsys hosting it runs as a function, paid per call (`app.json` `"runs": "function"`). Until a retailer's user key arrives the service answers 503, so your down answer applies.

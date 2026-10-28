@@ -138,6 +138,113 @@ class CheckRules(unittest.TestCase):
             self.assertFalse(set(text) & {"<", ">"}, text)
 
 
+class LinesAndLowestPrices(unittest.TestCase):
+    """1.3.0: the most lines on one sale, and a line below its item's lowest price (the retailer's price list)."""
+    rules = guard.settings_of(dict(SETTINGS, approval_from=0, max_lines_per_sale=3, lowest_price_list="Lowest"))
+    LOW = {("BREAD", "Nos"): 10.0, ("BREAD", "Box"): 100.0}
+
+    def test_more_lines_than_the_most_are_refused_and_exactly_the_most_allowed(self):
+        three = [line(n) for n in (1, 2, 3)]
+        self.assertEqual(guard.on_check(context(three), self.rules), {"verdict": "allow"})
+        out = guard.on_check(context(three + [line(4)]), self.rules)
+        self.assertEqual(out, {"verdict": "refuse",
+                               "reason": "This sale has 4 lines. The most on one sale is 3. Ring the rest as a second sale."})
+
+    def test_what_a_return_takes_back_is_not_counted(self):
+        lines = [line(1), line(2), line(3), line(4, qty=-1)]
+        self.assertEqual(guard.on_check(context(lines, stage="return"), self.rules), {"verdict": "allow"})
+
+    def test_a_line_below_its_lowest_price_calls_a_manager(self):
+        out = guard.on_check(context([line(1, rate=999)]), self.rules, self.LOW)
+        self.assertEqual(out, {"verdict": "approve", "reason":
+                               "Line 1: BREAD is 9.99 AED, below its lowest price of 10.00 AED. It needs a manager's approval."})
+
+    def test_at_its_lowest_price_is_allowed(self):
+        self.assertEqual(guard.on_check(context([line(1, rate=1000)]), self.rules, self.LOW), {"verdict": "allow"})
+
+    def test_the_line_is_judged_in_its_own_unit(self):
+        box = dict(line(1, rate=9000), uom="Box")
+        self.assertEqual(guard.on_check(context([box]), self.rules, self.LOW)["verdict"], "approve")
+        self.assertEqual(guard.on_check(context([dict(box, rate_minor=10000)]), self.rules, self.LOW), {"verdict": "allow"})
+
+    def test_a_unit_with_no_row_for_a_priced_item_calls_a_manager(self):
+        pair = dict(line(1, rate=100000), uom="Pair")             # never a way round the item's lowest price
+        self.assertEqual(guard.on_check(context([pair]), self.rules, self.LOW), {"verdict": "approve", "reason":
+                         "Line 1: BREAD is sold in Pair, which has no lowest price. It needs a manager's approval."})
+        other = line(1, "MILK", rate=1)                            # an item with no row at all is not judged
+        self.assertEqual(guard.on_check(context([other]), dict(self.rules, lowest_price=0), self.LOW), {"verdict": "allow"})
+
+    def test_a_discount_on_the_whole_sale_counts(self):
+        ctx = context([line(1, rate=1000)])
+        ctx["totals"].update(net_minor=500, discount_minor=500)   # a 50% discount on the sale: the customer pays 5.00
+        self.assertEqual(guard.on_check(ctx, self.rules, self.LOW), {"verdict": "approve", "reason":
+                         "Line 1: BREAD is 5.00 AED after the sale's discount, below its lowest price of 10.00 AED. "
+                         "It needs a manager's approval."})
+
+    def test_a_line_exactly_at_its_lowest_after_the_sale_discount_is_allowed(self):
+        ctx = context([line(1, "BREAD", rate=43)])
+        ctx["totals"].update(net_minor=115, discount_minor=100)     # 43 x 115 / 215 is exactly 23
+        self.assertEqual(guard.on_check(ctx, dict(self.rules, lowest_price=0), {("BREAD", "Nos"): 0.23}), {"verdict": "allow"})
+
+    def test_a_lowest_price_is_never_rounded_down(self):
+        self.assertEqual(guard.on_check(context([line(1, rate=12)]), dict(self.rules, lowest_price=0),
+                                        {("BREAD", "Nos"): 0.125})["verdict"], "approve")
+
+    def test_the_most_lines_stays_under_what_the_check_is_sent(self):
+        self.assertEqual(guard.settings_of(dict(SETTINGS, max_lines_per_sale=600))["max_lines"], 499)
+
+    def test_a_free_line_is_never_judged(self):
+        self.assertEqual(guard.on_check(context([line(1, rate=0)]), self.rules, self.LOW), {"verdict": "allow"})
+
+    def test_the_retailer_may_choose_a_question_and_more_lines_are_counted(self):
+        rules = dict(self.rules, approval_answer="ask")
+        out = guard.on_check(context([line(1, rate=500), line(2, rate=1500), line(3, rate=900)]), rules, self.LOW)
+        self.assertEqual(out, {"verdict": "ask", "question": "Line 1: BREAD is 5.00 AED, below its lowest price of 10.00 AED."
+                                                            " 1 more line is below theirs. Has a manager agreed to it?"})
+
+    def test_a_large_sale_below_its_lowest_price_is_one_approval_naming_both(self):
+        rules = dict(self.rules, approval_from=50.0)
+        out = guard.on_check(context([line(1, qty=6, rate=999)]), rules, self.LOW)
+        self.assertEqual(out["verdict"], "approve")
+        self.assertIn("below its lowest price of 10.00 AED. The sale is 50.00 AED or more.", out["reason"])
+
+    def test_a_refusal_comes_before_a_lowest_price_approval(self):
+        out = guard.on_check(context([line(1, rate=999), line(2, rate=1)]), self.rules, self.LOW)
+        self.assertEqual(out["verdict"], "refuse")
+
+    def test_off_until_set(self):
+        rules = guard.settings_of(SETTINGS)
+        self.assertEqual((rules["max_lines"], rules["lowest_list"]), (0, ""))
+        many = [line(n, rate=999) for n in range(1, 30)]
+        self.assertEqual(guard.on_check(context(many), dict(rules, approval_from=0)), {"verdict": "allow"})
+
+    def test_lowest_prices_are_picked_as_the_engine_picks_a_dated_price(self):
+        rows = [{"item_code": "BREAD", "uom": "Nos", "price_list_rate": 12, "currency": "AED", "valid_from": "2025-01-01"},
+                {"item_code": "BREAD", "uom": "Nos", "price_list_rate": 8, "currency": "AED", "valid_from": "2026-01-01"},
+                {"item_code": "BREAD", "uom": "Nos", "price_list_rate": 10, "currency": "AED", "valid_from": "2026-10-01"},
+                {"item_code": "BREAD", "uom": "Nos", "price_list_rate": 99, "currency": "AED", "valid_from": "2026-11-01"},
+                {"item_code": "BREAD", "uom": "Nos", "price_list_rate": 50, "currency": "USD", "valid_from": "2026-10-25"},
+                {"item_code": "BREAD", "uom": "Nos", "price_list_rate": 60, "currency": "AED", "customer": "CUST-1", "valid_from": "2026-10-25"},
+                {"item_code": "BREAD", "uom": "Nos", "price_list_rate": 70, "currency": "AED", "batch_no": "B1", "valid_from": "2026-10-25"},
+                {"item_code": "BREAD", "uom": "Nos", "price_list_rate": 80, "currency": "AED", "supplier": "S1", "valid_from": "2026-10-25"},
+                {"item_code": "MILK", "uom": "Nos", "price_list_rate": 3, "currency": "AED", "valid_upto": "2026-10-27"},
+                {"item_code": "JAM", "uom": "Nos", "price_list_rate": 0, "currency": "AED"}, "not a row"]
+        self.assertEqual(guard.lowest_prices(rows, "AED", "2026-10-28"), {("BREAD", "Nos"): 10.0})
+
+    def test_every_new_sentence_is_plain_and_at_most_140(self):
+        code = "X" * 60 + "<b>"
+        low = {(code, "Nos"): 10.0}
+        rules = dict(self.rules, approval_from=1.0, approval_answer="ask")
+        for out in (guard.on_check(context([line(1, code, rate=999), line(2, code, rate=500)]), rules, low),
+                    guard.on_check(context([line(n, code) for n in range(1, 9)]), rules, low)):
+            text = out.get("reason") or out.get("question")
+            self.assertLessEqual(len(text), 140)
+            self.assertNotIn("<", text)
+            if out["verdict"] == "ask":                     # the explanation is shortened, never the question
+                self.assertTrue(text.endswith("Has a manager agreed to it?"))
+        self.assertEqual(out["verdict"], "refuse")
+
+
 class ScanRule(unittest.TestCase):
     def test_a_flagged_item_beeps_and_asks_the_default_question(self):
         self.assertEqual(guard.on_scan(scan(), guard.settings_of(SETTINGS)),
