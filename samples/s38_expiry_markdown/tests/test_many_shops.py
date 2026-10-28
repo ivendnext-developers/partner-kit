@@ -1,5 +1,5 @@
 """S38 for many shops (the app template's handshake): each press checked with its own shop's secret and written with
-that shop's own integration key under the library's prefix, a press before Connect again answered in words, the record
+that shop's own integration key under the library's prefix, a press before the shop's key arrives answered in words, the record
 API's errors, and the function entry answering the same.
 
     python3 -m unittest discover -s samples/s38_expiry_markdown/tests -p 'test_*.py'

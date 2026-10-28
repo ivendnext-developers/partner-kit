@@ -24,6 +24,6 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD python3 -c "import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('PORT','8080')+'/health',timeout=2)"
 
-# No secret here: each shop hands over its own integration user's key at connect. IVN_LIBRARY_APP, GCS_PREFIX and
+# No secret here: each shop's site hands over the key of the app's own user at connect. IVN_LIBRARY_APP, GCS_PREFIX and
 # PP_STATE come from the platform's settings; IVN_SHOPS_TABLE and AWS_REGION from the hosting.
 CMD ["python3", "samples/s25_gift_on_spend/service/app.py"]

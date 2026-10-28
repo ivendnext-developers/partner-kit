@@ -2,13 +2,13 @@
 
 A connected app signs in to a retailer's iVendNext **from outside**, with an API key: a warranty service, a bin-location service, a marketplace bridge. This recipe shows how iVendNext gives that app its own user, holding only the rights it needs. It is for iVendNext Partners, and for the CitiXsys Consulting Team. **Reference implementation:** the integration user the two sample services use (`samples/s1_warranty/service/`, `samples/s2_bins/service/`).
 
-**When to use it.** Rung 2 of the build ladder: a connected app. Try configuration first (pricing rules, promotions, print formats, sale details, permissions). If the job really needs your own server, every connected app gets **its own** user, made this way. A till key hosted inside the retailer's iVendNext, an embedded app and a manifest do not need one: they run as the cashier, the person booking the sale, or nothing at all.
+**When to use it.** Rung 2 of the build ladder: a connected app. Try configuration first (pricing rules, promotions, print formats, sale details, permissions). If the job really needs your own server, every connected app gets **its own** user: one with an event feed gets it from its install, one with no feed gets it made this way. A till key hosted inside the retailer's iVendNext, an embedded app and a manifest do not need one: they run as the cashier, the person booking the sale, or nothing at all.
 
-**The rule in one line.** One connected app = one desk user = one user licence, holding one narrow role. The retailer decides which apps get a user, what each may do, and when to switch one off.
+**The rule in one line.** One connected app = one user, holding one narrow role. **An app with an event feed gets its user from its install** (POS version 2.1.0.667): `<app>@integration.invalid`, API only, holding the role `<PREFIX> Integration`, and the retailer makes none (see *The app's own user* below). **The steps below are for an app with no event feed**, where the retailer's administrator makes the user by hand: one desk user, one user licence. The retailer decides which apps get a user, what each may do, and when to switch one off.
 
-## Steps
+## Steps (an app with no event feed)
 
-The retailer's administrator does these in iVendNext Desk.
+The retailer's administrator does these in iVendNext Desk. An app with an event feed does not make its user by hand (step 2): the install makes its user and role (below), and the retailer only gives the role its rights (step 1) and, for a service the retailer hosts or the maker hosts, presses **Generate Keys** (step 3).
 
 1. **Give a role for this app alone the rights it needs** (Desk → Role Permissions Manager; Desk → Role → New only if no role of that name exists). If your manifest names the role in its permission rows and the role starts with your prefix, the install makes it (on a site whose POS app is at `e149dce4` or later; any other missing role is refused, so the retailer makes it first) and a manifest can grant it rights only on **your own** record types: the rights on the retailer's own record types are the ones you add here, and a card's setup steps say so. Give it only what the app reads and writes. The bin-location sample's role, for example:
 
@@ -26,7 +26,7 @@ The retailer's administrator does these in iVendNext Desk.
 
 2. **Make one user for the app** (Desk → User → New):
    - an e-mail that names the app, e.g. `bins-service@yourshop.example`;
-   - tick **Is Desk User**. iVendNext refuses a user that is neither a desk user nor a POS user, so there is no API-only kind;
+   - tick **Is Desk User**. iVendNext refuses a hand-made user that is neither a desk user nor a POS user, so a hand-made user is never the API-only kind (the install's own user for an event feed is);
    - give it only the role from step 1;
    - set no password. The user never signs in to Desk: only its API key is used.
 
@@ -53,24 +53,27 @@ The retailer's administrator does these in iVendNext Desk.
 6. **Rotate or revoke the key.** To rotate it (a person who saw it leaves, or on a schedule), press **Generate Keys** again. The old secret is refused (`401`) at once, and the new one works (`200`). Update your service's secret store in the same change. To switch the app off, the retailer **deletes the user**, or generates new keys and keeps the secret to itself. Disabling the user is not enough: its key still signs in.
    ⚠ **A user that has taken a workflow step cannot be deleted.** iVendNext keeps a record of every step taken (a *Workflow Action*), naming the user and the role that took it; a completed one is visible to the site's Administrator alone, so no partner key can find and clear them, and iVendNext answers *"linked with Workflow Action"*. For such a user, switch the app off by disabling the user, generating new keys that no one keeps, and disabling the role. A later setup run switches them back on. The site's Administrator can delete them if the retailer wants them gone.
 
-## Who sets the app's user
+## The app's own user (an app with an event feed)
 
-An app that reads the retailer's data through its own user (a feed registration naming it) needs that user set as the **Application User** on the app's *Registered Application* record. The field is locked in Desk, so the retailer's administrator cannot choose it: the retailer asks **iVendNext support**, naming the user (the e-mail from step 2), and then presses **Connect again** on the app's record. Until it is set, **Connect again** sends no key and the app seems to do nothing.
+From POS version 2.1.0.667 the install of an app whose manifest lists an event feed makes the feed's record, switched off, and **the app's own user**, `<app>@integration.invalid`, named on it as the user the service reads as. Nobody chooses that user and nobody asks iVendNext support to set it.
 
-The user must be one made for this app alone: its own e-mail, only its own role. Never a person's user (a cashier, a manager), never the Administrator, and never a user already named on another app's registration: the app would then read and write as that person, or the two apps would share one key.
+- **One role.** The user holds the role `<PREFIX> Integration` alone (made empty if the manifest does not declare it). The retailer's administrator gives that role the reads the app needs (Role Permissions) and ticks each record type on the feed. Nobody can give the user a password or another role.
+- **API only.** The user can never sign in to Desk, even with a password. The product marks it as an app's user, never a person's, by its address.
+- **Its key.** An app hosted by CitiXsys is handed the key by the retailer's site itself, after the install or an update; *Connect again* is only for when the site could not reach the app, or a key was lost or changed. For an app you host yourself, the retailer presses **Generate Keys** on the user (User, API Access) and hands you the key.
+- **The uninstall** removes the feed, then the user and its key. Disabling the user does not stop its key: to cut an app off, the retailer uninstalls it.
+- **The retailer's user limit.** Whether a site's own user licence counts this user is the hosting's, not yet confirmed. Until it is, a site at its user limit refuses the install with *"This site's licence has no room for another user, so the app's own user ⟨email⟩ could not be made. Ask iVendNext support to raise the site's user count, then install again."* and removes what it made.
+- **An app installed before 2.1.0.667** gets its own user at its next version, only if its feed names no user (a user the retailer already named on the feed is kept, with its key), or when it is installed again.
 
-A developer on their own sandbox, signed in as the site's administrator, sets it with one request (the record's name and the user's e-mail filled in):
+A developer on their own sandbox who wires a registration by script (not from a manifest install) can name the user with one request, signed in as the site's administrator:
 
 ```
 PUT /api/resource/Registered%20Application/<registration name>
 {"application_user": "<the app's user e-mail>"}
 ```
 
-Then press **Connect again**. Its message says it sent that user's API key.
-
 ## What is refused, and why
 
-- **An API-only user.** A user must be a desk user or a POS user, so a connected app takes a desk user and its licence. That is deliberate: the licence is how a connected app is counted.
+- **An API-only user made by hand.** A user made in Desk must be a desk user or a POS user, so a hand-made integration user takes a desk user and its licence. An app's own user, made by the install of an app with an event feed, is the API-only kind: it works through the API and can never sign in to Desk.
 - **A server-to-server sign-in with enforced scopes.** Not available today. The API key plus a narrow role is the boundary, so keep the role narrow.
 
 ## When your service is down, and when the till is offline

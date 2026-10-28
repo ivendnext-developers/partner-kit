@@ -1,5 +1,5 @@
 """S16 for many shops (the app template's handshake): each press checked with its own shop's secret and written with
-that shop's own integration key, a press before Connect again answered in words, and one press handled by one call
+that shop's own integration key, a press before the shop's key arrives answered in words, and one press handled by one call
 even when two copies of the function receive it (a claim in the shops table).
 
     python3 -m unittest discover -s samples/s16_pick_route/tests -p 'test_*.py'

@@ -58,8 +58,8 @@ BUDGET_S = 5.0          # no new lot is started after this: the shop waits 10 se
                         # cold start (about 2.5 s, APPF run 9) comes before this clock starts
 SWEEP = 20              # expired prices of the app's own removed per press, at most
 APP_NAME = "Mark down"
-NOT_SET_UP = (f"{APP_NAME} is not set up yet. Ask your manager to choose its user on the app's feed and press "
-              "Connect again.")
+NOT_SET_UP = (f"{APP_NAME} is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
+              "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
 REFUSED = f"{APP_NAME} may not read or change prices. Ask your manager to check the app's user, its role and its API key."
 CONNECT_AGAIN = " Then press Connect again on the app."    # many shops: a new key reaches the service only that way
 NO_SETTINGS = ("Mark down has no price list yet. Ask your manager to open the settings record Default and choose the "
@@ -142,7 +142,7 @@ class Tenant:
 
 
 def tenant_of(url: str, key: str) -> Tenant:
-    """A shop's door from the key it handed over on Connect again ("<api key>:<api secret>")."""
+    """A shop's door from the key the shop's site handed over ("<api key>:<api secret>")."""
     api_key, _, api_secret = key.partition(":")
     return Tenant(url, api_key, api_secret)
 

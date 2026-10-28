@@ -33,7 +33,7 @@ You make your own API key, as the five steps below show. There is nothing to ins
 ## The first call, in five steps
 
 1. **Make a role for your app** (Desk → Role → New, then Role Permissions Manager). Give it read on *Item* only, for now.
-2. **Make one user for your app** (Desk → User → New): an e-mail that names the app; tick *Is Desk User*; give it only your role; set no password. One app, one user — it takes one user licence on a customer's site, and the customer decides when to switch it off.
+2. **Make one user for your app** (Desk → User → New): an e-mail that names the app; tick *Is Desk User*; give it only your role; set no password. This hand-made user is for an app with no event feed, and for this first call. An app with an event feed gets its own user from its install (chapter 5), so the retailer makes none for it.
 3. **Generate its API key and secret** (User → Settings → API Access → *Generate Keys*). The secret is shown once; put it in your secret store.
 4. **Make the call:**
 

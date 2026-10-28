@@ -37,7 +37,7 @@ The retailer is told when a store's stock falls below its reorder level, or when
 
 1. Install `manifest.json` (the retailer's administrator, on the install screen; on your sandbox, `tools/deploy/deploy.py`). It adds `PP STK Settings`, `PP STK Alert`, the notification *PP STK New Alert* (bell) and the roles **PP STK Integration** and **PP STK Alerts** (both empty).
 2. In **Role Permissions**, give PP STK Integration **read** on Warehouse, Item, Bin, Batch and Serial and Batch Bundle, and **read, create and write** on Material Request. A manifest grants rights only on its own record types ([the integration user recipe](../../recipes/integration_user.md)). ⚠ With these rights the key can change **any** draft transfer request in the retailer's iVendNext: give the role to this app's user alone.
-3. Make the app's integration user with that role and generate its API key.
+3. This app has no event feed, so the install makes no user for it: make the app's integration user by hand with that role and generate its API key.
 4. Fill **PP STK Settings** named `Default`: the source warehouse (the stock replenishment comes from), the days before expiry, an optional clearance warehouse, the stores watched (empty: every store but the source and the clearance), an optional user to tell; tick **Enabled**.
 5. Give **PP STK Alerts** to the people who act on the alerts.
 6. Put reorder rows on the items (the store, the level, the quantity, the type *Transfer*), as for the standard reorder. Leave the retailer's automatic reorder **off**, or both will ask for the same stock.

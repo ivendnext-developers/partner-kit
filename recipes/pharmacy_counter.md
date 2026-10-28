@@ -57,7 +57,7 @@ answering presses keeps nothing.
    - **a Report Builder report on `<PREFIX> Dispensing`** for the prescriptions register, for the pharmacist roles only
      (the readers of the dispensings are the readers of the patient record);
    - **two *Days Before* notifications** on the licences' *valid until*, to the pharmacist-in-charge's role;
-   - a feed registration naming your integration user, and a help address on each record type.
+   - a feed registration (no user named: the install makes the app's own user and names it), and a help address on each record type.
 
 2. **Check every call with its own route's secret** (`<app>:sub:<key>`), and refuse a timestamp more than five minutes
    from yours.

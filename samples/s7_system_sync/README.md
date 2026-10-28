@@ -12,7 +12,7 @@ Runs **outside** the retailer's iVendNext, over the record API and the event fee
 
 The sample is a tool a customer's IT team runs, not a screen. What the retailer does is small and happens once:
 
-1. **Make the sync's user.** The administrator makes one integration user for it ([integration user recipe](../../recipes/integration_user.md)) holding this grant: read and write on the feed's log (to mark events done); read on *POS Invoice*; create and write on *Item* and *Item Price*; create, write and submit on *Stock Entry*; read on *Bin* and *Warehouse*. The user's API key goes to the sync.
+1. **Make the sync's user.** No app is installed here, so nothing makes this user: the administrator makes one integration user for it ([integration user recipe](../../recipes/integration_user.md)) holding this grant: read and write on the feed's log (to mark events done); read on *POS Invoice*; create and write on *Item* and *Item Price*; create, write and submit on *Stock Entry*; read on *Bin* and *Warehouse*. The user's API key goes to the sync.
 2. **Register the sync.** The retailer's administrator creates a **Registered Application** for the sync that follows **POS Invoice** ([`recipes/event_feed.md`](../../recipes/event_feed.md), step 1), chooses its integration user and ticks the record type on.
 3. **Name the store.** The sync is told the one warehouse and the one company it serves; it serves one of each per run.
 4. **Let it run.** Items, prices and stock the ERP changed arrive in the retailer's iVendNext as items, item prices and stock entries iVendNext books. Each sale and return iVendNext books reaches the ERP once.

@@ -140,10 +140,10 @@ report view.
      Charge** and **PP RXC Records Officer**. Nobody holds the last one until you give it ([How long to
      keep](#how-long-to-keep-and-what-happens-after)).
    - It adds five services, all switched off. Nothing changes at the till yet.
-2. **Make the app's integration user** ([integration user recipe](../../recipes/integration_user.md)). Give it the role
-   **PP RXC Integration** alone, generate its API key, and ask iVendNext support to set it as the *Application User* of **PP RXC Counter** (a user made for the app alone, never a person's). Then
-   give that role a plain **read** on Item, Item Group, Customer, POS Profile, POS Invoice, POS Opening Entry, Sales
-   Order, Delivery Note and Sales Invoice (*Role Permissions*), and press **Connect again** on the app's record.
+2. **Give the app's user its reads.** From POS 2.1.0.667 the install made the app's own user, `pp_rxc@integration.invalid`,
+   and named it on **PP RXC Counter**. It holds the role **PP RXC Integration** alone, works through the API only and can
+   never sign in to Desk, so there is no user to make. Give that role a plain **read** on Item, Item Group, Customer,
+   POS Profile, POS Invoice, POS Opening Entry, Sales Order, Delivery Note and Sales Invoice (*Role Permissions*). A service for one retailer: press *Generate Keys* on that user (User, API Access) and put the key in the service's settings. A service for many retailers is handed the key by the retailer's site itself, after the install or an update; press **Connect again** on the app only if the site could not reach the app, or a key was lost or changed.
    ⚠ Give that user **no User Permissions**: a booked sale the app cannot see cannot be counted.
 3. **Give your people their roles.** Pharmacists get **PP RXC Pharmacist**. The pharmacist-in-charge gets **PP RXC
    Pharmacist in Charge**, adds each pharmacist under *PP RXC Pharmacist* (user, licence number, *valid until*) and enters

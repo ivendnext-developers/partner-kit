@@ -73,8 +73,8 @@ CHUNK = 100             # names per read of the sales' lines (the address stays 
 MOST_DAYS = 92          # the longest food cost period one press works out
 RETRIES = 5             # issues left Short or Refused tried again per press, after the new sales
 APP_NAME = "Restaurant back office"
-NOT_SET_UP = (f"{APP_NAME} is not set up yet. Ask your manager to choose its user on the app's feed and press "
-              "Connect again.")
+NOT_SET_UP = (f"{APP_NAME} is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
+              "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
 REFUSED = (f"{APP_NAME} may not read or write what it needs. Ask your manager to check the app's user, its role and its "
            "API key.")
 CONNECT_AGAIN = " Then press Connect again on the app."    # many shops: a new key reaches the service only that way
@@ -176,7 +176,7 @@ class Tenant:
 
 
 def tenant_of(url: str, key: str) -> Tenant:
-    """A shop's door from the key it handed over on Connect again ("<api key>:<api secret>")."""
+    """A shop's door from the key the shop's site handed over ("<api key>:<api secret>")."""
     api_key, _, api_secret = key.partition(":")
     return Tenant(url, api_key, api_secret)
 

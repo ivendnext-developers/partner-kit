@@ -1,5 +1,5 @@
 """S45 for many shops (the app template's handshake): each press checked with its own shop's secret for that button
-and written with that shop's own integration key under the library's prefix, a press before Connect again answered in
+and written with that shop's own integration key under the library's prefix, a press before the shop's key arrives answered in
 words, the record API itself (the token, a table read through its record type, no redirect followed, the shop's own
 words kept from its message list only), and the function entry answering the same.
 

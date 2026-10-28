@@ -20,7 +20,7 @@ ONE SHOP (env or an env file):
     IVN_SHOP_KEY       the app's integration user's key, "<api key>:<api secret>"
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
     IVN_LIBRARY_APP    the App library's id (ivendnext_prc), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
-                       Each shop connects itself after its install and hands over its integration user's key
+                       Each shop connects itself after its install and hands over the key of the app's own user
                        ("user:<email>": "<api key>:<api secret>"); a kiosk's call names its shop in its body.
 PRC_PREFIX (default PP PRC; IVENDNEXT PRC for the library's app) · PORT (default 8080)
 

@@ -43,7 +43,7 @@ One small app, two doors, one settings record.
 
 1. Install `manifest.json` (the retailer's administrator, on the install screen; on your sandbox, `tools/deploy/deploy.py`). It adds `PP MHS Settings`, a field on the count (*Merged by press*), the two services and the button (all switched off), and the roles **PP MHS Integration**, **PP MHS Counts** and **PP MHS History** (empty).
 2. In **Role Permissions**, give PP MHS Integration **read, create and write** on Stock Reconciliation, **read and create** on Comment, and **read** on POS Invoice, Sales Invoice and User. A manifest grants rights only on its own record types ([the integration user recipe](../../recipes/integration_user.md)). On the sandbox, a read iVendNext gave to every user did not reach the app's key: give it to the role.
-3. Make the app's integration user with that role and generate its API key.
+3. This app has no event feed, so the install makes no user for it: make the app's integration user by hand with that role and generate its API key.
 4. Fill **PP MHS Settings** named `Default`: the rule for the same item in the same warehouse (*Sum* or *Last*) and the number of sales the page shows.
 5. Give **PP MHS Counts** to the people who merge and **PP MHS History** to the people who open the page.
 6. Open each service (*Retail Extension Subscription*), read what it receives, tick the consent and switch it on; switch the button on (*Retail Desk Action*).

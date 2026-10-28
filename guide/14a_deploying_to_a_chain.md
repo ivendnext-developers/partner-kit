@@ -34,7 +34,7 @@ You never sign in to a server, and you never change code on an installation. You
 
 ### Kind 1: your application, which runs on your own servers
 Your code runs on your servers or your cloud, in any language. It reaches the customer's site over the internet. To connect it, **the customer's administrator** creates records in Desk. They are settings, not software:
-- **an integration user and its key**, so your application can read and write records ([recipe](../recipes/integration_user.md)). It is one desk-user licence;
+- **an integration user and its key**, so your application can read and write records ([recipe](../recipes/integration_user.md)). This is for an application with no event feed: an application with a feed gets its own user from its install, and the retailer makes none;
 - **a till key record**, so a button on the till calls your server ([recipe](../recipes/point_handler.md), step 6);
 - **a Desk button and its service record**, so a button in Desk calls your server ([Desk action](../recipes/desk_action.md));
 - **an event-feed registration**, so you hear about new sales and changes ([recipe](../recipes/event_feed.md)).

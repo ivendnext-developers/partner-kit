@@ -36,7 +36,7 @@ A retailer wants a screen on its floor where a customer scans an item and reads 
 What the retailer does after install, in its own words:
 
 - **Before install:** make the role your manifest names, unless it is under your prefix (then the install makes it). The sample's `PP Integration` is made by iVendNext.
-- Make your integration user with that role and its API key ([recipe](integration_user.md)), and ask iVendNext support to set it on your feed registration (a user made for the app alone, never a person's).
+- **After install:** the install makes the app's own user, `pp_prc@integration.invalid`, and names it on your feed registration (from POS version 2.1.0.667); the retailer ticks the record types on and gives the role its reads. A retailer who made a user by hand earlier keeps it; the app's next version leaves it named.
 - Make one Kiosk record per screen: where it stands, and the store's till profile. The record's name is the screen's code. Changed the profile's price list later? Save the Kiosk again: its fields are fetched when it is saved.
 - On the tablet, open your app's address with `#shop=` and the retailer's site and `&kiosk=` and the record's name, in full screen. A barcode scanner connected to the tablet as a keyboard (USB or Bluetooth) scans into the page.
 - To stop a screen, switch its record off or delete it.
@@ -49,7 +49,7 @@ What the retailer does after install, in its own words:
 
 ## Technical notes
 
-- **Many retailers:** the template's handshake hands your app iVendNext's integration user's key when the retailer connects. iVendNext makes that user after the install, so its key can only travel on a later connect (*Connect again*); until then the kiosk says it is not set up. Name your service's one `*.ivendnext.app` address in the manifest's `allowed_urls`: the site connects only to that address (the POS release that carries the hosted handshake, train T10).
+- **Many retailers:** the template's handshake hands your app iVendNext's integration user's key when the retailer connects. iVendNext makes that user at the install, and the retailer's site hands the key over when it connects, after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed); until the key arrives the kiosk says it is not set up. Name your service's one `*.ivendnext.app` address in the manifest's `allowed_urls`: the site connects only to that address (the POS release that carries the hosted handshake, train T10).
 - **Hosting:** a page and a press-only answer, so on CitiXsys hosting it runs as a function, paid per call (`app.json` `"runs": "function"`, [chapter 14b](../guide/14b_deploying_your_app.md)); the sample's `lambda_handler` returns the page with its own content type.
 - **Bounds:** a typed item code is not looked up (the sample's 1.0); the price is shown in the till profile's currency, converted by the retailer's own exchange rate when its list is in another (read in the engine's pricer, not run); whoever holds a real kiosk's address can check as often as they like (two calls to iVendNext each); a walk-in customer whose customer group has its own price list is priced on the store's list; online only.
 

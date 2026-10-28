@@ -46,7 +46,7 @@ A retailer runs a *shop and win* campaign: every so much a customer spends at it
       "confirm_text": "Draw the winners and reserves now? A draw is never repeated, and the campaign's rule can no longer change."}]
    ```
 
-3. **Add a feed registration** for the app's user (leave it switched off; its description at most 140 characters, the retailer's own limit): a service that serves many retailers receives the user's key through it on *Connect again* (guide chapter 14b).
+3. **Add a feed registration** for the app's user (leave it switched off; its description at most 140 characters, the retailer's own limit): name no user: from POS version 2.1.0.667 the install makes the app's own user and names it, and a hosted service that serves many retailers is handed that user's key by the retailer's site after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed; guide chapter 14b).
 
 4. **Write the service** (`samples/s44_lucky_draw/draw.py` and `service/app.py`, standard library). For each press:
    - check the signature (that button's subscription's secret);

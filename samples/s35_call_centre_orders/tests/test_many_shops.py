@@ -1,5 +1,5 @@
 """S35 for many shops (the app template's handshake): each press checked with its own shop's secret and written with
-that shop's own integration key under the library's field name, a press before Connect again answered in words, the
+that shop's own integration key under the library's field name, a press before the shop's key arrives answered in words, the
 shop's refusals named in words, and the function entry answering the same.
 
     python3 -m unittest discover -s samples/s35_call_centre_orders/tests -p 'test_*.py'

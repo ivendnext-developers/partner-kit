@@ -6,16 +6,16 @@ adapted: a release pass instead of daily jobs; a defect there may be a defect he
     python3 service/worker.py run service/.env.local [--watch 30]     # ONE SHOP: the feed, then the releases due
 
 Settings (``service/.env.local``, never committed): PP_BASE (the shop's address), PP_KEY / PP_SECRET (the integration
-user's API key — one connected app, one user, one licence), PP_STATE (a folder for the handled-events note), GCS_PREFIX
+user's API key — one connected app, one user), PP_STATE (a folder for the handled-events note), GCS_PREFIX
 (``PP GCS``; ``IVENDNEXT GCS`` for the library's app).
 
 Many shops (``serve_all``, started by app.py when IVN_LIBRARY_APP is set): every PP_WATCH seconds (default 30), one pass
 for each connected shop, each on its own thread, with that shop's own key and its own handled-events note. A shop that
 fails is logged (its site and the error's class) and the others go on; a shop still busy from the last pass is skipped,
 never run twice at once. The service's /health answers 503 when no HEALTHY pass (the shops store answered, no shop
-stuck) has finished for three minutes, so the platform restarts it. The shop's site hands over the integration user's
-key at connect only once that user has its key and is chosen on the feed registration: the shop presses *Connect
-again* after setting it up (guide chapter 14b). ⚠ ``api_credentials`` takes the first ``user:`` key a shop handed over;
+stuck) has finished for three minutes, so the platform restarts it. The shop's site hands over the key of the app's own
+user (the install made it) at connect, after the install or an update; the shop presses *Connect again* only if the key
+is lost (guide chapter 14b). ⚠ ``api_credentials`` takes the first ``user:`` key a shop handed over;
 S25's manifest registers one feed user, so there is one.
 """
 

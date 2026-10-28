@@ -29,10 +29,10 @@ iVendNext keeps one price list worked out from another: the selling list is 1.5 
 
 ## What the retailer does to set it up
 
-1. Install `manifest.json` (the retailer's administrator, on the install screen; on your sandbox, `tools/deploy/deploy.py`). It adds `PP DPL Rule`, the feed registration *PP DPL Prices* (switched off) and the role **PP DPL Integration** (empty).
+1. Install `manifest.json` (the retailer's administrator, on the install screen; on your sandbox, `tools/deploy/deploy.py`). It adds `PP DPL Rule`, the feed registration *PP DPL Prices* (switched off), the role **PP DPL Integration** (empty) and, from POS 2.1.0.667, the app's own user, `pp_dpl@integration.invalid`, named on the feed.
 2. In **Role Permissions**, give PP DPL Integration **read** on Price List, and **read, create and write** on Item Price. A manifest grants rights only on its own record types ([the integration user recipe](../../recipes/integration_user.md)). ⚠ With these rights the key can change **any** item price in the retailer's iVendNext: give the role to this app's user alone.
-3. Make the app's integration user with that role and generate its API key.
-4. Tick **Item Price** on the feed registration *PP DPL Prices* and save. Ask iVendNext support to set that user as its *Application User* (a user made for the app alone, never a person's).
+3. There is no user to make: the app's own user holds the role **PP DPL Integration** alone, works through the API only and can never sign in to Desk. For a service you run yourself, press *Generate Keys* on it (User, API Access) and keep the key for step 5.
+4. Tick **Item Price** on the feed registration *PP DPL Prices* and save.
 5. Run the service with the user's key (below).
 6. Add a **PP DPL Rule**: a short name, the source and target price lists, the factor, an amount to add, the rounding step and direction, the floor, the decimal places; tick **Enabled**. The next pass writes every target price that no person has set.
 

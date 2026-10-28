@@ -1,5 +1,5 @@
 """S16's manifest: the app's own role, which the install makes, reads and creates pick tasks and nothing else, and the feed
-whose user a service serving many shops receives on Connect again.
+whose user a service serving many shops receives when its site connects.
 
     python3 -m unittest discover -s samples/s16_pick_route/tests -p 'test_*.py'
 """

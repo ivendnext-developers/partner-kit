@@ -1,5 +1,5 @@
 """S18 judged by each shop's OWN rule: the shop keeps it in ``<prefix> Rule`` records, one rule each, and the service
-reads them back with the user key the shop handed over on *Connect again*, after the call's signature holds, and keeps
+reads them back with the key of the app's own user the shop's site handed over, after the call's signature holds, and keeps
 them a minute. Two shops with different rules; a stand-in for the shop's read (``Shops``), and the real read
 (``ShopApi.rules``) against a local server, so the call's shape is pinned too.
 

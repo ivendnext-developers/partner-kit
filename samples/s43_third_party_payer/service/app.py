@@ -566,7 +566,7 @@ class Service:
         except ValueError as e:
             return 400, {"error": str(e)}
         if shop is None:
-            return (200, _message("Choose the app's user on its feed, then press Connect again.", "warning")) \
+            return (200, _message("No key from this shop has reached this app yet. Check that the app's user has its key and, if the site could not reach the app, or a key was lost or changed, press Connect again.", "warning")) \
                 if point == "desk_action" else (503, {"error": "not set up"})
         try:
             self.local.t0 = time.monotonic() if point == "payer" else None
