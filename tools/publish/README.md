@@ -10,7 +10,7 @@ Standard library only (Python 3.10+). Exit code: 0 published (or waiting for our
 python3 tools/publish/publish.py keygen
 ```
 
-It writes `~/.ivendnext/library-signing.key` (readable by you only; `--key <file>` to keep it elsewhere) and prints one line, `ivn-ed25519:…`, with its key id. Send that line to iVendNext through Help or your account manager, with your `recipient.pem` and the first word you would like for your company: every app you name under it is yours (`ACME LOYALTY` → `acme_loyalty`), with no reservation. The line is public; the file is not. Back the file up: a lost key means registering a new one.
+It writes `~/.ivendnext/library-signing.key` (readable by you only; `--key <file>` to keep it elsewhere) and prints one line, `ivn-ed25519:…`, with its key id. Send that line to iVendNext through Help or your account manager, with your `recipient.pem` and the first word you would like for your company: every app you name under it is yours (`ACME LOYALTY` becomes `acme_loyalty`), with no reservation. The line is public; the file is not. Back the file up: a lost key means registering a new one.
 
 ## Each version
 
