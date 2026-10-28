@@ -64,7 +64,7 @@
    "slug": "pos_invoice",
    "submittable": 1,
    "tables": 19,
-   "why": "openapi.yaml; contract fiscal_reader; guide chapter 10; recipe customer_history_page; recipe duty_free_allowance; recipe gift_card_on_spend; recipe loyalty_provider; recipe lucky_draw; recipe portal; recipe post_sale_feedback; recipe receipt_format; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe webhook_receiver; sample S13; sample S2; sample S22; sample S25; sample S3; sample S36; sample S4; sample S41; sample S43; sample S49; sample S9; the MCP server; the feed client; the request collection; retail core"
+   "why": "openapi.yaml; contract fiscal_reader; guide chapter 01c; guide chapter 10; recipe customer_history_page; recipe duty_free_allowance; recipe gift_card_on_spend; recipe loyalty_provider; recipe lucky_draw; recipe portal; recipe post_sale_feedback; recipe receipt_format; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe webhook_receiver; sample S13; sample S2; sample S22; sample S25; sample S3; sample S36; sample S4; sample S41; sample S43; sample S49; sample S52; sample S9; the MCP server; the feed client; the request collection; retail core"
   },
   {
    "area": "Till sales",
@@ -128,7 +128,7 @@
   },
   {
    "area": "Items",
-   "fields": 106,
+   "fields": 104,
    "name": "Item",
    "single": 0,
    "slug": "item",
@@ -174,7 +174,7 @@
    "slug": "item_price",
    "submittable": 0,
    "tables": 0,
-   "why": "guide chapter 07; recipe approvals; recipe approvals_stores; recipe derived_price_lists; recipe estate_rollout; recipe expiry_markdown; recipe print_pack; recipe system_sync; sample S11; sample S14; sample S26; retail core"
+   "why": "guide chapter 01c; guide chapter 07; recipe approvals; recipe approvals_stores; recipe derived_price_lists; recipe estate_rollout; recipe expiry_markdown; recipe print_pack; recipe system_sync; sample S11; sample S14; sample S23; sample S26; retail core"
   },
   {
    "area": "Prices and price lists",
@@ -204,7 +204,7 @@
    "slug": "customer",
    "submittable": 0,
    "tables": 5,
-   "why": "openapi.yaml; contract fields; recipe customer_code_check; recipe customer_history_page; recipe loyalty_provider; recipe optical_prescriptions; recipe print_pack; sample S22; sample S25; sample S39; sample S42; sample S43; sample S49; the MCP server; the request collection; retail core"
+   "why": "openapi.yaml; contract fields; recipe customer_code_check; recipe customer_history_page; recipe loyalty_provider; recipe optical_prescriptions; recipe print_pack; sample S22; sample S25; sample S39; sample S42; sample S43; sample S49; sample S52; the MCP server; the request collection; retail core"
   },
   {
    "area": "Customers and groups",
@@ -228,7 +228,7 @@
   },
   {
    "area": "Customers and groups",
-   "fields": 18,
+   "fields": 16,
    "name": "Address",
    "single": 0,
    "slug": "address",
@@ -238,7 +238,7 @@
   },
   {
    "area": "Customers and groups",
-   "fields": 26,
+   "fields": 25,
    "name": "Contact",
    "single": 0,
    "slug": "contact",
@@ -588,7 +588,7 @@
   },
   {
    "area": "Till sales",
-   "fields": 12,
+   "fields": 11,
    "name": "POS Terminal",
    "single": 0,
    "slug": "pos_terminal",
@@ -738,7 +738,7 @@
   },
   {
    "area": "The retailer's setup",
-   "fields": 25,
+   "fields": 24,
    "name": "Notification",
    "single": 0,
    "slug": "notification",

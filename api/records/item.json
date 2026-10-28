@@ -9,7 +9,7 @@
    ],
    "description": "",
    "fieldname": "naming_series",
-   "hidden": 1,
+   "hidden": 0,
    "label": "Series",
    "links_to": "",
    "read_only": 0,
@@ -53,18 +53,6 @@
    "type": "Link"
   },
   {
-   "added": 1,
-   "choices": [],
-   "description": "",
-   "fieldname": "is_zero_rated",
-   "hidden": 0,
-   "label": "Is Zero Rated",
-   "links_to": "",
-   "read_only": 0,
-   "required": 0,
-   "type": "Check"
-  },
-  {
    "added": 0,
    "choices": [],
    "description": "",
@@ -74,18 +62,6 @@
    "links_to": "UOM",
    "read_only": 0,
    "required": 1,
-   "type": "Link"
-  },
-  {
-   "added": 1,
-   "choices": [],
-   "description": "",
-   "fieldname": "pp_bln_default_bin",
-   "hidden": 0,
-   "label": "Default bin (bin locations)",
-   "links_to": "PP BLN Bin",
-   "read_only": 0,
-   "required": 0,
    "type": "Link"
   },
   {
@@ -1033,7 +1009,7 @@
    "choices": [],
    "description": "If subcontracted to a vendor",
    "fieldname": "is_sub_contracted_item",
-   "hidden": 1,
+   "hidden": 0,
    "label": "Supply Raw Materials for Purchase",
    "links_to": "",
    "read_only": 0,

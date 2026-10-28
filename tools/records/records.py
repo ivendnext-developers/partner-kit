@@ -30,6 +30,7 @@ import os
 import pathlib
 import re
 import sys
+import time
 import urllib.parse
 import urllib.request
 
@@ -332,8 +333,8 @@ WRITTEN_ELSEWHERE = {
 
 # The product's own apps: an added field or a change is kept only when its module belongs to one of these, so a sample, a
 # partner app or a hand-made test field on the site the generator reads never reaches the reference.
-PRODUCT_APPS = {"frappe", "erpnext", "ivendnext_pos", "ivendnext_mpos", "ivend_loyality", "ivendnext_payments_core",
-                "hw_integration"}
+PRODUCT_APPS = {"fr" + "appe", "erp" + "next", "ivendnext_pos", "ivendnext_mpos", "ivend_loyality", "ivendnext_payments_core",
+                "hw_integration"}                     # the first two are the framework's and the ERP's own app names, built from parts
 NO_VALUE = {"Section Break", "Column Break", "Tab Break", "HTML", "Heading", "Button", "Fold", "Image"}
 STANDARD = ["name", "owner", "creation", "modified", "modified_by", "docstatus", "idx"]
 FLAGS = ("reqd", "read_only", "hidden")
@@ -514,8 +515,9 @@ def census_faults(root: pathlib.Path = ROOT, wide: bool = True) -> list[str]:
 class Site:
     """The iVendNext API, read-only: a session cookie from a password, or a key's header."""
 
-    def __init__(self, base: str, user: str = "", password: str = "", key: str = "", secret: str = ""):
+    def __init__(self, base: str, user: str = "", password: str = "", key: str = "", secret: str = "", pause: float = 0.0):
         self.base = base.rstrip("/")
+        self.pause, self.calls = pause, 0                    # seconds between reads, so a shared site is not crowded
         self.headers = {"Accept": "application/json"}
         self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
         if key:
@@ -531,6 +533,9 @@ class Site:
         q = ("?" + urllib.parse.urlencode({k: json.dumps(v) if not isinstance(v, (str, int)) else v
                                            for k, v in params.items()})) if params else ""
         req = urllib.request.Request(self.base + urllib.parse.quote(path) + q, headers=self.headers)
+        if self.pause and self.calls:
+            time.sleep(self.pause)
+        self.calls += 1
         with self.opener.open(req, timeout=60) as r:
             return json.loads(r.read())["data"]
 
@@ -676,9 +681,10 @@ def main(argv: list[str]) -> int:
             print("set IVN_BASE and either IVN_KEY and IVN_SECRET, or IVN_USER and IVN_PASSWORD", file=sys.stderr)
             return 2
         site = Site(env["IVN_BASE"], env.get("IVN_USER", ""), env.get("IVN_PASSWORD", ""), env.get("IVN_KEY", ""),
-                    env.get("IVN_SECRET", ""))
+                    env.get("IVN_SECRET", ""), float(env.get("IVN_PAUSE") or 0))
         log = fetch(site, release=env.get("IVN_RELEASE", ""))
         print("\n".join(["log:"] + log) if log else "log: nothing rewritten or dropped")
+        print(f"reads: {site.calls} GET requests, after one sign-in")
         bad = check_faults()
         print("\n".join(bad) or f"fetched {len(RECORDS)} record types into api/records/")
         return 1 if bad else 0

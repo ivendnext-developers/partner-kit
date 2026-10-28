@@ -283,18 +283,6 @@
    "type": "Check"
   },
   {
-   "added": 1,
-   "choices": [],
-   "description": "",
-   "fieldname": "is_billing_contact",
-   "hidden": 0,
-   "label": "Is Billing Contact",
-   "links_to": "",
-   "read_only": 0,
-   "required": 0,
-   "type": "Check"
-  },
-  {
    "added": 0,
    "choices": [],
    "description": "",

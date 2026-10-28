@@ -39,25 +39,12 @@
    "type": "Link"
   },
   {
-   "added": 1,
-   "choices": [],
-   "description": "",
-   "fieldname": "custom_n8n_webhook_url",
-   "hidden": 0,
-   "label": "N8N WebHook URL",
-   "links_to": "",
-   "read_only": 0,
-   "required": 0,
-   "type": "Data"
-  },
-  {
    "added": 0,
    "choices": [
     "Email",
     "Slack",
     "System Notification",
-    "SMS",
-    "N8N"
+    "SMS"
    ],
    "description": "",
    "fieldname": "channel",

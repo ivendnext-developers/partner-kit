@@ -253,30 +253,6 @@
   {
    "added": 1,
    "choices": [],
-   "description": "",
-   "fieldname": "custom_suspended_by",
-   "hidden": 0,
-   "label": "Suspended By",
-   "links_to": "",
-   "read_only": 1,
-   "required": 0,
-   "type": "Data"
-  },
-  {
-   "added": 1,
-   "choices": [],
-   "description": "",
-   "fieldname": "custom_suspend_date_time",
-   "hidden": 0,
-   "label": "Suspend Date Time",
-   "links_to": "",
-   "read_only": 1,
-   "required": 0,
-   "type": "Datetime"
-  },
-  {
-   "added": 1,
-   "choices": [],
    "description": "Marks a day opened on the POS with a cash drawer. Set once, so day-end totals stay stable.",
    "fieldname": "custom_mpos_drawered_open",
    "hidden": 0,
@@ -297,6 +273,30 @@
    "read_only": 1,
    "required": 0,
    "type": "Data"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_suspended_by",
+   "hidden": 0,
+   "label": "Suspended By",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Data"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "",
+   "fieldname": "custom_suspend_date_time",
+   "hidden": 0,
+   "label": "Suspend Date Time",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
   }
  ],
  "lede": "A till's day opened by a cashier, with the cash in the drawer at the start.",

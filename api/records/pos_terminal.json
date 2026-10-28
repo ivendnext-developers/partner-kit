@@ -27,18 +27,6 @@
    "type": "Link"
   },
   {
-   "added": 1,
-   "choices": [],
-   "description": "",
-   "fieldname": "hardware_profile",
-   "hidden": 0,
-   "label": "Hardware Profile",
-   "links_to": "Hardware Profile",
-   "read_only": 0,
-   "required": 0,
-   "type": "Link"
-  },
-  {
    "added": 0,
    "choices": [],
    "description": "",

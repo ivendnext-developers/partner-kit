@@ -1088,11 +1088,11 @@ def search_docs(pages: list, cards: list, groups: list[list[str]], records: list
         docs.append({"id": p.out, "k": SEARCH_GROUPS.get(p.group, "guide"), "t": p.title, "a": asks,
                      "s": expand(p.title + " " + " ".join(heads), groups), "tp": "", "l": "", "c": "",
                      "b": " · ".join(heads) + " " + first, "u": p.out, "v": "", "ar": "", "d": "", "st": ""})
-    for g in records:                              # a record type: its name, its area and its first paragraph, not its fields
-        area = re.search(r"\*\*Area:\*\* ([^·]+)", g.text)
-        first = page_words(g.text)[1]
-        docs.append({"id": g.out, "k": "guide", "t": g.title, "a": "", "s": expand(f"{g.title} {area.group(1) if area else ''} record type fields", groups),
-                     "tp": "", "l": "", "c": "", "b": first, "u": g.out, "v": "", "ar": "", "d": "", "st": ""})
+    for g in records:                              # a record type: its name and first paragraph, no synonyms, so a guide or recipe
+        first = g.desc                             # that answers a word ("loyalty") still leads; the index takes the developer's words
+        words = expand("record type fields doctype", groups) if g.out == "records/index.html" else ""
+        docs.append({"id": g.out, "k": "guide", "t": g.title, "a": "", "s": words, "tp": "", "l": "", "c": "", "b": first,
+                     "u": g.out, "v": "", "ar": "", "d": "", "st": ""})
     return docs
 
 

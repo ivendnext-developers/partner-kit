@@ -834,7 +834,7 @@
    "choices": [],
    "description": "",
    "fieldname": "default_warehouse_for_sales_return",
-   "hidden": 1,
+   "hidden": 0,
    "label": "Default Warehouse for Sales Return",
    "links_to": "Warehouse",
    "read_only": 0,

@@ -454,7 +454,7 @@
    "choices": [],
    "description": "",
    "fieldname": "taxes_and_charges",
-   "hidden": 1,
+   "hidden": 0,
    "label": "Purchase Taxes and Charges Template",
    "links_to": "Purchase Taxes and Charges Template",
    "read_only": 0,

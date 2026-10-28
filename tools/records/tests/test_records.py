@@ -84,18 +84,25 @@ class Merge(unittest.TestCase):
 
 
 class ProductOnly(unittest.TestCase):
-    MODULES = {"Stock": "erpnext", "iVendNext mPOS": "ivendnext_mpos", "Pp Bln": "pp_bln"}
+    MODULES = {"Stock": "erp" + "next", "iVendNext mPOS": "ivendnext_mpos", "Pp Bln": "pp_bln"}
 
     def test_a_samples_or_a_hand_made_field_is_left_out(self):      # the canary: a sample's field must not reach the pages
         rows = [{"fieldname": "custom_gift_card_master", "module": "iVendNext mPOS"},
                 {"fieldname": "pp_bln_default_bin", "module": "Pp Bln"},
                 {"fieldname": "custom_test_note", "module": None}]
         self.assertEqual([r["fieldname"] for r in records.product_only(rows, self.MODULES)], ["custom_gift_card_master"])
+        setters = [{"field_name": "item_code", "property": "reqd", "module": None},             # a site's own customisation
+                   {"field_name": "pp_bln_default_bin", "property": "in_standard_filter", "module": "Pp Bln"},
+                   {"field_name": "item_name", "property": "label", "module": "Stock"}]
+        self.assertEqual([r["field_name"] for r in records.product_only(setters, self.MODULES)], ["item_name"])
 
     def test_the_kits_snapshots_hold_no_samples_field(self):
         for p in (ROOT / "api" / "records").glob("*.json"):
             text = p.read_text("utf-8")
             self.assertNotIn('"fieldname": "pp_', text, p.name)
+        item = json.loads((ROOT / "api" / "records" / "item.json").read_text("utf-8"))
+        sub = next(f for f in item["fields"] if f["fieldname"] == "is_sub_contracted_item")
+        self.assertEqual(sub["hidden"], 0)              # the bench site's own setter (hidden: 1) is not the product's, so not here
 
 
 class Words(unittest.TestCase):

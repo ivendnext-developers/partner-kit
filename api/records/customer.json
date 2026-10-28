@@ -9,7 +9,7 @@
    ],
    "description": "",
    "fieldname": "naming_series",
-   "hidden": 1,
+   "hidden": 0,
    "label": "Series",
    "links_to": "",
    "read_only": 0,
@@ -930,6 +930,6 @@
    ]
   }
  },
- "why": "openapi.yaml; contract fields; recipe customer_code_check; recipe customer_history_page; recipe loyalty_provider; recipe optical_prescriptions; recipe print_pack; sample S22; sample S25; sample S39; sample S42; sample S43; sample S49; the MCP server; the request collection; retail core",
+ "why": "openapi.yaml; contract fields; recipe customer_code_check; recipe customer_history_page; recipe loyalty_provider; recipe optical_prescriptions; recipe print_pack; sample S22; sample S25; sample S39; sample S42; sample S43; sample S49; sample S52; the MCP server; the request collection; retail core",
  "written_elsewhere": ""
 }

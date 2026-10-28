@@ -574,7 +574,7 @@
    "choices": [],
    "description": "",
    "fieldname": "taxes_and_charges",
-   "hidden": 1,
+   "hidden": 0,
    "label": "Purchase Taxes and Charges Template",
    "links_to": "Purchase Taxes and Charges Template",
    "read_only": 0,
@@ -2061,18 +2061,6 @@
      "type": "Text Editor"
     },
     {
-     "added": 1,
-     "choices": [],
-     "description": "",
-     "fieldname": "is_zero_rated",
-     "hidden": 0,
-     "label": "Is Zero Rated",
-     "links_to": "",
-     "read_only": 0,
-     "required": 0,
-     "type": "Check"
-    },
-    {
      "added": 0,
      "choices": [],
      "description": "",
@@ -2548,7 +2536,7 @@
      "choices": [],
      "description": "",
      "fieldname": "from_warehouse",
-     "hidden": 1,
+     "hidden": 0,
      "label": "From Warehouse",
      "links_to": "Warehouse",
      "read_only": 0,

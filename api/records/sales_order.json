@@ -397,7 +397,7 @@
    "choices": [],
    "description": "",
    "fieldname": "taxes_and_charges",
-   "hidden": 1,
+   "hidden": 0,
    "label": "Sales Taxes and Charges Template",
    "links_to": "Sales Taxes and Charges Template",
    "read_only": 0,

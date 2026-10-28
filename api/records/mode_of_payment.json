@@ -42,15 +42,9 @@
    "added": 0,
    "choices": [
     "Cash",
-    "Credit Card",
-    "Debit Card",
-    "Gift Certificate",
-    "On Account",
-    "Cheque",
-    "Custom",
-    "Store Credit",
-    "Loyalty",
-    "Payment Gateway"
+    "Bank",
+    "General",
+    "Phone"
    ],
    "description": "",
    "fieldname": "type",

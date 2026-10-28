@@ -723,7 +723,7 @@
    "choices": [],
    "description": "",
    "fieldname": "simultaneous_sessions",
-   "hidden": 1,
+   "hidden": 0,
    "label": "Simultaneous Sessions",
    "links_to": "",
    "read_only": 0,

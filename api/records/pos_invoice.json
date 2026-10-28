@@ -733,7 +733,7 @@
    "label": "Items",
    "links_to": "POS Invoice Item",
    "read_only": 0,
-   "required": 0,
+   "required": 1,
    "type": "Table"
   },
   {
@@ -873,7 +873,7 @@
    "choices": [],
    "description": "",
    "fieldname": "taxes_and_charges",
-   "hidden": 1,
+   "hidden": 0,
    "label": "Sales Taxes and Charges Template",
    "links_to": "Sales Taxes and Charges Template",
    "read_only": 0,
@@ -1029,7 +1029,7 @@
    "choices": [],
    "description": "",
    "fieldname": "redeem_loyalty_points",
-   "hidden": 1,
+   "hidden": 0,
    "label": "Redeem Loyalty Points",
    "links_to": "",
    "read_only": 0,
@@ -6518,6 +6518,6 @@
    ]
   }
  },
- "why": "openapi.yaml; contract fiscal_reader; guide chapter 10; recipe customer_history_page; recipe duty_free_allowance; recipe gift_card_on_spend; recipe loyalty_provider; recipe lucky_draw; recipe portal; recipe post_sale_feedback; recipe receipt_format; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe webhook_receiver; sample S13; sample S2; sample S22; sample S25; sample S3; sample S36; sample S4; sample S41; sample S43; sample S49; sample S9; the MCP server; the feed client; the request collection; retail core",
+ "why": "openapi.yaml; contract fiscal_reader; guide chapter 01c; guide chapter 10; recipe customer_history_page; recipe duty_free_allowance; recipe gift_card_on_spend; recipe loyalty_provider; recipe lucky_draw; recipe portal; recipe post_sale_feedback; recipe receipt_format; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe webhook_receiver; sample S13; sample S2; sample S22; sample S25; sample S3; sample S36; sample S4; sample S41; sample S43; sample S49; sample S52; sample S9; the MCP server; the feed client; the request collection; retail core",
  "written_elsewhere": ""
 }

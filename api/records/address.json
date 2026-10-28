@@ -160,18 +160,6 @@
    "type": "Data"
   },
   {
-   "added": 1,
-   "choices": [],
-   "description": "",
-   "fieldname": "tax_category",
-   "hidden": 0,
-   "label": "Tax Category",
-   "links_to": "Tax Category",
-   "read_only": 0,
-   "required": 0,
-   "type": "Link"
-  },
-  {
    "added": 0,
    "choices": [],
    "description": "",
@@ -202,18 +190,6 @@
    "fieldname": "disabled",
    "hidden": 0,
    "label": "Disabled",
-   "links_to": "",
-   "read_only": 0,
-   "required": 0,
-   "type": "Check"
-  },
-  {
-   "added": 1,
-   "choices": [],
-   "description": "",
-   "fieldname": "is_your_company_address",
-   "hidden": 0,
-   "label": "Is Your Company Address",
    "links_to": "",
    "read_only": 0,
    "required": 0,
