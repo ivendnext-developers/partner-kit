@@ -11,6 +11,7 @@ recipe: recipes/coupon_rules.md
 sample: samples/s32_coupon_rules
 request: -
 verified: 2026-10-18 · bench
+related: coupon-sale-needed-per-use
 ---
 ## What you build
 Your service answers the check before payment. iVendNext keeps one rule per coupon; the service refuses the coupon when the sale's customer has bought before (a first-purchase coupon) or is not in the coupon's customer group.

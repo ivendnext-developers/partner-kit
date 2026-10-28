@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/coupon_rules.md
 sample: samples/s32_coupon_rules
 request: -
-verified: 2026-10-28 · laptop tests
+verified: 2026-10-28 · bench
 related: coupon-first-purchase-or-group, coupon-uses-per-store, coupon-or-loyalty-cap
 ---
 ## What you build
@@ -20,7 +20,8 @@ Your service answers the check before payment. iVendNext keeps one rule per coup
 - Answered when the cashier presses Pay, not when the coupon is entered.
 - The sale's total is as rounded for payment, after its discounts (the coupons' own included), tax included. An exchange's replacement is its own sale, judged at its own total.
 - One amount per coupon, read in each sale's own currency.
-- The check sees each coupon once, so a coupon allowed to repeat on one sale counts once.
+- It counts each coupon as one use, never what the coupon takes off: a 10% coupon with 1,000 here takes 100 of a 1,000 sale, a 50% coupon 500. It is a minimum sale per coupon, not a cap on the discount.
+- Several coupons of one kind on one sale count as one. For one coupon for each so much spent, give each coupon its own record and rule (coupons issued as serial numbers of one coupon cannot be used twice on a sale unless its hidden Can Repeat In Transaction is ticked, and then count once).
 - Offline, the till does not ask the service: the coupon applies and the sale is flagged when it syncs.
 
 ## Tell the customer
