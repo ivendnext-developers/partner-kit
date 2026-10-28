@@ -30,7 +30,7 @@ AWS `us-east-1`, for App Hosting and the App library. Other regions are added wh
 
 ### Does the app keep any of the retail chain's data? Where does that data live?
 
-Not by default. The chain's data, and your app's own record types, live in the chain's own iVendNext, and your service reads them through the API. A hosted app keeps only each chain's connection (its address, secrets and key's id) in its own encrypted table. Anything you store elsewhere is yours to declare, and the chain sees where its data goes before it installs. [1a, section 4](../../guide/01a_how_it_all_works.md#4-where-the-customers-data-lives).
+Not by default. The chain's data, and your app's own record types, live in the chain's own iVendNext, and your service reads them through the API. A hosted app keeps each chain's connection (its address, secrets and key's id) in its own encrypted table, and none of the chain's sales or customers. Anything you store elsewhere is yours to declare, and the chain sees where its data goes before it installs. [1a, section 4](../../guide/01a_how_it_all_works.md#4-where-the-customers-data-lives).
 
 ### If my app talks to iVendNext and to an outside system, or only calculates, where does the data stay while it does?
 
@@ -46,7 +46,7 @@ No. Each chain's site gives your app a key and secrets for that site only, and y
 
 ### When a customer uninstalls my app, what happens to the data?
 
-The chain's site first saves your app's records to a private file, then removes everything the install added: record types, fields, roles, buttons, the event feed and your app's user with its key. The chain's own records stay. A hosted app is told goodbye and forgets that chain and its secrets; a store of your own is yours to clear. [1b, step 8](../../guide/01b_one_app_end_to_end.md#8-an-update-then-a-removal) · [Chapter 14a](../../guide/14a_deploying_to_a_chain.md).
+The chain's site first saves your app's records to a private file, then removes what the install added: record types, fields, roles, buttons, the event feed and your app's user with its key. Two things stay on purpose: a sale detail that booked sales point at (switched off) and a workflow state another workflow uses. The chain's own records stay. A hosted app is told goodbye and forgets that chain and its secrets; a store of your own is yours to clear. [1b, step 8](../../guide/01b_one_app_end_to_end.md#8-an-update-then-a-removal) · [Chapter 14a](../../guide/14a_deploying_to_a_chain.md).
 
 ## Many customers
 
@@ -132,11 +132,11 @@ Combine the ones that exist first, and say the combination's limit to your custo
 
 ### When I publish an app for a customer, do I give CitiXsys an image of the app? What exactly do I hand over, to whom?
 
-Publishing sends the App library your manifest and your app's card, signed with your key: never your code. Hosting is a separate, optional step: only if CitiXsys runs your service, you send a hosting order with your `app.json` and either an image you built or a function's package, never your source. [1a, section 9](../../guide/01a_how_it_all_works.md#9-publishing-is-not-handing-us-your-code).
+Publishing sends the App library your manifest and your app's card, signed with your key: never your code. Hosting is a separate, optional step: only if CitiXsys runs your service, you send a hosting order with your `app.json` and either an image you built or a function's package (the files it runs), never your repository. [1a, section 9](../../guide/01a_how_it_all_works.md#9-publishing-is-not-handing-us-your-code).
 
 ### Who owns the code?
 
-You do. Your code stays in your own repository, and we never need access to it. The kit's samples are Apache 2.0: copy them, change them, sell them and keep your changes private. [Build your business on iVendNext's apps](business.md#what-stays-yours).
+You do. Your code stays in your own repository, and we never need access to it; a hosted function's package holds only the files it runs. The kit's samples are Apache 2.0: copy them, change them, sell them and keep your changes private. [Build your business on iVendNext's apps](business.md#what-stays-yours).
 
 ### From finding an app to using it at the till, what does the customer's administrator do, and what does the cashier see?
 

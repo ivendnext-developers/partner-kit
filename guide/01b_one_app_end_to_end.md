@@ -85,7 +85,7 @@ Once it is live, each push to your repository's branch puts the new version live
 
 ## 5. The retailer installs it, with consent
 
-The chain's administrator opens the App library in Desk, finds the app on the public list or on the chain's *Made for you* shelf, and presses **Install**. Before anything is installed, iVendNext shows *What it will do*, written from your manifest: the record type and role it adds, the event feed, the check at Pay and the address it calls. The administrator ticks the consent and installs.
+No command: this step is the administrator's, in Desk. The chain's administrator opens the App library in Desk, finds the app on the public list or on the chain's *Made for you* shelf, and presses **Install**. Before anything is installed, iVendNext shows *What it will do*, written from your manifest: the record type and role it adds, the event feed, the check at Pay and the address it calls. The administrator ticks the consent and installs.
 
 ![The install screen: What installing it changes, written by iVendNext from the app's manifest, with the check at Pay, the event feed and the address it may call](img/1b-05-install.png)
 
@@ -113,6 +113,8 @@ Your service (the template's handshake, already in S18) checks that the key was 
 For a service on your own server, the site does not connect by itself: the chain's administrator gives you the check's secret and *Generate Keys* on your app's user, by hand ([chapter 14b](14b_deploying_your_app.md#one-app-many-retailers)).
 
 ## 7. The cashier presses Pay, and the call goes out and comes back
+
+No command: the cashier presses a button.
 
 1. The cashier rings a sale and presses **Pay**.
 2. The chain's iVendNext prices the basket and sends it, signed with that chain's secret, to `https://acme-rgd.ivendnext.app/rgd/check`.

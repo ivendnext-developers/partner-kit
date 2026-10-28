@@ -41,14 +41,14 @@ You choose one of three:
 
 ## 4. Where the customer's data lives
 
-![Where the chain's data lives. It stays in the chain's own iVendNext: sales, stock, customers, money, and your app's own record types, which your service reads through the API. Your service keeps nothing between calls by default. On App Hosting it keeps only each retailer's connection, its address, secrets and key id, in the app's own encrypted table. Anything you keep in a store of your own, or send to an outside system, is declared in your manifest and shown to the chain before it installs. App Hosting and the App library run in AWS us-east-1; other regions are added when a customer needs its data there.](img/where-data-goes.svg)
+![Where the chain's data lives. It stays in the chain's own iVendNext: sales, stock, customers, money, and your app's own record types, which your service reads through the API. Your service keeps nothing between calls by default. On App Hosting it keeps each retailer's connection, its address, secrets and key id, in the app's own encrypted table, and no sales or customers. Anything you keep in a store of your own, or send to an outside system, is declared in your manifest and shown to the chain before it installs. App Hosting and the App library run in AWS us-east-1; other regions are added when a customer needs its data there.](img/where-data-goes.svg)
 
 **The chain's data stays in the chain's iVendNext.** Your app reaches it through the API, as your app's own user, with only the rights the chain gives that user.
 
 - **A till-key or check calculation keeps nothing of the sale.** iVendNext sends your service the sale it needs to judge; your service answers and forgets it. What your service caches between calls, it keeps per chain (S18 keeps each chain's rule for a minute).
 - **A link to an outside system declares what leaves.** Each address your app sends data to is in your manifest, and each service that sends data is switched off until the chain's administrator reads exactly which fields go there and ticks consent.
 - **Your app's own data** lives in the chain's own records (the record types your manifest adds), or in a store you run yourself. A store of your own is yours to declare and to look after.
-- **What App Hosting keeps:** for each chain your hosted app serves, only its connection (its address, the secrets its install made and its key's id), in your app's own encrypted table. Hosting gives your app no database and no lasting disk of its own for anything else.
+- **What App Hosting keeps:** for each chain your hosted app serves, its connection (its address, the secrets its install made and its key's id), in your app's own encrypted table, with the short claims a scheduled run takes on a chain; no chain's sales or customers. Hosting gives your app no database and no lasting disk of its own for anything else.
 - **Which region:**
   - App Hosting and the App library run in AWS `us-east-1`. Other regions are added when a customer needs its data there.
   - On your own server, you choose the region: near the chain's site, and where the customer's data may live.
@@ -100,12 +100,12 @@ A customer asks you for four things. Do you build four apps in four containers, 
 
 ## 9. Publishing is not handing us your code
 
-![Who sends what to whom. One: you publish your manifest and its card to the App library, signed with your key. Two, only if CitiXsys runs your service: you send iVendNext App Hosting a hosting order with your app.json and an image or a function's package, never your source code. Three: the App library shows your app on its public list or on one chain's Made for you shelf. Four: the chain's administrator reads What it will do, ticks consent and installs. Five: the chain's iVendNext connects to your service, handing over its address, its key and the secrets the install made. Your code stays in your own repository.](img/publish-and-host.svg)
+![Who sends what to whom. One: you publish your manifest and its card to the App library, signed with your key. Two, only if CitiXsys runs your service: you send iVendNext App Hosting a hosting order with your app.json and an image, or a function's package of the files it runs, never your repository. Three: the App library shows your app on its public list or on one chain's Made for you shelf. Four: the chain's administrator reads What it will do, ticks consent and installs. Five: the chain's iVendNext connects to your service, handing over its address, its key and the secrets the install made. Your code stays in your own repository.](img/publish-and-host.svg)
 
-Publishing and hosting are **two separate steps**, and neither hands over your source code.
+Publishing and hosting are **two separate steps**. Publishing never sends your code, and neither gives us your repository.
 
 - **Publish:** your manifest and its card go to an App library shelf, signed with your own key ([Publish your app](../site/pages/publish.md)). This is all a no-service app ever sends.
-- **Hosting, only if CitiXsys runs your service:** a separate hosting order, with your `app.json` and either an **image** you built or a **function's package**, never your source ([chapter 14b](14b_deploying_your_app.md#let-citixsys-host-it)). On your own server you send us nothing.
+- **Hosting, only if CitiXsys runs your service:** a separate hosting order, with your `app.json` and either an **image** you built or a **function's package** (the files the function runs, zipped by the kit), never your repository or access to it ([chapter 14b](14b_deploying_your_app.md#let-citixsys-host-it)). On your own server you send us nothing.
 - **The customer installs with consent.** The chain's administrator reads *What it will do*, written by iVendNext from your manifest, ticks the box and installs.
 
 ## 10. What the customer sees

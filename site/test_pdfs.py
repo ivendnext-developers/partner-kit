@@ -258,7 +258,7 @@ class PdfTests(unittest.TestCase):
     # Chrome
     def test_how_apps_work_draws_every_picture_of_chapter_1a_inline_and_a_linked_one_is_red(self):
         names = build_pdfs.chapter_pictures(build_pdfs.HOWITWORKS)
-        self.assertGreaterEqual(len(names), 7)                                              # the six of HOWITWORKS-A and where-your-app-runs
+        self.assertGreaterEqual(len(names), 7)                                              # chapter 1a's six and where-your-app-runs
         errors: list = []
         body = build_pdfs.howitworks_body(errors)
         self.assertEqual(errors, [])
