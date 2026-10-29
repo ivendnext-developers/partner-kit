@@ -208,5 +208,80 @@ class Canary(unittest.TestCase):
             self.assertFalse((repo / "apps").exists())
 
 
+class WebAddressNames(unittest.TestCase):
+    """partner-feedback#39: a sample writes its prefix as a web address does (a stand-in retailer's path,
+    ``/api/resource/PP%20RFR%20Settings/Default``); the copy must take the new prefix there too, or its tests fail."""
+
+    def samples(self):
+        out = []
+        for d in sorted((KIT / "samples").iterdir()):
+            try:
+                m = json.loads(start.manifest_of(d).read_text(encoding="utf-8"))
+            except (start.Refused, OSError, ValueError):
+                continue
+            if " " in m["prefix"] and any(m["prefix"].replace(" ", "%20") in p.read_text(encoding="utf-8")
+                                          for p in start.texts(d)):
+                out.append((d.name, m))
+        return out
+
+    def test_every_sample_with_its_prefix_in_a_web_address_starts_and_passes_its_own_tests(self):
+        found = self.samples()
+        self.assertGreaterEqual(len(found), 15)     # S23, S24, S32, S36-S38, S42, S44-S51 when this was written
+        for sample, m in found:
+            with self.subTest(sample=sample), tempfile.TemporaryDirectory() as d:
+                repo = repository(d)
+                rc, out = run(sample, "--prefix", PREFIX, "--into", str(repo), "--test")
+                self.assertEqual(rc, 0, out)
+                self.assertRegex(out, r"copied tests: ran \d+, OK")
+                text = "".join(p.read_text(encoding="utf-8") for p in start.texts(repo / "apps" / "acme_tst"))
+                self.assertNotIn(m["prefix"].replace(" ", "%20"), text)
+                self.assertIn("ACME%20TST", text)
+
+    def test_canary_a_rewrite_that_leaves_the_web_address_spelling_turns_the_leftover_check_red(self):
+        real = start.rewrite
+
+        def broken(text, m, prefix, sample, app):
+            return real(text, m, prefix, sample, app).replace(prefix.replace(" ", "%20"), m["prefix"].replace(" ", "%20"))
+
+        with tempfile.TemporaryDirectory() as d:
+            repo = repository(d)
+            with mock.patch.object(start, "rewrite", broken):
+                rc, out = run("s51_refund_rules", "--prefix", PREFIX, "--into", str(repo))
+            self.assertEqual(rc, 1, out)
+            self.assertIn("a name of the sample is still in the copy", out)
+            self.assertIn("PP%20RFR", out)
+            self.assertFalse((repo / "apps").exists())
+
+
+class SharedNames(unittest.TestCase):
+    """A role or a till theme named with our first word alone ("PP Integration", "PP Partner Till") is renamed wherever the
+    copy names it, the manifest's own sentences included, so the manifest and the code agree (S24's tests read it)."""
+
+    def test_a_role_and_a_theme_named_in_the_description_follow(self):
+        for sample, old, new in (("s24_price_checker", "PP Integration", "ACME TST Integration"),
+                                 ("s21_field_rules", "PP Partner Till", "ACME TST Partner Till")):
+            with self.subTest(sample=sample), tempfile.TemporaryDirectory() as d:
+                repo = repository(d)
+                rc, out = run(sample, "--prefix", PREFIX, "--into", str(repo), "--test")
+                self.assertEqual(rc, 0, out)
+                m = json.loads((repo / "apps" / "acme_tst" / "manifest.json").read_text(encoding="utf-8"))
+                self.assertIn(new, m["description"])
+                self.assertNotIn(old, json.dumps(m))
+
+    def test_canary_a_rewrite_that_leaves_a_role_turns_the_leftover_check_red(self):
+        real = start.rewrite
+
+        def broken(text, m, prefix, sample, app):
+            return real(text, m, prefix, sample, app).replace("ACME TST Integration", "PP Integration")
+
+        with tempfile.TemporaryDirectory() as d:
+            repo = repository(d)
+            with mock.patch.object(start, "rewrite", broken):
+                rc, out = run("s24_price_checker", "--prefix", PREFIX, "--into", str(repo))
+            self.assertEqual(rc, 1, out)
+            self.assertIn("PP Integration", out)
+            self.assertFalse((repo / "apps").exists())
+
+
 if __name__ == "__main__":
     unittest.main()
