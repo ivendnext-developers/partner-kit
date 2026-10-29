@@ -18,10 +18,10 @@ Your service answers the check before payment. iVendNext keeps the rule per cust
 
 ## Limits
 - Answered when the cashier presses Pay. The till's loyalty form still shows when the customer has loyalty points: a redemption below the amount is refused when the payment completes, in your words.
-- *Loyalty Points* must be one of the till's payment methods (on the POS Profile or its Payment Template), or the check cannot leave it out.
-- On a split, a loyalty leg added after a card leg books and is flagged for review, never refused.
+- *Loyalty Points* must be one of the till's payment methods (on the POS Profile's Payment Template if it has one, else on the POS Profile), or the check cannot leave it out.
+- Once a card on the bank's own machine, a wallet or a split's earlier leg has taken money, a redemption below the amount books and the sale is flagged for review, never refused.
 - The Mode of Payment's own minimum amount is the least one payment by that method may be, not the sale's size.
-- The sale's total is as rounded for payment, after its discounts, tax included; equal is enough. It is the whole sale's total, not what is left after another method.
+- The sale's total is as rounded for payment, after its discounts, tax included, before a payment method's own discount; equal is enough. It is the whole sale's total, not what is left after another method.
 - One amount per method per rule, read in each sale's own currency.
 - A customer group with a rule of its own adds the same row to it: one rule decides, whole.
 - Refunds are not judged. Offline, the till does not ask the service: every method is offered and the sale is flagged when it syncs.

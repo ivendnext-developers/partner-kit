@@ -219,7 +219,7 @@ class FromASale(unittest.TestCase):
     def test_nothing_left_to_pay_with_is_refused_naming_the_amount(self):
         out = self.ask(rows(ONLY, (LP, 2000)), 150000, offered=["Cash", LP])
         self.assertEqual(out, {"verdict": "refuse", "reason": "This sale is AED 1,500.00; Loyalty Points needs a sale of "
-                                                              "AED 2,000.00, and the rule allows no other method here."})
+                                                              "AED 2,000.00: add to the sale; the rule allows no other method here."})
 
     def test_the_amount_is_rounded_up_to_the_sales_minor_unit(self):
         rule = rows(BUT, (LP, "19.991"))                   # needs 20.00: a minimum is never rounded down
