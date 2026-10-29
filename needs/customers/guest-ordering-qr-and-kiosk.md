@@ -18,7 +18,7 @@ A code record per table and per kiosk, its signed link and QR picture written by
 
 ## Limits
 - The app never sends to the kitchen, prices or takes a payment: the server sends, the till prices and pays.
-- One order a table at a time; a table with more than one bill open is refused.
+- One order a table at a time; a table with more than one bill open, or one being paid, is refused.
 - The till shows a guest's lines under their course and note, not as the guest's.
 - No pictures, allergens or *sold out* on the menu in this version.
 

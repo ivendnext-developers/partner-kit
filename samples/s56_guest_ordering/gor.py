@@ -35,6 +35,7 @@ COURSE = "Guest order"       # the course a guest's lines carry when the store r
 MENU_MAX = 300               # dishes on one menu
 SPACING_S = 15               # one order per code this often
 KIOSK_LETTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"   # 31: no 0/O, 1/I/L
+KIOSK_LEN = 5
 KIND_TABLE, KIND_KIOSK = "Table", "Kiosk"
 _KEY = re.compile(r"[A-Za-z0-9-]{16,64}")
 
@@ -223,14 +224,14 @@ def order_lines(raw, menu: list[dict], most_lines: int, most_qty: int, course: s
     for ln in raw:
         if not isinstance(ln, dict):
             raise Refused("Your order could not be read. Open the menu again.")
-        d = dishes.get(ln.get("item_code"))
+        d = dishes.get(ln.get("item_code")) if isinstance(ln.get("item_code"), str) else None
         if d is None:
             raise Refused("Something in your order is no longer on the menu. Open the menu again.")
         qty = ln.get("qty", 1)
         if isinstance(qty, bool) or not isinstance(qty, int) or not 1 <= qty <= most_qty:
             raise Refused(f"{d['name']}: order between 1 and {most_qty}.")
         picked = ln.get("options") or []
-        if not isinstance(picked, list) or len(picked) > 20:
+        if not isinstance(picked, list) or len(picked) > 20 or not all(isinstance(p, str) for p in picked):
             raise Refused(f"{d['name']}: your choices could not be read.")
         own = {c["code"]: g for g in d["groups"] for c in g["choices"]}
         if len(set(picked)) != len(picked):
@@ -266,11 +267,13 @@ def door_key(key: str, step: str) -> str:
     return f"{h[:8]}-{h[8:12]}-4{h[13:16]}-a{h[17:20]}-{h[20:32]}"
 
 
-def kiosk_code(key: str) -> str:
-    """The kiosk order's four-character code, made from the page's key (the same on a retry)."""
-    n = int.from_bytes(hashlib.sha256(f"gor1|kiosk|{key}".encode()).digest()[:8], "big")
+def kiosk_code(key: str, secret: bytes) -> str:
+    """The kiosk order's five-character code, made from the page's key (the same on a retry) with the retailer's secret,
+    so a guest cannot choose a key that gives another guest's code (31^5: two open tabs share one about once in
+    tens of millions of orders)."""
+    n = int.from_bytes(hmac.new(secret, f"gor1|kiosk|{key}".encode(), hashlib.sha256).digest()[:8], "big")
     out = ""
-    for _ in range(4):
+    for _ in range(KIOSK_LEN):
         n, r = divmod(n, len(KIOSK_LETTERS))
         out += KIOSK_LETTERS[r]
     return out

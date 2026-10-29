@@ -9,6 +9,11 @@ import json
 import os
 import unittest
 
+try:
+    import jinja2
+except ImportError:          # the kit's CI installs it; on a laptop without it the card's render tests skip
+    jinja2 = None
+
 MANIFEST = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "manifest.json")
 MGR, INT, SM = "PP GOR Manager", "PP GOR Integration", "System Manager"
 CODE, SET, STORE = "PP GOR Code", "PP GOR Settings", "PP GOR Store"
@@ -51,6 +56,27 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(p["doc_type"], CODE)
         self.assertIn('src="{{ doc.qr }}"', p["html"])
         self.assertNotIn("http", p["html"])
+
+    @unittest.skipUnless(jinja2, "the template engine is not installed here")
+    def test_m9_the_card_prints_the_qr_only_for_the_record_and_table_it_was_made_for(self):
+        (p,) = self.m["print_formats"]
+        tpl = jinja2.Environment(autoescape=False).from_string(p["html"])
+
+        class Doc(dict):
+            __getattr__ = dict.get
+
+        made = Doc(name="GOR-CODE-00001", kind="Table", store="S", place="FP-T12", place_label="Table 12", number=3,
+                   kiosk_name="", link="https://x/#s=a&t=GOR-CODE-00001.3.sig", qr="data:image/svg+xml;base64,AAAA",
+                   made_for="Table|S|FP-T12")
+        render = lambda d: tpl.render(doc=d, _=lambda s: s)
+        self.assertIn('src="data:image/svg+xml;base64,AAAA"', render(made))
+        copied = Doc(made, name="GOR-CODE-00002", place="FP-T13", place_label="Table 13")      # Desk's Duplicate
+        self.assertNotIn("<img", render(copied))
+        self.assertIn("Press Make code first.", render(copied))
+        self.assertNotIn("<img", render(Doc(made, place="FP-T13")))                             # its table changed
+        kiosk = Doc(made, kind="Kiosk", place="", kiosk_name=" Door ", made_for="Kiosk|S|Door")
+        self.assertIn("<img", render(kiosk))
+        self.assertIn("&lt;b&gt;", render(Doc(made, place_label="<b>x</b>")))             # a name is text
 
     def test_m5_no_guest_field_anywhere(self):
         names = [f["fieldname"] for d in self.m["doctypes"] for f in d["fields"]] + [c["fieldname"] for c in self.m["custom_fields"]]

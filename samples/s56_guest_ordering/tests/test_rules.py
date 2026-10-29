@@ -47,13 +47,14 @@ class Rules(unittest.TestCase):
         self.assertNotEqual(gor.door_key(k, "add"), gor.door_key(k[:-1] + "b", "add"))
         self.assertRegex(gor.door_key(k, "add"), r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-a[0-9a-f]{3}-[0-9a-f]{12}$")
 
-    def test_r4_the_kiosk_code_is_four_letters_that_cannot_be_misread(self):
-        codes = {gor.kiosk_code(f"key-{i:04d}-0000000000000") for i in range(500)}
-        self.assertGreater(len(codes), 490)
+    def test_r4_the_kiosk_code_is_five_letters_that_cannot_be_misread_nor_chosen_by_the_guest(self):
+        codes = {gor.kiosk_code(f"key-{i:04d}-0000000000000", b"s") for i in range(500)}
+        self.assertEqual(len(codes), 500)
         for c in codes:
-            self.assertEqual(len(c), 4)
+            self.assertEqual(len(c), 5)
             self.assertFalse(set(c) & set("01OIL"), c)
-        self.assertEqual(gor.kiosk_code("abc-0000000000000000"), gor.kiosk_code("abc-0000000000000000"))
+        self.assertEqual(gor.kiosk_code("abc-0000000000000000", b"s"), gor.kiosk_code("abc-0000000000000000", b"s"))
+        self.assertNotEqual(gor.kiosk_code("abc-0000000000000000", b"s"), gor.kiosk_code("abc-0000000000000000", b"t"))
 
     def test_r5_a_choices_price_is_the_rows_amount_else_the_list_price_less_its_discount(self):
         self.assertEqual(gor.choice_price({"price_type": "Amount", "price": 0.6}, 9), 0.6)

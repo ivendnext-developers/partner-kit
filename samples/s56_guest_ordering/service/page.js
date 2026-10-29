@@ -19,7 +19,9 @@
           changed: "This table's bill changed a moment ago. Please send your order again.",
           wait: "An order for this table was sent a moment ago. Please send yours again in a few seconds.",
           sent_table: "Your order is on your table's bill. Your server will confirm it with you.",
-          sent_kiosk: "Your order is {code}. Please pay at the counter." },
+          sent_kiosk: "Your order is {code}. Please pay at the counter.",
+          order: "Something in your order has changed on the menu. Please open the menu again and check your order.",
+          paying: "This table's bill is being paid. Please ask your server." },
     ar: { hint: "الأسعار قبل أي عرض: تُحسب فاتورتك عند الدفع.", add: "أضف", choose: "اختر", addOrder: "أضف إلى الطلب",
           pick: "اختر {n}", upTo: "حتى {n}", optional: "اختياري", basket: "طلبك", send: "أرسل الطلب", sending: "جارٍ الإرسال...",
           note: "ملاحظة للمطبخ (اختياري)", loading: "جارٍ تحميل القائمة...", kiosk: "اطلب هنا",
@@ -35,7 +37,9 @@
           changed: "تغيّرت فاتورة هذه الطاولة قبل لحظة. يرجى إرسال طلبك مرة أخرى.",
           wait: "أُرسل طلب لهذه الطاولة قبل لحظة. يرجى إرسال طلبك مرة أخرى بعد ثوانٍ.",
           sent_table: "طلبك على فاتورة طاولتك. سيؤكده النادل معك.",
-          sent_kiosk: "رقم طلبك {code}. يرجى الدفع عند الصندوق." },
+          sent_kiosk: "رقم طلبك {code}. يرجى الدفع عند الصندوق.",
+          order: "تغيّر شيء في طلبك على القائمة. يرجى فتح القائمة مرة أخرى ومراجعة طلبك.",
+          paying: "تُدفع فاتورة هذه الطاولة الآن. يرجى سؤال النادل." },
     es: { hint: "Precios antes de ofertas: su cuenta se calcula al pagar.", add: "Añadir", choose: "Elegir",
           addOrder: "Añadir al pedido", pick: "elija {n}", upTo: "hasta {n}", optional: "opcional", basket: "Su pedido",
           send: "Enviar pedido", sending: "Enviando...", note: "Nota para la cocina (opcional)", loading: "Cargando la carta...",
@@ -51,7 +55,9 @@
           changed: "La cuenta de esta mesa cambió hace un momento. Envíe su pedido otra vez.",
           wait: "Se acaba de enviar un pedido para esta mesa. Envíe el suyo de nuevo en unos segundos.",
           sent_table: "Su pedido está en la cuenta de su mesa. Su camarero lo confirmará con usted.",
-          sent_kiosk: "Su pedido es el {code}. Pague en el mostrador." },
+          sent_kiosk: "Su pedido es el {code}. Pague en el mostrador.",
+          order: "Algo de su pedido ha cambiado en la carta. Abra la carta de nuevo y revise su pedido.",
+          paying: "Se está pagando la cuenta de esta mesa. Pregunte a su camarero." },
     fr: { hint: "Prix avant toute offre : votre addition est calculée au paiement.", add: "Ajouter", choose: "Choisir",
           addOrder: "Ajouter à la commande", pick: "choisissez {n}", upTo: "jusqu'à {n}", optional: "facultatif",
           basket: "Votre commande", send: "Envoyer la commande", sending: "Envoi...", note: "Note pour la cuisine (facultatif)",
@@ -68,7 +74,9 @@
           changed: "L'addition de cette table vient de changer. Envoyez votre commande à nouveau.",
           wait: "Une commande vient d'être envoyée pour cette table. Renvoyez la vôtre dans quelques secondes.",
           sent_table: "Votre commande est sur l'addition de votre table. Votre serveur la confirmera avec vous.",
-          sent_kiosk: "Votre commande est la {code}. Payez au comptoir." },
+          sent_kiosk: "Votre commande est la {code}. Payez au comptoir.",
+          order: "Un élément de votre commande a changé sur la carte. Rouvrez la carte et vérifiez votre commande.",
+          paying: "L'addition de cette table est en cours de paiement. Demandez à votre serveur." },
     de: { hint: "Preise vor Angeboten: Ihre Rechnung wird beim Bezahlen berechnet.", add: "Hinzufügen", choose: "Auswählen",
           addOrder: "Zur Bestellung", pick: "{n} wählen", upTo: "bis zu {n}", optional: "optional", basket: "Ihre Bestellung",
           send: "Bestellung senden", sending: "Wird gesendet...", note: "Hinweis für die Küche (optional)",
@@ -85,7 +93,9 @@
           changed: "Die Rechnung dieses Tisches hat sich gerade geändert. Bitte senden Sie Ihre Bestellung erneut.",
           wait: "Für diesen Tisch wurde gerade bestellt. Bitte senden Sie Ihre Bestellung in ein paar Sekunden erneut.",
           sent_table: "Ihre Bestellung steht auf der Rechnung Ihres Tisches. Der Service bestätigt sie mit Ihnen.",
-          sent_kiosk: "Ihre Bestellung ist {code}. Bitte bezahlen Sie an der Theke." },
+          sent_kiosk: "Ihre Bestellung ist {code}. Bitte bezahlen Sie an der Theke.",
+          order: "Etwas in Ihrer Bestellung hat sich auf der Karte geändert. Bitte öffnen Sie die Karte erneut und prüfen Sie Ihre Bestellung.",
+          paying: "Die Rechnung dieses Tisches wird gerade bezahlt. Bitte fragen Sie den Service." },
     pt: { hint: "Preços antes de promoções: a conta é calculada no pagamento.", add: "Adicionar", choose: "Escolher",
           addOrder: "Adicionar ao pedido", pick: "escolha {n}", upTo: "até {n}", optional: "opcional", basket: "O seu pedido",
           send: "Enviar pedido", sending: "A enviar...", note: "Nota para a cozinha (opcional)", loading: "A carregar o menu...",
@@ -101,7 +111,9 @@
           changed: "A conta desta mesa mudou há um momento. Envie o pedido outra vez.",
           wait: "Acabou de ser enviado um pedido para esta mesa. Envie o seu outra vez daqui a uns segundos.",
           sent_table: "O seu pedido está na conta da sua mesa. O seu empregado vai confirmá-lo consigo.",
-          sent_kiosk: "O seu pedido é o {code}. Pague ao balcão." }
+          sent_kiosk: "O seu pedido é o {code}. Pague ao balcão.",
+          order: "Algo no seu pedido mudou no menu. Abra o menu outra vez e verifique o seu pedido.",
+          paying: "A conta desta mesa está a ser paga. Pergunte ao seu empregado." }
   };
   var lang = (navigator.language || "en").slice(0, 2).toLowerCase();
   var W = WORDS[lang] || WORDS.en;
@@ -112,6 +124,7 @@
   var who = { s: hash.get("s") || "", t: hash.get("t") || "" };
   var $ = function (id) { return document.getElementById(id); };
   var menu = null, basket = [], key = null, busy = false, money = null;
+  var KEPT_MS = 10 * 60 * 1000;      // an order's key kept this long in the browser, for a reload or a second scan
 
   function fmt(text, vals) { return text.replace(/\{(\w+)\}/g, function (_, k) { return vals[k]; }); }
   function el(tag, cls, text) {
@@ -159,7 +172,7 @@
       fs.appendChild(lg);
       g.choices.forEach(function (c) {
         var lab = el("label", "choice"), inp = el("input");
-        inp.type = g.max === 1 ? "radio" : "checkbox";
+        inp.type = g.min >= 1 && g.max === 1 ? "radio" : "checkbox";   // an optional choice can be unticked
         inp.name = dish.code + "-" + gi;
         inp.value = c.code;
         inputs.push({ input: inp, group: g, choice: c });
@@ -243,18 +256,34 @@
     });
   }
 
+  // The order's key, kept in the browser beside the order it was made for: the page reloaded or the card scanned again
+  // after a lost answer, the same order sends the same key, and the till's door writes it once.
+  function keptKey(sig) {
+    try {
+      var k = JSON.parse(localStorage.getItem("gor:" + who.t) || "null");
+      return k && k.sig === sig && Date.now() - k.at < KEPT_MS ? k.key : null;
+    } catch (e) { return null; }
+  }
+  function keepKey(sig, k) {
+    try { if (k) { localStorage.setItem("gor:" + who.t, JSON.stringify({ sig: sig, key: k, at: Date.now() })); }
+          else { localStorage.removeItem("gor:" + who.t); } } catch (e) { /* private window: the page's own key */ }
+  }
+
   function send() {
     if (busy || !basket.length) { return; }
     busy = true;
-    key = key || newKey();          // the same key until the order changes: a retry is never sent twice
-    $("send").disabled = true;
-    $("send").textContent = W.sending;
     var lines = basket.map(function (ln) {
       return { item_code: ln.dish.code, qty: ln.qty, note: ln.note,
                options: ln.choices.map(function (c) { return c.code; }) };
     });
+    var sig = JSON.stringify(lines);
+    key = key || keptKey(sig) || newKey();   // the same key until the order changes: a retry is never sent twice
+    keepKey(sig, key);
+    $("send").disabled = true;
+    $("send").textContent = W.sending;
     call("/gor/order", { key: key, lines: lines }).then(function (a) {
-      if (a.state === "sent") { basket = []; key = null; drawBasket(); note(say(a), true); }
+      if (a.state === "sent") { basket = []; key = null; keepKey(sig, null); drawBasket(); note(say(a), true); }
+      else if (a.state === "refused" || a.state === "closed") { key = null; keepKey(sig, null); note(say(a)); }
       else if (a.state === "unknown") { note(W.unknown); }
       else if (a.state === "unavailable") { note(W.lost); }     // it may have landed: the same key is sent again
       else { note(say(a)); }

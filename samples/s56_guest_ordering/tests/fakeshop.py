@@ -24,6 +24,7 @@ ITEMS = [
     {"name": "BURGER", "item_name": "Burger", "item_group": "Mains", "custom_mpos_option_only": 0},
     {"name": "SALAD", "item_name": "Green salad", "item_group": "Mains", "custom_mpos_option_only": 0},
     {"name": "OAT", "item_name": "Oat milk", "item_group": "Drinks", "custom_mpos_option_only": 1},
+    {"name": "GIFT", "item_name": "Gift card", "item_group": "Mains", "custom_mpos_option_only": 0, "custom_is_gift_card": 1},
 ]
 ROWS = [   # the dishes' Cross Selling Product Detail rows
     {"parent": "LATTE", "idx": 1, "item_code": "OAT", "item_name": "Oat milk", "price_type": "Amount", "price": 0.6,
@@ -69,6 +70,7 @@ class FakeTenant:
         self.n = itertools.count(1)
         self.clock = datetime.datetime(2026, 10, 29, 19, 0, 0)
         self.calls, self.sent = [], []
+        self.slow = set()
 
     def _gate(self, what):
         self.calls.append(what)
@@ -91,7 +93,7 @@ class FakeTenant:
         if doctype.endswith(" Store"):
             src = [dict(r) for s in self.settings.values() for r in s["stores"]]
         elif doctype == "Item":
-            src = [dict(i, is_sales_item=1, disabled=0, has_variants=0) for i in ITEMS]
+            src = [dict({"custom_is_gift_card": 0}, **dict(i, is_sales_item=1, disabled=0, has_variants=0)) for i in ITEMS]
         elif doctype == "Cross Selling Product Detail":
             assert parent == "Item"
             src = [dict(r) for r in ROWS]
@@ -130,13 +132,16 @@ class FakeTenant:
         if verb == "get_item_details":
             args = body["args"]
             assert "rate" not in args and "price_list_rate" not in args
+            if args["item_code"] in self.slow:
+                return {"item_code": args["item_code"]}             # the pricer gave no price in time
             return {"item_code": args["item_code"], "price_list_rate": PRICES.get(args["item_code"])}
         if verb == "floor_status":
             places = []
             for p in LABELS:
                 cs = [c for c in self.checks.values() if c.get("place") == p]
                 places.append({"place": p, "label": LABELS[p], "status": "seated" if cs else "free",
-                               "checks": [{"check": c["check"], "version": 1} for c in cs]})
+                               "checks": [{"check": c["check"], "version": 1,
+                                           "status": "paying" if c.get("paying") else "seated"} for c in cs]})
             tabs = [{"check": c["check"], "label": c.get("label")} for c in self.checks.values() if not c.get("place")]
             return {"store": query["store"], "sections": [], "places": places, "tabs": tabs}
         if self.door_refuse and verb == self.door_refuse[0]:

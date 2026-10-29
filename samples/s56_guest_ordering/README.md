@@ -12,15 +12,17 @@ Guests order for themselves. **At the table** a guest scans the table's QR code,
 | The guest's phone shows the **menu**: the register's item groups, each dish with its price, *Choose* for a dish with choices (each group's *choose 1* or *up to 2*, each choice with its price) | the guest scans the code. The prices are the register's price list before any offer: the page says so, and the bill is priced when it is paid |
 | The order is **on the table's bill**: the table's check opens if none is open there, or the lines join the one that is | the guest presses **Send order**. Each line waits unsent under the course *Guest order*, with the guest's note for the kitchen |
 | **Refused**: *more than one bill open, please ask your server* | the table holds two checks or more (the app cannot tell which party the guest is in) |
-| **Wait a few seconds** | another order for the same table was sent less than 15 seconds ago (one order a table at a time; also the flood limit) |
-| One order, never two | the guest presses **Send order** again, or the answer was lost: the page sends the same key, and the till's door returns its first answer |
-| A **tab** named *Kiosk 7KQ2* opens with the order; the guest reads *Your order is 7KQ2. Please pay at the counter.* | a guest orders at a kiosk. The counter finds the tab on the till's floor under *Tabs* and pays it as any check; the receipt's call number calls the order |
-| The old card **stops working**; the new one works | a code leaked (a photo posted online): press **Make code** again on that record and print its new card. Only that table's card changes |
+| **Refused**: *this table's bill is being paid, please ask your server* | a till is taking the table's payment: lines added now would sit outside it and keep the check open after the party leaves |
+| **Wait a few seconds** | another order for the same table was sent less than 15 seconds ago, from any of its cards (one order a table at a time; also the flood limit for orders) |
+| One order, never two | the guest presses **Send order** again, reloads the page or scans the card again within ten minutes with the same order after a lost answer: the page sends the same key, and the till's door returns its first answer |
+| A **tab** named *Kiosk 7KQ2M* opens with the order; the guest reads *Your order is 7KQ2M. Please pay at the counter.* | a guest orders at a kiosk. The counter finds the tab on the till's floor under *Tabs* and pays it as any check; the receipt's call number calls the order |
+| The old card **stops working** (within 15 seconds); the new one works | a code leaked (a photo posted online): press **Make code** again on that record and print its new card. Only that table's card changes |
+| The card prints *Press Make code first* instead of a QR code | the record was duplicated in Desk, or its kind, store, table or kiosk name changed since its code was made |
 | The code **stops working** until **Make code** is pressed again | the code's kind, store, table or kiosk name was changed after it was made, so a card printed for Table 12 never orders for another table |
 
 **The server's part.** A guest's lines carry the course *Guest order* (the store's own word if its row names one). When the server's own lines wait on the check too, the till's **Send** asks which course to send, so the server sees what the guest ordered before it goes to the kitchen. When a guest's lines are the only ones waiting, **Send** sends them with no question: read the check before you press it. A dish that cannot be made (out of stock) is removed at the till as any line.
 
-**No guest data.** The page asks no name, phone or e-mail and signs in to nothing; the service keeps no order (the check is the record).
+**No guest data.** The page asks no name, phone or e-mail and signs in to nothing; the service keeps no order (the check is the record). A note the guest types for the kitchen is kept on the check line like any note.
 
 | What the store sees (a demo store, the library copy *IVENDNEXT GOR*) | |
 |---|---|
@@ -33,12 +35,14 @@ Guests order for themselves. **At the table** a guest scans the table's QR code,
 1. Install `manifest.json` (the retailer's administrator, on the install screen; on your sandbox, `tools/deploy/deploy.py`). It adds `PP GOR Settings` and its table `PP GOR Store`, `PP GOR Code`, the print format *PP GOR Table card*, the roles **PP GOR Manager** and **PP GOR Integration**, the button *Make code* and its service (switched off), and the feed registration *PP GOR Guest ordering feed* (leave it off). The install also makes the app's own user, `pp_gor@integration.invalid`, holding PP GOR Integration alone.
 2. **The register and the tables.** The store's register (POS Profile) has **Table Service** ticked, lists the menu's **Item Groups** (each group listed: a group's sub-groups are not read; a register with none gives no menu) and its price list. The tables are the till's own floor: *Retail Floor Section* and its *Retail Floor Place* records for the store. A dish's choices are its own *Retail Option Groups* (HB-1). For the kiosk, the counter's register rings the same service mode as this one.
 3. **The app's user, in this order** (User `pp_gor@integration.invalid`): keep *Is Desk User* and tick **Is POS User**; choose a **Shift Profile** (any: it never opens a shift); link a **Retail Permission** with *Open Checks*: **open a check**, **add to a check** and **see the checks**, and nothing else; add **one row** to the store access table: the store and its register (Table Service on); **Save**; then **Generate Keys**. Without *Is POS User* the save drops the store row and every order is refused. ⚠ Never give it write on Floor Section, or *send to the kitchen*: a guest's order must wait for a person.
-4. In **Role Permissions Manager**, give **PP GOR Integration** **Read** on *Item*, *POS Profile* and *Retail Option Group* (the menu, its register and its choice groups). Give **PP GOR Manager** to the people who make the codes, and give it **Read** and **Select** on *Retail Floor Place* (so the form shows the table's name) and **Select** on *Warehouse*.
+4. In **Role Permissions Manager**, give **PP GOR Integration** **Read** on *Item*, *POS Profile* and *Retail Option Group* (the menu, its register and its choice groups). Give **PP GOR Manager** to the people who make the codes, and give it **Read** and **Select** on *Retail Floor Place* (so the form shows the table's name) and **Select** on *Warehouse*. A manager of one store gets a **User Permission** on *Warehouse* for that store, so their codes, list and button reach that store's records alone.
 5. Make a **PP GOR Settings** record for the company: a row per store with **the same register** the app's user holds there, *Orders from the tables* and *Orders from the kiosk*, the course word, and the most lines an order and the most of one dish (10 and 10 unless set).
 6. In **Retail Extension Subscription**, open *Make code service*, read what it is sent, tick the consent and switch it on; switch the button on in **Retail Desk Action**. Press **Connect again** on the app's package record if the site could not reach the app, or the key was made after the install.
-7. Make a *PP GOR Code* for each table (kind *Table*, the store, the table) and for each kiosk (kind *Kiosk*, the store, a name), press **Make code**, print the cards, and open each kiosk's link on its tablet.
+7. Make a *PP GOR Code* for each table (kind *Table*, the store, the table) and for each kiosk (kind *Kiosk*, the store, a name), press **Make code**, print the cards, and open each kiosk's link on its tablet in a full-screen kiosk browser, so its address is not on show: a kiosk link copied from the tablet lets anyone open unpaid tabs (one every 15 seconds) until **Make code** is pressed again.
 
-**Before you remove the app:** pay or close every check it opened (the uninstall deletes the app's user, and a check that user opened can then no longer be changed). A reinstall makes new secrets: every code is made and printed again.
+**Before you remove the app:** pay or close every check it opened (the uninstall deletes the app's user, and a check that user opened can then no longer be changed). A reinstall, or a new secret on the *Make code service*, makes every printed card stop working: make every code again and print it. *Connect again* resends the same secret and changes nothing.
+
+**Limits.** A check the app opened can be left empty: a guest's order whose dish the till refuses at a free table (an item switched off since the menu was read), or a retry after the bill was paid; the server closes it at the till. A till opening a check at the same moment as a guest's first order can leave two checks at the table; guest orders there are then refused until the server merges them. A store named on two companies' settings uses the first row found. One retailer's own service (no App library) takes one secret: changing it stops every card at once.
 
 ## What leaves the retailer's iVendNext
 
@@ -47,7 +51,7 @@ iVendNext calls nothing outside but the service's own address (`allowed_urls`), 
 ## Run it
 
 ```bash
-python3 -m unittest discover -s samples/s56_guest_ordering/tests -p 'test_*.py'   # 57 tests, the service with a stand-in shop
+python3 -m unittest discover -s samples/s56_guest_ordering/tests -p 'test_*.py'   # 66 tests, the service with a stand-in site
 python3 samples/s56_guest_ordering/tests/canaries.py                                # each guard turned off: its test goes RED
 python3 tools/check/check.py samples/s56_guest_ordering                            # the retailer's own install checks
 ```

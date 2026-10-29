@@ -28,7 +28,8 @@ class Clock:
 
 def service(shop, clock=None):
     conf = {"IVN_SHOP_URL": f"https://{F.SITE}", "IVN_SHOP_KEY": "k:s", "IVN_CODE_SECRET": F.SECRET, "GOR_PAGE_URL": F.PAGE}
-    return app.Service(conf, tenant=shop, now=clock or Clock())
+    clock = clock or Clock()
+    return app.Service(conf, tenant=shop, now=clock, clock=clock)
 
 
 def press(svc, names, secret=F.SECRET, ts=None, doctype="PP GOR Code"):
@@ -90,6 +91,7 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(guest(self.svc, "/gor/menu", old)[1]["state"], "open")
         new = made(self.shop, self.svc)
         self.assertEqual(self.shop.codes["GOR-CODE-00001"]["number"], 2)
+        self.clock.t += app.CODE_KEEP_S                                  # a copy that read the old code keeps it this long
         self.assertEqual(guest(self.svc, "/gor/menu", old), (404, {"state": "unknown"}))
         self.assertEqual(guest(self.svc, "/gor/menu", new)[1]["state"], "open")
 
@@ -126,12 +128,14 @@ class ServiceTest(unittest.TestCase):
     def test_g2_a_code_whose_table_changed_since_it_was_made_is_refused(self):
         t = made(self.shop, self.svc)
         self.shop.codes["GOR-CODE-00001"]["place"] = F.T14
+        self.clock.t += app.CODE_KEEP_S
         self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()]), (404, {"state": "unknown"}))
         self.assertEqual(self.shop.checks, {})
 
     def test_g3_the_stores_switch_off_answers_ask_staff(self):
         t = made(self.shop, self.svc)
         self.shop.settings[F.CO]["stores"][0]["tables_on"] = 0
+        self.clock.t += app.CODE_KEEP_S
         code, out = guest(self.svc, "/gor/menu", t)
         self.assertEqual((code, out["state"], out["say"]), (200, "closed", "ask_staff"))
 
@@ -250,11 +254,69 @@ class ServiceTest(unittest.TestCase):
             self.assertEqual(guest(self.svc, "/gor/order", t, key=k, lines=[latte()]), (400, {"state": "unknown"}))
         self.assertEqual(self.shop.checks, {})
 
+    def test_o10_a_bill_being_paid_takes_no_guest_order(self):
+        self.shop.checks["CHK-PAY"] = {"check": "CHK-PAY", "place": F.T12, "lines": [], "paying": 1}
+        t = made(self.shop, self.svc)
+        out = guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]
+        self.assertEqual((out["state"], out["say"]), ("refused", "paying"))
+        self.assertEqual(self.shop.checks["CHK-PAY"]["lines"], [])
+
+    def test_o11_one_order_a_table_even_with_two_cards_on_it(self):
+        self.shop.codes["GOR-CODE-00003"] = F.code("GOR-CODE-00003")      # a second card at the same table
+        t1, t3 = made(self.shop, self.svc), made(self.shop, self.svc, "GOR-CODE-00003")
+        self.assertEqual(guest(self.svc, "/gor/order", t1, key=ORDER, lines=[latte()])[1]["state"], "sent")
+        k2 = "3f1c2b9e-0d4a-4c1e-9a3b-1f2e3d4c5b6a"
+        self.assertEqual(guest(self.svc, "/gor/order", t3, key=k2, lines=[latte()])[1]["state"], "wait")
+        self.assertEqual(len(self.shop.checks), 1)
+
+    def test_o12_a_body_the_page_never_sends_is_refused_and_nothing_is_written(self):
+        t = made(self.shop, self.svc)
+        for i, lines in enumerate(([{"item_code": ["LATTE"]}], [latte(options=[{"a": 1}])], [latte(options=[["OAT"]])],
+                                   [{"item_code": {"x": 1}}])):
+            self.clock.t += gor.SPACING_S
+            code, out = guest(self.svc, "/gor/order", t, key=f"{ORDER[:-2]}{i:02d}", lines=lines)
+            self.assertEqual((code, out["state"]), (200, "refused"), lines)
+        self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()], s=["x"])[0], 400)
+        self.assertEqual(self.shop.checks, {})
+
+    def test_o13_a_table_switched_off_after_the_floor_read_is_ask_staff_not_sent(self):
+        t = made(self.shop, self.svc)
+        self.shop.door_refuse = ("check_open", "CheckRequestError", 417)
+        out = guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]
+        self.assertEqual((out["state"], out["say"]), ("closed", "ask_staff"))
+
+    def test_m4_a_gift_card_in_a_menu_group_is_not_on_the_menu(self):
+        t = made(self.shop, self.svc)
+        self.assertNotIn("GIFT", gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"]))
+
+    def test_m5_a_menu_with_a_late_price_is_read_again_soon(self):
+        t = made(self.shop, self.svc)
+        self.shop.slow = {"SALAD"}
+        self.assertIsNone(gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])["SALAD"]["price"])
+        self.shop.slow = set()
+        self.clock.t += app.MENU_SHORT_S
+        self.assertEqual(gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])["SALAD"]["price"], 7.5)
+
+    def test_m6_a_flood_of_calls_on_one_code_reads_the_retailer_once_a_copy(self):
+        t = made(self.shop, self.svc)
+        guest(self.svc, "/gor/menu", t)
+        before = list(self.shop.calls)
+        for _ in range(50):
+            guest(self.svc, "/gor/menu", t)
+        self.assertEqual(self.shop.calls, before)
+
+    def test_c7_a_link_too_long_for_a_qr_code_is_said_and_nothing_written(self):
+        svc = app.Service({"IVN_SHOP_URL": f"https://{F.SITE}", "IVN_SHOP_KEY": "k:s", "IVN_CODE_SECRET": F.SECRET,
+                           "GOR_PAGE_URL": "https://" + "p" * 150 + ".example.app"}, tenant=self.shop, now=self.clock)
+        out = answer(press(svc, ["GOR-CODE-00001"]))[1]
+        self.assertIn("too long for a QR code", out["message"]["body"])
+        self.assertEqual(self.shop.codes["GOR-CODE-00001"]["number"], 0)
+
     # ── the kiosk ──
     def test_k1_a_kiosk_order_opens_a_tab_named_by_its_code_and_a_retry_opens_none(self):
         t = made(self.shop, self.svc, "GOR-CODE-00002")
         out = guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]
-        self.assertEqual((out["state"], out["say"], out["code"]), ("sent", "sent_kiosk", gor.kiosk_code(ORDER)))
+        self.assertEqual((out["state"], out["say"], out["code"]), ("sent", "sent_kiosk", gor.kiosk_code(ORDER, F.SECRET.encode())))
         (chk,) = self.shop.checks.values()
         self.assertEqual((chk["place"], chk["label"], chk["covers"]), (None, f"Kiosk {out['code']}", 1))
         self.clock.t += gor.SPACING_S

@@ -67,6 +67,9 @@ READ_S = 4.0                         # one read, within the budget
 PRICERS = 8                          # prices asked at once
 MENU_KEEP_S = 120                    # a store's menu is read again after this
 MENU_CACHE_MAX = 200                 # stores whose menu one copy keeps
+MENU_SHORT_S = 10                    # a menu some of whose prices the pricer did not give in time is kept only this long
+CODE_KEEP_S = 15                     # a verified code and its store's row, kept so a flood of calls on one code reads
+                                     # the retailer once per copy this often (a code made again stops within this time)
 STATIC = {"/": ("page.html", "text/html; charset=utf-8"), "/page.js": ("page.js", "text/javascript; charset=utf-8"),
           "/page.css": ("page.css", "text/css; charset=utf-8")}
 CODE_FIELDS = ["name", "kind", "store", "place", "kiosk_name", "number", "modified"]
@@ -88,6 +91,7 @@ SENT_TWICE = "This order was already sent once. Please ask your server to check 
 WAIT = "An order for this table was sent a moment ago. Please send yours again in a few seconds."
 ITEM_REFUSED = "Something in your order cannot be ordered now. Please ask your server."
 CHANGED = "This table's bill changed a moment ago. Please send your order again."
+PAYING = "This table's bill is being paid. Please ask your server."
 SENT_TABLE = "Your order is on your table's bill. Your server will confirm it with you."
 SENT_KIOSK = "Your order is {code}. Please pay at the counter."
 
@@ -207,6 +211,7 @@ class Service:
         self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
         self.received = []
         self._menus: dict[tuple, tuple] = {}
+        self._codes: dict[tuple, tuple] = {}
         self._lock = threading.Lock()
 
     def retailer(self, site) -> tuple[str, list[bytes], object | None]:
@@ -222,10 +227,12 @@ class Service:
         door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
         return site or "", secrets, door
 
-    def space(self, site: str, code: str):
-        """One order per code every ``SPACING_S`` seconds: a claim every copy of the function sees (the shops table's
-        conditional write), or this process's own clock for one retailer. ``Busy`` when it is taken."""
-        name = f"gor|{site}|{code}"
+    def space(self, site: str, c: dict):
+        """One order per table (or kiosk) every ``SPACING_S`` seconds: a claim every copy of the function sees (the shops
+        table's conditional write), or this process's own clock for one retailer. ``Busy`` when it is taken. A table's
+        claim names its store and place, so two code records for one table share it."""
+        where = f"{c.get('store')}|{c.get('place')}" if c.get("kind") == gor.KIND_TABLE else c.get("name")
+        name = f"gor|{site}|{where}"
         now = self.now()
         if self.app:
             if not self.store.claim(name, now, gor.SPACING_S):
@@ -266,7 +273,7 @@ class Service:
             raise gor.Refused("")                         # no menu groups on the register: the guest asks staff
         items = door.rows("Item", ["name", "item_name", "item_group", "custom_mpos_option_only"],
                           [["item_group", "in", groups], ["is_sales_item", "=", 1], ["disabled", "=", 0],
-                           ["has_variants", "=", 0]], limit=gor.MENU_MAX)
+                           ["has_variants", "=", 0], ["custom_is_gift_card", "=", 0]], limit=gor.MENU_MAX)
         dishes = [i["name"] for i in items if isinstance(i.get("name"), str)]
         rows = door.rows("Cross Selling Product Detail",
                          ["parent", "idx", "item_code", "item_name", "price_type", "price", "discount_type", "discount",
@@ -280,10 +287,12 @@ class Service:
         need = dishes + sorted({r["item_code"] for r in rows if r.get("item_code") and r.get("price_type") != "Amount"})
         prices = self.prices(door, reg, list(dict.fromkeys(need)), t0)
         menu = gor.menu_of(items, rows, meta, prices, groups)
+        late = any(v is None for v in prices.values())      # kept briefly: a slow site is read again, not shown blank
         with self._lock:
             if len(self._menus) >= MENU_CACHE_MAX:
                 self._menus.pop(next(iter(self._menus)))
-            self._menus[key] = (self.clock(), menu, reg.get("currency") or "")
+            kept_at = self.clock() - (MENU_KEEP_S - MENU_SHORT_S if late else 0)
+            self._menus[key] = (kept_at, menu, reg.get("currency") or "")
         return menu, reg.get("currency") or ""
 
     def prices(self, door, reg: dict, codes: list[str], t0: float) -> dict:
@@ -337,7 +346,13 @@ class Service:
             number = gor.num(c.get("number")) + 1
             link = gor.link_of(self.page, site, name, number, secret)
             try:
-                door.update(gor.dt("Code"), name, {"number": number, "link": link, "qr": qr.svg_data_uri(link),
+                picture = qr.svg_data_uri(link)
+            except ValueError:
+                problems.append(f"{name}: its link is {len(link.encode())} bytes, too long for a QR code (at most 213): "
+                                "use a shorter page address.")
+                continue
+            try:
+                door.update(gor.dt("Code"), name, {"number": number, "link": link, "qr": picture,
                                                    "made_for": gor.made_for(c), "modified": c.get("modified")})
             except TenantError as e:
                 if e.kind != STALE:
@@ -378,9 +393,9 @@ class Service:
             return 502, {"error": str(e)}
 
     # ── the guest's page ──
-    def guest(self, body: dict) -> tuple[str, object, dict, dict, dict]:
-        """(the site, the door, the code record, the store's row, the code's words) a guest's call names, or an
-        answer to give back at once (raised as ``_Answer``)."""
+    def guest(self, body: dict) -> tuple[str, object, dict, dict, dict, bytes]:
+        """(the site, the door, the code record, the store's row, the code's words, the retailer's current secret) a
+        guest's call names, or an answer to give back at once (raised as ``_Answer``)."""
         try:
             site, secrets, door = self.retailer(body.get("s"))
         except Exception:               # noqa: BLE001 — the shops store did not answer
@@ -390,15 +405,24 @@ class Service:
             raise _Answer(404, {"state": "unknown"})
         if door is None:
             raise _Answer(503, {"state": "unavailable"})
-        c = self.code(door, *found)
-        if c is None:                   # gone, or made again since this code was printed
-            raise _Answer(404, {"state": "unknown"})
+        key = (site, *found)
+        kept = self._codes.get(key)
+        if kept and self.clock() - kept[0] < CODE_KEEP_S:
+            c, row = kept[1], kept[2]
+        else:
+            c = self.code(door, *found)
+            if c is None:               # gone, or made again since this code was printed
+                raise _Answer(404, {"state": "unknown"})
+            row = self.row(door, c.get("store") or "")
+            with self._lock:
+                if len(self._codes) >= MENU_CACHE_MAX * 10:
+                    self._codes.clear()
+                self._codes[key] = (self.clock(), c, row)
         table = c.get("kind") == gor.KIND_TABLE
-        row = self.row(door, c.get("store") or "")
         if not row or not gor.num(row.get("tables_on" if table else "kiosk_on")) or not row.get("register"):
             raise _Answer(200, _say("closed", "ask_staff", ASK_STAFF) if table else
                           _say("closed", "ask_staff_kiosk", ASK_STAFF_KIOSK))
-        return site, door, c, row, {"kind": c["kind"], "where": c.get("place_label") or c.get("kiosk_name") or ""}
+        return site, door, c, row, {"kind": c["kind"], "where": c.get("place_label") or c.get("kiosk_name") or ""}, secrets[0]
 
     def page_call(self, path: str, raw: bytes) -> tuple[int, dict]:
         try:
@@ -408,7 +432,7 @@ class Service:
         if not isinstance(body, dict) or not isinstance(body.get("s"), str):
             return 400, {"state": "unknown"}
         try:
-            site, door, c, row, where = self.guest(body)
+            site, door, c, row, where, secret = self.guest(body)
             closed = _say("closed", "ask_staff", ASK_STAFF) if c["kind"] == gor.KIND_TABLE else \
                 _say("closed", "ask_staff_kiosk", ASK_STAFF_KIOSK)
             try:
@@ -419,13 +443,14 @@ class Service:
                 return 200, {"state": "open", **where, "menu": menu, "currency": currency,
                              "most_lines": gor.setting(row.get("most_lines"), gor.LINES),
                              "most_qty": gor.setting(row.get("most_qty"), gor.QTY)}
-            return self.order(door, site, c, row, menu, body, closed)
+            return self.order(door, site, c, row, menu, body, closed, secret)
         except _Answer as a:
             return a.code, a.body
         except TenantError as e:
             return (404, {"state": "unknown"}) if e.code == 404 else (503, {"state": "unavailable"})
 
-    def order(self, door, site: str, c: dict, row: dict, menu: list, body: dict, closed: dict) -> tuple[int, dict]:
+    def order(self, door, site: str, c: dict, row: dict, menu: list, body: dict, closed: dict,
+              secret: bytes = b"") -> tuple[int, dict]:
         key = gor.page_key(body.get("key"))
         if not key:
             return 400, {"state": "unknown"}
@@ -436,7 +461,7 @@ class Service:
         except gor.Refused as r:
             return 200, {"state": "refused", "say": "order", "words": r.words}
         try:
-            self.space(site, c["name"])
+            self.space(site, c)
         except Busy:
             return 200, _say("wait", "wait", WAIT)
         store, register, table = c["store"], row["register"], c["kind"] == gor.KIND_TABLE
@@ -448,10 +473,17 @@ class Service:
                 checks = [k for k in place.get("checks") or [] if isinstance(k, dict) and k.get("check")]
                 if len(checks) > 1:
                     return 200, _say("refused", "many_bills", MANY_BILLS)
+                if checks and checks[0].get("status") == "paying":    # its new lines would sit outside the payment
+                    return 200, _say("refused", "paying", PAYING)
                 check = checks[0]["check"] if checks else self.open(door, store, register, key, c, place=c["place"])
             else:
-                code = gor.kiosk_code(key)
+                code = gor.kiosk_code(key, secret)
                 check = self.open(door, store, register, key, c, label=f"Kiosk {code}")
+        except TenantError as e:            # the open: nothing was added; a place switched off since the floor read
+            if not e.refused:
+                raise
+            return 200, closed
+        try:
             door.call("check_add_lines", {"check": check, "lines": lines, "key": gor.door_key(key, "add")})
         except TenantError as e:
             if not e.refused:
