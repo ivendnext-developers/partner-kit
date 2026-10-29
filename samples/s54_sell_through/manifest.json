@@ -77,7 +77,8 @@
      "label": "Sold",
      "read_only": 1,
      "in_list_view": 1,
-     "columns": 1
+     "columns": 1,
+     "precision": "0"
     },
     {
      "fieldname": "in_stock",
@@ -85,7 +86,8 @@
      "label": "In stock",
      "read_only": 1,
      "in_list_view": 1,
-     "columns": 1
+     "columns": 1,
+     "precision": "0"
     },
     {
      "fieldname": "sell_through",

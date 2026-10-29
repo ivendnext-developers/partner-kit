@@ -106,6 +106,8 @@ What a partner usually changes:
 
 - **The till's sales only, as the report counts them.** *POS Sale Report* counts every submitted till sale (POS Invoice), returns taken off, by the units on the sale's line; it has no filter by kind of sale. A till order not yet delivered is counted sold while its unit is still in stock, and a pack unit is counted in packs while stock is counted in the stock unit (measured on our test bench with plain sales in the stock unit only).
 - **An item past its end of life** keeps its sales, but *Stock Projected Quantity* leaves it out, so it reads as none left.
+- **A store is one warehouse.** *POS Sale Report* matches the store exactly, and the app keeps only that warehouse's own stock: a group warehouse chosen as a store reads as nothing sold and nothing in stock.
+- **A disabled variant** is left out of the run, sales and all.
 - **Dates:** the sales are read from *Sold since* to UTC's tomorrow, so a store ahead of UTC never misses today's sales; no sale is dated later. The service writes no time: the run's own activity shows when it wrote, in the site's time zone (a time it wrote in UTC would read hours wrong there, measured on our test bench).
 - **At most** 20 stores, 5,000 item attribute rows and 1,000 rows a run.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. The first press after a quiet spell starts the function (1 to 2.5 seconds, measured on earlier apps), inside the button's 10.
