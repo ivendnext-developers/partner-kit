@@ -9,6 +9,15 @@ Guests in quick service and full service expect to order from their phone at the
 **The four rules, here.** No code runs inside the retailer's iVendNext. One address is called, your service: by the *Make code* button, and by the guest's phone. The service writes to a check only through the till's door (`check_open`, `check_add_lines`), as the app's own user, with the three rights guest ordering asks for: *open a check*, *add to a check* and *see the checks*. ⛔ Never *send to the kitchen*: a guest's lines wait for a person. The page asks no name, phone or e-mail.
 
 
+## What the guest and the store see
+
+| | |
+|---|---|
+| The printed table card: the table's name, its QR code and *Scan to order* | ![The table card printed on a demo site](../samples/s56_guest_ordering/screenshots/01_table_card.png) |
+| A dish's choices on the guest's phone | ![The latte's milk choices](../samples/s56_guest_ordering/screenshots/03_choices.png) |
+| The order before sending, with a note for the kitchen | ![The guest's order before Send order](../samples/s56_guest_ordering/screenshots/04_order.png) |
+| After **Send order** at a kiosk: the order code, paid at the counter | ![A kiosk's order code](../samples/s56_guest_ordering/screenshots/06_kiosk_code.png) |
+
 ## Steps
 
 ### Settings
@@ -50,7 +59,7 @@ Day to day the guests order and the servers work the checks at the till as befor
 - A table with more than one bill open takes no guest order until the server merges or pays one.
 - A guest's lines show on the till under their course and note, not as the guest's: when they are the only lines waiting, *Send* sends them with no question.
 - The menu is the register's listed item groups (no sub-groups), at most 300 dishes; dish names are the retailer's own words as written. No pictures, allergens or *sold out*.
-- A check the app opens has no party size; the server sets it at the till.
+- A check the app opens at a table is for the table's usual party size, and a kiosk tab for one; the server corrects it at the till.
 - A reinstall makes new secrets: every code is made and printed again. A new secret on the *Make code service* is accepted beside the old one until the next *Connect again*; to stop one card, press *Make code* on it.
 - A dish with no price on the register's price list shows 0.00.
 - Ordering needs a connection: nothing here works offline.
