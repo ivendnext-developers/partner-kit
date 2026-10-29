@@ -12,7 +12,7 @@ The retailer decides which payment methods each group of its customers may use a
 |---|---|
 | A sale for a customer whose group's rule leaves methods out | The payment screen opens with those methods dimmed: *"Not for this sale: Talabat customers pay with Talabat."* The cashier takes one that is not |
 | A rule that leaves out every method this till offers | *"This sale can't be paid"* and *"Customers in Talabat can't pay at this till: use one with Talabat."* |
-| A sale below a method's *From a sale of* (Loyalty Points from 2,000, say) | That method dimmed: *"This sale is NGN 1,500.00; Loyalty Points needs a sale of NGN 2,000.00."* (or the rule's own words). From the amount on, it is offered |
+| A sale below a method's *From a sale of* (Loyalty Points from 2,000, say) | The method's tile dimmed: *"Not for this sale: This sale is NGN 1,500.00; Loyalty Points needs a sale of NGN 2,000.00."* (or the rule's own words). The till's loyalty form still shows when the customer has points: a redemption entered anyway is refused when the payment completes, in those words. From the amount on, the method is offered |
 | No rule for the customer's group, or for any group above it | The payment screen opens as always |
 | A refund, the returned items of an exchange, a return rung without its sale | Not judged: the refund choices open as always |
 | An exchange's new items | Judged as a sale. An exchange pays them with store credit: an *Only these* rule that does not list the store-credit method stops that group's exchanges |
@@ -27,7 +27,7 @@ The retailer decides which payment methods each group of its customers may use a
 
 A customer in *Retail* (under *All Customer Groups*) cannot buy on account; a customer in *Account customers*, or a group below it, can.
 
-**A minimum sale for a method** (version 1.1.0). Each method row may name an amount, *From a sale of*: under either kind of rule, that method pays only for a sale of at least that amount (the sale's total as paid: rounded, after discounts, tax included; equal is enough). Loyalty points pay through the method *Loyalty Points*, so a retailer that lets points pay only from a sale of 2,000 writes one rule on *All Customer Groups*: *Every payment method but these*, *Loyalty Points*, from a sale of 2,000. A group with its own rule adds the same row to it, since one rule decides, whole. A row with no amount means what it meant before. The amount is read in the sale's own currency.
+**A minimum sale for a method** (version 1.1.0). Each method row may name an amount, *From a sale of*: under either kind of rule, that method pays only for a sale of at least that amount (the sale's total as paid: rounded, after discounts, tax included; equal is enough). Loyalty points pay through the method *Loyalty Points*, so a retailer that lets points pay only from a sale of 2,000 writes one rule on *All Customer Groups*: *Every payment method but these*, *Loyalty Points*, from a sale of 2,000. A group with its own rule adds the same row to it, since one rule decides, whole. A row with no amount means what it meant before; a method on several rows takes the strictest (the largest amount, and under *Every payment method but these* a row with no amount keeps it out at any total). The amount is read in the sale's own currency, against the sale's total before any payment method's own discount. **Loyalty Points must be one of the till's payment methods** (on the POS Profile, or its Payment Template): the check can only leave out a method the till offers, and the till pays points without one. The Mode of Payment's own minimum amount is a different rule: the least one payment by that method may be, never the sale's size.
 
 | What the retailer sees (on a demo site, 2026-10-23) | |
 |---|---|
@@ -121,6 +121,7 @@ What a partner usually changes:
 - **A sale only.** A refund, a return against a sale, the returned items of an exchange and a return without its sale (`stage: "return"`) are allowed without reading iVendNext, a return without its sale that also sells included (the contract would judge its sold lines). An exchange's replacement basket is `stage: "sale"` and is judged.
 - **Methods together.** The check answers before the cashier picks a method, so a rule cannot say *these two not in one sale*.
 - **A minimum sale is judged at Pay,** on the sale's whole total, never on what is left to pay after another method; one amount per method per rule, read in the sale's own currency.
+- **A split payment.** The split screen reads no exclusion for its legs: when a card leg is taken first and a loyalty leg added after, the door that books the sale cannot refuse money already taken, so it books the sale and flags it on *Sales to review*.
 - **A rule per customer group.** A customer's own rule is a group of their own.
 - **Offline,** the till does not call the service: the down answer applies and the sale is flagged when it syncs.
 - **Where the check never runs:** a park to a till, a layaway deposit, an account collection (the check page, *Not in this version*) and the Desk's own POS screen.

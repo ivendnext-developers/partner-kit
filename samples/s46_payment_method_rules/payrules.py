@@ -17,7 +17,10 @@ with ``exclude_tenders``: the till draws those methods dimmed with the rule's wo
 out with the rule's words, or the app's naming the amount; from it, it is offered. A row without an amount keeps 1.0's
 meaning, and a method on two rows takes the largest amount. The amount is read in the sale's own currency, rounded up to
 its minor unit (a minimum), against ``totals.grand_minor``: the sale's total as rounded for payment, after its
-discounts, tax included. Equal is enough. Loyalty points pay through the method named *Loyalty Points*, so a rule on the
+discounts, tax included, before any payment method's own discount. Equal is enough. A method on several rows takes the
+strictest. The till draws an excluded method's tile dimmed, but its loyalty form shows whenever the customer has points:
+a redemption below the amount is refused when the payment completes, and on a split whose card leg was taken first it
+books and is flagged for review (the till's own doors, ``partner_check.Door.verify``). Loyalty points pay through the method named *Loyalty Points*, so a rule on the
 top customer group, *Every payment method but these*, *Loyalty Points* from 2,000, is NETT's rule for every customer.
 
 Only a sale is judged (``stage: "sale"``), and an exchange's replacement basket is one (the check page, section 1): it pays
@@ -102,12 +105,13 @@ def _amount(value) -> Decimal:
 
 def rules_of(rows) -> dict:
     """The shop's switched-on rules, from its list read (one row per method, a rule with no method once with none):
-    ``{group: {"kind": ONLY | BUT, "methods": set, "from": {method: amount}, "words": str}}`` (``from`` holds only the
-    methods with an amount, each the largest named for it). A row with no group, or a kind this app does not know,
+    ``{group: {"kind": ONLY | BUT, "methods": set, "from": {method: amount}, "words": str}}``. ``from`` holds the methods
+    with an amount, a method on several rows taking the strictest: the largest amount, and under *Every payment method but
+    these* a row with no amount keeps the method out at any total (a blank row is never loosened by another). A row with no group, or a kind this app does not know,
     is left out (that group then takes the rule above it). Anything that is not a list of records is ``ValueError``."""
     if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
         raise ValueError("the shop's rules are not a list of records")
-    out = {}
+    out, bare = {}, set()
     for r in rows:
         group, kind = r.get("customer_group"), r.get("kind")
         if not isinstance(group, str) or not group or kind not in (ONLY, BUT):
@@ -119,8 +123,13 @@ def rules_of(rows) -> dict:
         if isinstance(method, str) and method:
             rule["methods"].add(method)
             amount = _amount(r.get("min_sale"))
-            if amount > rule["from"].get(method, 0):
+            if not amount:
+                bare.add((group, method))
+            elif amount > rule["from"].get(method, 0):
                 rule["from"][method] = amount
+    for group, method in bare:
+        if out[group]["kind"] == BUT:       # always out: an amount on another row never lets it through
+            out[group]["from"].pop(method, None)
     return out
 
 
@@ -211,7 +220,7 @@ def on_check(ctx: dict, rules: dict, tree: dict) -> dict:
     if not out:
         return {"verdict": "allow"}
     if len(out) == len(offered) and short:
-        return {"verdict": "refuse", "reason": _short_words(short, need, ctx, ", and no other method is offered.")}
+        return {"verdict": "refuse", "reason": _short_words(short, need, ctx, ", and the rule allows no other method here.")}
     if len(out) == len(offered):
         takes = ", ".join(sorted(rule["methods"])) if rule["kind"] == ONLY and rule["methods"] else "another payment method"
         return {"verdict": "refuse", "reason": plain(       # 52 characters + a group of 30 + a list of 58: at most 140
@@ -221,6 +230,7 @@ def on_check(ctx: dict, rules: dict, tree: dict) -> dict:
             f"This till offers more payment methods than the rule for customers in {plain(group, 40)} can switch off. "
             "Ask your administrator.")}
     own = plain(rule["words"])
-    if not own.strip(MARKS) and out == short:   # every method out by its amount, and no words of the retailer's own
-        return {"verdict": "allow", "exclude_tenders": out, "reason": _short_words(short, need, ctx)}
+    if short and not own.strip(MARKS):   # the amount first (the contract carries one reason for every method left out)
+        tail = "." if out == short else f". {_reason(group, rule)}"
+        return {"verdict": "allow", "exclude_tenders": out, "reason": _short_words(short, need, ctx, tail)}
     return {"verdict": "allow", "exclude_tenders": out, "reason": _reason(group, rule)}

@@ -57,7 +57,8 @@ import shops  # noqa: E402
 
 KEY, ROUTE = "methods", "/pmr/check"   # the subscription's key in the manifest; its secret is "<app>:sub:<key>"
 RULES_TTL, READ_TIMEOUT = 60, 0.9      # one step (the rules and the tree at once) inside the check's 3 s; two
-                                       # reads of the rules for a retailer on 1.0.x (a 417 first), 1.8 s at most
+                                       # reads of the rules for a retailer on 1.0.x (a 417 first), each with its own
+                                       # socket timeout (a bound per socket operation, not per read)
 
 
 class ShopUnreadable(Exception):
@@ -107,6 +108,7 @@ class ShopApi:
         try:
             return self._list(url, key, prefix + " Rule", payrules.RULE_FIELDS, [["enabled", "=", 1]])
         except FieldMissing:
+            print(json.dumps({"read": "rules", "fields": "listed"}), file=sys.stderr, flush=True)   # a 1.0.x retailer
             return self._list(url, key, prefix + " Rule", payrules.RULE_FIELDS_LISTED, [["enabled", "=", 1]])
 
     def tree(self, url: str, key: str) -> list:

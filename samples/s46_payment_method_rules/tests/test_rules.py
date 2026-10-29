@@ -204,7 +204,8 @@ class FromASale(unittest.TestCase):
         self.assertEqual(out["exclude_tenders"], ["Credit Card"])
         out = self.ask(rows(BUT, "Credit Card", (LP, 2000)), 150000)
         self.assertEqual(out["exclude_tenders"], ["Credit Card", LP])
-        self.assertEqual(out["reason"], "Not for customers in All Customer Groups.")   # mixed: the rule's words
+        self.assertEqual(out["reason"], "This sale is AED 1,500.00; Loyalty Points needs a sale of AED 2,000.00. "
+                                        "Not for customers in All Customer Groups.")   # mixed: the amount first
 
     def test_only_these_offers_a_method_with_an_amount_only_from_it(self):
         only = rows(ONLY, "Cash", (LP, 2000))
@@ -218,7 +219,7 @@ class FromASale(unittest.TestCase):
     def test_nothing_left_to_pay_with_is_refused_naming_the_amount(self):
         out = self.ask(rows(ONLY, (LP, 2000)), 150000, offered=["Cash", LP])
         self.assertEqual(out, {"verdict": "refuse", "reason": "This sale is AED 1,500.00; Loyalty Points needs a sale of "
-                                                              "AED 2,000.00, and no other method is offered."})
+                                                              "AED 2,000.00, and the rule allows no other method here."})
 
     def test_the_amount_is_rounded_up_to_the_sales_minor_unit(self):
         rule = rows(BUT, (LP, "19.991"))                   # needs 20.00: a minimum is never rounded down
@@ -228,10 +229,15 @@ class FromASale(unittest.TestCase):
                                   payrules.rules_of(rule), TREE)
         self.assertEqual(three, {"verdict": "allow"})       # KWD 19.991 is enough at three decimals
 
-    def test_a_method_on_two_rows_takes_the_largest_amount(self):
-        rule = rows(BUT, (LP, 2000), (LP, 500), (LP, None))   # the larger first: a later, smaller row never wins
-        self.assertEqual(payrules.rules_of(rule)["All Customer Groups"]["from"], {LP: 2000})
-        self.assertEqual(self.ask(rule, 150000)["exclude_tenders"], [LP])
+    def test_a_method_on_two_rows_takes_the_strictest(self):
+        only = rows(ONLY, "Cash", (LP, 2000), (LP, 500), (LP, None))   # the larger first: a later, smaller row never wins
+        self.assertEqual(payrules.rules_of(only)["All Customer Groups"]["from"], {LP: 2000})
+        self.assertEqual(self.ask(only, 150000)["exclude_tenders"], ["Credit Card", LP])
+        self.assertEqual(self.ask(only, 250000)["exclude_tenders"], ["Credit Card"])
+        but = rows(BUT, (LP, None), (LP, 2000))           # every method but these: a blank row keeps it out at any total
+        self.assertEqual(payrules.rules_of(but)["All Customer Groups"]["from"], {})
+        self.assertEqual(self.ask(but, 250000)["exclude_tenders"], [LP])
+        self.assertEqual(self.ask(rows(BUT, (LP, 2000), (LP, None)), 250000)["exclude_tenders"], [LP])   # either order
 
     def test_a_blank_zero_negative_or_odd_amount_keeps_the_rules_meaning(self):
         for amount in (None, "", 0, "0", -5, "abc", True, float("nan"), float("inf"), [1]):
@@ -240,9 +246,21 @@ class FromASale(unittest.TestCase):
             self.assertEqual(self.ask(rows(BUT, (LP, amount)), 999999)["exclude_tenders"], [LP], amount)
 
     def test_a_retailer_on_the_listed_version_gets_the_same_answers(self):
-        for kw in ({}, {"group": "Talabat"}, {"group": "USD customers"}, {"group": "Gold accounts"}, {"stage": "return"}):
-            old = [{k: v for k, v in r.items()} for r in RECORDS]   # 1.0.x rows: no min_sale key
-            self.assertEqual(payrules.on_check(context(**kw), payrules.rules_of(old), TREE), check(**kw), kw)
+        """1.0.1's answers, frozen (computed by the listed payrules.py at origin/main 70d554b on these RECORDS): rows with no
+        min_sale key (a retailer on 1.0.x) and rows with a blank one answer exactly as before."""
+        listed = {
+            "Retail": {"verdict": "allow", "exclude_tenders": ["On Account"], "reason": "Not for customers in All Customer Groups."},
+            "Talabat": {"verdict": "allow", "exclude_tenders": ["Cash", "Credit Card", "On Account", "Gift Certificate", "Cash USD",
+                                                                "Card USD"], "reason": "Talabat customers pay with Talabat."},
+            "USD customers": {"verdict": "allow", "exclude_tenders": ["Cash", "Credit Card", "On Account", "Gift Certificate", "Talabat"],
+                              "reason": "Customers in USD customers pay with Card USD, Cash USD."},
+            "Gold accounts": {"verdict": "allow", "exclude_tenders": ["Gift Certificate"], "reason": "Not for customers in Account customers."},
+        }
+        blank = [dict(r, min_sale=None) for r in RECORDS]
+        for group, want in listed.items():
+            for recs in (RECORDS, blank):
+                self.assertEqual(payrules.on_check(context(group=group), payrules.rules_of(recs), TREE), want, group)
+        self.assertEqual(payrules.on_check(context(stage="return"), payrules.rules_of(RECORDS), TREE), {"verdict": "allow"})
 
     def test_a_refund_is_never_judged_whatever_the_amount(self):
         self.assertEqual(self.ask(rows(BUT, (LP, 2000)), 150000, stage="return"), {"verdict": "allow"})
