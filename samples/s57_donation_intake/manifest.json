@@ -5,7 +5,7 @@
  "title": "Donation intake with a donor receipt",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "A charity or thrift store's record of donated goods taken in, kept in Desk. Each PP DON Donation holds the donor (one of the retailer's customers, whose name, phone and e-mail it fills, or a donor typed in, or no one named), the donor's address for the receipt, the store that took the goods in and the day, and the goods: each kind, what it is, how many (items, bags or boxes) and its condition. A workflow moves it Received, then Give receipt to Receipt given, or Cancel to Cancelled; once a donation is Receipt given or Cancelled, a save rule stops its donor, store, day and goods from changing. It prints as the donor receipt under the retailer's own letter head, which states no value for the goods. The report Donations lists every donation not cancelled, newest first. A field on Stock Entry, Donation, names the donation whose goods a Material Receipt takes into stock (the Stock Entry list filters by it); a customer's donations show under the customer. The app moves no money and changes no stock, and calls nothing outside: no service, no outside address, nothing installed switched off.",
+ "description": "A charity or thrift store's record of donated goods taken in, kept in Desk. Each PP DON Donation holds the donor (one of the retailer's customers, whose name and e-mail it shows, or a donor typed in, or no one named), the donor's address for the receipt, the store that took the goods in and the day, and the goods: each kind, what it is, how many (items, bags or boxes) and its condition. A workflow moves it Received, then Give receipt to Receipt given, or Cancel to Cancelled; once a donation is Receipt given or Cancelled, a save rule stops its donor, store, day and goods from changing; the receipt reads the donation's state. It prints as the donor receipt under the retailer's own letter head, which states no value for the goods. The report Donations lists every donation not cancelled, newest first. A field on Stock Entry, Donation, names the donation whose goods a Material Receipt takes into stock (the Stock Entry list filters by it); a customer's donations show under the customer. The app moves no money and changes no stock, and calls nothing outside: no service, no outside address, nothing installed switched off.",
  "allowed_urls": [],
  "doctypes": [
   {
@@ -82,7 +82,7 @@
      "read": 1,
      "write": 1,
      "create": 1,
-     "delete": 1,
+     "delete": 0,
      "report": 1,
      "export": 1,
      "share": 0,
@@ -121,30 +121,44 @@
      "label": "Customer",
      "options": "Customer",
      "in_standard_filter": 1,
-     "description": "When the donor is one of your customers: the donor's name, phone and e-mail come from it. Optional."
+     "description": "When the donor is one of your customers. Optional: a donor who is not one is typed below."
+    },
+    {
+     "fieldname": "customer_name",
+     "fieldtype": "Data",
+     "label": "Customer name",
+     "fetch_from": "customer.customer_name",
+     "read_only": 1,
+     "description": "The customer's name, as the receipt prints it when no donor is typed. Change it on the customer."
+    },
+    {
+     "fieldname": "customer_email",
+     "fieldtype": "Data",
+     "label": "Customer's e-mail",
+     "options": "Email",
+     "fetch_from": "customer.custom_email",
+     "read_only": 1,
+     "description": "The customer's Email, as the till keeps it. Your own Notification can send the receipt to it."
     },
     {
      "fieldname": "donor_name",
      "fieldtype": "Data",
      "label": "Donor",
-     "fetch_from": "customer.customer_name",
      "bold": 1,
      "in_list_view": 1,
-     "description": "As the receipt names the donor. Leave it blank for a donor who gives no name: the receipt then says an anonymous donor."
+     "description": "A donor who is not one of your customers, as the receipt names them. Leave the donor and the customer blank for a donor who gives no name: the receipt then says an anonymous donor."
     },
     {
      "fieldname": "donor_phone",
      "fieldtype": "Data",
      "label": "Donor's phone",
-     "options": "Phone",
-     "fetch_from": "customer.custom_phone_no"
+     "options": "Phone"
     },
     {
      "fieldname": "donor_email",
      "fieldtype": "Data",
      "label": "Donor's e-mail",
      "options": "Email",
-     "fetch_from": "customer.custom_email",
      "description": "Your own Notification can send the receipt to it."
     },
     {
@@ -182,14 +196,7 @@
      "fieldtype": "Check",
      "label": "Receipt given",
      "read_only": 1,
-     "description": "Ticked by Give receipt. From then on the donor, the store, the day and the goods cannot change. Your own Notification on its change can e-mail the receipt, with the condition doc.receipt_given in (1, \"1\") and doc.donor_email."
-    },
-    {
-     "fieldname": "cancelled",
-     "fieldtype": "Check",
-     "label": "Cancelled",
-     "read_only": 1,
-     "description": "Ticked by Cancel. The donation keeps its number and prints as no receipt."
+     "description": "Ticked by Give receipt. From then on the donor, the store, the day and the goods cannot change. Your own Notification on its change can e-mail the receipt, with the condition doc.receipt_given in (1, \"1\") and (doc.donor_email or doc.customer_email)."
     },
     {
      "fieldname": "goods_section",
@@ -242,9 +249,7 @@
     },
     {
      "state": "PP DON Cancelled",
-     "allow_edit": "System Manager",
-     "update_field": "cancelled",
-     "update_value": "1"
+     "allow_edit": "System Manager"
     }
    ],
    "transitions": [
@@ -288,7 +293,8 @@
     "donor_address",
     "store",
     "received_on",
-    "goods"
+    "goods",
+    "receipt_given"
    ],
    "message": "The receipt was given: the donor, the store, the day and the goods stay as on it. Cancel it and take a new donation instead."
   }
@@ -298,7 +304,7 @@
    "name": "PP DON Donor receipt",
    "doc_type": "PP DON Donation",
    "print_format_type": "Jinja",
-   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n{% if doc.cancelled %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Cancelled: this is not a receipt.\") }}</p>{% elif not doc.receipt_given %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Not yet a receipt: press Give receipt first.\") }}</p>{% endif %}\n<h2 style=\"margin: 0 0 2px;\">{{ _(\"Donation receipt\") }} · {{ doc.name }}</h2>\n<p style=\"margin: 0 0 8px;\">{{ _(\"Received at\") }} {{ doc.store or \"\" }} · {{ doc.get_formatted(\"received_on\") }}</p>\n<p style=\"margin: 0;\">{{ _(\"From\") }} {{ doc.donor_name or _(\"an anonymous donor\") }}</p>\n{% if doc.donor_address %}<p style=\"margin: 0; white-space: pre-line;\">{{ doc.donor_address }}</p>{% endif %}\n<table style=\"width: 100%; border-collapse: collapse; margin-top: 8px;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Goods\") }}</th><th style=\"text-align: start;\">{{ _(\"How many\") }}</th><th style=\"text-align: start;\">{{ _(\"Condition\") }}</th></tr>\n{% for g in doc.goods if g.category or g.description %}<tr><td>{{ g.category or \"\" }}{% if g.category and g.description %}: {% endif %}{{ g.description or \"\" }}</td><td>{{ g.quantity or 0 }} {{ _(g.unit) if g.unit else \"\" }}</td><td>{{ _(g.condition) if g.condition else \"\" }}</td></tr>\n{% endfor %}</table>\n<p style=\"margin: 12px 0 0;\">{{ _(\"Thank you for your donation of the goods listed above. No goods or services were given in return. This receipt describes the goods and states no value.\") }}</p>\n</div>"
+   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n{% set state = doc.workflow_state or \"\" %}{% if state.endswith(\" Cancelled\") %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Cancelled: this is not a receipt.\") }}</p>{% elif not state.endswith(\" Receipt given\") %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Not yet a receipt: press Give receipt first.\") }}</p>{% endif %}\n<h2 style=\"margin: 0 0 2px;\">{{ _(\"Donation receipt\") }} · {{ doc.name }}</h2>\n<p style=\"margin: 0 0 8px;\">{{ _(\"Received at\") }} {{ doc.store or \"\" }} · {{ doc.get_formatted(\"received_on\") }}</p>\n<p style=\"margin: 0;\">{{ _(\"From\") }} {{ doc.donor_name or doc.customer_name or _(\"an anonymous donor\") }}</p>\n{% if doc.donor_address %}<p style=\"margin: 0; white-space: pre-line;\">{{ doc.donor_address }}</p>{% endif %}\n<table style=\"width: 100%; border-collapse: collapse; margin-top: 8px;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Goods\") }}</th><th style=\"text-align: start;\">{{ _(\"How many\") }}</th><th style=\"text-align: start;\">{{ _(\"Condition\") }}</th></tr>\n{% for g in doc.goods if g.category or g.description %}<tr><td>{{ g.category or \"\" }}{% if g.category and g.description %}: {% endif %}{{ g.description or \"\" }}</td><td>{{ g.quantity or 0 }} {{ _(g.unit) if g.unit else \"\" }}</td><td>{{ _(g.condition) if g.condition else \"\" }}</td></tr>\n{% endfor %}</table>\n<p style=\"margin: 12px 0 0;\">{{ _(\"Thank you for your donation of the goods listed above. This receipt describes the goods and states no value.\") }}</p>\n</div>"
   }
  ],
  "reports": [
@@ -316,9 +322,9 @@
    ],
    "filters": [
     [
-     "cancelled",
-     "=",
-     0
+     "workflow_state",
+     "!=",
+     "PP DON Cancelled"
     ]
    ],
    "order_by": "received_on desc"

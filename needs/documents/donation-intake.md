@@ -21,4 +21,4 @@ A donation as your manifest's own record type: the donor (a customer, a name typ
 - A manifest's notification goes only to the retailer's own users: e-mailing the receipt to the donor is the retailer's own Notification.
 
 ## Tell the customer
-Each donation is recorded at the door with who gave what, and the donor gets a receipt that stays as it was given; the goods are traced into stock.
+Each donation is recorded at the door with who gave what, and the donor gets a receipt that stays as it was given; the stock entry that takes the goods in can name the donation.
