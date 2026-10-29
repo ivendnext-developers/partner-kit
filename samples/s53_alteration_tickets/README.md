@@ -2,7 +2,7 @@
 
 *Start from this sample: `python3 tools/manifest/start.py s53_alteration_tickets --prefix "ACME ALT"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
-A fashion store's ticket for each alteration and each made-to-measure piece, kept in iVendNext Desk: what to do to which garment, the measurements, the fitting, the date it is ready, the tailor's progress, a slip for the customer with a tag for the garment, the tickets due, and who collected it. The charge and any deposit are rung at the till as before. Nothing leaves the retailer's iVendNext: no service, no outside address. The [recipe](../../recipes/alteration_tickets.md) walks a store through it.
+A fashion store's ticket for each alteration and each made-to-measure piece, kept in iVendNext Desk: what to do to which garment, the measurements, the fitting, the date it is ready, the tailor's progress, a slip for the customer with a tag for the garment, the tickets due, and who collected it. The charge and any deposit are rung at the till as before. The app itself calls nothing outside: no service, no outside address. The [recipe](../../recipes/alteration_tickets.md) walks a store through it.
 
 It uses the manifest's `doctypes` (a record type and two child tables), `workflows`, `print_formats`, `reports`, `links` and a `documentation` property setter. **When to use it:** a store alters what it sells (a hem, a waist, a sleeve) or makes to measure (a suit, a dress), and its tickets are on paper today.
 
@@ -11,7 +11,7 @@ It uses the manifest's `doctypes` (a record type and two child tables), `workflo
 1. **At the counter.** The cashier rings the alteration at the till as the store already does: a service item (*Hem trousers*), or a surcharge on the garment's line where the retailer set one up; a made-to-measure piece is ordered with its deposit by the till's order or a layaway. Then store staff open **PP ALT Ticket** in Desk, **+ Add**: the customer (its phone and e-mail come from the customer, as the till keeps them), the store that hands it over, **Ready by**, and a row per garment with **What to do**. For a made-to-measure piece, choose **Made to measure** and fill **Measurements**. Name the **Sale** or the **Order** it was paid on. Save: the ticket is numbered `ALT-00001` and is **Taken**.
 2. **The slip and the tag.** **Print** › *PP ALT Ticket*: the customer's slip (the number large, the store, Ready by, each garment and its work, the measurements) and, under a cut line, the garment's tag.
 3. **In the workroom.** **Send to tailor**, **Book a fitting** (write **Next fitting**; **Back to tailor** after it), **Ready**. **Ready** ticks **Ready to collect**; going back for more work unticks it.
-4. **The customer is told.** The retailer's own Notification on **Ready to collect** sends *"Your alteration ALT-00042 is ready to collect"* by e-mail or SMS (the recipe's step 4). The app sends nothing itself.
+4. **The customer is told.** The retailer's own Notification on **Ready to collect** sends *"Your alteration ALT-00042 is ready to collect"* by e-mail or SMS (the recipe's step 4; an SMS one also needs `doc.customer_phone` in its condition, or a customer with no phone stops **Ready**). The app sends nothing itself.
 5. **The hand-over.** Write **Collected by**, then **Hand over**: the ticket is **Closed**, and its history records who did it and when. **Cancel** closes a ticket the customer gave up.
 6. **What is due.** The report **PP ALT Tickets Due** lists every ticket not closed, the earliest Ready by first. A customer's, a sale's and an order's tickets show under each, in the form's connections.
 
@@ -26,7 +26,7 @@ It uses the manifest's `doctypes` (a record type and two child tables), `workflo
 | File | What |
 |---|---|
 | `manifest.json` | the ticket (`PP ALT Ticket`) and its two child tables (`PP ALT Garment`, `PP ALT Measure`); the workflow with its six states; the slip and tag print format; the report *Tickets Due*; the ticket list under Customer, POS Invoice and Sales Order; the ticket's help address |
-| `tests/test_manifest.py` | the manifest passes the kit's checker and nothing the retailer's install refuses; nothing leaves and no money field exists; *Ready* ticks *Ready to collect*, going back unticks it; *Hand over* and *Cancel* tick *Closed* and leave the ticket to a System Manager; the phone and e-mail are the customer's, read only; the report lists open tickets by Ready by; no child table is required; the print reads only fields that exist; the Connections; the rights; the help |
+| `tests/test_manifest.py` | the manifest passes the kit's checker and nothing the retailer's install refuses; no outside address and no money field; *Ready* ticks *Ready to collect*, going back unticks it; *Hand over* and *Cancel* tick *Closed* and leave the ticket to a System Manager on Desk's screen; the phone and e-mail are the customer's, read only; the report lists open tickets by Ready by; no child table is required; the print reads only fields that exist and skips a blank measurement row; the Connections; the rights; the help |
 | `tests/canaries.py` | each test goes RED when the rule it guards is broken |
 
 ## Run it
@@ -65,7 +65,7 @@ A manifest only. The till already charges an alteration (a service item, or a li
 ### Bounds, stated
 
 - **The ticket is written in Desk**, at the counter or in the workroom; nothing links it to the sale or the order on its own: staff name them.
-- **The phone and e-mail are the customer's** (`custom_phone_no`, `custom_email`, the fields the till's new-customer sheet and customer edit write), read only and filled again on each save: change them on the customer. A customer made in Desk with only its contact's mobile has a blank phone until its **Phone Number** is set.
+- **The phone and e-mail are the customer's** (`custom_phone_no`, `custom_email`, the fields the till's new-customer sheet and customer edit write), read only and filled again on each save: change them on the customer. A customer made in Desk with only its contact's mobile and e-mail has a blank phone and e-mail on the ticket until its **Phone Number** and **Email** are set.
 - **A workflow's *who may edit* is a screen rule.** Over the record API, anyone with write may change a ticket in any state; the buttons are the workflow's.
 - **A cancelled ticket refunds nothing**: a refund is the till's return.
 - **The measurements are personal data** the retailer keeps under its own policy; uninstalling the app removes the tickets (its export keeps a copy).

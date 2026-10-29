@@ -1,8 +1,8 @@
-"""S53's laptop tests: the manifest passes the kit's checker and nothing the retailer's install refuses; nothing leaves
-the retailer's iVendNext and no money is held; the ticket's workflow ticks the two boxes the report and the retailer's own
-message read, and a closed ticket is out of reach of store staff; the phone and e-mail are the customer's, read only; the
-report lists open tickets by Ready by; the slip and the garment tag read only fields that exist; the rights and the help
-page. Data only: no service.
+"""S53's laptop tests: the manifest passes the kit's checker and nothing the retailer's install refuses; the app calls
+no outside address and holds no money; the ticket's workflow ticks the two boxes the report and the retailer's own message
+read, and leaves a closed ticket to a System Manager on Desk's screen; the phone and e-mail are the customer's, read only;
+the report lists open tickets by Ready by; the slip and the garment tag read only fields that exist and skip a blank
+measurement row; the rights and the help page. Data only: no service.
 
     python3 -m unittest discover -s samples/s53_alteration_tickets/tests -p 'test_*.py'
 """
@@ -49,7 +49,7 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(validate.warnings(MANIFEST), [])
         self.assertEqual(site_rules.refusals(MANIFEST), [])   # nor anything the retailer's install refuses
 
-    def test_nothing_leaves_and_no_money_is_held(self):
+    def test_no_outside_address_and_no_money_is_held(self):
         self.assertEqual(MANIFEST["allowed_urls"], [])
         self.assertFalse([k for k in OUTSIDE if MANIFEST.get(k)])          # no service, feed, key or field on a retailer's record
         money = [(d, f["fieldname"]) for d in DT for f in DT[d]["fields"] if f["fieldtype"] in ("Currency", "Percent")]
@@ -66,7 +66,7 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(m[("Ready to collect", "Back to tailor")], "With the tailor")
         self.assertFalse(fields(TICKET)["ready_to_collect"].get("default"))   # a new ticket is not ready
 
-    def test_hand_over_and_cancel_close_the_ticket_and_lock_it_from_store_staff(self):
+    def test_hand_over_and_cancel_close_the_ticket_and_leave_it_to_a_system_manager(self):
         for end in ("Handed over", "Cancelled"):
             s = state(end)
             self.assertEqual((s["update_field"], s["update_value"], s["allow_edit"]), ("closed", "1", "System Manager"), end)
@@ -100,6 +100,7 @@ class ManifestTest(unittest.TestCase):
             used = set(re.findall(rf"\b{var}\.(\w+)", html)) - {"get_formatted"}
             self.assertLessEqual(used, set(fields(dt)) | {"name"}, var)
         self.assertIn("Garment tag", html)
+        self.assertIn("{% for m in doc.measurements if m.measure %}", html)   # a blank row keeps its unit's default: never printed
         self.assertEqual(html.count("{{ doc.name }}"), 2)   # on the slip and on the tag
 
     def test_the_customer_the_sale_and_the_order_list_their_tickets(self):

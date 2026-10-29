@@ -6,7 +6,7 @@ A fashion store takes a garment for alteration, or a customer's measurements for
 
 **When to use it.** The store alters what it sells (a hem, a waist, a sleeve), or makes suits and dresses to measure, and keeps its tickets on paper. The money side is already the till's: an alteration is rung as a service item or a line surcharge, and a made-to-measure deposit by the till's order or a layaway.
 
-**The four rules, here.** No code runs inside the retailer's iVendNext. No address is called: the app is a manifest of records, a workflow, a print format and a report. It reads and writes no money. Its only message to a customer is the retailer's own Notification.
+**The four rules, here.** No code runs inside the retailer's iVendNext. No address is called: the app is a manifest of records, a workflow, a print format and a report. It reads and writes no money. Its only message to a customer is the retailer's own Notification, which sends through the retailer's own mail server or SMS gateway.
 
 ## What the store sees
 
@@ -51,10 +51,10 @@ The actions, each allowed to Sales User: **Send to tailor** (Taken to With the t
 
 ## Steps
 
-1. **Add the record types above** to your manifest (`doctypes`, the two child tables with `"istable": 1`), with no money field: the charge and the deposit belong to the till's sale and order. Never make a child table `reqd`: Desk drops a row whose list fields are all blank, so *none* is a ticket with no rows.
+1. **Add the record types above** to your manifest (`doctypes`, the two child tables with `"istable": 1`), with no money field: the charge and the deposit belong to the till's sale and order. Never make a child table `reqd`: Desk drops a row whose list fields are all blank, so *none* is a ticket with no rows. A row whose list field has a default (the measure's unit, `cm`) is kept even when the rest is blank, so the print skips a measurement row with no measure (`{% for m in doc.measurements if m.measure %}`).
 2. **Add the workflow** (`workflows`), its states and actions under your prefix, each state's tick in `update_field` and `update_value`. A workflow writes the tick as text, `"0"` or `"1"`.
 3. **Add the print format** (`print_formats`, Jinja) reading only the ticket's own fields and its rows (`doc.garments`, `doc.measurements`), the report (`reports`, Report Builder, filtered `closed = 0`, ordered by `due_date`), the Connections (`links`) and a `documentation` property setter that points at your help.
-4. **Tell the customer, with the retailer's own Notification** (a manifest notifies only the retailer's own users). In Desk, **Notification**, **+ Add**: Document Type *PP ALT Ticket*, Send Alert On **Value Change**, Value Changed **Ready to collect**, Condition `doc.ready_to_collect in (1, "1")` (a bare `doc.ready_to_collect` would also fire on the untick, which is the text `"0"`), the channel **Email** to the document field **Customer's e-mail**, or **SMS** to **Customer's phone** through the retailer's SMS gateway. A fitting reminder is a second one: **Days Before**, **Next fitting**, 1 day, condition `not doc.closed`.
+4. **Tell the customer, with the retailer's own Notification** (a manifest notifies only the retailer's own users). In Desk, **Notification**, **+ Add**: Document Type *PP ALT Ticket*, Send Alert On **Value Change**, Value Changed **Ready to collect**, Condition `doc.ready_to_collect in (1, "1")` (a bare `doc.ready_to_collect` would also fire on the untick, which is the text `"0"`), the channel **Email** to the document field **Customer's e-mail**, or **SMS** to **Customer's phone** through the retailer's SMS gateway. **An SMS one adds the phone to its condition**, `doc.ready_to_collect in (1, "1") and doc.customer_phone`: iVendNext refuses an SMS with no number, and a Notification's error rolls back the save that raised it, so without it **Ready** fails for a customer with no phone. A fitting reminder is a second one: **Days Before**, **Next fitting**, 1 day, condition `not doc.closed` (by SMS, `not doc.closed and doc.customer_phone`, or the day's other reminders stop at it).
 5. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s53_alteration_tickets`.
 
 ## What the retailer does
@@ -66,7 +66,7 @@ The actions, each allowed to Sales User: **Send to tailor** (Taken to With the t
 ## Limits
 
 - **The ticket is written in Desk**, at the counter or in the workroom; the till rings the charge and the deposit, and staff name the sale or the order on the ticket.
-- **The phone and e-mail are the customer's**, read only: change them on the customer. A customer made in Desk with only its contact's mobile has a blank phone until its **Phone Number** is set.
+- **The phone and e-mail are the customer's**, read only: change them on the customer. A customer made in Desk with only its contact's mobile and e-mail has a blank phone and e-mail on the ticket until its **Phone Number** and **Email** are set: the e-mail message then goes to no one.
 - **Who may edit in a state is Desk's screen rule**, not a lock over the API.
 - **A cancelled ticket refunds nothing:** a refund is the till's return.
 - **Measurements and the customer's phone are personal data** the retailer keeps under its own policy. Uninstalling removes the tickets; the install's export keeps a copy.
