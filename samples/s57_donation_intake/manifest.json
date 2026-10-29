@@ -1,0 +1,343 @@
+{
+ "manifest_version": 2,
+ "app": "pp_don",
+ "prefix": "PP DON",
+ "title": "Donation intake with a donor receipt",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A charity or thrift store's record of donated goods taken in, kept in Desk. Each PP DON Donation holds the donor (one of the retailer's customers, whose name, phone and e-mail it fills, or a donor typed in, or no one named), the donor's address for the receipt, the store that took the goods in and the day, and the goods: each kind, what it is, how many (items, bags or boxes) and its condition. A workflow moves it Received, then Give receipt to Receipt given, or Cancel to Cancelled; once a donation is Receipt given or Cancelled, a save rule stops its donor, store, day and goods from changing. It prints as the donor receipt under the retailer's own letter head, which states no value for the goods. The report Donations lists every donation not cancelled, newest first. A field on Stock Entry, Donation, names the donation whose goods a Material Receipt takes into stock (the Stock Entry list filters by it); a customer's donations show under the customer. The app moves no money and changes no stock, and calls nothing outside: no service, no outside address, nothing installed switched off.",
+ "allowed_urls": [],
+ "doctypes": [
+  {
+   "name": "PP DON Goods",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "category",
+     "fieldtype": "Data",
+     "label": "Kind of goods",
+     "in_list_view": 1,
+     "columns": 2,
+     "description": "Such as clothing, books, household, toys, furniture."
+    },
+    {
+     "fieldname": "description",
+     "fieldtype": "Data",
+     "label": "What it is",
+     "in_list_view": 1,
+     "columns": 4,
+     "description": "As the receipt will describe it: children's coats, a box of paperbacks."
+    },
+    {
+     "fieldname": "quantity",
+     "fieldtype": "Int",
+     "label": "How many",
+     "default": "1",
+     "non_negative": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "unit",
+     "fieldtype": "Select",
+     "label": "Of",
+     "options": "Items\nBags\nBoxes",
+     "default": "Items",
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "condition",
+     "fieldtype": "Select",
+     "label": "Condition",
+     "options": "\nGood\nFair\nFor recycling",
+     "in_list_view": 1,
+     "columns": 2
+    }
+   ]
+  },
+  {
+   "name": "PP DON Donation",
+   "autoname": "format:DON-{#####}",
+   "track_changes": 1,
+   "title_field": "donor_name",
+   "search_fields": "customer,donor_name,donor_phone,received_on",
+   "sort_field": "received_on",
+   "sort_order": "DESC",
+   "permissions": [
+    {
+     "role": "Sales User",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock User",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    }
+   ],
+   "fields": [
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "in_standard_filter": 1,
+     "description": "When the donor is one of your customers: the donor's name, phone and e-mail come from it. Optional."
+    },
+    {
+     "fieldname": "donor_name",
+     "fieldtype": "Data",
+     "label": "Donor",
+     "fetch_from": "customer.customer_name",
+     "bold": 1,
+     "in_list_view": 1,
+     "description": "As the receipt names the donor. Leave it blank for a donor who gives no name: the receipt then says an anonymous donor."
+    },
+    {
+     "fieldname": "donor_phone",
+     "fieldtype": "Data",
+     "label": "Donor's phone",
+     "options": "Phone",
+     "fetch_from": "customer.custom_phone_no"
+    },
+    {
+     "fieldname": "donor_email",
+     "fieldtype": "Data",
+     "label": "Donor's e-mail",
+     "options": "Email",
+     "fetch_from": "customer.custom_email",
+     "description": "Your own Notification can send the receipt to it."
+    },
+    {
+     "fieldname": "donor_address",
+     "fieldtype": "Small Text",
+     "label": "Donor's address",
+     "description": "Printed on the receipt, for a donor who wants it there."
+    },
+    {
+     "fieldname": "col1",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Received at",
+     "options": "Warehouse",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The store that took the goods in."
+    },
+    {
+     "fieldname": "received_on",
+     "fieldtype": "Date",
+     "label": "Received on",
+     "default": "Today",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "receipt_given",
+     "fieldtype": "Check",
+     "label": "Receipt given",
+     "read_only": 1,
+     "description": "Ticked by Give receipt. From then on the donor, the store, the day and the goods cannot change. Your own Notification on its change can e-mail the receipt, with the condition doc.receipt_given in (1, \"1\") and doc.donor_email."
+    },
+    {
+     "fieldname": "cancelled",
+     "fieldtype": "Check",
+     "label": "Cancelled",
+     "read_only": 1,
+     "description": "Ticked by Cancel. The donation keeps its number and prints as no receipt."
+    },
+    {
+     "fieldname": "goods_section",
+     "fieldtype": "Section Break",
+     "label": "The goods"
+    },
+    {
+     "fieldname": "goods",
+     "fieldtype": "Table",
+     "label": "Goods",
+     "options": "PP DON Goods"
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Notes",
+     "description": "For the store only: never printed."
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "Stock Entry",
+   "fieldname": "pp_don_donation",
+   "fieldtype": "Link",
+   "label": "Donation",
+   "options": "PP DON Donation",
+   "insert_after": "stock_entry_type",
+   "depends_on": "eval:doc.purpose == \"Material Receipt\"",
+   "allow_on_submit": 1,
+   "description": "The donation whose goods this Material Receipt takes into stock. Optional."
+  }
+ ],
+ "workflows": [
+  {
+   "name": "PP DON Donation",
+   "document_type": "PP DON Donation",
+   "send_email_alert": 0,
+   "states": [
+    {
+     "state": "PP DON Received",
+     "allow_edit": "Sales User"
+    },
+    {
+     "state": "PP DON Receipt given",
+     "allow_edit": "Sales User",
+     "update_field": "receipt_given",
+     "update_value": "1"
+    },
+    {
+     "state": "PP DON Cancelled",
+     "allow_edit": "System Manager",
+     "update_field": "cancelled",
+     "update_value": "1"
+    }
+   ],
+   "transitions": [
+    {
+     "state": "PP DON Received",
+     "action": "PP DON Give receipt",
+     "next_state": "PP DON Receipt given",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP DON Received",
+     "action": "PP DON Cancel",
+     "next_state": "PP DON Cancelled",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP DON Receipt given",
+     "action": "PP DON Cancel",
+     "next_state": "PP DON Cancelled",
+     "allowed": "Sales Manager",
+     "allow_self_approval": 1
+    }
+   ]
+  }
+ ],
+ "save_rules": [
+  {
+   "rule_name": "PP DON donation locked once its receipt is given",
+   "record_type": "PP DON Donation",
+   "kind": "locked_in_state",
+   "mode": "refuse",
+   "states": [
+    "PP DON Receipt given",
+    "PP DON Cancelled"
+   ],
+   "locked_fields": [
+    "customer",
+    "donor_name",
+    "donor_address",
+    "store",
+    "received_on",
+    "goods"
+   ],
+   "message": "The receipt was given: the donor, the store, the day and the goods stay as on it. Cancel it and take a new donation instead."
+  }
+ ],
+ "print_formats": [
+  {
+   "name": "PP DON Donor receipt",
+   "doc_type": "PP DON Donation",
+   "print_format_type": "Jinja",
+   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n{% if doc.cancelled %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Cancelled: this is not a receipt.\") }}</p>{% elif not doc.receipt_given %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Not yet a receipt: press Give receipt first.\") }}</p>{% endif %}\n<h2 style=\"margin: 0 0 2px;\">{{ _(\"Donation receipt\") }} · {{ doc.name }}</h2>\n<p style=\"margin: 0 0 8px;\">{{ _(\"Received at\") }} {{ doc.store or \"\" }} · {{ doc.get_formatted(\"received_on\") }}</p>\n<p style=\"margin: 0;\">{{ _(\"From\") }} {{ doc.donor_name or _(\"an anonymous donor\") }}</p>\n{% if doc.donor_address %}<p style=\"margin: 0; white-space: pre-line;\">{{ doc.donor_address }}</p>{% endif %}\n<table style=\"width: 100%; border-collapse: collapse; margin-top: 8px;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Goods\") }}</th><th style=\"text-align: start;\">{{ _(\"How many\") }}</th><th style=\"text-align: start;\">{{ _(\"Condition\") }}</th></tr>\n{% for g in doc.goods if g.category or g.description %}<tr><td>{{ g.category or \"\" }}{% if g.category and g.description %}: {% endif %}{{ g.description or \"\" }}</td><td>{{ g.quantity or 0 }} {{ _(g.unit) if g.unit else \"\" }}</td><td>{{ _(g.condition) if g.condition else \"\" }}</td></tr>\n{% endfor %}</table>\n<p style=\"margin: 12px 0 0;\">{{ _(\"Thank you for your donation of the goods listed above. No goods or services were given in return. This receipt describes the goods and states no value.\") }}</p>\n</div>"
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP DON Donations",
+   "ref_doctype": "PP DON Donation",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "received_on",
+    "store",
+    "donor_name",
+    "customer",
+    "receipt_given"
+   ],
+   "filters": [
+    [
+     "cancelled",
+     "=",
+     0
+    ]
+   ],
+   "order_by": "received_on desc"
+  }
+ ],
+ "links": [
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP DON Donation",
+   "link_fieldname": "customer",
+   "group": "Donations"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP DON Donation",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/donation_intake.html#donations"
+  }
+ ]
+}

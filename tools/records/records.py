@@ -297,6 +297,7 @@ SKIP = {
     "Location": A_LABEL, "Note": A_LABEL, "Version": A_LABEL, "Report": A_LABEL, "File": A_LABEL, "Issue": A_LABEL,
     "Dashboard": A_LABEL, "Campaign": A_LABEL, "OAuth Provider Settings": "the site's sign-in settings, named once in the sign-in recipe",
     "Print Settings": "the site's printing settings, named once as configuration",
+    "Letter Head": "the heading the retailer prints its records under, named as configuration a receipt prints",
     "Promotion Bonus Buys Hierarchy": "the promotions' grouping settings, named once as configuration",
     "Retail Save Rule Count": "a save rule's own counter, written only by iVendNext",
     "DefaultValue": "a user's remembered defaults, read by the kit's test kit only",
