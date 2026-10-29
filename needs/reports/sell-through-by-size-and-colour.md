@@ -18,7 +18,7 @@ A run as your manifest's own record type: an item group or one style in it, a st
 ## Limits
 - *Sold* is the till's sales (POS Invoice). Sales booked another way (an online store's orders, a Sales Invoice made in Desk) are not in it; a till order not yet delivered counts as sold while its unit is still in stock (what the report counts).
 - *In stock* is today's, less any till sale whose stock has not left yet, so the figure reads from the start date up to today.
-- The two reports belong to accounting and stock roles: the retailer adds your app's role to both (*Role Permission for Page and Report*) and gives it read or select on every record type their filters and lookups name (S54's README lists the nine). Read on POS Invoice and Select on Customer let your app's user read till sales and list customers; say so. The buyers' roles need Select on Item Attribute and Warehouse to fill a run.
+- The two reports belong to accounting and stock roles: the retailer adds your app's role to both (*Role Permission for Page and Report*) and gives it read or select on every record type their filters and lookups name (S54's README lists the nine). Read on POS Invoice and Select on Customer let your app's user read till sales and list customers; say so. The buyers' roles need Select on Item Attribute and Warehouse to fill a run. A new rights row comes with Read ticked: untick it where Select is enough.
 - A press has 10 seconds: name fewer stores when the reports are slow, one style when a group has more rows than a run holds.
 
 ## Tell the customer
