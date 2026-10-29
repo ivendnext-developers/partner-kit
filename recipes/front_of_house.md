@@ -20,7 +20,7 @@ A restaurant's host takes bookings on the phone, keeps walk-ins waiting in order
 
 ### Settings
 
-1. Install the manifest. It adds the settings (one per company, with a row per store), the reservation, the waiting-list entry, *Guest notes* on Customer, the roles **PP FOH Host** and **PP FOH Integration**, six buttons and their five services (off), and the feed registration that makes the app's own user (`pp_foh@integration.invalid`, from POS 2.1.0.667; leave the feed off).
+1. Install the manifest. It adds the settings (one per company, with a row per store), the reservation, the waiting-list entry, the roles **PP FOH Host** and **PP FOH Integration**, six buttons and their five services (off), and the feed registration that makes the app's own user (`pp_foh@integration.invalid`, from POS 2.1.0.667; leave the feed off).
 2. Give the app's user its store and its key, in this order, on its User record: keep *Is Desk User*, tick **Is POS User**, choose a **Shift Profile**, link a **Retail Permission** with *Open Checks*: **open a check** and **see the checks** only; add one row to the store access table (the store and its register, *Table Service* on); **Save**; then **Generate Keys**. Without *Is POS User* the save drops the store row and the till answers *"You are not assigned to this outlet."* Never give it write on *Floor Section*: that is every check verb, a comp included.
 3. On **PP FOH Settings**, one row per store: **the same register** the app's user holds there, the usual booking length (90 minutes to start), whether a table with an open check may take a second check, and the **No-show deposit** rule (*Keep it* or *Return it*).
 4. Give **PP FOH Host** to the hosts and managers; consent to the five services and switch the six buttons on; press **Connect again** on the app's package record if the site could not reach the app.
@@ -37,7 +37,7 @@ A restaurant's host takes bookings on the phone, keeps walk-ins waiting in order
 
 ### A deposit
 
-9. The cashier takes the deposit at the till as the guest's advance (*Customers*, *Take a payment*; a guest who owes on account has that settled first, and only the rest is the deposit); the host names that sale on the reservation, which shows its amount. Nothing applies an advance when the table pays: at the table's payment the cashier puts the guest on the sale and charges the deposit's part *On account* (the guest needs a credit limit, and a buyer tax registration where the market asks for one), the rest as usual; when the day closes the sale joins the guest's invoice, and the accountant allocates the deposit's Payment Entry to it in **Payment Reconciliation**.
+9. The cashier takes the deposit at the till as the guest's advance (*Customers*, *Take a payment*; by default a guest who owes on account has that settled first and only the rest is the deposit; the cashier can set those bills aside); the host names that sale on the reservation, which shows its amount. Nothing applies an advance when the table pays: at the table's payment the cashier puts the guest on the sale and charges the deposit's part *On account* (the cashier needs *take a payment on account*, and the guest a buyer tax registration where the market asks for one), the rest as usual; when the day closes the sale joins the guest's invoice, and the accountant allocates the deposit's Payment Entry to it in **Payment Reconciliation**.
 
 ## What the retailer does
 

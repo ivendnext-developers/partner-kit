@@ -27,7 +27,9 @@ class ManifestTest(unittest.TestCase):
 
     def test_m1_the_guests_details_are_the_hosts_alone(self):
         guest = {(RES, "guest_name"), (RES, "phone"), (RES, "customer"), (RES, "notes"), (WAIT, "guest_name"),
-                 (WAIT, "phone"), ("Customer", "pp_foh_guest_notes")}
+                 (WAIT, "phone")}
+        self.assertFalse([c for c in self.m["custom_fields"] if c["dt"] == "Customer"])   # the Customer keeps a version
+        # history its readers see, which would carry a limited field to them: no field of the app's on Customer
         for k in guest:
             c = self.cf[k]
             self.assertEqual((sorted(c["read_roles"]), sorted(c["write_roles"])), (sorted([HOST, SM]), sorted([HOST, SM])), k)

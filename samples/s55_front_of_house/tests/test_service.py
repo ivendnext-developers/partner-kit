@@ -280,6 +280,17 @@ class ServiceTest(unittest.TestCase):
         self.press(s, "/press/seat", RES, "R1")
         self.assertEqual((len(shop.checks), shop.res["R1"]["check_name"]), (1, "CHK-0001"))
 
+    def test_s10b_a_retry_refused_by_the_checks_own_body_starts_afresh(self):
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00")], lose_open=1)
+        s = self.svc(shop)
+        self.press(s, "/press/seat", RES, "R1")
+        shop.keys.clear()                           # as if the lost first send had opened nothing
+        shop.checks.clear()
+        shop.door_refuse = ("CheckRequestError", 417, "That place is switched off. Pick another.")
+        out = self.press(s, "/press/seat", RES, "R1")
+        self.assertIn("That place is switched off", self.said(out))
+        self.assertEqual(shop.res["R1"]["seat_key"], "")                     # the host can choose another table
+
     def test_s11_a_refused_check_writes_no_key_at_all(self):
         shop = fs.FakeTenant([fs.booking("R0", "19:30:00", party=2), fs.booking("R1", "19:00:00", place=fs.T14)],
                              [fs.waiting("W1", place=fs.T12)])

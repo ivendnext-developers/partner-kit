@@ -5,7 +5,7 @@
  "title": "Front of house",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "A restaurant's front of house in Desk: reservations and a waiting list, a double-booking guard, no-shows, the deposit's sale, and seating that opens the table's check on the till through the open-check door. Book, on a reservation, holds its table when no other booking overlaps it (each from its start for its length). Seat, on a reservation or a waiting party, refuses a table booked for someone else within the party's stay or one with an open check (unless the store's row allows a second check), then opens the check at the table with the party's size and the booking's number. No-show and Cancel booking close a booking and free its table; a no-show writes the store's deposit rule on it. Once booked, the time, the length and the table are read-only in the form: Change booking releases the hold so they can change, and Book holds them again. A guest's name, phone, customer and notes, and Guest notes on Customer, are read and written only by PP FOH Host and System Manager: the app's own user never reads them, so they never leave the retailer's iVendNext. Each press sends the record's name, the pressing user and the language. Table ready on a waiting party is the retailer's own SMS Notification, made in Desk. The install makes the roles PP FOH Host and PP FOH Integration and the app's own user; the retailer gives that user its store, register and the Open Checks rights open a check and see the checks, and leaves the feed PP FOH Front of house feed off. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "A restaurant's front of house in Desk: reservations and a waiting list, a double-booking guard, no-shows, the deposit's sale, and seating that opens the table's check on the till through the open-check door. Book, on a reservation, holds its table when no other booking overlaps it (each from its start for its length). Seat, on a reservation or a waiting party, refuses a table booked for someone else within the party's stay or one with an open check (unless the store's row allows a second check), then opens the check at the table with the party's size and the booking's number. No-show and Cancel booking close a booking and free its table; a no-show writes the store's deposit rule on it. Once booked, the time, the length and the table are read-only in the form: Change booking releases the hold so they can change, and Book holds them again. A guest's name, phone, customer and notes are read and written only by PP FOH Host and System Manager: the app's own user never reads them, so they never leave the retailer's iVendNext. Each press sends the record's name, the pressing user and the language. Table ready on a waiting party is the retailer's own SMS Notification, made in Desk. The install makes the roles PP FOH Host and PP FOH Integration and the app's own user; the retailer gives that user its store, register and the Open Checks rights open a check and see the checks, and leaves the feed PP FOH Front of house feed off. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8155/press/book",
   "https://host.docker.internal:8155/press/seat",
@@ -454,22 +454,6 @@
    "label": "Phone",
    "insert_after": "guest_name",
    "description": "Table ready texts this number (your SMS Notification).",
-   "read_roles": [
-    "PP FOH Host",
-    "System Manager"
-   ],
-   "write_roles": [
-    "PP FOH Host",
-    "System Manager"
-   ]
-  },
-  {
-   "dt": "Customer",
-   "fieldname": "pp_foh_guest_notes",
-   "fieldtype": "Small Text",
-   "label": "Guest notes",
-   "insert_after": "customer_group",
-   "description": "For front of house: a favourite table, a high chair, an occasion. Read by hosts only; never on a till.",
    "read_roles": [
     "PP FOH Host",
     "System Manager"

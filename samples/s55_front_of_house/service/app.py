@@ -80,6 +80,9 @@ WAIT_FIELDS = ["name", "status", "store", "party", "place", "place_label", "chec
 ROW_FIELDS = ["parent", "store", "register", "minutes", "second_check", "no_show_deposit"]
 UNASSIGNED = ("ProfileNotAssignedError", "AssignedProfileDisabledError", "DuplicateStoreAssignmentError",
               "StoreAssignmentIncompleteError")
+# the refusals the till raises BEFORE it looks the key up: a retry refused by one of these may follow a first send that
+# opened the check, so its key is kept; any other refusal comes from the check's own body, so nothing was opened
+BEFORE_KEY = UNASSIGNED + ("TableServiceOffError", "PermissionError", "DeviceRequiredError")
 
 
 class TenantError(Exception):
@@ -353,7 +356,7 @@ class Service:
         except TenantError as e:
             if not e.refused:
                 raise                   # the outcome is unknown: the key stays, and the next press sends it again
-            if not retry:               # a first send the till refused opened nothing: the next press starts afresh
+            if not retry or not (e.kind in BEFORE_KEY or e.code == 403):   # nothing was opened: start afresh
                 self._clear(door, doctype, name)
                 raise Refusal(self._door_words(e, r, row)) from None
             raise Refusal(self._door_words(e, r, row) + " The first Seat may already have opened its check: fix this, "
