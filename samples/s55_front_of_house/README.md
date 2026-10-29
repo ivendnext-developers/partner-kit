@@ -37,6 +37,8 @@ A restaurant's host keeps the evening in iVendNext Desk: a **reservation** for e
 - The app opens checks and reads the floor, nothing more: it never adds a dish, moves, closes or prints a check (those are a person's decisions, at a till).
 - No reminder before a booking: the retailer's own Notification can add one.
 - Opening a check needs a connection; nothing here works offline.
+- A Seat whose answer was lost and whose retry the till then refuses for the app's user's assignment keeps its key until the assignment is fixed and *Seat* pressed again; a System Manager can clear the key (*Seat key*) if the register is gone for good.
+- A waiting party set to *Seated* by hand opens no check: use **Seat**.
 - The deposit's path was walked with the whole bill put on the guest's account; charging only the deposit's part on account beside a card (a split payment) is the till's own split and was not walked with this app.
 - Times are the site's: a chain whose stores sit in different time zones on one site sees each booking at the site's time.
 - **Before removing the app, pay or close every check it opened**: the uninstall removes the app's own user, and a check that user opened can then no longer be changed at a till (reported to the POS board).
@@ -48,7 +50,7 @@ A restaurant's host keeps the evening in iVendNext Desk: a **reservation** for e
 1. Install `manifest.json` (the retailer's administrator, on the install screen; on your sandbox, `tools/deploy/deploy.py`). It adds `PP FOH Settings` and its table `PP FOH Store`, `PP FOH Reservation`, `PP FOH Waitlist Entry`, the roles **PP FOH Host** and **PP FOH Integration**, six buttons and their five services (switched off), and the feed registration *PP FOH Front of house feed* (leave it off). From POS 2.1.0.667 the install also makes the app's own user, `pp_foh@integration.invalid`, holding PP FOH Integration alone.
 2. **The tables** are the till's own floor: *Retail Floor Section* and its *Retail Floor Place* records for the store, made in Desk, and **Table Service** ticked on the store's register (POS Profile).
 3. **The app's user, in this order** (User `pp_foh@integration.invalid`): keep *Is Desk User* and tick **Is POS User**; choose a **Shift Profile** (any: it never opens a shift); link a **Retail Permission** with *Open Checks*: **open a check** and **see the checks**, and nothing else; add **one row** to the store access table: the store and its register (Table Service on); **Save**; then **Generate Keys**. Without *Is POS User* the save drops the store row and every seating is refused *"not assigned to this outlet"*. ⚠ Never give it write on Floor Section: that grants every check verb, comp included. It takes no password and no other role.
-4. Give **PP FOH Host** to your hosts and managers. Only they (and System Manager) read a guest's details.
+4. Give **PP FOH Host** to your hosts and managers. Only they (and System Manager) read a guest's details. In **Role Permissions Manager**, give PP FOH Host **Select** on *Retail Floor Place*, *Warehouse*, *POS Invoice* and *Customer*: the records a booking links to (without it the host's list is refused).
 5. Make a **PP FOH Settings** record for the company: a row per store with **the same register** the app's user holds there, the usual booking length, whether a table that has an open check may take a second, and the **No-show deposit** rule.
 6. In **Retail Extension Subscription**, open each of the five services, read what it is sent, tick the consent and switch it on; switch the six buttons on in **Retail Desk Action**. A hosted service is handed the app's user's key by the retailer's site itself; press **Connect again** on the app's package record if the site could not reach the app, or the key was made after the install.
 7. **Table ready by SMS:** with **SMS Settings** set to your SMS provider, make a **Notification** on *PP FOH Waitlist Entry*: *Value Change* on *Status*, the condition `doc.status == "Table ready" and doc.phone`, channel *SMS*, the receiver *by document field* `phone`, and your message (*"Your table at … is ready. Please come to the host stand."*). A send the provider refuses is written to the Error Log; the record still saves. Remove the Notification before you remove the app.
@@ -60,7 +62,7 @@ iVendNext calls nothing outside but the service's own address (`allowed_urls`), 
 ## Run it
 
 ```bash
-python3 -m unittest discover -s samples/s55_front_of_house/tests -p 'test_*.py'   # 66 tests, the service with a stand-in shop
+python3 -m unittest discover -s samples/s55_front_of_house/tests -p 'test_*.py'   # 67 tests, the service with a stand-in shop
 python3 samples/s55_front_of_house/tests/canaries.py                                # each guard turned off: its test goes RED
 python3 tools/check/check.py samples/s55_front_of_house                            # the retailer's own install checks
 ```

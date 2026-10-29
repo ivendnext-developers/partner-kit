@@ -1,4 +1,4 @@
-"""S55 — *Front of house*: the partner's service behind the shop's four Desk buttons (standard library only).
+"""S55 — *Front of house*: the partner's service behind the retailer's five Desk buttons (standard library only).
 
     POST /press/book     *Book* on a reservation: the table is held when no other booking overlaps it
     POST /press/seat     *Seat* on a reservation or a waiting party: the table's check opens (the open-check door)

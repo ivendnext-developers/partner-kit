@@ -125,6 +125,9 @@ CANARIES = [
      F + "test_m1_the_guests_details_are_the_hosts_alone"),
     ("no Version history of a guest", "manifest.json", '   "name": "PP FOH Reservation",\n', '   "name": "PP FOH Reservation",\n   "track_changes": 1,\n',
      F + "test_m9_no_version_history_and_a_booked_slot_is_read_only_in_the_form"),
+    ("the host has no Report view", "manifest.json", '"fetch_from": "deposit_sale.paid_amount"\n    }\n   ],\n   "permissions": [\n    {\n     "role": "System Manager",\n     "read": 1,\n     "write": 1,\n     "create": 1,\n     "delete": 1,\n     "report": 1,\n     "export": 1,\n     "share": 0,\n     "print": 1,\n     "email": 0\n    },\n    {\n     "role": "PP FOH Host",\n     "read": 1,\n     "write": 1,\n     "create": 1,\n     "delete": 0,\n     "report": 0,',
+     '"fetch_from": "deposit_sale.paid_amount"\n    }\n   ],\n   "permissions": [\n    {\n     "role": "System Manager",\n     "read": 1,\n     "write": 1,\n     "create": 1,\n     "delete": 1,\n     "report": 1,\n     "export": 1,\n     "share": 0,\n     "print": 1,\n     "email": 0\n    },\n    {\n     "role": "PP FOH Host",\n     "read": 1,\n     "write": 1,\n     "create": 1,\n     "delete": 0,\n     "report": 1,',
+     F + "test_m4_who_may_do_what_on_the_records"),
     # the deposit
     ("the store's deposit rule is written", C, '    if (rule or "").startswith("Return"):', "    if False:",
      T + "test_n1_a_no_show_writes_the_stores_deposit_rule"),

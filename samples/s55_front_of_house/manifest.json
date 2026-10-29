@@ -134,7 +134,7 @@
   {
    "name": "PP FOH Reservation",
    "autoname": "format:FOH-RES-{#####}",
-   "sort_field": "booking_date",
+   "sort_field": "booking_time",
    "sort_order": "ASC",
    "search_fields": "booking_date,place",
    "fields": [
@@ -151,7 +151,6 @@
      "fieldtype": "Date",
      "label": "Date",
      "reqd": 1,
-     "in_list_view": 1,
      "in_standard_filter": 1,
      "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
     },
@@ -188,7 +187,6 @@
      "fieldtype": "Link",
      "options": "Retail Floor Place",
      "label": "Table",
-     "in_list_view": 1,
      "description": "A place on the store's floor: choose it before Book to hold it. Booked without one: Change booking, choose it, then Book.",
      "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
     },
@@ -197,7 +195,8 @@
      "fieldtype": "Data",
      "label": "Table name",
      "read_only": 1,
-     "fetch_from": "place.label"
+     "fetch_from": "place.label",
+     "in_list_view": 1
     },
     {
      "fieldname": "deposit_section",
@@ -238,7 +237,7 @@
      "write": 1,
      "create": 1,
      "delete": 0,
-     "report": 1,
+     "report": 0,
      "export": 0,
      "share": 0,
      "print": 1,
@@ -284,7 +283,6 @@
      "fieldname": "quoted_minutes",
      "fieldtype": "Int",
      "label": "Wait quoted (minutes)",
-     "in_list_view": 1,
      "non_negative": 1
     },
     {
@@ -343,7 +341,7 @@
      "write": 1,
      "create": 1,
      "delete": 0,
-     "report": 1,
+     "report": 0,
      "export": 0,
      "share": 0,
      "print": 1,
@@ -370,7 +368,7 @@
    "fieldname": "guest_name",
    "fieldtype": "Data",
    "label": "Guest",
-   "insert_after": "party",
+   "insert_after": "booking_time",
    "in_list_view": 1,
    "read_roles": [
     "PP FOH Host",
@@ -470,7 +468,7 @@
    "options": "Requested\nBooked\nSeated\nNo-show\nCancelled",
    "default": "Requested",
    "label": "Status",
-   "insert_after": "booking_time",
+   "insert_after": "place_label",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "description": "Book holds the table (Booked); Seat opens its check (Seated); Change booking, No-show and Cancel booking release it.",

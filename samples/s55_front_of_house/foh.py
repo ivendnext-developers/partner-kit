@@ -1,6 +1,6 @@
 """S55 — *Front of house*: the pure core (no framework, no network), shared by the service and its tests.
 
-Four Desk buttons send one signed POST per press each (the Desk action extension point, ``desk_action/1``):
+Five Desk buttons send one signed POST per press each (the Desk action extension point, ``desk_action/1``):
 
     Book      on a reservation        → /press/book     the table is held: no other booking overlaps it
     Seat      on a reservation or a   → /press/seat     the table's check opens through the till's open-check

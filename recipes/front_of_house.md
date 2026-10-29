@@ -6,7 +6,7 @@ A restaurant's host takes bookings on the phone, keeps walk-ins waiting in order
 
 **When to use it.** A store with *Table Service* on its register (full service, a bar that takes bookings, a hotel's restaurant). The tables are the till's own floor: *Retail Floor Section* and *Retail Floor Place*, set up in Desk. A deposit is the till's own customer advance. A booking platform or a messaging provider of your own comes on top (*Make it your own*, below).
 
-**The four rules, here.** No code runs inside the retailer's iVendNext. One address is called, your service, and only when the host presses one of the buttons. The service opens a check only through the till's door (`check_open`), as the app's own user, with the two rights front of house asks for: *open a check* and *see the checks*. A guest's name, phone, customer and notes are fields only the host role reads, so they never reach your service.
+**The four rules, here.** No code runs inside the retailer's iVendNext. One address is called, your service, and only when the host presses one of the buttons. The service opens a check only through the till's door (`check_open`), as the app's own user, with the two rights front of house asks for: *open a check* and *see the checks*. A guest's name, phone, customer and notes are fields only the host role reads, so they never reach your service: the app's user can neither read them nor search on them.
 
 ## What the host and the server see
 
@@ -23,7 +23,7 @@ A restaurant's host takes bookings on the phone, keeps walk-ins waiting in order
 1. Install the manifest. It adds the settings (one per company, with a row per store), the reservation, the waiting-list entry, the roles **PP FOH Host** and **PP FOH Integration**, six buttons and their five services (off), and the feed registration that makes the app's own user (`pp_foh@integration.invalid`, from POS 2.1.0.667; leave the feed off).
 2. Give the app's user its store and its key, in this order, on its User record: keep *Is Desk User*, tick **Is POS User**, choose a **Shift Profile**, link a **Retail Permission** with *Open Checks*: **open a check** and **see the checks** only; add one row to the store access table (the store and its register, *Table Service* on); **Save**; then **Generate Keys**. Without *Is POS User* the save drops the store row and the till answers *"You are not assigned to this outlet."* Never give it write on *Floor Section*: that is every check verb, a comp included.
 3. On **PP FOH Settings**, one row per store: **the same register** the app's user holds there, the usual booking length (90 minutes to start), whether a table with an open check may take a second check, and the **No-show deposit** rule (*Keep it* or *Return it*).
-4. Give **PP FOH Host** to the hosts and managers; consent to the five services and switch the six buttons on; press **Connect again** on the app's package record if the site could not reach the app.
+4. Give **PP FOH Host** to the hosts and managers, with **Select** on *Retail Floor Place*, *Warehouse*, *POS Invoice* and *Customer* (Role Permissions Manager); consent to the five services and switch the six buttons on; press **Connect again** on the app's package record if the site could not reach the app.
 
 ### Reservations
 
@@ -41,7 +41,7 @@ A restaurant's host takes bookings on the phone, keeps walk-ins waiting in order
 
 ## What the retailer does
 
-Day to day the host presses four buttons and the server works the table at the till as before. The app never adds a dish, moves, merges, closes, voids, comps or prints a check, and never takes a payment: those are a person's decisions, at a till.
+Day to day the host presses the five buttons and the server works the table at the till as before. The app never adds a dish, moves, merges, closes, voids, comps or prints a check, and never takes a payment: those are a person's decisions, at a till.
 
 ## Limits
 
