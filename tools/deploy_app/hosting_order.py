@@ -83,7 +83,7 @@ def send(data: bytes) -> tuple[int, dict]:
 
 def app_settings(m: dict) -> dict:
     """What of app.json the order sends: names and shapes, never a value."""
-    keep = ("app", "version", "runs", "size", "port", "health", "handler", "region", "shops")
+    keep = ("app", "version", "runs", "size", "port", "health", "handler", "region", "shops", "scratch")
     out = {k: m[k] for k in keep if k in m}
     out["env"] = [{k: e[k] for k in ("name", "secret", "required") if k in e} for e in m.get("env") or [] if isinstance(e, dict)]
     return out

@@ -138,6 +138,10 @@ class Refuses(Base):
         self.settings(size="large")
         self.assertIn("not on the starter plan", self.refused())
 
+    def test_a_scratch_folder_on_a_plan_with_two_instances(self):
+        self.settings(scratch=True)
+        self.assertIn("scratch:", self.refused(plan="managed"))
+
     def test_an_unknown_plan(self):
         self.assertIn("plan: one of", self.refused(plan="gold"))
 
