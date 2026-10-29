@@ -51,6 +51,10 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual([f.split(".")[1] for f in payrules.RULE_FIELDS if "." in f], [f["fieldname"] for f in table["fields"]])
         self.assertEqual(payrules.RULE_FIELDS_LISTED, ("name", "customer_group", "kind", "words", "methods.mode_of_payment"))
 
+    def test_the_feed_registration_is_as_listed(self):
+        """An update refuses a changed registered application (run pp-20261029T033646Z-26411): frozen as listed in 0.1.0."""
+        self.assertEqual(MANIFEST["registered_applications"], [{"name": "PP PMR Rules feed", "description": "the payment method rules service reads the shop's rules and its customer group tree as this user; leave the feed off", "events": ["PP PMR Rule"]}])
+
     def test_the_words_fit_the_tills_sentence(self):
         rule = TYPES[MANIFEST["prefix"] + " Rule"]
         self.assertLessEqual(next(f for f in rule["fields"] if f["fieldname"] == "words")["length"], 140)
