@@ -91,10 +91,9 @@ def old_names(m: dict, sample: str = "") -> re.Pattern:
 
 def roles(m: dict) -> set:
     """The manifest's names that start with the prefix's first word alone ("PP Integration"): ``rename`` makes them yours."""
-    words = m["prefix"].split()
-    if len(words) < 2:
+    first = rename.role_start(m["prefix"])
+    if not first:
         return set()
-    first = re.compile(rf"^{re.escape(words[0])} (?!{re.escape(' '.join(words[1:]))}\b)")
     return {s for s in rename._strings(m) if first.search(s) and len(s) <= 80}
 
 
