@@ -178,7 +178,7 @@ def rows(kind, *methods, words=None, group="All Customer Groups"):
 
 
 class FromASale(unittest.TestCase):
-    """1.1.0: a method row's *From a sale of* (NETT-CRD001: loyalty points only on a sale of at least 2,000)."""
+    """1.1.0: a method row's *From a sale of* (for example: loyalty points only on a sale of at least 2,000)."""
     OFFER = ["Cash", "Credit Card", LP]
 
     def ask(self, records, total, group="Retail", offered=None, **kw):
