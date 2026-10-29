@@ -12,6 +12,17 @@ with ``exclude_tenders``: the till draws those methods dimmed with the rule's wo
 - a rule that leaves out every offered method: ``refuse`` (the payment screen would have nothing to take);
 - more than the contract's 20 methods to leave out: ``refuse`` too, never a partial list that lets one through.
 
+**From a sale of** (1.1.0, NETT's minimum sale before loyalty points pay): a method row may carry an amount
+(``min_sale``). Under either kind of rule that method pays only for a sale of at least that amount: below it, it is left
+out with the rule's words, or the app's naming the amount; from it, it is offered. A row without an amount keeps 1.0's
+meaning, and a method on several rows takes the strictest (below). The amount is read in the sale's own currency, rounded up to
+its minor unit (a minimum), against ``totals.grand_minor``: the sale's total as rounded for payment, after its
+discounts, tax included, before any payment method's own discount. Equal is enough. A method on several rows takes the
+strictest: the largest amount, and under *Every payment method but these* a row with no amount keeps it out. The till draws an excluded method's tile dimmed, but its loyalty form shows whenever the customer has points:
+a redemption below the amount is refused when the payment completes, and once a card on the bank's own machine, a wallet
+or a split's earlier leg has taken money it books and is flagged for review (the till's own doors, ``partner_check.Door.verify``). Loyalty points pay through the method named *Loyalty Points*, so a rule on the
+top customer group, *Every payment method but these*, *Loyalty Points* from 2,000, is NETT's rule for every customer.
+
 Only a sale is judged (``stage: "sale"``), and an exchange's replacement basket is one (the check page, section 1): it pays
 by store credit, so an *Only these* rule that does not list the store-credit method stops that group's exchanges. A refund,
 the returned lines of an exchange and a return without its sale (``stage: "return"``) are allowed without reading the shop.
@@ -28,13 +39,17 @@ import base64
 import hashlib
 import hmac
 import time
+from decimal import ROUND_CEILING, Decimal, InvalidOperation
 
 SKEW_S = 300          # a request stamped further than this from our clock is refused (a replay window, not a clock)
 BODY_MAX = 256 * 1024
 TEXT_MAX = 140        # every sentence the till shows: plain text, 1 to 140 characters (the extension points' rule)
 EXCLUDE_MAX = 20      # the contract's most methods one answer leaves out
 ONLY, BUT = "Only these payment methods", "Every payment method but these"
-RULE_FIELDS = ("name", "customer_group", "kind", "words", "methods.mode_of_payment")   # one row per method (a left join)
+# one row per method (a left join). A retailer still on 1.0.x has no ``min_sale``: a read naming it answers 417, and the
+# service reads again with the listed version's fields (``RULE_FIELDS_LISTED``), whose rows carry no amount
+RULE_FIELDS = ("name", "customer_group", "kind", "words", "methods.mode_of_payment", "methods.min_sale")
+RULE_FIELDS_LISTED = RULE_FIELDS[:-1]
 TREE_FIELDS = ("name", "lft", "rgt")
 
 
@@ -66,26 +81,55 @@ def check_context(body: dict) -> dict:
         raise ValueError("offered_tenders is a list of text")
     if not (_text_or_none(ctx.get("customer")) and _text_or_none(ctx.get("customer_group"))):
         raise ValueError("customer and customer_group are text")
+    exp, totals = ctx.get("currency_exponent"), ctx.get("totals")
+    if not _whole(exp) or not 0 <= exp <= 4 or not isinstance(totals, dict) or not _whole(totals.get("grand_minor")):
+        raise ValueError("currency_exponent and totals.grand_minor are whole numbers")
     return ctx
+
+
+def _whole(n) -> bool:
+    return isinstance(n, int) and not isinstance(n, bool)
+
+
+def _amount(value) -> Decimal:
+    """A method row's *From a sale of*: 0 when blank, absent (a retailer on 1.0.x), not a number or not above 0.
+    S32's ``_amount`` (``samples/s32_coupon_rules/coupons.py``), copied: a defect there is a defect here."""
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        return Decimal(0)
+    try:
+        d = Decimal(str(value))
+    except InvalidOperation:
+        return Decimal(0)
+    return d if d.is_finite() and d > 0 else Decimal(0)
 
 
 def rules_of(rows) -> dict:
     """The shop's switched-on rules, from its list read (one row per method, a rule with no method once with none):
-    ``{group: {"kind": ONLY | BUT, "methods": set, "words": str}}``. A row with no group, or a kind this app does not know,
+    ``{group: {"kind": ONLY | BUT, "methods": set, "from": {method: amount}, "words": str}}``. ``from`` holds the methods
+    with an amount, a method on several rows taking the strictest: the largest amount, and under *Every payment method but
+    these* a row with no amount keeps the method out at any total (a blank row is never loosened by another). A row with no group, or a kind this app does not know,
     is left out (that group then takes the rule above it). Anything that is not a list of records is ``ValueError``."""
     if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
         raise ValueError("the shop's rules are not a list of records")
-    out = {}
+    out, bare = {}, set()
     for r in rows:
         group, kind = r.get("customer_group"), r.get("kind")
         if not isinstance(group, str) or not group or kind not in (ONLY, BUT):
             continue
-        rule = out.setdefault(group, {"kind": kind, "methods": set(), "words": ""})
+        rule = out.setdefault(group, {"kind": kind, "methods": set(), "from": {}, "words": ""})
         words, method = r.get("words"), r.get("mode_of_payment")
         if isinstance(words, str) and words.strip():
             rule["words"] = words.strip()
         if isinstance(method, str) and method:
             rule["methods"].add(method)
+            amount = _amount(r.get("min_sale"))
+            if not amount:
+                bare.add((group, method))
+            elif amount > rule["from"].get(method, 0):
+                rule["from"][method] = amount
+    for group, method in bare:
+        if out[group]["kind"] == BUT:       # always out: an amount on another row never lets it through
+            out[group]["from"].pop(method, None)
     return out
 
 
@@ -131,6 +175,23 @@ def plain(text, n: int = TEXT_MAX) -> str:
     return text if len(text) <= n else text[: n - 1] + "…"
 
 
+def money(minor: int, exponent: int, currency: str = "") -> str:
+    """``minor`` units as the till shows an amount: ``NGN 2,000.00``. S32's (``coupons.py``), copied."""
+    whole, frac = divmod(abs(minor), 10 ** exponent)
+    text = ("-" if minor < 0 else "") + f"{whole:,}" + (f".{frac:0{exponent}d}" if exponent else "")
+    return f"{plain(currency, 3)} {text}".strip()
+
+
+def _short_words(short: list, need: dict, ctx: dict, tail: str = ".") -> str:
+    """The sale's total first (a cut sentence keeps it), then each method left out by its amount, then ``tail``."""
+    exp, cur = ctx["currency_exponent"], ctx.get("currency") or ""
+    head = f"This sale is {money(ctx['totals']['grand_minor'], exp, cur)}; "
+    if len(short) == 1:
+        return plain(head + f"{plain(short[0], 40)} needs a sale of {money(need[short[0]], exp, cur)}{tail}")
+    return plain(head + "these need a larger sale: " + ", ".join(
+        f"{plain(t, 30)} {money(need[t], exp, cur)}" for t in short) + tail)
+
+
 def _reason(group: str, rule: dict) -> str:
     own = plain(rule["words"])          # words that come out empty (a mark alone) fall back to the app's own
     if own.strip(MARKS):
@@ -149,12 +210,17 @@ def on_check(ctx: dict, rules: dict, tree: dict) -> dict:
         return {"verdict": "allow"}
     group, rule = found
     offered = list(dict.fromkeys(ctx["offered_tenders"]))
+    exp, total = ctx["currency_exponent"], ctx["totals"]["grand_minor"]
+    need = {t: int((a * 10 ** exp).to_integral_value(ROUND_CEILING)) for t, a in rule["from"].items()}   # a minimum: up
+    short = [t for t in offered if t in need and total < need[t]]        # left out by the sale's size
     if rule["kind"] == ONLY:
-        out = [t for t in offered if t not in rule["methods"]]
+        out = [t for t in offered if t not in rule["methods"] or t in short]
     else:
-        out = [t for t in offered if t in rule["methods"]]
+        out = [t for t in offered if (t in rule["methods"] and t not in need) or t in short]
     if not out:
         return {"verdict": "allow"}
+    if len(out) == len(offered) and short:
+        return {"verdict": "refuse", "reason": _short_words(short, need, ctx, ": add to the sale; the rule allows no other method here.")}
     if len(out) == len(offered):
         takes = ", ".join(sorted(rule["methods"])) if rule["kind"] == ONLY and rule["methods"] else "another payment method"
         return {"verdict": "refuse", "reason": plain(       # 52 characters + a group of 30 + a list of 58: at most 140
@@ -163,4 +229,8 @@ def on_check(ctx: dict, rules: dict, tree: dict) -> dict:
         return {"verdict": "refuse", "reason": plain(
             f"This till offers more payment methods than the rule for customers in {plain(group, 40)} can switch off. "
             "Ask your administrator.")}
+    own = plain(rule["words"])
+    if short and not own.strip(MARKS):   # the amount first (the contract carries one reason for every method left out)
+        tail = "." if out == short else f". {_reason(group, rule)}"
+        return {"verdict": "allow", "exclude_tenders": out, "reason": _short_words(short, need, ctx, tail)}
     return {"verdict": "allow", "exclude_tenders": out, "reason": _reason(group, rule)}

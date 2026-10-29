@@ -3,18 +3,19 @@ id: payment-methods-for-sale
 title: Only some payment methods for a sale or a customer
 area: till
 topic: payment
-asks: Delivery-platform customers paying only by the platform's method, no on-account for a cash customer, and methods that may not be combined
+asks: Delivery-platform customers paying only by the platform's method, no on-account for a cash customer, a method only from a minimum sale, and methods that may not be combined
 status: ready-with-limits
 door: check-before-payment
 blocked-by: -
 recipe: recipes/payment_method_rules.md
 sample: samples/s46_payment_method_rules
 request: -
-verified: run on our test bench 2026-10-23 · a rule per customer group leaving methods off the till's payment screen, a group taking the rule above it, a sale with nothing left to pay with refused
+verified: run on our test bench 2026-10-23 · a rule per customer group leaving methods off the till's payment screen, a group taking the rule above it, a sale with nothing left to pay with refused; 2026-10-29 · bench · a method from a minimum sale
+related: minimum-sale-before-loyalty
 popular: yes
 ---
 ## What you build
-A rule record per customer group (*Only these payment methods* or *Every payment method but these*), and a service that answers the check before payment with `allow` and `exclude_tenders`: the payment methods this sale's customer may not use. A group with no rule takes the rule of the nearest group above it.
+A rule record per customer group (*Only these payment methods* or *Every payment method but these*), and a service that answers the check before payment with `allow` and `exclude_tenders`: the payment methods this sale's customer may not use. A group with no rule takes the rule of the nearest group above it. A method on a rule may name an amount, *From a sale of*: it is then offered only on a sale of at least that much.
 
 ## Limits
 - Answered when the cashier presses Pay, not when the line is entered.

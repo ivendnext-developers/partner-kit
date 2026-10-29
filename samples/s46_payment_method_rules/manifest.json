@@ -3,9 +3,9 @@
  "app": "pp_pmr",
  "prefix": "PP PMR",
  "title": "Payment method rules",
- "version": "0.1.0",
+ "version": "0.2.0",
  "publisher": "Partner Programme sample",
- "description": "Which payment methods each customer group may use at the till. A check before payment: when the cashier presses Pay, and before each refund, the shop's server sends its priced basket with the customer's group and the payment methods the till offers, and the service answers with the methods the group's rule leaves out; the till draws them dimmed with the rule's words, and the cashier takes another. One record of PP PMR Rule per customer group: Only these payment methods, or Every payment method but these; a group with no rule takes the rule of the nearest group above it, and a customer with no rule up the tree keeps every method. A rule that leaves out every method the till offers refuses the sale in words. A group's own rule replaces the rule above it. Refunds are not judged. An exchange's new items are judged as a sale and paid by store credit, so an Only these rule that does not list the store-credit method stops that group's exchanges. The service reads the rules and the customer group tree with the app's integration user and writes nothing. The install makes the role PP PMR Integration; the shop gives it to the app's integration user, with read on Customer Group. The check installs switched off; the shop reads what it is sent, ticks the consent and switches it on. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "Which payment methods each customer group may use at the till. A check before payment: when the cashier presses Pay, and before each refund, the retailer's server sends its priced basket with the customer's group and the payment methods the till offers, and the service answers with the methods the group's rule leaves out; the till draws them dimmed with the rule's words, and the cashier takes another. One record of PP PMR Rule per customer group: Only these payment methods, or Every payment method but these; a group with no rule takes the rule of the nearest group above it, and a customer with no rule up the tree keeps every method. A method row may name an amount, From a sale of: that method then pays only for a sale of at least that amount (the sale's total as paid), such as loyalty points from 2,000. A rule that leaves out every method the till offers refuses the sale in words. A group's own rule replaces the rule above it. Refunds are not judged. An exchange's new items are judged as a sale and paid by store credit, so an Only these rule that does not list the store-credit method stops that group's exchanges. The service reads the rules and the customer group tree with the app's integration user and writes nothing. The install makes the role PP PMR Integration and the app's own user holding it; the retailer gives the role read on Customer Group. The check installs switched off; the retailer reads what it is sent, ticks the consent and switches it on. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/pmr/check"
  ],
@@ -21,6 +21,13 @@
      "options": "Mode of Payment",
      "reqd": 1,
      "in_list_view": 1
+    },
+    {
+     "fieldname": "min_sale",
+     "fieldtype": "Currency",
+     "label": "From a sale of",
+     "in_list_view": 1,
+     "description": "Blank: as the rule says. An amount: this method pays only for a sale of at least this much, in the sale's currency (for example Loyalty Points from 2,000)."
     }
    ]
   },

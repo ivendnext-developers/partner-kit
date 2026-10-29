@@ -42,11 +42,18 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual((fields["methods"]["fieldtype"], fields["methods"]["options"], fields["methods"]["reqd"]),
                          ("Table", MANIFEST["prefix"] + " Rule Method", 1))
         table = TYPES[MANIFEST["prefix"] + " Rule Method"]
-        self.assertEqual((table["istable"], [(f["fieldname"], f["options"]) for f in table["fields"]]),
-                         (1, [("mode_of_payment", "Mode of Payment")]))
+        self.assertEqual((table["istable"], [(f["fieldname"], f["fieldtype"], f.get("options")) for f in table["fields"]]),
+                         (1, [("mode_of_payment", "Link", "Mode of Payment"), ("min_sale", "Currency", None)]))
+        self.assertFalse(table["fields"][1].get("reqd"))       # blank: as the rule says
         read = {f.split(".")[0] for f in payrules.RULE_FIELDS} - {"name"}
         self.assertEqual(read, set(fields) - {"enabled"})
-        self.assertEqual(payrules.RULE_FIELDS[-1], "methods.mode_of_payment")
+        # every method-row field the service reads, and the listed version's read without the new one
+        self.assertEqual([f.split(".")[1] for f in payrules.RULE_FIELDS if "." in f], [f["fieldname"] for f in table["fields"]])
+        self.assertEqual(payrules.RULE_FIELDS_LISTED, ("name", "customer_group", "kind", "words", "methods.mode_of_payment"))
+
+    def test_the_feed_registration_is_as_listed(self):
+        """An update refuses a changed registered application (run pp-20261029T033646Z-26411): frozen as listed in 0.1.0."""
+        self.assertEqual(MANIFEST["registered_applications"], [{"name": "PP PMR Rules feed", "description": "the payment method rules service reads the shop's rules and its customer group tree as this user; leave the feed off", "events": ["PP PMR Rule"]}])
 
     def test_the_words_fit_the_tills_sentence(self):
         rule = TYPES[MANIFEST["prefix"] + " Rule"]

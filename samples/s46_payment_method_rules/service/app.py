@@ -56,7 +56,9 @@ import function  # noqa: E402
 import shops  # noqa: E402
 
 KEY, ROUTE = "methods", "/pmr/check"   # the subscription's key in the manifest; its secret is "<app>:sub:<key>"
-RULES_TTL, READ_TIMEOUT = 60, 0.9      # one step (the rules and the tree at once) inside the check's 3 s
+RULES_TTL, READ_TIMEOUT = 60, 0.9      # one step (the rules and the tree at once) inside the check's 3 s; two
+                                       # reads of the rules for a retailer on 1.0.x (a 417 first), each with its own
+                                       # socket timeout (a bound per socket operation, not per read)
 
 
 class ShopUnreadable(Exception):
@@ -66,6 +68,11 @@ class ShopUnreadable(Exception):
 class KeyRefused(ShopUnreadable):
     """The shop answered 401 or 403 to the app's user key (a key withdrawn, a user disabled, a right not given): judged as
     the shop unreadable, but logged by its own name, so a partner can tell it from an outage."""
+
+
+class FieldMissing(ShopUnreadable):
+    """iVendNext answered 417 to a read naming a field its record type lacks: a retailer still on 1.0.x, whose method rows
+    have no *From a sale of*. The rules are read again with the listed version's fields."""
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -84,7 +91,8 @@ class ShopApi:
                 return json.loads(r.read() or b"{}") or {}
         except urllib.error.HTTPError as e:
             e.close()
-            raise (KeyRefused if e.code in (401, 403) else ShopUnreadable)(f"the shop answered {e.code}") from None
+            kind = KeyRefused if e.code in (401, 403) else FieldMissing if e.code == 417 else ShopUnreadable
+            raise kind(f"the shop answered {e.code}") from None
         except (OSError, http.client.HTTPException, ValueError) as e:   # OSError: URLError, timeouts, TLS, a cut
             raise ShopUnreadable(type(e).__name__) from None             # connection; HTTPException: a cut answer
 
@@ -94,8 +102,14 @@ class ShopApi:
         return out.get("data") if isinstance(out, dict) else None
 
     def rules(self, url: str, key: str, prefix: str) -> list:
-        """The shop's switched-on Rule records, one row per method (every one: ``limit_page_length`` 0)."""
-        return self._list(url, key, prefix + " Rule", payrules.RULE_FIELDS, [["enabled", "=", 1]])
+        """The shop's switched-on Rule records, one row per method (every one: ``limit_page_length`` 0). A retailer still on
+        1.0.x answers 417 to the method rows' *From a sale of*: read again with 1.0's fields (no amounts), once a minute at
+        most, since the rules are kept ``RULES_TTL``."""
+        try:
+            return self._list(url, key, prefix + " Rule", payrules.RULE_FIELDS, [["enabled", "=", 1]])
+        except FieldMissing:
+            print(json.dumps({"read": "rules", "fields": "listed"}), file=sys.stderr, flush=True)   # a 1.0.x retailer
+            return self._list(url, key, prefix + " Rule", payrules.RULE_FIELDS_LISTED, [["enabled", "=", 1]])
 
     def tree(self, url: str, key: str) -> list:
         """The shop's Customer Group tree: every group's ``lft`` and ``rgt``."""
