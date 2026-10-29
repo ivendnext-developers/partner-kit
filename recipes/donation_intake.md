@@ -16,6 +16,12 @@ A charity or thrift store takes donated goods in at its door, and the donor ofte
 4. **Into stock.** The Material Receipt that takes the sorted goods into the store names the donation in its **Donation** field.
 5. **What came in.** The report **PP DON Donations** lists every donation not cancelled, newest first.
 
+![A donation on a demo site](../samples/s57_donation_intake/screenshots/02_donation.png)
+
+![The donor receipt under the store's letter head](../samples/s57_donation_intake/screenshots/03_receipt.png)
+
+![A Material Receipt naming the donation](../samples/s57_donation_intake/screenshots/04_stock_entry.png)
+
 ## Donations
 
 The record type `PP DON Donation`, numbered `format:DON-{#####}`, tracked (its history shows who changed it and when):
