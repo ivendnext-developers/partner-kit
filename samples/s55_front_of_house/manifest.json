@@ -5,12 +5,13 @@
  "title": "Front of house",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "A restaurant's front of house in Desk: reservations and a waiting list, a double-booking guard, no-shows, the deposit's sale, and seating that opens the table's check on the till through the open-check door. Book, on a reservation, holds its table when no other booking overlaps it (each from its start for its length). Seat, on a reservation or a waiting party, refuses a table booked for someone else within the party's stay or one with an open check (unless the store's row allows a second check), then opens the check at the table with the party's size and the booking's number. No-show and Cancel booking close a booking and free its table; a no-show writes the store's deposit rule on it. A guest's name, phone, customer and notes, and Guest notes on Customer, are read and written only by PP FOH Host and System Manager: the app's own user never reads them, so they never leave the retailer's iVendNext. Each press sends the record's name, the pressing user and the language. Table ready on a waiting party is the retailer's own SMS Notification, made in Desk. The install makes the roles PP FOH Host and PP FOH Integration and the app's own user; the retailer gives that user its store, register and the Open Checks rights open a check and see the checks, and leaves the feed PP FOH Front of house feed off. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "A restaurant's front of house in Desk: reservations and a waiting list, a double-booking guard, no-shows, the deposit's sale, and seating that opens the table's check on the till through the open-check door. Book, on a reservation, holds its table when no other booking overlaps it (each from its start for its length). Seat, on a reservation or a waiting party, refuses a table booked for someone else within the party's stay or one with an open check (unless the store's row allows a second check), then opens the check at the table with the party's size and the booking's number. No-show and Cancel booking close a booking and free its table; a no-show writes the store's deposit rule on it. Once booked, the time, the length and the table are read-only in the form: Change booking releases the hold so they can change, and Book holds them again. A guest's name, phone, customer and notes, and Guest notes on Customer, are read and written only by PP FOH Host and System Manager: the app's own user never reads them, so they never leave the retailer's iVendNext. Each press sends the record's name, the pressing user and the language. Table ready on a waiting party is the retailer's own SMS Notification, made in Desk. The install makes the roles PP FOH Host and PP FOH Integration and the app's own user; the retailer gives that user its store, register and the Open Checks rights open a check and see the checks, and leaves the feed PP FOH Front of house feed off. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8155/press/book",
   "https://host.docker.internal:8155/press/seat",
   "https://host.docker.internal:8155/press/noshow",
-  "https://host.docker.internal:8155/press/cancel"
+  "https://host.docker.internal:8155/press/cancel",
+  "https://host.docker.internal:8155/press/change"
  ],
  "doctypes": [
   {
@@ -65,7 +66,6 @@
   {
    "name": "PP FOH Settings",
    "autoname": "field:company",
-   "track_changes": 1,
    "fields": [
     {
      "fieldname": "company",
@@ -134,7 +134,6 @@
   {
    "name": "PP FOH Reservation",
    "autoname": "format:FOH-RES-{#####}",
-   "track_changes": 1,
    "sort_field": "booking_date",
    "sort_order": "ASC",
    "search_fields": "booking_date,place",
@@ -153,14 +152,16 @@
      "label": "Date",
      "reqd": 1,
      "in_list_view": 1,
-     "in_standard_filter": 1
+     "in_standard_filter": 1,
+     "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
     },
     {
      "fieldname": "booking_time",
      "fieldtype": "Time",
      "label": "Time",
      "reqd": 1,
-     "in_list_view": 1
+     "in_list_view": 1,
+     "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
     },
     {
      "fieldname": "party",
@@ -175,7 +176,8 @@
      "fieldtype": "Int",
      "label": "Length (minutes)",
      "non_negative": 1,
-     "description": "Blank: the store's usual length. Changed after Book? Press Book again."
+     "description": "Blank: the store's usual length. Booked: press Change booking to change the time, the length or the table.",
+     "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
     },
     {
      "fieldname": "col_table",
@@ -187,7 +189,8 @@
      "options": "Retail Floor Place",
      "label": "Table",
      "in_list_view": 1,
-     "description": "A place on the store's floor. Choose it to hold it with Book, or when you seat the party."
+     "description": "A place on the store's floor: choose it before Book to hold it. Booked without one: Change booking, choose it, then Book.",
+     "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
     },
     {
      "fieldname": "place_label",
@@ -486,7 +489,7 @@
    "insert_after": "booking_time",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "description": "Book holds the table (Booked); Seat opens its check (Seated); No-show and Cancel booking free it.",
+   "description": "Book holds the table (Booked); Seat opens its check (Seated); Change booking, No-show and Cancel booking release it.",
    "write_roles": [
     "PP FOH Integration",
     "System Manager"
@@ -652,6 +655,13 @@
    "label": "Cancel booking service",
    "endpoint_url": "https://host.docker.internal:8155/press/cancel",
    "timeout_seconds": 10
+  },
+  {
+   "key": "change",
+   "point": "desk_action",
+   "label": "Change booking service",
+   "endpoint_url": "https://host.docker.internal:8155/press/change",
+   "timeout_seconds": 10
   }
  ],
  "desk_actions": [
@@ -721,6 +731,22 @@
    ],
    "send_fields": "name",
    "confirm_text": "Cancel this booking and free its table?"
+  },
+  {
+   "record_type": "PP FOH Reservation",
+   "label": "Change booking",
+   "placement": "form",
+   "service": "change",
+   "roles": [
+    "PP FOH Host"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "states": [
+    "Booked"
+   ],
+   "send_fields": "name",
+   "confirm_text": "Release this booking's table so you can change its time, length or table, then press Book again?"
   },
   {
    "record_type": "PP FOH Waitlist Entry",

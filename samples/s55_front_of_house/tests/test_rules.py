@@ -35,7 +35,7 @@ class Rules(unittest.TestCase):
                          ["R-17:31:00", "R-20:29:00"])                                         # earliest first
         self.assertEqual(foh.clashes(mine, [other("19:00:00", "Requested"), other("19:00:00", "No-show"),
                                             other("19:00:00", "Cancelled")], row), [])
-        self.assertEqual(len(foh.clashes(mine, [other("19:00:00", "Seated")], row)), 1)
+        self.assertEqual(foh.clashes(mine, [other("19:00:00", "Seated")], row), [])     # its open check holds it
         self.assertEqual(foh.clashes(mine, [other("19:00:00", name="ME")], row, exclude="ME"), [])
         self.assertEqual(len(foh.clashes(mine, [other("17:00:00", minutes=150)], row)), 1)      # its own length
 

@@ -22,7 +22,7 @@ import app  # noqa: E402
 import fakeshop as fs  # noqa: E402
 import foh  # noqa: E402
 
-SECRETS = {"book": "s55-book", "seat": "s55-seat", "noshow": "s55-noshow", "cancel": "s55-cancel"}
+SECRETS = {"book": "s55-book", "seat": "s55-seat", "noshow": "s55-noshow", "cancel": "s55-cancel", "change": "s55-change"}
 NOW = datetime.datetime(2026, 10, 29, 17, 0, tzinfo=datetime.timezone.utc).timestamp()
 RES, WAIT = "PP FOH Reservation", "PP FOH Waitlist Entry"
 
@@ -181,13 +181,20 @@ class ServiceTest(unittest.TestCase):
         for word in ("Ana", "Lima", "912", "CUST-ANA", "birthday"):
             self.assertNotIn(word, sent)
 
-    def test_s2_the_key_is_written_before_the_door_is_called(self):
+    def test_s2_the_key_is_written_after_the_checks_and_before_the_door_under_the_stamp(self):
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00")])
         self.press(self.svc(shop), "/press/seat", RES, "R1")
-        first_put = shop.calls.index(f"PUT {RES}")
-        self.assertLess(first_put, shop.calls.index("CALL check_open"))
-        self.assertEqual(shop.sent[0]["seat_key"], "key-1")
-        self.assertEqual(json.loads(shop.sent[0]["seat_request"])["key"], "key-1")
+        c = shop.calls
+        key_put = next(i for i, x in enumerate(c) if x == f"PUT {RES}")
+        self.assertLess(c.index(f"LIST {RES}"), key_put)                         # the clash check first
+        self.assertLess(c.index("CALL floor_status"), key_put)                   # the floor read first
+        self.assertLess(key_put, c.index("CALL check_open"))                     # the key before the door
+        stamps = [i for i, x in enumerate(c) if x == "PUT PP FOH Settings"]
+        self.assertEqual(len(stamps), 2)
+        self.assertLess(stamps[0], c.index(f"LIST {RES}"))
+        self.assertGreater(stamps[1], c.index("CALL check_open"))                # the stamp spans the door's call
+        keyed = next(b for b in shop.sent if isinstance(b, dict) and "seat_key" in b)
+        self.assertEqual((keyed["seat_key"], json.loads(keyed["seat_request"])["key"]), ("key-1", "key-1"))
 
     def test_s3_a_lost_answer_then_a_second_press_opens_one_check(self):
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00")], lose_open=1)
@@ -208,11 +215,17 @@ class ServiceTest(unittest.TestCase):
         self.assertIn("already seated", self.said(out))
         self.assertEqual(shop.calls.count("CALL check_open"), 1)
 
-    def test_s5_two_presses_at_once_send_one_key(self):
-        shop = fs.FakeTenant([fs.booking("R1", "19:00:00")], stale_seat=1)      # another press wrote its key first
-        self.press(self.svc(shop), "/press/seat", RES, "R1")
-        self.assertEqual(list(shop.keys), ["other-key"])
-        self.assertEqual(shop.res["R1"]["check_name"], "CHK-0001")
+    def test_s5_a_second_press_while_one_seats_is_told_to_wait_and_writes_no_key(self):
+        st = fs.settings()
+        st["run_started"] = datetime.datetime.fromtimestamp(NOW - 5, datetime.timezone.utc).isoformat(timespec="seconds")
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00")], settings_=st)
+        out = self.press(self.svc(shop), "/press/seat", RES, "R1")
+        self.assertIn("Another press", self.said(out))
+        self.assertEqual((shop.res["R1"]["seat_key"], shop.keys), ("", {}))
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00")], stale_seat=1)     # the record changed since it was read
+        out = self.press(self.svc(shop), "/press/seat", RES, "R1")
+        self.assertIn("Another press", self.said(out))
+        self.assertEqual(shop.keys, {})
 
     def test_s6_a_table_with_an_open_check_is_refused_unless_the_store_allows_it(self):
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00")], open_checks=[{"check": "CHK-0900", "place": fs.T12}])
@@ -255,6 +268,61 @@ class ServiceTest(unittest.TestCase):
         self.assertIn("is No-show", self.said(self.press(s, "/press/seat", RES, "R2")))
         self.assertNotIn("CALL check_open", shop.calls)
 
+    def test_s10_a_refused_retry_keeps_its_key(self):
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00")], lose_open=1)
+        s = self.svc(shop)
+        self.assertEqual(self.press(s, "/press/seat", RES, "R1")[0], 502)        # the check opened; the answer lost
+        shop.door_refuse = ("TableServiceOffError", 417, "Table service is off.")    # switched off before the retry
+        out = self.press(s, "/press/seat", RES, "R1")
+        self.assertIn("may already have opened its check", self.said(out))
+        self.assertEqual(shop.res["R1"]["seat_key"], "key-1")                    # kept: the next press finds the check
+        shop.door_refuse = None
+        self.press(s, "/press/seat", RES, "R1")
+        self.assertEqual((len(shop.checks), shop.res["R1"]["check_name"]), (1, "CHK-0001"))
+
+    def test_s11_a_refused_check_writes_no_key_at_all(self):
+        shop = fs.FakeTenant([fs.booking("R0", "19:30:00", party=2), fs.booking("R1", "19:00:00", place=fs.T14)],
+                             [fs.waiting("W1", place=fs.T12)])
+        self.press(self.svc(shop), "/press/seat", WAIT, "W1")
+        self.assertFalse(any("seat_key" in b for b in shop.sent if isinstance(b, dict)))
+        self.assertEqual(shop.wait["W1"]["seat_key"], "")
+
+    def test_s12_a_retry_after_an_edit_seats_where_the_check_opened(self):
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00", status="Requested")], lose_open=1)
+        s = self.svc(shop)
+        self.press(s, "/press/seat", RES, "R1")
+        shop.res["R1"]["place"], shop.res["R1"]["place_label"] = fs.T14, "Table 14"   # moved before the retry
+        out = self.press(s, "/press/seat", RES, "R1")
+        self.assertEqual((shop.res["R1"]["place"], shop.checks[0]["place"]), (fs.T12, fs.T12))
+        self.assertIn(f"seated at {fs.T12}", self.said(out))
+
+    def test_s13_a_party_seated_and_gone_does_not_hold_its_booked_time(self):
+        shop = fs.FakeTenant([fs.booking("R0", "18:30:00", status="Seated", check_name="CHK-0900")],
+                             [fs.waiting("W1", place=fs.T12)])
+        self.press(self.svc(shop), "/press/seat", WAIT, "W1")                        # the floor shows T12 free
+        self.assertEqual(shop.wait["W1"]["status"], "Seated")
+
+    # ── Change booking ──
+    def test_c1_change_booking_releases_the_hold_and_book_holds_the_new_slot(self):
+        shop = fs.FakeTenant([fs.booking("R0", "21:00:00", place=fs.T14), fs.booking("R1", "19:00:00")])
+        s = self.svc(shop)
+        self.assertIn("no longer held", self.said(self.press(s, "/press/change", RES, "R1")))
+        self.assertEqual(shop.res["R1"]["status"], "Requested")
+        shop.res["R1"].update(place=fs.T14, place_label="Table 14", booking_time="20:00:00")
+        self.press(s, "/press/book", RES, "R1")
+        self.assertEqual(shop.res["R1"]["status"], "Requested")                    # 20:00-21:30 against 21:00
+        shop.res["R2"] = fs.booking("R2", "19:00:00", status="Requested")
+        self.press(s, "/press/book", RES, "R2")
+        self.assertEqual(shop.res["R2"]["status"], "Booked")                       # T12 at 19:00 is free again
+
+    def test_c2_only_a_booked_reservation_not_being_seated_is_changed(self):
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00", status="Requested"),
+                              fs.booking("R2", "19:00:00", place=fs.T14, seat_key="k", seat_request="{}")])
+        s = self.svc(shop)
+        self.assertIn("is Requested", self.said(self.press(s, "/press/change", RES, "R1")))
+        self.assertIn("not being seated", self.said(self.press(s, "/press/change", RES, "R2")))
+        self.assertEqual(shop.res["R2"]["status"], "Booked")
+
     # ── No-show and Cancel ──
     def test_n1_a_no_show_writes_the_stores_deposit_rule(self):
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00", deposit_sale="ACC-PSINV-0007", deposit_amount=50)])
@@ -266,6 +334,14 @@ class ServiceTest(unittest.TestCase):
                              settings_=fs.settings(no_show_deposit="Return it"))
         self.press(self.svc(shop), "/press/noshow", RES, "R1")
         self.assertIn("return it", shop.res["R1"]["app_note"])
+
+    def test_n3_an_unfinished_seat_is_never_closed_over(self):
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00")], lose_open=1)
+        s = self.svc(shop)
+        self.press(s, "/press/seat", RES, "R1")
+        for path in ("/press/noshow", "/press/cancel"):
+            self.assertIn("did not finish", self.said(self.press(s, path, RES, "R1")))
+        self.assertEqual(shop.res["R1"]["status"], "Booked")
 
     def test_n2_cancel_frees_the_table_and_a_closed_booking_stays_closed(self):
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00"), fs.booking("R2", "19:00:00", place=fs.T14, status="Seated")])

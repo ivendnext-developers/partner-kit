@@ -46,12 +46,13 @@ class ManifestTest(unittest.TestCase):
             self.assertNotIn("read_roles", c, k)                                 # everyone reads it
         self.assertEqual(self.cf[(RES, "status")]["default"], "Requested")
 
-    def test_m3_four_buttons_for_the_host_on_their_states_sending_the_name_only(self):
+    def test_m3_five_buttons_for_the_host_on_their_states_sending_the_name_only(self):
         a = {(d["record_type"], d["label"]): d for d in self.m["desk_actions"]}
         self.assertEqual({k: (v["service"], v["states"]) for k, v in a.items()},
                          {(RES, "Book"): ("book", ["Requested", "Booked"]), (RES, "Seat"): ("seat", ["Requested", "Booked"]),
                           (RES, "No-show"): ("noshow", ["Requested", "Booked"]),
                           (RES, "Cancel booking"): ("cancel", ["Requested", "Booked"]),
+                          (RES, "Change booking"): ("change", ["Booked"]),
                           (WAIT, "Seat"): ("seat", ["Waiting", "Table ready"])})
         subs = {s["key"]: s for s in self.m["extension_subscriptions"]}
         for d in a.values():
@@ -83,6 +84,13 @@ class ManifestTest(unittest.TestCase):
         (r,) = self.m["registered_applications"]
         self.assertLessEqual(len(r["description"]), 140)
         self.assertEqual(r["events"], [RES])
+
+    def test_m9_no_version_history_and_a_booked_slot_is_read_only_in_the_form(self):
+        for d in self.m["doctypes"]:                 # a Version diff would hand a guest's field to any reader
+            self.assertNotIn("track_changes", d, d["name"])
+        f = {x["fieldname"]: x for x in self.dt[RES]["fields"]}
+        for k in ("booking_date", "booking_time", "minutes", "place"):
+            self.assertIn('doc.status=="Booked"', f[k].get("read_only_depends_on") or "", k)
 
     def test_m8_the_store_row_carries_the_register_and_the_rules(self):
         f = {x["fieldname"]: x for x in self.dt["PP FOH Store"]["fields"]}

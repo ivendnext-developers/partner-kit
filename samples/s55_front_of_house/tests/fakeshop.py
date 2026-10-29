@@ -105,12 +105,8 @@ class FakeTenant:
         t = self._table(doctype)
         rec = t[name]
         if "modified" in body:
-            if self.stale_seat and "seat_key" in body:
+            if self.stale_seat and "seat_key" in body:          # the host saved the record a moment before
                 self.stale_seat -= 1
-                rec.update(seat_key="other-key", seat_request=app.json.dumps(
-                    {"key": "other-key", "store": STORE, "pos_profile": REG, "place": rec.get("place"),
-                     "covers": rec.get("party"), "label": f"{name} · {rec.get('party')}", "source": "front_of_house",
-                     "source_ref": name}, sort_keys=True))
                 rec["modified"] = self._tick()
                 raise app.TenantError("PUT -> HTTP 417", 417, app.STALE)
             if body["modified"] != rec.get("modified"):

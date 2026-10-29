@@ -7,6 +7,7 @@ Four Desk buttons send one signed POST per press each (the Desk action extension
               waiting party                             door (``check_open``), with the party's size
     No-show   on a reservation        → /press/noshow   the booking is a no-show, the store's deposit rule written on it
     Cancel    on a reservation        → /press/cancel   the booking is cancelled and its table freed
+    Change    on a booked reservation → /press/change   its hold released, so its time or table can change
 
 ``verify`` checks the signature the shop puts on every call; ``records_of`` takes a press's record; ``span`` and
 ``clashes`` are the double-booking guard; ``seat_request`` builds the one call that opens a check; ``place_busy`` reads
@@ -29,7 +30,7 @@ TEXT_MAX = 140              # the door keeps 140 characters of a label and a ref
 BODY_WORDS = 280            # a Desk answer's body
 SOURCE = "front_of_house"   # the door's own name for a front-of-house app (20 characters at most)
 LENGTH = 90                 # a booking's length in minutes when neither the booking nor its store's row says
-HOLDING = ("Booked", "Seated")      # the bookings that hold their table
+HOLDING = ("Booked",)               # the bookings that hold their table (a seated party holds it by its open check)
 OPEN_STATES = ("Requested", "Booked")   # a booking that may still be booked, seated, marked a no-show or cancelled
 
 
@@ -124,7 +125,8 @@ def clashes(mine: tuple, others: list[dict], rows_by_store: dict, exclude: str =
     """The bookings that hold the same table at an overlapping time, earliest first.
 
     ``mine`` is ``(start, end)``; each other booking holds its table from its start for its length (its own, or its
-    store's usual). Only *Booked* and *Seated* bookings hold a table; a *Requested* one holds nothing yet."""
+    store's usual). Only *Booked* bookings hold a table: a *Requested* one holds nothing yet, and a *Seated* party holds it
+    by its open check on the floor, for as long as it really stays."""
     start, end = mine
     out = []
     for o in others:

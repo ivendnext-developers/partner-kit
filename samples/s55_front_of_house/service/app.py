@@ -3,7 +3,8 @@
     POST /press/book     *Book* on a reservation: the table is held when no other booking overlaps it
     POST /press/seat     *Seat* on a reservation or a waiting party: the table's check opens (the open-check door)
     POST /press/noshow   *No-show* on a reservation
-    POST /press/cancel   *Cancel* on a reservation
+    POST /press/cancel   *Cancel booking* on a reservation
+    POST /press/change   *Change booking* on a booked reservation: its hold released, so its time or table can change
     GET  /health         200 {"ok": 1}
     POST /ivendnext/connect · /ivendnext/disconnect   many shops: the app template's handshake (shops.py)
 
@@ -15,17 +16,19 @@ own user does not hold it, so the shop's answers carry none of them, and a press
 
 **Book** reads the store's other bookings for the table around that day (as the app's own user) and holds the table
 when none overlaps: one press at a time per company, by a stamp on the company's settings (the shop's own ``modified``
-check, as S45's). **Seat** writes a fresh key and the exact call on the record FIRST, then checks the table (no booking
-due within the party's stay, no open check unless the store allows a second), then calls the door's ``check_open`` as
-the app's user. A retry (a lost answer, a second press) finds the key and sends the same call again: the door returns
-its first check and writes nothing twice. A refusal clears the key, so the next press starts afresh.
+check, as S45's). **Seat**, under the same stamp, checks the table (no booking due within the party's stay, no open
+check unless the store allows a second), THEN writes a fresh key and the exact call on the record, then calls the door's
+``check_open`` as the app's user, and only then lifts the stamp: a stored key always means the checks passed. A retry
+(a lost answer, a second press) finds the key and sends the same call again: the door returns its first check and
+writes nothing twice. A first send the till refuses opened nothing, so its key is cleared; a refused retry keeps its key
+(the first send may have opened the check).
 
 Test-only routes, ON ONLY when the process starts with ``PP_TEST_MODES=1`` in its environment and the caller sends
 the ``X-PP-Admin`` token: ``GET /test/received`` returns the last presses as received. A partner's copy deletes them.
 
 ONE SHOP (an env file):
-    PP_BASE, PP_KEY, PP_SECRET (the app's user), PP_SECRET_BOOK, PP_SECRET_SEAT, PP_SECRET_NOSHOW, PP_SECRET_CANCEL
-    (handed back at install as pp_foh:sub:book …), PP_ADMIN_TOKEN, PP_PORT (8155)
+    PP_BASE, PP_KEY, PP_SECRET (the app's user), PP_SECRET_BOOK, PP_SECRET_SEAT, PP_SECRET_NOSHOW, PP_SECRET_CANCEL,
+    PP_SECRET_CHANGE (handed back at install as pp_foh:sub:book …), PP_ADMIN_TOKEN, PP_PORT (8155)
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
     IVN_LIBRARY_APP    the App library's id (ivendnext_foh), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 FOH_PREFIX (default PP FOH; IVENDNEXT FOH for the library's app) · PORT (default 8080)
@@ -58,7 +61,8 @@ import foh  # noqa: E402
 import function  # noqa: E402
 import shops  # noqa: E402
 
-SUBS = {"/press/book": "book", "/press/seat": "seat", "/press/noshow": "noshow", "/press/cancel": "cancel"}
+SUBS = {"/press/book": "book", "/press/seat": "seat", "/press/noshow": "noshow", "/press/cancel": "cancel",
+        "/press/change": "change"}
 DOOR = "/api/method/ivendnext_mpos.api.v1."     # the till's partner API (its open-check door)
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
 LOCK_S = 60             # a press stamp older than this has lapsed (a press takes seconds; the shop's wait is 10)
@@ -236,7 +240,8 @@ class Service:
                           "(the register the app's user is given at that store), then press again.")
         return rows[0]
 
-    def _lock(self, door, settings: str) -> str:
+    def _lock(self, door, settings: str) -> tuple[str, datetime.datetime | None]:
+        """The press stamp, and the site's own clock at that moment (the settings' new ``modified``)."""
         s = door.doc(foh.dt("Settings"), settings)
         stamp = s.get("run_started") or ""
         try:
@@ -247,12 +252,12 @@ class Service:
             raise Busy()
         mine = _now_utc(self.now).isoformat(timespec="seconds")
         try:
-            door.update(foh.dt("Settings"), settings, {"run_started": mine, "modified": s.get("modified")})
+            w = door.update(foh.dt("Settings"), settings, {"run_started": mine, "modified": s.get("modified")})
         except TenantError as e:
             if e.kind == STALE:         # another press stamped it first (or someone saved the record a moment ago)
                 raise Busy() from None
             raise
-        return mine
+        return mine, foh.stamp(w.get("modified"))
 
     def _unlock(self, door, settings: str, mine: str):
         try:
@@ -283,7 +288,7 @@ class Service:
             door.update(foh.dt("Reservation"), name, {"status": "Booked", "app_note": ""})
             return foh.message(APP_NAME, f"{name} is booked for {foh.num(r['party'])} at {start:%H:%M} on "
                                f"{start:%d %b}, with no table held yet. Choose a table and press Book again to hold one.")
-        mine = self._lock(door, row["parent"])
+        mine, _ = self._lock(door, row["parent"])
         try:
             clash = self._clash(door, r, row, start, exclude=name)
             if clash:
@@ -309,65 +314,56 @@ class Service:
         if not r.get("place") or foh.num(r.get("party")) < 1 or not r.get("store"):
             raise Refusal("Choose the table and the party size, save, then press Seat.")
         row = self._row(door, r["store"])
-        req = None
         if r.get("seat_key") and r.get("seat_request"):
             try:
                 req = json.loads(r["seat_request"])     # a retry: the same key and the same call, exactly
             except ValueError:
                 req = None
-        if req is None:
-            req, r = self._first_seat(door, doctype, r, row)
-            if req is None:                             # another press wrote its key first: retry with its call
-                req = json.loads(r["seat_request"])
+            if isinstance(req, dict):
+                return self._open(door, doctype, r, row, req, retry=True)
+        mine, now = self._lock(door, row["parent"])
+        try:
+            now = now or foh.moment(r.get("booking_date"), r.get("booking_time"))
+            where = r.get("place_label") or r["place"]
+            clash = self._clash(door, r, row, now, exclude=name)
+            if clash:
+                raise Refusal(f"Not seated: {clash} Seat the party at another table.")
+            if not foh.num(row.get("second_check")) and \
+                    foh.place_busy(door.call("floor_status", query={"store": r["store"]}), r["place"]):
+                raise Refusal(f"Not seated: {where} has an open check. Clear it at a till, or seat the party at another "
+                              "table.")
+            key = self.new_key()
+            req = foh.seat_request(r["store"], row["register"], key, r["place"], name, foh.num(r["party"]),
+                                   r.get("deposit_amount") if r.get("deposit_sale") else None)
+            try:                        # the key and the exact call, written only once the checks passed
+                door.update(doctype, name, {"seat_key": key, "seat_request": json.dumps(req, sort_keys=True),
+                                            "modified": r.get("modified")})
+            except TenantError as e:
+                if e.kind == STALE:     # the record changed since it was read: read it again with the next press
+                    raise Busy() from None
+                raise
+            return self._open(door, doctype, r, row, req, retry=False)
+        finally:
+            self._unlock(door, row["parent"], mine)
+
+    def _open(self, door, doctype: str, r: dict, row: dict, req: dict, retry: bool) -> dict:
+        name = r["name"]
         try:
             check = door.call("check_open", req)
         except TenantError as e:
             if not e.refused:
                 raise                   # the outcome is unknown: the key stays, and the next press sends it again
-            self._clear(door, doctype, name)
-            raise Refusal(self._door_words(e, r, row)) from None
-        status = "Seated"
-        door.update(doctype, name, {"status": status, "check_name": check.get("check") or "", "app_note": ""})
-        return foh.message(APP_NAME, f"{name} is seated at {r.get('place_label') or r['place']}: its check "
-                           f"{check.get('check')} is open on the till for {foh.num(r['party'])} guests.")
-
-    def _first_seat(self, door, doctype: str, r: dict, row: dict) -> tuple[dict | None, dict]:
-        """Writes the key and the exact call on the record, then checks the table. ``(None, record)`` when another press
-        wrote first."""
-        key = self.new_key()
-        name = r["name"]
-        req = foh.seat_request(r["store"], row["register"], key, r["place"], name, foh.num(r["party"]),
-                               r.get("deposit_amount") if r.get("deposit_sale") else None)
-        try:
-            w = door.update(doctype, name, {"seat_key": key, "seat_request": json.dumps(req, sort_keys=True),
-                                            "modified": r.get("modified")})
-        except TenantError as e:
-            if e.kind != STALE:
-                raise
-            again = door.doc(doctype, name)
-            if again.get("seat_key") and again.get("seat_request"):
-                return None, again
-            raise Busy() from None
-        now = foh.stamp(w.get("modified")) or foh.moment(r.get("booking_date"), r.get("booking_time"))
-        mine = self._lock(door, row["parent"])
-        try:
-            clash = self._clash(door, r, row, now, exclude=name)
-            busy = not foh.num(row.get("second_check")) and \
-                foh.place_busy(door.call("floor_status", query={"store": r["store"]}), r["place"])
-        except Exception:
-            self._clear(door, doctype, name)
-            raise
-        finally:
-            self._unlock(door, row["parent"], mine)
-        where = r.get("place_label") or r["place"]
-        if clash:
-            self._clear(door, doctype, name)
-            raise Refusal(f"Not seated: {clash} Seat the party at another table.")
-        if busy:
-            self._clear(door, doctype, name)
-            raise Refusal(f"Not seated: {where} has an open check. Clear it at a till, or seat the party at another "
-                          "table.")
-        return req, r
+            if not retry:               # a first send the till refused opened nothing: the next press starts afresh
+                self._clear(door, doctype, name)
+                raise Refusal(self._door_words(e, r, row)) from None
+            raise Refusal(self._door_words(e, r, row) + " The first Seat may already have opened its check: fix this, "
+                          "then press Seat again.") from None
+        place = req.get("place") or r["place"]
+        door.update(doctype, name, {"status": "Seated", "check_name": check.get("check") or "", "place": place,
+                                    "app_note": ""})
+        where = (r.get("place_label") or place) if place == r.get("place") else place
+        return foh.message(APP_NAME, f"{name} is seated at {where}: its check {check.get('check')} is open on the "
+                           f"till for {foh.num(req.get('covers'))} guests.")
 
     def _clear(self, door, doctype: str, name: str):
         """The key and the call off the record, so the next press starts afresh (only after a refusal: nothing opened)."""
@@ -399,11 +395,24 @@ class Service:
         if r.get("status") not in foh.OPEN_STATES:
             raise Refusal(f"{name} is {r.get('status')}: only a requested or booked reservation can be marked "
                           f"{status.lower()}.")
+        if r.get("seat_key"):
+            raise Refusal(f"A Seat for {name} did not finish, so its table's check may be open: press Seat again first.")
         rule = (self._row(door, r["store"]) if r.get("store") else {}).get("no_show_deposit") or "Keep it"
         note = foh.deposit_note(rule, r.get("deposit_sale"), r.get("deposit_amount"), cancelled=status == "Cancelled")
         door.update(foh.dt("Reservation"), name, {"status": status, "app_note": note[:500]})
         return foh.message(APP_NAME, f"{name} is {'a no-show' if status == 'No-show' else 'cancelled'}"
                            + (f"; its table is free again." if r.get("place") else ".") + (f" {note}" if note else ""))
+
+    def change(self, door, name: str) -> dict:
+        """Change booking: a booked table's hold released (Requested again), so its time, length or table can be changed
+        in the form; Book holds the new one."""
+        r = door.doc(foh.dt("Reservation"), name)
+        if r.get("status") != "Booked" or r.get("seat_key"):
+            raise Refusal(f"{name} is {r.get('status')}: only a booked reservation that is not being seated is changed.")
+        door.update(foh.dt("Reservation"), name, {"status": "Requested",
+                                                  "app_note": "Changed: its table is no longer held. Press Book again."})
+        return foh.message(APP_NAME, f"{name} is Requested again and its table is no longer held. Change the time, the "
+                           "length or the table, save, then press Book.")
 
     # ── the call ──
     def press(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
@@ -430,6 +439,8 @@ class Service:
                 return 200, self.book(door, name)
             if sub == "seat":
                 return 200, self.seat(door, doctype, name)
+            if sub == "change":
+                return 200, self.change(door, name)
             return 200, self.close(door, name, "No-show" if sub == "noshow" else "Cancelled")
         except Refusal as e:
             return 200, _warning(e.words, refresh=True)
