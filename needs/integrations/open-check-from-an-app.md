@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/open_check.md
 sample: samples/s55_front_of_house
 request: -
-verified: run by the product 2026-10-26 to 2026-10-28 (the door's first layer, through the API, 2026-10-26: an outside app's integration user opened a tab by its label and added to it, was refused a move and a close in the right's words, and read the check with no staff identity and no register; and POS train T19's walks on phone, counter and tablet: tables opened, two rounds added from two tills, the check claimed at Checkout and paid by card and cash, one line paid on each of two tills, Back giving the lines to the table, a pre-order tab paid, the close listing the open checks); and run by the kit sample S55 *Front of house* on our bench at POS train T19, 2026-10-29: its app's own user opened a seated party's table check from a reservation and a waiting party, a till added the dishes and took the payment
+verified: run by the product 2026-10-26 to 2026-10-28 (the door's first layer, through the API, 2026-10-26: an outside app's integration user opened a tab by its label and added to it, was refused a move and a close in the right's words, and read the check with no staff identity and no register; and POS train T19's walks on phone, counter and tablet: tables opened, two rounds added from two tills, the check claimed at Checkout and paid by card and cash, one line paid on each of two tills, Back giving the lines to the table, a pre-order tab paid, the close listing the open checks); and run by the kit sample S55 *Front of house* on our bench at POS train T19, 2026-10-29: its app's own user opened a seated party's table check from a reservation and a waiting party, a till added the dishes and took the payment; and by the kit sample S56 *Guest ordering* on the same bench, 2026-10-29: guests' orders from a table's QR code added to that table's one check, a kiosk order opened a tab, a till took the payment
 related: own-online-shop
 ---
 ## What you build
@@ -22,7 +22,7 @@ An app that calls the *open check* door (`open_check/1`, POS version 2.1.0.667 a
 - Ask only for *open a check*, *add to a check* and *see the checks*: sending to the kitchen, moving, merging, closing, voiding and comping are a person's decisions at the till.
 - A line never carries a price, a discount or a server's note.
 - Online only: a check needs a connection.
-- A weighed line on an open check is refused at Pay until a later POS version.
+- A weighed line added with no reading is refused at Pay until it is weighed at the till.
 - Which guest may see which check is your app's job: give each app its own user.
 
 ## Tell the customer

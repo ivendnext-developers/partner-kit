@@ -1,0 +1,344 @@
+{
+ "manifest_version": 2,
+ "app": "pp_gor",
+ "prefix": "PP GOR",
+ "title": "Guest ordering",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "Guests order for themselves: a QR code at each table, and a self-order kiosk for counter service. The guest reads the register's own menu on their phone (its item groups, the dishes' choices and the price list's prices, before any offer) and sends an order; it lands as lines on the table's check through the till's open-check door, unsent, under the store's course word (Guest order), so a server reads it and presses Send at the till; the table pays at a till as usual. A kiosk order opens a tab named by a five-character code the guest is shown, paid at the counter. The app never sends to the kitchen and the guest never pays in the app. Make code, on a PP GOR Code record, writes the table's or kiosk's signed link and its QR picture, printed by the print format PP GOR Table card; pressing it again replaces a code that leaked (the old card stops working). No guest data: the page asks no name, phone or e-mail. The install makes the roles PP GOR Manager and PP GOR Integration and the app's own user; the retailer gives that user its store, register and the Open Checks rights open a check, add to a check and see the checks, and leaves the feed PP GOR Guest ordering feed off. allowed_urls is the programme bench's address; a partner writes their own service's address.",
+ "allowed_urls": [
+  "https://host.docker.internal:8157/gor/code"
+ ],
+ "doctypes": [
+  {
+   "name": "PP GOR Store",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Store",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "A store whose guests order with the app."
+    },
+    {
+     "fieldname": "register",
+     "fieldtype": "Link",
+     "options": "POS Profile",
+     "label": "Register",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "The register (POS Profile, Table Service on) the app's user is given at this store. Its item groups and price list are the guest's menu; a kiosk's tabs open there."
+    },
+    {
+     "fieldname": "tables_on",
+     "fieldtype": "Check",
+     "label": "Orders from the tables",
+     "default": "1",
+     "in_list_view": 1,
+     "description": "Ticked: a guest at a table orders from the table's code. Off: every table's code answers that the table cannot take orders from a phone now."
+    },
+    {
+     "fieldname": "kiosk_on",
+     "fieldtype": "Check",
+     "label": "Orders from the kiosk",
+     "in_list_view": 1,
+     "description": "Ticked: the store's kiosk codes take orders, each a tab paid at the counter."
+    },
+    {
+     "fieldname": "course",
+     "fieldtype": "Data",
+     "label": "Course of a guest's lines",
+     "default": "Guest order",
+     "description": "The course every line a guest sends carries on the check (blank: Guest order). When a server's own lines wait too, the till's Send asks which course to send."
+    },
+    {
+     "fieldname": "most_lines",
+     "fieldtype": "Int",
+     "label": "Lines in one order",
+     "default": "10",
+     "description": "The most lines one order may hold (blank: 10, at most 50)."
+    },
+    {
+     "fieldname": "most_qty",
+     "fieldtype": "Int",
+     "label": "Quantity of one dish",
+     "default": "10",
+     "description": "The most of one dish in one order (blank: 10, at most 99)."
+    }
+   ]
+  },
+  {
+   "name": "PP GOR Settings",
+   "autoname": "field:company",
+   "fields": [
+    {
+     "fieldname": "company",
+     "fieldtype": "Link",
+     "options": "Company",
+     "label": "Company",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "One settings record per company."
+    },
+    {
+     "fieldname": "stores",
+     "fieldtype": "Table",
+     "options": "PP GOR Store",
+     "label": "Stores",
+     "description": "Each store whose guests order with the app, with its register."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP GOR Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP GOR Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP GOR Code",
+   "autoname": "format:GOR-CODE-{#####}",
+   "search_fields": "place_label,kiosk_name",
+   "fields": [
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "options": "Table\nKiosk",
+     "default": "Table",
+     "label": "Kind",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "Table: a code on a table's card, whose orders go to that table's check. Kiosk: a code a store's tablet opens, whose orders are tabs paid at the counter."
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Store",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The store whose floor holds the table, or whose counter pays the kiosk's orders."
+    },
+    {
+     "fieldname": "col_where",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "place",
+     "fieldtype": "Link",
+     "options": "Retail Floor Place",
+     "label": "Table",
+     "depends_on": "eval:doc.kind=='Table'",
+     "mandatory_depends_on": "eval:doc.kind=='Table'",
+     "description": "The table (a Floor Place of the store) the card stands on."
+    },
+    {
+     "fieldname": "place_label",
+     "fieldtype": "Data",
+     "label": "Table name",
+     "fetch_from": "place.label",
+     "read_only": 1,
+     "in_list_view": 1,
+     "depends_on": "eval:doc.kind=='Table'"
+    },
+    {
+     "fieldname": "kiosk_name",
+     "fieldtype": "Data",
+     "label": "Kiosk name",
+     "depends_on": "eval:doc.kind=='Kiosk'",
+     "mandatory_depends_on": "eval:doc.kind=='Kiosk'",
+     "in_list_view": 1,
+     "description": "How staff know this kiosk (for example By the door)."
+    },
+    {
+     "fieldname": "code_section",
+     "fieldtype": "Section Break",
+     "label": "The code"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP GOR Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP GOR Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "PP GOR Code",
+   "fieldname": "number",
+   "fieldtype": "Int",
+   "label": "Code number",
+   "insert_after": "code_section",
+   "in_list_view": 1,
+   "write_roles": [
+    "PP GOR Integration",
+    "System Manager"
+   ],
+   "description": "Raised by one each time Make code is pressed; a printed code with an earlier number no longer works."
+  },
+  {
+   "dt": "PP GOR Code",
+   "fieldname": "link",
+   "fieldtype": "Data",
+   "label": "Link",
+   "insert_after": "number",
+   "write_roles": [
+    "PP GOR Integration",
+    "System Manager"
+   ],
+   "description": "The address the QR code opens; the QR code itself is on the card: Print, Table card. Made by Make code. Changing the kind, the store, the table or the kiosk name stops this code working until Make code is pressed again.",
+   "length": 220
+  },
+  {
+   "dt": "PP GOR Code",
+   "fieldname": "made_for",
+   "fieldtype": "Data",
+   "label": "Made for",
+   "insert_after": "link",
+   "hidden": 1,
+   "write_roles": [
+    "PP GOR Integration",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP GOR Code",
+   "fieldname": "qr",
+   "fieldtype": "Long Text",
+   "label": "QR picture",
+   "insert_after": "made_for",
+   "hidden": 1,
+   "write_roles": [
+    "PP GOR Integration",
+    "System Manager"
+   ]
+  }
+ ],
+ "print_formats": [
+  {
+   "name": "PP GOR Table card",
+   "doc_type": "PP GOR Code",
+   "print_format_type": "Jinja",
+   "html": "{% set where = doc.place if doc.kind == \"Table\" else (doc.kiosk_name or \"\")|trim %}{% set made = doc.qr and doc.link and (\"t=\" ~ doc.name ~ \".\" ~ doc.number ~ \".\") in doc.link and doc.made_for == (doc.kind ~ \"|\" ~ doc.store ~ \"|\" ~ where)[:140] %}\n<div dir=\"auto\" style=\"font-family: Arial, sans-serif; text-align: center; padding: 12mm 0;\">\n<p style=\"margin: 0; font-size: 22pt; font-weight: bold;\">{{ (doc.place_label or doc.kiosk_name or \"\")|e }}</p>\n{% if made %}<img src=\"{{ doc.qr }}\" alt=\"\" style=\"width: 60mm; height: 60mm; margin: 6mm auto;\">{% else %}<p>{{ _(\"Press Make code first.\") }}</p>{% endif %}\n<p style=\"margin: 0; font-size: 16pt;\">{{ _(\"Scan to order\") }}</p>\n<p style=\"margin: 2mm 0 0; font-size: 9pt; color: #555;\">{{ doc.name|e }} · {{ doc.number or \"\" }}</p>\n</div>"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP GOR Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/guest_ordering.html#settings"
+  },
+  {
+   "doc_type": "PP GOR Code",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/guest_ordering.html#codes"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP GOR Guest ordering feed",
+   "description": "the guest ordering service reads the menu and adds guests' orders to checks as this feed's user; leave the feed off",
+   "events": [
+    "PP GOR Code"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "code",
+   "point": "desk_action",
+   "label": "Make code service",
+   "endpoint_url": "https://host.docker.internal:8157/gor/code",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP GOR Code",
+   "label": "Make code",
+   "placement": "both",
+   "service": "code",
+   "roles": [
+    "PP GOR Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Make a new code? Any card already printed for it stops working: print the new card."
+  }
+ ]
+}
