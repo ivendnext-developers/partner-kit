@@ -5,7 +5,8 @@
 
 The settings file says what the app is and what it needs, and holds **no value**: names only. A host (your own, or ours) reads it to
 know the port, the health address, the size, the region, which environment variables to supply and whether the app
-keeps a shops table (`shops`: many shops, each connecting itself), and whether it runs as an always-on container or as a
+keeps a shops table (`shops`: many shops, each connecting itself), whether it needs a writable `/scratch` folder
+(`scratch`: lost on a restart; one copy, stopped before the next), and whether it runs as an always-on container or as a
 function paid per call (`runs`; a function also names its `handler` and the `package` it is zipped from, and, for
 background work, a `schedule` of named runs and a `timeout` of up to 900 seconds). Refused, with the reason:
 an unknown key, a bad name or port, a size or region not on the list, an environment variable with a value in the file, a variable
@@ -20,8 +21,8 @@ import pathlib
 import re
 import sys
 
-KEYS = {"app", "version", "port", "health", "size", "region", "env", "shops", "runs", "handler", "package", "schedule",
-        "timeout"}
+KEYS = {"app", "version", "port", "health", "size", "region", "env", "shops", "scratch", "runs", "handler", "package",
+        "schedule", "timeout"}
 ENV_KEYS = {"name", "secret", "required", "about"}   # about: one line the hosting page shows under the setting
 SIZES = ("small", "medium", "large")
 RUNS = ("container", "function")
@@ -53,6 +54,8 @@ def check_settings(m) -> list[str]:
         bad.append("region: a two-letter lower-case country code, like us")
     if "shops" in m and not isinstance(m["shops"], bool):
         bad.append("shops: true or false (true: the app serves many shops, each connecting itself; chapter 14b)")
+    if "scratch" in m and not isinstance(m["scratch"], bool):
+        bad.append("scratch: true or false (true: a writable /scratch folder, lost on a restart; chapter 14b)")
     bad += check_form(m)
     env = m.get("env", [])
     if not isinstance(env, list):
@@ -108,6 +111,8 @@ def check_form(m: dict) -> list[str]:
         bad.append("package: a list of the files and folders the function is zipped from, relative paths like service")
     if m.get("shops") is not True:
         bad.append("shops: a function serves many shops, each connecting itself (\"shops\": true; chapter 14b)")
+    if m.get("scratch"):
+        bad.append("scratch: a function has no folder that lasts between calls (a container's)")
     env = m.get("env", [])
     if isinstance(env, list) and any(isinstance(e, dict) and e.get("secret") for e in env):
         bad.append("env: a function keeps no secret of its own: each shop hands over its own at connect "

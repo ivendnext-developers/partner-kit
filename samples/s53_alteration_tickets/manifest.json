@@ -1,0 +1,496 @@
+{
+ "manifest_version": 2,
+ "app": "pp_alt",
+ "prefix": "PP ALT",
+ "title": "Alterations and made-to-measure tickets",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A fashion store's alteration and made-to-measure tickets, kept in Desk. Each PP ALT Ticket holds the kind (Alteration or Made to measure), the customer with its phone and e-mail (the customer's, read only), the store that hands it over, Taken on, Ready by, the next fitting and the tailor; the till sale and the order it was paid on (each optional); the garments and what to do to each; the measurements; fitting notes; who collected it. A workflow moves it Taken, With the tailor, Fitting, Ready to collect, Handed over (or Cancelled): Ready ticks Ready to collect, which the store's own Notification reads to tell the customer, and Hand over or Cancel ticks Closed. It prints as the customer's slip with a garment tag, and the report Tickets Due lists every open ticket by Ready by. A customer's, a sale's and an order's tickets show under each. The charge and any deposit are rung at the till as before: the app moves no money. The app itself calls nothing outside: no service, no outside address, nothing installed switched off.",
+ "allowed_urls": [],
+ "doctypes": [
+  {
+   "name": "PP ALT Garment",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "garment",
+     "fieldtype": "Data",
+     "label": "Garment",
+     "in_list_view": 1,
+     "columns": 3,
+     "description": "As the customer and the tag will know it: navy suit trousers, size 34."
+    },
+    {
+     "fieldname": "item",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "in_list_view": 1,
+     "columns": 2,
+     "description": "The item, when the garment was sold here. Optional."
+    },
+    {
+     "fieldname": "work",
+     "fieldtype": "Small Text",
+     "label": "What to do",
+     "in_list_view": 1,
+     "columns": 4,
+     "description": "Such as: shorten the hem 3 cm, take in the waist 2 cm."
+    },
+    {
+     "fieldname": "done",
+     "fieldtype": "Check",
+     "label": "Done",
+     "in_list_view": 1,
+     "columns": 1
+    }
+   ]
+  },
+  {
+   "name": "PP ALT Measure",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "measure",
+     "fieldtype": "Data",
+     "label": "Measure",
+     "in_list_view": 1,
+     "columns": 3,
+     "description": "Such as chest, waist, hips, inside leg, sleeve, neck."
+    },
+    {
+     "fieldname": "value",
+     "fieldtype": "Float",
+     "label": "Value",
+     "precision": "1",
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "unit",
+     "fieldtype": "Select",
+     "label": "Unit",
+     "options": "cm\nin",
+     "default": "cm",
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "note",
+     "fieldtype": "Data",
+     "label": "Note",
+     "in_list_view": 1,
+     "columns": 4
+    }
+   ]
+  },
+  {
+   "name": "PP ALT Ticket",
+   "autoname": "format:ALT-{#####}",
+   "track_changes": 1,
+   "title_field": "customer_name",
+   "search_fields": "customer,customer_name,customer_phone,due_date",
+   "sort_field": "due_date",
+   "sort_order": "ASC",
+   "permissions": [
+    {
+     "role": "Sales User",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    }
+   ],
+   "fields": [
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "label": "Kind",
+     "options": "Alteration\nMade to measure",
+     "default": "Alteration",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "Alteration: work on a garment the customer brings or buys. Made to measure: a piece made to the customer's measurements."
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "reqd": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "customer_name",
+     "fieldtype": "Data",
+     "label": "Customer name",
+     "fetch_from": "customer.customer_name",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "customer_phone",
+     "fieldtype": "Data",
+     "label": "Customer's phone",
+     "options": "Phone",
+     "fetch_from": "customer.custom_phone_no",
+     "read_only": 1,
+     "description": "The customer's Phone Number, as the till keeps it. Change it on the customer. Your own ready message can be sent to it."
+    },
+    {
+     "fieldname": "customer_email",
+     "fieldtype": "Data",
+     "label": "Customer's e-mail",
+     "options": "Email",
+     "fetch_from": "customer.custom_email",
+     "read_only": 1,
+     "description": "The customer's Email, as the till keeps it. Change it on the customer."
+    },
+    {
+     "fieldname": "col1",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Collect at",
+     "options": "Warehouse",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The store that keeps the garment and hands it over."
+    },
+    {
+     "fieldname": "taken_on",
+     "fieldtype": "Date",
+     "label": "Taken on",
+     "default": "Today",
+     "reqd": 1
+    },
+    {
+     "fieldname": "due_date",
+     "fieldtype": "Date",
+     "label": "Ready by",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The date promised to the customer."
+    },
+    {
+     "fieldname": "next_fitting",
+     "fieldtype": "Datetime",
+     "label": "Next fitting",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "tailor",
+     "fieldtype": "Data",
+     "label": "Tailor or workroom",
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "paid_section",
+     "fieldtype": "Section Break",
+     "label": "Paid at the till"
+    },
+    {
+     "fieldname": "sale",
+     "fieldtype": "Link",
+     "label": "Sale",
+     "options": "POS Invoice",
+     "description": "The till sale that charged the alteration, or sold the garment. Optional."
+    },
+    {
+     "fieldname": "paid_col",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "order",
+     "fieldtype": "Link",
+     "label": "Order",
+     "options": "Sales Order",
+     "description": "The order a made-to-measure piece was ordered on, with its deposit. Optional."
+    },
+    {
+     "fieldname": "garments_section",
+     "fieldtype": "Section Break",
+     "label": "Garments and the work"
+    },
+    {
+     "fieldname": "garments",
+     "fieldtype": "Table",
+     "label": "Garments",
+     "options": "PP ALT Garment"
+    },
+    {
+     "fieldname": "measure_section",
+     "fieldtype": "Section Break",
+     "label": "Measurements and fittings",
+     "collapsible": 1
+    },
+    {
+     "fieldname": "measurements",
+     "fieldtype": "Table",
+     "label": "Measurements",
+     "options": "PP ALT Measure"
+    },
+    {
+     "fieldname": "fitting_notes",
+     "fieldtype": "Small Text",
+     "label": "Fitting notes",
+     "description": "What changed at each fitting, with its date."
+    },
+    {
+     "fieldname": "handover_section",
+     "fieldtype": "Section Break",
+     "label": "Hand-over"
+    },
+    {
+     "fieldname": "ready_to_collect",
+     "fieldtype": "Check",
+     "label": "Ready to collect",
+     "read_only": 1,
+     "description": "Ticked by Ready, unticked by Back to tailor: your own Notification on its change tells the customer, with the condition doc.ready_to_collect in (1, \"1\") (for SMS, and doc.customer_phone, or each ticket without a phone logs a failed send)."
+    },
+    {
+     "fieldname": "closed",
+     "fieldtype": "Check",
+     "label": "Closed",
+     "read_only": 1,
+     "description": "Ticked by Hand over or Cancel."
+    },
+    {
+     "fieldname": "hand_col",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "collected_by",
+     "fieldtype": "Data",
+     "label": "Collected by",
+     "description": "The name of the person who took the garment. Write it before Hand over: Hand over does not ask for it."
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Notes"
+    }
+   ]
+  }
+ ],
+ "workflows": [
+  {
+   "name": "PP ALT Ticket",
+   "document_type": "PP ALT Ticket",
+   "send_email_alert": 0,
+   "states": [
+    {
+     "state": "PP ALT Taken",
+     "allow_edit": "Sales User"
+    },
+    {
+     "state": "PP ALT With the tailor",
+     "allow_edit": "Sales User",
+     "update_field": "ready_to_collect",
+     "update_value": "0"
+    },
+    {
+     "state": "PP ALT Fitting",
+     "allow_edit": "Sales User",
+     "update_field": "ready_to_collect",
+     "update_value": "0"
+    },
+    {
+     "state": "PP ALT Ready to collect",
+     "allow_edit": "Sales User",
+     "update_field": "ready_to_collect",
+     "update_value": "1"
+    },
+    {
+     "state": "PP ALT Handed over",
+     "allow_edit": "System Manager",
+     "update_field": "closed",
+     "update_value": "1"
+    },
+    {
+     "state": "PP ALT Cancelled",
+     "allow_edit": "System Manager",
+     "update_field": "closed",
+     "update_value": "1"
+    }
+   ],
+   "transitions": [
+    {
+     "state": "PP ALT Taken",
+     "action": "PP ALT Send to tailor",
+     "next_state": "PP ALT With the tailor",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP ALT With the tailor",
+     "action": "PP ALT Book a fitting",
+     "next_state": "PP ALT Fitting",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP ALT Fitting",
+     "action": "PP ALT Back to tailor",
+     "next_state": "PP ALT With the tailor",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP ALT With the tailor",
+     "action": "PP ALT Ready",
+     "next_state": "PP ALT Ready to collect",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP ALT Fitting",
+     "action": "PP ALT Ready",
+     "next_state": "PP ALT Ready to collect",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP ALT Ready to collect",
+     "action": "PP ALT Back to tailor",
+     "next_state": "PP ALT With the tailor",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP ALT Ready to collect",
+     "action": "PP ALT Hand over",
+     "next_state": "PP ALT Handed over",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP ALT Taken",
+     "action": "PP ALT Cancel",
+     "next_state": "PP ALT Cancelled",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP ALT With the tailor",
+     "action": "PP ALT Cancel",
+     "next_state": "PP ALT Cancelled",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP ALT Fitting",
+     "action": "PP ALT Cancel",
+     "next_state": "PP ALT Cancelled",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP ALT Ready to collect",
+     "action": "PP ALT Cancel",
+     "next_state": "PP ALT Cancelled",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    }
+   ]
+  }
+ ],
+ "print_formats": [
+  {
+   "name": "PP ALT Ticket",
+   "doc_type": "PP ALT Ticket",
+   "print_format_type": "Jinja",
+   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n<h2 style=\"margin: 0 0 2px;\">{{ _(doc.kind) }} · {{ doc.name }}</h2>\n<p style=\"margin: 0 0 8px;\">{{ doc.customer_name or \"\" }} · {{ _(\"Collect at\") }} {{ doc.store or \"\" }} · {{ _(\"Taken on\") }} {{ doc.get_formatted(\"taken_on\") }} · {{ _(\"Ready by\") }} {{ doc.get_formatted(\"due_date\") }}{% if doc.next_fitting %} · {{ _(\"Next fitting\") }} {{ doc.get_formatted(\"next_fitting\") }}{% endif %}</p>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Garment\") }}</th><th style=\"text-align: start;\">{{ _(\"What to do\") }}</th></tr>\n{% for g in doc.garments %}<tr><td>{{ g.garment or g.item or \"\" }}</td><td>{{ g.work or \"\" }}</td></tr>\n{% endfor %}</table>\n{% if doc.measurements %}<p style=\"margin: 8px 0 0;\">{% for m in doc.measurements if m.measure %}{{ m.measure }} {{ m.get_formatted(\"value\") }} {{ m.unit }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}\n<p style=\"margin: 8px 0 0;\">{{ _(\"Please bring this slip when you collect.\") }}</p>\n<div style=\"border-top: 1px dashed #000; margin: 16px 0 8px;\"></div>\n<p style=\"margin: 0; font-size: 9pt;\">{{ _(\"Garment tag\") }}</p>\n<p style=\"margin: 0; font-size: 22pt; font-weight: bold;\">{{ doc.name }}</p>\n<p style=\"margin: 0;\">{{ doc.customer_name or \"\" }} · {{ _(\"Ready by\") }} {{ doc.get_formatted(\"due_date\") }}</p>\n<p style=\"margin: 0;\">{% for g in doc.garments %}{{ g.garment or g.item or \"\" }}{% if not loop.last %} · {% endif %}{% endfor %}</p>\n</div>"
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP ALT Tickets Due",
+   "ref_doctype": "PP ALT Ticket",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "customer_name",
+    "kind",
+    "store",
+    "due_date",
+    "next_fitting",
+    "tailor",
+    "ready_to_collect"
+   ],
+   "filters": [
+    [
+     "closed",
+     "=",
+     0
+    ]
+   ],
+   "order_by": "due_date asc"
+  }
+ ],
+ "links": [
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP ALT Ticket",
+   "link_fieldname": "customer",
+   "group": "Alterations"
+  },
+  {
+   "doctype": "POS Invoice",
+   "link_doctype": "PP ALT Ticket",
+   "link_fieldname": "sale",
+   "group": "Alterations"
+  },
+  {
+   "doctype": "Sales Order",
+   "link_doctype": "PP ALT Ticket",
+   "link_fieldname": "order",
+   "group": "Alterations"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP ALT Ticket",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/alteration_tickets.html#tickets"
+  }
+ ]
+}

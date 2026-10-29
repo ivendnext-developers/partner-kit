@@ -1,0 +1,751 @@
+{
+ "manifest_version": 2,
+ "app": "pp_foh",
+ "prefix": "PP FOH",
+ "title": "Front of house",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A restaurant's front of house in Desk: reservations and a waiting list, a double-booking guard, no-shows, the deposit's sale, and seating that opens the table's check on the till through the open-check door. Book, on a reservation, holds its table when no other booking overlaps it (each from its start for its length). Seat, on a reservation or a waiting party, refuses a table booked for someone else within the party's stay or one with an open check (unless the store's row allows a second check), then opens the check at the table with the party's size and the booking's number. No-show and Cancel booking close a booking and free its table; a no-show writes the store's deposit rule on it. Once booked, the time, the length and the table are read-only in the form: Change booking releases the hold so they can change, and Book holds them again. A guest's name, phone, customer and notes are read and written only by PP FOH Host and System Manager: the app's own user never reads them, so they never leave the retailer's iVendNext. Each press sends the record's name, the pressing user and the language. Table ready on a waiting party is the retailer's own SMS Notification, made in Desk. The install makes the roles PP FOH Host and PP FOH Integration and the app's own user; the retailer gives that user its store, register and the Open Checks rights open a check and see the checks, and leaves the feed PP FOH Front of house feed off. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8155/press/book",
+  "https://host.docker.internal:8155/press/seat",
+  "https://host.docker.internal:8155/press/noshow",
+  "https://host.docker.internal:8155/press/cancel",
+  "https://host.docker.internal:8155/press/change"
+ ],
+ "doctypes": [
+  {
+   "name": "PP FOH Store",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Store",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "A store whose tables the app seats."
+    },
+    {
+     "fieldname": "register",
+     "fieldtype": "Link",
+     "options": "POS Profile",
+     "label": "Register",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "The register (POS Profile, Table Service on) the app's user is given at this store. Its checks open there."
+    },
+    {
+     "fieldname": "minutes",
+     "fieldtype": "Int",
+     "label": "Usual booking length (minutes)",
+     "default": "90",
+     "in_list_view": 1,
+     "description": "How long a party holds its table when the booking does not say. Blank: 90."
+    },
+    {
+     "fieldname": "second_check",
+     "fieldtype": "Check",
+     "label": "Seat at a table that has an open check",
+     "in_list_view": 1,
+     "description": "Ticked: Seat opens a second check beside the table's open one (a long table shared by strangers). Off: it refuses, so the last party's bill is never split in two."
+    },
+    {
+     "fieldname": "no_show_deposit",
+     "fieldtype": "Select",
+     "options": "Keep it\nReturn it",
+     "default": "Keep it",
+     "label": "No-show deposit",
+     "in_list_view": 1,
+     "description": "What No-show writes on a booking that took a deposit. The app moves no money."
+    }
+   ]
+  },
+  {
+   "name": "PP FOH Settings",
+   "autoname": "field:company",
+   "fields": [
+    {
+     "fieldname": "company",
+     "fieldtype": "Link",
+     "options": "Company",
+     "label": "Company",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "One settings record per company."
+    },
+    {
+     "fieldname": "stores",
+     "fieldtype": "Table",
+     "options": "PP FOH Store",
+     "label": "Stores",
+     "description": "Each store the app seats, with its register."
+    },
+    {
+     "fieldname": "run_started",
+     "fieldtype": "Data",
+     "label": "Press running since (UTC)",
+     "read_only": 1,
+     "description": "Set while Book or Seat checks a table, so two presses never hold one table twice."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP FOH Host",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP FOH Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP FOH Reservation",
+   "autoname": "format:FOH-RES-{#####}",
+   "sort_field": "booking_time",
+   "sort_order": "ASC",
+   "search_fields": "booking_date,place",
+   "fields": [
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Store",
+     "reqd": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "booking_date",
+     "fieldtype": "Date",
+     "label": "Date",
+     "reqd": 1,
+     "in_standard_filter": 1,
+     "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
+    },
+    {
+     "fieldname": "booking_time",
+     "fieldtype": "Time",
+     "label": "Time",
+     "reqd": 1,
+     "in_list_view": 1,
+     "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
+    },
+    {
+     "fieldname": "party",
+     "fieldtype": "Int",
+     "label": "Party size",
+     "reqd": 1,
+     "in_list_view": 1,
+     "non_negative": 1
+    },
+    {
+     "fieldname": "minutes",
+     "fieldtype": "Int",
+     "label": "Length (minutes)",
+     "non_negative": 1,
+     "description": "Blank: the store's usual length. Booked: press Change booking to change the time, the length or the table.",
+     "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
+    },
+    {
+     "fieldname": "col_table",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "place",
+     "fieldtype": "Link",
+     "options": "Retail Floor Place",
+     "label": "Table",
+     "description": "A place on the store's floor: choose it before Book to hold it. Booked without one: Change booking, choose it, then Book.",
+     "read_only_depends_on": "eval:doc.status==\"Booked\"||doc.status==\"Seated\"||doc.seat_key"
+    },
+    {
+     "fieldname": "place_label",
+     "fieldtype": "Data",
+     "label": "Table name",
+     "read_only": 1,
+     "fetch_from": "place.label",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "deposit_section",
+     "fieldtype": "Section Break",
+     "label": "Deposit"
+    },
+    {
+     "fieldname": "deposit_sale",
+     "fieldtype": "Link",
+     "options": "POS Invoice",
+     "label": "Deposit sale",
+     "description": "The sale that took the guest's deposit at the till (AR / Advance Payment). The deposit stays on the guest's money on file."
+    },
+    {
+     "fieldname": "deposit_amount",
+     "fieldtype": "Currency",
+     "label": "Deposit",
+     "read_only": 1,
+     "fetch_from": "deposit_sale.paid_amount"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP FOH Host",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP FOH Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP FOH Waitlist Entry",
+   "autoname": "format:FOH-WL-{#####}",
+   "sort_field": "added_at",
+   "sort_order": "ASC",
+   "fields": [
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Store",
+     "reqd": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "party",
+     "fieldtype": "Int",
+     "label": "Party size",
+     "reqd": 1,
+     "in_list_view": 1,
+     "non_negative": 1
+    },
+    {
+     "fieldname": "quoted_minutes",
+     "fieldtype": "Int",
+     "label": "Wait quoted (minutes)",
+     "non_negative": 1
+    },
+    {
+     "fieldname": "added_at",
+     "fieldtype": "Datetime",
+     "label": "Added",
+     "default": "Now",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "options": "Waiting\nTable ready\nSeated\nLeft",
+     "default": "Waiting",
+     "label": "Status",
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "Table ready sends the guest your SMS (your own Notification on this status). Seat sets Seated."
+    },
+    {
+     "fieldname": "col_table",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "place",
+     "fieldtype": "Link",
+     "options": "Retail Floor Place",
+     "label": "Table",
+     "description": "Choose it, save, then press Seat."
+    },
+    {
+     "fieldname": "place_label",
+     "fieldtype": "Data",
+     "label": "Table name",
+     "read_only": 1,
+     "fetch_from": "place.label"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP FOH Host",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP FOH Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "PP FOH Reservation",
+   "fieldname": "guest_name",
+   "fieldtype": "Data",
+   "label": "Guest",
+   "insert_after": "booking_time",
+   "in_list_view": 1,
+   "read_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ],
+   "write_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Reservation",
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "options": "Phone",
+   "label": "Phone",
+   "insert_after": "guest_name",
+   "read_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ],
+   "write_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Reservation",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "options": "Customer",
+   "label": "Customer",
+   "insert_after": "phone",
+   "description": "The guest's customer record, when they have one.",
+   "read_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ],
+   "write_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Reservation",
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes",
+   "insert_after": "customer",
+   "description": "For the host: a high chair, an occasion. Not shown on the till.",
+   "read_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ],
+   "write_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Waitlist Entry",
+   "fieldname": "guest_name",
+   "fieldtype": "Data",
+   "label": "Guest",
+   "insert_after": "party",
+   "in_list_view": 1,
+   "read_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ],
+   "write_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Waitlist Entry",
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "options": "Phone",
+   "label": "Phone",
+   "insert_after": "guest_name",
+   "description": "Table ready texts this number (your SMS Notification).",
+   "read_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ],
+   "write_roles": [
+    "PP FOH Host",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Reservation",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "options": "Requested\nBooked\nSeated\nNo-show\nCancelled",
+   "default": "Requested",
+   "label": "Status",
+   "insert_after": "place_label",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Book holds the table (Booked); Seat opens its check (Seated); Change booking, No-show and Cancel booking release it.",
+   "write_roles": [
+    "PP FOH Integration",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Reservation",
+   "fieldname": "check_name",
+   "fieldtype": "Data",
+   "label": "Check",
+   "insert_after": "place_label",
+   "description": "The table's check on the till, opened by Seat.",
+   "write_roles": [
+    "PP FOH Integration",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Reservation",
+   "fieldname": "app_note",
+   "fieldtype": "Small Text",
+   "label": "Front of house says",
+   "insert_after": "check_name",
+   "write_roles": [
+    "PP FOH Integration",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Reservation",
+   "fieldname": "seat_key",
+   "fieldtype": "Data",
+   "label": "Seat key",
+   "insert_after": "app_note",
+   "write_roles": [
+    "PP FOH Integration",
+    "System Manager"
+   ],
+   "description": "Set while Seat is opening the table's check; cleared when it is open or refused. A System Manager may clear it if the register is gone for good."
+  },
+  {
+   "dt": "PP FOH Reservation",
+   "fieldname": "seat_request",
+   "fieldtype": "Small Text",
+   "label": "Seat request",
+   "insert_after": "seat_key",
+   "hidden": 1,
+   "write_roles": [
+    "PP FOH Integration",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Waitlist Entry",
+   "fieldname": "check_name",
+   "fieldtype": "Data",
+   "label": "Check",
+   "insert_after": "place_label",
+   "description": "The table's check on the till, opened by Seat.",
+   "write_roles": [
+    "PP FOH Integration",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Waitlist Entry",
+   "fieldname": "app_note",
+   "fieldtype": "Small Text",
+   "label": "Front of house says",
+   "insert_after": "check_name",
+   "write_roles": [
+    "PP FOH Integration",
+    "System Manager"
+   ]
+  },
+  {
+   "dt": "PP FOH Waitlist Entry",
+   "fieldname": "seat_key",
+   "fieldtype": "Data",
+   "label": "Seat key",
+   "insert_after": "app_note",
+   "write_roles": [
+    "PP FOH Integration",
+    "System Manager"
+   ],
+   "description": "Set while Seat is opening the table's check; cleared when it is open or refused. A System Manager may clear it if the register is gone for good."
+  },
+  {
+   "dt": "PP FOH Waitlist Entry",
+   "fieldname": "seat_request",
+   "fieldtype": "Small Text",
+   "label": "Seat request",
+   "insert_after": "seat_key",
+   "hidden": 1,
+   "write_roles": [
+    "PP FOH Integration",
+    "System Manager"
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP FOH Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/front_of_house.html#settings"
+  },
+  {
+   "doc_type": "PP FOH Reservation",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/front_of_house.html#reservations"
+  },
+  {
+   "doc_type": "PP FOH Waitlist Entry",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/front_of_house.html#waiting-list"
+  }
+ ],
+ "links": [
+  {
+   "doctype": "POS Invoice",
+   "link_doctype": "PP FOH Reservation",
+   "link_fieldname": "deposit_sale",
+   "group": "Front of house"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP FOH Front of house feed",
+   "description": "the front of house service opens checks and keeps its bookings as this feed's user; leave the feed switched off",
+   "events": [
+    "PP FOH Reservation"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "book",
+   "point": "desk_action",
+   "label": "Book service",
+   "endpoint_url": "https://host.docker.internal:8155/press/book",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "seat",
+   "point": "desk_action",
+   "label": "Seat service",
+   "endpoint_url": "https://host.docker.internal:8155/press/seat",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "noshow",
+   "point": "desk_action",
+   "label": "No-show service",
+   "endpoint_url": "https://host.docker.internal:8155/press/noshow",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "cancel",
+   "point": "desk_action",
+   "label": "Cancel booking service",
+   "endpoint_url": "https://host.docker.internal:8155/press/cancel",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "change",
+   "point": "desk_action",
+   "label": "Change booking service",
+   "endpoint_url": "https://host.docker.internal:8155/press/change",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP FOH Reservation",
+   "label": "Book",
+   "placement": "form",
+   "service": "book",
+   "roles": [
+    "PP FOH Host"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "states": [
+    "Requested",
+    "Booked"
+   ],
+   "send_fields": "name"
+  },
+  {
+   "record_type": "PP FOH Reservation",
+   "label": "Seat",
+   "placement": "form",
+   "service": "seat",
+   "roles": [
+    "PP FOH Host"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "states": [
+    "Requested",
+    "Booked"
+   ],
+   "send_fields": "name",
+   "confirm_text": "Open this party's check at its table on the till?"
+  },
+  {
+   "record_type": "PP FOH Reservation",
+   "label": "No-show",
+   "placement": "form",
+   "service": "noshow",
+   "roles": [
+    "PP FOH Host"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "states": [
+    "Requested",
+    "Booked"
+   ],
+   "send_fields": "name",
+   "confirm_text": "Mark this booking a no-show and free its table?"
+  },
+  {
+   "record_type": "PP FOH Reservation",
+   "label": "Cancel booking",
+   "placement": "form",
+   "service": "cancel",
+   "roles": [
+    "PP FOH Host"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "states": [
+    "Requested",
+    "Booked"
+   ],
+   "send_fields": "name",
+   "confirm_text": "Cancel this booking and free its table?"
+  },
+  {
+   "record_type": "PP FOH Reservation",
+   "label": "Change booking",
+   "placement": "form",
+   "service": "change",
+   "roles": [
+    "PP FOH Host"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "states": [
+    "Booked"
+   ],
+   "send_fields": "name",
+   "confirm_text": "Release this booking's table so you can change its time, length or table, then press Book again?"
+  },
+  {
+   "record_type": "PP FOH Waitlist Entry",
+   "label": "Seat",
+   "placement": "form",
+   "service": "seat",
+   "roles": [
+    "PP FOH Host"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "states": [
+    "Waiting",
+    "Table ready"
+   ],
+   "send_fields": "name",
+   "confirm_text": "Open this party's check at its table on the till?"
+  }
+ ]
+}

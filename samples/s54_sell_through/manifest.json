@@ -1,0 +1,317 @@
+{
+ "manifest_version": 2,
+ "app": "pp_sst",
+ "prefix": "PP SST",
+ "title": "Sell-through by size",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A fashion buyer's sell-through by size and colour, store by store. A run, PP SST Sell-through, names an item group (its own items, not its sub-groups) or one style in it, Sold since, the size attribute and optionally the colour attribute, and up to 20 stores. A Desk button, Work out sell-through, on the run: the service reads two of the retailer's own reports as the app's user, POS Sale Report (the till's units sold per item in each store since the date, returns taken off) and Stock Projected Quantity (the stock per item in each store, less any till sale whose stock has not left yet), and the items' size and colour, and writes one row per style, colour, size and store that sold or holds stock: sold, in stock, sell-through (sold divided by sold plus in stock) and None left. Each press replaces the rows. A report lists every run's rows. Nothing moves money; no customer is read. The install makes the role PP SST Integration; the retailer gives it the two reports and the reads and lookups they ask for. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/sst/work"
+ ],
+ "doctypes": [
+  {
+   "name": "PP SST Store",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "reqd": 1,
+     "in_list_view": 1,
+     "columns": 6,
+     "description": "The store's warehouse, as its POS Profile names it."
+    }
+   ]
+  },
+  {
+   "name": "PP SST Row",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "style",
+     "fieldtype": "Link",
+     "label": "Style",
+     "options": "Item",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "item",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "read_only": 1
+    },
+    {
+     "fieldname": "colour",
+     "fieldtype": "Data",
+     "label": "Colour",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "size",
+     "fieldtype": "Data",
+     "label": "Size",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "sold",
+     "fieldtype": "Float",
+     "label": "Sold",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1,
+     "precision": "0"
+    },
+    {
+     "fieldname": "in_stock",
+     "fieldtype": "Float",
+     "label": "In stock",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1,
+     "precision": "0"
+    },
+    {
+     "fieldname": "sell_through",
+     "fieldtype": "Percent",
+     "label": "Sell-through %",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "none_left",
+     "fieldtype": "Check",
+     "label": "None left",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    }
+   ]
+  },
+  {
+   "name": "PP SST Sell-through",
+   "autoname": "format:SST-{#####}",
+   "title_field": "title",
+   "search_fields": "title,item_group,style",
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP SST Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ],
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Title",
+     "reqd": 1,
+     "in_list_view": 1,
+     "length": 80,
+     "description": "Such as: Summer dresses, every store."
+    },
+    {
+     "fieldname": "item_group",
+     "fieldtype": "Link",
+     "label": "Item group",
+     "options": "Item Group",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "The group's own items, not its sub-groups."
+    },
+    {
+     "fieldname": "style",
+     "fieldtype": "Link",
+     "label": "Style",
+     "options": "Item",
+     "description": "Optional: one style in the group (an item with variants). Blank: every style in the group."
+    },
+    {
+     "fieldname": "sold_since",
+     "fieldtype": "Date",
+     "label": "Sold since",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "Till sales from this day up to now. In stock is now."
+    },
+    {
+     "fieldname": "column_attributes",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "size_attribute",
+     "fieldtype": "Link",
+     "label": "Size attribute",
+     "options": "Item Attribute",
+     "reqd": 1,
+     "description": "The attribute your variants' sizes are in, such as Size. Sizes are shown in its own order."
+    },
+    {
+     "fieldname": "colour_attribute",
+     "fieldtype": "Link",
+     "label": "Colour attribute",
+     "options": "Item Attribute",
+     "description": "Optional, such as Colour. Blank: each size's colours counted together."
+    },
+    {
+     "fieldname": "stores",
+     "fieldtype": "Table",
+     "label": "Stores",
+     "options": "PP SST Store",
+     "description": "One to 20 stores, in the order the rows show them."
+    },
+    {
+     "fieldname": "section_result",
+     "fieldtype": "Section Break",
+     "label": "Sell-through"
+    },
+    {
+     "fieldname": "summary",
+     "fieldtype": "Small Text",
+     "label": "Summary",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "rows",
+     "fieldtype": "Table",
+     "label": "By style, colour, size and store",
+     "options": "PP SST Row",
+     "read_only": 1,
+     "description": "Written by Work out sell-through; each press replaces them."
+    }
+   ]
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP SST Sell-through by size",
+   "ref_doctype": "PP SST Sell-through",
+   "report_type": "Report Builder",
+   "columns": [
+    "title",
+    "rows.style",
+    "rows.colour",
+    "rows.size",
+    "rows.store",
+    "rows.sold",
+    "rows.in_stock",
+    "rows.sell_through",
+    "rows.none_left"
+   ],
+   "filters": [
+    [
+     "rows.store",
+     "is",
+     "set"
+    ]
+   ],
+   "order_by": "modified desc"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP SST Sell-through",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/shop_reports.html#sell-through-by-size-and-colour"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP SST Sell-through feed",
+   "description": "the sell-through service reads the two reports and the items and writes the rows as this user; leave the feed off",
+   "events": [
+    "PP SST Sell-through"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "work",
+   "point": "desk_action",
+   "label": "Sell-through",
+   "endpoint_url": "https://host.docker.internal:8125/sst/work",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP SST Sell-through",
+   "label": "Work out sell-through",
+   "placement": "form",
+   "service": "work",
+   "roles": [
+    "Stock Manager",
+    "Sales Manager",
+    "System Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Replace this run's rows with today's figures from your till sales and stock?"
+  }
+ ]
+}

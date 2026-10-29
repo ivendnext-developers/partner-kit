@@ -105,6 +105,14 @@ def role_start(old_p: str) -> re.Pattern | None:
     return re.compile(rf"^{re.escape(words[0])} (?!(?:{'|'.join(re.escape(r) for r in rests)})\b)")
 
 
+def encoded(prefix: str) -> str | None:
+    """The pattern of ``prefix`` as a web address writes it, its spaces as ``%20`` ("/api/resource/PP%20RFR%20Settings"),
+    or None for a one-word prefix. ``%20`` ends in a digit, so a ``%20`` before the prefix is a boundary too."""
+    if " " not in prefix:
+        return None
+    return rf"(?:(?<![A-Za-z0-9])|(?<=%20)){re.escape(prefix.replace(' ', '%20'))}(?![A-Za-z0-9])"
+
+
 def rename(m: dict, prefix: str) -> tuple[dict, list[str]]:
     """The manifest under ``prefix``, and every string of it that still names the old prefix or app."""
     old_p, old_a, new_a = m["prefix"], m["app"], app_for(prefix)
@@ -114,18 +122,29 @@ def rename(m: dict, prefix: str) -> tuple[dict, list[str]]:
     # it becomes yours too, in the case it was written in
     series = re.compile(rf"(?<![A-Za-z0-9]){re.escape(old_p.replace(' ', '-'))}(?=-|\b)", re.I)
     new_s = case_like(prefix.replace(" ", "-"))
+    # a web address carries the prefix with its spaces as %20 (a stand-in retailer's path in a test)
+    web = re.compile(encoded(old_p), re.I) if encoded(old_p) else None
+    new_w = case_like(prefix.replace(" ", "%20"))
     # A sample's shared role ("PP Integration") starts with the prefix's first word only: it becomes yours too
     # ("ACME BINS Integration"), as the App library's own copy names it ("IVENDNEXT BLN Integration").
     first = role_start(old_p)
 
+    # ... and a sentence may name that role or theme in its middle ("The shop must have the role PP Integration"): it
+    # follows there too, or the description names a role the manifest no longer has
+    shared = sorted({s for s in _strings(m) if first and first.search(s) and len(s) <= 80}, key=len, reverse=True)
+    inside = re.compile("|".join(rf"(?<![A-Za-z0-9]){re.escape(r)}(?![A-Za-z0-9])" for r in shared)) if shared else None
+
     def one(s: str) -> str:
+        s = inside.sub(lambda r: first.sub(prefix + " ", r.group(0)), s) if inside else s
         s = series.sub(new_s, fields.sub(new_a, names.sub(prefix, s)))
+        s = web.sub(new_w, s) if web else s
         return first.sub(prefix + " ", s) if first else s
 
     out = _walk(m, one)
     out["app"], out["prefix"] = new_a, prefix
     left = sorted({s for s in _strings(out) if names.search(s) or fields.search(s) or series.search(s)
-                                                   or (first and first.search(s))})
+                                                   or (web and web.search(s)) or (first and first.search(s))
+                                                   or (inside and inside.search(s))})
     return out, left
 
 
@@ -144,7 +163,8 @@ def addresses(m: dict) -> list[str]:
 def mentions(folder: pathlib.Path, skip: set, old_p: str, old_a: str) -> list[str]:
     """``file:line: text`` for each line outside the manifest that still names the old prefix or app."""
     pat = re.compile(rf"\b{re.escape(old_p)}\b|(?<![A-Za-z0-9]){re.escape(old_a)}(?=_|\b)"
-                     rf"|(?<![A-Za-z0-9]){re.escape(old_p.replace(' ', '-'))}(?=-|\b)", re.I)
+                     rf"|(?<![A-Za-z0-9]){re.escape(old_p.replace(' ', '-'))}(?=-|\b)"
+                     + (f"|{encoded(old_p)}" if encoded(old_p) else ""), re.I)
     hits = []
     for p in sorted(folder.rglob("*")):
         if not p.is_file() or p in skip or (p.suffix.lower() not in TEXT and p.name not in TEXT_NAMES) or "__pycache__" in p.parts:

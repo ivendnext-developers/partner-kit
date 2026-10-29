@@ -23,6 +23,9 @@ class Settings(unittest.TestCase):
     def test_a_setting_may_say_what_it_is(self):  # the hosting page shows it under the setting's box
         self.assertEqual(bad(env=[{"name": "REGION_X", "about": "The region your app reports in."}]), [])
 
+    def test_a_container_may_ask_for_a_scratch_folder(self):
+        self.assertEqual(bad(scratch=True), [])
+
     def test_the_shipped_template_is_ready(self):
         self.assertEqual(V.check_folder(HERE.parent), [])
 
@@ -36,6 +39,7 @@ class Settings(unittest.TestCase):
             (bad(env=[{"name": "REGION_X", "value": "abc"}]), "never values"), (bad(env="x"), "env: a list"),
             (bad(env=[{"name": "REGION_X", "about": "two\nlines"}]), "about is one line"),
             (bad(env=[{"name": "REGION_X", "about": 3}]), "about is one line"),
+            (bad(scratch="yes"), "scratch:"),
         ]
         for errors, word in cases:
             self.assertTrue(any(word in e for e in errors), (word, errors))
@@ -102,6 +106,7 @@ class FunctionForm(unittest.TestCase):
             (bad(**{**self.FN, "package": ["../secrets"]}), "package:"),
             (bad(**{**self.FN, "package": ["/etc"]}), "package:"),
             (bad(**{**self.FN, "shops": False}), "shops:"),
+            (bad(**{**self.FN, "scratch": True}), "scratch:"),
             (bad(**{**self.FN, "env": [{"name": "IVN_POINT_SECRET", "secret": True, "required": True}]}), "keeps no secret"),
             (bad(handler="service/app.lambda_handler"), "handler: only a function"),
             (bad(package=["service"]), "package: only a function"),

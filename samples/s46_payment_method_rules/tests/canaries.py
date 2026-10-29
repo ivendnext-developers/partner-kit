@@ -95,7 +95,7 @@ CANARIES = [
      M + "test_the_integration_role_only_reads_the_rules"),
     ("the check lets the sale go on when down", "manifest.json", '"down_answer": "allow_and_flag"', '"down_answer": "refuse"',
      M + "test_one_check_switched_off_that_lets_the_sale_go_on_when_down"),
-    # 1.1.0: From a sale of (NETT-CRD001)
+    # 1.1.0: From a sale of (a method pays only for a sale of at least an amount)
     ("a method's amount is read from its row", "payrules.py", '            amount = _amount(r.get("min_sale"))',
      "            amount = Decimal(0)", "test_rules.FromASale.test_loyalty_points_left_out_below_the_amount_for_every_customer"),
     ("equal is enough", "payrules.py", "total < need[t]]", "total <= need[t]]",

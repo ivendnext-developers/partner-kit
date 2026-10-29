@@ -129,6 +129,32 @@ class HyphenedNames(unittest.TestCase):
         self.assertEqual((new["series"], new["css"], new["user"]), ("ACME-BINS-.YYYY.-", ".acme-bins-label { }", "acme-bins-service@x"))
         self.assertEqual(left, [])
 
+    def test_a_web_address_spelling_follows_and_a_longer_word_is_left_alone(self):
+        # partner-feedback#39: "/api/resource/PP%20STN%20Settings" is the prefix too; "PP%20STNX" is not
+        m = {"app": "pp_stn", "prefix": "PP STN", "url": "/api/resource/PP%20STN%20Settings/Default",
+             "after": "a%20PP%20STN%20b", "low": "pp%20stn%20x", "other": "PP%20STNX"}
+        new, left = rename.rename(m, "ACME BINS")
+        self.assertEqual((new["url"], new["after"], new["low"], new["other"]),
+                         ("/api/resource/ACME%20BINS%20Settings/Default", "a%20ACME%20BINS%20b", "acme%20bins%20x", "PP%20STNX"))
+        self.assertEqual(left, [])
+
+    def test_a_role_named_inside_a_sentence_follows_the_role_itself(self):
+        # S24: "The shop must have the role PP Integration before this is installed" names the role PP Integration
+        m = {"app": "pp_stn", "prefix": "PP STN", "description": "Give the role PP Integration first; PP Integrations is not it.",
+             "permissions": [{"role": "PP Integration"}]}
+        new, left = rename.rename(m, "ACME BINS")
+        self.assertEqual(new["permissions"][0]["role"], "ACME BINS Integration")
+        self.assertEqual(new["description"], "Give the role ACME BINS Integration first; PP Integrations is not it.")
+        self.assertEqual(left, [])
+
+    def test_a_line_naming_the_prefix_as_a_web_address_is_listed(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            (root / "t.py").write_text('PATH = "/api/resource/PP%20STN%20Settings/Default"\n')
+            hits = rename.mentions(root, set(), "PP STN", "pp_stn")
+        self.assertEqual(len(hits), 1)
+        self.assertIn("PP%20STN", hits[0])
+
     def test_a_manifest_in_a_plain_folder_never_pulls_in_the_hosting_order_above_it(self):
         with tempfile.TemporaryDirectory() as d:
             root = pathlib.Path(d)
