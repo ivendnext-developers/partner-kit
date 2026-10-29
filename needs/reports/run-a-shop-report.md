@@ -8,7 +8,7 @@ status: ready-with-limits
 door: outside-app
 blocked-by: -
 recipe: recipes/shop_reports.md
-sample: none
+sample: samples/s54_sell_through
 request: -
 verified: run on a sandbox 2026-10-21 · POS 2.0.0.658 · run_report on a report (59 rows); a prepared report answered nothing before a run, then prepare_report queued a run, and run_report read it by its filters and by its record name (60 rows); both runs deleted; not run: a caller naming another user, a user with fewer rights (the product's tests)
 ---
