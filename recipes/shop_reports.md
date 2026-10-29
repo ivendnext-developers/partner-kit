@@ -11,6 +11,16 @@
   - `prepare_report` checks no right. Any signed-in user may queue any report, and the run reads with their own User Permissions only.
   - So: never pass a `user` or a run name iVendNext did not choose, and give your service's user only the reports and stores it needs.
 
+## Sell-through by size and colour
+
+The worked sample of this recipe is [S54](../samples/s54_sell_through/README.md). A fashion buyer names a range (an item group, or one style), a start date and the stores, and presses *Work out sell-through* in Desk. The service reads two of the retailer's own reports for each store: *POS Sale Report* for the units the till sold since the date, and *Stock Projected Quantity* for the stock still there. It reads the items' size and colour, and writes one row per style, colour, size and store: sold, in stock, the sell-through and *None left*.
+
+What it shows a builder:
+- **Read the figure where the retailer keeps it.** Both numbers come from the retailer's reports, so they match what the retailer's own staff see in Desk.
+- **Read the columns by name**, never by position, and say so in words if a report answers without them.
+- **Give the app's role the reports, and what they check.** Both reports belong to other roles (accounting, stock): the retailer adds the app's role to each in *Role Permission for Page and Report*. A report also checks its reader's right on every record type its filters name, blank or not (Read or Select), and on what its own code lists (Read): measure the least set one right at a time, and put it on the card.
+- **A sale whose stock has not left yet:** *Stock Projected Quantity* names the till's sales whose stock has not left yet (*Reserved for POS*): take them off the actual stock, and a sale counts once, before and after its day closes.
+
 ---
 
 ## Technical notes

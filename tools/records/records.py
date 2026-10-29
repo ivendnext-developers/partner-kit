@@ -303,6 +303,9 @@ SKIP = {
     "Retail POS Theme": "the till's look, set in POS Studio; your field rules are declared in a manifest (`field_rules`)",
     "Retail POS Theme Field": "a till theme's field rules, declared in a manifest (`field_rules`); the field rules contract describes them",
     "Fulfillment Charges": "a row of a sale's delivery charges, named once by the kit's print check",
+    "Item Attribute": "the sizes or colours a style's variants are made in, read by one sample for the order of their values; "
+                      "not yet fetched into this reference",
+    "Role Permission for Page and Report": "a Desk tool that gives a role a report; a setup step, not a business record",
 }
 
 # Record types an app reads but never writes over the record API, and how each is written instead: its page says so in
