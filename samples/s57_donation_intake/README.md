@@ -14,12 +14,19 @@ It uses the manifest's `doctypes` (a record type and a child table), `workflows`
 4. **Into stock.** Whoever prices the sorted goods takes them into stock as today, with a **Stock Entry** of type **Material Receipt** into the store, and chooses the donation in its **Donation** field (shown on a Material Receipt only; settable after submit too). The Stock Entry list, filtered by **Donation**, shows where a donation's goods went.
 5. **What came in.** The report **PP DON Donations** lists every donation not cancelled, newest first, with its store, its donor and whether its receipt was given. A customer's donations show under the customer, in the form's connections.
 
+| What the store sees (a demo store, the library copy *IVENDNEXT DON*) | |
+|---|---|
+| What installing it changes, read before the install | ![](screenshots/01_install.png) |
+| A donation for one of the retailer's customers: the customer's name and e-mail from the customer, the store, three lines of goods | ![](screenshots/02_donation.png) |
+| The donor receipt under the store's letter head | ![](screenshots/03_receipt.png) |
+| A Material Receipt naming the donation its goods came from | ![](screenshots/04_stock_entry.png) |
+
 ## What the retailer does
 
 - **Switch the lock on** first: Desk › *Retail Save Rule* › *PP DON donation locked once its receipt is given* › tick **Enabled** › Save. A manifest installs every save rule switched off; until it is on, a given receipt can still be changed.
 - Give the people at the donation door **Sales User** (or a role of your own with the same rights on the donation) (they take donations, give receipts, print them and cancel a donation not yet given its receipt). A **Sales Manager** cancels a given receipt. Neither deletes a donation; a System Manager can.
 - Put the charity's name, its registration number and its address on the **Letter Head** the store prints with (Desk › *Letter Head*): the receipt prints under it.
-- Whoever makes the Material Receipt holds **Stock User**, which reads donations so the **Donation** field can find one. Reading a donation shows the donor's details. If the site has no **Stock Entry Type** named *Material Receipt* (a site set up without the setup wizard's records has none), add it once: Desk › *Stock Entry Type* › **+ Add**, name *Material Receipt*, purpose *Material Receipt*.
+- Whoever makes the Material Receipt holds **Stock User**, which reads donations so the **Donation** field can find one. Reading a donation shows the donor's details. Keep the roles they make stock entries with today: on a demo site a user holding Stock User alone was refused the stock entry form's own settings. If the site has no **Stock Entry Type** named *Material Receipt* (a site set up without the setup wizard's records has none), add it once: Desk › *Stock Entry Type* › **+ Add**, name *Material Receipt*, purpose *Material Receipt*.
 - Add the goods before **Give receipt**: from then on they cannot change, and a given receipt with no goods is cancelled by a manager.
 - If the store gives anything back for a donation (a voucher, say), it says so in its own words: on its letter head, or in its own copy of the print format. If it e-mails receipts: its own Notification (the recipe's step 4). Nothing else: the app installs no setting and no role.
 
