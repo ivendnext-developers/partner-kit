@@ -8,16 +8,16 @@ It uses the manifest's `doctypes` (a record type and two child tables), `workflo
 
 ## What happens
 
-1. **At the counter.** The cashier rings the alteration at the till as the store already does: a service item (*Hem trousers*), or a surcharge on the garment's line where the retailer set one up; a made-to-measure piece is ordered with its deposit by the till's order or a layaway. Then store staff open **PP ALT Ticket** in Desk, **+ Add**: the customer (its phone and e-mail come from the customer, as the till keeps them), the store that hands it over, **Ready by**, and a row per garment with **What to do**. For a made-to-measure piece, choose **Made to measure** and fill **Measurements**. Name the **Sale** or the **Order** it was paid on. Save: the ticket is numbered `ALT-00001` and is **Taken**.
+1. **At the counter.** The cashier rings the alteration at the till as the store already does: a service item (*Hem trousers*), or a surcharge on the garment's line where the retailer set one up; a made-to-measure piece is ordered with its deposit by the till's order or a layaway. Then store staff open **PP ALT Ticket** in Desk, **+ Add**: the customer by name and number, never the store's walk-in customer (its phone and e-mail come from the customer, as the till keeps them; the till's new-customer sheet makes one), the store that hands it over, **Ready by**, and a row per garment with **What to do**. For a made-to-measure piece, choose **Made to measure** and fill **Measurements**. Name the **Sale** or the **Order** it was paid on. Save: the ticket is numbered `ALT-00001` and is **Taken**.
 2. **The slip and the tag.** **Print** › *PP ALT Ticket*: the customer's slip (the number large, the store, Ready by, each garment and its work, the measurements) and, under a cut line, the garment's tag.
 3. **In the workroom.** **Send to tailor**, **Book a fitting** (write **Next fitting**; **Back to tailor** after it), **Ready**. **Ready** ticks **Ready to collect**; going back for more work unticks it.
-4. **The customer is told.** The retailer's own Notification on **Ready to collect** sends *"Your alteration ALT-00042 is ready to collect"* by e-mail or SMS (the recipe's step 4; an SMS one also needs `doc.customer_phone` in its condition, or a customer with no phone stops **Ready**). The app sends nothing itself.
-5. **The hand-over.** Write **Collected by**, then **Hand over**: the ticket is **Closed**, and its history records who did it and when. **Cancel** closes a ticket the customer gave up.
+4. **The customer is told.** The retailer's own Notification on **Ready to collect** sends *"Your alteration ALT-00042 is ready to collect"* by e-mail or SMS (the recipe's step 4; an SMS one also names `doc.customer_phone` in its condition, or each ticket of a customer with no phone leaves a failed send in the Error Log). The app sends nothing itself.
+5. **The hand-over.** For a made-to-measure piece, take the balance at the till first (its order or layaway). Write **Collected by**, then **Hand over**: the ticket is **Closed**, and its history records who did it and when. **Cancel** closes a ticket the customer gave up.
 6. **What is due.** The report **PP ALT Tickets Due** lists every ticket not closed, the earliest Ready by first. A customer's, a sale's and an order's tickets show under each, in the form's connections.
 
 ## What the retailer does
 
-- Give the people at the counter and in the workroom **Sales User** (they take, move and print tickets; they cannot delete one). A **Sales Manager** may delete a ticket taken in error.
+- Give the people at the counter and in the workroom **Sales User** (they take, move and print tickets; they cannot delete one). A **Sales Manager** may delete a ticket taken in error, and needs **Sales User** too to move one.
 - Add its own Notification for the ready message, and, if it wants one, a reminder the day before a fitting (the recipe's step 4).
 - Nothing else: the app installs no setting, no role and no switch.
 
@@ -66,6 +66,9 @@ A manifest only. The till already charges an alteration (a service item, or a li
 
 - **The ticket is written in Desk**, at the counter or in the workroom; nothing links it to the sale or the order on its own: staff name them.
 - **The phone and e-mail are the customer's** (`custom_phone_no`, `custom_email`, the fields the till's new-customer sheet and customer edit write), read only and filled again on each save: change them on the customer. A customer made in Desk with only its contact's mobile and e-mail has a blank phone and e-mail on the ticket until its **Phone Number** and **Email** are set.
+- **Desk shows the states and buttons with the prefix** (*PP ALT Ready*, *IVENDNEXT ALT Ready* in the library app).
+- **Hand over does not ask for *Collected by*:** staff write it first.
+- **Removing the app:** delete your own Notifications on the ticket first (a daily reminder on a removed record would fail every day).
 - **A workflow's *who may edit* is a screen rule.** Over the record API, anyone with write may change a ticket in any state; the buttons are the workflow's.
 - **A cancelled ticket refunds nothing**: a refund is the till's return.
 - **The measurements are personal data** the retailer keeps under its own policy; uninstalling the app removes the tickets (its export keeps a copy).

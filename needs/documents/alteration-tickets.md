@@ -18,7 +18,7 @@ A ticket as your manifest's own record type: the garments and what to do to each
 ## Limits
 - The ticket is written in iVendNext Desk; staff name the sale or the order on it. A till key that writes it from the basket is a version of your own.
 - Who may edit a record in a workflow state is checked in the browser only: follow the four safeguards in chapter 13a.
-- A manifest's notification goes only to the retailer's own users: the message to the customer is the retailer's own Notification (an SMS one names the phone in its condition, or a customer with no phone stops the save).
+- A manifest's notification goes only to the retailer's own users: the message to the customer is the retailer's own Notification (an SMS one names the phone in its condition, or each ticket of a customer with no phone logs a failed send).
 
 ## Tell the customer
 Each alteration and made-to-measure piece has a ticket from the counter to the hand-over, with a slip, a garment tag, its fittings and a message when it is ready.

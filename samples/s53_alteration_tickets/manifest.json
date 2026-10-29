@@ -282,14 +282,13 @@
      "fieldtype": "Check",
      "label": "Ready to collect",
      "read_only": 1,
-     "description": "Ticked by Ready, unticked by Back to tailor: your own Notification on its change tells the customer, with the condition doc.ready_to_collect in (1, \"1\") and, for SMS, and doc.customer_phone (a blank number stops the save)."
+     "description": "Ticked by Ready, unticked by Back to tailor: your own Notification on its change tells the customer, with the condition doc.ready_to_collect in (1, \"1\") (for SMS, and doc.customer_phone, or each ticket without a phone logs a failed send)."
     },
     {
      "fieldname": "closed",
      "fieldtype": "Check",
      "label": "Closed",
      "read_only": 1,
-     "in_standard_filter": 1,
      "description": "Ticked by Hand over or Cancel."
     },
     {
@@ -301,7 +300,7 @@
      "fieldname": "collected_by",
      "fieldtype": "Data",
      "label": "Collected by",
-     "description": "The name of the person who took the garment, written before Hand over."
+     "description": "The name of the person who took the garment. Write it before Hand over: Hand over does not ask for it."
     },
     {
      "fieldname": "notes",
@@ -438,7 +437,7 @@
    "name": "PP ALT Ticket",
    "doc_type": "PP ALT Ticket",
    "print_format_type": "Jinja",
-   "html": "<div style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n<h2 style=\"margin: 0 0 2px;\">{{ doc.kind }} ticket {{ doc.name }}</h2>\n<p style=\"margin: 0 0 8px;\">{{ doc.customer_name or \"\" }} · collect at {{ doc.store or \"\" }} · taken {{ doc.get_formatted(\"taken_on\") }} · ready by {{ doc.get_formatted(\"due_date\") }}{% if doc.next_fitting %} · fitting {{ doc.get_formatted(\"next_fitting\") }}{% endif %}</p>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: left;\">Garment</th><th style=\"text-align: left;\">What to do</th></tr>\n{% for g in doc.garments %}<tr><td>{{ g.garment or g.item or \"\" }}</td><td>{{ g.work or \"\" }}</td></tr>\n{% endfor %}</table>\n{% if doc.measurements %}<p style=\"margin: 8px 0 0;\">{% for m in doc.measurements if m.measure %}{{ m.measure }} {{ m.get_formatted(\"value\") }} {{ m.unit }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}\n<p style=\"margin: 8px 0 0;\">Please bring this slip when you collect.</p>\n<div style=\"border-top: 1px dashed #000; margin: 16px 0 8px;\"></div>\n<p style=\"margin: 0; font-size: 9pt;\">Garment tag</p>\n<p style=\"margin: 0; font-size: 22pt; font-weight: bold;\">{{ doc.name }}</p>\n<p style=\"margin: 0;\">{{ doc.customer_name or \"\" }} · ready by {{ doc.get_formatted(\"due_date\") }}</p>\n<p style=\"margin: 0;\">{% for g in doc.garments %}{{ g.garment or g.item or \"\" }}{% if not loop.last %} · {% endif %}{% endfor %}</p>\n</div>"
+   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n<h2 style=\"margin: 0 0 2px;\">{{ _(doc.kind) }} · {{ doc.name }}</h2>\n<p style=\"margin: 0 0 8px;\">{{ doc.customer_name or \"\" }} · {{ _(\"Collect at\") }} {{ doc.store or \"\" }} · {{ _(\"Taken on\") }} {{ doc.get_formatted(\"taken_on\") }} · {{ _(\"Ready by\") }} {{ doc.get_formatted(\"due_date\") }}{% if doc.next_fitting %} · {{ _(\"Next fitting\") }} {{ doc.get_formatted(\"next_fitting\") }}{% endif %}</p>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Garment\") }}</th><th style=\"text-align: start;\">{{ _(\"What to do\") }}</th></tr>\n{% for g in doc.garments %}<tr><td>{{ g.garment or g.item or \"\" }}</td><td>{{ g.work or \"\" }}</td></tr>\n{% endfor %}</table>\n{% if doc.measurements %}<p style=\"margin: 8px 0 0;\">{% for m in doc.measurements if m.measure %}{{ m.measure }} {{ m.get_formatted(\"value\") }} {{ m.unit }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}\n<p style=\"margin: 8px 0 0;\">{{ _(\"Please bring this slip when you collect.\") }}</p>\n<div style=\"border-top: 1px dashed #000; margin: 16px 0 8px;\"></div>\n<p style=\"margin: 0; font-size: 9pt;\">{{ _(\"Garment tag\") }}</p>\n<p style=\"margin: 0; font-size: 22pt; font-weight: bold;\">{{ doc.name }}</p>\n<p style=\"margin: 0;\">{{ doc.customer_name or \"\" }} · {{ _(\"Ready by\") }} {{ doc.get_formatted(\"due_date\") }}</p>\n<p style=\"margin: 0;\">{% for g in doc.garments %}{{ g.garment or g.item or \"\" }}{% if not loop.last %} · {% endif %}{% endfor %}</p>\n</div>"
   }
  ],
  "reports": [

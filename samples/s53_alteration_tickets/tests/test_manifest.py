@@ -85,6 +85,10 @@ class ManifestTest(unittest.TestCase):
         (r,) = MANIFEST["reports"]
         self.assertEqual((r["ref_doctype"], r["filters"], r["order_by"]), (TICKET, [["closed", "=", 0]], "due_date asc"))
         self.assertLessEqual(set(r["columns"]) - {"name"}, set(fields(TICKET)))
+        # a Check the report filters on is never a standard filter: Desk turns the saved filter into the unticked box and
+        # drops it, so the report would list closed tickets too (run 11; run 20's bench browser pass saw it)
+        f = fields(TICKET)
+        self.assertFalse([x[0] for x in r["filters"] if f[x[0]]["fieldtype"] == "Check" and f[x[0]].get("in_standard_filter")])
 
     def test_child_tables_are_never_required(self):
         tables = [f for f in DT[TICKET]["fields"] if f["fieldtype"] == "Table"]
