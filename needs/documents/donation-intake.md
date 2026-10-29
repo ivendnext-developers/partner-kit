@@ -13,7 +13,7 @@ request: -
 verified: 2026-10-29 · bench
 ---
 ## What you build
-A donation as your manifest's own record type: the donor (a customer, a name typed at the door, or no one named), the donor's address, the store and the day, and the goods by kind, count and condition. A workflow *Received → Receipt given* (or *Cancelled*) ticks *Receipt given*, and a save rule then locks the donor, the store, the day and the goods on every door, so the receipt holds. A print format gives the donor receipt under the retailer's own letter head, stating no value; a report lists the donations; a field on Stock Entry names the donation whose goods a Material Receipt takes into stock.
+A donation as your manifest's own record type: the donor (a customer, a name typed at the door, or no one named), the donor's address, the store and the day, and the goods by kind, count and condition. A workflow *Received → Receipt given* (or *Cancelled*), and a save rule that then locks the donor, the store, the day and the goods on every door, so the receipt holds. A print format gives the donor receipt under the retailer's own letter head, stating no value; a report lists the donations; a field on Stock Entry names the donation whose goods a Material Receipt takes into stock.
 
 ## Limits
 - The receipt states no value: a valuation for a tax claim, or the UK's Gift Aid, is a version of your own.

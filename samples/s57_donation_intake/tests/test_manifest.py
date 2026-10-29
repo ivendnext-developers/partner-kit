@@ -1,8 +1,8 @@
 """S57's laptop tests: the manifest passes the kit's checker and nothing the retailer's install refuses; the app calls
 no outside address and holds no money, and its one field on a retailer's record (Stock Entry's Donation) is optional;
-Give receipt ticks Receipt given and a given receipt is cancelled by a manager only; the receipt and the report read the
-donation's state, never a tick box (a read-only box is a screen rule); the save rule locks every field the receipt prints
-once it is given, the customer's own name excepted; a customer's name and e-mail are read-only copies, a donor who is not
+a given receipt is cancelled by a manager only; the receipt, the report and the retailer's e-mail read the donation's
+step, never a tick box (a read-only box is a screen rule, and Duplicate copies a box but never the step); the save rule
+locks every field the receipt prints once it is given, the customer's own name excepted; a customer's name and e-mail are read-only copies, a donor who is not
 one is typed; the report lists donations not cancelled, newest first; the receipt reads only fields that exist, skips a
 blank row and states no value; the rights and the help page. Data only: no service.
 
@@ -66,17 +66,12 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(cf.get("allow_on_submit"), 1)                      # a submitted receipt can still name it
         self.assertIn('"Material Receipt"', cf["depends_on"])               # shown on a Material Receipt only
 
-    def test_give_receipt_ticks_receipt_given_and_the_receipt_reads_the_state(self):
-        self.assertEqual((state("Receipt given")["update_field"], state("Receipt given")["update_value"]), ("receipt_given", "1"))
-        self.assertNotIn("update_field", state("Received"))
-        self.assertNotIn("update_field", state("Cancelled"))     # nothing to tick: the receipt and the report read the state
-        f = fields(DONATION)
-        self.assertEqual((f["receipt_given"]["fieldtype"], f["receipt_given"].get("read_only")), ("Check", 1))
-        self.assertFalse(f["receipt_given"].get("default"))
-        self.assertNotIn("cancelled", f)
-        # read-only is the browser's rule only: the API can tick a box, so the print never decides by one (review, run 22)
+    def test_no_tick_box_the_receipt_reads_the_step(self):
+        # read-only is the browser's rule only (the API sets a box) and Desk's Duplicate copies a box but never the
+        # workflow's own step (no_copy): so nothing here is a tick, and the receipt reads the step
+        self.assertFalse([s["state"] for s in WF["states"] if "update_field" in s])
+        self.assertFalse([n for n, x in fields(DONATION).items() if x["fieldtype"] == "Check"])
         html = PF["html"]
-        self.assertNotIn("doc.receipt_given", html)
         self.assertIn('state.endswith(" Cancelled")', html)
         self.assertIn('state.endswith(" Receipt given")', html)
 
@@ -94,7 +89,7 @@ class ManifestTest(unittest.TestCase):
         # the customer's own name is fetched again at each save: locking it would refuse every later save after the
         # customer is renamed, so the customer link is locked and the name follows the customer (README, bounds)
         printed = set(re.findall(r"\bdoc\.(\w+)", PF["html"])) - {"get_formatted", "name", "workflow_state", "customer_name"}
-        self.assertLessEqual(printed | {"goods", "customer", "receipt_given"}, set(LOCK["locked_fields"]))
+        self.assertLessEqual(printed | {"goods", "customer"}, set(LOCK["locked_fields"]))
         self.assertNotIn("customer_name", LOCK["locked_fields"])
         self.assertLessEqual(set(LOCK["locked_fields"]), set(fields(DONATION)))
         self.assertLessEqual(len(LOCK["message"]), 140)
