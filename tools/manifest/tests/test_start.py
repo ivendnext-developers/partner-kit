@@ -13,6 +13,7 @@ import json
 import os
 import pathlib
 import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -207,6 +208,30 @@ class Canary(unittest.TestCase):
             self.assertIn("a name of the sample is still in the copy", out)
             self.assertFalse((repo / "apps").exists())
 
+
+class ReadsAnotherSample(unittest.TestCase):
+    """partner-feedback#40: S41's tests read the counter-rules app it works with (S39). Started into apps/, they find it in
+    the repository's samples/, and with no samples/ they say so and skip those checks: never a file that is not there."""
+
+    def test_s41_started_beside_the_kits_samples_runs_its_checks_against_s39(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = repository(d)
+            (repo / "samples").symlink_to(KIT / "samples")
+            rc, out = run("s41_regulated_register", "--prefix", PREFIX, "--into", str(repo), "--test")
+            self.assertEqual(rc, 0, out)
+            t = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"],
+                               cwd=repo / "apps" / "acme_tst", capture_output=True, text=True,
+                               env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
+            self.assertEqual(t.returncode, 0, t.stderr[-1500:])
+            self.assertRegex(t.stderr, r"counter_rules_app_installs.*\.\.\. ok")
+            self.assertRegex(t.stderr, r"customers_linked_record.*\.\.\. ok")
+
+    def test_s41_started_with_no_samples_skips_the_s39_checks_and_passes(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = repository(d)
+            rc, out = run("s41_regulated_register", "--prefix", PREFIX, "--into", str(repo), "--test")
+            self.assertEqual(rc, 0, out)
+            self.assertRegex(out, r"copied tests: ran \d+, OK")
 
 class WebAddressNames(unittest.TestCase):
     """partner-feedback#39: a sample writes its prefix as a web address does (a stand-in retailer's path,

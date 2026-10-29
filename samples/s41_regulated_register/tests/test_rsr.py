@@ -35,6 +35,12 @@ except ImportError:
     jinja2 = None
 
 NEED_JINJA = unittest.skipUnless(jinja2, "jinja2 is not installed: the rendering tests did not run")
+# the counter-rules app (K1, S39) whose records and details this register reads: beside this sample in the kit, or in the
+# kit's samples/ when this app was started into apps/ of a repository made from the kit (tools/manifest/start.py)
+K1_MANIFEST = next((p for p in (SAMPLE.parent / "s39_pharmacy_counter" / "manifest.json",
+                                SAMPLE.parents[1] / "samples" / "s39_pharmacy_counter" / "manifest.json") if p.is_file()), None)
+NEED_K1 = unittest.skipUnless(K1_MANIFEST, "the counter-rules app's manifest (samples/s39_pharmacy_counter) is not in this "
+                                           "repository: the checks against it did not run")
 KE = json.loads((SAMPLE / "datasets" / "ke_pharmacy.json").read_text(encoding="utf-8"))
 LIQUOR = json.loads((HERE / "fixtures" / "liquor_one_book.json").read_text(encoding="utf-8"))
 
@@ -387,6 +393,7 @@ class Manifest(unittest.TestCase):
         self.assertLessEqual({"PP RSR Occupation", "PP RSR Purpose", "PP RSR Prescriber Address"},
                              {a["name"] for a in m["sale_attributes"]})
 
+    @NEED_K1
     def test_a_detail_read_from_the_customers_linked_record_is_declared_with_its_record(self):
         # since K1 0.1.2 (PH-B1d) the patient's ID is on the counter-rules app's patient record, which links to the Customer
         rec = {"doctype": "PP RXC Patient", "match": "customer_link", "field": "id_number"}
@@ -395,7 +402,7 @@ class Manifest(unittest.TestCase):
                          {"label": "Patient identifier", "record": rec})
         # the record and field it names are K1's today, the record linking its customer by a field named customer (the
         # door refuses a lookup of a field that does not exist)
-        k1 = json.loads((SAMPLE.parent / "s39_pharmacy_counter" / "manifest.json").read_text(encoding="utf-8"))
+        k1 = json.loads(K1_MANIFEST.read_text(encoding="utf-8"))
         pat = next(d for d in k1["doctypes"] if d["name"] == "PP RXC Patient")
         got = {f["fieldname"]: f for f in pat["fields"]}
         self.assertEqual(got["id_number"]["fieldtype"], "Data")
@@ -404,10 +411,11 @@ class Manifest(unittest.TestCase):
         self.assertFalse([b for b in build.build_manifest()["register_books"]
                           if "pp_rxc_id_number" in json.dumps(b)])
 
+    @NEED_K1
     def test_every_authority_source_is_a_sale_detail_and_a_desk_field_the_counter_rules_app_installs(self):
         # the door refuses a declaration naming a sale detail the shop does not have (at install): every authority source
         # is K1's, and the prescription's date (K1 0.1.3, PH-B1e) is named where the book prints it (Jordan, Mexico)
-        k1 = json.loads((SAMPLE.parent / "s39_pharmacy_counter" / "manifest.json").read_text(encoding="utf-8"))
+        k1 = json.loads(K1_MANIFEST.read_text(encoding="utf-8"))
         details = {a["name"] for a in k1["sale_attributes"]}
         for ds in build.datasets():          # the authority's sources are the data set's, every book of it
             a = ds.get("authority") or {}

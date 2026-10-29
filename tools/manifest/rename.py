@@ -82,6 +82,29 @@ def case_like(new: str):
     return lambda m: new.lower() if m.group(0).islower() else new
 
 
+def kit_prefixes() -> set:
+    """Every prefix the kit's samples own ("PP RXC"), read from their manifests."""
+    found = set()
+    for p in [*HERE.parents[1].glob("samples/*/manifest.json"), *HERE.parents[1].glob("samples/*/outside/manifest.json")]:
+        try:
+            found.add(json.loads(p.read_text(encoding="utf-8"))["prefix"])
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return found
+
+
+def role_start(old_p: str) -> re.Pattern | None:
+    """The start of a name that begins with the prefix's first word alone ("PP Integration"), a role of this sample. A
+    name that begins with another sample's prefix ("PP RXC Rx Number", the counter-rules app's field that S41 reads) is
+    that app's, and stays as it is."""
+    words = old_p.split()
+    if len(words) < 2:
+        return None
+    rests = [" ".join(words[1:])] + [o.split(" ", 1)[1] for o in kit_prefixes()
+                                      if o != old_p and o.split()[0] == words[0] and len(o.split()) > 1]
+    return re.compile(rf"^{re.escape(words[0])} (?!(?:{'|'.join(re.escape(r) for r in rests)})\b)")
+
+
 def encoded(prefix: str) -> str | None:
     """The pattern of ``prefix`` as a web address writes it, its spaces as ``%20`` ("/api/resource/PP%20RFR%20Settings"),
     or None for a one-word prefix. ``%20`` ends in a digit, so a ``%20`` before the prefix is a boundary too."""
@@ -104,8 +127,7 @@ def rename(m: dict, prefix: str) -> tuple[dict, list[str]]:
     new_w = case_like(prefix.replace(" ", "%20"))
     # A sample's shared role ("PP Integration") starts with the prefix's first word only: it becomes yours too
     # ("ACME BINS Integration"), as the App library's own copy names it ("IVENDNEXT BLN Integration").
-    first = re.compile(rf"^{re.escape(old_p.split()[0])} (?!{re.escape(' '.join(old_p.split()[1:]))}\b)") \
-        if len(old_p.split()) > 1 else None
+    first = role_start(old_p)
 
     # ... and a sentence may name that role or theme in its middle ("The shop must have the role PP Integration"): it
     # follows there too, or the description names a role the manifest no longer has
