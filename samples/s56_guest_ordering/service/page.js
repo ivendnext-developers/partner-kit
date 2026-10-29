@@ -135,10 +135,11 @@
     if (!kiosk()) { return; }
     clearTimeout(idle);
     idle = setTimeout(function () {
-      if (busy || (lost && Date.now() - lostAt < KIOSK_IDLE_MS)) { return resetLater(ms); }
-      basket = []; key = null; lost = false; drawBasket(); note("");
-      call("/gor/menu").then(function (a) {        // drawn only while no next guest has started
-        if (a.state === "open" && !basket.length && !document.querySelector(".choose")) { menu = a; drawMenu(); }
+      if (busy) { return resetLater(ms); }
+      if (lost && Date.now() - lostAt < KIOSK_IDLE_MS) { return resetLater(KIOSK_IDLE_MS - (Date.now() - lostAt)); }
+      basket = []; key = null; lost = false; drawBasket(); note(""); drawMenu();   // the last guest's open choices go too
+      call("/gor/menu").then(function (a) {        // drawn only while no next guest has opened a dish's choices
+        if (a.state === "open" && !document.querySelector(".choose")) { menu = a; drawMenu(); }
       }).catch(function () {});
     }, ms);
   }

@@ -118,7 +118,7 @@ CANARIES = [
      T + "test_o14_a_dish_the_door_refuses_is_said_to_ask_staff"),
     ("a kiosk keeps no order key in the browser", "service/page.js", "  function keptKey(sig) {\n    if (kiosk()) { return null; }",
      "  function keptKey(sig) {", T + "test_e5_the_kiosks_guards_are_in_the_pages_text"),
-    ("a lost answer holds a kiosk one idle period, no longer", "service/page.js", " && Date.now() - lostAt < KIOSK_IDLE_MS)", ")",
+    ("a lost answer holds a kiosk one idle period, no longer", "service/page.js", "      if (lost && Date.now() - lostAt < KIOSK_IDLE_MS) {", "      if (lost) {",
      T + "test_e5_the_kiosks_guards_are_in_the_pages_text"),
     ("a kiosk keeps no order key in the browser (the save)", "service/page.js", "  function keepKey(sig, k) {\n    if (kiosk()) { return; }",
      "  function keepKey(sig, k) {", T + "test_e5_the_kiosks_guards_are_in_the_pages_text"),

@@ -372,7 +372,9 @@ class ServiceTest(unittest.TestCase):
         self.assertIn("function keptKey(sig) {\n    if (kiosk()) { return null; }", js)
         self.assertIn("function keepKey(sig, k) {\n    if (kiosk()) { return; }", js)
         self.assertIn('["pointerdown", "keydown", "input"]', js)            # the idle clock restarts on every touch
-        self.assertIn("if (busy || (lost && Date.now() - lostAt < KIOSK_IDLE_MS)) { return resetLater(ms); }", js)
+        self.assertIn("if (lost && Date.now() - lostAt < KIOSK_IDLE_MS) { return resetLater(KIOSK_IDLE_MS - (Date.now() - lostAt)); }", js)
+        self.assertEqual(js.count("lostAt = Date.now()"), 2)                 # set at both ways an answer is lost
+        self.assertIn('note(""); drawMenu();', js)                            # the clear removes open choices
         self.assertIn("basket = []; key = null; lost = false;", js)         # the hold ends with the clear
         self.assertIn("var KIOSK_IDLE_MS = 2 * 60 * 1000;", js)
 
