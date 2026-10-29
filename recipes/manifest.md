@@ -121,7 +121,7 @@ Your app needs to keep something on a sale: a delivery slot, a prescription numb
 2. **A sale detail** (`sale_attributes`): a short value, up to 140 characters, that the cashier or a till key fills on the sale. It takes no room on the sale's row. Best for one or two short values captured at the till.
 3. **A field on the sale** (`custom_fields` on POS Invoice), only when the detail must sit on the sale itself, for example a fiscal reader's result. Declare it **`Small Text`** unless something lists, filters or searches by it: a `Small Text` field takes 10 bytes of the row, a `Data`, `Link` or `Select` field 562.
 
-**What happens when the fields do not fit.** On POS releases after 2.1.0.668 the install measures each record your manifest adds fields to, and each record type it brings, before it makes anything, on a first install and on an update. Fields that would not fit are refused, in one line, for example:
+**What happens when the fields do not fit.** On POS 2.1.0.669 and later the install measures each record your manifest adds fields to, and each record type it brings, before it makes anything, on a first install and on an update. Fields that would not fit are refused, in one line, for example:
 
 > custom_fields[0] (POS Invoice): POS Invoice has 5,117 bytes of room left on this site (about 9 more Data, Link or Select fields), and this app's fields need 6,744 (the widest: pp_xyz_slot, pp_xyz_ref, pp_xyz_note). A record's row holds at most 65,535 bytes, shared by every app and the shop's own fields: put them in your app's own record type; a sale detail (sale_attributes) for a short value, up to 140 characters, captured on the sale; or use Small Text for text nothing searches, which uses almost no room
 

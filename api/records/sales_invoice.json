@@ -1931,7 +1931,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -1943,7 +1943,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -1979,7 +1979,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -1991,7 +1991,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2015,7 +2015,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2039,7 +2039,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2051,7 +2051,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2063,7 +2063,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2075,7 +2075,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2087,7 +2087,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   }
  ],
  "lede": "A sale booked in the back office, or a till's day of sales merged into one document; a return is a Sales Invoice with *Is Return* ticked that names the sale it returns.",
@@ -3053,6 +3053,18 @@
     {
      "added": 1,
      "choices": [],
+     "description": "Notional, reference-only apportionment of the transaction's total tender/payment-mode discount to this line, in proportion to the line's value at time of sale. Used only to compute proportional discount reversal on returns; never affects rate, amount, or tax.",
+     "fieldname": "custom_tender_discount_apportioned",
+     "hidden": 1,
+     "label": "Tender Discount Apportioned",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Currency"
+    },
+    {
+     "added": 1,
+     "choices": [],
      "description": "Set to 1 when this line's rate and/or quantity was extracted from a barcode mask scan. Propagated from POS Invoice Item on merge.",
      "fieldname": "custom_barcode_masked",
      "hidden": 0,
@@ -3069,18 +3081,6 @@
      "fieldname": "custom_barcode_mask_amount",
      "hidden": 0,
      "label": "Label Total",
-     "links_to": "",
-     "read_only": 1,
-     "required": 0,
-     "type": "Currency"
-    },
-    {
-     "added": 1,
-     "choices": [],
-     "description": "Notional, reference-only apportionment of the transaction's total tender/payment-mode discount to this line, in proportion to the line's value at time of sale. Used only to compute proportional discount reversal on returns; never affects rate, amount, or tax.",
-     "fieldname": "custom_tender_discount_apportioned",
-     "hidden": 1,
-     "label": "Tender Discount Apportioned",
      "links_to": "",
      "read_only": 1,
      "required": 0,
@@ -4797,6 +4797,6 @@
    ]
   }
  },
- "why": "openapi.yaml; api/validate.sh; guide chapter 02; recipe bulk_reads; recipe customer_history_page; recipe price_checker; recipe print_pack; recipe webhook_receiver; sample S2; sample S29; sample S3; sample S39; sample S41; sample S43; the MCP server; the request collection; retail core",
+ "why": "openapi.yaml; api/validate.sh; guide chapter 02; recipe bulk_reads; recipe customer_history_page; recipe price_checker; recipe print_pack; recipe repairs_by_serial; recipe webhook_receiver; sample S1; sample S2; sample S24; sample S28; sample S29; sample S3; sample S30; sample S32; sample S39; sample S40; sample S41; sample S43; sample S45; sample S56; the MCP server; the feed client; the kit's tool moneykit; the kit's tool scale_profile; the kit's tool selfcheck; the request collection; retail core",
  "written_elsewhere": ""
 }
