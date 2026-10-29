@@ -67,8 +67,7 @@ class ManifestTest(unittest.TestCase):
     def test_m4_who_may_do_what_on_the_records(self):
         for dt in (RES, WAIT):
             self.assertEqual(self.rights(dt, INT), ["read", "write"])          # never creates or deletes a booking
-            self.assertEqual(self.rights(dt, HOST), ["create", "print", "read", "write"])   # no delete; no Report view,
-            # whose inline edit ignores the form's read-only slot
+            self.assertEqual(self.rights(dt, HOST), ["create", "print", "read", "report", "write"])   # no delete
         self.assertEqual(self.rights("PP FOH Settings", INT), ["read", "write"])     # the press stamp
         self.assertEqual(self.rights("PP FOH Settings", HOST), ["read"])
 
