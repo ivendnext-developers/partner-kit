@@ -17,6 +17,12 @@ An electronics or phone store repairs and services the units it sells, and each 
 5. **A repair that will not go ahead.** **Cancel**: by store staff while the repair is **Received**, by a store manager once it is **In repair**. A cancelled repair keeps its number; the store never deletes one.
 6. **The history and the queue.** The serial number's form lists its **Repairs**. The report **PP RPR Open repairs** lists the repairs not yet collected, by the date promised.
 
+![A repair on a demo site](../samples/s58_repairs_by_serial/screenshots/02_repair.png)
+
+![The repair slip under the store's letter head, with the unit tag](../samples/s58_repairs_by_serial/screenshots/03_slip.png)
+
+![A serial number listing its repairs](../samples/s58_repairs_by_serial/screenshots/04_serial_history.png)
+
 ## Repairs
 
 The record type `PP RPR Repair`, numbered `format:RPR-{#####}`, tracked (its history shows who changed it and when), its title the serial number:
@@ -39,7 +45,7 @@ The record type `PP RPR Repair`, numbered `format:RPR-{#####}`, tracked (its his
 
 **Sales User** and **Sales Manager** read, write, create and print repairs; only **System Manager** deletes one; **Stock User** reads them, so the Stock Entry's **Repair** field can find one. A repair shows under the Serial No, the Customer and the POS Invoice it names (manifest `links`).
 
-**Reading the serial.** Sales User holds no right on Serial No, so the retailer gives Sales User (and Sales Manager) **Read** on Serial No in the Role Permissions Manager (a new rule comes with *Read* and *Select* ticked). *Select* alone is not enough: the search finds the serial, but when it is picked the form fetches the item and warranty date with the person's own rights and says *You need Read permission to fetch values* (the save itself fills them either way, with no right needed). *Read* also opens the serial's own form, with its repairs, to the counter.
+**Reading the serial.** Sales User holds no right on Serial No, so the retailer gives Sales User (and Sales Manager) **Read** on Serial No in the Role Permissions Manager (a new rule comes with *Read* ticked). *Select* alone is not enough: the search finds the serial, but when it is picked the form fetches the item and warranty date with the person's own rights and says *You need Read permission to fetch values* (the save itself fills them either way, with no right needed). *Read* also opens the serial's own form, with its repairs, to the counter.
 
 ## The workflow and the lock
 
