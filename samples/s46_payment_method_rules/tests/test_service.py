@@ -220,7 +220,14 @@ class ShopApi(unittest.TestCase):
                     h.send_header("Location", f"http://{h.headers['Host']}/api/resource/PP%20PMR%20Rule?{q}")
                     h.end_headers()
                     return
+                listed = "/api/resource/Listed%20Rule"
+                if path in (listed, "/api/resource/Odd%20Rule"):   # a retailer on 1.0.x: no min_sale on its rows
+                    fields = json.loads(dict(urllib.parse.parse_qsl(q))["fields"])
+                    if path != listed or "methods.min_sale" in fields:
+                        path = "/api/resource/Missing%20Field"
                 code, body = {"/api/resource/PP%20PMR%20Rule": (200, {"data": RECORDS}),
+                              listed: (200, {"data": RECORDS}),
+                              "/api/resource/Missing%20Field": (417, {"exc_type": "DataError"}),
                               "/api/resource/Customer%20Group": (200, {"data": TREE_ROWS}),
                               "/api/resource/Gone%20Rule": (404, {"exc_type": "DoesNotExistError"}),
                               "/api/resource/Locked%20Rule": (403, {"exc_type": "PermissionError"}),
@@ -261,6 +268,19 @@ class ShopApi(unittest.TestCase):
         self.assertEqual((json.loads(args["filters"]), args["limit_page_length"]), ([["enabled", "=", 1]], "0"))
         self.assertEqual(json.loads(args["fields"]), list(app.payrules.RULE_FIELDS))
         self.assertIn("methods.mode_of_payment", json.loads(args["fields"]))
+
+    def test_a_retailer_on_the_listed_version_is_read_again_without_the_amount(self):
+        start = len(self.seen)
+        self.assertEqual(self.api.rules(self.url, "k:s", "Listed"), RECORDS)
+        asked = [json.loads(dict(urllib.parse.parse_qsl(p.split("?", 1)[1]))["fields"]) for p, _ in self.seen[start:]]
+        self.assertEqual(asked, [list(app.payrules.RULE_FIELDS), list(app.payrules.RULE_FIELDS_LISTED)])
+
+    def test_a_field_refused_twice_is_unreadable_and_never_a_key_refused(self):
+        start = len(self.seen)
+        with self.assertRaises(app.ShopUnreadable) as e:
+            self.api.rules(self.url, "k:s", "Odd")
+        self.assertNotIsInstance(e.exception, app.KeyRefused)
+        self.assertEqual(len(self.seen) - start, 2)     # one read again, never a loop
 
     def test_reads_the_whole_group_tree(self):
         self.assertEqual(self.api.tree(self.url, "k:s"), TREE_ROWS)

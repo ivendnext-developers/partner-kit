@@ -12,6 +12,7 @@ The retailer decides which payment methods each group of its customers may use a
 |---|---|
 | A sale for a customer whose group's rule leaves methods out | The payment screen opens with those methods dimmed: *"Not for this sale: Talabat customers pay with Talabat."* The cashier takes one that is not |
 | A rule that leaves out every method this till offers | *"This sale can't be paid"* and *"Customers in Talabat can't pay at this till: use one with Talabat."* |
+| A sale below a method's *From a sale of* (Loyalty Points from 2,000, say) | That method dimmed: *"This sale is NGN 1,500.00; Loyalty Points needs a sale of NGN 2,000.00."* (or the rule's own words). From the amount on, it is offered |
 | No rule for the customer's group, or for any group above it | The payment screen opens as always |
 | A refund, the returned items of an exchange, a return rung without its sale | Not judged: the refund choices open as always |
 | An exchange's new items | Judged as a sale. An exchange pays them with store credit: an *Only these* rule that does not list the store-credit method stops that group's exchanges |
@@ -25,6 +26,8 @@ The retailer decides which payment methods each group of its customers may use a
 | Account customers | Only these payment methods | Cash, Credit Card, On Account |
 
 A customer in *Retail* (under *All Customer Groups*) cannot buy on account; a customer in *Account customers*, or a group below it, can.
+
+**A minimum sale for a method** (version 1.1.0). Each method row may name an amount, *From a sale of*: under either kind of rule, that method pays only for a sale of at least that amount (the sale's total as paid: rounded, after discounts, tax included; equal is enough). Loyalty points pay through the method *Loyalty Points*, so a retailer that lets points pay only from a sale of 2,000 writes one rule on *All Customer Groups*: *Every payment method but these*, *Loyalty Points*, from a sale of 2,000. A group with its own rule adds the same row to it, since one rule decides, whole. A row with no amount means what it meant before. The amount is read in the sale's own currency.
 
 | What the retailer sees (on a demo site, 2026-10-23) | |
 |---|---|
@@ -41,7 +44,7 @@ A customer in *Retail* (under *All Customer Groups*) cannot buy on account; a cu
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. The install adds the record type *PP PMR Rule*, the role `PP PMR Integration`, the check and the feed registration, the check switched off. Nothing changes at the till yet.
 2. **Give the app's user its reads.** From POS 2.1.0.667 the install made the app's own user, `pp_pmr@integration.invalid`, and named it on **PP PMR Rules feed**. It holds the role **PP PMR Integration** alone, works through the API only and can never sign in to Desk, so there is no user to make. In *Role Permissions*, give that role **read on Customer Group** (the service reads the group tree). A service for one retailer: press *Generate Keys* on that user (User, API Access) and put the key in the service's settings. A service for many retailers is handed the key by the retailer's site itself, after the install or an update; press **Connect again** on the app's record only if the site could not reach the app, or a key was lost or changed.
 3. **Stop cashiers moving a customer into another group.** The till's edit sheet lets a cashier change a customer's group, and the retailer's cashier role can save customers: a cashier could move a customer into a group whose rule allows *On Account*, or into a group with no rule, and take a method the customer's own rule leaves out. In *Customize Form* for *Customer*, set **Customer Group**'s *Perm Level* to 1, and in *Role Permissions* give level 1 *Write* on Customer only to the roles that may move customers (your managers). A cashier's change then leaves the group as it was (measured with [S47](../s47_customers_by_store/) on the programme's bench, run `pp-20261023T115256Z-45139`). Two things follow: a cashier can no longer give a new customer a group either: a customer created at the till takes the default customer group (Selling Settings), or none when none is set, and a manager sets the right one (measured on the programme's bench, run `pp-20261023T162435Z-43204`, with a default group and without), and the till still says *Saved* after a group change it dropped. Check the level 1 rows already there: Sales Master Manager has one by default, and no cashier's role may hold level 1 *Write*.
-4. **Write the rules** in *PP PMR Rule*: one per customer group that needs one. The payment methods are the retailer's own *Mode of Payment* records, as the till offers them (*Cash*, *Credit Card*, *On Account*). *Words the cashier reads* is optional: blank, the app writes *"Customers in ⟨group⟩ pay with ⟨methods⟩."* or *"Not for customers in ⟨group⟩."*
+4. **Write the rules** in *PP PMR Rule*: one per customer group that needs one. The payment methods are the retailer's own *Mode of Payment* records, as the till offers them (*Cash*, *Credit Card*, *On Account*). *From a sale of* on a method row is optional (blank: as the rule says). *Words the cashier reads* is optional: blank, the app writes *"Customers in ⟨group⟩ pay with ⟨methods⟩."*, *"Not for customers in ⟨group⟩."*, or, when every method left out is left out by its amount, *"This sale is ⟨total⟩; ⟨method⟩ needs a sale of ⟨amount⟩."*
 5. **Switch the check on:** open *Payment method rules* in *Retail Extension Subscription*, read what is sent, tick the consent, choose the POS Profiles, and switch it on.
 
 **Where it shows.** The rules are Desk records the retailer keeps (its System Manager, or a role the retailer gives the rights to in *Role Permissions*: that role also needs *Select* on **Customer Group** and **Mode of Payment**, or the rule's lookups answer nothing). At the till the cashier meets them at **Pay**: the methods left out are dimmed with the rule's words.
@@ -80,7 +83,7 @@ The service is the [app template](../../tools/app_template/README.md)'s shape: s
 
 What a partner usually changes:
 - **the rule's reach:** a rule per POS Profile or per terminal (the check sends `pos_profile` and `pos_terminal`), or per customer, from a field you add to Customer;
-- **amounts:** cash up to a limit, a card above one, on account up to the customer's credit left (read it with the integration user);
+- **amounts:** a method from an amount is a row's *From a sale of* already; cash up to a limit, or on account up to the customer's credit left (read it with the integration user), are yours to add;
 - **refunds:** a refund only to the methods that paid the sale (the check sends `return_of.paid_by` on a return); keep store credit open, or every exchange is refused;
 - **the prefix:** `tools/manifest/rename.py` makes your copy under your own reserved prefix in one step; the service takes its prefix from `PMR_PREFIX`;
 - **its records:** `tools/deploy/copy_records.py` moves the rules between a test site and the retailer's iVendNext.
@@ -108,15 +111,16 @@ What a partner usually changes:
 
 ### The answer, exactly
 
-- **The reads:** `GET /api/resource/<prefix> Rule` with `fields` `["name","customer_group","kind","words","methods.mode_of_payment"]` (one row per method), `filters` `[["enabled","=",1]]`, `limit_page_length` 0; and `GET /api/resource/Customer Group` with `["name","lft","rgt"]`. Both at once (each read has its own timeout inside the check's 3 s), kept a minute per retailer and per key. Either one failing answers 503: never a decision on half the retailer's rules.
+- **The reads:** `GET /api/resource/<prefix> Rule` with `fields` `["name","customer_group","kind","words","methods.mode_of_payment","methods.min_sale"]` (one row per method), `filters` `[["enabled","=",1]]`, `limit_page_length` 0 (a retailer still on 1.0.x answers HTTP 417 to `methods.min_sale`, a field its rows lack: the service reads again without it, so that retailer keeps every 1.0 answer); and `GET /api/resource/Customer Group` with `["name","lft","rgt"]`. Both at once (each read has its own timeout inside the check's 3 s), kept a minute per retailer and per key. Either one failing answers 503: never a decision on half the retailer's rules.
 - **The rule that decides** is the customer's own group's, else the innermost group whose span (`lft`, `rgt`) holds the group's and that has a switched-on rule. A customer with no group takes the outermost group's rule. A group the tree does not know keeps every method unless it has its own rule.
-- **The methods left out** are the offered methods (`offered_tenders`, the till's own order, each once) the rule does not allow: under *Only these*, every offered method not listed; under *Every method but these*, the listed ones offered. None: `allow`. All of them, or more than 20: `refuse` in words.
+- **The methods left out** are the offered methods (`offered_tenders`, the till's own order, each once) the rule does not allow: under *Only these*, every offered method not listed; under *Every method but these*, the listed ones offered; and, under either, a listed method with an amount when the sale's `totals.grand_minor` is below that amount in the sale currency's minor units (`currency_exponent`, rounded up: a minimum), while from the amount it is offered. None: `allow`. All of them, or more than 20: `refuse` in words.
 - **The words** are the rule's own (up to 120 characters), else the app's; every sentence is plain text of 1 to 140 characters.
 
 ### Bounds, stated
 
 - **A sale only.** A refund, a return against a sale, the returned items of an exchange and a return without its sale (`stage: "return"`) are allowed without reading iVendNext, a return without its sale that also sells included (the contract would judge its sold lines). An exchange's replacement basket is `stage: "sale"` and is judged.
 - **Methods together.** The check answers before the cashier picks a method, so a rule cannot say *these two not in one sale*.
+- **A minimum sale is judged at Pay,** on the sale's whole total, never on what is left to pay after another method; one amount per method per rule, read in the sale's own currency.
 - **A rule per customer group.** A customer's own rule is a group of their own.
 - **Offline,** the till does not call the service: the down answer applies and the sale is flagged when it syncs.
 - **Where the check never runs:** a park to a till, a layaway deposit, an account collection (the check page, *Not in this version*) and the Desk's own POS screen.
