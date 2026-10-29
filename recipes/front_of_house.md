@@ -12,9 +12,11 @@ A restaurant's host takes bookings on the phone, keeps walk-ins waiting in order
 
 | | |
 |---|---|
-| A reservation: the store, the date and time, the party, the guest, the table; **Book**, **Seat**, **Change booking**, **No-show**, **Cancel booking** | *(pictures follow the walk on a demo site)* |
-| The waiting list: walk-ins in the order added; **Table ready** sends the guest an SMS; **Seat** | |
-| The till's floor: the seated party's table, its check open with the party's size | |
+| A reservation after **Book**: the table held from 20:00 to 21:30 for 4 | ![A booking after Book on a demo site](../samples/s55_front_of_house/screenshots/02_booked.png) |
+| A second booking for the same table, refused, naming the first | ![A clashing booking refused](../samples/s55_front_of_house/screenshots/03_refused.png) |
+| After **Seat**: the booking seated, its check open on the till | ![A booking after Seat](../samples/s55_front_of_house/screenshots/04_seated.png) |
+| The till's floor: the seated party's table, its check open with the party's size | ![The till's floor on a counter screen](../samples/s55_front_of_house/screenshots/05_floor_counter.png) |
+| The waiting list: walk-ins in the order added; **Table ready** sends the guest an SMS; **Seat** | walked on the programme bench (no SMS provider on the demo site) |
 
 ## Steps
 

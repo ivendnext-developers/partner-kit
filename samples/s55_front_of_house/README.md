@@ -21,9 +21,14 @@ A restaurant's host keeps the evening in iVendNext Desk: a **reservation** for e
 
 **The guest's details stay in the retailer's iVendNext.** A guest's name, phone, customer and notes are read and changed only by the role **PP FOH Host** (and System Manager), and no till shows them. The app adds no field to the retailer's Customer: Customer keeps a version history its readers see, which would carry a limited field to them. The app's own user does not hold that role, so the service never reads them: a press sends the record's name, the service reads the record without them, and the check it opens carries the booking's number and the party's size, never a name. The SMS is sent by the retailer's own iVendNext.
 
-| What the retailer sees | |
+| What the store sees (a demo store, the library copy *IVENDNEXT FOH*) | |
 |---|---|
-| *(pictures follow the walk on a demo site)* | |
+| The diary: the evening's reservations by time, each with its guest, party size and table | ![](screenshots/01_list.png) |
+| **Book**: the table held for the party's stay | ![](screenshots/02_booked.png) |
+| A second booking for that table at 20:30, refused, naming the first | ![](screenshots/03_refused.png) |
+| **Seat**: the booking seated, its check open on the till for 4 guests | ![](screenshots/04_seated.png) |
+| The till's floor on a counter screen: the table seated for 4, the other free | ![](screenshots/05_floor_counter.png) |
+| The same floor on a phone | ![](screenshots/06_floor_phone.png) |
 
 **A deposit.** A booking that took a deposit names the sale that took it: the cashier takes it at the till as the guest's advance (*Customers*, *Take a payment*), and the host picks that sale on the reservation, which shows its amount. By default a guest who already owes on account has that settled first and only the rest becomes the deposit; the cashier can set those bills aside to keep it all as the deposit. The deposit stays on the guest's money on file: nothing applies it when the table pays. So at the table's payment the cashier puts the guest on the sale and charges the deposit's part to the guest's account (the till's *On account*: the cashier needs *take a payment on account* in their Retail Permission, and the guest a buyer tax registration where your market asks for one), the rest as usual; when the day closes the sale joins the guest's invoice, and the retailer's accountant allocates the deposit's Payment Entry to that invoice in **Payment Reconciliation**. A kept no-show deposit is booked to income from the same unallocated entry; a returned one is paid back from it.
 
