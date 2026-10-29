@@ -25,6 +25,15 @@ Guests order for themselves. **At the table** a guest scans the table's QR code,
 **No guest data.** The page asks no name, phone or e-mail and signs in to nothing; the service keeps no order (the check is the record). A note the guest types for the kitchen is kept on the check line like any note.
 
 
+| What the guest and the store see (a demo store, the library copy *IVENDNEXT GOR*) | |
+|---|---|
+| **Make code**, then **Print**, *Table card*: the table's name, its QR code and *Scan to order* | ![](screenshots/01_table_card.png) |
+| The guest's phone after the scan: the register's menu, each dish with its price | ![](screenshots/02_menu.png) |
+| A dish's choices: oat milk for 0.60 more, or whole milk | ![](screenshots/03_choices.png) |
+| The order before sending: a latte with oat milk, a salad with a note for the kitchen | ![](screenshots/04_order.png) |
+| After **Send order**: the order is on the table's bill, for the server to confirm | ![](screenshots/05_sent.png) |
+| A kiosk tablet after **Send order**: the order code, paid at the counter | ![](screenshots/06_kiosk_code.png) |
+
 ## What the retailer does to set it up
 
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and in the service) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's calls never reach your service; if this manifest is already installed, raise its `version` and install it again.
