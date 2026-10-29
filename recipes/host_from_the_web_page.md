@@ -66,7 +66,7 @@ Open `https://developer.ivendnext.com/hosting`. The form is at the top, under *O
 
 17. The page shows each copy and where it stands: *waiting for the payment*, *being built*, *built, waiting for its secrets and its first version*, *live*.
 18. **Your GitHub workflow:** press **Set them on your repository**. The page sets the Variables your workflow needs on the order's repository. If it cannot (the App is not installed there), it lists each one with a **Copy** button: set them under *Settings > Secrets and variables > Actions > Variables* in your repository.
-19. **Your app's secrets** (a container's `"secret": true` settings): type each value in its box for each copy and press **Set**. The value is sent once and never shown again.
+19. **Your app's secrets** (a container's `"secret": true` settings): type the values you have, for any copy and in any order, and press **Set the values you typed**. Each is sent once and never shown again. Under each box the page says *Has a value* or *No value yet*, so after a reload or a new sign-in you type only what is missing. If you try to leave, reload or move to another step while a box still holds a value, the page asks first.
 20. Push to your branch. Each copy gets the version in your `app.json` and goes **live**.
 21. Once every copy is live, the page shows the **Publish** button and the `publish.py` command: put the app on your customer's shelf from there. The hosting page itself never publishes. Then the customer's administrator installs it from *Made for you* on the customer's site, and your app answers there at its address.
 
