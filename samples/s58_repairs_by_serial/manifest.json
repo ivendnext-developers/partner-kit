@@ -5,7 +5,7 @@
  "title": "Repairs by serial number",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "An electronics or phone store's repairs and services, kept in Desk against each unit's serial number. Each PP RPR Repair holds the serial (its item and its warranty date read from the serial, read only), what kind of job it is (Repair, Service, Test only or Recall work), the customer with their phone (the customer's, read only), the store that took the unit in, the day, the date it is promised for, the fault the customer reports and the unit's condition and accessories at intake; then the tests run and their results, the work done, the technician and the parts fitted, each with its own serial where it has one. A workflow moves it Received, In repair, Ready to collect and Collected, or Cancelled; once Collected or Cancelled, a save rule stops its serial, customer, fault, tests, work and parts from changing, so the unit's history holds. The repair slip prints under the retailer's own letter head, with a tag for the unit. Every repair shows under its serial number, its customer and the sale that paid for it; the report Open repairs lists the repairs not yet collected, by the date promised. A field on Stock Entry, Repair, names the repair whose parts a Material Issue takes out of stock. The lock installs switched off, as every save rule does: the retailer switches it on. The app moves no money and changes no stock, and calls nothing outside: no service, no outside address.",
+ "description": "An electronics or phone store's repairs and services, kept in Desk against each unit's serial number. Each PP RPR Repair holds the serial (its item and its warranty date read from the serial, read only), what kind of job it is (Repair, Service, Test only or Recall work), the customer with their phone (the customer's, read only), the store that took the unit in, the day, the date it is promised for, the fault the customer reports and the unit's condition and accessories at intake; then the tests run and their results, the work done, the technician and the parts fitted, each with its own serial where it has one. A workflow moves it Received, In repair, Ready to collect and Collected, or Cancelled; once Collected or Cancelled, a save rule stops its serial, customer, dates, fault, tests, work and parts from changing, so the unit's history holds. The repair slip prints under the retailer's own letter head, with a tag for the unit. Every repair shows under its serial number, its customer and the sale that paid for it; the report Open repairs lists the repairs not yet collected, by the date promised. A field on Stock Entry, Repair, names the repair whose parts a Material Issue takes out of stock. The lock installs switched off, as every save rule does: the retailer switches it on. The app moves no money and changes no stock, and calls nothing outside: no service, no outside address.",
  "allowed_urls": [],
  "doctypes": [
   {
@@ -422,8 +422,7 @@
     "tests",
     "work_done",
     "technician",
-    "parts",
-    "sale"
+    "parts"
    ],
    "message": "This repair is closed: its unit, customer, fault, tests, work and parts stay as they were. Take a new repair for the serial instead."
   }

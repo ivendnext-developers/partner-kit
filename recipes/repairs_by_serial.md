@@ -39,7 +39,7 @@ The record type `PP RPR Repair`, numbered `format:RPR-{#####}`, tracked (its his
 
 **Sales User** and **Sales Manager** read, write, create and print repairs; only **System Manager** deletes one; **Stock User** reads them, so the Stock Entry's **Repair** field can find one. A repair shows under the Serial No, the Customer and the POS Invoice it names (manifest `links`).
 
-**Finding the serial.** Sales User holds no right on Serial No, so the form's search finds nothing for store staff until the retailer gives Sales User (and Sales Manager) **Select** on Serial No in the Role Permissions Manager, with **Read** unticked (a new rule comes with *Read* ticked). *Select* answers the search and nothing more. The fetched copies need no right: they are read by the save, not by the person.
+**Reading the serial.** Sales User holds no right on Serial No, so the retailer gives Sales User (and Sales Manager) **Read** on Serial No in the Role Permissions Manager (a new rule comes with *Read* and *Select* ticked). *Select* alone is not enough: the search finds the serial, but when it is picked the form fetches the item and warranty date with the person's own rights and says *You need Read permission to fetch values* (the save itself fills them either way, with no right needed). *Read* also opens the serial's own form, with its repairs, to the counter.
 
 ## The workflow and the lock
 
@@ -53,7 +53,7 @@ The record type `PP RPR Repair`, numbered `format:RPR-{#####}`, tracked (its his
 
 The actions: **Start work** (Received to In repair), **Ready** (In repair to Ready to collect), **Back to work** (Ready to collect to In repair), **Hand over** (Ready to collect to Collected), each by Sales User; **Cancel** (Received to Cancelled, Sales User; In repair to Cancelled, Sales Manager). Nothing leaves *Collected* or *Cancelled*.
 
-A **save rule** of kind `locked_in_state` (`save_rules`) refuses any change to `serial_no`, `kind`, `customer`, `store`, `received_on`, `ready_by`, `fault`, `condition`, the `tests` rows, `work_done`, `technician`, the `parts` rows and `sale` once the repair was saved **Collected** or **Cancelled** (the save that moves it there may still change them), at every save: Desk's form, an import and the record API alike, with the message *"This repair is closed: its unit, customer, fault, tests, work and parts stay as they were. Take a new repair for the serial instead."* (A workflow's *who edits* and a read-only field are only the browser's rules; the lock is the save's.) The fetched copies are not locked: each is fetched again at each save, so a lock on one would refuse every later save after its source changes.
+A **save rule** of kind `locked_in_state` (`save_rules`) refuses any change to `serial_no`, `kind`, `customer`, `store`, `received_on`, `ready_by`, `fault`, `condition`, the `tests` rows, `work_done`, `technician` and the `parts` rows once the repair was saved **Collected** or **Cancelled** (the save that moves it there may still change them), at every save: Desk's form, an import and the record API alike, with the message *"This repair is closed: its unit, customer, fault, tests, work and parts stay as they were. Take a new repair for the serial instead."* (A workflow's *who edits* and a read-only field are only the browser's rules; the lock is the save's.) The fetched copies are not locked: each is fetched again at each save, so a lock on one would refuse every later save after its source changes. Nor is `sale`: a till sale cancelled later leaves a link the framework refuses at every save, and a locked link could then never be cleared.
 
 ## The slip
 
@@ -72,7 +72,7 @@ The print format *PP RPR Repair slip* (Jinja) reads only the repair's own fields
 
 1. **Install the app.** It adds the repair, its workflow and lock, the slip, the report, the Stock Entry field and the Connections. No setting, no role, no outside address.
 2. **Switch the lock on:** Desk › *Retail Save Rule* › *PP RPR repair locked once collected* › **Enabled**. A manifest installs every save rule switched off; until it is on, a collected repair can still be changed.
-3. **Give Sales User and Sales Manager *Select* on Serial No** (Read unticked), so the repair counter's search finds serials.
+3. **Give Sales User and Sales Manager *Read* on Serial No**, so the repair counter finds a serial and the form shows its item and warranty date.
 4. **Give Sales User** to the people at the repair counter; a Sales Manager cancels a repair in work. Whoever takes parts out of stock holds Stock User; add the Stock Entry Type *Material Issue* if the site has none.
 5. **Put the store's details on the Letter Head** the store prints with, and **add its own Notification** if it tells customers by SMS (step 4).
 
@@ -80,7 +80,7 @@ The print format *PP RPR Repair slip* (Jinja) reads only the repair's own fields
 
 A maker recalls a model, or the units between two serial numbers. The store needs three things, and the engine has each:
 
-1. **Who bought them.** Desk › *Stock* › **Serial No Ledger**: the recalled **Item** (its one required filter), and a **Serial No** to narrow it to one unit. Each row is one movement of one serial: a movement out by a sale (voucher type *Sales Invoice*) names its **Party**, the customer it was sold to. A till sale appears once its day's sales are booked to stock: at once on some sites, at the day's close on others. A walk-in sale names the store's walk-in customer, so there is no one to contact; a customer the till made keeps the phone in the customer's own record. **Stock User** opens the report (it is a report on the stock ledger: *Sales User* alone is refused it); it shows customers' names, so give it only to whoever runs the recall. For many serials, export it (**Menu › Export**) and match the list.
+1. **Who bought them.** Desk › *Stock* › **Serial No Ledger**: the recalled **Item** (its one required filter), and the **Serial No** of one recalled unit. Each row is one movement of the unit: its movement out by a sale (voucher type *Sales Invoice*) names its **Party**, the customer it was sold to. Look each unit up by its own serial: listed by the item alone, a sale line that carried several units names its voucher and buyer on the first unit's row only, the others beneath it with neither (the till sells one serial per line; a Desk sale or delivery may carry several). A till sale appears once its day's sales are booked to stock: at once on some sites, at the day's close on others. A walk-in sale names the store's walk-in customer, so there is no one to contact; a customer the till made keeps the phone in the customer's own record. **Stock User** opens the report (it is a report on the stock ledger: *Sales User* alone is refused it); it shows customers' names, so give it only to whoever runs the recall. For many serials, export the item's rows (**Menu › Export**), carry each sale's voucher and buyer down to the rows beneath it, and match the list.
 2. **Stop the rest being sold.** Move the recalled units still in stock to a store no till sells from (a quarantine warehouse that is on no POS Profile) with a **Stock Entry** of type **Material Transfer** naming their serial numbers. A serial sells only from the till's own store, so the till then refuses them.
 3. **The units brought back.** Take each in as a repair of kind **Recall work**; filter the repair list by **Kind of job** to see which have come back, and each serial's **Repairs** shows its own.
 
@@ -90,7 +90,7 @@ This is configuration, not an app: nothing to install for it. A recall by lot (a
 
 - **The repair is written in Desk**, at the repair counter; a till key that takes it in at the till is a version of your own.
 - **The app holds no charge, quote or deposit:** the till charges the repair; a quote the customer approves first is a version of your own.
-- ***Collected by* and the notes stay editable after the hand-over:** the slip prints neither. **What is read from the serial and the customer follows them:** a slip reprinted after the customer is renamed prints the new name; the serial and the customer themselves cannot change.
+- ***Collected by*, *Paid by sale* and the notes stay editable after the hand-over:** the slip prints none of them (a cancelled repair is read only in Desk to store staff). **What is read from the serial and the customer follows them:** a slip reprinted after the customer is renamed prints the new name; the serial and the customer themselves cannot change.
 - **Duplicating a Material Issue copies its Repair:** clear it on the copy (a manifest's field cannot carry `no_copy`).
 - **The stock entry names the repair; the repair does not list its stock entries** (a manifest's link may only list its own records under a retailer's record). Filter the Stock Entry list by **Repair**.
 - **A part's own serial is typed, not chosen:** a part tracked by serial in stock is named on the Material Issue as well.

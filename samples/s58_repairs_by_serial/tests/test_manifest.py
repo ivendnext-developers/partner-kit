@@ -102,10 +102,15 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(set(LOCK["states"]), {f"{P} Collected", f"{P} Cancelled"})
         # a copy fetched from the serial or the customer is fetched again at each save: locking it would refuse every
         # later save once the source changes, so the link is locked and the copy follows it (README, bounds)
-        printed = set(re.findall(r"\bdoc\.(\w+)", PF["html"])) - {"get_formatted", "name", "workflow_state"}
+        html = PF["html"]
+        printed = (set(re.findall(r"\bdoc\.(\w+)", html)) | set(re.findall(r'doc\.get_formatted\("(\w+)"\)', html))) \
+            - {"get_formatted", "name", "workflow_state"}
         self.assertLessEqual(printed - set(FETCHED), set(LOCK["locked_fields"]))
         self.assertFalse(set(FETCHED) & set(LOCK["locked_fields"]))
-        self.assertLessEqual({"serial_no", "customer", "tests", "parts", "work_done"}, set(LOCK["locked_fields"]))
+        # the history the slip does not print is locked too (the kind, the technician); the sale is not: a till sale
+        # cancelled later would leave a link the framework refuses to save, and a locked one could then never change
+        self.assertEqual(set(LOCK["locked_fields"]), {"serial_no", "kind", "customer", "store", "received_on", "ready_by",
+                                                      "fault", "condition", "tests", "work_done", "technician", "parts"})
         self.assertLessEqual(set(LOCK["locked_fields"]), set(fields(REPAIR)))
         self.assertLessEqual(len(LOCK["message"]), 140)
         self.assertNotIn("enabled", LOCK)   # a manifest installs every rule switched off: the README's set-up switches it on

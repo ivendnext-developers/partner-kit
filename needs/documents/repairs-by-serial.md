@@ -19,7 +19,7 @@ A repair as your manifest's own record type, kept against a Serial No: the item 
 ## Limits
 - The app holds no charge: the till charges the repair as a service item, and the repair names the sale. A quote the customer approves first, or a deposit, is a version of your own.
 - The repair is written in iVendNext Desk; a till key that takes a unit in at the till is a version of your own.
-- Store staff find serials through *Select* on Serial No, which the retailer gives them (Read unticked).
+- Store staff need *Read* on Serial No, which the retailer gives them, so the form shows the serial's item and warranty date.
 - A manifest's notification goes only to the retailer's own users: telling the customer the unit is ready is the retailer's own Notification.
 
 ## Tell the customer

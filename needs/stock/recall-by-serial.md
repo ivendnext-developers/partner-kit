@@ -14,9 +14,10 @@ verified: 2026-10-29 · bench
 related: recall-and-disposal, repairs-by-serial
 ---
 ## What you build
-Nothing new. **Who bought them:** the engine's **Serial No Ledger** (Desk › Stock), the recalled item and, to narrow it, the serial number: each movement out by a sale names the customer it was sold to. **Stop the rest:** a Stock Entry of type **Material Transfer** moves the recalled units still in stock to a store no till sells from (a warehouse on no POS Profile); the till sells a serial only from its own store, so it refuses them. **The units brought back:** with sample S58, each is a repair of kind *Recall work* under its serial.
+Nothing new. **Who bought them:** the engine's **Serial No Ledger** (Desk › Stock), the recalled item and the serial number of one unit: its movement out by a sale names the customer it was sold to. **Stop the rest:** a Stock Entry of type **Material Transfer** moves the recalled units still in stock to a store no till sells from (a warehouse on no POS Profile); the till sells a serial only from its own store, so it refuses them. **The units brought back:** with sample S58, each is a repair of kind *Recall work* under its serial.
 
 ## Limits
+- Look each unit up by its own serial: listed by the item alone, a sale line that carried several units names its buyer on the first unit's row only.
 - A till sale shows in the ledger once its day's sales are booked to stock: at once on some sites, at the day's close on others.
 - A walk-in sale names the store's walk-in customer: no one to contact.
 - The report is on the stock ledger: Stock User opens it, Sales User alone does not. It shows customers' names: give it only to whoever runs the recall.
