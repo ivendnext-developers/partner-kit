@@ -124,10 +124,13 @@ def code_of(site: str, token, secrets: list[bytes]) -> tuple[str, int] | None:
     parts = token.rsplit(".", 2)
     if len(parts) != 3 or not parts[0] or not parts[1].isdigit() or len(parts[2]) != SIG_LEN:
         return None
-    record, number, sig = parts[0], int(parts[1]), parts[2]
-    if number < 1:
+    try:
+        record, number, sig = parts[0], int(parts[1]), parts[2]
+        if number < 1:
+            return None
+        return (record, number) if any(hmac.compare_digest(sign(s, site, record, number), sig) for s in secrets) else None
+    except ValueError:                  # a digit int() refuses, a character UTF-8 refuses: not the retailer's link
         return None
-    return (record, number) if any(hmac.compare_digest(sign(s, site, record, number), sig) for s in secrets) else None
 
 
 # ── the menu ─────────────────────────────────────────────────────────────────────────────────────────────────────────

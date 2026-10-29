@@ -52,7 +52,8 @@ Day to day the guests order and the servers work the checks at the till as befor
 - A guest's lines show on the till under their course and note, not as the guest's: when they are the only lines waiting, *Send* sends them with no question.
 - The menu is the register's listed item groups (no sub-groups), at most 300 dishes; dish names are the retailer's own words as written. No pictures, allergens or *sold out*.
 - A check the app opens has no party size; the server sets it at the till.
-- A reinstall makes new secrets: every code is made and printed again.
+- A reinstall makes new secrets: every code is made and printed again. A new secret on the *Make code service* is accepted beside the old one until the next *Connect again*; to stop one card, press *Make code* on it.
+- A dish with no price on the register's price list shows 0.00.
 - Ordering needs a connection: nothing here works offline.
 
 ## Technical notes

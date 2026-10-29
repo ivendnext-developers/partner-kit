@@ -258,7 +258,8 @@
     "PP GOR Integration",
     "System Manager"
    ],
-   "description": "The address the QR code opens; the QR code itself is on the card: Print, Table card. Made by Make code. Changing the kind, the store, the table or the kiosk name stops this code working until Make code is pressed again."
+   "description": "The address the QR code opens; the QR code itself is on the card: Print, Table card. Made by Make code. Changing the kind, the store, the table or the kiosk name stops this code working until Make code is pressed again.",
+   "length": 220
   },
   {
    "dt": "PP GOR Code",
@@ -290,7 +291,7 @@
    "name": "PP GOR Table card",
    "doc_type": "PP GOR Code",
    "print_format_type": "Jinja",
-   "html": "{% set where = doc.place if doc.kind == \"Table\" else (doc.kiosk_name or \"\")|trim %}{% set made = doc.qr and doc.link and (\"t=\" ~ doc.name ~ \".\" ~ doc.number ~ \".\") in doc.link and doc.made_for == (doc.kind ~ \"|\" ~ doc.store ~ \"|\" ~ where) %}\n<div dir=\"auto\" style=\"font-family: Arial, sans-serif; text-align: center; padding: 12mm 0;\">\n<p style=\"margin: 0; font-size: 22pt; font-weight: bold;\">{{ (doc.place_label or doc.kiosk_name or \"\")|e }}</p>\n{% if made %}<img src=\"{{ doc.qr }}\" alt=\"\" style=\"width: 60mm; height: 60mm; margin: 6mm auto;\">{% else %}<p>{{ _(\"Press Make code first.\") }}</p>{% endif %}\n<p style=\"margin: 0; font-size: 16pt;\">{{ _(\"Scan to order\") }}</p>\n<p style=\"margin: 2mm 0 0; font-size: 9pt; color: #555;\">{{ doc.name|e }} · {{ doc.number or \"\" }}</p>\n</div>"
+   "html": "{% set where = doc.place if doc.kind == \"Table\" else (doc.kiosk_name or \"\")|trim %}{% set made = doc.qr and doc.link and (\"t=\" ~ doc.name ~ \".\" ~ doc.number ~ \".\") in doc.link and doc.made_for == (doc.kind ~ \"|\" ~ doc.store ~ \"|\" ~ where)[:140] %}\n<div dir=\"auto\" style=\"font-family: Arial, sans-serif; text-align: center; padding: 12mm 0;\">\n<p style=\"margin: 0; font-size: 22pt; font-weight: bold;\">{{ (doc.place_label or doc.kiosk_name or \"\")|e }}</p>\n{% if made %}<img src=\"{{ doc.qr }}\" alt=\"\" style=\"width: 60mm; height: 60mm; margin: 6mm auto;\">{% else %}<p>{{ _(\"Press Make code first.\") }}</p>{% endif %}\n<p style=\"margin: 0; font-size: 16pt;\">{{ _(\"Scan to order\") }}</p>\n<p style=\"margin: 2mm 0 0; font-size: 9pt; color: #555;\">{{ doc.name|e }} · {{ doc.number or \"\" }}</p>\n</div>"
   }
  ],
  "property_setters": [

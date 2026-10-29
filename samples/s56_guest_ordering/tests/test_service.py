@@ -289,13 +289,35 @@ class ServiceTest(unittest.TestCase):
         t = made(self.shop, self.svc)
         self.assertNotIn("GIFT", gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"]))
 
-    def test_m5_a_menu_with_a_late_price_is_read_again_soon(self):
+    def test_m5_a_menu_the_time_budget_cut_prices_only_what_it_missed_soon_after(self):
         t = made(self.shop, self.svc)
-        self.shop.slow = {"SALAD"}
-        self.assertIsNone(gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])["SALAD"]["price"])
-        self.shop.slow = set()
+        self.shop.slow, self.shop.tick = {"LATTE"}, self.clock      # the first price takes the budget
+        real, app.PRICERS = app.PRICERS, 1
+        try:
+            first = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
+            self.assertEqual((first["LATTE"]["price"], first["SALAD"]["price"]), (3.2, None))
+            self.shop.slow = set()
+            asked = len([c for c in self.shop.calls if c == "CALL get_item_details"])
+            self.clock.t += app.MENU_SHORT_S
+            second = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
+        finally:
+            app.PRICERS = real
+        self.assertEqual((second["LATTE"]["price"], second["SALAD"]["price"]), (3.2, 7.5))
+        again = len([c for c in self.shop.calls if c == "CALL get_item_details"]) - asked
+        self.assertEqual(again, 4)                                    # BURGER, SALAD, COW, SHOT: never LATTE again
         self.clock.t += app.MENU_SHORT_S
-        self.assertEqual(gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])["SALAD"]["price"], 7.5)
+        guest(self.svc, "/gor/menu", t)
+        self.assertEqual(len([c for c in self.shop.calls if c == "CALL get_item_details"]) - asked, 4)   # full: 2 minutes
+
+    def test_m7_a_flood_on_a_replaced_card_reads_the_retailer_once_a_copy(self):
+        old = made(self.shop, self.svc)
+        made(self.shop, self.svc)
+        self.clock.t += app.CODE_KEEP_S
+        self.assertEqual(guest(self.svc, "/gor/menu", old), (404, {"state": "unknown"}))
+        before = list(self.shop.calls)
+        for _ in range(50):
+            self.assertEqual(guest(self.svc, "/gor/menu", old)[0], 404)
+        self.assertEqual(self.shop.calls, before)
 
     def test_m6_a_flood_of_calls_on_one_code_reads_the_retailer_once_a_copy(self):
         t = made(self.shop, self.svc)

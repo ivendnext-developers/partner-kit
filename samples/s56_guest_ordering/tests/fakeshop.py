@@ -70,7 +70,7 @@ class FakeTenant:
         self.n = itertools.count(1)
         self.clock = datetime.datetime(2026, 10, 29, 19, 0, 0)
         self.calls, self.sent = [], []
-        self.slow = set()
+        self.slow, self.tick = set(), None
 
     def _gate(self, what):
         self.calls.append(what)
@@ -132,9 +132,9 @@ class FakeTenant:
         if verb == "get_item_details":
             args = body["args"]
             assert "rate" not in args and "price_list_rate" not in args
-            if args["item_code"] in self.slow:
-                return {"item_code": args["item_code"]}             # the pricer gave no price in time
-            return {"item_code": args["item_code"], "price_list_rate": PRICES.get(args["item_code"])}
+            if args["item_code"] in self.slow and self.tick is not None:
+                self.tick.t += 6                                    # a slow answer: the service's time budget runs out
+            return {"item_code": args["item_code"], "price_list_rate": PRICES.get(args["item_code"], 0.0)}   # no row: 0.0
         if verb == "floor_status":
             places = []
             for p in LABELS:

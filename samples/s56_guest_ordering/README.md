@@ -40,9 +40,9 @@ Guests order for themselves. **At the table** a guest scans the table's QR code,
 6. In **Retail Extension Subscription**, open *Make code service*, read what it is sent, tick the consent and switch it on; switch the button on in **Retail Desk Action**. Press **Connect again** on the app's package record if the site could not reach the app, or the key was made after the install.
 7. Make a *PP GOR Code* for each table (kind *Table*, the store, the table) and for each kiosk (kind *Kiosk*, the store, a name), press **Make code**, print the cards, and open each kiosk's link on its tablet in a full-screen kiosk browser, so its address is not on show: a kiosk link copied from the tablet lets anyone open unpaid tabs (one every 15 seconds) until **Make code** is pressed again.
 
-**Before you remove the app:** pay or close every check it opened (the uninstall deletes the app's user, and a check that user opened can then no longer be changed). A reinstall, or a new secret on the *Make code service*, makes every printed card stop working: make every code again and print it. *Connect again* resends the same secret and changes nothing.
+**Before you remove the app:** pay or close every check it opened (the uninstall deletes the app's user, and a check that user opened can then no longer be changed). A reinstall makes new secrets: make every code again and print it. A new secret on the *Make code service* is accepted beside the old one until the next *Connect again*, so printed cards keep working until then and stop after it. To stop one card, press **Make code** on it.
 
-**Limits.** A check the app opened can be left empty: a guest's order whose dish the till refuses at a free table (an item switched off since the menu was read), or a retry after the bill was paid; the server closes it at the till. A till opening a check at the same moment as a guest's first order can leave two checks at the table; guest orders there are then refused until the server merges them. A store named on two companies' settings uses the first row found. One retailer's own service (no App library) takes one secret: changing it stops every card at once.
+**Limits.** A check the app opened can be left empty: a guest's order whose dish the till refuses at a free table (an item switched off since the menu was read), or a retry after the bill was paid; the server closes it at the till. A till opening a check at the same moment as a guest's first order can leave two checks at the table; guest orders there are then refused until the server merges them. A store named on two companies' settings uses the first row found. One retailer's own service (no App library) takes one secret: changing it stops every card at once. A secret or register change made while a guest's order is being retried is answered *ask staff*, though the first send is on the check. A dish with no price on the register's price list shows 0.00 on the menu.
 
 ## What leaves the retailer's iVendNext
 
@@ -51,7 +51,7 @@ iVendNext calls nothing outside but the service's own address (`allowed_urls`), 
 ## Run it
 
 ```bash
-python3 -m unittest discover -s samples/s56_guest_ordering/tests -p 'test_*.py'   # 66 tests, the service with a stand-in site
+python3 -m unittest discover -s samples/s56_guest_ordering/tests -p 'test_*.py'   # 67 tests, the service with a stand-in site
 python3 samples/s56_guest_ordering/tests/canaries.py                                # each guard turned off: its test goes RED
 python3 tools/check/check.py samples/s56_guest_ordering                            # the retailer's own install checks
 ```

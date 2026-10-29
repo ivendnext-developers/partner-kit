@@ -68,6 +68,7 @@ PRICERS = 8                          # prices asked at once
 MENU_KEEP_S = 120                    # a store's menu is read again after this
 MENU_CACHE_MAX = 200                 # stores whose menu one copy keeps
 MENU_SHORT_S = 10                    # a menu some of whose prices the pricer did not give in time is kept only this long
+LATE = object()                      # a price the time budget skipped: asked again at the next read, alone
 CODE_KEEP_S = 15                     # a verified code and its store's row, kept so a flood of calls on one code reads
                                      # the retailer once per copy this often (a code made again stops within this time)
 STATIC = {"/": ("page.html", "text/html; charset=utf-8"), "/page.js": ("page.js", "text/javascript; charset=utf-8"),
@@ -266,6 +267,7 @@ class Service:
         kept = self._menus.get(key)
         if kept and self.clock() - kept[0] < MENU_KEEP_S:
             return kept[1], kept[2]
+        known = {c: p for c, p in (kept[3] if kept else {}).items() if p is not LATE}   # a late menu prices what it missed
         t0 = self.clock()
         reg = door.doc("POS Profile", register)
         groups = [g.get("item_group") for g in reg.get("item_groups") or [] if isinstance(g, dict) and g.get("item_group")]
@@ -274,7 +276,7 @@ class Service:
         items = door.rows("Item", ["name", "item_name", "item_group", "custom_mpos_option_only"],
                           [["item_group", "in", groups], ["is_sales_item", "=", 1], ["disabled", "=", 0],
                            ["has_variants", "=", 0], ["custom_is_gift_card", "=", 0]], limit=gor.MENU_MAX)
-        dishes = [i["name"] for i in items if isinstance(i.get("name"), str)]
+        dishes = [i["name"] for i in items if isinstance(i.get("name"), str) and not i.get("custom_mpos_option_only")]
         rows = door.rows("Cross Selling Product Detail",
                          ["parent", "idx", "item_code", "item_name", "price_type", "price", "discount_type", "discount",
                           "custom_mpos_option_group"],
@@ -285,23 +287,28 @@ class Service:
                                                 ["name", "display_name", "min_picks", "max_picks", "enabled"],
                                                 [["name", "in", names]])} if names else {}
         need = dishes + sorted({r["item_code"] for r in rows if r.get("item_code") and r.get("price_type") != "Amount"})
-        prices = self.prices(door, reg, list(dict.fromkeys(need)), t0)
-        menu = gor.menu_of(items, rows, meta, prices, groups)
-        late = any(v is None for v in prices.values())      # kept briefly: a slow site is read again, not shown blank
+        need = list(dict.fromkeys(need))
+        if not (kept and any(p is LATE for p in kept[3].values())):
+            known = {}                                    # a full read prices every item again
+        prices = {**{c: known[c] for c in need if c in known},
+                  **self.prices(door, reg, [c for c in need if c not in known], t0)}
+        late = any(v is LATE for v in prices.values())    # kept briefly: what the budget skipped is priced next read
+        menu = gor.menu_of(items, rows, meta, {c: (None if p is LATE else p) for c, p in prices.items()}, groups)
         with self._lock:
             if len(self._menus) >= MENU_CACHE_MAX:
                 self._menus.pop(next(iter(self._menus)))
             kept_at = self.clock() - (MENU_KEEP_S - MENU_SHORT_S if late else 0)
-            self._menus[key] = (kept_at, menu, reg.get("currency") or "")
+            self._menus[key] = (kept_at, menu, reg.get("currency") or "", prices)
         return menu, reg.get("currency") or ""
 
     def prices(self, door, reg: dict, codes: list[str], t0: float) -> dict:
         """One unit's list price of each item at the register (its price list, company, currency and walk-in customer,
-        no price rule), side by side. A price the pricer does not give stays blank on the menu.
+        no price rule), side by side. A price the pricer refuses stays blank on the menu; one the time budget skipped is
+        ``LATE``.
         ⛔ Never a ``rate``: given one, the shop's pricer may write a price row."""
         def one(code):
             if self.clock() - t0 > BUDGET_S - 2:
-                return code, None
+                return code, LATE
             args = {"item_code": code, "qty": 1, "doctype": "Sales Invoice", "company": reg.get("company"),
                     "selling_price_list": reg.get("selling_price_list"), "currency": reg.get("currency"),
                     "conversion_rate": 1, "plc_conversion_rate": 1, "ignore_pricing_rule": 1,
@@ -411,13 +418,13 @@ class Service:
             c, row = kept[1], kept[2]
         else:
             c = self.code(door, *found)
-            if c is None:               # gone, or made again since this code was printed
-                raise _Answer(404, {"state": "unknown"})
-            row = self.row(door, c.get("store") or "")
+            row = self.row(door, c.get("store") or "") if c else None
             with self._lock:
                 if len(self._codes) >= MENU_CACHE_MAX * 10:
                     self._codes.clear()
                 self._codes[key] = (self.clock(), c, row)
+        if c is None:                   # gone, or made again since this card was printed: kept refused, read again later
+            raise _Answer(404, {"state": "unknown"})
         table = c.get("kind") == gor.KIND_TABLE
         if not row or not gor.num(row.get("tables_on" if table else "kiosk_on")) or not row.get("register"):
             raise _Answer(200, _say("closed", "ask_staff", ASK_STAFF) if table else
@@ -450,7 +457,7 @@ class Service:
             return (404, {"state": "unknown"}) if e.code == 404 else (503, {"state": "unavailable"})
 
     def order(self, door, site: str, c: dict, row: dict, menu: list, body: dict, closed: dict,
-              secret: bytes = b"") -> tuple[int, dict]:
+              secret: bytes) -> tuple[int, dict]:
         key = gor.page_key(body.get("key"))
         if not key:
             return 400, {"state": "unknown"}

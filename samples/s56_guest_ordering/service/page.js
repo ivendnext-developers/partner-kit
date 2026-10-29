@@ -283,7 +283,6 @@
     $("send").textContent = W.sending;
     call("/gor/order", { key: key, lines: lines }).then(function (a) {
       if (a.state === "sent") { basket = []; key = null; keepKey(sig, null); drawBasket(); note(say(a), true); }
-      else if (a.state === "refused" || a.state === "closed") { key = null; keepKey(sig, null); note(say(a)); }
       else if (a.state === "unknown") { note(W.unknown); }
       else if (a.state === "unavailable") { note(W.lost); }     // it may have landed: the same key is sent again
       else { note(say(a)); }
