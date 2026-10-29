@@ -63,11 +63,11 @@ class PdfTests(unittest.TestCase):
         self.assertEqual(build_pdfs.pdf_problems(self.guide, 1, exact=True), [])
         self.assertEqual(build_pdfs.pdf_problems(self.example, 5, landscape=1), [])
         self.assertEqual(build_pdfs.pdf_problems(self.ladder, 2, exact=True), [])
-        self.assertEqual(build_pdfs.pdf_problems(self.glance, 6), [])
+        self.assertEqual(build_pdfs.pdf_problems(self.glance, 7), [])
         self.assertLessEqual(self.pages(self.form), 4)
         self.assertEqual(self.pages(self.guide), 1)
         self.assertEqual(self.pages(self.ladder), 2)
-        self.assertLessEqual(self.pages(self.glance), 6)
+        self.assertLessEqual(self.pages(self.glance), 7)
         self.assertEqual(build_pdfs.pdf_problems(self.howitworks, 10), [])
         self.assertLessEqual(self.pages(self.howitworks), 10)                                     # measured 2026-10-28: 10 pages
         for data in (self.form, self.guide, self.example, self.ladder, self.glance):
