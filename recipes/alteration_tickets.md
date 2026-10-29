@@ -16,6 +16,12 @@ A fashion store takes a garment for alteration, or a customer's measurements for
 4. **The hand-over.** For a made-to-measure piece, take the balance at the till first. Write **Collected by**, press **Hand over**: **Closed** is ticked. **Cancel** closes a ticket the customer gave up.
 5. **What is due.** The report **PP ALT Tickets Due** lists every open ticket, the earliest **Ready by** first.
 
+![A ticket for two garments on a demo site](../samples/s53_alteration_tickets/screenshots/02_ticket.png)
+
+![The slip and the garment's tag](../samples/s53_alteration_tickets/screenshots/03_slip_and_tag.png)
+
+![Tickets Due on a demo site](../samples/s53_alteration_tickets/screenshots/04_tickets_due.png)
+
 ## Tickets
 
 The record type `PP ALT Ticket`, numbered `format:ALT-{#####}`, tracked (its history shows who moved it and when):
