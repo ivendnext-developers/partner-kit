@@ -2,7 +2,7 @@
 id: guest-ordering-qr-and-kiosk
 title: Guests order from a QR code at the table or a kiosk, onto the table's check
 area: customers
-topic: online-shops-and-orders
+topic: history-and-crm
 asks: A QR code on each table that opens the menu on the guest's phone, a self-order kiosk at the counter, and the orders on the till for staff to send and take payment
 status: ready-with-limits
 door: open-check

@@ -43,7 +43,7 @@ Day to day the guests order and the servers work the checks at the till as befor
 - A kiosk link copied from the tablet lets anyone open unpaid tabs, one every 15 seconds, until *Make code* is pressed again.
 - A check the app opened can be left empty (a dish refused at the add at a free table, or a retry after the bill was paid); the server closes it. A till opening a check at the same moment as a guest's first order can leave two checks at the table.
 - A guest's note for the kitchen is kept on the check line like any note.
-- A dish sold by weight arrives with no reading: the till weighs it before it is paid.
+- A dish sold by weight arrives with no reading: the till weighs it before it is paid, the weighing replacing the guest's quantity.
 - A guest at a place one party already holds (a bar counter, a shared table) joins that party's bill: one place per party, or phone orders off for shared places.
 - A card works whenever its store takes orders, after closing too: switch *Orders from the tables* off at closing.
 - A kiosk tab a guest walks away from stays open: a cashier with *change any line* and *close an empty check* removes its lines and closes it.

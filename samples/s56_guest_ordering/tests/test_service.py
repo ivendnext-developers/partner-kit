@@ -365,12 +365,16 @@ class ServiceTest(unittest.TestCase):
         self.assertNotRegex(html, r"\son[a-z]+=")
         self.assertEqual(self.svc.handle("GET", "/../app.py", {}, b"")[0], 404)
 
-    def test_e5_a_kiosk_keeps_no_order_key_in_the_browser_and_clears_itself_after_the_last_touch(self):
+    def test_e5_the_kiosks_guards_are_in_the_pages_text(self):
+        """A text pin, not a run (the kit has no browser harness for one sample): the kiosk keeps no key in the browser,
+        its idle clock restarts on every touch, it waits one idle period after a lost answer and no longer."""
         js = open(os.path.join(os.path.dirname(HERE), "service", "page.js")).read()
         self.assertIn("function keptKey(sig) {\n    if (kiosk()) { return null; }", js)
         self.assertIn("function keepKey(sig, k) {\n    if (kiosk()) { return; }", js)
         self.assertIn('["pointerdown", "keydown", "input"]', js)            # the idle clock restarts on every touch
-        self.assertIn("if (busy || lost) { return resetLater(ms); }", js)   # never under a retry
+        self.assertIn("if (busy || (lost && Date.now() - lostAt < KIOSK_IDLE_MS)) { return resetLater(ms); }", js)
+        self.assertIn("basket = []; key = null; lost = false;", js)         # the hold ends with the clear
+        self.assertIn("var KIOSK_IDLE_MS = 2 * 60 * 1000;", js)
 
     def test_e4_the_page_sets_every_word_as_text_never_as_markup(self):
         js = open(os.path.join(os.path.dirname(HERE), "service", "page.js")).read()
