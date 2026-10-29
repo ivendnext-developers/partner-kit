@@ -1,0 +1,495 @@
+{
+ "manifest_version": 2,
+ "app": "pp_rpr",
+ "prefix": "PP RPR",
+ "title": "Repairs by serial number",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "An electronics or phone store's repairs and services, kept in Desk against each unit's serial number. Each PP RPR Repair holds the serial (its item and its warranty date read from the serial, read only), what kind of job it is (Repair, Service, Test only or Recall work), the customer with their phone (the customer's, read only), the store that took the unit in, the day, the date it is promised for, the fault the customer reports and the unit's condition and accessories at intake; then the tests run and their results, the work done, the technician and the parts fitted, each with its own serial where it has one. A workflow moves it Received, In repair, Ready to collect and Collected, or Cancelled; once Collected or Cancelled, a save rule stops its serial, customer, fault, tests, work and parts from changing, so the unit's history holds. The repair slip prints under the retailer's own letter head, with a tag for the unit. Every repair shows under its serial number, its customer and the sale that paid for it; the report Open repairs lists the repairs not yet collected, by the date promised. A field on Stock Entry, Repair, names the repair whose parts a Material Issue takes out of stock. The lock installs switched off, as every save rule does: the retailer switches it on. The app moves no money and changes no stock, and calls nothing outside: no service, no outside address.",
+ "allowed_urls": [],
+ "doctypes": [
+  {
+   "name": "PP RPR Test",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "test",
+     "fieldtype": "Data",
+     "label": "Test",
+     "in_list_view": 1,
+     "columns": 4,
+     "description": "Such as battery health, charging, screen, camera, speaker, water damage."
+    },
+    {
+     "fieldname": "result",
+     "fieldtype": "Select",
+     "label": "Result",
+     "options": "\nPassed\nFailed\nNot run",
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "reading",
+     "fieldtype": "Data",
+     "label": "Reading or note",
+     "in_list_view": 1,
+     "columns": 3,
+     "description": "Such as 82% battery health."
+    }
+   ]
+  },
+  {
+   "name": "PP RPR Part",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "item",
+     "fieldtype": "Link",
+     "label": "Part",
+     "options": "Item",
+     "in_list_view": 1,
+     "columns": 3,
+     "description": "The part as an item in your stock, when it is one."
+    },
+    {
+     "fieldname": "part",
+     "fieldtype": "Data",
+     "label": "What it is",
+     "in_list_view": 1,
+     "columns": 3,
+     "description": "As the slip will describe it: a replacement screen, a battery."
+    },
+    {
+     "fieldname": "part_serial",
+     "fieldtype": "Data",
+     "label": "Part's serial number",
+     "in_list_view": 1,
+     "columns": 2,
+     "description": "The fitted part's own serial, where it has one."
+    },
+    {
+     "fieldname": "quantity",
+     "fieldtype": "Int",
+     "label": "How many",
+     "default": "1",
+     "non_negative": 1,
+     "in_list_view": 1,
+     "columns": 1
+    }
+   ]
+  },
+  {
+   "name": "PP RPR Repair",
+   "autoname": "format:RPR-{#####}",
+   "track_changes": 1,
+   "title_field": "serial_no",
+   "search_fields": "serial_no,customer,customer_name,customer_phone,received_on",
+   "sort_field": "received_on",
+   "sort_order": "DESC",
+   "permissions": [
+    {
+     "role": "Sales User",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Sales Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock User",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    }
+   ],
+   "fields": [
+    {
+     "fieldname": "serial_no",
+     "fieldtype": "Link",
+     "label": "Serial number",
+     "options": "Serial No",
+     "reqd": 1,
+     "bold": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The unit's serial number or IMEI, as iVendNext keeps it. Every repair of the unit shows under it."
+    },
+    {
+     "fieldname": "item_code",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "fetch_from": "serial_no.item_code",
+     "read_only": 1,
+     "in_standard_filter": 1
+    },
+    {
+     "fieldname": "item_name",
+     "fieldtype": "Data",
+     "label": "Item name",
+     "fetch_from": "serial_no.item_name",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "warranty_until",
+     "fieldtype": "Date",
+     "label": "Warranty until",
+     "fetch_from": "serial_no.warranty_expiry_date",
+     "read_only": 1,
+     "description": "The serial's own warranty date, as iVendNext keeps it. Change it on the serial number."
+    },
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "label": "Kind of job",
+     "options": "Repair\nService\nTest only\nRecall work",
+     "default": "Repair",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "Recall work is a unit brought back because its maker recalled it."
+    },
+    {
+     "fieldname": "col1",
+     "fieldtype": "Column Break",
+     "label": ""
+    },
+    {
+     "fieldname": "customer",
+     "fieldtype": "Link",
+     "label": "Customer",
+     "options": "Customer",
+     "in_standard_filter": 1,
+     "description": "Whose unit it is. Leave it blank for a unit of your own stock."
+    },
+    {
+     "fieldname": "customer_name",
+     "fieldtype": "Data",
+     "label": "Customer name",
+     "fetch_from": "customer.customer_name",
+     "read_only": 1
+    },
+    {
+     "fieldname": "customer_phone",
+     "fieldtype": "Data",
+     "label": "Customer's phone",
+     "options": "Phone",
+     "fetch_from": "customer.custom_phone_no",
+     "read_only": 1,
+     "description": "The customer's phone, as the till keeps it. Your own Notification can tell them the unit is ready."
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Taken in at",
+     "options": "Warehouse",
+     "reqd": 1,
+     "in_standard_filter": 1,
+     "description": "The store that took the unit in and hands it back."
+    },
+    {
+     "fieldname": "received_on",
+     "fieldtype": "Date",
+     "label": "Received on",
+     "default": "Today",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "ready_by",
+     "fieldtype": "Date",
+     "label": "Ready by",
+     "description": "The date promised to the customer."
+    },
+    {
+     "fieldname": "intake_section",
+     "fieldtype": "Section Break",
+     "label": "At intake"
+    },
+    {
+     "fieldname": "fault",
+     "fieldtype": "Small Text",
+     "label": "Fault reported",
+     "reqd": 1,
+     "description": "In the customer's words."
+    },
+    {
+     "fieldname": "condition",
+     "fieldtype": "Small Text",
+     "label": "Condition and accessories",
+     "description": "What the unit came in with and how it looked: a cracked corner, with its charger, no SIM card."
+    },
+    {
+     "fieldname": "tests_section",
+     "fieldtype": "Section Break",
+     "label": "Tests"
+    },
+    {
+     "fieldname": "tests",
+     "fieldtype": "Table",
+     "label": "Tests",
+     "options": "PP RPR Test"
+    },
+    {
+     "fieldname": "work_section",
+     "fieldtype": "Section Break",
+     "label": "The work"
+    },
+    {
+     "fieldname": "work_done",
+     "fieldtype": "Small Text",
+     "label": "Work done",
+     "description": "As the slip will tell the customer. When the unit could not be repaired, say so here."
+    },
+    {
+     "fieldname": "technician",
+     "fieldtype": "Data",
+     "label": "Technician"
+    },
+    {
+     "fieldname": "parts",
+     "fieldtype": "Table",
+     "label": "Parts fitted",
+     "options": "PP RPR Part"
+    },
+    {
+     "fieldname": "handover_section",
+     "fieldtype": "Section Break",
+     "label": "Hand-over"
+    },
+    {
+     "fieldname": "sale",
+     "fieldtype": "Link",
+     "label": "Paid by sale",
+     "options": "POS Invoice",
+     "description": "The till sale that charged for the repair, if it was charged. The till charges it as a service item."
+    },
+    {
+     "fieldname": "collected_by",
+     "fieldtype": "Data",
+     "label": "Collected by",
+     "description": "Who took the unit back, when it was not the customer."
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Notes",
+     "description": "For the store only: never printed."
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "Stock Entry",
+   "fieldname": "pp_rpr_repair",
+   "fieldtype": "Link",
+   "label": "Repair",
+   "options": "PP RPR Repair",
+   "insert_after": "stock_entry_type",
+   "depends_on": "eval:doc.purpose == \"Material Issue\"",
+   "allow_on_submit": 1,
+   "description": "The repair whose parts this Material Issue takes out of stock. Optional."
+  }
+ ],
+ "workflows": [
+  {
+   "name": "PP RPR Repair",
+   "document_type": "PP RPR Repair",
+   "send_email_alert": 0,
+   "states": [
+    {
+     "state": "PP RPR Received",
+     "allow_edit": "Sales User"
+    },
+    {
+     "state": "PP RPR In repair",
+     "allow_edit": "Sales User"
+    },
+    {
+     "state": "PP RPR Ready to collect",
+     "allow_edit": "Sales User"
+    },
+    {
+     "state": "PP RPR Collected",
+     "allow_edit": "Sales User"
+    },
+    {
+     "state": "PP RPR Cancelled",
+     "allow_edit": "System Manager"
+    }
+   ],
+   "transitions": [
+    {
+     "state": "PP RPR Received",
+     "action": "PP RPR Start work",
+     "next_state": "PP RPR In repair",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP RPR In repair",
+     "action": "PP RPR Ready",
+     "next_state": "PP RPR Ready to collect",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP RPR Ready to collect",
+     "action": "PP RPR Back to work",
+     "next_state": "PP RPR In repair",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP RPR Ready to collect",
+     "action": "PP RPR Hand over",
+     "next_state": "PP RPR Collected",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP RPR Received",
+     "action": "PP RPR Cancel",
+     "next_state": "PP RPR Cancelled",
+     "allowed": "Sales User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP RPR In repair",
+     "action": "PP RPR Cancel",
+     "next_state": "PP RPR Cancelled",
+     "allowed": "Sales Manager",
+     "allow_self_approval": 1
+    }
+   ]
+  }
+ ],
+ "save_rules": [
+  {
+   "rule_name": "PP RPR repair locked once collected",
+   "record_type": "PP RPR Repair",
+   "kind": "locked_in_state",
+   "mode": "refuse",
+   "states": [
+    "PP RPR Collected",
+    "PP RPR Cancelled"
+   ],
+   "locked_fields": [
+    "serial_no",
+    "kind",
+    "customer",
+    "store",
+    "received_on",
+    "ready_by",
+    "fault",
+    "condition",
+    "tests",
+    "work_done",
+    "technician",
+    "parts",
+    "sale"
+   ],
+   "message": "This repair is closed: its unit, customer, fault, tests, work and parts stay as they were. Take a new repair for the serial instead."
+  }
+ ],
+ "print_formats": [
+  {
+   "name": "PP RPR Repair slip",
+   "doc_type": "PP RPR Repair",
+   "print_format_type": "Jinja",
+   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n{% if letter_head and not no_letterhead %}<div class=\"letter-head\">{{ letter_head }}</div>{% endif %}\n{% set state = doc.workflow_state or \"\" %}{% if state.endswith(\" Cancelled\") %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Cancelled: this repair was not done.\") }}</p>{% endif %}\n<h2 style=\"margin: 0 0 2px;\">{{ _(doc.kind) }} · {{ doc.name }}</h2>\n<p style=\"margin: 0;\">{{ doc.item_name or doc.item_code or \"\" }} · {{ _(\"Serial number\") }} {{ doc.serial_no }}{% if doc.warranty_until %} · {{ _(\"Warranty until\") }} {{ doc.get_formatted(\"warranty_until\") }}{% endif %}</p>\n<p style=\"margin: 0 0 8px;\">{% if doc.customer_name %}{{ doc.customer_name }} · {% endif %}{{ _(\"Taken in at\") }} {{ doc.store or \"\" }} · {{ doc.get_formatted(\"received_on\") }}{% if doc.ready_by %} · {{ _(\"Ready by\") }} {{ doc.get_formatted(\"ready_by\") }}{% endif %}</p>\n<p style=\"margin: 0;\"><b>{{ _(\"Fault reported\") }}:</b> {{ doc.fault or \"\" }}</p>\n{% if doc.condition %}<p style=\"margin: 0;\"><b>{{ _(\"Condition and accessories\") }}:</b> {{ doc.condition }}</p>{% endif %}\n{% if state.endswith(\" Ready to collect\") or state.endswith(\" Collected\") %}\n{% if doc.work_done %}<p style=\"margin: 8px 0 0;\"><b>{{ _(\"Work done\") }}:</b> {{ doc.work_done }}</p>{% endif %}\n{% if doc.tests %}<table style=\"width: 100%; border-collapse: collapse; margin-top: 8px;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Test\") }}</th><th style=\"text-align: start;\">{{ _(\"Result\") }}</th><th style=\"text-align: start;\">{{ _(\"Reading or note\") }}</th></tr>\n{% for t in doc.tests if t.test %}<tr><td>{{ t.test }}</td><td>{{ _(t.result) if t.result else \"\" }}</td><td>{{ t.reading or \"\" }}</td></tr>\n{% endfor %}</table>{% endif %}\n{% if doc.parts %}<table style=\"width: 100%; border-collapse: collapse; margin-top: 8px;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Parts fitted\") }}</th><th style=\"text-align: start;\">{{ _(\"Part's serial number\") }}</th><th style=\"text-align: start;\">{{ _(\"How many\") }}</th></tr>\n{% for p in doc.parts if p.part or p.item %}<tr><td>{{ p.part or p.item }}</td><td>{{ p.part_serial or \"\" }}</td><td>{{ p.quantity or 0 }}</td></tr>\n{% endfor %}</table>{% endif %}\n{% else %}<p style=\"margin: 8px 0 0;\">{{ _(\"Please bring this slip when you collect.\") }}</p>{% endif %}\n<div style=\"border-top: 1px dashed #000; margin: 16px 0 8px;\"></div>\n<p style=\"margin: 0; font-size: 9pt;\">{{ _(\"Unit tag\") }}</p>\n<p style=\"margin: 0; font-size: 22pt; font-weight: bold;\">{{ doc.name }}</p>\n<p style=\"margin: 0;\">{{ doc.serial_no }} · {{ doc.customer_name or \"\" }}{% if doc.ready_by %} · {{ _(\"Ready by\") }} {{ doc.get_formatted(\"ready_by\") }}{% endif %}</p>\n</div>"
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP RPR Open repairs",
+   "ref_doctype": "PP RPR Repair",
+   "report_type": "Report Builder",
+   "columns": [
+    "name",
+    "serial_no",
+    "item_name",
+    "kind",
+    "customer_name",
+    "store",
+    "received_on",
+    "ready_by"
+   ],
+   "filters": [
+    [
+     "workflow_state",
+     "not in",
+     [
+      "PP RPR Collected",
+      "PP RPR Cancelled"
+     ]
+    ]
+   ],
+   "order_by": "ready_by asc"
+  }
+ ],
+ "links": [
+  {
+   "doctype": "Serial No",
+   "link_doctype": "PP RPR Repair",
+   "link_fieldname": "serial_no",
+   "group": "Repairs"
+  },
+  {
+   "doctype": "Customer",
+   "link_doctype": "PP RPR Repair",
+   "link_fieldname": "customer",
+   "group": "Repairs"
+  },
+  {
+   "doctype": "POS Invoice",
+   "link_doctype": "PP RPR Repair",
+   "link_fieldname": "sale",
+   "group": "Repairs"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP RPR Repair",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/repairs_by_serial.html#repairs"
+  }
+ ]
+}
