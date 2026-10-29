@@ -45,6 +45,10 @@ The retailer's record `Default` of `<PREFIX> Settings`, each rule off until set 
 
 ![On a demo site: the cashier scans a ticked item and the till names the batch to sell first](../samples/s23_till_guard/screenshots/till-guard-rules-notice.png)
 
+![On a demo site: Most lines on one sale set to 2](../samples/s23_till_guard/screenshots/till-guard-rules-most-lines-settings.png)
+
+![On a demo site: a sale of three lines refused at Pay](../samples/s23_till_guard/screenshots/till-guard-rules-most-lines-refused.png)
+
 ## What iVendNext needs from you
 
 | You give | iVendNext checks |
