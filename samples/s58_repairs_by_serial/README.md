@@ -15,10 +15,18 @@ It uses the manifest's `doctypes` (a record type and two child tables), `workflo
 5. **A repair that will not go ahead.** **Cancel** one still **Received** (store staff), or one **In repair** (a store manager only): it is **Cancelled**, keeps its number and prints *Cancelled: this repair was not done*. A repair is never deleted by the store.
 6. **The history and the queue.** Open the serial number (Desk › *Serial No*): its **Repairs** list every repair of that unit. The repair list, filtered by **Serial number**, shows the same. The report **PP RPR Open repairs** lists the repairs not yet collected, by the date promised. A customer's repairs show under the customer, and a sale's under the sale.
 
+| What the store sees (a demo store, the library copy *IVENDNEXT RPR*) | |
+|---|---|
+| What installing it changes, read before the install | ![](screenshots/01_install.png) |
+| A repair taken in: the serial with its item and warranty date, the customer and their phone, the store, the dates and the fault | ![](screenshots/02_repair.png) |
+| The slip under the store's letter head, ready to collect: the work, the tests, the part with its serial and the unit tag | ![](screenshots/03_slip.png) |
+| The serial number listing its repairs | ![](screenshots/04_serial_history.png) |
+| A Material Issue naming the repair its parts went to | ![](screenshots/05_stock_entry.png) |
+
 ## What the retailer does
 
 - **Switch the lock on** first: Desk › *Retail Save Rule* › *PP RPR repair locked once collected* › tick **Enabled** › Save. A manifest installs every save rule switched off; until it is on, a collected repair can still be changed.
-- **Let the repair counter read serial numbers:** Desk › *Role Permissions Manager* › **Serial No** › **Add a New Rule** for **Sales User** (and **Sales Manager**) › Save: the new rule comes with *Read* (and *Select*) ticked. The form needs *Read* to show the serial's item and warranty date when the counter picks a serial; with *Select* alone the search finds it, but the form says *You need Read permission to fetch values*. *Read* also shows the counter the serial's own form, with its repairs, its status and the price it was bought at. *Stock User* reads serial numbers already.
+- **Let the repair counter read serial numbers:** Desk › *Role Permissions Manager* › **Serial No** › **Add a New Rule** for **Sales User** (and **Sales Manager**) › Save: the new rule comes with *Read* ticked; keep it. The form needs *Read* to show the serial's item and warranty date when the counter picks a serial; with *Select* alone the search finds it, but the form says *You need Read permission to fetch values*. *Read* also shows the counter the serial's own form, with its repairs, its status and the price it was bought at. *Stock User* reads serial numbers already.
 - Give the people at the repair counter **Sales User** (or a role of your own with the same rights on the repair): they take repairs in, record the work, print slips, hand units over and cancel a repair not yet begun. A **Sales Manager** cancels one in repair. Neither deletes a repair; a System Manager can.
 - Whoever takes parts out of stock holds **Stock User**, which reads repairs so the **Repair** field can find one. Reading a repair shows the customer's name and phone. If the site has no **Stock Entry Type** named *Material Issue* (a site set up without the setup wizard's records has none), add it once: Desk › *Stock Entry Type* › **+ Add**, name *Material Issue*, purpose *Material Issue*.
 - Put the store's name and address on the **Letter Head** the store prints with: the slip prints under it.
