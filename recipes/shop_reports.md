@@ -13,7 +13,7 @@
 
 ## Sell-through by size and colour
 
-The worked sample of this recipe is [S54](../samples/s54_sell_through/README.md). A fashion buyer names a range (an item group, or one style), a start date and the stores, and presses *Work out sell-through* in Desk. The service reads two of the retailer's own reports for each store: *POS Sale Report* for the units the till sold since the date, and *Stock Projected Quantity* for the stock still there. It reads the items' size and colour, and writes one row per style, colour, size and store: sold, in stock, the sell-through and *None left*.
+The worked sample of this recipe is [S54](../samples/s54_sell_through/README.md) ([what the buyer sees](../samples/s54_sell_through/screenshots/02_run.png)). A fashion buyer names a range (an item group, or one style), a start date and the stores, and presses *Work out sell-through* in Desk. The service reads two of the retailer's own reports for each store: *POS Sale Report* for the units the till sold since the date, and *Stock Projected Quantity* for the stock still there. It reads the items' size and colour, and writes one row per style, colour, size and store: sold, in stock, the sell-through and *None left*.
 
 What it shows a builder:
 - **Read the figure where the retailer keeps it.** Both numbers come from the retailer's reports, so they match what the retailer's own staff see in Desk.
