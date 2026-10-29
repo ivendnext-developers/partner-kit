@@ -1980,7 +1980,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2040,7 +2040,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2052,7 +2052,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2088,7 +2088,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2124,7 +2124,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2136,7 +2136,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2152,13 +2152,7 @@
   },
   {
    "added": 1,
-   "choices": [
-    "PENDING",
-    "CLEARED",
-    "FAILED",
-    "REPORTED",
-    "NOT-FISCAL"
-   ],
+   "choices": [],
    "description": "The fiscal result from the fiscal app, or NOT-FISCAL from the POS. Empty means none yet.",
    "fieldname": "custom_ivn_fiscal_status",
    "hidden": 1,
@@ -2166,7 +2160,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Select"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2178,7 +2172,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2190,7 +2184,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2298,7 +2292,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2370,7 +2364,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2382,7 +2376,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2430,7 +2424,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2442,7 +2436,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2466,7 +2460,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2490,7 +2484,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2502,7 +2496,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2514,7 +2508,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2526,7 +2520,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -2538,7 +2532,7 @@
    "links_to": "",
    "read_only": 1,
    "required": 0,
-   "type": "Data"
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -3749,6 +3743,18 @@
     {
      "added": 1,
      "choices": [],
+     "description": "Notional, reference-only apportionment of the transaction's total tender/payment-mode discount to this line, in proportion to the line's value at time of sale. Used only to compute proportional discount reversal on returns; never affects rate, amount, or tax.",
+     "fieldname": "custom_tender_discount_apportioned",
+     "hidden": 1,
+     "label": "Tender Discount Apportioned",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Currency"
+    },
+    {
+     "added": 1,
+     "choices": [],
      "description": "Set to 1 when this line's rate and/or quantity was extracted from a barcode mask scan.",
      "fieldname": "custom_barcode_masked",
      "hidden": 0,
@@ -3765,18 +3771,6 @@
      "fieldname": "custom_barcode_mask_amount",
      "hidden": 0,
      "label": "Label Total",
-     "links_to": "",
-     "read_only": 1,
-     "required": 0,
-     "type": "Currency"
-    },
-    {
-     "added": 1,
-     "choices": [],
-     "description": "Notional, reference-only apportionment of the transaction's total tender/payment-mode discount to this line, in proportion to the line's value at time of sale. Used only to compute proportional discount reversal on returns; never affects rate, amount, or tax.",
-     "fieldname": "custom_tender_discount_apportioned",
-     "hidden": 1,
-     "label": "Tender Discount Apportioned",
      "links_to": "",
      "read_only": 1,
      "required": 0,
@@ -6518,6 +6512,6 @@
    ]
   }
  },
- "why": "openapi.yaml; contract fiscal_reader; guide chapter 01c; guide chapter 10; recipe customer_history_page; recipe duty_free_allowance; recipe gift_card_on_spend; recipe loyalty_provider; recipe lucky_draw; recipe portal; recipe post_sale_feedback; recipe receipt_format; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe webhook_receiver; sample S13; sample S2; sample S22; sample S25; sample S3; sample S36; sample S4; sample S41; sample S43; sample S49; sample S52; sample S9; the MCP server; the feed client; the request collection; retail core",
+ "why": "openapi.yaml; contract event_feed; contract fiscal_reader; guide chapter 01c; guide chapter 05; guide chapter 10; recipe customer_history_page; recipe duty_free_allowance; recipe event_feed; recipe front_of_house; recipe gift_card_on_spend; recipe loyalty_provider; recipe lucky_draw; recipe money_kit; recipe portal; recipe post_sale_feedback; recipe receipt_format; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe webhook_receiver; sample S1; sample S13; sample S2; sample S22; sample S25; sample S27; sample S28; sample S3; sample S30; sample S32; sample S36; sample S39; sample S4; sample S40; sample S41; sample S42; sample S43; sample S44; sample S45; sample S49; sample S52; sample S53; sample S55; sample S58; sample S7; sample S9; site/pages/starters.md; the MCP server; the feed client; the kit's tool manifest; the kit's tool moneykit; the kit's tool scale_profile; the kit's tool selfcheck; the request collection; retail core",
  "written_elsewhere": ""
 }
