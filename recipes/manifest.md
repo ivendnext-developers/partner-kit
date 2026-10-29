@@ -113,6 +113,22 @@ A manifest is one file that adds **your own record types and fields** to a retai
 
 8. **Reinstall — clean.** A reinstall gives exactly the first install's schema. None of the old data comes back.
 
+## Adding details to a sale
+
+Your app needs to keep something on a sale: a delivery slot, a prescription number, a tax authority's answer. The sale is the record every app and every retailer change wants a field on, and its row has a fixed amount of room, shared by all of them. On a busy site there is room for only a few more short fields. So choose where the detail lives in this order:
+
+1. **Your own record type,** linked to the sale (a `Link` field to POS Invoice on your record). It has room of its own, your app owns it, and it can hold as many details as you need. Best for anything with more than two or three values, or anything your service writes after the sale.
+2. **A sale detail** (`sale_attributes`): a short value, up to 140 characters, that the cashier or a till key fills on the sale. It takes no room on the sale's row. Best for one or two short values captured at the till.
+3. **A field on the sale** (`custom_fields` on POS Invoice), only when the detail must sit on the sale itself, for example a fiscal reader's result. Declare it **`Small Text`** unless something lists, filters or searches by it: a `Small Text` field takes 10 bytes of the row, a `Data`, `Link` or `Select` field 562.
+
+**What happens when the fields do not fit.** On POS releases after 2.1.0.668 the install measures each record your manifest adds fields to, and each record type it brings, before it makes anything, on a first install and on an update. Fields that would not fit are refused, in one line, for example:
+
+> custom_fields[0] (POS Invoice): POS Invoice has 5,117 bytes of room left on this site (about 9 more Data, Link or Select fields), and this app's fields need 6,744 (the widest: pp_xyz_slot, pp_xyz_ref, pp_xyz_note). A record's row holds at most 65,535 bytes, shared by every app and the shop's own fields: put them in your app's own record type; a sale detail (sale_attributes) for a short value, up to 140 characters, captured on the sale; or use Small Text for text nothing searches, which uses almost no room
+
+Nothing is made, so the retailer's administrator can install a corrected version straight away. Earlier releases stop part-way through the install with the database's own error (*Row size too large*) and take back what they made.
+
+**Technical notes.** The room differs per site: it depends on the other apps installed and the retailer's own fields, so a manifest that installs on your sandbox may not fit a busy retailer's site. Your own record types have the same ceiling per row, so a record type with very many long fields is refused the same way; split it, or use a child table. An update counts only what it adds or widens: a field already installed is already counted.
+
 ## A field only named roles read or change
 
 From version 2.1.0 a field your manifest adds may carry `write_roles` (the roles that change it, and so read it too) and `read_roles` (the roles that read it; left out, every role that reads the record type):
