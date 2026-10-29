@@ -8,9 +8,9 @@ status: ready-with-limits
 door: open-check
 blocked-by: -
 recipe: recipes/open_check.md
-sample: none
+sample: samples/s55_front_of_house
 request: -
-verified: run by the product 2026-10-26 to 2026-10-28 (the door's first layer, through the API, 2026-10-26: an outside app's integration user opened a tab by its label and added to it, was refused a move and a close in the right's words, and read the check with no staff identity and no register; and POS train T19's walks on phone, counter and tablet: tables opened, two rounds added from two tills, the check claimed at Checkout and paid by card and cash, one line paid on each of two tills, Back giving the lines to the table, a pre-order tab paid, the close listing the open checks); not run by a kit sample
+verified: run by the product 2026-10-26 to 2026-10-28 (the door's first layer, through the API, 2026-10-26: an outside app's integration user opened a tab by its label and added to it, was refused a move and a close in the right's words, and read the check with no staff identity and no register; and POS train T19's walks on phone, counter and tablet: tables opened, two rounds added from two tills, the check claimed at Checkout and paid by card and cash, one line paid on each of two tills, Back giving the lines to the table, a pre-order tab paid, the close listing the open checks); and run by the kit sample S55 *Front of house* on our bench at POS train T19, 2026-10-29: its app's own user opened a seated party's table check from a reservation and a waiting party, a till added the dishes and took the payment
 related: own-online-shop
 ---
 ## What you build
