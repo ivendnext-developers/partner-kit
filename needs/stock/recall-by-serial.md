@@ -20,6 +20,7 @@ Nothing new. **Who bought them:** the engine's **Serial No Ledger** (Desk › St
 - Look each unit up by its own serial: listed by the item alone, a sale line that carried several units names its buyer on the first unit's row only.
 - A till sale shows in the ledger once its day's sales are booked to stock: at once on some sites, at the day's close on others.
 - A walk-in sale names the store's walk-in customer: no one to contact.
+- An offline till learns of the move only when it next syncs: a recalled unit it sells meanwhile reaches iVendNext with the sale, for review.
 - The report is on the stock ledger: Stock User opens it, Sales User alone does not. It shows customers' names: give it only to whoever runs the recall.
 - A recall by lot (food, medicine) is a different need: sample S40, *Expiry and recall*.
 
