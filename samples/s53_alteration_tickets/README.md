@@ -15,6 +15,13 @@ It uses the manifest's `doctypes` (a record type and two child tables), `workflo
 5. **The hand-over.** For a made-to-measure piece, take the balance at the till first (its order or layaway). Write **Collected by**, then **Hand over**: the ticket is **Closed**, and its history records who did it and when. **Cancel** closes a ticket the customer gave up.
 6. **What is due.** The report **PP ALT Tickets Due** lists every ticket not closed, the earliest Ready by first. A customer's, a sale's and an order's tickets show under each, in the form's connections.
 
+| What the store sees (a demo store, the library copy *IVENDNEXT ALT*) | |
+|---|---|
+| What installing it changes, read before the install | ![](screenshots/01_install.png) |
+| A ticket for two garments: the customer's phone and e-mail from the customer, Ready by, the next fitting, the workroom | ![](screenshots/02_ticket.png) |
+| The slip, and under the cut line the garment's tag | ![](screenshots/03_slip_and_tag.png) |
+| *Tickets Due*: the open tickets, the earliest Ready by first | ![](screenshots/04_tickets_due.png) |
+
 ## What the retailer does
 
 - Give the people at the counter and in the workroom **Sales User** (they take, move and print tickets; they cannot delete one). A **Sales Manager** may delete a ticket taken in error, and needs **Sales User** too to move one.
