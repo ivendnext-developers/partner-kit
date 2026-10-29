@@ -94,6 +94,12 @@ class ManifestTest(unittest.TestCase):
         for k in ("booking_date", "booking_time", "minutes", "place"):
             self.assertIn('doc.status=="Booked"', f[k].get("read_only_depends_on") or "", k)
 
+    def test_m10_a_stranded_seat_key_is_cleared_on_the_form_by_system_manager_alone(self):
+        for dt in (RES, WAIT):
+            k = self.cf[(dt, "seat_key")]
+            self.assertFalse(k.get("hidden") or k.get("read_only"), dt)     # either would hide it from System Manager too
+            self.assertEqual(sorted(k["write_roles"]), sorted([INT, SM]), dt)
+
     def test_m8_the_store_row_carries_the_register_and_the_rules(self):
         f = {x["fieldname"]: x for x in self.dt["PP FOH Store"]["fields"]}
         self.assertEqual((f["register"]["options"], f["register"]["reqd"]), ("POS Profile", 1))

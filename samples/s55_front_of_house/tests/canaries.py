@@ -125,6 +125,9 @@ CANARIES = [
      F + "test_m1_the_guests_details_are_the_hosts_alone"),
     ("no Version history of a guest", "manifest.json", '   "name": "PP FOH Reservation",\n', '   "name": "PP FOH Reservation",\n   "track_changes": 1,\n',
      F + "test_m9_no_version_history_and_a_booked_slot_is_read_only_in_the_form"),
+    ("a stranded seat key stays clearable", "manifest.json", '   "dt": "PP FOH Reservation",\n   "fieldname": "seat_key",\n   "fieldtype": "Data",\n   "label": "Seat key",\n',
+     '   "dt": "PP FOH Reservation",\n   "fieldname": "seat_key",\n   "fieldtype": "Data",\n   "label": "Seat key",\n   "read_only": 1,\n',
+     F + "test_m10_a_stranded_seat_key_is_cleared_on_the_form_by_system_manager_alone"),
     # the deposit
     ("the store's deposit rule is written", C, '    if (rule or "").startswith("Return"):', "    if False:",
      T + "test_n1_a_no_show_writes_the_stores_deposit_rule"),

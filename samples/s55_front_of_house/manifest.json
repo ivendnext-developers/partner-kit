@@ -510,7 +510,6 @@
     "PP FOH Integration",
     "System Manager"
    ],
-   "read_only": 1,
    "description": "Set while Seat is opening the table's check; cleared when it is open or refused. A System Manager may clear it if the register is gone for good."
   },
   {
@@ -558,7 +557,6 @@
     "PP FOH Integration",
     "System Manager"
    ],
-   "read_only": 1,
    "description": "Set while Seat is opening the table's check; cleared when it is open or refused. A System Manager may clear it if the register is gone for good."
   },
   {
