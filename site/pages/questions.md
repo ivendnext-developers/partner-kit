@@ -90,7 +90,7 @@ Use the event feed: your service reads, from the chain's site, every change to t
 
 ### How long does iVendNext wait for my service's answer?
 
-A till key waits 3 seconds unless the manifest raises it, 10 at most; a check at Pay waits what its manifest says, also 10 at most. Do the slow work before the call or after it. [Chapter 14b, *What every deployable app does*](../../guide/14b_deploying_your_app.md#what-every-deployable-app-does).
+A till key waits 3 seconds unless raised: its manifest may ask for up to 5, and the record the retailer's System Manager keeps allows 10 at most. A check at Pay waits what its manifest says, and the checks on one POS Profile share 10 seconds. Do the slow work before the call or after it. [Chapter 14b, *What every deployable app does*](../../guide/14b_deploying_your_app.md#what-every-deployable-app-does).
 
 ## Outside systems
 
@@ -110,7 +110,7 @@ The App library card names every address your app sends data to, and the install
 
 ### Is there a list of all the iVendNext endpoints, fields and screens an app can use?
 
-Yes, in four places today: the [API reference](api.md) for the record calls, [`api/README.md`](../../api/README.md) for the `ivendnext_mpos.api.v1` methods, [chapter 9](../../guide/09_points_and_requests.md) for every extension point iVendNext calls on your service, and [chapter 13a](../../guide/13a_screens_and_ux.md) for the screens. [The developer's map, *What you can use*](map.md), puts them on one page with [every record type and its fields](site:records/index.html).
+Yes, on one page: [the developer's map, *What you can use*](map.md) lists every endpoint your app can call, every endpoint iVendNext calls on your service, everything a manifest can add and every screen you can add. [Every record type and its fields](site:records/index.html), with which are required and which are read-only, is one click further. The detail behind the map is in the [API reference](api.md), [`api/README.md`](../../api/README.md), [chapter 9](../../guide/09_points_and_requests.md) and [chapter 13a](../../guide/13a_screens_and_ux.md).
 
 ### Can my app add a field to the sale, or its own record types and fields?
 
@@ -118,7 +118,7 @@ Yes, as data in your manifest: a field on an existing record such as the sale, y
 
 ### What screens can my app add?
 
-On the till: a sheet over the sale, sheets at the scan, the customer and the quantity, and extra fields on a sale. In Desk: buttons, your own pages and the native screens of your own record types. And a standalone page. [Chapter 13a](../../guide/13a_screens_and_ux.md).
+On the till: a sheet over the sale, sheets at the scan, the customer and the quantity, and extra fields on a sale. In Desk: buttons, your own pages and the native screens of your own record types. And a standalone page. [The map, part (d)](map.md#d-screens-you-can-add) shows each with a picture; [chapter 13a](../../guide/13a_screens_and_ux.md) explains them.
 
 ### Can my app change how iVendNext itself works?
 
