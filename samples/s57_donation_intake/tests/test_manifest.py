@@ -137,6 +137,10 @@ class ManifestTest(unittest.TestCase):
         self.assertIn('doc.donor_name or doc.customer_name or _("an anonymous donor")', html)
         self.assertLess(html.index("Cancelled: this is not a receipt."), html.index("Not yet a receipt"))   # a cancelled one says so first
         self.assertIn('dir="auto"', html)
+        # a Jinja print places the letter head itself (the standard template does it for its own): the charity's name
+        # and registration number are the retailer's Letter Head (bench run 4 printed none without this)
+        self.assertTrue(html.split(">", 1)[1].lstrip().startswith("{% if letter_head and not no_letterhead %}"))
+        self.assertIn("{{ letter_head }}", html)
 
     def test_a_customer_lists_its_donations(self):
         got = {(ln["doctype"], ln["link_doctype"], ln["link_fieldname"]) for ln in MANIFEST["links"]}
