@@ -119,7 +119,7 @@
  "registered_applications": [
   {
    "name": "PP PMR Rules feed",
-   "description": "the payment method rules service reads the retailer's rules and its customer group tree as this user; leave the feed off",
+   "description": "the payment method rules service reads the shop's rules and its customer group tree as this user; leave the feed off",
    "events": [
     "PP PMR Rule"
    ]
