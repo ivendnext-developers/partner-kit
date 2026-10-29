@@ -21,7 +21,7 @@ When your app is ready to leave your laptop: before a retailer's sandbox calls i
 ## What every deployable app does
 
 1. **Has a public HTTPS address with a valid certificate.** iVendNext checks the certificate against your host name, and an address that resolves to a private network is refused (`recipes/point_handler.md`).
-2. **Answers inside the time.** A till key has 3 seconds unless iVendNext raises it, 10 at most. Do the slow work before the call, or after it.
+2. **Answers inside the time.** A till key has 3 seconds unless raised: up to 5 from your manifest, 10 at most on the record the retailer's System Manager keeps. Do the slow work before the call, or after it.
 3. **Verifies every call before it reads it.** The signature is `base64(HMAC-SHA256(secret, "<timestamp>.<raw body>"))` over the raw body, and a timestamp more than five minutes from your clock is refused. Answer a body over 64 KB with 413.
 4. **Keeps secrets out of the image and the repository.** The signing secret and the API key arrive as environment variables from the host's secret store.
 5. **Has a health address** (`/health`) that answers without a signature and says nothing about retailers.

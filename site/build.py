@@ -1067,6 +1067,15 @@ def page_words(text: str) -> tuple[list[str], str]:
 
 ASKED_PAGES = {"questions.html"}                   # pages whose ### headings are questions in the asker's own words: they count as
                                                    # the page's asks line, as a card's does (Questions developers ask)
+# Two pages answer a developer's question without ### headings; their asks line is written here, in the developer's words, so
+# the header's six show them for "screen", "field" and "loyalty" ahead of the recipes that also use those words (HOWITWORKS-CHECK).
+ASKS_ADDED = {
+    "map.html": "Is there a list of all the endpoints my app can call? Which record types and fields can my app read or change, "
+                "and which are required or read-only? Which screens can my app add, on the till and in the back office?",
+    "guide/01c_how_the_data_travels.html": "A chain has its own loyalty system outside iVendNext: which calls go where on each sale, "
+                "and how does the reward get onto the sale? How does a phone retailer link the till to a telecom provider "
+                "for plan prices and activation?",
+}
 
 
 def search_docs(pages: list, cards: list, groups: list[list[str]], records: list = ()) -> list[dict]:
@@ -1084,7 +1093,7 @@ def search_docs(pages: list, cards: list, groups: list[list[str]], records: list
         if p.out == "index.html":
             continue
         heads, first = page_words(p.text)
-        asks = " ".join(plain(q) for q in re.findall(r"^### (.+)$", p.text, re.M)) if p.out in ASKED_PAGES else ""
+        asks = " ".join(plain(q) for q in re.findall(r"^### (.+)$", p.text, re.M)) if p.out in ASKED_PAGES else ASKS_ADDED.get(p.out, "")
         docs.append({"id": p.out, "k": SEARCH_GROUPS.get(p.group, "guide"), "t": p.title, "a": asks,
                      "s": expand(p.title + " " + " ".join(heads), groups), "tp": "", "l": "", "c": "",
                      "b": " · ".join(heads) + " " + first, "u": p.out, "v": "", "ar": "", "d": "", "st": ""})

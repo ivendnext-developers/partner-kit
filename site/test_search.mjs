@@ -75,7 +75,9 @@ check("the header's list: six at most, needs first, four needs and the two best 
       `event feed: ${kinds(feed)} · webhook: ${kinds(hook)} · bnpl: ${kinds(nonly)}`);
 // a developer's own words find the pages that answer them (How it all works, One app end to end, Questions developers ask)
 // among the header's six; the last four words are on none of those pages, so only their synonym groups find them
-const HOW = new Set(["guide/01a_how_it_all_works.html", "guide/01b_one_app_end_to_end.html", "questions.html"]);
+// (the map answers "endpoint", "field" and "screen" best, and leads for them since HOWITWORKS-CHECK, so it counts here too; for
+// "screen" it is now the only one of the three pages in the header's six, the questions page having fallen to third)
+const HOW = new Set(["guide/01a_how_it_all_works.html", "guide/01b_one_app_end_to_end.html", "questions.html", "map.html"]);
 const DEV_WORDS = ["docker", "container", "tenant", "multi-tenant", "endpoint", "field", "screen", "data", "conflict", "publish",
                    "image", "cost", "kubernetes", "multitenant", "clash", "callback url"];
 const unanswered = (index) => {
@@ -92,20 +94,20 @@ check("each of the three pages is found by a developer's word: docker finds How 
 const dock = "docker container containerised containerized kubernetes k8s";
 const planted3 = unanswered(docs.map((d) => ({ ...d, s: d.s.replace(dock, "") })));
 check("planted: the docker synonym group removed turns a developer's word red", planted3.includes("kubernetes"), planted3.join(", "));
-// chapter 1c's words: a developer linking the till to an outside system finds How the data travels among the header's six,
-// or among the first three pages for a word recipes answer as well (two loyalty recipes lead for "loyalty"; on 10-28 1c's lead
-// over the second of them was 0.02 points, so any new page tipped it: HOWITWORKS-B)
+// chapter 1c's words: a developer linking the till to an outside system finds How the data travels among the header's six.
+// (HOWITWORKS-CHECK: this once also accepted "the first three pages", which let "loyalty" show two recipes and no 1c in the six
+// a reader sees; 1c's asks line, ASKS_ADDED in build.py, now puts it first.)
 const C1 = "guide/01c_how_the_data_travels.html";
 const C_WORDS = ["outside system", "integration", "loyalty", "telecom", "plan", "data flow"];
 const cMissing = (index) => {
   const m = search.create(index, MiniSearch);
   return C_WORDS.filter((q) => {
     const r = search.rank(m, q);
-    return !search.instant(r, 6).some((x) => x.id === C1) && !r.filter((x) => x.k !== "need").slice(0, 3).some((x) => x.id === C1);
+    return !search.instant(r, 6).some((x) => x.id === C1);
   });
 };
 const cMiss = cMissing(docs);
-check(`chapter 1c's words find How the data travels in the header's six or the first three pages (${C_WORDS.length} words)`, cMiss.length === 0, cMiss.join(", "));
+check(`chapter 1c's words find How the data travels in the header's six (${C_WORDS.length} words)`, cMiss.length === 0, cMiss.join(", "));
 // planted fault: chapter 1c left out of the index turns every one of its words red
 const planted4 = cMissing(docs.filter((d) => d.id !== C1));
 check("planted: chapter 1c out of the index turns its words red", planted4.length === C_WORDS.length, planted4.join(", "));
@@ -131,6 +133,19 @@ check("endpoint finds the map first or second, record type the record types firs
 const noMap = docs.filter((d) => d.id !== "map.html" && d.id !== "records/index.html");
 check("planted: the map and the record index taken out of the index turn the developer's words red", mapMiss(noMap).length >= 5,
       mapMiss(noMap).join("\n  "));
+
+// the header's six, which is all a reader sees (HOWITWORKS-CHECK): endpoint, field and screen show the map, loyalty and telecom
+// show How the data travels; a planted fault, the two pages' asks lines left out, turns them red
+const SIX = [["endpoint", "map.html"], ["field", "map.html"], ["screen", "map.html"], ["loyalty", C1], ["telecom", C1]];
+const sixMiss = (index) => {
+  const m = search.create(index, MiniSearch);
+  return SIX.filter(([q, u]) => !search.instant(search.rank(m, q), 6).some((r) => r.id === u)).map(([q]) => q);
+};
+check("endpoint, field and screen show the map, loyalty and telecom show How the data travels, in the header's six",
+      sixMiss(docs).length === 0, sixMiss(docs).join(", "));
+const noAsks = sixMiss(docs.map((d) => (d.id === "map.html" || d.id === C1 ? { ...d, a: "" } : d)));
+check("planted: the map's and chapter 1c's asks lines left out turn screen, field and loyalty red",
+      ["screen", "field", "loyalty"].every((q) => noAsks.includes(q)), noAsks.join(", "));
 
 console.log(red ? `${red} FAILED` : "SEARCH GREEN");
 process.exit(red ? 1 : 0);
