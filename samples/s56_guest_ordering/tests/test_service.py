@@ -365,6 +365,13 @@ class ServiceTest(unittest.TestCase):
         self.assertNotRegex(html, r"\son[a-z]+=")
         self.assertEqual(self.svc.handle("GET", "/../app.py", {}, b"")[0], 404)
 
+    def test_e5_a_kiosk_keeps_no_order_key_in_the_browser_and_clears_itself_after_the_last_touch(self):
+        js = open(os.path.join(os.path.dirname(HERE), "service", "page.js")).read()
+        self.assertIn("function keptKey(sig) {\n    if (kiosk()) { return null; }", js)
+        self.assertIn("function keepKey(sig, k) {\n    if (kiosk()) { return; }", js)
+        self.assertIn('["pointerdown", "keydown", "input"]', js)            # the idle clock restarts on every touch
+        self.assertIn("if (busy || lost) { return resetLater(ms); }", js)   # never under a retry
+
     def test_e4_the_page_sets_every_word_as_text_never_as_markup(self):
         js = open(os.path.join(os.path.dirname(HERE), "service", "page.js")).read()
         for sink in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval(", "setAttribute(\"on"):
@@ -376,7 +383,7 @@ class ServiceTest(unittest.TestCase):
         out = answer(press(self.svc, ["GOR-CODE-00001"]))[1]
         self.assertEqual((out["message"]["level"], out["message"]["body"]), ("warning", app.REFUSED))
 
-    def test_o14_a_dish_the_door_refuses_is_said_and_the_order_kept_for_staff(self):
+    def test_o14_a_dish_the_door_refuses_is_said_to_ask_staff(self):
         t = made(self.shop, self.svc)
         self.shop.door_refuse = ("check_add_lines", "ItemRefusedError", 417)
         out = guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]

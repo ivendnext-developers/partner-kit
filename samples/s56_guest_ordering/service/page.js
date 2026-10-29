@@ -126,14 +126,23 @@
   var menu = null, basket = [], key = null, busy = false, money = null;
   var KEPT_MS = 10 * 60 * 1000;      // an order's key kept this long in the browser, for a reload or a second scan
   var KIOSK_IDLE_MS = 2 * 60 * 1000;  // a kiosk left this long clears itself for the next guest
-  var KIOSK_SHOWN_MS = 20 * 1000;     // a kiosk shows the order's code this long after it is sent
-  var idle = null;
+  var idle = null, lost = false;
   function kiosk() { return !!menu && menu.kind === "Kiosk"; }
-  function resetLater(ms) {           // a kiosk is a shared tablet: the next guest never sees this one's order
+  // A kiosk is a shared tablet: two minutes after the last touch it clears itself for the next guest and reads the menu
+  // again (a dish switched off since shows no more). Never while an order is being sent or its answer was lost: that
+  // guest's retry needs the same basket and key.
+  function resetLater(ms) {
     if (!kiosk()) { return; }
     clearTimeout(idle);
-    idle = setTimeout(function () { basket = []; key = null; drawBasket(); note(""); }, ms);
+    idle = setTimeout(function () {
+      if (busy || lost) { return resetLater(ms); }
+      basket = []; key = null; drawBasket(); note("");
+      call("/gor/menu").then(function (a) { if (a.state === "open") { menu = a; drawMenu(); } }).catch(function () {});
+    }, ms);
   }
+  ["pointerdown", "keydown", "input"].forEach(function (ev) {
+    document.addEventListener(ev, function () { resetLater(KIOSK_IDLE_MS); }, true);
+  });
 
   function fmt(text, vals) { return text.replace(/\{(\w+)\}/g, function (_, k) { return vals[k]; }); }
   function el(tag, cls, text) {
@@ -210,7 +219,7 @@
   function addLine(dish, choices) {
     if (basket.length >= menu.most_lines) { note(fmt(W.tooMany, { n: menu.most_lines })); return; }
     basket.push({ dish: dish, choices: choices, qty: 1, note: "" });
-    resetLater(KIOSK_IDLE_MS);
+    lost = false;
     key = null;
     note("");
     drawBasket();
@@ -294,11 +303,12 @@
     $("send").disabled = true;
     $("send").textContent = W.sending;
     call("/gor/order", { key: key, lines: lines }).then(function (a) {
-      if (a.state === "sent") { basket = []; key = null; keepKey(sig, null); drawBasket(); note(say(a), true); resetLater(KIOSK_SHOWN_MS); }
+      lost = a.state === "unavailable";
+      if (a.state === "sent") { basket = []; key = null; keepKey(sig, null); drawBasket(); note(say(a), true); }
       else if (a.state === "unknown") { note(W.unknown); }
       else if (a.state === "unavailable") { note(W.lost); }     // it may have landed: the same key is sent again
       else { note(say(a)); }
-    }).catch(function () { note(W.lost); }).then(function () {
+    }).catch(function () { lost = true; note(W.lost); }).then(function () {
       busy = false;
       $("send").disabled = false;
       $("send").textContent = W.send;

@@ -115,7 +115,11 @@ CANARIES = [
     ("the page never writes markup", "service/page.js", "    if (text !== undefined && text !== null) { e.textContent = text; }",
      "    if (text !== undefined && text !== null) { e.innerHTML = text; }", T + "test_e4_the_page_sets_every_word_as_text_never_as_markup"),
     ("a dish the door refuses is said", S, '            if e.kind == "ItemRefusedError":', "            if False:",
-     T + "test_o14_a_dish_the_door_refuses_is_said_and_the_order_kept_for_staff"),
+     T + "test_o14_a_dish_the_door_refuses_is_said_to_ask_staff"),
+    ("a kiosk keeps no order key in the browser", "service/page.js", "  function keptKey(sig) {\n    if (kiosk()) { return null; }",
+     "  function keptKey(sig) {", T + "test_e5_a_kiosk_keeps_no_order_key_in_the_browser_and_clears_itself_after_the_last_touch"),
+    ("a kiosk never clears under a retry", "service/page.js", "      if (busy || lost) { return resetLater(ms); }\n", "",
+     T + "test_e5_a_kiosk_keeps_no_order_key_in_the_browser_and_clears_itself_after_the_last_touch"),
     # the order's checks
     ("a dish must be on the menu", C, "        if d is None:\n            raise Refused(\"Something", "        if False:\n            raise Refused(\"Something",
      T + "test_o8_the_order_is_checked_against_the_menu_and_the_stores_limits"),

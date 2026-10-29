@@ -95,6 +95,7 @@ class FakeTenant:
         elif doctype == "Item":
             src = [dict({"custom_is_gift_card": 0}, **dict(i, is_sales_item=1, disabled=0, has_variants=0)) for i in ITEMS]
             if order_by:
+                assert order_by == "item_name asc", order_by
                 src.sort(key=lambda r: r["item_name"])
         elif doctype == "Cross Selling Product Detail":
             assert parent == "Item"
