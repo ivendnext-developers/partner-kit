@@ -88,12 +88,14 @@ class FakeTenant:
             return copy.deepcopy(self.register)
         raise app.TenantError("404", 404)
 
-    def rows(self, doctype, fields, filters, parent=None, limit=500):
+    def rows(self, doctype, fields, filters, parent=None, limit=500, order_by=""):
         self._gate(f"LIST {doctype}")
         if doctype.endswith(" Store"):
             src = [dict(r) for s in self.settings.values() for r in s["stores"]]
         elif doctype == "Item":
             src = [dict({"custom_is_gift_card": 0}, **dict(i, is_sales_item=1, disabled=0, has_variants=0)) for i in ITEMS]
+            if order_by:
+                src.sort(key=lambda r: r["item_name"])
         elif doctype == "Cross Selling Product Detail":
             assert parent == "Item"
             src = [dict(r) for r in ROWS]

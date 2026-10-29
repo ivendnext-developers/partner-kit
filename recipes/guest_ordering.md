@@ -8,18 +8,13 @@ Guests in quick service and full service expect to order from their phone at the
 
 **The four rules, here.** No code runs inside the retailer's iVendNext. One address is called, your service: by the *Make code* button, and by the guest's phone. The service writes to a check only through the till's door (`check_open`, `check_add_lines`), as the app's own user, with the three rights guest ordering asks for: *open a check*, *add to a check* and *see the checks*. ⛔ Never *send to the kitchen*: a guest's lines wait for a person. The page asks no name, phone or e-mail.
 
-## What the guest, the manager and the server see
-
-| | |
-|---|---|
-| (the walk's pictures go here) | |
 
 ## Steps
 
 ### Settings
 
 1. Install the manifest. It adds the settings (one per company, with a row per store), the code record, the print format *Table card*, the roles **PP GOR Manager** and **PP GOR Integration**, the button *Make code* and its service (off), and the feed registration that makes the app's own user (`pp_gor@integration.invalid`; leave the feed off).
-2. Give the app's user its store and its key, in this order, on its User record: keep *Is Desk User*, tick **Is POS User**, choose a **Shift Profile**, link a **Retail Permission** with *Open Checks*: **open a check**, **add to a check** and **see the checks** only; add one row to the store access table (the store and its register, *Table Service* on); **Save**; then **Generate Keys**. Without *Is POS User* the save drops the store row and the till answers *"You are not assigned to this outlet."* Never give it write on *Floor Section*: that is every check verb, a comp included.
+2. Give the app's user its store and its key, in this order, on its User record: keep *Is Desk User*, tick **Is POS User**, choose a **Shift Profile**, link a **Retail Permission** with *Open Checks*: **open a check**, **add to a check** and **see the checks** only; add one row for each store to the store access table (each store once, with its register there, *Table Service* on); **Save**; then **Generate Keys**. Without *Is POS User* the save drops the store row and the till answers *"You are not assigned to this outlet."* Never give it write on *Floor Section*: that is every check verb, a comp included.
 3. In **Role Permissions Manager**, give **PP GOR Integration** **Read** on *Item*, *POS Profile* and *Retail Option Group*; give **PP GOR Manager** to the people who make the codes, with **Read** and **Select** on *Retail Floor Place* and **Select** on *Warehouse*.
 4. On **PP GOR Settings**, one row per store: **the same register** the app's user holds there (its **Item Groups** are the menu: list each group, a group's sub-groups are not read), *Orders from the tables*, *Orders from the kiosk*, the course word (*Guest order* to start), the most lines one order holds and the most of one dish (10 and 10 to start). Consent to the service and switch the button on; press **Connect again** on the app's package record if the site could not reach the app.
 
@@ -36,7 +31,7 @@ Guests in quick service and full service expect to order from their phone at the
 
 ### An order at the kiosk
 
-10. The kiosk's tablet opens the kiosk's link in a full-screen kiosk browser, so its address is not on show. The guest orders the same way; the service opens a **tab** named *Kiosk* and a five-character code (letters and digits that cannot be misread), adds the lines, and shows *Your order is 7KQ2M. Please pay at the counter.* The counter finds the tab on the till's floor under *Tabs* and pays it; the receipt's call number calls the order. The counter's register rings the same service mode as the app's register.
+10. The kiosk's tablet opens the kiosk's link in a full-screen kiosk browser, so its address is not on show. The guest orders the same way; the service opens a **tab** named *Kiosk* and a five-character code (letters and digits that cannot be misread), adds the lines, and shows *Your order is 7KQ2M. Please pay at the counter.* The counter finds the tab on the till's floor under *Tabs* and pays it; the receipt's call number calls the order. The counter's register that takes the payment has *Table Service* ticked too (a tab is claimed only there) and rings the app's register's service mode.
 
 ## What the retailer does
 
@@ -48,6 +43,9 @@ Day to day the guests order and the servers work the checks at the till as befor
 - A kiosk link copied from the tablet lets anyone open unpaid tabs, one every 15 seconds, until *Make code* is pressed again.
 - A check the app opened can be left empty (a dish refused at the add at a free table, or a retry after the bill was paid); the server closes it. A till opening a check at the same moment as a guest's first order can leave two checks at the table.
 - A guest's note for the kitchen is kept on the check line like any note.
+- A guest at a place one party already holds (a bar counter, a shared table) joins that party's bill: one place per party, or phone orders off for shared places.
+- A card works whenever its store takes orders, after closing too: switch *Orders from the tables* off at closing.
+- A kiosk tab a guest walks away from stays open: a cashier with *change any line* and *close an empty check* removes its lines and closes it.
 - A table with more than one bill open takes no guest order until the server merges or pays one.
 - A guest's lines show on the till under their course and note, not as the guest's: when they are the only lines waiting, *Send* sends them with no question.
 - The menu is the register's listed item groups (no sub-groups), at most 300 dishes; dish names are the retailer's own words as written. No pictures, allergens or *sold out*.

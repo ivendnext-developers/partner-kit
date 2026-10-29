@@ -22,7 +22,7 @@ An app that calls the *open check* door (`open_check/1`, POS version 2.1.0.667 a
 - Ask only for *open a check*, *add to a check* and *see the checks*: sending to the kitchen, moving, merging, closing, voiding and comping are a person's decisions at the till.
 - A line never carries a price, a discount or a server's note.
 - Online only: a check needs a connection.
-- A weighed line on an open check is refused at Pay until a later POS version.
+- A weighed line added with no reading is refused at Pay until it is weighed at the till.
 - Which guest may see which check is your app's job: give each app its own user.
 
 ## Tell the customer

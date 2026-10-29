@@ -159,14 +159,14 @@ def choice_price(row: dict, list_rate) -> float | None:
 def menu_of(items: list[dict], rows: list[dict], groups: dict, prices: dict, order: list[str] | None = None) -> list[dict]:
     """The page's menu, by item group: each dish with its price and its choice groups, each choice with its price.
 
-    ``items`` are the dishes' Item rows; ``rows`` their *Cross Selling Product Detail* rows (``parent`` the dish); a
+    ``items`` are the dishes' Item rows (read without the items sold only as a choice); ``rows`` their *Cross Selling Product Detail* rows (``parent`` the dish); a
     row is a choice when it names a *Retail Option Group* (``custom_mpos_option_group``) found, switched on, in
     ``groups`` (``display_name``, ``min_picks``, ``max_picks``, ``enabled``); any other row is an ordinary offer and is
     not shown. ``prices`` holds an item's list price by code."""
     dishes: dict[str, dict] = {}
     for r in items:
         code = r.get("name")
-        if not isinstance(code, str) or not code or code in dishes or r.get("custom_mpos_option_only"):
+        if not isinstance(code, str) or not code or code in dishes:
             continue
         if len(dishes) >= MENU_MAX:
             break

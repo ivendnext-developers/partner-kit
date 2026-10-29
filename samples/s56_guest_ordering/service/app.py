@@ -88,13 +88,13 @@ CONNECT_AGAIN = " Then press Connect again on the app."    # many retailers: a n
 ASK_STAFF = "This table cannot take orders from your phone right now. Please ask a member of staff."
 ASK_STAFF_KIOSK = "This kiosk cannot take orders right now. Please order at the counter."
 MANY_BILLS = "This table has more than one bill open. Please ask your server to take your order."
-SENT_TWICE = "This order was already sent once. Please ask your server to check your table's bill."
-WAIT = "An order for this table was sent a moment ago. Please send yours again in a few seconds."
-ITEM_REFUSED = "Something in your order cannot be ordered now. Please ask your server."
-CHANGED = "This table's bill changed a moment ago. Please send your order again."
+SENT_TWICE = "This order was already sent once. Please ask a member of staff to check the bill."
+WAIT = "An order was sent from here a moment ago. Please send yours again in a few seconds."
+ITEM_REFUSED = "Something in your order cannot be ordered now. Please ask a member of staff."
+CHANGED = "The bill changed a moment ago. Please send your order again."
 PAYING = "This table's bill is being paid. Please ask your server."
 SENT_TABLE = "Your order is on your table's bill. Your server will confirm it with you."
-SENT_KIOSK = "Your order is {code}. Please pay at the counter."
+SENT_KIOSK = "Your order is {code}. Please pay at the counter and keep your receipt."
 
 
 class TenantError(Exception):
@@ -160,8 +160,11 @@ class Tenant:
     def doc(self, doctype: str, name: str) -> dict:
         return self._data("GET", f"{doctype}/{name}")
 
-    def rows(self, doctype: str, fields: list, filters: list, parent: str | None = None, limit: int = 500) -> list:
+    def rows(self, doctype: str, fields: list, filters: list, parent: str | None = None, limit: int = 500,
+             order_by: str = "") -> list:
         q = {"fields": fields, "filters": filters, "limit_page_length": limit}
+        if order_by:
+            q["order_by"] = order_by
         if parent:
             q["parent"] = parent
         return [r for r in self._data("GET", doctype, query=q, kind=list) if isinstance(r, dict)]
@@ -273,10 +276,11 @@ class Service:
         groups = [g.get("item_group") for g in reg.get("item_groups") or [] if isinstance(g, dict) and g.get("item_group")]
         if not groups:
             raise gor.Refused("")                         # no menu groups on the register: the guest asks staff
-        items = door.rows("Item", ["name", "item_name", "item_group", "custom_mpos_option_only"],
+        items = door.rows("Item", ["name", "item_name", "item_group"],
                           [["item_group", "in", groups], ["is_sales_item", "=", 1], ["disabled", "=", 0],
-                           ["has_variants", "=", 0], ["custom_is_gift_card", "=", 0]], limit=gor.MENU_MAX)
-        dishes = [i["name"] for i in items if isinstance(i.get("name"), str) and not i.get("custom_mpos_option_only")]
+                           ["has_variants", "=", 0], ["custom_is_gift_card", "=", 0], ["custom_mpos_option_only", "=", 0]],
+                          limit=gor.MENU_MAX, order_by="item_name asc")
+        dishes = [i["name"] for i in items if isinstance(i.get("name"), str)]
         rows = door.rows("Cross Selling Product Detail",
                          ["parent", "idx", "item_code", "item_name", "price_type", "price", "discount_type", "discount",
                           "custom_mpos_option_group"],

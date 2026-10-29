@@ -14,12 +14,12 @@
           ask_staff: "This table cannot take orders from your phone right now. Please ask a member of staff.",
           ask_staff_kiosk: "This kiosk cannot take orders right now. Please order at the counter.",
           many_bills: "This table has more than one bill open. Please ask your server to take your order.",
-          sent_twice: "This order was already sent once. Please ask your server to check your table's bill.",
-          item_refused: "Something in your order cannot be ordered now. Please ask your server.",
-          changed: "This table's bill changed a moment ago. Please send your order again.",
-          wait: "An order for this table was sent a moment ago. Please send yours again in a few seconds.",
+          sent_twice: "This order was already sent once. Please ask a member of staff to check the bill.",
+          item_refused: "Something in your order cannot be ordered now. Please ask a member of staff.",
+          changed: "The bill changed a moment ago. Please send your order again.",
+          wait: "An order was sent from here a moment ago. Please send yours again in a few seconds.",
           sent_table: "Your order is on your table's bill. Your server will confirm it with you.",
-          sent_kiosk: "Your order is {code}. Please pay at the counter.",
+          sent_kiosk: "Your order is {code}. Please pay at the counter and keep your receipt.",
           order: "Something in your order has changed on the menu. Please open the menu again and check your order.",
           paying: "This table's bill is being paid. Please ask your server." },
     ar: { hint: "الأسعار قبل أي عرض: تُحسب فاتورتك عند الدفع.", add: "أضف", choose: "اختر", addOrder: "أضف إلى الطلب",
@@ -32,12 +32,12 @@
           ask_staff: "لا تستقبل هذه الطاولة الطلبات من هاتفك الآن. يرجى سؤال أحد الموظفين.",
           ask_staff_kiosk: "لا يستقبل هذا الجهاز الطلبات الآن. يرجى الطلب عند الصندوق.",
           many_bills: "لهذه الطاولة أكثر من فاتورة مفتوحة. يرجى أن يأخذ النادل طلبك.",
-          sent_twice: "أُرسل هذا الطلب من قبل. يرجى أن يتحقق النادل من فاتورة طاولتك.",
-          item_refused: "شيء في طلبك غير متاح الآن. يرجى سؤال النادل.",
-          changed: "تغيّرت فاتورة هذه الطاولة قبل لحظة. يرجى إرسال طلبك مرة أخرى.",
-          wait: "أُرسل طلب لهذه الطاولة قبل لحظة. يرجى إرسال طلبك مرة أخرى بعد ثوانٍ.",
+          sent_twice: "أُرسل هذا الطلب من قبل. يرجى أن يتحقق أحد الموظفين من الفاتورة.",
+          item_refused: "شيء في طلبك غير متاح الآن. يرجى سؤال أحد الموظفين.",
+          changed: "تغيّرت الفاتورة قبل لحظة. يرجى إرسال طلبك مرة أخرى.",
+          wait: "أُرسل طلب من هنا قبل لحظة. يرجى إرسال طلبك مرة أخرى بعد ثوانٍ.",
           sent_table: "طلبك على فاتورة طاولتك. سيؤكده النادل معك.",
-          sent_kiosk: "رقم طلبك {code}. يرجى الدفع عند الصندوق.",
+          sent_kiosk: "رقم طلبك {code}. يرجى الدفع عند الصندوق والاحتفاظ بالإيصال.",
           order: "تغيّر شيء في طلبك على القائمة. يرجى فتح القائمة مرة أخرى ومراجعة طلبك.",
           paying: "تُدفع فاتورة هذه الطاولة الآن. يرجى سؤال النادل." },
     es: { hint: "Precios antes de ofertas: su cuenta se calcula al pagar.", add: "Añadir", choose: "Elegir",
@@ -50,12 +50,12 @@
           ask_staff: "Esta mesa no acepta pedidos desde el teléfono ahora. Pregunte a un miembro del personal.",
           ask_staff_kiosk: "Este quiosco no acepta pedidos ahora. Pida en el mostrador.",
           many_bills: "Esta mesa tiene más de una cuenta abierta. Pida a su camarero que tome su pedido.",
-          sent_twice: "Este pedido ya se envió una vez. Pida a su camarero que revise la cuenta de su mesa.",
-          item_refused: "Algo de su pedido no se puede pedir ahora. Pregunte a su camarero.",
-          changed: "La cuenta de esta mesa cambió hace un momento. Envíe su pedido otra vez.",
-          wait: "Se acaba de enviar un pedido para esta mesa. Envíe el suyo de nuevo en unos segundos.",
+          sent_twice: "Este pedido ya se envió una vez. Pida a un miembro del personal que revise la cuenta.",
+          item_refused: "Algo de su pedido no se puede pedir ahora. Pregunte a un miembro del personal.",
+          changed: "La cuenta cambió hace un momento. Envíe su pedido otra vez.",
+          wait: "Se acaba de enviar un pedido desde aquí. Envíe el suyo de nuevo en unos segundos.",
           sent_table: "Su pedido está en la cuenta de su mesa. Su camarero lo confirmará con usted.",
-          sent_kiosk: "Su pedido es el {code}. Pague en el mostrador.",
+          sent_kiosk: "Su pedido es el {code}. Pague en el mostrador y guarde su recibo.",
           order: "Algo de su pedido ha cambiado en la carta. Abra la carta de nuevo y revise su pedido.",
           paying: "Se está pagando la cuenta de esta mesa. Pregunte a su camarero." },
     fr: { hint: "Prix avant toute offre : votre addition est calculée au paiement.", add: "Ajouter", choose: "Choisir",
@@ -69,12 +69,12 @@
           ask_staff: "Cette table ne prend pas de commandes par téléphone pour le moment. Demandez à un membre du personnel.",
           ask_staff_kiosk: "Cette borne ne prend pas de commandes pour le moment. Commandez au comptoir.",
           many_bills: "Cette table a plus d'une addition ouverte. Demandez à votre serveur de prendre votre commande.",
-          sent_twice: "Cette commande a déjà été envoyée. Demandez à votre serveur de vérifier l'addition de votre table.",
-          item_refused: "Un article de votre commande n'est pas disponible. Demandez à votre serveur.",
-          changed: "L'addition de cette table vient de changer. Envoyez votre commande à nouveau.",
-          wait: "Une commande vient d'être envoyée pour cette table. Renvoyez la vôtre dans quelques secondes.",
+          sent_twice: "Cette commande a déjà été envoyée. Demandez à un membre du personnel de vérifier l'addition.",
+          item_refused: "Un article de votre commande n'est pas disponible. Demandez à un membre du personnel.",
+          changed: "L'addition vient de changer. Envoyez votre commande à nouveau.",
+          wait: "Une commande vient d'être envoyée d'ici. Renvoyez la vôtre dans quelques secondes.",
           sent_table: "Votre commande est sur l'addition de votre table. Votre serveur la confirmera avec vous.",
-          sent_kiosk: "Votre commande est la {code}. Payez au comptoir.",
+          sent_kiosk: "Votre numéro de commande est {code}. Payez au comptoir et gardez votre ticket.",
           order: "Un élément de votre commande a changé sur la carte. Rouvrez la carte et vérifiez votre commande.",
           paying: "L'addition de cette table est en cours de paiement. Demandez à votre serveur." },
     de: { hint: "Preise vor Angeboten: Ihre Rechnung wird beim Bezahlen berechnet.", add: "Hinzufügen", choose: "Auswählen",
@@ -88,12 +88,12 @@
           ask_staff: "An diesem Tisch kann gerade nicht per Telefon bestellt werden. Bitte fragen Sie das Personal.",
           ask_staff_kiosk: "An diesem Terminal kann gerade nicht bestellt werden. Bitte bestellen Sie an der Theke.",
           many_bills: "An diesem Tisch ist mehr als eine Rechnung offen. Bitte lassen Sie Ihre Bestellung vom Service aufnehmen.",
-          sent_twice: "Diese Bestellung wurde bereits gesendet. Bitte lassen Sie die Rechnung Ihres Tisches vom Service prüfen.",
-          item_refused: "Etwas in Ihrer Bestellung ist gerade nicht bestellbar. Bitte fragen Sie den Service.",
-          changed: "Die Rechnung dieses Tisches hat sich gerade geändert. Bitte senden Sie Ihre Bestellung erneut.",
-          wait: "Für diesen Tisch wurde gerade bestellt. Bitte senden Sie Ihre Bestellung in ein paar Sekunden erneut.",
+          sent_twice: "Diese Bestellung wurde bereits gesendet. Bitte lassen Sie die Rechnung vom Personal prüfen.",
+          item_refused: "Etwas in Ihrer Bestellung ist gerade nicht bestellbar. Bitte fragen Sie das Personal.",
+          changed: "Die Rechnung hat sich gerade geändert. Bitte senden Sie Ihre Bestellung erneut.",
+          wait: "Von hier wurde gerade bestellt. Bitte senden Sie Ihre Bestellung in ein paar Sekunden erneut.",
           sent_table: "Ihre Bestellung steht auf der Rechnung Ihres Tisches. Der Service bestätigt sie mit Ihnen.",
-          sent_kiosk: "Ihre Bestellung ist {code}. Bitte bezahlen Sie an der Theke.",
+          sent_kiosk: "Ihre Bestellung ist {code}. Bitte bezahlen Sie an der Theke und behalten Sie Ihren Beleg.",
           order: "Etwas in Ihrer Bestellung hat sich auf der Karte geändert. Bitte öffnen Sie die Karte erneut und prüfen Sie Ihre Bestellung.",
           paying: "Die Rechnung dieses Tisches wird gerade bezahlt. Bitte fragen Sie den Service." },
     pt: { hint: "Preços antes de promoções: a conta é calculada no pagamento.", add: "Adicionar", choose: "Escolher",
@@ -106,12 +106,12 @@
           ask_staff: "Esta mesa não aceita pedidos pelo telemóvel agora. Pergunte a um membro da equipa.",
           ask_staff_kiosk: "Este quiosque não aceita pedidos agora. Peça ao balcão.",
           many_bills: "Esta mesa tem mais de uma conta aberta. Peça ao seu empregado que registe o pedido.",
-          sent_twice: "Este pedido já foi enviado. Peça ao seu empregado que verifique a conta da mesa.",
-          item_refused: "Algo no seu pedido não pode ser pedido agora. Pergunte ao seu empregado.",
-          changed: "A conta desta mesa mudou há um momento. Envie o pedido outra vez.",
-          wait: "Acabou de ser enviado um pedido para esta mesa. Envie o seu outra vez daqui a uns segundos.",
+          sent_twice: "Este pedido já foi enviado. Peça a um membro da equipa que verifique a conta.",
+          item_refused: "Algo no seu pedido não pode ser pedido agora. Pergunte a um membro da equipa.",
+          changed: "A conta mudou há um momento. Envie o pedido outra vez.",
+          wait: "Acabou de ser enviado um pedido daqui. Envie o seu outra vez daqui a uns segundos.",
           sent_table: "O seu pedido está na conta da sua mesa. O seu empregado vai confirmá-lo consigo.",
-          sent_kiosk: "O seu pedido é o {code}. Pague ao balcão.",
+          sent_kiosk: "O seu pedido é o {code}. Pague ao balcão e guarde o recibo.",
           order: "Algo no seu pedido mudou no menu. Abra o menu outra vez e verifique o seu pedido.",
           paying: "A conta desta mesa está a ser paga. Pergunte ao seu empregado." }
   };
@@ -125,6 +125,15 @@
   var $ = function (id) { return document.getElementById(id); };
   var menu = null, basket = [], key = null, busy = false, money = null;
   var KEPT_MS = 10 * 60 * 1000;      // an order's key kept this long in the browser, for a reload or a second scan
+  var KIOSK_IDLE_MS = 2 * 60 * 1000;  // a kiosk left this long clears itself for the next guest
+  var KIOSK_SHOWN_MS = 20 * 1000;     // a kiosk shows the order's code this long after it is sent
+  var idle = null;
+  function kiosk() { return !!menu && menu.kind === "Kiosk"; }
+  function resetLater(ms) {           // a kiosk is a shared tablet: the next guest never sees this one's order
+    if (!kiosk()) { return; }
+    clearTimeout(idle);
+    idle = setTimeout(function () { basket = []; key = null; drawBasket(); note(""); }, ms);
+  }
 
   function fmt(text, vals) { return text.replace(/\{(\w+)\}/g, function (_, k) { return vals[k]; }); }
   function el(tag, cls, text) {
@@ -201,6 +210,7 @@
   function addLine(dish, choices) {
     if (basket.length >= menu.most_lines) { note(fmt(W.tooMany, { n: menu.most_lines })); return; }
     basket.push({ dish: dish, choices: choices, qty: 1, note: "" });
+    resetLater(KIOSK_IDLE_MS);
     key = null;
     note("");
     drawBasket();
@@ -259,12 +269,14 @@
   // The order's key, kept in the browser beside the order it was made for: the page reloaded or the card scanned again
   // after a lost answer, the same order sends the same key, and the till's door writes it once.
   function keptKey(sig) {
+    if (kiosk()) { return null; }     // a shared tablet: the next guest's same basket must never get this key
     try {
       var k = JSON.parse(localStorage.getItem("gor:" + who.t) || "null");
       return k && k.sig === sig && Date.now() - k.at < KEPT_MS ? k.key : null;
     } catch (e) { return null; }
   }
   function keepKey(sig, k) {
+    if (kiosk()) { return; }
     try { if (k) { localStorage.setItem("gor:" + who.t, JSON.stringify({ sig: sig, key: k, at: Date.now() })); }
           else { localStorage.removeItem("gor:" + who.t); } } catch (e) { /* private window: the page's own key */ }
   }
@@ -282,7 +294,7 @@
     $("send").disabled = true;
     $("send").textContent = W.sending;
     call("/gor/order", { key: key, lines: lines }).then(function (a) {
-      if (a.state === "sent") { basket = []; key = null; keepKey(sig, null); drawBasket(); note(say(a), true); }
+      if (a.state === "sent") { basket = []; key = null; keepKey(sig, null); drawBasket(); note(say(a), true); resetLater(KIOSK_SHOWN_MS); }
       else if (a.state === "unknown") { note(W.unknown); }
       else if (a.state === "unavailable") { note(W.lost); }     // it may have landed: the same key is sent again
       else { note(say(a)); }

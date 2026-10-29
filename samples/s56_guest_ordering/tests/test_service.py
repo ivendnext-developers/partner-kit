@@ -291,20 +291,20 @@ class ServiceTest(unittest.TestCase):
 
     def test_m5_a_menu_the_time_budget_cut_prices_only_what_it_missed_soon_after(self):
         t = made(self.shop, self.svc)
-        self.shop.slow, self.shop.tick = {"LATTE"}, self.clock      # the first price takes the budget
+        self.shop.slow, self.shop.tick = {"BURGER"}, self.clock     # the first price (by name) takes the budget
         real, app.PRICERS = app.PRICERS, 1
         try:
             first = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
-            self.assertEqual((first["LATTE"]["price"], first["SALAD"]["price"]), (3.2, None))
+            self.assertEqual((first["BURGER"]["price"], first["SALAD"]["price"]), (11.0, None))
             self.shop.slow = set()
             asked = len([c for c in self.shop.calls if c == "CALL get_item_details"])
             self.clock.t += app.MENU_SHORT_S
             second = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
         finally:
             app.PRICERS = real
-        self.assertEqual((second["LATTE"]["price"], second["SALAD"]["price"]), (3.2, 7.5))
+        self.assertEqual((second["BURGER"]["price"], second["SALAD"]["price"]), (11.0, 7.5))
         again = len([c for c in self.shop.calls if c == "CALL get_item_details"]) - asked
-        self.assertEqual(again, 4)                                    # BURGER, SALAD, COW, SHOT: never LATTE again
+        self.assertEqual(again, 4)                                    # SALAD, LATTE, COW, SHOT: never BURGER again
         self.clock.t += app.MENU_SHORT_S
         guest(self.svc, "/gor/menu", t)
         self.assertEqual(len([c for c in self.shop.calls if c == "CALL get_item_details"]) - asked, 4)   # full: 2 minutes
@@ -364,6 +364,23 @@ class ServiceTest(unittest.TestCase):
         self.assertNotIn("<script>", html)
         self.assertNotRegex(html, r"\son[a-z]+=")
         self.assertEqual(self.svc.handle("GET", "/../app.py", {}, b"")[0], 404)
+
+    def test_e4_the_page_sets_every_word_as_text_never_as_markup(self):
+        js = open(os.path.join(os.path.dirname(HERE), "service", "page.js")).read()
+        for sink in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval(", "setAttribute(\"on"):
+            self.assertNotIn(sink, js, sink)
+        self.assertIn("textContent", js)
+
+    def test_c8_the_apps_user_refused_by_the_retailer_is_said_in_words(self):
+        self.shop.refuse = ("GET PP GOR Code", 403)
+        out = answer(press(self.svc, ["GOR-CODE-00001"]))[1]
+        self.assertEqual((out["message"]["level"], out["message"]["body"]), ("warning", app.REFUSED))
+
+    def test_o14_a_dish_the_door_refuses_is_said_and_the_order_kept_for_staff(self):
+        t = made(self.shop, self.svc)
+        self.shop.door_refuse = ("check_add_lines", "ItemRefusedError", 417)
+        out = guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]
+        self.assertEqual((out["state"], out["say"]), ("refused", "item_refused"))
 
     def test_e2_a_page_call_over_its_size_is_refused(self):
         self.assertEqual(answer(self.svc.handle("POST", "/gor/order", {}, b"{" + b" " * gor.PAGE_BODY_MAX + b"}"))[0], 413)
