@@ -16,10 +16,11 @@ It uses the manifest's `doctypes` (a record type and a child table), `workflows`
 
 ## What the retailer does
 
+- **Switch the lock on** first: Desk › *Retail Save Rule* › *PP DON donation locked once its receipt is given* › tick **Enabled** › Save. A manifest installs every save rule switched off; until it is on, a given receipt can still be changed.
 - Give the people at the donation door **Sales User** (they take donations, give receipts, print them and cancel a donation not yet given its receipt). A **Sales Manager** cancels a given receipt. Neither deletes a donation; a System Manager can.
 - Put the charity's name, its registration number and its address on the **Letter Head** the store prints with (Desk › *Letter Head*): the receipt prints under it.
 - Whoever makes the Material Receipt holds **Stock User**, which reads donations so the **Donation** field can find one. Reading a donation shows the donor's details. If the site has no **Stock Entry Type** named *Material Receipt* (a site set up without the setup wizard's records has none), add it once: Desk › *Stock Entry Type* › **+ Add**, name *Material Receipt*, purpose *Material Receipt*.
-- If the store gives anything back for a donation (a voucher, say), it says so in its own words: on its letter head, or in its own copy of the print format. If it e-mails receipts: its own Notification (the recipe's step 4). Nothing else: the app installs no setting, no role and no switch.
+- If the store gives anything back for a donation (a voucher, say), it says so in its own words: on its letter head, or in its own copy of the print format. If it e-mails receipts: its own Notification (the recipe's step 4). Nothing else: the app installs no setting and no role.
 
 ## The files
 
@@ -38,7 +39,7 @@ python3 -m unittest discover -s samples/s57_donation_intake/tests -p 'test_*.py'
 python3 samples/s57_donation_intake/tests/canaries.py
 ```
 
-Install the manifest in a retailer's iVendNext through **Extension Packages** (guide chapter 3), then open **PP DON Donation**.
+Install the manifest in a retailer's iVendNext through **Extension Packages** (guide chapter 3), switch the lock on (above), then open **PP DON Donation**.
 
 ## What is refused, and why
 

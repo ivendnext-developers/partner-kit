@@ -98,6 +98,10 @@ class ManifestTest(unittest.TestCase):
         self.assertNotIn("customer_name", LOCK["locked_fields"])
         self.assertLessEqual(set(LOCK["locked_fields"]), set(fields(DONATION)))
         self.assertLessEqual(len(LOCK["message"]), 140)
+        self.assertNotIn("enabled", LOCK)   # a manifest installs every rule switched off: the README's set-up switches it on
+        readme = (HERE.parent / "README.md").read_text()
+        self.assertIn("**Switch the lock on**", readme)
+        self.assertIn(LOCK["rule_name"], readme)
 
     def test_a_customers_details_are_read_only_copies_and_a_walk_up_donor_is_typed(self):
         f = fields(DONATION)

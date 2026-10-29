@@ -54,17 +54,18 @@ The print format *PP DON Donor receipt* (Jinja) reads only the donation's own fi
 
 1. **Add the record types above** to your manifest (`doctypes`, the goods table with `"istable": 1`), with no money field: the receipt states no value. Never make the goods table `reqd`: Desk drops a row whose list fields are all blank, so *none* is a donation with no rows. A row whose count and unit have defaults is kept even when the rest is blank, so the print skips a row with no kind and no description.
 2. **Add the workflow** (`workflows`), its states and actions under your prefix, *Receipt given*'s tick in `update_field` and `update_value` (a workflow writes the tick as text, `"0"` or `"1"`).
-3. **Add the lock** (`save_rules`, kind `locked_in_state`, mode `refuse`), naming the states and every field the receipt prints, and the tick. A lock needs an active workflow on its record type. It judges the state the record was saved in, so never lock a field the move out of a locked state writes (a *Cancelled* tick would refuse the manager's own Cancel): read the step instead.
+3. **Add the lock** (`save_rules`, kind `locked_in_state`, mode `refuse`), naming the states and every field the receipt prints, and the tick. A lock needs an active workflow on its record type, and installs switched off: the retailer switches it on. It judges the state the record was saved in, so never lock a field the move out of a locked state writes (a *Cancelled* tick would refuse the manager's own Cancel): read the step instead.
 4. **E-mail the receipt, with the retailer's own Notification** (a manifest notifies only the retailer's own users). In Desk, **Notification**, **+ Add**: Document Type *PP DON Donation*, Send Alert On **Value Change**, Value Changed **Receipt given**, Condition `doc.receipt_given in (1, "1") and (doc.donor_email or doc.customer_email)` (a bare `doc.receipt_given` would also fire on a text `"0"`), the channel **Email** to the document fields **Donor's e-mail** and **Customer's e-mail** (two recipient rows), **Attach Print** with the print format *PP DON Donor receipt*.
 5. **Add the field on Stock Entry** (`custom_fields`): a Link to your donation, named with your reserved field prefix, `allow_on_submit` 1, `depends_on` the purpose *Material Receipt*, never `reqd`. A Material Receipt needs a **Stock Entry Type** of that purpose: a site set up without the setup wizard's records has none, and the retailer adds *Material Receipt* once. Then the report (`reports`, Report Builder, filtered `workflow_state != PP DON Cancelled`, ordered by `received_on desc`; a Check a report filters on is never `in_standard_filter`, or Desk drops the saved filter), the Connections (`links`, the donation under Customer) and a `documentation` property setter that points at your help.
 6. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s57_donation_intake`.
 
 ## What the retailer does
 
-1. **Install the app.** It adds the donation, its workflow and lock, the receipt, the report, the Stock Entry field and the Connections. No setting, no role, no switch, no outside address.
-2. **Give Sales User** to the people at the donation door. A Sales Manager cancels a given receipt. Whoever makes the Material Receipt holds Stock User; add the Stock Entry Type *Material Receipt* if the site has none.
-3. **Put the charity's details on the Letter Head** the store prints with.
-4. **Add its own Notification** if it e-mails receipts (step 4).
+1. **Install the app.** It adds the donation, its workflow and lock, the receipt, the report, the Stock Entry field and the Connections. No setting, no role, no outside address.
+2. **Switch the lock on:** Desk › *Retail Save Rule* › *PP DON donation locked once its receipt is given* › **Enabled**. A manifest installs every save rule switched off; until it is on, a given receipt can still be changed.
+3. **Give Sales User** to the people at the donation door. A Sales Manager cancels a given receipt. Whoever makes the Material Receipt holds Stock User; add the Stock Entry Type *Material Receipt* if the site has none.
+4. **Put the charity's details on the Letter Head** the store prints with.
+5. **Add its own Notification** if it e-mails receipts (step 4).
 
 ## Limits
 
