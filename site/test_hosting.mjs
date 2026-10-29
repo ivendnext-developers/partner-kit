@@ -75,6 +75,9 @@ check("a required plain setting left empty is named, a secret is not",
 check("a schedule is read as the hosting reads it", h.scheduled({ schedule: { pass: "x" } }) && !h.scheduled({ schedule: {} }) && h.scheduled({ timeout: 0 }));
 check("a scheduled app's schedule reaches the hosting, which refuses it",
   "schedule" in h.appSettings({ app: "a", schedule: { pass: "rate(1 minute)" } }) && "timeout" in h.appSettings({ app: "a", timeout: 120 }));
+check("a secret's box says whether it has a value, and nothing before the hosting says",
+  h.secretState({ secrets_set: ["A"] }, "A").startsWith("Has a value") && h.secretState({ secrets_set: ["A"] }, "B") === "No value yet."
+  && h.secretState({}, "A") === "");
 check("the scratch flag reaches the hosting", h.appSettings({ app: "a", scratch: true }).scratch === true);
 check("the order records the Schedule only when it was accepted, at that version",
   p.schedule_version === "2026-10-21"

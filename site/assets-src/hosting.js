@@ -164,6 +164,11 @@
     return Object.keys(seen).sort();
   }
 
+  function secretState(c, name) {   // the line under a secret's box: the hosting names the secrets that have a value
+    if (!c || !Array.isArray(c.secrets_set)) return "";
+    return c.secrets_set.indexOf(name) >= 0 ? "Has a value. Type a new one only to replace it." : "No value yet.";
+  }
+
   function publishCommand(maker) {
     return "python3 <the kit>/tools/publish/publish.py publish . --partner " + maker;
   }
@@ -172,7 +177,7 @@
               readReturn: readReturn, subjectFor: subjectFor, appSettings: appSettings, plainNames: plainNames, scheduled: scheduled,
               missingRequired: missingRequired, prefill: prefill, subjectNames: subjectNames,
               planCopies: planCopies, orderPayload: orderPayload, copyWords: copyWords, settled: settled,
-              checkCommand: checkCommand, publishCommand: publishCommand, customersFrom: customersFrom, PAGE: PAGE, API: API };
+              checkCommand: checkCommand, publishCommand: publishCommand, secretState: secretState, customersFrom: customersFrom, PAGE: PAGE, API: API };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -626,8 +631,10 @@
   function busy() {
     var a = doc.activeElement;
     if (a && tool.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return true;
-    return [].some.call(tool.querySelectorAll("input[type=password]"), function (x) { return x.value !== ""; });
+    return typedSecret();
   }
+  function typedSecret() { return [].some.call(tool.querySelectorAll("input[type=password]"), function (x) { return x.value !== ""; }); }
+  function mayLeave() { return !typedSecret() || root.confirm("A secret you typed is not set yet: press Set the values you typed first. Leave it?"); }
 
   function follow(again) {
     stopPolling();
@@ -689,7 +696,7 @@
     box.appendChild(button("Set them on your repository", function (ev) {
       ev.target.disabled = true;
       call("POST", "/variables", { order: o.order }).then(function (r) {
-        s.variables = r; keep(); say(r.set.length ? "Set on " + r.repo + ": " + r.set.join(", ") + "." : ""); render();
+        s.variables = r; keep(); say(r.set.length ? "Set on " + r.repo + ": " + r.set.join(", ") + "." : ""); redraw();
       }, function (e) { ev.target.disabled = false; fail(e); });
     }, true));
     var left = s.variables ? s.variables.to_set_by_hand : null;
@@ -708,22 +715,42 @@
 
   function secretsPanel(o) {
     var box = el("div", {}, el("h4", { text: "Your app's secrets" }));
-    box.appendChild(p("Each copy has its own values. A value is sent once to that copy's own secret store and never shown again, here or anywhere."));
+    box.appendChild(p("Each copy has its own values. Type the ones you have, in any order, and press Set the values you typed: " +
+      "each is sent once to that copy's own secret store and never shown again, here or anywhere. Under each box the page " +
+      "says whether it already has a value, so after a reload you type only what is missing."));
+    var typed = [];
     (o.copies || [o]).forEach(function (c) {
       if (["waiting", "live"].indexOf(c.status) < 0) return;
       o.secrets.forEach(function (name) {
         var v = el("input", { type: "password", autocomplete: "off" });
-        box.appendChild(field(COPY_WORDS[c.env] + ": " + name, v));
-        box.appendChild(button("Set", function () {
-          var value = v.value;
-          v.value = "";
-          call("POST", "/order", { cmd: "secret", order: o.order, env: c.env, name: name, value: value }).then(function () {
-            say(name + " is set on the " + COPY_WORDS[c.env] + " copy."); follow();
-          }, fail);
-        }, true));
+        var line = field(COPY_WORDS[c.env] + ": " + name, v, secretState(c, name));
+        box.appendChild(line);
+        typed.push({ env: c.env, name: name, box: v, line: line });
       });
     });
+    if (typed.length) box.appendChild(button("Set the values you typed", function (ev) { setTyped(o, typed, ev.target); }));
     return box;
+  }
+
+  // One press sends every box that holds a value, one after another; a box is emptied once its value is stored.
+  function setTyped(o, typed, btn) {
+    var todo = typed.filter(function (t) { return t.box.value !== ""; }), done = [];
+    if (!todo.length) { say("Type a value in at least one box first.", true); return; }
+    btn.disabled = true;   // one run at a time: a second press would send a box the first has already emptied
+    (function next(i) {
+      if (i === todo.length) { btn.disabled = false; say("Set: " + done.join(", ") + "."); follow(); return; }
+      var t = todo[i];
+      call("POST", "/order", { cmd: "secret", order: o.order, env: t.env, name: t.name, value: t.box.value }).then(function () {
+        t.box.value = ""; done.push(t.name + " on " + COPY_WORDS[t.env]);
+        var hint = t.line.querySelector(".hosting-hint") || t.line.appendChild(el("span", { "class": "hosting-hint" }));
+        hint.textContent = secretState({ secrets_set: [t.name] }, t.name);   // now, not at the next redraw: a box still typed holds it back
+        next(i + 1);
+      }, function (e) {
+        btn.disabled = false;
+        if (e.code === "not_signed_in") typed.forEach(function (t) { t.box.value = ""; });   // a new sign-in reloads the page
+        fail(e); follow();   // the boxes not sent keep what was typed
+      });
+    })(0);
   }
 
   // ── My apps ──
@@ -750,6 +777,7 @@
         (o.stops_at ? ", stops at the end of the paid month (" + new Date(o.stops_at * 1000).toISOString().slice(0, 10) + ")" : "") + ": " +
         (o.copies || [o]).map(function (c) { return COPY_WORDS[c.env] + " " + copyWords(c); }).join("; ") + " ");
       li.appendChild(button("Follow", function () {
+        if (!mayLeave()) return;
         toTop(); s.order = o.order; s.checkout = null; s.invoice = o.kind === "invoice"; s.variables = null; s.step = "follow";
         keep(); current = null; render(); follow();
       }, true));
@@ -775,9 +803,9 @@
 
   function nav(back, next, last) {
     var row = el("p", { "class": "hosting-nav" });
-    if (back) row.appendChild(button("Back", function () { s.step = back; keep(); render(); toTop(); }, true));
-    if (next) row.appendChild(button("Next", function () { s.step = next; keep(); render(); toTop(); if (next === "follow") follow(); }));
-    if (last) row.appendChild(button("Back to the order's steps", function () { s.step = "pay"; keep(); render(); toTop(); }, true));
+    if (back) row.appendChild(button("Back", function () { if (!mayLeave()) return; s.step = back; keep(); render(); toTop(); }, true));
+    if (next) row.appendChild(button("Next", function () { if (!mayLeave()) return; s.step = next; keep(); render(); toTop(); if (next === "follow") follow(); }));
+    if (last) row.appendChild(button("Back to the order's steps", function () { if (!mayLeave()) return; s.step = "pay"; keep(); render(); toTop(); }, true));
     return row;
   }
 
@@ -802,6 +830,9 @@
     }
   }
 
+  root.addEventListener("beforeunload", function (e) {   // a typed secret is never kept: ask before a reload loses it
+    if (typedSecret()) { e.preventDefault(); e.returnValue = "A secret you typed is not set yet."; }
+  });
   tool.hidden = false;
   tool.appendChild(out);
   tool.appendChild(view);
