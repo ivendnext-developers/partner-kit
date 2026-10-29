@@ -18,6 +18,8 @@ The common checks a retailer wants before money is taken, in one app. Each rule 
 |---|---|
 | The settings record with *Warn of a shorter-dated batch instead of asking* ticked | ![](screenshots/till-guard-rules-settings.png) |
 | A ticked item scanned: the item goes on and the till names the batch to sell first | ![](screenshots/till-guard-rules-notice.png) |
+| *Most lines on one sale* set to 2 on the settings record (1.3, on a demo site, 2026-10-29) | ![](screenshots/till-guard-rules-most-lines-settings.png) |
+| A sale of three lines refused at Pay | ![](screenshots/till-guard-rules-most-lines-refused.png) |
 
 **Configure first:** iVendNext already refuses a price below the item's cost (Selling Settings, *Validate Selling Price for Item Against Purchase Rate or Valuation Rate*), keeps a cashier's price change inside a share of the list price unless a manager approves (the cashier's Retail Permission, *price override lower and upper limit*), and caps a line's discount (the item's *Max Discount (%)*). The lowest price here is for what those do not hold: an amount per item and unit, judged on the line's final price.
 

@@ -36,6 +36,8 @@ A customer in *Retail* (under *All Customer Groups*) cannot buy on account; a cu
 | The check switched on for one POS Profile, with its time to answer and its down answer | ![](screenshots/03_check-on.png) |
 | At Pay for a customer in that group: the card left out with the rule's words | ![](screenshots/04_card-left-out.png) |
 | A customer in a group with no rule of its own, below one whose rule is *Only these: Cash*: the card and the gift card left out | ![](screenshots/05_cash-only.png) |
+| 1.1.0 (on a demo site, 2026-10-29): a rule with *From a sale of*, Gift Certificate from 40.00 | ![](screenshots/06_from-a-sale-rule.png) |
+| At Pay on a USD 14.58 sale: the gift card left out with the amount it needs | ![](screenshots/07_from-a-sale-left-out.png) |
 
 ## What the retailer does
 

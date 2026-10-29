@@ -16,6 +16,8 @@ A till offers every payment method its POS Profile lists to every customer. Reta
 
 ![A customer whose group takes its parent's rule, Only these: Cash](../samples/s46_payment_method_rules/screenshots/05_cash-only.png)
 
+![On a demo site: a method left out on a sale below its From a sale of](../samples/s46_payment_method_rules/screenshots/07_from-a-sale-left-out.png)
+
 ## Rules
 
 1. **Declare the rule record and the check in your manifest** (`samples/s46_payment_method_rules/manifest.json`):

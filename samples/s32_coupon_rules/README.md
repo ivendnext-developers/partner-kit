@@ -12,6 +12,11 @@ Rules a retailer adds to its own coupons, checked when the cashier presses **Pay
 
 A coupon with no rule, or with its rule switched off, is never refused; a sale with no coupon is allowed without reading iVendNext. The cashier removes the coupon (or adds the new customer) and presses Pay again. The recipe: [`recipes/coupon_rules.md`](../../recipes/coupon_rules.md).
 
+| What the retailer and the cashier see (on a demo site, 2026-10-29) | |
+|---|---|
+| A rule with *Sale needed for each use* set to 50.00 | ![](screenshots/coupon-rules-sale-needed-rule.png) |
+| The coupon refused at Pay on a sale of USD 33.05 | ![](screenshots/coupon-rules-sale-needed-refused.png) |
+
 ## What the retailer does
 
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
