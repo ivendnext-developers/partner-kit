@@ -120,6 +120,11 @@ class Order(Base):
         self.assertIn("not_open", out)
 
 
+class Settings(unittest.TestCase):
+    def test_the_scratch_flag_is_sent(self):  # the hosting builds the folder only from what the order carries
+        self.assertIs(HO.app_settings({"app": "a", "version": "1.0.0", "scratch": True})["scratch"], True)
+
+
 class ScheduledFunction(Base):
     def test_an_app_on_a_schedule_is_refused_before_anything_is_sent(self):
         m = json.loads((self.app / "app.json").read_text())
