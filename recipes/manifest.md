@@ -125,7 +125,7 @@ Your app needs to keep something on a sale: a delivery slot, a prescription numb
 
 > custom_fields[0] (POS Invoice): POS Invoice has 5,117 bytes of room left on this site (about 9 more Data, Link or Select fields), and this app's fields need 6,744 (the widest: pp_xyz_slot, pp_xyz_ref, pp_xyz_note). A record's row holds at most 65,535 bytes, shared by every app and the shop's own fields: put them in your app's own record type; a sale detail (sale_attributes) for a short value, up to 140 characters, captured on the sale; or use Small Text for text nothing searches, which uses almost no room
 
-Nothing is made, so the retailer's administrator can install a corrected version straight away. Earlier releases stop part-way through the install with the database's own error (*Row size too large*) and take back what they made.
+Nothing is made, so the retailer's administrator can install a corrected version straight away. Earlier releases stop part-way through the install with the database's own error (*Row size too large*) and take back most of what they made: the field whose column failed can be left behind, and it blocks a second try until the retailer's administrator deletes it (Desk, *Custom Field* list).
 
 **Technical notes.** The room differs per site: it depends on the other apps installed and the retailer's own fields, so a manifest that installs on your sandbox may not fit a busy retailer's site. Your own record types have the same ceiling per row, so a record type with very many long fields is refused the same way; split it, or use a child table. An update counts only what it adds or widens: a field already installed is already counted.
 
