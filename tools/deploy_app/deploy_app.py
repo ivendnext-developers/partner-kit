@@ -97,6 +97,8 @@ def check(folder, image: str, plan: str, partner: str, env: str, customer: str =
             bad.append(f"size: {m['size']} is not on the {plan} plan (it allows {', '.join(enforced['sizes'])})")
         if env in PLANS["envs"] and env not in enforced["envs"]:
             bad.append(f"env: a {env} copy is not on the {plan} plan (it allows {', '.join(enforced['envs'])})")
+        if m.get("scratch") is True and enforced["instances"] > 1:
+            bad.append(f"scratch: an app with a scratch folder runs as one instance; the {plan} plan runs {enforced['instances']}")
     if not SLUG.fullmatch(partner or ""):
         bad.append("partner: 2 to 31 lower-case letters, digits and hyphens, starting with a letter")
     if customer and not SLUG.fullmatch(customer):

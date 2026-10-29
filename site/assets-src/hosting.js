@@ -64,7 +64,7 @@
 
   // What of app.json the order sends: names and shapes, never a value (the kit's hosting_order.app_settings).
   function appSettings(m) {
-    var keep = ["app", "version", "runs", "size", "port", "health", "handler", "region", "shops", "schedule", "timeout"], out = {};
+    var keep = ["app", "version", "runs", "size", "port", "health", "handler", "region", "shops", "scratch", "schedule", "timeout"], out = {};
     keep.forEach(function (k) { if (k in m) out[k] = m[k]; });
     out.env = (m.env || []).filter(function (e) { return e && typeof e === "object"; }).map(function (e) {
       var x = {};

@@ -70,7 +70,7 @@ What each plan includes, and what is not offered yet, is in [`plans.json`](plans
 
 - Your app gets `https://<app>.ivendnext.app` (or `https://<app>-<env>.ivendnext.app`), a container on ARM64 with the size's CPU and memory, a firewall that admits only our load balancer, its own image registry and secrets, and no rights in our cloud.
 - Secrets you mark `"required": true` are asked for when the app is put live; an optional one (such as `IVN_POINT_SECRET_PREVIOUS`) is added when you rotate.
-- The root filesystem is read-only. If your app writes temporary files, say so in your request.
+- The root filesystem is read-only. An app that writes working files says `"scratch": true` in `app.json`: it gets a writable `/scratch`, lost when the container restarts, and runs as one copy, stopped before its new version starts (so not on Managed, which runs two). Its image makes `/scratch` itself, owned by its user, and declares it a `VOLUME`.
 - A function gets the same address, Python 3.13 on ARM64 with 512 MB, at most 10 copies at once, its own shops table, and no other rights. The block it prints uses the hosting's `modules/function`; the package is copied into the hosting's code bucket as `<app>/<version>.zip`, never overwritten.
 - The last thing planning prints is the block CitiXsys adds to its hosting infrastructure for an app put live by hand; an online order needs none of it.
 - Standard library only. It reuses the template's checker (`../app_template/validate_app.py`), never a copy.
