@@ -1,4 +1,4 @@
-# Front of house: reservations, a waiting list and seating that opens the table's check — the recipe
+# Front of house: reservations, a waiting list and seating — the recipe
 
 A restaurant's host takes bookings on the phone, keeps walk-ins waiting in order, tells a party its table is ready and seats it. The till already keeps a table's running order (the open check) and the floor's tables; what it does not keep is the evening before the party sits down. This recipe gives the host a diary of bookings and a waiting list in iVendNext Desk, holds a table against two bookings at once, records a no-show, ties a booking to the sale that took its deposit, and seats a party by opening its table's check through the till's open-check door, so the server finds the table on the floor with the party's size.
 

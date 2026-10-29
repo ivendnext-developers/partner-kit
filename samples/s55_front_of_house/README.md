@@ -1,4 +1,4 @@
-# S55 — Front of house (reservations, a waiting list, seating that opens the table's check)
+# S55 — Front of house (reservations, a waiting list, seating that opens a check)
 
 *Start from this sample: `python3 tools/manifest/start.py s55_front_of_house --prefix "ACME FOH"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
