@@ -78,6 +78,8 @@ CANARIES = [
      T + "test_s26_a_paid_payout_whose_lines_changed_stops_every_work_out_and_pay"),
     ("the count is compared", C, 'and have.get(p["name"], 0) != p["lines_paid"])', "and False)",
      T + "test_s26_a_paid_payout_whose_lines_changed_stops_every_work_out_and_pay"),
+    ("no lines left is said as none", S, "max(0, len(rows) - n)", "len(rows) - n",
+     T + "test_s1_work_out_writes_the_owed_lines_and_totals"),
     ("one draft a consignor", S, "        if drafts:", "        if False:",
      T + "test_s10_a_sale_cancelled_after_its_payout_was_paid_is_taken_back_once"),
     ("a moved item's paid line is held for good", S, '"sale_row", keys, t0, parent=consign.PAYOUT) if keys else []',

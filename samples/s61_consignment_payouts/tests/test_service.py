@@ -86,7 +86,7 @@ class ServiceTest(unittest.TestCase):
             "sl1": ("Sale", 10.0, 40, 4.0)})                  # a Desk invoice
         p = self.s.payouts["CSG-P-00001"]
         self.assertEqual((p["sales_total"], p["payout_total"], p["worked_out_by"]), (135.0, 64.0, "back@shop.example"))
-        self.assertIn("4 lines: 3 sales, 1 return. Sold for 135.00 USD; the consignor's share 64.00 USD.", p["summary"])
+        self.assertEqual(p["summary"], "4 lines: 3 sales, 1 return. Sold for 135.00 USD; the consignor's share 64.00 USD.")
         self.assertEqual(out["message"]["body"], p["summary"])
         self.assertTrue(out["refresh"])
         self.assertEqual([r["sale_line"] for r in p["lines"]], ["pl1", "pl3", "pl4", "sl1"])   # oldest first
