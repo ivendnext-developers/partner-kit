@@ -1,0 +1,623 @@
+{
+ "manifest_version": 2,
+ "app": "pp_csg",
+ "prefix": "PP CSG",
+ "title": "Consignment payouts",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A resale or consignment store's consignors and their share of each piece sold, worked out from the retailer's own sales and paid once. A consignor (PP CSG Consignor) holds a name, phone, e-mail, the share (a percent of what a piece sold for) and Consigned since (no earlier sale is theirs); two fields on Item name an item's consignor and, where it differs, the item's own share. A payout (PP CSG Payout) for one consignor and company, up to a date, has two Desk buttons while it is a draft: Work out the payout (Accounts User, Accounts Manager) has the service read the consignor's items, every submitted till sale (POS Invoice) and Desk invoice (Sales Invoice that is not the till day's combined invoice) of them in the company from Consigned since up to the date, and the lines other payouts hold, and write the lines no payout that is not Cancelled holds: each line's amount after discounts and before tax, a return's negative, the share and the consignor's part, at most 500 lines, oldest first; a consignor has one draft payout at a time. Pay this payout (Accounts Manager), once the back office has filled Paid with and Paid on, has the service read all of that again, check the lines are exactly what is owed now and on no other payout, and the lock below is switched on, and only then move the payout to Paid: the workflow lets only the app's own role, PP CSG Integration, take that step. A paid payout's Cancel (Accounts Manager) frees its lines for the next payout; a sale cancelled after it was paid is settled once by its balance on the next payout (Taken back, or a Correction when the payout that paid it was cancelled afterwards). A save rule keeps a paid or cancelled payout as it was (it installs switched off: switch it on). The Payout statement prints the lines under the retailer's letter head. The install makes the role and the app's own user; the retailer gives the role read on POS Invoice, Sales Invoice, Item and Retail Save Rule, and leaves the feed off. The consignor's phone and e-mail stay in the site: the service reads the payout, which carries the consignor's name, and only the consignor's share and date. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/csg/work",
+  "https://host.docker.internal:8125/csg/pay"
+ ],
+ "doctypes": [
+  {
+   "name": "PP CSG Consignor",
+   "autoname": "format:CSG-C-{#####}",
+   "track_changes": 1,
+   "title_field": "consignor_name",
+   "show_title_field_in_link": 1,
+   "search_fields": "consignor_name,phone,email,since",
+   "sort_field": "modified",
+   "sort_order": "DESC",
+   "permissions": [
+    {
+     "role": "Sales User",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Item Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "Accounts User",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Accounts Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP CSG Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ],
+   "fields": [
+    {
+     "fieldname": "consignor_name",
+     "fieldtype": "Data",
+     "label": "Consignor",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "The person or business whose pieces you sell. Name them on each item you take in from them."
+    },
+    {
+     "fieldname": "phone",
+     "fieldtype": "Data",
+     "label": "Phone",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "email",
+     "fieldtype": "Data",
+     "label": "E-mail",
+     "options": "Email"
+    },
+    {
+     "fieldname": "col1",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "since",
+     "fieldtype": "Date",
+     "label": "Consigned since",
+     "reqd": 1,
+     "default": "Today",
+     "description": "Sales before this day are never paid to them, even of an item later named to them."
+    },
+    {
+     "fieldname": "share",
+     "fieldtype": "Percent",
+     "label": "Consignor's share",
+     "reqd": 1,
+     "default": "50",
+     "in_list_view": 1,
+     "description": "The consignor's part of what each piece sold for, after discounts and before tax. An item can carry its own."
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Notes",
+     "description": "Such as how they like to be paid, or your agreement's terms."
+    }
+   ]
+  },
+  {
+   "name": "PP CSG Payout Line",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "posting_date",
+     "fieldtype": "Date",
+     "label": "Date",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "label": "Line",
+     "options": "Sale\nReturn\nTaken back\nCorrection",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "item_code",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "item_name",
+     "fieldtype": "Data",
+     "label": "Item name",
+     "read_only": 1
+    },
+    {
+     "fieldname": "qty",
+     "fieldtype": "Float",
+     "label": "Quantity",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sale_amount",
+     "fieldtype": "Currency",
+     "label": "Sold for",
+     "options": "currency",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2,
+     "description": "After discounts and before tax, in the company's currency. A return's is negative."
+    },
+    {
+     "fieldname": "share",
+     "fieldtype": "Percent",
+     "label": "Share",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1
+    },
+    {
+     "fieldname": "payout",
+     "fieldtype": "Currency",
+     "label": "Consignor's part",
+     "options": "currency",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "sale_type",
+     "fieldtype": "Data",
+     "label": "Sale type",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sale",
+     "fieldtype": "Data",
+     "label": "Sale",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sale_row",
+     "fieldtype": "Data",
+     "label": "Sale line",
+     "read_only": 1,
+     "description": "The sale's own line: it is on one payout at a time."
+    },
+    {
+     "fieldname": "sale_line",
+     "fieldtype": "Data",
+     "label": "Settlement",
+     "read_only": 1,
+     "description": "The sale line, or the sale line and a count when a cancelled sale's balance is settled."
+    }
+   ]
+  },
+  {
+   "name": "PP CSG Payout",
+   "autoname": "format:CSG-P-{#####}",
+   "track_changes": 1,
+   "title_field": "consignor_name",
+   "search_fields": "consignor,consignor_name,up_to",
+   "sort_field": "up_to",
+   "sort_order": "DESC",
+   "permissions": [
+    {
+     "role": "Accounts User",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Accounts Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP CSG Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ],
+   "fields": [
+    {
+     "fieldname": "consignor",
+     "fieldtype": "Link",
+     "label": "Consignor",
+     "options": "PP CSG Consignor",
+     "reqd": 1,
+     "in_standard_filter": 1,
+     "set_only_once": 1
+    },
+    {
+     "fieldname": "consignor_name",
+     "fieldtype": "Data",
+     "label": "Consignor name",
+     "fetch_from": "consignor.consignor_name",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "company",
+     "fieldtype": "Link",
+     "label": "Company",
+     "options": "Company",
+     "reqd": 1,
+     "set_only_once": 1
+    },
+    {
+     "fieldname": "currency",
+     "fieldtype": "Link",
+     "label": "Currency",
+     "options": "Currency",
+     "fetch_from": "company.default_currency",
+     "read_only": 1
+    },
+    {
+     "fieldname": "col1",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "up_to",
+     "fieldtype": "Date",
+     "label": "Sales up to",
+     "reqd": 1,
+     "default": "Today",
+     "in_list_view": 1,
+     "description": "Lines sold on or before this date. Lines no other payout holds, from any earlier date, are included."
+    },
+    {
+     "fieldname": "worked_out_by",
+     "fieldtype": "Data",
+     "label": "Worked out by",
+     "read_only": 1
+    },
+    {
+     "fieldname": "lines_section",
+     "fieldtype": "Section Break",
+     "label": "Lines"
+    },
+    {
+     "fieldname": "summary",
+     "fieldtype": "Small Text",
+     "label": "Summary",
+     "read_only": 1
+    },
+    {
+     "fieldname": "lines",
+     "fieldtype": "Table",
+     "label": "Lines",
+     "options": "PP CSG Payout Line",
+     "read_only": 1
+    },
+    {
+     "fieldname": "sales_total",
+     "fieldtype": "Currency",
+     "label": "Sold for",
+     "options": "currency",
+     "read_only": 1
+    },
+    {
+     "fieldname": "payout_total",
+     "fieldtype": "Currency",
+     "label": "To pay",
+     "options": "currency",
+     "read_only": 1,
+     "bold": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "payment_section",
+     "fieldtype": "Section Break",
+     "label": "Payment"
+    },
+    {
+     "fieldname": "paid_with",
+     "fieldtype": "Link",
+     "label": "Paid with",
+     "options": "Mode of Payment",
+     "description": "How you paid the consignor: cash, a bank transfer, a cheque, store credit. The back office fills it before the manager pays."
+    },
+    {
+     "fieldname": "paid_on",
+     "fieldtype": "Date",
+     "label": "Paid on"
+    },
+    {
+     "fieldname": "col2",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "payment_reference",
+     "fieldtype": "Data",
+     "label": "Payment reference",
+     "description": "Such as the transfer's or cheque's number."
+    },
+    {
+     "fieldname": "paid_by",
+     "fieldtype": "Data",
+     "label": "Marked paid by",
+     "read_only": 1
+    },
+    {
+     "fieldname": "lines_paid",
+     "fieldtype": "Int",
+     "label": "Lines paid",
+     "read_only": 1,
+     "description": "Counted when it was paid: a paid payout whose lines change stops every later payout of the consignor."
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "Item",
+   "fieldname": "pp_csg_consignor",
+   "fieldtype": "Link",
+   "label": "Consignor",
+   "options": "PP CSG Consignor",
+   "insert_after": "item_group",
+   "in_standard_filter": 1,
+   "description": "Whose piece this is, for a consignment. Its sales are paid out to them."
+  },
+  {
+   "dt": "Item",
+   "fieldname": "pp_csg_share",
+   "fieldtype": "Percent",
+   "label": "Consignor's share for this item",
+   "insert_after": "pp_csg_consignor",
+   "depends_on": "eval:doc.pp_csg_consignor",
+   "description": "Leave at 0 for the consignor's own share."
+  }
+ ],
+ "workflows": [
+  {
+   "name": "PP CSG Payout",
+   "document_type": "PP CSG Payout",
+   "send_email_alert": 0,
+   "states": [
+    {
+     "state": "PP CSG Draft",
+     "allow_edit": "Accounts User"
+    },
+    {
+     "state": "PP CSG Paid",
+     "allow_edit": "Accounts Manager"
+    },
+    {
+     "state": "PP CSG Cancelled",
+     "allow_edit": "Accounts Manager"
+    }
+   ],
+   "transitions": [
+    {
+     "state": "PP CSG Draft",
+     "action": "PP CSG Pay",
+     "next_state": "PP CSG Paid",
+     "allowed": "PP CSG Integration",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP CSG Draft",
+     "action": "PP CSG Drop",
+     "next_state": "PP CSG Cancelled",
+     "allowed": "Accounts User",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP CSG Paid",
+     "action": "PP CSG Cancel",
+     "next_state": "PP CSG Cancelled",
+     "allowed": "Accounts Manager",
+     "allow_self_approval": 1
+    }
+   ]
+  }
+ ],
+ "save_rules": [
+  {
+   "rule_name": "PP CSG payout locked once paid",
+   "record_type": "PP CSG Payout",
+   "kind": "locked_in_state",
+   "mode": "refuse",
+   "states": [
+    "PP CSG Paid",
+    "PP CSG Cancelled"
+   ],
+   "locked_fields": [
+    "consignor",
+    "company",
+    "up_to",
+    "lines",
+    "sales_total",
+    "payout_total",
+    "summary",
+    "worked_out_by",
+    "paid_with",
+    "paid_on",
+    "payment_reference",
+    "paid_by",
+    "lines_paid"
+   ],
+   "message": "This payout is paid or cancelled: its lines, amounts and payment stay as they were. Make a new payout instead."
+  }
+ ],
+ "print_formats": [
+  {
+   "name": "PP CSG Payout statement",
+   "doc_type": "PP CSG Payout",
+   "print_format_type": "Jinja",
+   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n{% if letter_head and not no_letterhead %}<div class=\"letter-head\">{{ letter_head }}</div>{% endif %}\n{% set state = doc.workflow_state or \"\" %}\n{% if state.endswith(\" Cancelled\") %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Cancelled: this payout was not paid.\") }}</p>\n{% elif not state.endswith(\" Paid\") %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Draft: not paid yet.\") }}</p>{% endif %}\n<h2 style=\"margin: 0 0 2px;\">{{ _(\"Consignment payout\") }} {{ doc.name }}</h2>\n<p style=\"margin: 0;\">{{ doc.consignor_name or doc.consignor }} &middot; {{ _(\"Sales up to\") }} {{ doc.get_formatted(\"up_to\") }}</p>\n{% if state.endswith(\" Paid\") %}<p style=\"margin: 0;\">{{ _(\"Paid on\") }} {{ doc.get_formatted(\"paid_on\") }} &middot; {{ doc.paid_with or \"\" }}{% if doc.payment_reference %} &middot; {{ doc.payment_reference }}{% endif %}</p>{% endif %}\n<table style=\"width: 100%; border-collapse: collapse; margin-top: 8px;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Date\") }}</th><th style=\"text-align: start;\">{{ _(\"Item\") }}</th><th style=\"text-align: start;\">{{ _(\"Line\") }}</th><th style=\"text-align: end;\">{{ _(\"Sold for\") }}</th><th style=\"text-align: end;\">{{ _(\"Share\") }}</th><th style=\"text-align: end;\">{{ _(\"Your part\") }}</th></tr>\n{% for r in doc.lines %}<tr><td>{{ r.get_formatted(\"posting_date\") }}</td><td>{{ r.item_name or r.item_code }}</td><td>{{ _(r.kind) }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"sale_amount\", doc) }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"share\") }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"payout\", doc) }}</td></tr>\n{% endfor %}\n<tr><td colspan=\"3\"><b>{{ _(\"Total\") }}</b></td><td style=\"text-align: end;\"><b>{{ doc.get_formatted(\"sales_total\") }}</b></td><td></td><td style=\"text-align: end;\"><b>{{ doc.get_formatted(\"payout_total\") }}</b></td></tr>\n</table>\n<p style=\"margin: 8px 0 0; font-size: 9pt;\">{{ _(\"Sold for is after discounts and before tax. A return comes off.\") }}</p>\n</div>"
+  }
+ ],
+ "links": [
+  {
+   "doctype": "PP CSG Consignor",
+   "link_doctype": "PP CSG Payout",
+   "link_fieldname": "consignor",
+   "group": "Payouts"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP CSG Consignor",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/consignment_payouts.html#consignors"
+  },
+  {
+   "doc_type": "PP CSG Payout",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/consignment_payouts.html#payouts"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP CSG Payout feed",
+   "description": "the payout service reads sales, items and payouts and writes payouts as this user; leave the feed off",
+   "events": [
+    "PP CSG Payout"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "work",
+   "point": "desk_action",
+   "label": "Consignment payouts work out",
+   "endpoint_url": "https://host.docker.internal:8125/csg/work",
+   "timeout_seconds": 10
+  },
+  {
+   "key": "pay",
+   "point": "desk_action",
+   "label": "Consignment payouts pay",
+   "endpoint_url": "https://host.docker.internal:8125/csg/pay",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP CSG Payout",
+   "label": "Work out the payout",
+   "placement": "form",
+   "service": "work",
+   "roles": [
+    "Accounts User",
+    "Accounts Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "conditions": [
+    {
+     "field": "workflow_state",
+     "operator": "=",
+     "value": "PP CSG Draft"
+    }
+   ],
+   "confirm_text": "Replace this payout's lines with what this consignor is owed now?"
+  },
+  {
+   "record_type": "PP CSG Payout",
+   "label": "Pay this payout",
+   "placement": "form",
+   "service": "pay",
+   "roles": [
+    "Accounts Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "conditions": [
+    {
+     "field": "workflow_state",
+     "operator": "=",
+     "value": "PP CSG Draft"
+    }
+   ],
+   "confirm_text": "Record this payout as paid? Check its lines, Paid with and Paid on first: a paid payout cannot change."
+  }
+ ]
+}

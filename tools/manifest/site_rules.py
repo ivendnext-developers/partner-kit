@@ -1,7 +1,7 @@
 """What the shop's INSTALL refuses that its checker (``validate.py``, a byte-equal copy of the shop's own) passes.
 
 The install screen runs ``validate.py`` first; then, inside the shop, the installer checks the manifest against the site
-(``manifest_install._site_refusals_v2`` in the POS app) and installs in a fixed order. Three refusals come from that, and a
+(``manifest_install._site_refusals_v2`` in the POS app) and installs in a fixed order. Four refusals come from that, and a
 manifest that passes ``validate.py`` still fails at a shop on them (found on our test bench, 2026-10-18, sample S33, and
 2026-10-23, sample S44):
 
@@ -15,6 +15,10 @@ manifest that passes ``validate.py`` still fails at a shop on them (found on our
 3. **A feed registration's description holds at most 140 characters.** The shop's Registered Application keeps its
    description in a field of 140 characters, and a longer one stops the install: *"CharacterLengthExceededError"*
    (found on our test bench, 2026-10-23, sample S44's first manifest).
+4. **A Dynamic Link names a Link field to DocType, or a Select.** A field of type *Dynamic Link* takes its record type
+   from the field its ``options`` names, which must be a field of the same record type: a Link whose own ``options`` is
+   *DocType*, or a Select (the framework's ``check_dynamic_link_options``). The install stops on any other with *"Options 'Dynamic Link' type of field must point to another Link Field with options
+   as 'DocType'"* (found on our test bench, 2026-10-30, sample S61's first manifest).
 
     python3 tools/manifest/site_rules.py samples/s33_click_and_collect/manifest.json    # exit 0 = none; 1 = refused
 
@@ -70,6 +74,17 @@ def refusals(m: dict) -> list[dict]:
                 out.append({"where": f"workspaces[{i}].shortcuts[{j}]", "name": w.get("name"),
                             "reason": f"Could not find Row #{j + 1}: Link To: {s['link_to']} (the shop makes a workspace before the "
                                       "manifest's own reports: link a record type's list instead)"})
+    for i, d in enumerate(_rows(m, "doctypes")):
+        fields = {f.get("fieldname"): f for f in d.get("fields") or [] if isinstance(f, dict)}
+        for f in fields.values():
+            if f.get("fieldtype") == "Dynamic Link":
+                src = fields.get(f.get("options"))
+                if not src or src.get("fieldtype") not in ("Link", "Select") \
+                        or (src.get("fieldtype") == "Link" and src.get("options") != "DocType"):
+                    out.append({"where": f"doctypes[{i}]", "name": d.get("name"),
+                                "reason": f"Options 'Dynamic Link' type of field must point to another Link Field with "
+                                          f"options as 'DocType' ({f.get('fieldname')}: its options name a Link field "
+                                          "to DocType, or a Select, on the same record type)"})
     for i, r in enumerate(_rows(m, "registered_applications")):
         d = r.get("description")
         if isinstance(d, str) and len(d) > DESCRIPTION_MAX:
