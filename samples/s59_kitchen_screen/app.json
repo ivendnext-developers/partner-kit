@@ -37,6 +37,11 @@
    "name": "KSC_PAGE_URL",
    "about": "Where the kitchen's screens reach this service's page (https://kitchen-screen.example.app). Each screen's link points there.",
    "required": true
+  },
+  {
+   "name": "KSC_LIVE_URL",
+   "about": "Optional: where the screens reach the live service beside this one (https://kitchen-screen-live.example.app, live/). Set, the page may reach that one address and listens there; unset, the screens read every 3 seconds only.",
+   "required": false
   }
  ]
 }

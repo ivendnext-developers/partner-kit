@@ -345,6 +345,8 @@ CANARIES = [
      "        if False:", L + "LiveTest.test_v14_an_edges_small_page_at_app_is_not_parked_as_no_name"),
     ("a refused screen leaves the linger mark alone", LS, "            if sock and line is not None:   # a refusal admits nothing",
      "            if sock:   # a refusal admits nothing", L + "LiveTest.test_v13_a_socket_whose_lines_are_gone_is_swept_even_when_a_busy_refusal_cleared_its_mark"),
+    ("a renamed site's name is learned again", LS, "                self.names.pop(site, None)", "                pass",
+     L + "LiveTest.test_v15_a_site_renamed_after_its_name_was_learned_is_reached_by_its_new_name"),
     # KSCSOLDNAME
     ("a sold-out dish is named by its record", S, "            value = ksc.with_names(value, named)", "            value = value",
      T + "test_s8_a_dish_sold_out_that_no_ticket_names_is_shown_by_its_name"),

@@ -188,10 +188,11 @@ class Hub:
             self.sockets[site] = entry = {"stop": stop, "live": False, "idle_since": None}
 
         def said(what: str):
-            if self.sockets.get(site) is not entry:     # a socket swept away while it closed: not this site's news now
-                return
             up = what == "signed in"
-            entry["live"] = up
+            with self._lock:            # checked and set with admit's pop: an old socket never speaks after its replacement
+                if self.sockets.get(site) is not entry:     # a socket swept or replaced: not this site's news now
+                    return
+                entry["live"] = up
             self._tell(site, "state", {"live": up})
             if up:                      # notices sent while the channel was down were missed: every screen reads now
                 self._tell(site, "read", {})
@@ -209,7 +210,9 @@ class Hub:
             return sess
 
         def lost(e):
-            if e.refused and "Invalid namespace" in e.why and site not in self.names \
+            if e.refused and "Invalid namespace" in e.why and site in self.names:   # the site was renamed: learn it again
+                self.names.pop(site, None)
+            elif e.refused and "Invalid namespace" in e.why and site not in self.names \
                     and self.clock() - self.name_tried.get(site, -1e9) >= NAME_RETRY_S:
                 name = self.site_name(site)
                 if name:

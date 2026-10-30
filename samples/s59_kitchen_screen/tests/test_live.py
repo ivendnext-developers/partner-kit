@@ -280,6 +280,16 @@ class LiveTest(unittest.TestCase):
         r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
         self.assertEqual(self.up(r)[-1], ("state", {"live": True}))
 
+    def test_v15_a_site_renamed_after_its_name_was_learned_is_reached_by_its_new_name(self):
+        self.start(name="shop-internal.example.com")
+        r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+        self.up(r)
+        self.site.name = "shop-moved.example.com"                          # a migration renames the site
+        self.site.drop()
+        got = self.events(r, lambda n, d: n == "state" and d == {"live": True}, 8)
+        self.assertEqual(got[-1], ("state", {"live": True}))
+        self.assertEqual(self.hub.names[self.site.site], "shop-moved.example.com")
+
     def test_v10_a_site_whose_desk_page_names_no_site_is_not_read_again_at_once(self):
         self.start(name="shop-internal.example.com", named=False)
         self.events(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")), None, 2.5)
