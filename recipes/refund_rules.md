@@ -41,7 +41,7 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 - Whole sales only (every line returned) is your version: read the sale's lines with the integration user.
 - Offline, the till does not call your service. The check does not run on a park, a layaway deposit, an account collection, a gift card's balance paid out in cash or the Desk's own POS screen.
 - At a till with a cash drawer, an exchange whose replacement costs less pays its difference in cash: refused at its credit note when your rule leaves cash out. Say so in your guide: return the items, then ring the new ones.
-- `return_of.paid_by` lists the sale's tender rows; a zero-amount row would count as a method that paid.
+- Before POS version 2.1.0.669, `return_of.paid_by` lists a sale's tender rows, so a zero-amount row counts as a method that paid; from 2.1.0.669 it names only the methods that paid.
 - A layaway plan's refund is payable at any store of the company, whatever *Use inter-store transactions* says.
 - The till asks every check at each Pay too: answer a sale at once, but it is still a call, and it carries the sale's details.
 - Not checked: a return sent to a register (refunded in Desk) and a refund made in Desk.

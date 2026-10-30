@@ -43,7 +43,7 @@ A Sale Attribute's *Required* switch holds for every customer on every till. Ret
 
 - A sale only: refunds and an exchange's returned items are not judged; its new items are, as a sale, except an exchange rung without its sale when nothing is owed.
 - A detail switched off, or hidden by a field rule, cannot be filled at the till: take it off the rules first.
-- An exchange's screen and a sale made from a quote have no place to fill a sale detail today: your refusal there is one the cashier cannot clear. Say so in your guide (fill it on the quote first; refund and ring a new sale), or let those sales through.
+- From POS version 2.1.0.669 the exchange screen, a sale made from a quote, an order made from a quote and an order's change screen each draw a *Sale details* row after a refusal, so the cashier fills the detail there and presses Pay again (a quote converted while the till is offline draws none). On an earlier build none of them has a place to fill it, so your refusal there is one the cashier cannot clear: on such a site say so in your guide (fill it on the quote first; refund and ring a new sale), or let those sales through. From 2.1.0.668 an order and a layaway plan are also checked when placed, as a sale (`stage: "sale"`): your rule holds there too.
 - The sale's details, not a line's (`line_attributes`): a line rule is your version.
 - Present, not right: the value's shape is the Sale Attribute's own *Regex Pattern*.
 - One rule per customer group; a customer's own rule is a group of their own.

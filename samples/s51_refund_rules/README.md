@@ -111,7 +111,7 @@ What a partner usually changes:
 - **A refund only.** A sale's Pay is answered `allow` without a read.
 - **Methods, not amounts:** the split of a refund between methods is the cashier's.
 - **Which store's sales a till may refund** is Retail Setting's *Use inter-store transactions*, never this app's, for a return against a sale; a layaway plan's refund is payable at any store of the company (the plan doors hold the company only).
-- **`paid_by` is the sale's tender rows.** A zero-amount row there would count as a method that paid (the till filters zero rows for an order or a plan, not for a sale; asked of the POS app).
+- **`paid_by` names the methods that paid.** From POS version 2.1.0.669 a zero-amount payment row is left out for a sale too, as it already was for an order or a plan. On an earlier build a sale's zero-amount row counts as a method that paid.
 - **A drawered till's cheaper exchange** pays its difference in cash and is refused at its credit note when the rules leave cash out (above).
 - **Offline,** the till does not call the service; a refund needs iVendNext anyway.
 - **Where the check never runs:** a park to a till, a return sent to a register (it is refunded in Desk), a refund made in Desk, a layaway deposit, an account collection, a gift card's balance paid out in cash (the check page, *Not in this version*) and the Desk's own POS screen.
