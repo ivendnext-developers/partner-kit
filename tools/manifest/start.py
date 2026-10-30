@@ -45,6 +45,10 @@ WORD = re.compile(r"[A-Z][A-Z0-9]{1,11}")   # a maker's first word, as the libra
 IMAGE = re.compile(r"!\[[^\]]*\]\(screenshots/[^)]*\)")
 SKIP_DIRS = {"__pycache__", "screenshots"}
 START_LINE = "*Start from this sample:"      # an italic line, so the site does not take it for the page's description
+# the sample's path in the kit, but not inside an address on the iVendNext guide sites (docs, developer, help, www): a help
+# link to the sample's own page (S43's "https://developer.ivendnext.com/samples/s43_third_party_payer/…") is the guide's,
+# kept as rename.addresses keeps it, never a name left in the copy
+NOT_GUIDE = "".join(rf"(?<!//{h}\.ivendnext\.com/)" for h in ("docs", "developer", "help", "www"))
 
 
 class Refused(Exception):
@@ -88,7 +92,7 @@ def old_names(m: dict, sample: str = "") -> re.Pattern:
     if rename.encoded(o):
         forms.append(rename.encoded(o))
     if sample:
-        forms.append(rf"samples/{re.escape(sample)}\b")
+        forms.append(rf"{NOT_GUIDE}samples/{re.escape(sample)}\b")
     # the roles and themes named with the prefix's first word alone ("PP Integration"), wherever a line names them
     forms += [rf"(?<![A-Za-z0-9]){re.escape(r)}(?![A-Za-z0-9])" for r in roles(m)]
     return re.compile("|".join(forms), re.I)
@@ -115,7 +119,8 @@ def rewrite(text: str, m: dict, prefix: str, sample: str, app: str) -> str:
     text = re.sub(rf"(?<![A-Za-z0-9]){re.escape(old_a)}(?=_|\b)", rename.case_like(app), text, flags=re.I)
     for old in sorted(roles(m), key=len, reverse=True):
         text = re.sub(rf"(?<![A-Za-z0-9]){re.escape(old)}(?![A-Za-z0-9])", re.sub(r"^\S+", prefix, old, count=1), text)
-    return text.replace(f"samples/{sample}", f"apps/{app}").replace("](../s", "](../../samples/s")   # links to the other samples
+    text = re.sub(rf"{NOT_GUIDE}samples/{re.escape(sample)}", f"apps/{app}", text)
+    return text.replace("](../s", "](../../samples/s")   # links to the other samples
 
 
 def run(sample: str, prefix: str, into: pathlib.Path, test: bool, out) -> int:
