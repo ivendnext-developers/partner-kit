@@ -230,11 +230,42 @@ class LiveTest(unittest.TestCase):
         self.assertEqual(self.up(r)[-1], ("state", {"live": True}))
         self.assertEqual(list(self.site.hs.values())[-1]["Authorization"], f"token {new_key}")
 
+    def test_v12_a_key_replaced_while_the_retailer_is_at_its_cap_still_tells_its_screens_and_comes_back(self):
+        self.start()
+        old_max = live.SITE_STREAMS_MAX
+        live.SITE_STREAMS_MAX = 1
+        self.addCleanup(setattr, live, "SITE_STREAMS_MAX", old_max)
+        r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+        self.up(r)
+        new_key = "k3y-app-user:s3cret-after-connect-again"
+        rec = self.store.get(self.site.site)
+        rec["secrets"][USER] = new_key
+        self.store.put(self.site.site, rec)
+        self.site.key = new_key
+        busy = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+        self.assertEqual((busy.status, json.loads(busy.read())), (503, {"state": "busy"}))
+        got = self.events(r, lambda n, d: n == "state" and d == {"live": True}, 6)
+        self.assertIn(("state", {"live": False}), got)                         # down at once, then back
+        self.assertEqual(got[-1], ("state", {"live": True}))
+        self.assertEqual(list(self.site.hs.values())[-1]["Authorization"], f"token {new_key}")
+
     def test_v10_a_site_whose_desk_page_names_no_site_is_not_read_again_at_once(self):
         self.start(name="shop-internal.example.com", named=False)
         self.events(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")), None, 2.5)
         self.assertEqual((self.site.pages, self.hub.names), (1, {}))     # several refusals, one read of the page
         self.assertGreaterEqual(self.out.getvalue().count("Invalid namespace"), 2)
+        clock = Clock(self.hub.clock())
+        self.hub.clock = clock
+        self.hub.name_tried = {k: clock() for k in self.hub.name_tried}
+        clock.t += 1800                                                  # half an hour on (the README's bound): read again
+        self.events(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")), None, 2.5)
+        self.assertEqual(self.site.pages, 2)
+
+    def test_v11_a_desk_page_that_failed_to_answer_is_read_again_at_the_next_refusal(self):
+        self.start(name="shop-internal.example.com", page_fails=1)        # one 502, then the page names the site
+        r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+        self.assertEqual(self.up(r)[-1], ("state", {"live": True}))
+        self.assertEqual((self.site.pages, self.hub.names[self.site.site]), (2, "shop-internal.example.com"))
 
 
 class ServerTest(unittest.TestCase):
@@ -299,13 +330,14 @@ class SocketTest(unittest.TestCase):
         self.assertIn("edge=sticky-1", site.headers[-1]["Cookie"])
 
     def test_k5_an_answer_with_no_packet_ends_the_session_never_asks_again_at_once(self):
-        site = fakesite.FakeSite(empty_polls=True)      # an edge answering 200 with an empty body or its own page
-        self.addCleanup(site.stop)
-        s = sitesocket.Session(site.url, fakesite.KEY, lambda *a: None)
-        s.handshake()
-        with self.assertRaises(sitesocket.Lost) as e:
-            s.sign_in()
-        self.assertEqual((e.exception.why, site.polls), ("an answer with no packet", 1))
+        for body in ("", "200 OK", "404 page not found", "2xx maintenance", "<html>maintenance</html>", "6"):
+            site = fakesite.FakeSite(poll_body=body)   # an edge answering 200 with an empty body or its own page
+            self.addCleanup(site.stop)
+            s = sitesocket.Session(site.url, fakesite.KEY, lambda *a: None)
+            s.handshake()
+            with self.assertRaises(sitesocket.Lost, msg=body) as e:
+                s.sign_in()
+            self.assertEqual((e.exception.why, site.polls), ("an answer with no packet", 1), body)
 
     def test_k4_the_pause_grows_while_sessions_fail_and_stops_on_stop(self):
         stop, pauses, said = threading.Event(), [], []

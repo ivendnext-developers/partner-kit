@@ -59,7 +59,8 @@ import app as service  # noqa: E402  — the service's own admission check and k
 import sitesocket  # noqa: E402
 
 HEARTBEAT_S = 20          # well inside the load balancer's 60-second idle limit
-LIFE_S = 300              # a line is checked again this often (a link made again stops hearing within it)
+LIFE_S = 300              # a line is checked again this often (a link made again stops hearing within it and the
+                          # service's own 15-second keep of a checked screen: 5 minutes 15 seconds)
 LINGER_S = 60             # a site's socket stays this long after its last line, for a page that opens it again
 STREAMS_MAX = 2000        # lines one copy holds, every retailer together
 SITE_STREAMS_MAX = 300    # … and one retailer's
@@ -133,22 +134,28 @@ class Hub:
             key = ""
         with self._lock:
             old = self.sockets.get(site)
-            if old and old.get("key") and key and old["key"] != key:   # Connect again replaced it: that socket ends now
+            replaced = bool(old and old.get("key") and key and old["key"] != key)
+            if replaced:                # Connect again replaced the key: the socket signed in with the old one ends now
                 self.sockets.pop(site)["stop"].set()
             mine = self.lines.setdefault(site, set())
-            if sum(len(v) for v in self.lines.values()) >= STREAMS_MAX or len(mine) >= SITE_STREAMS_MAX:
-                if not mine:
-                    self.lines.pop(site, None)
-                return 503, {"state": "busy"}, None
-            line = Line(site, s["store"])
-            mine.add(line)
+            busy = sum(len(v) for v in self.lines.values()) >= STREAMS_MAX or len(mine) >= SITE_STREAMS_MAX
+            if busy and not mine:
+                self.lines.pop(site, None)
+            line = None if busy else Line(site, s["store"])
+            if line:
+                mine.add(line)
             sock = self.sockets.get(site)
             live = bool(sock and sock["live"])
             if sock:
                 sock["idle_since"] = None
-        line.tell("state", {"live": live})
-        if not sock:
+            others = bool(self.lines.get(site))
+        if replaced:                    # the retailer's open screens read every 3 s until the new socket signs in
+            self._tell(site, "state", {"live": False})
+        if not sock and others:
             self._start(site)
+        if line is None:
+            return 503, {"state": "busy"}, None
+        line.tell("state", {"live": live})
         return 200, {}, line
 
     def drop(self, line: Line):
@@ -206,8 +213,8 @@ class Hub:
                 name = self.site_name(site)
                 if name:
                     self.names[site] = name
-                else:                   # not read: not again for a while (the page is large)
-                    self.name_tried[site] = self.clock()
+                elif name == "":        # read whole and it names no site: not again for a while (the page is large);
+                    self.name_tried[site] = self.clock()   # a read that failed (None) is tried at the next refusal
 
         def run():
             sitesocket.hold(make, stop, lambda what: said(what), on_lost=lost)
@@ -215,22 +222,26 @@ class Hub:
         entry["thread"] = t = threading.Thread(target=run, name=f"socket {site}", daemon=True)
         t.start()
 
-    def site_name(self, site: str) -> str:
-        """The site's own name, read once from its Desk page as the app's user; "" when it cannot be read."""
+    def site_name(self, site: str) -> str | None:
+        """The site's own name, read once from its Desk page as the app's user; "" when the page was read and names no
+        site, None when it could not be read (a timeout, an error answer)."""
         try:
             record = self.svc.store.get(site)
             key = service.user_key(record)
             text = self.opener(record["url"], key) if key else ""
         except Exception as e:          # noqa: BLE001 — never a key in the words
             log(site=site, socket="name not read: " + type(e).__name__)
-            return ""
+            return None
+        if text is None:
+            log(site=site, socket="name not read: the page did not answer 200")
+            return None
         m = _NAME.search(text or "")
         name = m.group(1) if m else ""
         log(site=site, socket="name read" if name else "name not found")
         return name
 
     @staticmethod
-    def _open_page(url: str, key: str) -> str:
+    def _open_page(url: str, key: str) -> str | None:
         parts = urllib.parse.urlsplit(url)
         kind = http.client.HTTPSConnection if parts.scheme == "https" else http.client.HTTPConnection
         conn = kind(parts.hostname, parts.port, timeout=15)
@@ -238,7 +249,7 @@ class Hub:
             conn.request("GET", NAME_PAGE, headers={"Authorization": f"token {key}", "Accept": "text/html"})
             r = conn.getresponse()
             if r.status != 200:         # a redirect is never followed: a key never travels to another host
-                return ""
+                return None
             return r.read(NAME_MAX).decode("utf-8", "replace")
         finally:
             conn.close()

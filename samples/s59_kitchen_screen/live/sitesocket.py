@@ -181,7 +181,8 @@ class Session:
         """One long poll: its socket.io packets; a ping answered here, the server's close raised."""
         text = self._request("_polls", "GET", {"sid": self.sid}, None, self.wait_s)
         packets = text.split(SEP)
-        if not any(p[:1] in ("1", "2", "4") for p in packets):     # an empty answer, an edge's own page: never asked again at once
+        if not any(p in ("1", "2") or (p[:1] == "4" and p[2:].startswith(self.ns)) for p in packets):   # an empty answer,
+            # an edge's own page ("200 OK", "404 page not found"): never asked again at once
             raise Lost("an answer with no packet")
         out = []
         for packet in packets:
