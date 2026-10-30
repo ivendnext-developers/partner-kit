@@ -149,6 +149,32 @@
     }
    }
   },
+  "reading": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "source",
+    "weight"
+   ],
+   "description": "A weighed article's scale reading or typed weight: the weight is the line's quantity, in the article's stock unit. A typed weight (manual) needs the manual-weight right at the add and again from the cashier who takes the payment; a kit's reading is recorded as typed whatever source it names. An article not sold by weight, or one that also tracks lots or serials, is refused.",
+   "properties": {
+    "source": {
+     "enum": [
+      "scale",
+      "manual"
+     ]
+    },
+    "weight": {
+     "type": "number",
+     "minimum": 0.001,
+     "maximum": 9999
+    },
+    "tare": {
+     "type": "number",
+     "minimum": 0
+    }
+   }
+  },
   "line_in": {
    "type": "object",
    "additionalProperties": false,
@@ -171,6 +197,9 @@
      "type": "string",
      "minLength": 1,
      "maxLength": 140
+    },
+    "weighed": {
+     "$ref": "#/$defs/reading"
     },
     "options": {
      "type": "array",
@@ -248,6 +277,20 @@
        "type": "null"
       }
      ]
+    },
+    "weighed": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/reading"
+      }
+     ]
+    },
+    "sold_by_weight": {
+     "type": "boolean",
+     "description": "The article sells by its captured weight (a reading or none yet): a weighed line changes only with a new reading through check_change_line's weighed."
     },
     "options": {
      "type": "array",

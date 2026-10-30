@@ -1,0 +1,23 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "A filled value is plain text.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false,
+    "fillable": [
+      "Rx Date"
+    ]
+  },
+  "expect_refusal": "plain text of 1 to 140 characters",
+  "payload": {
+    "verdict": "allow",
+    "fill": {
+      "Rx Date": "<b>2026-10-01</b>"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_page.md @ 60147699cce4, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_page.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner page
 
 **Contract:** [`partner_page.v1.schema.json`](../extension_contracts/partner_page.v1.schema.json)
@@ -16,6 +16,16 @@ at what from a **signed, one-time, five-minute context** in its address, and on 
 
 It fires when the cashier presses the page's key on the till, or when a Desk user opens the page (a link
 or shortcut the shop adds, or a [Desk action's](desk_action.md) `open_page` answer).
+
+**Your capture service's notice can carry a button that opens this page.** A
+[capture](partner_capture.md) service on scan or on customer select whose settings name this page
+(`"page": "<this subscription>"`) gets a button on its notice, *Open ⟨the key's caption⟩*, on the counter
+and the tablet, after an item is added on the Sell screen or a customer is put on the sale from its scan
+box. A tap waits for the item's pricing, then presses this page's key: the same press, the same context,
+the same answer and confirm sheet, and the same log. Your page cannot tell the button from the key, and
+the till never opens the page by itself. The shop still places the key in POS Studio → Apps; with no key
+on the band there is no button. Where it is drawn and what a tap does: [capture](partner_capture.md),
+section 3, *A button that opens your page*.
 
 ## 2. Version
 
@@ -149,6 +159,26 @@ cashier presses *Deliveries*; your board shows the basket, the cashier books a c
 server posts `{"ctx_nonce": "…", "result": {"sale_attributes": [{"sale_attribute": "Delivery Order",
 "attribute_value": "TB-88123"}]}}`. Your page posts `{"type": "ivendnext:done"}`; the cashier confirms and
 the sale carries the order number.
+
+**Holding Pay until the slot is booked.** A page never holds a payment: no notice at Pay carries the
+button, the cashier can close the page, and it answers once. Holding is the
+[check before payment's](partner_check.md) job, enforced on the server before any money. The three
+together:
+1. The check refuses with its reason: *"Book the delivery slot first: press Deliveries."*
+2. The cashier presses the key; the board books the slot and answers a *Delivery Order* sale detail.
+3. The next Pay asks the check again, and **the check confirms the booking reference it finds in that sale
+   detail against your own records** — the booking exists, is live, and is for this store and these items.
+
+⛔ **The sale detail's presence proves nothing.** A cashier can type any active sale detail, so a check that
+only looks for *Delivery Order* on the sale passes with no slot booked. Only the reference, verified in your
+records, proves the booking. ⚠ **Never key on `sale_ref` alone:** a held, parked or converted sale gets a
+new `sale_ref` when it comes back, while its sale details come back with it — a check keyed on `sale_ref`
+would refuse the resumed sale, and you would book a second slot.
+
+Where this does not hold: **offline** the remote check is not called — its declared down answer applies,
+and the synced sale is flagged in *Sales to review*, never refused. An **order** or a **layaway plan** is
+checked once, at placement (its deliveries and the plan's pickup go on that answer), so the booking must be
+in place before the order is placed.
 
 **A console in Desk for a record.** Declared *Desk page* at `https://partner.example/console/`, for the
 role *Stock Manager*. A Desk user opens `/app/partner-page/<page>?doctype=Sales%20Order&name=SO-0042`;

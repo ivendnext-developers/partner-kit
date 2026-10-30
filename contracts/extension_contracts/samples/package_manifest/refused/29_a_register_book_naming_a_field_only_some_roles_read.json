@@ -1,0 +1,74 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A register book that reads a permit number only the pharmacists read into the book's prescription column, which every reader of the book's lines reads. A detail slot is the column for it.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_rxl",
+    "prefix": "PP RXL",
+    "version": "1.0.0",
+    "custom_fields": [
+      {
+        "dt": "Sales Invoice",
+        "fieldname": "pp_rxl_permit",
+        "fieldtype": "Data",
+        "label": "Permit number",
+        "insert_after": "customer",
+        "read_roles": [
+          "PP RXL Pharmacist"
+        ],
+        "write_roles": [
+          "PP RXL Pharmacist"
+        ]
+      }
+    ],
+    "register_books": [
+      {
+        "book": "pp_rxl.permit_book",
+        "title": "Sales on a permit",
+        "data_set": "pp_rxl",
+        "cite": "A sample, not a market's law",
+        "certified": 0,
+        "enabled": 1,
+        "items": {
+          "item_groups": [
+            "All Item Groups"
+          ]
+        },
+        "numbering": "book_store",
+        "balance": 0,
+        "correction": "signed_strike_through",
+        "retention_years": 5,
+        "count_role": "System Manager",
+        "conditions": [
+          {
+            "field": "kind",
+            "operator": "=",
+            "value": "Sale"
+          }
+        ],
+        "columns": [
+          {
+            "label": "Date",
+            "value": [
+              "movement_date"
+            ]
+          },
+          {
+            "label": "Permit",
+            "value": [
+              "authority_no"
+            ]
+          }
+        ],
+        "authority": {
+          "desk_fields": {
+            "authority_no": "pp_rxl_permit"
+          }
+        }
+      }
+    ]
+  },
+  "expect_refusal": "for a register column every reader of the book's lines reads",
+  "beyond_schema": true
+}

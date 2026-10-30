@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/label_layout.md @ 60147699cce4, copied unchanged except the links, one bug id and one row id on the product's board: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/label_layout.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Label layout
 
 **Contract:** [`label_layout.v1.schema.json`](../extension_contracts/label_layout.v1.schema.json)
@@ -26,9 +26,9 @@ box: one strip, §3), with the details typed on the line for a layout that print
 ## 2. Version
 
 Version 1. Kinds `html` and `zpl` (added with the basket-line entry, the lot label and the manifest kind,
-lane `plabel2`: a layout written for version 1 is unchanged). Lane `plabelscale` adds two placeholders to the
+since 2.0.0.629: a layout written for version 1 is unchanged). Version 2.0.0.635 adds two placeholders to the
 closed list, `{weight}` and `{unit_price}`: a layout that holds neither is unchanged, and a checker copy older than
-this one refuses a layout that holds them. Lane `pb10label` adds two **named** placeholders beside the list,
+this one refuses a layout that holds them. Version 2.1.0.664 adds two **named** placeholders beside the list,
 `{item.<fieldname>}` and `{detail.<attribute>}`, and prints a basket line's label in that line's unit: a layout that
 holds neither is unchanged, the item card's label is unchanged, and a checker copy older than this one refuses a
 layout that holds them.
@@ -265,7 +265,7 @@ Labels are filled on the server, so the row is dimmed offline: *"Labels need a c
 ⚠ **Scanned offline.** A till that has lost its link rings an item's barcode with no unit as the item's **stock**
 unit, while a connected till rings it in the unit it sells the item in by default. So a label printed in a default
 unit that is not the stock unit (a Pack-sold article whose only barcode has no unit) scans offline at one stock
-unit's price, a known defect. A unit's own barcode (Item Barcode with that unit) scans the same online and
+unit's price (a known limit, not yet fixed). A unit's own barcode (Item Barcode with that unit) scans the same online and
 offline: give a pack-sold article a barcode for its pack.
 
 ## 7. Money and limits

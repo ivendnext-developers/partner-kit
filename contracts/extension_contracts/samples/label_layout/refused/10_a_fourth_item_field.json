@@ -1,7 +1,7 @@
 {
   "extension_point": "label_layout",
   "contract": "declaration",
-  "about": "four of the item's fields; a label prints at most three, as the till's field rules show three. The record counts them; the schema states only their shape.",
+  "about": "Four of the item's fields; a label prints at most three, as the till's field rules show three. The record counts them; the schema states only their shape.",
   "beyond_schema": true,
   "payload": {
     "doctype": "Retail Label Layout",

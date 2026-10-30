@@ -1,8 +1,8 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/print_template_readers.md @ 60147699cce4, copied unchanged except the links, the framework's raw SQL and its readers, named by what they are: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/print_template_readers.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Print template readers — `ivn_rows` and `ivn_value`
 
 **Samples:** [`samples/package_manifest/`](../extension_contracts/samples/package_manifest/)
-(`accepted/07_a_print_format_reading_rows.json` · `refused/10_…` · `refused/11_…` · `refused/27_…`)
+(`accepted/07_a_print_format_reading_rows.json` · `refused/10_…` · `refused/11_…` · `refused/27_…` · `refused/28_…`)
 · code: `business_logic/template_readers.py` (the readers), `business_logic/template_requester.py` (who asked),
 the print-format rules in `business_logic/manifest_check.py` · tests: `tests/test_template_readers.py`.
 
@@ -57,12 +57,24 @@ bulk print of up to 25 records from a list renders as the person who pressed it.
 
 ## 3. What they read
 
-Record types of the iVendNext layer, the engine and the POS app only. Never the framework's own record types
-(users, roles, sessions, logs, e-mail, keys, versions …), and never a single, virtual, table, log or custom
-record type, or one holding a password field.
+Record types of the iVendNext layer, the engine and the POS app, and the record types a partner package made.
+Never the framework's own record types (users, roles, sessions, logs, e-mail, keys, versions …), and never a
+single, virtual, table or log record type, a custom record type the shop made by hand, or one holding a password
+field.
 
-**Bounds (v0):** a partner package's own record types are not served yet, nor another record's table rows; and
-the framework types prints often show — Address, Contact, File, Currency, Country — are refused with the rest.
+**A partner package's own record types** are read like any other, with the viewer's rights: the permission rows
+the package gave the type (and the System Manager row the installer adds unless the package already gives System
+Manager a level-0 row) and the field levels, as in section 2. A pharmacy package's prescription-register
+print can show each patient's age from the package's own patient record to a pharmacist whose role may read that
+record, and nothing to anyone else. A type is served while both of these hold: the app's install record says it
+is installed and lists the type, and a version of the app the shop consented to on the package screen declares
+it. Once the app is uninstalled, or its uninstall failed, a print that reads its types shows nothing and still
+renders. A package's till receipt on POS Invoice, printed or previewed at the till, is rendered the same way, as
+the cashier who prints it; a receipt sent from the queue reads nothing (section 2). On a site whose POS app
+predates this change, the readers answer nothing for a package's own record types.
+
+**Bounds:** another record's table rows are not served, a package's included; and the framework types prints often
+show — Address, Contact, File, Currency, Country — are refused with the rest.
 A secret a record type keeps in an ordinary field (a gift card's barcode) is printable to a viewer who may read
 it in Desk, and goes out with an e-mail sent in their request.
 
@@ -97,7 +109,7 @@ When a manifest installs a print format, the checker
 - **refuses**, since version 2.1.0 of the POS app, a row or value read called on the framework —
   `get_all`, `get_list`, `db.get_value`, `db.get_all`, `db.get_list`, each called on the framework's own object — whose
   record type, written as a quoted first argument (`'Item Price'` or `doctype='Item Price'`), is one `ivn_rows` serves
-  (`get_all('Item Price')`, `db.get_value("Company", …)` …, on that object): read it through `ivn_rows` or
+  (`get_all('Item Price')`, `db.get_value("Company", …)` …, on that object; sample `refused/27_…` shows the exact form): read it through `ivn_rows` or
   `ivn_value`, or show the printed record's own fields. These stay a warning, because `ivn_rows` has no
   replacement for them: a read of a type it does not serve (the framework's Address, Contact, Letter Head …, a
   child table, a settings record); a whole-record read such as `get_doc` (its child rows are out of
@@ -106,6 +118,12 @@ When a manifest installs a print format, the checker
   as a later keyword (`get_all(fields=[…], doctype='Item Price')`).
   Remember that `ivn_rows` and `ivn_value` return nothing to a share-key visitor or in a mail; a receipt that
   must show a value there prints it from the record's own fields.
+- **refuses** the same read of one of the manifest's own record types that `ivn_rows` will serve once the app is
+  installed — not a table, settings or virtual type, nor one holding a password
+  (`db.get_value('PP PRD Patient', doc.patient, 'birth_date')` on the framework's object, in the package's own register print, sample
+  `refused/28_…`): read it through `ivn_value`. A POS app from before this change only warns it. A read of
+  another package's record type stays a warning, though `ivn_rows` serves it: the checker reads one manifest, and
+  which packages a site holds changes after it.
 
 It reads the template's text, so it catches the obvious only. Six known evasions pass it, each a known-pass test:
 the raw SQL reached by indexing (`db["sql"]`), the `attr` filter with a name built at render time, `render_template` on a built string, a

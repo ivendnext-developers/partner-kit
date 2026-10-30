@@ -158,7 +158,7 @@
       }
     },
     "input_limit": {
-      "description": "at most this many of the shop's own Customer fields a theme may ask for at customer add and edit (show on customer_create), counted apart from the shown fields.",
+      "description": "At most this many of the shop's own Customer fields a theme may ask for at customer add and edit (show on customer_create), counted apart from the shown fields.",
       "maximum": 3
     }
   }

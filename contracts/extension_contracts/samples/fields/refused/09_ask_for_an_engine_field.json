@@ -1,7 +1,7 @@
 {
   "extension_point": "fields",
   "contract": "declaration",
-  "about": "customer add asks only for a field the shop or an app added, never one of the record's own.",
+  "about": "Customer add asks only for a field the shop or an app added, never one of the record's own.",
   "payload": {
     "doctype": "Retail POS Theme",
     "theme_name": "LIB1 Fields R9",

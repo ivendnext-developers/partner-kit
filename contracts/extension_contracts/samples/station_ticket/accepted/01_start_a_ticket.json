@@ -1,0 +1,11 @@
+{
+  "extension_point": "station_ticket",
+  "contract": "move_request",
+  "about": "The cook starts a new ticket.",
+  "payload": {
+    "store": "Main Store",
+    "kitchen_order": "KO-1",
+    "ticket": 1,
+    "state": "started"
+  }
+}

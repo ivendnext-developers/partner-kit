@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_manifest_check_modules.py,
-# at development 60147699cce4f7bd35f73e111649ce108eb2dcc2; changed: the import, the fixture folder, and a row id in a comment.
+# at development c39b1449937adac83d9be35bcfa2a6e3e41871ef; changed: the import, the fixture folder, and two row ids in comments.
 # A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """A package that carries a certified module — stdlib only, no bench.
 
@@ -103,6 +103,15 @@ FORBIDDEN = [
             m["extension_subscriptions"].clear(),
         ),
         "runs no module",
+    ),
+    (
+        # a fill is composed again on the server, which a till offline cannot do
+        "a check module that would fill a sale detail",
+        lambda m: (
+            _check_module(m),
+            m["extension_subscriptions"][-1].update(settings={"fill_attributes": ["Rx Date"]}),
+        ),
+        "a partner module cannot fill a sale detail",
     ),
     ("version 0", at("extension_modules", version=0), "whole number from 1"),
     ("a version as text", at("extension_modules", version="1"), "whole number from 1"),

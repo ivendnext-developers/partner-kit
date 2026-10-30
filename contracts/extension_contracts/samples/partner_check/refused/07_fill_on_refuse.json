@@ -1,0 +1,24 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "A refusal fills nothing.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false,
+    "fillable": [
+      "Rx Date"
+    ]
+  },
+  "expect_refusal": "carries a key refuse does not allow",
+  "payload": {
+    "verdict": "refuse",
+    "reason": "Not today.",
+    "fill": {
+      "Rx Date": "2026-10-01"
+    }
+  }
+}

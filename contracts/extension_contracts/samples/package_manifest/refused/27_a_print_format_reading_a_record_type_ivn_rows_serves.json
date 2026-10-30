@@ -1,7 +1,7 @@
 {
   "extension_point": "package_manifest",
   "contract": "manifest",
-  "about": "A print format reading the Company through the framework's own reader, which skips the viewer's rights: a record type ivn_rows serves is read through ivn_rows or ivn_value (2.1.0).",
+  "about": "A print format reading the Company through the framework's own reader, which skips the viewer's rights: a record type ivn_rows serves is read through ivn_rows or ivn_value (since 2.1.0).",
   "payload": {
     "manifest_version": 1,
     "app": "pp_plc",

@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_manifest_check_rolefields.py,
-# at development 60147699cce4f7bd35f73e111649ce108eb2dcc2; changed: the import, the row and lane ids in the docstring, and one print format that reads through the framework's name (now through the helper's own name: the field is refused either way).
+# at development c39b1449937adac83d9be35bcfa2a6e3e41871ef; changed: the import, the row and lane ids in the docstring, and one print format that reads through the framework's name (now through the helper's own name: the field is refused either way).
 # A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """A field the manifest adds may name the roles that read it (``read_roles``) and
 the roles that change it (``write_roles``). Stdlib only. The installer's half (the level, the rows,
@@ -172,6 +172,97 @@ class RoleFields(unittest.TestCase):
             m[kind] = [x]
             r = [y for y in validate(m) if "pp_prf_licence" in y["reason"]]
             self.assertTrue(r and r[0]["where"] == f"{kind}[0]", (kind, validate(m)))
+
+
+BOOK = {
+    "book": "pp_prf.book",
+    "title": "Sales on a permit",
+    "data_set": "pp_prf",
+    "cite": "A test",
+    "certified": 0,
+    "enabled": 1,
+    "items": {"item_groups": ["All Item Groups"]},
+    "numbering": "book_store",
+    "balance": 0,
+    "correction": "signed_strike_through",
+    "retention_years": 5,
+    "count_role": "System Manager",
+    "columns": [{"label": "Date", "value": ["movement_date"]}],
+}
+
+
+def book_refusals(**parts):
+    m = copy.deepcopy(BASE)
+    m["register_books"] = [{**copy.deepcopy(BOOK), **parts}]
+    return [x for x in validate(m) if "pp_prf_licence" in x["reason"]]
+
+
+class RegisterBooks(unittest.TestCase):
+    """A book records what it names whoever submits: a field only some roles read may fill a
+    person's column (a detail slot, the counterparty), read at the line's level 1, never a column
+    every reader of the line reads."""
+
+    def test_a_column_every_reader_reads_is_refused(self):
+        for parts in (
+            {"authority": {"desk_fields": {"authority_no": "pp_prf_licence"}}},
+            {
+                "authority": {
+                    "dispenser_licence": {
+                        "doctype": "Customer",
+                        "match": "user",
+                        "field": "pp_prf_licence",
+                    }
+                }
+            },
+            {"columns_from": {"Sales Invoice": {"reference_no": "pp_prf_licence"}}},
+        ):
+            r = book_refusals(**parts)
+            self.assertTrue(r and r[0]["where"] == "register_books[0]", (parts, r))
+            self.assertIn("detail slot", r[0]["reason"])
+
+    def test_a_class_read_from_it_is_refused_with_its_own_door(self):
+        for cls in (
+            {"item_field": "pp_prf_licence"},
+            {"item_table": "pp_prf_t", "class_field": "pp_prf_licence", "from_field": "f"},
+            {"item_table": "pp_prf_t", "class_field": "c", "group_field": "pp_prf_licence"},
+        ):
+            r = book_refusals(class_source=cls)
+            self.assertTrue(r and "item_groups" in r[0]["reason"], (cls, r))
+        # the dated table's from_field only picks which row's class applies: never written
+        self.assertEqual(
+            book_refusals(
+                class_source={
+                    "item_table": "t",
+                    "class_field": "c",
+                    "from_field": "pp_prf_licence",
+                }
+            ),
+            [],
+        )
+
+    def test_a_persons_column_stays_allowed(self):
+        for parts in (
+            {"details": {"detail_1": {"label": "Licence", "desk_field": "pp_prf_licence"}}},
+            {
+                "details": {
+                    "detail_1": {
+                        "label": "Licence",
+                        "record": {
+                            "doctype": "Customer",
+                            "match": "customer",
+                            "field": "pp_prf_licence",
+                        },
+                    }
+                }
+            },
+            {"columns_from": {"Sales Invoice": {"counterparty": "pp_prf_licence"}}},
+        ):
+            self.assertEqual(book_refusals(**parts), [], parts)
+
+    def test_a_field_everyone_reads_stays_allowed_in_any_column(self):
+        self.assertEqual(
+            book_refusals(authority={"desk_fields": {"authority_no": "pp_prf_barred"}}), []
+        )
 
 
 if __name__ == "__main__":

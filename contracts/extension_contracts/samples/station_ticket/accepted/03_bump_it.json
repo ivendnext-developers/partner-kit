@@ -1,0 +1,11 @@
+{
+  "extension_point": "station_ticket",
+  "contract": "move_request",
+  "about": "The dish left the pass: the ticket is bumped.",
+  "payload": {
+    "store": "Main Store",
+    "kitchen_order": "KO-1",
+    "ticket": 1,
+    "state": "bumped"
+  }
+}

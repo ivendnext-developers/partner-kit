@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/open_check.md @ 60147699cce4, copied unchanged except the links and the framework's generic record calls (named by whose they are): its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/open_check.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Open check — a table's running order, paid once (`open_check/1`)
 
 **Who this is for:** a partner building a front-of-house app (reservations, a waiting list) or a guest
@@ -8,7 +8,7 @@ ordering app (a QR menu, a kiosk) on iVendNext POS, and the AI assistant working
 close and read — the kitchen (send, a manager's void of a sent line, a manager's comp), and payment at a
 till: a till's Checkout claims a check's lines and books them as an ordinary sale, the day's close lists
 open checks and refuses while a payment is held, and the floor and Pay screens are on every till frame.
-A kit never claims or pays (§12).
+A kit never claims or pays (§2, §2b).
 
 ---
 
@@ -34,7 +34,7 @@ take `GET` too). Each runs the shop's own function, under the rights of the user
 |---|---|---|
 | `check_open(store, pos_profile, key, place?, label?, covers?, server?, service_mode?, suggested_customer?, source?, source_ref?)` | open a check | opens a check at `place`, or a tab or pre-order named `label` (one at least); returns the check, version 1 |
 | `check_add_lines(check, lines, key)` | add to a check | appends lines; two callers adding at once both land |
-| `check_change_line(check, line_id, version, …)` · `check_remove_line(check, line_id, version, reason?)` | change own lines / change any line | an unsent line nobody is paying (`concession_note` alone: a sent line too, a till only) |
+| `check_change_line(check, line_id, version, …, weighed?)` · `check_remove_line(check, line_id, version, reason?)` | change own lines / change any line | an unsent line nobody is paying (`concession_note`, `seat` and `course` alone: a sent line too; `concession_note` a till only); `weighed` weighs a line again (alone, a sent line's first weighing too) |
 | `check_move(check, place?, label?)` · `check_move_lines(check, into, line_ids)` · `check_merge(check, into)` · `check_split_line(check, line_id, qty, version)` | move, merge or split | — |
 | `check_transfer_server(check, server)` | hand a check over | a shift's handover |
 | `check_edit(check, version, covers?, label?, suggested_customer?, service_mode?)` | change any line | the service mode only until a line has gone to the kitchen |
@@ -48,12 +48,30 @@ take `GET` too). Each runs the shop's own function, under the rights of the user
 | `check_print(check, version?)` | print a table's check | a till's only: the printed check — see §2c. ⛔ Your app is refused, whatever it is granted |
 
 A move of lines takes each named line as it is at that moment (no version: a line split meanwhile moves only its own part).
+Moved lines keep their `seat`, unless the receiving check already has a guest with that number; a merge seats
+the whole party that joins after the one there. Either way a `seat` that is a whole number is raised by the
+larger of the receiving check's party size and its highest numbered seat, so its *1* is never the other
+party's *1*; a seat that is not a number is kept as written.
 
-`lines` is a list of `{item_code, qty?, uom?, options?, note?, seat?, course?}`; `options` is the dish's
+`lines` is a list of `{item_code, qty?, uom?, weighed?, options?, note?, seat?, course?}` (`seat`: whose dish it is, `"2"`,
+shown on the till as *Guest 2*; `course`: when it is served, in the shop's word, e.g. *Mains*, compared as
+written, so *main* and *Mains* are two courses; each up to 140 characters, and an empty value clears it); `options` is the dish's
 choices, `[{item_code, option_group?}]`, checked against the item's choice groups when the line is added.
 ⛔ A line with a `rate`, `price`, `amount` or `discount` key is refused, and so is a kit's line carrying a
 `concession_note` (what a server promised a guest: only a till notes it). A unit sold in whole numbers takes a
 whole quantity.
+
+**A weighed article** (fruit, cheese, anything sold by the kilo) is paid at a scale reading, so its line
+carries one: `weighed` is `{source, weight, tare?}`. Your app's reading is recorded as a typed weight
+(`manual`), whatever source it names: it needs the manual-weight right, the cashier who takes the payment
+needs it again, and the sale marks the line. The weight is the line's quantity, in the article's stock unit.
+The check keeps the reading and the sale takes it from there. A line with a reading changes its weight only
+with a new one (`check_change_line(…, weighed=…)`, before it is sent) and is never split. A weighed article
+added by name with no reading is refused at Pay until it is weighed; that first weighing may come after the
+line went to the kitchen. An article that also tracks lots or serials is sold by its lot or serial and takes
+no reading. Each line the check returns says `sold_by_weight` (`true` with a reading or without one yet), so
+your app knows which lines to offer a weighing on; a till offers *Weigh it* or *Weigh it again* on them to a
+cashier who may change the line, except on a sent line that already holds a reading (a manager voids that one).
 
 **`key`** is one per press of your button: a fresh random value (a UUID), ⛔ never one built from an order
 number or a table, which comes round again. A request repeated with the same key — a lost answer, a retry,
@@ -88,14 +106,20 @@ every till of the table writes the one order). `results` lists each kitchen's
 answer (`handed`, `agent` with the ticket's text, or `failed` with a reason); your app reads only the
 kitchen, the line count, the state and the ticket number.
 
-A sent line cannot be changed or removed. It leaves the check only by a void, a comp (each asks its own
+Each dish on a ticket carries the line's guest and course under it (*Guest 2 · Mains*). To send one course
+while the next waits, name its lines in `line_ids`: the till's *Send* asks which course when the lines
+waiting span more than one. A send that names lines is still the next send: a line whose ticket the till's
+agent could not print goes with it.
+
+A sent line's dish cannot be changed, and the line cannot be removed; its `seat` and `course` can (they
+change nothing the kitchen makes, and a guest is who pays for it). It leaves the check only by a void, a comp (each asks its own
 right, which the shop gives its managers, or a manager signing in at the till; either way it writes an
 approval record naming the check, and the line is on the check's history), or being paid. A void goes to
 the kitchen order the line was sent on, even after the line moved to another check, to the kitchen that send went to,
 and is read with that order's place and register of its last send (a check moved since then is not
-renamed on the void); a void of a line whose ticket never printed prints nothing. Once any line has gone to the kitchen the check's service mode is fixed. The kitchen
-display (when it ships) reads the check's kitchen order like any other; each of its rows names the check
-line it carried.
+renamed on the void); a void of a line whose ticket never printed prints nothing. Once any line has gone to the kitchen the check's service mode is fixed. A kitchen
+display reads the check's tickets like any other, with each dish's guest and course
+([Station ticket](station_ticket.md)).
 
 ⛔ The kitchen order of a check is never the paying sale's: paying some lines of a check is never refused
 because the kitchen has the others.
@@ -117,6 +141,13 @@ the claimed lines. A cancelled check sale gives its lines back to the check; it 
 
 A till claims only at a register of the check's own store that rings the check's service mode; another
 till of the store takes the payment otherwise.
+
+Guest by guest, each payer's part is its own sale from some of the check's lines: several claims on one
+check may be held at once, each with its own token, and the check stays open with the rest. The engine
+prices each sale on its own lines, so a promotion or charge that counts a quantity or a total can make the
+parts come to more or less than the check paid together; `check_preview(check, line_ids)` gives the
+engine's price of any set of open lines, and the till shows that difference before a guest pays. Nothing
+shares the money out to make the parts agree.
 
 No clock ends a claim. **Back** (`check_release(claim, token)`) frees the lines unless a card payment under
 the claim is live or money noted on the bank's own machine is not cleared. Each slip is noted on its own
@@ -200,6 +231,12 @@ those are a person's decisions, and an app granted them has made a person's deci
 **One integration user per kit app:** the door tells a check your user opened from any other user's, never one
 app from another behind the same user, so two apps sharing a user see each other's suggested customers.
 **Your user is fenced to its stores:** it must have the store, and `pos_profile` must be its register there.
+The shop gives it the store in iVendNext Desk, on the user: keep *Is Desk User* ticked, tick *Is POS User*, choose a
+*Shift Profile*, link the Retail Permission, add a row under the store access table with the store and that register,
+then Save; *Generate Keys* after that. The store table shows only with *Is POS User* ticked, and a user without it
+loses its store rows at its next save (*Generate Keys* is a save), so its key works but every call is refused
+*"You are not assigned to this outlet."* An app's own user (`…@integration.invalid`) takes the same ticks; it still
+takes no password and no other role.
 **Which guest may see which check is your app's job:** the door scopes by store, and cannot tell one guest
 from another behind one integration user.
 
@@ -208,7 +245,7 @@ A check your app opens with no `server` stays unassigned until the first till wr
 ## 5. Written only by these calls
 
 No role holds create, write or delete on the check's records. A save from iVendNext Desk (an administrator
-included), the generic record calls (the framework's own client calls, `/api/resource`), a data import or a write of one
+included), the generic record calls (the framework's own record methods, `/api/resource`), a data import or a write of one
 line is refused with `WrittenOutsideDoorError`. ⚠ Code installed inside the site can still write them; the
 fence is against outside writers.
 

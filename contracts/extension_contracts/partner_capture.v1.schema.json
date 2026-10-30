@@ -5,7 +5,7 @@
   "description": "Extension point capture: what iVendNext POS sends a partner's HTTPS service when an item the service's filter names is scanned (scan_request), when a new customer is added (customer_request), when a cashier puts an existing customer on a sale (select_request), when the quantity of a line the filter names changes (qty_request) and to check a code the customer gives (verify_request), and what the service answers. Answers are judged by business_logic/partner_capture.py validate_answer and validate_verify: one bad key or value refuses the whole answer, and the declared down answer applies. Page: docs/extending/partner_capture.md.",
   "$defs": {
     "settings": {
-      "description": "The subscription's settings field (a JSON object, stored as text on the Retail Extension Subscription of extension point capture): the event, and for a scan or a quantity change its filter. One service answers each event for a POS Profile.",
+      "description": "The subscription's settings field (a JSON object, stored as text on the Retail Extension Subscription of extension point capture): the event, and for a scan or a quantity change its filter; for a scan or a customer put on a sale, optionally the partner page its notice points at. One service answers each event for a POS Profile.",
       "oneOf": [
         {
           "type": "object",
@@ -31,6 +31,12 @@
               "minLength": 1,
               "maxLength": 140,
               "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "page": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "description": "The ID (the record name in Desk, not the label) of a Retail Extension Subscription of extension point page placed on the till (Till key, or Till key and Desk page). When the service answers notice, the till's message carries a button that presses that page's key, on the counter and the tablet, after an item is added or a customer is scanned into the sale. Refused at save on customer_add and qty_change, and in a package: the shop sets it after the install."
             }
           },
           "anyOf": [
@@ -72,6 +78,12 @@
           "properties": {
             "event": {
               "const": "customer_select"
+            },
+            "page": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 140,
+              "description": "The ID (the record name in Desk, not the label) of a Retail Extension Subscription of extension point page placed on the till (Till key, or Till key and Desk page). When the service answers notice, the till's message carries a button that presses that page's key, on the counter and the tablet, after an item is added or a customer is scanned into the sale. Refused at save on customer_add and qty_change, and in a package: the shop sets it after the install."
             }
           }
         },
@@ -595,7 +607,7 @@
       }
     },
     "scan_answer": {
-      "description": "HTTP 2xx, a JSON object of at most 64 KB. notice (lane pcapture4) is allow plus a sentence the till shows, the partner's label first; it may carry the values allow may.",
+      "description": "HTTP 2xx, a JSON object of at most 64 KB. notice is allow plus a sentence the till shows, the partner's label first; it may carry the values allow may.",
       "oneOf": [
         {
           "type": "object",
@@ -681,7 +693,7 @@
       ]
     },
     "customer_answer": {
-      "description": "HTTP 2xx, a JSON object of at most 64 KB. notice (lane pcapture4) is allow plus a sentence the till shows once the customer is created or on the sale; it carries no values.",
+      "description": "HTTP 2xx, a JSON object of at most 64 KB. notice is allow plus a sentence the till shows once the customer is created or on the sale; it carries no values.",
       "oneOf": [
         {
           "type": "object",

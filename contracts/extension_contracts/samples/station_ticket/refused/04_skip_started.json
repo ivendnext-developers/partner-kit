@@ -1,0 +1,13 @@
+{
+  "extension_point": "station_ticket",
+  "contract": "move_request",
+  "about": "A new ticket marked ready, skipping started. Only the stored state can refuse it.",
+  "beyond_schema": true,
+  "expect_refusal": "so it cannot be ready yet",
+  "payload": {
+    "store": "Main Store",
+    "kitchen_order": "KO-1",
+    "ticket": 1,
+    "state": "ready"
+  }
+}

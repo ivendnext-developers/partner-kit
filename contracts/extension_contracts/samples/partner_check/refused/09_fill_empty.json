@@ -1,0 +1,21 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "A fill names at least one detail.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false,
+    "fillable": [
+      "Rx Date"
+    ]
+  },
+  "expect_refusal": "fill must name 1 to 10 sale details",
+  "payload": {
+    "verdict": "allow",
+    "fill": {}
+  }
+}

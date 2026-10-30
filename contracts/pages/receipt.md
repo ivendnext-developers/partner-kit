@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/receipt.md @ 60147699cce4, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/receipt.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Receipt: the shop's own lines, WhatsApp, a checked layout
 
 **Contract:** none. These are store settings on the register, not a declaration a manifest carries.
@@ -23,7 +23,7 @@ our fixes):
 
 ## 2. Version
 
-Version 1 (lane `preceipt2`, 2026-10-09).
+Version 1 (2026-10-09).
 
 ## 3. What you set
 
@@ -32,7 +32,7 @@ On the **POS Profile** (the register), in iVendNext Desk, beside **Print Format*
 | Field | What it holds |
 |---|---|
 | Receipt Header | lines printed under the store's name |
-| Receipt Footer | lines printed after *"Thank you for your purchase!"* |
+| Receipt Footer | lines printed at the very end (after *"Thank you for your purchase!"* on `mPOS Receipt`, after the barcode on the engine's 3") |
 
 The lines print as typed, one per line, in every paper language: write both languages if the store needs
 both. Each line is trimmed and blank lines are dropped. They are printed as text: markup and `{{ … }}` print
@@ -44,12 +44,18 @@ sends with).
 
 ## 4. What the till does
 
-- **The shipped receipt (`mPOS Receipt`)** prints the register's header and footer. A register that sets
-  neither prints exactly what it printed before. Your **own** receipt layout prints them only if it calls
-  `receipt_shop_additions(doc)` (a Jinja method returning `{"header": [lines], "footer": [lines]}`).
-- **A sale's delivery** (items that arrived later, nothing to pay) prints *DELIVERY* with no totals on the
-  shipped receipt. Your own layout does the same only if it asks `receipt_handover(doc)` (a Jinja method
-  returning `true` for that delivery); an order's delivery is the tax sale and keeps its totals.
+- **The shipped receipts** print the register's header and footer: `mPOS Receipt`, and the engine's
+  `Print Format Receipt 3"` through the places it leaves for an installed app's lines. A register that sets
+  neither gets no header or footer lines (the engine's 3" still prints the register's name under the
+  store's). Your **own** receipt layout prints them only if it calls `receipt_lines(doc, "header")` /
+  `receipt_lines(doc, "footer")` (as a copy of the engine's 3" does) or `receipt_shop_additions(doc)` (a
+  Jinja method returning `{"header": [lines], "footer": [lines]}`).
+- **A sale's delivery** (items that arrived later, nothing to pay) prints with no totals on both shipped
+  receipts (*DELIVERY* on `mPOS Receipt`, *Delivery* on the engine's). The two decide it a little
+  differently: `mPOS Receipt` and the till's screen ask `receipt_handover(doc)` (the source is a sale and
+  nothing was paid on the delivery); the engine's 3" asks `receipt_kind(doc)` (the source is anything but an
+  order). Your own layout does the same only if it asks one of them; an order's delivery is the tax sale and
+  keeps its totals.
 - **WhatsApp** is a chip on the Print sheet, on the phone, the counter and the tablet. It sends to the
   customer's **stored** mobile, the same number SMS uses. On a walk-in sale the cashier types a name and a
   number, a customer is created with that number, and the receipt goes to it: a typed number never reaches

@@ -1,0 +1,30 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A dispensing print reading the package's own patient record through the framework's own reader, which skips the viewer's rights: once installed, ivn_rows serves the package's own record types, so the print reads them through ivn_value.",
+  "payload": {
+    "manifest_version": 1,
+    "app": "pp_prd",
+    "prefix": "PP PRD",
+    "version": "1.0.0",
+    "doctypes": [
+      {
+        "name": "PP PRD Patient",
+        "fields": [{ "fieldname": "birth_date", "fieldtype": "Date", "label": "Birth date" }]
+      },
+      {
+        "name": "PP PRD Dispensing",
+        "fields": [{ "fieldname": "patient", "fieldtype": "Link", "label": "Patient", "options": "PP PRD Patient" }]
+      }
+    ],
+    "print_formats": [
+      {
+        "name": "PP PRD Register",
+        "doc_type": "PP PRD Dispensing",
+        "html": "{{ db.get_value('PP PRD Patient', doc.patient, 'birth_date') }}"
+      }
+    ]
+  },
+  "expect_refusal": "may not read PP PRD Patient through the framework's own helpers",
+  "beyond_schema": true
+}

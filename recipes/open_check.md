@@ -2,7 +2,7 @@
 
 A restaurant's guests are seated by a reservations app, or order from a QR menu at the table or a kiosk. The **open check** door lets your app open the table's running order and add what the guest chose; every till of the store sees it at once, and the cashier takes the payment when the table pays, priced by the shop with every promotion and tax. This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, building one. It needs POS version 2.1.0.667 or later.
 
-**Reference:** the open check page, [`contracts/pages/open_check.md`](../contracts/pages/open_check.md) (every call, right and refusal), and its contract [`open_check.v1.schema.json`](../contracts/extension_contracts/open_check.v1.schema.json) with its samples. There is no kit sample yet.
+**Reference:** the open check page, [`contracts/pages/open_check.md`](../contracts/pages/open_check.md) (every call, right and refusal), and its contract [`open_check.v1.schema.json`](../contracts/extension_contracts/open_check.v1.schema.json) with its samples. Two kit samples call it: [S55 *Front of house*](../samples/s55_front_of_house/README.md) (reservations and a waiting list that seat a table and open its check) and [S56 *Guest ordering*](../samples/s56_guest_ordering/README.md) (a QR code at the table and a self-order kiosk that add to it).
 
 **The four rules, here.** Your app's code never runs inside the retailer's site: it calls the shop's own functions through `ivendnext_mpos.api.v1`. **A check never holds a price:** your app sends what was ordered, and the till prices it when it is paid.
 
@@ -19,7 +19,7 @@ Every call is `POST /api/method/ivendnext_mpos.api.v1.<name>` with your app's ke
 
 1. **Read the floor:** `floor_status(store)` answers the store's sections, its places with their status (*free*, *seated*, *ordered*, *paying*) and its tabs.
 2. **Open the check:** `check_open(store, pos_profile, key, place?, label?, covers?, source?, source_ref?, suggested_customer?)`, with a `place` (a table's id) or a `label` (a tab or a pre-order, such as *Order 42*). It answers the check at version 1.
-3. **Add the guest's order:** `check_add_lines(check, lines, key)`, each line `{item_code, qty?, uom?, options?, note?, seat?, course?}`. A dish's choices go in `options` as `[{"item_code": "OAT-MILK"}]` and are checked against the item's choice groups when the line is added.
+3. **Add the guest's order:** `check_add_lines(check, lines, key)`, each line `{item_code, qty?, uom?, weighed?, options?, note?, seat?, course?}`. A dish's choices go in `options` as `[{"item_code": "OAT-MILK"}]` and are checked against the item's choice groups when the line is added. `seat` is whose dish it is (`"2"`, shown on the till and the kitchen ticket as *Guest 2*) and `course` when it is served, in the shop's own word (*Mains*). A weighed article (from POS version 2.1.0.668) carries its scale reading, `weighed: {source, weight, tare?}`, which counts as a typed weight, so your app's user needs the manual-weight right; each line the check returns says `sold_by_weight`.
 4. **Show the guest a price, if you need one:** `check_preview(check)` answers the shop's price of the open lines (`rows` and `total`). It is never stored: the bill is priced again when it is paid.
 
 Staff send each round to the kitchen from a till (*Send*); your app does not ask for that right.
@@ -40,6 +40,6 @@ Staff send each round to the kitchen from a till (*Send*); your app does not ask
 ## Limits
 
 - Online only: nothing here works offline.
-- A weighed line on an open check is refused at Pay until a later POS version.
+- A weighed article added with no reading is refused at Pay until a till weighs it (from POS version 2.1.0.668, the reading rides the line: step 3). An article that tracks lots or serials takes no reading.
 - What your app reads back carries no staff identity, no register and no server's note.
 - The door tells one app's user from another, never one guest from another: which guest may see which check is your app's job, and each app has its own user.

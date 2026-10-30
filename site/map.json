@@ -49,7 +49,11 @@
   "check_note_pending": "A till's own, when a check is paid. Refused to your app whatever it is granted.",
   "check_clear_pending": "A till's own, when a check is paid. Refused to your app whatever it is granted.",
   "check_break_claim": "A till's own: end another till's payment of a check. Refused to your app whatever it is granted.",
-  "check_print": "A till's own: the printed check for the table. Refused to your app whatever it is granted."
+  "check_print": "A till's own: the printed check for the table. Refused to your app whatever it is granted.",
+  "station_tickets": "A kitchen station's board now (every station's when none is named): tickets sent in the last 12 hours not yet bumped, and 30 minutes of bumped ones to recall.",
+  "station_ticket_move": "Move one ticket one step, new to started to ready to bumped; the same step again answers already.",
+  "item_availability": "A store's items that carry a sold-out or hours rule (or the one you name), available now or not and why.",
+  "set_item_availability": "Mark an item sold out at one store (until a time or until cleared), clear it, or set the hours it is sold; not fenced to your user's stores."
  },
  "other_calls": [
   {
@@ -399,7 +403,7 @@
    "when": "It fires when the cashier presses Pay, before the payment sheet opens (`stage: \"sale\"`); before the refund choices open on every refund the till pays (`stage: \"return\"`)",
    "sends": "The numbers are the **server's**, never the till's echo. Money is a whole number of minor units with the currency's own digits (`currency_exponent`: 2 for AED, 3 for KWD, 0 for JPY); quantity is in thousandths.",
    "answer": "allow it, allow it without some tenders, refuse it, ask the cashier a question, or call a manager.",
-   "limit": "3 seconds unless raised, at most 10 · at most 3 checks per POS Profile, 10 seconds together.",
+   "limit": "3 seconds unless raised, at most 10 · at most 3 checks per POS Profile, 10 seconds together",
    "sees": "*\"⟨label⟩ did not answer. This sale can't be paid until it does. Try again, or get a manager.\"*"
   },
   {
@@ -457,7 +461,7 @@
    "table": "declared",
    "what": "Lines under the store's name (an address, a tax number, a slogan) and lines at the very end (a returns policy, a thank-you in a second language).",
    "when": "They print on every receipt of that register, on every print route and in the Print sheet's preview, in every frame.",
-   "sees": "The shipped receipt (`mPOS Receipt`)** prints the register's header and footer."
+   "sees": "The shipped receipts** print the register's header and footer"
   },
   {
    "page": "register_books",
@@ -488,6 +492,13 @@
    "what": "declares that table once, and the till's scan finds the unit: its item, its batch, its serial, and whether it can be sold.",
    "when": "It fires **only on a miss**: an item barcode, a serial or a batch is found exactly as before and no source is read.",
    "sees": "A source that cannot be read is logged and skipped, so a misconfigured table can cost a *Not found*, never a sale."
+  },
+  {
+   "page": "station_ticket",
+   "table": "declared",
+   "what": "Each is a call on the partner API, `/api/method/ivendnext_mpos.api.v1.<name>`, under the rights of the user your app signs in as.",
+   "when": "When a till presses *Send*, each kitchen station gets its own ticket",
+   "sees": "There is no cursor to lose: every read is the whole board, so a screen that dropped its connection reads it again and has caught up."
   },
   {
    "page": "wallet",

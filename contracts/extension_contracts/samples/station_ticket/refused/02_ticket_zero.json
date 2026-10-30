@@ -1,0 +1,12 @@
+{
+  "extension_point": "station_ticket",
+  "contract": "move_request",
+  "about": "Ticket 0 is a void that printed nowhere; it is never on the board.",
+  "expect_refusal": "That ticket is not in this store's kitchen.",
+  "payload": {
+    "store": "Main Store",
+    "kitchen_order": "KO-1",
+    "ticket": 0,
+    "state": "started"
+  }
+}

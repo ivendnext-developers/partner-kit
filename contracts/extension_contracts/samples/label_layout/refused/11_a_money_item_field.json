@@ -1,7 +1,7 @@
 {
   "extension_point": "label_layout",
   "contract": "declaration",
-  "about": "an item field of a money type (standard_rate, Currency). A label's price is the till's own ({price}), never an item field; the till shows only Data, Select, Int and Check fields. The type lives on the site, so the record refuses it.",
+  "about": "An item field of a money type (standard_rate, Currency). A label's price is the till's own ({price}), never an item field; the till shows only Data, Select, Int and Check fields. The type lives on the site, so the record refuses it.",
   "beyond_schema": true,
   "payload": {
     "doctype": "Retail Label Layout",

@@ -26,6 +26,7 @@ TITLE_DOOR = {
     "Label layout": "label-layout",
     "List mark": "manifest",           # a manifest kind (list_marks): any ready manifest card satisfies this door
     "Open check — a table's running order, paid once (`open_check/1`)": "open-check",
+    "Station ticket — the kitchen's tickets on a kitchen screen (`station_ticket/1`)": "station-ticket",
     "Partner fulfil — a code your service makes for a paid sale line": "fulfil-at-sale",
     "Partner page": "partner-page",
     "Payer — your service pays part of a sale for someone else": "payer",

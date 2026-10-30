@@ -1,0 +1,23 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "A question for the cashier, and a detail filled with it.",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false,
+    "fillable": [
+      "Rx Date"
+    ]
+  },
+  "payload": {
+    "verdict": "ask",
+    "question": "Has the customer shown the prescription?",
+    "fill": {
+      "Rx Date": "2026-10-01"
+    }
+  }
+}

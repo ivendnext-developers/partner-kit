@@ -1,0 +1,12 @@
+{
+  "extension_point": "station_ticket",
+  "contract": "move_request",
+  "about": "A state the door does not know.",
+  "expect_refusal": "A ticket moves to started, ready or bumped.",
+  "payload": {
+    "store": "Main Store",
+    "kitchen_order": "KO-1",
+    "ticket": 1,
+    "state": "cooking"
+  }
+}
