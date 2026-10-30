@@ -303,6 +303,15 @@ class LiveTest(unittest.TestCase):
         self.site.refuse_ns = False
         self.assertEqual(self.events(r, lambda n, d: n == "state" and d == {"live": True}, 6)[-1], ("state", {"live": True}))
 
+    def test_v17_a_failed_page_read_with_a_cached_name_does_not_hold_a_rename_back(self):
+        self.start(name="shop-internal.example.com")
+        r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+        self.up(r)
+        self.site.name, self.site.page_fails = "shop-moved.example.com", 1   # renamed, and the first page read fails
+        self.site.drop()
+        got = self.events(r, lambda n, d: n == "state" and d == {"live": True}, 8)
+        self.assertEqual((got[-1], self.hub.names[self.site.site]), (("state", {"live": True}), "shop-moved.example.com"))
+
     def test_v10_a_site_whose_desk_page_names_no_site_is_not_read_again_at_once(self):
         self.start(name="shop-internal.example.com", named=False)
         self.events(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")), None, 2.5)

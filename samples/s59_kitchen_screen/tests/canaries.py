@@ -355,6 +355,8 @@ CANARIES = [
     ("an old socket's state is told under the lock", LS,
      '                for ln in self.lines.get(site, ()):         # Line\'s own lock is a leaf\n                    ln.tell("state", {"live": up})',
      "                pass", L + "LiveTest.test_v4_a_dropped_socket_says_so_then_comes_back_and_every_screen_reads"),
+    ("a failed page read does not use up the name read's window", LS, "                    if name is not None:    # read: not again",
+     "                    if True:    # read: not again", L + "LiveTest.test_v17_a_failed_page_read_with_a_cached_name_does_not_hold_a_rename_back"),
     # KSCSOLDNAME
     ("a sold-out dish is named by its record", S, "            value = ksc.with_names(value, named)", "            value = value",
      T + "test_s8_a_dish_sold_out_that_no_ticket_names_is_shown_by_its_name"),

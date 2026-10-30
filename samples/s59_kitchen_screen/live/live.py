@@ -65,7 +65,8 @@ LINGER_S = 60             # a site's socket stays this long after its last line,
 STREAMS_MAX = 2000        # lines one copy holds, every retailer together
 SITE_STREAMS_MAX = 300    # … and one retailer's
 CONNECTIONS_MAX = STREAMS_MAX + 200   # connections at once, admitted or not (a slow caller holds a thread each)
-NAME_RETRY_S = 1800       # a site whose Desk page named no site is read again at most this often
+NAME_RETRY_S = 1800       # a Desk page read whole is read again at most this often (no name in it, or a refusal
+                          # of the name it gave)
 NAME_PAGE = "/app"        # the site's Desk page: its boot data names the site (``"sitename": …``)
 NAME_MAX = 4 * 1024 * 1024
 NAME_PAGE_MIN = 64 * 1024 # a Desk page is larger than this; a smaller one (an edge's own page) is not parked
@@ -116,7 +117,7 @@ class Hub:
         self.lines: dict[str, set] = {}             # site → its open lines
         self.sockets: dict[str, dict] = {}          # site → {"stop", "thread", "live", "idle_since"}
         self.names: dict[str, str] = {}             # site → its socket's namespace, when not its address
-        self.name_tried: dict[str, float] = {}      # site → when its Desk page last named no site
+        self.name_tried: dict[str, float] = {}      # site → when its Desk page was last read whole without a new name
 
     # ── lines ──
     def admit(self, body) -> tuple[int, dict, Line | None]:
@@ -213,8 +214,9 @@ class Hub:
         def lost(e):
             if e.refused and "Invalid namespace" in e.why and site in self.names:   # renamed, or refused for another reason:
                 if self.clock() - self.name_tried.get(site, -1e9) >= NAME_RETRY_S:  # read the page again, at most so often
-                    self.name_tried[site] = self.clock()
                     name = self.site_name(site)
+                    if name is not None:    # read: not again for a while (a failed read is tried at the next refusal)
+                        self.name_tried[site] = self.clock()
                     if name:            # a new name, or the same one (then the refusal was the socket's own)
                         self.names[site] = name
             elif e.refused and "Invalid namespace" in e.why and site not in self.names \
