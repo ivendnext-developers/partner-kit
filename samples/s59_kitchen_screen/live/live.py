@@ -146,14 +146,13 @@ class Hub:
             if line:
                 mine.add(line)
             sock = self.sockets.get(site)
-            live = bool(sock and sock["live"])
-            if sock:
+            if line is not None:        # told under the lock: a "signed in" racing it always lands after (Line's own lock is a leaf)
+                line.tell("state", {"live": bool(sock and sock["live"])})
+            if sock and line is not None:   # a refusal admits nothing, so it leaves the linger mark as it is
                 sock["idle_since"] = None
             others = bool(self.lines.get(site))
         if replaced:                    # the retailer's open screens read every 3 s until the new socket signs in
             self._tell(site, "state", {"live": False})
-        if line is not None:            # told before a socket starts, so its "signed in" always comes after
-            line.tell("state", {"live": live})
         if not sock and others:
             self._start(site)
         if line is None:

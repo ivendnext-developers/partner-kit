@@ -259,7 +259,13 @@ class LiveTest(unittest.TestCase):
         deadline = time.monotonic() + 3
         while self.hub.lines and time.monotonic() < deadline:
             time.sleep(0.05)
-        self.hub.sockets[self.site.site]["idle_since"] = None      # as a busy admission in its linger minute leaves it
+        old_max = live.SITE_STREAMS_MAX
+        live.SITE_STREAMS_MAX = 0                                   # the copy is full: a screen of this retailer is refused
+        self.addCleanup(setattr, live, "SITE_STREAMS_MAX", old_max)
+        busy = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+        self.assertEqual(busy.status, 503)
+        self.assertIsNotNone(self.hub.sockets[self.site.site]["idle_since"])   # the refusal left the linger mark alone
+        self.hub.sockets[self.site.site]["idle_since"] = None      # and a socket with no mark at all is still swept
         self.hub.sweep()
         clock.t += live.LINGER_S
         self.hub.sweep()

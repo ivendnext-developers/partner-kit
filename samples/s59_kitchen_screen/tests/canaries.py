@@ -343,6 +343,8 @@ CANARIES = [
      L + "SocketTest.test_k3_pings_are_answered_and_the_edges_cookie_is_sent_back"),
     ("an edge's small page is not parked as no name", LS, "        if not name and len(text or \"\") < NAME_PAGE_MIN:",
      "        if False:", L + "LiveTest.test_v14_an_edges_small_page_at_app_is_not_parked_as_no_name"),
+    ("a refused screen leaves the linger mark alone", LS, "            if sock and line is not None:   # a refusal admits nothing",
+     "            if sock:   # a refusal admits nothing", L + "LiveTest.test_v13_a_socket_whose_lines_are_gone_is_swept_even_when_a_busy_refusal_cleared_its_mark"),
     # KSCSOLDNAME
     ("a sold-out dish is named by its record", S, "            value = ksc.with_names(value, named)", "            value = value",
      T + "test_s8_a_dish_sold_out_that_no_ticket_names_is_shown_by_its_name"),
