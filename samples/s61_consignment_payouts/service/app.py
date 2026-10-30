@@ -262,7 +262,7 @@ class Service:
         n = consign.MOST_LINES
         while n < len(rows) and consign.totals(rows[:n])[1] < 0:   # a kept part below 0 would stick: take the next
             n += 1
-        kept, left = rows[:n], len(rows) - n
+        kept, left = rows[:n], max(0, len(rows) - n)
         sales, part = consign.totals(kept)
         words = consign.summary_of(kept, left, p.get("currency") or "")
         self.left(t0)                   # out of time after the reads: nothing is written
