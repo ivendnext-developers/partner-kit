@@ -1,4 +1,4 @@
-# Source: ivendnext/iVendNext_PWA apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contract_check.py @ 60147699cce4, copied unchanged: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board.
+# Source: ivendnext/iVendNext_PWA apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contract_check.py @ c39b1449937a, copied unchanged: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board.
 # Copyright (c) 2026, CitiXsys Technologies and contributors
 # For license information, please see license.txt
 """The extension-point library's schema checker (lane ``lib1``), kept free of fixtures so any suite

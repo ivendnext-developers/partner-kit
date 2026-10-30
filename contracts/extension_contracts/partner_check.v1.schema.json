@@ -266,7 +266,7 @@
       }
     },
     "answer": {
-      "description": "HTTP 2xx, a JSON object of at most 64 KB, one of five.",
+      "description": "HTTP 2xx, a JSON object of at most 64 KB, one of five. allow, ask and approve may also carry fill: the sale details the subscription lists in its settings (fill_attributes).",
       "oneOf": [
         {
           "type": "object",
@@ -277,6 +277,9 @@
           "properties": {
             "verdict": {
               "const": "allow"
+            },
+            "fill": {
+              "$ref": "#/$defs/fill"
             }
           }
         },
@@ -307,6 +310,9 @@
               "minLength": 1,
               "maxLength": 140,
               "pattern": "^[^<>]*\\S[^<>]*$"
+            },
+            "fill": {
+              "$ref": "#/$defs/fill"
             }
           }
         },
@@ -345,6 +351,9 @@
               "minLength": 1,
               "maxLength": 140,
               "pattern": "^[^<>]*\\S[^<>]*$"
+            },
+            "fill": {
+              "$ref": "#/$defs/fill"
             }
           }
         },
@@ -364,6 +373,9 @@
               "minLength": 1,
               "maxLength": 140,
               "pattern": "^[^<>]*\\S[^<>]*$"
+            },
+            "fill": {
+              "$ref": "#/$defs/fill"
             }
           }
         }
@@ -436,6 +448,10 @@
             0,
             1
           ]
+        },
+        "settings": {
+          "description": "A JSON object stored as text: see settings. A wasm check carries none.",
+          "type": "string"
         }
       },
       "oneOf": [
@@ -461,6 +477,37 @@
           ]
         }
       ]
+    },
+    "fill": {
+      "description": "1 to 10 sale details this answer writes onto the sale, by name: each one the subscription lists in fill_attributes (one the store has switched off since is skipped), each value plain text of 1 to 140 characters. iVendNext composes the filled sale on the server and asks every check once more on it; that answer is the round's. Never on refuse; a partner module never fills.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 140,
+        "pattern": "^[^<>]*\\S[^<>]*$"
+      }
+    },
+    "settings": {
+      "description": "The subscription's settings field (a JSON object, stored as text): only fill_attributes, the sale details an answer may fill. An address check only. Naming them adds one sentence to the consent text, so the consent lapses when the list changes.",
+      "type": "object",
+      "required": [
+        "fill_attributes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fill_attributes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "1 to 10 different active sale details."
+        }
+      }
     }
   }
 }

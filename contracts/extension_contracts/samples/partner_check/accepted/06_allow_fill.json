@@ -1,0 +1,22 @@
+{
+  "extension_point": "partner_check",
+  "contract": "answer",
+  "about": "The sale goes on, and the prescription's date is written onto it (a detail the subscription lists).",
+  "given": {
+    "offered": [
+      "Cash",
+      "Credit Card",
+      "Gift Certificate"
+    ],
+    "may_approve": false,
+    "fillable": [
+      "Rx Date"
+    ]
+  },
+  "payload": {
+    "verdict": "allow",
+    "fill": {
+      "Rx Date": "2026-10-01"
+    }
+  }
+}

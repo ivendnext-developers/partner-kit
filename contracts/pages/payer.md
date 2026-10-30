@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ 60147699cce4, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Payer — your service pays part of a sale for someone else
 
 **Contract:** [`payer.v1.schema.json`](../extension_contracts/payer.v1.schema.json)
@@ -326,7 +326,9 @@ changes it, and the calls stop until consent is ticked again):
   service mode's charge) cannot be split by line, so it is never asked about: the cashier is told to take the
   charge off. An item's own surcharge and its tax count on that item's line.
 - With a partner's check before payment on the till, the check is asked again on the plan's prices once your
-  answer lands, and on the sale's own prices if the cashier removes the payer. A check that refuses the sale on
+  answer lands, and on the sale's own prices if the cashier removes the payer or goes back to the payment screen
+  with the payer still on (that screen books the whole sale without your share), unless the split already holds
+  money (a payment sent, or a card payment started or taken) or the till is offline. A check that refuses the sale on
   the plan's prices takes the payer off.
 
 ## 8. Telling an AI assistant

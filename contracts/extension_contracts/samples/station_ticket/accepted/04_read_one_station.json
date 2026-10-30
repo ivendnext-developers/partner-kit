@@ -1,0 +1,9 @@
+{
+  "extension_point": "station_ticket",
+  "contract": "board_request",
+  "about": "The grill screen reads its board.",
+  "payload": {
+    "store": "Main Store",
+    "station": "Grill"
+  }
+}

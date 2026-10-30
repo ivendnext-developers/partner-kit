@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_capture.md @ 60147699cce4, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_capture.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner capture
 
 **Contract:** [`partner_capture.v1.schema.json`](../extension_contracts/partner_capture.v1.schema.json)
@@ -87,6 +87,12 @@ refuses `notice` as an unknown verdict and applies your declared down answer, so
 item is blocked with *"⟨label⟩ did not answer…"*: don't send `notice` to an older build. The other way round
 is safe: an older till given a newer server's notice adds the line silently, with nothing shown.
 
+**The setting `page` was added to version 1** (additive; section 3, *A button that opens your page*). The
+first POS build that accepts it is the first whose release notes list *the capture setting `page`*. An
+older build refuses the key when the subscription is saved (*"The settings of a scan capture may only
+carry: …"*), so you learn it at set-up, not at the till. An older till given a newer server's `page` shows
+your notice without the button.
+
 ## 3. What is sent, and what you answer
 
 **Setting it up.** A System Manager adds one **Retail Extension Subscription** per event in iVendNext Desk:
@@ -99,6 +105,10 @@ and `settings`, a JSON object:
   `Data`, `Select`, `Link`, `Int` or `Small Text`, at permission level 0), or both; at least one;
 - on customer add: `{"event": "customer_add"}`;
 - on customer select: `{"event": "customer_select"}`;
+- on scan and on customer select only, optionally `"page": "<id>"` — the ID of a
+  [partner page](partner_page.md)'s subscription (its record name in Desk, ⛔ not its label) placed on the
+  till (*Till key*, or *Till key and Desk page*): your notice then carries a button that opens it (*A button
+  that opens your page*, below). The shop sets it after both are installed: a package cannot name it;
 - on a quantity change: `{"event": "qty_change", "item_groups": ["Sold in sixes"]}` — the scan's filter,
   with the scan's rules.
 
@@ -199,6 +209,34 @@ not called).
 - **The sentence is never logged**, and the till never reads it: the row says *"⟨label⟩: answered with a
   notice"*.
 
+**A button that opens your page.** When your settings name a `page`, a notice you send carries one more
+key on its way to the till, `page`, and the till's message carries a button, *Open ⟨the key's caption⟩*,
+that presses that page's key for the cashier. Only beside a notice: never on *allow*, *confirm*, *refuse*,
+a challenge, or a down answer.
+- **Where it is drawn.** On the counter and the tablet, when the page's key is on the till's band (the
+  shop places it in POS Studio → Apps; a key only in a button group gets no button), off the camera, on a
+  sale that has started, and on two routes only: an item added on the Sell screen (scanned, searched or
+  tapped), and a customer put on the sale from the Sell screen's scan box (their code scanned or typed, or
+  their suggestion tapped). Everywhere else your notice shows as before, without the button: the phone,
+  an item weighed on the till's scale, the Customers screen, quick-create, Pay, a resumed or converted sale, a quote becoming an
+  order, an exchange, the receipt, the camera's pause, and a notice with values (the confirm sheet).
+- **What a tap does.** It waits until the till has finished pricing the item (at most 5 seconds; if pricing
+  is still running, nothing opens and the button stays for another tap while the message is on screen), then presses the page's key
+  exactly as the cashier would: its placement, consent, the 10-second rule and its answer all hold. If a
+  sheet is open — a cross-sold item's offer sheet, for one — it opens nothing and the till says *"Close
+  the open sheet, then press ⟨caption⟩."*; the button stays while the message is on screen, so the cashier
+  closes the sheet and taps it again (or presses the key). A tap off the Sell screen's basket keeps the button too. While a tap waits, the
+  message stays on screen. If it has gone by the time pricing settles (the cashier closed it, or a later
+  notice took its place), or the sale has changed, nothing opens; the key is still there. The till never opens your page by itself, and your
+  page cannot tell the button from the key.
+- **One service per event.** On one POS Profile one service answers scans, so a delivery service with a
+  page and, say, a shelf-life notice service cannot both answer scans at the same store: point one service
+  at the page, or split the stores' POS Profiles.
+- **Not on customer add or a quantity change.** A `page` there is refused when the subscription is saved.
+- **Updates and a stale page.** A package update keeps the `page` the shop set while the new version's event
+  still honours one and it still names a page placed on the till; otherwise the update drops it. A service
+  switched off saves with a stale `page`; switching it on checks the page again.
+
 **No answer sets a quantity or a price.** A `set_qty`, a `qty`, a price, `sale_attributes` on a quantity
 change, or any other key refuses the whole answer, and your declared down answer applies.
 
@@ -260,7 +298,9 @@ qty_change."* · *"The settings of a ⟨event⟩ capture may only carry: ⟨keys
 item group names."* · *"A ⟨event⟩ capture names at most 50 item groups."* · *"No item group named ⟨group⟩."* ·
 *"item_field must be the name of one field on Item."* · *"Item has no field ⟨field⟩ that holds a value."* ·
 *"⟨field⟩ is set on ⟨n⟩ items; a ⟨event⟩ capture's field may name at most 2000. Name item groups instead."* ·
-*"Say which items a ⟨event⟩ capture asks about: item groups, an item field, or both."* · *"⟨subscription⟩ already answers ⟨event⟩
+*"Say which items a ⟨event⟩ capture asks about: item groups, an item field, or both."* · *"⟨page⟩ is not a
+partner page placed on the till."* · *"A page opens only from a scan or a customer picked at the till.
+Remove page from this service's settings."* · *"⟨subscription⟩ already answers ⟨event⟩
 for these POS Profiles. One service answers each."* · *"The time to answer must be more than 0 and at most
 ⟨3 or 10⟩ seconds."* · *"When the service is down, this extension point can only: allow_and_flag,
 refuse."* · and the address and label rules every extension point's subscription carries.

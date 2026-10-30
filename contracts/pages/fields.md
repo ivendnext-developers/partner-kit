@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/fields.md @ 60147699cce4, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/fields.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Field rules
 
 **Contract:** [`fields.v1.schema.json`](../extension_contracts/fields.v1.schema.json)
@@ -116,7 +116,10 @@ the device's, and a teammate who takes the till offline reads it), so a till tha
 nothing for it. The book's page
 names it as withheld, and a device holding a copy from before clears its customer book and fills it again. A
 shown **Item** field above level 0 never reaches a till, its catalogue or a receipt, for anyone (one everyone
-reads but only some change included), and a till stops drawing it at its next start. ⚠ The customer fields the till always carries (name, phone, email, tax id, group) are read as
+reads but only some change included), and a till stops drawing it at its next start. A register book writes what
+it names whoever sells: a field only some roles read may go only in a detail slot or the counterparty, which only
+the book's readers of a person's details read, and an Item field is refused as a book's class
+([`register_books.md`](register_books.md) §8). ⚠ The customer fields the till always carries (name, phone, email, tax id, group) are read as
 they are: put one of them at a level and the till still shows and searches it.
 
 ⛔ **Require through the offline drain is a flag, never a refusal:** a customer added offline without a
@@ -135,7 +138,8 @@ takes no place) · seven screens.
 ## 7a. The receipt (`receipt_preview`)
 
 A shown Item field prints one line under each item that has a value — *Pack: 12 × 500 ml* — on the receipt
-screen, on the paper (the shipped `mPOS Receipt`, every print route and the Print sheet's preview) and on the
+screen, on the paper (the shipped `mPOS Receipt` and the engine's `Print Format Receipt 3"`, every print route and
+the Print sheet's preview) and on the
 offline slip, in the same words. Nothing else on the receipt takes a rule: money, tax, totals, tenders, the
 tax authority's marks, the receipt number, the buyer's tax id, the reprint and duplicate marks and the till
 time print as they are. A shop's own words go in the register's header and footer ([receipt](receipt.md)).

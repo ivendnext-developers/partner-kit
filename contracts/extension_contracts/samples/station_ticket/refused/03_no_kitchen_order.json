@@ -1,0 +1,11 @@
+{
+  "extension_point": "station_ticket",
+  "contract": "move_request",
+  "about": "A move that names no kitchen order.",
+  "expect_refusal": "kitchen_order",
+  "payload": {
+    "store": "Main Store",
+    "ticket": 1,
+    "state": "started"
+  }
+}

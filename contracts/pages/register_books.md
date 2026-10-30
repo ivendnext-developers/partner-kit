@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/register_books.md @ 60147699cce4, copied unchanged except the links, one decision id and three framework asks on the product's board, and the framework's own readers (named by whose they are): its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/register_books.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Register books
 
 **Contract:** [`register_book.v1.schema.json`](../extension_contracts/register_book.v1.schema.json)
@@ -43,7 +43,7 @@ keeps each book's periods, and prints the book (section 7). Section 6 names what
 | `numbering` | `book_store` (one sequence per book and register store) or `book_store_item` (one per item) |
 | `balance` | `1` keeps a running balance per book, register store and item (a ledger) |
 | `correction` | how a correction prints: `reversing_line`, `dated_note`, `signed_strike_through` or `signed_amendment` |
-| `required` | the columns a person's Desk submit may not leave empty (the till is never refused) |
+| `required` | the columns a person or an integration may not leave empty when submitting (the till and a background job are never refused: §5, *Who is refused*) |
 | `columns` | the printed columns: a label and the line columns it prints (`when`: `In` or `Out`; `group`: the band printed over the column, such as a received or an issued half, which a market's own layout prints (the door's plain print has fixed columns); `mark`); besides the line's own columns a column may print `balance_before`, the balance before the line, which the print works out (a condition or a required column cannot name it) |
 | `details` | up to six slots `detail_1` … `detail_6`, each a label and a source: a sale detail, a Desk field, or a record lookup `{"doctype", "match", "field"}` — `match` is `customer` (the Customer the movement names), `customer_link` (the one record of `doctype` whose `customer` field names that Customer, such as the pharmacy counter app's patient record) or `user` (the record named by the line's dispenser); a slot with no source prints empty for the shop to write in. A slot's `type` is `Data`, `Date` (it routes as a date) or `Age`: whole years at the movement's date from the date of birth its source gives (a date field, or text written `YYYY-MM-DD`), empty when the date is missing, is written any other way, or comes after the movement. A slot's `person` (`0` or `1`) says whether it holds a person's details, which are erased once the book's retention has passed (§8); not declared, a slot read from the customer or its linked record (`customer`, `customer_link`), or an `Age`, is a person's and any other is not (a dose, a prescriber's address). A `customer_link` lookup that finds two records of one customer reads neither; the store's walk-in customer (a warehouse's cash customer or a till's default customer) reads none, so a patient record linked to it by mistake never reaches an anonymous sale |
 | `authority` | where the prescription, permit or pass is read: `pos_sale_details`, `desk_fields`, `dispenser_licence` |
@@ -132,12 +132,14 @@ document is not submitted, and no number is used.
   store, since numbers count per store), and in a book without a balance its print shows it
   as a note of the return, never as a movement; a book that keeps a balance counts it (the goods
   came back).
-- **Who is refused.** Only a person's submit on the Desk: a column the book declares `required` left
+- **Who is refused.** A submit made outside a background job — a person on the Desk, an integration
+  through the REST API, a console or `bench execute` — and a person's own Desk action the core queues
+  through its queue action (a stock-take of more than 100 rows): a column the book declares `required` left
   empty (*"⟨column⟩ is required in ⟨book⟩."*), a line that would take a balance below
   zero after its opening (*"This would take the ⟨book⟩ balance of ⟨item⟩ below zero. A count of
   ⟨book⟩ by ⟨role⟩ settles it."*), or a declared item moved by a document the door does not book.
-  The till's sale, a sale drained from the offline queue, a document the till writes in its own
-  save (the Delivery Note of a sale with a line to deliver) and a background job's post (the ERP
+  A POS Invoice (the till's sale), a sale drained from the offline queue, a document the till writes in its own
+  save or for its operator (the Delivery Note of a sale with a line to deliver) and any other background job's post (the ERP
   path's stock entries) are never refused: their lines are written flagged (`incomplete`,
   `below_zero`), an open task. A correction is never refused.
 - **A late line.** A sale drained from the offline queue is entered when it drains, numbered then,
@@ -219,8 +221,8 @@ kit's prints to them.
   date or a warehouse: count again and reconcile anew.
 - *"This print holds N of the M entries"* counts the book's entries in the range for any signed-in
   holder of the read right, whatever their warehouses; a print nobody signed in for tells no count.
-- A document posted in a web request by an integration (through the REST API, not a background
-  job) is a person's submit: it is refused for a required column or a balance below zero.
+- A document an integration posts through the REST API is refused as a person's submit is (§5, *Who
+  is refused*): for a required column or a balance below zero.
 - A document the door does not book, moving two declared items at once, takes their register rows
   in its own order: a document locking the same two rows the other way at the same moment is ended
   by the database (rolled back whole, never a gap).
@@ -278,7 +280,7 @@ kit's prints to them.
 - The register stores mapping is not checked against a premises: the shop maps it.
 - A person's columns are held back by their permission level, which the framework does not apply
   everywhere: the Desk's group-by count on a list's sidebar and a link search still answer on a field
-  above a reader's level (asked of the framework, as for any role-limited field). System
+  above a reader's level (each asked of the framework, as for any role-limited field). System
   Manager reads them only when a book names it its count role (Administrator always does).
 - Two *Erase persons' details* run at once on one store may list an entry in both records; each
   record is still true.
@@ -323,7 +325,7 @@ kit's prints to them.
   settled (its stock would move back past the register): count again; an import's cancel writes the
   move back as flagged lines. Where the till's open sales are the only difference, the refusal names
   the quantity to reconcile to. A reconciliation of more than 100 rows, which the core submits in
-  the background, is still the person's own. A person's Desk submit is refused otherwise (*"⟨item⟩ is kept in ⟨book⟩: count it there first
+  the background, is still the person's own. A person's or an integration's submit is refused otherwise (*"⟨item⟩ is kept in ⟨book⟩: count it there first
   (a count of ⟨book⟩ by ⟨role⟩), then reconcile it to the counted quantity."*); an import's job writes
   the change as flagged lines. The reconciliation writes no line: the count did. Before the opening
   nothing is refused: a shop loads its stock, then counts its opening. The reconciliation does not
@@ -420,11 +422,21 @@ kit's prints to them.
   its lists and report, *Data Export* and `ivn_rows`; the record API returns them empty when it
   reads one line (keys kept: an event-feed application's user reads `counterparty: null`) and leaves
   them out of a list (an integration that copies the register elsewhere is given the level, or
-  knows an empty or missing column may be a hidden one). A print through `ivn_rows` or
+  knows an empty or missing column may be a hidden one).
+  A print through `ivn_rows` or
   `ivn_register_print(doc)` (every print of the book from its period) shows only what its viewer may
   read, and the plain
   print says *"A person's details are not shown: your role may not read them."* A level belongs to
   the record type, not to a book: a role that reads one book's people reads every book's.
+- **A field only some roles read, named by a book.** The book writes it whoever submits (the law
+  wants the line whole), so its readers are then the line's: a detail slot or the counterparty is
+  read only by a role given level 1 here, whatever roles the field itself names. Name such a field
+  only there: the checker refuses it in `authority.desk_fields`, `authority.dispenser_licence` or a
+  `columns_from` → `reference_no`, which every reader of the line reads, and as the item's class
+  (`class_source`), which the book also routes on (take the items by `item_groups` instead). ⚠ A
+  detail slot hides its value, not what the book does with it: a condition on the slot decides
+  whether a line is written, and a `required` slot left empty marks the line `incomplete` and names
+  the slot in its remark (or refuses a person's submit, naming it), both read by every reader of the line.
 - **When they are erased.** During a book's retention the register is kept whole, whatever a
   person asks. After it, *Erase persons' details* on the book's form (its count role; never on a
   schedule) asks a register store, an optional cut-off date (*entered up to*) and the shop's own

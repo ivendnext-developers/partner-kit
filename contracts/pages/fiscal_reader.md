@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/fiscal_reader.md @ 60147699cce4, copied unchanged except the links and the framework's own calls, named by what they do: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/fiscal_reader.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Fiscal reader
 
 **Contract:** [`fiscal_reader.v1.schema.json`](../extension_contracts/fiscal_reader.v1.schema.json)
@@ -79,9 +79,11 @@ and the till's receipt screen print the authority's QR, drawn from the stored pa
 with the framework's own QR library), and the seal as plain text. A payload over 2,000 characters, or
 one too large for a QR, is not drawn; the receipt says *"The tax QR is too long to print. Open the sale
 in the back office."* instead. A gift copy prints neither: a tax QR can encode the sale's total. A store
-whose profile prints on another format (the engine's own receipt, say) shows the marks on the till's
-receipt screen but prints none on paper. A store that copied the receipt format calls the same Jinja
-method, `receipt_fiscal_marks(doc)`, which returns
+whose profile prints the engine's own `Print Format Receipt 3"` gets them too, under its totals, through
+the place that receipt leaves for an installed app's lines. A store whose profile prints a format of its
+own shows the marks on the till's receipt screen but prints none on paper unless that format calls
+`receipt_lines(doc, "totals")` (as a copy of the engine's 3" does) or the Jinja method
+`receipt_fiscal_marks(doc)`, which returns
 `qr_svg` (the drawn code), `qr_too_long_text` and `signature`.
 
 **What the till does with it:** CLEARED and REPORTED release the receipt. PENDING shows *"Waiting for

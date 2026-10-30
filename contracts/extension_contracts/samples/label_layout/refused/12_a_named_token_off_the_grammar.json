@@ -1,7 +1,7 @@
 {
   "extension_point": "label_layout",
   "contract": "declaration",
-  "about": "an item field is named by its field name in lower case ({item.custom_strength}); {item.Strength} is no placeholder.",
+  "about": "An item field is named by its field name in lower case ({item.custom_strength}); {item.Strength} is no placeholder.",
   "payload": {
     "doctype": "Retail Label Layout",
     "label_name": "LIB1 Bad name",

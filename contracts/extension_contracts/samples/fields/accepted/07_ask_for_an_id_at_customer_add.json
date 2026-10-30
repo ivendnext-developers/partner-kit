@@ -1,7 +1,7 @@
 {
   "extension_point": "fields",
   "contract": "declaration",
-  "about": "the new-customer sheet and the till's customer edit ask for the shop's own ID-number field; a Save Rule makes it required.",
+  "about": "The new-customer sheet and the till's customer edit ask for the shop's own ID-number field; a Save Rule makes it required.",
   "payload": {
     "doctype": "Retail POS Theme",
     "theme_name": "LIB1 Fields A7",

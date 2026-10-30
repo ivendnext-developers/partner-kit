@@ -46,6 +46,12 @@ class Good(unittest.TestCase):
     def test_the_waveb_fixture_passes(self):
         self.assertEqual(validate(WAVEB), [])
 
+    def test_a_check_may_declare_the_sale_details_it_fills(self):
+        # since 2.1.0.668 (the product's test_manifest_check_waveb): the shop checks the names against its sale details at insert
+        m = copy.deepcopy(WAVEB)
+        m["extension_subscriptions"][0]["settings"] = {"fill_attributes": ["Rx Date"]}
+        self.assertEqual(validate(m), [])
+
     def test_three_checks_within_ten_seconds_pass(self):
         self.assertEqual(planted(more_checks(2, seconds=3)), [])
 
@@ -78,7 +84,12 @@ FORBIDDEN = [
     ("a check a manager may approve past", sub(may_approve=1), "a manager may approve"),
     ("a check whose down answer the product does not offer", sub(down_answer="allow"), "allow_and_flag, refuse, ask"),
     ("a check slower than its extension point allows", sub(timeout_seconds=11), "at most 10"),
-    ("a check with settings", sub(settings={"event": "scan"}), "a check takes no settings"),
+    # since 2.1.0.668 a check's one setting is the sale details its answer may fill
+    ("a check with other settings", sub(settings={"event": "scan"}), "carry only fill_attributes"),
+    ("a check filling eleven details", sub(settings={"fill_attributes": [f"d{j}" for j in range(11)]}),
+     "fill_attributes must list 1 to 10 different sale details"),
+    ("a check filling one detail twice", sub(settings={"fill_attributes": ["Rx Date", "Rx Date"]}),
+     "fill_attributes must list 1 to 10 different sale details"),
     # P-CAPTURE — partner_capture.validate_subscription's sentences
     ("a capture naming no event", sub(1, settings={"item_groups": ["All Item Groups"]}),
      "Name the event in the settings: scan, customer_add, customer_select or qty_change."),
@@ -88,6 +99,10 @@ FORBIDDEN = [
      "The settings of a customer_add capture may only carry: event."),
     ("a scan capture with an unknown setting", sub(1, settings={"event": "scan", "item_groups": ["x"], "price": 1}),
      "The settings of a scan capture may only carry: event, item_field, item_groups."),
+    # since 2.1.0.669: page is the page subscription's id, made at the shop's own install
+    ("a scan capture naming a page (the shop sets it after the install)",
+     sub(1, settings={"event": "scan", "item_groups": ["x"], "page": "a1b2c3d4e5"}),
+     "A package cannot name a page in a capture's settings. The shop sets page after the install."),
     ("a scan capture asking about every item", sub(1, settings={"event": "scan"}),
      "Say which items a scan capture asks about: item groups, an item field, or both."),
     ("a scan capture's groups that are not names", sub(1, settings={"event": "scan", "item_groups": "All"}),

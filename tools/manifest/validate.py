@@ -1,8 +1,7 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/business_logic/manifest_check.py,
-# at development 60147699cce4f7bd35f73e111649ce108eb2dcc2. The shop's own checker (the install screen runs it) is the source;
+# at development c39b1449937adac83d9be35bcfa2a6e3e41871ef. The shop's own checker (the install screen runs it) is the source;
 # this copy lets you check a manifest before you send it, and refuses the same manifests in the same words. Everything
-# below this header equals the source, except seventeen comments reworded in plain words (they named the product's
-# internal row and lane ids, a train, or the framework's own readers). A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
+# below this header equals the source. A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """The companion manifest — the VALIDATOR. Pure Python: no framework import, no network.
 
 A partner's own data (record types, fields, print formats, notifications, workspaces, sale details, webhooks)
@@ -49,9 +48,10 @@ whole tag printed from a string, a ``<meta http-equiv=refresh>``, or an address 
 ``{{ u }}`` — six known evasions, each a known-pass canary in ``test_template_readers.py``. The framework's other
 template helpers (``get_all``, ``get_doc``, ``db.get_value``) read without the viewer's rights and are only WARNED
 (``PRINT_READER_WARNING``); since version 2.1.0 a row or value read (the framework's own ``get_all``, ``get_list``,
-``db.get_value`` …) whose quoted record type is one ``ivn_rows`` serves is refused (``PRINT_SERVED_TYPES``;
-the framework's own types, such as Address, child tables and whole-record reads have no replacement and stay
-warned). ``ivn_rows`` and ``ivn_value`` apply the rights.
+``db.get_value`` …) whose quoted record type is one ``ivn_rows`` serves is refused (``PRINT_SERVED_TYPES``,
+and, since 2.1.0.668, the manifest's own served types; the framework's own types, such as Address, child tables and
+whole-record reads have no replacement and stay warned, and so does another package's type: the check reads one
+manifest, and which packages a site holds changes after it). ``ivn_rows`` and ``ivn_value`` apply the rights.
 """
 
 from __future__ import annotations
@@ -101,7 +101,7 @@ KINDS_V2 = (
     "label_layouts",
     # P-LISTMARK's list mark
     "list_marks",
-    # The regulated-stock register books (the register door)
+    # the regulated-stock register books (the register door)
     "register_books",
 )
 KINDS = KINDS_V1 + KINDS_V2
@@ -314,6 +314,15 @@ LIMIT_TEMPLATE_REASON = (
     "names {0}, a field only some roles read: a template prints or sends what it names to whoever "
     "prints or receives it, whatever their roles"
 )
+LIMIT_BOOK_REASON = (
+    "names {0}, a field only some roles read, for a register column every reader of the book's "
+    "lines reads: name it in a detail slot (detail_1 … detail_6), which only a role given a "
+    "person's columns reads"
+)
+LIMIT_BOOK_CLASS_REASON = (
+    "names {0}, a field only some roles read, as the item's class, which every reader of the "
+    "book's lines reads and the book routes on: take the book's items by item_groups instead"
+)
 # What a property setter MAY change on a shop's own record type (on the manifest's own added field): display only.
 ENGINE_DISPLAY_PROPS = {
     "bold",
@@ -495,19 +504,18 @@ _PLAIN_REFERENCE_RE = re.compile(r"\s*\{\{\s*[A-Za-z_]\w*(\.[A-Za-z_]\w*)*\s*\}\
 PRINT_READER_WARNING = (
     "this print format reads through the framework's own helpers, which skip the viewer's rights (a share-key "
     "visitor sees what they return): read other records through ivn_rows and ivn_value. The checker refuses "
-    "a row or value read of a record type ivn_rows serves"
+    "a row or value read of a record type ivn_rows serves, and of this app's own; another app's is only warned"
 )
-# Since 2.1.0: the framework's ROW and VALUE readers called on the framework (its `get_all(`,
-# `get_list(`, `db.get_value(` / `get_all(` / `get_list(`) whose record type is a quoted first
+# Since 2.1.0: the framework's row and value readers (the pattern below) whose record type is a quoted first
 # argument or a quoted `doctype=`; group 1 or 2 is the type. ivn_rows / ivn_value replace exactly these.
 # ⚠ A whole-record reader (get_doc …: its child rows have no ivn_rows door), a render, a map or a count, an
-# alias (its `db` object given another name with `{% set %}`), a subscript (`['get_all']` on its object) or a built name stays warned.
+# alias of the framework's database object, a subscript or a built name stays warned.
 _PRINT_TYPED_READ_RE = re.compile(
     r"\bfrappe\s*\.\s*(?:get_all|get_list|db\s*\.\s*(?:get_value|get_all|get_list))"
     r"""\s*\(\s*(?:doctype\s*=\s*)?(?:'([^'\\]*)'|"([^"\\]*)")"""
 )
-# The record types ivn_rows serves (template_readers._record_type_refusal is None), read on a test site
-# running version 2.1.0. ⚠ Pinned by test_template_readers: every name here is
+# The record types ivn_rows serves (template_readers._record_type_refusal is None), read on the CI site
+# migrated to the 2.1.0 release. ⚠ Pinned by test_template_readers: every name here is
 # served (no read without a replacement is refused), and every type THIS app ships that ivn_rows serves is
 # here (a pack that adds one regenerates the list in the same change). A type the engine adds later is
 # only warned until the list is regenerated from the site.
@@ -566,6 +574,7 @@ PRINT_SERVED_TYPES = frozenset(
             "Retail Extension Module|Retail Fiscal Reader|Retail Fiscal Regime Config",
             "Retail Floor Place|Retail Floor Section",
             "Retail Item Availability|Retail Kitchen Order|Retail Kitchen Station",
+            "Retail Kitchen Ticket",
             "Retail Label Layout|Retail Layaway Plan|Retail List Mark",
             "Retail Open Check|Retail Open Check Claim|Retail Open Check Event",
             "Retail Option Group|Retail Override Request|Retail PIN Event|Retail POS Theme",
@@ -1054,6 +1063,24 @@ def _limited_in_templates(v: _V):
             for fn in sorted(names):
                 if re.search(rf"\b{re.escape(fn)}\b", text):
                     v.refuse(f"{kind}[{i}]", x.get("name"), LIMIT_TEMPLATE_REASON.format(fn))
+    # a register book writes what it names whoever submits (register_line._header). A detail slot
+    # and the counterparty columns are a person's columns, read at the line's level 1; the
+    # authority, licence, class and reference columns are read by every reader of the line
+    for i, b in enumerate(v.m.get("register_books") or []):
+        if not isinstance(b, dict):
+            continue
+        auth = b.get("authority") if isinstance(b.get("authority"), dict) else {}
+        froms = b.get("columns_from") if isinstance(b.get("columns_from"), dict) else {}
+        shown = [auth.get("desk_fields"), auth.get("dispenser_licence")]
+        shown += [f.get("reference_no") for f in froms.values() if isinstance(f, dict)]
+        # the class is written and routed on; the dated table's from_field only picks its row
+        cls = b.get("class_source") if isinstance(b.get("class_source"), dict) else {}
+        cls = [cls.get(k) for k in ("item_field", "class_field", "group_field")]
+        for words, part in ((LIMIT_BOOK_REASON, shown), (LIMIT_BOOK_CLASS_REASON, cls)):
+            text = json.dumps(part)
+            for fn in sorted(names):
+                if re.search(rf"\b{re.escape(fn)}\b", text):
+                    v.refuse(f"register_books[{i}]", b.get("book"), words.format(fn))
     fields = [(f"custom_fields[{i}]", c) for i, c in enumerate(v.m.get("custom_fields") or [])]
     for i, d in enumerate(v.m.get("doctypes") or []):
         if isinstance(d, dict) and isinstance(d.get("fields"), list):
@@ -1155,6 +1182,7 @@ def _own_setter(v: _V, w: str, label: str, dt: str, fn, prop: str, value):
 
 
 def _print_formats(v: _V):
+    own = _own_served(v.m)
     for i, p in enumerate(v.list_of("print_formats")):
         w, name = f"print_formats[{i}]", p.get("name")
         v.named(w, name)
@@ -1162,7 +1190,7 @@ def _print_formats(v: _V):
             v.refuse(w, name, "a print format must name its record type")
         lang = p.get("default_print_language")
         if lang is not None and not (isinstance(lang, str) and _LANG_RE.match(lang)):
-            # the language it prints in (§15 R-6: the core sets the page's direction from it); the
+            # the language it prints in (the core sets the page's direction from it); the
             # site's own Language record is checked at install
             v.refuse(w, name, "default_print_language is a language code, such as ar or pt-BR")
         if p.get("print_format_type", "Jinja") != "Jinja":
@@ -1197,7 +1225,7 @@ def _print_formats(v: _V):
                     "an address a print format loads may hold only a whole {{ a.b }} reference, never a "
                     "template built around it: a built address can carry the viewer's data out",
                 )
-            for rt in _served_reads(p.get(k)):
+            for rt in _served_reads(p.get(k), own):
                 v.refuse(
                     f"{w}.{k}",
                     name,
@@ -1207,9 +1235,30 @@ def _print_formats(v: _V):
                 )
 
 
-def _served_reads(text) -> list[str]:
-    """The record types ivn_rows serves that a print reads through a framework helper, once each."""
-    served = {t.casefold(): t for t in PRINT_SERVED_TYPES}
+def _own_served(m: dict) -> set[str]:
+    """The manifest's own record types ivn_rows serves once installed — not a table, single
+    or virtual type, nor one holding a password."""
+
+    def listed(x):
+        return x if isinstance(x, list) else []
+
+    return {
+        d["name"]
+        for d in listed(m.get("doctypes"))
+        if isinstance(d, dict)
+        and isinstance(d.get("name"), str)
+        and not any(d.get(k) for k in ("istable", "issingle", "is_virtual"))
+        and not any(
+            isinstance(f, dict) and f.get("fieldtype") == "Password"
+            for f in listed(d.get("fields"))
+        )
+    }
+
+
+def _served_reads(text, own=()) -> list[str]:
+    """The record types ivn_rows serves (``own``: the manifest's own) that a print reads through a
+    framework helper, once each."""
+    served = {t.casefold(): t for t in (*PRINT_SERVED_TYPES, *own)}
     out = []
     for m in _PRINT_TYPED_READ_RE.finditer(text if isinstance(text, str) else ""):
         rt = served.get((m.group(1) if m.group(1) is not None else m.group(2)).strip().casefold())
@@ -2012,7 +2061,7 @@ def _registered_applications(v: _V):
                     "the install makes the user the application reads as and the shop switches it on; "
                     "a manifest installs the registration switched off",
                 )
-        # The app's own user serves one feed (the feed's door: one user, one registration)
+        # the app's own user serves one feed (the feed's door: one user, one registration)
         if i:
             v.refuse(
                 w,
@@ -2102,7 +2151,7 @@ SUB_POINTS = {
     "doccheck": 10,
     "fulfil": 10,
     "price": 10,
-    # A payer answers in at most 5 seconds (the cashier waits at the tender)
+    # a payer answers in at most 5 seconds (the cashier waits at the tender)
     "payer": 5,
 }
 # each extension point's answers when its service is down (`Point.down_answers`, the first the product's default)
@@ -2116,7 +2165,7 @@ DOWN_ANSWERS = {
     "fulfil": ("wait",),
     # a pricing module that cannot answer takes nothing off: the shop's own price
     "price": ("no_adjustment",),
-    # Fixed — a payer service that cannot answer means no cover
+    # fixed — a payer service that cannot answer means no cover
     "payer": ("no_cover",),
 }
 # The extension points a partner's sandboxed module may answer (the product's points that take a module), and those that
@@ -2393,9 +2442,7 @@ def _extension_subscriptions(v: _V):
             _endpoint(v, w, key, s.get("endpoint_url"))
         top = SUB_POINTS.get(point, 10)
         if point == "check" and "settings" in s:
-            v.refuse(
-                w, key, "a check takes no settings: what it is sent is the extension point's own"
-            )
+            _check_settings(v, w, key, s.get("settings"), transport)
         if point == "capture":
             top = _capture_settings(v, w, key, s.get("settings"))
         if point == "fulfil":
@@ -2467,7 +2514,14 @@ def _capture_settings(v: _V, w, key, settings) -> int:
         )
         return 10
     known, top = CAPTURE_EVENTS[event]
-    if set(settings) - known:
+    if "page" in settings:
+        # a page subscription's name is the shop's record id, minted at its own install: a package cannot know it
+        v.refuse(
+            w,
+            key,
+            "A package cannot name a page in a capture's settings. The shop sets page after the install.",
+        )
+    elif set(settings) - known:
         v.refuse(
             w,
             key,
@@ -2490,8 +2544,37 @@ def _capture_settings(v: _V, w, key, settings) -> int:
     return top
 
 
+def _check_settings(v: _V, w, key, settings, transport) -> None:
+    """The one setting a check may carry: the sale details its answer may fill
+    (``partner_check._validate_fill_list``; the site's sale details are checked by the
+    product at insert). What a check is sent stays the extension point's own."""
+    if not isinstance(settings, dict) or set(settings) != {"fill_attributes"}:
+        v.refuse(
+            w,
+            key,
+            "a check's settings carry only fill_attributes (the sale details its answer may "
+            "fill): what it is sent is the extension point's own",
+        )
+        return
+    names = settings["fill_attributes"]
+    if (
+        not isinstance(names, list)
+        or not 1 <= len(names) <= 10
+        or any(not isinstance(n, str) or not n.strip() for n in names)
+        or len(set(names)) != len(names)
+    ):
+        v.refuse(w, key, "fill_attributes must list 1 to 10 different sale details")
+    if transport == "wasm":
+        v.refuse(
+            w,
+            key,
+            "a partner module cannot fill a sale detail: a fill is checked again on the server, "
+            "which a till offline cannot do",
+        )
+
+
 def _payer_settings(v: _V, w, key, settings) -> None:
-    """The payer's settings a manifest may carry: the prescription's sale details and the
+    """The payer settings a manifest may carry: the prescription's sale details and the
     bill-back role (``partner_payer.validate_subscription``; the site's sale details and
     roles are checked by the product at insert). The clearing mode is the shop's: its
     account is on the shop's own books."""
@@ -3246,10 +3329,10 @@ def _list_marks(v: _V):
             v.refuse("list_marks", dt, f"{dt} holds at most {LIST_MARKS_MAX} marks.")
 
 
-# ── The register books ──────────────────────────────────
+# ── the register books ───────────────────────────────────────────────────────
 # A book is data the register door reads (ivendnext_mpos business_logic/register_book.py, which imports the
 # column vocabulary below, so the checker and the door read one list). The door checks every name a book reads
-# against the site when the book is saved (VR-28); its refusal comes back word for word. Here: the shape.
+# against the site when the book is saved; its refusal comes back word for word. Here: the shape.
 REGISTER_LINE_COLUMNS = (
     "number",
     "book",
@@ -3314,11 +3397,11 @@ REGISTER_CORRECTIONS = (
     "signed_amendment",
 )
 REGISTER_PERIOD_MONTHS = (1, 2, 3, 4, 6, 12)
-# what a book is kept on (§15 R-18): its printed pages · this system · the authority's own numbered
+# what a book is kept on: its printed pages · this system · the authority's own numbered
 # book · the authority's own system, the shop's lines then a working register
 REGISTER_MEDIA = ("printed_book", "system_of_record", "official_book", "regulator_system")
 # what a print may show beside the line's own columns, worked out when it prints (never routed on,
-# never required): the balance before a line (§15 R-9)
+# never required): the balance before a line
 REGISTER_PRINT_COLUMNS = ("balance_before",)
 BOOK_KEYS = {
     "book",

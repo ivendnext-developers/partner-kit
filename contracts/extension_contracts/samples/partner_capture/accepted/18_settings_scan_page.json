@@ -1,0 +1,12 @@
+{
+  "extension_point": "partner_capture",
+  "contract": "settings",
+  "about": "Ask about every item in the store's top item group, and point a notice at the delivery board placed on the till (page is that page subscription's ID).",
+  "payload": {
+    "event": "scan",
+    "item_groups": [
+      "All Item Groups"
+    ],
+    "page": "a1b2c3d4e5"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "extension_point": "label_layout",
   "contract": "declaration",
-  "about": "a pharmacy's dispensing label for a strip sold from a box — the medicine's name and strength, its route and the dose typed on the basket line, and the strip's batch and expiry. Printed from the basket line, {uom} is the line's unit (Strip). custom_strength and custom_route are the shop's own Data fields on Item; Dose is an active Transaction Item Attribute.",
+  "about": "A pharmacy's dispensing label for a strip sold from a box — the medicine's name and strength, its route and the dose typed on the basket line, and the strip's batch and expiry. Printed from the basket line, {uom} is the line's unit (Strip). custom_strength and custom_route are the shop's own Data fields on Item; Dose is an active Transaction Item Attribute.",
   "payload": {
     "doctype": "Retail Label Layout",
     "label_name": "LIB1 Dispensing",
