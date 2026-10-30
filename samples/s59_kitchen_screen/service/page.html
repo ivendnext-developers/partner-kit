@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Kitchen screen</title>
+<link rel="stylesheet" href="ivn-kit.css">
+<link rel="stylesheet" href="page.css">
+</head>
+<body class="ivn ksc">
+<header class="ksc-head">
+  <h1 id="title" class="ksc-title" dir="auto"></h1>
+  <p id="stations" class="ksc-sub" dir="auto"></p>
+  <div class="ksc-tools">
+    <button id="recall" type="button" class="ivn-btn ksc-tool" aria-pressed="false" hidden></button>
+    <button id="sold" type="button" class="ivn-btn ksc-tool" hidden></button>
+    <p id="read" class="ksc-read"></p>
+  </div>
+</header>
+<section id="waiting" class="ksc-waiting" hidden></section>
+<main id="board" class="ksc-board"></main>
+<p id="note" class="ivn-banner ksc-note" role="alert" hidden></p>
+<dialog id="sold-dialog" class="ivn-dialog ksc-dialog">
+  <div class="ivn-dialog-head"><h2 id="sold-title" class="ivn-dialog-title"></h2></div>
+  <div class="ivn-dialog-body"><ul id="sold-list" class="ivn-list ksc-sold-list"></ul></div>
+  <div class="ivn-dialog-foot"><button id="sold-close" type="button" class="ivn-btn" data-ivn-close="close"></button></div>
+</dialog>
+<script src="ivn-kit.js"></script>
+<script src="page.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+/* S59 — the kitchen screen's layout, on ivn-kit 0.1.0's tokens only (no colour or font of its own), so the kit's
+ * wall-screen template can adopt it. Legible from a metre: a 20px base, 28px dish names on a station screen, 64px
+ * call numbers on the board. A state is shown by an icon, a word and a colour together. */
+body.ksc { min-block-size: 100vh; font-size: 20px; }
+.ksc-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ivn-s3) var(--ivn-s5);
+  padding: var(--ivn-s4) var(--ivn-s5); border-block-end: 1px solid var(--ivn-border); background: var(--ivn-surface); }
+.ksc-title { margin: 0; font-size: 32px; font-weight: 700; }
+.ksc-sub { margin: 0; color: var(--ivn-text-muted); font-size: 22px; }
+.ksc-tools { display: flex; align-items: center; gap: var(--ivn-s3); margin-inline-start: auto; }
+.ksc-tool { min-block-size: 56px; padding: 0 var(--ivn-s5); font-size: 22px; }
+.ksc-tool[aria-pressed="true"] { background: var(--ivn-primary-tint); border-color: var(--ivn-primary); }
+.ksc-read { margin: 0; color: var(--ivn-text-muted); font-size: 18px; }
+.ksc-read.is-late { color: var(--ivn-pill-orange-ink); background: var(--ivn-pill-orange-bg); padding: 2px var(--ivn-s2);
+  border-radius: var(--ivn-radius); font-weight: 700; }
+.ksc-waiting { display: flex; flex-wrap: wrap; gap: var(--ivn-s2) var(--ivn-s5); padding: var(--ivn-s3) var(--ivn-s5);
+  background: var(--ivn-surface-2); font-size: 26px; font-weight: 700; }
+.ksc-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--ivn-s4);
+  padding: var(--ivn-s5); align-items: start; }
+.ksc-empty { grid-column: 1 / -1; padding: var(--ivn-s6); text-align: center; color: var(--ivn-text-muted); font-size: 28px; }
+.ksc-note { margin: var(--ivn-s4) var(--ivn-s5); font-size: 24px; }
+.ksc-note[hidden], .ksc-tool[hidden], .ksc-waiting[hidden] { display: none; }   /* the kit's classes set display */
+
+/* a ticket */
+.ksc-ticket { display: flex; flex-direction: column; background: var(--ivn-surface); border: 3px solid var(--ivn-border-strong);
+  border-radius: var(--ivn-radius-lg); box-shadow: var(--ivn-shadow-sm); overflow: hidden; }
+.ksc-ticket.is-warn { border-color: var(--ivn-pill-orange-ink); }
+.ksc-ticket.is-late { border-color: var(--ivn-pill-red-ink); }
+.ksc-ticket.is-void { border-style: dashed; }
+.ksc-ticket-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--ivn-s2);
+  padding: var(--ivn-s2) var(--ivn-s3); background: var(--ivn-surface-2); }
+.ksc-call { margin: 0; font-size: 30px; font-weight: 800; }
+.ksc-meta { margin: 0; padding: 0 var(--ivn-s3); color: var(--ivn-text-muted); font-size: 18px; }
+.ksc-timer { display: inline-flex; align-items: center; gap: 6px; padding: 2px var(--ivn-s2); border-radius: var(--ivn-radius-pill);
+  font-size: 22px; font-weight: 700; white-space: nowrap; background: var(--ivn-pill-grey-bg); color: var(--ivn-pill-grey-ink); }
+.ksc-timer.is-warn { background: var(--ivn-pill-orange-bg); color: var(--ivn-pill-orange-ink); }
+.ksc-timer.is-late { background: var(--ivn-pill-red-bg); color: var(--ivn-pill-red-ink); }
+.ksc-icon { inline-size: 1em; block-size: 1em; flex: none; }
+.ksc-void { margin: 0; padding: var(--ivn-s2) var(--ivn-s3); background: var(--ivn-danger-tint); color: var(--ivn-danger-text);
+  font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: var(--ivn-s2); }
+.ksc-lines { list-style: none; margin: 0; padding: var(--ivn-s2) var(--ivn-s3); }
+.ksc-line { padding: 4px 0; font-size: 28px; font-weight: 700; }
+.ksc-line.is-choice { padding-inline-start: var(--ivn-s5); font-size: 22px; font-weight: 500; }
+.ksc-ticket.is-void .ksc-line { text-decoration: line-through; }
+.ksc-line-note, .ksc-line-who, .ksc-allergens { display: block; font-size: 20px; font-weight: 500; }
+.ksc-line-note { font-style: italic; }
+.ksc-line-who { color: var(--ivn-text-muted); }
+.ksc-allergens { color: var(--ivn-pill-orange-ink); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.ksc-state { display: inline-flex; align-items: center; gap: 6px; font-size: 20px; font-weight: 700; }
+.ksc-act.ivn-btn-block { inline-size: calc(100% - 2 * var(--ivn-s3)); margin: var(--ivn-s2) var(--ivn-s3) var(--ivn-s3); min-block-size: 64px; font-size: 26px; font-weight: 800; }
+
+/* the expo */
+.ksc-order { background: var(--ivn-surface); border: 3px solid var(--ivn-border-strong); border-radius: var(--ivn-radius-lg); }
+.ksc-order.is-ready { border-color: var(--ivn-pill-green-ink); }
+.ksc-part { padding: var(--ivn-s2) var(--ivn-s3); border-block-start: 1px solid var(--ivn-border); }
+.ksc-part-head { display: flex; justify-content: space-between; gap: var(--ivn-s2); font-size: 22px; font-weight: 700; }
+.ksc-part .ksc-line { font-size: 22px; }
+
+/* the Now serving board */
+.ksc-serving { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ivn-s5); padding: var(--ivn-s5); }
+.ksc-col h2 { margin: 0 0 var(--ivn-s4); font-size: 44px; display: flex; align-items: center; gap: var(--ivn-s3); }
+.ksc-col.is-ready h2 { color: var(--ivn-pill-green-ink); }
+.ksc-nums { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--ivn-s4); }
+.ksc-num { min-inline-size: 3.2em; padding: var(--ivn-s3) var(--ivn-s4); border-radius: var(--ivn-radius-lg); font-size: 64px;
+  font-weight: 800; text-align: center; background: var(--ivn-surface); border: 3px solid var(--ivn-border-strong); }
+.ksc-col.is-ready .ksc-num { background: var(--ivn-pill-green-bg); color: var(--ivn-pill-green-ink); border-color: var(--ivn-pill-green-ink); }
+
+/* sold out */
+.ksc-dialog { min-inline-size: min(640px, 92vw); font-size: 22px; }
+.ksc-sold-list .ivn-list-row { display: flex; justify-content: space-between; align-items: center; gap: var(--ivn-s3); }
+.ksc-sold-list .ivn-btn { min-block-size: 52px; font-size: 20px; }

@@ -1,0 +1,271 @@
+/* ivn-kit 0.1.0 — the iVendNext partner design kit. Plain CSS, no build step, no dependencies.
+ *
+ * SOURCE of the token VALUES below (a copy that must stay current with its source):
+ *   repo  iVendNext_PWA (ivendnext_mpos) · path design_system/foundations/
+ *   files 00-tokens-desk.html (light) · 00-tokens-pos-dark.html (dark) · 00-tokens-shared.html (spacing)
+ *   SHA   05bb4dab92f294edac7b9d5bbac697d3072a4978 (2026-10-04)
+ *   A defect here is a defect there — send it with the Kit defect form (feedback/kit_defect.md).
+ * Values marked "kit" are authored here (not in the design system) and are ours to fix.
+ *
+ * Contract: a page reads ONLY the --ivn-* variables listed in README.md. The tenant's theme
+ * (from the page context) overrides the starred ones; ivn-kit.js applyTheme() sets them.
+ */
+
+/* ── 1. Tokens · light (Desk plane) ─────────────────────────────────────────── */
+:root {
+  color-scheme: light;
+  /* surfaces + text */
+  --ivn-bg: #f9fafa;               /* * sf-g50  page background */
+  --ivn-surface: #ffffff;          /* * sf-fg   cards, sheets, dialogs */
+  --ivn-surface-2: #f4f5f6;        /*   sf-g100 table head, default button */
+  --ivn-border: #ebeef0;           /* * sf-g200 hairlines */
+  --ivn-border-strong: #c0c6cb;    /*   sf-g400 checkbox + chip outlines */
+  --ivn-text: #1f272e;             /* * sf-g900 body text */
+  --ivn-text-muted: #687178;       /* * sf-g600 help text, meta, placeholders */
+  --ivn-control-bg: #f4f5f6;       /*   sf-g100 Desk fills its inputs */
+  --ivn-control-border: transparent;
+  /* brand */
+  --ivn-primary: #2490ef;          /* * sf-primary  accents, selected, toggle on */
+  --ivn-primary-strong: #1366ae;   /* * sf-primary-d  primary button ground */
+  --ivn-on-primary: #ffffff;       /* * text on the two grounds above */
+  --ivn-primary-tint: #f0f8fe;     /*   sf-blue50   selected row, active chip */
+  --ivn-link: #1366ae;             /*   sf-primary-d */
+  --ivn-focus: #2490ef;            /* * focus ring (2px, offset 2px — DS focus-ring spec) */
+  --ivn-danger: #b00020;           /*   POS err-rgb 176,0,32 (Desk red #e24c4c is 3.9:1 under white text) */
+  --ivn-danger-text: #b00020;
+  --ivn-danger-tint: #fdecec;      /*   sf-redbg */
+  /* status pills — Desk indicator colours: ground = DS tint, ink = DS dark ink */
+  --ivn-pill-grey-bg: #f4f5f6;   --ivn-pill-grey-ink: #4c5258;    /* sf-g100 / sf-g700 */
+  --ivn-pill-blue-bg: #f0f8fe;   --ivn-pill-blue-ink: #1366ae;    /* sf-blue50 / sf-primary-d */
+  --ivn-pill-green-bg: #e6f7ef;  --ivn-pill-green-ink: #0a6e5f;   /* sf-greenbg / ink-fired (light) */
+  --ivn-pill-orange-bg: #fff8f1; --ivn-pill-orange-ink: #9a5b1f;  /* sf-amberbg / ink-held (light) */
+  --ivn-pill-red-bg: #fdecec;    --ivn-pill-red-ink: #b00020;     /* sf-redbg / err-rgb */
+  --ivn-overlay: rgba(31, 39, 46, .45);                           /* kit: sf-g900 at 45% */
+  /* shape, type, space */
+  --ivn-radius: 6px;               /* * sf-radius */
+  --ivn-radius-lg: 8px;            /* * sf-radius-md */
+  --ivn-radius-pill: 999px;
+  --ivn-shadow-sm: 0 1px 2px rgba(25,39,52,.05), 0 0 4px rgba(25,39,52,.08);   /* sf-shadow-sm */
+  --ivn-shadow-lg: 0 16px 38px rgba(0,0,0,.22), 0 6px 12px rgba(0,0,0,.12);    /* elev12 */
+  --ivn-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;  /* sf-font */
+  --ivn-font-mono: "SFMono-Regular", Menlo, monospace;
+  --ivn-font-scale: 1;             /* * 1 = 14px body (Desk base) */
+  --ivn-s1: 4px; --ivn-s2: 8px; --ivn-s3: 12px; --ivn-s4: 16px; --ivn-s5: 24px; --ivn-s6: 32px;
+}
+
+/* ── 2. Tokens · dark (POS dark ladder, 2026-07-03) ─────────────────
+ * Set data-theme="dark" on <html>. With no data-theme, the device setting decides.
+ * The two blocks hold the SAME values; edit both. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ivn-bg: #10242e; --ivn-surface: #16313c; --ivn-surface-2: #182f39;
+  --ivn-border: #21434f; --ivn-border-strong: #597784;
+  --ivn-text: #e7eef0; --ivn-text-muted: #9fb6bf;
+  --ivn-control-bg: #10242e; --ivn-control-border: #597784;
+  --ivn-primary: #6ab0f3; --ivn-primary-strong: #1366ae; --ivn-on-primary: #ffffff;
+  --ivn-primary-tint: rgba(106,176,243,.16); --ivn-link: #6ab0f3; --ivn-focus: #6ab0f3;
+  --ivn-danger: #b00020; --ivn-danger-text: #f08a93; --ivn-danger-tint: rgba(229,89,101,.16);
+  --ivn-pill-grey-bg: #21434f;               --ivn-pill-grey-ink: #c6d4d9;
+  --ivn-pill-blue-bg: rgba(106,176,243,.16); --ivn-pill-blue-ink: #8fc6f7;   /* kit */
+  --ivn-pill-green-bg: rgba(17,158,136,.18); --ivn-pill-green-ink: #4ad0b0;  /* ink-fired (dark) */
+  --ivn-pill-orange-bg: rgba(240,173,78,.16);--ivn-pill-orange-ink: #f0ad4e; /* ink-held (dark) */
+  --ivn-pill-red-bg: rgba(229,89,101,.18);   --ivn-pill-red-ink: #f08a93;    /* kit */
+  --ivn-overlay: rgba(0,0,0,.6);
+  --ivn-shadow-sm: 0 1px 3px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.40);
+  --ivn-shadow-lg: 0 16px 38px rgba(0,0,0,.60), 0 6px 12px rgba(0,0,0,.40);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ivn-bg: #10242e; --ivn-surface: #16313c; --ivn-surface-2: #182f39;
+    --ivn-border: #21434f; --ivn-border-strong: #597784;
+    --ivn-text: #e7eef0; --ivn-text-muted: #9fb6bf;
+    --ivn-control-bg: #10242e; --ivn-control-border: #597784;
+    --ivn-primary: #6ab0f3; --ivn-primary-strong: #1366ae; --ivn-on-primary: #ffffff;
+    --ivn-primary-tint: rgba(106,176,243,.16); --ivn-link: #6ab0f3; --ivn-focus: #6ab0f3;
+    --ivn-danger: #b00020; --ivn-danger-text: #f08a93; --ivn-danger-tint: rgba(229,89,101,.16);
+    --ivn-pill-grey-bg: #21434f;               --ivn-pill-grey-ink: #c6d4d9;
+    --ivn-pill-blue-bg: rgba(106,176,243,.16); --ivn-pill-blue-ink: #8fc6f7;
+    --ivn-pill-green-bg: rgba(17,158,136,.18); --ivn-pill-green-ink: #4ad0b0;
+    --ivn-pill-orange-bg: rgba(240,173,78,.16);--ivn-pill-orange-ink: #f0ad4e;
+    --ivn-pill-red-bg: rgba(229,89,101,.18);   --ivn-pill-red-ink: #f08a93;
+    --ivn-overlay: rgba(0,0,0,.6);
+    --ivn-shadow-sm: 0 1px 3px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.40);
+    --ivn-shadow-lg: 0 16px 38px rgba(0,0,0,.60), 0 6px 12px rgba(0,0,0,.40);
+  }
+}
+
+/* ── 3. Base ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { font-size: calc(14px * var(--ivn-font-scale)); -webkit-text-size-adjust: 100%; }
+body.ivn { margin: 0; background: var(--ivn-bg); color: var(--ivn-text);
+  font-family: var(--ivn-font); font-size: 1rem; line-height: 1.45; }
+:where(.ivn) :where(h1, h2, h3) { margin: 0; line-height: 1.25; }
+:where(.ivn) a { color: var(--ivn-link); }
+.ivn :focus-visible { outline: 2px solid var(--ivn-focus); outline-offset: 2px; }
+.ivn-muted { color: var(--ivn-text-muted); }
+.ivn-mono { font-family: var(--ivn-font-mono); }
+.ivn-sr-only { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ivn-icon { inline-size: 1.15em; block-size: 1.15em; flex: none; vertical-align: -0.2em; }
+[dir="rtl"] .ivn-flip-rtl { transform: scaleX(-1); }   /* arrows + chevrons only; never a magnifier or a tick */
+.ivn-container { max-inline-size: 1120px; margin-inline: auto; padding: var(--ivn-s5) var(--ivn-s5) var(--ivn-s6); }
+.ivn-stack { display: flex; flex-direction: column; gap: var(--ivn-s4); }
+.ivn-row { display: flex; align-items: center; gap: var(--ivn-s2); flex-wrap: wrap; }
+.ivn-spacer { flex: 1; }
+
+/* ── 4. Page head (Desk band 3: breadcrumb · title · pill · actions) ─────────── */
+.ivn-page-head { display: flex; align-items: center; gap: var(--ivn-s3); flex-wrap: wrap; margin-block-end: var(--ivn-s4); }
+.ivn-crumb { font-size: .82rem; color: var(--ivn-text-muted); margin-block-end: 2px; }
+.ivn-title { font-size: 1.36rem; font-weight: 600; }
+.ivn-page-head .ivn-actions { margin-inline-start: auto; display: flex; gap: var(--ivn-s2); }
+
+/* ── 5. Card + form section (titled section, grid of fields) ─────────────────── */
+.ivn-card { background: var(--ivn-surface); border: 1px solid var(--ivn-border);
+  border-radius: var(--ivn-radius-lg); box-shadow: var(--ivn-shadow-sm); }
+.ivn-section { padding: var(--ivn-s4) var(--ivn-s5); }
+.ivn-section + .ivn-section { border-block-start: 1px solid var(--ivn-border); }
+.ivn-section-title { font-size: 1rem; font-weight: 600; margin-block-end: var(--ivn-s3); }
+.ivn-section-desc { font-size: .9rem; color: var(--ivn-text-muted); margin: -6px 0 var(--ivn-s3); }
+.ivn-grid { display: grid; gap: var(--ivn-s3) var(--ivn-s5); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.ivn-span-all { grid-column: 1 / -1; }
+
+/* ── 6. Fields ─────────────────────────────────────────────────────────────── */
+.ivn-field { display: flex; flex-direction: column; gap: var(--ivn-s1); min-inline-size: 0; }
+.ivn-label { font-size: .86rem; color: var(--ivn-text-muted); font-weight: 500; }
+.ivn-req { color: var(--ivn-danger-text); margin-inline-start: 2px; }
+.ivn-input, .ivn-select, .ivn-textarea {
+  inline-size: 100%; min-block-size: 2.3rem; padding: 6px 10px; font: inherit; font-size: .93rem;
+  color: var(--ivn-text); background-color: var(--ivn-control-bg);
+  border: 1px solid var(--ivn-control-border); border-radius: var(--ivn-radius); }
+.ivn-input::placeholder, .ivn-textarea::placeholder { color: var(--ivn-text-muted); opacity: 1; }
+.ivn-input:focus, .ivn-select:focus, .ivn-textarea:focus { background-color: var(--ivn-surface); border-color: var(--ivn-primary); }
+.ivn-input:disabled, .ivn-select:disabled, .ivn-textarea:disabled { opacity: .6; cursor: not-allowed; }
+.ivn-textarea { min-block-size: 5.5rem; resize: vertical; }
+.ivn-select { appearance: none; padding-inline-end: 30px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-size: 5px 5px; background-repeat: no-repeat;
+  background-position: right 16px center, right 11px center; }
+[dir="rtl"] .ivn-select { background-position: left 11px center, left 16px center; }
+.ivn-help { font-size: .82rem; color: var(--ivn-text-muted); }
+.ivn-error-text { font-size: .82rem; color: var(--ivn-danger-text); font-weight: 500; }
+.ivn-field.is-invalid .ivn-input, .ivn-field.is-invalid .ivn-select, .ivn-field.is-invalid .ivn-textarea { border-color: var(--ivn-danger-text); }
+/* checkbox */
+.ivn-check { display: inline-flex; align-items: center; gap: var(--ivn-s2); cursor: pointer; font-size: .93rem; }
+.ivn-check input { inline-size: 16px; block-size: 16px; margin: 0; accent-color: var(--ivn-primary); }
+/* toggle: <label class="ivn-toggle"><input type="checkbox" role="switch"><span class="ivn-toggle-track"></span>Text</label> */
+.ivn-toggle { display: inline-flex; align-items: center; gap: var(--ivn-s2); cursor: pointer; font-size: .93rem; position: relative; }
+.ivn-toggle input { position: absolute; opacity: 0; inline-size: 30px; block-size: 18px; margin: 0; }
+.ivn-toggle-track { inline-size: 30px; block-size: 18px; border-radius: var(--ivn-radius-pill); background: var(--ivn-text-muted);
+  position: relative; flex: none; transition: background 120ms; }
+.ivn-toggle-track::after { content: ""; position: absolute; inset-block-start: 2px; inset-inline-start: 2px; inline-size: 14px; block-size: 14px;
+  border-radius: 50%; background: var(--ivn-surface); box-shadow: var(--ivn-shadow-sm); transition: inset-inline-start 120ms; }
+.ivn-toggle input:checked + .ivn-toggle-track { background: var(--ivn-primary); }
+.ivn-toggle input:checked + .ivn-toggle-track::after { inset-inline-start: 14px; }
+.ivn-toggle input:focus-visible + .ivn-toggle-track { outline: 2px solid var(--ivn-focus); outline-offset: 2px; }
+
+/* ── 7. Link search (input + result list; ivn-kit.js wires the keys) ─────────── */
+.ivn-link-search { position: relative; }
+.ivn-results { position: absolute; inset-inline: 0; inset-block-start: calc(100% + 4px); z-index: 20; margin: 0; padding: var(--ivn-s1);
+  list-style: none; background: var(--ivn-surface); border: 1px solid var(--ivn-border); border-radius: var(--ivn-radius);
+  box-shadow: var(--ivn-shadow-lg); max-block-size: 260px; overflow-y: auto; }
+.ivn-results[hidden] { display: none; }
+.ivn-results li { padding: 6px 10px; border-radius: var(--ivn-radius); cursor: pointer; }
+.ivn-results li[aria-selected="true"], .ivn-results li:hover { background: var(--ivn-primary-tint); }
+.ivn-results .ivn-result-sub { display: block; font-size: .82rem; color: var(--ivn-text-muted); }
+.ivn-results .ivn-results-empty { color: var(--ivn-text-muted); cursor: default; }
+
+/* ── 8. Buttons ────────────────────────────────────────────────────────────── */
+.ivn-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-block-size: 2.3rem; padding: 0 14px;
+  font: inherit; font-size: .93rem; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer; text-decoration: none;
+  color: var(--ivn-text); background: var(--ivn-surface-2); border: 1px solid var(--ivn-border); border-radius: var(--ivn-radius); }
+.ivn-btn:hover { border-color: var(--ivn-border-strong); }
+.ivn-btn-primary { background: var(--ivn-primary-strong); border-color: var(--ivn-primary-strong); color: var(--ivn-on-primary); }
+.ivn-btn-danger { background: var(--ivn-danger); border-color: var(--ivn-danger); color: var(--ivn-on-primary); }
+.ivn-btn-primary:hover, .ivn-btn-danger:hover { filter: brightness(1.08); border-color: transparent; }
+.ivn-btn-sm { min-block-size: 1.85rem; padding: 0 10px; font-size: .86rem; }
+.ivn-btn-icon { padding: 0; inline-size: 2.3rem; }
+.ivn-btn-icon.ivn-btn-sm { inline-size: 1.85rem; }
+.ivn-btn-block { inline-size: 100%; }
+.ivn-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ── 9. Status pill (Desk indicator pill: grey · blue · green · orange · red) ── */
+.ivn-pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: var(--ivn-radius-pill);
+  font-size: .82rem; font-weight: 500; white-space: nowrap; background: var(--ivn-pill-grey-bg); color: var(--ivn-pill-grey-ink); }
+.ivn-pill::before { content: ""; inline-size: 6px; block-size: 6px; border-radius: 50%; background: currentColor; }
+.ivn-pill-blue   { background: var(--ivn-pill-blue-bg);   color: var(--ivn-pill-blue-ink); }
+.ivn-pill-green  { background: var(--ivn-pill-green-bg);  color: var(--ivn-pill-green-ink); }
+.ivn-pill-orange { background: var(--ivn-pill-orange-bg); color: var(--ivn-pill-orange-ink); }
+.ivn-pill-red    { background: var(--ivn-pill-red-bg);    color: var(--ivn-pill-red-ink); }
+
+/* ── 10. Table ─────────────────────────────────────────────────────────────── */
+.ivn-table-wrap { overflow-x: auto; }
+.ivn-table { inline-size: 100%; border-collapse: collapse; font-size: .93rem; }
+.ivn-table th { text-align: start; font-size: .82rem; font-weight: 500; color: var(--ivn-text-muted); background: var(--ivn-surface-2);
+  padding: 8px 12px; border-block-end: 1px solid var(--ivn-border); white-space: nowrap; }
+.ivn-table td { padding: 9px 12px; border-block-end: 1px solid var(--ivn-border); vertical-align: middle; }
+.ivn-table tbody tr:last-child td { border-block-end: 0; }
+.ivn-table tbody tr:hover { background: var(--ivn-primary-tint); }
+.ivn-table .ivn-num { text-align: end; font-variant-numeric: tabular-nums; }
+
+/* ── 11. List with a filter bar (Desk list view) ─────────────────────────────── */
+.ivn-filter-bar { display: flex; flex-wrap: wrap; gap: var(--ivn-s2); align-items: center; padding: var(--ivn-s3) var(--ivn-s4);
+  border-block-end: 1px solid var(--ivn-border); }
+.ivn-filter-bar .ivn-input, .ivn-filter-bar .ivn-select { inline-size: auto; min-inline-size: 160px; flex: 0 1 220px; }
+.ivn-chip { font: inherit; font-size: .86rem; padding: 4px 12px; border-radius: var(--ivn-radius-pill); cursor: pointer;
+  color: var(--ivn-text); background: var(--ivn-surface); border: 1px solid var(--ivn-border-strong); }
+.ivn-chip[aria-pressed="true"] { background: var(--ivn-primary-tint); border-color: var(--ivn-primary); color: var(--ivn-pill-blue-ink); font-weight: 600; }
+.ivn-list { list-style: none; margin: 0; padding: 0; }
+.ivn-list-row { display: flex; align-items: center; gap: var(--ivn-s3); padding: 10px var(--ivn-s4); border-block-end: 1px solid var(--ivn-border); }
+.ivn-list-row:last-child { border-block-end: 0; }
+.ivn-list-row:hover { background: var(--ivn-surface-2); }
+.ivn-list-main { flex: 1; min-inline-size: 0; }
+.ivn-list-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ivn-list-sub, .ivn-list-meta { font-size: .82rem; color: var(--ivn-text-muted); }
+.ivn-list-meta { white-space: nowrap; }
+.ivn-list-foot { display: flex; align-items: center; gap: var(--ivn-s2); padding: var(--ivn-s3) var(--ivn-s4); font-size: .86rem; color: var(--ivn-text-muted); border-block-start: 1px solid var(--ivn-border); }
+
+/* ── 12. Empty state + error state ──────────────────────────────────────────── */
+.ivn-empty, .ivn-error-state { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--ivn-s2);
+  padding: var(--ivn-s6) var(--ivn-s5); color: var(--ivn-text-muted); }
+.ivn-empty .ivn-icon, .ivn-error-state .ivn-icon { inline-size: 36px; block-size: 36px; }
+.ivn-empty-title, .ivn-error-title { font-size: 1.07rem; font-weight: 600; color: var(--ivn-text); }
+.ivn-error-state .ivn-icon { color: var(--ivn-danger-text); }
+.ivn-error-state { background: var(--ivn-danger-tint); border-radius: var(--ivn-radius-lg); }
+.ivn-error-state p, .ivn-empty p { margin: 0; max-inline-size: 42ch; color: var(--ivn-text); }
+.ivn-banner { display: flex; gap: var(--ivn-s2); align-items: flex-start; padding: var(--ivn-s3); border-radius: var(--ivn-radius);
+  background: var(--ivn-danger-tint); color: var(--ivn-text); font-size: .9rem; }
+.ivn-banner .ivn-icon { color: var(--ivn-danger-text); }
+
+/* ── 13. Dialog (native <dialog>; ivn-kit.js opens it modally) ───────────────── */
+.ivn-dialog { padding: 0; inline-size: min(520px, calc(100vw - 32px)); color: var(--ivn-text); background: var(--ivn-surface);
+  border: 1px solid var(--ivn-border); border-radius: var(--ivn-radius-lg); box-shadow: var(--ivn-shadow-lg); }
+.ivn-dialog::backdrop { background: var(--ivn-overlay); }
+.ivn-dialog-head { display: flex; align-items: center; gap: var(--ivn-s2); padding: var(--ivn-s3) var(--ivn-s4); border-block-end: 1px solid var(--ivn-border); }
+.ivn-dialog-title { font-size: 1.07rem; font-weight: 600; flex: 1; }
+.ivn-dialog-body { padding: var(--ivn-s4); }
+.ivn-dialog-foot { display: flex; justify-content: flex-end; gap: var(--ivn-s2); padding: var(--ivn-s3) var(--ivn-s4); border-block-start: 1px solid var(--ivn-border); }
+
+/* ── 14. Toast (ivn-kit.js creates them inside one live region) ──────────────── */
+.ivn-toasts { position: fixed; inset-block-end: var(--ivn-s4); inset-inline-end: var(--ivn-s4); z-index: 100;
+  display: flex; flex-direction: column; gap: var(--ivn-s2); max-inline-size: min(380px, calc(100vw - 32px)); }
+.ivn-toast { display: flex; align-items: center; gap: var(--ivn-s2); padding: 10px 14px; border-radius: var(--ivn-radius);
+  background: var(--ivn-text); color: var(--ivn-surface); box-shadow: var(--ivn-shadow-lg); font-size: .93rem; }
+.ivn-toast::before { content: ""; inline-size: 8px; block-size: 8px; border-radius: 50%; flex: none; background: var(--ivn-surface); }
+.ivn-toast-success::before { background: var(--ivn-pill-green-bg); box-shadow: inset 0 0 0 2px currentColor; }
+.ivn-toast-error { border-inline-start: 4px solid var(--ivn-danger); }
+
+/* ── 15. Till sheet (POS frame, ≤ 480px, bottom-sheet look) ──────────────────── */
+.ivn-sheet { max-inline-size: 480px; margin-inline: auto; min-block-size: 100vh; display: flex; flex-direction: column;
+  background: var(--ivn-surface); border-start-start-radius: var(--ivn-radius-lg); border-start-end-radius: var(--ivn-radius-lg); }
+.ivn-sheet-grab { inline-size: 40px; block-size: 4px; border-radius: 2px; background: var(--ivn-border-strong); margin: var(--ivn-s2) auto 0; }
+.ivn-sheet-head { display: flex; align-items: center; gap: var(--ivn-s2); padding: var(--ivn-s2) var(--ivn-s4) var(--ivn-s3); border-block-end: 1px solid var(--ivn-border); }
+.ivn-sheet-body { flex: 1; padding: var(--ivn-s4); display: flex; flex-direction: column; gap: var(--ivn-s4); }
+.ivn-sheet-foot { position: sticky; inset-block-end: 0; display: flex; gap: var(--ivn-s2); padding: var(--ivn-s3) var(--ivn-s4);
+  background: var(--ivn-surface); border-block-start: 1px solid var(--ivn-border); }
+.ivn-sheet-foot .ivn-btn { flex: 1; min-block-size: 2.9rem; }
+
+@media (max-width: 600px) {
+  .ivn-container { padding: var(--ivn-s4); }
+  .ivn-page-head .ivn-actions { margin-inline-start: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .ivn * { transition: none !important; } }
