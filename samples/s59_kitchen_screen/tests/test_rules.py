@@ -112,7 +112,9 @@ class Rules(unittest.TestCase):
 
     def test_r8_the_look_takes_only_a_colour_and_known_words(self):
         self.assertEqual(ksc.look({"accent": "red;background:url(x)", "language": "Klingon", "look": "Neon"}),
-                         {"mode": "dark", "accent": "", "lang": "en", "warn": 8, "late": 15})
+                         {"mode": "dark", "accent": "", "lang": "en", "warn": 8, "late": 15, "size": "standard"})
+        self.assertEqual(ksc.look({"slip_size": "Huge;x"})["size"], "standard")       # only the four steps
+        self.assertEqual(ksc.look({"slip_size": "Extra large"})["size"], "xlarge")
         self.assertEqual(ksc.look({"warn_min": 20, "late_min": 10})["late"], 21)    # red always after amber
 
     def test_r9_the_sold_out_list_is_the_boards_dishes_and_what_is_already_out(self):

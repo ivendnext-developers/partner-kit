@@ -20,7 +20,8 @@ import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 T, M, R, F = "test_service.ServiceTest.", "test_many_shops.", "test_rules.Rules.", "test_manifest.ManifestTest."
-S, C = "service/app.py", "ksc.py"
+FR, PR = "test_page.FitRules.", "test_page.PageRules."
+S, C, FIT, PAGE = "service/app.py", "ksc.py", "service/fit.js", "service/page.js"
 
 CANARIES = [
     # the press and the retailer
@@ -69,7 +70,7 @@ CANARIES = [
      R + "test_r1_a_link_is_the_retailers_own_signature_for_that_site_record_and_number"),
     ("a refused sold-out read leaves the tickets", S, "            except TenantError:         # the sold-out right missing",
      "            except ZeroDivisionError:   # the sold-out right missing", T + "test_s6_a_sold_out_read_the_shop_refuses_leaves_the_tickets_showing"),
-    ("a refused sold-out read is kept refused", S, "            self._keep(self._sold, key, None)\n            raise", "            raise",
+    ("a refused sold-out read is kept refused", S, "            self._keep(self._sold, key, e)\n            raise", "            raise",
      T + "test_s6_a_sold_out_read_the_shop_refuses_leaves_the_tickets_showing"),
     ("an expo card leaves with its dishes", C, '        live = [t for t in ts if t["kind"] == "send" and t["state"] != "bumped"]',
      '        live = [t for t in ts if t["state"] != "bumped"]', R + "test_r6b_the_expo_card_leaves_with_its_dishes_and_times_its_oldest_open_one"),
@@ -158,6 +159,38 @@ CANARIES = [
     ("the page is never framed", S, " frame-ancestors 'none'", "", T + "test_e1_the_page_is_served_with_a_strict_policy_and_the_kits_files"),
     ("a large call is refused", S, "            if len(raw) > ksc.PAGE_BODY_MAX:", "            if False:",
      T + "test_e2_a_large_or_shapeless_call_is_refused"),
+    # the size and the fit (fit.js, page.js)
+    ("only the four size steps are taken from the device", FIT, "    if (SIZES.indexOf(chosen) >= 0) return chosen;",
+     "    if (chosen) return chosen;", FR + "test_p1_a_screen_takes_the_cooks_size_then_the_stores_then_standard"),
+    ("A- and A+ stop at the ends", FIT, "Math.max(0, Math.min(SIZES.length - 1, i))", "i",
+     FR + "test_p2_a_minus_and_a_plus_stop_at_the_ends"),
+    ("a page always holds one ticket", FIT, "for (var i = 1; i < bottoms.length; i++)", "for (var i = 0; i < bottoms.length; i++)",
+     FR + "test_p3_a_page_ends_before_the_first_ticket_that_passes_the_bottom_and_holds_at_least_one"),
+    ("the page asked for, not always the last", FIT, "if (starts.length - 1 >= want || end >= count) break;",
+     "if (end >= count) break;", FR + "test_p4_pages_cover_every_ticket_in_order_and_stop_at_the_last"),
+    ("a folded ticket keeps its first dish", FIT, "hide < heights.length - 1", "hide < heights.length",
+     FR + "test_p5_a_tall_ticket_folds_its_last_dishes_and_keeps_the_first"),
+    ("the store's default size is used", PAGE, "var v = window.kscFit.size(chosen, last && last.look && last.look.size)",
+     'var v = window.kscFit.size(chosen, "standard")', PR + "test_q1_the_store_default_then_the_cooks_choice_kept_on_this_device"),
+    ("a blocked device store does not stop the page", PAGE,
+     '  try { chosen = window.localStorage.getItem(SIZE_KEY) || ""; } catch (e) { chosen = ""; }',
+     '  chosen = window.localStorage.getItem(SIZE_KEY) || "";', PR + "test_q2_a_blocked_device_store_still_opens_and_sizes_the_screen"),
+    ("a blocked device store does not stop A+", PAGE,
+     "    try { window.localStorage.setItem(SIZE_KEY, chosen); } catch (e) { /* not kept on this device: this visit only */ }",
+     "    window.localStorage.setItem(SIZE_KEY, chosen);", PR + "test_q2_a_blocked_device_store_still_opens_and_sizes_the_screen"),
+    ("only a success takes a held refusal down", PAGE, ' && (a.state === "moved" || a.state === "set")', "",
+     PR + "test_q3_a_tap_with_no_answer_does_not_take_down_a_held_refusal"),
+    ("the retailer's words sit in <bdi>, never dir=auto", PAGE,
+     "      if (own) e.appendChild(bdi(text));\n      else e.textContent = String(text);",
+     '      e.textContent = String(text);\n      if (own) e.setAttribute("dir", "auto");',
+     PR + "test_q4_the_retailers_words_are_isolated_and_nothing_is_dir_auto"),
+    ("the store's size is one of the four", C, '"size": SIZES.get(row.get("slip_size") or "", "standard")',
+     '"size": row.get("slip_size") or "standard"', R + "test_r8_the_look_takes_only_a_colour_and_known_words"),
+    ("the store's size is read", S, '"tables_on_board",\n              "slip_size"]', '"tables_on_board"]',
+     T + "test_b5_the_store_row_sets_the_look"),
+    ("a kept sold-out answer is the shop's own", S, "                raise kept[1]  ",
+     '                raise TenantError("item_availability -> refused (kept)", 403)  ',
+     T + "test_s7_a_sold_out_read_that_timed_out_is_kept_as_a_timeout_not_a_refusal"),
     # the manifest
     ("only the app writes a link's number", "manifest.json", '"insert_after": "link_section",\n   "in_list_view": 1,\n   "write_roles": [\n    "PP KSC Integration",',
      '"insert_after": "link_section",\n   "in_list_view": 1,\n   "write_roles": [\n    "PP KSC Manager",', F + "test_m1_what_makes_a_link_work_only_the_app_writes"),
@@ -183,6 +216,8 @@ def run(name, path, anchor, mutant, test) -> tuple[str, str]:
         open(f, "w").write(src.replace(anchor, mutant))
         if f.endswith(".py"):
             py_compile.compile(f, doraise=True)
+        elif f.endswith(".js") and shutil.which("node"):
+            subprocess.run(["node", "--check", f], check=True, capture_output=True, timeout=60)
         p = subprocess.run([sys.executable, "-m", "unittest", test], cwd=os.path.join(dest, "tests"),
                            capture_output=True, text=True, timeout=120)
         last = (p.stderr.strip().splitlines() or [""])[-1]

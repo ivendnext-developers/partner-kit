@@ -56,6 +56,14 @@
      "description": "Dark suits a kitchen; Light suits a bright counter."
     },
     {
+     "fieldname": "slip_size",
+     "fieldtype": "Select",
+     "options": "Compact\nStandard\nLarge\nExtra large",
+     "default": "Standard",
+     "label": "Ticket size",
+     "description": "How large the tickets are drawn on this store's screens; they also grow and shrink with the screen. A cook's A- and A+ on one screen override it there, remembered on that device."
+    },
+    {
      "fieldname": "accent",
      "fieldtype": "Data",
      "label": "Accent colour",

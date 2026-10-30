@@ -3,14 +3,19 @@
 // a server in the address, only in the body of the calls below. It reads the board every READ_MS (the station-ticket
 // door's own fallback: no cursor, every read is the whole board), so a screen that lost its connection has caught up on
 // its next read. Every word the retailer wrote (a dish, a note, a station, a table) is put on the page as text, never as
-// markup, with dir="auto". A state is shown by an icon, a word and a colour together.
+// markup, inside a <bdi> in a block of the page's own direction, so a ticket has one reading edge whatever the words'
+// script. A state is shown by an icon, a word and a colour together. The page never scrolls: fit() (with fit.js's
+// rules) folds a ticket taller than the board behind "+N more dishes" and shows only whole tickets, paged.
 (function () {
   "use strict";
-  var READ_MS = 3000, RETRY_MS = 3000, LATE_READ_S = 15, NOTE_MS = 6000;
+  var READ_MS = 3000, RETRY_MS = 3000, LATE_READ_S = 15, NOTE_MS = 6000, PAGE_BACK_MS = 60000;
   // The till's own words where it has them (guest and sold out, from its ar, es and fr tables at T21; send is never
   // used for a bump, which is the kitchen's own step); German and Portuguese are this app's own until the till signs them.
   var WORDS = {
-    en: { start: "Start", ready: "Ready", bump: "Bump", bumpOrder: "Bump order", recall: "Recall", soldOut: "Sold out",
+    en: { moreDish: "+1 more dish", moreDishes: "+{n} more dishes", moreTicket: "+1 more ticket",
+          moreTickets: "+{n} more tickets", earlier: "Earlier tickets", later: "Later tickets", smaller: "Smaller tickets",
+          bigger: "Larger tickets", compact: "Compact", standard: "Standard", large: "Large", xlarge: "Extra large",
+          start: "Start", ready: "Ready", bump: "Bump", bumpOrder: "Bump order", recall: "Recall", soldOut: "Sold out",
           soldTitle: "Sold out at this store", markSold: "Mark sold out", markBack: "Available again", isSold: "Sold out",
           close: "Close", waiting: "Still to make", preparing: "Preparing", readyCol: "Ready", void: "Void: stop making",
           recallNote: "Bumped in the last 30 minutes, to read again. A bumped ticket cannot be moved back.",
@@ -24,7 +29,10 @@
           step: "This ticket moved on another screen. The board is read again.", gone: "This ticket is no longer on the board.",
           not_yours: "This ticket is another station's.", wait: "One moment, then tap again.",
           not_listed: "That dish is not on this screen's list.", off: "Sold out is switched off for this store." },
-    ar: { start: "ابدأ", ready: "جاهز", bump: "أنهِ", bumpOrder: "أنهِ الطلب", recall: "استرجاع", soldOut: "نفدت الكمية",
+    ar: { moreDish: "+طبق واحد آخر", moreDishes: "+{n} أطباق أخرى", moreTicket: "+تذكرة واحدة أخرى",
+          moreTickets: "+{n} تذاكر أخرى", earlier: "التذاكر السابقة", later: "التذاكر التالية", smaller: "تذاكر أصغر",
+          bigger: "تذاكر أكبر", compact: "مضغوط", standard: "عادي", large: "كبير", xlarge: "كبير جدًا",
+          start: "ابدأ", ready: "جاهز", bump: "أنهِ", bumpOrder: "أنهِ الطلب", recall: "استرجاع", soldOut: "نفدت الكمية",
           soldTitle: "نفدت الكمية في هذا المتجر", markSold: "علّمه نافدًا", markBack: "متوفر مرة أخرى", isSold: "نفدت الكمية",
           close: "إغلاق", waiting: "ما زال للتحضير", preparing: "قيد التحضير", readyCol: "جاهز", void: "ملغى: أوقف التحضير",
           recallNote: "أُنهيت في آخر 30 دقيقة، لقراءتها مرة أخرى. لا يمكن إعادة تذكرة منتهية.",
@@ -38,7 +46,11 @@
           step: "تغيّرت هذه التذكرة على شاشة أخرى. تُقرأ اللوحة مرة أخرى.", gone: "لم تعد هذه التذكرة على اللوحة.",
           not_yours: "هذه التذكرة لمحطة أخرى.", wait: "لحظة، ثم اضغط مرة أخرى.",
           not_listed: "هذا الطبق ليس في قائمة هذه الشاشة.", off: "خاصية النفاد متوقفة في هذا المتجر." },
-    es: { start: "Empezar", ready: "Listo", bump: "Retirar", bumpOrder: "Retirar pedido", recall: "Recuperar", soldOut: "Agotado",
+    es: { moreDish: "+1 plato más", moreDishes: "+{n} platos más", moreTicket: "+1 ticket más",
+          moreTickets: "+{n} tickets más", earlier: "Tickets anteriores", later: "Tickets siguientes",
+          smaller: "Tickets más pequeños", bigger: "Tickets más grandes", compact: "Compacto", standard: "Estándar",
+          large: "Grande", xlarge: "Muy grande",
+          start: "Empezar", ready: "Listo", bump: "Retirar", bumpOrder: "Retirar pedido", recall: "Recuperar", soldOut: "Agotado",
           soldTitle: "Agotado en esta tienda", markSold: "Marcar agotado", markBack: "Disponible otra vez", isSold: "Agotado",
           close: "Cerrar", waiting: "Por preparar", preparing: "Preparando", readyCol: "Listo", void: "Anulado: no preparar",
           recallNote: "Retirados en los últimos 30 minutos, para leer otra vez. Un ticket retirado no puede volver atrás.",
@@ -52,7 +64,11 @@
           step: "Este ticket cambió en otra pantalla. Se lee el tablero otra vez.", gone: "Este ticket ya no está en el tablero.",
           not_yours: "Este ticket es de otra estación.", wait: "Un momento y pulse otra vez.",
           not_listed: "Ese plato no está en la lista de esta pantalla.", off: "Agotado está desactivado en esta tienda." },
-    fr: { start: "Commencer", ready: "Prêt", bump: "Retirer", bumpOrder: "Retirer la commande", recall: "Rappel",
+    fr: { moreDish: "+1 plat de plus", moreDishes: "+{n} plats de plus", moreTicket: "+1 ticket de plus",
+          moreTickets: "+{n} tickets de plus", earlier: "Tickets précédents", later: "Tickets suivants",
+          smaller: "Tickets plus petits", bigger: "Tickets plus grands", compact: "Compact", standard: "Standard",
+          large: "Grand", xlarge: "Très grand",
+          start: "Commencer", ready: "Prêt", bump: "Retirer", bumpOrder: "Retirer la commande", recall: "Rappel",
           soldOut: "Épuisé", soldTitle: "Épuisé dans ce magasin", markSold: "Marquer épuisé", markBack: "De nouveau disponible",
           isSold: "Épuisé", close: "Fermer", waiting: "Reste à préparer", preparing: "En préparation", readyCol: "Prêt",
           void: "Annulé : ne pas préparer",
@@ -67,7 +83,10 @@
           step: "Ce ticket a changé sur un autre écran. Le tableau est relu.", gone: "Ce ticket n'est plus au tableau.",
           not_yours: "Ce ticket est celui d'un autre poste.", wait: "Un instant, puis appuyez de nouveau.",
           not_listed: "Ce plat n'est pas dans la liste de cet écran.", off: "Épuisé est désactivé dans ce magasin." },
-    de: { start: "Starten", ready: "Fertig", bump: "Abräumen", bumpOrder: "Bestellung abräumen", recall: "Zurückholen",
+    de: { moreDish: "+1 weiteres Gericht", moreDishes: "+{n} weitere Gerichte", moreTicket: "+1 weiterer Bon",
+          moreTickets: "+{n} weitere Bons", earlier: "Frühere Bons", later: "Spätere Bons", smaller: "Kleinere Bons",
+          bigger: "Größere Bons", compact: "Kompakt", standard: "Standard", large: "Groß", xlarge: "Sehr groß",
+          start: "Starten", ready: "Fertig", bump: "Abräumen", bumpOrder: "Bestellung abräumen", recall: "Zurückholen",
           soldOut: "Ausverkauft", soldTitle: "Ausverkauft in dieser Filiale", markSold: "Als ausverkauft markieren",
           markBack: "Wieder verfügbar", isSold: "Ausverkauft", close: "Schließen", waiting: "Noch zuzubereiten",
           preparing: "In Zubereitung", readyCol: "Fertig", void: "Storniert: nicht zubereiten",
@@ -83,7 +102,11 @@
           gone: "Dieser Bon ist nicht mehr auf der Tafel.", not_yours: "Dieser Bon gehört zu einer anderen Station.",
           wait: "Einen Moment, dann noch einmal tippen.", not_listed: "Dieses Gericht steht nicht auf der Liste dieses Bildschirms.",
           off: "Ausverkauft ist für diese Filiale ausgeschaltet." },
-    pt: { start: "Começar", ready: "Pronto", bump: "Retirar", bumpOrder: "Retirar pedido", recall: "Recuperar",
+    pt: { moreDish: "+1 prato a mais", moreDishes: "+{n} pratos a mais", moreTicket: "+1 pedido a mais",
+          moreTickets: "+{n} pedidos a mais", earlier: "Pedidos anteriores", later: "Próximos pedidos",
+          smaller: "Pedidos menores", bigger: "Pedidos maiores", compact: "Compacto", standard: "Padrão",
+          large: "Grande", xlarge: "Muito grande",
+          start: "Começar", ready: "Pronto", bump: "Retirar", bumpOrder: "Retirar pedido", recall: "Recuperar",
           soldOut: "Esgotado", soldTitle: "Esgotado nesta loja", markSold: "Marcar esgotado", markBack: "Disponível de novo",
           isSold: "Esgotado", close: "Fechar", waiting: "Ainda por fazer", preparing: "Em preparo", readyCol: "Pronto",
           void: "Cancelado: não preparar",
@@ -109,14 +132,17 @@
   var hash = new URLSearchParams(location.hash.slice(1));
   var LINK = { s: hash.get("s") || "", t: hash.get("t") || "" };
   var $ = function (id) { return document.getElementById(id); };
-  var last = null, readAt = 0, goodAt = 0, timer = null, busy = {}, showRecall = false;
+  var last = null, readAt = 0, goodAt = 0, timer = null, busy = {}, showRecall = false, page = 0, touchedAt = 0;
 
   // ── drawing helpers: text only, never markup ──
-  function el(tag, cls, text, auto) {
+  function bdi(text) { var b = document.createElement("bdi"); b.textContent = String(text); return b; }
+  function el(tag, cls, text, own) {   // own: the retailer's words, isolated so the block keeps the page's edge
     var e = document.createElement(tag);
     if (cls) e.className = cls;
-    if (text !== undefined && text !== null) e.textContent = String(text);
-    if (auto) e.setAttribute("dir", "auto");
+    if (text !== undefined && text !== null) {
+      if (own) e.appendChild(bdi(text));
+      else e.textContent = String(text);
+    }
     return e;
   }
   var ICONS = {   // 24×24 strokes, drawn in currentColor
@@ -125,7 +151,9 @@
     check: ["M5 12l5 5L19 7"],
     cross: ["M6 6l12 12", "M18 6L6 18"],
     play: ["M8 5l11 7-11 7z"],
-    flame: ["M12 3c3 4 5 6 5 10a5 5 0 0 1-10 0c0-2 1-4 3-5c0 2 1 3 2 3c0-3-1-5 0-8"]
+    flame: ["M12 3c3 4 5 6 5 10a5 5 0 0 1-10 0c0-2 1-4 3-5c0 2 1 3 2 3c0-3-1-5 0-8"],
+    back: ["M15 5l-7 7 7 7"],
+    forth: ["M9 5l7 7-7 7"]
   };
   function icon(name) {
     var NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg");
@@ -135,7 +163,9 @@
     ICONS[name].forEach(function (d) { var p = document.createElementNS(NS, "path"); p.setAttribute("d", d); svg.appendChild(p); });
     return svg;
   }
-  function withIcon(tag, cls, name, text) { var e = el(tag, cls); e.appendChild(icon(name)); e.appendChild(el("span", "", text)); return e; }
+  function withIcon(tag, cls, name, text, own) {
+    var e = el(tag, cls); e.appendChild(icon(name)); e.appendChild(el("span", "", text, own)); return e;
+  }
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
 
   // ── the site's own clock: a ticket's age is the door's as_of minus its sent_at, plus the time since the read ──
@@ -165,15 +195,19 @@
       .catch(function () { return { state: "unavailable" }; });
   }
   var noteUntil = 0, noteFor = "";
-  function answered(a, what) {       // a refusal is held; a later success on the SAME ticket or dish takes it down
+  function answered(a, what) {       // a refusal is held; only a later success on the SAME ticket or dish takes it down
     if (a.state === "refused" && WORDS.en[a.why]) { note(a.why, true); noteFor = what; }
-    else if (what === noteFor) { noteUntil = 0; note(""); }
+    else if (what === noteFor && (a.state === "moved" || a.state === "set")) { noteUntil = 0; note(""); }
   }
   function note(key, hold) {         // a tap's refusal is held NOTE_MS, so the read that follows does not wipe it
     var n = $("note");
-    if (!key) { if (performance.now() < noteUntil) return; n.hidden = true; n.textContent = ""; return; }
+    if (!key) {
+      if (performance.now() < noteUntil || n.hidden) return;
+      n.hidden = true; n.textContent = ""; fit(); return;
+    }
     n.textContent = w(key); n.hidden = false;
     noteUntil = hold ? performance.now() + NOTE_MS : 0;
+    fit();                           // the note sits above the board: the board is fitted again below it
   }
   function schedule(ms) { clearTimeout(timer); timer = setTimeout(read, ms); }
   function read() {
@@ -186,11 +220,12 @@
           window.ivnKit.applyTheme({ mode: a.look.mode, vars: vars });
           window.ivnKit.applyDir(lang);
         }
+        applySize();
         note("");
         draw();
         schedule(READ_MS);
       } else if (a.state === "unknown" || a.state === "closed" || a.state === "not_set_up") {
-        last = null; clear($("board")); $("waiting").hidden = true; note(a.state);
+        last = null; clear($("board")); $("waiting").hidden = true; pager(0, 0, false, false); note(a.state);
         schedule(a.state === "unknown" ? 60000 : 15000);   // a replaced link stays refused: read again rarely
       } else {
         note(goodAt ? "" : "unavailable"); stale(); schedule(RETRY_MS);
@@ -222,12 +257,12 @@
     var ul = el("ul", "ksc-lines " + (cls || ""));
     t.lines.forEach(function (ln) {
       var li = el("li", "ksc-line" + (ln.under !== null ? " is-choice" : ""));
-      li.appendChild(el("span", "", (ln.qty || "") + "× ", false));
-      li.appendChild(el("span", "", ln.item_name || ln.item_code, true));
+      li.appendChild(el("span", "", (ln.qty || "") + "× "));
+      li.appendChild(bdi(ln.item_name || ln.item_code));
       if (ln.note) li.appendChild(el("span", "ksc-line-note", ln.note, true));
       var who = [ln.guest ? w("guest", { n: ln.guest }) : "", ln.course || ""].filter(Boolean).join(" · ");
       if (who && ln.under === null) li.appendChild(el("span", "ksc-line-who", who, true));
-      if (ln.allergens) li.appendChild(withIcon("span", "ksc-allergens", "warn", ln.allergens));
+      if (ln.allergens) li.appendChild(withIcon("span", "ksc-allergens", "warn", ln.allergens, true));
       ul.appendChild(li);
     });
     return ul;
@@ -235,7 +270,7 @@
 
   function ticketCard(t, look, readOnly) {
     var tm = timerOf(t.sent_at, look);
-    var card = el("article", "ksc-ticket " + (t.kind === "void" ? "is-void " : "") + (t.state === "bumped" ? "" : tm.cls));
+    var card = el("article", "ksc-ticket ksc-slip " + (t.kind === "void" ? "is-void " : "") + (t.state === "bumped" ? "" : tm.cls));
     var head = el("div", "ksc-ticket-head");
     head.appendChild(el("p", "ksc-call", t.call_number || "#" + t.ticket, true));
     head.appendChild(tm.node);
@@ -245,6 +280,7 @@
     if (meta) card.appendChild(el("p", "ksc-meta", meta, true));
     if (t.kind === "void") card.appendChild(withIcon("p", "ksc-void", "cross", w("void")));
     card.appendChild(lines(t));
+    card.appendChild(more(t.call_number || "#" + t.ticket, function () { return [lines(t)]; }));
     var next = NEXT[t.state];
     if (!readOnly && next) {
       var b = el("button", "ivn-btn " + (next[0] === "bumped" ? "ivn-btn-primary " : "") + "ivn-btn-block ksc-act", w(next[1]));
@@ -262,29 +298,32 @@
     list.forEach(function (t) { main.appendChild(ticketCard(t, look, showRecall)); });
   }
 
+  function part(t) {                 // one station's share of an order, on the expo
+    var sec = el("section", "ksc-part" + (t.kind === "void" ? " ksc-ticket is-void" : ""));
+    var ph = el("div", "ksc-part-head");
+    ph.appendChild(el("span", "", t.station, true));
+    ph.appendChild(withIcon("span", "ksc-state", t.kind === "void" ? "cross" : STATE_ICON[t.state],
+      t.kind === "void" ? w("void") : w(STATE_WORD[t.state])));
+    sec.appendChild(ph);
+    sec.appendChild(lines(t));
+    return sec;
+  }
+
   function drawExpo(main, v, look) {
     var strip = $("waiting"); clear(strip);
     strip.hidden = false;
     strip.appendChild(el("span", "", w("waiting") + ":"));
     if (!v.waiting.length) strip.appendChild(el("span", "", w("nothing")));
-    v.waiting.forEach(function (d) { strip.appendChild(el("span", "", d.qty + "× " + d.item_name, true)); });
+    v.waiting.forEach(function (d) { var sp = el("span", "", d.qty + "× "); sp.appendChild(bdi(d.item_name)); strip.appendChild(sp); });
     if (!v.orders.length) main.appendChild(el("p", "ksc-empty", w("empty")));
     v.orders.forEach(function (o) {
-      var card = el("article", "ksc-order" + (o.bump ? " is-ready" : ""));
+      var card = el("article", "ksc-order ksc-slip" + (o.bump ? " is-ready" : ""));
       var head = el("div", "ksc-ticket-head"), tm = timerOf(o.sent_at, look);
       head.appendChild(el("p", "ksc-call", o.call_number || o.kitchen_order, true));
       head.appendChild(tm.node);
       card.appendChild(head);
-      o.tickets.forEach(function (t) {
-        var part = el("section", "ksc-part" + (t.kind === "void" ? " ksc-ticket is-void" : ""));
-        var ph = el("div", "ksc-part-head");
-        ph.appendChild(el("span", "", t.station, true));
-        ph.appendChild(withIcon("span", "ksc-state", t.kind === "void" ? "cross" : STATE_ICON[t.state],
-          t.kind === "void" ? w("void") : w(STATE_WORD[t.state])));
-        part.appendChild(ph);
-        part.appendChild(lines(t));
-        card.appendChild(part);
-      });
+      o.tickets.forEach(function (t) { card.appendChild(part(t)); });
+      card.appendChild(more(o.call_number || o.kitchen_order, function () { return o.tickets.map(part); }));
       if (o.bump) {
         var b = el("button", "ivn-btn ivn-btn-primary ivn-btn-block ksc-act", w("bumpOrder"));
         b.type = "button";
@@ -336,8 +375,9 @@
     var a = last, main = $("board");
     main.className = "ksc-board";
     clear(main);
-    $("title").textContent = a.title;
-    $("stations").textContent = a.stations.join(" · ");
+    clear($("title")); $("title").appendChild(bdi(a.title));
+    clear($("stations"));
+    a.stations.forEach(function (st, i) { if (i) $("stations").appendChild(document.createTextNode(" · ")); $("stations").appendChild(bdi(st)); });
     $("recall").hidden = a.kind !== "Station";
     $("recall").textContent = w("recall");
     $("recall").setAttribute("aria-pressed", showRecall ? "true" : "false");
@@ -345,11 +385,109 @@
     $("sold").textContent = w("soldOut");
     $("sold-title").textContent = w("soldTitle");
     $("sold-close").textContent = w("close");
+    $("ticket-close").textContent = w("close");
     $("waiting").hidden = true;
     if (a.kind === "Station") drawStation(main, a.view, a.look);
     else if (a.kind === "Expo") drawExpo(main, a.view, a.look);
     else drawBoard(main, a.view);
     stale();
+    fit();
+  }
+
+  // ── fitting the screen: whole tickets only, paged; a ticket taller than the board folded behind "+N more dishes" ──
+  function more(title, make) {       // the fold's button: opens the whole ticket in a dialog
+    var b = el("button", "ivn-btn ksc-more");
+    b.type = "button"; b.hidden = true;
+    b.addEventListener("click", function () {
+      clear($("ticket-title")); $("ticket-title").appendChild(bdi(title));
+      var body = $("ticket-body"); clear(body);
+      make().forEach(function (n) { body.appendChild(n); });
+      window.ivnKit.openDialog($("ticket-dialog"));
+    });
+    return b;
+  }
+  function capSlip(slip, cap) {
+    var lis = slip.querySelectorAll(".ksc-line"), parts = slip.querySelectorAll(".ksc-part"), btn = slip.querySelector(".ksc-more");
+    var groups = [];
+    lis.forEach(function (li) { li.hidden = false; });
+    parts.forEach(function (p) { p.hidden = false; });
+    if (btn) btn.hidden = true;
+    if (!btn || slip.getBoundingClientRect().height <= cap + 0.5) return;
+    btn.hidden = false;                // counted in the slip's height before anything is folded
+    lis.forEach(function (li) {        // a dish and the choices under it fold together
+      if (!groups.length || !li.classList.contains("is-choice")) groups.push([]);
+      groups[groups.length - 1].push(li);
+    });
+    var heights = groups.map(function (g) { return g.reduce(function (h, li) { return h + li.getBoundingClientRect().height; }, 0); });
+    var hide = window.kscFit.trim(heights, slip.getBoundingClientRect().height, cap);
+    var fold = function (n) {
+      groups.forEach(function (g, i) { g.forEach(function (li) { li.hidden = i >= groups.length - n; }); });
+      parts.forEach(function (p) {     // the expo: a station whose every dish is folded folds with them, heading and all
+        var ls = p.querySelectorAll(".ksc-line");
+        p.hidden = ls.length > 0 && Array.prototype.every.call(ls, function (li) { return li.hidden; });
+      });
+    };
+    fold(hide);
+    while (hide < groups.length - 1 && slip.getBoundingClientRect().height > cap + 0.5) fold(++hide);   // margins measured
+    if (!hide) { btn.hidden = true; return; }
+    btn.textContent = hide === 1 ? w("moreDish") : w("moreDishes", { n: hide });
+  }
+  function lateIn(slips) {
+    return slips.some(function (s) { return s.classList.contains("is-late") || !!s.querySelector(".ksc-ticket-head .ksc-timer.is-late"); });
+  }
+  function pager(before, after, lateBefore, lateAfter) {
+    var paged = before > 0 || after > 0;
+    $("prev").hidden = $("next").hidden = !paged;
+    $("prev").disabled = !before; $("next").disabled = !after;
+    $("prev").classList.toggle("is-late", lateBefore); $("next").classList.toggle("is-late", lateAfter);
+    $("more").hidden = !after;
+    $("more").classList.toggle("is-late", lateAfter);
+    $("more").textContent = after === 1 ? w("moreTicket") : w("moreTickets", { n: after });
+    $("prev").setAttribute("aria-label", w("earlier")); $("prev").title = w("earlier");
+    $("next").setAttribute("aria-label", w("later")); $("next").title = w("later");
+  }
+  function fit() {
+    var main = $("board");
+    if (!last) return;
+    if (main.classList.contains("ksc-serving")) {   // the board: the numbers shrink a step at a time until they fit
+      for (var n = 0; n <= 4; n++) {
+        main.setAttribute("data-shrink", String(n));
+        if (main.scrollHeight <= main.clientHeight + 1) break;
+      }
+      pager(0, 0, false, false);
+      return;
+    }
+    var slips = Array.prototype.filter.call(main.children, function (c) { return c.classList.contains("ksc-slip"); });
+    slips.forEach(function (sl) { sl.hidden = false; });
+    if (!slips.length) { pager(0, 0, false, false); return; }
+    var box = main.getBoundingClientRect(), limit = box.bottom - parseFloat(getComputedStyle(main).paddingBottom);
+    var cap = limit - slips[0].getBoundingClientRect().top;
+    slips.forEach(function (sl) { capSlip(sl, cap); });
+    if (page && performance.now() - touchedAt > PAGE_BACK_MS) page = 0;   // left on a later page: back to the oldest
+    var shown = window.kscFit.pages(slips.length, page, function (from) {
+      slips.forEach(function (sl, i) { sl.hidden = i < from; });
+      return slips.slice(from).map(function (sl) { return sl.getBoundingClientRect().bottom; });
+    }, limit);
+    page = shown.page;
+    slips.forEach(function (sl, i) { sl.hidden = i < shown.from || i >= shown.end; });
+    pager(shown.from, slips.length - shown.end, lateIn(slips.slice(0, shown.from)), lateIn(slips.slice(shown.end)));
+  }
+
+  // ── the size: the store's default, or the cook's A- / A+ on this screen, remembered on this device ──
+  var SIZE_KEY = "ksc.size." + LINK.s + "." + LINK.t.split(".")[0], chosen = "";
+  try { chosen = window.localStorage.getItem(SIZE_KEY) || ""; } catch (e) { chosen = ""; }
+  function applySize() {
+    var v = window.kscFit.size(chosen, last && last.look && last.look.size), S = window.kscFit.SIZES;
+    document.body.setAttribute("data-size", v);
+    $("smaller").disabled = v === S[0]; $("bigger").disabled = v === S[S.length - 1];
+    $("smaller").textContent = "A\u2212"; $("bigger").textContent = "A+";
+    $("smaller").setAttribute("aria-label", w("smaller") + " (" + w(v) + ")"); $("smaller").title = w("smaller");
+    $("bigger").setAttribute("aria-label", w("bigger") + " (" + w(v) + ")"); $("bigger").title = w("bigger");
+  }
+  function resize(by) {
+    chosen = window.kscFit.step(window.kscFit.size(chosen, last && last.look && last.look.size), by);
+    try { window.localStorage.setItem(SIZE_KEY, chosen); } catch (e) { /* not kept on this device: this visit only */ }
+    applySize(); fit();
   }
 
   // the timers move every second between reads, with no call
@@ -362,11 +500,21 @@
     });
   }, 1000);
 
-  $("recall").addEventListener("click", function () { showRecall = !showRecall; if (last) draw(); });
+  $("recall").addEventListener("click", function () { showRecall = !showRecall; page = 0; if (last) draw(); });
+  $("prev").appendChild(icon("back")); $("next").appendChild(icon("forth"));
+  $("prev").addEventListener("click", function () { page = Math.max(0, page - 1); fit(); });
+  $("next").addEventListener("click", function () { page += 1; fit(); });
+  $("smaller").addEventListener("click", function () { resize(-1); });
+  $("bigger").addEventListener("click", function () { resize(1); });
+  $("ticket-close").textContent = w("close");
+  document.addEventListener("pointerdown", function () { touchedAt = performance.now(); }, true);
+  var fitting = 0;
+  window.addEventListener("resize", function () { cancelAnimationFrame(fitting); fitting = requestAnimationFrame(fit); });
   $("sold").addEventListener("click", function () { drawSold(); window.ivnKit.openDialog($("sold-dialog")); });
   window.addEventListener("online", function () { read(); });   // back on the network: read at once, not in 3 s
   window.addEventListener("hashchange", function () { location.reload(); });
 
+  applySize();
   if (!LINK.s || !LINK.t) { note("unknown"); return; }
   stale();
   read();

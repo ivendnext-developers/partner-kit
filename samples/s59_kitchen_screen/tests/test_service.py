@@ -195,10 +195,11 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(self.shop.calls.count("station_tickets"), 1)
 
     def test_b5_the_store_row_sets_the_look(self):
-        self.shop.settings[F.CO]["stores"][0].update(look="Light", accent="#0b4d69", language="Arabic", warn_min=5, late_min=3)
+        self.shop.settings[F.CO]["stores"][0].update(look="Light", accent="#0b4d69", language="Arabic", warn_min=5, late_min=3,
+                                                     slip_size="Large")
         t = made(self.shop, self.svc)
         self.assertEqual(call(self.svc, "/ksc/board", t)[1]["look"],
-                         {"mode": "light", "accent": "#0b4d69", "lang": "ar", "warn": 5, "late": 6})
+                         {"mode": "light", "accent": "#0b4d69", "lang": "ar", "warn": 5, "late": 6, "size": "large"})
 
     # ── moves ──
     def move(self, t, order, n, state):
@@ -309,9 +310,19 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((v["state"], len(v["view"]["tickets"])), ("open", 2))
         self.assertNotIn("sold_out", v)
         self.shop.calls.clear()
-        for _ in range(11):                                            # 33 s of reads: kept refused 30 s, so asked once
+        for i in range(11):                                            # 33 s of reads: kept refused 30 s, so asked once
             self.later(3)
-            call(self.svc, "/ksc/board", t)
+            self.assertNotIn("sold_out", call(self.svc, "/ksc/board", t)[1], i)
+            if i == 2:                                                 # a tap while it is kept is told the same refusal
+                self.assertEqual(self.sold(t, "FRIES"), {"state": "not_set_up"})
+        self.assertEqual(self.shop.calls.count("item_availability"), 1)
+
+    def test_s7_a_sold_out_read_that_timed_out_is_kept_as_a_timeout_not_a_refusal(self):
+        t = made(self.shop, self.svc)
+        self.shop.door_refuse = ("item_availability", None)
+        self.assertNotIn("sold_out", call(self.svc, "/ksc/board", t)[1])
+        self.later(3)
+        self.assertEqual(call(self.svc, "/ksc/soldout", t, item_code="FRIES", sold_out=True), (503, {"state": "unavailable"}))
         self.assertEqual(self.shop.calls.count("item_availability"), 1)
 
     def test_s4_sold_out_off_for_the_store_or_from_the_board_is_refused(self):
@@ -325,7 +336,7 @@ class ServiceTest(unittest.TestCase):
 
     # ── every call ──
     def test_e1_the_page_is_served_with_a_strict_policy_and_the_kits_files(self):
-        for path in ("/", "/page.js", "/page.css", "/ivn-kit.css", "/ivn-kit.js"):
+        for path in ("/", "/page.js", "/fit.js", "/page.css", "/ivn-kit.css", "/ivn-kit.js"):
             code, body, hdrs = self.svc.handle("GET", path, {}, None)
             self.assertEqual(code, 200, path)
             policy = dict(p.strip().split(" ", 1) for p in hdrs["Content-Security-Policy"].split(";"))

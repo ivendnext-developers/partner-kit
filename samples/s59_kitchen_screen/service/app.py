@@ -5,7 +5,7 @@ library only).
     POST /ksc/link      the retailer's signed press of *Make link* (``desk_action/1``): each ticked screen record gets a
                         new number and its signed link                          →  200 {"message": …, "refresh": true}
     GET  /              the screen's page (its address carries #s=<the retailer's site>&t=<screen>.<number>.<signature>)
-    GET  /page.js · /page.css · /ivn-kit.css · /ivn-kit.js   (the kit's own two files, a pinned copy beside the page)
+    GET  /page.js · /fit.js · /page.css · /ivn-kit.css · /ivn-kit.js   (the kit's own two files, a pinned copy beside the page)
     POST /ksc/board     {"s", "t"}                                     →  200 {"state": "open", "kind", "view", …}
     POST /ksc/move      {"s", "t", "kitchen_order", "ticket", "state"} →  200 {"state": "moved" | "refused", …}
                         {"s", "t", "kitchen_order", "order": true}     (the expo: bump every ready ticket of the order)
@@ -68,10 +68,11 @@ SCREEN_KEEP_S = 15                   # a verified screen and its store's row (a 
 CACHE_MAX = 2000                     # screens (and stores) one copy keeps
 MOVE_GAP_S = 0.25                    # one move (or sold-out tap) a screen this often, per copy
 STATIC = {"/": ("page.html", "text/html; charset=utf-8"), "/page.js": ("page.js", "text/javascript; charset=utf-8"),
-          "/page.css": ("page.css", "text/css; charset=utf-8"),
+          "/page.css": ("page.css", "text/css; charset=utf-8"), "/fit.js": ("fit.js", "text/javascript; charset=utf-8"),
           "/ivn-kit.css": ("ivn-kit.css", "text/css; charset=utf-8"),    # the kit's own files, copied beside the page and
           "/ivn-kit.js": ("ivn-kit.js", "text/javascript; charset=utf-8")}   # pinned (kit/design/README.md §1)
-ROW_FIELDS = ["parent", "store", "sold_out_on", "warn_min", "late_min", "look", "accent", "language", "tables_on_board"]
+ROW_FIELDS = ["parent", "store", "sold_out_on", "warn_min", "late_min", "look", "accent", "language", "tables_on_board",
+              "slip_size"]
 SET_UP = ("PermissionError", "DeviceRequiredError", "ProfileNotAssignedError", "AssignedProfileDisabledError",
           "DuplicateStoreAssignmentError", "StoreAssignmentIncompleteError")
 NOT_SET_UP = ("Kitchen screen is not set up yet: no key from this site has reached it. Ask your manager to check that "
@@ -337,13 +338,13 @@ class Service:
         key = (site, store)
         kept = self._sold.get(key)
         if kept and self.clock() - kept[0] < SOLD_KEEP_S:
-            if kept[1] is None:         # refused a moment ago: kept refused, so a missing right costs 2 calls a minute
-                raise TenantError("item_availability -> refused (kept)", 403)
+            if isinstance(kept[1], TenantError):   # refused or late a moment ago: the same answer, kept, so a missing
+                raise kept[1]                       # right costs 2 calls a minute (and a timeout is never told as a 403)
             return kept[1]
         try:
             value = ksc.sold_out_of(door.call("item_availability", query={"warehouse": store}))
-        except TenantError:
-            self._keep(self._sold, key, None)
+        except TenantError as e:
+            self._keep(self._sold, key, e)
             raise
         self._keep(self._sold, key, value)
         return value

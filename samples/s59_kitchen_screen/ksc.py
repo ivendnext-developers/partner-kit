@@ -35,6 +35,7 @@ NEXT = {"new": "started", "started": "ready", "ready": "bumped"}   # the door's 
 WARN = (1, 120, 8)           # (least, most, blank) minutes before a ticket's timer turns amber
 LATE = (1, 240, 15)          # … and red
 LANGS = {"English": "en", "Arabic": "ar", "Spanish": "es", "French": "fr", "German": "de", "Portuguese": "pt"}
+SIZES = {"Compact": "compact", "Standard": "standard", "Large": "large", "Extra large": "xlarge"}   # the slips' size steps
 TICKETS_MAX = 300            # tickets one screen's answer carries to a page (after its own filter)
 BOARD_MAX = 2000             # tickets of one store's board a copy keeps (the newest, when a board is larger)
 LINES_MAX = 60               # lines one ticket carries
@@ -316,9 +317,11 @@ def sold_out_of(rows) -> list[dict]:
 
 
 def look(row: dict) -> dict:
-    """The store row's look for its screens: mode, an accent colour (only ``#rrggbb``), the language, the timers."""
+    """The store row's look for its screens: mode, an accent colour (only ``#rrggbb``), the language, the timers, and the
+    slips' size (a cook's A- / A+ on one screen overrides it there, remembered on that device)."""
     accent = row.get("accent") if isinstance(row.get("accent"), str) and _COLOUR.fullmatch(row.get("accent") or "") else ""
     return {"mode": "light" if row.get("look") == "Light" else "dark", "accent": accent,
             "lang": LANGS.get(row.get("language") or "", "en"),
             "warn": setting(row.get("warn_min"), WARN), "late": max(setting(row.get("late_min"), LATE),
-                                                                     setting(row.get("warn_min"), WARN) + 1)}
+                                                                     setting(row.get("warn_min"), WARN) + 1),
+            "size": SIZES.get(row.get("slip_size") or "", "standard")}

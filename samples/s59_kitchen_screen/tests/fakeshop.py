@@ -21,7 +21,8 @@ STEP = {"new": "started", "started": "ready", "ready": "bumped"}
 def settings(**row):
     return {"name": CO, "company": CO, "modified": "2026-10-30 09:00:00.000001",
             "stores": [dict({"parent": CO, "store": STORE, "sold_out_on": 1, "warn_min": 0, "late_min": 0, "look": "Dark",
-                             "accent": "", "language": "English", "tables_on_board": 0}, **row)]}
+                             "accent": "", "language": "English", "tables_on_board": 0,
+                             "slip_size": "Standard"}, **row)]}
 
 
 def screen(name, kind="Station", stations=(GRILL,), store=STORE, number=0, title="Grill", **kw):
