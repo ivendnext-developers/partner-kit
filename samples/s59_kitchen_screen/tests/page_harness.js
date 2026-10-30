@@ -74,7 +74,7 @@ function run(opts) {
   const html = fs.readFileSync(path.join(SERVICE, "page.html"), "utf8");
   for (const m of html.matchAll(/<(\w+)[^>]*\bid="([^"]+)"/g)) { byId[m[2]] = element(m[1]); body.appendChild(byId[m[2]]); }
   BOARD = byId.board; STRIP = byId.waiting;
-  const calls = [], answers = opts.answers || {}, winListeners = {};
+  const calls = [], answers = opts.answers || {}, winListeners = {}, timers = [];
   const store = opts.storage === "throws" ? null : Object.assign({}, opts.storage || {});
   const win = {
     location: { hash: opts.hash === undefined ? "#s=bistro.example.com&t=KSC-SCREEN-00001.1.sig" : opts.hash, reload() {} },
@@ -93,7 +93,7 @@ function run(opts) {
     getComputedStyle: () => ({ paddingBottom: "0", paddingTop: "0" }),
     addEventListener(type, fn) { (winListeners[type] = winListeners[type] || []).push(fn); },
     performance: { now: () => clock.t }, URLSearchParams, Date, console,
-    setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, requestAnimationFrame: () => 0, cancelAnimationFrame() {},
+    setTimeout: (fn, ms) => { timers.push(ms); return 0; }, clearTimeout() {}, setInterval: () => 0, requestAnimationFrame: () => 0, cancelAnimationFrame() {},
   };
   const clock = { t: 1000 };
   Object.defineProperty(win, "localStorage", {
@@ -106,7 +106,7 @@ function run(opts) {
   vm.createContext(win);
   vm.runInContext(fs.readFileSync(path.join(SERVICE, "fit.js"), "utf8"), win, { filename: "fit.js" });
   vm.runInContext(fs.readFileSync(path.join(SERVICE, "page.js"), "utf8"), win, { filename: "page.js" });
-  return { win, byId, body, calls, store, clock, winListeners };
+  return { win, byId, body, calls, store, clock, winListeners, timers };
 }
 const settle = () => new Promise((r) => setImmediate(r));
 async function settled() { for (let i = 0; i < 20; i++) await settle(); }
@@ -138,7 +138,7 @@ const SCENARIOS = {
   async fit(opts) {
     const p = run(opts);
     await settled();
-    const out = { first: snapshot(p) };
+    const out = { first: snapshot(p), timers: p.timers.slice() };
     out.moves = 0;
     for (const step of opts.steps || []) {
       if (step === "next" || step === "prev") { p.byId[step].click(); out[step] = snapshot(p); }

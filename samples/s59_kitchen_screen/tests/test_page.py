@@ -235,12 +235,13 @@ class PageFit(unittest.TestCase):
         self.assertEqual(got["taps"], [1, 1])               # the expo bumped k0: the cook's next tap is held
 
     def test_f10_a_screen_back_on_the_network_catches_up_on_its_next_read(self):
-        six = [ticket(f"k{i}", 1, 1) for i in range(2)]
-        got = page("fit", answers={"/ksc/board": [{"state": "unavailable"}, station(*six)]},
+        two = [ticket(f"k{i}", 1, 1) for i in range(2)]
+        got = page("fit", answers={"/ksc/board": [{"state": "unavailable"}, station(*two)]},
                    layout={"board": 340, "inner": 1000}, steps=["read"])
         self.assertEqual((got["first"]["shown"], got["first"]["note"]), ([], "The kitchen's tickets cannot be read right now. "
                                                                           "This screen tries again by itself."))
         self.assertEqual((got["read"]["shown"], got["read"]["note"]), (["k0.1", "k1.1"], ""))
+        self.assertIn(3000, got["timers"])                  # a failed read is tried again 3 s later, by itself
 
     def test_f11_a_late_ticket_on_another_page_turns_the_page_button_red(self):
         six = [ticket(f"k{i}", 1, 1) for i in range(6)]
@@ -251,6 +252,9 @@ class PageFit(unittest.TestCase):
     def test_f12_a_minute_after_the_last_touch_the_screen_goes_back_to_the_first_page(self):
         six = [ticket(f"k{i}", 1, 1) for i in range(6)]
         got = page("fit", answers={"/ksc/board": [station(*six)]}, layout={"board": 340, "inner": 1000},
+                   steps=["next", "wait:30000", "read"])
+        self.assertEqual(got["read"]["shown"], ["k3.1", "k4.1", "k5.1"])     # half a minute: the cook's page stays
+        got = page("fit", answers={"/ksc/board": [station(*six)]}, layout={"board": 340, "inner": 1000},
                    steps=["next", "wait:61000", "read"])
         self.assertEqual((got["next"]["shown"], got["read"]["shown"]), (["k3.1", "k4.1", "k5.1"], ["k0.1", "k1.1", "k2.1"]))
 
@@ -258,7 +262,7 @@ class PageFit(unittest.TestCase):
         six = [dict(ticket(f"k{i}", 1, 1), state="ready") for i in range(2)]
         got = page("fit", answers={"/ksc/board": [station(*six)], "/ksc/move": [{"state": "unavailable"}]},
                    layout={"board": 340, "inner": 1000}, steps=["tap", "read"])
-        self.assertEqual(got["read"]["note"], "The kitchen's tickets cannot be read right now. This screen tries again by itself.")
+        self.assertEqual(got["read"]["note"], "That tap did not go through. Check the ticket and tap again.")
 
     def test_f9_arabic_counts_take_their_dual_and_eleven_and_over_forms(self):
         def more(n):

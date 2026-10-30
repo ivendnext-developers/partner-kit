@@ -244,6 +244,10 @@ CANARIES = [
      PF + "test_f12_a_minute_after_the_last_touch_the_screen_goes_back_to_the_first_page"),
     ("a tap not applied says so", PAGE, '    else if ((a.state === "unavailable" || a.state === "not_set_up") && performance.now() >= noteUntil) {',
      '    else if (false) {', PF + "test_f13_a_tap_that_was_not_applied_says_so"),
+    ("a failed read is tried again by itself", PAGE, 'note(goodAt ? "" : "unavailable"); stale(); schedule(RETRY_MS);',
+     'note(goodAt ? "" : "unavailable"); stale();', PF + "test_f10_a_screen_back_on_the_network_catches_up_on_its_next_read"),
+    ("the cook's page stays inside the minute", PAGE, "performance.now() - touchedAt > PAGE_BACK_MS", "performance.now() - touchedAt > 0",
+     PF + "test_f12_a_minute_after_the_last_touch_the_screen_goes_back_to_the_first_page"),
     # the manifest
     ("only the app writes a link's number", "manifest.json", '"insert_after": "link_section",\n   "in_list_view": 1,\n   "write_roles": [\n    "PP KSC Integration",',
      '"insert_after": "link_section",\n   "in_list_view": 1,\n   "write_roles": [\n    "PP KSC Manager",', F + "test_m1_what_makes_a_link_work_only_the_app_writes"),

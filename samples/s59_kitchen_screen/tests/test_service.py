@@ -347,7 +347,8 @@ class ServiceTest(unittest.TestCase):
         self.assertNotIn("style=", page)
         self.assertNotRegex(page, r"(src|href)=\"(https?:)?//")         # nothing from another site
 
-    def test_e3_every_file_the_service_serves_is_in_the_hosted_package(self):
+    def test_e3_every_file_the_service_serves_is_in_the_hosted_package(self):   # the page's files; app.json's
+        # handler and the template modules it imports are listed by hand beside them
         pkg = set(json.load(open(os.path.join(os.path.dirname(HERE), "app.json")))["package"])
         for fname, _ in app.STATIC.values():
             self.assertIn(f"samples/s59_kitchen_screen/service/{fname}", pkg, fname)   # else the hosted page is blank

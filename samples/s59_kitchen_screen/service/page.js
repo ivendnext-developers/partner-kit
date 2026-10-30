@@ -13,7 +13,8 @@
   // The till's own words where it has them (guest and sold out, from its ar, es and fr tables at T21; send is never
   // used for a bump, which is the kitchen's own step); German and Portuguese are this app's own until the till signs them.
   var WORDS = {
-    en: { moreChoice: "+1 more choice", moreChoices: "+{n} more choices",
+    en: { tapFailed: "That tap did not go through. Check the ticket and tap again.", tapRight: "This screen may not do that. Ask your manager to check the app's rights.",
+          moreChoice: "+1 more choice", moreChoices: "+{n} more choices",
           moreDish: "+1 more dish", moreDishes: "+{n} more dishes", moreTicket: "+1 more ticket",
           moreTickets: "+{n} more tickets", earlier: "Earlier tickets", later: "Later tickets", smaller: "Smaller tickets",
           bigger: "Larger tickets", compact: "Compact", standard: "Standard", large: "Large", xlarge: "Extra large",
@@ -31,7 +32,8 @@
           step: "This ticket moved on another screen. The board is read again.", gone: "This ticket is no longer on the board.",
           not_yours: "This ticket is another station's.", wait: "One moment, then tap again.",
           not_listed: "That dish is not on this screen's list.", off: "Sold out is switched off for this store." },
-    ar: { moreChoice: "+خيار واحد آخر", moreChoices: "+{n} خيارات أخرى", moreDish2: "+طبقان آخران",
+    ar: { tapFailed: "لم يُنفَّذ هذا الضغط. تحقق من التذكرة واضغط مرة أخرى.", tapRight: "لا يمكن لهذه الشاشة فعل ذلك. اطلب من المدير التحقق من صلاحيات التطبيق.",
+          moreChoice: "+خيار واحد آخر", moreChoices: "+{n} خيارات أخرى", moreDish2: "+طبقان آخران",
           moreDishes11: "+{n} طبقًا آخر", moreTicket2: "+تذكرتان أخريان", moreTickets11: "+{n} تذكرةً أخرى",
           moreChoice2: "+خياران آخران", moreChoices11: "+{n} خيارًا آخر",
           moreDishes100: "+{n} طبق آخر", moreTickets100: "+{n} تذكرة أخرى", moreChoices100: "+{n} خيار آخر",
@@ -52,7 +54,8 @@
           step: "تغيّرت هذه التذكرة على شاشة أخرى. تُقرأ اللوحة مرة أخرى.", gone: "لم تعد هذه التذكرة على اللوحة.",
           not_yours: "هذه التذكرة لمحطة أخرى.", wait: "لحظة، ثم اضغط مرة أخرى.",
           not_listed: "هذا الطبق ليس في قائمة هذه الشاشة.", off: "خاصية النفاد متوقفة في هذا المتجر." },
-    es: { moreChoice: "+1 opción más", moreChoices: "+{n} opciones más",
+    es: { tapFailed: "Esa pulsación no se aplicó. Revise el ticket y pulse otra vez.", tapRight: "Esta pantalla no puede hacer eso. Pida a su encargado que revise los permisos de la app.",
+          moreChoice: "+1 opción más", moreChoices: "+{n} opciones más",
           moreDish: "+1 plato más", moreDishes: "+{n} platos más", moreTicket: "+1 ticket más",
           moreTickets: "+{n} tickets más", earlier: "Tickets anteriores", later: "Tickets siguientes",
           smaller: "Tickets más pequeños", bigger: "Tickets más grandes", compact: "Compacto", standard: "Estándar",
@@ -71,7 +74,8 @@
           step: "Este ticket cambió en otra pantalla. Se lee el tablero otra vez.", gone: "Este ticket ya no está en el tablero.",
           not_yours: "Este ticket es de otra estación.", wait: "Un momento y pulse otra vez.",
           not_listed: "Ese plato no está en la lista de esta pantalla.", off: "Agotado está desactivado en esta tienda." },
-    fr: { moreChoice: "+1 option de plus", moreChoices: "+{n} options de plus",
+    fr: { tapFailed: "Cet appui n'a pas abouti. Vérifiez le ticket et appuyez de nouveau.", tapRight: "Cet écran ne peut pas faire cela. Demandez à votre responsable de vérifier les droits de l'app.",
+          moreChoice: "+1 option de plus", moreChoices: "+{n} options de plus",
           moreDish: "+1 plat de plus", moreDishes: "+{n} plats de plus", moreTicket: "+1 ticket de plus",
           moreTickets: "+{n} tickets de plus", earlier: "Tickets précédents", later: "Tickets suivants",
           smaller: "Tickets plus petits", bigger: "Tickets plus grands", compact: "Compact", standard: "Standard",
@@ -91,7 +95,8 @@
           step: "Ce ticket a changé sur un autre écran. Le tableau est relu.", gone: "Ce ticket n'est plus au tableau.",
           not_yours: "Ce ticket est celui d'un autre poste.", wait: "Un instant, puis appuyez de nouveau.",
           not_listed: "Ce plat n'est pas dans la liste de cet écran.", off: "Épuisé est désactivé dans ce magasin." },
-    de: { moreChoice: "+1 weitere Option", moreChoices: "+{n} weitere Optionen",
+    de: { tapFailed: "Dieses Tippen kam nicht an. Bon prüfen und erneut tippen.", tapRight: "Dieser Bildschirm darf das nicht. Ihre Leitung soll die Rechte der App prüfen.",
+          moreChoice: "+1 weitere Option", moreChoices: "+{n} weitere Optionen",
           moreDish: "+1 weiteres Gericht", moreDishes: "+{n} weitere Gerichte", moreTicket: "+1 weiterer Bon",
           moreTickets: "+{n} weitere Bons", earlier: "Frühere Bons", later: "Spätere Bons", smaller: "Kleinere Bons",
           bigger: "Größere Bons", compact: "Kompakt", standard: "Standard", large: "Groß", xlarge: "Sehr groß",
@@ -111,7 +116,8 @@
           gone: "Dieser Bon ist nicht mehr auf der Tafel.", not_yours: "Dieser Bon gehört zu einer anderen Station.",
           wait: "Einen Moment, dann noch einmal tippen.", not_listed: "Dieses Gericht steht nicht auf der Liste dieses Bildschirms.",
           off: "Ausverkauft ist für diese Filiale ausgeschaltet." },
-    pt: { moreChoice: "+1 opção a mais", moreChoices: "+{n} opções a mais",
+    pt: { tapFailed: "Esse toque não foi aplicado. Confira o pedido e toque de novo.", tapRight: "Esta tela não pode fazer isso. Peça ao seu gerente para verificar as permissões do app.",
+          moreChoice: "+1 opção a mais", moreChoices: "+{n} opções a mais",
           moreDish: "+1 prato a mais", moreDishes: "+{n} pratos a mais", moreTicket: "+1 pedido a mais",
           moreTickets: "+{n} pedidos a mais", earlier: "Pedidos anteriores", later: "Próximos pedidos",
           smaller: "Pedidos menores", bigger: "Pedidos maiores", compact: "Compacto", standard: "Padrão",
@@ -217,8 +223,8 @@
   function answered(a, what) {       // a refusal is held; only a later success on the SAME ticket or dish takes it down
     if (a.state === "refused" && WORDS.en[a.why]) { note(a.why, true); noteFor = what; }
     else if ((a.state === "unavailable" || a.state === "not_set_up") && performance.now() >= noteUntil) {
-      note(a.state, true); noteFor = what;   // the tap was not applied: say so, never over a refusal still held
-    }
+      note(a.state === "unavailable" ? "tapFailed" : "tapRight", true); noteFor = what;   // not applied, and never retried:
+    }                                                                                    // say so, never over a held refusal
     else if (what === noteFor && (a.state === "moved" || a.state === "set")) { noteUntil = 0; note(""); }
   }
   function note(key, hold) {         // a tap's refusal is held NOTE_MS, so the read that follows does not wipe it
