@@ -1,8 +1,9 @@
 """S60's laptop tests: the manifest passes the kit's checker and nothing the retailer's install refuses; the app calls
-no outside address and holds no money; the project field is the same Link on all five documents a builder's job runs
-through, and the stage field the same text field on the three line tables, so Desk's own Create (which copies a field
-of the same name, unless it is no_copy) carries both from the quote to the order, each delivery and the invoice; both are
-optional and settable after submit where a booked document needs them; the project's builder is required and its name
+no outside address and holds no money; the project field is the same Link on the four documents Desk's own Create chains
+(which copies a field of the same name, unless it is no_copy) from the quote to the order, each delivery and the
+invoice, and a Link of its OWN name on the till's POS Invoice, because the day's consolidation copies every same-named
+field of each till sale into the combined Sales Invoice; the stage field the same text field on the three line tables;
+all optional, settable after submit where a booked document needs them, and a standard filter on each list; the project's builder is required and its name
 a read-only copy; no table is required; the project sheet reads each document type through ivn_rows (the viewer's
 rights) filtered on the project, never through the framework's own readers, and prints the retailer's letter head; the
 builder's projects under Customer; the rights and the help page. Data only: no service.
@@ -26,7 +27,8 @@ P = MANIFEST["prefix"]
 PROJECT, STAGE = f"{P} Project", f"{P} Stage"
 DT = {d["name"]: d for d in MANIFEST["doctypes"]}
 OUTSIDE = ("extension_subscriptions", "webhooks", "registered_applications", "remote_keys", "desk_actions")
-HEADERS = {"Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "POS Invoice"}
+CHAIN = {"Quotation", "Sales Order", "Delivery Note", "Sales Invoice"}
+HEADERS = CHAIN | {"POS Invoice"}
 LINES = {"Quotation Item", "Sales Order Item", "Delivery Note Item"}
 (PF,) = MANIFEST["print_formats"]
 
@@ -57,8 +59,13 @@ class ManifestTest(unittest.TestCase):
         got = [c for c in MANIFEST["custom_fields"] if c["fieldtype"] == "Link"]
         self.assertEqual({c["dt"] for c in got}, HEADERS)
         self.assertEqual(len(got), len(HEADERS))
-        self.assertEqual({c["fieldname"] for c in got}, {MANIFEST["app"] + "_project"})   # one name: Create copies it
+        chain = {c["fieldname"] for c in got if c["dt"] in CHAIN}
+        self.assertEqual(chain, {MANIFEST["app"] + "_project"})                # one name: Create copies it down the chain
+        (till,) = [c for c in got if c["dt"] == "POS Invoice"]
+        self.assertEqual(till["fieldname"], MANIFEST["app"] + "_till_project")  # never the chain's: the day's
+        # consolidation maps each till sale into the combined Sales Invoice, same-named fields included
         for c in got:
+            self.assertEqual(c.get("in_standard_filter"), 1, c["dt"])         # each list filters by project
             self.assertEqual(c["options"], PROJECT)
             self.assertFalse(c.get("reqd") or c.get("no_copy") or c.get("read_only") or c.get("hidden") or c.get("default"))
             self.assertEqual(c.get("allow_on_submit"), 1, c["dt"])         # a booked till sale or order is named later
@@ -96,9 +103,10 @@ class ManifestTest(unittest.TestCase):
     def test_the_sheet_reads_each_document_with_the_viewers_rights_filtered_on_the_project(self):
         html = PF["html"]
         self.assertEqual((PF["doc_type"], PF["print_format_type"]), (PROJECT, "Jinja"))
-        reads = re.findall(r'ivn_rows\("([^"]+)", filters=\{"([a-z_]+)": doc\.name\}', html)
-        self.assertEqual(sorted(t for t, _ in reads), sorted(HEADERS))
-        self.assertEqual({f for _, f in reads}, {MANIFEST["app"] + "_project"})
+        reads = dict(re.findall(r'ivn_rows\("([^"]+)", filters=\{"([a-z_]+)": doc\.name\}', html))
+        self.assertEqual(set(reads), HEADERS)
+        field = {c["dt"]: c["fieldname"] for c in MANIFEST["custom_fields"] if c["dt"] in HEADERS}
+        self.assertEqual(reads, field)                                      # each read filters on that type's own field
         self.assertNotRegex(html, r"\b(get_all|get_list|get_doc|get_value|db\.)")   # never the framework's own readers
         self.assertIn("{{ letter_head }}", html)                            # a Jinja print places it itself (run 22)
         own = set(fields(PROJECT)) | {"name", "status"}
@@ -116,7 +124,7 @@ class ManifestTest(unittest.TestCase):
         self.assertIn("delete", rights("System Manager"))
         self.assertEqual(rights("Stock User"), {"read", "report"})
         self.assertEqual(rights("Accounts User"), {"read"})
-        self.assertEqual(rights("Retail Manager"), {"read", "report", "print"})   # names a till document's project
+        self.assertEqual(rights("Retail Manager"), {"read", "report", "print"})   # reads the whole sheet
 
     def test_the_project_opens_its_help(self):
         (ps,) = MANIFEST["property_setters"]

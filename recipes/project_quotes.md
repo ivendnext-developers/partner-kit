@@ -13,8 +13,8 @@ A hardware or DIY store sells to builders, and a builder buys for a job: the sto
 1. **The project.** The trade desk opens **PP PQT Project** in Desk and presses **+ Add**: the **Project** as the builder names it, the **Builder** (a customer; its name shows, read only), the **Store**, **Started on**, **Finish by**, the **Site address**, **Site contact** and **Site phone**, and a row per stage in **Stages planned** (the stage, the date it is **Wanted on site by**, **What goes**). Saved, it is numbered `PQT-00001` and is **Open**.
 2. **The quote.** A Desk **Quotation** to the builder names the **Project**; each line names its **Stage**.
 3. **The order.** **Create › Sales Order** on the quote: the project and every line's stage come with it. Each line gets its own **Delivery Date**, the stage's date.
-4. **Staged deliveries.** **Create › Delivery Note** on the order, choosing a delivery date: only the lines due by then, with the project and their stage. The next delivery takes the lines still owed. **Create › Sales Invoice** on a delivery carries the project.
-5. **The till's documents.** A quote, order or sale rung at the till for the builder is a *POS Invoice* in Desk: an **Accounts User** names a booked sale or order (settable after it is booked; Sales User reads no till document), and whoever holds the till's own **Quotation** right, such as the cashier who made it, names a till quote. The trade desk names a till order's own Sales Order the same way.
+4. **Staged deliveries.** **Create › Delivery Note** on the order: Desk asks which delivery dates to send (the dates up to today come ticked); tick the stage's date and press **Select**: only the lines of the ticked dates, with the project and their stage. The next delivery takes the lines of its own date. **Create › Sales Invoice** on a delivery carries the project.
+5. **The till's sales and orders.** A sale or an order rung at the till for the builder is a **POS Invoice** in Desk: once it is booked, an **Accounts User** (Sales User reads no till document) opens it from the POS Invoice list and chooses its **Project**. A till quote is not named: name the sale or order it becomes. The trade desk names a till order's own Sales Order.
 6. **The job in one place.** **Print › PP PQT Project sheet** on the project: its stages, then its quotes, the till's documents, its orders with the share delivered, its deliveries and its invoices with what is still owed. Every one of those lists filters by **Project**, and the builder's projects show under the customer.
 
 ## Projects
@@ -35,10 +35,13 @@ On the retailer's documents, two fields, each one name everywhere:
 
 | Field | On | What |
 |---|---|---|
-| Project (`pp_pqt_project`, a Link) | Quotation, Sales Order, Delivery Note, Sales Invoice, POS Invoice | the project the document belongs to; never required; settable after submit; a standard filter on each list |
+| Project (`pp_pqt_project`, a Link) | Quotation, Sales Order, Delivery Note, Sales Invoice | the project the document belongs to; never required; settable after submit; a standard filter on each list |
+| Project (`pp_pqt_till_project`, a Link) | POS Invoice | the same, for a till sale or order, under a name of its own (below) |
 | Stage (`pp_pqt_stage`, text) | the lines of Quotation, Sales Order and Delivery Note | the stage a line goes to site for; on an order's line beside its own delivery date, and settable after submit there |
 
 **Why one name.** Desk's own **Create** (a quote's *Sales Order*, an order's *Delivery Note*, a delivery's *Sales Invoice*) copies every field of the same name from the document it is made from, on the header and on the lines, unless the field is marked not to be copied. One name on every document therefore carries the project and the stages down the whole chain, with no code. The till makes a till order's Sales Order with a fixed list of fields of its own, so that one is named by hand.
+
+**Why the till's field has its own name.** When iVendNext combines the till's sales into Sales Invoices (at once on some sites, at the day's close on others), it copies every field of the same name from each sale (the last one's value wins). A till sale's project under the chain's name would land on that combined invoice, which can hold the builder's other sales of the day, and the sheet would count the same money twice. A name of its own keeps it off.
 
 ## The project sheet
 
@@ -55,7 +58,7 @@ The print format *PP PQT Project sheet* (Jinja) places the store's **Letter Head
 ## Steps
 
 1. **Add the record types above** to your manifest (`doctypes`, the stage table with `"istable": 1`), with no money field: the quotes, orders and invoices hold the money. Never make the stage table `reqd`.
-2. **Add the two fields** (`custom_fields`): the project as a Link of one name (your reserved field prefix, then `_project`) on the five documents, `allow_on_submit` 1, never `reqd`; the stage as a text field of one name on the three line tables, `allow_on_submit` 1 on the order's line, placed after its `delivery_date`.
+2. **Add the two fields** (`custom_fields`): the project as a Link of one name (your reserved field prefix, then `_project`) on the four documents Desk's Create chains (Quotation, Sales Order, Delivery Note, Sales Invoice) and, under a name of its own (`_till_project`), on POS Invoice, `allow_on_submit` 1, `in_standard_filter` 1, never `reqd`; the stage as a text field of one name on the three line tables, `allow_on_submit` 1 on the order's line, placed after its `delivery_date`.
 3. **Add the project sheet** (`print_formats`, above), the builder's projects under Customer (`links`), and a `documentation` property setter that points at your help.
 4. **Leave out** a Connections list of the documents under the project (a manifest's link may only list its own records under a retailer's record) and a report on the Sales Order naming your field (the retailer's site checks a report against its record type before the install, when your field is not there yet): the sheet and the lists' filter do that work.
 5. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s60_project_quotes`.
@@ -63,14 +66,15 @@ The print format *PP PQT Project sheet* (Jinja) places the store's **Letter Head
 ## What the retailer does
 
 1. **Install the app.** It adds the project and its stage table, the two fields on the documents, the sheet and the Connection. No setting, no role, no outside address.
-2. **Give Sales User** to the trade desk; a Sales Manager keeps projects too. Whoever sends goods out holds Stock User and accounts Accounts User, which read projects; a Retail Manager reads them too. An Accounts User names a booked till document's project; a till quote's is named by whoever holds the till's Quotation right.
+2. **Give Sales User** to the trade desk; a Sales Manager keeps projects too. Whoever sends goods out holds Stock User and accounts Accounts User, which read projects; a Retail Manager reads them too. An Accounts User names a booked till sale's or order's project.
 3. **For the deliveries still to come, line by line:** the Sales Order list's **Report** view, filtered by **Project** and **% Delivered** under 100, with the item columns *Stage*, *Delivery Date*, *Quantity* and *Delivered Qty*, saved as the store's own report.
 
 ## Limits
 
-- **The till does not name the project itself:** a till document is named in Desk after it is booked, by an Accounts User (a till quote by whoever holds the till's Quotation right), and a till order's Sales Order by the trade desk. Naming it at the till is a version of your own.
-- **Each section of the sheet shows what the person printing may read:** Sales User the quotes, orders and deliveries; Accounts User the orders, deliveries, invoices and till documents; Retail Manager all of them.
+- **The till does not name the project itself:** a till sale or order is named in Desk after it is booked, by an Accounts User, and a till order's Sales Order by the trade desk; a till quote is not named (its sale or order is). Naming it at the till is a version of your own.
+- **Each section of the sheet shows what the person printing may read:** Sales User the quotes, orders and deliveries; Stock User the orders and deliveries; Accounts User the orders, deliveries, invoices and till sales; Retail Manager all of them.
 - **The project is not checked against the document's customer:** the trade desk chooses it; the builder's projects show under the customer.
 - **The project holds no money:** a budget, retentions and progress claims are versions of your own.
+- **The sheet prints its documents' dates as year-month-day:** the rows `ivn_rows` returns are plain values.
 - **Desk shows the records with the app's prefix** (*PP PQT Project*).
-- **The builder's details are the retailer's.** Uninstalling removes the projects (the install's export keeps a copy) and the Project and Stage fields from every document.
+- **The builder's details are the retailer's.** Uninstalling removes the projects (the install's export keeps a copy of them) and the Project and Stage fields from every document; which project each document named goes with the fields, and the export does not keep it.

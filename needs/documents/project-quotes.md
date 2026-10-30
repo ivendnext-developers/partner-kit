@@ -14,10 +14,10 @@ verified: 2026-10-30 · bench
 related: repairs-by-serial
 ---
 ## What you build
-The builder's project as your manifest's own record type: the builder (a customer), the site, the dates and the stages planned. A Project field of one name on the quote, the order, the delivery, the invoice and the till's documents, and a Stage field of one name on the lines of the quote, the order and the delivery, so Desk's own Create carries both from the quote to every delivery and invoice. A print format, the project sheet, lists the job's documents with the viewer's own rights; each document list filters by project.
+The builder's project as your manifest's own record type: the builder (a customer), the site, the dates and the stages planned. A Project field of one name on the quote, the order, the delivery and the invoice, and a Stage field of one name on the lines of the quote, the order and the delivery, so Desk's own Create carries both from the quote to every delivery and invoice. The till's sales and orders get a Project field of their own name, so the till day's combined invoice does not take it. A print format, the project sheet, lists the job's documents with the viewer's own rights; each document list filters by project.
 
 ## Limits
-- The till does not name the project: a till document is named in Desk after it is booked, by an Accounts User (a till quote by whoever holds the till's Quotation right), and a till order's Sales Order by the trade desk. Naming it at the till is a version of your own.
+- The till does not name the project: a till sale or order is named in Desk after it is booked, by an Accounts User, and a till order's Sales Order by the trade desk; a till quote is not named (its sale or order is). Naming it at the till is a version of your own.
 - A manifest's Connections cannot list the retailer's documents under the project, and a report it ships cannot name a field it adds to the Sales Order: the sheet and the lists' filter do that work.
 - The project holds no money; the quotes, orders and invoices do.
 
