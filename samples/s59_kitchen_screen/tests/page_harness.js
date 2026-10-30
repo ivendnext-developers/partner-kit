@@ -1,16 +1,36 @@
 // S59 — runs the screen's page (service/fit.js + service/page.js) under node on a small stand-in for the browser, for
-// tests/test_page.py. The stand-in keeps a tree of elements with their text, classes, attributes and click handlers;
-// it lays nothing out (every box is empty), so it proves the page's own rules, never how a screen looks.
+// tests/test_page.py. The stand-in keeps a tree of elements with their text, classes, attributes and click handlers.
+// With a layout (opts.layout = {board, inner}) it gives each box a height (a line, a heading 20; a button 30; a "still
+// to make" dish 10) and stacks the board's tickets in one column from its top, so the page's own folding and paging
+// run; without one every box is empty. It proves the page's own rules, never how a screen looks.
 //
 //   node page_harness.js <scenario> '<json options>'   → prints one JSON answer
 "use strict";
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const SERVICE = path.join(__dirname, "..", "service");
+let LAYOUT = null, BOARD = null, STRIP = null;
+const BASE = { LI: 20, P: 20, H2: 20, BUTTON: 30 };
+function heightOf(e) {
+  if (!e.tagName || e.hidden) return 0;
+  let h = BASE[e.tagName] || 0;
+  if (e.parentNode === STRIP || e.className.split(" ").includes("ksc-part-head")) h = Math.max(h, e.parentNode === STRIP ? 10 : 20);
+  h += e.children.reduce((sum, c) => sum + heightOf(c), 0);
+  const cap = parseFloat(e.style.maxBlockSize);
+  return isNaN(cap) ? h : Math.min(h, cap);
+}
+function rectOf(e) {
+  if (!LAYOUT) return { top: 0, bottom: 0, height: 0, left: 0, right: 0, width: 0 };
+  if (e === BOARD) return { top: 0, bottom: LAYOUT.board, height: LAYOUT.board, left: 0, right: 100, width: 100 };
+  let top = 0;
+  if (e.parentNode === BOARD) for (const c of BOARD.children) { if (c === e) break; top += heightOf(c); }
+  const h = heightOf(e);
+  return { top, bottom: top + h, height: h, left: 0, right: 100, width: 100 };
+}
 
 function element(tag) {
   const e = {
     tagName: String(tag).toUpperCase(), children: [], parentNode: null, attrs: {}, listeners: {}, hidden: false,
-    disabled: false, title: "", className: "", _text: "", style: { setProperty() {} },
+    disabled: false, title: "", className: "", _text: "", style: { setProperty() {}, maxBlockSize: "" },
     get firstChild() { return this.children[0] || null; },
     get textContent() { return this._text + this.children.map((c) => c.textContent).join(""); },
     set textContent(v) { this.children = []; this._text = String(v); },
@@ -32,7 +52,7 @@ function element(tag) {
     all() { return this.children.reduce((out, c) => out.concat([c], c.all ? c.all() : []), []); },
     querySelectorAll(sel) { const cls = sel.replace(/^\./, ""); return this.all().filter((c) => c.classList && c.classList.contains(cls)); },
     querySelector(sel) { return this.querySelectorAll(sel)[0] || null; },
-    getBoundingClientRect() { return { top: 0, bottom: 0, height: 0, left: 0, right: 0, width: 0 }; },
+    getBoundingClientRect() { return rectOf(this); },
     get scrollHeight() { return 0; }, get clientHeight() { return 0; },
   };
   return e;
@@ -41,8 +61,10 @@ function text(t) { return { textContent: String(t), parentNode: null, all: () =>
 
 function run(opts) {
   const byId = {}, body = element("body");
+  LAYOUT = opts.layout || null;
   const html = fs.readFileSync(path.join(SERVICE, "page.html"), "utf8");
   for (const m of html.matchAll(/<(\w+)[^>]*\bid="([^"]+)"/g)) { byId[m[2]] = element(m[1]); body.appendChild(byId[m[2]]); }
+  BOARD = byId.board; STRIP = byId.waiting;
   const calls = [], answers = opts.answers || {};
   const store = opts.storage === "throws" ? null : Object.assign({}, opts.storage || {});
   const win = {
@@ -57,7 +79,8 @@ function run(opts) {
       const a = queue.length > 1 ? queue.shift() : queue[0];
       return Promise.resolve({ json: () => Promise.resolve(a) });
     },
-    ivnKit: { applyTheme() {}, applyDir() {}, openDialog(el) { el.attrs.open = "1"; } },
+    ivnKit: { applyTheme() {}, applyDir() {}, openDialog(el) { el.open = true; }, closeDialog(el) { el.open = false; } },
+    innerHeight: (opts.layout || {}).inner || 0,
     getComputedStyle: () => ({ paddingBottom: "0", paddingTop: "0" }),
     addEventListener() {}, performance: { now: () => clock.t }, URLSearchParams, Date, console,
     setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, requestAnimationFrame: () => 0, cancelAnimationFrame() {},
@@ -78,7 +101,44 @@ function run(opts) {
 const settle = () => new Promise((r) => setImmediate(r));
 async function settled() { for (let i = 0; i < 20; i++) await settle(); }
 
+function snapshot(p) {
+  const slips = p.byId.board.children.filter((c) => c.classList.contains("ksc-slip"));
+  const vis = (e) => !!e && !e.hidden;
+  return {
+    shown: slips.filter(vis).map((s) => s.getAttribute("data-key")),
+    slips: slips.filter(vis).map((s) => ({
+      key: s.getAttribute("data-key"), height: heightOf(s), tall: s.classList.contains("is-tall"),
+      more: vis(s.querySelector(".ksc-more")) ? s.querySelector(".ksc-more").textContent : "",
+      act: vis(s.querySelector(".ksc-act")),
+      voidPart: s.querySelectorAll(".ksc-part").filter((x) => x.classList.contains("is-void"))
+        .map((x) => ({ shown: vis(x), lines: x.querySelectorAll(".ksc-line").filter(vis).length })),
+    })),
+    pager: { more: vis(p.byId.more) ? p.byId.more.textContent : "", prev: vis(p.byId.prev) && !p.byId.prev.disabled,
+             next: vis(p.byId.next) && !p.byId.next.disabled },
+    strip: { dishes: p.byId.waiting.querySelectorAll(".ksc-wait").filter(vis).length, height: heightOf(p.byId.waiting),
+             rest: vis(p.byId.waiting.querySelector(".ksc-wait-more")) ? p.byId.waiting.querySelector(".ksc-wait-more").textContent : "" },
+  };
+}
+
 const SCENARIOS = {
+  // the page's own fitting, with a layout: what is shown, folded and paged; then the taps asked for
+  async fit(opts) {
+    const p = run(opts);
+    await settled();
+    const out = { first: snapshot(p) };
+    for (const step of opts.steps || []) {
+      if (step === "next" || step === "prev") { p.byId[step].click(); out[step] = snapshot(p); }
+      if (step.startsWith("more:")) {
+        const slip = p.byId.board.children.find((c) => c.getAttribute("data-key") === step.slice(5));
+        slip.querySelector(".ksc-more").click();
+        const b = p.byId["ticket-body"];
+        out.dialog = { open: !!p.byId["ticket-dialog"].open, voidBanner: b.querySelectorAll(".ksc-void").length,
+                       voidBox: b.children.some((c) => c.classList && c.classList.contains("is-void")),
+                       lines: b.querySelectorAll(".ksc-line").length };
+      }
+    }
+    return out;
+  },
   // the size the screen opens at, and after A- / A+
   async size(opts) {
     const p = run(opts);

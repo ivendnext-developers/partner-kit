@@ -8,11 +8,13 @@
 // rules) folds a ticket taller than the board behind "+N more dishes" and shows only whole tickets, paged.
 (function () {
   "use strict";
-  var READ_MS = 3000, RETRY_MS = 3000, LATE_READ_S = 15, NOTE_MS = 6000, PAGE_BACK_MS = 60000;
+  var READ_MS = 3000, RETRY_MS = 3000, LATE_READ_S = 15, NOTE_MS = 6000, PAGE_BACK_MS = 60000, SHIFT_MS = 1000;
+  var STRIP_SHARE = 0.25;            // "Still to make" takes at most a quarter of the screen's height
   // The till's own words where it has them (guest and sold out, from its ar, es and fr tables at T21; send is never
   // used for a bump, which is the kitchen's own step); German and Portuguese are this app's own until the till signs them.
   var WORDS = {
-    en: { moreDish: "+1 more dish", moreDishes: "+{n} more dishes", moreTicket: "+1 more ticket",
+    en: { moreChoice: "+1 more choice", moreChoices: "+{n} more choices",
+          moreDish: "+1 more dish", moreDishes: "+{n} more dishes", moreTicket: "+1 more ticket",
           moreTickets: "+{n} more tickets", earlier: "Earlier tickets", later: "Later tickets", smaller: "Smaller tickets",
           bigger: "Larger tickets", compact: "Compact", standard: "Standard", large: "Large", xlarge: "Extra large",
           start: "Start", ready: "Ready", bump: "Bump", bumpOrder: "Bump order", recall: "Recall", soldOut: "Sold out",
@@ -29,7 +31,10 @@
           step: "This ticket moved on another screen. The board is read again.", gone: "This ticket is no longer on the board.",
           not_yours: "This ticket is another station's.", wait: "One moment, then tap again.",
           not_listed: "That dish is not on this screen's list.", off: "Sold out is switched off for this store." },
-    ar: { moreDish: "+طبق واحد آخر", moreDishes: "+{n} أطباق أخرى", moreTicket: "+تذكرة واحدة أخرى",
+    ar: { moreChoice: "+خيار واحد آخر", moreChoices: "+{n} خيارات أخرى", moreDish2: "+طبقان آخران",
+          moreDishes11: "+{n} طبقًا آخر", moreTicket2: "+تذكرتان أخريان", moreTickets11: "+{n} تذكرةً أخرى",
+          moreChoice2: "+خياران آخران", moreChoices11: "+{n} خيارًا آخر",
+          moreDish: "+طبق واحد آخر", moreDishes: "+{n} أطباق أخرى", moreTicket: "+تذكرة واحدة أخرى",
           moreTickets: "+{n} تذاكر أخرى", earlier: "التذاكر السابقة", later: "التذاكر التالية", smaller: "تذاكر أصغر",
           bigger: "تذاكر أكبر", compact: "مضغوط", standard: "عادي", large: "كبير", xlarge: "كبير جدًا",
           start: "ابدأ", ready: "جاهز", bump: "أنهِ", bumpOrder: "أنهِ الطلب", recall: "استرجاع", soldOut: "نفدت الكمية",
@@ -46,7 +51,8 @@
           step: "تغيّرت هذه التذكرة على شاشة أخرى. تُقرأ اللوحة مرة أخرى.", gone: "لم تعد هذه التذكرة على اللوحة.",
           not_yours: "هذه التذكرة لمحطة أخرى.", wait: "لحظة، ثم اضغط مرة أخرى.",
           not_listed: "هذا الطبق ليس في قائمة هذه الشاشة.", off: "خاصية النفاد متوقفة في هذا المتجر." },
-    es: { moreDish: "+1 plato más", moreDishes: "+{n} platos más", moreTicket: "+1 ticket más",
+    es: { moreChoice: "+1 opción más", moreChoices: "+{n} opciones más",
+          moreDish: "+1 plato más", moreDishes: "+{n} platos más", moreTicket: "+1 ticket más",
           moreTickets: "+{n} tickets más", earlier: "Tickets anteriores", later: "Tickets siguientes",
           smaller: "Tickets más pequeños", bigger: "Tickets más grandes", compact: "Compacto", standard: "Estándar",
           large: "Grande", xlarge: "Muy grande",
@@ -64,7 +70,8 @@
           step: "Este ticket cambió en otra pantalla. Se lee el tablero otra vez.", gone: "Este ticket ya no está en el tablero.",
           not_yours: "Este ticket es de otra estación.", wait: "Un momento y pulse otra vez.",
           not_listed: "Ese plato no está en la lista de esta pantalla.", off: "Agotado está desactivado en esta tienda." },
-    fr: { moreDish: "+1 plat de plus", moreDishes: "+{n} plats de plus", moreTicket: "+1 ticket de plus",
+    fr: { moreChoice: "+1 option de plus", moreChoices: "+{n} options de plus",
+          moreDish: "+1 plat de plus", moreDishes: "+{n} plats de plus", moreTicket: "+1 ticket de plus",
           moreTickets: "+{n} tickets de plus", earlier: "Tickets précédents", later: "Tickets suivants",
           smaller: "Tickets plus petits", bigger: "Tickets plus grands", compact: "Compact", standard: "Standard",
           large: "Grand", xlarge: "Très grand",
@@ -83,7 +90,8 @@
           step: "Ce ticket a changé sur un autre écran. Le tableau est relu.", gone: "Ce ticket n'est plus au tableau.",
           not_yours: "Ce ticket est celui d'un autre poste.", wait: "Un instant, puis appuyez de nouveau.",
           not_listed: "Ce plat n'est pas dans la liste de cet écran.", off: "Épuisé est désactivé dans ce magasin." },
-    de: { moreDish: "+1 weiteres Gericht", moreDishes: "+{n} weitere Gerichte", moreTicket: "+1 weiterer Bon",
+    de: { moreChoice: "+1 weitere Option", moreChoices: "+{n} weitere Optionen",
+          moreDish: "+1 weiteres Gericht", moreDishes: "+{n} weitere Gerichte", moreTicket: "+1 weiterer Bon",
           moreTickets: "+{n} weitere Bons", earlier: "Frühere Bons", later: "Spätere Bons", smaller: "Kleinere Bons",
           bigger: "Größere Bons", compact: "Kompakt", standard: "Standard", large: "Groß", xlarge: "Sehr groß",
           start: "Starten", ready: "Fertig", bump: "Abräumen", bumpOrder: "Bestellung abräumen", recall: "Zurückholen",
@@ -102,7 +110,8 @@
           gone: "Dieser Bon ist nicht mehr auf der Tafel.", not_yours: "Dieser Bon gehört zu einer anderen Station.",
           wait: "Einen Moment, dann noch einmal tippen.", not_listed: "Dieses Gericht steht nicht auf der Liste dieses Bildschirms.",
           off: "Ausverkauft ist für diese Filiale ausgeschaltet." },
-    pt: { moreDish: "+1 prato a mais", moreDishes: "+{n} pratos a mais", moreTicket: "+1 pedido a mais",
+    pt: { moreChoice: "+1 opção a mais", moreChoices: "+{n} opções a mais",
+          moreDish: "+1 prato a mais", moreDishes: "+{n} pratos a mais", moreTicket: "+1 pedido a mais",
           moreTickets: "+{n} pedidos a mais", earlier: "Pedidos anteriores", later: "Próximos pedidos",
           smaller: "Pedidos menores", bigger: "Pedidos maiores", compact: "Compacto", standard: "Padrão",
           large: "Grande", xlarge: "Muito grande",
@@ -123,6 +132,12 @@
           not_listed: "Esse prato não está na lista desta tela.", off: "Esgotado está desligado nesta loja." }
   };
   var lang = "en";
+  function count(one, many, n) {     // "+1 more dish", "+N more dishes"; Arabic's dual and 11-and-over forms
+    if (n === 1) return w(one);
+    if (lang === "ar" && n === 2) return w(one + "2");
+    if (lang === "ar" && n >= 11) return w(many + "11", { n: n });
+    return w(many, { n: n });
+  }
   function w(key, args) {
     var s = (WORDS[lang] && WORDS[lang][key]) || WORDS.en[key] || "";
     Object.keys(args || {}).forEach(function (k) { s = s.split("{" + k + "}").join(String(args[k])); });
@@ -133,6 +148,7 @@
   var LINK = { s: hash.get("s") || "", t: hash.get("t") || "" };
   var $ = function (id) { return document.getElementById(id); };
   var last = null, readAt = 0, goodAt = 0, timer = null, busy = {}, showRecall = false, page = 0, touchedAt = 0;
+  var shiftedAt = -1e9, openKey = "";
 
   // ── drawing helpers: text only, never markup ──
   function bdi(text) { var b = document.createElement("bdi"); b.textContent = String(text); return b; }
@@ -241,7 +257,7 @@
   // ── moves ──
   function move(btn, extra) {
     var key = extra.kitchen_order + "." + (extra.ticket || "order");
-    if (busy[key]) return;
+    if (busy[key] || performance.now() - shiftedAt < SHIFT_MS) return;   // the page just changed under the finger
     busy[key] = true; btn.disabled = true;
     call("/ksc/move", extra).then(function (a) {
       busy[key] = false;
@@ -271,6 +287,7 @@
   function ticketCard(t, look, readOnly) {
     var tm = timerOf(t.sent_at, look);
     var card = el("article", "ksc-ticket ksc-slip " + (t.kind === "void" ? "is-void " : "") + (t.state === "bumped" ? "" : tm.cls));
+    card.setAttribute("data-key", t.kitchen_order + "." + t.ticket);
     var head = el("div", "ksc-ticket-head");
     head.appendChild(el("p", "ksc-call", t.call_number || "#" + t.ticket, true));
     head.appendChild(tm.node);
@@ -280,7 +297,12 @@
     if (meta) card.appendChild(el("p", "ksc-meta", meta, true));
     if (t.kind === "void") card.appendChild(withIcon("p", "ksc-void", "cross", w("void")));
     card.appendChild(lines(t));
-    card.appendChild(more(t.call_number || "#" + t.ticket, function () { return [lines(t)]; }));
+    card.appendChild(more(t.call_number || "#" + t.ticket, t.kitchen_order + "." + t.ticket, function () {
+      var box = el("div", t.kind === "void" ? "is-void" : "");     // a void reads as one in the dialog too
+      if (t.kind === "void") box.appendChild(withIcon("p", "ksc-void", "cross", w("void")));
+      box.appendChild(lines(t));
+      return [box];
+    }));
     var next = NEXT[t.state];
     if (!readOnly && next) {
       var b = el("button", "ivn-btn " + (next[0] === "bumped" ? "ivn-btn-primary " : "") + "ivn-btn-block ksc-act", w(next[1]));
@@ -314,16 +336,20 @@
     strip.hidden = false;
     strip.appendChild(el("span", "", w("waiting") + ":"));
     if (!v.waiting.length) strip.appendChild(el("span", "", w("nothing")));
-    v.waiting.forEach(function (d) { var sp = el("span", "", d.qty + "× "); sp.appendChild(bdi(d.item_name)); strip.appendChild(sp); });
+    v.waiting.forEach(function (d) {
+      var sp = el("span", "ksc-wait", d.qty + "× "); sp.appendChild(bdi(d.item_name)); strip.appendChild(sp);
+    });
+    var rest = el("span", "ksc-wait-more"); rest.hidden = true; strip.appendChild(rest);
     if (!v.orders.length) main.appendChild(el("p", "ksc-empty", w("empty")));
     v.orders.forEach(function (o) {
       var card = el("article", "ksc-order ksc-slip" + (o.bump ? " is-ready" : ""));
+      card.setAttribute("data-key", o.kitchen_order);
       var head = el("div", "ksc-ticket-head"), tm = timerOf(o.sent_at, look);
       head.appendChild(el("p", "ksc-call", o.call_number || o.kitchen_order, true));
       head.appendChild(tm.node);
       card.appendChild(head);
       o.tickets.forEach(function (t) { card.appendChild(part(t)); });
-      card.appendChild(more(o.call_number || o.kitchen_order, function () { return o.tickets.map(part); }));
+      card.appendChild(more(o.call_number || o.kitchen_order, o.kitchen_order, function () { return o.tickets.map(part); }));
       if (o.bump) {
         var b = el("button", "ivn-btn ivn-btn-primary ivn-btn-block ksc-act", w("bumpOrder"));
         b.type = "button";
@@ -392,34 +418,41 @@
     else drawBoard(main, a.view);
     stale();
     fit();
+    if (openKey && $("ticket-dialog").open &&               // the ticket in the dialog left the board: close it
+        !Array.prototype.some.call(main.children, function (c) { return c.getAttribute && c.getAttribute("data-key") === openKey; })) {
+      window.ivnKit.closeDialog($("ticket-dialog"));
+    }
   }
 
-  // ── fitting the screen: whole tickets only, paged; a ticket taller than the board folded behind "+N more dishes" ──
-  function more(title, make) {       // the fold's button: opens the whole ticket in a dialog
+  // ── fitting the screen: whole tickets only, paged; a ticket taller than the board folded behind "+N more" ──
+  function more(title, key, make) {  // the fold's button: opens the whole ticket in a dialog
     var b = el("button", "ivn-btn ksc-more");
     b.type = "button"; b.hidden = true;
     b.addEventListener("click", function () {
       clear($("ticket-title")); $("ticket-title").appendChild(bdi(title));
       var body = $("ticket-body"); clear(body);
       make().forEach(function (n) { body.appendChild(n); });
+      openKey = key;
       window.ivnKit.openDialog($("ticket-dialog"));
     });
     return b;
   }
+  function tall(e) { return e.getBoundingClientRect().height; }
   function capSlip(slip, cap) {
-    var lis = slip.querySelectorAll(".ksc-line"), parts = slip.querySelectorAll(".ksc-part"), btn = slip.querySelector(".ksc-more");
-    var groups = [];
-    lis.forEach(function (li) { li.hidden = false; });
+    var parts = slip.querySelectorAll(".ksc-part"), btn = slip.querySelector(".ksc-more"), groups = [];
+    slip.querySelectorAll(".ksc-line").forEach(function (li) { li.hidden = false; });
     parts.forEach(function (p) { p.hidden = false; });
+    slip.classList.remove("is-tall"); slip.style.maxBlockSize = "";
     if (btn) btn.hidden = true;
-    if (!btn || slip.getBoundingClientRect().height <= cap + 0.5) return;
+    if (!btn || tall(slip) <= cap + 0.5) return;
     btn.hidden = false;                // counted in the slip's height before anything is folded
-    lis.forEach(function (li) {        // a dish and the choices under it fold together
-      if (!groups.length || !li.classList.contains("is-choice")) groups.push([]);
-      groups[groups.length - 1].push(li);
+    slip.querySelectorAll(".ksc-lines").forEach(function (ul) {
+      if (ul.parentNode && ul.parentNode.classList.contains("ksc-part") && ul.parentNode.classList.contains("is-void")) return;
+      Array.prototype.forEach.call(ul.children, function (li, i) {   // a dish and its choices fold together; a void
+        if (!i || !li.classList.contains("is-choice")) groups.push([]);   // station's dishes on the expo never fold
+        groups[groups.length - 1].push(li);
+      });
     });
-    var heights = groups.map(function (g) { return g.reduce(function (h, li) { return h + li.getBoundingClientRect().height; }, 0); });
-    var hide = window.kscFit.trim(heights, slip.getBoundingClientRect().height, cap);
     var fold = function (n) {
       groups.forEach(function (g, i) { g.forEach(function (li) { li.hidden = i >= groups.length - n; }); });
       parts.forEach(function (p) {     // the expo: a station whose every dish is folded folds with them, heading and all
@@ -427,13 +460,62 @@
         p.hidden = ls.length > 0 && Array.prototype.every.call(ls, function (li) { return li.hidden; });
       });
     };
+    var heights = groups.map(function (g) { return g.reduce(function (h, li) { return h + tall(li); }, 0); });
+    var hide = window.kscFit.trim(heights, tall(slip), cap);
     fold(hide);
-    while (hide < groups.length - 1 && slip.getBoundingClientRect().height > cap + 0.5) fold(++hide);   // margins measured
-    if (!hide) { btn.hidden = true; return; }
-    btn.textContent = hide === 1 ? w("moreDish") : w("moreDishes", { n: hide });
+    while (hide < groups.length - 1 && tall(slip) > cap + 0.5) fold(++hide);   // margins and headings measured
+    while (hide > 0) {                 // and what fits again is shown again (a folded heading freed more than its lines)
+      fold(hide - 1);
+      if (tall(slip) > cap + 0.5) { fold(hide); break; }
+      hide--;
+    }
+    var first = groups[0] || [], choices = 0;   // the first dish alone too tall: its last choices fold, the dish stays
+    while (tall(slip) > cap + 0.5 && choices < first.length - 1) first[first.length - ++choices].hidden = true;
+    var said = [];
+    if (hide) said.push(count("moreDish", "moreDishes", hide));
+    if (choices) said.push(count("moreChoice", "moreChoices", choices));
+    if (!said.length) { btn.hidden = true; return; }
+    btn.textContent = said.join(" · ");
+    if (tall(slip) > cap + 0.5) {      // one dish taller than the board: this ticket scrolls, so Bump stays in reach
+      slip.classList.add("is-tall"); slip.style.maxBlockSize = cap + "px";
+    }
   }
-  function lateIn(slips) {
-    return slips.some(function (s) { return s.classList.contains("is-late") || !!s.querySelector(".ksc-ticket-head .ksc-timer.is-late"); });
+  function fitStrip() {              // the expo's "Still to make": whole dishes only, the rest counted
+    var strip = $("waiting"), rest = strip.querySelector(".ksc-wait-more");
+    if (strip.hidden || !rest) return;
+    var dishes = strip.querySelectorAll(".ksc-wait"), cap = window.innerHeight * STRIP_SHARE, hide = 0;
+    dishes.forEach(function (d) { d.hidden = false; });
+    rest.hidden = true;
+    if (tall(strip) <= cap + 0.5) return;
+    rest.hidden = false;
+    while (hide < dishes.length - 1 && tall(strip) > cap + 0.5) {
+      dishes[dishes.length - 1 - hide++].hidden = true;
+      rest.textContent = count("moreDish", "moreDishes", hide);
+    }
+  }
+  function fitNumbers(main) {        // the board: the numbers shrink a step at a time; at the last, the rest are counted
+    main.querySelectorAll(".ksc-num").forEach(function (n) { n.hidden = false; });
+    main.querySelectorAll(".ksc-num-more").forEach(function (n) { n.parentNode.removeChild(n); });
+    for (var n = 0; n <= 4; n++) {
+      main.setAttribute("data-shrink", String(n));
+      if (main.scrollHeight <= main.clientHeight + 1) return;
+    }
+    var limit = main.getBoundingClientRect().bottom;
+    main.querySelectorAll(".ksc-nums").forEach(function (ul) {
+      var nums = ul.querySelectorAll(".ksc-num"), hide = 0, tag = el("li", "ksc-num ksc-num-more");
+      while (hide < nums.length && nums[nums.length - 1 - hide].getBoundingClientRect().bottom > limit) nums[nums.length - 1 - hide++].hidden = true;
+      if (!hide) return;
+      tag.textContent = "+" + hide; ul.appendChild(tag);
+      while (tag.getBoundingClientRect().bottom > limit && hide < nums.length) {
+        nums[nums.length - 1 - hide++].hidden = true;
+        tag.textContent = "+" + hide;
+      }
+    });
+  }
+  function lateIn(slips) {           // a ticket's own late colour; on the expo, an order's oldest open ticket's timer
+    return slips.some(function (s) {
+      return s.classList.contains("is-late") || (s.classList.contains("ksc-order") && !!s.querySelector(".ksc-timer.is-late"));
+    });
   }
   function pager(before, after, lateBefore, lateAfter) {
     var paged = before > 0 || after > 0;
@@ -442,36 +524,34 @@
     $("prev").classList.toggle("is-late", lateBefore); $("next").classList.toggle("is-late", lateAfter);
     $("more").hidden = !after;
     $("more").classList.toggle("is-late", lateAfter);
-    $("more").textContent = after === 1 ? w("moreTicket") : w("moreTickets", { n: after });
+    $("more").textContent = count("moreTicket", "moreTickets", after);
     $("prev").setAttribute("aria-label", w("earlier")); $("prev").title = w("earlier");
     $("next").setAttribute("aria-label", w("later")); $("next").title = w("later");
   }
   function fit() {
     var main = $("board");
     if (!last) return;
-    if (main.classList.contains("ksc-serving")) {   // the board: the numbers shrink a step at a time until they fit
-      for (var n = 0; n <= 4; n++) {
-        main.setAttribute("data-shrink", String(n));
-        if (main.scrollHeight <= main.clientHeight + 1) break;
-      }
-      pager(0, 0, false, false);
-      return;
-    }
+    fitStrip();
+    if (main.classList.contains("ksc-serving")) { fitNumbers(main); pager(0, 0, false, false); return; }
     var slips = Array.prototype.filter.call(main.children, function (c) { return c.classList.contains("ksc-slip"); });
     slips.forEach(function (sl) { sl.hidden = false; });
     if (!slips.length) { pager(0, 0, false, false); return; }
     var box = main.getBoundingClientRect(), limit = box.bottom - parseFloat(getComputedStyle(main).paddingBottom);
     var cap = limit - slips[0].getBoundingClientRect().top;
     slips.forEach(function (sl) { capSlip(sl, cap); });
-    if (page && performance.now() - touchedAt > PAGE_BACK_MS) page = 0;   // left on a later page: back to the oldest
-    var shown = window.kscFit.pages(slips.length, page, function (from) {
+    var want = page;
+    if (want && performance.now() - touchedAt > PAGE_BACK_MS) want = 0;   // left on a later page: back to the oldest
+    var shown = window.kscFit.pages(slips.length, want, function (from) {
       slips.forEach(function (sl, i) { sl.hidden = i < from; });
       return slips.slice(from).map(function (sl) { return sl.getBoundingClientRect().bottom; });
     }, limit);
+    if (shown.page !== page) shiftedAt = performance.now();   // the page changed without the cook: hold taps a moment
     page = shown.page;
     slips.forEach(function (sl, i) { sl.hidden = i < shown.from || i >= shown.end; });
     pager(shown.from, slips.length - shown.end, lateIn(slips.slice(0, shown.from)), lateIn(slips.slice(shown.end)));
   }
+  var fitting = 0;
+  function refit() { cancelAnimationFrame(fitting); fitting = requestAnimationFrame(fit); }
 
   // ── the size: the store's default, or the cook's A- / A+ on this screen, remembered on this device ──
   var SIZE_KEY = "ksc.size." + LINK.s + "." + LINK.t.split(".")[0], chosen = "";
@@ -479,7 +559,7 @@
   function applySize() {
     var v = window.kscFit.size(chosen, last && last.look && last.look.size), S = window.kscFit.SIZES;
     document.body.setAttribute("data-size", v);
-    $("smaller").disabled = v === S[0]; $("bigger").disabled = v === S[S.length - 1];
+    $("smaller").disabled = !last || v === S[0]; $("bigger").disabled = !last || v === S[S.length - 1];   // the store's size first
     $("smaller").textContent = "A\u2212"; $("bigger").textContent = "A+";
     $("smaller").setAttribute("aria-label", w("smaller") + " (" + w(v) + ")"); $("smaller").title = w("smaller");
     $("bigger").setAttribute("aria-label", w("bigger") + " (" + w(v) + ")"); $("bigger").title = w("bigger");
@@ -494,22 +574,26 @@
   setInterval(function () {
     if (!last) return;
     stale();
+    var moved = false;
     document.querySelectorAll(".ksc-timer").forEach(function (t) {
       var fresh = timerOf(t.getAttribute("data-from"), last.look).node;
+      moved = moved || t.className !== fresh.className;
       t.className = fresh.className; t.replaceChildren.apply(t, Array.prototype.slice.call(fresh.childNodes));
     });
+    if (moved) refit();                // Late soon / Late can change a ticket's height and the pager's colour
   }, 1000);
 
   $("recall").addEventListener("click", function () { showRecall = !showRecall; page = 0; if (last) draw(); });
   $("prev").appendChild(icon("back")); $("next").appendChild(icon("forth"));
-  $("prev").addEventListener("click", function () { page = Math.max(0, page - 1); fit(); });
-  $("next").addEventListener("click", function () { page += 1; fit(); });
+  $("prev").addEventListener("click", function () { touchedAt = performance.now(); page = Math.max(0, page - 1); fit(); });
+  $("next").addEventListener("click", function () { touchedAt = performance.now(); page += 1; fit(); });
   $("smaller").addEventListener("click", function () { resize(-1); });
   $("bigger").addEventListener("click", function () { resize(1); });
   $("ticket-close").textContent = w("close");
   document.addEventListener("pointerdown", function () { touchedAt = performance.now(); }, true);
-  var fitting = 0;
-  window.addEventListener("resize", function () { cancelAnimationFrame(fitting); fitting = requestAnimationFrame(fit); });
+  document.addEventListener("keydown", function () { touchedAt = performance.now(); }, true);
+  window.addEventListener("resize", refit);
+  if (window.ResizeObserver) new window.ResizeObserver(refit).observe($("board"));   // the top bar or the strip wrapped
   $("sold").addEventListener("click", function () { drawSold(); window.ivnKit.openDialog($("sold-dialog")); });
   window.addEventListener("online", function () { read(); });   // back on the network: read at once, not in 3 s
   window.addEventListener("hashchange", function () { location.reload(); });

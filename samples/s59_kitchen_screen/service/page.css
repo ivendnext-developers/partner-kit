@@ -20,11 +20,11 @@ body.ksc[data-size="xlarge"] { --k: 1.45; }
 .ksc-tool.is-late, .ksc-more-tickets.is-late { color: var(--ivn-pill-red-ink); border-color: var(--ivn-pill-red-ink); font-weight: 800; }
 html[dir="rtl"] .ksc-dir .ksc-icon { transform: scaleX(-1); }   /* earlier and later point the reading way */
 .ksc-more-tickets { margin: 0; font-size: calc(1.05 * var(--u)); font-weight: 700; white-space: nowrap; }
-.ksc-read { margin: 0; color: var(--ivn-text-muted); font-size: calc(0.9 * var(--u)); }
+.ksc-read { margin: 0; color: var(--ivn-text-muted); font-size: max(12px, calc(0.9 * var(--u))); }
 .ksc-read.is-late { color: var(--ivn-pill-orange-ink); background: var(--ivn-pill-orange-bg); padding: 2px calc(0.4 * var(--u));
   border-radius: var(--ivn-radius); font-weight: 700; }
-.ksc-waiting { flex: none; display: flex; flex-wrap: wrap; gap: calc(0.3 * var(--u)) calc(1 * var(--u)); max-block-size: 25vh;
-  overflow: hidden; padding: calc(0.5 * var(--u)) calc(1 * var(--u)); background: var(--ivn-surface-2);
+.ksc-waiting { flex: none; display: flex; flex-wrap: wrap; gap: calc(0.3 * var(--u)) calc(1 * var(--u));
+  padding: calc(0.5 * var(--u)) calc(1 * var(--u)); background: var(--ivn-surface-2);
   font-size: calc(1.25 * var(--u)); font-weight: 700; }
 #board { flex: 1 1 auto; min-block-size: 0; overflow: hidden; }
 .ksc-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(17 * var(--u), 100%), 1fr));
@@ -34,10 +34,11 @@ html[dir="rtl"] .ksc-dir .ksc-icon { transform: scaleX(-1); }   /* earlier and l
   font-size: calc(1.4 * var(--u)); }
 .ksc-note { flex: none; margin: calc(0.5 * var(--u)) calc(1 * var(--u)) 0; font-size: calc(1.15 * var(--u)); }
 .ksc-note[hidden], .ksc-tool[hidden], .ksc-waiting[hidden], .ksc-more-tickets[hidden], .ksc-slip[hidden], .ksc-line[hidden],
-.ksc-more[hidden], .ksc-part[hidden] { display: none; }   /* the kit's classes set display */
+.ksc-more[hidden], .ksc-part[hidden], .ksc-wait[hidden], .ksc-wait-more[hidden], .ksc-num[hidden] { display: none; }   /* the kit's classes set display */
 
 /* a ticket (and the expo's order card): a slip */
 .ksc-slip { min-inline-size: 0; overflow-wrap: anywhere; }
+.ksc-slip.is-tall { overflow-y: auto; }   /* one dish taller than the board: the ticket scrolls, Bump stays in reach */
 .ksc-ticket { display: flex; flex-direction: column; background: var(--ivn-surface); border: 3px solid var(--ivn-border-strong);
   border-radius: var(--ivn-radius-lg); box-shadow: var(--ivn-shadow-sm); overflow: hidden; }
 .ksc-ticket.is-warn { border-color: var(--ivn-pill-orange-ink); }
@@ -99,5 +100,7 @@ html[dir="rtl"] .ksc-dir .ksc-icon { transform: scaleX(-1); }   /* earlier and l
 /* the dialogs: sold out, and a whole ticket */
 .ksc-dialog { min-inline-size: min(36 * var(--u), 92vw); max-block-size: 90vh; font-size: calc(1.1 * var(--u)); }
 .ksc-dialog .ksc-lines { padding-inline: 0; }
+.ksc-dialog .is-void .ksc-line { text-decoration: line-through; }
+.ksc-dialog .ivn-dialog-foot .ivn-btn { min-block-size: max(44px, calc(2.4 * var(--u))); font-size: calc(1 * var(--u)); }
 .ksc-sold-list .ivn-list-row { display: flex; justify-content: space-between; align-items: center; gap: calc(0.5 * var(--u)); }
 .ksc-sold-list .ivn-btn { min-block-size: max(44px, calc(2.4 * var(--u))); font-size: calc(1 * var(--u)); }

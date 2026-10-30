@@ -338,13 +338,13 @@ class Service:
         key = (site, store)
         kept = self._sold.get(key)
         if kept and self.clock() - kept[0] < SOLD_KEEP_S:
-            if isinstance(kept[1], TenantError):   # refused or late a moment ago: the same answer, kept, so a missing
-                raise kept[1]                       # right costs 2 calls a minute (and a timeout is never told as a 403)
-            return kept[1]
+            if isinstance(kept[1], tuple):   # refused or late a moment ago: the same answer, kept, so a missing right
+                raise TenantError(*kept[1])   # costs 2 calls a minute (a timeout is never told as a 403); a fresh error
+            return kept[1]                    # each time, so no request's frames hang on a kept one
         try:
             value = ksc.sold_out_of(door.call("item_availability", query={"warehouse": store}))
         except TenantError as e:
-            self._keep(self._sold, key, e)
+            self._keep(self._sold, key, (str(e), e.code, e.kind))
             raise
         self._keep(self._sold, key, value)
         return value

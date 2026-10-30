@@ -20,7 +20,7 @@ import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 T, M, R, F = "test_service.ServiceTest.", "test_many_shops.", "test_rules.Rules.", "test_manifest.ManifestTest."
-FR, PR = "test_page.FitRules.", "test_page.PageRules."
+FR, PR, PF = "test_page.FitRules.", "test_page.PageRules.", "test_page.PageFit."
 S, C, FIT, PAGE = "service/app.py", "ksc.py", "service/fit.js", "service/page.js"
 
 CANARIES = [
@@ -70,7 +70,7 @@ CANARIES = [
      R + "test_r1_a_link_is_the_retailers_own_signature_for_that_site_record_and_number"),
     ("a refused sold-out read leaves the tickets", S, "            except TenantError:         # the sold-out right missing",
      "            except ZeroDivisionError:   # the sold-out right missing", T + "test_s6_a_sold_out_read_the_shop_refuses_leaves_the_tickets_showing"),
-    ("a refused sold-out read is kept refused", S, "            self._keep(self._sold, key, e)\n            raise", "            raise",
+    ("a refused sold-out read is kept refused", S, "            self._keep(self._sold, key, (str(e), e.code, e.kind))\n            raise", "            raise",
      T + "test_s6_a_sold_out_read_the_shop_refuses_leaves_the_tickets_showing"),
     ("an expo card leaves with its dishes", C, '        live = [t for t in ts if t["kind"] == "send" and t["state"] != "bumped"]',
      '        live = [t for t in ts if t["state"] != "bumped"]', R + "test_r6b_the_expo_card_leaves_with_its_dishes_and_times_its_oldest_open_one"),
@@ -188,9 +188,26 @@ CANARIES = [
      '"size": row.get("slip_size") or "standard"', R + "test_r8_the_look_takes_only_a_colour_and_known_words"),
     ("the store's size is read", S, '"tables_on_board",\n              "slip_size"]', '"tables_on_board"]',
      T + "test_b5_the_store_row_sets_the_look"),
-    ("a kept sold-out answer is the shop's own", S, "                raise kept[1]  ",
-     '                raise TenantError("item_availability -> refused (kept)", 403)  ',
+    ("a kept sold-out answer is the shop's own", S, "                raise TenantError(*kept[1])   #",
+     '                raise TenantError("item_availability -> refused (kept)", 403)   #',
      T + "test_s7_a_sold_out_read_that_timed_out_is_kept_as_a_timeout_not_a_refusal"),
+    ("the first dish's choices fold when it alone is too tall", PAGE,
+     "    while (tall(slip) > cap + 0.5 && choices < first.length - 1) first[first.length - ++choices].hidden = true;",
+     "    choices = 0;", PF + "test_f1_a_dish_with_too_many_choices_folds_its_choices_and_keeps_bump"),
+    ("a ticket one dish too tall scrolls", PAGE, '      slip.classList.add("is-tall"); slip.style.maxBlockSize = cap + "px";',
+     "      cap = cap;", PF + "test_f2_a_single_dish_taller_than_the_board_scrolls_its_ticket"),
+    ("a void station is never folded on the expo", PAGE,
+     '      if (ul.parentNode && ul.parentNode.classList.contains("ksc-part") && ul.parentNode.classList.contains("is-void")) return;\n',
+     "", PF + "test_f3_the_expo_never_folds_a_void_and_shows_again_what_fits"),
+    ("what fits again is shown again", PAGE, "      if (tall(slip) > cap + 0.5) { fold(hide); break; }\n      hide--;",
+     "      fold(hide); break;", PF + "test_f3b_a_folded_station_heading_frees_room_that_is_used_again"),
+    ("only the page's tickets are shown", PAGE, "    slips.forEach(function (sl, i) { sl.hidden = i < shown.from || i >= shown.end; });",
+     "    slips.forEach(function (sl) { sl.hidden = false; });", PF + "test_f4_whole_tickets_paged_in_order_and_none_left_out"),
+    ("still to make shows whole dishes and a count", PAGE, "      dishes[dishes.length - 1 - hide++].hidden = true;", "      hide++;",
+     PF + "test_f5_still_to_make_shows_whole_dishes_and_counts_the_rest"),
+    ("a void says so in the whole-ticket dialog", PAGE,
+     '      if (t.kind === "void") box.appendChild(withIcon("p", "ksc-void", "cross", w("void")));', "",
+     PF + "test_f6_a_void_reads_as_one_in_the_whole_ticket_dialog"),
     # the manifest
     ("only the app writes a link's number", "manifest.json", '"insert_after": "link_section",\n   "in_list_view": 1,\n   "write_roles": [\n    "PP KSC Integration",',
      '"insert_after": "link_section",\n   "in_list_view": 1,\n   "write_roles": [\n    "PP KSC Manager",', F + "test_m1_what_makes_a_link_work_only_the_app_writes"),

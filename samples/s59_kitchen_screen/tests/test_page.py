@@ -43,6 +43,36 @@ def board(size="standard", note="", name="Steak"):
             "view": {"tickets": [ticket], "recall": []}}
 
 
+def line(name, under=None):
+    return {"item_code": name.upper(), "item_name": name, "qty": 1, "note": "", "under": under, "guest": "", "course": "",
+            "allergens": ""}
+
+
+def ticket(order, n, dishes, kind="send", choices=0, station="Grill"):
+    ls = [line(f"dish {order} {i}") for i in range(dishes)]
+    ls[1:1] = [line(f"choice {i}", under=0) for i in range(choices)]
+    return {"kitchen_order": order, "ticket": n, "station": station, "kind": kind, "call_number": order, "till": "Till 2",
+            "state": "new", "sent_at": "2026-10-30 19:01:00", "lines": ls}
+
+
+def station(*tickets):
+    b = board()
+    b["view"] = {"tickets": list(tickets), "recall": []}
+    b["look"]["lang"] = "en"
+    return b
+
+
+def expo(orders, waiting=0):
+    b = station()
+    b.update(kind="Expo", stations=[])
+    b["view"] = {"orders": orders, "waiting": [{"qty": 1, "item_name": f"w{i}"} for i in range(waiting)]}
+    return b
+
+
+def order(key, tickets, bump=False):
+    return {"kitchen_order": key, "call_number": key, "sent_at": "2026-10-30 19:01:00", "bump": bump, "tickets": tickets}
+
+
 @unittest.skipUnless(NODE, "node is not installed")
 class FitRules(unittest.TestCase):
     def test_p1_a_screen_takes_the_cooks_size_then_the_stores_then_standard(self):
@@ -98,6 +128,52 @@ class PageRules(unittest.TestCase):
         self.assertEqual(got["dirAuto"], 0)
         for words in ("Grill", "Table 12", "ستيك", "well done", "Allergens: sesame", "Till 2"):
             self.assertIn(words, got["bdi"])
+
+
+@unittest.skipUnless(NODE, "node is not installed")
+class PageFit(unittest.TestCase):
+    """page.js's own fitting, on the harness's layout (lines and headings 20 high, buttons 30, one column: a
+    one-dish station ticket is 110 high)."""
+
+    def fit(self, answer, board_h, inner=1000, steps=()):
+        return page("fit", answers={"/ksc/board": [answer]}, layout={"board": board_h, "inner": inner}, steps=list(steps))
+
+    def test_f1_a_dish_with_too_many_choices_folds_its_choices_and_keeps_bump(self):
+        got = self.fit(station(ticket("k1", 1, 1, choices=8)), 200)["first"]["slips"][0]
+        self.assertEqual((got["more"], got["act"], got["tall"]), ("+5 more choices", True, False))
+        self.assertLessEqual(got["height"], 200)
+
+    def test_f2_a_single_dish_taller_than_the_board_scrolls_its_ticket(self):
+        got = self.fit(station(ticket("k1", 1, 1, choices=8)), 100)["first"]["slips"][0]
+        self.assertTrue(got["tall"])
+        self.assertLessEqual(got["height"], 100)
+
+    def test_f3_the_expo_never_folds_a_void_and_shows_again_what_fits(self):
+        got = self.fit(expo([order("k1", [ticket("k1", 1, 3), ticket("k1", 2, 2, kind="void", station="Bar")])]), 150)
+        slip = got["first"]["slips"][0]
+        self.assertEqual(slip["voidPart"], [{"shown": True, "lines": 2}])
+        self.assertEqual(slip["more"], "+2 more dishes")
+        self.assertLessEqual(slip["height"], 150)
+
+    def test_f3b_a_folded_station_heading_frees_room_that_is_used_again(self):
+        parts = [ticket("k1", n, 1, station=st) for n, st in ((1, "Grill"), (2, "Fryer"), (3, "Bar"))]
+        self.assertEqual(self.fit(expo([order("k1", parts)]), 130)["first"]["slips"][0]["more"], "+1 more dish")
+
+    def test_f4_whole_tickets_paged_in_order_and_none_left_out(self):
+        got = self.fit(station(*[ticket(f"k{i}", 1, 1) for i in range(6)]), 340, steps=["next"])
+        self.assertEqual(got["first"]["shown"], ["k0.1", "k1.1", "k2.1"])
+        self.assertEqual(got["first"]["pager"], {"more": "+3 more tickets", "prev": False, "next": True})
+        self.assertEqual(got["next"]["shown"], ["k3.1", "k4.1", "k5.1"])
+        self.assertEqual(got["next"]["pager"], {"more": "", "prev": True, "next": False})
+
+    def test_f5_still_to_make_shows_whole_dishes_and_counts_the_rest(self):
+        got = self.fit(expo([order("k1", [ticket("k1", 1, 1)])], waiting=20), 500, inner=400)["first"]["strip"]
+        self.assertEqual((got["dishes"], got["rest"]), (8, "+12 more dishes"))
+        self.assertLessEqual(got["height"], 100)
+
+    def test_f6_a_void_reads_as_one_in_the_whole_ticket_dialog(self):
+        got = self.fit(station(ticket("k1", 1, 10, kind="void")), 150, steps=["more:k1.1"])
+        self.assertEqual(got["dialog"], {"open": True, "voidBanner": 1, "voidBox": True, "lines": 10})
 
 
 if __name__ == "__main__":
