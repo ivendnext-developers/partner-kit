@@ -320,7 +320,8 @@ class LiveTest(unittest.TestCase):
         clock = Clock(self.hub.clock())
         self.hub.clock = clock
         self.hub.name_tried = {k: clock() for k in self.hub.name_tried}
-        clock.t += 1800                                                  # half an hour on (the README's bound): read again
+        clock.t += 1830                                                  # half an hour on (the README's bound), with room for
+        # a stamp the socket thread took from the real clock as the test swapped clocks: the page is read again
         self.events(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")), None, 2.5)
         self.assertEqual(self.site.pages, 2)
 
