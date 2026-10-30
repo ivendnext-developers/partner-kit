@@ -127,6 +127,7 @@ function snapshot(p) {
     })),
     pager: { more: vis(p.byId.more) ? p.byId.more.textContent : "", prev: vis(p.byId.prev) && !p.byId.prev.disabled,
              next: vis(p.byId.next) && !p.byId.next.disabled },
+    late: p.byId.next.classList.contains("is-late"), note: vis(p.byId.note) ? p.byId.note.textContent : "",
     strip: { dishes: p.byId.waiting.querySelectorAll(".ksc-wait").filter(vis).length, height: heightOf(p.byId.waiting),
              rest: vis(p.byId.waiting.querySelector(".ksc-wait-more")) ? p.byId.waiting.querySelector(".ksc-wait-more").textContent : "" },
   };

@@ -347,6 +347,11 @@ class ServiceTest(unittest.TestCase):
         self.assertNotIn("style=", page)
         self.assertNotRegex(page, r"(src|href)=\"(https?:)?//")         # nothing from another site
 
+    def test_e3_every_file_the_service_serves_is_in_the_hosted_package(self):
+        pkg = set(json.load(open(os.path.join(os.path.dirname(HERE), "app.json")))["package"])
+        for fname, _ in app.STATIC.values():
+            self.assertIn(f"samples/s59_kitchen_screen/service/{fname}", pkg, fname)   # else the hosted page is blank
+
     def test_e2_a_large_or_shapeless_call_is_refused(self):
         self.assertEqual(answer(self.svc.handle("POST", "/ksc/board", {}, b"x" * (ksc.PAGE_BODY_MAX + 1)))[0], 413)
         self.assertEqual(answer(self.svc.handle("POST", "/ksc/board", {}, b"[]"))[0], 400)

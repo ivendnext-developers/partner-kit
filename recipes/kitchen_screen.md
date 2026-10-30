@@ -36,7 +36,7 @@ Every restaurant past the first one runs its kitchen from screens. The till alre
 8. One tap moves a ticket one step, through the door: *Start*, *Ready*, *Bump*. The service reads the board first and refuses a ticket of another station or another store, a skip and a step back; the door answers a double tap as *already*. A void ticket shows *Void: stop making* with its dishes struck through; the cook bumps it. *Recall* shows the tickets bumped in the last 30 minutes, read only.
 9. The expo shows one card per order, each station's ticket inside it, and *Still to make* across the top (each dish's quantity over the tickets not yet ready, less what a void of the same order cancels). **Bump order** appears when every station's part is ready, and bumps them all.
 10. The *Now serving* board shows *Preparing* and *Ready*: an order is ready when every station's ticket of it is ready or bumped, and it leaves when all are bumped. Call numbers only, no dish.
-11. **Sold out:** a cook taps *Sold out* and marks a dish on the board's tickets; the service calls `set_item_availability` for the screen's own store, and the tills stop selling it. The same list clears it.
+11. **Sold out:** a cook taps *Sold out* and marks a dish on the board's tickets; the service calls `set_item_availability` for the screen's own store, and the tills stop selling it (a till's sale is refused; a line an app adds to an open check is refused when the check is paid). The same list clears it.
 
 ## What the retailer does
 

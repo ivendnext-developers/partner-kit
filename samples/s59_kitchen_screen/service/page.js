@@ -216,6 +216,9 @@
   var noteUntil = 0, noteFor = "";
   function answered(a, what) {       // a refusal is held; only a later success on the SAME ticket or dish takes it down
     if (a.state === "refused" && WORDS.en[a.why]) { note(a.why, true); noteFor = what; }
+    else if ((a.state === "unavailable" || a.state === "not_set_up") && performance.now() >= noteUntil) {
+      note(a.state, true); noteFor = what;   // the tap was not applied: say so, never over a refusal still held
+    }
     else if (what === noteFor && (a.state === "moved" || a.state === "set")) { noteUntil = 0; note(""); }
   }
   function note(key, hold) {         // a tap's refusal is held NOTE_MS, so the read that follows does not wipe it
@@ -281,8 +284,13 @@
       li.appendChild(el("span", "", (ln.qty || "") + "× "));
       li.appendChild(bdi(ln.item_name || ln.item_code));
       if (ln.note) li.appendChild(el("span", "ksc-line-note", ln.note, true));
-      var who = [ln.guest ? w("guest", { n: ln.guest }) : "", ln.course || ""].filter(Boolean).join(" · ");
-      if (who && ln.under === null) li.appendChild(el("span", "ksc-line-who", who, true));
+      if ((ln.guest || ln.course) && ln.under === null) {
+        var who = el("span", "ksc-line-who");
+        if (ln.guest) who.appendChild(el("span", "", w("guest", { n: ln.guest })));
+        if (ln.guest && ln.course) who.appendChild(document.createTextNode(" · "));
+        if (ln.course) who.appendChild(bdi(ln.course));
+        li.appendChild(who);
+      }
       if (ln.allergens) li.appendChild(withIcon("span", "ksc-allergens", "warn", ln.allergens, true));
       ul.appendChild(li);
     });
@@ -298,8 +306,12 @@
     head.appendChild(tm.node);
     card.appendChild(head);
     card.appendChild(withIcon("p", "ksc-meta ksc-state ksc-st-" + t.state, STATE_ICON[t.state], w(STATE_WORD[t.state])));
-    var meta = [t.till, last.stations.length > 1 ? t.station : ""].filter(Boolean).join(" · ");
-    if (meta) card.appendChild(el("p", "ksc-meta", meta, true));
+    var meta = [t.till, last.stations.length > 1 ? t.station : ""].filter(Boolean);
+    if (meta.length) {
+      var mp = el("p", "ksc-meta");
+      meta.forEach(function (m, i) { if (i) mp.appendChild(document.createTextNode(" · ")); mp.appendChild(bdi(m)); });
+      card.appendChild(mp);
+    }
     if (t.kind === "void") card.appendChild(withIcon("p", "ksc-void", "cross", w("void")));
     card.appendChild(lines(t));
     card.appendChild(more(t.call_number || "#" + t.ticket, t.kitchen_order + "." + t.ticket, function () {
@@ -611,6 +623,12 @@
   window.addEventListener("online", function () { read(); });   // back on the network: read at once, not in 3 s
   window.addEventListener("hashchange", function () { location.reload(); });
 
+  function awake() {                   // a kitchen tablet must not dim: ask the browser, where it allows it
+    try { if (navigator.wakeLock && document.visibilityState === "visible") navigator.wakeLock.request("screen").catch(function () {}); }
+    catch (e) { /* no wake lock here: the tablet's own setting keeps it on */ }
+  }
+  document.addEventListener("visibilitychange", awake);
+  awake();
   applySize();
   if (!LINK.s || !LINK.t) { note("unknown"); return; }
   stale();

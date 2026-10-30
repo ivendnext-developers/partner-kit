@@ -4,7 +4,7 @@
 
 ## What the retailer does
 
-The kitchen runs from screens instead of paper. When a till presses *Send*, each kitchen station's ticket shows on that station's screen, oldest first, with how long it has waited. A cook taps it **Start**, then **Ready**, then **Bump**. At the pass, an expo screen shows every station's tickets of one order together and adds up what is still to make. A *Now serving* board in the dining room or at the counter shows the call numbers that are ready. A cook can mark a dish **sold out** at the store, and the tills stop selling it at once. The app never voids, comps, changes a line or touches money.
+The kitchen runs from screens instead of paper. When a till presses *Send*, each kitchen station's ticket shows on that station's screen, oldest first, with how long it has waited. A cook taps it **Start**, then **Ready**, then **Bump**. At the pass, an expo screen shows every station's tickets of one order together and adds up what is still to make. A *Now serving* board in the dining room or at the counter shows the call numbers that are ready. A cook can mark a dish **sold out** at the store, and the tills stop selling it at once (a sale at a till is refused; a dish an app adds to an open check, such as guest ordering, is refused only when the check is paid). The app never voids, comps, changes a line or touches money.
 
 | What happens | When |
 |---|---|
@@ -20,7 +20,7 @@ The kitchen runs from screens instead of paper. When a till presses *Send*, each
 | The old link **stops working** (within 15 seconds); the new one works | a link leaked: press **Make link** again and open the new link on the screen |
 | The screen says its link was replaced | the screen's kind, store or stations changed since its link was made, or *Make link* was pressed again |
 
-**No guest data.** A ticket carries the dishes, the place or call number and the till; no customer's name, phone or e-mail, and no price. The service keeps nothing: the till's tickets are the record.
+**No guest data.** A ticket carries the dishes, the place or call number and the till; no customer's phone or e-mail, and no price. A tab's name is shown as typed at the till (on the *Now serving* board too when *Board shows tables* is ticked): the app adds no name of its own. The service keeps nothing: the till's tickets are the record.
 
 | What the kitchen and the counter see (a test store, the light look) | |
 |---|---|
@@ -45,7 +45,7 @@ The kitchen runs from screens instead of paper. When a till presses *Send*, each
 
 **Before you remove the app:** nothing to close: the tickets are the till's. A reinstall makes new secrets: make every screen's link again. A new secret on the *Make link service* is accepted beside the old one until the next *Connect again*.
 
-**Limits.** A ticket is on the board only when its station's printer took it from the till: a station with no printer on the sending register, or a printer that refused, has no ticket. A screen needs the internet: tickets a till printed while the store was offline are on paper only, and never reach the board. A ticket the till's print agent later reports unprinted leaves the board without a bump (its dishes come back on the next *Send*). A screen reads the board every 3 seconds, so a new ticket shows within about 4 seconds; after a lost connection it has caught up on its next read, and its corner shows *Last read* in amber when its last good read is older than 15 seconds. A recalled ticket is shown again, never moved back to ready. Sold out needs the item-availability right, which covers every store; a dish marked and then cleared at one store keeps that store's own row, which wins over a later sold out for every store. If the sold-out read is refused (the right missing), the screen keeps showing its tickets and hides *Sold out*. The App library's hosted copy serves every retailer from at most 10 copies at once; the screens of one store share one read. The board's call numbers are the till's: a sale's call number, or a check's place or tab name. Allergens show only where the store's receipt theme shows them.
+**Limits.** A dish marked sold out stops a till's sale, but a dish an app adds to an open check (guest ordering) is refused only when the check is paid. A screen keeps itself awake where the browser allows it; set the tablet never to sleep, or use a kiosk browser that does. A ticket is on the board only when its station's printer took it from the till: a station with no printer on the sending register, or a printer that refused, has no ticket. A screen needs the internet: tickets a till printed while the store was offline are on paper only, and never reach the board. A ticket the till's print agent later reports unprinted leaves the board without a bump (its dishes come back on the next *Send*). A screen reads the board every 3 seconds, so a new ticket shows within about 4 seconds; after a lost connection it has caught up on its next read, and its corner shows *Last read* in amber when its last good read is older than 15 seconds. A recalled ticket is shown again, never moved back to ready. Sold out needs the item-availability right, which covers every store; a dish marked and then cleared at one store keeps that store's own row, which wins over a later sold out for every store. If the sold-out read is refused (the right missing), the screen keeps showing its tickets and hides *Sold out*. The App library's hosted copy serves every retailer from at most 10 copies at once; the screens of one store share one read. The board's call numbers are the till's: a sale's call number, or a check's place or tab name. Allergens show only where the store's receipt theme shows them.
 
 ## What leaves the retailer's iVendNext
 
@@ -55,12 +55,12 @@ iVendNext calls nothing outside but the service's own address (`allowed_urls`), 
 
 ```bash
 python3 -m unittest discover -s samples/s59_kitchen_screen/tests -p 'test_*.py'   # the service with a stand-in site
-python3 samples/s59_kitchen_screen/tests/canaries.py                                # each guard turned off: its test goes RED
+python3 samples/s59_kitchen_screen/tests/canaries.py                                # each guard turned off: its test goes RED (needs node)
 python3 tools/check/check.py samples/s59_kitchen_screen                            # the retailer's own install checks
 bash kit/design/tools/check_kit.sh samples/s59_kitchen_screen/service/page.html     # the page's kit checks
 ```
 
-The tests drive the service with a stand-in site. The page's own behaviour (text only, never markup; the held refusal note; the amber *Last read*; the timers; right to left with real tickets) has no script harness in the kit: it was walked in a browser on our bench after the review's folds (two taps at once, the refusal held six seconds; Arabic, right to left, with real tickets), and the page check's contrast and right-to-left passes run on the page before it has read a board.
+The tests drive the service with a stand-in site. The page's own rules run in `tests/test_page.py` through `tests/page_harness.js`, a small stand-in for the browser with a simple layout (it needs `node`; without it those tests skip and their canaries report GREEN): the size steps and what the device keeps, whole tickets and paging, folding a tall ticket, the strip and the board's counts, the held refusal, the tap hold, the retailer's words in `<bdi>`. How it looks was walked in a browser on our bench after the review's folds (two taps at once, the refusal held six seconds; Arabic, right to left, with real tickets), and the page check's contrast and right-to-left passes run on the page before it has read a board.
 
 The service: `python3 service/app.py service/.env.local` for one store (the env file names the app's user's key, the *Make link* secret the install handed back and the page's address), or as a function on CitiXsys hosting for many (`app.json`). It serves the screen's page itself (`service/page.html`, `page.js`, `page.css`, and its pinned copy of the kit's `ivn-kit.css` and `ivn-kit.js`: no inline script, nothing from another site).
 
