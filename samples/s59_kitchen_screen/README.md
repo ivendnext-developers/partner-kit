@@ -27,6 +27,7 @@ The kitchen runs from screens instead of paper. When a till presses *Send*, each
 | A station screen on a tablet in landscape: the grill's tickets, oldest first, each with its timer | ![](screenshots/01_station.png) |
 | The expo at the pass: each order's tickets together, what is still to make | ![](screenshots/02_expo.png) |
 | The *Now serving* board on a TV | ![](screenshots/03_board.png) |
+| The station screen in Arabic: the English note and dish names on the same right-hand edge as the screen's words | ![](screenshots/04_station_arabic.png) |
 
 ## What the retailer does to set it up
 
