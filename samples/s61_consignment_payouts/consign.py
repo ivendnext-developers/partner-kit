@@ -16,8 +16,12 @@ writes anything: the service writes the payout itself, with its own API key and 
 A **sold line** is a line of a submitted till sale (POS Invoice) or of a submitted Desk invoice that is not the till
 day's combined invoice (Sales Invoice, ``is_consolidated`` 0: the combined invoice repeats the till's lines), in the
 payout's company, dated from the consignor's *Consigned since* to the payout's *Up to*. Its amount is ``base_net_amount``: after discounts, before tax, in the
-company's currency. A return's line is negative. A line on any payout that is not Cancelled is never put on another.
-A line whose sale was cancelled after a PAID payout held it comes back once, negative, as *Cancelled after payout*.
+company's currency. A return's line is negative. A sale's line (its ``sale_row``) on any payout that is not Cancelled is never put on another.
+**Settled by balance:** for each sale line this consignor was paid on (lines of their PAID payouts in the company), the
+parts add up to what they were paid on it. When the sale is cancelled and that balance is not 0, one line settles it:
+*Taken back* (the balance, negative) or, when a payout that paid it was cancelled after the take-back was paid,
+*Correction* (positive). Its key (``sale_line``) is the sale line's with ``/`` and the count of paid lines after it, so
+each settlement is its own line.
 """
 
 from __future__ import annotations
@@ -35,15 +39,14 @@ FIELD = "pp_csg_"                       # the prefix of the two fields on Item: 
 DRAFT, PAID, CANCELLED = "PP CSG Draft", "PP CSG Paid", "PP CSG Cancelled"
 LOCK_RULE = "PP CSG payout locked once paid"
 SALE_TYPES = ("POS Invoice", "Sales Invoice")
-SALE, RETURN, REVERSAL = "Sale", "Return", "Cancelled after payout"
-UNDONE = "/cancelled"                    # a reversal's line key: the sale line's own, with this after it
+SALE, RETURN, TAKEN_BACK, CORRECTION = "Sale", "Return", "Taken back", "Correction"
 SKEW_S = 300                             # a request stamped further than this from our clock is refused (a replay window)
 BODY_MAX = 256 * 1024
 MOST_LINES = 500                         # a payout's lines, oldest first; the rest wait for the next payout
 CENT = Decimal("0.01")
-LINE_FIELDS = ("sale_type", "sale", "sale_line", "kind", "posting_date", "item_code", "item_name", "qty",
+LINE_FIELDS = ("sale_type", "sale", "sale_row", "sale_line", "kind", "posting_date", "item_code", "item_name", "qty",
                "sale_amount", "share", "payout")
-COMPARED = ("sale_type", "sale", "kind", "item_code", "sale_amount", "share", "payout")
+COMPARED = ("sale_type", "sale", "sale_row", "kind", "item_code", "sale_amount", "share", "payout")
 
 
 def use_prefix(prefix: str):
@@ -60,7 +63,7 @@ def verify(timestamp: str | None, signature: str | None, raw: bytes, secret: str
     """``""`` when the request is the retailer's site's, else why not. The signature is base64 HMAC-SHA256 of
     ``<timestamp>.<raw body>`` with the subscription's secret (the installer handed it back once)."""
     ts, sig = timestamp or "", signature or ""
-    if not (ts.isascii() and ts.isdigit()) or abs((now or time.time()) - int(ts)) > SKEW_S:
+    if not (ts.isascii() and ts.isdigit() and len(ts) <= 20) or abs((now or time.time()) - int(ts)) > SKEW_S:
         return "the request's time is missing or too far from ours"
     want = base64.b64encode(hmac.new(secret.encode(), ts.encode() + b"." + raw, hashlib.sha256).digest())
     if not hmac.compare_digest(want, sig.encode()):
@@ -119,28 +122,34 @@ def _key(row: dict) -> str:
     return str(row.get("sale_line") or "")
 
 
-def holds_of(rows: list[dict], states: dict[str, str], this: str) -> dict[str, dict]:
-    """The lines other payouts hold: ``{sale line key: {"payout", "state", the line}}``. A Cancelled payout holds none,
-    and this payout's own lines are not a hold on itself."""
+def _row(row: dict) -> str:
+    return str(row.get("sale_row") or row.get("sale_line") or "").split("/")[0]
+
+
+def holds_of(rows: list[dict], states: dict[str, str], this: str) -> dict[str, str]:
+    """The sale lines other payouts hold: ``{sale_row: the holding payout}``, a PAID payout first. A Cancelled payout
+    holds none, and this payout's own lines are not a hold on itself."""
     out = {}
     for r in rows:
-        p, k = r.get("parent"), _key(r)
+        p, k = r.get("parent"), _row(r)
         st = states.get(p)
         if not k or not p or p == this or st is None or st == CANCELLED:
             continue
-        out.setdefault(k, dict(r, payout_name=p, state=st))
+        if k not in out or st == PAID:
+            out[k] = p
     return out
 
 
-def work_out(consignor_share, items: dict, lines: list[dict], heads: dict, holds: dict, company: str,
-             up_to: datetime.date, since: datetime.date | None = None) -> tuple[list[dict], str]:
+def work_out(consignor_share, items: dict, lines: list[dict], heads: dict, holds: dict, settled: list[dict],
+             company: str, up_to: datetime.date, since: datetime.date | None = None) -> tuple[list[dict], str]:
     """(every line the consignor is owed now, oldest first; or ``[]`` and the words saying why not).
 
     ``items``: ``{item code: {"item_name", "share"}}`` (the consignor's items, their own share as the site holds it);
     ``lines``: sale lines, each ``{"sale_type", "name", "parent", "item_code", "item_name", "qty", "base_net_amount"}``;
-    ``heads``: ``{(sale type, sale): {"docstatus", "company", "posting_date", "is_return", "is_consolidated"}}``;
-    ``holds``: ``holds_of`` for every key of these lines and their reversals; ``since``: the consignor's *Consigned
-    since*, before which no sale is theirs (an item named to them later keeps its earlier sales off their payouts)."""
+    ``heads``: ``{(sale type, sale): {"docstatus", "company", "posting_date", "is_return", "is_consolidated"}}``, for these
+    lines' sales and the settled lines' sales; ``holds``: ``holds_of`` for these lines (any consignor's payouts);
+    ``settled``: the lines of THIS consignor's PAID payouts in the company; ``since``: the consignor's *Consigned since*,
+    before which no sale is theirs (an item named to them later keeps its earlier sales off their payouts)."""
     try:
         own = share_of(consignor_share)
     except ValueError:
@@ -154,40 +163,43 @@ def work_out(consignor_share, items: dict, lines: list[dict], heads: dict, holds
         except ValueError:
             return [], f"The consignor's share on item {code} must be a percent from 0 to 100."
     out = []
-    for ln in lines:
+    for ln in lines:                 # what sold: each submitted line once, in the window, on no other payout
         code, typ = ln.get("item_code"), ln.get("sale_type")
         head = heads.get((typ, ln.get("parent")))
         day = date_of((head or {}).get("posting_date"))
         if code not in shares or typ not in SALE_TYPES or not head or not ln.get("name") or not day:
             continue
-        if head.get("company") != company or day > up_to or (since and day < since) \
+        if head.get("docstatus") != 1 or head.get("company") != company or day > up_to or (since and day < since) \
                 or (typ == "Sales Invoice" and head.get("is_consolidated")):
             continue
-        key, status = str(ln["name"]), head.get("docstatus")
-        if status == 1:
-            if key in holds:
-                continue
-            amount = money(ln.get("base_net_amount"))
-            if amount is None:
-                continue
-            share = shares[code]
-            out.append({"sale_type": typ, "sale": ln["parent"], "sale_line": key,
-                        "kind": RETURN if head.get("is_return") else SALE, "posting_date": day.isoformat(),
-                        "item_code": code, "item_name": ln.get("item_name") or (items.get(code) or {}).get("item_name") or "",
-                        "qty": ln.get("qty") or 0, "sale_amount": amount, "share": share,
-                        "payout": payout_amount(amount, share)})
-        elif status == 2:
-            held, back = holds.get(key), key + UNDONE
-            if not held or held["state"] != PAID or back in holds:
-                continue                    # never paid (a draft's Pay refuses it), or already taken back
-            paid, part = money(held.get("sale_amount")), money(held.get("payout"))
-            if paid is None or part is None:
-                continue
-            out.append({"sale_type": typ, "sale": ln["parent"], "sale_line": back, "kind": REVERSAL,
-                        "posting_date": day.isoformat(), "item_code": code,
-                        "item_name": ln.get("item_name") or held.get("item_name") or "",
-                        "qty": -(ln.get("qty") or 0), "sale_amount": -paid, "share": money(held.get("share")) or Decimal(0),
-                        "payout": -part})
+        key = str(ln["name"])
+        amount = money(ln.get("base_net_amount"))
+        if key in holds or amount is None:
+            continue
+        share = shares[code]
+        out.append({"sale_type": typ, "sale": ln["parent"], "sale_row": key, "sale_line": key,
+                    "kind": RETURN if head.get("is_return") else SALE, "posting_date": day.isoformat(),
+                    "item_code": code, "item_name": ln.get("item_name") or (items.get(code) or {}).get("item_name") or "",
+                    "qty": ln.get("qty") or 0, "sale_amount": amount, "share": share,
+                    "payout": payout_amount(amount, share)})
+    paid: dict[str, list[dict]] = {}
+    for r in settled:                # what this consignor was paid, sale line by sale line
+        if _row(r):
+            paid.setdefault(_row(r), []).append(r)
+    for key, got in paid.items():    # a cancelled sale's balance settled once, whatever the item or window now
+        first = got[0]
+        head = heads.get((first.get("sale_type"), first.get("sale")))
+        if not head or head.get("docstatus") != 2:
+            continue
+        part = sum((money(r.get("payout")) or Decimal(0) for r in got), Decimal(0))
+        if part == 0:
+            continue
+        sold = sum((money(r.get("sale_amount")) or Decimal(0) for r in got), Decimal(0))
+        out.append({"sale_type": first.get("sale_type"), "sale": first.get("sale"), "sale_row": key,
+                    "sale_line": f"{key}/{len(got)}", "kind": TAKEN_BACK if part > 0 else CORRECTION,
+                    "posting_date": str(first.get("posting_date") or "")[:10], "item_code": first.get("item_code"),
+                    "item_name": first.get("item_name") or "", "qty": 0, "sale_amount": -sold,
+                    "share": money(first.get("share")) or Decimal(0), "payout": -part})
     out.sort(key=lambda r: (r["posting_date"], r["sale_type"], r["sale"], r["sale_line"]))
     return out, ""
 
@@ -219,19 +231,20 @@ def check_to_pay(payout: dict, owed: list[dict], holds: dict, lock: dict | None)
     now = {r["sale_line"]: r for r in owed}
     for r in rows:
         k = _key(r)
-        if k in holds:
-            return f"A line is also on payout {holds[k]['payout_name']}. Cancel one of them, then work this one out again."
+        if r.get("kind") in (SALE, RETURN) and _row(r) in holds:
+            return f"A line is also on payout {holds[_row(r)]}. Drop one of them, then work this one out again."
         want = now.get(k)
         if not want:
             return "A line is no longer owed (its sale or item changed, or it was cancelled). Work the payout out again."
         if not all(_same(r.get(f), want[f]) for f in COMPARED):
             return "A line has changed since the payout was worked out. Work it out again, check it, then pay."
-    _, part = totals([now[k] for k in keys])
-    total = money(payout.get("payout_total"))
-    if total is None or total.quantize(CENT) != part:
-        return "The payout's total is not the sum of its lines. Work it out again."
+    sold, part = totals([now[k] for k in keys])
+    total, sales = money(payout.get("payout_total")), money(payout.get("sales_total"))
+    if total is None or total.quantize(CENT) != part or sales is None or sales.quantize(CENT) != sold:
+        return "The payout's totals are not the sums of its lines. Work it out again."
     if part < 0:
-        return "The returns are more than the sales: nothing is owed yet. Keep the payout as a draft until more sells."
+        return ("The returns are more than the sales: nothing is owed yet. When more has sold, set Sales up to later "
+                "and work it out again.")
     return ""
 
 
@@ -264,14 +277,15 @@ def summary_of(rows: list[dict], left: int, currency: str = "") -> str:
         return "Nothing owed: no sold line of this consignor's items is waiting to be paid up to this date."
     sales, part = totals(rows)
     cur = f" {currency}" if currency else ""
-    n = {k: sum(1 for r in rows if r["kind"] == k) for k in (SALE, RETURN, REVERSAL)}
+    n = {k: sum(1 for r in rows if r["kind"] == k) for k in (SALE, RETURN, TAKEN_BACK, CORRECTION)}
     kinds = [_n(n[k], one, many) for k, one, many in ((SALE, "sale", "sales"), (RETURN, "return", "returns"),
-             (REVERSAL, "sale cancelled after payout", "sales cancelled after payout")) if n[k]]
+             (TAKEN_BACK, "paid sale taken back", "paid sales taken back"),
+             (CORRECTION, "correction", "corrections")) if n[k]]
     body = f"{_n(len(rows), 'line', 'lines')}: {', '.join(kinds)}. Sold for {sales:,.2f}{cur}; the consignor's share {part:,.2f}{cur}."
     if left:
         body += f" {_n(left, 'older line waits', 'more lines wait')} for the next payout (at most {MOST_LINES} a payout)."
     if part < 0:
-        body += " The returns are more than the sales: nothing to pay yet."
+        body += " The returns are more than the sales: nothing to pay yet. When more has sold, set Sales up to later and work it out again."
     return body
 
 

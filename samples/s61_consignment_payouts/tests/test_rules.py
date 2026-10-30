@@ -51,8 +51,8 @@ HEAD = {"docstatus": 1, "company": "Co", "posting_date": "2026-10-01", "is_retur
 
 
 class WorkOut(unittest.TestCase):
-    def owed(self, lines, heads, holds=None, items=None, share=40, up_to="2026-10-31"):
-        return consign.work_out(share, items or {"A": {"share": 0}}, lines, heads, holds or {}, "Co",
+    def owed(self, lines, heads, holds=None, items=None, share=40, up_to="2026-10-31", settled=None):
+        return consign.work_out(share, items or {"A": {"share": 0}}, lines, heads, holds or {}, settled or [], "Co",
                                 datetime.date.fromisoformat(up_to))
 
     def test_only_a_submitted_line_of_the_company_on_or_before_the_date(self):
@@ -68,20 +68,23 @@ class WorkOut(unittest.TestCase):
         heads = {("POS Invoice", "S1"): dict(HEAD, is_consolidated=1)}     # a till sale has no such field: never read
         self.assertEqual(len(self.owed([line("a")], heads)[0]), 1)
 
-    def test_a_held_line_is_left_and_a_reversal_needs_a_paid_hold(self):
-        heads = {("POS Invoice", "S1"): dict(HEAD, docstatus=2)}
-        draft = {"a": {"payout_name": "CSG-P-00010", "state": consign.DRAFT, "sale_amount": 100, "payout": 40, "share": 40}}
-        self.assertEqual(self.owed([line("a")], heads, draft)[0], [])
-        paid = {"a": dict(draft["a"], state=consign.PAID)}
-        rows = self.owed([line("a")], heads, paid)[0]
+    def test_a_held_line_is_left_and_a_cancelled_sale_settles_its_paid_balance_once(self):
+        self.assertEqual(self.owed([line("a")], {("POS Invoice", "S1"): HEAD}, {"a": "CSG-P-00010"})[0], [])
+        paid = [{"sale_row": "a", "sale_line": "a", "sale_type": "POS Invoice", "sale": "S1", "kind": "Sale",
+                 "item_code": "A", "sale_amount": 100, "share": 40, "payout": 40, "posting_date": "2026-10-01"}]
+        cancelled = {("POS Invoice", "S1"): dict(HEAD, docstatus=2)}
+        rows = self.owed([line("a")], cancelled, {"a": "CSG-P-00001"}, settled=paid)[0]
         self.assertEqual([(r["sale_line"], r["kind"], r["sale_amount"], r["payout"]) for r in rows],
-                         [("a/cancelled", consign.REVERSAL, D(-100), D(-40))])
-        paid["a/cancelled"] = {"payout_name": "CSG-P-00001", "state": consign.DRAFT}
-        self.assertEqual(self.owed([line("a")], heads, paid)[0], [])
+                         [("a/1", consign.TAKEN_BACK, D(-100), D(-40))])
+        back = dict(paid[0], sale_line="a/1", kind=consign.TAKEN_BACK, sale_amount=-100, payout=-40)
+        self.assertEqual(self.owed([line("a")], cancelled, {"a": "CSG-P-00001"}, settled=paid + [back])[0], [])   # settled: 0
+        rows = self.owed([], cancelled, settled=[back])[0]                     # the payout that paid it cancelled since
+        self.assertEqual([(r["sale_line"], r["kind"], r["payout"]) for r in rows], [("a/1", consign.CORRECTION, D(40))])
+        self.assertEqual(self.owed([], {("POS Invoice", "S1"): HEAD}, settled=paid)[0], [])  # not cancelled: nothing
 
     def test_a_sale_before_consigned_since_is_never_theirs(self):
         heads = {("POS Invoice", "S1"): HEAD, ("POS Invoice", "S2"): dict(HEAD, posting_date="2026-09-30")}
-        rows, _ = consign.work_out(40, {"A": {"share": 0}}, [line("a"), line("b", parent="S2")], heads, {}, "Co",
+        rows, _ = consign.work_out(40, {"A": {"share": 0}}, [line("a"), line("b", parent="S2")], heads, {}, [], "Co",
                                    datetime.date(2026, 10, 31), datetime.date(2026, 10, 1))
         self.assertEqual([r["sale_line"] for r in rows], ["a"])
 
@@ -97,15 +100,23 @@ class Holds(unittest.TestCase):
         rows = [{"parent": "CSG-P-00001", "sale_line": "a"}, {"parent": "CSG-P-00002", "sale_line": "b"}, {"parent": "CSG-P-00003", "sale_line": "c"},
                 {"parent": "CSG-P-00009", "sale_line": "d"}]
         got = consign.holds_of(rows, {"CSG-P-00001": consign.DRAFT, "CSG-P-00002": consign.CANCELLED, "CSG-P-00003": consign.PAID}, "CSG-P-00001")
-        self.assertEqual(sorted(got), ["c"])
+        self.assertEqual(got, {"c": "CSG-P-00003"})
+
+    def test_a_paid_payout_wins_over_a_draft_holding_the_same_line(self):
+        rows = [{"parent": "CSG-P-00021", "sale_row": "a"}, {"parent": "CSG-P-00022", "sale_row": "a"},
+                {"parent": "CSG-P-00021", "sale_row": "b"}]
+        states = {"CSG-P-00021": consign.DRAFT, "CSG-P-00022": consign.PAID}
+        for order in (rows, rows[::-1]):
+            self.assertEqual(consign.holds_of(order, states, "CSG-P-00030"), {"a": "CSG-P-00022", "b": "CSG-P-00021"})
 
 
 class PayCheck(unittest.TestCase):
     def setUp(self):
-        self.owed = [{"sale_type": "POS Invoice", "sale": "S1", "sale_line": "a", "kind": "Sale", "item_code": "A",
+        self.owed = [{"sale_type": "POS Invoice", "sale": "S1", "sale_row": "a", "sale_line": "a", "kind": "Sale", "item_code": "A",
                       "sale_amount": D(100), "share": D(40), "payout": D(40)}]
         self.p = {"workflow_state": consign.DRAFT, "paid_with": "Cash", "paid_on": "2026-10-31", "payout_total": 40.0,
-                  "lines": [{"sale_type": "POS Invoice", "sale": "S1", "sale_line": "a", "kind": "Sale", "item_code": "A",
+                  "sales_total": 100.0,
+                  "lines": [{"sale_type": "POS Invoice", "sale": "S1", "sale_row": "a", "sale_line": "a", "kind": "Sale", "item_code": "A",
                              "sale_amount": 100.0, "share": 40.0, "payout": 40.0}]}
         self.lock = {"enabled": 1, "mode": "refuse"}
 

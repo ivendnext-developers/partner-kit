@@ -13,7 +13,7 @@ A resale or consignment store sells pieces it does not own and pays each consign
 1. **At intake.** Store staff open **PP CSG Consignor**, **+ Add**: the consignor's name, phone, e-mail, **Consigned since** (today) and **Consignor's share** (50% unless changed). Then, on each item taken in, the **Consignor** field (under the item group), and **Consignor's share for this item** where this piece pays differently.
 2. **At the till.** Nothing new: the piece is sold, returned or exchanged as any other.
 3. **A payout.** The back office opens **PP CSG Payout**, **+ Add**: the consignor, the company and **Sales up to** (today). Saved, it is a draft numbered `CSG-P-00001`. **Work out the payout**: the lines appear, each sold line with its date, item, *Sold for*, share and *Consignor's part*, returns negative, and the summary.
-4. **Paying.** **Print**, format *PP CSG Payout statement*, for the consignor. Pay them your way, fill **Paid with**, **Paid on** and the **Payment reference**, and an Accounts Manager presses **Pay this payout**. The payout reads **Paid** and is locked.
+4. **Paying.** **Print**, format *PP CSG Payout statement*, for the consignor. The back office pays them your way and fills **Paid with**, **Paid on** and the **Payment reference** (a draft is the Accounts User's to edit), and an Accounts Manager checks it and presses **Pay this payout**. The payout reads **Paid** and is locked.
 5. **A mistake.** A draft that is not wanted: **Drop** (Accounts User). A paid payout that was never really paid: **Cancel** (Accounts Manager); its lines come onto the next payout.
 
 ## Consignors
@@ -32,9 +32,9 @@ Two fields on **Item**: `pp_csg_consignor` (a Link to the consignor, a standard 
 
 ## Payouts
 
-The record type `PP CSG Payout`, numbered `format:CSG-P-{#####}`, tracked: `consignor`, `consignor_name` (read only, fetched), `company`, `currency` (read only, the company's), `up_to` (**Sales up to**), the read-only `summary`, `lines`, `sales_total` and `payout_total` (**To pay**) the service writes, `worked_out_by`, the payment's `paid_with` (a Mode of Payment), `paid_on` and `payment_reference`, and `paid_by`, the manager whose press marked it paid. Its table `PP CSG Payout Line`, all read only: `posting_date`, `kind` (*Sale*, *Return*, *Cancelled after payout*), `item_code`, `item_name`, `qty`, `sale_amount`, `share`, `payout`, and the sale it came from (`sale_type`, `sale`, `sale_line`).
+The record type `PP CSG Payout`, numbered `format:CSG-P-{#####}`, tracked: `consignor`, `consignor_name` (read only, fetched), `company`, `currency` (read only, the company's), `up_to` (**Sales up to**), the read-only `summary`, `lines`, `sales_total` and `payout_total` (**To pay**) the service writes, `worked_out_by`, the payment's `paid_with` (a Mode of Payment), `paid_on` and `payment_reference`, and `paid_by`, the manager whose press marked it paid. Its table `PP CSG Payout Line`, all read only: `posting_date`, `kind` (*Sale*, *Return*, *Taken back*, *Correction*), `item_code`, `item_name`, `qty`, `sale_amount`, `share`, `payout`, and the sale it came from (`sale_type`, `sale`, `sale_row`, the sale line, and `sale_line`, the settlement's own key).
 
-**A sold line** is a line of a submitted till sale (POS Invoice) or of a submitted Desk invoice that is not the till day's combined invoice (Sales Invoice with `is_consolidated` 0: the combined invoice repeats the till's lines), in the payout's company, dated from the consignor's *Consigned since* to *Sales up to*, for an item whose consignor is the payout's. Its *Sold for* is `base_net_amount`; its part is that times the share, to the cent. **A line on any payout that is not Cancelled is never put on another.**
+**A sold line** is a line of a submitted till sale (POS Invoice) or of a submitted Desk invoice that is not the till day's combined invoice (Sales Invoice with `is_consolidated` 0: the combined invoice repeats the till's lines), in the payout's company, dated from the consignor's *Consigned since* to *Sales up to*, for an item whose consignor is the payout's. Its *Sold for* is `base_net_amount`; its part is that times the share, to the cent. **A sale line on any payout that is not Cancelled is never put on another, and a consignor has one draft payout at a time.** A cancelled sale the consignor was paid on is settled once by its balance: *Taken back* (negative) or, when a payout that paid it was cancelled after the take-back was paid, *Correction*. Only the consignor who was paid settles it.
 
 **The workflow** `PP CSG Payout`: *PP CSG Draft* to *PP CSG Paid* by **PP CSG Pay**, allowed to `PP CSG Integration` alone, the app's own role, which only the service holds; *Draft* to *PP CSG Cancelled* by **PP CSG Drop** (Accounts User); *Paid* to *Cancelled* by **PP CSG Cancel** (Accounts Manager). iVendNext refuses a move a user's role has no transition for, on every door, and refuses a record made straight into a later step, so no person marks a payout paid.
 
@@ -55,7 +55,7 @@ The record type `PP CSG Payout`, numbered `format:CSG-P-{#####}`, tracked: `cons
 2. **Switch the lock on:** Desk › *Retail Save Rule* › *PP CSG payout locked once paid* › **Enabled**.
 3. **Give the app's role Read** on POS Invoice, Sales Invoice, Item and Retail Save Rule (Role Permissions Manager).
 4. **Switch the services and buttons on** (Retail Extension Subscription: read, consent, enable; Retail Desk Action: enable).
-5. **Decide who does what:** intake (Sales User, Item Manager), payouts (Accounts User), paying and cancelling (Accounts Manager). Write on Item is a money right here: an item's consignor and share decide what a payout pays.
+5. **Decide who does what:** intake (Sales User, Item Manager), payouts and how each was paid (Accounts User), the press that pays and a cancel (Accounts Manager). Write on Item is a money right here: an item's consignor and share decide what a payout pays.
 
 ## Limits
 
@@ -63,6 +63,7 @@ The record type `PP CSG Payout`, numbered `format:CSG-P-{#####}`, tracked: `cons
 - **A piece sold after *Consigned since* but before its item named the consignor** is counted for them; nothing before *Consigned since* ever is.
 - **One consignor a press**, at most 500 lines a payout; the rest wait for the next.
 - **Payment is recorded, not booked:** a purchase invoice or journal for the payout, or store credit issued as a gift card, is a version of your own.
-- **A System Manager can delete a paid payout**, and its lines are then owed again; no other role may delete one.
+- **A System Manager can delete a paid payout or switch the lock off**, and its lines may then be paid again; no other role may. The payout's history shows it.
+- **Rounding is per line:** a sale returned piece by piece can leave a cent between what was paid and what was taken back.
 - **Desk shows the steps and buttons with the app's prefix** (*PP CSG Pay*).
 - **Uninstalling removes the consignors and payouts**; the install's export keeps a copy.

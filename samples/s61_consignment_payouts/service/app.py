@@ -10,8 +10,9 @@ On CitiXsys hosting it runs as a FUNCTION, paid per call (app.json "runs": "func
 answers presses.
 
 For the pressed payout it reads, with the app's own integration user's key (that user's rights, never the pressing
-user's): the payout, its consignor's share and *Consigned since*, the consignor's items (each one's own share), every till sale line and Desk
-invoice line of those items, those sales' headers, and the lines other payouts already hold (``consign.work_out``).
+user's): the payout, its consignor's share and *Consigned since*, the consignor's payouts (one draft a consignor), the consignor's items
+(each one's own share), every till sale line and Desk invoice line of those items, those sales' headers, the lines other
+payouts already hold, and the lines of the consignor's paid payouts with their sales' state (``consign.work_out``).
 *Work out the payout* writes the payout's lines, its totals and a summary. *Pay this payout* writes nothing but the
 payout's step: it reads the same again and the payout lock's state, checks the payout's lines are exactly what is owed now
 and on no other payout (``consign.check_to_pay``), and only then moves the payout to Paid, which only the app's own role
@@ -35,6 +36,7 @@ CSG_PREFIX (default PP CSG; IVENDNEXT CSG for the library's app) · PORT (defaul
 from __future__ import annotations
 
 import datetime
+import hmac
 import http.client
 import json
 import os
@@ -57,14 +59,18 @@ import shops  # noqa: E402
 
 ROUTES = {"/csg/work": "work", "/csg/pay": "pay"}   # the manifest's extension_subscriptions[].key for each
 STALE = "TimestampMismatchError"     # the site's refusal of a write whose ``modified`` is not the row's own
-CHUNK = 100                          # names a read, so the address stays short
+RIGHTS_KINDS = ("PermissionError", "WorkflowPermissionError", "LinkValidationError")   # a 417 that is a rights problem;
+                                     # any other 417 (a value the site refused) takes the site's own did-not-answer words
+CHUNK = 200                          # names a read: fewer reads in the press's time, the address still short
 READ_S = 6                           # one read may take this long, within BUDGET_S; the site waits 10 seconds at most,
                                      # and a hosted function's cold start (about 2.5 s, APPF run 9) comes first
 BUDGET_S = 7.0                       # the whole press: past it, the press stops before it writes anything
 LINE_READ = ["name", "parent", "item_code", "item_name", "qty", "base_net_amount"]
 HEAD_READ = {"POS Invoice": ["name", "docstatus", "company", "posting_date", "is_return"],
              "Sales Invoice": ["name", "docstatus", "company", "posting_date", "is_return", "is_consolidated"]}
-HOLD_READ = ["parent", "sale_type", "sale_line", "kind", "item_name", "sale_amount", "share", "payout"]
+HOLD_READ = ["parent", "sale_row", "sale_line"]
+PAID_READ = ["parent", "sale_type", "sale", "sale_row", "sale_line", "kind", "posting_date", "item_code", "item_name",
+             "sale_amount", "share", "payout"]
 NOT_SET_UP = ("Consignment payouts is not set up yet: no key from this site has reached it. Ask your manager to check "
               "that the app's user has its key and, if the site could not reach the app, or a key was lost or changed, "
               "to press Connect again on the app.")
@@ -75,6 +81,8 @@ CHANGED = "The payout was changed while this press read it. Open it again and pr
 GONE = "This payout was not found. Open it again from the list."
 NOT_DRAFT = "Only a draft payout can be worked out. This one is already paid or cancelled."
 NO_CONSIGNOR = "Choose the consignor and the company first, then save the payout."
+OTHER_DRAFT = ("Payout {} for this consignor is still a draft. Pay it, work it out again, or drop it (Actions, Drop) "
+               "first: a consignor has one draft payout at a time.")
 
 
 class TenantError(Exception):
@@ -209,27 +217,36 @@ class Service:
                           timeout=self.left(t0))
         if not found:
             return [], NO_CONSIGNOR, {}
+        mine = door.rows(consign.PAYOUT, ["name", "company", "workflow_state"], [["consignor", "=", p["consignor"]]],
+                         timeout=self.left(t0))
+        drafts = sorted(r["name"] for r in mine if r.get("name") != p.get("name")
+                        and (r.get("workflow_state") or consign.DRAFT) == consign.DRAFT)
+        if drafts:                      # one draft a consignor: a second would hide the first one's lines from it
+            return [], OTHER_DRAFT.format(drafts[0]), {}
+        paid = [r["name"] for r in mine if r.get("workflow_state") == consign.PAID and r.get("company") == p.get("company")]
         items = {r["name"]: {"item_name": r.get("item_name"), "share": r.get(consign.FIELD + "share")}
                  for r in door.rows("Item", ["name", "item_name", consign.FIELD + "share"],
                                     [[consign.FIELD + "consignor", "=", p["consignor"]]], timeout=self.left(t0))
                  if r.get("name")}
+        settled = self._in(door, consign.LINE, PAID_READ, "parent", paid, t0, parent=consign.PAYOUT) if paid else []
         lines, heads = [], {}
         for typ in consign.SALE_TYPES:
-            got = self._in(door, typ + " Item", LINE_READ, "item_code", items, t0, parent=typ) if items else []
+            got = self._in(door, typ + " Item", LINE_READ, "item_code", items, t0, filters=[["docstatus", "!=", 0]],
+                           parent=typ) if items else []
             lines += [dict(r, sale_type=typ) for r in got]
             parents = {r.get("parent") for r in got if r.get("parent")}
+            parents |= {r.get("sale") for r in settled if r.get("sale_type") == typ and r.get("sale")}
             for h in self._in(door, typ, HEAD_READ[typ], "name", parents, t0, filters=[["docstatus", "!=", 0]]) \
                     if parents else []:
                 heads[(typ, h.get("name"))] = h
         keys = [str(r["name"]) for r in lines if r.get("name")]
-        held = self._in(door, consign.LINE, HOLD_READ, "sale_line", keys + [k + consign.UNDONE for k in keys], t0,
-                        parent=consign.PAYOUT) if keys else []
+        held = self._in(door, consign.LINE, HOLD_READ, "sale_row", keys, t0, parent=consign.PAYOUT) if keys else []
         states = {r.get("name"): r.get("workflow_state") or consign.DRAFT
                   for r in (self._in(door, consign.PAYOUT, ["name", "workflow_state"], "name",
                                      {r.get("parent") for r in held if r.get("parent")}, t0) if held else [])}
         holds = consign.holds_of(held, states, p.get("name"))
         up_to = consign.date_of(p.get("up_to")) or datetime.date.today()
-        rows, why = consign.work_out(found[0].get("share"), items, lines, heads, holds, p.get("company"), up_to,
+        rows, why = consign.work_out(found[0].get("share"), items, lines, heads, holds, settled, p.get("company"), up_to,
                                      consign.date_of(found[0].get("since")))
         return rows, why, holds
 
@@ -302,7 +319,7 @@ class Service:
                     return 200, self.run(door, sub, name, user)
             return 200, self.run(door, sub, name, user)
         except TenantError as e:
-            if e.code in (401, 403, 417):   # the site refused the app's user a read (417: a link filter's record type)
+            if e.code in (401, 403) or (e.code == 417 and e.kind in RIGHTS_KINDS):   # the site refused the app's user
                 return 200, _warning(REFUSED + (CONNECT_AGAIN if self.app and e.code == 401 else ""))
             # the site tells the user "did not answer in time. Check the record before you try again": nothing was
             # written unless the one update landed, and the payout then shows it
@@ -352,7 +369,8 @@ def make_handler(svc: Service, log=sys.stderr):
                 _log(log, rid, self.path, code, t0)
 
         def do_GET(self):
-            if self.path == "/test/received" and svc.test_modes and self.headers.get("X-PP-Admin") == svc.admin:
+            if self.path == "/test/received" and svc.test_modes and hmac.compare_digest(
+                    (self.headers.get("X-PP-Admin") or "").encode(), svc.admin.encode()):
                 return self._send(200, {"received": svc.received})
             self._send(*svc.handle("GET", self.path, self.headers, b""))
 

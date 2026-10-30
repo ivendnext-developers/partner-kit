@@ -5,7 +5,7 @@
  "title": "Consignment payouts",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "A resale or consignment store's consignors and their share of each piece sold, worked out from the retailer's own sales and paid once. A consignor (PP CSG Consignor) holds a name, phone, e-mail, the share (a percent of what a piece sold for) and Consigned since (no earlier sale is theirs); two fields on Item name an item's consignor and, where it differs, the item's own share. A payout (PP CSG Payout) for one consignor and company, up to a date, has two Desk buttons while it is a draft: Work out the payout (Accounts User, Accounts Manager) has the service read the consignor's items, every submitted till sale (POS Invoice) and Desk invoice (Sales Invoice that is not the till day's combined invoice) of them in the company from Consigned since up to the date, and the lines other payouts hold, and write the lines no payout that is not Cancelled holds: each line's amount after discounts and before tax, a return's negative, the share and the consignor's part, at most 500 lines, oldest first. Pay this payout (Accounts Manager), once Paid with and Paid on are filled, has the service read all of that again, check the lines are exactly what is owed now and on no other payout, and the lock below is switched on, and only then move the payout to Paid: the workflow lets only the app's own role, PP CSG Integration, take that step. A paid payout's Cancel (Accounts Manager) frees its lines for the next payout; a sale cancelled after its payout was paid comes back once, negative. A save rule keeps a paid or cancelled payout as it was (it installs switched off: switch it on). The Payout statement prints the lines under the retailer's letter head. The install makes the role and the app's own user; the retailer gives the role read on POS Invoice, Sales Invoice, Item and Retail Save Rule, and leaves the feed off. The consignor's name, phone and e-mail stay in the site: the service reads only the share and the date. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "A resale or consignment store's consignors and their share of each piece sold, worked out from the retailer's own sales and paid once. A consignor (PP CSG Consignor) holds a name, phone, e-mail, the share (a percent of what a piece sold for) and Consigned since (no earlier sale is theirs); two fields on Item name an item's consignor and, where it differs, the item's own share. A payout (PP CSG Payout) for one consignor and company, up to a date, has two Desk buttons while it is a draft: Work out the payout (Accounts User, Accounts Manager) has the service read the consignor's items, every submitted till sale (POS Invoice) and Desk invoice (Sales Invoice that is not the till day's combined invoice) of them in the company from Consigned since up to the date, and the lines other payouts hold, and write the lines no payout that is not Cancelled holds: each line's amount after discounts and before tax, a return's negative, the share and the consignor's part, at most 500 lines, oldest first; a consignor has one draft payout at a time. Pay this payout (Accounts Manager), once the back office has filled Paid with and Paid on, has the service read all of that again, check the lines are exactly what is owed now and on no other payout, and the lock below is switched on, and only then move the payout to Paid: the workflow lets only the app's own role, PP CSG Integration, take that step. A paid payout's Cancel (Accounts Manager) frees its lines for the next payout; a sale cancelled after it was paid is settled once by its balance on the next payout (Taken back, or a Correction when the payout that paid it was cancelled afterwards). A save rule keeps a paid or cancelled payout as it was (it installs switched off: switch it on). The Payout statement prints the lines under the retailer's letter head. The install makes the role and the app's own user; the retailer gives the role read on POS Invoice, Sales Invoice, Item and Retail Save Rule, and leaves the feed off. The consignor's name, phone and e-mail stay in the site: the service reads the payout, which carries the consignor's name, and only the consignor's share and date. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/csg/work",
   "https://host.docker.internal:8125/csg/pay"
@@ -160,7 +160,7 @@
      "fieldname": "kind",
      "fieldtype": "Select",
      "label": "Line",
-     "options": "Sale\nReturn\nCancelled after payout",
+     "options": "Sale\nReturn\nTaken back\nCorrection",
      "read_only": 1,
      "in_list_view": 1,
      "columns": 2
@@ -190,6 +190,7 @@
      "fieldname": "sale_amount",
      "fieldtype": "Currency",
      "label": "Sold for",
+     "options": "currency",
      "read_only": 1,
      "in_list_view": 1,
      "columns": 2,
@@ -207,6 +208,7 @@
      "fieldname": "payout",
      "fieldtype": "Currency",
      "label": "Consignor's part",
+     "options": "currency",
      "read_only": 1,
      "in_list_view": 1,
      "columns": 2
@@ -224,11 +226,18 @@
      "read_only": 1
     },
     {
-     "fieldname": "sale_line",
+     "fieldname": "sale_row",
      "fieldtype": "Data",
      "label": "Sale line",
      "read_only": 1,
-     "description": "The sale's own line: each is paid once."
+     "description": "The sale's own line: it is on one payout at a time."
+    },
+    {
+     "fieldname": "sale_line",
+     "fieldtype": "Data",
+     "label": "Settlement",
+     "read_only": 1,
+     "description": "The sale line, or the sale line and a count when a cancelled sale's balance is settled."
     }
    ]
   },
@@ -385,7 +394,7 @@
      "fieldtype": "Link",
      "label": "Paid with",
      "options": "Mode of Payment",
-     "description": "How you paid the consignor: cash, a bank transfer, a cheque, store credit."
+     "description": "How you paid the consignor: cash, a bank transfer, a cheque, store credit. The back office fills it before the manager pays."
     },
     {
      "fieldname": "paid_on",

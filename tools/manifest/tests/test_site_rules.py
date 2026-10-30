@@ -78,6 +78,13 @@ class FeedDescription(unittest.TestCase):
         self.assertEqual(validate(m), [])                 # the shop's checker passes it: only the install refuses it
         self.assertTrue(any("141 characters" in r["reason"] for r in site(m)))
 
+    def test_a_dynamic_link_must_name_a_link_field_to_doctype(self):
+        m = {"doctypes": [{"name": "PP X Row", "istable": 1, "fields": [
+            {"fieldname": "kind", "fieldtype": "Data"}, {"fieldname": "ref", "fieldtype": "Dynamic Link", "options": "kind"}]}]}
+        self.assertTrue(any("Dynamic Link" in r["reason"] for r in site(m)))
+        m["doctypes"][0]["fields"][0] = {"fieldname": "kind", "fieldtype": "Link", "options": "DocType"}
+        self.assertEqual(site(m), [])
+
     def test_every_sample_feed_description_fits(self):
         for f in sorted((HERE.parents[2] / "samples").glob("*/manifest.json")):
             bad = [r for r in site(json.loads(f.read_text())) if "description" in r["reason"]]

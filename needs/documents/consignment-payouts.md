@@ -17,7 +17,8 @@ A consignor as your manifest's own record type, with the share each piece pays t
 
 ## Limits
 - The share is the one on the item or the consignor when the payout is worked out; a change before *Pay* makes *Pay* refuse until it is worked out again.
-- Payouts are worked out by a press, one consignor at a time, at most 500 lines a payout.
+- Payouts are worked out by a press, one consignor at a time, at most 500 lines a payout; a consignor has one draft payout at a time.
+- A System Manager who deletes a paid payout or switches the lock off lets its lines be paid again.
 - How the consignor is paid (cash, a transfer, store credit) is recorded on the payout; booking it in the accounts is a version of your own.
 
 ## Tell the customer

@@ -43,7 +43,8 @@ class FakeShop:
     def payout(self, name, consignor="C1", company="Shop Co", up_to="2026-10-31", state=None, lines=(), **kw):
         self.payouts[name] = dict({"name": name, "consignor": consignor, "company": company, "up_to": up_to,
                                    "workflow_state": state or consign.DRAFT, "modified": f"m-{name}-0",
-                                   "lines": [dict(r, parent=name) for r in lines], "currency": "USD"}, **kw)
+                                   "lines": [dict(dict({"sale_row": str(r.get("sale_line", "")).split("/")[0]}, **r), parent=name)
+                                             for r in lines], "currency": "USD"}, **kw)
         return self.payouts[name]
 
     def sale(self, typ, name, lines, company="Shop Co", day="2026-10-10", docstatus=1, is_return=0, consolidated=0):
@@ -84,6 +85,8 @@ class FakeShop:
             src = [r for p in self.payouts.values() for r in p["lines"]]
         elif doctype == consign.PAYOUT:
             src = list(self.payouts.values())
+        elif doctype == "PP CSG Payout Line" or doctype == consign.LINE:
+            src = [r for p in self.payouts.values() for r in p["lines"]]
         elif doctype == "Retail Save Rule":
             src = self.rules
         else:
