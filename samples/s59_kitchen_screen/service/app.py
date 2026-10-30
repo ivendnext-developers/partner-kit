@@ -354,7 +354,10 @@ class Service:
         out = {"state": "open", "kind": kind, "title": (s.get("title") or "")[:80], "stations": ksc.stations_of(s),
                "look": ksc.look(row), "as_of": as_of, "view": view}
         if kind != ksc.KIND_BOARD and ksc.num(row.get("sold_out_on")):
-            out["sold_out"] = {"dishes": ksc.dishes(self.own(s, tickets)), "out": self.sold(door, site, s["store"])}
+            try:
+                out["sold_out"] = {"dishes": ksc.dishes(self.own(s, tickets)), "out": self.sold(door, site, s["store"])}
+            except TenantError:         # the sold-out right missing or the read late: the tickets still show, no button
+                pass
         return out
 
     def own(self, s: dict, tickets: list[dict]) -> list[dict]:
@@ -387,7 +390,7 @@ class Service:
             cards = ksc.expo_view([t for t in tickets if t["kitchen_order"] == order])["orders"]
             if not cards or not cards[0]["bump"]:
                 return {"state": "refused", "why": "step"}
-            todo, state = [t for t in cards[0]["tickets"] if t["kind"] == "send" and t["state"] == "ready"], "bumped"
+            todo, state = [t for t in cards[0]["tickets"] if t["state"] == "ready"], "bumped"
         else:
             t = ksc.find(tickets, order, number)
             why = ksc.may_move(s["kind"], ksc.stations_of(s), t, state)

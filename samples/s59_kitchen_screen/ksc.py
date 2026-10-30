@@ -35,7 +35,8 @@ NEXT = {"new": "started", "started": "ready", "ready": "bumped"}   # the door's 
 WARN = (1, 120, 8)           # (least, most, blank) minutes before a ticket's timer turns amber
 LATE = (1, 240, 15)          # … and red
 LANGS = {"English": "en", "Arabic": "ar", "Spanish": "es", "French": "fr", "German": "de", "Portuguese": "pt"}
-TICKETS_MAX = 300            # tickets one board answer carries to a page
+TICKETS_MAX = 300            # tickets one screen's answer carries to a page (after its own filter)
+BOARD_MAX = 2000             # tickets of one store's board a copy keeps (the newest, when a board is larger)
 LINES_MAX = 60               # lines one ticket carries
 DISHES_MAX = 100             # dishes the sold-out list offers
 _ORDER = re.compile(r"[A-Za-z0-9_-]{1,140}")   # the door names an order by its record name (a hash)
@@ -192,8 +193,7 @@ def clean_ticket(t) -> dict | None:
 def tickets_of(board) -> list[dict]:
     """Every ticket of a door's answer, cleaned, in the door's order (oldest first)."""
     raw = board.get("tickets") if isinstance(board, dict) else None
-    out = [c for c in (clean_ticket(t) for t in (raw or [])[:TICKETS_MAX * 4]) if c]
-    return out
+    return [c for c in (clean_ticket(t) for t in (raw if isinstance(raw, list) else [])[-BOARD_MAX:]) if c]
 
 
 def station_view(tickets: list[dict], stations: list[str]) -> dict:
@@ -242,15 +242,16 @@ def waiting(tickets: list[dict]) -> list[dict]:
 
 
 def expo_view(tickets: list[dict]) -> dict:
-    """The expo: one card per order not wholly bumped (in the order its first ticket was sent), its tickets by number;
+    """The expo: one card per order with a send ticket not yet bumped (oldest first), its tickets by number;
     ``bump`` when every send ticket is ready or bumped and one is ready; and what is still waiting."""
     cards = []
     for order, ts in _orders(tickets).items():
-        if all(t["state"] == "bumped" for t in ts):
+        live = [t for t in ts if t["kind"] == "send" and t["state"] != "bumped"]
+        if not live:                    # every dish of it gone (a void left is the station's to bump): off the pass
             continue
         ts = sorted(ts, key=lambda t: t["ticket"])
         cards.append({"kitchen_order": order, "call_number": ts[-1]["call_number"], "source": ts[0]["source"],
-                      "sent_at": min(t["sent_at"] for t in ts), "bump": _ready(ts), "tickets": ts})
+                      "sent_at": min(t["sent_at"] for t in live), "bump": _ready(ts), "tickets": ts})
     cards.sort(key=lambda c: c["sent_at"])
     return {"orders": cards[:TICKETS_MAX], "waiting": waiting(tickets)}
 

@@ -202,7 +202,7 @@ class ServiceTest(unittest.TestCase):
 
     # ── moves ──
     def move(self, t, order, n, state):
-        return call(self.svc, "/ksc/move", t, kitchen_order=order, ticket=n, state=state)[1]
+        return call(self.svc, "/ksc/move", t, kitchen_order=order, ticket=n, state=state, store=F.OTHER)[1]
 
     def test_m1_a_cook_moves_a_ticket_one_step_at_a_time_and_a_double_tap_is_safe(self):
         t = made(self.shop, self.svc)
@@ -236,6 +236,7 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(call(self.svc, "/ksc/move", board, kitchen_order="ko1", order=True)[1]["why"], "not_yours")
 
     def test_m5_the_expo_bumps_an_order_only_when_every_station_is_ready(self):
+        self.shop.tickets.append(F.ticket("ko1", 3, F.FRY, [F.line("FRIES", "Fries", 1)], kind="void"))
         expo = made(self.shop, self.svc, "KSC-SCREEN-00002")
         self.assertEqual(call(self.svc, "/ksc/move", expo, kitchen_order="ko1", order=True)[1], {"state": "refused", "why": "step"})
         for tk in self.shop.tickets[:2]:
@@ -243,6 +244,7 @@ class ServiceTest(unittest.TestCase):
         self.later(1)
         self.assertEqual(call(self.svc, "/ksc/move", expo, kitchen_order="ko1", order=True)[1], {"state": "moved", "moved": 2})
         self.assertEqual([t["state"] for t in self.shop.tickets[:2]], ["bumped", "bumped"])
+        self.assertEqual(self.shop.tickets[-1]["state"], "new")           # the void is the fryer's to strike and bump
 
     def test_m6_a_flood_of_taps_reads_the_retailer_no_more(self):
         t = made(self.shop, self.svc)
@@ -267,7 +269,7 @@ class ServiceTest(unittest.TestCase):
 
     # ── sold out ──
     def sold(self, t, code, out=True):
-        return call(self.svc, "/ksc/soldout", t, item_code=code, sold_out=out)[1]
+        return call(self.svc, "/ksc/soldout", t, item_code=code, sold_out=out, warehouse=F.OTHER, store=F.OTHER)[1]
 
     def test_s1_a_dish_on_the_board_is_marked_sold_out_at_the_screens_own_store_only(self):
         t = made(self.shop, self.svc)
@@ -299,6 +301,13 @@ class ServiceTest(unittest.TestCase):
         expo = made(self.shop, self.svc, "KSC-SCREEN-00002")
         self.later(1)
         self.assertEqual(self.sold(expo, "BEER")["state"], "set")        # the pass sees every station
+
+    def test_s6_a_sold_out_read_the_shop_refuses_leaves_the_tickets_showing(self):
+        t = made(self.shop, self.svc)
+        self.shop.door_refuse = ("item_availability", 403, "PermissionError")
+        v = call(self.svc, "/ksc/board", t)[1]
+        self.assertEqual((v["state"], len(v["view"]["tickets"])), ("open", 2))
+        self.assertNotIn("sold_out", v)
 
     def test_s4_sold_out_off_for_the_store_or_from_the_board_is_refused(self):
         board = made(self.shop, self.svc, "KSC-SCREEN-00003")

@@ -6,7 +6,9 @@
 // markup, with dir="auto". A state is shown by an icon, a word and a colour together.
 (function () {
   "use strict";
-  var READ_MS = 3000, RETRY_MS = 5000, LATE_READ_S = 15;
+  var READ_MS = 3000, RETRY_MS = 3000, LATE_READ_S = 15, NOTE_MS = 6000;
+  // The till's own words where it has them (check, guest, course, send, sold out: its ar, es and fr tables at T21);
+  // German and Portuguese are this app's own until the till signs them.
   var WORDS = {
     en: { start: "Start", ready: "Ready", bump: "Bump", bumpOrder: "Bump order", recall: "Recall", soldOut: "Sold out",
           soldTitle: "Sold out at this store", markSold: "Mark sold out", markBack: "Available again", isSold: "Sold out",
@@ -22,8 +24,8 @@
           step: "This ticket moved on another screen. The board is read again.", gone: "This ticket is no longer on the board.",
           not_yours: "This ticket is another station's.", wait: "One moment, then tap again.",
           not_listed: "That dish is not on this screen's list.", off: "Sold out is switched off for this store." },
-    ar: { start: "ابدأ", ready: "جاهز", bump: "أنهِ", bumpOrder: "أنهِ الطلب", recall: "استرجاع", soldOut: "نفد",
-          soldTitle: "نفد في هذا المتجر", markSold: "علّمه نافدًا", markBack: "متوفر مرة أخرى", isSold: "نفد",
+    ar: { start: "ابدأ", ready: "جاهز", bump: "أنهِ", bumpOrder: "أنهِ الطلب", recall: "استرجاع", soldOut: "نفدت الكمية",
+          soldTitle: "نفدت الكمية في هذا المتجر", markSold: "نفدت الكمية", markBack: "متوفر مرة أخرى", isSold: "نفدت الكمية",
           close: "إغلاق", waiting: "ما زال للتحضير", preparing: "قيد التحضير", readyCol: "جاهز", void: "ملغى: أوقف التحضير",
           recallNote: "أُنهيت في آخر 30 دقيقة، لقراءتها مرة أخرى. لا يمكن إعادة تذكرة منتهية.",
           lastRead: "آخر قراءة {t}", empty: "لا تذاكر", nothing: "لا شيء بانتظار التحضير", onTime: "في الوقت",
@@ -56,7 +58,7 @@
           void: "Annulé : ne pas préparer",
           recallNote: "Envoyés dans les 30 dernières minutes, à relire. Un ticket envoyé ne peut pas revenir en arrière.",
           lastRead: "Dernière lecture {t}", empty: "Aucun ticket", nothing: "Rien en attente", onTime: "À l'heure",
-          warn: "Bientôt en retard", late: "En retard", min: "{n} min", guest: "Convive {n}", stNew: "Nouveau",
+          warn: "Bientôt en retard", late: "En retard", min: "{n} min", guest: "Couvert {n}", stNew: "Nouveau",
           stStarted: "Commencé", stReady: "Prêt", stBumped: "Envoyé", loading: "Lecture des tickets de la cuisine...",
           unknown: "Le lien de cet écran ne fonctionne pas ou a été remplacé. Demandez le nouveau lien à votre responsable.",
           closed: "Ce magasin n'a pas d'écrans de cuisine configurés. Demandez à votre responsable.",
@@ -161,10 +163,12 @@
       .then(function (r) { return r.json().catch(function () { return { state: "unavailable" }; }); })
       .catch(function () { return { state: "unavailable" }; });
   }
-  function note(key) {
+  var noteUntil = 0;
+  function note(key, hold) {         // a tap's refusal is held NOTE_MS, so the read that follows does not wipe it
     var n = $("note");
-    if (!key) { n.hidden = true; n.textContent = ""; return; }
+    if (!key) { if (Date.now() < noteUntil) return; n.hidden = true; n.textContent = ""; return; }
     n.textContent = w(key); n.hidden = false;
+    noteUntil = hold ? Date.now() + NOTE_MS : 0;
   }
   function schedule(ms) { clearTimeout(timer); timer = setTimeout(read, ms); }
   function read() {
@@ -201,7 +205,7 @@
     busy[key] = true; btn.disabled = true;
     call("/ksc/move", extra).then(function (a) {
       busy[key] = false;
-      if (a.state === "refused" && WORDS.en[a.why]) note(a.why);
+      if (a.state === "refused" && WORDS.en[a.why]) note(a.why, true);
       read();
     });
   }
@@ -231,6 +235,7 @@
     head.appendChild(el("p", "ksc-call", t.call_number || "#" + t.ticket, true));
     head.appendChild(tm.node);
     card.appendChild(head);
+    card.appendChild(withIcon("p", "ksc-meta ksc-state ksc-st-" + t.state, STATE_ICON[t.state], w(STATE_WORD[t.state])));
     var meta = [t.till, last.stations.length > 1 ? t.station : ""].filter(Boolean).join(" · ");
     if (meta) card.appendChild(el("p", "ksc-meta", meta, true));
     if (t.kind === "void") card.appendChild(withIcon("p", "ksc-void", "cross", w("void")));
@@ -241,8 +246,6 @@
       b.type = "button";
       b.addEventListener("click", function () { move(b, { kitchen_order: t.kitchen_order, ticket: t.ticket, state: next[0] }); });
       card.appendChild(b);
-    } else {
-      card.appendChild(withIcon("p", "ksc-meta ksc-state", STATE_ICON[t.state], w(STATE_WORD[t.state])));
     }
     return card;
   }
@@ -315,7 +318,7 @@
       b.addEventListener("click", function () {
         b.disabled = true;
         call("/ksc/soldout", { item_code: d.item_code, sold_out: !isOut }).then(function (a) {
-          if (a.state === "refused" && WORDS.en[a.why]) note(a.why);
+          if (a.state === "refused" && WORDS.en[a.why]) note(a.why, true);
           return read();
         }).then(drawSold);
       });

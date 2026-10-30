@@ -27,7 +27,7 @@ Every restaurant past the first one runs its kitchen from screens. The till alre
 
 ### Screens
 
-5. The manager makes a **PP KSC Screen** for each screen: its name, its kind (*Station*, *Expo* or *Board*), its store and, for a station screen, its stations (one, or a few on a small kitchen's screen). **Make link** (on one record, or on many ticked in the list) writes the screen's number and its link. The manager opens the link on the screen's browser, full screen.
+5. The manager makes a **PP KSC Screen** for each screen (a manager of one store gets a **User Permission** on *Warehouse* for that store, so their screens reach that store alone): its name, its kind (*Station*, *Expo* or *Board*), its store and, for a station screen, its stations (one, or a few on a small kitchen's screen). **Make link** (on one record, or on many ticked in the list) writes the screen's number and its link. The manager opens the link on the screen's browser, full screen.
 6. A link that leaked is replaced by pressing **Make link** again on that record: its number goes up by one and a screen open with the old link stops within 15 seconds. Changing a screen's kind, store or stations stops its link until *Make link* is pressed again.
 
 ### A service
@@ -49,7 +49,8 @@ Day to day the tills send as before; the kitchen taps tickets on its screens; th
 - A ticket the till's print agent later reports unprinted leaves the board without a bump; its dishes come back on the next *Send*.
 - A screen reads every 3 seconds: a new ticket shows within about 4 seconds. Its corner shows *Last read* in amber when its last good read is older than 15 seconds.
 - A recalled ticket is shown again, never moved back to ready (the door has no step back).
-- Sold out needs the item-availability right, which the till does not limit to a user's stores.
+- Sold out needs the item-availability right (read, write and create), which the till does not limit to a user's stores. A dish marked and then cleared at one store keeps that store's own availability row, which wins over a later sold out for every store: mark it again at that store, or clear the store's row in Desk.
+- A dish already sold out that no ticket on the board names is listed by its item code.
 - A line of a sold-out dish that reaches an open check by another way (an app adding to a check) is refused when the check is paid, not when it is added.
 - Allergens show only where the store's receipt theme shows them on the item.
 
@@ -58,6 +59,6 @@ Day to day the tills send as before; the kitchen taps tickets on its screens; th
 - **The link is an authorisation.** A screen's link carries the site, the screen record, its number and an HMAC-SHA256 signature of the three with the *Make link* subscription's secret (`#s=…&t=<record>.<number>.<signature>`, after `#`). The service checks the signature before it reads anything, then reads the record and refuses a link whose number moved on, or whose kind, store or stations changed since it was made (a hash of the three, written beside the number).
 - **What makes a link work is the app's.** The number, the link and what it was made for carry `write_roles` of the app's role and System Manager: a manager cannot lower a number to bring a leaked link back.
 - **One read for a store's screens.** A copy of the function keeps a store's board for 1.5 seconds, its sold-out list for 30 seconds, and a verified screen with its store's row for 15 seconds, so the screens of one kitchen read the retailer about once every 3 seconds between them. A move reads the board fresh first.
-- **Calls:** 20 board reads a minute per screen, plus 2 sold-out reads when sold out is on. A move or a sold-out tap is one call more (and at most one a screen every quarter of a second).
+- **Calls:** 20 calls a minute per screen to the service. On one copy they cost the retailer up to 20 board reads (shared by that copy's screens of the store), 4 screen-record and 4 store-row re-reads, and 2 sold-out reads when sold out is on. A move is a fresh board read and the move; a sold-out tap one call; at most one of either a screen every quarter of a second on each copy.
 - **Live, without a socket.** The door's notice (`mpos_station_ticket` on the site's own socket) reaches only a server holding that socket. A function holds none between calls, so the page reads every few seconds, which the door's own page says to do when the socket is down. A partner hosting a container can hold the site's socket (namespace `/<site>`, `Authorization: token key:secret`, `Origin` the site's address, a `Cookie` with no `sid`) and tell its screens to read at once.
 - **The page.** Served by the service (`page.html`, `page.js`, `page.css`, and the kit's `ivn-kit.css` and `ivn-kit.js`), with a policy that allows nothing from another site and no inline script. Every word the retailer wrote is put on the page as text, never as markup.

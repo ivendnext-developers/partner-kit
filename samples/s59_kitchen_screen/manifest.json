@@ -29,7 +29,7 @@
      "fieldtype": "Check",
      "label": "Sold out from the screens",
      "in_list_view": 1,
-     "description": "Ticked: a station or expo screen of this store may mark a dish on its board sold out here (and clear it). The app's user then needs Read and Write on Retail Item Availability, which the till does not limit to its stores; the app marks only the screen's own store."
+     "description": "Ticked: a station or expo screen of this store may mark a dish on its board sold out here (and clear it). The app's user then needs Read, Write and Create on Retail Item Availability, which the till does not limit to its stores; the app marks only the screen's own store."
     },
     {
      "fieldname": "warn_min",

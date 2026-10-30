@@ -28,6 +28,7 @@ class Rules(unittest.TestCase):
         self.assertIsNone(ksc.code_of("a.example", f"KSC-SCREEN-00001.4.{s}", [b"k"]))   # another number
         self.assertIsNone(ksc.code_of("a.example", tok, [b"other"]))
         self.assertEqual(ksc.code_of("a.example", tok, [b"new", b"k"]), ("KSC-SCREEN-00001", 3))   # the secret before
+        self.assertIsNone(ksc.code_of("a.example", f"KSC-SCREEN-00001.0.{ksc.sign(b'k', 'a.example', 'KSC-SCREEN-00001', 0)}", [b"k"]))
         for bad in (None, "", "x.y", "KSC-SCREEN-00001.0." + s, "KSC-SCREEN-00001.٣." + s, "a" * 201):
             self.assertIsNone(ksc.code_of("a.example", bad, [b"k"]), bad)
 
@@ -79,6 +80,22 @@ class Rules(unittest.TestCase):
         self.assertEqual([o["kitchen_order"] for o in ksc.expo_view(ts)["orders"]], ["ko2"])
         void_only = board([F.ticket("kv", 1, F.GRILL, [F.line("X", "X")], kind="void")])
         self.assertEqual(ksc.board_view(void_only, True), {"preparing": [], "ready": []})   # a void is never a number
+
+    def test_r6b_the_expo_card_leaves_with_its_dishes_and_times_its_oldest_open_one(self):
+        ts = board(F.lunch() + [F.ticket("ko1", 3, F.FRY, [F.line("FRIES", "Fries", 1)], kind="void")])
+        for t in ts:
+            if t["kitchen_order"] == "ko1" and t["kind"] == "send":
+                t["state"] = "bumped"
+        self.assertEqual([c["kitchen_order"] for c in ksc.expo_view(ts)["orders"]], ["ko2"])   # its void is the fryer's
+        ts = board([F.ticket("k", 1, F.GRILL, [F.line("A", "A")], state="bumped", sent_at="2026-10-30 18:00:00"),
+                    F.ticket("k", 2, F.GRILL, [F.line("B", "B")], sent_at="2026-10-30 19:00:00")])
+        self.assertEqual(ksc.expo_view(ts)["orders"][0]["sent_at"], "2026-10-30 19:00:00")
+
+    def test_r7b_a_busy_board_keeps_its_newest_tickets(self):
+        many = [F.ticket(f"o{i}", 1, F.BAR, [F.line("X", "X")]) for i in range(ksc.BOARD_MAX)] + [F.ticket("new", 1, F.GRILL, [F.line("A", "A")])]
+        ts = board(many)
+        self.assertEqual(len(ts), ksc.BOARD_MAX)
+        self.assertEqual([t["kitchen_order"] for t in ksc.station_view(ts, [F.GRILL])["tickets"]], ["new"])
 
     def test_r7_who_may_move_what(self):
         ts = board()
