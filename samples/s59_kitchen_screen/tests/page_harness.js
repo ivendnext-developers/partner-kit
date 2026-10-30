@@ -121,7 +121,8 @@ function snapshot(p) {
     slips: slips.filter(vis).map((s) => ({
       key: s.getAttribute("data-key"), height: heightOf(s), tall: s.classList.contains("is-tall"),
       more: vis(s.querySelector(".ksc-more")) ? s.querySelector(".ksc-more").textContent : "",
-      act: vis(s.querySelector(".ksc-act")), hiddenLines: s.querySelectorAll(".ksc-line").filter((x) => x.hidden).length,
+      act: vis(s.querySelector(".ksc-act")), actOn: !!s.querySelector(".ksc-act") && !s.querySelector(".ksc-act").disabled,
+      hiddenLines: s.querySelectorAll(".ksc-line").filter((x) => x.hidden).length,
       voidPart: s.querySelectorAll(".ksc-part").filter((x) => x.classList.contains("is-void"))
         .map((x) => ({ shown: vis(x), lines: x.querySelectorAll(".ksc-line").filter(vis).length })),
     })),

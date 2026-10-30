@@ -95,7 +95,7 @@
           step: "Ce ticket a changé sur un autre écran. Le tableau est relu.", gone: "Ce ticket n'est plus au tableau.",
           not_yours: "Ce ticket est celui d'un autre poste.", wait: "Un instant, puis appuyez de nouveau.",
           not_listed: "Ce plat n'est pas dans la liste de cet écran.", off: "Épuisé est désactivé dans ce magasin." },
-    de: { tapFailed: "Dieses Tippen kam nicht an. Bon prüfen und erneut tippen.", tapRight: "Dieser Bildschirm darf das nicht. Ihre Leitung soll die Rechte der App prüfen.",
+    de: { tapFailed: "Dieses Tippen kam nicht an. Bon prüfen und noch einmal tippen.", tapRight: "Dieser Bildschirm darf das nicht. Ihre Leitung soll die Rechte der App prüfen.",
           moreChoice: "+1 weitere Option", moreChoices: "+{n} weitere Optionen",
           moreDish: "+1 weiteres Gericht", moreDishes: "+{n} weitere Gerichte", moreTicket: "+1 weiterer Bon",
           moreTickets: "+{n} weitere Bons", earlier: "Frühere Bons", later: "Spätere Bons", smaller: "Kleinere Bons",
@@ -220,7 +220,7 @@
       .catch(function () { return { state: "unavailable" }; });
   }
   var noteUntil = 0, noteFor = "";
-  function answered(a, what) {       // a refusal is held; only a later success on the SAME ticket or dish takes it down
+  function answered(a, what) {       // a refusal is held NOTE_MS; a success on the SAME ticket or dish takes it down early
     if (a.state === "refused" && WORDS.en[a.why]) { note(a.why, true); noteFor = what; }
     else if ((a.state === "unavailable" || a.state === "not_set_up") && performance.now() >= noteUntil) {
       note(a.state === "unavailable" ? "tapFailed" : "tapRight", true); noteFor = what;   // not applied, and never retried:
@@ -256,7 +256,8 @@
         last = null; clear($("board")); $("waiting").hidden = true; pager(0, 0, false, false); note(a.state);
         schedule(a.state === "unknown" ? 60000 : 15000);   // a replaced link stays refused: read again rarely
       } else {
-        note(goodAt ? "" : "unavailable"); stale(); schedule(RETRY_MS);
+        if (!goodAt) note("unavailable");   // a failing read never takes down a tap's word
+        stale(); schedule(RETRY_MS);
       }
     });
   }
@@ -274,7 +275,10 @@
     if (extra.state === "bumped" || extra.order) bumped[key.replace(/\.order$/, "")] = true;   // it leaves by the cook's hand
     call("/ksc/move", extra).then(function (a) {
       busy[key] = false;
-      if (a.state !== "moved") delete bumped[key.replace(/\.order$/, "")];   // a refused Bump stays: not the cook's
+      if (a.state !== "moved") {          // not applied: the button is the cook's again, and a refused Bump stays
+        btn.disabled = false;
+        delete bumped[key.replace(/\.order$/, "")];
+      }
       answered(a, key);
       read();
     });

@@ -241,7 +241,7 @@ class PageFit(unittest.TestCase):
         self.assertEqual((got["first"]["shown"], got["first"]["note"]), ([], "The kitchen's tickets cannot be read right now. "
                                                                           "This screen tries again by itself."))
         self.assertEqual((got["read"]["shown"], got["read"]["note"]), (["k0.1", "k1.1"], ""))
-        self.assertIn(3000, got["timers"])                  # a failed read is tried again 3 s later, by itself
+        self.assertEqual(got["timers"], [3000])              # a failed read is tried again 3 s later, by itself
 
     def test_f11_a_late_ticket_on_another_page_turns_the_page_button_red(self):
         six = [ticket(f"k{i}", 1, 1) for i in range(6)]
@@ -263,6 +263,16 @@ class PageFit(unittest.TestCase):
         got = page("fit", answers={"/ksc/board": [station(*six)], "/ksc/move": [{"state": "unavailable"}]},
                    layout={"board": 340, "inner": 1000}, steps=["tap", "read"])
         self.assertEqual(got["read"]["note"], "That tap did not go through. Check the ticket and tap again.")
+        down = page("fit", answers={"/ksc/board": [station(*six), {"state": "unavailable"}], "/ksc/move": [{"state": "unavailable"}]},
+                    layout={"board": 340, "inner": 1000}, steps=["tap", "wait:7000", "read"])
+        self.assertEqual((down["read"]["note"], down["read"]["slips"][0]["actOn"]),   # the site still down: the word
+                         ("That tap did not go through. Check the ticket and tap again.", True))   # stays, the button works
+
+    def test_f13b_a_tap_refused_for_a_missing_right_says_so(self):
+        two = [dict(ticket(f"k{i}", 1, 1), state="ready") for i in range(2)]
+        got = page("fit", answers={"/ksc/board": [station(*two)], "/ksc/move": [{"state": "not_set_up"}]},
+                   layout={"board": 340, "inner": 1000}, steps=["tap", "read"])
+        self.assertEqual(got["read"]["note"], "This screen may not do that. Ask your manager to check the app's rights.")
 
     def test_f9_arabic_counts_take_their_dual_and_eleven_and_over_forms(self):
         def more(n):
