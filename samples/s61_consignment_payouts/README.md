@@ -1,4 +1,4 @@
-# S61 — Consignment payouts (`pp_csg`): each consignor's share of what sold, worked out and paid once
+# S61 — Consignment payouts (`pp_csg`): each consignor's share of what sold, paid once
 
 *Start from this sample: `python3 tools/manifest/start.py s61_consignment_payouts --prefix "ACME CON"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
