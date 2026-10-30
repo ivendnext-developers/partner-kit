@@ -55,14 +55,16 @@ The record type `PP CSG Payout`, numbered `format:CSG-P-{#####}`, tracked: `cons
 2. **Switch the lock on:** Desk › *Retail Save Rule* › *PP CSG payout locked once paid* › **Enabled**.
 3. **Give the app's role Read** on POS Invoice, Sales Invoice, Item and Retail Save Rule (Role Permissions Manager).
 4. **Switch the services and buttons on** (Retail Extension Subscription: read, consent, enable; Retail Desk Action: enable).
-5. **Decide who does what:** intake (Sales User, Item Manager), payouts and how each was paid (Accounts User), the press that pays and a cancel (Accounts Manager). Write on Item is a money right here: an item's consignor and share decide what a payout pays.
+5. **Decide who does what:** intake (Sales User, Item Manager), payouts and how each was paid (Accounts User), the press that pays and a cancel (Accounts Manager). Write on Item and on consignors is a money right here: an item's consignor and share, and a consignor's share and *Consigned since*, decide what a payout pays. A payout's consignor and company are set once.
 
 ## Limits
 
 - **The share when it is worked out** applies; *Pay* refuses if it changed since. An item moved to another consignor takes its unpaid lines with it.
 - **A piece sold after *Consigned since* but before its item named the consignor** is counted for them; nothing before *Consigned since* ever is.
 - **One consignor a press**, at most 500 lines a payout; the rest wait for the next. Each press reads all the consignor's history, so a very long one can run out of the press's time.
-- **A return after an item moved** to another consignor is charged to its new consignor (a return names no line it returns); settle that one by hand.
+- **A return is judged by its own date and the item's consignor now** (the app does not follow its link to the line it returns): after an item moved it is charged to the new consignor, and a return of a sale before *Consigned since* to the consignor. Settle either by hand.
+- **Starting and reinstalling:** set *Consigned since* to the day after the last sale already paid; an uninstall removes the payouts, so a reinstall restores them with the consignors (`copy_records.py`) or resets *Consigned since*.
+- **A paid payout is counted:** *Pay* writes its number of lines (`lines_paid`); a paid payout whose lines changed stops every later work-out and pay of the consignor.
 - **Payment is recorded, not booked:** a purchase invoice or journal for the payout, or store credit issued as a gift card, is a version of your own.
 - **A System Manager can delete a paid payout or switch the lock off**, and its lines may then be paid again; no other role may. The payout's history shows it.
 - **Rounding is per line:** a sale returned piece by piece can leave a cent between what was paid and what was taken back.

@@ -56,7 +56,7 @@ class ManifestTest(unittest.TestCase):
                          ("locked_in_state", "refuse", [f"{P} Paid", f"{P} Cancelled"]))
         self.assertEqual(set(rule["locked_fields"]),
                          {"consignor", "company", "up_to", "lines", "sales_total", "payout_total", "summary",
-                          "worked_out_by", "paid_with", "paid_on", "payment_reference", "paid_by"})
+                          "worked_out_by", "paid_with", "paid_on", "payment_reference", "paid_by", "lines_paid"})
 
     def test_the_buttons_are_on_a_draft_payout_and_send_only_its_name(self):
         work, pay = self.m["desk_actions"]
@@ -75,6 +75,11 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(sorted(k for k, v in perms[INT].items() if v == 1), ["read", "write"])
         self.assertEqual(sorted(k for k, v in {p["role"]: p for p in self.types[f"{P} Consignor"]["permissions"]}[INT]
                                 .items() if v == 1), ["read"])
+
+    def test_a_payouts_consignor_and_company_are_set_once_and_pay_counts_its_lines(self):
+        self.assertEqual((self.pay["consignor"].get("set_only_once"), self.pay["company"].get("set_only_once")), (1, 1))
+        self.assertEqual((self.pay["lines_paid"]["fieldtype"], self.pay["lines_paid"].get("read_only")), ("Int", 1))
+        self.assertIn("lines_paid", self.m["save_rules"][0]["locked_fields"])
 
     def test_the_item_fields_name_the_consignor_and_its_own_share(self):
         f = {c["fieldname"]: c for c in self.m["custom_fields"]}

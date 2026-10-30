@@ -205,6 +205,15 @@ def work_out(consignor_share, items: dict, lines: list[dict], heads: dict, holds
     return out, ""
 
 
+def changed_since_paid(paid: list[dict], settled: list[dict]) -> list[str]:
+    """The paid payouts whose lines are no longer the number *Pay* counted (``lines_paid``): a line removed or added
+    after it was paid would free a paid sale or hide one. A payout paid before the count existed (0) is not judged."""
+    have: dict[str, int] = {}
+    for r in settled:
+        have[r.get("parent")] = have.get(r.get("parent"), 0) + 1
+    return sorted(p["name"] for p in paid if (p.get("lines_paid") or 0) and have.get(p["name"], 0) != p["lines_paid"])
+
+
 def totals(rows: list[dict]) -> tuple[Decimal, Decimal]:
     return sum((r["sale_amount"] for r in rows), Decimal(0)), sum((r["payout"] for r in rows), Decimal(0))
 

@@ -81,6 +81,8 @@ CHANGED = "The payout was changed while this press read it. Open it again and pr
 GONE = "This payout was not found. Open it again from the list."
 NOT_DRAFT = "Only a draft payout can be worked out. This one is already paid or cancelled."
 NO_CONSIGNOR = "Choose the consignor and the company first, then save the payout."
+CHANGED_SINCE_PAID = ("Paid payout {} no longer has the lines it was paid with. Nothing is worked out or paid until it is "
+                      "put back as it was paid (its history shows the change).")
 OTHER_DRAFT = ("Payout {} for this consignor is still a draft. Pay it, work it out again, or drop it (Actions, Drop) "
                "first: a consignor has one draft payout at a time.")
 
@@ -217,8 +219,8 @@ class Service:
                           timeout=self.left(t0))
         if not found:
             return [], NO_CONSIGNOR, {}
-        mine = door.rows(consign.PAYOUT, ["name", "company", "workflow_state"], [["consignor", "=", p["consignor"]]],
-                         timeout=self.left(t0))
+        mine = door.rows(consign.PAYOUT, ["name", "company", "workflow_state", "lines_paid"],
+                         [["consignor", "=", p["consignor"]]], timeout=self.left(t0))
         drafts = sorted(r["name"] for r in mine if r.get("name") != p.get("name")
                         and (r.get("workflow_state") or consign.DRAFT) == consign.DRAFT)
         if drafts:                      # one draft a consignor: a second would hide the first one's lines from it
@@ -229,6 +231,9 @@ class Service:
                                     [[consign.FIELD + "consignor", "=", p["consignor"]]], timeout=self.left(t0))
                  if r.get("name")}
         settled = self._in(door, consign.LINE, PAID_READ, "parent", paid, t0, parent=consign.PAYOUT) if paid else []
+        changed = consign.changed_since_paid([r for r in mine if r["name"] in paid], settled)
+        if changed:                     # a paid payout's lines changed since Pay counted them: never pay over it
+            return [], CHANGED_SINCE_PAID.format(changed[0]), {}
         lines, heads = [], {}
         for typ in consign.SALE_TYPES:
             got = self._in(door, typ + " Item", LINE_READ, "item_code", items, t0, filters=[["docstatus", "!=", 0]],
@@ -277,7 +282,7 @@ class Service:
             return _warning(refused)
         self.left(t0)
         door.update(consign.PAYOUT, p["name"], {"workflow_state": consign.PAID, "paid_by": user,
-                                                "modified": p.get("modified")})
+                                                "lines_paid": len(p.get("lines") or []), "modified": p.get("modified")})
         return consign.paid_answer(p.get("payout_total") or 0, p.get("currency") or "")
 
     def run(self, door, sub: str, name: str, user: str) -> dict:

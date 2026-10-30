@@ -418,6 +418,13 @@
      "fieldtype": "Data",
      "label": "Marked paid by",
      "read_only": 1
+    },
+    {
+     "fieldname": "lines_paid",
+     "fieldtype": "Int",
+     "label": "Lines paid",
+     "read_only": 1,
+     "description": "Counted when it was paid: a paid payout whose lines change stops every later payout of the consignor."
     }
    ]
   }
@@ -509,7 +516,8 @@
     "paid_with",
     "paid_on",
     "payment_reference",
-    "paid_by"
+    "paid_by",
+    "lines_paid"
    ],
    "message": "This payout is paid or cancelled: its lines, amounts and payment stay as they were. Make a new payout instead."
   }

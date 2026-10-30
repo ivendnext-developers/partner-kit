@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/consignment_payouts.md
 sample: samples/s61_consignment_payouts
 request: -
-verified: 2026-10-30 · laptop
+verified: 2026-10-30 · bench
 ---
 ## What you build
 A consignor as your manifest's own record type, with the share each piece pays them; a field on Item naming its consignor and, where it differs, its own share. A payout per consignor with two Desk buttons whose service reads the retailer's own till sales and Desk invoices: one writes every sold line no other payout holds (returns negative, the share and the consignor's part on each), the other checks every line again before it moves the payout to Paid, a step your workflow lets only your app's own role take. A save rule then locks the paid payout, so no line is ever paid twice.
@@ -22,4 +22,4 @@ A consignor as your manifest's own record type, with the share each piece pays t
 - How the consignor is paid (cash, a transfer, store credit) is recorded on the payout; booking it in the accounts is a version of your own.
 
 ## Tell the customer
-Each consignor's payout is worked out from your own sales with returns taken off, checked again before it is marked paid, and no sale is ever paid twice.
+Each consignor's payout is worked out from your own sales with returns taken off, checked again before it is marked paid, so a sale is paid once.

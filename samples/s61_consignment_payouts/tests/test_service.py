@@ -113,7 +113,7 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertIn("Paid: 64.00 USD", out["message"]["body"])
         self.assertEqual(self.s.writes[n:], [(consign.PAYOUT, "CSG-P-00001", {"workflow_state": consign.PAID,
-                                                                       "paid_by": "boss@shop.example"})])
+                                                                       "paid_by": "boss@shop.example", "lines_paid": 4})])
         self.s.payout("CSG-P-00002")
         self.press(name="CSG-P-00002")
         self.assertEqual(self.lines("CSG-P-00002"), {})                       # nothing is ever paid twice
@@ -277,6 +277,23 @@ class ServiceTest(unittest.TestCase):
         self.s.payout("CSG-P-00012", consignor="C2", lines=[{"sale_line": "pl1", "sale_type": "POS Invoice", "payout": 40}])
         self.assertIn("also on payout CSG-P-00012", self.press("pay")[1]["message"]["body"])
         self.assertEqual(self.s.payouts["CSG-P-00001"]["workflow_state"], consign.DRAFT)
+
+    def test_s26_a_paid_payout_whose_lines_changed_stops_every_work_out_and_pay(self):
+        self.press()
+        self.paid_ready()
+        self.press("pay")
+        self.assertEqual(self.s.payouts["CSG-P-00001"]["lines_paid"], 4)
+        self.s.payouts["CSG-P-00001"]["lines"].pop()                            # a line removed after it was paid
+        self.s.payout("CSG-P-00002")
+        out = self.press(name="CSG-P-00002")[1]["message"]["body"]
+        self.assertIn("Paid payout CSG-P-00001 no longer has the lines it was paid with", out)
+        self.assertEqual(self.lines("CSG-P-00002"), {})
+
+    def test_s27_an_exchange_in_one_invoice_pays_the_sale_and_takes_off_the_return(self):
+        self.s.sale("POS Invoice", "PSI-EX", [("ex1", "A", 60.0), ("ex2", "B", -50.0)], day="2026-10-06")
+        self.press()
+        got = self.lines()
+        self.assertEqual((got["ex1"][3], got["ex2"][3]), (24.0, -30.0))       # 40% of 60, 60% of -50
 
     def test_s13_only_a_draft_and_only_with_a_consignor(self):
         self.s.payouts["CSG-P-00001"]["workflow_state"] = consign.PAID
