@@ -58,7 +58,7 @@ python3 tools/check/check.py samples/s59_kitchen_screen                         
 bash kit/design/tools/check_kit.sh samples/s59_kitchen_screen/service/page.html     # the page's kit checks
 ```
 
-The tests drive the service with a stand-in site. The page's own behaviour (text only, never markup; the held refusal note; the amber *Last read*; the timers; right to left with real tickets) has no script harness in the kit: it was walked in a browser on our bench, and the page check's contrast and right-to-left passes run on the page before it has read a board.
+The tests drive the service with a stand-in site. The page's own behaviour (text only, never markup; the held refusal note; the amber *Last read*; the timers; right to left with real tickets) has no script harness in the kit: it was walked in a browser on our bench after the review's folds (two taps at once, the refusal held six seconds; Arabic, right to left, with real tickets), and the page check's contrast and right-to-left passes run on the page before it has read a board.
 
 The service: `python3 service/app.py service/.env.local` for one store (the env file names the app's user's key, the *Make link* secret the install handed back and the page's address), or as a function on CitiXsys hosting for many (`app.json`). It serves the screen's page itself (`service/page.html`, `page.js`, `page.css`, and its pinned copy of the kit's `ivn-kit.css` and `ivn-kit.js`: no inline script, nothing from another site).
 

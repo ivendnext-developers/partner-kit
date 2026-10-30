@@ -337,8 +337,14 @@ class Service:
         key = (site, store)
         kept = self._sold.get(key)
         if kept and self.clock() - kept[0] < SOLD_KEEP_S:
+            if kept[1] is None:         # refused a moment ago: kept refused, so a missing right costs 2 calls a minute
+                raise TenantError("item_availability -> refused (kept)", 403)
             return kept[1]
-        value = ksc.sold_out_of(door.call("item_availability", query={"warehouse": store}))
+        try:
+            value = ksc.sold_out_of(door.call("item_availability", query={"warehouse": store}))
+        except TenantError:
+            self._keep(self._sold, key, None)
+            raise
         self._keep(self._sold, key, value)
         return value
 

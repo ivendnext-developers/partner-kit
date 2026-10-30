@@ -69,6 +69,8 @@ CANARIES = [
      R + "test_r1_a_link_is_the_retailers_own_signature_for_that_site_record_and_number"),
     ("a refused sold-out read leaves the tickets", S, "            except TenantError:         # the sold-out right missing",
      "            except ZeroDivisionError:   # the sold-out right missing", T + "test_s6_a_sold_out_read_the_shop_refuses_leaves_the_tickets_showing"),
+    ("a refused sold-out read is kept refused", S, "            self._keep(self._sold, key, None)\n            raise", "            raise",
+     T + "test_s6_a_sold_out_read_the_shop_refuses_leaves_the_tickets_showing"),
     ("an expo card leaves with its dishes", C, '        live = [t for t in ts if t["kind"] == "send" and t["state"] != "bumped"]',
      '        live = [t for t in ts if t["state"] != "bumped"]', R + "test_r6b_the_expo_card_leaves_with_its_dishes_and_times_its_oldest_open_one"),
     ("a busy board keeps its newest", C, "[-BOARD_MAX:]", "[:BOARD_MAX]", R + "test_r7b_a_busy_board_keeps_its_newest_tickets"),

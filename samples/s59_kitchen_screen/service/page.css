@@ -46,7 +46,7 @@ body.ksc { min-block-size: 100vh; font-size: 20px; }
 .ksc-line-who { color: var(--ivn-text-muted); }
 .ksc-allergens { color: var(--ivn-pill-orange-ink); font-weight: 700; display: flex; align-items: center; gap: 6px; }
 .ksc-state { display: inline-flex; align-items: center; gap: 6px; font-size: 20px; font-weight: 700; }
-.ksc-st-started { color: var(--ivn-pill-orange-ink); }
+.ksc-st-started { color: var(--ivn-pill-blue-ink); }
 .ksc-st-ready { color: var(--ivn-pill-green-ink); }
 .ksc-act.ivn-btn-block { inline-size: calc(100% - 2 * var(--ivn-s3)); margin: var(--ivn-s2) var(--ivn-s3) var(--ivn-s3); min-block-size: 64px; font-size: 26px; font-weight: 800; }
 

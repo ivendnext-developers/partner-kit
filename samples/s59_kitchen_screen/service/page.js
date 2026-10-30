@@ -7,8 +7,8 @@
 (function () {
   "use strict";
   var READ_MS = 3000, RETRY_MS = 3000, LATE_READ_S = 15, NOTE_MS = 6000;
-  // The till's own words where it has them (check, guest, course, send, sold out: its ar, es and fr tables at T21);
-  // German and Portuguese are this app's own until the till signs them.
+  // The till's own words where it has them (guest and sold out, from its ar, es and fr tables at T21; send is never
+  // used for a bump, which is the kitchen's own step); German and Portuguese are this app's own until the till signs them.
   var WORDS = {
     en: { start: "Start", ready: "Ready", bump: "Bump", bumpOrder: "Bump order", recall: "Recall", soldOut: "Sold out",
           soldTitle: "Sold out at this store", markSold: "Mark sold out", markBack: "Available again", isSold: "Sold out",
@@ -25,7 +25,7 @@
           not_yours: "This ticket is another station's.", wait: "One moment, then tap again.",
           not_listed: "That dish is not on this screen's list.", off: "Sold out is switched off for this store." },
     ar: { start: "ابدأ", ready: "جاهز", bump: "أنهِ", bumpOrder: "أنهِ الطلب", recall: "استرجاع", soldOut: "نفدت الكمية",
-          soldTitle: "نفدت الكمية في هذا المتجر", markSold: "نفدت الكمية", markBack: "متوفر مرة أخرى", isSold: "نفدت الكمية",
+          soldTitle: "نفدت الكمية في هذا المتجر", markSold: "علّمه نافدًا", markBack: "متوفر مرة أخرى", isSold: "نفدت الكمية",
           close: "إغلاق", waiting: "ما زال للتحضير", preparing: "قيد التحضير", readyCol: "جاهز", void: "ملغى: أوقف التحضير",
           recallNote: "أُنهيت في آخر 30 دقيقة، لقراءتها مرة أخرى. لا يمكن إعادة تذكرة منتهية.",
           lastRead: "آخر قراءة {t}", empty: "لا تذاكر", nothing: "لا شيء بانتظار التحضير", onTime: "في الوقت",
@@ -52,14 +52,14 @@
           step: "Este ticket cambió en otra pantalla. Se lee el tablero otra vez.", gone: "Este ticket ya no está en el tablero.",
           not_yours: "Este ticket es de otra estación.", wait: "Un momento y pulse otra vez.",
           not_listed: "Ese plato no está en la lista de esta pantalla.", off: "Agotado está desactivado en esta tienda." },
-    fr: { start: "Commencer", ready: "Prêt", bump: "Envoyer", bumpOrder: "Envoyer la commande", recall: "Rappel",
+    fr: { start: "Commencer", ready: "Prêt", bump: "Retirer", bumpOrder: "Retirer la commande", recall: "Rappel",
           soldOut: "Épuisé", soldTitle: "Épuisé dans ce magasin", markSold: "Marquer épuisé", markBack: "De nouveau disponible",
           isSold: "Épuisé", close: "Fermer", waiting: "Reste à préparer", preparing: "En préparation", readyCol: "Prêt",
           void: "Annulé : ne pas préparer",
-          recallNote: "Envoyés dans les 30 dernières minutes, à relire. Un ticket envoyé ne peut pas revenir en arrière.",
+          recallNote: "Retirés dans les 30 dernières minutes, à relire. Un ticket retiré ne peut pas revenir en arrière.",
           lastRead: "Dernière lecture {t}", empty: "Aucun ticket", nothing: "Rien en attente", onTime: "À l'heure",
           warn: "Bientôt en retard", late: "En retard", min: "{n} min", guest: "Couvert {n}", stNew: "Nouveau",
-          stStarted: "Commencé", stReady: "Prêt", stBumped: "Envoyé", loading: "Lecture des tickets de la cuisine...",
+          stStarted: "Commencé", stReady: "Prêt", stBumped: "Retiré", loading: "Lecture des tickets de la cuisine...",
           unknown: "Le lien de cet écran ne fonctionne pas ou a été remplacé. Demandez le nouveau lien à votre responsable.",
           closed: "Ce magasin n'a pas d'écrans de cuisine configurés. Demandez à votre responsable.",
           not_set_up: "Cet écran ne peut pas lire les tickets. Demandez à votre responsable de vérifier l'utilisateur de l'app et sa clé.",
@@ -124,6 +124,7 @@
     warn: ["M12 3l9 16H3z", "M12 10v4", "M12 17v.5"],
     check: ["M5 12l5 5L19 7"],
     cross: ["M6 6l12 12", "M18 6L6 18"],
+    play: ["M8 5l11 7-11 7z"],
     flame: ["M12 3c3 4 5 6 5 10a5 5 0 0 1-10 0c0-2 1-4 3-5c0 2 1 3 2 3c0-3-1-5 0-8"]
   };
   function icon(name) {
@@ -163,12 +164,16 @@
       .then(function (r) { return r.json().catch(function () { return { state: "unavailable" }; }); })
       .catch(function () { return { state: "unavailable" }; });
   }
-  var noteUntil = 0;
+  var noteUntil = 0, noteFor = "";
+  function answered(a, what) {       // a refusal is held; a later success on the SAME ticket or dish takes it down
+    if (a.state === "refused" && WORDS.en[a.why]) { note(a.why, true); noteFor = what; }
+    else if (what === noteFor) { noteUntil = 0; note(""); }
+  }
   function note(key, hold) {         // a tap's refusal is held NOTE_MS, so the read that follows does not wipe it
     var n = $("note");
-    if (!key) { if (Date.now() < noteUntil) return; n.hidden = true; n.textContent = ""; return; }
+    if (!key) { if (performance.now() < noteUntil) return; n.hidden = true; n.textContent = ""; return; }
     n.textContent = w(key); n.hidden = false;
-    noteUntil = hold ? Date.now() + NOTE_MS : 0;
+    noteUntil = hold ? performance.now() + NOTE_MS : 0;
   }
   function schedule(ms) { clearTimeout(timer); timer = setTimeout(read, ms); }
   function read() {
@@ -205,13 +210,13 @@
     busy[key] = true; btn.disabled = true;
     call("/ksc/move", extra).then(function (a) {
       busy[key] = false;
-      if (a.state === "refused" && WORDS.en[a.why]) note(a.why, true);
+      answered(a, key);
       read();
     });
   }
   var NEXT = { "new": ["started", "start"], started: ["ready", "ready"], ready: ["bumped", "bump"] };
   var STATE_WORD = { "new": "stNew", started: "stStarted", ready: "stReady", bumped: "stBumped" };
-  var STATE_ICON = { "new": "clock", started: "flame", ready: "check", bumped: "check" };
+  var STATE_ICON = { "new": "clock", started: "play", ready: "check", bumped: "check" };
 
   function lines(t, cls) {
     var ul = el("ul", "ksc-lines " + (cls || ""));
@@ -318,7 +323,7 @@
       b.addEventListener("click", function () {
         b.disabled = true;
         call("/ksc/soldout", { item_code: d.item_code, sold_out: !isOut }).then(function (a) {
-          if (a.state === "refused" && WORDS.en[a.why]) note(a.why, true);
+          answered(a, "sold." + d.item_code);
           return read();
         }).then(drawSold);
       });

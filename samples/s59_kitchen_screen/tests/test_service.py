@@ -308,6 +308,11 @@ class ServiceTest(unittest.TestCase):
         v = call(self.svc, "/ksc/board", t)[1]
         self.assertEqual((v["state"], len(v["view"]["tickets"])), ("open", 2))
         self.assertNotIn("sold_out", v)
+        self.shop.calls.clear()
+        for _ in range(11):                                            # 33 s of reads: kept refused 30 s, so asked once
+            self.later(3)
+            call(self.svc, "/ksc/board", t)
+        self.assertEqual(self.shop.calls.count("item_availability"), 1)
 
     def test_s4_sold_out_off_for_the_store_or_from_the_board_is_refused(self):
         board = made(self.shop, self.svc, "KSC-SCREEN-00003")
