@@ -5,7 +5,7 @@
  "title": "Project quotes and staged deliveries",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "A hardware or DIY store's builder projects, kept in Desk. Each PP PQT Project holds the builder's job: its name, the builder (a customer) with the builder's name read from the customer, its status (Open, Completed or Cancelled), the store that serves it, its dates, the site's address, contact and phone, and the stages the builder plans with the date each is wanted on site. A Project field on Quotation, Sales Order, Delivery Note, Sales Invoice and POS Invoice names the project a document belongs to; set on a quote, Desk's own Create carries it to the order, each delivery and the invoice, and it can be set after a document is submitted. A Stage field on the lines of a quote, an order and a delivery names the stage each line goes to site for, carried the same way, beside the order line's own delivery date. The project sheet, printed or previewed in Desk, lists the project's stages and its quotes, the till's documents, orders with the share delivered, deliveries and invoices, each as the viewer may read them; each builder lists its projects. The till and Desk keep quoting, ordering, taking deposits and delivering in parts as they do: the app moves no money and no stock, and calls nothing outside: no service, no outside address.",
+ "description": "A hardware or DIY store's builder projects, kept in Desk. Each PP PQT Project holds the builder's job: its name, the builder (a customer) with the builder's name read from the customer, its status (Open, Completed or Cancelled), the store that serves it, its dates, the site's address, contact and phone, and the stages the builder plans with the date each is wanted on site. A Project field on Quotation, Sales Order, Delivery Note, Sales Invoice and POS Invoice names the project a document belongs to; set on a quote, Desk's own Create carries it to the order, each delivery and the invoice, and it can be set after a document is submitted (a till document by whoever may change one in Desk: a Retail Manager or an Accounts User). A Stage field on the lines of a quote, an order and a delivery names the stage each line goes to site for, carried the same way, beside the order line's own delivery date. The project sheet, printed or previewed in Desk, lists the project's stages and its quotes, the till's documents, orders with the share delivered, deliveries and invoices, each as the viewer may read them; each builder lists its projects. The till and Desk keep quoting, ordering, taking deposits and delivering in parts as they do: the app moves no money and no stock, and calls nothing outside: no service, no outside address.",
  "allowed_urls": [],
  "doctypes": [
   {
@@ -93,6 +93,18 @@
      "export": 0,
      "share": 0,
      "print": 0,
+     "email": 0
+    },
+    {
+     "role": "Retail Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
      "email": 0
     },
     {

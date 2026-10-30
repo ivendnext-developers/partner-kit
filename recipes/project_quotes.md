@@ -14,7 +14,7 @@ A hardware or DIY store sells to builders, and a builder buys for a job: the sto
 2. **The quote.** A Desk **Quotation** to the builder names the **Project**; each line names its **Stage**.
 3. **The order.** **Create › Sales Order** on the quote: the project and every line's stage come with it. Each line gets its own **Delivery Date**, the stage's date.
 4. **Staged deliveries.** **Create › Delivery Note** on the order, choosing a delivery date: only the lines due by then, with the project and their stage. The next delivery takes the lines still owed. **Create › Sales Invoice** on a delivery carries the project.
-5. **The till's documents.** A quote, order or sale rung at the till for the builder is a *POS Invoice* in Desk: open it and choose its **Project** (settable after it is booked). A till order's own Sales Order is named the same way.
+5. **The till's documents.** A quote, order or sale rung at the till for the builder is a *POS Invoice* in Desk: a **Retail Manager** or an **Accounts User** (who change till documents in Desk; Sales User reads none) opens it and chooses its **Project** (settable after it is booked). The trade desk names a till order's own Sales Order the same way.
 6. **The job in one place.** **Print › PP PQT Project sheet** on the project: its stages, then its quotes, the till's documents, its orders with the share delivered, its deliveries and its invoices with what is still owed. Every one of those lists filters by **Project**, and the builder's projects show under the customer.
 
 ## Projects
@@ -63,12 +63,12 @@ The print format *PP PQT Project sheet* (Jinja) places the store's **Letter Head
 ## What the retailer does
 
 1. **Install the app.** It adds the project and its stage table, the two fields on the documents, the sheet and the Connection. No setting, no role, no outside address.
-2. **Give Sales User** to the trade desk; a Sales Manager keeps projects too. Whoever sends goods out holds Stock User and accounts Accounts User, which read projects.
+2. **Give Sales User** to the trade desk; a Sales Manager keeps projects too. Whoever sends goods out holds Stock User and accounts Accounts User, which read projects; a Retail Manager reads them too, and names a till document's project with an Accounts User.
 3. **For the deliveries still to come, line by line:** the Sales Order list's **Report** view, filtered by **Project** and **% Delivered** under 100, with the item columns *Stage*, *Delivery Date*, *Quantity* and *Delivered Qty*, saved as the store's own report.
 
 ## Limits
 
-- **The till does not name the project itself:** a till document is named in Desk after it is booked, and a till order's Sales Order too. Naming it at the till is a version of your own.
+- **The till does not name the project itself:** a till document is named in Desk after it is booked, by a Retail Manager or an Accounts User, and a till order's Sales Order by the trade desk. Naming it at the till is a version of your own. The sheet's till section shows only to those who read till documents.
 - **The project is not checked against the document's customer:** the trade desk chooses it; the builder's projects show under the customer.
 - **The project holds no money:** a budget, retentions and progress claims are versions of your own.
 - **Desk shows the records with the app's prefix** (*PP PQT Project*).

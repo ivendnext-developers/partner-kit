@@ -116,6 +116,7 @@ class ManifestTest(unittest.TestCase):
         self.assertIn("delete", rights("System Manager"))
         self.assertEqual(rights("Stock User"), {"read", "report"})
         self.assertEqual(rights("Accounts User"), {"read"})
+        self.assertEqual(rights("Retail Manager"), {"read", "report", "print"})   # names a till document's project
 
     def test_the_project_opens_its_help(self):
         (ps,) = MANIFEST["property_setters"]

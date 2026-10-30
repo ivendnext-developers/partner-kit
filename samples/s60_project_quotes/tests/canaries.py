@@ -79,6 +79,9 @@ CANARIES = [
     ("whoever sends goods out reads, never changes, a project", M,
      '"role": "Stock User",\n     "read": 1,\n     "write": 0,', '"role": "Stock User",\n     "read": 1,\n     "write": 1,',
      T + "test_the_trade_desk_keeps_projects_no_one_but_a_system_manager_deletes"),
+    ("the till's manager reads projects, to name a till document's", M,
+     '"role": "Retail Manager",\n     "read": 1,', '"role": "Retail Manager",\n     "read": 0,',
+     T + "test_the_trade_desk_keeps_projects_no_one_but_a_system_manager_deletes"),
     ("the project opens its help", M, 'recipes/project_quotes.html#projects', 'recipes/project_quotes.html',
      T + "test_the_project_opens_its_help"),
 ]
