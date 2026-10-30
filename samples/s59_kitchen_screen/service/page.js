@@ -34,6 +34,7 @@
     ar: { moreChoice: "+خيار واحد آخر", moreChoices: "+{n} خيارات أخرى", moreDish2: "+طبقان آخران",
           moreDishes11: "+{n} طبقًا آخر", moreTicket2: "+تذكرتان أخريان", moreTickets11: "+{n} تذكرةً أخرى",
           moreChoice2: "+خياران آخران", moreChoices11: "+{n} خيارًا آخر",
+          moreDishes100: "+{n} طبق آخر", moreTickets100: "+{n} تذكرة أخرى", moreChoices100: "+{n} خيار آخر",
           moreDish: "+طبق واحد آخر", moreDishes: "+{n} أطباق أخرى", moreTicket: "+تذكرة واحدة أخرى",
           moreTickets: "+{n} تذاكر أخرى", earlier: "التذاكر السابقة", later: "التذاكر التالية", smaller: "تذاكر أصغر",
           bigger: "تذاكر أكبر", compact: "مضغوط", standard: "عادي", large: "كبير", xlarge: "كبير جدًا",
@@ -136,7 +137,8 @@
     var h = n % 100;
     if (n === 1) return w(one);
     if (lang === "ar" && n === 2) return w(one + "2");
-    if (lang === "ar" && (h >= 11 || (n > 2 && h < 3))) return w(many + "11", { n: n });   // 100, 101, 102: the singular too
+    if (lang === "ar" && n > 2 && h < 3) return w(many + "100", { n: n });   // 100, 101, 102 …: the singular
+    if (lang === "ar" && h >= 11) return w(many + "11", { n: n });
     return w(many, { n: n });
   }
   function w(key, args) {
@@ -263,6 +265,7 @@
     if (extra.state === "bumped" || extra.order) bumped[key.replace(/\.order$/, "")] = true;   // it leaves by the cook's hand
     call("/ksc/move", extra).then(function (a) {
       busy[key] = false;
+      if (a.state !== "moved") delete bumped[key.replace(/\.order$/, "")];   // a refused Bump stays: not the cook's
       answered(a, key);
       read();
     });
@@ -475,7 +478,6 @@
     while (tall(slip) > cap + 0.5 && choices < first.length - 1) first[first.length - ++choices].hidden = true;
     if (tall(slip) > cap + 0.5) {      // still too tall (one dish, or a void that never folds): nothing stays folded
       fold(0); hide = 0; choices = 0;   // and this ticket scrolls whole, so Bump stays in reach
-      first.forEach(function (li) { li.hidden = false; });
       slip.classList.add("is-tall"); slip.style.maxBlockSize = cap + "px";
     }
     var said = [];
@@ -553,11 +555,8 @@
     page = shown.page;
     slips.forEach(function (sl, i) { sl.hidden = i < shown.from || i >= shown.end; });
     var keys = slips.slice(shown.from, shown.end).map(function (sl) { return sl.getAttribute("data-key"); });
-    for (var i = 0; i < Math.max(keys.length, shownKeys.length); i++) {   // a ticket moved under the finger, not by the
-      if (keys[i] === shownKeys[i]) continue;                            // cook's own tap: hold taps a moment
-      if (shownKeys.length && !bumped[shownKeys[i]] && !cookPaged) shiftedAt = performance.now();
-      break;
-    }
+    var left = shownKeys.filter(function (k) { return keys.indexOf(k) < 0; });   // a ticket left the page by another
+    if (!cookPaged && left.some(function (k) { return !bumped[k]; })) shiftedAt = performance.now();   // hand: the rest slid
     shownKeys = keys; cookPaged = false;
     var present = {};                  // a bumped ticket is forgotten once it has left the board
     slips.forEach(function (sl) { present[sl.getAttribute("data-key")] = true; });

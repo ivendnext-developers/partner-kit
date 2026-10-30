@@ -213,6 +213,13 @@ class PageFit(unittest.TestCase):
                    layout={"board": 340, "inner": 1000}, steps=["tap", "tap"])
         self.assertEqual(got["taps"], [1, 2])
 
+    def test_f8e_a_refused_bump_is_not_the_cooks_and_its_later_removal_holds(self):
+        six = [dict(ticket(f"k{i}", 1, 1), state="ready") for i in range(6)]
+        got = page("fit", answers={"/ksc/board": [station(*six), station(*six), station(*six[1:])],
+                                   "/ksc/move": [{"state": "refused", "why": "step"}, {"state": "moved", "moved": 1}]},
+                   layout={"board": 340, "inner": 1000}, steps=["tap", "wait:7000", "read", "tap"])
+        self.assertEqual(got["taps"], [1, 1])               # the expo bumped k0 after the cook's Bump was refused
+
     def test_f8c_the_cooks_own_paging_holds_nothing(self):
         six = [ticket(f"k{i}", 1, 1) for i in range(6)]
         got = page("fit", answers={"/ksc/board": [station(*six)], "/ksc/move": [{"state": "moved", "moved": 1}]},
@@ -230,9 +237,9 @@ class PageFit(unittest.TestCase):
     def test_f9_arabic_counts_take_their_dual_and_eleven_and_over_forms(self):
         def more(n):
             return self.fit(station(*[ticket(f"k{i}", 1, 1) for i in range(n + 1)], lang="ar"), 120)["first"]["pager"]["more"]
-        self.assertEqual([more(1), more(2), more(4), more(12), more(100), more(103), more(111)],
-                         ["+تذكرة واحدة أخرى", "+تذكرتان أخريان", "+4 تذاكر أخرى", "+12 تذكرةً أخرى", "+100 تذكرةً أخرى",
-                          "+103 تذاكر أخرى", "+111 تذكرةً أخرى"])
+        self.assertEqual([more(1), more(2), more(4), more(12), more(100), more(102), more(103), more(111)],
+                         ["+تذكرة واحدة أخرى", "+تذكرتان أخريان", "+4 تذاكر أخرى", "+12 تذكرةً أخرى", "+100 تذكرة أخرى",
+                          "+102 تذكرة أخرى", "+103 تذاكر أخرى", "+111 تذكرةً أخرى"])
 
 
 if __name__ == "__main__":
