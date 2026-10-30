@@ -10,7 +10,7 @@ blocked-by: -
 recipe: contracts/pages/station_ticket.md
 sample: none
 request: -
-verified: run by the product 2026-10-29 (the station ticket lane's walk, through the API and the site's live socket: an integration user set up as the open check's, then Generate Keys, its store row kept; a till's Send printed the ticket and the user's server was told within 0.1 seconds; the user read the grill board with the guest, course and allergen line, moved a ticket started, ready and bumped, was answered already for the same step twice, and was refused a skip, a step back, another store's board and an unknown order); not run by a kit sample
+verified: run by the product 2026-10-29 (the product's own walk, before its review fixes, which its tests then proved, through the API and the site's live socket: an integration user set up as the open check's, then Generate Keys, its store row kept; a till's Send printed the ticket and the user's server was told within 0.1 seconds; the user read the grill board with the guest, course and allergen line, moved a ticket started, ready and bumped, was answered already for the same step twice, and was refused a skip, a step back, another store's board and an unknown order); not run by a kit sample
 related: open-check-from-an-app
 ---
 ## What you build
@@ -21,6 +21,7 @@ A kitchen display (a screen per station, an expo screen, a *Now serving* board) 
 - The notice comes only to a server of yours on the site's own socket (namespace `/<site name>`, your user's key in `Authorization: token <key>:<secret>`, `Origin` the site's own address, a `Cookie` header with no `sid`), never to a page on another address.
 - There is no cursor: every read is the whole board. Read it on every notice and every few seconds, since a ticket can leave the board with no notice.
 - Tickets a till printed while the store was offline never reach the board.
+- One integration user for each kit app: a user that ever enrolled a till device is refused (`DeviceRequiredError`). A user who holds the right only through write on Kitchen Stations may read and move tickets but is never told of a change.
 - Your screen moves tickets only: it never voids, comps or changes a line, and a ticket carries no price.
 - ⚠ The sold-out calls are not fenced to your user's stores: they answer to the item-availability rights for every store. Ask for them only where your app may mark every store's items.
 

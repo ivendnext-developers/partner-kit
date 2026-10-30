@@ -22,7 +22,7 @@ A rule record per customer group naming the sale details it needs (Sale Attribut
 - The sale's details only, not a line's.
 - Refunds are not judged. An exchange's new items are, as a sale, except an exchange rung without its sale when nothing is owed.
 - A detail switched off, or hidden by a field rule, cannot be filled at the till.
-- Before POS version 2.1.0.669, an exchange's screen and a sale made from a quote have no place to fill a sale detail: fill it on the quote first; refund and ring a new sale instead of an exchange. From 2.1.0.669 both draw a *Sale details* row after a refusal, as an order's screens do.
+- Before POS version 2.1.0.669, an exchange's screen and a sale made from a quote have no place to fill a sale detail: fill it on the quote first; refund and ring a new sale instead of an exchange. From 2.1.0.669 both draw a *Sale details* row after a refusal, as an order from a quote and an order change do in the same build.
 - A group's own rule replaces the rule above it entirely.
 - Offline sales are flagged when they reach iVendNext, never refused.
 
