@@ -59,7 +59,7 @@ import shops  # noqa: E402
 
 ROUTES = {"/csg/work": "work", "/csg/pay": "pay"}   # the manifest's extension_subscriptions[].key for each
 STALE = "TimestampMismatchError"     # the site's refusal of a write whose ``modified`` is not the row's own
-RIGHTS_KINDS = ("PermissionError", "WorkflowPermissionError", "LinkValidationError")   # a 417 that is a rights problem;
+RIGHTS_KINDS = ("PermissionError", "WorkflowPermissionError")   # a 417 that is a rights problem;
                                      # any other 417 (a value the site refused) takes the site's own did-not-answer words
 CHUNK = 200                          # names a read: fewer reads in the press's time, the address still short
 READ_S = 6                           # one read may take this long, within BUDGET_S; the site waits 10 seconds at most,
@@ -204,7 +204,7 @@ class Service:
         return min(READ_S, rest)
 
     def _in(self, door, doctype, fields, field, names, t0, filters=(), parent=None) -> list:
-        """``rows`` for a long list of names, a hundred a read."""
+        """``rows`` for a long list of names, ``CHUNK`` a read."""
         names, out = sorted(set(names)), []
         for i in range(0, len(names), CHUNK):
             out += door.rows(doctype, fields, list(filters) + [[field, "in", names[i:i + CHUNK]]], parent=parent,
@@ -254,7 +254,10 @@ class Service:
         rows, why, _ = self.owed(door, p, t0)
         if why:
             return _warning(why)
-        kept, left = rows[:consign.MOST_LINES], max(0, len(rows) - consign.MOST_LINES)
+        n = consign.MOST_LINES
+        while n < len(rows) and consign.totals(rows[:n])[1] < 0:   # a kept part below 0 would stick: take the next
+            n += 1
+        kept, left = rows[:n], len(rows) - n
         sales, part = consign.totals(kept)
         words = consign.summary_of(kept, left, p.get("currency") or "")
         self.left(t0)                   # out of time after the reads: nothing is written

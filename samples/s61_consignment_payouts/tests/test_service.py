@@ -224,6 +224,27 @@ class ServiceTest(unittest.TestCase):
         self.press(name="CSG-P-00008")
         self.assertEqual(self.lines("CSG-P-00008"), {"pl3/1": ("Taken back", -50.0, 60, -30.0)})
 
+    def test_s22b_a_paid_payout_of_another_company_is_never_settled_here(self):
+        self.press()
+        self.paid_ready()
+        self.press("pay")
+        self.s.payouts["CSG-P-00001"]["company"] = "Other Co"                    # paid in another company
+        next(h for h in self.s.heads["POS Invoice"] if h["name"] == "PSI-2")["docstatus"] = 2
+        self.s.payout("CSG-P-00008")
+        self.press(name="CSG-P-00008")
+        self.assertNotIn("pl3/1", self.lines("CSG-P-00008"))
+
+    def test_s25_the_kept_lines_never_stick_below_zero(self):
+        s = self.s
+        s.items.append({"name": "M", "item_name": "Many", ITEM + "consignor": "C1", ITEM + "share": 0})
+        s.sale("POS Invoice", "PSI-BIG", [("big", "M", -6000.0)], day="2026-10-01", is_return=1)
+        for i in range(600):
+            s.sale("POS Invoice", f"PSI-M{i:03}", [(f"m{i:03}", "M", 10.0)], day="2026-10-02")
+        self.press()
+        rows = s.payouts["CSG-P-00001"]["lines"]
+        self.assertGreater(len(rows), 500)
+        self.assertGreaterEqual(s.payouts["CSG-P-00001"]["payout_total"], 0)
+
     def test_s23_a_paid_line_moved_to_another_consignor_is_never_paid_again(self):
         self.press()
         self.paid_ready()

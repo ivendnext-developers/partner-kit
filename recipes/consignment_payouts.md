@@ -61,7 +61,8 @@ The record type `PP CSG Payout`, numbered `format:CSG-P-{#####}`, tracked: `cons
 
 - **The share when it is worked out** applies; *Pay* refuses if it changed since. An item moved to another consignor takes its unpaid lines with it.
 - **A piece sold after *Consigned since* but before its item named the consignor** is counted for them; nothing before *Consigned since* ever is.
-- **One consignor a press**, at most 500 lines a payout; the rest wait for the next.
+- **One consignor a press**, at most 500 lines a payout; the rest wait for the next. Each press reads all the consignor's history, so a very long one can run out of the press's time.
+- **A return after an item moved** to another consignor is charged to its new consignor (a return names no line it returns); settle that one by hand.
 - **Payment is recorded, not booked:** a purchase invoice or journal for the payout, or store credit issued as a gift card, is a version of your own.
 - **A System Manager can delete a paid payout or switch the lock off**, and its lines may then be paid again; no other role may. The payout's history shows it.
 - **Rounding is per line:** a sale returned piece by piece can leave a cent between what was paid and what was taken back.

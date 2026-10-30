@@ -19,9 +19,10 @@ payout's company, dated from the consignor's *Consigned since* to the payout's *
 company's currency. A return's line is negative. A sale's line (its ``sale_row``) on any payout that is not Cancelled is never put on another.
 **Settled by balance:** for each sale line this consignor was paid on (lines of their PAID payouts in the company), the
 parts add up to what they were paid on it. When the sale is cancelled and that balance is not 0, one line settles it:
-*Taken back* (the balance, negative) or, when a payout that paid it was cancelled after the take-back was paid,
-*Correction* (positive). Its key (``sale_line``) is the sale line's with ``/`` and the count of paid lines after it, so
-each settlement is its own line.
+*Taken back* (the balance, negative) or *Correction* (positive: a take-back was paid and the payout that paid the sale
+was cancelled since, or a paid return's own invoice was cancelled). Its key (``sale_line``) is the sale line's with ``/``
+and the count of paid lines after it: unique within a payout (two payouts may reuse one; nothing keys on it across
+payouts, where ``sale_row`` is the hold).
 """
 
 from __future__ import annotations
