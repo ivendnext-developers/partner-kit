@@ -18,12 +18,13 @@ A kitchen display (a screen per station, an expo screen, a *Now serving* board) 
 
 ## Limits
 - The retailer sets up the kitchens in iVendNext Desk (*Kitchen Stations*) and gives your app's user *May Work a Kitchen Screen* in a Retail Permission, and its store, as for the open check. A station your screen serves still needs a printer that takes the ticket: a send no printer takes writes no ticket.
-- The notice comes only to a server of yours on the site's own socket (namespace `/<site name>`, your user's key in `Authorization: token <key>:<secret>`, `Origin` the site's own address, a `Cookie` header with no `sid`), never to a page on another address.
+- The notice comes only to a long-running server of yours (never a function, which holds no connection between calls) on the site's own Socket.IO socket at `/socket.io` (namespace `/<site name>`, your user's key in `Authorization: token <key>:<secret>`, `Origin` the site's own address, a `Cookie` header with no `sid`), never to a page on another address.
 - There is no cursor: every read is the whole board. Read it on every notice and every few seconds, since a ticket can leave the board with no notice.
 - Tickets a till printed while the store was offline never reach the board.
 - One integration user for each kit app: a user that ever enrolled a till device is refused (`DeviceRequiredError`). A user who holds the right only through write on Kitchen Stations may read and move tickets but is never told of a change.
 - Your screen moves tickets only: it never voids, comps or changes a line, and a ticket carries no price.
-- ⚠ The sold-out calls are not fenced to your user's stores: they answer to the item-availability rights for every store. Ask for them only where your app may mark every store's items.
+- A `void` ticket names a dish a manager voided, with no link to the ticket it cancels: show it for the cook to strike, and leave it out of a *Now serving* count.
+- ⚠ The sold-out calls are not fenced to your user's stores: they answer to read, write and create on *Retail Item Availability* for every store. Ask for them only where your app may mark every store's items.
 
 ## Tell the customer
 Each station sees on its screen what the tills sent, as the printed ticket shows it; the cooks tap a dish through and the board shows the guests whose order is ready. The printers keep printing, so a kitchen still works when the screen or the network is down.
