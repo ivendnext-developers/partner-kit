@@ -16,6 +16,12 @@ A resale or consignment store sells pieces it does not own and pays each consign
 4. **Paying.** **Print**, format *PP CSG Payout statement*, for the consignor. The back office pays them your way and fills **Paid with**, **Paid on** and the **Payment reference** (a draft is the Accounts User's to edit), and an Accounts Manager checks it and presses **Pay this payout**. The payout reads **Paid** and is locked.
 5. **A mistake.** A draft that is not wanted: **Drop** (Accounts User). A paid payout that was never really paid: **Cancel** (Accounts Manager); its lines come onto the next payout.
 
+![A consignor on a demo site](../samples/s61_consignment_payouts/screenshots/02_consignor.png)
+
+![A payout worked out on a demo site: two pieces, each at its share](../samples/s61_consignment_payouts/screenshots/04_payout.png)
+
+![The payout statement](../samples/s61_consignment_payouts/screenshots/05_statement.png)
+
 ## Consignors
 
 The record type `PP CSG Consignor`, numbered `format:CSG-C-{#####}`, shown by its name in links, tracked:

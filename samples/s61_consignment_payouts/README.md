@@ -26,6 +26,15 @@ A resale or consignment store sells pieces it does not own. Each piece belongs t
 | A copied payout (Desk's Duplicate) | A second draft for the consignor: both refuse *Pay* until one is dropped (*Actions*, *Drop*) |
 | The service down | The button's own words: *did not answer in time. Check the record before you try again.* Nothing is written |
 
+| What the back office sees (on a demo site, 2026-10-30) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/01_install.png) |
+| A consignor: her share and the day her consignment began | ![](screenshots/02_consignor.png) |
+| An item named to its consignor, with a share of its own | ![](screenshots/03_item.png) |
+| A payout worked out: two pieces sold at the tills, each at its share, and how it was paid | ![](screenshots/04_payout.png) |
+| The payout statement for the consignor | ![](screenshots/05_statement.png) |
+| The payout marked Paid: locked, its lines as they were paid | ![](screenshots/06_paid.png) |
+
 ## What iVendNext does
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. It comes in switched off: its services have no consent and are off, its buttons are off, and its lock rule is off. The install adds the record types *PP CSG Consignor*, *PP CSG Payout* (with its table of lines), two fields on Item, the workflow *PP CSG Payout*, the lock rule and the print *PP CSG Payout statement*, and makes the role **PP CSG Integration** and the app's own user, `pp_csg@integration.invalid`, with that role alone (API only, never Desk; give it no User Permissions).
