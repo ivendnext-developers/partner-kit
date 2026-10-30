@@ -54,7 +54,7 @@ CANARIES = [
      '"dt": "POS Invoice",\n   "fieldname": "pp_pqt_project",\n   "fieldtype": "Link",\n   "label": "Project",\n   "options": "PP PQT Project",\n   "insert_after": "customer_name",',
      T + "test_the_project_field_is_one_optional_link_on_the_five_documents_carried_by_create"),
     ("a submitted order's line can be restaged", M,
-     'Optional; carried to the order and each delivery.",\n   "allow_on_submit": 1\n', 'Optional; carried to the order and each delivery."\n',
+     'Optional; carried to each delivery.",\n   "allow_on_submit": 1\n', 'Optional; carried to each delivery."\n',
      T + "test_the_stage_field_is_one_optional_text_field_on_the_three_line_tables"),
     ("the stage is on the delivery's lines too", M,
      '"dt": "Delivery Note Item",', '"dt": "Delivery Note Item Missing",',

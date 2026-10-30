@@ -1,4 +1,4 @@
-# Project quotes and staged deliveries — the recipe
+# Project quotes and deliveries by stage — the recipe
 
 A hardware or DIY store sells to builders, and a builder buys for a job: the store quotes the job's materials, the builder takes all or part of the quote, and the goods go to site as the work reaches each stage, over months and several orders. iVendNext already quotes (at the till and in Desk, with a validity), turns a quote into an order line by line, takes a deposit, and delivers an order in parts by each line's own date. This recipe adds the one thing nothing holds: **the builder's project**, as the retailer's own record in iVendNext Desk, named on every quote, order, delivery, invoice and till document of the job, with a **stage** on each line and a **project sheet** that lists the job's documents together. It is for an iVendNext Partner, or the CitiXsys Consulting Team, who wants a store's builder jobs out of folders and purchase order numbers without code inside the retailer's iVendNext.
 
@@ -41,7 +41,7 @@ On the retailer's documents, two fields, each one name everywhere:
 
 **Why one name.** Desk's own **Create** (a quote's *Sales Order*, an order's *Delivery Note*, a delivery's *Sales Invoice*) copies every field of the same name from the document it is made from, on the header and on the lines, unless the field is marked not to be copied. One name on every document therefore carries the project and the stages down the whole chain, with no code. The till makes a till order's Sales Order with a fixed list of fields of its own, so that one is named by hand.
 
-**Why the till's field has its own name.** When iVendNext combines the till's sales into Sales Invoices (at once on some sites, at the day's close on others), it copies every field of the same name from each sale (the last one's value wins). A till sale's project under the chain's name would land on that combined invoice, which can hold the builder's other sales of the day, and the sheet would count the same money twice. A name of its own keeps it off.
+**Why the till's field has its own name.** When iVendNext combines the till's sales into Sales Invoices (at once on some sites, at the day's close on others), it copies every field of the same name from each sale (the last one's value wins). A till sale's project under the chain's name would land on that combined invoice, which can hold the builder's other sales of the day, and the sheet would list the builder's other sales of that day under the project. A name of its own keeps it off.
 
 ## The project sheet
 
@@ -75,6 +75,9 @@ The print format *PP PQT Project sheet* (Jinja) places the store's **Letter Head
 - **Each section of the sheet shows what the person printing may read:** Sales User the quotes, orders and deliveries; Stock User the orders and deliveries; Accounts User the orders, deliveries, invoices and till sales; Retail Manager all of them.
 - **The project is not checked against the document's customer:** the trade desk chooses it; the builder's projects show under the customer.
 - **The project holds no money:** a budget, retentions and progress claims are versions of your own.
+- **A till order's Sales Order and the till's own deliveries** do not carry the project by themselves: name them in Desk (unmeasured on the bench, which named a till sale).
+- **The sheet lists every document naming the project**, drafts, cancelled ones and returns included; each section stops at 200.
+- **A document made from several others takes the last one's project** (*Get Items From* over two orders): keep one job per document.
 - **The sheet prints its documents' dates as year-month-day:** the rows `ivn_rows` returns are plain values.
 - **Desk shows the records with the app's prefix** (*PP PQT Project*).
 - **The builder's details are the retailer's.** Uninstalling removes the projects (the install's export keeps a copy of them) and the Project and Stage fields from every document; which project each document named goes with the fields, and the export does not keep it.

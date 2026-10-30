@@ -1,4 +1,4 @@
-# S60 — Project quotes and staged deliveries (`pp_pqt`)
+# S60 — Project quotes and deliveries by stage (`pp_pqt`)
 
 *Start from this sample: `python3 tools/manifest/start.py s60_project_quotes --prefix "ACME PQT"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
@@ -69,6 +69,10 @@ A manifest only. iVendNext keeps the quotes and their validity, the orders and t
 - **A till order's Sales Order does not carry the project**: the till makes it with a fixed list of fields. Name the project on that Sales Order in Desk; a delivery or invoice made from it in Desk then carries it.
 - **The project on a document is not checked against its customer**: the trade desk chooses the builder's project; the builder's projects show under the customer, and the sheet prints each document.
 - **The sheet lists what the person printing may read** (measured on the bench): Sales User the quotes, orders and deliveries; Stock User the orders and deliveries; Accounts User the orders, deliveries, invoices and till sales; Retail Manager all five. A print sent from the e-mail queue lists none (it still prints).
+- **A till order and what the till hands over from it** (unmeasured on the bench, which named a till sale): the till's Sales Order and any delivery note the till makes do not carry the project by themselves; name them in Desk. Desk's own Create from a named Sales Order carries it.
+- **The sheet lists every document naming the project**: drafts, cancelled ones beside their amendments, and returns (with their negative totals). Each section stops at 200 documents.
+- **A document made from several others takes the last one's project** (Desk's *Get Items From* over two orders, or the till day's combination, which is why the till's field has its own name): keep one job per document.
+- **A Completed or Cancelled project is still offered** in each Project field, and Desk's **Duplicate** of a quote keeps its project (the field is copied on purpose).
 - **The sheet prints its documents' dates as year-month-day** (the rows `ivn_rows` returns are plain values); the project's own dates and the stages print in the site's format.
 - **Desk shows the records with the prefix** (*IVENDNEXT PQT Project* in the library app).
 - **The builder's details are the retailer's**, kept as it keeps its customers; uninstalling the app removes the projects (its export keeps a copy of them) and the Project and Stage fields from every document, and with the fields goes which project each document named: the export does not keep that.

@@ -1,6 +1,6 @@
 ---
 id: project-quotes
-title: A builder's project across its quotes, orders and staged deliveries
+title: A builder's project across its quotes, orders and deliveries in stages
 area: documents
 topic: own-records-and-fields
 asks: One builder's job kept as a project, with its quotes, orders, deliveries in stages and invoices named to it and listed together

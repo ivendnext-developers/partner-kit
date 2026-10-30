@@ -2,7 +2,7 @@
  "manifest_version": 2,
  "app": "pp_pqt",
  "prefix": "PP PQT",
- "title": "Project quotes and staged deliveries",
+ "title": "Project quotes and deliveries by stage",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
  "description": "A hardware or DIY store's builder projects, kept in Desk. Each PP PQT Project holds the builder's job: its name, the builder (a customer) with the builder's name read from the customer, its status (Open, Completed or Cancelled), the store that serves it, its dates, the site's address, contact and phone, and the stages the builder plans with the date each is wanted on site. A Project field on Quotation, Sales Order, Delivery Note and Sales Invoice names the project a document belongs to; set on a quote, Desk's own Create carries it to the order, each delivery and the invoice, and it can be set after a document is submitted. A till sale or order is named in Desk after it is booked, in a Project field of its own name on POS Invoice (an Accounts User may change one), so the day's combined Sales Invoice does not take it. A Stage field on the lines of a quote, an order and a delivery (not an invoice's or the till's) names the stage each line goes to site for, carried the same way, beside the order line's own delivery date. The project sheet, printed or previewed in Desk, lists the project's stages and its quotes, the till's documents, orders with the share delivered, deliveries and invoices, each as the viewer may read them; each builder lists its projects. The till and Desk keep quoting, ordering, taking deposits and delivering in parts as they do: the app moves no money and no stock, and calls nothing outside: no service, no outside address.",
@@ -291,7 +291,7 @@
    "fieldtype": "Data",
    "label": "Stage",
    "insert_after": "delivery_date",
-   "description": "The project's stage this line goes to site for, such as Frame. Optional; carried to the order and each delivery.",
+   "description": "The project's stage this line goes to site for, such as Frame. Optional; carried to each delivery.",
    "allow_on_submit": 1
   },
   {
@@ -300,7 +300,7 @@
    "fieldtype": "Data",
    "label": "Stage",
    "insert_after": "item_name",
-   "description": "The project's stage this line goes to site for, such as Frame. Optional; carried to the order and each delivery."
+   "description": "The project's stage this line goes to site for, such as Frame. Optional; carried from the order and on to the invoice's own document."
   }
  ],
  "print_formats": [
