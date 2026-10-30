@@ -6,9 +6,15 @@
 // markup, inside a <bdi> in a block of the page's own direction, so a ticket has one reading edge whatever the words'
 // script. A state is shown by an icon, a word and a colour together. The page never scrolls: fit() (with fit.js's
 // rules) folds a ticket taller than the board behind "+N more dishes" and shows only whole tickets, paged.
+// LIVE: when the board's answer names the live service (``live``), the page also listens there (listen()): the service
+// tells it "read" when the till tells the store's kitchen something changed, and the page reads at once. While that
+// line says the store's channel is up, the page reads every LIVE_READ_MS as well (the door's "every few seconds": some
+// changes send no notice); whenever the line is down, refused or parked, it reads every READ_MS as before, and says
+// nothing about it.
 (function () {
   "use strict";
   var READ_MS = 3000, RETRY_MS = 3000, LATE_READ_S = 15, NOTE_MS = 6000, PAGE_BACK_MS = 60000, SHIFT_MS = 1000;
+  var LIVE_READ_MS = 10000, LIVE_RETRY_MS = [5000, 15000, 60000, 300000], LIVE_SILENT_MS = 45000, LIVE_STEADY_MS = 60000;
   var STRIP_SHARE = 0.25;            // "Still to make" takes at most a quarter of the screen's height
   // The till's own words where it has them (guest and sold out, from its ar, es and fr tables at T21; send is never
   // used for a bump, which is the kitchen's own step); German and Portuguese are this app's own until the till signs them.
@@ -158,6 +164,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var last = null, readAt = 0, goodAt = 0, timer = null, busy = {}, showRecall = false, page = 0, touchedAt = 0;
   var shiftedAt = -1e9, openKey = "", shownKeys = [], bumped = {}, cookPaged = false;
+  var reading = false, again = false, liveOn = false, liveTry = 0, liveTimer = null, liveStop = null, liveFrom = "";
 
   // ── drawing helpers: text only, never markup ──
   function bdi(text) { var b = document.createElement("bdi"); b.textContent = String(text); return b; }
@@ -238,8 +245,14 @@
     fit();                           // the note sits above the board: the board is fitted again below it
   }
   function schedule(ms) { clearTimeout(timer); timer = setTimeout(read, ms); }
+  function readNow() {                 // told by the live line or the network: one read at a time, one more if asked meanwhile
+    if (reading) { again = true; return; }
+    read();
+  }
   function read() {
+    clearTimeout(timer); reading = true;
     return call("/ksc/board").then(function (a) {
+      reading = false;
       if (a.state === "open") {
         last = a; readAt = Date.now(); goodAt = readAt;
         if (a.look) {
@@ -251,15 +264,92 @@
         applySize();
         note("");
         draw();
-        schedule(READ_MS);
+        schedule(liveOn ? LIVE_READ_MS : READ_MS);
+        listen(typeof a.live === "string" ? a.live : "");
       } else if (a.state === "unknown" || a.state === "closed" || a.state === "not_set_up") {
         last = null; clear($("board")); $("waiting").hidden = true; pager(0, 0, false, false); note(a.state);
+        listen("");                       // a refused screen holds no line
         schedule(a.state === "unknown" ? 60000 : 15000);   // a replaced link stays refused: read again rarely
       } else {
         if (!goodAt) note("unavailable");   // a failing read never takes down a tap's word
         stale(); schedule(RETRY_MS);
       }
+      if (again) { again = false; readNow(); }
     });
+  }
+
+  // ── the live line: "read now" from the live service; the 3-second reads whenever it is not up ──
+  function listen(from) {
+    if (!/^https?:\/\/[^\/?#]+$/.test(from)) from = "";
+    if (from === liveFrom) return;    // already listening there (or already not listening)
+    liveFrom = from; liveTry = 0;
+    if (liveStop) liveStop();
+    clearTimeout(liveTimer);
+    if (from) open();
+  }
+  function down(at) {                  // the line ended: read every READ_MS again, and try the line again later
+    var was = liveOn;
+    liveOn = false; liveStop = null;
+    if (was && !reading) schedule(READ_MS);
+    if (!liveFrom) return;
+    if (Date.now() - at > LIVE_STEADY_MS) liveTry = 0;
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(open, LIVE_RETRY_MS[Math.min(liveTry, LIVE_RETRY_MS.length - 1)]);
+    liveTry += 1;
+  }
+  function open() {
+    if (!liveFrom || !window.fetch || !window.AbortController || !window.TextDecoder) return;   // no line: 3-second reads
+    var from = liveFrom, ctl = new AbortController(), at = Date.now(), quiet = null, ended = false, buf = "";
+    var dec = new TextDecoder();
+    function end() {
+      if (ended) return;
+      ended = true; clearTimeout(quiet);
+      try { ctl.abort(); } catch (e) { /* already closed */ }
+      if (from === liveFrom) down(at);
+    }
+    function heard() { clearTimeout(quiet); quiet = setTimeout(end, LIVE_SILENT_MS); }   // no heartbeat: the line is gone
+    liveStop = function () { ended = true; clearTimeout(quiet); liveOn = false; try { ctl.abort(); } catch (e) { /* closed */ } };
+    heard();
+    fetch(from + "/ksc/live", { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" },
+                                body: JSON.stringify({ s: LINK.s, t: LINK.t }), cache: "no-store", credentials: "omit",
+                                signal: ctl.signal })
+      .then(function (r) {
+        if (!r.ok || !r.body || !r.body.getReader) { end(); return; }   // parked (503), refused, or no stream here
+        var reader = r.body.getReader();
+        function pump() {
+          return reader.read().then(function (got) {
+            if (ended) return;
+            if (got.done) { end(); return; }
+            heard();
+            buf += dec.decode(got.value, { stream: true });
+            var parts = buf.split("\n\n"); buf = parts.pop();
+            if (buf.length > 4096) { end(); return; }
+            parts.forEach(event);
+            return pump();
+          });
+        }
+        return pump();
+      })
+      .catch(end);
+    function event(block) {
+      var name = "message", data = "";
+      block.split("\n").forEach(function (ln) {
+        if (ln.indexOf("event:") === 0) name = ln.slice(6).trim();
+        else if (ln.indexOf("data:") === 0) data += ln.slice(5).trim();
+      });
+      if (name === "state") {
+        var on = false;
+        try { on = JSON.parse(data).live === true; } catch (e) { on = false; }
+        if (on && !liveOn) { liveOn = true; liveTry = 0; readNow(); }       // up: catch up at once, then the slower pace
+        else if (!on && liveOn) { liveOn = false; if (!reading) schedule(READ_MS); }
+      } else if (name === "read" && liveOn) {
+        readNow();
+      } else if (name === "again") {       // the service ends a line now and then: open it again at once
+        ended = true; clearTimeout(quiet); liveOn = false;
+        try { ctl.abort(); } catch (e) { /* closed */ }
+        if (from === liveFrom) { if (!reading) schedule(READ_MS); open(); }
+      }
+    }
   }
   function stale() {
     var r = $("read"), late = goodAt && (Date.now() - goodAt) / 1000 > LATE_READ_S;
@@ -405,7 +495,7 @@
     if (!so) return;
     var out = {}; so.out.forEach(function (d) { out[d.item_code] = true; });
     var rows = so.dishes.slice();
-    so.out.forEach(function (d) { if (!rows.some(function (r) { return r.item_code === d.item_code; })) rows.push({ item_code: d.item_code, item_name: d.item_code }); });
+    so.out.forEach(function (d) { if (!rows.some(function (r) { return r.item_code === d.item_code; })) rows.push({ item_code: d.item_code, item_name: d.item_name || d.item_code }); });
     rows.forEach(function (d) {
       var li = el("li", "ivn-list-row"), isOut = !!out[d.item_code];
       li.appendChild(el("span", "ivn-list-title", d.item_name, true));
@@ -630,7 +720,7 @@
   window.addEventListener("resize", refit);
   if (window.ResizeObserver) new window.ResizeObserver(refit).observe($("board"));   // the top bar or the strip wrapped
   $("sold").addEventListener("click", function () { drawSold(); window.ivnKit.openDialog($("sold-dialog")); });
-  window.addEventListener("online", function () { read(); });   // back on the network: read at once, not in 3 s
+  window.addEventListener("online", function () { readNow(); });   // back on the network: read at once, not in 3 s
   window.addEventListener("hashchange", function () { location.reload(); });
 
   function awake() {                   // a kitchen tablet must not dim: ask the browser, where it allows it

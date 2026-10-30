@@ -282,5 +282,58 @@ class PageFit(unittest.TestCase):
                           "+102 تذكرة أخرى", "+103 تذاكر أخرى", "+111 تذكرةً أخرى"])
 
 
+
+
+LIVE = "https://kitchen-screen-live.example.app"
+UP = 'event: state\ndata: {"live": true}\n\n'
+READ = "event: read\ndata: {}\n\n"
+
+
+def live_board():
+    b = station(ticket("k1", 1, 1))
+    b["live"] = LIVE
+    return b
+
+
+@unittest.skipUnless(NODE, "node is not installed")
+class PageLive(unittest.TestCase):
+    def test_l1_a_notice_on_the_live_line_reads_the_board_at_once_and_the_pace_slows_while_it_is_up(self):
+        got = page("live", answers={"/ksc/board": [live_board()]}, live={"chunks": [UP, READ]})
+        self.assertEqual(got["calls"][:2], ["/ksc/board", LIVE + "/ksc/live"])
+        self.assertEqual(got["sent"], [["path", "s", "t"]])                     # the link in the body, never the address
+        self.assertEqual(got["calls"].count("/ksc/board"), 3)                  # the first read, up (catch up), the notice
+        self.assertEqual(got["timers"][0], 3000)                                # before the line: every 3 s
+        self.assertEqual(got["timers"][-1], 10000)                              # while it is up: every 10 s as well
+        self.assertEqual(got["note"], "")
+
+    def test_l2_a_parked_or_refused_live_service_leaves_the_three_second_reads_and_says_nothing(self):
+        for live in ({"status": 503}, {"reject": True}, {"status": 404}):
+            got = page("live", answers={"/ksc/board": [live_board()]}, live=live)
+            self.assertEqual(got["calls"].count("/ksc/board"), 1, live)
+            self.assertIn(5000, got["timers"], live)                           # the line is tried again later
+            self.assertNotIn(10000, got["timers"], live)
+            self.assertEqual(got["note"], "", live)
+
+    def test_l3_a_line_that_ends_puts_the_three_second_reads_back(self):
+        got = page("live", answers={"/ksc/board": [live_board()]}, live={"chunks": [UP], "done": True})
+        self.assertEqual(sorted(got["timers"][-2:]), [3000, 5000])             # 3 s reads again, the line tried in 5 s
+
+    def test_l4_a_line_not_yet_up_is_heard_but_reads_stay_at_three_seconds(self):
+        down = 'event: state\ndata: {"live": false}\n\n'
+        got = page("live", answers={"/ksc/board": [live_board()]}, live={"chunks": [down, READ]})
+        self.assertEqual(got["calls"].count("/ksc/board"), 1)                  # a "read" from a line not up is not used
+        self.assertNotIn(10000, got["timers"])
+
+    def test_l5_no_live_service_named_opens_no_line(self):
+        got = page("live", answers={"/ksc/board": [station(ticket("k1", 1, 1))]}, live={"chunks": [UP, READ]})
+        self.assertEqual(got["calls"], ["/ksc/board"])
+        self.assertEqual(got["timers"], [3000])
+
+    def test_l6_a_sold_out_dish_no_ticket_names_shows_its_name(self):     # KSCSOLDNAME
+        b = station(ticket("k1", 1, 1))
+        b["sold_out"] = {"dishes": [], "out": [{"item_code": "SOUP", "item_name": "Soup of the day"}, {"item_code": "FISH"}]}
+        got = page("sold", answers={"/ksc/board": [b]})
+        self.assertEqual(got["rows"], ["Soup of the day", "FISH"])
+
 if __name__ == "__main__":
     unittest.main()

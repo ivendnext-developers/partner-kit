@@ -14,7 +14,10 @@ library only).
     POST /ivendnext/connect · /ivendnext/disconnect   many retailers: the app template's handshake (shops.py)
 
 On CitiXsys hosting it runs as a FUNCTION, paid per call (app.json "runs": "function"; ``lambda_handler`` below). The
-page reads the board every few seconds (the door's own fallback: no socket is held between calls).
+page reads the board every few seconds (the door's own fallback: no socket is held between calls). When KSC_LIVE_URL
+names the live service (``live/live.py``, a container holding each retailer's own live channel), the page also listens
+there and reads at once when the till tells the store's kitchen something changed; the page's policy lets it reach that
+one address, and nothing else.
 
 **The screen is never trusted with a choice the shop makes.** The page holds no secret. Each call carries the link's
 ``s`` and ``t``; the service checks ``t``'s signature with the retailer's *Make link* secret before it reads anything,
@@ -30,6 +33,8 @@ ONE RETAILER (env or an env file):
 MANY RETAILERS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
     IVN_LIBRARY_APP    the App library's id (ivendnext_ksc), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 KSC_PREFIX (default PP KSC; IVENDNEXT KSC for the library's app)
+KSC_LIVE_URL (optional) where the screens reach the live service (https://kitchen-screen-live.example.app); unset, the
+    screens read every 3 seconds only
 
     python3 service/app.py service/.env.local
 """
@@ -59,6 +64,7 @@ import shops  # noqa: E402
 
 SUB = "link"                         # the manifest's extension_subscriptions[].key
 DOOR = "/api/method/ivendnext_mpos.api.v1."     # the till's partner API (its station-ticket door and item availability)
+AVAIL = "Retail Item Availability"   # the till's sold-out record: its item_name names a dish no ticket on the board holds
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
 BUDGET_S = 7.0                       # a press: the shop waits 10 seconds for it
 READ_S = 4.0                         # one read
@@ -173,6 +179,23 @@ def _host(url: str) -> str:
     return (urllib.parse.urlsplit(url).netloc or "").lower()
 
 
+def user_key(record: dict | None) -> str | None:
+    """The key ("<api key>:<api secret>") of the app's own user the retailer's site handed over, or None: the first user
+    by name, never Administrator (the site never sends it; nor do we use it). The live service signs in with the same."""
+    secrets = (record or {}).get("secrets") or {}
+    users = sorted(k for k in secrets if k.startswith("user:") and k != "user:Administrator")
+    return secrets[users[0]] if users else None
+
+
+def origin_of(url: str) -> str:
+    """``https://host[:port]`` of an address, or "" when it is not one (the page's policy names an origin, never a path)."""
+    parts = urllib.parse.urlsplit((url or "").strip())
+    if parts.scheme not in ("https", "http") or not parts.netloc or parts.path not in ("", "/") or parts.query \
+            or parts.fragment or "@" in parts.netloc or any(c in parts.netloc for c in " ;'\""):
+        return ""
+    return f"{parts.scheme}://{parts.netloc.lower()}"
+
+
 class Service:
     def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, now=time.time, clock=time.monotonic):
         self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
@@ -183,6 +206,9 @@ class Service:
         self.page = (conf.get("KSC_PAGE_URL") or "").strip()
         if not self.page.startswith(("https://", "http://")):
             raise SystemExit("set KSC_PAGE_URL, where screens reach this service's page (each link points there)")
+        self.live = origin_of(conf.get("KSC_LIVE_URL") or "")
+        if (conf.get("KSC_LIVE_URL") or "").strip() and not self.live:
+            raise SystemExit("KSC_LIVE_URL is the live service's address alone, like https://kitchen-screen-live.example.app")
         self.tenants, self.now, self.clock = tenants, now, clock
         if self.app:                                    # many retailers: each connects itself
             self.store = store or shops.open_store(conf)
@@ -207,9 +233,8 @@ class Service:
         site = shops.site_of(site)
         record = self.store.get(site) if site else None
         secrets = shops.secrets_for(record, f"{self.app}:sub:{SUB}")
-        users = sorted(k for k in (record or {}).get("secrets") or {}
-                       if k.startswith("user:") and k != "user:Administrator")    # the site never sends it; nor do we use it
-        door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
+        key = user_key(record)
+        door = self.tenants(record["url"], key) if key else None
         return site or "", secrets, door
 
     def _keep(self, cache: dict, key, value):
@@ -346,6 +371,12 @@ class Service:
         except TenantError as e:
             self._keep(self._sold, key, (str(e), e.code, e.kind))
             raise
+        if value:                       # each dish by its name, though no ticket on the board names it (KSCSOLDNAME)
+            try:
+                named = door.rows(AVAIL, ["item_code", "item_name"], [["item_code", "in", [d["item_code"] for d in value]]])
+            except TenantError:         # the names are a nicety: the codes still show
+                named = []
+            value = ksc.with_names(value, named)
         self._keep(self._sold, key, value)
         return value
 
@@ -360,6 +391,8 @@ class Service:
             view = ksc.board_view(tickets, bool(ksc.num(row.get("tables_on_board"))))
         out = {"state": "open", "kind": kind, "title": (s.get("title") or "")[:80], "stations": ksc.stations_of(s),
                "look": ksc.look(row), "as_of": as_of, "view": view}
+        if self.live:                   # the page listens there too, and reads at once when told
+            out["live"] = self.live
         if kind != ksc.KIND_BOARD and ksc.num(row.get("sold_out_on")):
             try:
                 out["sold_out"] = {"dishes": ksc.dishes(self.own(s, tickets)), "out": self.sold(door, site, s["store"])}
@@ -467,7 +500,8 @@ class Service:
 
     # ── every call ──
     def csp(self) -> str:
-        return ("default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'none'; "
+        connect = "'self'" + (" " + self.live if self.live else "")      # the live service's one origin, nothing else
+        return (f"default-src 'none'; script-src 'self'; style-src 'self'; connect-src {connect}; img-src 'none'; "
                 "base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 
     def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, bytes, dict]:

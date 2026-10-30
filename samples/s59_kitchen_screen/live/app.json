@@ -1,0 +1,35 @@
+{
+ "app": "kitchen-screen-live",
+ "version": "1.1.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "env": [
+  {
+   "name": "IVN_LIBRARY_APP",
+   "about": "The App library's id of the service beside it (ivendnext_ksc for the library's app): the retailers it reads are the ones that connected to that service.",
+   "required": true
+  },
+  {
+   "name": "KSC_PREFIX",
+   "about": "The prefix of the app's names in the retailer's iVendNext, in capitals, as the service beside it has it (IVENDNEXT KSC for the library's app).",
+   "required": true
+  },
+  {
+   "name": "KSC_PAGE_URL",
+   "about": "Where the kitchen's screens reach the service's page (https://kitchen-screen.example.app): only a page from there may open a line.",
+   "required": true
+  },
+  {
+   "name": "IVN_SHOPS_TABLE",
+   "about": "The service's own table of the retailers that connected (CitiXsys hosting): this container reads it and never writes it.",
+   "required": true
+  },
+  {
+   "name": "AWS_REGION",
+   "about": "The table's region (CitiXsys hosting).",
+   "required": true
+  }
+ ]
+}

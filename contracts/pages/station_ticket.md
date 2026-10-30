@@ -124,6 +124,10 @@ it again and has caught up. Poll the board every few seconds whenever the live c
 and send three headers: `Authorization: token <key>:<secret>` (your user's API key), `Origin` = the site's own
 address, and a `Cookie` header with any value that carries no `sid` (the socket refuses a connection with no
 cookie, and a `sid` would sign in as that session instead of your key). Then listen for `mpos_station_ticket`.
+⚠ The site's name is not always its address: a hosted site can answer at one address and carry another name
+(a sandbox measured 2026-10-30 answers at its own address and names itself under the hosting's domain), and the
+socket then refuses the address with *Invalid namespace*. Read the name once from the site's Desk page (`/app`, with
+your key): its boot data carries `"sitename"`. Sample S59's live service (`samples/s59_kitchen_screen/live/`) does both.
 
 A kitchen screen needs the internet: while the store is offline, tills print their tickets on their own
 and your screen shows the board as it last read it. ⚠ Those offline tickets never reach the board,

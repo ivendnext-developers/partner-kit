@@ -65,6 +65,7 @@ class FakeTenant:
         self.tickets = copy.deepcopy(lunch() if tickets is None else tickets)
         self.refuse, self.door_refuse, self.stale = refuse, door_refuse, stale
         self.sold = {(c, STORE) for c in sold}
+        self.names = {"SOUP": "Soup of the day"}        # an item's name on its sold-out record (none for the others)
         self.calls, self.sent = [], []
 
     def _gate(self, what):
@@ -90,6 +91,9 @@ class FakeTenant:
         if doctype.endswith(" Store"):
             store = filters[0][2]
             return [{k: r.get(k) for k in fields} for s in self.settings.values() for r in s["stores"] if r["store"] == store]
+        if doctype == "Retail Item Availability":       # the till's sold-out records, each with its item's name
+            codes = filters[0][2]
+            return [{"item_code": c, "item_name": self.names.get(c, "")} for c, _ in sorted(self.sold) if c in codes]
         return []
 
     def update(self, doctype, name, body):
