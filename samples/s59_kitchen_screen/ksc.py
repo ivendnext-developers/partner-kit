@@ -316,6 +316,17 @@ def sold_out_of(rows) -> list[dict]:
     return out[:DISHES_MAX]
 
 
+def with_names(out: list[dict], rows) -> list[dict]:
+    """The sold-out list with each dish's name, from the till's own sold-out records (``item_name``, the item's name):
+    a dish no record names keeps its code alone, and the page shows the code."""
+    names = {}
+    for r in rows if isinstance(rows, list) else []:
+        if isinstance(r, dict) and isinstance(r.get("item_code"), str) and isinstance(r.get("item_name"), str) \
+                and r["item_name"].strip():
+            names.setdefault(r["item_code"], r["item_name"][:140])
+    return [dict(d, item_name=names[d["item_code"]]) if d["item_code"] in names else d for d in out]
+
+
 def look(row: dict) -> dict:
     """The store row's look for its screens: mode, an accent colour (only ``#rrggbb``), the language, the timers, and the
     slips' size (a cook's A- / A+ on one screen overrides it there, remembered on that device)."""

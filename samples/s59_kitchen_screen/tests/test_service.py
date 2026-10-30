@@ -325,6 +325,19 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(call(self.svc, "/ksc/soldout", t, item_code="FRIES", sold_out=True), (503, {"state": "unavailable"}))
         self.assertEqual(self.shop.calls.count("item_availability"), 1)
 
+    def test_s8_a_dish_sold_out_that_no_ticket_names_is_shown_by_its_name(self):     # KSCSOLDNAME (demo-2, 10-30)
+        self.shop.sold = {("SOUP", F.STORE)}
+        t = made(self.shop, self.svc)
+        self.assertEqual(call(self.svc, "/ksc/board", t)[1]["sold_out"]["out"],
+                         [{"item_code": "SOUP", "item_name": "Soup of the day"}])
+
+    def test_s9_a_names_read_the_shop_refuses_leaves_the_codes_showing(self):
+        self.shop.sold = {("SOUP", F.STORE)}
+        self.shop.refuse = ("rows Retail Item Availability", 403)
+        t = made(self.shop, self.svc)
+        v = call(self.svc, "/ksc/board", t)[1]
+        self.assertEqual((v["state"], v["sold_out"]["out"]), ("open", [{"item_code": "SOUP"}]))
+
     def test_s4_sold_out_off_for_the_store_or_from_the_board_is_refused(self):
         board = made(self.shop, self.svc, "KSC-SCREEN-00003")
         self.assertEqual(self.sold(board, "FRIES"), {"state": "refused", "why": "off"})
@@ -352,6 +365,20 @@ class ServiceTest(unittest.TestCase):
         pkg = set(json.load(open(os.path.join(os.path.dirname(HERE), "app.json")))["package"])
         for fname, _ in app.STATIC.values():
             self.assertIn(f"samples/s59_kitchen_screen/service/{fname}", pkg, fname)   # else the hosted page is blank
+
+    def test_e4_the_page_may_reach_the_live_service_and_nothing_else(self):
+        live = "https://kitchen-screen-live.example.app"
+        conf = {"IVN_SHOP_URL": f"https://{F.SITE}", "IVN_SHOP_KEY": "k:s", "IVN_LINK_SECRET": F.SECRET,
+                "KSC_PAGE_URL": F.PAGE, "KSC_LIVE_URL": live + "/"}
+        svc = app.Service(conf, tenant=self.shop, now=self.clock, clock=self.clock)
+        policy = dict(p.strip().split(" ", 1) for p in svc.handle("GET", "/", {}, None)[2]["Content-Security-Policy"].split(";"))
+        self.assertEqual(policy["connect-src"], "'self' " + live)
+        self.assertEqual(call(svc, "/ksc/board", made(self.shop, svc))[1]["live"], live)
+        self.assertNotIn("live", call(self.svc, "/ksc/board", made(self.shop, self.svc))[1])   # unset: 3-second reads only
+        for bad in (live + "/ksc", "javascript:alert(1)", live + " 'unsafe-eval'", "https://user@live.example.app", live + ";",
+                    "https://*.ivendnext.app"):
+            with self.assertRaises(SystemExit, msg=bad):
+                app.Service(dict(conf, KSC_LIVE_URL=bad), tenant=self.shop)
 
     def test_e2_a_large_or_shapeless_call_is_refused(self):
         self.assertEqual(answer(self.svc.handle("POST", "/ksc/board", {}, b"x" * (ksc.PAGE_BODY_MAX + 1)))[0], 413)

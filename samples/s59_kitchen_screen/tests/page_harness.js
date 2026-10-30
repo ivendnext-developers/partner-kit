@@ -74,7 +74,8 @@ function run(opts) {
   const html = fs.readFileSync(path.join(SERVICE, "page.html"), "utf8");
   for (const m of html.matchAll(/<(\w+)[^>]*\bid="([^"]+)"/g)) { byId[m[2]] = element(m[1]); body.appendChild(byId[m[2]]); }
   BOARD = byId.board; STRIP = byId.waiting;
-  const calls = [], answers = opts.answers || {}, winListeners = {}, timers = [];
+  const calls = [], answers = opts.answers || {}, winListeners = {}, timers = [], pending = [];
+  let tid = 0;
   const store = opts.storage === "throws" ? null : Object.assign({}, opts.storage || {});
   const win = {
     location: { hash: opts.hash === undefined ? "#s=bistro.example.com&t=KSC-SCREEN-00001.1.sig" : opts.hash, reload() {} },
@@ -84,6 +85,10 @@ function run(opts) {
     },
     fetch: (url, init) => {
       const b = JSON.parse(init.body); calls.push(Object.assign({ path: url }, b));
+      if (url.endsWith("/ksc/live")) {      // one answer a line opened: opts.live.lines in turn, then refused
+        const lines = (opts.live || {}).lines;
+        return liveAnswer(lines ? (lines.shift() || { reject: true }) : (opts.live || {}), init);
+      }
       const queue = answers[url] || [{ state: "unavailable" }];
       const a = queue.length > 1 ? queue.shift() : queue[0];
       return Promise.resolve({ json: () => Promise.resolve(a) });
@@ -92,8 +97,10 @@ function run(opts) {
     innerHeight: (opts.layout || {}).inner || 0,
     getComputedStyle: () => ({ paddingBottom: "0", paddingTop: "0" }),
     addEventListener(type, fn) { (winListeners[type] = winListeners[type] || []).push(fn); },
-    performance: { now: () => clock.t }, URLSearchParams, Date, console,
-    setTimeout: (fn, ms) => { timers.push(ms); return 0; }, clearTimeout() {}, setInterval: () => 0, requestAnimationFrame: () => 0, cancelAnimationFrame() {},
+    performance: { now: () => clock.t }, URLSearchParams, Date, console, AbortController, TextDecoder,
+    setTimeout: (fn, ms) => { timers.push(ms); pending.push({ id: ++tid, ms, fn }); return tid; },
+    clearTimeout: (id) => { const i = pending.findIndex((t) => t.id === id); if (i >= 0) pending.splice(i, 1); },
+    setInterval: () => 0, requestAnimationFrame: () => 0, cancelAnimationFrame() {},
   };
   const clock = { t: 1000 };
   Object.defineProperty(win, "localStorage", {
@@ -106,7 +113,24 @@ function run(opts) {
   vm.createContext(win);
   vm.runInContext(fs.readFileSync(path.join(SERVICE, "fit.js"), "utf8"), win, { filename: "fit.js" });
   vm.runInContext(fs.readFileSync(path.join(SERVICE, "page.js"), "utf8"), win, { filename: "page.js" });
-  return { win, byId, body, calls, store, clock, winListeners, timers };
+  // fire(ms): run the oldest pending timer set for ms (as the browser would when that time has passed)
+  const fire = (ms) => { const i = pending.findIndex((t) => t.ms === ms); if (i < 0) return false; const t = pending.splice(i, 1)[0]; t.fn(); return true; };
+  return { win, byId, body, calls, store, clock, winListeners, timers, pending, fire };
+}
+// The live service's answer: opts.live = {status, chunks: ["event: state\ndata: {...}\n\n", ...], done, reject}.
+// After its chunks the line stays open (a read that never answers) unless done; an abort ends it.
+function liveAnswer(live, init) {
+  if (live.reject) return Promise.reject(new TypeError("Failed to fetch"));   // a parked address answers no CORS header
+  const status = live.status || 200, chunks = (live.chunks || []).slice(), enc = new TextEncoder();
+  let aborted = false;
+  if (init.signal) init.signal.addEventListener("abort", () => { aborted = true; });
+  const reader = { read: () => {
+    if (aborted) return Promise.reject(new Error("AbortError"));
+    if (chunks.length) return Promise.resolve({ done: false, value: enc.encode(chunks.shift()) });
+    return live.done ? Promise.resolve({ done: true }) : new Promise(() => {});
+  } };
+  return Promise.resolve({ ok: status === 200, status, body: { getReader: () => reader },
+                           json: () => Promise.resolve({ state: "unavailable" }) });
 }
 const settle = () => new Promise((r) => setImmediate(r));
 async function settled() { for (let i = 0; i < 20; i++) await settle(); }
@@ -186,6 +210,29 @@ const SCENARIOS = {
     btn().click(); await settled();
     out.afterSecond = { hidden: p.byId.note.hidden, text: p.byId.note.textContent };
     out.moves = p.calls.filter((c) => c.path === "/ksc/move").length;
+    return out;
+  },
+  // the Sold out dialog's rows, by the words each row shows
+  async sold(opts) {
+    const p = run(opts);
+    await settled();
+    p.byId.sold.click();
+    return { rows: p.byId["sold-list"].querySelectorAll("ivn-list-title").map((e) => e.textContent) };
+  },
+  // the live line: what the page asked of the live service and the board, and the waits it set, in order
+  async live(opts) {
+    const p = run(opts);
+    await settled();
+    const fired = [];
+    for (const step of opts.steps || []) {       // "fire:<ms>": that wait has passed; "mark": cut the timers list here
+      if (step === "mark") { p.timers.length = 0; p.calls.length = 0; continue; }
+      fired.push(p.fire(Number(step.slice(5))));
+      await settled();
+    }
+    const out = { calls: p.calls.map((c) => c.path), timers: p.timers.slice(), fired,
+                  pending: p.pending.map((t) => t.ms).sort((a, b) => a - b),
+                  note: p.byId.note.hidden ? "" : p.byId.note.textContent };
+    out.sent = p.calls.filter((c) => c.path.endsWith("/ksc/live")).map((c) => Object.keys(c).sort());
     return out;
   },
   // what the page puts on a ticket: the retailer's words in <bdi>, and no element told dir="auto"

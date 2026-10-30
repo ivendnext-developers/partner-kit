@@ -18,7 +18,7 @@ A kitchen display (a screen per station, an expo screen, a *Now serving* board) 
 
 ## Limits
 - The retailer sets up the kitchens in iVendNext Desk (*Kitchen Stations*) and gives your app's user *May Work a Kitchen Screen* in a Retail Permission, and its store, as for the open check. A station your screen serves still needs a printer that takes the ticket: a send no printer takes writes no ticket.
-- The notice comes only to a long-running server of yours (never a function, which holds no connection between calls) on the site's own Socket.IO socket at `/socket.io` (namespace `/<site name>`, your user's key in `Authorization: token <key>:<secret>`, `Origin` the site's own address, a `Cookie` header with no `sid`), never to a page on another address.
+- The notice comes only to a long-running server of yours (never a function, which holds no connection between calls) on the site's own Socket.IO socket at `/socket.io` (namespace `/<site name>`, your user's key in `Authorization: token <key>:<secret>`, `Origin` the site's own address, a `Cookie` header with no `sid`), never to a page on another address. A hosted site's name can differ from its address (the socket answers *Invalid namespace*): its Desk page (`/app`) names it as `"sitename"`.
 - There is no cursor: every read is the whole board. Read it on every notice and every few seconds, since a ticket can leave the board with no notice.
 - Tickets a till printed while the store was offline never reach the board.
 - One integration user for each kit app: a user that ever enrolled a till device is refused (`DeviceRequiredError`). A user who holds the right only through write on Kitchen Stations may read and move tickets but is never told of a change.
