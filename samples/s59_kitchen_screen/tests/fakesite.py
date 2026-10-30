@@ -21,6 +21,7 @@ class FakeSite:
         self.page_fails = page_fails                                    # the Desk page answers 502 this many times first
         self.poll_ts = []                                               # each long poll's t= (a fresh one each time)
         self.edge_page = None                                           # /app answers this small page (an edge's)
+        self.refuse_ns = False
         self.lock = threading.Condition()
         self.queues, self.signed, self.headers, self.pongs, self.closed, self.pages = {}, set(), [], 0, [], 0
         site = self
@@ -121,7 +122,7 @@ class FakeSite:
             cookie = h.get("Cookie") or ""
             host = (h.get("Host") or "").split(":")[0]
             origin = urllib.parse.urlsplit(h.get("Origin") or "").hostname or ""
-            if want != ns:
+            if want != ns or self.refuse_ns:              # refuse_ns: refused though the name is right (a node without the site)
                 why = "Invalid namespace"
             elif host != origin:
                 why = "Invalid origin"

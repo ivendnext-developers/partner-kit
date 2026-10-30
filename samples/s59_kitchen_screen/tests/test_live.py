@@ -290,6 +290,19 @@ class LiveTest(unittest.TestCase):
         self.assertEqual(got[-1], ("state", {"live": True}))
         self.assertEqual(self.hub.names[self.site.site], "shop-moved.example.com")
 
+    def test_v16_a_socket_refusing_its_right_name_does_not_re_read_the_desk_page_each_time(self):
+        self.start(name="shop-internal.example.com")
+        r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+        self.up(r)
+        pages = self.site.pages
+        self.site.refuse_ns = True                                         # the socket refuses the right name for a while
+        self.site.drop()
+        self.events(r, None, 2.5)                                          # several refusals at the test's short back-off
+        self.assertLessEqual(self.site.pages - pages, 1)                   # the page read once at most, not each time
+        self.assertEqual(self.hub.names[self.site.site], "shop-internal.example.com")
+        self.site.refuse_ns = False
+        self.assertEqual(self.events(r, lambda n, d: n == "state" and d == {"live": True}, 6)[-1], ("state", {"live": True}))
+
     def test_v10_a_site_whose_desk_page_names_no_site_is_not_read_again_at_once(self):
         self.start(name="shop-internal.example.com", named=False)
         self.events(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")), None, 2.5)

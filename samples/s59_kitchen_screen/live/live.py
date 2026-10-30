@@ -189,11 +189,12 @@ class Hub:
 
         def said(what: str):
             up = what == "signed in"
-            with self._lock:            # checked and set with admit's pop: an old socket never speaks after its replacement
-                if self.sockets.get(site) is not entry:     # a socket swept or replaced: not this site's news now
+            with self._lock:            # checked, set and told with admit's pop: an old socket never speaks after its
+                if self.sockets.get(site) is not entry:     # replacement (a socket swept or replaced: not this site's news)
                     return
                 entry["live"] = up
-            self._tell(site, "state", {"live": up})
+                for ln in self.lines.get(site, ()):         # Line's own lock is a leaf
+                    ln.tell("state", {"live": up})
             if up:                      # notices sent while the channel was down were missed: every screen reads now
                 self._tell(site, "read", {})
             log(site=site, socket=what)
@@ -210,8 +211,12 @@ class Hub:
             return sess
 
         def lost(e):
-            if e.refused and "Invalid namespace" in e.why and site in self.names:   # the site was renamed: learn it again
-                self.names.pop(site, None)
+            if e.refused and "Invalid namespace" in e.why and site in self.names:   # renamed, or refused for another reason:
+                if self.clock() - self.name_tried.get(site, -1e9) >= NAME_RETRY_S:  # read the page again, at most so often
+                    self.name_tried[site] = self.clock()
+                    name = self.site_name(site)
+                    if name:            # a new name, or the same one (then the refusal was the socket's own)
+                        self.names[site] = name
             elif e.refused and "Invalid namespace" in e.why and site not in self.names \
                     and self.clock() - self.name_tried.get(site, -1e9) >= NAME_RETRY_S:
                 name = self.site_name(site)
