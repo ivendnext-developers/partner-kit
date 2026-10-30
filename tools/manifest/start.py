@@ -48,7 +48,7 @@ START_LINE = "*Start from this sample:"      # an italic line, so the site does 
 # the sample's path in the kit, but not inside an address on the iVendNext guide sites (docs, developer, help, www): a help
 # link to the sample's own page (S43's "https://developer.ivendnext.com/samples/s43_third_party_payer/…") is the guide's,
 # kept as rename.addresses keeps it, never a name left in the copy
-NOT_GUIDE = r"(?<!\.ivendnext\.com/)"
+NOT_GUIDE = "".join(rf"(?<!//{h}\.ivendnext\.com/)" for h in ("docs", "developer", "help", "www"))
 
 
 class Refused(Exception):
