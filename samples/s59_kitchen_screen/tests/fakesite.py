@@ -15,8 +15,9 @@ SEP = "\x1e"
 
 
 class FakeSite:
-    def __init__(self, name=None, key=KEY, ping_ms=400, redirect=False):
+    def __init__(self, name=None, key=KEY, ping_ms=400, redirect=False, empty_polls=False, named=True):
         self.key, self.ping_ms, self.redirect = key, ping_ms, redirect
+        self.empty_polls, self.named, self.polls = empty_polls, named, 0   # an edge answering 200 with no packet
         self.lock = threading.Condition()
         self.queues, self.signed, self.headers, self.pongs, self.closed, self.pages = {}, set(), [], 0, [], 0
         site = self
@@ -41,7 +42,8 @@ class FakeSite:
                     site.pages += 1
                     if self.headers.get("Authorization") != f"token {site.key}":
                         return self._send(403, "no")
-                    return self._send(200, '<script>frappe.boot = {"sitename": "%s"}</script>' % site.name, "text/html")
+                    return self._send(200, '<script>frappe.boot = {"sitename": "%s"}</script>' % site.name
+                                      if site.named else "<html>a page with no boot data</html>", "text/html")
                 q = dict(urllib.parse.parse_qsl(url.query))
                 if site.redirect:
                     return self._send(302, "", extra={"Location": "http://127.0.0.1:9/elsewhere"})
@@ -54,6 +56,9 @@ class FakeSite:
                                                              "pingTimeout": site.ping_ms}),
                                       extra={"Set-Cookie": "edge=sticky-1; Path=/"})
                 sid = q["sid"]
+                site.polls += 1
+                if site.empty_polls:
+                    return self._send(200, "")
                 with site.lock:
                     if sid not in site.queues:
                         return self._send(400, '{"code":1,"message":"Session ID unknown"}')

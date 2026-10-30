@@ -302,8 +302,8 @@ class PageLive(unittest.TestCase):
         self.assertEqual(got["calls"][:2], ["/ksc/board", LIVE + "/ksc/live"])
         self.assertEqual(got["sent"], [["path", "s", "t"]])                     # the link in the body, never the address
         self.assertEqual(got["calls"].count("/ksc/board"), 3)                  # the first read, up (catch up), the notice
-        self.assertEqual(got["timers"][0], 3000)                                # before the line: every 3 s
-        self.assertEqual(got["timers"][-1], 10000)                              # while it is up: every 10 s as well
+        reads = [t for t in got["timers"] if t in (3000, 10000)]                # the waits between board reads
+        self.assertEqual((reads[0], reads[-1]), (3000, 10000))                 # 3 s before the line is up, then 10 s
         self.assertEqual(got["note"], "")
 
     def test_l2_a_parked_or_refused_live_service_leaves_the_three_second_reads_and_says_nothing(self):
@@ -328,6 +328,41 @@ class PageLive(unittest.TestCase):
         got = page("live", answers={"/ksc/board": [station(ticket("k1", 1, 1))]}, live={"chunks": [UP, READ]})
         self.assertEqual(got["calls"], ["/ksc/board"])
         self.assertEqual(got["timers"], [3000])
+
+    def test_l7_again_opens_one_new_line_whose_own_state_is_heard(self):
+        again, down = "event: again\ndata: {}\n\n", 'event: state\ndata: {"live": false}\n\n'
+        got = page("live", answers={"/ksc/board": [live_board()]},
+                   live={"lines": [{"chunks": [UP, again + again + UP]}, {"chunks": [down]}, {"chunks": [UP]}]})
+        self.assertEqual(got["calls"].count(LIVE + "/ksc/live"), 2)          # one reopen, the rest of the chunk ignored
+        self.assertEqual(got["pending"].count(10000), 0)                       # the new line says down: 3-s reads
+        self.assertIn(3000, got["pending"])
+
+    def test_l8_a_silent_line_is_given_up_after_30_seconds_and_the_reads_go_back_to_three(self):
+        got = page("live", answers={"/ksc/board": [live_board()]}, live={"lines": [{"chunks": [UP]}]},
+                   steps=["mark", "fire:30000"])
+        self.assertEqual(got["fired"], [True])
+        self.assertIn(3000, got["timers"])
+        self.assertIn(5000, got["pending"])                                    # and the line is tried again in 5 s
+
+    def test_l9_a_line_that_keeps_failing_is_tried_after_5_15_60_then_300_seconds(self):
+        got = page("live", answers={"/ksc/board": [live_board()]}, live={"lines": []},
+                   steps=["fire:5000", "fire:15000", "fire:60000", "fire:300000", "fire:300000"])
+        self.assertEqual(got["fired"], [True] * 5)
+        self.assertEqual([t for t in got["timers"] if t in (5000, 15000, 60000, 300000)], [5000, 15000, 60000, 300000, 300000, 300000])
+        self.assertEqual(got["calls"].count(LIVE + "/ksc/live"), 6)
+
+    def test_l10_a_link_refused_by_the_board_closes_the_line_and_opens_no_other(self):
+        got = page("live", answers={"/ksc/board": [live_board(), {"state": "unknown"}]},
+                   live={"lines": [{"chunks": [UP]}, {"chunks": [UP]}]}, steps=["fire:10000"])
+        self.assertEqual(got["calls"].count(LIVE + "/ksc/live"), 1)
+        self.assertNotIn(5000, got["pending"])
+        self.assertNotIn(30000, got["pending"])                                # the line itself is closed, not left open
+        self.assertIn(60000, got["pending"])                                   # the refused link is read again rarely
+
+    def test_l11_a_service_that_stops_naming_the_live_service_reads_at_three_seconds_at_once(self):
+        got = page("live", answers={"/ksc/board": [live_board(), live_board(), station(ticket("k1", 1, 1))]},
+                   live={"lines": [{"chunks": [UP]}]}, steps=["mark", "fire:10000"])
+        self.assertEqual([t for t in got["timers"] if t in (3000, 10000)], [3000])
 
     def test_l6_a_sold_out_dish_no_ticket_names_shows_its_name(self):     # KSCSOLDNAME
         b = station(ticket("k1", 1, 1))

@@ -58,13 +58,13 @@ class LiveTest(unittest.TestCase):
         self._backoff = sitesocket.BACKOFF
         sitesocket.BACKOFF = (0.05, 0.1, 0.2)
         self.out = Out()
-        self._redirect = contextlib.redirect_stdout(self.out)
-        self._redirect.__enter__()
-        self.addCleanup(self._redirect.__exit__, None, None, None)
+        for r in (contextlib.redirect_stdout(self.out), contextlib.redirect_stderr(self.out)):   # tracebacks too
+            r.__enter__()
+            self.addCleanup(r.__exit__, None, None, None)
         self.addCleanup(setattr, sitesocket, "BACKOFF", self._backoff)
 
-    def start(self, name=None, key=fakesite.KEY, screens=None, site_key=None):
-        self.site = fakesite.FakeSite(name=name, key=key)
+    def start(self, name=None, key=fakesite.KEY, screens=None, site_key=None, **site):
+        self.site = fakesite.FakeSite(name=name, key=key, **site)
         self.addCleanup(self.site.stop)
         grill = F.screen("KSC-SCREEN-00001", number=1)
         grill["made_for"] = ksc.made_for(grill)
@@ -74,15 +74,14 @@ class LiveTest(unittest.TestCase):
         self.shop.settings[F.CO]["stores"].append(dict(F.settings()["stores"][0], store=F.OTHER))
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp, True)
-        store = shops.FileStore(os.path.join(tmp, "shops.json"), local=True)
+        self.store = store = shops.FileStore(os.path.join(tmp, "shops.json"), local=True)
         store.put(self.site.site, {"site": self.site.site, "url": self.site.url, "previous": {},
                                    "secrets": {f"{APP}:sub:link": F.SECRET, USER: site_key or fakesite.KEY,
                                                "user:Administrator": "admin:never"}})
         svc = app.Service({"IVN_LIBRARY_APP": APP, "KSC_PREFIX": "PP KSC", "KSC_PAGE_URL": F.PAGE}, store=store,
                           tenants=lambda url, key: self.shop)
         self.hub = live.Hub(svc)
-        self.http = live.ThreadingHTTPServer(("127.0.0.1", 0), live.handler(self.hub, F.PAGE, heartbeat_s=0.3, life_s=4))
-        self.http.daemon_threads = True
+        self.http = live.Server(("127.0.0.1", 0), live.handler(self.hub, F.PAGE, heartbeat_s=0.3, life_s=4))
         threading.Thread(target=self.http.serve_forever, daemon=True).start()
         self.addCleanup(self.http.server_close)
         self.addCleanup(self.http.shutdown)
@@ -216,6 +215,57 @@ class LiveTest(unittest.TestCase):
         self.assertEqual((r.status, json.loads(r.read())), (503, {"state": "busy"}))
 
 
+    def test_v9_a_key_replaced_by_connect_again_ends_the_socket_signed_in_with_the_old_one(self):
+        self.start()
+        self.up(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")))
+        old = self.hub.sockets[self.site.site]
+        new_key = "k3y-app-user:s3cret-after-connect-again"
+        rec = self.store.get(self.site.site)
+        rec["secrets"][USER] = new_key
+        self.store.put(self.site.site, rec)
+        self.site.key = new_key                                   # the site now takes only the new key
+        r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+        self.assertTrue(old["stop"].is_set())
+        self.assertIsNot(self.hub.sockets[self.site.site], old)
+        self.assertEqual(self.up(r)[-1], ("state", {"live": True}))
+        self.assertEqual(list(self.site.hs.values())[-1]["Authorization"], f"token {new_key}")
+
+    def test_v10_a_site_whose_desk_page_names_no_site_is_not_read_again_at_once(self):
+        self.start(name="shop-internal.example.com", named=False)
+        self.events(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")), None, 2.5)
+        self.assertEqual((self.site.pages, self.hub.names), (1, {}))     # several refusals, one read of the page
+        self.assertGreaterEqual(self.out.getvalue().count("Invalid namespace"), 2)
+
+
+class ServerTest(unittest.TestCase):
+    def test_c1_connections_past_the_cap_are_closed_before_they_are_read(self):
+        import socket
+        srv = live.Server(("127.0.0.1", 0), live.handler(None, F.PAGE), most=2)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        self.addCleanup(srv.server_close)
+        self.addCleanup(srv.shutdown)
+        held = [socket.create_connection(srv.server_address, timeout=3) for _ in range(2)]   # two slow callers
+        for c in held:
+            self.addCleanup(c.close)
+        time.sleep(0.3)
+        third = socket.create_connection(srv.server_address, timeout=3)
+        self.addCleanup(third.close)
+        self.assertEqual(third.recv(1), b"")                    # closed at once, never read
+        held[0].close()
+        time.sleep(0.5)                                          # its slot comes back when its handler ends (10 s read
+        # timeout) or the caller goes: a fresh caller is served once a slot is free
+        deadline = time.monotonic() + 12
+        while time.monotonic() < deadline:
+            c = socket.create_connection(srv.server_address, timeout=3)
+            c.sendall(b"GET /health HTTP/1.0\r\n\r\n")
+            got = c.recv(64)
+            c.close()
+            if got:
+                break
+            time.sleep(0.5)
+        self.assertTrue(got.startswith(b"HTTP/1.0 200"))
+
+
 class SocketTest(unittest.TestCase):
     def test_k1_a_notice_of_another_event_or_shape_is_not_passed_on(self):
         heard = []
@@ -247,6 +297,15 @@ class SocketTest(unittest.TestCase):
         s.close()
         self.assertGreaterEqual(site.pongs, 2)
         self.assertIn("edge=sticky-1", site.headers[-1]["Cookie"])
+
+    def test_k5_an_answer_with_no_packet_ends_the_session_never_asks_again_at_once(self):
+        site = fakesite.FakeSite(empty_polls=True)      # an edge answering 200 with an empty body or its own page
+        self.addCleanup(site.stop)
+        s = sitesocket.Session(site.url, fakesite.KEY, lambda *a: None)
+        s.handshake()
+        with self.assertRaises(sitesocket.Lost) as e:
+            s.sign_in()
+        self.assertEqual((e.exception.why, site.polls), ("an answer with no packet", 1))
 
     def test_k4_the_pause_grows_while_sessions_fail_and_stops_on_stop(self):
         stop, pauses, said = threading.Event(), [], []

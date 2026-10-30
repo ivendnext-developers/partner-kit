@@ -375,7 +375,8 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(policy["connect-src"], "'self' " + live)
         self.assertEqual(call(svc, "/ksc/board", made(self.shop, svc))[1]["live"], live)
         self.assertNotIn("live", call(self.svc, "/ksc/board", made(self.shop, self.svc))[1])   # unset: 3-second reads only
-        for bad in (live + "/ksc", "javascript:alert(1)", live + " 'unsafe-eval'", "https://user@live.example.app", live + ";"):
+        for bad in (live + "/ksc", "javascript:alert(1)", live + " 'unsafe-eval'", "https://user@live.example.app", live + ";",
+                    "https://*.ivendnext.app"):
             with self.assertRaises(SystemExit, msg=bad):
                 app.Service(dict(conf, KSC_LIVE_URL=bad), tenant=self.shop)
 

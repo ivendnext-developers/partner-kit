@@ -64,6 +64,8 @@ A screen's page asks the service for the board every few seconds, which is what 
 
 Without it, nothing changes for a retailer: the screens read every 3 seconds. While it is up, each screen still reads every 10 seconds (some changes send no notice).
 
+**Its bounds.** A link made again stops hearing within 5 minutes 15 seconds (its line's life plus the service's 15-second keep; the line carries no ticket in the meantime). A key replaced by *Connect again* ends the socket signed in with the old key when the next screen of that retailer opens its line, within 5 minutes while a screen is open. A line that goes silent without closing (a tablet changing networks) is given up after 30 seconds, and a socket the site stops answering after about 50; until then that screen reads every 10 seconds. One copy holds at most 2,000 lines (300 for one retailer) and 2,200 connections; past them a screen is refused and reads every 3 seconds. A site whose socket refuses its address and whose Desk page names no site is read again at most every 30 minutes.
+
 ## Run it
 
 ```bash

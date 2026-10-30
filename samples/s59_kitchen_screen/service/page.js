@@ -14,7 +14,7 @@
 (function () {
   "use strict";
   var READ_MS = 3000, RETRY_MS = 3000, LATE_READ_S = 15, NOTE_MS = 6000, PAGE_BACK_MS = 60000, SHIFT_MS = 1000;
-  var LIVE_READ_MS = 10000, LIVE_RETRY_MS = [5000, 15000, 60000, 300000], LIVE_SILENT_MS = 45000, LIVE_STEADY_MS = 60000;
+  var LIVE_READ_MS = 10000, LIVE_RETRY_MS = [5000, 15000, 60000, 300000], LIVE_SILENT_MS = 30000, LIVE_STEADY_MS = 60000;
   var STRIP_SHARE = 0.25;            // "Still to make" takes at most a quarter of the screen's height
   // The till's own words where it has them (guest and sold out, from its ar, es and fr tables at T21; send is never
   // used for a bump, which is the kitchen's own step); German and Portuguese are this app's own until the till signs them.
@@ -264,8 +264,8 @@
         applySize();
         note("");
         draw();
+        listen(typeof a.live === "string" ? a.live : "");   // first: a service that stopped naming it ends the line
         schedule(liveOn ? LIVE_READ_MS : READ_MS);
-        listen(typeof a.live === "string" ? a.live : "");
       } else if (a.state === "unknown" || a.state === "closed" || a.state === "not_set_up") {
         last = null; clear($("board")); $("waiting").hidden = true; pager(0, 0, false, false); note(a.state);
         listen("");                       // a refused screen holds no line
@@ -332,6 +332,7 @@
       })
       .catch(end);
     function event(block) {
+      if (ended) return;               // the rest of a chunk after "again" belongs to a line that is gone
       var name = "message", data = "";
       block.split("\n").forEach(function (ln) {
         if (ln.indexOf("event:") === 0) name = ln.slice(6).trim();
@@ -370,7 +371,7 @@
         delete bumped[key.replace(/\.order$/, "")];
       }
       answered(a, key);
-      read();
+      readNow();                       // one read at a time: a tap during a notice's read asks for one more
     });
   }
   var NEXT = { "new": ["started", "start"], started: ["ready", "ready"], ready: ["bumped", "bump"] };

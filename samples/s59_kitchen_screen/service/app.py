@@ -191,7 +191,7 @@ def origin_of(url: str) -> str:
     """``https://host[:port]`` of an address, or "" when it is not one (the page's policy names an origin, never a path)."""
     parts = urllib.parse.urlsplit((url or "").strip())
     if parts.scheme not in ("https", "http") or not parts.netloc or parts.path not in ("", "/") or parts.query \
-            or parts.fragment or "@" in parts.netloc or any(c in parts.netloc for c in " ;'\""):
+            or parts.fragment or any(c in parts.netloc for c in " ;'\"@*"):
         return ""
     return f"{parts.scheme}://{parts.netloc.lower()}"
 

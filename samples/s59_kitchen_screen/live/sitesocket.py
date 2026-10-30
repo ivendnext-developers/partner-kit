@@ -180,8 +180,11 @@ class Session:
     def poll(self) -> list[str]:
         """One long poll: its socket.io packets; a ping answered here, the server's close raised."""
         text = self._request("_polls", "GET", {"sid": self.sid}, None, self.wait_s)
+        packets = text.split(SEP)
+        if not any(p[:1] in ("1", "2", "4") for p in packets):     # an empty answer, an edge's own page: never asked again at once
+            raise Lost("an answer with no packet")
         out = []
-        for packet in text.split(SEP):
+        for packet in packets:
             if packet == "2":
                 self.send("3")
             elif packet == "1":

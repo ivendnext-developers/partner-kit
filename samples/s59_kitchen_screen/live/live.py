@@ -17,12 +17,15 @@ ticket was sent, voided or moved (``mpos_station_ticket``), it tells that store'
 **The line carries no ticket, no dish and no name: only "read again".** It still admits only a screen's valid link,
 checked by the service's own ``Service.opened`` (the link's signature with the retailer's secret, the screen record's
 number and what it was made for, the store's row), never a second copy of that check. A line lasts LIFE_S at most, then
-the page opens it again and is checked again, so a link made again stops hearing within that time.
+the page opens it again and is checked again, so a link made again stops hearing within LIFE_S plus the service's own
+SCREEN_KEEP_S (5 minutes 15 seconds).
 
 **The retailer's key.** Each retailer's site hands its keys to the service at connect (the app template's handshake);
 they are kept in the service's own table. This service READS that table (the hosting grants it ``GetItem`` on it and
 nothing else) and signs in to the site's socket as the app's own user (``app.user_key``, the same user the service
-reads the board as). It writes nothing, keeps no second copy, and never prints a key.
+reads the board as). It writes nothing, keeps no second copy, and never prints a key. A key the retailer replaced
+(*Connect again*) ends the socket signed in with the old one at the next line admitted for that retailer (within
+LIFE_S while a screen is open).
 
 A site's socket is opened when the first screen of that site opens its line, and closed LINGER_S after its last line
 ends: a retailer with no screen open costs its socket server nothing. Its namespace is the site's own name, which a
@@ -37,6 +40,7 @@ the screens' origin is KSC_PAGE_URL's), IVN_SHOPS_TABLE (the service's table, re
 
 from __future__ import annotations
 
+import hashlib
 import http.client
 import json
 import os
@@ -59,9 +63,16 @@ LIFE_S = 300              # a line is checked again this often (a link made agai
 LINGER_S = 60             # a site's socket stays this long after its last line, for a page that opens it again
 STREAMS_MAX = 2000        # lines one copy holds, every retailer together
 SITE_STREAMS_MAX = 300    # … and one retailer's
+CONNECTIONS_MAX = STREAMS_MAX + 200   # connections at once, admitted or not (a slow caller holds a thread each)
+NAME_RETRY_S = 1800       # a site whose Desk page named no site is read again at most this often
 NAME_PAGE = "/app"        # the site's Desk page: its boot data names the site (``"sitename": …``)
 NAME_MAX = 4 * 1024 * 1024
 _NAME = re.compile(r'sitename\\?"\s*:\s*\\?"([a-z0-9][a-z0-9.-]{0,252})\\?"')
+
+
+def fingerprint(key: str | None) -> str:
+    """A key's short hash, to tell a replaced key from the one a socket signed in with; never logged."""
+    return hashlib.sha256((key or "").encode()).hexdigest()[:16]
 
 
 def log(**fields):
@@ -103,6 +114,7 @@ class Hub:
         self.lines: dict[str, set] = {}             # site → its open lines
         self.sockets: dict[str, dict] = {}          # site → {"stop", "thread", "live", "idle_since"}
         self.names: dict[str, str] = {}             # site → its socket's namespace, when not its address
+        self.name_tried: dict[str, float] = {}      # site → when its Desk page last named no site
 
     # ── lines ──
     def admit(self, body) -> tuple[int, dict, Line | None]:
@@ -115,7 +127,14 @@ class Hub:
             if e.code == 404:
                 return 404, {"state": "unknown"}, None
             return 503, {"state": "unavailable"}, None
+        try:
+            key = fingerprint(service.user_key(self.svc.store.get(site)))   # the key the site handed over last
+        except Exception:               # noqa: BLE001 — the table did not answer: the socket is left as it is
+            key = ""
         with self._lock:
+            old = self.sockets.get(site)
+            if old and old.get("key") and key and old["key"] != key:   # Connect again replaced it: that socket ends now
+                self.sockets.pop(site)["stop"].set()
             mine = self.lines.setdefault(site, set())
             if sum(len(v) for v in self.lines.values()) >= STREAMS_MAX or len(mine) >= SITE_STREAMS_MAX:
                 if not mine:
@@ -175,16 +194,20 @@ class Hub:
             key = service.user_key(record)
             if not key:
                 return None
+            entry["key"] = fingerprint(key)
             sess = self.session(record["url"], key, lambda st, sn: self.notice(site, st, sn))
             if site in self.names:
                 sess.ns = "/" + self.names[site]
             return sess
 
         def lost(e):
-            if e.refused and "Invalid namespace" in e.why and site not in self.names:
+            if e.refused and "Invalid namespace" in e.why and site not in self.names \
+                    and self.clock() - self.name_tried.get(site, -1e9) >= NAME_RETRY_S:
                 name = self.site_name(site)
                 if name:
                     self.names[site] = name
+                else:                   # not read: not again for a while (the page is large)
+                    self.name_tried[site] = self.clock()
 
         def run():
             sitesocket.hold(make, stop, lambda what: said(what), on_lost=lost)
@@ -228,6 +251,31 @@ class Hub:
                     if not self.lines.get(s) and e["idle_since"] is not None and now - e["idle_since"] >= LINGER_S]
             for s in idle:
                 self.sockets.pop(s)["stop"].set()
+
+
+class Server(ThreadingHTTPServer):
+    """One thread a connection, at most ``most`` at once: a connection past them is closed before it is read."""
+    daemon_threads = True
+
+    def __init__(self, address, handler_class, most: int = CONNECTIONS_MAX):
+        self._slots = threading.BoundedSemaphore(most)
+        super().__init__(address, handler_class)
+
+    def process_request(self, request, client_address):
+        if not self._slots.acquire(blocking=False):
+            self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except Exception:               # noqa: BLE001 — no thread started: give its slot back
+            self._slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._slots.release()
 
 
 def handler(hub: Hub, origin: str, heartbeat_s: float = HEARTBEAT_S, life_s: float = LIFE_S):
@@ -307,8 +355,7 @@ def main():
     if not origin:
         raise SystemExit("KSC_PAGE_URL is where the screens' page is served, like https://kitchen-screen.example.app")
     hub = Hub(svc)
-    srv = ThreadingHTTPServer(("0.0.0.0", int(conf.get("PORT") or 8080)), handler(hub, origin))
-    srv.daemon_threads = True
+    srv = Server(("0.0.0.0", int(conf.get("PORT") or 8080)), handler(hub, origin))
     stop = threading.Event()
 
     def sweeper():
