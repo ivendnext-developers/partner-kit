@@ -6,12 +6,22 @@ A hardware or DIY store's **builder projects**, kept in iVendNext Desk. A builde
 
 It uses the manifest's `doctypes` (a record type and a child table), `custom_fields` (the project on four documents and on the till's own, the stage on three line tables), `print_formats` (the project sheet, reading the documents with `ivn_rows`), `links` and a `documentation` property setter. **When to use it:** a store sells to builders or contractors whose jobs run over several quotes, orders and deliveries, and today it keeps the job on paper or in the builder's purchase order numbers.
 
+
+| What the store sees (a demo store, the library copy *IVENDNEXT PQT*) | |
+|---|---|
+| What installing it changes, read before the install | ![](screenshots/01_install.png) |
+| A project: the builder, the store and the dates, the site and its contact, and two stages with the date each is wanted on site | ![](screenshots/02_project.png) |
+| A sales order line: its delivery date and, beside it, the stage it goes to site for | ![](screenshots/03_order_line.png) |
+| Desk's delivery dates on the order: the first stage's date ticked, the later one unticked | ![](screenshots/04_delivery_dates.png) |
+| The delivery note made from it: the project, and only the first stage's lines | ![](screenshots/05_delivery.png) |
+| The project sheet under the store's letter head: the stages, the quote, the order two-thirds delivered, the delivery and the invoice still owed | ![](screenshots/06_sheet.png) |
+
 ## What happens
 
 1. **The project.** The trade desk opens **PP PQT Project** in Desk, **+ Add**: the **Project** as the builder names it (*Oak Street extension*), the **Builder** (a customer; the builder's name shows beside it, read only), the **Store** that serves it, **Started on** and **Finish by**, the **Site address**, **Site contact** and **Site phone**, and the **Stages planned**: a row per stage with the date it is **Wanted on site by** and **What goes** (*Foundations, blocks and cement*; *Frame, timber*). Save: the project is numbered `PQT-00001` and is **Open**.
 2. **The quote.** In Desk, a **Quotation** to the builder: choose the **Project**, and on each line type its **Stage** (*Foundations*, *Frame*). The builder accepts all or part of it.
 3. **The order.** On the quote, **Create › Sales Order**: Desk's own Create carries the project and every line's stage to the order. Give each line its own **Delivery Date** (the stage's date); the order's own **Delivery Date** becomes the last of them.
-4. **Staged deliveries.** When the first stage is due, on the order **Create › Delivery Note**: Desk asks which delivery dates to send (the dates up to today come ticked); tick the stage's date and press **Select**. Desk takes only the lines of the ticked dates, with the project and their stage. The order reads *partly delivered*. The next stage's delivery takes the lines of its own date; each delivery's own **Create › Sales Invoice** carries the project too.
+4. **Staged deliveries.** When the first stage is due, on the order **Create › Delivery Note**: Desk asks which delivery dates to send, every date still to deliver ticked; untick the dates not yet due and press **Select**. Desk takes only the lines of the ticked dates, with the project and their stage. The order reads *partly delivered*. The next stage's delivery takes the lines of its own date; each delivery's own **Create › Sales Invoice** carries the project too.
 5. **The till.** A sale or an order rung at the till for the builder is a **POS Invoice** in Desk. Once it is booked, an **Accounts User** (Sales User reads no till document) opens it from the POS Invoice list and chooses its **Project**, a field of its own name there, so the day's combined Sales Invoice does not take it. A till quote is not named: name the sale or order it becomes. A till order's Sales Order does not carry the project either: the trade desk chooses it there, and every delivery and invoice Desk makes from that order carries it.
 6. **The job in one place.** On the project, **Print › PP PQT Project sheet**: the stages planned, then the project's quotes, the till's documents, its orders with the share delivered, its deliveries and its invoices with what is still owed, each as the person printing may read them. Every one of those lists (Quotation, Sales Order, Delivery Note, Sales Invoice, POS Invoice) filters by **Project**; the builder's projects show under the customer.
 7. **Done.** Set the project's **Status** to *Completed* (or *Cancelled*). A project is never deleted by the store.

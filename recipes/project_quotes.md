@@ -13,9 +13,16 @@ A hardware or DIY store sells to builders, and a builder buys for a job: the sto
 1. **The project.** The trade desk opens **PP PQT Project** in Desk and presses **+ Add**: the **Project** as the builder names it, the **Builder** (a customer; its name shows, read only), the **Store**, **Started on**, **Finish by**, the **Site address**, **Site contact** and **Site phone**, and a row per stage in **Stages planned** (the stage, the date it is **Wanted on site by**, **What goes**). Saved, it is numbered `PQT-00001` and is **Open**.
 2. **The quote.** A Desk **Quotation** to the builder names the **Project**; each line names its **Stage**.
 3. **The order.** **Create › Sales Order** on the quote: the project and every line's stage come with it. Each line gets its own **Delivery Date**, the stage's date.
-4. **Staged deliveries.** **Create › Delivery Note** on the order: Desk asks which delivery dates to send (the dates up to today come ticked); tick the stage's date and press **Select**: only the lines of the ticked dates, with the project and their stage. The next delivery takes the lines of its own date. **Create › Sales Invoice** on a delivery carries the project.
+4. **Staged deliveries.** **Create › Delivery Note** on the order: Desk asks which delivery dates to send, every date still to deliver ticked; untick the dates not yet due and press **Select**: only the lines of the ticked dates, with the project and their stage. The next delivery takes the lines of its own date. **Create › Sales Invoice** on a delivery carries the project.
 5. **The till's sales and orders.** A sale or an order rung at the till for the builder is a **POS Invoice** in Desk: once it is booked, an **Accounts User** (Sales User reads no till document) opens it from the POS Invoice list and chooses its **Project**. A till quote is not named: name the sale or order it becomes. The trade desk names a till order's own Sales Order.
 6. **The job in one place.** **Print › PP PQT Project sheet** on the project: its stages, then its quotes, the till's documents, its orders with the share delivered, its deliveries and its invoices with what is still owed. Every one of those lists filters by **Project**, and the builder's projects show under the customer.
+
+
+![A project on a demo site](../samples/s60_project_quotes/screenshots/02_project.png)
+
+![Desk's delivery dates on the order, the first stage's date ticked](../samples/s60_project_quotes/screenshots/04_delivery_dates.png)
+
+![The project sheet under the store's letter head](../samples/s60_project_quotes/screenshots/06_sheet.png)
 
 ## Projects
 
