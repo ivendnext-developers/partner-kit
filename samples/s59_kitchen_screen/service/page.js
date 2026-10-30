@@ -133,9 +133,10 @@
   };
   var lang = "en";
   function count(one, many, n) {     // "+1 more dish", "+N more dishes"; Arabic's dual and 11-and-over forms
+    var h = n % 100;
     if (n === 1) return w(one);
     if (lang === "ar" && n === 2) return w(one + "2");
-    if (lang === "ar" && n >= 11) return w(many + "11", { n: n });
+    if (lang === "ar" && h >= 11) return w(many + "11", { n: n });
     return w(many, { n: n });
   }
   function w(key, args) {
@@ -148,7 +149,7 @@
   var LINK = { s: hash.get("s") || "", t: hash.get("t") || "" };
   var $ = function (id) { return document.getElementById(id); };
   var last = null, readAt = 0, goodAt = 0, timer = null, busy = {}, showRecall = false, page = 0, touchedAt = 0;
-  var shiftedAt = -1e9, openKey = "";
+  var shiftedAt = -1e9, openKey = "", shownKeys = [], movedKey = "", cookPaged = false;
 
   // ── drawing helpers: text only, never markup ──
   function bdi(text) { var b = document.createElement("bdi"); b.textContent = String(text); return b; }
@@ -258,7 +259,7 @@
   function move(btn, extra) {
     var key = extra.kitchen_order + "." + (extra.ticket || "order");
     if (busy[key] || performance.now() - shiftedAt < SHIFT_MS) return;   // the page just changed under the finger
-    busy[key] = true; btn.disabled = true;
+    busy[key] = true; btn.disabled = true; movedKey = key.replace(/\.order$/, "");
     call("/ksc/move", extra).then(function (a) {
       busy[key] = false;
       answered(a, key);
@@ -471,14 +472,16 @@
     }
     var first = groups[0] || [], choices = 0;   // the first dish alone too tall: its last choices fold, the dish stays
     while (tall(slip) > cap + 0.5 && choices < first.length - 1) first[first.length - ++choices].hidden = true;
+    if (tall(slip) > cap + 0.5) {      // still too tall (one dish, or a void that never folds): this ticket scrolls,
+      first.forEach(function (li) { li.hidden = false; });   // its dish whole, so Bump stays in reach
+      choices = 0;
+      slip.classList.add("is-tall"); slip.style.maxBlockSize = cap + "px";
+    }
     var said = [];
     if (hide) said.push(count("moreDish", "moreDishes", hide));
     if (choices) said.push(count("moreChoice", "moreChoices", choices));
-    if (!said.length) { btn.hidden = true; return; }
+    btn.hidden = !said.length;
     btn.textContent = said.join(" · ");
-    if (tall(slip) > cap + 0.5) {      // one dish taller than the board: this ticket scrolls, so Bump stays in reach
-      slip.classList.add("is-tall"); slip.style.maxBlockSize = cap + "px";
-    }
   }
   function fitStrip() {              // the expo's "Still to make": whole dishes only, the rest counted
     var strip = $("waiting"), rest = strip.querySelector(".ksc-wait-more");
@@ -492,6 +495,7 @@
       dishes[dishes.length - 1 - hide++].hidden = true;
       rest.textContent = count("moreDish", "moreDishes", hide);
     }
+    rest.hidden = !hide;
   }
   function fitNumbers(main) {        // the board: the numbers shrink a step at a time; at the last, the rest are counted
     main.querySelectorAll(".ksc-num").forEach(function (n) { n.hidden = false; });
@@ -545,9 +549,15 @@
       slips.forEach(function (sl, i) { sl.hidden = i < from; });
       return slips.slice(from).map(function (sl) { return sl.getBoundingClientRect().bottom; });
     }, limit);
-    if (shown.page !== page) shiftedAt = performance.now();   // the page changed without the cook: hold taps a moment
     page = shown.page;
     slips.forEach(function (sl, i) { sl.hidden = i < shown.from || i >= shown.end; });
+    var keys = slips.slice(shown.from, shown.end).map(function (sl) { return sl.getAttribute("data-key"); });
+    for (var i = 0; i < Math.max(keys.length, shownKeys.length); i++) {   // a ticket moved under the finger, not by the
+      if (keys[i] === shownKeys[i]) continue;                            // cook's own tap: hold taps a moment
+      if (shownKeys.length && shownKeys[i] !== movedKey && !cookPaged) shiftedAt = performance.now();
+      break;
+    }
+    shownKeys = keys; cookPaged = false;
     pager(shown.from, slips.length - shown.end, lateIn(slips.slice(0, shown.from)), lateIn(slips.slice(shown.end)));
   }
   var fitting = 0;
@@ -567,7 +577,7 @@
   function resize(by) {
     chosen = window.kscFit.step(window.kscFit.size(chosen, last && last.look && last.look.size), by);
     try { window.localStorage.setItem(SIZE_KEY, chosen); } catch (e) { /* not kept on this device: this visit only */ }
-    applySize(); fit();
+    cookPaged = true; applySize(); fit();
   }
 
   // the timers move every second between reads, with no call
@@ -583,10 +593,10 @@
     if (moved) refit();                // Late soon / Late can change a ticket's height and the pager's colour
   }, 1000);
 
-  $("recall").addEventListener("click", function () { showRecall = !showRecall; page = 0; if (last) draw(); });
+  $("recall").addEventListener("click", function () { showRecall = !showRecall; page = 0; cookPaged = true; if (last) draw(); });
   $("prev").appendChild(icon("back")); $("next").appendChild(icon("forth"));
-  $("prev").addEventListener("click", function () { touchedAt = performance.now(); page = Math.max(0, page - 1); fit(); });
-  $("next").addEventListener("click", function () { touchedAt = performance.now(); page += 1; fit(); });
+  $("prev").addEventListener("click", function () { touchedAt = performance.now(); cookPaged = true; page = Math.max(0, page - 1); fit(); });
+  $("next").addEventListener("click", function () { touchedAt = performance.now(); cookPaged = true; page += 1; fit(); });
   $("smaller").addEventListener("click", function () { resize(-1); });
   $("bigger").addEventListener("click", function () { resize(1); });
   $("ticket-close").textContent = w("close");

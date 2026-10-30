@@ -55,10 +55,10 @@ def ticket(order, n, dishes, kind="send", choices=0, station="Grill"):
             "state": "new", "sent_at": "2026-10-30 19:01:00", "lines": ls}
 
 
-def station(*tickets):
+def station(*tickets, lang="en"):
     b = board()
     b["view"] = {"tickets": list(tickets), "recall": []}
-    b["look"]["lang"] = "en"
+    b["look"]["lang"] = lang
     return b
 
 
@@ -174,6 +174,39 @@ class PageFit(unittest.TestCase):
     def test_f6_a_void_reads_as_one_in_the_whole_ticket_dialog(self):
         got = self.fit(station(ticket("k1", 1, 10, kind="void")), 150, steps=["more:k1.1"])
         self.assertEqual(got["dialog"], {"open": True, "voidBanner": 1, "voidBox": True, "lines": 10})
+
+    def test_f2b_an_expo_void_too_tall_to_fold_scrolls_so_bump_order_stays_in_reach(self):
+        o = order("k1", [ticket("k1", 1, 1), ticket("k1", 2, 14, kind="void", station="Bar")], bump=True)
+        got = self.fit(expo([o]), 200)["first"]["slips"][0]
+        self.assertEqual((got["tall"], got["more"], got["voidPart"]), (True, "", [{"shown": True, "lines": 14}]))
+        self.assertLessEqual(got["height"], 200)
+
+    def test_f7_the_board_counts_the_numbers_that_still_do_not_fit(self):
+        b = station()
+        b.update(kind="Board", stations=[])
+        b["view"] = {"preparing": [str(100 + i) for i in range(10)], "ready": []}
+        got = self.fit(b, 200)["first"]["numbers"]
+        self.assertEqual(got, {"shown": 8, "more": ["+2"]})
+
+    def test_f8_a_ticket_moved_under_the_finger_holds_taps_a_moment(self):
+        six = [ticket(f"k{i}", 1, 1) for i in range(6)]
+        a, b = station(*six), station(*six[1:])        # another screen bumped k0: every ticket slides up a slot
+        got = page("fit", answers={"/ksc/board": [a, b], "/ksc/move": [{"state": "moved", "moved": 1}]},
+                   layout={"board": 340, "inner": 1000}, steps=["read", "tap", "wait:1100", "tap"])
+        self.assertEqual(got["taps"], [0, 1])
+
+    def test_f8b_the_cooks_own_ticket_leaving_holds_nothing(self):
+        six = [ticket(f"k{i}", 1, 1) for i in range(6)]
+        got = page("fit", answers={"/ksc/board": [station(*six), station(*six[1:])],
+                                   "/ksc/move": [{"state": "moved", "moved": 1}]},
+                   layout={"board": 340, "inner": 1000}, steps=["tap", "tap"])
+        self.assertEqual(got["taps"], [1, 2])
+
+    def test_f9_arabic_counts_take_their_dual_and_eleven_and_over_forms(self):
+        def more(n):
+            return self.fit(station(*[ticket(f"k{i}", 1, 1) for i in range(n + 1)], lang="ar"), 120)["first"]["pager"]["more"]
+        self.assertEqual([more(1), more(2), more(4), more(12)],
+                         ["+تذكرة واحدة أخرى", "+تذكرتان أخريان", "+4 تذاكر أخرى", "+12 تذكرةً أخرى"])
 
 
 if __name__ == "__main__":

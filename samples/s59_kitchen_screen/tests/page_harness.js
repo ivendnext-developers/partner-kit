@@ -18,12 +18,17 @@ function heightOf(e) {
   const cap = parseFloat(e.style.maxBlockSize);
   return isNaN(cap) ? h : Math.min(h, cap);
 }
+function topOf(e) {                 // inside the board, a box starts below its earlier siblings, in one column
+  if (e === BOARD || !e.parentNode) return 0;
+  let top = topOf(e.parentNode);
+  for (const c of e.parentNode.children) { if (c === e) break; top += heightOf(c); }
+  return top;
+}
+function inBoard(e) { for (let x = e; x; x = x.parentNode) if (x === BOARD) return true; return false; }
 function rectOf(e) {
   if (!LAYOUT) return { top: 0, bottom: 0, height: 0, left: 0, right: 0, width: 0 };
   if (e === BOARD) return { top: 0, bottom: LAYOUT.board, height: LAYOUT.board, left: 0, right: 100, width: 100 };
-  let top = 0;
-  if (e.parentNode === BOARD) for (const c of BOARD.children) { if (c === e) break; top += heightOf(c); }
-  const h = heightOf(e);
+  const top = inBoard(e) ? topOf(e) : 0, h = heightOf(e);
   return { top, bottom: top + h, height: h, left: 0, right: 100, width: 100 };
 }
 
@@ -50,10 +55,14 @@ function element(tag) {
     addEventListener(type, fn) { (this.listeners[type] = this.listeners[type] || []).push(fn); },
     click() { (this.listeners.click || []).forEach((fn) => fn({})); },
     all() { return this.children.reduce((out, c) => out.concat([c], c.all ? c.all() : []), []); },
-    querySelectorAll(sel) { const cls = sel.replace(/^\./, ""); return this.all().filter((c) => c.classList && c.classList.contains(cls)); },
+    querySelectorAll(sel) {            // one class, or several joined (".a.b")
+      const cls = sel.split(".").filter(Boolean);
+      return this.all().filter((c) => c.classList && cls.every((k) => c.classList.contains(k)));
+    },
     querySelector(sel) { return this.querySelectorAll(sel)[0] || null; },
     getBoundingClientRect() { return rectOf(this); },
-    get scrollHeight() { return 0; }, get clientHeight() { return 0; },
+    get scrollHeight() { return LAYOUT && this === BOARD ? this.children.reduce((h, c) => h + heightOf(c), 0) : 0; },
+    get clientHeight() { return LAYOUT && this === BOARD ? LAYOUT.board : 0; },
   };
   return e;
 }
@@ -65,7 +74,7 @@ function run(opts) {
   const html = fs.readFileSync(path.join(SERVICE, "page.html"), "utf8");
   for (const m of html.matchAll(/<(\w+)[^>]*\bid="([^"]+)"/g)) { byId[m[2]] = element(m[1]); body.appendChild(byId[m[2]]); }
   BOARD = byId.board; STRIP = byId.waiting;
-  const calls = [], answers = opts.answers || {};
+  const calls = [], answers = opts.answers || {}, winListeners = {};
   const store = opts.storage === "throws" ? null : Object.assign({}, opts.storage || {});
   const win = {
     location: { hash: opts.hash === undefined ? "#s=bistro.example.com&t=KSC-SCREEN-00001.1.sig" : opts.hash, reload() {} },
@@ -82,7 +91,8 @@ function run(opts) {
     ivnKit: { applyTheme() {}, applyDir() {}, openDialog(el) { el.open = true; }, closeDialog(el) { el.open = false; } },
     innerHeight: (opts.layout || {}).inner || 0,
     getComputedStyle: () => ({ paddingBottom: "0", paddingTop: "0" }),
-    addEventListener() {}, performance: { now: () => clock.t }, URLSearchParams, Date, console,
+    addEventListener(type, fn) { (winListeners[type] = winListeners[type] || []).push(fn); },
+    performance: { now: () => clock.t }, URLSearchParams, Date, console,
     setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, requestAnimationFrame: () => 0, cancelAnimationFrame() {},
   };
   const clock = { t: 1000 };
@@ -96,7 +106,7 @@ function run(opts) {
   vm.createContext(win);
   vm.runInContext(fs.readFileSync(path.join(SERVICE, "fit.js"), "utf8"), win, { filename: "fit.js" });
   vm.runInContext(fs.readFileSync(path.join(SERVICE, "page.js"), "utf8"), win, { filename: "page.js" });
-  return { win, byId, body, calls, store, clock };
+  return { win, byId, body, calls, store, clock, winListeners };
 }
 const settle = () => new Promise((r) => setImmediate(r));
 async function settled() { for (let i = 0; i < 20; i++) await settle(); }
@@ -104,7 +114,9 @@ async function settled() { for (let i = 0; i < 20; i++) await settle(); }
 function snapshot(p) {
   const slips = p.byId.board.children.filter((c) => c.classList.contains("ksc-slip"));
   const vis = (e) => !!e && !e.hidden;
+  const nums = p.byId.board.querySelectorAll("ksc-num").filter((n) => !n.classList.contains("ksc-num-more"));
   return {
+    numbers: { shown: nums.filter(vis).length, more: p.byId.board.querySelectorAll(".ksc-num-more").map((n) => n.textContent) },
     shown: slips.filter(vis).map((s) => s.getAttribute("data-key")),
     slips: slips.filter(vis).map((s) => ({
       key: s.getAttribute("data-key"), height: heightOf(s), tall: s.classList.contains("is-tall"),
@@ -126,8 +138,17 @@ const SCENARIOS = {
     const p = run(opts);
     await settled();
     const out = { first: snapshot(p) };
+    out.moves = 0;
     for (const step of opts.steps || []) {
       if (step === "next" || step === "prev") { p.byId[step].click(); out[step] = snapshot(p); }
+      if (step === "read") { (p.winListeners.online || []).forEach((fn) => fn()); await settled(); out.read = snapshot(p); }
+      if (step.startsWith("wait:")) p.clock.t += Number(step.slice(5));
+      if (step === "tap") {             // the first shown ticket's own button (Start, Ready, Bump)
+        const slip = p.byId.board.children.find((c) => c.classList.contains("ksc-slip") && !c.hidden);
+        slip.querySelector(".ksc-act").click(); await settled();
+        out.moves = p.calls.filter((c) => c.path === "/ksc/move").length;
+        out.taps = (out.taps || []).concat([out.moves]);
+      }
       if (step.startsWith("more:")) {
         const slip = p.byId.board.children.find((c) => c.getAttribute("data-key") === step.slice(5));
         slip.querySelector(".ksc-more").click();
