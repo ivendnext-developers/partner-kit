@@ -1,0 +1,342 @@
+{
+ "manifest_version": 2,
+ "app": "pp_ksc",
+ "prefix": "PP KSC",
+ "title": "Kitchen screen",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A kitchen screen for each station, an expo screen at the pass and a Now serving board, on the till's own station tickets (the station-ticket door): each screen reads its store's board every few seconds through the app's service. A cook taps a ticket started, ready and bumped; a void ticket shows its dishes struck through; the expo shows every station's tickets of one order together, what is still waiting, and bumps an order when every station's part is ready; the board shows the call numbers preparing and ready. When the store's row allows it, a cook marks a dish on the board sold out at the screen's own store, and the tills stop selling it (an app's line on an open check is refused when the check is paid). Make link, on a PP KSC Screen record, writes the screen's signed link; pressing it again replaces a link that leaked (the old one stops). The app never voids, comps, changes a line or touches money, and keeps no guest data. The install makes the roles PP KSC Manager and PP KSC Integration and the app's own user; the retailer gives that user its stores and the right May Work a Kitchen Screen, and leaves the feed PP KSC Kitchen screen feed off. allowed_urls is the programme bench's address; a partner writes their own service's address.",
+ "allowed_urls": [
+  "https://host.docker.internal:8159/ksc/link"
+ ],
+ "doctypes": [
+  {
+   "name": "PP KSC Store",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Store",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "A store whose kitchen uses the screens."
+    },
+    {
+     "fieldname": "sold_out_on",
+     "fieldtype": "Check",
+     "label": "Sold out from the screens",
+     "in_list_view": 1,
+     "description": "Ticked: a station or expo screen of this store may mark a dish on its board sold out here (and clear it). The app's user then needs Read, Write and Create on Retail Item Availability, which the till does not limit to its stores; the app marks only the screen's own store."
+    },
+    {
+     "fieldname": "warn_min",
+     "fieldtype": "Int",
+     "label": "Warn after (minutes)",
+     "default": "8",
+     "in_list_view": 1,
+     "description": "A ticket waiting this long shows amber, with Late soon (blank: 8)."
+    },
+    {
+     "fieldname": "late_min",
+     "fieldtype": "Int",
+     "label": "Late after (minutes)",
+     "default": "15",
+     "in_list_view": 1,
+     "description": "A ticket waiting this long shows red, with Late (blank: 15; always after Warn after)."
+    },
+    {
+     "fieldname": "look",
+     "fieldtype": "Select",
+     "options": "Dark\nLight",
+     "default": "Dark",
+     "label": "Screens' look",
+     "description": "Dark suits a kitchen; Light suits a bright counter."
+    },
+    {
+     "fieldname": "slip_size",
+     "fieldtype": "Select",
+     "options": "Compact\nStandard\nLarge\nExtra large",
+     "default": "Standard",
+     "label": "Ticket size",
+     "description": "How large the tickets are drawn on this store's screens; they also grow and shrink with the screen. A cook's A− and A+ on one screen override it there, remembered on that device."
+    },
+    {
+     "fieldname": "accent",
+     "fieldtype": "Data",
+     "label": "Accent colour",
+     "description": "The screens' buttons and highlights, as #rrggbb (for example #0b4d69; blank: the iVendNext blue).",
+     "length": 7
+    },
+    {
+     "fieldname": "language",
+     "fieldtype": "Select",
+     "options": "English\nArabic\nSpanish\nFrench\nGerman\nPortuguese",
+     "default": "English",
+     "label": "Screens' language",
+     "description": "The screens' own words; dish names stay as written on the items."
+    },
+    {
+     "fieldname": "tables_on_board",
+     "fieldtype": "Check",
+     "label": "Board shows tables",
+     "description": "Ticked: the Now serving board shows tables' checks too. Off: counter sales' call numbers only."
+    }
+   ]
+  },
+  {
+   "name": "PP KSC Settings",
+   "autoname": "field:company",
+   "fields": [
+    {
+     "fieldname": "company",
+     "fieldtype": "Link",
+     "options": "Company",
+     "label": "Company",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "One settings record per company."
+    },
+    {
+     "fieldname": "stores",
+     "fieldtype": "Table",
+     "options": "PP KSC Store",
+     "label": "Stores",
+     "description": "Each store whose kitchen uses the screens."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP KSC Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP KSC Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP KSC Screen Station",
+   "istable": 1,
+   "permissions": [],
+   "fields": [
+    {
+     "fieldname": "station",
+     "fieldtype": "Link",
+     "options": "Retail Kitchen Station",
+     "label": "Kitchen station",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "A kitchen station (Kitchen Stations in Desk) whose tickets this screen shows."
+    }
+   ]
+  },
+  {
+   "name": "PP KSC Screen",
+   "autoname": "format:KSC-SCREEN-{#####}",
+   "title_field": "title",
+   "search_fields": "title,store",
+   "fields": [
+    {
+     "fieldname": "title",
+     "fieldtype": "Data",
+     "label": "Screen name",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "Shown at the top of the screen (for example Grill, Pass or Counter board)."
+    },
+    {
+     "fieldname": "kind",
+     "fieldtype": "Select",
+     "options": "Station\nExpo\nBoard",
+     "default": "Station",
+     "label": "Kind",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "Station: one or more stations' tickets, tapped started, ready and bumped. Expo: every station's tickets of each order together, bumped when all are ready. Board: the call numbers preparing and ready, for guests."
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Store",
+     "reqd": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The store whose kitchen this screen serves."
+    },
+    {
+     "fieldname": "stations",
+     "fieldtype": "Table",
+     "options": "PP KSC Screen Station",
+     "label": "Kitchen stations",
+     "depends_on": "eval:doc.kind=='Station'",
+     "mandatory_depends_on": "eval:doc.kind=='Station'",
+     "description": "The stations whose tickets a station screen shows (one, or a few on a small kitchen's screen)."
+    },
+    {
+     "fieldname": "link_section",
+     "fieldtype": "Section Break",
+     "label": "The screen's link"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP KSC Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP KSC Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "PP KSC Screen",
+   "fieldname": "number",
+   "fieldtype": "Int",
+   "label": "Link number",
+   "insert_after": "link_section",
+   "in_list_view": 1,
+   "write_roles": [
+    "PP KSC Integration",
+    "System Manager"
+   ],
+   "description": "Raised by one each time Make link is pressed; a screen opened with an earlier number stops within 15 seconds."
+  },
+  {
+   "dt": "PP KSC Screen",
+   "fieldname": "link",
+   "fieldtype": "Data",
+   "label": "Link",
+   "insert_after": "number",
+   "length": 240,
+   "write_roles": [
+    "PP KSC Integration",
+    "System Manager"
+   ],
+   "description": "Open this address on the screen's browser (full screen). Anyone with it can work this screen's tickets: press Make link again if it leaked. Changing the kind, the store or the stations stops it until Make link is pressed again."
+  },
+  {
+   "dt": "PP KSC Screen",
+   "fieldname": "made_for",
+   "fieldtype": "Data",
+   "label": "Made for",
+   "insert_after": "link",
+   "hidden": 1,
+   "write_roles": [
+    "PP KSC Integration",
+    "System Manager"
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP KSC Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/kitchen_screen.html#settings"
+  },
+  {
+   "doc_type": "PP KSC Screen",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/kitchen_screen.html#screens"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP KSC Kitchen screen feed",
+   "description": "the kitchen screen service reads the store's tickets and moves them as this feed's user; leave the feed off",
+   "events": [
+    "PP KSC Screen"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "link",
+   "point": "desk_action",
+   "label": "Make link service",
+   "endpoint_url": "https://host.docker.internal:8159/ksc/link",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP KSC Screen",
+   "label": "Make link",
+   "placement": "both",
+   "service": "link",
+   "roles": [
+    "PP KSC Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "confirm_text": "Make a new link? A screen open with the old link stops within 15 seconds: open the new link on it."
+  }
+ ]
+}

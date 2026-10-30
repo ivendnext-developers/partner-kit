@@ -1,0 +1,42 @@
+{
+ "app": "kitchen-screen",
+ "version": "1.0.0",
+ "port": 8080,
+ "health": "/health",
+ "size": "small",
+ "region": "us",
+ "shops": true,
+ "runs": "function",
+ "handler": "samples/s59_kitchen_screen/service/app.lambda_handler",
+ "package": [
+  "tools/app_template/service/function.py",
+  "tools/app_template/service/shops.py",
+  "tools/app_template/service/dynamo.py",
+  "tools/app_template/service/ed25519.py",
+  "samples/s59_kitchen_screen/ksc.py",
+  "samples/s59_kitchen_screen/service/app.py",
+  "samples/s59_kitchen_screen/service/page.html",
+  "samples/s59_kitchen_screen/service/page.js",
+  "samples/s59_kitchen_screen/service/page.css",
+  "samples/s59_kitchen_screen/service/fit.js",
+  "samples/s59_kitchen_screen/service/ivn-kit.css",
+  "samples/s59_kitchen_screen/service/ivn-kit.js"
+ ],
+ "env": [
+  {
+   "name": "IVN_LIBRARY_APP",
+   "about": "Your app's id in the App library, in lower case with underscores: for the prefix ACME KSC, acme_ksc. Each retailer that installs your app connects with a key that names this id.",
+   "required": true
+  },
+  {
+   "name": "KSC_PREFIX",
+   "about": "The prefix your app's names in the retailer's iVendNext start with, in capitals: the --prefix you gave start.py (for example ACME KSC).",
+   "required": true
+  },
+  {
+   "name": "KSC_PAGE_URL",
+   "about": "Where the kitchen's screens reach this service's page (https://kitchen-screen.example.app). Each screen's link points there.",
+   "required": true
+  }
+ ]
+}

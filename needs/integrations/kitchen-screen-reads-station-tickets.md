@@ -7,10 +7,10 @@ asks: Our kitchen screen shows each station what the tills sent, the cooks tap a
 status: ready-with-limits
 door: station-ticket
 blocked-by: -
-recipe: contracts/pages/station_ticket.md
-sample: none
+recipe: recipes/kitchen_screen.md
+sample: samples/s59_kitchen_screen
 request: -
-verified: run by the product 2026-10-29 (the product's own walk, before its review fixes, which its tests then proved, through the API and the site's live socket: an integration user set up as the open check's, then Generate Keys, its store row kept; a till's Send printed the ticket and the user's server was told within 0.1 seconds; the user read the grill board with the guest, course and allergen line, moved a ticket started, ready and bumped, was answered already for the same step twice, and was refused a skip, a step back, another store's board and an unknown order); not run by a kit sample
+verified: run by the product 2026-10-29 (the product's own walk, before its review fixes, which its tests then proved, through the API and the site's live socket: an integration user set up as the open check's, then Generate Keys, its store row kept; a till's Send printed the ticket and the user's server was told within 0.1 seconds; the user read the grill board with the guest, course and allergen line, moved a ticket started, ready and bumped, was answered already for the same step twice, and was refused a skip, a step back, another store's board and an unknown order); run by kit sample S59 2026-10-30 on a test site at POS 2.1.0.669 (two stations, each with its printer: a till's Send of a table's check reached the grill and the bar; each Send was in the grill screen's next read of the service 0.04 to 0.34 seconds after it across the day's runs, so on a screen within about 4 seconds with its 3-second read; a cook moved a ticket started, ready and bumped, a double tap moved it once, a skip and a step back were refused, a void reached its station, the expo bumped an order, the board showed the table's name once Board shows tables was ticked, another store's board and a replaced link were refused, and sold out marked a dish at the screen's own store only)
 related: open-check-from-an-app
 ---
 ## What you build
