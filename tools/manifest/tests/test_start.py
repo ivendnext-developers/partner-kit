@@ -308,5 +308,32 @@ class SharedNames(unittest.TestCase):
             self.assertFalse((repo / "apps").exists())
 
 
+class GuideLinks(unittest.TestCase):
+    """partner-feedback#45: a help link to the sample's own page on the developer site
+    (``https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#claims``) is the guide's: it stays as it is,
+    and is never taken for the kit's path to the sample left in the copy."""
+
+    LINK = "https://developer.ivendnext.com/samples/s43_third_party_payer/index.html#claims"
+
+    def test_s43_starts_and_passes_its_own_tests_with_its_help_links_kept(self):
+        self.assertIn(self.LINK, (KIT / "samples" / "s43_third_party_payer" / "manifest.json").read_text(encoding="utf-8"),
+                      "S43 no longer links its page: this test guards nothing")
+        with tempfile.TemporaryDirectory() as d:
+            repo = repository(d)
+            rc, out = run("s43_third_party_payer", "--prefix", PREFIX, "--into", str(repo), "--test")
+            self.assertEqual(rc, 0, out)
+            self.assertRegex(out, r"copied tests: ran \d+, OK")
+            self.assertIn(self.LINK, (repo / "apps" / "acme_tst" / "manifest.json").read_text(encoding="utf-8"))
+
+    def test_the_kits_path_is_still_a_leftover_and_still_rewritten(self):
+        m = {"prefix": "PP ICP", "app": "pp_icp"}
+        pat = start.old_names(m, "s43_third_party_payer")
+        self.assertIsNone(pat.search(self.LINK))
+        self.assertTrue(pat.search("COPY samples/s43_third_party_payer/service /app"))
+        text = start.rewrite(f"COPY samples/s43_third_party_payer/service /app\nsee {self.LINK}\n", m, PREFIX,
+                             "s43_third_party_payer", "acme_tst")
+        self.assertEqual(text, f"COPY apps/acme_tst/service /app\nsee {self.LINK}\n")
+
+
 if __name__ == "__main__":
     unittest.main()
