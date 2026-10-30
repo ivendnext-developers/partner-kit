@@ -43,6 +43,12 @@ class Lost(Exception):
         self.why, self.refused = why, refused
 
 
+def _bust() -> str:
+    """A fresh value for each long poll's address, as the socket's own browser client sends: an edge that caches by
+    address never replays an old answer (which would be polled again at once, for ever)."""
+    return f"{random.random():.10f}"[2:]
+
+
 def _short(text) -> str:
     """A refusal's words from the site, kept to letters, digits and a little punctuation, at most 60 characters."""
     s = "".join(c for c in str(text) if c.isalnum() or c in " .,:'-")
@@ -139,7 +145,7 @@ class Session:
     # ── the protocol ──
     def handshake(self):
         """engine.io's open packet: ``0{"sid", "pingInterval", "pingTimeout", …}``."""
-        text = self._request("_polls", "GET", {"t": f"{random.random():.8f}"[2:]}, None, WAIT_S)
+        text = self._request("_polls", "GET", {"t": _bust()}, None, WAIT_S)
         first = text.split(SEP, 1)[0]
         if not first.startswith("0"):
             raise Lost("no open packet")
@@ -179,7 +185,7 @@ class Session:
 
     def poll(self) -> list[str]:
         """One long poll: its socket.io packets; a ping answered here, the server's close raised."""
-        text = self._request("_polls", "GET", {"sid": self.sid}, None, self.wait_s)
+        text = self._request("_polls", "GET", {"sid": self.sid, "t": _bust()}, None, self.wait_s)   # never a cached answer
         packets = text.split(SEP)
         if not any(p in ("1", "2") or (p[:1] == "4" and p[2:].startswith(self.ns)) for p in packets):   # an empty answer,
             # an edge's own page ("200 OK", "404 page not found"): never asked again at once

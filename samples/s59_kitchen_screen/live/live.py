@@ -68,6 +68,7 @@ CONNECTIONS_MAX = STREAMS_MAX + 200   # connections at once, admitted or not (a 
 NAME_RETRY_S = 1800       # a site whose Desk page named no site is read again at most this often
 NAME_PAGE = "/app"        # the site's Desk page: its boot data names the site (``"sitename": …``)
 NAME_MAX = 4 * 1024 * 1024
+NAME_PAGE_MIN = 64 * 1024 # a Desk page is larger than this; a smaller one (an edge's own page) is not parked
 _NAME = re.compile(r'sitename\\?"\s*:\s*\\?"([a-z0-9][a-z0-9.-]{0,252})\\?"')
 
 
@@ -151,11 +152,12 @@ class Hub:
             others = bool(self.lines.get(site))
         if replaced:                    # the retailer's open screens read every 3 s until the new socket signs in
             self._tell(site, "state", {"live": False})
+        if line is not None:            # told before a socket starts, so its "signed in" always comes after
+            line.tell("state", {"live": live})
         if not sock and others:
             self._start(site)
         if line is None:
             return 503, {"state": "busy"}, None
-        line.tell("state", {"live": live})
         return 200, {}, line
 
     def drop(self, line: Line):
@@ -238,6 +240,8 @@ class Hub:
         m = _NAME.search(text or "")
         name = m.group(1) if m else ""
         log(site=site, socket="name read" if name else "name not found")
+        if not name and len(text or "") < NAME_PAGE_MIN:   # an edge's maintenance page, not the Desk: try again later
+            return None
         return name
 
     @staticmethod
@@ -258,6 +262,9 @@ class Hub:
         """Close each socket whose retailer has had no line for LINGER_S."""
         now = self.clock()
         with self._lock:
+            for s, e in self.sockets.items():
+                if not self.lines.get(s) and e["idle_since"] is None:   # no line and no mark (a busy refusal cleared
+                    e["idle_since"] = now                               # it, or its lines left first): idle from now
             idle = [s for s, e in self.sockets.items()
                     if not self.lines.get(s) and e["idle_since"] is not None and now - e["idle_since"] >= LINGER_S]
             for s in idle:

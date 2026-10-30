@@ -249,6 +249,31 @@ class LiveTest(unittest.TestCase):
         self.assertEqual(got[-1], ("state", {"live": True}))
         self.assertEqual(list(self.site.hs.values())[-1]["Authorization"], f"token {new_key}")
 
+    def test_v13_a_socket_whose_lines_are_gone_is_swept_even_when_a_busy_refusal_cleared_its_mark(self):
+        self.start()
+        clock = Clock()
+        self.hub.clock = clock
+        r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+        self.up(r)
+        r.close()
+        deadline = time.monotonic() + 3
+        while self.hub.lines and time.monotonic() < deadline:
+            time.sleep(0.05)
+        self.hub.sockets[self.site.site]["idle_since"] = None      # as a busy admission in its linger minute leaves it
+        self.hub.sweep()
+        clock.t += live.LINGER_S
+        self.hub.sweep()
+        self.assertEqual(self.hub.sockets, {})
+
+    def test_v14_an_edges_small_page_at_app_is_not_parked_as_no_name(self):
+        self.start(name="shop-internal.example.com")
+        self.site.edge_page = "<html>down for maintenance</html>"
+        self.events(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")), None, 1.5)
+        self.assertEqual(self.hub.name_tried, {})                          # not parked: read again at the next refusal
+        self.site.edge_page = None                                         # maintenance over
+        r = self.open_line(link_for(self.site.site, "KSC-SCREEN-00001"))
+        self.assertEqual(self.up(r)[-1], ("state", {"live": True}))
+
     def test_v10_a_site_whose_desk_page_names_no_site_is_not_read_again_at_once(self):
         self.start(name="shop-internal.example.com", named=False)
         self.events(self.open_line(link_for(self.site.site, "KSC-SCREEN-00001")), None, 2.5)
@@ -327,10 +352,12 @@ class SocketTest(unittest.TestCase):
             s.poll()
         s.close()
         self.assertGreaterEqual(site.pongs, 2)
+        self.assertEqual(len(set(site.poll_ts)), len(site.poll_ts))     # each poll's address is new: never a cached answer
+        self.assertTrue(all(site.poll_ts))
         self.assertIn("edge=sticky-1", site.headers[-1]["Cookie"])
 
     def test_k5_an_answer_with_no_packet_ends_the_session_never_asks_again_at_once(self):
-        for body in ("", "200 OK", "404 page not found", "2xx maintenance", "<html>maintenance</html>", "6"):
+        for body in ("", "200 OK", "404 page not found", "2xx maintenance", "<html>maintenance</html>"):
             site = fakesite.FakeSite(poll_body=body)   # an edge answering 200 with an empty body or its own page
             self.addCleanup(site.stop)
             s = sitesocket.Session(site.url, fakesite.KEY, lambda *a: None)

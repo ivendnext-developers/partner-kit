@@ -19,6 +19,8 @@ class FakeSite:
         self.key, self.ping_ms, self.redirect = key, ping_ms, redirect
         self.poll_body, self.named, self.polls = poll_body, named, 0    # poll_body: an edge answering 200 with no packet
         self.page_fails = page_fails                                    # the Desk page answers 502 this many times first
+        self.poll_ts = []                                               # each long poll's t= (a fresh one each time)
+        self.edge_page = None                                           # /app answers this small page (an edge's)
         self.lock = threading.Condition()
         self.queues, self.signed, self.headers, self.pongs, self.closed, self.pages = {}, set(), [], 0, [], 0
         site = self
@@ -41,13 +43,16 @@ class FakeSite:
                 url = urllib.parse.urlsplit(self.path)
                 if url.path == "/app":
                     site.pages += 1
+                    if site.edge_page is not None:
+                        return self._send(200, site.edge_page, "text/html")
                     if site.page_fails > 0:
                         site.page_fails -= 1
                         return self._send(502, "bad gateway")
                     if self.headers.get("Authorization") != f"token {site.key}":
                         return self._send(403, "no")
                     return self._send(200, '<script>frappe.boot = {"sitename": "%s"}</script>' % site.name
-                                      if site.named else "<html>a page with no boot data</html>", "text/html")
+                                      if site.named else "<html>a Desk page with no boot data" + " " * 70000 + "</html>",
+                                      "text/html")
                 q = dict(urllib.parse.parse_qsl(url.query))
                 if site.redirect:
                     return self._send(302, "", extra={"Location": "http://127.0.0.1:9/elsewhere"})
@@ -61,6 +66,7 @@ class FakeSite:
                                       extra={"Set-Cookie": "edge=sticky-1; Path=/"})
                 sid = q["sid"]
                 site.polls += 1
+                site.poll_ts.append(q.get("t", ""))
                 if site.poll_body is not None:
                     return self._send(200, site.poll_body)
                 with site.lock:

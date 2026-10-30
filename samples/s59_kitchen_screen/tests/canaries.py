@@ -337,6 +337,12 @@ CANARIES = [
     ("a replaced key's socket comes back though the admission was busy", LS, "        if not sock and others:",
      "        if not sock and others and line is not None:",
      L + "LiveTest.test_v12_a_key_replaced_while_the_retailer_is_at_its_cap_still_tells_its_screens_and_comes_back"),
+    ("a socket with no line and no mark is idle from now", LS, '                if not self.lines.get(s) and e["idle_since"] is None:',
+     "                if False:", L + "LiveTest.test_v13_a_socket_whose_lines_are_gone_is_swept_even_when_a_busy_refusal_cleared_its_mark"),
+    ("each long poll asks at a fresh address", SS, '{"sid": self.sid, "t": _bust()}', '{"sid": self.sid}',
+     L + "SocketTest.test_k3_pings_are_answered_and_the_edges_cookie_is_sent_back"),
+    ("an edge's small page is not parked as no name", LS, "        if not name and len(text or \"\") < NAME_PAGE_MIN:",
+     "        if False:", L + "LiveTest.test_v14_an_edges_small_page_at_app_is_not_parked_as_no_name"),
     # KSCSOLDNAME
     ("a sold-out dish is named by its record", S, "            value = ksc.with_names(value, named)", "            value = value",
      T + "test_s8_a_dish_sold_out_that_no_ticket_names_is_shown_by_its_name"),
