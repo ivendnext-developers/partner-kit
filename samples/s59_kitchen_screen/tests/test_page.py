@@ -145,8 +145,13 @@ class PageFit(unittest.TestCase):
 
     def test_f2_a_single_dish_taller_than_the_board_scrolls_its_ticket(self):
         got = self.fit(station(ticket("k1", 1, 1, choices=8)), 100)["first"]["slips"][0]
-        self.assertTrue(got["tall"])
+        self.assertEqual((got["tall"], got["more"], got["hiddenLines"]), (True, "", 0))   # whole, and it scrolls
         self.assertLessEqual(got["height"], 100)
+
+    def test_f2c_a_scrolling_ticket_keeps_its_parts_height_so_every_line_shows(self):
+        # the browser shrinks a flex child that hides its overflow: the scroll must not squeeze a part away
+        css = open(os.path.join(os.path.dirname(HERE), "service", "page.css")).read()
+        self.assertIn(".ksc-slip.is-tall > * { flex-shrink: 0; }", css)
 
     def test_f3_the_expo_never_folds_a_void_and_shows_again_what_fits(self):
         got = self.fit(expo([order("k1", [ticket("k1", 1, 3), ticket("k1", 2, 2, kind="void", station="Bar")])]), 150)
@@ -178,8 +183,14 @@ class PageFit(unittest.TestCase):
     def test_f2b_an_expo_void_too_tall_to_fold_scrolls_so_bump_order_stays_in_reach(self):
         o = order("k1", [ticket("k1", 1, 1), ticket("k1", 2, 14, kind="void", station="Bar")], bump=True)
         got = self.fit(expo([o]), 200)["first"]["slips"][0]
-        self.assertEqual((got["tall"], got["more"], got["voidPart"]), (True, "", [{"shown": True, "lines": 14}]))
+        self.assertEqual((got["tall"], got["more"], got["voidPart"], got["hiddenLines"]),
+                         (True, "", [{"shown": True, "lines": 14}], 0))
         self.assertLessEqual(got["height"], 200)
+
+    def test_f2d_a_ticket_that_scrolls_anyway_unfolds_what_was_folded(self):
+        o = order("k1", [ticket("k1", 1, 3), ticket("k1", 2, 14, kind="void", station="Bar")], bump=True)
+        got = self.fit(expo([o]), 200)["first"]["slips"][0]
+        self.assertEqual((got["tall"], got["more"], got["hiddenLines"]), (True, "", 0))
 
     def test_f7_the_board_counts_the_numbers_that_still_do_not_fit(self):
         b = station()
@@ -195,18 +206,33 @@ class PageFit(unittest.TestCase):
                    layout={"board": 340, "inner": 1000}, steps=["read", "tap", "wait:1100", "tap"])
         self.assertEqual(got["taps"], [0, 1])
 
-    def test_f8b_the_cooks_own_ticket_leaving_holds_nothing(self):
-        six = [ticket(f"k{i}", 1, 1) for i in range(6)]
+    def test_f8b_the_cooks_own_bump_leaving_holds_nothing(self):
+        six = [dict(ticket(f"k{i}", 1, 1), state="ready") for i in range(6)]   # the cook's tap is Bump
         got = page("fit", answers={"/ksc/board": [station(*six), station(*six[1:])],
                                    "/ksc/move": [{"state": "moved", "moved": 1}]},
                    layout={"board": 340, "inner": 1000}, steps=["tap", "tap"])
         self.assertEqual(got["taps"], [1, 2])
 
+    def test_f8c_the_cooks_own_paging_holds_nothing(self):
+        six = [ticket(f"k{i}", 1, 1) for i in range(6)]
+        got = page("fit", answers={"/ksc/board": [station(*six)], "/ksc/move": [{"state": "moved", "moved": 1}]},
+                   layout={"board": 340, "inner": 1000}, steps=["next", "tap"])
+        self.assertEqual(got["taps"], [1])
+
+    def test_f8d_a_ticket_the_cook_only_started_leaving_by_another_screen_holds(self):
+        six = [ticket(f"k{i}", 1, 1) for i in range(6)]
+        started = [dict(six[0], state="started")] + six[1:]
+        got = page("fit", answers={"/ksc/board": [station(*six), station(*started), station(*six[1:])],
+                                   "/ksc/move": [{"state": "moved", "moved": 1}]},
+                   layout={"board": 340, "inner": 1000}, steps=["tap", "read", "tap"])
+        self.assertEqual(got["taps"], [1, 1])               # the expo bumped k0: the cook's next tap is held
+
     def test_f9_arabic_counts_take_their_dual_and_eleven_and_over_forms(self):
         def more(n):
             return self.fit(station(*[ticket(f"k{i}", 1, 1) for i in range(n + 1)], lang="ar"), 120)["first"]["pager"]["more"]
-        self.assertEqual([more(1), more(2), more(4), more(12)],
-                         ["+تذكرة واحدة أخرى", "+تذكرتان أخريان", "+4 تذاكر أخرى", "+12 تذكرةً أخرى"])
+        self.assertEqual([more(1), more(2), more(4), more(12), more(100), more(103), more(111)],
+                         ["+تذكرة واحدة أخرى", "+تذكرتان أخريان", "+4 تذاكر أخرى", "+12 تذكرةً أخرى", "+100 تذكرةً أخرى",
+                          "+103 تذاكر أخرى", "+111 تذكرةً أخرى"])
 
 
 if __name__ == "__main__":

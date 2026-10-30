@@ -39,6 +39,7 @@ html[dir="rtl"] .ksc-dir .ksc-icon { transform: scaleX(-1); }   /* earlier and l
 /* a ticket (and the expo's order card): a slip */
 .ksc-slip { min-inline-size: 0; overflow-wrap: anywhere; }
 .ksc-slip.is-tall { overflow-y: auto; }   /* one dish taller than the board: the ticket scrolls, Bump stays in reach */
+.ksc-slip.is-tall > * { flex-shrink: 0; }  /* and its parts keep their height, so the scroll shows every line */
 .ksc-slip.is-tall .ksc-ticket-head { position: sticky; inset-block-start: 0; z-index: 1; }   /* its number stays in view */
 .ksc-ticket { display: flex; flex-direction: column; background: var(--ivn-surface); border: 3px solid var(--ivn-border-strong);
   border-radius: var(--ivn-radius-lg); box-shadow: var(--ivn-shadow-sm); overflow: hidden; }

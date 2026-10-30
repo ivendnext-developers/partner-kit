@@ -136,7 +136,7 @@
     var h = n % 100;
     if (n === 1) return w(one);
     if (lang === "ar" && n === 2) return w(one + "2");
-    if (lang === "ar" && h >= 11) return w(many + "11", { n: n });
+    if (lang === "ar" && (h >= 11 || (n > 2 && h < 3))) return w(many + "11", { n: n });   // 100, 101, 102: the singular too
     return w(many, { n: n });
   }
   function w(key, args) {
@@ -149,7 +149,7 @@
   var LINK = { s: hash.get("s") || "", t: hash.get("t") || "" };
   var $ = function (id) { return document.getElementById(id); };
   var last = null, readAt = 0, goodAt = 0, timer = null, busy = {}, showRecall = false, page = 0, touchedAt = 0;
-  var shiftedAt = -1e9, openKey = "", shownKeys = [], movedKey = "", cookPaged = false;
+  var shiftedAt = -1e9, openKey = "", shownKeys = [], bumped = {}, cookPaged = false;
 
   // ── drawing helpers: text only, never markup ──
   function bdi(text) { var b = document.createElement("bdi"); b.textContent = String(text); return b; }
@@ -259,7 +259,8 @@
   function move(btn, extra) {
     var key = extra.kitchen_order + "." + (extra.ticket || "order");
     if (busy[key] || performance.now() - shiftedAt < SHIFT_MS) return;   // the page just changed under the finger
-    busy[key] = true; btn.disabled = true; movedKey = key.replace(/\.order$/, "");
+    busy[key] = true; btn.disabled = true;
+    if (extra.state === "bumped" || extra.order) bumped[key.replace(/\.order$/, "")] = true;   // it leaves by the cook's hand
     call("/ksc/move", extra).then(function (a) {
       busy[key] = false;
       answered(a, key);
@@ -472,9 +473,9 @@
     }
     var first = groups[0] || [], choices = 0;   // the first dish alone too tall: its last choices fold, the dish stays
     while (tall(slip) > cap + 0.5 && choices < first.length - 1) first[first.length - ++choices].hidden = true;
-    if (tall(slip) > cap + 0.5) {      // still too tall (one dish, or a void that never folds): this ticket scrolls,
-      first.forEach(function (li) { li.hidden = false; });   // its dish whole, so Bump stays in reach
-      choices = 0;
+    if (tall(slip) > cap + 0.5) {      // still too tall (one dish, or a void that never folds): nothing stays folded
+      fold(0); hide = 0; choices = 0;   // and this ticket scrolls whole, so Bump stays in reach
+      first.forEach(function (li) { li.hidden = false; });
       slip.classList.add("is-tall"); slip.style.maxBlockSize = cap + "px";
     }
     var said = [];
@@ -536,10 +537,10 @@
     var main = $("board");
     if (!last) return;
     fitStrip();
-    if (main.classList.contains("ksc-serving")) { fitNumbers(main); pager(0, 0, false, false); return; }
+    if (main.classList.contains("ksc-serving")) { fitNumbers(main); pager(0, 0, false, false); cookPaged = false; return; }
     var slips = Array.prototype.filter.call(main.children, function (c) { return c.classList.contains("ksc-slip"); });
     slips.forEach(function (sl) { sl.hidden = false; });
-    if (!slips.length) { pager(0, 0, false, false); return; }
+    if (!slips.length) { pager(0, 0, false, false); shownKeys = []; cookPaged = false; return; }
     var box = main.getBoundingClientRect(), limit = box.bottom - parseFloat(getComputedStyle(main).paddingBottom);
     var cap = limit - slips[0].getBoundingClientRect().top;
     slips.forEach(function (sl) { capSlip(sl, cap); });
@@ -554,10 +555,13 @@
     var keys = slips.slice(shown.from, shown.end).map(function (sl) { return sl.getAttribute("data-key"); });
     for (var i = 0; i < Math.max(keys.length, shownKeys.length); i++) {   // a ticket moved under the finger, not by the
       if (keys[i] === shownKeys[i]) continue;                            // cook's own tap: hold taps a moment
-      if (shownKeys.length && shownKeys[i] !== movedKey && !cookPaged) shiftedAt = performance.now();
+      if (shownKeys.length && !bumped[shownKeys[i]] && !cookPaged) shiftedAt = performance.now();
       break;
     }
     shownKeys = keys; cookPaged = false;
+    var present = {};                  // a bumped ticket is forgotten once it has left the board
+    slips.forEach(function (sl) { present[sl.getAttribute("data-key")] = true; });
+    Object.keys(bumped).forEach(function (k) { if (!present[k]) delete bumped[k]; });
     pager(shown.from, slips.length - shown.end, lateIn(slips.slice(0, shown.from)), lateIn(slips.slice(shown.end)));
   }
   var fitting = 0;
