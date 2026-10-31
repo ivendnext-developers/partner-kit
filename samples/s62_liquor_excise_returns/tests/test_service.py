@@ -105,7 +105,7 @@ WANT = {
     ("Wine", "Closing stock"): ("3", "2.250", "0.281"),
 }
 SUMMARY = ("3 duty classes, 5 items. Sold 13.860 litres (3.283 litres of pure alcohol); closing stock 40.130 litres. "
-           "Stock counts changed -1.400 litres in all. 1 item has no litres or no strength, so its volume or pure alcohol is "
+           "Stock counts changed -1.400 litres in all. 1 item has no millilitres or no strength, so its volume or pure alcohol is "
            "left out (units counted): Rum.")
 
 
@@ -150,14 +150,14 @@ class ServiceTest(unittest.TestCase):
 
     def test_s2_the_reads_are_few_and_never_a_row_a_sale(self):
         self.press()
-        self.assertEqual(len(self.s.reads), 10, self.s.reads)       # the return, classes, items, 5 grouped, the balances, purposes
+        self.assertEqual(len(self.s.reads), 11, self.s.reads)       # the return, the lock, classes, items, 5 grouped, the balances, purposes
         ledger = [r for r in self.s.reads if r[1] == "Stock Ledger Entry"]
         grouped = [r for r in ledger if r[3]]
         self.assertEqual(len(grouped), 5, ledger)                   # two last times, in, out, the entries
         self.assertEqual({r[2] for r in ledger if not r[3]},
                          {("name", "item_code", "posting_datetime", "creation", "qty_after_transaction")})
         self.assertNotIn("customer", json.dumps(self.s.reads))
-        self.assertEqual(self.s.reads[2][2], ("name", "item_name", ITEM + "class", ITEM + "ml", ITEM + "abv"))
+        self.assertEqual(self.s.reads[3][2], ("name", "item_name", ITEM + "class", ITEM + "ml", ITEM + "abv"))
 
     def test_s3_us_gallons(self):
         self.s.returns[NAME]["unit"] = "US gallons"
@@ -214,6 +214,21 @@ class ServiceTest(unittest.TestCase):
             self.assertEqual((code, out["message"]["body"], out["message"]["level"], s.writes), (200, words, "warning", []),
                              change)
 
+    def test_s5b_no_figures_while_the_lock_is_off(self):
+        for rules in ([], [dict(self.s.rules[0], enabled=0)], [dict(self.s.rules[0], mode="flag")]):
+            s = shop()
+            s.rules = rules
+            code, out = app.Service(CONF, s).handle("POST", "/exr/work", signed(body(), CONF["PP_WORK_SECRET"]), body())
+            self.assertEqual((code, out["message"]["body"], s.writes),
+                             (200, app.LOCK_OFF.format(exr.LOCK_RULE), []), rules)
+            self.assertNotIn("Stock Ledger Entry", [r[1] for r in s.reads])
+
+    def test_s5c_a_movement_one_second_after_the_period_and_a_cancelled_row_before_it_stay_out(self):
+        self.s.move("VODKA", "2026-09-30 23:59:59", "Sales Invoice", "SINV-Y", -9, cancelled=1)   # cancelled, at the end
+        self.s.move("BEER6", "2026-10-01 00:00:00", "Purchase Receipt", "PR-ZERO", 0)              # at the start: in it
+        self.press()
+        self.assertEqual(self.lines()[("Spirits", "Opening stock")][0], 36.0)
+
     def test_s6_a_return_saved_meanwhile_is_never_written_over(self):
         orig = self.s.rows
 
@@ -234,10 +249,10 @@ class ServiceTest(unittest.TestCase):
         self.assertIn("ran out of time", out["error"])
 
     def test_s7b_reads_done_but_the_time_gone_writes_nothing(self):
-        svc = app.Service(CONF, self.s, clock=lambda: 8.0 if len(self.s.reads) >= 10 else 0.1)
+        svc = app.Service(CONF, self.s, clock=lambda: 8.0 if len(self.s.reads) >= 11 else 0.1)
         raw = body()
         code, out = svc.handle("POST", "/exr/work", signed(raw, CONF["PP_WORK_SECRET"]), raw)
-        self.assertEqual((code, len(self.s.reads), self.s.writes), (502, 10, []))
+        self.assertEqual((code, len(self.s.reads), self.s.writes), (502, 11, []))
 
     def test_s8_the_apps_user_refused_by_the_site_is_said_in_words(self):
         for refuse in ((403, "PermissionError"), (417, "PermissionError")):

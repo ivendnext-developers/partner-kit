@@ -51,14 +51,15 @@ The record type `PP EXR Return`, numbered `format:EXR-R-{#####}`, tracked: `comp
 ## What the retailer does
 
 1. **Install the app.** It adds the duty class, the return, the three Item fields, the workflow, the lock, the worksheet and the button, and makes the role `PP EXR Integration` and the app's own user with that role alone.
-2. **Switch the lock on:** Desk › *Retail Save Rule* › *PP EXR return locked once filed* › **Enabled**.
-3. **Give the app's role Read** on Stock Ledger Entry, Stock Entry and Item (Role Permissions Manager).
+2. **Switch the lock on:** Desk › *Retail Save Rule* › *PP EXR return locked once filed* › **Enabled**. The press refuses while it is off (it reads the rule's `enabled` and `mode`).
+3. **Give the app's role Read** on Stock Ledger Entry, Stock Entry, Item and Retail Save Rule (Role Permissions Manager).
 4. **Switch the service and the button on** (Retail Extension Subscription: read, consent, enable; Retail Desk Action: enable).
 5. **Make the duty classes and fill the three fields** on each liquor item. Write on Item decides what a return counts: give it to whom you trust with the return.
 
 ## Limits
 
-- **The books as they stand when it is worked out:** a late till sync or a back-dated entry changes the books, not a filed return; the next return's opening then differs from this one's closing by it. Work a return out once the store's tills have synced and its last day is closed.
+- **The books as they stand when it is worked out:** a back-dated entry changes the earlier books, not a filed return; the next return's opening then differs from this one's closing by it.
+- **Not stopped:** two returns for one store and period (a correction is a new return); an item moved to another class (its stock moves with no line); a period not yet over. One return a warehouse.
 - **A till's sales are dated when its day is closed** (the day's combined invoice takes the closing's date): close each till's last day of the period before midnight, or that day's sales count in the next period.
 - **By document type:** an internal (inter-company) delivery or receipt counts as *Sold* or *Received*; a *Material Receipt* as *Received from suppliers*. An item variant needs its own three fields. Units add each item's own stock unit; a US proof gallon is twice a pure-alcohol gallon. The count difference also carries the rounding (a few thousandths).
 - **An item missing its millilitres or strength** is counted in units only for what it lacks, and the summary names it.

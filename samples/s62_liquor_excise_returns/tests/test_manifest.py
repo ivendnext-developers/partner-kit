@@ -37,6 +37,8 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(self.line["duty_class"]["options"], f"{P} Duty Class")
         self.assertEqual((self.types[f"{P} Return"]["autoname"], self.types[f"{P} Duty Class"]["autoname"]),
                          ("format:EXR-R-{#####}", "field:class_name"))
+        cls = {f["fieldname"]: f for f in self.types[f"{P} Duty Class"]["fields"]}
+        self.assertEqual(cls["class_name"].get("set_only_once"), 1)     # the record keeps its name: a rename would print stale
 
     def test_the_lines_and_who_worked_them_out_are_the_services_alone(self):
         for f in self.line.values():

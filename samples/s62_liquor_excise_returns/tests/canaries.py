@@ -12,6 +12,7 @@ runner is S16's, by way of S44's and S61's.
 
 from __future__ import annotations
 
+import json
 import os
 import py_compile
 import shutil
@@ -21,9 +22,44 @@ import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 T, M, R, S, C = "test_service.ServiceTest.", "test_many_shops.ManyShops.", "test_rules.", "service/app.py", "exr.py"
+J, MT = "manifest.json", "test_manifest.ManifestTest."
 S1 = T + "test_s1_work_out_writes_twelve_lines_per_class_from_the_stores_ledger"
 
 CANARIES = [
+    ("no figures while the lock is off", S,
+     '        if not lock or not lock[0].get("enabled") or lock[0].get("mode") != "refuse":', "        if False:",
+     T + "test_s5b_no_figures_while_the_lock_is_off"),
+    ("a transfer is Transferred", C, "            return TRANSFERRED_IN if inward else TRANSFERRED_OUT",
+     "            return OTHER_IN if inward else OTHER_OUT", R + "Kinds.test_each_voucher_type_and_purpose_has_its_line"),
+    ("a Material Receipt is Received", C, '        if purpose == "Material Receipt" and inward:', "        if False:",
+     R + "Kinds.test_each_voucher_type_and_purpose_has_its_line"),
+    ("a sale coming back is Returned by customers", C, "        return RETURNED_IN if inward else SOLD",
+     "        return RECEIVED if inward else SOLD", R + "Kinds.test_each_voucher_type_and_purpose_has_its_line"),
+    ("a year at most", C, "    if (b - a).days >= MOST_DAYS:", "    if False:", R + "Period.test_bounds_and_refusals"),
+    ("a balance never from a cancelled row", S, '        base = [["warehouse", "=", store], ["is_cancelled", "=", 0]]\n        ends',
+     '        base = [["warehouse", "=", store]]\n        ends', T + "test_s5c_a_movement_one_second_after_the_period_and_a_cancelled_row_before_it_stay_out"),
+    ("a balance strictly before its moment", S, '                              base + [["posting_datetime", "<", before]]',
+     '                              base + [["posting_datetime", "<=", before]]', S1),
+    ("one return a press", C, '    if len(ctx["records"]) != 1:', "    if False:", R + "Press.test_return_of_takes_one_return"),
+    ("only a return is pressed", C, ' or rec.get("doctype") != RETURN', "", R + "Press.test_return_of_takes_one_return"),
+    ("a return without its store is refused", S, '        if not r.get("store") or not r.get("company"):', "        if False:",
+     T + "test_s5_only_a_draft_with_a_store_a_period_and_a_unit_is_worked_out"),
+    ("a return without a unit is refused", S, '        if r.get("unit") not in exr.UNITS:\n            return _warning(BAD_UNIT)',
+     '        if False:\n            return _warning(BAD_UNIT)', T + "test_s5_only_a_draft_with_a_store_a_period_and_a_unit_is_worked_out"),
+    ("a stale write is said in words", S, "            if e.kind == STALE:", "            if False:",
+     T + "test_s6_a_return_saved_meanwhile_is_never_written_over"),
+    ("the period is set once", J, '"label": "From",\n     "reqd": 1,\n     "in_list_view": 1,\n     "set_only_once": 1', '"label": "From",\n     "reqd": 1,\n     "in_list_view": 1',
+     MT + "test_a_filed_return_is_locked_on_every_figure_and_its_source_but_not_the_filing"),
+    ("the lock covers a dropped return", J, '    "PP EXR Filed",\n    "PP EXR Dropped"\n   ],', '    "PP EXR Filed"\n   ],',
+     MT + "test_a_filed_return_is_locked_on_every_figure_and_its_source_but_not_the_filing"),
+    ("the lock covers the lines", J, '    "lines",\n    "summary",', '    "summary",',
+     MT + "test_a_filed_return_is_locked_on_every_figure_and_its_source_but_not_the_filing"),
+    ("only the Stock Manager files", J, '"next_state": "PP EXR Filed",\n     "allowed": "Stock Manager",', '"next_state": "PP EXR Filed",\n     "allowed": "Stock User",',
+     MT + "test_only_the_stock_manager_files_a_return_and_a_stock_user_drops_a_draft"),
+    ("the button is on a draft only", J, '"value": "PP EXR Draft"\n    }', '"value": "PP EXR Filed"\n    }',
+     MT + "test_the_button_is_on_a_draft_return_and_sends_only_its_name"),
+    ("a class's name is set once", J, 'move the items to it.",\n     "set_only_once": 1', 'move the items to it."',
+     MT + "test_a_duty_class_a_return_and_its_lines"),
     ("the signature is checked", S, "        if not secrets or all(exr.verify(ts, sig, raw, s) for s in secrets):",
      "        if not secrets:", T + "test_s10_a_bad_signature_another_secret_and_an_old_stamp_are_refused"),
     ("an old stamp is refused", C, " or abs((now or time.time()) - int(ts)) > SKEW_S:", ":",
@@ -123,7 +159,10 @@ def run(name, path, anchor, mutant, test) -> tuple[str, str]:
         if src.count(anchor) != 1:
             return "BROKEN", f"anchor found {src.count(anchor)} times"
         open(f, "w").write(src.replace(anchor, mutant))
-        py_compile.compile(f, doraise=True)
+        if f.endswith(".py"):
+            py_compile.compile(f, doraise=True)
+        else:
+            json.loads(open(f).read())     # the mutant is still a manifest the test can read
         p = subprocess.run([sys.executable, "-m", "unittest", test], cwd=os.path.join(dest, "tests"),
                            capture_output=True, text=True, timeout=120)
         last = (p.stderr.strip().splitlines() or [""])[-1]

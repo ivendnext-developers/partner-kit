@@ -288,6 +288,6 @@ def summary_of(lines: list[dict], missing: list[str], counted: int, unit: str, c
         body += f" Stock counts changed {_sum(lines, COUNT, 'volume'):+,.3f} {u} in all."
     if missing:
         names = ", ".join(missing[:3]) + (f" and {len(missing) - 3:,} more" if len(missing) > 3 else "")
-        body += (f" {_n(len(missing), 'item has', 'items have')} no litres or no strength, so "
+        body += (f" {_n(len(missing), 'item has', 'items have')} no millilitres or no strength, so "
                  f"{'its' if len(missing) == 1 else 'their'} volume or pure alcohol is left out (units counted): {names}.")
     return _fit(body, 1000)

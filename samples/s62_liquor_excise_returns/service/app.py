@@ -9,7 +9,7 @@ On CitiXsys hosting it runs as a FUNCTION, paid per call (app.json "runs": "func
 answers presses.
 
 For the pressed return it reads, with the app's own integration user's key (that user's rights, never the pressing
-user's): the return (company, store, period, unit), the duty classes and their return codes, the items that have a duty
+user's): the return (company, store, period, unit), the lock rule's state (no lock, no figures), the duty classes and their return codes, the items that have a duty
 class (millilitres and strength), and from the store's stock ledger, never a row at a time: each item's last ledger time
 before the period and at its end (``max(posting_datetime)`` per item), the rows at those times (their balance), the
 period's totals per item and voucher type in and out, the Stock Entries' net movement per item and entry, and those
@@ -81,6 +81,8 @@ EMPTY_STORE = ("This store has no stock movements up to the end of the period, s
                "the store is a warehouse that holds stock (not a group of warehouses), and that the app's user has no User "
                "Permission that limits what it reads. Nothing was written.")
 BAD_UNIT = "Choose the unit, Litres or US gallons, then save the return."
+LOCK_OFF = ("Switch on the rule {} in Retail Save Rule first: a filed return is kept as filed only while it is on. "
+            "Nothing was written.")
 
 
 class TenantError(Exception):
@@ -292,6 +294,10 @@ class Service:
             return _warning(NO_STORE)
         if r.get("unit") not in exr.UNITS:
             return _warning(BAD_UNIT)
+        lock = door.rows("Retail Save Rule", ["name", "enabled", "mode"], [["rule_name", "=", exr.LOCK_RULE]],
+                         timeout=self.left(t0))
+        if not lock or not lock[0].get("enabled") or lock[0].get("mode") != "refuse":   # the critic: S61's Pay guard
+            return _warning(LOCK_OFF.format(exr.LOCK_RULE))
         try:
             return self.work(door, r, user, t0)
         except TenantError as e:

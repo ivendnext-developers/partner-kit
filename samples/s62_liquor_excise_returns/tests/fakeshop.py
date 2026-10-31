@@ -48,6 +48,7 @@ class FakeShop:
         self.items: list[dict] = []
         self.ledger: list[dict] = []
         self.entries: dict[str, str] = {}      # Stock Entry name -> purpose
+        self.rules = [{"name": "R1", "rule_name": exr.LOCK_RULE, "enabled": 1, "mode": "refuse"}]
         self.writes: list[tuple[str, str, dict]] = []
         self.reads: list[tuple] = []
         self.refuse = None            # (status, kind) to raise on every call, as the site refusing the app's user
@@ -118,6 +119,8 @@ class FakeShop:
             src = [{"name": k, "purpose": v} for k, v in self.entries.items()]
         elif doctype == exr.RETURN:
             src = list(self.returns.values())
+        elif doctype == "Retail Save Rule":
+            src = self.rules
         else:
             raise AssertionError(doctype)
         out = [r for r in src if all(_match(r, f) for f in filters)]

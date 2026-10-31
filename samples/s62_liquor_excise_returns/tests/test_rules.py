@@ -190,7 +190,7 @@ class Words(unittest.TestCase):
         many = [f"Item {i}" for i in range(5)]
         self.assertEqual(exr.summary_of(lines, many, n, "US gallons", counts),
                          "1 duty class, 1 item. Sold 2.100 US gallons (0.840 US gallons of pure alcohol); closing stock "
-                         "4.900 US gallons. 5 items have no litres or no strength, so their volume or pure alcohol is left "
+                         "4.900 US gallons. 5 items have no millilitres or no strength, so their volume or pure alcohol is left "
                          "out (units counted): Item 0, Item 1, Item 2 and 2 more.")
         self.assertTrue(exr.summary_of([], [], 0, "Litres").startswith("Nothing to return:"))
 
