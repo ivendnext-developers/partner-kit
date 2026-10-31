@@ -13,7 +13,7 @@ user's): the return (company, store, period, unit), the duty classes and their r
 class (millilitres and strength), and from the store's stock ledger, never a row at a time: each item's last ledger time
 before the period and at its end (``max(posting_datetime)`` per item), the rows at those times (their balance), the
 period's totals per item and voucher type in and out, the Stock Entries' net movement per item and entry, and those
-entries' purpose (``exr.work_out``). It writes the return's lines, its summary and who worked it out, carrying the
+entries' purpose (``exr.work_out``), the time and name lists ``CHUNK_BYTES`` of them a read. It writes the return's lines, its summary and who worked it out, carrying the
 return's ``modified`` as read, so a press never writes over someone's edit. A press reads for at most ``BUDGET_S``
 seconds; past it, it writes nothing and the site says the press did not answer in time.
 
@@ -59,7 +59,8 @@ STALE = "TimestampMismatchError"     # the site's refusal of a write whose ``mod
 RIGHTS_KINDS = ("PermissionError",)  # a 417 that is a rights problem; any other 417 (a value the site refused) takes the
                                      # site's own did-not-answer words
 LEDGER = "Stock Ledger Entry"
-CHUNK = 200                          # names or times a read: fewer reads in the press's time, the address still short
+CHUNK_BYTES = 2000                   # the values' bytes a read, as sent: the request line stays under 4 KB (S23's
+                                     # PRICE_CHUNK); 200 ledger times a read was 8.4 KB (the Tier-S review)
 READ_S = 6                           # one read may take this long, within BUDGET_S; the site waits 10 seconds at most,
                                      # and a hosted function's cold start (about 2.5 s, APPF run 9) comes first
 BUDGET_S = 7.0                       # the whole press: past it, the press stops before it writes anything
@@ -71,8 +72,11 @@ REFUSED = ("Liquor excise returns may not read the stock ledger, stock entries a
 CONNECT_AGAIN = " Then press Connect again on the app."    # many retailers: a new key reaches the service only that way
 CHANGED = "The return was changed while this press read it. Open it again and press once more."
 GONE = "This return was not found. Open it again from the list."
-NOT_DRAFT = "Only a draft return can be worked out. This one is filed: make a new return for a correction."
+NOT_DRAFT = "Only a draft return can be worked out. This one is filed or dropped: make a new return for a correction."
 NO_STORE = "Choose the company, the store and the period first, then save the return."
+EMPTY_STORE = ("This store has no stock movements up to the end of the period, so there is nothing to return. Check that "
+               "the store is a warehouse that holds stock (not a group of warehouses), and that the app's user has no User "
+               "Permission that limits what it reads. Nothing was written.")
 BAD_UNIT = "Choose the unit, Litres or US gallons, then save the return."
 
 
@@ -147,6 +151,20 @@ class Tenant:
         return self._data("PUT", f"{doctype}/{name}", body)
 
 
+def chunks(values: list[str]):
+    """The values in reads whose ``in`` list, as the query string carries it, stays within CHUNK_BYTES bytes."""
+    chunk, size = [], 0
+    for v in values:
+        n = len(urllib.parse.quote_plus(json.dumps(v))) + 4          # the value and its ", " as urlencode sends them
+        if chunk and size + n > CHUNK_BYTES:
+            yield chunk
+            chunk, size = [], 0
+        chunk.append(v)
+        size += n
+    if chunk:
+        yield chunk
+
+
 def tenant_of(url: str, key: str) -> Tenant:
     """A retailer's door from the key the retailer's site handed over ("<api key>:<api secret>")."""
     api_key, _, api_secret = key.partition(":")
@@ -196,22 +214,23 @@ class Service:
         return min(READ_S, rest)
 
     def _in(self, door, doctype, fields, field, values, t0, filters=()) -> list:
-        """``rows`` for a long list of values, ``CHUNK`` a read."""
-        values, out = sorted(set(values)), []
-        for i in range(0, len(values), CHUNK):
-            out += door.rows(doctype, fields, list(filters) + [[field, "in", values[i:i + CHUNK]]], timeout=self.left(t0))
+        """``rows`` for a long list of values, ``CHUNK_BYTES`` of them a read."""
+        out = []
+        for chunk in chunks(sorted(set(values))):
+            out += door.rows(doctype, fields, list(filters) + [[field, "in", chunk]], timeout=self.left(t0))
         return out
 
-    def balances(self, door, store: str, before: str, items: dict, t0: float) -> dict:
-        """Each item's balance in ``store`` at ``before`` (exclusive): its last ledger row's ``qty_after_transaction``."""
+    def balances(self, door, store: str, before: str, items: dict, t0: float) -> tuple[dict, int]:
+        """(each item's balance in ``store`` at ``before`` (exclusive): its last ledger row's ``qty_after_transaction``,
+        the number of items of any kind the store's ledger holds before then)."""
         base = [["warehouse", "=", store], ["is_cancelled", "=", 0]]
-        ats = [r for r in door.rows(LEDGER, ["item_code", "max(posting_datetime) as last_at"],
-                                    base + [["posting_datetime", "<", before]], group_by="item_code", timeout=self.left(t0))
-               if r.get("item_code") in items]
+        every = door.rows(LEDGER, ["item_code", "max(posting_datetime) as last_at"],
+                          base + [["posting_datetime", "<", before]], group_by="item_code", timeout=self.left(t0))
+        ats = [r for r in every if r.get("item_code") in items]
         ats = [{"item_code": r["item_code"], "at": r.get("last_at")} for r in ats if r.get("last_at")]
         rows = self._in(door, LEDGER, ["name", "item_code", "posting_datetime", "creation", "qty_after_transaction"],
                         "posting_datetime", [str(a["at"]) for a in ats], t0, filters=base) if ats else []
-        return exr.last_balances(ats, rows)
+        return exr.last_balances(ats, rows), len(every)
 
     def work(self, door, r: dict, user: str, t0: float) -> dict:
         bounds = exr.period(r.get("from_date"), r.get("to_date"))
@@ -224,8 +243,10 @@ class Service:
         items = {i["name"]: exr.item_of(i) for i in door.rows(
             "Item", ["name", "item_name", exr.FIELD + "class", exr.FIELD + "ml", exr.FIELD + "abv"],
             [[exr.FIELD + "class", "is", "set"]], timeout=self.left(t0)) if i.get("name")}
-        opening = self.balances(door, store, start, items, t0) if items else {}
-        closing = self.balances(door, store, end, items, t0) if items else {}
+        opening, _ = self.balances(door, store, start, items, t0) if items else ({}, 0)
+        closing, held = self.balances(door, store, end, items, t0) if items else ({}, 0)
+        if items and not held:           # a group of warehouses, or a user permission: never an empty return to file
+            return _warning(EMPTY_STORE)
         span = [["warehouse", "=", store], ["is_cancelled", "=", 0], ["posting_datetime", ">=", start],
                 ["posting_datetime", "<", end]]
         moves, entries = [], []

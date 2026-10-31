@@ -20,7 +20,8 @@ times each item's strength). *Opening stock* and *Closing stock* are each item's
 last ledger row, ordered as the ledger orders them: ``posting_datetime``, then ``creation``) at the end of the day before
 *From* and at the end of *To*. A stock count of an item without batches writes its ledger row with ``actual_qty`` 0 and
 sets the balance directly, so no sum of ``actual_qty`` sees it: *Count difference* is what is left, the closing less the
-opening and every other line, per item. Out lines are positive figures; *Count difference* carries its sign.
+opening and every other line: per item, then once more per class on the rounded lines, so each printed column adds up.
+Out lines are positive figures; *Count difference* carries its sign.
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 PREFIX = "PP EXR"
 CLASS, RETURN, LINE = "PP EXR Duty Class", "PP EXR Return", "PP EXR Return Line"
 FIELD = "pp_exr_"                       # the prefix of the three fields on Item: <FIELD>class, <FIELD>ml, <FIELD>abv
-DRAFT, FILED = "PP EXR Draft", "PP EXR Filed"
+DRAFT, FILED, DROPPED = "PP EXR Draft", "PP EXR Filed", "PP EXR Dropped"
 LOCK_RULE = "PP EXR return locked once filed"
 SKEW_S = 300                            # a request stamped further than this from our clock is refused (a replay window)
 BODY_MAX = 256 * 1024
@@ -60,11 +61,11 @@ SKIPPED = ("Stock Entry", "Stock Reconciliation")   # never in the voucher-type 
 
 def use_prefix(prefix: str):
     """Every name under another prefix: *IVENDNEXT EXR Return* and the field ``ivendnext_exr_class`` for the library's app."""
-    global PREFIX, CLASS, RETURN, LINE, FIELD, DRAFT, FILED, LOCK_RULE
+    global PREFIX, CLASS, RETURN, LINE, FIELD, DRAFT, FILED, DROPPED, LOCK_RULE
     PREFIX = prefix
     CLASS, RETURN, LINE = f"{prefix} Duty Class", f"{prefix} Return", f"{prefix} Return Line"
     FIELD = prefix.lower().replace(" ", "_") + "_"
-    DRAFT, FILED = f"{prefix} Draft", f"{prefix} Filed"
+    DRAFT, FILED, DROPPED = f"{prefix} Draft", f"{prefix} Filed", f"{prefix} Dropped"
     LOCK_RULE = f"{prefix} return locked once filed"
 
 
@@ -213,8 +214,6 @@ def work_out(items: dict[str, dict], opening: dict, closing: dict, moves: list[d
     totals: dict[tuple[str, str], list[Decimal]] = {}
     missing = []
     for item, figures in per.items():
-        figures[COUNT] = (figures.get(CLOSING, Decimal(0)) - figures.get(OPENING, Decimal(0))
-                          - sum(figures.get(k, Decimal(0)) for k in INS) + sum(figures.get(k, Decimal(0)) for k in OUTS))
         it = items[item]
         if it["litres"] is None or it["abv"] is None:
             missing.append(it["item_name"] or item)
@@ -230,12 +229,15 @@ def work_out(items: dict[str, dict], opening: dict, closing: dict, moves: list[d
     scale = Decimal(1) if unit == "Litres" else 1 / GALLON
     lines = []
     for cls in sorted({c for c, _ in totals}):
+        rows = {}
         for movement in MOVEMENTS:
-            t = totals.get((cls, movement))
-            lines.append({"duty_class": cls, "return_code": (codes or {}).get(cls) or "", "movement": movement,
-                          "units": _round(t[0] if t else Decimal(0)),
-                          "volume": _round((t[1] if t else Decimal(0)) * scale),
-                          "pure_alcohol": _round((t[2] if t else Decimal(0)) * scale)})
+            t = totals.get((cls, movement)) or [Decimal(0)] * 3
+            rows[movement] = {"duty_class": cls, "return_code": (codes or {}).get(cls) or "", "movement": movement,
+                              "units": _round(t[0]), "volume": _round(t[1] * scale), "pure_alcohol": _round(t[2] * scale)}
+        for col in ("units", "volume", "pure_alcohol"):   # the count is what is left of the ROUNDED lines, so each
+            rows[COUNT][col] = (rows[CLOSING][col] - rows[OPENING][col]   # column adds up as printed (Tier-S review)
+                                - sum(rows[m][col] for m in INS) + sum(rows[m][col] for m in OUTS))
+        lines += [rows[m] for m in MOVEMENTS]
     return lines, sorted(set(missing)), len(per)
 
 
@@ -278,9 +280,8 @@ def summary_of(lines: list[dict], missing: list[str], counted: int, unit: str) -
     body = (f"{_n(classes, 'duty class', 'duty classes')}, {_n(counted, 'item', 'items')}. "
             f"Sold {_sum(lines, SOLD, 'volume'):,.3f} {u} ({_sum(lines, SOLD, 'pure_alcohol'):,.3f} {u} of pure alcohol); "
             f"closing stock {_sum(lines, CLOSING, 'volume'):,.3f} {u}.")
-    counted_change = _sum(lines, COUNT, "volume")
-    if counted_change:
-        body += f" Stock counts changed {counted_change:+,.3f} {u}."
+    if _sum(lines, COUNT, "units"):          # units are exact: a volume left over by rounding alone is no count
+        body += f" Stock counts changed {_sum(lines, COUNT, 'volume'):+,.3f} {u}."
     if missing:
         names = ", ".join(missing[:3]) + (f" and {len(missing) - 3:,} more" if len(missing) > 3 else "")
         body += (f" {_n(len(missing), 'item has', 'items have')} no litres or no strength, so "

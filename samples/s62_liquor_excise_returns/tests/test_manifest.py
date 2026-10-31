@@ -46,20 +46,23 @@ class ManifestTest(unittest.TestCase):
         for f in ("units", "volume", "pure_alcohol"):
             self.assertEqual((self.line[f]["fieldtype"], self.line[f].get("precision")), ("Float", "3"), f)
 
-    def test_only_the_stock_manager_files_a_return(self):
+    def test_only_the_stock_manager_files_a_return_and_a_stock_user_drops_a_draft(self):
         wf = self.m["workflows"][0]
         self.assertEqual([(t["state"], t["next_state"], t["allowed"]) for t in wf["transitions"]],
-                         [(f"{P} Draft", f"{P} Filed", "Stock Manager")])
+                         [(f"{P} Draft", f"{P} Filed", "Stock Manager"), (f"{P} Draft", f"{P} Dropped", "Stock User")])
         self.assertEqual({s["state"]: s["allow_edit"] for s in wf["states"]},
-                         {f"{P} Draft": "Stock User", f"{P} Filed": "Stock Manager"})
+                         {f"{P} Draft": "Stock User", f"{P} Filed": "Stock Manager", f"{P} Dropped": "Stock User"})
 
     def test_a_filed_return_is_locked_on_every_figure_and_its_source_but_not_the_filing(self):
         rule = self.m["save_rules"][0]
-        self.assertEqual((rule["kind"], rule["mode"], rule["states"]), ("locked_in_state", "refuse", [f"{P} Filed"]))
+        self.assertEqual((rule["kind"], rule["mode"], rule["states"]),
+                         ("locked_in_state", "refuse", [f"{P} Filed", f"{P} Dropped"]))
         self.assertEqual(set(rule["locked_fields"]), {"company", "store", "unit", "from_date", "to_date", "lines",
                                                       "summary", "worked_out_by", "worked_out_at"})
         self.assertNotIn("filed_on", rule["locked_fields"])
-        self.assertEqual((self.ret["company"].get("set_only_once"), self.ret["store"].get("set_only_once")), (1, 1))
+        # set once: a return's lines are always of its own store, period and unit (the Tier-S review's MAJOR)
+        self.assertEqual({f: self.ret[f].get("set_only_once") for f in ("company", "store", "unit", "from_date", "to_date")},
+                         {"company": 1, "store": 1, "unit": 1, "from_date": 1, "to_date": 1})
 
     def test_the_button_is_on_a_draft_return_and_sends_only_its_name(self):
         (a,) = self.m["desk_actions"]
@@ -86,6 +89,7 @@ class ManifestTest(unittest.TestCase):
         html = pf["html"]
         self.assertEqual((pf["doc_type"], pf["print_format_type"]), (f"{P} Return", "Jinja"))
         for want in ('groupby("duty_class")', "{% if letter_head and not no_letterhead %}", 'state.endswith(" Filed")',
+                     'state.endswith(" Dropped")',
                      'r.get_formatted("pure_alcohol")', 'dir="auto"'):
             self.assertIn(want, html)
 

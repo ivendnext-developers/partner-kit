@@ -167,11 +167,39 @@ class ServiceTest(unittest.TestCase):
                          (37.0, float((D(26) / exr.GALLON).quantize(exr.PLACES)), float((D("10.1") / exr.GALLON).quantize(exr.PLACES))))
         self.assertIn("US gallons", self.s.returns[NAME]["summary"])
 
-    def test_s4_a_store_with_nothing_writes_no_lines_and_says_so(self):
-        self.s.returns[NAME]["store"] = "Store C"
+    def test_s4_a_store_with_no_ledger_is_refused_and_one_with_no_liquor_says_so(self):
+        self.s.returns[NAME]["store"] = "Store C"          # a group of warehouses, or a user permission: no rows at all
         code, out = self.press()
+        self.assertEqual((code, out["message"]["body"], out["message"]["level"], self.s.writes),
+                         (200, app.EMPTY_STORE, "warning", []))
+        self.s.move("SODA", "2026-10-02 10:00:00", "Purchase Receipt", "PR-C", 5, store="Store C")
+        code, out = self.press()                             # a store whose stock has no duty class
         self.assertEqual((code, self.s.returns[NAME]["lines"], out["message"]["level"]), (200, [], "info"))
         self.assertTrue(out["message"]["body"].startswith("Nothing to return: no item with a duty class"))
+
+    def test_s4b_reads_stay_short_for_a_store_of_many_items(self):
+        for i in range(400):                               # 400 liquor items, each moved at its own second
+            code = f"WINE-{i:03d}"
+            self.s.items.append(item(code, f"Wine {i}", "Wine", 750, 12.5))
+            self.s.move(code, f"2026-09-{1 + i % 28:02d} 10:{i // 60:02d}:{i % 60:02d}.{i:06d}", "Purchase Receipt", "PR-W", 6)
+            self.s.move(code, f"2026-10-{1 + i % 28:02d} 11:{i // 60:02d}:{i % 60:02d}.{i:06d}", "Sales Invoice", "SINV-W", -1)
+        sizes = []
+        orig = self.s.rows
+
+        def rows(doctype, fields, filters, group_by=None, timeout=None):
+            q = {"fields": fields, "filters": filters, "limit_page_length": 0}
+            if group_by:
+                q["group_by"] = group_by
+            sizes.append(len(app.urllib.parse.urlencode({k: app.json.dumps(v) if not isinstance(v, (str, int)) else v
+                                                         for k, v in q.items()})))
+            return orig(doctype, fields, filters, group_by, timeout)
+        self.s.rows = rows
+        code, out = self.press()
+        self.assertEqual(code, 200, out)
+        self.assertLess(max(sizes), 3000, sizes)               # every query string well inside a 4 KB request line
+        got = self.lines()
+        self.assertEqual(got[("Wine", "Sold")][0], 404.0)      # the run's 4 wine sales and the 400 new ones
+        self.assertEqual(got[("Wine", "Closing stock")][0], 3.0 + 400 * 5)
 
     def test_s5_only_a_draft_with_a_store_a_period_and_a_unit_is_worked_out(self):
         cases = [({"workflow_state": exr.FILED}, app.NOT_DRAFT), ({"store": ""}, app.NO_STORE),

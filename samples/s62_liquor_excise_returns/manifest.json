@@ -5,7 +5,7 @@
  "title": "Liquor excise returns",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "A liquor retailer's excise return figures from its own stock: per store and period, the volume and the volume of pure alcohol per duty class, kept as filed. A duty class (PP EXR Duty Class) holds its name and the authority's code; three fields on Item give an item's duty class, its millilitres per stock unit and its strength (alcohol by volume). A return (PP EXR Return) for one company, one store (a warehouse), a period and a unit (Litres or US gallons) has a Desk button while it is a draft: Work out the return (Stock User, Stock Manager) has the service read, from the store's stock ledger, each item's balance at the end of the day before From and at the end of To, and the period's movements, and write twelve lines per duty class: opening stock, received from suppliers, transferred in, returned by customers, other in, sold, transferred out, returned to suppliers, written off, other out, the count difference and closing stock, each in units, volume and pure alcohol. The workflow's File step (Stock Manager only) moves a draft to Filed, and a save rule keeps a filed return's figures as they were (it installs switched off: switch it on); the filing date and reference stay for the manager to fill. The Excise return worksheet prints the lines under the retailer's letter head. The install makes the role and the app's own user; the retailer gives the role Read on Stock Ledger Entry, Stock Entry and Item, and leaves the feed off. No customer, price or money leaves the site: the service reads stock quantities, entries' purposes and items. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "A liquor retailer's excise return figures from its own stock: per store and period, the volume and the volume of pure alcohol per duty class, kept as filed. A duty class (PP EXR Duty Class) holds its name and the authority's code; three fields on Item give an item's duty class, its millilitres per stock unit and its strength (alcohol by volume). A return (PP EXR Return) for one company, one store (a warehouse), a period and a unit (Litres or US gallons) has a Desk button while it is a draft: Work out the return (Stock User, Stock Manager) has the service read, from the store's stock ledger, each item's balance at the end of the day before From and at the end of To, and the period's movements, and write twelve lines per duty class: opening stock, received from suppliers, transferred in, returned by customers, other in, sold, transferred out, returned to suppliers, written off, other out, the count difference and closing stock, each in units, volume and pure alcohol. A return's company, store, period and unit are set once, so its lines are always of that period. The workflow's File step (Stock Manager only) moves a draft to Filed, and Drop (Stock User) puts aside a draft not wanted; a save rule keeps a filed or dropped return's figures as they were (it installs switched off: switch it on); the filing date and reference stay for the manager to fill. The Excise return worksheet prints the lines under the retailer's letter head. The install makes the role and the app's own user; the retailer gives the role Read on Stock Ledger Entry, Stock Entry and Item, and leaves the feed off. No customer, price or money leaves the site: the service reads stock quantities, entries' purposes and items. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/exr/work"
  ],
@@ -261,7 +261,8 @@
      "label": "Volumes in",
      "options": "Litres\nUS gallons",
      "default": "Litres",
-     "reqd": 1
+     "reqd": 1,
+     "set_only_once": 1
     },
     {
      "fieldname": "col1",
@@ -272,7 +273,8 @@
      "fieldtype": "Date",
      "label": "From",
      "reqd": 1,
-     "in_list_view": 1
+     "in_list_view": 1,
+     "set_only_once": 1
     },
     {
      "fieldname": "to_date",
@@ -280,7 +282,8 @@
      "label": "To",
      "reqd": 1,
      "in_list_view": 1,
-     "description": "Inclusive. Work the return out once every till of the store has synced and its last day is closed."
+     "description": "Inclusive. Work the return out once every till of the store has synced and its last day is closed. The store, the period and the unit are set once: for another period, make a new return.",
+     "set_only_once": 1
     },
     {
      "fieldname": "lines_section",
@@ -383,6 +386,10 @@
     {
      "state": "PP EXR Filed",
      "allow_edit": "Stock Manager"
+    },
+    {
+     "state": "PP EXR Dropped",
+     "allow_edit": "Stock User"
     }
    ],
    "transitions": [
@@ -391,6 +398,13 @@
      "action": "PP EXR File",
      "next_state": "PP EXR Filed",
      "allowed": "Stock Manager",
+     "allow_self_approval": 1
+    },
+    {
+     "state": "PP EXR Draft",
+     "action": "PP EXR Drop",
+     "next_state": "PP EXR Dropped",
+     "allowed": "Stock User",
      "allow_self_approval": 1
     }
    ]
@@ -403,7 +417,8 @@
    "kind": "locked_in_state",
    "mode": "refuse",
    "states": [
-    "PP EXR Filed"
+    "PP EXR Filed",
+    "PP EXR Dropped"
    ],
    "locked_fields": [
     "company",
@@ -416,7 +431,7 @@
     "worked_out_by",
     "worked_out_at"
    ],
-   "message": "This return is filed: its store, period and figures stay as they were. Make a new return for a correction."
+   "message": "This return is filed or dropped: its store, period and figures stay as they were. Make a new return for a correction."
   }
  ],
  "print_formats": [
@@ -424,7 +439,7 @@
    "name": "PP EXR Excise return worksheet",
    "doc_type": "PP EXR Return",
    "print_format_type": "Jinja",
-   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n{% if letter_head and not no_letterhead %}<div class=\"letter-head\">{{ letter_head }}</div>{% endif %}\n{% set state = doc.workflow_state or \"\" %}\n{% if not state.endswith(\" Filed\") %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Draft: not filed yet.\") }}</p>{% endif %}\n<h2 style=\"margin: 0 0 2px;\">{{ _(\"Excise return\") }} {{ doc.name }}</h2>\n<p style=\"margin: 0;\">{{ doc.store }} &middot; {{ doc.get_formatted(\"from_date\") }} {{ _(\"to\") }} {{ doc.get_formatted(\"to_date\") }} &middot; {{ _(\"Volumes in\") }} {{ _(doc.unit) }}</p>\n{% if state.endswith(\" Filed\") %}<p style=\"margin: 0;\">{{ _(\"Filed on\") }} {{ doc.get_formatted(\"filed_on\") }}{% if doc.filing_reference %} &middot; {{ doc.filing_reference }}{% endif %}</p>{% endif %}\n{% for g in doc.lines|groupby(\"duty_class\") %}\n<h3 style=\"margin: 12px 0 2px;\">{{ g.grouper }}{% if g.list[0].return_code %} &middot; {{ g.list[0].return_code }}{% endif %}</h3>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Movement\") }}</th><th style=\"text-align: end;\">{{ _(\"Units\") }}</th><th style=\"text-align: end;\">{{ _(\"Volume\") }}</th><th style=\"text-align: end;\">{{ _(\"Pure alcohol\") }}</th></tr>\n{% for r in g.list %}<tr{% if r.movement in (\"Opening stock\", \"Closing stock\") %} style=\"font-weight: bold;\"{% endif %}><td>{{ _(r.movement) }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"units\") }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"volume\") }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"pure_alcohol\") }}</td></tr>\n{% endfor %}</table>\n{% else %}<p style=\"margin: 8px 0 0;\">{{ _(\"No lines: press Work out the return.\") }}</p>\n{% endfor %}\n{% if doc.summary %}<p style=\"margin: 8px 0 0;\">{{ doc.summary }}</p>{% endif %}\n<p style=\"margin: 8px 0 0; font-size: 9pt;\">{{ _(\"Worked out from the store's stock ledger by\") }} {{ doc.worked_out_by or \"\" }}{% if doc.worked_out_at %}, {{ doc.worked_out_at }}{% endif %}. {{ _(\"Out lines are shown as positive figures; a count difference carries its sign. Pure alcohol is the volume times each item's strength.\") }}</p>\n</div>"
+   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n{% if letter_head and not no_letterhead %}<div class=\"letter-head\">{{ letter_head }}</div>{% endif %}\n{% set state = doc.workflow_state or \"\" %}\n{% if state.endswith(\" Dropped\") %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Dropped: this return was not filed.\") }}</p>\n{% elif not state.endswith(\" Filed\") %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Draft: not filed yet.\") }}</p>{% endif %}\n<h2 style=\"margin: 0 0 2px;\">{{ _(\"Excise return\") }} {{ doc.name }}</h2>\n<p style=\"margin: 0;\">{{ doc.store }} &middot; {{ doc.get_formatted(\"from_date\") }} {{ _(\"to\") }} {{ doc.get_formatted(\"to_date\") }} &middot; {{ _(\"Volumes in\") }} {{ _(doc.unit) }}</p>\n{% if state.endswith(\" Filed\") %}<p style=\"margin: 0;\">{{ _(\"Filed on\") }} {{ doc.get_formatted(\"filed_on\") }}{% if doc.filing_reference %} &middot; {{ doc.filing_reference }}{% endif %}</p>{% endif %}\n{% for g in doc.lines|groupby(\"duty_class\") %}\n<h3 style=\"margin: 12px 0 2px;\">{{ g.grouper }}{% if g.list[0].return_code %} &middot; {{ g.list[0].return_code }}{% endif %}</h3>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Movement\") }}</th><th style=\"text-align: end;\">{{ _(\"Units\") }}</th><th style=\"text-align: end;\">{{ _(\"Volume\") }}</th><th style=\"text-align: end;\">{{ _(\"Pure alcohol\") }}</th></tr>\n{% for r in g.list %}<tr{% if r.movement in (\"Opening stock\", \"Closing stock\") %} style=\"font-weight: bold;\"{% endif %}><td>{{ _(r.movement) }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"units\") }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"volume\") }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"pure_alcohol\") }}</td></tr>\n{% endfor %}</table>\n{% else %}<p style=\"margin: 8px 0 0;\">{{ _(\"No lines: press Work out the return.\") }}</p>\n{% endfor %}\n{% if doc.summary %}<p style=\"margin: 8px 0 0;\">{{ doc.summary }}</p>{% endif %}\n<p style=\"margin: 8px 0 0; font-size: 9pt;\">{{ _(\"Worked out from the store's stock ledger by\") }} {{ doc.worked_out_by or \"\" }}{% if doc.worked_out_at %}, {{ doc.worked_out_at }}{% endif %}. {{ _(\"Out lines are shown as positive figures; a count difference carries its sign. Pure alcohol is the volume times each item's strength.\") }}</p>\n</div>"
   }
  ],
  "property_setters": [

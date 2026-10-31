@@ -12,11 +12,11 @@ A liquor store files an excise return every month or quarter: what it held and w
 |---|---|
 | Set-up | The retailer makes its duty classes once (*Spirits*, *Wine*, *Beer* …, each with the authority's code if it has one), and on each liquor item its **Duty class**, **Millilitres per stock unit** (750 for a 750 ml bottle; 9000 for a case of twelve kept in cases) and **Alcohol by volume** |
 | A sale, a receipt, a transfer, a count | Nothing new: the till, Desk and the stock screens work as before. The app reads what iVendNext booked |
-| The back office opens a return | The company, the store (its warehouse), *From*, *To* and *Volumes in* (Litres or US gallons), saved as a draft numbered `EXR-R-00001` |
+| The back office opens a return | The company, the store (its warehouse), *From*, *To* and *Volumes in* (Litres or US gallons), saved as a draft numbered `EXR-R-00001`. All five are set once, so a return's lines are always of its own store, period and unit |
 | *Work out the return* is pressed (Stock User, Stock Manager) | The service reads the store's stock ledger and writes twelve lines per duty class: **Opening stock**, **Received from suppliers**, **Transferred in**, **Returned by customers**, **Other in**, **Sold**, **Transferred out**, **Returned to suppliers**, **Written off**, **Other out**, **Count difference** and **Closing stock**, each in units, volume and pure alcohol. A summary says what was sold, the closing stock, what counts changed and any item missing its millilitres or strength. Pressing again replaces the lines with the books as they are now |
 | The worksheet | **Print**, *PP EXR Excise return worksheet*: one table per duty class under the retailer's letter head, the authority's code beside the class |
 | Filed | The Stock Manager files the figures with the authority and moves the return to **Filed** (the workflow's *File*, the Stock Manager's alone), then fills *Filed on* and the authority's reference. The lock keeps the store, the period and every figure as filed |
-| A correction | A new return for the same period. A filed return never changes |
+| A correction | A new return for the same period. A filed return never changes. A draft that is not wanted (a wrong period, a copy) is put aside with *Actions*, *PP EXR Drop* (Stock User): a dropped return is locked too |
 | The service down | The button's own words: *did not answer in time. Check the record before you try again.* Nothing is written |
 
 ## What iVendNext does
@@ -26,7 +26,7 @@ A liquor store files an excise return every month or quarter: what it held and w
 3. **Give the app's role its reads:** in **Role Permissions Manager**, give **PP EXR Integration** *Read* on **Stock Ledger Entry**, **Stock Entry** and **Item**. The install gives it its rights on the app's own record types. A service for one retailer: press *Generate Keys* on the app's user (User, API Access) and put the key in the service's settings. A service for many retailers is handed the key by the retailer's site itself; press **Connect again** on the app's record only if the site could not reach the app, or a key was lost or changed.
 4. **Switch the service and the button on:** **Retail Extension Subscription**, *Liquor excise returns work out*: read what it is sent, tick the consent, switch it on. Then **Retail Desk Action**, *Work out the return*: switch it on.
 5. **Classes and items:** make the duty classes your authority uses, then fill the three fields on each liquor item (the Item list filters by *Duty class*). An item with no duty class is left out of every return.
-6. **Who does what:** Stock Users and Stock Managers make returns and work them out; the Stock Manager files them. Accounts Managers may read and print them. A draft is the Stock User's to edit (the workflow shows it read only to anyone else); a filed return is the Stock Manager's, for *Filed on* and the reference.
+6. **Who does what:** Stock Users make returns, work them out and drop a draft not wanted; the Stock Manager files them. Accounts Managers may read and print them. A draft is the Stock User's to edit (the workflow shows it read only to anyone else): a manager who also makes returns holds Stock User too. A filed return is the Stock Manager's, for *Filed on* and the reference.
 7. **Test it:** a duty class *Spirits*, one item at 700 ml and 40%, ten in stock at the start of the month, three sold at the till: work out that month's return. *Sold*: 3 units, 2.100 litres, 0.840 litres of pure alcohol.
 
 **Where it shows.** In Desk: the duty classes and returns, the button on a draft return, the worksheet to print, and on Item the three fields under the item group. At the till: nothing new.
@@ -78,7 +78,8 @@ What a partner usually changes:
 - **The figures are the retailer's own books.** The service reads what iVendNext booked in the store's stock ledger and never counts stock itself. It reads totals, never a row per sale, so a month of a busy store is one press.
 - **Counts are worked out by difference.** A stock count writes its ledger row with a quantity of 0 and sets the balance directly, so no sum of quantities sees it. The opening and closing stock are each item's balance from its last ledger row, and *Count difference* is what is left: the closing less the opening and every other line.
 - **The books as they stand when it is worked out.** A late entry (a till that synced after the period, a back-dated receipt) changes the books, not a filed return: the next return's opening then differs from this one's closing by it. Work a return out once every till of the store has synced and its last day is closed; the worksheet prints when it was worked out.
-- **Kept as filed.** The lock keeps the store, the period and every figure of a filed return; only a System Manager can switch it off or delete a return.
+- **A till's sales are dated when its day is closed.** The till's sales reach the stock ledger in the day's combined invoice, dated at the day's closing (the engine's merge takes the closing's date and time). A last day of the period closed after midnight puts that day's sales, and the stock they took, into the next period: close each till's last day of the period before midnight.
+- **Kept as filed.** A return's store, period and unit are set once, so its lines are always of that period; the lock keeps every figure of a filed return; only a System Manager can switch it off or delete a return.
 - **A press, not a schedule.** A return is worked out when someone presses, one store and one period at a time.
 
 ## Technical notes
@@ -103,7 +104,14 @@ What a partner usually changes:
 
 ### Bounds, stated
 
-- **An item missing its millilitres or strength** is counted in units and left out of the volume or the pure alcohol, and the summary names it.
+- **An item missing its millilitres or strength** is counted in units and left out of the volume or the pure alcohol, and the summary names it. **An item variant** does not take the three fields from its template: fill them on each variant that holds stock.
+- **Internal (inter-company) deliveries and receipts** made with a delivery note, sales invoice, purchase receipt or purchase invoice to an internal customer or from an internal supplier count as *Sold*, *Returned by customers*, *Received from suppliers* or *Returned to suppliers*, by their document type; a transfer between your own stores is a Stock Entry and counts as *Transferred*. A *Material Receipt* counts as *Received from suppliers* (stock taken in without a supplier document, such as from an ERP that keeps the purchasing).
+- **Units** add each item's own stock unit: a class holding both bottles and cases adds both. **US gallons** are gallons of volume and of pure alcohol; a US proof gallon is twice a pure-alcohol gallon.
+- **Rounding:** each line is rounded once; the *Count difference* is what is left of the rounded lines, so every printed column adds up, and a period with no count can show a count difference of a thousandth from rounding alone (the summary names a count only when counted units changed).
+- **A store of another company** is read by its warehouse: the return's company is the company named on it.
+- **A return with no lines can be filed:** a workflow step cannot ask for lines (a manifest refuses a transition condition), so the manager checks the lines before *File*.
+- **A replayed press:** the press's signature holds for five minutes; a copy of a press sent again within them works the same draft out again from the books as they are then (a draft only: a filed return refuses it, and an edit made meanwhile refuses the write).
+- **The key used:** for many retailers, the service reads with the first user key the retailer's site handed over at connect (today the app's own user's, the only one it hands over), as the app template does.
 - **A count and a movement at the same second** are not told apart: the count difference is what is left, so the sum stands.
 - **An item's class, millilitres and strength** are read at the press; a change shows only on a return worked out after it.
 - **A store with very many items and long history** makes the press read more (the rows at each item's last time, 200 times a read). Past the press's 7 seconds it writes nothing and says *did not answer in time*: work the return out for a shorter period.

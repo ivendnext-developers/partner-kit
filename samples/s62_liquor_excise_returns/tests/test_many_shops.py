@@ -201,7 +201,7 @@ class Prefix(unittest.TestCase):
         self.assertEqual(sorted(d["name"] for d in manifest["doctypes"]), sorted((exr.CLASS, exr.RETURN, exr.LINE)))
         self.assertEqual({c["fieldname"] for c in manifest["custom_fields"]},
                          {exr.FIELD + "class", exr.FIELD + "ml", exr.FIELD + "abv"})
-        self.assertEqual({s["state"] for s in manifest["workflows"][0]["states"]}, {exr.DRAFT, exr.FILED})
+        self.assertEqual({s["state"] for s in manifest["workflows"][0]["states"]}, {exr.DRAFT, exr.FILED, exr.DROPPED})
         self.assertEqual(manifest["save_rules"][0]["rule_name"], exr.LOCK_RULE)
         self.assertEqual({a["record_type"] for a in manifest["desk_actions"]}, {exr.RETURN})
         line = {f["fieldname"]: f for f in next(d for d in manifest["doctypes"] if d["name"] == exr.LINE)["fields"]}

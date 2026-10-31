@@ -111,6 +111,19 @@ class WorkOut(unittest.TestCase):
         with self.assertRaises(ValueError):
             exr.work_out({}, {}, {}, [], [], {}, "Gallons")
 
+    def test_each_printed_column_adds_up_after_rounding(self):
+        wine = {"item_name": "Wine", "class": "Wine", "litres": D("0.75"), "abv": D("12.5")}
+        lines, _, _ = exr.work_out({"W": wine, "V": dict(wine)}, {"W": D(2)}, {"W": D(3), "V": D(1)},
+                                   [{"item_code": "W", "voucher_type": "Purchase Receipt", "qty": 1},
+                                    {"item_code": "V", "voucher_type": "Purchase Receipt", "qty": 1}], [], {}, "Litres")
+        f = {ln["movement"]: ln for ln in lines}
+        for col in ("units", "volume", "pure_alcohol"):
+            self.assertEqual(f[exr.OPENING][col] + sum(f[m][col] for m in exr.INS) - sum(f[m][col] for m in exr.OUTS)
+                             + f[exr.COUNT][col], f[exr.CLOSING][col], col)
+        self.assertEqual(f[exr.CLOSING]["pure_alcohol"], D("0.375"))   # 0.28125 + 0.09375, rounded once
+        self.assertEqual((f[exr.COUNT]["units"], f[exr.COUNT]["pure_alcohol"]), (D(0), D("-0.001")))
+        self.assertNotIn("Stock counts", exr.summary_of(lines, [], 2, "Litres"))   # rounding alone is no count
+
     def test_the_class_code_rides_each_line(self):
         lines, _, _ = exr.work_out({"G": GIN}, {"G": D(1)}, {"G": D(1)}, [], [], {}, "Litres", {"Spirits": "S1"})
         self.assertEqual({ln["return_code"] for ln in lines}, {"S1"})
@@ -181,9 +194,10 @@ class Prefix(unittest.TestCase):
 
     def test_every_name_follows(self):
         exr.use_prefix("IVENDNEXT EXR")
-        self.assertEqual((exr.CLASS, exr.RETURN, exr.LINE, exr.FIELD, exr.DRAFT, exr.FILED, exr.LOCK_RULE),
+        self.assertEqual((exr.CLASS, exr.RETURN, exr.LINE, exr.FIELD, exr.DRAFT, exr.FILED, exr.DROPPED, exr.LOCK_RULE),
                          ("IVENDNEXT EXR Duty Class", "IVENDNEXT EXR Return", "IVENDNEXT EXR Return Line", "ivendnext_exr_",
-                          "IVENDNEXT EXR Draft", "IVENDNEXT EXR Filed", "IVENDNEXT EXR return locked once filed"))
+                          "IVENDNEXT EXR Draft", "IVENDNEXT EXR Filed", "IVENDNEXT EXR Dropped",
+                          "IVENDNEXT EXR return locked once filed"))
 
 
 if __name__ == "__main__":
