@@ -1,0 +1,116 @@
+{
+  "industries": {
+    "Beauty and cosmetics": [
+      "s19_unit_codes",
+      "s30_units_as_serials",
+      "s31_parent_groups",
+      "s38_expiry_markdown",
+      "s48_customer_code_check"
+    ],
+    "Electronics and phones": [
+      "s1_warranty",
+      "s2_bins",
+      "s5_config_pack",
+      "s19_unit_codes",
+      "s20_capture",
+      "s23_till_guard",
+      "s30_units_as_serials",
+      "s32_coupon_rules",
+      "s33_click_and_collect",
+      "s52_phone_plans",
+      "s58_repairs_by_serial"
+    ],
+    "Fashion": [
+      "s2_bins",
+      "s3_price_audit",
+      "s33_click_and_collect",
+      "s44_lucky_draw",
+      "s53_alteration_tickets",
+      "s54_sell_through"
+    ],
+    "Grocery": [
+      "s2_bins",
+      "s24_price_checker",
+      "s27_stock_alerts",
+      "s33_click_and_collect",
+      "s37_age_check",
+      "s38_expiry_markdown",
+      "s40_expiry_recall"
+    ],
+    "Hardware and DIY": [
+      "s1_warranty",
+      "s2_bins",
+      "s60_project_quotes"
+    ],
+    "Hospitality": [
+      "s37_age_check",
+      "s45_restaurant_back_office",
+      "s55_front_of_house",
+      "s56_guest_ordering",
+      "s59_kitchen_screen"
+    ],
+    "Liquor and wine": [
+      "s22_customer_loyalty",
+      "s37_age_check",
+      "s38_expiry_markdown",
+      "s41_regulated_register",
+      "s62_liquor_excise_returns"
+    ],
+    "Optical": [
+      "s42_optical_prescriptions",
+      "s43_third_party_payer"
+    ],
+    "Pharmacy": [
+      "s19_unit_codes",
+      "s25_gift_on_spend",
+      "s30_units_as_serials",
+      "s32_coupon_rules",
+      "s35_call_centre_orders",
+      "s37_age_check",
+      "s38_expiry_markdown",
+      "s39_pharmacy_counter",
+      "s40_expiry_recall",
+      "s41_regulated_register",
+      "s43_third_party_payer"
+    ],
+    "Thrift and resale": [
+      "s3_price_audit",
+      "s11_approvals",
+      "s14_approvals_stores",
+      "s33_click_and_collect",
+      "s44_lucky_draw",
+      "s57_donation_intake",
+      "s61_consignment_payouts"
+    ],
+    "Travel retail": [
+      "s36_duty_free",
+      "s41_regulated_register"
+    ],
+    "Distribution and warehousing": [
+      "s2_bins",
+      "s16_pick_route",
+      "s29_print_pack"
+    ]
+  },
+  "every_industry": [
+    "s4_receipt_pack",
+    "s6_ai_till_key",
+    "s7_system_sync",
+    "s8_estate_rollout",
+    "s9_bi_feed",
+    "s10_ai_manager",
+    "s12_release_gate",
+    "s13_portal",
+    "s17_partner_page",
+    "s18_rule_guard",
+    "s21_field_rules",
+    "s26_derived_prices",
+    "s28_merge_and_history",
+    "s34_po_check",
+    "s46_payment_method_rules",
+    "s47_customers_by_store",
+    "s49_post_sale_feedback",
+    "s50_required_sale_details",
+    "s51_refund_rules"
+  ]
+}

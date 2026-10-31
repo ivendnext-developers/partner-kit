@@ -8,6 +8,8 @@
 
 This sample is a small Python service that registers a warranty for every covered item a retailer sells, and tells staff on the sale. A sale that is a return, or a consolidated roll-up of till sales, registers nothing, and the sale webhooks themselves were not exercised by its tests. It runs on your own server, outside the retailer's iVendNext: a developer new to iVendNext can copy it to react to any booked sale without putting code inside the retailer's iVendNext.
 
+**Industries:** Electronics and phones, Hardware and DIY
+
 **When to use it:** you want to do something with every booked sale (register it, notify someone, audit it) and show the result to staff on the sale itself.
 
 ## What it looks like
@@ -132,3 +134,17 @@ The forms table dates from 2026-10-04 — the rule: outsiders never write Python
 ### Bounds, stated
 
 The reconciliation timer is off on the bench (`PP_RECONCILE_SECONDS=0`) so the tests drive it. A partner runs it nightly and after every restart. A sale that is a return, or a consolidated roll-up of till sales, registers nothing. POS Invoice webhooks are subscribed but not exercised by these tests, which open no POS day.
+
+## Try it at the till
+
+- Sell a covered phone and scan its serial number when the till asks for it, before it charges.
+- A few seconds later the warranty service's comment is on the sale in Desk.
+- Close the till day when you are done.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: a warranty check against your own service, connected to the retailer's iVendNext.
+- A cut-short answer from a retailer's site is handled as an unknown outcome, like a site that cannot be reached, never a crash.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

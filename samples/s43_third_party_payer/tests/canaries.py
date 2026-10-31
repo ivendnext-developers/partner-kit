@@ -192,6 +192,13 @@ CANARIES = [
      M + "test_members_and_claims_are_never_a_till_roles"),
     ("a claim's name is its reference", "manifest.json", '"autoname": "field:claim_ref"', '"autoname": "hash"',
      M + "test_a_claims_name_is_its_reference_so_a_second_insert_is_refused"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path not in ROUTES:\n            return 404, {"error": "not found"}\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path not in ROUTES:\n            return 404, {"error": "not found"}\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

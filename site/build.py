@@ -31,7 +31,10 @@ site/test_plan.mjs tests it in node. Without script the page is its seven steps.
 
 Every sample gets a card (site/gallery.py) built from its README: `{{samples: cards}}` puts them all on a page, grouped by door,
 and the samples list uses the same cards; a sample README without a run section or a door fails the build. A reference app's
-card is a hand-written `{{reference-app: name | one line | doors | status | repository}}` line.
+card is a hand-written `{{reference-app: name | one line | doors | status | repository}}` line. The same READMEs give
+samples/index.json, the published samples index (gallery.index); a README without an Industries line or with one that
+differs from site/industries.json, a sample with a till part and no Try it at the till section, or a README without its
+Versions section fails the build (gallery.readme_errors).
 
 A relative link in a kit file becomes a link to the page it points at, an image is copied beside its page, and anything
 else in the repository (code, a folder) becomes a link to the file on GitHub. A link to a path that does not exist fails
@@ -1187,6 +1190,7 @@ def build(out_dir: pathlib.Path) -> int:
     errors += synonym_errors(groups)
     served = catalogue.backlinks(need_cards)
     ctx.samples = gallery.collect(pages, served, catalogue.DOORS, first_use, slug, ROOT, errors)
+    errors += gallery.readme_errors(ROOT)                           # Industries, Try it at the till, Versions
     ctx.door_pages = {c.door for c in need_cards}
     assets.update(s["shot"] for s in ctx.samples if s["shot"])
     sha = (os.environ.get("GITHUB_SHA") or "")[:7]
@@ -1300,6 +1304,7 @@ def build(out_dir: pathlib.Path) -> int:
     proof_pages = {k: v.out for k, v in registry.items() if isinstance(v, (Page, ListPage)) and k != "recipes" and k != "samples"}
     write("catalogue.json", catalogue_json(need_cards, titles, proof_pages, related))
     import json
+    write("samples/index.json", json.dumps(gallery.index(ctx.samples, pages, served, catalogue.DOORS, ROOT), ensure_ascii=False, indent=1) + "\n")
     write("search-index.json", json.dumps(search_docs(pages, need_cards, groups, rec_pages), ensure_ascii=False, separators=(",", ":")) + "\n")
     write("search.html", shell("Search", search_page(), "search.html", sha=sha, noindex=True,
                                desc="Search the iVendNext Developers site: the needs catalogue first, then the recipes, samples and guide."))
@@ -1381,6 +1386,8 @@ def build(out_dir: pathlib.Path) -> int:
         ("Record types", rows(lambda o, m: o.startswith("records/"))),
         ("Machine-readable", [("The needs catalogue as JSON", f"https://{DOMAIN}/catalogue.json",
                                "Every need card with its verdict, door, recipes, samples and limits, for an assistant."),
+                              ("The samples index as JSON", f"https://{DOMAIN}/samples/index.json",
+                               "Every kit sample with its version and versions, industries, door, needs, recipe and what to try at the till."),
                               ("The AI chapter", canonical("guide/13_ai.html"), ai.desc if ai else "How to use an assistant with the kit."),
                               ("Sitemap", f"https://{DOMAIN}/sitemap.xml", "Every indexed page of the site.")])]))
     write("downloads/blueprint_template.md", (ROOT / "kit/blueprint_template.md").read_text("utf-8"))   # to fill on screen; the PDFs: site/pdf/

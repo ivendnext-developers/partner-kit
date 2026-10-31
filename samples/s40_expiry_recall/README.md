@@ -9,6 +9,8 @@ A pharmacy, a grocery or any retailer that sells lots with an expiry date. Four 
 - **The worklist.** An **Expiry Worklist** lists, per store, the lots that expire within the retailer's window, and the medicine lots with no expiry date at all.
 - **Receiving.** A goods receipt is refused when a lot has fewer days left than the retailer's minimum, unless its line carries a **Letter of Undertaking** with its days. An ERP's own receipts are flagged, never refused.
 
+**Industries:** Grocery, Pharmacy
+
 Kit sample **S40**; its App library copy is `ivendnext_rcl`. Part of iVendNext's pharmacy standard version, and useful to any retailer that sells by lot.
 
 ## What happens
@@ -43,7 +45,7 @@ Kit sample **S40**; its App library copy is `ivendnext_rcl`. Part of iVendNext's
 | `recall.py` | the pure core: the signature, the recall's outcome per lot, stock per store, customers supplied, the clock, the worklist, the receiving and disposal rules, the answers |
 | `service/app.py` | the service: five routes, one per door, each signed with its own secret; the retailer's record API as the app's user |
 | `app.json` | hosted as a function, paid per call |
-| `tests/` | 98 laptop tests against a stand-in iVendNext, and 63 canaries (`canaries.py`): each guard's test goes red when its check is removed |
+| `tests/` | 101 laptop tests against a stand-in iVendNext, and 65 canaries (`canaries.py`): each guard's test goes red when its check is removed |
 
 ## Run it
 
@@ -54,6 +56,12 @@ python3 samples/s40_expiry_recall/service/app.py samples/s40_expiry_recall/servi
 ```
 
 One retailer's `.env.local`: `PP_BASE`, `PP_KEY`, `PP_SECRET` (the app's user) and the five secrets the install handed back once, `PP_SECRET_BLOCK`, `PP_SECRET_WORKLIST`, `PP_SECRET_RECEIPT`, `PP_SECRET_DISPOSAL`, `PP_SECRET_COUNT`.
+
+## Try it at the till
+
+- In Desk, enter a recall notice for one lot and press Block these batches.
+- Sell that item at the till; the blocked lot is no longer offered.
+- Close the till day when you are done.
 
 ## Many retailers, hosted
 
@@ -104,3 +112,11 @@ What a partner usually changes:
 - *Shelf-life check exempt* and the Letter of Undertaking can be ticked by whoever receives: a field a kit app adds cannot be limited to a role.
 - Not built here, for later or for a partner: a near-expiry notification (sample S27 sends one), an overdue mark on store progress, the release or return of recalled stock to the supplier per lot, the chain of custody to destruction, per-store progress inside the regulator's print (a print reads only its own record: the *Recall progress* report has it), and a recall's effectiveness check.
 - Lots on one notice: at most 100.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a recall that blocks lots at every till and traces stores and customers; disposal only with the regulator's visit on record.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

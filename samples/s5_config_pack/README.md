@@ -8,6 +8,8 @@
 
 Nothing here is code. The pack switches on what iVendNext already has: the till asks for and keeps a coded reason, tracks a phone by its IMEI, captures one more detail per line, and prices members differently. It is for an iVendNext Partner or a retailer's administrator who wants that set-up as one data file they can apply, test and repeat on the next retailer.
 
+**Industries:** Electronics and phones
+
 Configuration only, applied by a script over the record API and written up as a recipe: [`recipes/configure_no_code.md`](../../recipes/configure_no_code.md).
 
 **When to use it:** what the retailer needs is already in iVendNext and only has to be switched on and filled in.
@@ -81,3 +83,9 @@ The cashier is the bench's *Thabo Nkosi*; the customer, the item and the reasons
 ### Not used here
 
 Shipped, and left out because this pack is settings only: hiding or requiring a till field (P-FIELDS, [S21](../s21_field_rules/README.md)), a rule that refuses a wrong detail on save (P-RULES, [the save rules recipe](../../recipes/save_rules.md)), a wallet (P-WALLET, [S22](../s22_customer_loyalty/README.md)). Not shipped: a card check (P-CARDSET). The member discount is the promotion engine's, not a pricing rule (selling pricing rules are refused at this pin).
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: reasons, IMEI, a line detail and member pricing, set as configuration.

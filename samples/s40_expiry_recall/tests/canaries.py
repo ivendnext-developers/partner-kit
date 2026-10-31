@@ -153,6 +153,13 @@ CANARIES = [
     ("Administrator's key is never used", S, ' and k != "user:Administrator")', ")", M + "test_administrators_key_is_never_used"),
     ("the library's fields follow its prefix", C, '    PREFIX, P = prefix, prefix.lower().replace(" ", "_")', '    PREFIX = prefix',
      M + "test_the_receipt_reads_the_librarys_item_fields"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_recall.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path in ROUTES:\n            return self.call(ROUTES[path], headers, raw)\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path in ROUTES:\n            return self.call(ROUTES[path], headers, raw)\n',
+     "test_recall.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

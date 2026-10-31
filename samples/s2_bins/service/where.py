@@ -60,7 +60,9 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import core  # noqa: E402
 import function  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 ROUTE, KEY = "/point/where_is_it", "where_is_it"       # the manifest's remote_keys[].key; its secret is "<app>:<key>"
 BODY_MAX, SKEW_S = 64 * 1024, 300
@@ -161,15 +163,16 @@ def _warning(body: str) -> dict:
 class Service:
     def __init__(self, conf: dict, store=None, reader=read_list, clock=time.monotonic):
         self.prefix = (conf.get("BLN_PREFIX") or "PP BLN").strip()
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         self.reader, self.clock = reader, clock
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
-            self.secret = (conf.get("IVN_POINT_SECRET") or "").strip()
+            self.secret = oneshop.value(conf, "IVN_POINT_SECRET")
             if not self.secret:
                 raise SystemExit("IVN_POINT_SECRET is empty: the app does not start without a way to check a call")
-            self.shop = {"url": conf["IVN_SHOP_URL"], "key": conf["IVN_SHOP_KEY"]}
+            one = oneshop.settings(conf, ["IVN_SHOP_URL", "IVN_SHOP_KEY"])
+            self.shop = {"url": one["IVN_SHOP_URL"], "key": one["IVN_SHOP_KEY"]}
 
     def caller(self, headers) -> tuple[list[str], dict | None]:
         """(the secrets this call may be signed with, the shop's address and its integration user's key, if handed over)."""
@@ -198,6 +201,8 @@ class Service:
             return 503, {"error": "unavailable"}
         if not secrets or not verified(secrets, headers, raw):
             return 401, {"error": "the signature does not match"}   # the same words for a site the app does not know
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(KEY)
         try:
             context = json.loads(raw)["context"]
             if not isinstance(context, dict):
@@ -297,7 +302,7 @@ def env_file(path: str) -> dict:
 
 def main():
     conf = dict(os.environ, **(env_file(sys.argv[1]) if len(sys.argv) > 1 else {}))
-    if not (conf.get("IVN_LIBRARY_APP") or all(conf.get(k) for k in ("IVN_POINT_SECRET", "IVN_SHOP_URL", "IVN_SHOP_KEY"))):
+    if not (oneshop.many(conf) or all(oneshop.value(conf, k) for k in ("IVN_POINT_SECRET", "IVN_SHOP_URL", "IVN_SHOP_KEY"))):
         raise SystemExit("set IVN_POINT_SECRET, IVN_SHOP_URL and IVN_SHOP_KEY (one shop), or IVN_LIBRARY_APP with a store "
                          "(many shops): the app does not start without a way to check a call")
     srv = make_server(Service(conf), int(conf.get("PORT") or 8080))

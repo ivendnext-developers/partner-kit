@@ -4,6 +4,8 @@
 
 A resale or consignment store sells pieces it does not own. Each piece belongs to a consignor, who is owed an agreed share of what it sold for. Once a month, or when the consignor asks, someone adds up what sold, takes off what came back, works out the share and pays it. The app keeps the consignors, names the consignor on each item, and works each payout out from the retailer's own till sales and Desk invoices. **Each sold line is paid once:** a line on a payout is never put on another, and a payout is marked paid only after the app's service has checked every line again.
 
+**Industries:** Thrift and resale
+
 **When to use it:** the retailer sells goods on consignment (second-hand clothing, furniture, books, collectables, luxury resale) and pays consignors a share of each sale.
 
 ## What happens
@@ -74,6 +76,12 @@ python3 samples/s61_consignment_payouts/service/app.py samples/s61_consignment_p
 
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's presses never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
 
+## Try it at the till
+
+- Sell an item that names a consignor.
+- In Desk, make a payout for that consignor and press Work out the payout, then Pay this payout.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The service is the [app template](../../tools/app_template/README.md)'s shape: set `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting; `IVN_SHOPS_FILE` is for the tests and a laptop: a retailer's site names itself and connects by itself only to an app on `*.ivendnext.app`, so a partner's own server runs one retailer). Each retailer connects itself after its install and hands over the presses' secrets and the key of the app's own user (*Connect again* is only for when the site could not reach the app, or a key was lost or changed). Until the key arrives a press is answered in words. Every press names its retailer's iVendNext (`X-iVendNext-Site`), so each retailer is read and written with its own key.
@@ -130,3 +138,14 @@ What a partner usually changes:
 - **A line with an amount the site sends unreadable** is left off (never paid wrongly), and a payout of another consignor that still holds a line after an item moved keeps it off this consignor's payout until that payout is paid or dropped.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. The first press after a quiet spell starts the function (1 to 2.5 seconds, measured on earlier apps), inside the button's 10.
 - It logs one line per call: the route, the status and the milliseconds, never a body or a key.
+
+## Versions
+
+### 1.0.1
+
+- A payout of fewer than 500 lines no longer says lines wait.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+
+### 1.0.0
+
+- First version in the kit: each consignor's share of what sold, worked out from the retailer's own sales and paid once.

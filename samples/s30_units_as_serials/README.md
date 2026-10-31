@@ -4,6 +4,8 @@
 
 Some retailers track every pack or handset by its own printed code: supplements, phones, pharmacy packs. They need that code checked when stock is received, moved, counted and sold, in the back office as well as at the till. iVendNext already tracks a unit like this when the code is a **serial number** of an item that has both batches and serial numbers. This sample sets that up, moves an existing unit table onto it, and tells a lost unit from a sold one.
 
+**Industries:** Beauty and cosmetics, Electronics and phones, Pharmacy
+
 It is for an iVendNext Partner or a retailer's administrator. **No code runs in the retailer's iVendNext.** The scripts run once on the administrator's computer and use the retailer's record API with the administrator's key.
 
 **When to use it.** Each unit carries a code the retailer must check on every stock document, not only at the till. When the codes live in a table of the retailer's own and only the till needs to read them, a scan source is lighter: [S19](../s19_unit_codes/README.md).
@@ -168,3 +170,9 @@ python3 samples/s30_units_as_serials/tests/canaries.py
 - *A unit table, a scan source and a service* — S19's shape. Rejected here: Desk forms would not check the codes, and the service would repeat what iVendNext already does.
 - *A saved report for counted-out units* — rejected: a saved report cannot order a unit's movements.
 - *Do nothing* — rejected: a count's missing units stay mixed with sales.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: each pack's printed code tracked as a serial number by iVendNext itself.

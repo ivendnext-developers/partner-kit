@@ -8,6 +8,8 @@
 
 A manifest with one POS Invoice print format: the company's tax registration number and address, an inline logo, one line per item with its VAT rate, the taxable value at each rate, and every label in English beside Arabic. It is for a developer who needs the till to print a receipt that meets their market's rules. The recipe is [`recipes/receipt_format.md`](../../recipes/receipt_format.md).
 
+**Industries:** every industry
+
 **When to use it:** the retailer's receipt must carry what your market's tax rules ask for, and you want to ship that layout as a package the retailer installs and removes cleanly.
 
 ## What it looks like
@@ -94,3 +96,9 @@ The cashier is the bench's *Thabo Nkosi*, the customer *Johan van der Merwe*. Th
 ### Not used here
 
 Shipped, and left out to keep this sample about the receipt: a QR or fiscal mark (P-RECEIPT, through the [fiscal reader](../../contracts/pages/fiscal_reader.md); a format of your own calls `receipt_fiscal_marks(doc)` to print it), hiding or requiring a till field (P-FIELDS, [S21](../s21_field_rules/README.md)), labels (P-LABEL, the [label layout](../../contracts/pages/label_layout.md)). Not shipped: a manifest that sets the profile's format (the last part of P-RECEIPT), so step 5 of the recipe is configuration.
+
+## Versions
+
+### 0.1.2
+
+- First version in the kit: a UAE tax invoice on the till sale, as a receipt pack.

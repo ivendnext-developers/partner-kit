@@ -56,7 +56,9 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import feedback as fb  # noqa: E402
 import function  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 SUB = "send"                         # the manifest's extension_subscriptions[].key
 STALE, DUPLICATE = "TimestampMismatchError", "DuplicateEntryError"   # the retailer's error types the service branches on
@@ -168,7 +170,7 @@ def _host(url: str) -> str:
 
 class Service:
     def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, now=None, clock=time.monotonic):
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         prefix = (conf.get("PSF_PREFIX") or "").strip()
         if self.app and not prefix:      # the library's record types are not the sample's: every read would 404
             raise SystemExit("IVN_LIBRARY_APP is set but PSF_PREFIX is not (IVENDNEXT PSF for the App library's app)")
@@ -180,9 +182,10 @@ class Service:
         if self.app:                                    # many retailers: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one retailer, from the settings
-            self.site = _host(conf["IVN_SHOP_URL"])
-            self.secret = conf["IVN_SEND_SECRET"]
-            self.tenant = tenant or tenant_of(conf["IVN_SHOP_URL"], conf["IVN_SHOP_KEY"])
+            one = oneshop.settings(conf, ["IVN_SHOP_URL", "IVN_SHOP_KEY", "IVN_SEND_SECRET"])
+            self.site = _host(one["IVN_SHOP_URL"])
+            self.secret = one["IVN_SEND_SECRET"]
+            self.tenant = tenant or tenant_of(one["IVN_SHOP_URL"], one["IVN_SHOP_KEY"])
         self.admin = conf.get("PP_ADMIN_TOKEN") or ""
         self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
         self.received = []
@@ -316,6 +319,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or all(fb.verify(ts, sig, raw, s.decode()) for s in secrets):
             return 401, {"error": "the signature does not match"}   # the same words for a site the app does not know
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(SUB)
         try:
             body = json.loads(raw)
             names, _user = fb.rules_of_press(body)
@@ -502,7 +507,7 @@ def env_file(path: str) -> dict:
 
 def main():
     conf = dict(os.environ, **(env_file(sys.argv[1]) if len(sys.argv) > 1 else {}))
-    if not (conf.get("IVN_LIBRARY_APP") or all(conf.get(k) for k in ("IVN_SHOP_URL", "IVN_SHOP_KEY", "IVN_SEND_SECRET"))):
+    if not (oneshop.many(conf) or all(oneshop.value(conf, k) for k in ("IVN_SHOP_URL", "IVN_SHOP_KEY", "IVN_SEND_SECRET"))):
         raise SystemExit("set IVN_SHOP_URL, IVN_SHOP_KEY and IVN_SEND_SECRET (one retailer), or IVN_LIBRARY_APP with a "
                          "store (many retailers): the app does not start without a way to check a press")
     svc = Service(conf)

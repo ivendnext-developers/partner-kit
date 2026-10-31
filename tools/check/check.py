@@ -3,7 +3,7 @@
 
     python3 tools/check/check.py <project dir> [--server-only]
 
-It finds four kinds of thing under the folder and runs the kit's own checker on each:
+It finds five kinds of thing under the folder and runs the kit's own checker on each:
 
   * manifests        every file whose name ends in ``manifest.json`` -> tools/manifest/validate.py
   * apps             every folder holding a ``hooks.py`` -> tools/selfcheck/selfcheck.py
@@ -15,6 +15,10 @@ It finds four kinds of thing under the folder and runs the kit's own checker on 
                      and ``"expect_refusal": "why"`` for an answer that must be turned away (the kit's own refused
                      samples work unchanged; ``"beyond_schema": true`` marks one only a shop's stored state refuses).
                      -> tools/contracts/check.py
+  * settings files   every ``app.json`` that names an ``env`` list, a ``port``, a ``health`` or ``runs`` (the hosting
+                     order, chapter 14b; the App library's card, also ``app.json``, is not one): its
+                     settings -> tools/app_template/validate_app.py (every setting says its ``purpose``, the line the
+                     Settings screen shows; the Dockerfile is checked when you plan a deploy, tools/deploy_app/)
 
 Folders named ``tests``, ``fixtures``, ``node_modules``, ``.git``, ``.venv``, ``venv`` and ``__pycache__`` are not
 searched when this looks for things to check: a test may hold a defect on purpose. (The self-check, once it is given an
@@ -162,9 +166,30 @@ def _answer(path, rel, out):
         out.append(("OK", f"{rel}: {'refused as expected' if must_refuse else 'holds'} against {s['extension_point']}"))
 
 
+def _is_settings(path, rel, out) -> bool:
+    """An ``app.json`` that is the hosting order's settings file. Another tool's ``app.json`` (the App library's card, a
+    mobile project's) is left alone; one that is not valid JSON is named, since nobody can tell what it is."""
+    try:
+        m = json.loads(path.read_text("utf-8"))
+    except (ValueError, OSError):
+        out.append(("NOTE", f"{rel}: not valid JSON, so not checked as a settings file "
+                            "(tools/app_template/validate_app.py says where it breaks)"))
+        return False
+    return isinstance(m, dict) and any(k in m for k in ("env", "port", "health", "runs"))
+
+
+def _settings(path, rel, out):
+    validate_app = _load("kit_validate_app", KIT / "tools" / "app_template" / "validate_app.py")
+    bad = validate_app.check_settings(json.loads(path.read_text("utf-8")))     # read once already by _is_settings
+    for b in bad:
+        out.append(("REFUSED", f"{rel}: {b}"))
+    if not bad:
+        out.append(("OK", f"{rel}: settings file valid"))
+
+
 def run(root: pathlib.Path, server_only: bool = False):
     out: list[tuple[str, str]] = []
-    count = {"manifests": 0, "apps": 0, "modules": 0, "answers": 0}
+    count = {"manifests": 0, "apps": 0, "modules": 0, "answers": 0, "settings files": 0}
     files = _files(root, out)
 
     def rel(p):
@@ -180,6 +205,9 @@ def run(root: pathlib.Path, server_only: bool = False):
         elif p.name.endswith(".contract.json") or ("contract_samples" in p.relative_to(root).parts[:-1] and p.suffix == ".json"):
             count["answers"] += 1
             _answer(p, rel(p), out)
+        elif p.name == "app.json" and _is_settings(p, rel(p), out):
+            count["settings files"] += 1
+            _settings(p, rel(p), out)
     for app in _apps(files):
         count["apps"] += 1
         _app(app, rel(app), out)
@@ -198,7 +226,7 @@ def main(argv: list[str]) -> int:
     found = ", ".join(f"{n} {k[:-1] if n == 1 else k}" for k, n in count.items() if n)
     refused = sum(k == "REFUSED" for k, _ in out)
     if not found:
-        print("NOTHING FOUND: no manifest, app, sandboxed build or answer file under this folder")
+        print("NOTHING FOUND: no manifest, app, sandboxed build, answer file or settings file under this folder")
         return 2
     print(f"CHECK {'GREEN' if not refused else f'RED: {refused} refusal(s)'} — {found}")
     return 1 if refused else 0

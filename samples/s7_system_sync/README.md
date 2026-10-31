@@ -4,6 +4,8 @@
 
 This sample keeps a customer's own back-office system in step with iVendNext. Items, prices and stock go out to iVendNext; booked sales and returns come back, once each; a nightly report names anything the two disagree on. It is for a developer who connects a large customer's ERP, order system or warehouse system to their stores.
 
+**Industries:** every industry
+
 Runs **outside** the retailer's iVendNext, over the record API and the event feed ([`recipes/event_feed.md`](../../recipes/event_feed.md)); written up as a recipe: [`recipes/system_sync.md`](../../recipes/system_sync.md).
 
 **When to use it:** another system is the master for items, prices or stock, and it must also learn of every sale.
@@ -87,3 +89,10 @@ PASS T6 canary: a total that is one unit off is named with both figures
 ### Bounds
 
 **One instance per ERP per retailer** — the sync takes no lock (recipe, Bounds). **Not used here, though shipped:** the feed scoped to one application (P-FEED, the client's `--transport door`, `recipes/event_feed.md` §3) — the sync uses the engine transport and the integration user's grant, which reaches every application's queue; a payment-time check (P-CHECK, `samples/s23_till_guard/`). **Never done:** a stock figure is a Stock Entry the engine books, never a number the sample sets; a price is written to the price list, never onto a sale.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a customer's own order or warehouse system kept in step with iVendNext.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

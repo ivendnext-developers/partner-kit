@@ -10,6 +10,8 @@ A distributor's ERP knows things iVendNext does not: which suppliers are on hold
 | **The order is over what the company has left of this month's budget** | *needs approval by Purchase Manager* (*"Over the monthly budget: 7,500.00 USD left."*). Whoever submits it meets this: a user without the role is refused, and a purchase manager is asked to approve, and a yes submits |
 | **All clear** | the order is submitted, and its **ERP order number** is filled in by the ERP (`ERP-PO-9912`) |
 
+**Industries:** every industry
+
 It uses the **document check** extension point (`doccheck/1`, POS app from train T11). The recipe: [A rule checked before a document is submitted](../../recipes/document_check.md).
 
 ## What the retailer does
@@ -51,6 +53,7 @@ python3 samples/s34_po_check/service/app.py samples/s34_po_check/service/.env.lo
 
 **Settings, one retailer** (`service/.env.local`, never committed): `IVN_CHECK_SECRET` (handed back at install as `pp_poc:sub:po_check`), `PORT`. **Many retailers** (the [app template](../../tools/app_template/README.md)'s handshake): `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`); each retailer hands over its secret when it connects. `POC_PREFIX` names the fill field (`<prefix>_erp_number`, default `pp_poc`). `ERP_STANDIN` points at another stand-in file.
 
+
 ## Technical notes
 
 - **The fill field is the app's own.** The product fills only a field the retailer added; a field your package adds counts (it is installed as the retailer's own field). A standard field, such as the order's schedule date, is refused when the subscription is saved: *"A service cannot fill …: on Purchase Order it may fill only a field the retailer added, never a money field or one a total is computed from."*
@@ -64,5 +67,13 @@ python3 samples/s34_po_check/service/app.py samples/s34_po_check/service/.env.lo
 
 ### What was proven where
 
-- **Laptop:** the tests above (the rules, the shape, the signature, one retailer and many, a real call over HTTP, every answer against the published `doccheck/1` contract, the product's own accepted samples, the manifest through the kit's checker: 32 tests) and 13 canaries, each RED with its baseline passing.
+- **Laptop:** the tests above (the rules, the shape, the signature, one retailer and many, a real call over HTTP, every answer against the published `doccheck/1` contract, the product's own accepted samples, the manifest through the kit's checker, the test call: 35 tests) and 15 canaries, each RED with its baseline passing.
 - **The sandbox `demo-1`** (2026-10-21, POS app 2.0.0.656): the manifest installed, and the site took its field as one the service may fill; with the service unreachable, a purchase order's submit was refused (*"ERP purchase order check did not answer, so this document can't be submitted yet. Try again."*) and stayed a draft, and the site's *Retail Extension Log* row read `outcome` *unreachable*, `check_answer` *refuse*, flagged; a subscription naming a standard field (`schedule_date`) or a money field (`grand_total`) was refused at its save in the product's words. **Not run on the sandbox:** the service's own refuse, approve and fill answers on a submitted order (our service is not reachable from the sandbox; the laptop tests prove the answers against the product's contract).
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: purchase orders checked by your own back-office system, as a document check.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The README says to put your own service's address in the manifest before you install.

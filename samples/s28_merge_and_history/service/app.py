@@ -29,8 +29,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 HERE = os.path.dirname(os.path.abspath(__file__))
 SAMPLE = os.path.dirname(HERE)
 sys.path.insert(0, SAMPLE)
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(SAMPLE)), "tools", "app_template", "service"))   # the test call
 import history  # noqa: E402
 import merge  # noqa: E402
+import testcall  # noqa: E402
 
 SETTINGS = "PP MHS Settings"
 DESIGN = [os.path.join(HERE, "design"), os.path.join(SAMPLE, "..", "..", "kit", "design")]   # a copy beside, else the kit's
@@ -130,6 +132,8 @@ class Service:
                            self.action_secret)
         if why:
             return 401, {"error": why}
+        if testcall.is_test(headers):     # checked as a real press; the merge itself does not run
+            return testcall.answer("merge")
         try:
             ctx = merge.context_of(json.loads(raw))
         except ValueError as e:

@@ -196,6 +196,13 @@ CANARIES = [
      T + "test_f1b_a_desk_copy_is_the_shops_own_and_an_entry_from_before_a_reinstall_is_the_apps"),
     ("an entry from before a reinstall is the app's", S, '                or (not r.get(f"{bo.FIELD}_issue") and bo.ours_by_remarks(r.get("remarks")))}',
      '                or False}', T + "test_f1b_a_desk_copy_is_the_shops_own_and_an_entry_from_before_a_reinstall_is_the_apps"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path in SUBS:\n            return self.press(path, headers, raw)\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path in SUBS:\n            return self.press(path, headers, raw)\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

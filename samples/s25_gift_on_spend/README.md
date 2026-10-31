@@ -2,6 +2,8 @@
 
 *Start from this sample: `python3 tools/manifest/start.py s25_gift_on_spend --prefix "ACME GCS"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
+**Industries:** Pharmacy
+
 ## What the retailer does
 
 A customer's sale reaches the retailer's threshold. Within the next half a minute the app gives them the retailer's **own** gift card, of the value the retailer chose, from the retailer's own gift card item. The card can be spent once the hold has passed (24 hours by default), at the till, like any other gift card. Nothing changes at the till: the cashier rings the sale as before.
@@ -83,3 +85,16 @@ docker build --platform linux/arm64 -f samples/s25_gift_on_spend/Dockerfile -t g
 
 - **The laptop tests** (`tests/`): the rules, the card's life against a stand-in iVendNext that sets a card's balance on a submitted Gift Card Balance as the engine does, the worker, many retailers and the manifest; `canaries.py` turns each rule off in turn and its test goes RED.
 - **The test bench** (the programme's bench, against a real site at the bench's pins, the service in its one-retailer form): sales rung at the till, a card held at 0 and refused at the till, released after a short hold and spent at the till, a cancelled sale's cards never released, a sale returned through the till's own return voided, and the uninstall leaving the schema as found. The run's record is in the programme's evidence. The many-retailers form (the handshake, the shops store) is proven by the laptop tests only.
+
+## Versions
+
+### 1.1.0
+
+- Hosted on a schedule as a function, paid per call, instead of an always-on container.
+- A cut-short answer from a retailer's site is handled as an unknown outcome, like a site that cannot be reached, never a crash.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+
+### 1.0.0
+
+- First version in the kit: a sale over the retailer's threshold earns its own gift card, spendable after a hold.
+- Keeps its notes in a writable /scratch folder on CitiXsys hosting.

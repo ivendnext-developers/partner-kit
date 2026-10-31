@@ -21,6 +21,15 @@ import tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CANARIES = [
+    ("a test call never reaches the handler", "service/app.py", "        if test:                                    # checked as a real call; the key itself does not run\n",
+     "        if False:\n", "test_testcall.TestCall.test_canary_a_test_call_never_reaches_the_handler"),
+    ("a test call to a route the service does not have", "service/app.py",
+     "        if test and path != ROUTE:                  # a test is answered only where the route matches\n            code = 404\n            return code, {\"error\": \"no such route\"}\n",
+     "        if test:\n            code, out = testcall.answer(KEY)\n            return code, out\n",
+     "test_testcall.TestCall.test_canary_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
+    ("a test call checks the signature", "service/app.py", "        if not verified(secrets, headers, raw):\n",
+     "        if not test and not verified(secrets, headers, raw):\n",
+     "test_testcall.TestCall.test_a_mis_signed_test_call_gets_the_real_refusal"),
     ("a key for another app", "service/shops.py", '    if payload["app"] != app:', "    if False:",
      "test_shops.KeyCheck.test_canary_a_key_for_another_app"),
     ("a key for another site", "service/shops.py", '    if payload["host"] != site:', "    if False:",
@@ -83,6 +92,9 @@ CANARIES = [
     ("local mode is never a hosting setting", "validate_app.py",
      '        if name in ("IVN_LOCAL", "IVN_LOCAL_LIBRARY_KEYS"):', "        if False:",
      "test_validate_app.Settings.test_canary_local_mode_is_never_a_hosting_setting"),
+    ("every setting says its purpose", "validate_app.py",
+     '        purpose = e.get("purpose")\n', '        purpose = e.get("purpose") or "x"\n',
+     "test_validate_app.Settings.test_canary_a_setting_with_no_purpose_is_refused"),
     ("a store that does not answer is never a pass", "service/app.py", "            code = 503\n"
      "            return code, {\"error\": \"unavailable\"}\n", "            secrets = []\n",
      "test_shops.Service.test_a_store_that_does_not_answer_is_503_never_a_pass"),

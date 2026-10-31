@@ -29,7 +29,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 SAMPLE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, SAMPLE)
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(SAMPLE)), "tools", "app_template", "service"))   # the test call
 import capture  # noqa: E402
+import testcall  # noqa: E402
 
 
 class Outbox:
@@ -53,6 +55,7 @@ class Service:
     PATHS = {"/cap/scan": ("PP_POINT_SECRET_SCAN", ("scan",)),
              "/cap/customer": ("PP_POINT_SECRET_CUSTOMER", ("customer_add", "verify")),
              "/cap/qty": ("PP_POINT_SECRET_QTY", ("qty_change",))}
+    KEYS = {"/cap/scan": "on_scan", "/cap/customer": "on_customer", "/cap/qty": "on_qty"}   # the manifest's subscription keys
 
     def __init__(self, conf: dict, send):
         self.secrets = {path: conf[key] for path, (key, _events) in self.PATHS.items()     # a missing scan or customer secret stops the
@@ -66,6 +69,8 @@ class Service:
                              self.secrets[path])
         if why:
             return 401, {"error": why}
+        if testcall.is_test(headers):                   # checked as a real call; the capture itself does not run
+            return testcall.answer(self.KEYS[path])
         try:
             ctx = capture.context_of(json.loads(raw))
         except (ValueError, RecursionError) as e:

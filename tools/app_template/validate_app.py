@@ -10,7 +10,8 @@ keeps a shops table (`shops`: many shops, each connecting itself), whether it ne
 function paid per call (`runs`; a function also names its `handler` and the `package` it is zipped from, and, for
 background work, a `schedule` of named runs and a `timeout` of up to 900 seconds). Refused, with the reason:
 an unknown key, a bad name or port, a size or region not on the list, an environment variable with a value in the file, a variable
-whose name looks like a secret but is not marked secret; and a Dockerfile that runs as root, has no health check, exposes a
+whose name looks like a secret but is not marked secret, a setting with no `purpose` (the line the Settings screen shows) or a
+`together` that is not a list of the other settings' names; and a Dockerfile that runs as root, has no health check, exposes a
 different port from the file, or sets a secret-looking variable with ENV. A function needs no Dockerfile (one present is
 still checked), serves many shops and keeps no secret of its own: each shop hands over its own at connect.
 """
@@ -22,8 +23,12 @@ import re
 import sys
 
 KEYS = {"app", "version", "port", "health", "size", "region", "env", "shops", "scratch", "runs", "handler", "package",
-        "schedule", "timeout"}
-ENV_KEYS = {"name", "secret", "required", "about"}   # about: one line the hosting page shows under the setting
+        "schedule", "timeout", "samples"}
+# samples: the record New app writes (tools/manifest/combine.py): each sample the app was made from, its version and the
+# hashes of what was written, so Add a sample can tell what the developer changed. The hosting order does not read it.
+ENV_KEYS = {"name", "secret", "required", "about", "purpose", "together"}
+# about: one line the hosting page shows under the setting. purpose: the line the Settings screen shows a functional
+# person, what to put there (every setting has one). together: the other settings set with it, both or neither.
 SIZES = ("small", "medium", "large")
 RUNS = ("container", "function")
 HANDLER = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_/]*\.[A-Za-z_][A-Za-z0-9_]*")     # service/app.lambda_handler
@@ -81,8 +86,38 @@ def check_settings(m) -> list[str]:
                 bad.append(f"{w}: {flag} is true or false")
         if "about" in e and (not isinstance(e["about"], str) or not 0 < len(e["about"]) <= 300 or "\n" in e["about"]):
             bad.append(f"{w}: about is one line of up to 300 characters, what the setting is")
+        purpose = e.get("purpose")
+        if not isinstance(purpose, str) or not purpose.strip():
+            bad.append(f"the setting {name} in app.json has no purpose: the line the Settings screen shows, what to put "
+                       f"there (\"purpose\": \"Your loyalty service's address, if it runs elsewhere\")")
+        elif len(purpose) > 200 or "\n" in purpose:
+            bad.append(f"the setting {name} in app.json: its purpose is one line of up to 200 characters")
         if SECRETISH.search(name) and e.get("secret") is not True:
             bad.append(f"{w}: {name} looks like a secret: mark it \"secret\": true")
+    bad += check_together(env)
+    return bad
+
+
+def check_together(env: list) -> list[str]:
+    """``together``: the names of the other settings in this file that are set with this one, both or neither."""
+    bad = []
+    entries = [e for e in env if isinstance(e, dict) and isinstance(e.get("name"), str)]
+    names = {e["name"] for e in entries}
+    pairs = {(e["name"], o) for e in entries if isinstance(e.get("together"), list) for o in e["together"]
+             if isinstance(o, str)}
+    for e in entries:
+        if "together" not in e:
+            continue
+        t, name = e["together"], e["name"]
+        if not isinstance(t, list) or not all(isinstance(o, str) for o in t):
+            bad.append(f"the setting {name} in app.json: together is a list of the other settings' names set with it "
+                       f"([] when none)")
+            continue
+        for o in t:
+            if o == name or o not in names:
+                bad.append(f"the setting {name} in app.json: together names {o}, which is not another setting in its env list")
+            elif (o, name) not in pairs:
+                bad.append(f"the setting {name} in app.json: together names {o}, so {o} names {name} too (set both, or neither)")
     return bad
 
 

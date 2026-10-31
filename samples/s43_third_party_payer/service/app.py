@@ -61,7 +61,9 @@ sys.path.append(os.path.join(KIT, "tools", "feed_client"))
 import claims as K  # noqa: E402
 import copay as C  # noqa: E402
 import function  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 BODY_MAX = 256 * 1024
 REFUSAL_MAX = 250       # the door's words in a press's answer, whose body the door takes up to 280 characters
@@ -192,13 +194,15 @@ class Service:
     def __init__(self, conf: dict, store=None, api=None, now=time.time):
         self.prefix = (conf.get("ICP_PREFIX") or "PP ICP").strip()
         self.fp = self.prefix.lower().replace(" ", "_") + "_"
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         self.api, self.now, self.local = api or ShopApi(), now, threading.local()
         if self.app:
             self.store = store or shops.open_store(conf)
         else:
-            self.secrets = {k: conf.get(f"IVN_SECRET_{k.upper()}") for k, _ in ROUTES.values()}
-            self.shop = {"url": conf["IVN_SHOP_URL"].rstrip("/"), "key": conf["IVN_SHOP_KEY"]}
+            one = oneshop.settings(conf, ["IVN_SHOP_URL", "IVN_SHOP_KEY"],
+                                   [f"IVN_SECRET_{k.upper()}" for k, _ in ROUTES.values()])     # a route with none refuses
+            self.secrets = {k: one[f"IVN_SECRET_{k.upper()}"] for k, _ in ROUTES.values()}
+            self.shop = {"url": one["IVN_SHOP_URL"].rstrip("/"), "key": one["IVN_SHOP_KEY"]}
 
     def dt(self, suffix: str) -> str:
         return f"{self.prefix} {suffix}"
@@ -549,6 +553,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or all(verify(ts, sig, raw, s) for s in secrets):
             return 401, {"error": "the signature does not match"}
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(route_key)
         try:
             body = json.loads(raw)
             if not isinstance(body, dict):
@@ -660,7 +666,7 @@ def env_file(path):
 def main():
     conf = dict(os.environ, **(env_file(sys.argv[1]) if len(sys.argv) > 1 else {}))
     one = [f"IVN_SECRET_{k.upper()}" for k in NOW] + ["IVN_SHOP_URL", "IVN_SHOP_KEY"]
-    if not (conf.get("IVN_LIBRARY_APP") or all(conf.get(k) for k in one)):
+    if not (oneshop.many(conf) or all(oneshop.value(conf, k) for k in one)):
         raise SystemExit("set " + ", ".join(one) + " (one shop), or IVN_LIBRARY_APP with a store (many shops)")
     srv = make_server(Service(conf), int(conf.get("PORT") or 8080))
     signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=srv.shutdown, daemon=True).start())

@@ -4,6 +4,8 @@
 
 A store's board for the web orders it must pick and hand over, in Desk, from a manifest alone. A report lists the web orders still to pick; two fields on the delivery note record the hand-over, and the Delivery Note list filtered on one of them lists the orders waiting for their customer. Nothing leaves the retailer's iVendNext: no service, no outside address.
 
+**Industries:** Electronics and phones, Fashion, Grocery, Thrift and resale
+
 It uses the manifest's `custom_fields`, `reports` and `workspaces`. **When to use it:** a retailer sells on the web and its customers collect in store, and you want every store to see the same lists without building a screen.
 
 ## What the retailer does
@@ -78,3 +80,9 @@ Proven on our test bench on 2026-10-18 (APPF run 5, final run `pp-20261018T12112
 - **Who and when** of a hand-over are the delivery note's own history, not fields.
 - A web order booked as a sales invoice (the connector's other setting) has no sales order to pick; it shows once its delivery note exists.
 - **Web orders to pick** shows each order until it is fully delivered; a partly delivered order stays on it.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: a Desk board for click and collect web orders.

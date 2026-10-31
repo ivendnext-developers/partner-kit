@@ -82,11 +82,18 @@ CANARIES = [
      "        if secrets and not any(verify(ts, sig, raw, s) for s in secrets):",
      T + "Callers.test_an_unknown_retailer_gets_401"),
     ("the key's secret never signs the check", A,
-     '        name = f"{self.app}:{self.app}_{KEY}" if route == PLANS else f"{self.app}:sub:{CHECK}"',
-     '        name = f"{self.app}:{self.app}_{KEY}"', T + "Callers.test_the_keys_secret_does_not_sign_the_check"),
+     '        name = f"{self.app}:{self.till_key}" if route == PLANS else f"{self.app}:sub:{CHECK}"',
+     '        name = f"{self.app}:{self.till_key}"', T + "Callers.test_the_keys_secret_does_not_sign_the_check"),
     ("a cut answer from the shop is unreachable, never a crash", "service/shop.py", 'ConnectionError, http.client.HTTPException) as e:',
      'ConnectionError) as e:',
      T + "AnswerCutShort.test_a_shop_answer_cut_short_is_the_shop_unreachable_never_a_crash"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path in (PLANS, CHECKS):\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path in (PLANS, CHECKS):\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

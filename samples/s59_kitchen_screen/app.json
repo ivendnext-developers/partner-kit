@@ -11,6 +11,8 @@
  "package": [
   "tools/app_template/service/function.py",
   "tools/app_template/service/shops.py",
+  "tools/app_template/service/testcall.py",
+  "tools/app_template/service/oneshop.py",
   "tools/app_template/service/dynamo.py",
   "tools/app_template/service/ed25519.py",
   "samples/s59_kitchen_screen/ksc.py",
@@ -26,22 +28,30 @@
   {
    "name": "IVN_LIBRARY_APP",
    "about": "Your app's id in the App library, in lower case with underscores: for the prefix ACME KSC, acme_ksc. Each retailer that installs your app connects with a key that names this id.",
-   "required": true
+   "purpose": "Your app's id in the App library, like acme_ksc for the prefix ACME KSC",
+   "required": true,
+   "together": []
   },
   {
    "name": "KSC_PREFIX",
    "about": "The prefix your app's names in the retailer's iVendNext start with, in capitals: the --prefix you gave start.py (for example ACME KSC).",
-   "required": true
+   "purpose": "Filled in for you: the prefix your app's names start with, like ACME KSC",
+   "required": true,
+   "together": []
   },
   {
    "name": "KSC_PAGE_URL",
    "about": "Where the kitchen's screens reach this service's page (https://kitchen-screen.example.app). Each screen's link points there.",
-   "required": true
+   "purpose": "Your service's web address, where the kitchen's screens open their page",
+   "required": true,
+   "together": []
   },
   {
    "name": "KSC_LIVE_URL",
    "about": "Optional: where the screens reach the live service beside this one (https://kitchen-screen-live.example.app, live/). Set, the page may reach that one address and listens there; unset, the screens read every 3 seconds only.",
-   "required": false
+   "purpose": "Your live service's address, if you run it beside this one: the screens then update at once instead of every 3 seconds",
+   "required": false,
+   "together": []
   }
  ]
 }

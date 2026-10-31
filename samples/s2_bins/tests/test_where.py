@@ -440,5 +440,150 @@ class AnswerCutShort(unittest.TestCase):
         self.assertIn("IncompleteRead", str(e.exception))
 
 
+class TestCall(unittest.TestCase):
+    """The test call (``X-iVendNext-Test: 1``, tools/app_template/service/testcall.py) at each signed point route: checked
+    exactly as a real call to that route, then answered 200 {"test": "ok", "point": <key>} without the point's handler;
+    a route the service does not have is 404."""
+    BAD = b"not a call"          # a body the point's handler refuses: a real call with it is never answered 200
+
+    def setUp(self):
+        self.svc = where.Service(ONE, reader=lambda *a, **k: [])
+        # route -> (the point's key as the site knows it, its secret)
+        self.routes = {where.ROUTE: (where.KEY, SECRET)}
+
+    def call(self, path, raw, secret, test=True):
+        import base64, hashlib, hmac, time
+        ts = str(int(time.time()))
+        sig = base64.b64encode(hmac.new(secret.encode(), ts.encode() + b"." + raw, hashlib.sha256).digest()).decode()
+        h = {"X-iVendNext-Timestamp": ts, "X-iVendNext-Signature": sig}
+        if test:
+            h["X-iVendNext-Test"] = "1"
+        return self.svc.handle("POST", path, h, raw)
+
+    def test_a_signed_test_call_is_answered_ok_without_the_handler(self):
+        for path, (key, secret) in self.routes.items():
+            with self.subTest(path):
+                self.assertNotEqual(self.call(path, self.BAD, secret, test=False)[0], 200)   # the handler ran, and refused
+                self.assertEqual(self.call(path, self.BAD, secret), (200, {"test": "ok", "point": key}))   # it did not run
+
+    def test_a_mis_signed_test_call_gets_the_real_refusal(self):
+        for path in self.routes:
+            with self.subTest(path):
+                real = self.call(path, self.BAD, "not-the-secret", test=False)
+                self.assertEqual(real[0], 401)
+                self.assertEqual(self.call(path, self.BAD, "not-the-secret"), real)
+
+    def test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404(self):
+        path, (_, secret) = next(iter(self.routes.items()))
+        for wrong in ("/point/nothing", path + "/extra", path.rsplit("/", 1)[0] + "/nothing"):
+            with self.subTest(wrong):
+                self.assertEqual(self.call(wrong, self.BAD, secret)[0], 404)
+
+
+class OwnServerTestCall(unittest.TestCase):
+    """``service/app.py``, the whole S2 service for your own server, answers the test call (``X-iVendNext-Test: 1``,
+    tools/app_template/service/testcall.py) at its till key's route: checked as a real call, then answered 200
+    {"test": "ok", "point": "where_is_it"} without reading a bin; a route it does not have is 404."""
+    BAD = b"not a call"          # a body the till key's handler cannot read: a real call with it is never answered 200
+    routes = {"/point/where_is_it": ("where_is_it", "own-point-secret")}
+
+    def setUp(self):
+        import shutil
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        port = self.free_port()
+        conf = {"PP_BASE": "http://127.0.0.1:9", "PP_KEY": "k", "PP_SECRET": "s", "PP_WEBHOOK_SECRETS": "w1", "PP_PORT": port,
+                "PP_ADMIN_TOKEN": "t0ken", "PP_POINT_SECRET": "own-point-secret", "PP_DB": os.path.join(d, "bins.sqlite3")}
+        Path(d, ".env.local").write_text("".join(f"{k}={v}\n" for k, v in conf.items()))
+        self.serve([str(HERE.parent / "service" / "app.py"), str(Path(d, ".env.local"))], d, port)
+
+    def serve(self, argv, cwd, port):
+        """Run the server in its own process; it prints its line just before it serves its port."""
+        import socket, subprocess
+        self.port = port
+        p = subprocess.Popen([sys.executable, "-I", "-B", *argv], cwd=cwd, env={"PATH": os.environ.get("PATH", "")},
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+
+        def stop():
+            p.kill()
+            p.communicate()
+        self.addCleanup(stop)
+        self.assertIn(f":{port}", p.stdout.readline())
+        for _ in range(200):
+            try:
+                with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                    return
+            except OSError:
+                time.sleep(0.05)
+
+    @staticmethod
+    def free_port():
+        import socket
+        with socket.socket() as s:
+            s.bind(("127.0.0.1", 0))
+            return s.getsockname()[1]
+
+    def call(self, path, raw, secret, test=True):
+        import urllib.error, urllib.request
+        ts = str(int(time.time()))
+        sig = base64.b64encode(hmac.new(secret.encode(), ts.encode() + b"." + raw, hashlib.sha256).digest()).decode()
+        h = {"X-iVendNext-Timestamp": ts, "X-iVendNext-Signature": sig}
+        if test:
+            h["X-iVendNext-Test"] = "1"
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}", data=raw, headers=h, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}")
+        except (urllib.error.URLError, OSError):     # the handler failed on the body: the connection closed unanswered
+            return 0, None
+
+    def test_a_signed_test_call_is_answered_ok_without_the_handler(self):
+        for path, (key, secret) in self.routes.items():
+            with self.subTest(path):
+                self.assertNotEqual(self.call(path, self.BAD, secret, test=False)[0], 200)   # the handler ran, and failed
+                self.assertEqual(self.call(path, self.BAD, secret), (200, {"test": "ok", "point": key}))   # it did not run
+
+    def test_a_mis_signed_test_call_gets_the_real_refusal(self):
+        for path in self.routes:
+            with self.subTest(path):
+                real = self.call(path, self.BAD, "not-the-secret", test=False)
+                self.assertEqual(real[0], 401)
+                self.assertEqual(self.call(path, self.BAD, "not-the-secret"), real)
+
+    def test_a_signed_test_call_at_the_webhook_stores_no_sale(self):
+        """The webhook answers a test call after its own signature check, and handles no sale (nothing is stored)."""
+        import re as _re
+        import urllib.error
+        import urllib.request
+        sys.path.insert(0, str(HERE.parents[1] / "s1_warranty" / "service"))
+        import receiver
+        source = (HERE.parent / "service" / "app.py").read_text(encoding="utf-8")
+        header = _re.search(r'self\.headers\.get\("(X-[A-Za-z]+-Webhook-Signature)"\)', source).group(1)
+        body = json.dumps({"doctype": "POS Invoice", "name": "T-1", "modified": "2026-10-31 10:00:00"}).encode()
+
+        def post(secret):
+            h = {header: receiver._sign(secret, body).decode(), "X-iVendNext-Test": "1"}
+            req = urllib.request.Request(f"http://127.0.0.1:{self.port}/webhook", data=body, headers=h, method="POST")
+            try:
+                with urllib.request.urlopen(req, timeout=10) as r:
+                    return r.status, json.loads(r.read())
+            except urllib.error.HTTPError as e:
+                return e.code, json.loads(e.read() or b"{}")
+        self.assertEqual(post("w1"), (200, {"test": "ok", "point": "webhook"}))
+        self.assertEqual(post("not-w1")[0], 401)
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}/status", headers={"X-PP-Admin": "t0ken"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            events = json.loads(r.read()).get("events") or []
+        self.assertFalse([e for e in events if "T-1" in json.dumps(e)], events)
+
+    def test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404(self):
+        path, (_, secret) = next(iter(self.routes.items()))
+        for wrong in ("/point/nothing", path + "/extra", path.rsplit("/", 1)[0] + "/nothing"):
+            with self.subTest(wrong):
+                self.assertEqual(self.call(wrong, self.BAD, secret)[0], 404)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -8,6 +8,8 @@
 
 For each booked sale, this sample records each line charged below its price-list rate by more than the retailer's threshold (a store manager's audit). It runs as your own service, outside the retailer's iVendNext: for one retailer on your own server (`outside/service.py`), or for many retailers, each connecting itself after it installs the app from the App library (`outside/app.py`, the way CitiXsys hosts the library's *Price-deviation audit*). It is for a developer who wants to check every sale after it is booked, and keep the findings where store managers can read them in Desk.
 
+**Industries:** Fashion, Thrift and resale
+
 **When to use it:** you want an after-the-sale check on prices, discounts or anything else a booked sale carries.
 
 **Door:** Event feed
@@ -68,3 +70,15 @@ On our test bench (2026-10-10) the one-retailer service read the feed through ou
 It judges each line's own price against its list price: a discount on the whole sale, and an item with no list price, are not checked. A cancelled or amended sale keeps the deviations it was given; a sale deleted before the service reads it is passed over.
 
 A pass reads at most 100 events a page and each sale once; a very large backlog after an outage is read over several passes, and `/health` does not restart a retailer that is catching up.
+
+## Versions
+
+### 1.1.0
+
+- Hosted on a schedule as a function, paid per call, instead of an always-on container.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+
+### 1.0.0
+
+- First version in the kit: every line sold below list by more than a threshold, as an audit.
+- Serves many retailers, each at its own threshold.

@@ -7,6 +7,8 @@ customer. A controlled or prescription-only line is sold only by a pharmacist wh
 needs the patient's identity. Quantity caps hold, and dispensed medicine is not taken back. The same rules hold when a
 sale is made on the Desk.
 
+**Industries:** Pharmacy
+
 This app checks those rules at **Pay** on the till, at a return's confirm, and when a sales order, delivery or sales
 invoice is submitted on the Desk. Each rule is a record the retailer fills: its **drug schedules**, its **pharmacists**, the
 **prescriptions** its pharmacist enters and its **patients'** records (identity and consent). Nothing is written in per
@@ -449,6 +451,12 @@ python3 samples/s39_pharmacy_counter/service/app.py samples/s39_pharmacy_counter
 (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`). `RXC_PREFIX` names the record types, fields and sale
 details (default `PP RXC`).
 
+## Try it at the till
+
+- Sell a prescription medicine with no prescription number; the till stops it at Pay.
+- Add the prescription number in Sale details and press Pay again.
+- Close the till day when you are done.
+
 ## Technical notes
 
 - **An item's schedules:**
@@ -479,7 +487,7 @@ details (default `PP RXC`).
 
 ### What was proven where
 
-- **On the laptop:** the tests and canaries above (144 tests, one of them replaying a recorded bench run when one is
+- **On the laptop:** the tests and canaries above (147 tests, one of them replaying a recorded bench run when one is
   given; 114 canaries, each RED with its baseline passing).
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344`, the engine at `dc65d832`):
   - **The setup.** The app was installed through iVendNext's own installer: five services, switched off, with the
@@ -602,3 +610,11 @@ The service takes its prefix from the setting `RXC_PREFIX`, so
 and the hosting order, and the code needs no change for the name. A retailer's schedules, pharmacists and settings move to
 your copy with `tools/deploy/copy_records.py`
 ([Make one of our apps your own](../../recipes/make_it_your_own.md)).
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: prescription, pharmacist and patient rules at Pay and at Desk submit, each fill reserved in the retailer's own records.
+- Its manifest is now 0.1.3: the patient's data and consent, the patient's own record, and the prescription's date on the sale with a prescriptions register.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.

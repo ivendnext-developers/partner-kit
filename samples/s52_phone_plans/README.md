@@ -4,6 +4,8 @@
 
 A phone retailer sells mobile plans from a telecom company at its tills. The plans and their prices are the telecom company's, and they differ from one retailer to the next: each retailer has its own account with the telecom company. This sample links the till to the telecom company through your service, with each retailer's own account, and follows the data the whole way: the cashier sees the plans, the plan's price enters the sale as a line before payment, Pay confirms it with the telecom company, and after payment the plan is activated and its number written back.
 
+**Industries:** Electronics and phones
+
 **When to use it:** any link between the till and an outside system that prices something per retailer account (the outside system confirming each customer at Pay) and must hear about the sale afterwards: a telecom company's plans, an insurer's device cover, a utility's connection. Chapter 1c of the guide walks this sample hop by hop ([How the data travels](../../guide/01c_how_the_data_travels.md)).
 
 ## What happens
@@ -60,6 +62,12 @@ python3 samples/s52_phone_plans/service/app.py samples/s52_phone_plans/service/.
 
 with `IVN_POINT_SECRET` (the Plans key's secret the install handed back), `IVN_CHECK_SECRET` (the check's), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (the app's user's key, `<api key>:<api secret>`), `TEL_API=http://127.0.0.1:8154`, and `PP_STATE` (a folder). For many retailers on your laptop, use the app template's local mode (`IVN_LOCAL=1`, [the template's README](../../tools/app_template/README.md#local-mode-many-retailers-on-your-laptop)) with `IVN_LIBRARY_APP` and `IVN_SHOPS_FILE` instead.
 
+## Try it at the till
+
+- Scan a phone and press Plans; the till lists its plans.
+- Add a plan as its own line and press Pay; the till confirms it with the telecom company.
+- Close the till day when you are done.
+
 ## Many retailers, one service
 
 One service serves every retailer that installs the app. Each press and each check names its retailer (`X-iVendNext-Site`) and is signed with that retailer's own secret; the service finds the retailer's address and key in its shops store, reads that retailer's telecom account from that retailer's settings record, and calls the telecom company with it. The service keeps nothing between calls but the shops store and each retailer's note of handled feed events, so two retailers pressing Plans at the same second are two separate calls, each answered with its own account and its own prices (`tests/test_service.py`, *TwoRetailersAtOnce*). The activation's idempotency key is the retailer's site and the sale's line, so the same sale name at two retailers is never one activation, however a real telecom company scopes its keys.
@@ -99,3 +107,11 @@ One service serves every retailer that installs the app. Each press and each che
 
 - **On the laptop:** the tests and canaries above, against the stand-in telecom company running as a web server and in-memory stand-ins for two retailers.
 - **On the programme's test bench** (2026-10-28, run `pp-20261028T170105Z-24298`, POS app 2.1.0): installed from this manifest; the install made the app's own user, which read the telecom account whole while a cashier could not read the record; the prices written; Plans pressed through the till's own call and answered over HTTPS; a phone and Plan S confirmed at Pay and booked; refused at Pay with only the walk-in customer, with a moved price and with the telecom company down; the activation written from the real event feed (`ACT-NORTH-00001`); every POS day closed. The steps and checks are chapter 1c's *Technical notes*. Not photographed: the till's plan sheet and the plan's line.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: a telecom company's plans sold with the phone, priced, checked at Pay and activated after payment.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- A cut-short answer from a retailer's site is handled as an unknown outcome, like a site that cannot be reached, never a crash.

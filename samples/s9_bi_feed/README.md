@@ -4,6 +4,8 @@
 
 A small program that copies the retailer's sales, lines, payments and returns into a data warehouse file, and picks up where it stopped. This sample is for a retailer's analytics team that wants the retailer's sales outside the retailer's iVendNext without copying everything every night.
 
+**Industries:** every industry
+
 **When to use it:** reports or dashboards outside the retailer's iVendNext need the retailer's sales, kept up to date and checked against the till's own end-of-day figures.
 
 It runs **outside** the retailer's iVendNext, read-only on the business, over the event feed (`recipes/event_feed.md`); written up as a recipe: `recipes/bi_feed.md`.
@@ -73,3 +75,10 @@ PASS B5 every POS Closing Entry since the start agrees with the warehouse's tota
 PASS B5 canary: a total that is one unit off makes the control RED and names the closing
 PASS B6 a file missing its last three invoices, with its watermark behind them, is healed by one backfill to equal the full one
 ```
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: sales, lines, payments and returns into a warehouse file, picking up where it stopped.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

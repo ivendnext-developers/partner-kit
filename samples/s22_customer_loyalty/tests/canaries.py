@@ -242,6 +242,13 @@ CANARIES = [
      "test_adapter.Adapter.test_an_address_is_https_with_no_query_and_plain_http_only_to_this_machine_in_local_mode"),
     ("plain http only in local mode", "service/outside.py", "        return u.hostname in LOCAL and local", "        return u.hostname in LOCAL",
      "test_adapter.Adapter.test_an_address_is_https_with_no_query_and_plain_http_only_to_this_machine_in_local_mode"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        return svc.press(headers, raw) if path == "/lyl/member" else (404, {"error": "not found"})\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        return svc.press(headers, raw) if path == "/lyl/member" else (404, {"error": "not found"})\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

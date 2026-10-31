@@ -4,6 +4,8 @@
 
 A liquor store files an excise return every month or quarter: what it held and what moved, **in volume, by duty class** (spirits, wine, beer …), and often the volume of **pure alcohol** too. The app works those figures out from the retailer's own stock: per store and period, for each duty class, the opening stock, what came in, what went out, what stock counts changed and the closing stock, each in units, volume and pure alcohol. A filed return is **kept as filed**: its figures are locked.
 
+**Industries:** Liquor and wine
+
 **When to use it:** the retailer sells alcohol and reports volumes to an excise or licensing authority. The authority's own form, its codes and duty rates differ by country and state: they are the partner's version, built on these figures.
 
 ## What happens
@@ -65,6 +67,12 @@ python3 samples/s62_liquor_excise_returns/service/app.py samples/s62_liquor_exci
 **Settings, one retailer** (`service/.env.local`, never committed): `PP_BASE` (the retailer's iVendNext address), `PP_KEY` and `PP_SECRET` (the integration user's API key and secret), `PP_WORK_SECRET` (handed back at install as `pp_exr:sub:work`), `PP_PORT` (8162). `EXR_PREFIX` names the record types and fields (default `PP EXR`).
 
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's presses never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
+
+## Try it at the till
+
+- Sell a bottle of an item with a duty class.
+- In Desk, make a return for this store and month and press Work out the return; the bottle is under Sold.
+- Close the till day when you are done.
 
 ## Many retailers, hosted
 
@@ -133,3 +141,11 @@ What a partner usually changes:
 - **Inventory dimensions:** the balance read is the item's in the warehouse; a site that splits stock by its own dimensions reads the warehouse's total.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. The first press after a quiet spell starts the function (1 to 2.5 seconds, measured on earlier apps), inside the button's 10.
 - It logs one line per call: the route, the status and the milliseconds, never a body or a key.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: excise return figures per store and period, worked out from the stock ledger and kept as filed.
+- When a till's sales are dated follows the company's till posting setting.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.

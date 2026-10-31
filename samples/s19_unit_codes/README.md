@@ -8,6 +8,8 @@
 
 The retailer's own unit codes, read by the till's scan: one record per unit (its unique code, its item, its batch, *Available* or *Sold*) and a scan source over that table. A scanned unit lands as its item with its batch; a sold unit is refused. **Data only**: no service, nothing leaves the retailer's iVendNext.
 
+**Industries:** Beauty and cosmetics, Electronics and phones, Pharmacy
+
 The recipe: [`recipes/unit_codes.md`](../../recipes/unit_codes.md).
 
 ## What the retailer does
@@ -53,3 +55,15 @@ Taken on our test bench on 2026-10-10 (product pin: the iVendNext POS app `87812
 | 4. The code of a unit already *Sold*: *This unit is already sold.* Nothing is added | the till | ![](screenshots/04_sold_unit_refused.png) |
 | 5. The phone: the line's sheet shows the batch, and *Item details* the unit's code | the phone | ![](screenshots/05_phone_the_units_batch_and_code.png) |
 | 6. The phone: a sold unit refused | the phone | ![](screenshots/06_phone_sold_unit_refused.png) |
+
+## Try it at the till
+
+- In Desk, open Retail Scan Source, open the app's units, and switch it on.
+- Scan a unit's code; it lands on the sale as its item, with its batch. Scan a sold unit; the till refuses it.
+- Close the till day when you are done.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: unit codes read at the scan, as a scan source.

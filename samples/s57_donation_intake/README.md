@@ -4,6 +4,8 @@
 
 A charity or thrift store's record of the goods people give it, kept in iVendNext Desk: who gave (one of the retailer's customers, a donor typed in at the door, or no one named), what came in (each kind of goods, how many, its condition), which store took it in and when, and a **donor receipt** that holds once it is given. When the sorted goods go into stock with the engine's own Material Receipt, the stock entry names the donation. The app moves no money, changes no stock and states no value for the goods. It calls nothing outside: no service, no outside address. The [recipe](../../recipes/donation_intake.md) walks a store through it.
 
+**Industries:** Thrift and resale
+
 It uses the manifest's `doctypes` (a record type and a child table), `workflows`, `save_rules` (a lock), `print_formats`, `reports`, `custom_fields` (one field on Stock Entry), `links` and a `documentation` property setter. **When to use it:** a store takes donated goods in at its door, and its donations and receipts are on paper or nowhere today.
 
 ## What happens
@@ -81,3 +83,9 @@ A manifest only. The engine already takes goods into stock (a Material Receipt a
 - **A workflow's *who may edit* is a screen rule**; the lock is not: it refuses the save itself.
 - **The Material Receipt's valuation is the store's choice**, as today; the app reads and writes no stock.
 - **The donor's details are personal data** the retailer keeps under its own policy, as it keeps its customers'; uninstalling the app removes the donations (its export keeps a copy) and the Stock Entry field.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: donated goods recorded in Desk with a donor receipt, from a manifest only.
