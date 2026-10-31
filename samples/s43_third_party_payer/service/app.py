@@ -81,14 +81,15 @@ ROUTES = {"/icp/payer": ("payer", "payer"),
           "/icp/press/billback": ("billback", "desk_action")}
 NOW = ("payer", "claims", "file", "remit", "ready", "settle", "billback")      # the subscriptions this version installs
 DOOR_METHOD = "/api/method/ivendnext_mpos.api.v1.payer_bill_back"
-# What the payer door stores on a sale and its lines (payer.md §4b; a return's give-back, §4c). A payer service reads
-# them through the event feed.
-DOOR = {"payer": "custom_mpos_payer_code", "plan": "custom_mpos_payer_plan", "member": "custom_mpos_payer_member",
-        "claim_ref": "custom_mpos_payer_claim_ref", "prescription": "custom_mpos_payer_prescription",
-        "prescriber": "custom_mpos_payer_prescriber", "prescriber_licence": "custom_mpos_payer_prescriber_licence",
-        "line_payer": "custom_mpos_payer_share", "line_patient": "custom_mpos_patient_share",
-        "line_qty": "custom_mpos_payer_covered_qty", "line_gtin": "custom_mpos_payer_gtin",
-        "line_back": "custom_mpos_payer_back", "journal": "custom_mpos_payer_journal"}
+# What the payer door stores for a sale and its lines (payer.md §4b; a return's give-back, §4c): on the sale's payer
+# record, which the sale names in LINK; each record line names its sale line by position (``line``, the line's idx).
+# A payer service reads the sale through the event feed, then its record.
+RECORD = "Retail Payer Record"
+LINK = "custom_mpos_payer_record"
+DOOR = {"payer": "payer_code", "plan": "plan", "member": "member", "claim_ref": "claim_ref",
+        "prescription": "prescription", "prescriber": "prescriber", "prescriber_licence": "prescriber_licence",
+        "line_payer": "payer_share", "line_patient": "patient_share", "line_qty": "covered_qty", "line_gtin": "gtin",
+        "line_back": "back", "journal": "journal"}
 NO_END = "9999-12-31"   # a cover with no end date: the door takes a date
 SALES = {"sale.booked": "POS Invoice", "return.booked": "POS Invoice", "invoice.booked": "Sales Invoice"}
 
@@ -342,26 +343,33 @@ class Service:
 
     # ── claims from booked sales (the event feed) ────────────────────────────
 
-    def payer_sale(self, doc: dict, doctype: str) -> dict | None:
-        """The door's record of a sale (payer.md §4b), or None when no payer leg was booked on it."""
-        if not doc.get(DOOR["claim_ref"]) or not doc.get(DOOR["payer"]):
+    def record(self, shop, doc: dict | None) -> dict:
+        """The payer record a sale names (payer.md §4b), or {} for a sale no payer pays."""
+        return (self._one(shop, RECORD, doc.get(LINK)) if doc and doc.get(LINK) else None) or {}
+
+    def payer_sale(self, doc: dict, doctype: str, rec: dict) -> dict | None:
+        """The door's record of a sale (payer.md §4b), from the sale and its payer record, or None when no payer leg
+        was booked on it."""
+        if not rec.get(DOOR["claim_ref"]) or not rec.get(DOOR["payer"]):
             return None
-        if not int(doc.get("is_return") or 0) and not doc.get(DOOR["journal"]):
+        if not int(doc.get("is_return") or 0) and not rec.get(DOOR["journal"]):
             return None         # its booking was cancelled with its day's closing: no claim, nothing owed (payer.md §4b)
         if doctype == "Sales Invoice" and (doc.get("is_consolidated") or any(
                 it.get("pos_invoice") for it in doc.get("items") or [])):
             return None         # the till sale's own posting: its claim is the POS sale's, made from that record
-        lines = [{"line_id": it.get("name"), "item_code": it.get("item_code"), "gtin": it.get(DOOR["line_gtin"]) or it.get("barcode") or None,
-                  "qty": it.get(DOOR["line_qty"]) or it.get("qty"), "uom": it.get("uom"),
-                  "amount": str(C.D(it.get(DOOR["line_payer"])) + C.D(it.get(DOOR["line_patient"]))),
-                  "payer_share": it.get(DOOR["line_payer"]), "patient_share": it.get(DOOR["line_patient"]),
-                  "payer_back": it.get(DOOR["line_back"]), "returned_line": it.get("pos_invoice_item")
-                  or it.get("sales_invoice_item"), "back_qty": abs(C.D(it.get("qty")))} for it in doc.get("items") or []]
+        by_line = {ln.get("line"): ln for ln in rec.get("lines") or []}
+        rows = [(it, by_line.get(it.get("idx") or i) or {}) for i, it in enumerate(doc.get("items") or [], 1)]
+        lines = [{"line_id": it.get("name"), "item_code": it.get("item_code"), "gtin": ln.get(DOOR["line_gtin"]) or it.get("barcode") or None,
+                  "qty": ln.get(DOOR["line_qty"]) or it.get("qty"), "uom": it.get("uom"),
+                  "amount": str(C.D(ln.get(DOOR["line_payer"])) + C.D(ln.get(DOOR["line_patient"]))),
+                  "payer_share": ln.get(DOOR["line_payer"]), "patient_share": ln.get(DOOR["line_patient"]),
+                  "payer_back": ln.get(DOOR["line_back"]), "returned_line": it.get("pos_invoice_item")
+                  or it.get("sales_invoice_item"), "back_qty": abs(C.D(it.get("qty")))} for it, ln in rows]
         return {"doctype": doctype, "name": doc["name"], "posting_date": doc.get("posting_date"),
                 "store": doc.get("set_warehouse") or (doc.get("items") or [{}])[0].get("warehouse"),
                 "customer": doc.get("customer"), "is_return": int(doc.get("is_return") or 0),
                 "return_against": doc.get("return_against"), "lines": lines,
-                **{k: doc.get(DOOR[k]) for k in ("payer", "plan", "member", "claim_ref", "prescription", "prescriber",
+                **{k: rec.get(DOOR[k]) for k in ("payer", "plan", "member", "claim_ref", "prescription", "prescriber",
                                                  "prescriber_licence")}}
 
     def build_claims(self, shop) -> dict:
@@ -395,7 +403,8 @@ class Service:
                 "text": f"{made} claims made, {reduced} reduced by returns, {failed} failed.{more}"}
 
     def handle_sale(self, shop, doctype, name, ours) -> str:
-        sale = self.payer_sale(self._one(shop, doctype, name) or {}, doctype)
+        doc = self._one(shop, doctype, name) or {}
+        sale = self.payer_sale(doc, doctype, self.record(shop, doc))
         if not sale or sale["payer"] not in ours:
             return "-"
         if sale["is_return"]:
@@ -467,7 +476,7 @@ class Service:
     def sale_stands(self, shop, claim) -> bool:
         """The claim's sale is still booked with its payer journal: cancelled since, it owes the payer nothing."""
         doc = self._one(shop, claim.get("sale_doctype") or "POS Invoice", claim.get("sale"))
-        return bool(doc) and int(doc.get("docstatus") or 0) == 1 and bool(doc.get(DOOR["journal"]))
+        return bool(doc) and int(doc.get("docstatus") or 0) == 1 and bool(self.record(shop, doc).get(DOOR["journal"]))
 
     def match(self, shop, remit_name) -> dict:
         """A payer's remittance against its claims: every line of one claim summed first, then settled once."""

@@ -86,13 +86,14 @@ use the till's own *On Account* tender instead: there is nothing to split.
    line the list does not carry (the customer's own default list, else the store's). An answer that breaks any of these rules is refused whole, and reads as a service
    that is down.
 6. **Make claims from the feed** (`claims.py`): the door books your share as a payment row on the shop's clearing
-   mode and, in the same transaction, a journal moving it to `payer_customer`; the sale stores your answer and each
-   line's shares (payer page §4b). On each booked sale the feed names, read the POS Invoice (never the posted Sales
-   Invoice, which may merge several sales) with your integration user and make its claim. A submitted sale with an
-   empty `custom_mpos_payer_journal` is no claim: its day's closing was cancelled after it was booked, on a shop that posts each sale at once (from POS version 2.1.0.667 a posted sale's own cancel is refused while its Sales Invoice stands, and cancelling that invoice cancels the sale with it).
+   mode and, in the same transaction, a journal moving it to `payer_customer`; the sale's payer record stores your
+   answer and each line's shares (payer page §4b). On each booked sale the feed names, read the POS Invoice (never
+   the posted Sales Invoice, which may merge several sales), then the `Retail Payer Record` it names in
+   `custom_mpos_payer_record`, with your integration user, and make its claim. A submitted sale whose record has an
+   empty `journal` is no claim: its day's closing was cancelled after it was booked, on a shop that posts each sale at once (from POS version 2.1.0.667 a posted sale's own cancel is refused while its Sales Invoice stands, and cancelling that invoice cancels the sale with it).
 7. **A return gives your share back, never the customer** (payer page §4c): the till's Returns works out each
-   returned line's share and books a `Return` journal. Read the return from the feed and reduce the claim's lines by
-   `custom_mpos_payer_back`, once.
+   returned line's share and books a `Return` journal. Read the return from the feed, then its payer record, and
+   reduce the claim's lines by each record line's `back`, once.
 8. **Bill a rejected claim back to the customer** through `/api/method/ivendnext_mpos.api.v1.payer_bill_back`
    (`sale`, `claim_ref`, `amount` in the company's currency, `reason`), as a user holding `bill_back_role` or the
    shop's accounts role. It answers `{"journal": …}`; the same sale, claim, reason and amount answer the same journal,

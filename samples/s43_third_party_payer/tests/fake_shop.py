@@ -13,12 +13,14 @@ import app
 import dataset
 
 P = "PP ICP"
+# the tests' short names → the payer record's (header) and its lines' own names
 SHORT = {"payer_code": app.DOOR["payer"], "payer_plan": app.DOOR["plan"], "payer_member": app.DOOR["member"],
          "payer_claim_ref": app.DOOR["claim_ref"], "payer_prescription": app.DOOR["prescription"],
          "payer_prescriber": app.DOOR["prescriber"], "payer_prescriber_licence": app.DOOR["prescriber_licence"],
-         "payer_share": app.DOOR["line_payer"], "patient_share": app.DOOR["line_patient"],
-         "payer_covered_qty": app.DOOR["line_qty"], "payer_gtin": app.DOOR["line_gtin"],
-         "payer_back": app.DOOR["line_back"], "payer_journal": app.DOOR["journal"]}
+         "payer_journal": app.DOOR["journal"]}
+LINE_SHORT = {"payer_share": app.DOOR["line_payer"], "patient_share": app.DOOR["line_patient"],
+              "payer_covered_qty": app.DOOR["line_qty"], "payer_gtin": app.DOOR["line_gtin"],
+              "payer_back": app.DOOR["line_back"]}
 
 
 class FakeShop:
@@ -43,6 +45,10 @@ class FakeShop:
 
     def find(self, doctype, name):
         return next((r for r in self.rows(doctype) if r.get("name") == name), None)
+
+    def record_of(self, name, doctype="POS Invoice"):
+        """The payer record a booked sale names (stored, so a test can change it)."""
+        return self.find(app.RECORD, self.find(doctype, name)[app.LINK])
 
     @staticmethod
     def _match(r, filters):
@@ -128,15 +134,23 @@ class FakeShop:
         return self
 
     def book(self, name, lines, doctype="POS Invoice", **kw):
-        """A sale as the payer door books it (payer.md §4b: its fields' own names, from ``app.DOOR``), with its feed
-        event. The tests write the short names below; each is stored under the door's name."""
+        """A sale as the payer door books it (payer.md §4b): the sale names its payer record (``app.LINK``), which holds
+        the payer's fields and, per sale line by its position, the line's; with its feed event. The tests write the
+        short names below; each is stored on the record under the door's name."""
         doc = {"name": name, "docstatus": 1, "customer": "C1", "posting_date": "2026-10-23", "set_warehouse": "Pharmacy Dispensary",
                "is_return": 0, "payer_code": "GEN-INS", "payer_plan": "Generic Silver", "payer_member": "m1",
                "payer_claim_ref": f"GEN-INS-{name}", "payer_prescription": "RX-77", "payer_prescriber": "Dr A",
                "payer_prescriber_licence": "L-1", "payer_journal": f"JV-{name}", "items": lines}
         doc.update(kw)
-        doc = {SHORT.get(k, k): v for k, v in doc.items()}
-        doc["items"] = [{SHORT.get(k, k): v for k, v in it.items()} for it in doc.get("items") or []]
+        rec = {"name": f"PR-{name}", "sale_doctype": doctype, "sale": name, "lines": []}
+        rec.update({SHORT[k]: doc.pop(k) for k in list(doc) if k in SHORT})
+        items = []
+        for i, it in enumerate(doc.get("items") or [], 1):
+            rec["lines"].append({"line": i, **{LINE_SHORT[k]: v for k, v in it.items() if k in LINE_SHORT}})
+            items.append({"idx": i, **{k: v for k, v in it.items() if k not in LINE_SHORT}})
+        doc["items"] = items
+        doc[app.LINK] = rec["name"]
+        self.add(app.RECORD, **rec)
         self.add(doctype, **doc)
         ev = {"POS Invoice": "return.booked" if doc["is_return"] else "sale.booked",
               "Sales Invoice": "invoice.booked"}[doctype]

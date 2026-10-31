@@ -287,6 +287,8 @@ FORM_TOOL = "a Desk tool that changes a form; your manifest's own kinds do this 
 A_LABEL = "the word here is a field's, a view's or a header's label, not the record type"
 SKIP = {
     "DocType": "a record type's definition, which this tool reads; not a business record",
+    "Retail Payer Record": "a payer sale's details, which the payer door writes from the POS release after 2.1.0.669 "
+                           "(the payer page, section 4b); its page here comes when that release is read",
     "Error Log": "the site's own error log, which the sign-in tool reads for a failed sign-in",
     "Deleted Document": "a housekeeping step for the retailer's administrator in a sample's walk; no app reads or writes it",
     "Data Export": "a Desk tool named as one more way a register's columns are read",

@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ c39b1449937a, copied unchanged except the links, plus the payer record's change to sections 4b, 4c and 4d (the release after 2.1.0.669): its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Payer — your service pays part of a sale for someone else
 
 **Contract:** [`payer.v1.schema.json`](../extension_contracts/payer.v1.schema.json)
@@ -164,32 +164,37 @@ whose claim reference moved between two asks for the same sale reads as no cover
   account*. The customer's invoice reads paid; you owe the shop your share from the moment of the sale. Pay it
   with an ordinary payment against that journal. A journal that cannot be made fails the sale: nothing is left
   booked.
-- **What the sale stores** — on the POS Invoice, the claim's source (⛔ never the Sales Invoice its posting or the
-  day's close makes, which may merge several sales): `custom_mpos_payer_customer`, `_payer_title`,
-  `_payer_code`, `_payer_plan`, `_payer_member`, `_payer_member_label`, `_payer_claim_ref`,
-  `_payer_prescription`, `_payer_prescriber`, `_payer_prescriber_licence`, `_payer_share`, `custom_mpos_patient_share`,
-  `_payer_no_partial_refund`, `_payer_answer` (your answer as booked, JSON), `_payer_journal`,
-  `_payer_subscription`, `_payer_clearing_account`, `_payer_bill_back_role`; and on each line
-  `custom_mpos_payer_share`, `custom_mpos_patient_share`, `custom_mpos_payer_covered_qty`, `custom_mpos_payer_gtin`.
-  The journal names its sale in `custom_mpos_payer_pos_invoice`. Read them with your integration user when the
-  event feed says a sale was booked.
+- **What the sale stores** — the POS Invoice, the claim's source (⛔ never the Sales Invoice its posting or the
+  day's close makes, which may merge several sales), names its **payer record** in `custom_mpos_payer_record`: a
+  `Retail Payer Record`, one per payer sale, which holds `payer_customer`, `payer_title`, `payer_code`, `plan`,
+  `member`, `member_label`, `claim_ref`, `prescription`, `prescriber`, `prescriber_licence`, `payer_share`,
+  `patient_share`, `no_partial_refund`, `answer` (your answer as booked, JSON), `journal`, `subscription`,
+  `clearing_account`, `bill_back_role` and the sale it belongs to (`sale_doctype`, `sale`); and in its `lines`,
+  one per sale line, `line` (the sale line's position, its `idx`), `payer_share`, `patient_share`, `covered_qty`
+  and `gtin`. The journal names its sale in `custom_mpos_payer_pos_invoice`. When the event feed says a sale was
+  booked, read the sale, then its record (`/api/resource/Retail Payer Record/<name>`), with your integration user:
+  it needs a plain read on `Retail Payer Record` too. ⚠ Before this release these were columns on the sale and
+  its lines (`custom_mpos_payer_*`, `custom_mpos_patient_share`); they moved to the record to keep the sale's
+  database row inside its limit, and the update copies every sale's values onto its record, checks them and
+  removes the columns.
 - **A cancel in iVendNext Desk:** a sale the day has not posted yet takes its journal with it. Once a sale is
   posted, its own cancel is refused while its Sales Invoice stands; cancelling that invoice takes the journal and
   cancels the sale with it (or the day's closing is cancelled, on a shop that posts each sale at once: the journal
   goes and the sale stays, no longer posted).
   Once a payment or another journal references your journal, the cancel is refused: *"⟨payer⟩'s share of this sale
   has moved since: return it instead."*
-- **A submitted sale with an empty `_payer_journal`** is a sale whose day's closing was cancelled after it was
-  booked, on a shop that posts each sale at once: its journal was cancelled with that closing, and the sale keeps naming you (`_payer_customer` and the
-  rest stay set). ⛔ It is no claim: you owe the shop nothing for it, it is not billed back, and the till does not
+- **A submitted sale whose payer record has an empty `journal`** is a sale whose day's closing was cancelled after
+  it was booked, on a shop that posts each sale at once: its journal was cancelled with that closing, and the
+  record keeps naming you (`payer_customer` and the rest stay set). ⛔ It is no claim: you owe the shop nothing for it, it is not billed back, and the till does not
   return it (the books no longer hold the sale; a manager settles it in iVendNext Desk). The cancelled journal still names the sale.
 - **Your customer record must be billable** when the cashier asks and when the sale is booked: in use, not
   frozen, inside any credit limit the shop gives it, and with its receivable account in the company's
   currency. Otherwise the cashier is told so and the payer is not used for that sale.
-- Only the till's payer leg sets these fields or books on the clearing mode; any other writer is refused, and a
-  Sales Invoice made in iVendNext Desk never carries a clearing row (the posted invoice of a till sale does; a
-  Desk sale has its own payer section, §4d). `_payer_subscription` and `_payer_bill_back_role` hold names, not
-  links: a sale outlives an uninstalled service, and so do its returns and bill-backs.
+- Only the till's payer leg writes a payer record or books on the clearing mode; any other writer is refused (a
+  sale saved naming a record, a record written or deleted by hand), and a Sales Invoice made in iVendNext Desk
+  never carries a clearing row (the posted invoice of a till sale does, and names no record; a Desk sale has its
+  own payer section, §4d). `subscription` and `bill_back_role` hold names, not links: a sale outlives an
+  uninstalled service, and so do its returns and bill-backs.
 - Every journal says what it does in `custom_mpos_payer_entry`: `Sale` (your share booked), `Bill back` (a claim
   billed back to the customer, its reason in `custom_mpos_payer_reason`) or `Return` (your share given back).
 
@@ -207,10 +212,11 @@ whose claim reference moved between two asks for the same sale reads as no cover
   invoice (they no longer owe it); what was billed back and the customer has paid is refunded to the customer
   with their share; what you have already paid is a credit on your customer record, not against any journal,
   for the shop to refund or net.
-- **What a return stores:** your fields as the sale had them (the claim reference included), and
-  `custom_mpos_payer_back` (your share given back, a positive amount) on the return and on each returned line,
-  with `custom_mpos_payer_back_billed` (of it, the part that had been billed back to the customer). Read the
-  return when the event feed says a return was booked. The till shows the same split: *Given back to ⟨payer⟩*
+- **What a return stores:** its own payer record, with your fields as the sale had them (the claim reference
+  included), `back` (your share given back, a positive amount) and `back_billed` (of it, the part that had been
+  billed back to the customer), and on each record line, by the return line's position, that line's `back`; its
+  `journal` is the `Return` journal. Read the return, then its record, when the event feed says a return was
+  booked. The till shows the same split: *Given back to ⟨payer⟩*
   (what you owed plus what you had paid) and *Taken off what the customer owes* (a billed-back share not yet
   paid), beside what the customer is paid back.
 - **Only the till's Returns refund.** A return parked for another till, an exchange of a payer's sale, a credit
@@ -227,8 +233,8 @@ whose claim reference moved between two asks for the same sale reads as no cover
   the Desk, against its Sales Invoice). The same sale, claim, reason and amount answer the
   journal booked the first time; the same reason with another amount is refused (*"⟨amount⟩ was already billed
   back for this reason. Give the new amount its own reason."*); a new reason books another. It needs a user who may submit a
-  journal (the shop's accounts role), or the role your subscription names in `bill_back_role` (stored on the sale
-  when it was booked). Refused: *"No sale paid by a payer is named ⟨sale⟩."* · *"That claim is not this sale's."*
+  journal (the shop's accounts role), or the role your subscription names in `bill_back_role` (stored on the sale's
+  payer record when it was booked). Refused: *"No sale paid by a payer is named ⟨sale⟩."* · *"That claim is not this sale's."*
   · *"Say why the claim is billed back."* · *"Bill back an amount above zero."* · *"⟨payer⟩ owes ⟨amount⟩ on this
   sale. Bill back no more than that."* · *"⟨payer⟩ owes nothing on this sale."* · *"This sale is posted at the
   day's close. Bill it back after the close."* · no right: a permission error. An answer without `journal` books
@@ -241,7 +247,7 @@ whose claim reference moved between two asks for the same sale reads as no cover
   stranded by a service switched off since). *Ask the payer* is
   `/api/method/ivendnext_mpos.api.v1.payer_coverage` with `doctype` and `name`: without `cover` it answers the
   customer's covers, each with a `ticket`; with a cover's `ticket` it asks `coverage` (your `sale_ref` is the
-  invoice's name) and seals your answer into the invoice, filling the same fields as a till sale. An unsaved form
+  invoice's name) and seals your answer into the invoice's payer record, filling the same fields as a till sale's. An unsaved form
   is refused (*"Save the invoice first, then ask the payer."*), as is a POS Invoice (*"A till sale's payer is
   asked at the till."*). The payer service is the invoice's POS Profile's, or the one service that answers the
   company's tills.
@@ -271,7 +277,7 @@ whose claim reference moved between two asks for the same sale reads as no cover
 - **The log:** every call writes one row to the extension log (its request's hash, the outcome, the time it
   took); a refused answer is flagged. The row is queued so a refusal cannot roll it back, and is written within
   minutes, best-effort (a restart before then, or a service deleted before then, drops it). The log is cleared on its usual
-  schedule; the answer the sale booked is kept on the sale, never read back from the log.
+  schedule; the answer the sale booked is kept on its payer record, never read back from the log.
 
 ## 6. Consent
 
