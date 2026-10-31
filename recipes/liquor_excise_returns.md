@@ -16,6 +16,12 @@ A liquor store files an excise return every month or quarter: what it held and w
 4. **Filing.** **Print**, format *PP EXR Excise return worksheet*: the figures for the authority's form. The Stock Manager files them and moves the return to **Filed** (*Actions*, *PP EXR File*), then fills **Filed on** and the authority's **Filing reference**. The figures are locked.
 5. **A correction.** A new return for the period. A filed return never changes. A draft not wanted: *Actions*, *PP EXR Drop* (Stock User).
 
+![A liquor item's duty class, millilitres and strength, on a demo site](../samples/s62_liquor_excise_returns/screenshots/02_item.png)
+
+![A return worked out on a demo site](../samples/s62_liquor_excise_returns/screenshots/03_return.png)
+
+![A filed return's worksheet](../samples/s62_liquor_excise_returns/screenshots/04_worksheet.png)
+
 ## Duty classes
 
 The record type `PP EXR Duty Class`, named by its class (`field:class_name`), tracked:

@@ -63,7 +63,7 @@ LEDGER = "Stock Ledger Entry"
 CHUNK_BYTES = 2000                   # the values' bytes a read, as sent: the request line stays under 4 KB (S23's
                                      # PRICE_CHUNK); 200 ledger times a read was 8.4 KB (the Tier-S review)
 AT_ONCE = 4                          # chunk reads run this many at a time: about 50 ledger times a read, so a store of
-                                     # 2,000 liquor items needs about 40 reads, ten rounds of four (the folds' re-grade)
+                                     # 2,000 liquor items needs about 40 reads, ten rounds of four
 READ_S = 6                           # one read may take this long, within BUDGET_S; the site waits 10 seconds at most,
                                      # and a hosted function's cold start (about 2.5 s, APPF run 9) comes first
 BUDGET_S = 7.0                       # the whole press: past it, the press stops before it writes anything
@@ -298,7 +298,7 @@ class Service:
             return _warning(BAD_UNIT)
         lock = door.rows("Retail Save Rule", ["name", "enabled", "mode"], [["rule_name", "=", exr.LOCK_RULE]],
                          timeout=self.left(t0))
-        if not lock or not lock[0].get("enabled") or lock[0].get("mode") != "refuse":   # the critic: S61's Pay guard
+        if not lock or not lock[0].get("enabled") or lock[0].get("mode") != "refuse":   # S61's Pay guard
             return _warning(LOCK_OFF.format(exr.LOCK_RULE))
         try:
             return self.work(door, r, user, t0)
