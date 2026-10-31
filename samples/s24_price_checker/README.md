@@ -2,6 +2,8 @@
 
 *Start from this sample: `python3 tools/manifest/start.py s24_price_checker --prefix "ACME PRC"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
+**Industries:** Grocery
+
 ## What the retailer does
 
 A tablet or screen stands on the shop floor. A customer scans an item and reads its name, its picture and its **price**. The price is the retailer's own: the store's price list price for one unit, in the scanned unit, found and converted by iVendNext itself (the same price list lookup the till starts a sale from). Nobody signs in on the tablet; the retailer switches each kiosk on and off in Desk.
@@ -61,3 +63,11 @@ python3 samples/s24_price_checker/service/app.py samples/s24_price_checker/servi
 
 - **Laptop:** the tests above (53) and 24 canaries, each RED with its baseline passing. The page in a real browser (the laptop, 2026-10-15), against a stand-in iVendNext: a scanned barcode followed by Enter showed the item, its unit and *ZAR 12.50* with the offers line; an item with no price and an unknown barcode showed their sentences; an address with no kiosk said *not set up*; the scan box kept the focus throughout.
 - **Test bench** (2026-10-15, the iVendNext POS app at `e149dce4`; run `pp-20261015T045526Z-22519`, on the reviewed code), **20 of 20** checks, the service in one-retailer mode reading the bench iVendNext with the integration user's key: the install made the Kiosk record type with random names and its help address, and the feed registration, with no service and no secret; a Kiosk took its company, price list, currency, walk-in customer and store from the till profile; the page was served with its content policy; two items scanned by barcode showed **12.50** and **7.25**, the same as the till's own price for one of each (`api.mpos_cart.recompute`, in a day opened and closed); an item with no price said *no price here*; a disabled item said *not on sale*; an unknown barcode and a typed item code said *could not find*; a kiosk switched off, and a code the retailer never made, said *not set up* (the retailer's real 404 names the record); price rows, price rules, items and kiosks counted the same before and after the scans (the bench's *auto-insert price* setting is off, so this cannot see the one write the pricer can make; that the service never sends a `rate` is proven by the laptop tests); switched off in Desk, the kiosk said *not set up* after the service's minute; the service's log carried no scan and no code; uninstall left the schema as found; no POS day left open. **Not run on the bench:** many retailers (the laptop tests; the product sends the handshake since train T10), iVendNext down (the laptop tests), a promotion (not shown, by design).
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a price checker page on the shop floor, priced by iVendNext.
+- It names its service's address, so a hosted copy is connected.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.

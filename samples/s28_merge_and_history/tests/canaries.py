@@ -103,6 +103,13 @@ CANARIES = [
     ("a cut answer from the shop is a shop error, never a crash", A, 'except (urllib.error.URLError, OSError, http.client.HTTPException) as e:',
      'except (urllib.error.URLError, OSError) as e:',
      "test_shop.AnswerCutShort.test_a_shop_answer_cut_short_is_a_shop_error_never_a_crash"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_merge.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '            if self.path == "/mhs/merge":\n',
+     '            if testcall.is_test(self.headers):\n                return self._send(*testcall.answer("x"))\n            if self.path == "/mhs/merge":\n',
+     "test_merge.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 
@@ -112,8 +119,9 @@ def run(name, path, anchor, mutant, test) -> tuple[str, str]:
         kit = os.path.dirname(os.path.dirname(ROOT))
         dest = os.path.join(tmp, "r", "samples", os.path.basename(ROOT))
         shutil.copytree(ROOT, dest, ignore=shutil.ignore_patterns("__pycache__", ".env*"))
-        shutil.copytree(os.path.join(kit, "tools", "manifest"), os.path.join(tmp, "r", "tools", "manifest"),
-                        ignore=shutil.ignore_patterns("__pycache__"))
+        for tool in ("manifest", "app_template"):     # the service imports the template's test call
+            shutil.copytree(os.path.join(kit, "tools", tool), os.path.join(tmp, "r", "tools", tool),
+                            ignore=shutil.ignore_patterns("__pycache__"))
         base = subprocess.run([sys.executable, "-m", "unittest", test], cwd=os.path.join(dest, "tests"),
                               capture_output=True, text=True, timeout=120)
         if base.returncode:              # the test must pass on the unmutated copy, or a RED below proves nothing

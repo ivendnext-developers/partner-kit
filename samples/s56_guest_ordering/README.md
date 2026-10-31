@@ -2,6 +2,8 @@
 
 *Start from this sample: `python3 tools/manifest/start.py s56_guest_ordering --prefix "ACME GOR"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
+**Industries:** Hospitality
+
 ## What the retailer does
 
 Guests order for themselves. **At the table** a guest scans the table's QR code, reads the menu on their phone and sends an order: it lands on that table's check on the till, waiting for the server. **At a kiosk** a counter-service guest orders on a tablet in the store, is shown an order code, and pays at the counter. Staff stay in charge: the app never sends anything to the kitchen and the guest never pays in the app.
@@ -64,6 +66,19 @@ python3 tools/check/check.py samples/s56_guest_ordering                         
 
 The service: `python3 service/app.py service/.env.local` for one store (the env file names the app's user's key, the *Make code* secret the install handed back and the page's address), or as a function on CitiXsys hosting for many (`app.json`). It serves the guest's page itself (`service/page.html`, `page.js`, `page.css`: no inline script, nothing from another site), and draws each code's QR picture itself (`qr.py`, standard library only).
 
+## Try it at the till
+
+- In Desk, press Make code on a table's code and open its link on a phone.
+- Send an order from the phone; it waits on the table's check on the till.
+- Close the till day when you are done.
+
 ## Make it your own
 
 What a partner usually changes: the page's look and its languages (`page.css`, the `WORDS` table in `page.js`), pictures and allergens from the retailer's own records, payment at the kiosk through the retailer's gateway, and a delivery or collection channel. The prefix the service reads is `GOR_PREFIX` (`IVENDNEXT GOR` for the App library's copy), and `tools/deploy/copy_records.py` moves the settings and codes between sites (each code is made again on the new site: its link names the site). A copy keeps the rule that a guest's lines wait unsent: an app given *send to the kitchen* turns a stranger's photo of a table card into food cooked for nobody.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a QR code at the table and a self-order kiosk, to the table's check.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.

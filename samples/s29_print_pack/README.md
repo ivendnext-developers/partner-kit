@@ -4,6 +4,8 @@
 
 A distributor sells to four or five other distributors, and each of them wants its own invoice layout. The distributor also sends each one a price list with a photo of every item, so that nearly identical products can be told apart. This sample does both without touching the till: **part 1** is two ways to give the back-office sales invoice a layout for each customer, and **part 2** is the photo price list two ways: a print format on the price list itself (POS build 2.0.0.654 on), and a small program that makes it as one page that prints to PDF.
 
+**Industries:** Distribution and warehousing
+
 ## What the retailer does
 
 **Part 1 — the invoice.** The retailer's administrator installs **one** of two packages (they are alternatives: they carry the same app name, so a site holds one).
@@ -109,3 +111,10 @@ The price list's print format as a viewer with fewer rights, a list of more than
 |---|---|
 | `tests/test_s29.py` | the manifests are the build of the files and pass the checker; the checker refuses a script, a frame, an outside address and an event handler planted in a layout; a template reads only the invoice (no row reader, no upstream name, no figure worked out); the branch prints each customer's layout and the plain one for a stranger (needs jinja2); the price list holds every item once with its photo or a reported grey box, nothing outside (a redirect to another host is refused and the key never goes there), escaped names, a spreadsheet file that does not run as a formula, paged reads against a local stand-in; the price list's print format is the build of its file, passes the checker with no warning, reads other records only through the two readers, and prints every general price with its photo, page by page (needs jinja2) |
 | `tests/canaries.py` | 46 mutations: each guard removed must turn its test red |
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a layout of its own for each distributor's invoice, and a price list with photos.
+- A cut-short answer from a retailer's site is handled as an unknown outcome, like a site that cannot be reached, never a crash.

@@ -11,6 +11,8 @@ A retailer that sells alcohol, tobacco, vapes, knives or some medicines must see
 | **Pay**, a restricted line with no check on the sale (picked from a list, *Don't add it* earlier, or a value in Sale details that is not an age, such as a date of birth) | *"This sale can't be paid"* and *"Line 2: WHISKY-70 is for customers 18 or over. See their ID, then enter 18 in Sale details, or take it off."* |
 | **Pay**, a line needing more than the recorded check | *"Line 3: VAPE-01 is for customers 21 or over; the sale's ID check says 18. See their ID, then enter 21 in Sale details."* |
 
+**Industries:** Grocery, Hospitality, Liquor and wine, Pharmacy
+
 Everything else is allowed. A refund is never judged; an exchange is judged for what it sells. No date of birth or ID number is asked or kept: the sale records the age band the cashier confirmed. The recipe: [`recipes/age_check.md`](../../recipes/age_check.md).
 
 | What the retailer sees (on a demo site, 2026-10-22) | |
@@ -63,6 +65,12 @@ python3 samples/s37_age_check/service/app.py samples/s37_age_check/service/.env.
 
 **Settings, one retailer** (`service/.env.local`, never committed): `IVN_SCAN_SECRET` (handed back at install as `pp_age:sub:scan`), `IVN_CHECK_SECRET` (`pp_age:sub:check`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. **Many retailers** (the [app template](../../tools/app_template/README.md)'s handshake): `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`); each retailer hands over the two secrets and the key of the app's own user when it connects (*Connect again* is only for when the site could not reach the app, or a key was lost or changed); until the key arrives the service answers 503 and the down answers apply. `AGE_PREFIX` names the record type, the fields and the sale detail (default `PP AGE`).
 
+## Try it at the till
+
+- Scan a bottle of wine; the till shows the date of birth to check. Press Add with these details.
+- Pick a restricted item from the list instead of scanning it; the till stops it at Pay.
+- Close the till day when you are done.
+
 ## Technical notes
 
 - **An item's age** is its own *Customers must be at least this old* when above 0, else its template's (a variant: iVendNext copies to variants only the fields its *Item Variant Settings* list, so an age set on a template is read from the template), else the nearest item group above it (itself first) that has one. So *Alcohol* 18 with *Beer* 16 below it sells beer at 16 and wine at 18. A 0 is *none of its own*, never *no age*: a group or item under a restricted group cannot be made free of age (move it out of the group). The scan asks about a variant by its own value or by its group, so set the age on each variant or on their group.
@@ -83,7 +91,7 @@ python3 samples/s37_age_check/service/app.py samples/s37_age_check/service/.env.
 
 ### What was proven where
 
-- **On the laptop:** the tests and canaries above (81 tests, 1 more that replays a recorded bench run when one is given; 49 canaries, each RED with its baseline passing).
+- **On the laptop:** the tests and canaries above (84 tests, 1 more that replays a recorded bench run when one is given; 51 canaries, each RED with its baseline passing).
 - **On a demo site** (2026-10-22, iVendNext POS 2.0.0.659): installed from the App library with a free key and set up in the card's order (the scan service's item groups added in its form); at the till, a bottle of wine scanned showed the age sheet from the service hosted by CitiXsys and went on with *Add with these details*, a second bottle was asked once more (the sale's first item had no reference) and a third was not, a vape picked from the catalogue went on unasked and Pay was refused naming 21, and with *21* in Sale details the payment screen opened (the pictures above). Then voided, the day closed, uninstalled and the walk's data removed.
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344` (the programme's own clone the bench mounts), the engine at `dc65d832`; the service in its one-retailer form, reading iVendNext with a user holding only the app's role and a read on Item Group and Item; the retailer's settings UTC+2, *ask for ID if they look under* 25; a group *Alcohol* at 18 with a whisky in a group below it, *Vapes* at 21, and a knife with its own age 18 in a group of none; the scan service naming Alcohol and Vapes), **11 of 11** through the till's own calls (the scan, the check, the card push, the booking) inside one day that was closed after: the whisky's scan answered with the date of birth and *18 or over*, on the sale's first scan and again once the sale had its reference · the same sale's next whisky not asked again · a vape on that sale asked at 21 · the knife asked by its own age · a plain item, and a whisky picked from a list, calling nobody · Pay on a whisky with no check refused in the app's words, the card push refused, no sale booked · a whisky with *18 or over* allowed and booked with the check on the sale · a whisky and a vape with *18 or over* refused naming the vape and 21 · the same basket with *21* typed in Sale details allowed and booked · a plain item booked with no check · the calls the till sent hold the published contracts. Before the scenario, each read the service makes was made as the app's user and none was refused. The install, the uninstall (the schema as found; the sale detail kept, switched off) and the rights put back were checked too, and no POS day was left open. **In a browser** on that bench: as a System Manager with Item Manager, the settings record (a change saved), the age on an item group and on an item (a change saved); at the till as the cashier (`/pos?frame=terminal`, 1440 wide), a whisky scanned showed the *Age check* sheet and went on with *Add with these details* (*Sale details · 1 recorded*), a vape picked from the catalogue went on with no question, Checkout was refused (*"Line 2: PPAGE-VAPE-01 is for customers 21 or over; the sale's ID check says 18. See their ID, then enter 21 in Sale details."*), and with 21 entered in Sale details the payment screen opened; the sale was voided.
 
@@ -94,3 +102,11 @@ A partner's version of this app usually changes:
 - **the words** the cashier reads (`agecheck.py`, `on_scan` and `on_check`).
 
 The service takes its prefix from the setting `AGE_PREFIX`, so `python3 tools/manifest/rename.py samples/s37_age_check/manifest.json --prefix "ACME AGE"` renames the manifest and the hosting order, and the code needs no change for the name. A retailer's ages and settings move to your copy with `tools/deploy/copy_records.py` ([Make one of our apps your own](../../recipes/make_it_your_own.md)).
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: the date of birth to check at the scan, recorded on the sale, and Pay refused without it.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

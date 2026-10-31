@@ -109,6 +109,13 @@ CANARIES = [
      S + "OneShop.test_a_group_the_kept_tree_does_not_know_is_a_503_and_is_read_again"),
     ("a long timestamp is refused, never parsed", "storerules.py", "ts.isdigit() and len(ts) <= 12)", "ts.isdigit())",
      "test_rules.Verify.test_the_signature_and_the_time_are_checked"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path != ROUTE:\n            return 404, {"error": "not found"}\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path != ROUTE:\n            return 404, {"error": "not found"}\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

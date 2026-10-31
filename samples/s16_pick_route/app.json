@@ -8,10 +8,10 @@
  "shops": true,
  "runs": "function",
  "handler": "samples/s16_pick_route/service/app.lambda_handler",
- "package": ["tools/app_template/service/function.py", "tools/app_template/service/shops.py", "tools/app_template/service/dynamo.py",
+ "package": ["tools/app_template/service/function.py", "tools/app_template/service/shops.py", "tools/app_template/service/testcall.py", "tools/app_template/service/oneshop.py", "tools/app_template/service/dynamo.py",
              "tools/app_template/service/ed25519.py", "samples/s16_pick_route/route.py", "samples/s16_pick_route/service/app.py"],
  "env": [
-  {"name": "IVN_LIBRARY_APP", "about": "Your app's id in the App library, in lower case with underscores: for the prefix ACME PTS, acme_pts. Each shop that installs your app connects with a key that names this id.", "required": true},
-  {"name": "PCK_PREFIX", "about": "The prefix your app's names in the shop start with, in capitals: the --prefix you gave start.py (for example ACME PTS).", "required": true}
+  {"name": "IVN_LIBRARY_APP", "about": "Your app's id in the App library, in lower case with underscores: for the prefix ACME PTS, acme_pts. Each shop that installs your app connects with a key that names this id.", "purpose": "Your app's id in the App library, like acme_pts for the prefix ACME PTS", "required": true, "together": []},
+  {"name": "PCK_PREFIX", "about": "The prefix your app's names in the shop start with, in capitals: the --prefix you gave start.py (for example ACME PTS).", "purpose": "Filled in for you: the prefix your app's names start with, like ACME PTS", "required": true, "together": []}
  ]
 }

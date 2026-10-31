@@ -4,6 +4,8 @@
 
 The retailer decides at which stores each group of its customers may buy: account customers only at the store that holds their account, a trade group only at the trade counters, staff only at the staff store. When the cashier puts a customer on a sale at any other store, the till takes the customer off the sale with the retailer's reason, and no door that charges or books a new sale takes payment for that customer there.
 
+**Industries:** every industry
+
 **When to use it:** a rule about the customer decides where they may buy, and iVendNext keeps the rule itself, in Desk.
 
 ## What happens
@@ -73,6 +75,11 @@ python3 samples/s47_customers_by_store/service/app.py samples/s47_customers_by_s
 
 **Settings, one retailer** (`service/.env.local`, never committed): `IVN_CAPTURE_SECRET` (handed back at install as `pp_cbs:sub:on_select`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. `CBS_PREFIX` names the rule record type (default `PP CBS`).
 
+## Try it at the till
+
+- Choose a customer whose group may not buy at this store; the till takes the customer off the sale, with the reason.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The service is the [app template](../../tools/app_template/README.md)'s shape: set `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`). Each retailer connects itself after its install and hands over the capture's secret and the key of the app's own user (*Connect again* is only for when the site could not reach the app, or a key was lost or changed). Until the key arrives the service answers 503 and the down answer applies. Every call names its retailer (`X-iVendNext-Site`), and each retailer is answered from its own rules with its own key.
@@ -126,3 +133,11 @@ What a partner usually changes:
 - **A rule per customer group.** A customer's own rule is a group of their own.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. On CitiXsys hosting the first pick after a quiet spell starts the function; past 3 s the down answer applies, flagged.
 - It logs one line per call: the route, the status and the milliseconds, never the body.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: at which stores each customer group may buy.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

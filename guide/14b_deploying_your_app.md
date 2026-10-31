@@ -53,7 +53,11 @@ The template does all eight. Replace its `core.py` with your logic and keep the 
    python3 tools/app_template/validate_app.py
    ```
 
-   It refuses a container that runs as root, has no health check, exposes a port the settings file does not name, or has a secret baked into it; and a settings file with a value in it.
+   It refuses a container that runs as root, has no health check, exposes a port the settings file does not name, or has a secret baked into it; and a settings file with a value in it, or a setting with no `purpose`. Each setting in `env` says its `purpose` (the line the *Settings* screen shows: what to put there), whether it is `required`, and `together`, the other settings that are set with it, both or neither (`[]` when none):
+
+   ```json
+   {"name": "TEL_API", "purpose": "Your telecom company's API address", "required": true, "together": []}
+   ```
 5. **Publish the image** to a container registry you control, with a version tag (`1.0.0`), never only `latest`.
 6. **Run the image on a host** (below) with the settings from `app.json`.
 7. **Tell iVendNext where you are.** Put your HTTPS address and the signing secret in the retailer's record for the key, the webhook or the feed (chapters 5 to 7). `tools/deploy` prints a generated secret once: store it in your host's secret store the same minute.

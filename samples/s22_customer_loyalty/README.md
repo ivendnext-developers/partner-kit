@@ -4,6 +4,10 @@
 
 A retailer that runs its **own** loyalty programme — its own tiers, its own cash back, its own rules — and wants it on iVendNext without putting any code inside the retailer's iVendNext. This sample is for a developer, or the CitiXsys Consulting Team, who would otherwise have built an app inside the customer's iVendNext for it.
 
+**Industries:** Liquor and wine
+
+**What is in it:** members, cash back, a till key, a wallet.
+
 **When to use it:** the customer owns the rules (you write them in your own service), but staff should see the members, tiers and cash back on iVendNext's own screens, and the till should show a member's status.
 
 The recipe: [`recipes/customer_owned_loyalty.md`](../../recipes/customer_owned_loyalty.md). The receipt check in it: [`recipes/check_by_workflow.md`](../../recipes/check_by_workflow.md).
@@ -80,6 +84,11 @@ python3 samples/s22_customer_loyalty/service/worker.py daily service/.env.local
 python3 samples/s22_customer_loyalty/service/app.py service/.env.local
 ```
 
+## Try it at the till
+
+- Choose a member, press Member; the till shows their tier and cash back.
+- Close the till day when you are done.
+
 ## One service for many retailers
 
 The same service can serve every retailer that installs the app, with the app template's handshake ([chapter 14b](../../guide/14b_deploying_your_app.md#one-app-many-retailers)). Each retailer connects itself after its install and hands over the member key's secret and the key of the app's own user (*Connect again* is only for when the site could not reach the app, or a key was lost or changed). Every press names its retailer and is answered from that retailer's records alone, with that retailer's key. The feed worker runs inside the same service: every 30 seconds it reads each connected retailer's feed with that retailer's key, each retailer on its own thread so a slow retailer never holds up another, and runs each retailer's daily jobs once a day (a job that fails is logged with its error's class and tried again the next day, never on every pass; a customer iVendNext refuses to save is counted in the log with the retailer's status code, never by name, and keeps its plan while the other members still move). Its health address answers 503 when the worker has stalled for three minutes, so the platform restarts it. The plans, rates and windows stay in each retailer's own settings record, as before.
@@ -147,7 +156,21 @@ The worker reads the event feed's door, scoped to your own application, with the
 
 ### What was proven where
 
-- **On the laptop:** 104 tests and 72 canaries (the opt-in adapter's: 8 tests and 9 canaries, laptop only, against `tests/standin_loyalty.py`), all against in-memory stand-ins for iVendNext (Member cash: 23 tests and 22 canaries; many retailers: 16 tests and 12 canaries, two retailers sharing a customer's name, one of them stuck).
+- **On the laptop:** 107 tests and 74 canaries (the opt-in adapter's: 8 tests and 9 canaries, laptop only, against `tests/standin_loyalty.py`), all against in-memory stand-ins for iVendNext (Member cash: 23 tests and 22 canaries; many retailers: 16 tests and 12 canaries, two retailers sharing a customer's name, one of them stuck).
 - **On a site in the sandbox's shape** (our test bench, 2026-10-09, with manifest 0.1.0, before Member cash was added; Member cash has not run on a bench or a till: a new site with developer mode off and the sandbox template's Demo Retail in US dollars, dropped after; the template's own demo promotion, *10% off the sale*, was switched off for the run, so the member rates are the sample's alone — on your sandbox it stays on and adds to every sale): our installer installed the manifest switched off; `prepare`, `apply` and `switch-on` set iVendNext up; the service ran beside it on the real event feed. Every check passed: both new customers joined Bronze from the feed; a walk-in and a Bronze member paid no member discount; a big spender moved to Silver at the daily job and then paid 3% only, one tier promotion; the member key answered on the till (*Silver*, the cash back, what reaches Gold) and said *no member* on a walk-in's sale; each earning was 2% of its sale; a partial return took its exact share, netted against the pending earning; every handled event delivered again changed nothing; a receipt the order waited for was *Verified* by the service's user, one that took more stayed waiting with the service's reason; *Verify* was refused for the administrator, and the administrator's submit through the record API was refused. The kit's sandbox check passed 8 of 8 on the same site.
 - **What a sandbox walk of the reference implementation taught it** (2026-10-12): a goods receipt for a batch-tracked item makes and submits its batch bundle as the integration user when it is verified, so the integration role needs *create*, *write* and *submit* on *Serial and Batch Bundle* (in `config.json`, held by a test); and steps 2, 4, 5 and 6 of the Member cash set-up above, each of which the first set-up got wrong.
 - **What the bench taught this sample** (each now in the files, with a test where a laptop test can hold it): `switch-on` must tick each followed record type of the feed registration, not only name the user; the integration user needs the *Is Desk User* field (`custom_is_desk_user`) when made over the API; reading a receipt needs read on its supplier; the maker's own *Send for Verification* must allow self-approval; the integration role is the app's own (*PP LYL Integration*), never one another app's user holds; `remove` puts every right of every permission row back (*select* included).
+
+## Versions
+
+### 1.2.0
+
+- Hosted on a schedule as a function, paid per call, instead of an always-on container.
+- An opt-in link to a chain's own loyalty system: its points and offer on the Member key, each sale's earning posted to it.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+
+### 1.1.0
+
+- First version in the kit: loyalty whose logic runs in your service and whose records live in iVendNext.
+- Cash back is earned on what the customer bought, so a gift card earns once.
+- Serves many retailers: each one's daily balance rows under the app's own name, and a daily job tried once a day.

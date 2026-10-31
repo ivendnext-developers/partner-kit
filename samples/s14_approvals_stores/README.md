@@ -8,6 +8,8 @@
 
 A chain wants a price change to need a yes — but **a store manager's yes up to a limit, and head office's yes above it**, with each store seeing only its own requests. This sample is S11 (one approval step, one retailer) grown for a chain: it is for a developer, or the CitiXsys Consulting Team, who will copy it for anything that needs a manager's approval across stores.
 
+**Industries:** Thrift and resale
+
 **When to use it:** an approval whose approver depends on the store, and on how big the change is. For one retailer with one approver, S11 is enough.
 
 ## What happens
@@ -93,3 +95,9 @@ BASE=https://shop.example AP_KEY=… AP_SECRET=… python3 approvals_stores.py e
 ## Technical notes
 
 Tested on our test bench on 2026-10-08, with two stores, a requester and a store manager in each, head office, the service, and three people holding two roles each. The run's id and checks are in the recipe. Not tried: two services at once, many requests at once, approvals across companies, an approver who is also the applier. A request names a price list, and the service does not tie the list to the store: a manager's approval moves the price on whatever list the request names — every store's where they share one, another store's own list where the requester named it; a retailer with one list per store adds that check. A limit raised after an approval applies to it. The service's key can list the retailer's users with their email and phone (the retailer's default for any desk user).
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: price-change approvals across stores, each store manager up to a limit.

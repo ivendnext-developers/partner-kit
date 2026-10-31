@@ -53,7 +53,9 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import exr  # noqa: E402
 import function  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 ROUTES = {"/exr/work": "work"}       # the manifest's extension_subscriptions[].key for each
 STALE = "TimestampMismatchError"     # the site's refusal of a write whose ``modified`` is not the row's own
@@ -184,7 +186,7 @@ def _warning(body: str, refresh: bool = False) -> dict:
 
 class Service:
     def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, clock=time.monotonic, now=None):
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         prefix = (conf.get("EXR_PREFIX") or "").strip()
         if self.app and not prefix:      # the library's record types are not the sample's: every read would 404
             raise SystemExit("IVN_LIBRARY_APP is set but EXR_PREFIX is not (IVENDNEXT EXR for the App library's app)")
@@ -194,7 +196,7 @@ class Service:
         if self.app:                                    # many retailers: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one retailer, from the settings
-            self.secrets = {"work": conf["PP_WORK_SECRET"]}
+            self.secrets = {"work": oneshop.settings(conf, ["PP_WORK_SECRET"])["PP_WORK_SECRET"]}
             self.tenant = tenant
         self.admin = conf.get("PP_ADMIN_TOKEN") or ""
         self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
@@ -315,6 +317,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or all(exr.verify(ts, sig, raw, s) for s in secrets):
             return 401, {"error": "the signature does not match"}   # the same words for a site the app does not know
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(sub)
         try:
             body = json.loads(raw)
             name, user = exr.return_of(body)
@@ -414,9 +418,9 @@ def env(path: str) -> dict:
 
 def main():
     conf = dict(os.environ, **(env(sys.argv[1]) if len(sys.argv) > 1 else {}))
-    if conf.get("IVN_LIBRARY_APP"):
+    if oneshop.many(conf):
         svc = Service(conf)
-    elif all(conf.get(k) for k in ("PP_BASE", "PP_KEY", "PP_SECRET", "PP_WORK_SECRET")):
+    elif all(oneshop.value(conf, k) for k in ("PP_BASE", "PP_KEY", "PP_SECRET", "PP_WORK_SECRET")):
         svc = Service(conf, Tenant(conf["PP_BASE"], conf["PP_KEY"], conf["PP_SECRET"]))
     else:
         raise SystemExit("set PP_BASE, PP_KEY, PP_SECRET and PP_WORK_SECRET (one retailer), or IVN_LIBRARY_APP with a "

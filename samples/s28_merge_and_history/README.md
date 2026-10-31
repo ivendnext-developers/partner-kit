@@ -2,6 +2,8 @@
 
 *Start from this sample: `python3 tools/manifest/start.py s28_merge_and_history --prefix "ACME MHS"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
+**Industries:** every industry
+
 ## What the retailer does
 
 One small app, two doors, one settings record.
@@ -74,6 +76,12 @@ python3 samples/s28_merge_and_history/service/app.py samples/s28_merge_and_histo
 
 iVendNext must reach it over HTTPS with a real certificate: put it behind your own host, and write that address in the manifest's `allowed_urls` and the two `endpoint_url`s.
 
+## Try it at the till
+
+- Choose a customer and press Customer history; the till shows their last sales and who served.
+- In Desk, tick two draft stock counts and press Merge counts; one new draft count holds both.
+- Close the till day when you are done.
+
 ## The files
 
 | File | What |
@@ -83,7 +91,7 @@ iVendNext must reach it over HTTPS with a real certificate: put it behind your o
 | `service/app.py` | the service: iVendNext over the record API with the app's key, the press, the page and its one read |
 | `service/history.html` | the page, drawn with the design kit (`kit/design/`), which the service serves beside it |
 | `manifest.json` | the settings, the field on the count, the two services, the button, the three roles |
-| `tests/` | 53 laptop tests (`test_merge.py`, `test_history.py`, `test_shop.py`, `test_manifest.py`); `canaries.py` removes each guard in turn and its test must go RED (38 of 38) |
+| `tests/` | 56 laptop tests (`test_merge.py`, `test_history.py`, `test_shop.py`, `test_manifest.py`); `canaries.py` removes each guard in turn and its test must go RED (40 of 40) |
 
 ## Technical notes
 
@@ -100,3 +108,11 @@ iVendNext must reach it over HTTPS with a real certificate: put it behind your o
 - **A sandbox site** (2026-10-16, POS 2.0.0.648, the service on a laptop behind a temporary HTTPS tunnel, the site's integration user): installed with `tools/deploy`, switched on as a System Manager would. Two draft counts (EARBUDS 12 at 77.40 posted 09:00, and 7 at 78.00 posted 10:30, with two other items) pressed the way Desk presses: **one new draft with EARBUDS 19 at 78.00**, the other items as counted, posted at 10:30, made by the integration user; a comment on each count; the counts unchanged. With *Last*: EARBUDS 7. A press that ran out of time, retried with its key: the same draft, no second one, one comment each. A submitted count ticked: the retailer's own refusal, the app not called. An opening-stock count beside a count, and one count alone: *Nothing merged*, with the reason. The page, opened in a real browser with the context the retailer signed for a customer in Desk: three sales by three people from two stores, newest first, each discount as stored, the roll-up invoice skipped; a customer with none: *No sales yet*; the same context again: refused; a user without the page's role: *You can't open this page for that record.*; the settings' number at 2: two sales. Everything made was removed and the site compared with its state before.
 - **The walk ran the first build.** The review's changes after it (the bundle refusal, the latest real rate, the lock, the Desk label, a return's sign) ran on the laptop only.
 - **Not run on a sandbox:** the button on the list and its dialog in Desk, and the till's own key (no one was signed in to the site's screens: every press and context came through the same server calls). The till-shaped page was opened with a context signed by the walk script with the page's secret, not by the till. Not run at all: serial-numbered counts, a batch row or a bundle, a row counted at zero, more than two counts in a press, more than 10 sales, a till sale (the sandbox has none), a till with a default walk-in customer, a return.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: merged stock counts, and a customer's history on the till.
+- A cut-short answer from a retailer's site is handled as an unknown outcome, like a site that cannot be reached, never a crash.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

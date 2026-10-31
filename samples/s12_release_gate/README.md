@@ -4,6 +4,8 @@
 
 One script that says red or green before a change reaches a live site. This sample is for a licensed customer's team (or an iVendNext Partner's) who ship changes to a retailer's iVendNext — an app, a manifest, a price or tax rule — and want a pass or fail in their pipeline before every release.
 
+**Industries:** every industry
+
 **When to use it:** before every release, in your pipeline, against a **staging** site.
 
 **Door:** Outside app
@@ -96,3 +98,9 @@ The money kit runs in the staging site's bench.
 |---|---|
 | `tests/test_s12.py` | 13 laptop tests with a stand-in iVendNext |
 | *our test bench's own run (not in the kit)* | 16 checks on our test bench |
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: the customer's release gate, red or green before a change reaches a live site.

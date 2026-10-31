@@ -194,10 +194,26 @@ def handle(store, app: str, path: str, headers, raw: bytes, keys: dict | None = 
         return 503, {"refused": "unavailable"}
 
 
+# In an app made from several samples (``tools/manifest/start.py``), each sample's points carry its tag in the manifest
+# (``guard`` becomes ``tgr_guard``) while the sample's code still names them as the sample did. The app's generated
+# service fills this, for each sample's own copy of this module, with {the name the sample's code uses: the app's name}.
+# Empty (every app made from one sample, and every sample in the kit): nothing changes.
+ALIASES: dict = {}
+
+
+def public_key(key: str) -> str:
+    """The key the site knows a point by: the app's name for it when the sample's code uses another."""
+    return ALIASES.get(key, key)
+
+
 def secrets_for(record: dict | None, name: str) -> list[bytes]:
-    """The shop's current secret of that name, then its previous one: what a call to that route may be signed with."""
+    """The shop's current secret of that name, then its previous one: what a call to that route may be signed with.
+    ``name`` is ``<app>:sub:<key>`` or ``<app>:<key>``; the key part follows ``ALIASES``."""
     if not record:
         return []
+    head, sep, key = name.rpartition(":")
+    if sep and key in ALIASES:
+        name = f"{head}:{ALIASES[key]}"
     return [s.encode() for s in ((record.get("secrets") or {}).get(name), (record.get("previous") or {}).get(name)) if s]
 
 

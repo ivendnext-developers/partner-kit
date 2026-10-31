@@ -4,6 +4,8 @@
 
 The retailer wants its customers' own word on each store. After a till sale, the retailer's own message asks the customer how the visit was, with a link to a one-page answer: three answers in the retailer's words, an optional comment, and *Stop these messages*. Each answer lands on the retailer's own record of that sale's request, once, and a report lists the answers by store.
 
+**Industries:** every industry
+
 **When to use it:** the retailer wants answers kept in iVendNext, by sale and store, sent through its own SMS gateway, e-mail account or WhatsApp app.
 
 ## What happens
@@ -75,6 +77,12 @@ python3 samples/s49_post_sale_feedback/service/app.py samples/s49_post_sale_feed
 
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's presses never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
 
+## Try it at the till
+
+- Sell to a customer who has a mobile number.
+- In Desk, press Send feedback requests on a rule; the customer is sent the question.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The service is the [app template](../../tools/app_template/README.md)'s shape: set `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`). Each retailer connects itself after its install and hands over the press's secret and the key of the app's own user (*Connect again* is only for when the site could not reach the app, or a key was lost or changed). Until the key arrives a press is answered in words. Every press names its retailer's iVendNext (`X-iVendNext-Site`); every link names it too (`s`), signed with that retailer's own secret, so a link opens only for its own retailer.
@@ -126,3 +134,22 @@ What a partner usually changes:
 - **Requests stay** (the manager role and your System Manager read them) until the app is removed; the uninstall's export file keeps them. Each holds a customer's mobile number and e-mail: a System Manager can delete older ones from the list.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. The first press after a quiet spell starts the function (1 to 2.5 seconds, measured on earlier apps), inside the button's 10. The press's reads go side by side (eight at a time), in three rounds for a few rules, so a retailer far from the US waits about three round trips before the writes.
 - It logs one line per call: the route, the status and the milliseconds, never a body, a link, a number or a key.
+
+## Versions
+
+### 1.0.3
+
+- On a phone set to Arabic, each line of the page aligns by its own direction.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+
+### 1.0.2
+
+- The page keeps the retailer's words in their own direction; pictures from the demo-site walk.
+
+### 1.0.1
+
+- Fixes from the completeness pass: stops kept by number and e-mail, no closed links sent, the link key's words.
+
+### 1.0.0
+
+- First version in the kit: ask each recent till sale's customer how the visit was.

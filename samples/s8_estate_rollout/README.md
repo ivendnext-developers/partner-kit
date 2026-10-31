@@ -4,6 +4,8 @@
 
 Your whole estate — regions, prices, stores, tills, cashiers — written down in one file, and a script that makes iVendNext match it. This sample is for an iVendNext Partner or head office that sets up many stores and wants each change previewed, applied and checked, not clicked through store by store.
 
+**Industries:** every industry
+
 **When to use it:** you open or change stores in numbers, and need to see what will change before it does and prove afterwards that iVendNext matches the file.
 
 **Door:** Configure
@@ -86,3 +88,9 @@ PASS T5 verify is RED and names the profile and the field the hand edit changed
 PASS T5 apply repaired only that profile
 PASS T7 …and ONLY that store is left: one profile, one warehouse (both disabled); the other 50 stores are deleted
 ```
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: fifty stores and three regions rolled out from one file.

@@ -67,6 +67,13 @@ CANARIES = [
     ("a cut answer from the shop is a tenant error, never a crash", "service/tenant.py", 'except (urllib.error.URLError, TimeoutError, http.client.HTTPException) as e:',
      'except (urllib.error.URLError, TimeoutError) as e:',
      "test_tenant.AnswerCutShort.test_an_answer_cut_short_is_a_tenant_error_never_a_crash"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/where.py", "if testcall.is_test(headers):", "if False:",
+     "test_where.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/where.py",
+     '        if path != ROUTE:\n            return 404, {"error": "not found"}\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path != ROUTE:\n            return 404, {"error": "not found"}\n',
+     "test_where.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

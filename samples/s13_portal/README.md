@@ -8,6 +8,8 @@
 
 A small web app on **your own server**. A person from the retailer opens it, signs in with their own iVendNext account, and sees the retailer's records that *their own account* may see — a store user sees their store's sales and no other store's; someone with no right sees nothing. It is for a developer, or the CitiXsys Consulting Team, who needs a screen that is not inside the retailer's frame (a head-office or franchise portal, say).
 
+**Industries:** every industry
+
 **When to use it:** a screen of your own, outside the retailer's iVendNext, for people who already have iVendNext accounts. If the screen can live inside the retailer's iVendNext, use the native screens first (guide chapter 13a).
 
 **Door:** Outside app
@@ -88,3 +90,10 @@ PORTAL_SHOP=https://shop.example PORTAL_CLIENT_ID=… PORTAL_CLIENT_SECRET=… P
 
 Tested on our test bench on 2026-10-10 (25 checks; the run id is in the recipe): two store users with one store each, a desk user holding an unrelated role, a website user, and an OAuth client with and without *Allowed Roles*. Measured: a website user (no desk role) is stopped by iVendNext at its Allow step with "Invalid client_id parameter value" (400), and so is a desk user without the role when the client lists *Allowed Roles*; the portal never receives a code for either.
 Bounds, recorded: a sign-in lasts as long as the retailer's token — an hour on this build (read from the retailer's code, not measured); the portal's own 8-hour ceiling never binds. The token is the person's **whole account** in the retailer's iVendNext, writes included: the portal only reads, but whoever holds the portal's memory holds every signed-in person's account until their token ends. Disabling a person in iVendNext does not end a token already issued: revoke their tokens too. A sign-in that ends without *Sign out* (the token ends, a restart) leaves the retailer's refresh token active at the retailer's iVendNext; the portal never kept it. Each total shows its currency's own decimals (ISO 4217: none for JPY, three for KWD) with a comma between thousands and a point before the decimals, whatever number format the retailer uses; a retailer on another format (lakh grouping, a decimal comma) shows the same amount written differently in Desk. iVendNext's refusal at sign-in always reads "Your account may not use this portal"; a restart signs everyone out. Not tried: the refresh token, HTTPS (the bench is plain HTTP on its own network), two portals on one client, many users at once.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a standalone portal with Sign in with iVendNext.
+- A cut-short answer from a retailer's site is handled as an unknown outcome, like a site that cannot be reached, never a crash.

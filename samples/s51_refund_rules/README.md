@@ -4,6 +4,8 @@
 
 The retailer decides how a refund goes back. A return against a sale goes back only by the payment methods that paid that sale, plus the retailer's store credit and any method it always allows. A return without its sale goes back only by the methods the retailer names. When the cashier opens a refund, the till dims the methods the rules leave out, with the reason, or refuses the refund in the app's words.
 
+**Industries:** every industry
+
 **When to use it:** a sale paid by card alone must not be refunded in cash, or a no-receipt return must go to store credit. A payment method's own *Allowed in Returns* holds for every refund alike; this app looks at the sale being refunded. Each store refunding only its own sales needs no app: leave *Use inter-store transactions* off in Retail Setting (the default), and a till opens only its own store's sales for a return against a sale (a layaway plan's refund is payable at any store of the company).
 
 **In the App library:** [Refund rules](https://library.ivendnext.app/apps/ivendnext_rfr), free, for a retailer to install as it is. This sample is the code behind it, to copy and change.
@@ -67,6 +69,11 @@ python3 samples/s51_refund_rules/service/app.py samples/s51_refund_rules/service
 
 **Settings, one retailer** (`service/.env.local`, never committed): `IVN_CHECK_SECRET` (handed back at install as `pp_rfr:sub:refunds`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. `RFR_PREFIX` names the settings record type (default `PP RFR`).
 
+## Try it at the till
+
+- Return an item from a sale paid by card; the refund dims the methods the rules leave out, with the reason.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The service is the [app template](../../tools/app_template/README.md)'s shape: set `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`). Each retailer connects itself after its install and hands over the check's secret and the key of the app's own user (*Connect again* is only for when the site could not reach the app, or a key was lost or changed). Until the key arrives the service answers 503 and the down answer applies. Every call names its retailer (`X-iVendNext-Site`), and each retailer is answered from its own settings with its own key.
@@ -118,3 +125,11 @@ What a partner usually changes:
 - **The app's own English sentences.** The cashier reads them as written; the retailer's own words, or another language, are a partner's version.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. On CitiXsys hosting the first refund after a quiet spell starts the function; past 3 s the down answer applies, flagged.
 - It logs one line per call: the route, the status and the milliseconds, never the body.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a refund goes back by the methods that paid its sale.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

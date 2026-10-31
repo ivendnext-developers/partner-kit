@@ -69,6 +69,13 @@ CANARIES = [
      T + "test_administrators_key_is_never_used"),
     ("a cut answer is an unknown outcome", S, "(OSError, ValueError, http.client.HTTPException) as e:", "(OSError, ValueError) as e:",
      "test_many_shops.ShopApi.test_an_answer_cut_short_is_an_unknown_outcome_never_a_crash"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path == "/press/route":\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path == "/press/route":\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

@@ -4,6 +4,8 @@
 
 The retailer decides which sale details a group of its customers must give before they pay: an account customer's purchase order number, an insured patient's policy number, a contractor's project. When the cashier presses **Pay** and a detail the customer's group needs is empty, the till refuses the sale in the retailer's words. The cashier fills the detail under the sale's details and presses Pay again.
 
+**Industries:** every industry
+
 **When to use it:** a sale detail matters for some customers only. A Sale Attribute's own *Required* switch holds for every customer on every till; this app holds it for the groups and tills the retailer names.
 
 **In the App library:** [Required sale details](https://library.ivendnext.app/apps/ivendnext_rsd), free, for a retailer to install as it is. This sample is the code behind it, to copy and change.
@@ -78,6 +80,12 @@ python3 samples/s50_required_sale_details/service/app.py samples/s50_required_sa
 
 **Settings, one retailer** (`service/.env.local`, never committed): `IVN_CHECK_SECRET` (handed back at install as `pp_rsd:sub:details`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. `RSD_PREFIX` names the rule record type (default `PP RSD`).
 
+## Try it at the till
+
+- Choose a customer in a group that needs a detail and press Pay; the till stops it.
+- Fill the detail in Sale details and press Pay again.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The service is the [app template](../../tools/app_template/README.md)'s shape: set `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`). Each retailer connects itself after its install and hands over the check's secret and the key of the app's own user (*Connect again* is only for when the site could not reach the app, or a key was lost or changed). Until the key arrives the service answers 503 and the down answer applies. Every call names its retailer (`X-iVendNext-Site`), and each retailer is answered from its own rules with its own key.
@@ -129,3 +137,11 @@ What a partner usually changes:
 - **Where the check never runs:** a park to a till, a layaway deposit, an account collection (the check page, *Not in this version*) and the Desk's own POS screen.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. On CitiXsys hosting the first Pay after a quiet spell starts the function; past 3 s the down answer applies, flagged.
 - It logs one line per call: the route, the status and the milliseconds, never the body.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: the details a customer group gives before paying.
+- On POS 2.1.0.669 the till asks for the details on the exchange screen and on orders and quotes too, so the work-arounds are for an earlier build only.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.

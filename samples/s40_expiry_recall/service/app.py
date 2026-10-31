@@ -54,7 +54,9 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import function  # noqa: E402
 import recall  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 ROUTES = {"/press/block": "block", "/press/worklist": "worklist", "/check/receipt": "receipt",
           "/check/disposal": "disposal", "/check/count": "count"}                 # route -> the manifest's extension_subscriptions[].key
@@ -156,7 +158,7 @@ def _chunks(names: list, n: int = 100):
 
 class Service:
     def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, now=None):
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         prefix = (conf.get("RCL_PREFIX") or "").strip()
         if self.app and not prefix:      # the library's names are not the sample's: every read would miss
             raise SystemExit("IVN_LIBRARY_APP is set but RCL_PREFIX is not (IVENDNEXT RCL for the App library's app)")
@@ -165,7 +167,7 @@ class Service:
         if self.app:
             self.store = store or shops.open_store(conf)
         else:
-            self.secrets = {k: conf.get(f"PP_SECRET_{k.upper()}") or "" for k in ROUTES.values()}
+            self.secrets = {k: oneshop.value(conf, f"PP_SECRET_{k.upper()}") for k in ROUTES.values()}
             self.tenant = tenant
         self.admin = conf.get("PP_ADMIN_TOKEN") or ""
         self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)
@@ -453,6 +455,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or all(recall.verify(ts, sig, raw, s, self.now) for s in secrets):
             return 401, {"error": "the signature does not match"}
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(sub)
         try:
             body = json.loads(raw)
             if sub == "block":
@@ -572,9 +576,9 @@ def env(path: str) -> dict:
 
 def main():
     conf = dict(os.environ, **(env(sys.argv[1]) if len(sys.argv) > 1 else {}))
-    if conf.get("IVN_LIBRARY_APP"):
+    if oneshop.many(conf):
         svc = Service(conf)
-    elif all(conf.get(k) for k in ("PP_BASE", "PP_KEY", "PP_SECRET")):
+    elif all(oneshop.value(conf, k) for k in ("PP_BASE", "PP_KEY", "PP_SECRET")):
         svc = Service(conf, Tenant(conf["PP_BASE"], conf["PP_KEY"], conf["PP_SECRET"]))
     else:
         raise SystemExit("set PP_BASE, PP_KEY, PP_SECRET and the five PP_SECRET_* (one shop), or IVN_LIBRARY_APP with a "

@@ -284,6 +284,13 @@ CANARIES = [
      M + "test_the_patient_record_holds_every_field_a_schedule_may_need_and_only_the_pharmacists_read_it"),
     ("0.1.1's Customer fields show only while they hold a value", "manifest.json", '"depends_on": "pp_rxc_consent_by"', '"depends_on": ""',
      M + "test_the_customer_fields_of_0_1_1_stay_empty_and_show_only_while_they_hold_a_value"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path not in ROUTES:\n            return 404, {"error": "not found"}\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path not in ROUTES:\n            return 404, {"error": "not found"}\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

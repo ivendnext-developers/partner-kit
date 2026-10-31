@@ -162,6 +162,13 @@ CANARIES = [
      "lowest = self.lowest(name, shop, ctx, rules, self.clock())", "test_service.LowestPrices.test_a_slow_settings_read_counts_against_the_check_s_time"),
     ("each price read is given only the time left", "service/app.py", "min(READ_TIMEOUT, left))", "READ_TIMEOUT)",
      "test_service.LowestPrices.test_each_price_read_is_given_only_the_check_s_time_left"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path not in ROUTES:\n            return 404, {"error": "not found"}\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path not in ROUTES:\n            return 404, {"error": "not found"}\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

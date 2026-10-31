@@ -14,6 +14,10 @@ The common checks a retailer wants before money is taken, in one app. Each rule 
 | **Confirm a flagged item** | the scan | a beep and *"PEN-01: Check this item before it goes on the sale. Add it?"*; *No* leaves it off |
 | **Warn on a shorter shelf life** (instead of the question; POS build 2.0.0.654 on) | the scan of a flagged item | no tap: the item goes on and the till shows *"Till guard: MILK-1: sell batch B-1102 first. It expires 2026-11-02."* for 8 seconds, when the store holds a batch of the item that expires sooner; nothing otherwise |
 
+**Industries:** Electronics and phones
+
+**What is in it:** a check at Pay, a capture on scan.
+
 | What the retailer and the cashier see (on a demo site, 2026-10-25) | |
 |---|---|
 | The settings record with *Warn of a shorter-dated batch instead of asking* ticked | ![](screenshots/till-guard-rules-settings.png) |
@@ -64,6 +68,12 @@ python3 samples/s23_till_guard/service/app.py samples/s23_till_guard/service/.en
 
 **Settings, one retailer** (`service/.env.local`, never committed): `IVN_CHECK_SECRET` (handed back at install as `pp_tgr:sub:guard`), `IVN_SCAN_SECRET` (`pp_tgr:sub:on_scan`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. **Many retailers** (the [app template](../../tools/app_template/README.md)'s handshake): `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`); each retailer hands over the two secrets and its integration user's key when it connects. The install makes that user and the retailer's site hands over its key when it connects, after the install or an update (*Connect again* is only for when the site could not reach the app, or a key was lost or changed); until the key arrives, the service answers 503 and the down answer applies (the sale goes on, flagged). `TGR_PREFIX` names the settings record type (default `PP TGR`).
 
+## Try it at the till
+
+- In Desk, set Most of one item on a line to 50 in the app's settings.
+- Sell 51 of one item; the till stops it at Pay.
+- Close the till day when you are done.
+
 ## Technical notes
 
 - **Each route takes only its own secret:** the check's call is checked with the check's secret, the scan's with the scan's. A site the app does not know gets 401.
@@ -80,8 +90,25 @@ python3 samples/s23_till_guard/service/app.py samples/s23_till_guard/service/.en
 
 ### What was proven where
 
-- **Laptop:** the tests above (rules, signatures, the retailer's record read, one retailer and many, the contracts: 109 tests, and 1 more that replays a recorded bench run when one is given), 66 canaries each RED with its baseline passing, and the image built and run read-only (`/health`, an unknown retailer 401, a bad key at connect 403).
+- **Laptop:** the tests above (rules, signatures, the retailer's record read, one retailer and many, the contracts, the test call: 112 tests, and 1 more that replays a recorded bench run when one is given), 68 canaries each RED with its baseline passing, and the image built and run read-only (`/health`, an unknown retailer 401, a bad key at connect 403).
 - **Test bench** (2026-10-13, the iVendNext POS app at `87812e14`), **17 of 17** checks through the till's own calls as the cashier, over HTTPS, the service in one-retailer mode reading the retailer's `Default` record with the integration user's key: the install made both services switched off with `allow_and_flag`, the two secrets handed back once, the record type and the Item field; a line at 0.01 refused in the app's words and the card push refused before any money (0 sales booked); 51 of an item refused (*the most on one line is 50*); a 300.00 sale called a manager (approval from 250.00), the card push refused until a manager who is not the cashier approved in person (the cashier's own approval refused: *A cashier never approves their own sale.*), then one sale booked with the approver on the round; an ordinary sale booked; a ticked item's scan was answered `confirm` with the retailer's own question; an unticked item's scan called nobody; uninstall left the schema as found; no POS day left open. **Not run on the bench or a sandbox:** the service down (the product's down answers for the check and the capture were proven with samples S18 and S20), many retailers (the laptop tests), the ten-minute stand-in (the laptop tests), a real browser on the till's screens.
 - **Test bench, the shelf-life warning** (2026-10-25, the iVendNext POS app at `844788cf`, this sample at kit `main` `ff0a98b`): **6 of 6** checks through the till's own scan door as the cashier, the service in one-retailer mode reading the retailer's `Default` record and the batches with the integration user's key, a lot-tracked item with two batches in the till's store: an ordinary scan answered with the notice naming the earlier batch and its date; a scan naming the earlier batch allowed with nothing shown; a scan naming the later batch warned; the item on a booked sale; the check at Pay unchanged (a line at 0.01 refused, no sale); and, with the tick off, the same scan answered `confirm` with the retailer's question. The update from 1.1.0 to 1.2.0 kept the retailer's settings and both services consented and on.
 - **Test bench, the most lines and lowest prices** (2026-10-28, the iVendNext POS app at `60147699`, this sample at 0.4.0): **11 of 11** checks through the till's own Pay door as the cashier: four lines refused with the most at 3, the card push refused, nothing booked; three allowed; a line at 100.00 below its lowest of 101.00 sent to a manager, the push refused until a manager who is not the cashier approved in person, then one sale booked with the approver on the round; with the default `ask`, the card push held until the cashier's Yes, then one sale booked, not flagged; with read on Item Price not yet given, the four lines still refused and a single line allowed and flagged; with both new settings cleared, the answers 1.2.0 gives. The update from 1.2.0 to 1.3.0 kept the retailer's settings and both services consented, on and called by the till. **Laptop tests only:** a large sale while the prices cannot be read (its approval says so), a unit with no row, a discount on the whole sale, a retailer's iVendNext answering slowly or cut short.
 - **A demo site** (2026-10-25, `demo-1`, the hosted service at till-guard.ivendnext.app): installed from the App library as 1.2.0, the record made in Desk with the warning ticked, the app's user holding the app's role alone with read on Batch, two batches received in the store: the cashier's scan showed *"Till guard: confirm item: TGR-WALK-LOT: sell batch TGR-WALK-LOT-A first. It expires 2026-11-03."* 1,029 ms after the first scan and 535 ms after the next, and the item was on the sale; then uninstalled. The listed copy's service is labelled *Till guard: confirm item* (a changed label would switch an updating retailer's service off), so the notice starts with that name.
+
+## Versions
+
+### 1.3.0
+
+- Two new rules: the most lines on one sale, and a lowest price per item and unit.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+
+### 1.2.0
+
+- The shelf-life warning, run on the bench and walked on a demo site.
+- Any failure reading the shelf life is a plain allow, never a refusal.
+
+### 1.1.0
+
+- First version in the kit: several till rules in one app, a check before payment and a capture on scan.
+- Hosted as a function, paid per call; an exchange is checked for what it sells.

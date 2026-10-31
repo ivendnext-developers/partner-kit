@@ -65,7 +65,9 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import function  # noqa: E402
 import rxrules  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 KEPT_TTL = 60          # the shop's settings, schedules, item groups and profiles' customers, kept a minute per shop
 RESERVE_BY = 4.0       # seconds from the call's arrival: past it the service answers 503 rather than reserve a fill the
@@ -159,14 +161,16 @@ class Service:
     def __init__(self, conf: dict, store=None, api=None, clock=time.monotonic, now=time.time):
         self.prefix = (conf.get("RXC_PREFIX") or "PP RXC").strip()
         self.p = rxrules.field_prefix(self.prefix)
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         self.api, self.clock, self.now, self.lock = api or ShopApi(), clock, now, threading.Lock()
         self.kept, self.profiles = {}, {}
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
-            self.secrets = {k: conf[f"IVN_SECRET_{k.upper()}"] for k, _ in ROUTES.values()}
-            self.shop = {"url": conf["IVN_SHOP_URL"].rstrip("/"), "key": conf["IVN_SHOP_KEY"]}
+            one = oneshop.settings(conf, [f"IVN_SECRET_{k.upper()}" for k, _ in ROUTES.values()]
+                                   + ["IVN_SHOP_URL", "IVN_SHOP_KEY"])
+            self.secrets = {k: one[f"IVN_SECRET_{k.upper()}"] for k, _ in ROUTES.values()}
+            self.shop = {"url": one["IVN_SHOP_URL"].rstrip("/"), "key": one["IVN_SHOP_KEY"]}
 
     def dt(self, suffix: str) -> str:
         return f"{self.prefix} {suffix}"
@@ -535,6 +539,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or all(rxrules.verify(ts, sig, raw, s) for s in secrets):
             return 401, {"error": "the signature does not match"}   # the same words for a site the app does not know
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(route_key)
         try:
             body = json.loads(raw)
             ctx = rxrules.sale_context(body) if point == "check" else rxrules.desk_context(body, self.prefix)
@@ -622,7 +628,7 @@ def env_file(path: str) -> dict:
 def main():
     conf = dict(os.environ, **(env_file(sys.argv[1]) if len(sys.argv) > 1 else {}))
     one = [f"IVN_SECRET_{k.upper()}" for k, _ in ROUTES.values()] + ["IVN_SHOP_URL", "IVN_SHOP_KEY"]
-    if not (conf.get("IVN_LIBRARY_APP") or all(conf.get(k) for k in one)):
+    if not (oneshop.many(conf) or all(oneshop.value(conf, k) for k in one)):
         raise SystemExit("set " + ", ".join(one) + " (one shop), or IVN_LIBRARY_APP with a store (many shops): "
                          "the app does not start without a way to check a call")
     srv = make_server(Service(conf), int(conf.get("PORT") or 8080))

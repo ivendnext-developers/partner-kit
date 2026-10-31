@@ -8,6 +8,8 @@
 
 An AI assistant for a store or area manager, which reads and changes iVendNext through **our MCP server** (`tools/mcp_server/`). This sample is for a developer who wants to put an assistant in front of iVendNext safely: it uses the manager's own key, reads only unless you allow writes, and its assistant is told to ask before every change (the server cannot see a person: see *Before you copy it*).
 
+**Industries:** every industry
+
 **When to use it:** a manager wants to ask *"what sold in the Store 1 store yesterday?"* or say *"put the 10% off AirPods promotion on"* in plain words.
 
 **Door:** Outside app
@@ -99,3 +101,9 @@ The promotion and the item are the demo site's own data (*UC-003*, AirPods; the 
 |---|---|
 | `tests/test_s10.py` | 19 laptop tests against a stand-in iVendNext, no AI |
 | (our test bench) | the same flow against a real site: 25 checks, passed |
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: the manager's AI assistant.

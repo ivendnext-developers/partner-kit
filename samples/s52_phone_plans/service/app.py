@@ -55,7 +55,9 @@ sys.path.insert(0, HERE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import function  # noqa: E402
 import plans  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 import telecom  # noqa: E402
 from shop import Shop, ShopError  # noqa: E402
 
@@ -87,14 +89,17 @@ class Service:
         self.conf = conf
         self.prefix = (conf.get("TEL_PREFIX") or "PP TEL").strip()
         self.tel_api = (conf.get("TEL_API") or "").strip()
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
+        # the till key as the site knows it (the manifest's remote_keys[].key): <app>_plans, or the sample's pp_tel_plans
+        self.till_key = f"{self.app or self.prefix.lower().replace(' ', '_')}_{KEY}"
         self.opener = opener or (lambda url, key, secret, timeout: Shop(url, key, secret, timeout))
         if self.app:                                            # many retailers: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                                   # one retailer, from the settings
-            key, secret = conf["IVN_SHOP_KEY"].split(":", 1)
-            self.one = {"site": "-", "url": conf["IVN_SHOP_URL"].rstrip("/"), "key": key, "secret": secret,
-                        PLANS: conf["IVN_POINT_SECRET"], CHECKS: conf["IVN_CHECK_SECRET"]}
+            one = oneshop.settings(conf, ["IVN_SHOP_URL", "IVN_SHOP_KEY", "IVN_POINT_SECRET", "IVN_CHECK_SECRET"])
+            key, secret = one["IVN_SHOP_KEY"].split(":", 1)
+            self.one = {"site": "-", "url": one["IVN_SHOP_URL"].rstrip("/"), "key": key, "secret": secret,
+                        PLANS: one["IVN_POINT_SECRET"], CHECKS: one["IVN_CHECK_SECRET"]}
 
     # ---- who is calling ------------------------------------------------------------------------------------------
     def caller(self, route: str, headers) -> tuple[dict | None, list[str]]:
@@ -103,7 +108,7 @@ class Service:
             return self.one, [self.one[route]]
         site = shops.site_of(headers.get(shops.SITE_HEADER))
         record = self.store.get(site) if site else None
-        name = f"{self.app}:{self.app}_{KEY}" if route == PLANS else f"{self.app}:sub:{CHECK}"
+        name = f"{self.app}:{self.till_key}" if route == PLANS else f"{self.app}:sub:{CHECK}"
         secrets = [s.decode() for s in shops.secrets_for(record, name)]
         if not record:
             return None, secrets
@@ -133,6 +138,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or not any(verify(ts, sig, raw, s) for s in secrets):
             return 401, {"error": "the signature does not match"}   # the same words for a retailer the app does not know
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(self.till_key if route == PLANS else CHECK)
         try:
             body = json.loads(raw)
             ctx = body["context"]
@@ -246,7 +253,7 @@ def env_file(path: str) -> dict:
 def main():
     conf = dict(os.environ, **(env_file(sys.argv[1]) if len(sys.argv) > 1 else {}))
     one = ("IVN_POINT_SECRET", "IVN_CHECK_SECRET", "IVN_SHOP_URL", "IVN_SHOP_KEY")
-    if not (conf.get("IVN_LIBRARY_APP") or all(conf.get(k) for k in one)) or not conf.get("TEL_API"):
+    if not (oneshop.many(conf) or all(oneshop.value(conf, k) for k in one)) or not conf.get("TEL_API"):
         raise SystemExit("set TEL_API, and IVN_POINT_SECRET, IVN_CHECK_SECRET, IVN_SHOP_URL and IVN_SHOP_KEY (one retailer) "
                          "or IVN_LIBRARY_APP with a store (many retailers)")
     svc = Service(conf)

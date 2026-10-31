@@ -46,7 +46,9 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import function  # noqa: E402
 import rule  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 KEY, ROUTE = "guard", "/rgd/check"     # the subscription's key in the manifest; its secret is "<app>:sub:<key>"
 RULES_TTL, READ_TIMEOUT = 60, 2.0      # a shop's rule is kept a minute; one read must leave time inside the check's 3 s
@@ -90,13 +92,14 @@ class Service:
     def __init__(self, conf: dict, api=None, clock=time.monotonic):
         self.rules = rule.rules_from(conf)          # a laptop run with no shop to read only
         self.prefix = (conf.get("RGD_PREFIX") or "PP RGD").strip()
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         self.store = shops.open_store(conf) if self.app else None
-        self.secret = None if self.app else conf["PP_POINT_SECRET"]
-        if not self.app and bool(conf.get("IVN_SHOP_URL")) != bool(conf.get("IVN_SHOP_KEY")):
+        one = {} if self.app else oneshop.settings(conf, ["PP_POINT_SECRET"], ["IVN_SHOP_URL", "IVN_SHOP_KEY"])
+        self.secret = None if self.app else one["PP_POINT_SECRET"]
+        if not self.app and bool(one["IVN_SHOP_URL"]) != bool(one["IVN_SHOP_KEY"]):
             raise SystemExit("set both IVN_SHOP_URL and IVN_SHOP_KEY, or neither")   # never fall back to the settings rule
-        self.one = ({"url": conf["IVN_SHOP_URL"].rstrip("/"), "key": conf["IVN_SHOP_KEY"]}
-                    if not self.app and conf.get("IVN_SHOP_URL") else None)
+        self.one = ({"url": one["IVN_SHOP_URL"].rstrip("/"), "key": one["IVN_SHOP_KEY"]}
+                    if not self.app and one["IVN_SHOP_URL"] else None)
         self.api, self.clock = api or ShopApi(), clock
         self.kept, self.lock = {}, threading.Lock()
         self.keys = None           # the library's public keys: the pinned ones unless a test gives its own
@@ -139,6 +142,8 @@ class Service:
                 for s in secrets] or ["the signature does not match"]
         if "" not in whys:
             return 401, {"error": whys[0]}
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(KEY)
         try:
             ctx = rule.context_of(json.loads(raw))
         except ValueError as e:      # json's own errors are ValueErrors too

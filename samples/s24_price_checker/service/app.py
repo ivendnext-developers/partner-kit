@@ -51,6 +51,7 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import function  # noqa: E402
 import price  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
 
 KIOSK_TTL, READ_TIMEOUT, BODY_MAX = 60, 3.0, 2048
@@ -138,7 +139,7 @@ class ShopApi:
 class Service:
     def __init__(self, conf: dict, store=None, api=None, clock=time.monotonic, today=None):
         self.prefix = (conf.get("PRC_PREFIX") or "PP PRC").strip()
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         self.api, self.clock = api or ShopApi(), clock
         self.today = today or (lambda: datetime.datetime.now(datetime.timezone.utc).date())
         self.cache, self.known, self.lock = {}, set(), threading.Lock()
@@ -147,7 +148,8 @@ class Service:
             self.store = store or shops.open_store(conf)
             self.one = None
         else:                                           # one shop, from the settings
-            self.one = {"url": conf["IVN_SHOP_URL"].rstrip("/"), "key": conf["IVN_SHOP_KEY"]}
+            one = oneshop.settings(conf, ["IVN_SHOP_URL", "IVN_SHOP_KEY"])
+            self.one = {"url": one["IVN_SHOP_URL"].rstrip("/"), "key": one["IVN_SHOP_KEY"]}
 
     def shop(self, named) -> tuple[str, dict | None]:
         """(the shop's name for the cache, its address and the app's key there): None for a shop that did not connect,
@@ -328,7 +330,7 @@ def env_file(path: str) -> dict:
 
 def main():
     conf = dict(os.environ, **(env_file(sys.argv[1]) if len(sys.argv) > 1 else {}))
-    if not (conf.get("IVN_LIBRARY_APP") or all(conf.get(k) for k in ("IVN_SHOP_URL", "IVN_SHOP_KEY"))):
+    if not (oneshop.many(conf) or all(oneshop.value(conf, k) for k in ("IVN_SHOP_URL", "IVN_SHOP_KEY"))):
         raise SystemExit("set IVN_SHOP_URL and IVN_SHOP_KEY (one shop), or IVN_LIBRARY_APP with a store (many shops)")
     srv = make_server(Service(conf), int(conf.get("PORT") or 8080))
     signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=srv.shutdown, daemon=True).start())

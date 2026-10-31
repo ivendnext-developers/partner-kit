@@ -19,7 +19,7 @@
 5. Make it safe to run twice: handle each event once, note failures, reconcile every night (the feed client does this; use it).
 6. Read-only calls may run on a sandbox with the person's key. Any call that writes goes to the person's own sandbox and needs their yes; show the request first. A write to any other retailer is never yours to make.
 
-**Check.** `python3 -m unittest discover -s <your tests folder>` for your core, and `python3 tools/check/check.py <project folder>` for anything it recognises (app code with a `hooks.py`, a manifest, sample answers). A service that sits outside the retailer's iVendNext has no `hooks.py`, so the check prints `NOTHING FOUND` and exits 2 for it. That is not a verdict: say so, and name the tests you ran instead.
+**Check.** `python3 -m unittest discover -s <your tests folder>` for your core, and `python3 tools/check/check.py <project folder>` for anything it recognises (app code with a `hooks.py`, a manifest, sample answers). A service that sits outside the retailer's iVendNext has no `hooks.py`: the check reads only its `app.json` settings file (every setting says its `purpose`), and with no `app.json` it prints `NOTHING FOUND` and exits 2. That is not a verdict: say so, and name the tests you ran instead.
 
 **Done looks like.** The core's tests pass; the service handles a sample event twice with one effect; it says what it does when iVendNext is unreachable and when it is slow; no key is in any file; the person has read the first write request before it was sent.
 

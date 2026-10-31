@@ -4,6 +4,8 @@
 
 A retailer runs a *shop and win* campaign: every 200 spent at its tills during the campaign is one entry, say, and after the last day the winners are drawn. the retailer makes a **campaign** in Desk: its days, its tills, the spend for one entry, the customer groups that take part, how many winners and reserves, and the prize. During the campaign a manager presses **Count entries** to see how it is going. After the last day the manager presses **Draw winners** once: the app draws the winners and reserves from the entries, one prize per customer, each entry with the same chance, and writes the results and a record of the draw on the campaign. This sample is for a developer who wants buttons on a record of the app's own whose service **reads the retailer's sales and writes its answer back on that record**.
 
+**Industries:** Fashion, Thrift and resale
+
 **When to use it:** a rule the retailer keeps decides something from many of its own records (here, a campaign's sales), a person decides when, and the answer belongs on one record the retailer can keep and show.
 
 ## What happens
@@ -74,6 +76,13 @@ python3 tests/canaries.py
 python3 service/app.py service/.env.local      # PP_BASE, PP_KEY, PP_SECRET, PP_COUNT_SECRET, PP_DRAW_SECRET, PP_PORT
 ```
 
+## Try it at the till
+
+- In Desk, make a campaign that runs today.
+- Sell more than the spend for one entry to a customer in the campaign's group.
+- In Desk, press Count entries on the campaign; the sale is counted.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The App library's *Lucky draw* runs this same `service/app.py` for every retailer that installs it, as a function on CitiXsys hosting (`app.json`): it costs nothing between presses. Set `IVN_LIBRARY_APP` (the library's id), a shops store (`IVN_SHOPS_TABLE` on hosting, `IVN_SHOPS_FILE` on your own server) and `LDW_PREFIX` (`IVENDNEXT LDW`: the record type is then *IVENDNEXT LDW Campaign*).
@@ -135,3 +144,11 @@ What a partner usually changes:
 - **Returns** are the till's returns made against the sale. A credit note made in Desk against the day's closing invoice does not take entries off.
 - **A customer's own entries** are not shown at the till or on the receipt; a count gives the totals.
 - **Removing the app** removes its campaigns.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: entries by spend from the retailer's till sales, and a fair draw of the winners and reserves, once.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

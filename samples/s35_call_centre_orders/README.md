@@ -4,6 +4,8 @@
 
 A customer phones the call centre; the agent enters the order once, in Desk, and presses **Send to store**. The order then ships from the store that serves the customer's district, and appears on that store's own list. This sample is for a developer who wants a button on a Desk record whose service **changes that same record**: here, the warehouse of a draft Sales Order and of every line on it.
 
+**Industries:** Pharmacy
+
 **When to use it:** you want a press in Desk to decide something about the record from data iVendNext already holds, and write the answer back onto it.
 
 ## What happens
@@ -67,6 +69,7 @@ python3 tests/canaries.py
 python3 service/app.py service/.env.local      # PP_BASE, PP_KEY, PP_SECRET, PP_POINT_SECRET, PP_PORT
 ```
 
+
 ## Many retailers, hosted
 
 The App library's *Call-centre orders by district* runs this same `service/app.py` for every retailer that installs it, as a function on CitiXsys hosting (`app.json`): it costs nothing between presses. Set `IVN_LIBRARY_APP` (the library's id), a shops store (`IVN_SHOPS_TABLE` on hosting, `IVN_SHOPS_FILE` on your own server) and `CCO_PREFIX` (`IVENDNEXT CCO`: the Serving store field is then `ivendnext_cco_store`).
@@ -110,3 +113,11 @@ A manifest cannot write the order itself: `fetch_from` goes only on a field the 
 - **No notice to the store.** The store's filtered list is its inbox; a manifest notification on submit, mailed to the store's warehouse e-mail, is the next step.
 - **The tree walk stops** after 12 territories or at a loop, and says no store serves the district.
 - **What was proven where:** see the recipe's *What was proven where*.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a Desk button that routes a phone order to its district's store.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

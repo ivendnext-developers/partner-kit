@@ -4,6 +4,8 @@
 
 An electronics or phone store's repairs and services, kept in iVendNext Desk against each unit's **serial number** (or IMEI): what the customer says is wrong, the unit's condition and what came with it, the tests run and their results, the work done and the parts fitted (each with its own serial where it has one), from the counter to the hand-over. Every repair shows under its serial number, so the unit's **service history** is one list; a repair slip with a unit tag prints under the retailer's own letter head. The parts leave stock with the engine's own Material Issue, which names the repair. The app moves no money: the till charges the repair as a service item, as it charges anything else. It calls nothing outside: no service, no outside address. The [recipe](../../recipes/repairs_by_serial.md) walks a store through it, and through a **recall by serial**, which needs no app.
 
+**Industries:** Electronics and phones
+
 It uses the manifest's `doctypes` (a record type and two child tables), `workflows`, `save_rules` (a lock), `print_formats`, `reports`, `custom_fields` (one field on Stock Entry), `links` and a `documentation` property setter. **When to use it:** a store repairs or services the units it sells (phones, laptops, appliances), and its repair jobs are on paper or in a separate system today.
 
 ## What happens
@@ -90,3 +92,9 @@ A manifest only. The engine keeps the serial numbers, their warranty dates, the 
 - **Desk shows the states and buttons with the prefix** (*PP RPR Hand over*, *IVENDNEXT RPR Hand over* in the library app).
 - **A workflow's *who may edit* is a screen rule**; the lock is not: it refuses the save itself.
 - **The customer's details are personal data** the retailer keeps under its own policy, as it keeps its customers'; uninstalling the app removes the repairs (its export keeps a copy) and the Stock Entry field.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: repairs recorded against each unit's serial number, from a manifest only.

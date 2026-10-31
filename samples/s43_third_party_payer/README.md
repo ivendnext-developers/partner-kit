@@ -4,6 +4,8 @@
 
 In many markets a pharmacy cannot sell to most of its patients without their insurer: the insurer pays part of the sale and the patient pays the rest. The same shape serves an optical plan, and a company paying for what its staff buy. This app is **one payer service for any third party that pays part of a sale**. Its payers, plans, formularies and members are records the retailer fills; it answers the POS app's **payer door** line by line, makes a **claim** from each sale the door books, files claims as a file, and follows each claim to payment.
 
+**Industries:** Optical, Pharmacy
+
 Its first data set is **one generic insurer**, with the co-pay rules of an iVend Retail add-on we built for a pharmacy chain and an insurer price-list rule a pharmacy customer ran. A second data set, **a company paying 70% of what its staff buy**, loads and answers with no code change.
 
 ⚠ **The generic insurer is a sample, not a real insurer.** A partner replaces it with each real payer's terms, and writes each payer's own claim link (NHIF/SHA, NPHIES, eClaimLink, Shafafiya, NHIA) against the same door.
@@ -101,3 +103,21 @@ python3 tools/check/check.py samples/s43_third_party_payer
 The service: `python3 samples/s43_third_party_payer/service/app.py service/.env.local` (one retailer; the file holds `IVN_SHOP_URL`, `IVN_SHOP_KEY` and the seven secrets the install handed back, `IVN_SECRET_PAYER`, `_CLAIMS`, `_FILE`, `_REMIT`, `_READY`, `_SETTLE`, `_BILLBACK`), or many retailers through the app template's handshake. It runs as a function: it only answers calls and presses.
 
 Recipe: [`recipes/third_party_payer.md`](../../recipes/third_party_payer.md).
+
+## Try it at the till
+
+- Choose an insured customer, press Pay, then press Payer on the payment screen.
+- The payer's share is taken as one line; the customer pays the rest.
+- Close the till day when you are done.
+
+## Versions
+
+### 0.2.0
+
+- Installs the payer service on the POS app's payer door (POS 2.1.0 build 667 or later) and the claims clerk's Bill to the customer button, in one manifest.
+- Answers in the shipped payer contract, money in whole minor units, checked against the contract's own schema.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+
+### 0.1.0
+
+- First version in the kit: an insurer's or a company's share of a sale, split by the plan's rules and claimed from the sales.

@@ -10,6 +10,8 @@ Rules a retailer adds to its own coupons, checked when the cashier presses **Pay
 | **Only for customers in one group** | *"Coupon STAFF15 is only for customers in Staff. Remove it, or add a customer in that group."* |
 | **Sale needed for each use** (1.1.0) | *"Coupons C100A, C100B need a sale of AED 2,000.00; this sale is AED 1,450.00. Remove a coupon, or add to the sale."* Each coupon on a sale with an amount here takes that much of the sale's total; one coupon of 100 for each 1,000 spent is a rule of 1,000 on each such coupon. |
 
+**Industries:** Electronics and phones, Pharmacy
+
 A coupon with no rule, or with its rule switched off, is never refused; a sale with no coupon is allowed without reading iVendNext. The cashier removes the coupon (or adds the new customer) and presses Pay again. The recipe: [`recipes/coupon_rules.md`](../../recipes/coupon_rules.md).
 
 | What the retailer and the cashier see (on a demo site, 2026-10-29) | |
@@ -59,6 +61,12 @@ python3 samples/s32_coupon_rules/service/app.py samples/s32_coupon_rules/service
 
 **Settings, one retailer** (`service/.env.local`, never committed): `IVN_CHECK_SECRET` (handed back at install as `pp_cpn:sub:coupons`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. **Many retailers** (the [app template](../../tools/app_template/README.md)'s handshake): `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`); each retailer hands over the check's secret and the key of the app's own user when it connects (*Connect again* is only for when the site could not reach the app, or a key was lost or changed); until the key arrives the service answers 503 and the down answer applies. `CPN_PREFIX` names the rule record type (default `PP CPN`).
 
+## Try it at the till
+
+- In Desk, write a rule for a coupon: First purchase only.
+- Use that coupon for a customer who has bought before; the till stops it at Pay.
+- Close the till day when you are done.
+
 ## Technical notes
 
 - **What the check receives for a coupon:** `coupon_codes`, the names of the Coupon records on the sale (each one's `id`), never the code the cashier typed.
@@ -78,3 +86,15 @@ python3 samples/s32_coupon_rules/service/app.py samples/s32_coupon_rules/service
 - **On the laptop:** the tests and canaries above.
 - **On our test bench, version 1.1.0** (2026-10-28, the iVendNext POS app at `60147699`, the engine at `12f182446`; the service in its one-retailer form, its user holding the app's role alone): the new service against the listed 0.1.0 install answered the eight cases above as before; the update to 0.2.0 kept the check on and consented and the rules as they were, the new field blank; with *Sale needed for each use* 150.00 on a 10% coupon, one unit (90.00 after the coupon) refused in the app's words with nothing booked, two units (180.00) allowed and booked with the coupon, the total the service received equal to the booked one. The library copy's update from the listed 1.0.1 on a rehearsal site kept a rule, the field blank, and the check enabled, consented and called by the till. **Laptop tests only:** two capped coupons on one sale; the return-stage backstop.
 - **On our test bench** (2026-10-18, the iVendNext POS app at `4c3f11b5`, the engine at `b26351df`; the service in its one-retailer form, reading iVendNext with a user holding only the app's role and a read on POS Invoice and Sales Invoice; two of the retailer's own coupons, 10% and 15% off), **8 of 8**, through the till's own calls inside one day that was closed after: a sale with no coupon allowed and booked · a first-purchase coupon for the walk-in customer refused in the app's words, the card push refused, no sale booked · the same coupon for a new customer allowed, booked at 90.00 of 100.00 with the coupon on the sale · that customer's next sale with it refused (the sale just booked counted live) · a group coupon for a customer outside the group refused, nothing booked · for a customer in it allowed, booked at 85.00 · after an allowed check, a second unit, another customer or another coupon each refused before any money, and Pay again asked the service again · the service received each coupon by its record's name, never the code typed. The install, the uninstall (the schema as found) and the rights put back were checked too, and no POS day was left open. **Not run on the bench:** a cash booking of a refused basket (the bench's day has no drawer, so the till refuses cash before the check's door; read in the till's code, the door refuses it), many retailers (the laptop tests), offline.
+
+## Versions
+
+### 1.1.0
+
+- A rule can ask for a sale of a set amount for each coupon used; a smaller sale is refused at Pay.
+- The service reads the rules with every field, so it still answers retailers on the earlier version.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+
+### 1.0.0
+
+- First version in the kit: a coupon for a first purchase only, or for one customer group.

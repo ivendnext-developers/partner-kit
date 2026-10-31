@@ -8,6 +8,8 @@
 
 A button in iVendNext Desk that hands a record to your own service, which does real work and answers. This sample is for a developer who wants a press in Desk to create something in their system: here, a pick task for a Sales Order.
 
+**Industries:** Distribution and warehousing
+
 **When to use it:** you want a button on a Desk record that sends the record to your service and shows the answer.
 
 ## What happens
@@ -72,6 +74,7 @@ cd samples/s16_pick_route
 python3 service/app.py service/.env.local
 ```
 
+
 ## Many retailers, hosted
 
 The App library's *Pick route* runs this same `service/app.py` for every retailer that installs it, as a function on CitiXsys hosting (`app.json`): it costs nothing between presses. Set `IVN_LIBRARY_APP` (the library's id) and a shops store (`IVN_SHOPS_TABLE` on hosting, `IVN_SHOPS_FILE` on your own server), and `PCK_PREFIX` when the library's record names differ from the sample's (`IVENDNEXT PCK`).
@@ -132,3 +135,11 @@ On our test bench the real button was pressed through `ivendnext_mpos.api.desk_a
 - **Picking a colleague.** iVendNext checks the picker as the user may pick it (the same check as the user's own search). On our bench the button's tests picked the user who pressed; the walk of 2026-10-07 picked a colleague (step 2 above) and the task was made with that picker.
 - **Test routes.** `/test/mode` and `/test/received` exist only when the process starts with `PP_TEST_MODES=1` **and** the caller sends the admin token. A partner's copy deletes them.
 - **`allowed_urls`** names the address of the sample's service (the manifest ships a test address). A partner writes its own. The retailer's server must trust the certificate: a real one for a retailer.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a Desk action that assigns a pick route, serving many retailers as a function.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

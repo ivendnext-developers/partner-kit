@@ -13,6 +13,11 @@ GOOD = json.loads((HERE.parent / "app.json").read_text())
 DOCKERFILE = (HERE.parent / "Dockerfile").read_text()
 
 
+def setting(name, **keys):
+    """One setting as the kit writes it: every setting says its purpose."""
+    return {"name": name, "purpose": f"What to put in {name}", **keys}
+
+
 def bad(**changes):
     m = copy.deepcopy(GOOD)
     m.update(changes)
@@ -21,7 +26,7 @@ def bad(**changes):
 
 class Settings(unittest.TestCase):
     def test_a_setting_may_say_what_it_is(self):  # the hosting page shows it under the setting's box
-        self.assertEqual(bad(env=[{"name": "REGION_X", "about": "The region your app reports in."}]), [])
+        self.assertEqual(bad(env=[setting("REGION_X", about="The region your app reports in.")]), [])
 
     def test_a_container_may_ask_for_a_scratch_folder(self):
         self.assertEqual(bad(scratch=True), [])
@@ -33,24 +38,58 @@ class Settings(unittest.TestCase):
         cases = [
             (bad(app="X"), "app:"), (bad(version="1.0"), "version:"), (bad(port=80), "port:"), (bad(port="8080"), "port:"),
             (bad(health="health"), "health:"), (bad(size="huge"), "size:"), (bad(region="usa"), "region:"), (bad(extra=1), "unknown key"),
-            (bad(env=[{"name": "lower"}]), "capitals"), (bad(env=[{"name": "A_B"}, {"name": "A_B"}]), "twice"),
-            (bad(env=[{"name": "API_TOKEN"}]), "looks like a secret"),
-            (bad(env=[{"name": "API_TOKEN", "secret": False}]), "looks like a secret"),
-            (bad(env=[{"name": "REGION_X", "value": "abc"}]), "never values"), (bad(env="x"), "env: a list"),
-            (bad(env=[{"name": "REGION_X", "about": "two\nlines"}]), "about is one line"),
-            (bad(env=[{"name": "REGION_X", "about": 3}]), "about is one line"),
+            (bad(env=[setting("lower")]), "capitals"), (bad(env=[setting("A_B"), setting("A_B")]), "twice"),
+            (bad(env=[setting("API_TOKEN")]), "looks like a secret"),
+            (bad(env=[setting("API_TOKEN", secret=False)]), "looks like a secret"),
+            (bad(env=[setting("REGION_X", value="abc")]), "never values"), (bad(env="x"), "env: a list"),
+            (bad(env=[setting("REGION_X", about="two\nlines")]), "about is one line"),
+            (bad(env=[setting("REGION_X", about=3)]), "about is one line"),
+            (bad(env=[setting("REGION_X", purpose="two\nlines")]), "its purpose is one line"),
+            (bad(env=[setting("REGION_X", required="yes")]), "required is true or false"),
             (bad(scratch="yes"), "scratch:"),
         ]
         for errors, word in cases:
             self.assertTrue(any(word in e for e in errors), (word, errors))
 
     def test_a_non_secret_name_needs_no_flag_and_a_secret_one_passes_when_marked(self):
-        self.assertEqual(bad(env=[{"name": "LOG_LEVEL"}, {"name": "DB_PASSWORD", "secret": True, "required": True}]), [])
+        self.assertEqual(bad(env=[setting("LOG_LEVEL"), setting("DB_PASSWORD", secret=True, required=True)]), [])
 
     def test_canary_local_mode_is_never_a_hosting_setting(self):
         for name in ("IVN_LOCAL", "IVN_LOCAL_LIBRARY_KEYS"):
-            self.assertTrue(any("never for hosting" in e for e in bad(env=[{"name": name}])), name)
-        self.assertEqual(bad(env=[{"name": "IVN_LOCALE"}]), [])
+            self.assertTrue(any("never for hosting" in e for e in bad(env=[setting(name)])), name)
+        self.assertEqual(bad(env=[setting("IVN_LOCALE")]), [])
+
+    def test_canary_a_setting_with_no_purpose_is_refused(self):  # the line the Settings screen shows
+        want = ("the setting PP_STATE in app.json has no purpose: the line the Settings screen shows")
+        for entry in ({"name": "PP_STATE", "required": True}, {"name": "PP_STATE", "purpose": ""},
+                      {"name": "PP_STATE", "purpose": "   "}, {"name": "PP_STATE", "purpose": 3}):
+            self.assertTrue(any(e.startswith(want) for e in bad(env=[entry])), entry)
+        self.assertEqual(bad(env=[setting("PP_STATE", required=True, together=[])]), [])
+
+    def test_settings_set_together_name_each_other_in_the_same_list(self):
+        pair = [setting("WALLET_SITE", together=["WALLET_MERCHANT"]), setting("WALLET_MERCHANT", together=["WALLET_SITE"])]
+        self.assertEqual(bad(env=pair), [])
+        cases = [
+            ([setting("WALLET_SITE", together="WALLET_MERCHANT"), setting("WALLET_MERCHANT")], "together is a list"),
+            ([setting("WALLET_SITE", together=[3])], "together is a list"),
+            ([setting("WALLET_SITE", together=[{"name": "X"}])], "together is a list"),
+            ([setting("WALLET_SITE", together=["WALLET_MERCHANT"])], "not another setting in its env list"),
+            ([setting("WALLET_SITE", together=["WALLET_SITE"])], "not another setting in its env list"),
+            ([setting("WALLET_SITE", together=["WALLET_MERCHANT"]), setting("WALLET_MERCHANT")], "names WALLET_SITE too"),
+        ]
+        for env, want in cases:
+            got = bad(env=env)
+            self.assertTrue(any(want in e and "WALLET_SITE" in e for e in got), (want, got))
+
+    def test_every_settings_file_in_the_kit_says_each_settings_purpose(self):
+        kit = HERE.parents[2]
+        files = sorted(kit.glob("samples/*/app.json")) + sorted(kit.glob("samples/*/live/app.json")) + [HERE.parent / "app.json"]
+        self.assertGreater(len(files), 30)
+        for f in files:
+            m = json.loads(f.read_text("utf-8"))
+            self.assertEqual(V.check_settings(m), [], f)
+            for e in m["env"]:
+                self.assertTrue(isinstance(e.get("required"), bool) and isinstance(e.get("together"), list), (f, e))
 
     def test_not_an_object(self):
         self.assertEqual(V.check_settings([]), ["app.json is not a JSON object"])
@@ -88,7 +127,7 @@ class FunctionForm(unittest.TestCase):
     """`runs`: an app that says nothing is a container, as before; a function names its handler and package, serves
     many shops and keeps no secret of its own (chapter 14b)."""
     FN = {"runs": "function", "handler": "service/app.lambda_handler", "package": ["service"], "shops": True,
-          "env": [{"name": "IVN_LIBRARY_APP", "required": True}]}
+          "env": [setting("IVN_LIBRARY_APP", required=True)]}
 
     def test_a_function_with_its_handler_and_package_is_ready(self):
         self.assertEqual(bad(**self.FN), [])
@@ -107,7 +146,7 @@ class FunctionForm(unittest.TestCase):
             (bad(**{**self.FN, "package": ["/etc"]}), "package:"),
             (bad(**{**self.FN, "shops": False}), "shops:"),
             (bad(**{**self.FN, "scratch": True}), "scratch:"),
-            (bad(**{**self.FN, "env": [{"name": "IVN_POINT_SECRET", "secret": True, "required": True}]}), "keeps no secret"),
+            (bad(**{**self.FN, "env": [setting("IVN_POINT_SECRET", secret=True, required=True)]}), "keeps no secret"),
             (bad(handler="service/app.lambda_handler"), "handler: only a function"),
             (bad(package=["service"]), "package: only a function"),
         ]

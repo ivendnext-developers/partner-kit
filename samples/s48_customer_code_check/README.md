@@ -4,6 +4,8 @@
 
 The retailer decides which groups of its customers must prove they are at the counter before a sale can use their account: loyalty members before their points are spent, account customers before they buy on account. When the cashier puts such a customer on a sale, iVendNext texts a one-time code to the mobile number on the customer's record, and the cashier types the code the customer reads out. Until the code is right, no door that takes payment takes that customer.
 
+**Industries:** Beauty and cosmetics
+
 **When to use it:** a customer's points, store credit or account must not be used by someone who only knows their name or number, and iVendNext sends text messages through its own SMS gateway.
 
 ## What happens
@@ -85,6 +87,12 @@ python3 samples/s48_customer_code_check/service/app.py samples/s48_customer_code
 
 **Settings, one retailer** (`service/.env.local`, never committed): `IVN_CAPTURE_SECRET` (handed back at install as `pp_ccc:sub:on_select`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. `CCC_PREFIX` names the record types (default `PP CCC`).
 
+## Try it at the till
+
+- Choose a customer in a group that needs a code; the till asks for the code texted to their mobile.
+- Type the code the customer reads out, then sell as usual.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The service is the [app template](../../tools/app_template/README.md)'s shape: set `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`). Each retailer connects itself after its install and hands over the capture's secret and the key of the app's own user (*Connect again* is only for when the site could not reach the app, or a key was lost or changed). Until the key arrives the service answers 503 and the down answer applies. Every call names its retailer's iVendNext (`X-iVendNext-Site`), and each retailer is answered from its own rules and its own code records with its own key.
@@ -144,3 +152,11 @@ What a partner usually changes:
 - **iVendNext's SMS log** keeps each text the gateway was given, the code in it, and the Error Log the address of a text that failed (with a gateway called by GET, the message and its code in it): both are the retailer's System Manager's to read.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. On CitiXsys hosting the first pick after a quiet spell starts the function; past the capture's 5 s, the text included, the down answer applies, flagged.
 - It logs one line per call: the route, the status and the milliseconds, never the body or a code.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a one-time code to the customer's phone before their account is used.
+- Pictures from the demo-site walk, and two measured corrections.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.

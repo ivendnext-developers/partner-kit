@@ -35,7 +35,8 @@ class Base(unittest.TestCase):
         shutil.copytree(TEMPLATE, self.app, ignore=shutil.ignore_patterns("tests", "__pycache__"))
         (self.app / "LICENSE").write_text("Apache License, Version 2.0\n", "utf-8")
         m = json.loads((self.app / "app.json").read_text())
-        m["env"].append({"name": "LOG_LEVEL", "secret": False, "required": False})  # one plain setting
+        m["env"].append({"name": "LOG_LEVEL", "secret": False, "purpose": "How much the app writes to its log",
+                         "required": False, "together": []})  # one plain setting
         (self.app / "app.json").write_text(json.dumps(m))
         self.key = self.tmp / "signing.key"
         HO.publish.keygen(self.key)

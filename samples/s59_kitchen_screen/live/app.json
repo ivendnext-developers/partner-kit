@@ -9,27 +9,41 @@
   {
    "name": "IVN_LIBRARY_APP",
    "about": "The App library's id of the service beside it (ivendnext_ksc for the library's app): the retailers it reads are the ones that connected to that service.",
-   "required": true
+   "purpose": "The App library id of the kitchen screen service beside this one, like ivendnext_ksc",
+   "required": true,
+   "together": []
   },
   {
    "name": "KSC_PREFIX",
    "about": "The prefix of the app's names in the retailer's iVendNext, in capitals, as the service beside it has it (IVENDNEXT KSC for the library's app).",
-   "required": true
+   "purpose": "The prefix of the app's names, as the service beside this one has it, like IVENDNEXT KSC",
+   "required": true,
+   "together": []
   },
   {
    "name": "KSC_PAGE_URL",
    "about": "Where the kitchen's screens reach the service's page (https://kitchen-screen.example.app): only a page from there may open a line.",
-   "required": true
+   "purpose": "The kitchen screen service's web address: only its page may open a line here",
+   "required": true,
+   "together": []
   },
   {
    "name": "IVN_SHOPS_TABLE",
    "about": "The service's own table of the retailers that connected (CitiXsys hosting): this container reads it and never writes it.",
-   "required": true
+   "purpose": "The table of connected retailers that the service beside this one keeps (CitiXsys hosting)",
+   "required": true,
+   "together": [
+    "AWS_REGION"
+   ]
   },
   {
    "name": "AWS_REGION",
    "about": "The table's region (CitiXsys hosting).",
-   "required": true
+   "purpose": "The region that table is in (CitiXsys hosting)",
+   "required": true,
+   "together": [
+    "IVN_SHOPS_TABLE"
+   ]
   }
  ]
 }

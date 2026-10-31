@@ -8,6 +8,8 @@
 
 Three capture services, each at its own address. **On scan** of an item in the named item groups, before its line goes on the sale, the service answers with a warranty reference for the line (a value of a line attribute iVendNext keeps). **On customer add**, before the customer is created, it refuses a customer without a mobile number or with a barred one, and otherwise sends a one-time code: the customer is created only after the right code. **On a quantity change** of a line in the iPad group (POS build 2.0.0.654 on), up to three on a line are allowed, four or five are asked about (*"4 of iPad Air 64GB on one line. Has a manager agreed to more than 3?"*), and more are refused: a refusal or a *No* puts back the last allowed quantity. No answer writes a customer field or moves money.
 
+**Industries:** Electronics and phones
+
 The recipe: [`recipes/capture.md`](../../recipes/capture.md).
 
 ## What the retailer does
@@ -50,6 +52,12 @@ To start the service, run this from the sample's own folder, `samples/s20_captur
 python3 service/app.py service/.env.local
 ```
 
+## Try it at the till
+
+- Scan an iPhone; the till shows a warranty reference. Press Add with these details.
+- Add a new customer; the till asks for the code just sent to their mobile.
+- Close the till day when you are done.
+
 ## What it looks like
 
 Taken on our test bench on 2026-10-10 (product pin: the iVendNext POS app `87812e141`), on iVendNext POS's counter frame (the till, `/pos?frame=terminal`) in a 1440 px wide browser window, light mode, and on its phone frame (`/pos` in a 390 × 844 phone viewport) for the rows marked *the phone*. The cashier is shown as *Thabo Nkosi*, at the kit's demo site *Demo Retail*, store *Store 1 — R1*. The counter frame's basket screens stop above the till's key row (other samples' keys); the GIF's frames are all cut by that one box, and the phone stills are the whole screen. The handset is the bench's `iPhone 15-BLU-128`, and the line attribute *SET5 Warranty ref* is the bench iVendNext's own (*SET5* is the bench's label for the records its tests made). The customer *Nandi Zungu* was made on the bench for this walk and deleted after it; the phone number typed in the walk is made up. The one-time code went to the sample's stand-in gateway and was typed from there: the right code is not in any picture, and the sheet in step 3 is shown empty. The customers listed behind the sheet in steps 3 and 4 are the bench's own test customers.
@@ -65,3 +73,14 @@ Taken on our test bench on 2026-10-10 (product pin: the iVendNext POS app `87812
 | 7. The phone: the sale with the new customer attached | the phone | ![](screenshots/07_phone_customer_attached.png) |
 
 *Handset count* is not in these pictures. On a sandbox site (2026-10-21, POS 2.0.0.658) a copy of the manifest before its last change (both services on iPhone and iPad, renamed to the site's own groups) installed all three services switched off, *Handset count* with `{"event": "qty_change", …}` and `allow_and_flag`, and was uninstalled; no till asked it. Version 0.3.0 as shipped (the quantity service on *iPad* only) was not installed on a sandbox; its quantity service ran in the laptop tests, and the till's side of a quantity change was walked by the product (POS train T12, counter, phone and tablet frames).
+
+## Versions
+
+### 0.3.0
+
+- A third capture, Handset count, asks on a quantity change (POS build 2.0.0.654 or later).
+- The README says to put your own service's address in the manifest before you install.
+
+### 0.1.0
+
+- First version in the kit: a warranty reference on scan, and a member code when a customer is added.
