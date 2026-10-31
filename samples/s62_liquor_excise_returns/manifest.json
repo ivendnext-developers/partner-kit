@@ -1,0 +1,485 @@
+{
+ "manifest_version": 2,
+ "app": "pp_exr",
+ "prefix": "PP EXR",
+ "title": "Liquor excise returns",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A liquor retailer's excise return figures from its own stock: per store and period, the volume and the volume of pure alcohol per duty class, kept as filed. A duty class (PP EXR Duty Class) holds its name and the authority's code; three fields on Item give an item's duty class, its millilitres per stock unit and its strength (alcohol by volume). A return (PP EXR Return) for one company, one store (a warehouse), a period and a unit (Litres or US gallons) has a Desk button while it is a draft: Work out the return (Stock User, Stock Manager) has the service read, from the store's stock ledger, each item's balance at the end of the day before From and at the end of To, and the period's movements, and write twelve lines per duty class: opening stock, received from suppliers, transferred in, returned by customers, other in, sold, transferred out, returned to suppliers, written off, other out, the count difference and closing stock, each in units, volume and pure alcohol. The workflow's File step (Stock Manager only) moves a draft to Filed, and a save rule keeps a filed return's figures as they were (it installs switched off: switch it on); the filing date and reference stay for the manager to fill. The Excise return worksheet prints the lines under the retailer's letter head. The install makes the role and the app's own user; the retailer gives the role Read on Stock Ledger Entry, Stock Entry and Item, and leaves the feed off. No customer, price or money leaves the site: the service reads stock quantities, entries' purposes and items. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8125/exr/work"
+ ],
+ "doctypes": [
+  {
+   "name": "PP EXR Duty Class",
+   "autoname": "field:class_name",
+   "track_changes": 1,
+   "title_field": "class_name",
+   "search_fields": "return_code",
+   "sort_field": "class_name",
+   "sort_order": "ASC",
+   "permissions": [
+    {
+     "role": "Stock User",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Item Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP EXR Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ],
+   "fields": [
+    {
+     "fieldname": "class_name",
+     "fieldtype": "Data",
+     "label": "Duty class",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "description": "As your excise authority names it: Spirits, Wine, Beer, Ready to drink, or a strength band."
+    },
+    {
+     "fieldname": "return_code",
+     "fieldtype": "Data",
+     "label": "Authority's code",
+     "in_list_view": 1,
+     "description": "The code or line your return form gives this class, if it has one. It prints beside the class."
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Notes",
+     "description": "Such as which products belong here, or the rule that sets the band."
+    }
+   ]
+  },
+  {
+   "name": "PP EXR Return Line",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "duty_class",
+     "fieldtype": "Link",
+     "label": "Duty class",
+     "options": "PP EXR Duty Class",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2
+    },
+    {
+     "fieldname": "return_code",
+     "fieldtype": "Data",
+     "label": "Authority's code",
+     "read_only": 1
+    },
+    {
+     "fieldname": "movement",
+     "fieldtype": "Select",
+     "label": "Movement",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 3,
+     "options": "Opening stock\nReceived from suppliers\nTransferred in\nReturned by customers\nOther in\nSold\nTransferred out\nReturned to suppliers\nWritten off\nOther out\nCount difference\nClosing stock"
+    },
+    {
+     "fieldname": "units",
+     "fieldtype": "Float",
+     "label": "Units",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 1,
+     "precision": "3",
+     "description": "In each item's stock unit."
+    },
+    {
+     "fieldname": "volume",
+     "fieldtype": "Float",
+     "label": "Volume",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2,
+     "precision": "3",
+     "description": "In the return's unit."
+    },
+    {
+     "fieldname": "pure_alcohol",
+     "fieldtype": "Float",
+     "label": "Pure alcohol",
+     "read_only": 1,
+     "in_list_view": 1,
+     "columns": 2,
+     "precision": "3",
+     "description": "The volume times each item's strength, in the return's unit."
+    }
+   ]
+  },
+  {
+   "name": "PP EXR Return",
+   "autoname": "format:EXR-R-{#####}",
+   "track_changes": 1,
+   "title_field": "store",
+   "search_fields": "store,from_date,to_date",
+   "sort_field": "to_date",
+   "sort_order": "DESC",
+   "permissions": [
+    {
+     "role": "Stock User",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Stock Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "Accounts Manager",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP EXR Integration",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ],
+   "fields": [
+    {
+     "fieldname": "company",
+     "fieldtype": "Link",
+     "label": "Company",
+     "options": "Company",
+     "reqd": 1,
+     "set_only_once": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "label": "Store",
+     "options": "Warehouse",
+     "reqd": 1,
+     "set_only_once": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "The store's warehouse. One return a store: its stock ledger is read, nothing else."
+    },
+    {
+     "fieldname": "unit",
+     "fieldtype": "Select",
+     "label": "Volumes in",
+     "options": "Litres\nUS gallons",
+     "default": "Litres",
+     "reqd": 1
+    },
+    {
+     "fieldname": "col1",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "from_date",
+     "fieldtype": "Date",
+     "label": "From",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "to_date",
+     "fieldtype": "Date",
+     "label": "To",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "Inclusive. Work the return out once every till of the store has synced and its last day is closed."
+    },
+    {
+     "fieldname": "lines_section",
+     "fieldtype": "Section Break",
+     "label": "Lines"
+    },
+    {
+     "fieldname": "summary",
+     "fieldtype": "Small Text",
+     "label": "Summary",
+     "read_only": 1
+    },
+    {
+     "fieldname": "lines",
+     "fieldtype": "Table",
+     "label": "Lines",
+     "options": "PP EXR Return Line",
+     "read_only": 1
+    },
+    {
+     "fieldname": "worked_out_by",
+     "fieldtype": "Data",
+     "label": "Worked out by",
+     "read_only": 1
+    },
+    {
+     "fieldname": "col2",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "worked_out_at",
+     "fieldtype": "Data",
+     "label": "Worked out at",
+     "read_only": 1
+    },
+    {
+     "fieldname": "filing_section",
+     "fieldtype": "Section Break",
+     "label": "Filing"
+    },
+    {
+     "fieldname": "filed_on",
+     "fieldtype": "Date",
+     "label": "Filed on",
+     "description": "The day you filed it with the authority. The manager fills it once the return is filed."
+    },
+    {
+     "fieldname": "col3",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "filing_reference",
+     "fieldtype": "Data",
+     "label": "Filing reference",
+     "description": "The authority's receipt or reference number."
+    }
+   ]
+  }
+ ],
+ "custom_fields": [
+  {
+   "dt": "Item",
+   "fieldname": "pp_exr_class",
+   "fieldtype": "Link",
+   "label": "Duty class",
+   "options": "PP EXR Duty Class",
+   "insert_after": "item_group",
+   "in_standard_filter": 1,
+   "description": "For an excise return: the duty class this product is returned under. Leave empty for anything not excisable."
+  },
+  {
+   "dt": "Item",
+   "fieldname": "pp_exr_ml",
+   "fieldtype": "Float",
+   "label": "Millilitres per stock unit",
+   "insert_after": "pp_exr_class",
+   "depends_on": "eval:doc.pp_exr_class",
+   "description": "The volume of one stock unit: 750 for a 750 ml bottle, 9000 for a case of twelve kept in cases."
+  },
+  {
+   "dt": "Item",
+   "fieldname": "pp_exr_abv",
+   "fieldtype": "Percent",
+   "label": "Alcohol by volume",
+   "insert_after": "pp_exr_ml",
+   "depends_on": "eval:doc.pp_exr_class",
+   "description": "The strength printed on the label, such as 40 for a spirit at 40%."
+  }
+ ],
+ "workflows": [
+  {
+   "name": "PP EXR Return",
+   "document_type": "PP EXR Return",
+   "send_email_alert": 0,
+   "states": [
+    {
+     "state": "PP EXR Draft",
+     "allow_edit": "Stock User"
+    },
+    {
+     "state": "PP EXR Filed",
+     "allow_edit": "Stock Manager"
+    }
+   ],
+   "transitions": [
+    {
+     "state": "PP EXR Draft",
+     "action": "PP EXR File",
+     "next_state": "PP EXR Filed",
+     "allowed": "Stock Manager",
+     "allow_self_approval": 1
+    }
+   ]
+  }
+ ],
+ "save_rules": [
+  {
+   "rule_name": "PP EXR return locked once filed",
+   "record_type": "PP EXR Return",
+   "kind": "locked_in_state",
+   "mode": "refuse",
+   "states": [
+    "PP EXR Filed"
+   ],
+   "locked_fields": [
+    "company",
+    "store",
+    "unit",
+    "from_date",
+    "to_date",
+    "lines",
+    "summary",
+    "worked_out_by",
+    "worked_out_at"
+   ],
+   "message": "This return is filed: its store, period and figures stay as they were. Make a new return for a correction."
+  }
+ ],
+ "print_formats": [
+  {
+   "name": "PP EXR Excise return worksheet",
+   "doc_type": "PP EXR Return",
+   "print_format_type": "Jinja",
+   "html": "<div dir=\"auto\" style=\"font-family: Arial, sans-serif; font-size: 11pt;\">\n{% if letter_head and not no_letterhead %}<div class=\"letter-head\">{{ letter_head }}</div>{% endif %}\n{% set state = doc.workflow_state or \"\" %}\n{% if not state.endswith(\" Filed\") %}<p style=\"border: 1px solid #000; padding: 4px; margin: 0 0 8px;\">{{ _(\"Draft: not filed yet.\") }}</p>{% endif %}\n<h2 style=\"margin: 0 0 2px;\">{{ _(\"Excise return\") }} {{ doc.name }}</h2>\n<p style=\"margin: 0;\">{{ doc.store }} &middot; {{ doc.get_formatted(\"from_date\") }} {{ _(\"to\") }} {{ doc.get_formatted(\"to_date\") }} &middot; {{ _(\"Volumes in\") }} {{ _(doc.unit) }}</p>\n{% if state.endswith(\" Filed\") %}<p style=\"margin: 0;\">{{ _(\"Filed on\") }} {{ doc.get_formatted(\"filed_on\") }}{% if doc.filing_reference %} &middot; {{ doc.filing_reference }}{% endif %}</p>{% endif %}\n{% for g in doc.lines|groupby(\"duty_class\") %}\n<h3 style=\"margin: 12px 0 2px;\">{{ g.grouper }}{% if g.list[0].return_code %} &middot; {{ g.list[0].return_code }}{% endif %}</h3>\n<table style=\"width: 100%; border-collapse: collapse;\" border=\"1\" cellpadding=\"4\">\n<tr><th style=\"text-align: start;\">{{ _(\"Movement\") }}</th><th style=\"text-align: end;\">{{ _(\"Units\") }}</th><th style=\"text-align: end;\">{{ _(\"Volume\") }}</th><th style=\"text-align: end;\">{{ _(\"Pure alcohol\") }}</th></tr>\n{% for r in g.list %}<tr{% if r.movement in (\"Opening stock\", \"Closing stock\") %} style=\"font-weight: bold;\"{% endif %}><td>{{ _(r.movement) }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"units\") }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"volume\") }}</td><td style=\"text-align: end;\">{{ r.get_formatted(\"pure_alcohol\") }}</td></tr>\n{% endfor %}</table>\n{% else %}<p style=\"margin: 8px 0 0;\">{{ _(\"No lines: press Work out the return.\") }}</p>\n{% endfor %}\n{% if doc.summary %}<p style=\"margin: 8px 0 0;\">{{ doc.summary }}</p>{% endif %}\n<p style=\"margin: 8px 0 0; font-size: 9pt;\">{{ _(\"Worked out from the store's stock ledger by\") }} {{ doc.worked_out_by or \"\" }}{% if doc.worked_out_at %}, {{ doc.worked_out_at }}{% endif %}. {{ _(\"Out lines are shown as positive figures; a count difference carries its sign. Pure alcohol is the volume times each item's strength.\") }}</p>\n</div>"
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP EXR Duty Class",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/liquor_excise_returns.html#duty-classes"
+  },
+  {
+   "doc_type": "PP EXR Return",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/recipes/liquor_excise_returns.html#returns"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP EXR Return feed",
+   "description": "the return service reads stock, entries and items and writes returns as this user; leave the feed off",
+   "events": [
+    "PP EXR Return"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "work",
+   "point": "desk_action",
+   "label": "Liquor excise returns work out",
+   "endpoint_url": "https://host.docker.internal:8125/exr/work",
+   "timeout_seconds": 10
+  }
+ ],
+ "desk_actions": [
+  {
+   "record_type": "PP EXR Return",
+   "label": "Work out the return",
+   "placement": "form",
+   "service": "work",
+   "roles": [
+    "Stock User",
+    "Stock Manager"
+   ],
+   "on_draft": 1,
+   "on_submitted": 0,
+   "send_fields": "name",
+   "conditions": [
+    {
+     "field": "workflow_state",
+     "operator": "=",
+     "value": "PP EXR Draft"
+    }
+   ],
+   "confirm_text": "Replace this return's lines with the figures from the store's stock ledger now?"
+  }
+ ]
+}
