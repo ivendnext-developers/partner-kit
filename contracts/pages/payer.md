@@ -173,7 +173,8 @@ whose claim reference moved between two asks for the same sale reads as no cover
   one per sale line, `line` (the sale line's position, its `idx`), `payer_share`, `patient_share`, `covered_qty`
   and `gtin`. The journal names its sale in `custom_mpos_payer_pos_invoice`. When the event feed says a sale was
   booked, read the sale, then its record (`/api/resource/Retail Payer Record/<name>`), with your integration user:
-  it needs a plain read on `Retail Payer Record` too. ⚠ Before this release these were columns on the sale and
+  it needs a plain read on `Retail Payer Record` too. The record carries the sale's `company`, so a User Permission
+  on Company narrows that read exactly as it narrows the sale's. ⚠ Before this release these were columns on the sale and
   its lines (`custom_mpos_payer_*`, `custom_mpos_patient_share`); they moved to the record to keep the sale's
   database row inside its limit, and the update copies every sale's values onto its record, checks them and
   removes the columns.
