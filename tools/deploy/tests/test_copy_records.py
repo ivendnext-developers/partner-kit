@@ -5,11 +5,13 @@ A stand-in site in memory: two installs (``ivendnext_bln`` and ``acme_bins``), t
 Item, and records. Proven on a real site as well (the recipe's notes)."""
 
 import copy as copylib
+import http.client
 import io
 import pathlib
 import sys
 import unittest
 from contextlib import redirect_stdout
+from unittest import mock
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import copy_records as C  # noqa: E402
@@ -223,6 +225,34 @@ class Refused(unittest.TestCase):
         s.installs["ivendnext_bln"]["status"] = "uninstalled"
         with self.assertRaises(C.Refused):
             run(s)
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_site_answer_cut_short_is_a_refusal_never_a_crash(self):
+        site = C.Site("https://shop.example", "k", "s")
+        with mock.patch.object(C.urllib.request, "urlopen", cut_answer):
+            with self.assertRaises(C.Refused) as e:
+                site.get("Item", "X")
+        self.assertIn("the site did not answer: IncompleteRead", str(e.exception))
 
 
 if __name__ == "__main__":

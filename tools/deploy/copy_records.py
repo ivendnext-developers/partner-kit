@@ -34,6 +34,7 @@ differs · 2 usage.
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import os
 import sys
@@ -70,8 +71,8 @@ class Site:
             if e.code == 404 and method == "GET":
                 return None
             raise Refused(f"the site answered HTTP {e.code} to {method} {urllib.parse.unquote(path.split('?')[0])}: {_why(e.read())}")
-        except urllib.error.URLError as e:
-            raise Refused(f"the site did not answer: {e.reason}")
+        except (urllib.error.URLError, http.client.HTTPException) as e:
+            raise Refused(f"the site did not answer: {getattr(e, 'reason', type(e).__name__)}")
 
     def get(self, doctype, name):
         got = self._req("GET", f"/api/resource/{urllib.parse.quote(doctype)}/{urllib.parse.quote(name, safe='')}")

@@ -7,6 +7,7 @@ the P-FEED contract).
 
 import ast
 import contextlib
+import http.client
 import io
 import json
 import os
@@ -14,6 +15,7 @@ import sys
 import tempfile
 import unittest
 import urllib.parse
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -474,6 +476,35 @@ class TestChanged(unittest.TestCase):
             store.handled({"id": "e1", "event": "updated", "doc_type": "Customer", "doc_name": "C1"},
                           lambda db: out.append(F.changed(db, "Customer", "C1", "credit_limit", 900)))
             self.assertEqual(out, [(True, None)], "the failed event's value was remembered without the event")
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_shop_answer_cut_short_is_a_feed_error_never_a_crash(self):
+        api = F.Api("https://shop.example", "k", "s")
+        api._opener = mock.Mock(open=cut_answer)
+        with self.assertRaises(F.FeedError) as e:
+            api.call("GET", "/api/resource/Item")
+        self.assertIn("unreachable", str(e.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -15,6 +15,7 @@ the one settings record ``PP MHS Settings`` named ``Default``: the merge rule an
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import sys
@@ -60,7 +61,7 @@ class Shop:
                 return json.loads(r.read() or b"{}")
         except urllib.error.HTTPError as e:
             raise ShopError(f"{method} {path} -> HTTP {e.code}", e.code) from None
-        except (urllib.error.URLError, OSError) as e:
+        except (urllib.error.URLError, OSError, http.client.HTTPException) as e:
             raise ShopError(f"{method} {path} -> {e}") from None
 
     def _list(self, doctype: str, **params) -> list[dict]:

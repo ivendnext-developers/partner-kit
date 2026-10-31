@@ -108,6 +108,9 @@ CANARIES = [
      "test_shops.FileClaim.test_a_claim_is_held_until_deleted_or_stale_and_never_listed"),
     ("the file never lists a claim", "service/shops.py", "if CLAIM_MARK not in n and (", "if (",
      "test_shops.FileClaim.test_a_claim_is_held_until_deleted_or_stale_and_never_listed"),
+    ("a cut answer from the table is a store error, never a crash", "service/dynamo.py", 'ConnectionError, http.client.HTTPException) as e:',
+     'ConnectionError) as e:',
+     "test_shops.AnswerCutShort.test_a_table_answer_cut_short_is_a_store_error_never_a_crash"),
 ]
 
 

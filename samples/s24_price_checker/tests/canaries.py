@@ -76,6 +76,9 @@ CANARIES = [
     ("a hosted copy is connected: the manifest names the service", "manifest.json",
      ' "allowed_urls": [\n  "https://prc.partner.example"\n ],\n', "",
      "test_manifest.Manifest.test_the_shop_sends_nothing_outside_but_the_handshake"),
+    ("a cut answer from the shop is unreadable, never a crash", "service/app.py", 'ConnectionError, ValueError, http.client.HTTPException) as e:',
+     'ConnectionError, ValueError) as e:',
+     "test_service.AnswerCutShort.test_a_shop_answer_cut_short_is_the_shop_unreadable_never_a_crash"),
 ]
 
 

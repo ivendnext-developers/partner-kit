@@ -100,6 +100,9 @@ CANARIES = [
      'filters = [["docstatus", "=", 1]]', "test_shop.Reads.test_the_sales_invoice_read_skips_roll_ups_and_asks_for_x"),
     ("the line discount is per unit times quantity", H, 'off = abs(_num(it.get("discount_amount")) * qty)', 'off = abs(_num(it.get("discount_amount")))',
      "test_history.Visits.test_each_visit_has_the_store_who_served_and_the_discounts"),
+    ("a cut answer from the shop is a shop error, never a crash", A, 'except (urllib.error.URLError, OSError, http.client.HTTPException) as e:',
+     'except (urllib.error.URLError, OSError) as e:',
+     "test_shop.AnswerCutShort.test_a_shop_answer_cut_short_is_a_shop_error_never_a_crash"),
 ]
 
 

@@ -84,6 +84,9 @@ CANARIES = [
     ("the key's secret never signs the check", A,
      '        name = f"{self.app}:{self.app}_{KEY}" if route == PLANS else f"{self.app}:sub:{CHECK}"',
      '        name = f"{self.app}:{self.app}_{KEY}"', T + "Callers.test_the_keys_secret_does_not_sign_the_check"),
+    ("a cut answer from the shop is unreachable, never a crash", "service/shop.py", 'ConnectionError, http.client.HTTPException) as e:',
+     'ConnectionError) as e:',
+     T + "AnswerCutShort.test_a_shop_answer_cut_short_is_the_shop_unreachable_never_a_crash"),
 ]
 
 

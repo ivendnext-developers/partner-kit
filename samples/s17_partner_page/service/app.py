@@ -19,6 +19,7 @@ and ``GET /test/opened`` lists the contexts opened. A partner's copy deletes the
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import sys
@@ -66,7 +67,7 @@ class Board:
                 return r.status, r.read()
         except urllib.error.HTTPError as e:
             return e.code, e.read()
-        except (urllib.error.URLError, OSError):     # unreachable or timed out (TimeoutError is an OSError)
+        except (urllib.error.URLError, OSError, http.client.HTTPException):     # unreachable, timed out (TimeoutError is an OSError) or cut short
             return 0, b""                             # the caller releases the claim; the shop's own once-check still holds
 
     def open(self, data: dict) -> tuple[int, dict]:

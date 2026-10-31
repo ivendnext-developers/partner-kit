@@ -13,6 +13,7 @@ from __future__ import annotations
 import datetime
 import hashlib
 import hmac
+import http.client
 import json
 import os
 import threading
@@ -106,7 +107,7 @@ class TableStore:
                 except (ValueError, AttributeError):
                     kind = "?"
             raise StoreError(f"{op} answered {e.code} {kind}") from None
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
             raise StoreError(f"{op} unreachable ({type(e).__name__})") from None
 
     def get(self, site: str) -> dict | None:

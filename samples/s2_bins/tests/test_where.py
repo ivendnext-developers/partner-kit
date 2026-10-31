@@ -8,6 +8,7 @@ the cashier reads when the app is not set up or the shop cannot be read.
 import base64
 import hashlib
 import hmac
+import http.client
 import io
 import json
 import os
@@ -15,6 +16,7 @@ import sys
 import tempfile
 import threading
 import time
+import types
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -409,6 +411,33 @@ class AsAFunction(unittest.TestCase):
                                 "s.loader.exec_module(m);print(m.core.where_answer.__name__, m.core.TITLE)"],
                                cwd=d, capture_output=True, text=True, env={"IVN_POINT_SECRET": "x"})
             self.assertEqual(r.stdout.strip(), "where_answer Where is it?", r.stderr)
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_list_read_cut_short_is_the_shop_unreadable_never_a_crash(self):
+        with mock.patch.object(where.urllib.request, "build_opener", return_value=types.SimpleNamespace(open=cut_answer)):
+            with self.assertRaises(where.ShopUnreadable) as e:
+                where.read_list("https://shop.example", "k:s", "IVENDNEXT BLN Bin", ["name"], [])
+        self.assertIn("IncompleteRead", str(e.exception))
 
 
 if __name__ == "__main__":

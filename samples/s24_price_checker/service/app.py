@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import collections
 import datetime
+import http.client
 import json
 import os
 import signal
@@ -91,7 +92,7 @@ def _call(url: str, key: str, path: str, body: dict | None = None, timeout: floa
             return json.loads(r.read() or b"{}") or {}
     except urllib.error.HTTPError:
         raise
-    except (urllib.error.URLError, TimeoutError, ConnectionError, ValueError) as e:
+    except (urllib.error.URLError, TimeoutError, ConnectionError, ValueError, http.client.HTTPException) as e:
         raise ShopUnreadable(type(e).__name__) from None
 
 

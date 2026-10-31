@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
+import http.client
 import importlib.util
 import json
 import os
@@ -225,7 +226,7 @@ def send(url: str, data: bytes) -> tuple[int, dict]:
                 return e.code, json.loads(e.read())
             except ValueError:
                 return e.code, {"refused": f"http_{e.code}", "words": "the library did not answer in JSON"}
-    except (urllib.error.URLError, OSError, ValueError) as e:
+    except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException) as e:
         raise Stop(f"the library could not be reached or did not answer in JSON ({type(e).__name__}); nothing is "
                    "known to be published: run it again") from None
 

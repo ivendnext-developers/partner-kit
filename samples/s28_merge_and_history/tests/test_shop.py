@@ -4,6 +4,7 @@ at most x; the merge writes one new count and comments, and never edits or delet
     python3 -m unittest discover -s samples/s28_merge_and_history/tests -p 'test_*.py'
 """
 
+import http.client
 import io
 import json
 import unittest
@@ -62,6 +63,34 @@ class Reads(unittest.TestCase):
         src = open(app.__file__).read()
         self.assertNotIn('"PUT"', src)
         self.assertNotIn('"DELETE"', src)
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_shop_answer_cut_short_is_a_shop_error_never_a_crash(self):
+        s = app.Shop("https://shop.example", "k", "s")
+        with mock.patch.object(app.urllib.request, "urlopen", cut_answer):
+            with self.assertRaises(app.ShopError) as e:
+                s.sales(history.SI, "Ann", 7)
+        self.assertIn("IncompleteRead", str(e.exception))
 
 
 if __name__ == "__main__":

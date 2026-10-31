@@ -61,6 +61,7 @@ A reconciliation pull finds every sale whose webhook never arrived. Nothing is a
 | `service/store.py` | the partner's own store: terms, warranties, handled sales, seen-set, watermark, events |
 | `service/terms.json` | the partner's warranty terms (item or item group → months) |
 | `tests/test_core.py` | tests of the core on recorded sale contexts (`tests/contexts/`) |
+| `tests/test_tenant.py` | the door into iVendNext: an answer cut short is an error the service handles, never a crash |
 
 ## Two ways to use the same core
 
@@ -106,6 +107,7 @@ The stills: walked in a real browser on our test bench, 2026-10-10, iVendNext PO
 | File | What |
 |---|---|
 | `tests/test_core.py` | core tests on contexts **recorded** from the bench's own `build_context` (`tests/contexts/`) |
+| `tests/test_tenant.py` | the door into iVendNext: an answer cut short is an error the service handles, never a crash |
 | *our test bench's own run (not in the kit)* | the end-to-end tests: functional, signature, replay, idempotency, three failed deliveries → reconciliation |
 | *our test bench's own run (not in the kit)* | a canary that proves the end-to-end tests can fail: a receiver with no signature check and no replay set must turn them red |
 

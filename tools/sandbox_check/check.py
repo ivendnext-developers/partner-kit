@@ -116,7 +116,7 @@ class Site:
             conn.request("GET", path, headers=headers)
             resp = conn.getresponse()
             status, raw = resp.status, resp.read()
-        except OSError as e:
+        except (OSError, http.client.HTTPException) as e:
             return 0, {"error": str(e)}
         finally:
             conn.close()

@@ -61,6 +61,12 @@ CANARIES = [
      "test_where.OneShop.test_a_read_gets_only_the_time_left"),
     ("the manifest fills Location from the bin", "manifest.json", '"fetch_from": "bin.location"', '"fetch_from": "aisle.location"',
      "test_where.TheManifest.test_what_is_in_each_bin_fills_its_location_from_the_bin"),
+    ("a cut answer from a list read is unreadable, never a crash", W, 'ConnectionError, ValueError, http.client.HTTPException) as e:',
+     'ConnectionError, ValueError) as e:',
+     "test_where.AnswerCutShort.test_a_list_read_cut_short_is_the_shop_unreadable_never_a_crash"),
+    ("a cut answer from the shop is a tenant error, never a crash", "service/tenant.py", 'except (urllib.error.URLError, TimeoutError, http.client.HTTPException) as e:',
+     'except (urllib.error.URLError, TimeoutError) as e:',
+     "test_tenant.AnswerCutShort.test_an_answer_cut_short_is_a_tenant_error_never_a_crash"),
 ]
 
 

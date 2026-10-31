@@ -16,7 +16,7 @@ python3 -m unittest discover -s tools/feed_client/tests -p 'test_*.py'
 | File | What |
 |---|---|
 | `feed_client.py` | the client: two transports (the engine's feed; the event feed's door), the seen-set, `failed` notes, the nightly `reconcile` (it lists a sale handled before a lost working folder as `unknown`, not `missing`); a CLI (`run`, `backlog`, `reconcile`, `dump`) |
-| `tests/test_client.py` | laptop tests (24): every event once over small pages, a crash before `done`, a failed event, the labels, reconciliation, a lost working folder (handled sales read `unknown`, a skipped one `missing`), the two label tables agree, no redirect followed, the door asked with POST (its stand-in refuses a GET) |
+| `tests/test_client.py` | laptop tests (25): every event once over small pages, a crash before `done`, a failed event, the labels, reconciliation, a lost working folder (handled sales read `unknown`, a skipped one `missing`), the two label tables agree, no redirect followed, the door asked with POST (its stand-in refuses a GET) |
 
 Both transports work on a retailer's iVendNext today. The `door` transport reads the event feed's door, which is live: it is scoped to your own application, and each of its three calls is a POST. The same POST call was read on a test site on 2026-10-09. The `engine` transport reads the older feed and is not scoped; use it only where you are the retailer's one consumer.
 

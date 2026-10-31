@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import getpass
+import http.client
 import json
 import os
 import pathlib
@@ -77,7 +78,7 @@ def send(data: bytes) -> tuple[int, dict]:
                 return e.code, json.loads(e.read())
             except ValueError:
                 return e.code, {"refused": f"http_{e.code}", "words": "the hosting did not answer in JSON"}
-    except (urllib.error.URLError, OSError, ValueError) as e:
+    except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException) as e:
         raise Stop(f"the hosting could not be reached ({type(e).__name__}); nothing is known to be done: run it again") from None
 
 

@@ -5,6 +5,7 @@ key ("reader" may read, "writer" may also write). The bench test (run_mcp.sh) re
 """
 
 import ast
+import http.client
 import http.server
 import json
 import os
@@ -15,6 +16,7 @@ import tempfile
 import threading
 import unittest
 import urllib.request
+from unittest import mock
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent
@@ -72,6 +74,23 @@ def start(handler, srv=None):
 
 
 COMMENT = {"comment_type": "Comment", "reference_doctype": "Item", "reference_name": "ITEM-1", "content": "hello"}
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
 
 
 class T(unittest.TestCase):
@@ -234,6 +253,22 @@ class T(unittest.TestCase):
         mods = {n.names[0].name.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.Import)} | \
                {n.module.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
         self.assertEqual(mods - set(sys.stdlib_module_names) - {"__future__"}, set())
+
+    def test_a_read_cut_short_says_the_shop_could_not_be_reached(self):
+        srv = S.Server("https://shop.example", audit=self.audit)
+        srv._opener = mock.Mock(open=cut_answer)
+        r = self.call(srv, "listItems", {})
+        self.assertTrue(r["isError"])
+        self.assertEqual(r["content"][0]["text"], "The shop could not be reached.")
+        self.assertIn("unreachable: IncompleteRead", open(self.audit).read())
+
+    def test_a_write_cut_short_says_it_may_have_been_made_and_is_never_retried_blindly(self):
+        srv = S.Server("https://shop.example", writes=True, audit=self.audit)
+        srv._opener = mock.Mock(open=cut_answer)
+        r = self.call(srv, "createComment", {"body": COMMENT, "confirm": True}, "writer")
+        self.assertTrue(r["isError"])
+        self.assertIn("The write may have been made", r["content"][0]["text"])
+        self.assertIn("unknown: no answer (IncompleteRead)", open(self.audit).read())
 
 
 if __name__ == "__main__":
