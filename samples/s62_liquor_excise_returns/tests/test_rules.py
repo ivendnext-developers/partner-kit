@@ -166,7 +166,9 @@ class Press(unittest.TestCase):
     def test_return_of_takes_one_return(self):
         ctx = {"v": 1, "user": "u", "records": [{"doctype": exr.RETURN, "name": "EXR-R-00001"}]}
         self.assertEqual(exr.return_of({"point": "desk_action/1", "context": ctx}), ("EXR-R-00001", "u"))
+        two = [{"doctype": exr.RETURN, "name": "EXR-R-00001"}, {"doctype": exr.RETURN, "name": "EXR-R-00002"}]
         for bad in ({"point": "x", "context": ctx}, {"point": "desk_action/1", "context": dict(ctx, records=[])},
+                    {"point": "desk_action/1", "context": dict(ctx, records=two)},
                     {"point": "desk_action/1", "context": dict(ctx, records=[{"doctype": exr.CLASS, "name": "x"}])},
                     {"point": "desk_action/1", "context": dict(ctx, records=[{"doctype": exr.RETURN, "name": ""}])}):
             with self.assertRaises(ValueError):

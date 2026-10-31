@@ -37,7 +37,7 @@ CANARIES = [
      "        return RECEIVED if inward else SOLD", R + "Kinds.test_each_voucher_type_and_purpose_has_its_line"),
     ("a year at most", C, "    if (b - a).days >= MOST_DAYS:", "    if False:", R + "Period.test_bounds_and_refusals"),
     ("a balance never from a cancelled row", S, '        base = [["warehouse", "=", store], ["is_cancelled", "=", 0]]\n        ends',
-     '        base = [["warehouse", "=", store]]\n        ends', T + "test_s5c_a_movement_one_second_after_the_period_and_a_cancelled_row_before_it_stay_out"),
+     '        base = [["warehouse", "=", store]]\n        ends', T + "test_s5c_a_cancelled_row_before_the_period_stays_out_and_a_row_at_its_first_second_is_in_it"),
     ("a balance strictly before its moment", S, '                              base + [["posting_datetime", "<", before]]',
      '                              base + [["posting_datetime", "<=", before]]', S1),
     ("one return a press", C, '    if len(ctx["records"]) != 1:', "    if False:", R + "Press.test_return_of_takes_one_return"),

@@ -223,11 +223,13 @@ class ServiceTest(unittest.TestCase):
                              (200, app.LOCK_OFF.format(exr.LOCK_RULE), []), rules)
             self.assertNotIn("Stock Ledger Entry", [r[1] for r in s.reads])
 
-    def test_s5c_a_movement_one_second_after_the_period_and_a_cancelled_row_before_it_stay_out(self):
+    def test_s5c_a_cancelled_row_before_the_period_stays_out_and_a_row_at_its_first_second_is_in_it(self):
         self.s.move("VODKA", "2026-09-30 23:59:59", "Sales Invoice", "SINV-Y", -9, cancelled=1)   # cancelled, at the end
-        self.s.move("BEER6", "2026-10-01 00:00:00", "Purchase Receipt", "PR-ZERO", 0)              # at the start: in it
+        self.s.move("BEER6", "2026-10-01 00:00:00", "Purchase Receipt", "PR-EDGE", 2)              # at the start: in it
         self.press()
-        self.assertEqual(self.lines()[("Spirits", "Opening stock")][0], 36.0)
+        got = self.lines()
+        self.assertEqual(got[("Spirits", "Opening stock")][0], 36.0)
+        self.assertEqual((got[("Beer", "Opening stock")][0], got[("Beer", "Received from suppliers")][0]), (5.0, 5.0))
 
     def test_s6_a_return_saved_meanwhile_is_never_written_over(self):
         orig = self.s.rows

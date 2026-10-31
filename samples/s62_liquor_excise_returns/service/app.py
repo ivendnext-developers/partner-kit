@@ -70,7 +70,8 @@ BUDGET_S = 7.0                       # the whole press: past it, the press stops
 NOT_SET_UP = ("Liquor excise returns is not set up yet: no key from this site has reached it. Ask your manager to check "
               "that the app's user has its key and, if the site could not reach the app, or a key was lost or changed, "
               "to press Connect again on the app.")
-REFUSED = ("Liquor excise returns may not read the stock ledger, stock entries and items, or write the return. Ask your "
+REFUSED = ("Liquor excise returns may not read the stock ledger, stock entries, items or the lock rule (Retail Save Rule), "
+           "or write the return. Ask your "
            "manager to check the app's user, its role and its rights (the app's set-up names them).")
 CONNECT_AGAIN = " Then press Connect again on the app."    # many retailers: a new key reaches the service only that way
 CHANGED = "The return was changed while this press read it. Open it again and press once more."
@@ -81,7 +82,8 @@ EMPTY_STORE = ("This store has no stock movements up to the end of the period, s
                "the store is a warehouse that holds stock (not a group of warehouses), and that the app's user has no User "
                "Permission that limits what it reads. Nothing was written.")
 BAD_UNIT = "Choose the unit, Litres or US gallons, then save the return."
-LOCK_OFF = ("Switch on the rule {} in Retail Save Rule first: a filed return is kept as filed only while it is on. "
+LOCK_OFF = ("Switch on the rule {} in Retail Save Rule, set to refuse, first: a filed return is kept as filed only while "
+            "it is. "
             "Nothing was written.")
 
 

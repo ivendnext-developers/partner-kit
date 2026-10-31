@@ -2,7 +2,7 @@
 ledger and the Stock Entries. The ledger keeps its balances as the site's does: rows ordered by ``posting_datetime`` then
 ``creation``, each row's ``qty_after_transaction`` its item's balance in its warehouse after it, and a stock count
 (Stock Reconciliation of an item without batches) written with ``actual_qty`` 0 and the counted balance. Reads honour the
-filters the service sends (=, !=, <, >, >=, in, not in, is set) and add up with ``group_by`` (``sum(f) as a``,
+filters the service sends (=, !=, <, <=, >, >=, in, not in, is set) and add up with ``group_by`` (``sum(f) as a``,
 ``max(f) as a``) as the site's list API does; a write carrying a stale ``modified`` is refused as the site does.
 """
 
@@ -34,10 +34,10 @@ def _match(row: dict, flt) -> bool:
     if op == "is":
         assert v == "set", v
         return got not in (None, "")
-    if op in ("<", ">", ">="):
+    if op in ("<", "<=", ">", ">="):
         if got is None:
             return False
-        return {"<": got < v, ">": got > v, ">=": got >= v}[op]
+        return {"<": got < v, "<=": got <= v, ">": got > v, ">=": got >= v}[op]
     raise AssertionError(f"filter {op} not in the stand-in")
 
 
