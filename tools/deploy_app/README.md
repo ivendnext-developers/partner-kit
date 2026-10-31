@@ -27,7 +27,9 @@ It prints `PLANNED:` and what would be created, or one `REFUSED:` line per probl
 ## Order online
 
 ```bash
-python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --partner <your code> --github <owner>/<repo> --accept-schedule
+python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --partner <your code> --accept-schedule
+python3 tools/deploy_app/deploy_app.py push <your app folder> --partner <your code> --order <id>
+python3 tools/deploy_app/deploy_app.py back --partner <your code> --order <id> --to <earlier version>
 python3 tools/deploy_app/deploy_app.py status --partner <your code>
 python3 tools/deploy_app/deploy_app.py secret --partner <your code> --order <id> --env sandbox --name IVN_POINT_SECRET   # value on stdin
 python3 tools/deploy_app/deploy_app.py cancel --partner <your code> --order <id>
@@ -37,14 +39,22 @@ python3 tools/deploy_app/deploy_app.py cancel --partner <your code> --order <id>
   `keygen`, default `~/.ivendnext/library-signing.key`, or `--key`, or `IVN_LIBRARY_KEY`). It prints a Stripe checkout
   address, or with `--invoice --email <address>` says an invoice is on its way. Plain settings: `--set NAME=VALUE`, each
   one your `app.json` names. One order runs every copy the plan has (production and its sandbox, and staging on
-  Standard and Managed) at the plan's one price; fewer: `--copies prod,sandbox`. A branch other than `main`:
-  `--branch`. `--dry-run` sends nothing.
+  Standard and Managed) at the plan's one price; fewer: `--copies prod,sandbox`. `--dry-run` sends nothing. An order
+  names no GitHub repository: each version is uploaded (`push`).
 - Your app's name starts with your maker word (`acme` → `acme-points`).
 - Once it is paid, the hosting builds each copy; `status` shows each copy's state (building, waiting for its
-  secrets, live, a version refused or one that did not start, held, stopped), its address, where your GitHub pushes to,
-  and the line to set as the variable `IVN_HOSTING_ROLES`. Copy [`hosting-workflow.yml`](hosting-workflow.yml) into your
-  repository's `.github/workflows/`: it pushes each version to every copy that line lists. Secrets are set per copy
-  (`secret --env <copy>`).
+  secrets, live, a version refused or one that did not start, held, stopped), its address, the versions it has had, and
+  the latest upload's build: *Building 1.0.1…*, *Building 1.0.1… Built.*, or, when it did not build, the hosting's
+  words and the build's last 50 lines. Secrets are set per copy (`secret --env <copy>`).
+- `push` zips the app's folder (every file but `.git`, `.env…` files, `.samples` and `__pycache__`; a function: its
+  `app.json` and its package, from `--root` as `--zip` reads it; the same bytes for the same files), asks
+  the hosting for the upload's address with a signed request to `https://hosting.ivendnext.app/v1/upload`, and uploads
+  the zip there. The hosting builds it on its side for every copy: a container's image for ARM64 from its Dockerfile,
+  or a function's package from its `package` paths (inside the folder), zipped as `--zip` does. Raise `app.json`'s
+  `"version"` for each upload; a version is never built twice. An upload over its limit is refused before anything is
+  built (a function's package 50 MB, a container's image 1,024 MB).
+- `back --to <earlier version>` puts an earlier version live again under a new, higher number (the next one after your
+  newest, or `--version`): the hosting copies that version's image or package; nothing is built.
 - Exit code: 0 done · 1 refused · 2 usage. The signed request uses its own signing domain
   (`ivendnext-hosting-order/1`), so it can never be replayed as a library upload, nor an upload as an order.
 

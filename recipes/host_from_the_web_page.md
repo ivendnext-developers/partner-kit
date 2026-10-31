@@ -1,12 +1,12 @@
 # Host your app from the web page, screen by screen — the recipe
 
-You can have CitiXsys run your app's outside service with no command: on the developer site's hosting page you sign in with GitHub, say which repository and app, name the customer, choose a plan, pay, and watch the app go live. This recipe walks every screen of that page with a real example, so you know what each box wants before you reach it. It is for anyone who builds for iVendNext: an iVendNext Partner, a licensed customer's IT team, CitiXsys's own teams. You sign in with your own GitHub account; you never need to join our GitHub organisation.
+You can have CitiXsys run your app's outside service with no command: on the developer site's hosting page you sign in with GitHub, give your app's settings, name the customer, choose a plan, pay, upload your app as a zip, and watch it go live. This recipe walks every screen of that page with a real example, so you know what each box wants before you reach it. It is for anyone who builds for iVendNext: an iVendNext Partner, a licensed customer's IT team, CitiXsys's own teams. You sign in with your own GitHub account; you never need to join our GitHub organisation.
 
 **The example.** A company whose maker word is `acme` hosts the kit's S18 sample, started as `ACME RLG`, for its customer `acme-stores`. Put your own names where the example has `acme`.
 
 ## Before you start
 
-Have these four things ready. The page asks for each one.
+Have these three things ready. The page asks for each one.
 
 1. **Your app, made with the kit.** For the example, from the kit's folder:
 
@@ -14,10 +14,9 @@ Have these four things ready. The page asks for each one.
    python3 tools/manifest/start.py s18_rule_guard --prefix "ACME RLG"
    ```
 
-   It makes the folder `apps/acme_rlg` in your repository, with the app's `app.json` in it.
-2. **Your app in a GitHub repository made from the kit** (your copy of the kit, where `start.py` put the app), with the kit's workflow copied in: `tools/deploy_app/hosting-workflow.yml` goes to `.github/workflows/` in that repository. For the example, the repository is `acme/acme-apps`.
-3. **The iVendNext App Hosting GitHub App installed on that repository:** open `https://github.com/apps/ivendnext-app-hosting/installations/new`, choose your account or organisation, choose *Only select repositories*, tick the repository, and press **Install**. The App can write the repository's Actions variables and nothing else; it never reads your code. With it, the page lists your repository, fills in its sign-in subject and sets its Variables for you.
-4. **Your settings' values and the customer's code.** Your `app.json` names your app's plain settings; the page shows each with a line saying what it is. The customer's code is the one on the customer's *Made for you* shelf in the App library: the code you name when you publish to that customer. Ask your account team if you do not have it.
+   It makes the folder `apps/acme_rlg` in your copy of the kit, with the app's `app.json` in it.
+2. **Once it is paid, the zip you upload.** No GitHub repository, no workflow and nothing to install: you upload each version and the hosting builds it. For the example, a function made with `start.py`, make the zip from the kit's folder (its package names paths from there) with `python3 tools/deploy_app/deploy_app.py push apps/acme_rlg --root . --partner acme --save acme-rlg-1.1.1.zip`; for a container, a zip of the app's folder is enough.
+3. **Your settings' values and the customer's code.** Your `app.json` names your app's plain settings; the page shows each with a line saying what it is. The customer's code is the one on the customer's *Made for you* shelf in the App library: the code you name when you publish to that customer. Ask your account team if you do not have it.
 
 No hosting account yet? Sign in all the same: the page offers **Request access**, and a CitiXsys person approves it on the same page (below).
 
@@ -34,41 +33,37 @@ Open `https://developer.ivendnext.com/hosting`. The form is at the top, under *O
 
 ### 1. Your app
 
-3. **Repository:** choose `acme/acme-apps` from the list. Not in the list? Type it in **Or type it** and press Tab. The page looks it up and fills in **Its sign-in subject**. If it cannot see the repository, it says so: check the name, or install the App on it and press **Look again**, or paste the line the command it shows prints on your computer.
-4. **Branch:** `main`, or the branch your workflow pushes from.
-5. **Folder that holds app.json:** `apps/acme_rlg`
-6. **app.json:** press **Choose file** and pick `apps/acme_rlg/app.json`, or paste the file's text into the box.
-7. The page shows the app's name, version and kind, then one box per setting. For the example, the two marked **(required)**:
+3. **app.json:** press **Choose file** and pick `apps/acme_rlg/app.json`, or paste the file's text into the box.
+4. The page shows the app's name, version and kind, then one box per setting. For the example, the two marked **(required)**:
    - **Setting IVN_LIBRARY_APP (required):** `acme_rlg` (the id you publish the app under in the App library)
    - **Setting RGD_PREFIX (required):** `ACME RLG` (the prefix you gave `start.py`)
 
    Leave the others empty unless you need them.
-8. Press **Next**.
+5. Press **Next**.
 
 ### 2. Your customer
 
-9. Choose **Built for a customer** and type `acme-stores` (or choose **Not for a customer** for an app of your own).
-10. Press **Next**.
+6. Choose **Built for a customer** and type `acme-stores` (or choose **Not for a customer** for an app of your own).
+7. Press **Next**.
 
 ### 3. Plan, copies and terms
 
-11. Choose the plan. **Starter** runs a production copy and a sandbox copy; **Standard** and **Managed** add a staging copy. One order runs the copies you tick at the plan's one price.
-12. Choose how to pay: **Pay monthly by card**, or **An invoice with payment terms** and the address the invoices go to.
-13. Read the **App Hosting Schedule** (the link opens it) and tick **I accept the App Hosting Schedule**.
-14. Press **Check the order**. The hosting checks it, reserving nothing, and answers with the app's addresses and its price, or names what to change.
-15. Press **Next**.
+8. Choose the plan. **Starter** runs a production copy and a sandbox copy; **Standard** and **Managed** add a staging copy. One order runs the copies you tick at the plan's one price.
+9. Choose how to pay: **Pay monthly by card**, or **An invoice with payment terms** and the address the invoices go to.
+10. Read the **App Hosting Schedule** (the link opens it) and tick **I accept the App Hosting Schedule**.
+11. Press **Check the order**. The hosting checks it, reserving nothing, and answers with the app's addresses and its price, or names what to change.
+12. Press **Next**.
 
 ### 4. Pay
 
-16. Press **Order**. With a card, press **Pay by card**: Stripe's checkout opens in a new tab. Pay there, then come back to this tab. With an invoice, it is sent to the address you gave; the app is built once it is paid.
+13. Press **Order**. With a card, press **Pay by card**: Stripe's checkout opens in a new tab. Pay there, then come back to this tab. With an invoice, it is sent to the address you gave; the app is built once it is paid.
 
 ### 5. Follow it to live
 
-17. The page shows each copy and where it stands: *waiting for the payment*, *being built*, *built, waiting for its secrets and its first version*, *live*.
-18. **Your GitHub workflow:** press **Set them on your repository**. The page sets the Variables your workflow needs on the order's repository. If it cannot (the App is not installed there), it lists each one with a **Copy** button: set them under *Settings > Secrets and variables > Actions > Variables* in your repository.
-19. **Your app's secrets** (a container's `"secret": true` settings): type the values you have, for any copy and in any order, and press **Set the values you typed**. Each is sent once and never shown again. Under each box the page says *Has a value* or *No value yet*, so after a reload or a new sign-in you type only what is missing. If you try to leave, reload or move to another step while a box still holds a value, the page asks first.
-20. Push to your branch. Each copy gets the version in your `app.json` and goes **live**.
-21. Once every copy is live, the page shows the **Publish** button and the `publish.py` command: put the app on your customer's shelf from there. The hosting page itself never publishes. Then the customer's administrator installs it from *Made for you* on the customer's site, and your app answers there at its address.
+14. The page shows each copy and where it stands: *waiting for the payment*, *being built*, *built, waiting for its secrets and its first version*, *live*.
+15. **Upload a version:** once every copy is built, choose the zip (for the example, `acme-rlg-1.1.1.zip`). The page reads its version from the zip's `app.json`, uploads it, and the hosting builds it on its side for every copy: the page shows *Building 1.1.1…*, then *Building 1.1.1… Built.* If it did not build, the page shows *⟨version⟩ did not build. The last 50 lines of the build are below.* with those lines: fix it, raise `app.json`'s version, and upload again. A zip over its limit is refused before anything is built (an app that runs only when called at most 50 MB, one that runs all the time at most 1,024 MB).
+16. **Your app's secrets** (a container's `"secret": true` settings): type the values you have, for any copy and in any order, and press **Set the values you typed**. Each is sent once and never shown again. Under each box the page says *Has a value* or *No value yet*, so after a reload or a new sign-in you type only what is missing. If you try to leave, reload or move to another step while a box still holds a value, the page asks first.
+17. Once every copy is live, the page shows the **Publish** button and the `publish.py` command: put the app on your customer's shelf from there. The hosting page itself never publishes. Then the customer's administrator installs it from *Made for you* on the customer's site, and your app answers there at its address.
 
 ## Later
 

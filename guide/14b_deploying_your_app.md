@@ -116,15 +116,14 @@ python3 tools/deploy_app/deploy_app.py <your app folder> --image <registry>/<rep
 
 **An app that only answers presses runs as a function**, run only when called, not as an always-on container: see [A function or a container](14b_deploying_your_app.md#a-function-or-a-container) in this chapter.
 
-**A new version:** push it from your GitHub ([Updates from your GitHub](14b_deploying_your_app.md#updates-from-your-github)), or, for an app we put live by hand, send the new version's tag on the same order.
+**A new version:** upload it ([Upload a new version](14b_deploying_your_app.md#upload-a-new-version)), or, for an app we put live by hand, send the new version's tag on the same order.
 
 ## Order and pay online
 
 One command orders the hosting, signed with the key you already publish to the App library with (`tools/publish`, `keygen`). Your company's hosting account holds its monthly spending cap and how many apps it holds; the web page's *Request access* makes one ([From the web page](#from-the-web-page)). The command also needs your signing key registered in the App library, under your hosting account's code.
 
 ```bash
-python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --partner <your code> \
-    --github <owner>/<repository> --github-subject <its sign-in subject prefix> --accept-schedule
+python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --partner <your code> --accept-schedule
 ```
 
 1. **It checks your app** exactly as planning does (above), and refuses what the hosting refuses.
@@ -134,7 +133,7 @@ python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --
 5. **You pay.** It prints a Stripe checkout address: pay monthly by card. With `--invoice --email <address>` you get an invoice with payment terms instead; the app is built once the invoice is paid. An app that runs as a function and is listed in the App library carries no charge, so its order needs no payment.
 6. **We build it, with no person.** Once it is paid, the hosting makes each copy's address, its own registry or package folder, its secret store and its firewall. `deploy_app.py status --partner <your code>` shows where each copy stands: building, waiting for its secrets, live, held, or stopped, with the reason when one of your versions was refused or did not start, and the date the hosting stops if you cancelled.
 7. **Put each secret** your `app.json` marks `"secret": true` (a container), on each copy: `deploy_app.py secret --partner <your code> --order <id> --env sandbox --name <NAME>`, with the value on standard input. Each copy has its own values. It is never shown, never in a file, and kept only in that copy's own secret store.
-8. **Push the first version** from your GitHub (below). The app goes live once its image or package and its secrets are there, and its health check answers.
+8. **Upload the first version** with `deploy_app.py push` (below). The app goes live once it is built, its secrets are there, and its health check answers.
 
 Plain (not secret) settings go on the order: `--set LOG_LEVEL=info`. Each must be a setting your `app.json` names.
 
@@ -147,21 +146,28 @@ Plain (not secret) settings go on the order: `--set LOG_LEVEL=info`. Each must b
 The same order runs with no command on the developer site's hosting page, `https://developer.ivendnext.com/hosting`. Every screen of it, with a real example: [Host your app from the web page](../recipes/host_from_the_web_page.md).
 
 1. **Sign in with GitHub,** with your own GitHub account. Your hosting account says which company you order for and what it pays. CitiXsys's own people come straight in. Anyone else, the first time, presses **Request access** and gives the company's name, a work email and a line on what it builds; a CitiXsys person approves it on the same page, which makes your company's hosting account, and the page opens it. **You never need to join our GitHub organisation.** If your GitHub account orders for more than one hosting account, you choose one, and you pay that account's price.
-2. **Your app:** pick your repository from your list, or type it, with its branch and the folder that holds `app.json`, and drop in your `app.json`. The page checks it with the hosting and shows the command that checks the Dockerfile, the licence files and the package on your computer.
+2. **Your app:** drop in your `app.json`. The page checks it with the hosting and shows the command that checks the Dockerfile, the licence files and the package on your computer.
 3. **Your customer** (their code: the one on the customer's *Made for you* shelf; the page offers the ones your earlier orders named), **then the plan, its copies and the App Hosting Schedule,** as with the command. Check the order, then order it.
 4. **Pay** in Stripe's checkout, which opens in a new tab, or by an invoice. The page follows the order while you pay.
-5. **Follow it to live.** Once it is paid, the page sets your workflow's two Variables on the order's repository (or lists them for you to copy), takes each copy's secrets (each value sent once, never shown), and shows each copy's state until it is live. Then it shows the Publish button and the `publish.py` command that put the app on your customer's shelf. It does not publish. Next, publish the app to that customer's shelf; its administrator installs it from *Made for you* on the customer's site, and your app answers there at its address.
+5. **Follow it to live.** Once it is paid and built, **Upload a version** takes your app's folder as a zip (the hosting builds it and shows *Building…*, *Built.*, or the last 50 lines of a build that failed), takes each copy's secrets (each value sent once, never shown), and shows each copy's state until it is live. Then it shows the Publish button and the `publish.py` command that put the app on your customer's shelf. It does not publish. Next, publish the app to that customer's shelf; its administrator installs it from *Made for you* on the customer's site, and your app answers there at its address.
 6. **My apps** lists every order with its copies, where each stands, and its plan; cancel one at the end of the paid month from there.
 
-**The page's GitHub App.** To list your repositories and set the Variables, install the *iVendNext App Hosting* GitHub App on your app's repository (the page links it). It can write that repository's Actions variables and nothing else: it never reads your code. Without it, type the repository and set the Variables yourself. Your GitHub sign-in stays on our server and ends when you sign out or after three hours. The page keeps the steps you filled in, in that browser tab, and, while GitHub signs you in, a one-use check value it throws away when you come back; never your sign-in or a secret.
+**Your GitHub sign-in is only who you are.** The page reads no repository and writes nothing to GitHub, and you install nothing. Your GitHub sign-in stays on our server and ends when you sign out or after three hours. The page keeps the steps you filled in, in that browser tab, and, while GitHub signs you in, a one-use check value it throws away when you come back; never your sign-in or a secret.
 
-## Updates from your GitHub
+## Upload a new version
 
-Copy [`tools/deploy_app/hosting-workflow.yml`](../tools/deploy_app/hosting-workflow.yml) to `.github/workflows/` in your app's repository and set the variable it names (`IVN_HOSTING_ROLES`, the line `status` prints: one role per copy). Each push to the branch your order names pushes the version in your `app.json` to every copy listed, and the hosting puts it live on each through the same checks as the first one. Each copy gets its own build of the same commit. To try a version on the sandbox first, list only the sandbox's role; when it is right, add the others and run the workflow again by hand: a copy that already has that version is left as it is. No secret is stored in GitHub: GitHub signs each run in to one role of ours, which can push only your app's new version.
+Each version is uploaded, not pushed from GitHub: you need no repository, no workflow, no Variables and no AWS sign-in. Zip your app's folder and upload it; the hosting builds it on its side, for every copy of your order, and puts it live through the same checks as the first one.
 
-- **Raise the version for every release.** A version is never overwritten. To go back, release the earlier code under a new version number.
-- **A version above your plan's limits is refused** (a package over 50 MB).
-- **The role trusts your repository and branch exactly.** A repository made since 2025 signs in to AWS with a subject that carries its owner's and its own numeric ids: give it with the order, `--github-subject "$(gh api repos/<owner>/<repo>/actions/oidc/customization/sub --jq .sub_claim_prefix)"`. Then a repository deleted and made again under the same name can never push your app. Without it, the role trusts the older subject, `repo:<owner>/<name>`. If your organisation has changed the subject's other parts, set them back for this repository, or the sign-in is refused.
+```bash
+python3 tools/deploy_app/deploy_app.py push <your app folder> --partner <your code> --order <id>
+```
+
+- **What goes up.** `push` zips the folder that holds `app.json` (every file but `.git`, `.env…` files, `.samples` and `__pycache__`; for a function, its `app.json` and its package, read from `--root` as `--zip` reads it), signs the request with your publishing key, and uploads the zip. On the hosting page, **Upload a version** takes the same zip: make it of the app's folder.
+- **What we build.** A container is built from its Dockerfile for ARM64 and pushed to each copy's own registry as the version in `app.json`; a function's `package` paths are zipped exactly as `deploy_app.py --zip` does, so they must lie inside the folder. `deploy_app.py status` (and the page) says *Building 1.0.1…*, then *Building 1.0.1… Built.*, and the copies go live.
+- **When it does not build,** `status` says *⟨version⟩ did not build. The last 50 lines of the build are below. Your sites still run ⟨previous version⟩.*, with those lines. Fix it, raise the version, and push again.
+- **Raise the version for every upload.** A version is never built twice or overwritten.
+- **Size limits.** An upload larger than its limit is refused before anything is built: *Not kept: this upload is ⟨size⟩ MB; a function's package can be at most 50 MB, a container's image at most 1,024 MB. Nothing was built.*
+- **Go back to an earlier version:** `deploy_app.py back --partner <your code> --order <id> --to 1.0.1` puts the earlier version live again under a new, higher number (1.0.3 holding 1.0.1's content). Nothing is built: the hosting copies what it already has. A container can go back to one of its newest 10 versions.
 
 **The part inside the retailer's iVendNext is separate.** Your manifest reaches each customer's site through its administrator's install screen, with the customer's consent (chapter 14a); `tools/deploy` puts it on your own sandbox. Hosting runs only your outside service. An app that is not a container in this template's shape is a Managed job: ask us.
 
