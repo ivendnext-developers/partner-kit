@@ -19,6 +19,13 @@ A liquor store files an excise return every month or quarter: what it held and w
 | A correction | A new return for the same period. A filed return never changes. A draft that is not wanted (a wrong period, a copy) is put aside with *Actions*, *PP EXR Drop* (Stock User): a dropped return is locked too |
 | The service down | The button's own words: *did not answer in time. Check the record before you try again.* Nothing is written |
 
+| What the back office sees (on a demo site, 2026-10-31) | |
+|---|---|
+| What the install will change, read before you consent | ![](screenshots/01_install.png) |
+| A liquor item's duty class, millilitres and strength | ![](screenshots/02_item.png) |
+| A return worked out: the summary and the first duty class's lines | ![](screenshots/03_return.png) |
+| A filed return's worksheet: one table per duty class, the authority's code beside it | ![](screenshots/04_worksheet.png) |
+
 ## What iVendNext does
 
 1. **Install the app** from the App library (or paste its manifest into **Retail Extension Package** in Desk), read what it will do and consent. It comes in switched off: its service has no consent and is off, its button is off, and its lock rule is off. The install adds the record types *PP EXR Duty Class* and *PP EXR Return* (with its table of lines), three fields on Item, the workflow *PP EXR Return*, the lock rule and the print *PP EXR Excise return worksheet*, and makes the role **PP EXR Integration** and the app's own user, `pp_exr@integration.invalid`, with that role alone (API only, never Desk; give it no User Permissions).
