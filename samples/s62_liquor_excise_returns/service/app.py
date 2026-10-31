@@ -43,6 +43,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -61,6 +62,8 @@ RIGHTS_KINDS = ("PermissionError",)  # a 417 that is a rights problem; any other
 LEDGER = "Stock Ledger Entry"
 CHUNK_BYTES = 2000                   # the values' bytes a read, as sent: the request line stays under 4 KB (S23's
                                      # PRICE_CHUNK); 200 ledger times a read was 8.4 KB (the Tier-S review)
+AT_ONCE = 4                          # chunk reads run this many at a time: about 50 ledger times a read, so a store of
+                                     # 2,000 liquor items needs about 40 reads, ten rounds of four (the folds' re-grade)
 READ_S = 6                           # one read may take this long, within BUDGET_S; the site waits 10 seconds at most,
                                      # and a hosted function's cold start (about 2.5 s, APPF run 9) comes first
 BUDGET_S = 7.0                       # the whole press: past it, the press stops before it writes anything
@@ -214,23 +217,29 @@ class Service:
         return min(READ_S, rest)
 
     def _in(self, door, doctype, fields, field, values, t0, filters=()) -> list:
-        """``rows`` for a long list of values, ``CHUNK_BYTES`` of them a read."""
-        out = []
-        for chunk in chunks(sorted(set(values))):
-            out += door.rows(doctype, fields, list(filters) + [[field, "in", chunk]], timeout=self.left(t0))
-        return out
+        """``rows`` for a long list of values, ``CHUNK_BYTES`` of them a read, ``AT_ONCE`` reads at a time."""
+        reads = [list(filters) + [[field, "in", c]] for c in chunks(sorted(set(values)))]
+        if len(reads) < 2:
+            return [r for f in reads for r in door.rows(doctype, fields, f, timeout=self.left(t0))]
+        with ThreadPoolExecutor(max_workers=AT_ONCE) as pool:     # a read's failure is raised here, as one after another
+            parts = list(pool.map(lambda f: door.rows(doctype, fields, f, timeout=self.left(t0)), reads))
+        return [r for part in parts for r in part]
 
-    def balances(self, door, store: str, before: str, items: dict, t0: float) -> tuple[dict, int]:
-        """(each item's balance in ``store`` at ``before`` (exclusive): its last ledger row's ``qty_after_transaction``,
-        the number of items of any kind the store's ledger holds before then)."""
+    def balances(self, door, store: str, start: str, end: str, items: dict, t0: float) -> tuple[dict, dict, int]:
+        """(each item's balance in ``store`` at ``start`` and at ``end`` (each exclusive): its last ledger row's
+        ``qty_after_transaction``, the number of items of any kind the store's ledger holds before ``end``). The rows at
+        both ends' last times are read in one pass: an item that did not move in the period has the same time at both."""
         base = [["warehouse", "=", store], ["is_cancelled", "=", 0]]
-        every = door.rows(LEDGER, ["item_code", "max(posting_datetime) as last_at"],
-                          base + [["posting_datetime", "<", before]], group_by="item_code", timeout=self.left(t0))
-        ats = [r for r in every if r.get("item_code") in items]
-        ats = [{"item_code": r["item_code"], "at": r.get("last_at")} for r in ats if r.get("last_at")]
+        ends = []
+        for before in (start, end):
+            every = door.rows(LEDGER, ["item_code", "max(posting_datetime) as last_at"],
+                              base + [["posting_datetime", "<", before]], group_by="item_code", timeout=self.left(t0))
+            ends.append([{"item_code": r["item_code"], "at": r["last_at"]} for r in every
+                         if r.get("item_code") in items and r.get("last_at")])
+        times = {str(a["at"]) for side in ends for a in side}
         rows = self._in(door, LEDGER, ["name", "item_code", "posting_datetime", "creation", "qty_after_transaction"],
-                        "posting_datetime", [str(a["at"]) for a in ats], t0, filters=base) if ats else []
-        return exr.last_balances(ats, rows), len(every)
+                        "posting_datetime", times, t0, filters=base) if times else []
+        return exr.last_balances(ends[0], rows), exr.last_balances(ends[1], rows), len(every)
 
     def work(self, door, r: dict, user: str, t0: float) -> dict:
         bounds = exr.period(r.get("from_date"), r.get("to_date"))
@@ -243,8 +252,7 @@ class Service:
         items = {i["name"]: exr.item_of(i) for i in door.rows(
             "Item", ["name", "item_name", exr.FIELD + "class", exr.FIELD + "ml", exr.FIELD + "abv"],
             [[exr.FIELD + "class", "is", "set"]], timeout=self.left(t0)) if i.get("name")}
-        opening, _ = self.balances(door, store, start, items, t0) if items else ({}, 0)
-        closing, held = self.balances(door, store, end, items, t0) if items else ({}, 0)
+        opening, closing, held = self.balances(door, store, start, end, items, t0) if items else ({}, {}, 0)
         if items and not held:           # a group of warehouses, or a user permission: never an empty return to file
             return _warning(EMPTY_STORE)
         span = [["warehouse", "=", store], ["is_cancelled", "=", 0], ["posting_datetime", ">=", start],
@@ -262,8 +270,8 @@ class Service:
         purposes = {e["name"]: e.get("purpose") for e in self._in(
             door, "Stock Entry", ["name", "purpose"], "name", {e.get("voucher_no") for e in entries if e.get("voucher_no")},
             t0)} if entries else {}
-        lines, missing, counted = exr.work_out(items, opening, closing, moves, entries, purposes, r["unit"], codes)
-        words = exr.summary_of(lines, missing, counted, r["unit"])
+        lines, missing, counted, counts = exr.work_out(items, opening, closing, moves, entries, purposes, r["unit"], codes)
+        words = exr.summary_of(lines, missing, counted, r["unit"], counts)
         self.left(t0)                   # out of time after the reads: nothing is written
         door.update(exr.RETURN, r["name"], {"lines": exr.as_written(lines), "summary": words, "worked_out_by": user,
                                             "worked_out_at": self.now().strftime("%Y-%m-%d %H:%M UTC"),

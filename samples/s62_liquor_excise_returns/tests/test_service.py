@@ -105,7 +105,7 @@ WANT = {
     ("Wine", "Closing stock"): ("3", "2.250", "0.281"),
 }
 SUMMARY = ("3 duty classes, 5 items. Sold 13.860 litres (3.283 litres of pure alcohol); closing stock 40.130 litres. "
-           "Stock counts changed -1.400 litres. 1 item has no litres or no strength, so its volume or pure alcohol is "
+           "Stock counts changed -1.400 litres in all. 1 item has no litres or no strength, so its volume or pure alcohol is "
            "left out (units counted): Rum.")
 
 
@@ -150,7 +150,7 @@ class ServiceTest(unittest.TestCase):
 
     def test_s2_the_reads_are_few_and_never_a_row_a_sale(self):
         self.press()
-        self.assertEqual(len(self.s.reads), 11, self.s.reads)       # the return, classes, items, 5 grouped, 2 balances, purposes
+        self.assertEqual(len(self.s.reads), 10, self.s.reads)       # the return, classes, items, 5 grouped, the balances, purposes
         ledger = [r for r in self.s.reads if r[1] == "Stock Ledger Entry"]
         grouped = [r for r in ledger if r[3]]
         self.assertEqual(len(grouped), 5, ledger)                   # two last times, in, out, the entries
@@ -204,7 +204,7 @@ class ServiceTest(unittest.TestCase):
     def test_s5_only_a_draft_with_a_store_a_period_and_a_unit_is_worked_out(self):
         cases = [({"workflow_state": exr.FILED}, app.NOT_DRAFT), ({"store": ""}, app.NO_STORE),
                  ({"company": None}, app.NO_STORE), ({"unit": "Gallons"}, app.BAD_UNIT),
-                 ({"to_date": "2026-09-30"}, "To is before From. Correct the period, save, and work it out again."),
+                 ({"to_date": "2026-09-30"}, "To is before From. Drop this return (Actions) and make a new one for the period."),
                  ({"from_date": None}, "Fill From and To, then save the return."),
                  ({"from_date": "2025-01-01", "to_date": "2026-01-02"}, "A return covers at most 366 days. Make one return a period.")]
         for change, words in cases:
@@ -234,10 +234,10 @@ class ServiceTest(unittest.TestCase):
         self.assertIn("ran out of time", out["error"])
 
     def test_s7b_reads_done_but_the_time_gone_writes_nothing(self):
-        svc = app.Service(CONF, self.s, clock=lambda: 8.0 if len(self.s.reads) >= 11 else 0.1)
+        svc = app.Service(CONF, self.s, clock=lambda: 8.0 if len(self.s.reads) >= 10 else 0.1)
         raw = body()
         code, out = svc.handle("POST", "/exr/work", signed(raw, CONF["PP_WORK_SECRET"]), raw)
-        self.assertEqual((code, len(self.s.reads), self.s.writes), (502, 11, []))
+        self.assertEqual((code, len(self.s.reads), self.s.writes), (502, 10, []))
 
     def test_s8_the_apps_user_refused_by_the_site_is_said_in_words(self):
         for refuse in ((403, "PermissionError"), (417, "PermissionError")):

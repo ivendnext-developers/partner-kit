@@ -30,7 +30,7 @@ Three fields on **Item**: `pp_exr_class` (a Link to the duty class, a standard f
 
 ## Returns
 
-The record type `PP EXR Return`, numbered `format:EXR-R-{#####}`, tracked: `company` and `store` (a Warehouse), `unit` (**Volumes in**: *Litres* or *US gallons*), `from_date` and `to_date` (both inclusive), all five `set_only_once` so the lines are always of the return's own period, the read-only `summary`, `lines`, `worked_out_by` and `worked_out_at` the service writes, and `filed_on` and `filing_reference`. Its table `PP EXR Return Line`, all read only: `duty_class`, `return_code`, `movement`, `units`, `volume`, `pure_alcohol` (three places each).
+The record type `PP EXR Return`, numbered `format:EXR-R-{#####}`, tracked: `company` and `store` (a Warehouse), `unit` (**Volumes in**: *Litres* or *US gallons*), `from_date` and `to_date` (both inclusive), all five `set_only_once` so the lines the service writes are always of the return's own period, the read-only `summary`, `lines`, `worked_out_by` and `worked_out_at` the service writes, and `filed_on` and `filing_reference`. Its table `PP EXR Return Line`, all read only: `duty_class`, `return_code`, `movement`, `units`, `volume`, `pure_alcohol` (three places each).
 
 **The lines**, twelve per duty class with stock or a movement, in this order: *Opening stock*, *Received from suppliers*, *Transferred in*, *Returned by customers*, *Other in*, *Sold*, *Transferred out*, *Returned to suppliers*, *Written off*, *Other out*, *Count difference*, *Closing stock*. Out lines are positive figures; *Count difference* carries its sign. Opening plus the in lines, less the out lines, plus the count difference, is the closing.
 
@@ -60,10 +60,11 @@ The record type `PP EXR Return`, numbered `format:EXR-R-{#####}`, tracked: `comp
 
 - **The books as they stand when it is worked out:** a late till sync or a back-dated entry changes the books, not a filed return; the next return's opening then differs from this one's closing by it. Work a return out once the store's tills have synced and its last day is closed.
 - **A till's sales are dated when its day is closed** (the day's combined invoice takes the closing's date): close each till's last day of the period before midnight, or that day's sales count in the next period.
-- **By document type:** an internal (inter-company) delivery or receipt counts as *Sold* or *Received*; a *Material Receipt* as *Received from suppliers*. An item variant needs its own three fields. Units add each item's own stock unit; a US proof gallon is twice a pure-alcohol gallon. The count difference also carries the rounding (a thousandth).
+- **By document type:** an internal (inter-company) delivery or receipt counts as *Sold* or *Received*; a *Material Receipt* as *Received from suppliers*. An item variant needs its own three fields. Units add each item's own stock unit; a US proof gallon is twice a pure-alcohol gallon. The count difference also carries the rounding (a few thousandths).
 - **An item missing its millilitres or strength** is counted in units only for what it lacks, and the summary names it.
 - **A count and a movement at the same second** are not told apart; the sum stands.
-- **One store and one period a press**, at most 366 days. A store with very many items and long history can run out of the press's time: work the return out for a shorter period.
+- **One store and one period a press**, at most 366 days. A store with very many liquor items can run out of the press's time (about 50 balance times a read, four reads at a time); a shorter period does not shorten it.
+- **The app's user holds no User Permission:** one silently narrows what it reads.
 - **Duty, rates and the authority's form** are a version of your own: add them on top of these figures.
 - **A return with no lines can be filed:** a workflow step cannot ask for lines; the manager checks them before *File*.
 - **A System Manager can switch the lock off or delete a return;** no other role may. The return's history shows it.

@@ -62,17 +62,19 @@ class Balances(unittest.TestCase):
 
 class WorkOut(unittest.TestCase):
     def test_a_count_is_what_is_left_and_the_figures_close(self):
-        lines, missing, n = exr.work_out({"G": GIN}, {"G": D(10)}, {"G": D(6)},
+        lines, missing, n, _ = exr.work_out({"G": GIN}, {"G": D(10)}, {"G": D(6)},
                                          [{"item_code": "G", "voucher_type": "Sales Invoice", "qty": -3}], [], {}, "Litres")
         f = {ln["movement"]: (ln["units"], ln["volume"], ln["pure_alcohol"]) for ln in lines}
         self.assertEqual(f[exr.COUNT], (D("-1.000"), D("-0.700"), D("-0.280")))
         self.assertEqual(f[exr.SOLD], (D("3.000"), D("2.100"), D("0.840")))
         self.assertEqual((missing, n, len(lines)), ([], 1, 12))
+        self.assertTrue(exr.work_out({"G": GIN}, {"G": D(10)}, {"G": D(6)},
+                                     [{"item_code": "G", "voucher_type": "Sales Invoice", "qty": -3}], [], {}, "Litres")[3])
 
     def test_stock_entries_net_per_entry_and_by_purpose(self):
         entries = [{"item_code": "G", "voucher_no": "E1", "qty": -2}, {"item_code": "G", "voucher_no": "E1", "qty": 2},
                    {"item_code": "G", "voucher_no": "E2", "qty": -1}, {"item_code": "G", "voucher_no": "E3", "qty": 4}]
-        lines, _, _ = exr.work_out({"G": GIN}, {}, {"G": D(3)}, [], entries, {"E1": "Material Transfer",
+        lines, _, _, _ = exr.work_out({"G": GIN}, {}, {"G": D(3)}, [], entries, {"E1": "Material Transfer",
                                                                               "E2": "Material Issue"}, "Litres")
         f = {ln["movement"]: ln["units"] for ln in lines}
         self.assertEqual((f[exr.TRANSFERRED_OUT], f[exr.WRITTEN_OFF], f[exr.OTHER_IN], f[exr.COUNT]),
@@ -81,19 +83,19 @@ class WorkOut(unittest.TestCase):
     def test_counts_and_entries_are_never_read_from_the_voucher_type_totals(self):
         moves = [{"item_code": "G", "voucher_type": "Stock Reconciliation", "qty": 5},
                  {"item_code": "G", "voucher_type": "Stock Entry", "qty": 5}]
-        lines, _, _ = exr.work_out({"G": GIN}, {}, {"G": D(5)}, moves, [], {}, "Litres")
+        lines, _, _, _ = exr.work_out({"G": GIN}, {}, {"G": D(5)}, moves, [], {}, "Litres")
         f = {ln["movement"]: ln["units"] for ln in lines}
         self.assertEqual((f[exr.OTHER_IN], f[exr.RECEIVED], f[exr.COUNT]), (D(0), D(0), D(5)))
 
     def test_items_without_a_class_or_any_figure_are_left_out(self):
-        lines, _, n = exr.work_out({"G": GIN}, {"X": D(9)}, {}, [{"item_code": "X", "voucher_type": "Sales Invoice",
+        lines, _, n, _ = exr.work_out({"G": GIN}, {"X": D(9)}, {}, [{"item_code": "X", "voucher_type": "Sales Invoice",
                                                                  "qty": -1}], [], {}, "Litres")
         self.assertEqual((lines, n), ([], 0))
 
     def test_missing_litres_or_strength_counts_units_and_names_the_item(self):
         items = {"R": {"item_name": "Rum", "class": "Spirits", "litres": None, "abv": D(40)},
                  "W": {"item_name": "Wine", "class": "Wine", "litres": D("0.75"), "abv": None}}
-        lines, missing, _ = exr.work_out(items, {"R": D(2), "W": D(4)}, {"R": D(2), "W": D(4)}, [], [], {}, "Litres")
+        lines, missing, _, _ = exr.work_out(items, {"R": D(2), "W": D(4)}, {"R": D(2), "W": D(4)}, [], [], {}, "Litres")
         f = {(ln["duty_class"], ln["movement"]): (ln["units"], ln["volume"], ln["pure_alcohol"]) for ln in lines}
         self.assertEqual(f[("Spirits", exr.OPENING)], (D(2), D(0), D(0)))
         self.assertEqual(f[("Wine", exr.OPENING)], (D(4), D("3.000"), D(0)))
@@ -101,19 +103,19 @@ class WorkOut(unittest.TestCase):
 
     def test_us_gallons_and_rounding_once_per_line_half_up(self):
         items = {k: dict(GIN, litres=D("0.0375"), abv=D(40)) for k in ("A", "B")}
-        lines, _, _ = exr.work_out(items, {"A": D(1), "B": D(1)}, {"A": D(1), "B": D(1)}, [], [], {}, "Litres")
+        lines, _, _, _ = exr.work_out(items, {"A": D(1), "B": D(1)}, {"A": D(1), "B": D(1)}, [], [], {}, "Litres")
         self.assertEqual(lines[0]["volume"], D("0.075"))          # 2 x 0.0375 summed first, never 0.038 + 0.038
         self.assertEqual(lines[0]["pure_alcohol"], D("0.030"))
-        lines, _, _ = exr.work_out({"A": dict(GIN, litres=D("0.25"), abv=D(25))}, {"A": D(1)}, {"A": D(1)}, [], [], {}, "Litres")
+        lines, _, _, _ = exr.work_out({"A": dict(GIN, litres=D("0.25"), abv=D(25))}, {"A": D(1)}, {"A": D(1)}, [], [], {}, "Litres")
         self.assertEqual(lines[0]["pure_alcohol"], D("0.063"))    # 0.0625: half up, never the even 0.062
-        lines, _, _ = exr.work_out({"A": dict(GIN, litres=D(1))}, {"A": D(1)}, {"A": D(1)}, [], [], {}, "US gallons")
+        lines, _, _, _ = exr.work_out({"A": dict(GIN, litres=D(1))}, {"A": D(1)}, {"A": D(1)}, [], [], {}, "US gallons")
         self.assertEqual(lines[0]["volume"], D("0.264"))          # 1 / 3.785411784 = 0.26417…
         with self.assertRaises(ValueError):
             exr.work_out({}, {}, {}, [], [], {}, "Gallons")
 
     def test_each_printed_column_adds_up_after_rounding(self):
         wine = {"item_name": "Wine", "class": "Wine", "litres": D("0.75"), "abv": D("12.5")}
-        lines, _, _ = exr.work_out({"W": wine, "V": dict(wine)}, {"W": D(2)}, {"W": D(3), "V": D(1)},
+        lines, _, _, _ = exr.work_out({"W": wine, "V": dict(wine)}, {"W": D(2)}, {"W": D(3), "V": D(1)},
                                    [{"item_code": "W", "voucher_type": "Purchase Receipt", "qty": 1},
                                     {"item_code": "V", "voucher_type": "Purchase Receipt", "qty": 1}], [], {}, "Litres")
         f = {ln["movement"]: ln for ln in lines}
@@ -122,10 +124,19 @@ class WorkOut(unittest.TestCase):
                              + f[exr.COUNT][col], f[exr.CLOSING][col], col)
         self.assertEqual(f[exr.CLOSING]["pure_alcohol"], D("0.375"))   # 0.28125 + 0.09375, rounded once
         self.assertEqual((f[exr.COUNT]["units"], f[exr.COUNT]["pure_alcohol"]), (D(0), D("-0.001")))
-        self.assertNotIn("Stock counts", exr.summary_of(lines, [], 2, "Litres"))   # rounding alone is no count
+        self.assertNotIn("Stock counts", exr.summary_of(lines, [], 2, "Litres", False))   # rounding alone is no count
+
+    def test_a_count_whose_units_net_to_nothing_is_still_said(self):
+        bottle = {"item_name": "Wine 75cl", "class": "Wine", "litres": D("0.75"), "abv": D(12)}
+        litre = {"item_name": "Wine 1L", "class": "Wine", "litres": D(1), "abv": D(12)}
+        lines, missing, n, counts = exr.work_out({"B": bottle, "L": litre}, {"B": D(5), "L": D(5)},
+                                                 {"B": D(6), "L": D(4)}, [], [], {}, "Litres")
+        f = {ln["movement"]: ln for ln in lines}
+        self.assertEqual((f[exr.COUNT]["units"], f[exr.COUNT]["volume"], counts), (D(0), D("-0.250"), True))
+        self.assertIn("Stock counts changed -0.250 litres in all.", exr.summary_of(lines, missing, n, "Litres", counts))
 
     def test_the_class_code_rides_each_line(self):
-        lines, _, _ = exr.work_out({"G": GIN}, {"G": D(1)}, {"G": D(1)}, [], [], {}, "Litres", {"Spirits": "S1"})
+        lines, _, _, _ = exr.work_out({"G": GIN}, {"G": D(1)}, {"G": D(1)}, [], [], {}, "Litres", {"Spirits": "S1"})
         self.assertEqual({ln["return_code"] for ln in lines}, {"S1"})
 
 
@@ -172,12 +183,12 @@ class Press(unittest.TestCase):
 
 class Words(unittest.TestCase):
     def test_the_summary_in_full(self):
-        lines, missing, n = exr.work_out({"G": GIN}, {"G": D(10)}, {"G": D(7)},
+        lines, missing, n, counts = exr.work_out({"G": GIN}, {"G": D(10)}, {"G": D(7)},
                                          [{"item_code": "G", "voucher_type": "POS Invoice", "qty": -3}], [], {}, "Litres")
-        self.assertEqual(exr.summary_of(lines, missing, n, "Litres"),
+        self.assertEqual(exr.summary_of(lines, missing, n, "Litres", counts),
                          "1 duty class, 1 item. Sold 2.100 litres (0.840 litres of pure alcohol); closing stock 4.900 litres.")
         many = [f"Item {i}" for i in range(5)]
-        self.assertEqual(exr.summary_of(lines, many, n, "US gallons"),
+        self.assertEqual(exr.summary_of(lines, many, n, "US gallons", counts),
                          "1 duty class, 1 item. Sold 2.100 US gallons (0.840 US gallons of pure alcohol); closing stock "
                          "4.900 US gallons. 5 items have no litres or no strength, so their volume or pure alcohol is left "
                          "out (units counted): Item 0, Item 1, Item 2 and 2 more.")

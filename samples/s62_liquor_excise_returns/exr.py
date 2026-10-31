@@ -129,7 +129,7 @@ def period(start, end) -> tuple[str, str] | str:
     if not a or not b:
         return "Fill From and To, then save the return."
     if b < a:
-        return "To is before From. Correct the period, save, and work it out again."
+        return "To is before From. Drop this return (Actions) and make a new one for the period."
     if (b - a).days >= MOST_DAYS:
         return f"A return covers at most {MOST_DAYS} days. Make one return a period."
     return f"{a.isoformat()} 00:00:00", f"{(b + datetime.timedelta(days=1)).isoformat()} 00:00:00"
@@ -179,8 +179,10 @@ def kind_of(voucher_type: str, qty: Decimal, purpose: str | None = None) -> str:
 
 
 def work_out(items: dict[str, dict], opening: dict, closing: dict, moves: list[dict], entries: list[dict],
-             purposes: dict[str, str], unit: str, codes: dict[str, str] | None = None) -> tuple[list[dict], list[str], int]:
-    """(the return's lines, the names of items that moved with no litres or no strength, the count of items counted).
+             purposes: dict[str, str], unit: str, codes: dict[str, str] | None = None
+             ) -> tuple[list[dict], list[str], int, bool]:
+    """(the return's lines, the names of items that moved with no litres or no strength, the count of items counted,
+    whether a stock count changed any item: its closing is not its opening and movements, in exact units).
 
     ``items``: every item with a class (``item_of``); ``opening`` / ``closing``: balances by item; ``moves``: the store's
     totals per item and voucher type (``qty`` signed; Stock Entry and Stock Reconciliation rows are not read here);
@@ -238,7 +240,9 @@ def work_out(items: dict[str, dict], opening: dict, closing: dict, moves: list[d
             rows[COUNT][col] = (rows[CLOSING][col] - rows[OPENING][col]   # column adds up as printed (Tier-S review)
                                 - sum(rows[m][col] for m in INS) + sum(rows[m][col] for m in OUTS))
         lines += [rows[m] for m in MOVEMENTS]
-    return lines, sorted(set(missing)), len(per)
+    counts = any(f.get(CLOSING, Decimal(0)) - f.get(OPENING, Decimal(0)) - sum(f.get(k, Decimal(0)) for k in INS)
+                 + sum(f.get(k, Decimal(0)) for k in OUTS) for f in per.values())
+    return lines, sorted(set(missing)), len(per), counts
 
 
 def _round(v: Decimal) -> Decimal:
@@ -270,7 +274,7 @@ def message(body: str, level: str = "success", refresh: bool = False, title: str
     return out
 
 
-def summary_of(lines: list[dict], missing: list[str], counted: int, unit: str) -> str:
+def summary_of(lines: list[dict], missing: list[str], counted: int, unit: str, counts: bool = False) -> str:
     """The words written on the return and said to the user after *Work out the return*."""
     if not lines:
         return ("Nothing to return: no item with a duty class had stock in this store or moved in this period. "
@@ -280,8 +284,8 @@ def summary_of(lines: list[dict], missing: list[str], counted: int, unit: str) -
     body = (f"{_n(classes, 'duty class', 'duty classes')}, {_n(counted, 'item', 'items')}. "
             f"Sold {_sum(lines, SOLD, 'volume'):,.3f} {u} ({_sum(lines, SOLD, 'pure_alcohol'):,.3f} {u} of pure alcohol); "
             f"closing stock {_sum(lines, CLOSING, 'volume'):,.3f} {u}.")
-    if _sum(lines, COUNT, "units"):          # units are exact: a volume left over by rounding alone is no count
-        body += f" Stock counts changed {_sum(lines, COUNT, 'volume'):+,.3f} {u}."
+    if counts:                               # an item's count, never a thousandth left over by rounding
+        body += f" Stock counts changed {_sum(lines, COUNT, 'volume'):+,.3f} {u} in all."
     if missing:
         names = ", ".join(missing[:3]) + (f" and {len(missing) - 3:,} more" if len(missing) > 3 else "")
         body += (f" {_n(len(missing), 'item has', 'items have')} no litres or no strength, so "

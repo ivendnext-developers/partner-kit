@@ -51,7 +51,7 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual([(t["state"], t["next_state"], t["allowed"]) for t in wf["transitions"]],
                          [(f"{P} Draft", f"{P} Filed", "Stock Manager"), (f"{P} Draft", f"{P} Dropped", "Stock User")])
         self.assertEqual({s["state"]: s["allow_edit"] for s in wf["states"]},
-                         {f"{P} Draft": "Stock User", f"{P} Filed": "Stock Manager", f"{P} Dropped": "Stock User"})
+                         {f"{P} Draft": "Stock User", f"{P} Filed": "Stock Manager", f"{P} Dropped": "System Manager"})
 
     def test_a_filed_return_is_locked_on_every_figure_and_its_source_but_not_the_filing(self):
         rule = self.m["save_rules"][0]
@@ -85,12 +85,14 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(f["pp_exr_class"]["options"], f"{P} Duty Class")
 
     def test_the_print_groups_the_lines_by_class_under_the_letter_head(self):
+        # every volume at three places: the framework's own number format trims trailing zeros (21, 7.50, 0.938 side by
+        # side on the bench's browser pass)
         (pf,) = self.m["print_formats"]
         html = pf["html"]
         self.assertEqual((pf["doc_type"], pf["print_format_type"]), (f"{P} Return", "Jinja"))
         for want in ('groupby("duty_class")', "{% if letter_head and not no_letterhead %}", 'state.endswith(" Filed")',
                      'state.endswith(" Dropped")',
-                     'r.get_formatted("pure_alcohol")', 'dir="auto"'):
+                     '"%.3f"|format(r.volume or 0)', '"%.3f"|format(r.pure_alcohol or 0)', 'dir="auto"'):
             self.assertIn(want, html)
 
     def test_the_address_is_the_services_and_the_feed_says_leave_it_off(self):

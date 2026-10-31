@@ -17,7 +17,7 @@ A duty class as your manifest's own record type, and three fields on Item: the i
 
 ## Limits
 - The figures are the books as they stand when the return is worked out; a late till sync or a back-dated entry changes the next return's opening, never a filed one.
-- One store and one period a press; a store with very many items and long history can run out of the press's time.
+- One store and one period a press; a store with very many liquor items can run out of the press's time.
 - The authority's own form, codes, duty rates and an electronic filing are a version of your own, built on these figures.
 
 ## Tell the customer
