@@ -288,6 +288,7 @@ tr:last-child td { border-block-end: 0; }
 .hosting-bad { color: #a4262c; font-weight: 600; }
 .hosting-ok { color: #107c10; }
 .hosting-before { margin-block-end: var(--ivn-s4); }
+.hosting-build { max-block-size: 20rem; overflow: auto; padding: 0.5rem; border: 1px solid var(--site-line); border-radius: var(--ivn-radius); font-size: 0.8125rem; white-space: pre-wrap; overflow-wrap: anywhere; }   /* a failed build's last 50 lines */
 .hosting-before summary { font-weight: 600; cursor: pointer; }
 .hosting-tool label:has(input:disabled) { color: var(--ivn-text-muted); }   /* a copy that cannot be chosen reads as such */
 .hosting-tool button:focus-visible, .hosting-tool input:focus-visible, .hosting-tool select:focus-visible,

@@ -997,7 +997,8 @@ def plan_tool(here: str) -> str:
             f'<script src="{up}assets/plan.js" defer></script>')
 
 
-HOSTING_API = "https://hosting.ivendnext.app"            # the hosting's web door: hosting.js calls only this
+HOSTING_API = "https://hosting.ivendnext.app"            # the hosting's web door: hosting.js calls this
+UPLOAD_STORE = "https://ivn-selfserve-work-416648266684.s3.us-east-1.amazonaws.com"  # and puts an upload's zip here
 OWN_POLICY = {"hosting.html"}                              # pages that carry their own content policy, no site-wide scripts
 
 
@@ -1010,10 +1011,11 @@ def hosting_tool(here: str) -> str:
 
 
 def page_policy() -> str:
-    """The hosting page's own content policy, in place of the site-wide one: its one script, and the one address it may
-    reach (the hosting's web door). No counter and no search script on it: the page that holds a sign-in runs nothing
+    """The hosting page's own content policy, in place of the site-wide one: its one script, and the two addresses it may
+    reach (the hosting's door, and the hosting's upload store, where a version's zip goes by the address the door
+    signed). No counter and no search script on it: the page that holds a sign-in runs nothing
     else. A meta tag cannot send frame-ancestors: hosting.js refuses to run inside a frame."""
-    return "; ".join(["default-src 'self'", "script-src 'self'", f"connect-src {HOSTING_API}", "img-src 'self' data:",
+    return "; ".join(["default-src 'self'", "script-src 'self'", f"connect-src {HOSTING_API} {UPLOAD_STORE}", "img-src 'self' data:",
                       "font-src 'self'", "style-src 'self'", "object-src 'none'", "base-uri 'self'",
                       "form-action 'self'"])
 

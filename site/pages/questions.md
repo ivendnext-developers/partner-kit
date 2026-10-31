@@ -144,7 +144,7 @@ The administrator finds your app in the App library, reads its card, installs it
 
 ### How do I roll back a bad version?
 
-Release the earlier code under a new, higher version number: a version is never overwritten. For your service on App Hosting, push the earlier code under the new version (on your own server, run the previous tag); for your manifest, publish the earlier content as a higher version, which each chain takes as an update. [Chapter 14b, *Updates from your GitHub*](../../guide/14b_deploying_your_app.md#updates-from-your-github) · [Chapter 14a](../../guide/14a_deploying_to_a_chain.md).
+Release the earlier code under a new, higher version number: a version is never overwritten. For your service on App Hosting, `deploy_app.py back --to <earlier version>` puts the earlier version live again under a new, higher number, with nothing built (on your own server, run the previous tag); for your manifest, publish the earlier content as a higher version, which each chain takes as an update. [Chapter 14b, *Upload a new version*](../../guide/14b_deploying_your_app.md#upload-a-new-version) · [Chapter 14a](../../guide/14a_deploying_to_a_chain.md).
 
 ### How do I test my app on my laptop before I touch a customer?
 

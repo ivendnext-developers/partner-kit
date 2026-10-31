@@ -363,9 +363,9 @@ class SiteTests(unittest.TestCase):
             m = tag.search(f.read_text("utf-8"))
             self.assertTrue(m, f"{f}: no content policy")
             self.assertIn("script-src 'self'", m.group(1))
-            if f.relative_to(self.out).as_posix() in build.OWN_POLICY:   # its own, in place of the site's: one address
+            if f.relative_to(self.out).as_posix() in build.OWN_POLICY:   # its own, in place of the site's: two addresses
                 self.assertEqual(m.group(1), build.page_policy(), f.name)
-                self.assertEqual(re.findall(r"https://[^\s;]+", m.group(1)), [build.HOSTING_API], f.name)
+                self.assertEqual(re.findall(r"https://[^\s;]+", m.group(1)), [build.HOSTING_API, build.UPLOAD_STORE], f.name)
                 self.assertEqual(len(tag.findall(f.read_text("utf-8"))), 1, f.name)
                 continue
             self.assertEqual(set(re.findall(r"https://[^\s;]+", m.group(1))), {f"https://{h}" for h in check_links.ALLOWED_HOSTS}, f.name)

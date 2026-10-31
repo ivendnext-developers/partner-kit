@@ -1,8 +1,11 @@
-// site/assets-src/hosting.js — Host your app from this page: sign in with GitHub, pick your repository and your
-// customer, pick a plan and its copies, pay in a new tab, and follow the order to live (developer.ivendnext.com/hosting).
+// site/assets-src/hosting.js — Host your app from this page: sign in with GitHub, give your app.json and your
+// customer, pick a plan and its copies, pay in a new tab, upload each version as a zip of the app's folder, and follow
+// it to live (developer.ivendnext.com/hosting). No GitHub repository, workflow or Variables: the hosting builds what
+// you upload.
 //
-// It talks to one place, the hosting itself (https://hosting.ivendnext.app/v1/web/), which the page's own content policy
-// is the only address it may reach. Sign-in: GitHub sends the browser back here with a code; this script checks the
+// It talks to the hosting itself (https://hosting.ivendnext.app/v1/web/ and /v1/upload), and sends an upload's zip
+// straight to the hosting's upload store at the one address the hosting signed: the page's own content policy allows
+// those two addresses and no other. Sign-in: GitHub sends the browser back here with a code; this script checks the
 // `state` it kept, takes the code and the state out of the address before anything else, and gives the code and its
 // PKCE verifier to the hosting, which exchanges them on the server. The session it gets back is kept in this script's
 // memory only: a reload signs out. The steps you filled in (never a secret, never the session) are kept for this tab in
@@ -13,6 +16,8 @@
   "use strict";
 
   var API = "https://hosting.ivendnext.app/v1/web";
+  var UPLOAD = "https://hosting.ivendnext.app/v1/upload";       // a new version's upload (the same door as the kit's push)
+  var STORE = "https://ivn-selfserve-work-416648266684.s3.us-east-1.amazonaws.com/";   // where an upload's zip goes
   var PAGE = "https://developer.ivendnext.com/hosting";   // the GitHub App's one callback address
   var KEEP = "ivn-hosting-steps";                          // this tab's steps (no secret)
   var PENDING = "ivn-hosting-signin";                      // the state and verifier of a sign-in on its way, used once
@@ -57,11 +62,6 @@
     return { kind: "none" };
   }
 
-  function subjectFor(repo, plainName) {
-    if (!repo) return "";
-    return plainName ? "" : repo.subject || "";   // empty: the hosting trusts repo:<owner>/<name>
-  }
-
   // What of app.json the order sends: names and shapes, never a value (the kit's hosting_order.app_settings).
   function appSettings(m) {
     var keep = ["app", "version", "runs", "size", "port", "health", "handler", "region", "shops", "scratch", "schedule", "timeout"], out = {};
@@ -97,13 +97,10 @@
 
   function orderPayload(s, cmd, scheduleVersion) {
     var m = JSON.parse(s.appJson);
-    var gh = { repo: s.repo, branch: s.branch || "main" };
-    if (s.folder && s.folder !== ".") gh.folder = s.folder;   // a folder only when one was given: never "." over a hand-set one
-    if (s.subject) gh.subject = s.subject;
     var plain = {};
     Object.keys(s.settings || {}).forEach(function (k) { if (s.settings[k] !== "") plain[k] = s.settings[k]; });
     var p = { cmd: cmd, app: appSettings(m), plan: s.plan, copies: ENVS.filter(function (e) { return (s.copies || []).indexOf(e) >= 0; }),
-              customer: s.forCustomer ? s.customer : "", github: gh, plain_env: plain, invoice: !!s.invoice,
+              customer: s.forCustomer ? s.customer : "", plain_env: plain, invoice: !!s.invoice,
               email: s.invoice ? s.email : "", schedule_version: s.accepted === scheduleVersion ? scheduleVersion : "" };
     if (cmd === "check") delete p.cmd;
     return p;
@@ -121,35 +118,22 @@
     if (c.waiting_for) w += " (waiting for " + [].concat(c.waiting_for).join(", ") + ")";
     if (c.roll_failed) w += " (version " + c.roll_failed + " did not start)";
     if (c.push_refused) w += " (version " + c.push_refused + " was refused)";
+    if (c.push_not_sent) w += " (version " + c.push_not_sent + " reached it from outside an upload and is not put live)";
     return w;
   }
 
-  function settled(order) {   // nothing more to wait for: every copy live, or the order ended
-    var cs = order.copies || [order];
+  // Nothing more to wait for: every copy live and no build running, or the order ended. `uploaded`, a version this tab
+  // just uploaded, is waited for until the hosting says how its build ended (its zip reaches the build a moment later).
+  function settled(order, uploaded) {
+    var cs = order.copies || [order], b = order.build;
+    if (b && b.state === "building") return false;
+    if (uploaded && !(b && b.version === uploaded)) return false;
     return cs.every(function (c) { return c.status === "live" && !c.building; }) ||
       cs.some(function (c) { return ["failed", "expired", "removed", "stopped"].indexOf(c.status) >= 0; });
   }
 
   function ended(o) {   // every copy has ended, as My apps reads it
     return (o.copies || [o]).every(function (c) { return ["expired", "removed", "failed"].indexOf(c.status) >= 0; });
-  }
-
-  // A lookup's answer applied to the steps (pure, tested): GitHub's own spelling of the name wins; a subject the person
-  // typed or emptied (subjectSet) is never replaced; one that names an earlier repository is cleared.
-  function prefill(s, asked, r) {
-    var out = Object.assign({}, s);
-    if (out.repo !== asked) return out;                           // the person has moved on: a late answer changes nothing
-    var mine = r.found && r.can_push !== false;
-    if (mine && r.repo !== asked) out.repo = r.repo;              // renamed, moved, or typed in other letter case
-    if (out.subject && !subjectNames(out.subject, out.repo)) { out.subject = ""; out.subjectSet = false; }
-    if (mine && !out.subjectSet) out.subject = r.subject;
-    out.looked = Object.assign({}, r, { asked: out.repo });
-    return out;
-  }
-
-  function subjectNames(subject, repo) {   // the subject's owner/name (either form) is this repository
-    var m = /^repo:([^@/]+)(?:@\d+)?\/([^@:]+)(?:@\d+)?$/.exec(subject || "");
-    return !!m && (m[1] + "/" + m[2]).toLowerCase() === String(repo || "").toLowerCase();
   }
 
   function checkCommand(s, maker, m) {
@@ -169,13 +153,67 @@
     return c.secrets_set.indexOf(name) >= 0 ? "Has a value. Type a new one only to replace it." : "No value yet.";
   }
 
+  // An upload's zip: the app.json at its top, or in its one top folder (a zip made of the folder itself), read in the
+  // browser before anything is sent, so the version uploaded is the one the zip holds. Only the zip's end (its list of
+  // files) and app.json are read, never the whole file. `src` is the zip's bytes, or { size, read(start, end) } giving
+  // a promise of a Uint8Array (the page's chosen file). Stored or deflated entries.
+  function zipAppJson(src) {
+    var r = src instanceof Uint8Array ? { size: src.length, read: function (a, b) { return Promise.resolve(src.subarray(a, b)); } } : src;
+    var NOT = "That file is not a zip. Zip your app's folder, the one that holds app.json, and choose the zip.";
+    var BAD = "That zip cannot be read. Zip the app's folder again.";
+    var tailFrom = Math.max(0, r.size - 65557);
+    return r.read(tailFrom, r.size).then(function (tail) {
+      var dv = new DataView(tail.buffer, tail.byteOffset, tail.byteLength), end = -1;
+      for (var i = tail.length - 22; i >= 0; i--) if (dv.getUint32(i, true) === 0x06054b50) { end = i; break; }
+      if (end < 0) throw new Error(NOT);
+      var n = dv.getUint16(end + 10, true), cdSize = dv.getUint32(end + 12, true), cdAt = dv.getUint32(end + 16, true);
+      if (cdAt + cdSize > r.size) throw new Error(BAD);
+      return r.read(cdAt, cdAt + cdSize).then(function (cd) {
+        var cv = new DataView(cd.buffer, cd.byteOffset, cd.byteLength), at = 0, all = {};
+        for (var k = 0; k < n; k++) {
+          if (at + 46 > cd.length || cv.getUint32(at, true) !== 0x02014b50) throw new Error(BAD);
+          var nlen = cv.getUint16(at + 28, true);
+          all[new TextDecoder().decode(cd.subarray(at + 46, at + 46 + nlen))] = {
+            method: cv.getUint16(at + 10, true), csize: cv.getUint32(at + 20, true), size: cv.getUint32(at + 24, true),
+            local: cv.getUint32(at + 42, true) };
+          at += 46 + nlen + cv.getUint16(at + 30, true) + cv.getUint16(at + 32, true);
+        }
+        var names = Object.keys(all).filter(function (x) { return /^([^/]+\/)?app\.json$/.test(x) && !/^(__MACOSX|\.)/.test(x); });
+        var name = names.indexOf("app.json") >= 0 ? "app.json" : names.length === 1 ? names[0] : null;
+        if (!name) throw new Error("The zip has no app.json at its top. Zip your app's folder, the one that holds app.json.");
+        var e = all[name];
+        if (e.size > 1048576) throw new Error("The zip's app.json is larger than an app.json can be.");
+        return r.read(e.local, Math.min(r.size, e.local + 30 + 65535 * 2 + e.csize)).then(function (loc) {
+          var lv = new DataView(loc.buffer, loc.byteOffset, loc.byteLength);
+          if (lv.getUint32(0, true) !== 0x04034b50) throw new Error(BAD);
+          var start = 30 + lv.getUint16(26, true) + lv.getUint16(28, true), raw = loc.subarray(start, start + e.csize);
+          if (e.method === 0) return new TextDecoder().decode(raw);
+          if (e.method === 8) return new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
+          throw new Error("The zip's app.json is packed in a way this page cannot read. Zip the app's folder again.");
+        });
+      });
+    }).then(function (t) {
+      var m;
+      try { m = JSON.parse(t); } catch (x) { throw new Error("The zip's app.json is not JSON."); }
+      if (!m || typeof m !== "object" || !/^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}$/.test(m.version || "")) {
+        throw new Error("The zip's app.json has no version like 1.0.1.");
+      }
+      return m;
+    });
+  }
+
+  function buildLines(o) {   // what the hosting says of the latest upload's build: its words, then its last lines
+    var b = o && o.build;
+    return b && b.words ? [b.words].concat(b.lines || []) : [];
+  }
+
   function publishCommand(maker) {
     return "python3 <the kit>/tools/publish/publish.py publish . --partner " + maker;
   }
 
   var api = { b64u: b64u, randomString: randomString, challengeOf: challengeOf, authorizeUrl: authorizeUrl,
-              readReturn: readReturn, subjectFor: subjectFor, appSettings: appSettings, plainNames: plainNames, scheduled: scheduled,
-              missingRequired: missingRequired, prefill: prefill, subjectNames: subjectNames,
+              readReturn: readReturn, appSettings: appSettings, plainNames: plainNames, scheduled: scheduled,
+              missingRequired: missingRequired, zipAppJson: zipAppJson, buildLines: buildLines, UPLOAD: UPLOAD, STORE: STORE,
               planCopies: planCopies, orderPayload: orderPayload, copyWords: copyWords, settled: settled,
               checkCommand: checkCommand, publishCommand: publishCommand, secretState: secretState, customersFrom: customersFrom, PAGE: PAGE, API: API };
   if (typeof module === "object" && module.exports) {
@@ -203,7 +241,7 @@
   var arrival = readReturn(root.location.search, pending);
   if (root.location.search) root.history.replaceState(null, "", root.location.pathname + root.location.hash);
 
-  var session = null, who = null, cfg = null, repos = null, poller = null;
+  var session = null, who = null, cfg = null, poller = null;
   var s = load();
 
   function load() {
@@ -240,10 +278,10 @@
     return el("p", { "class": "hosting-field" }, el("label", { "for": id, text: label }), input, hint ? el("span", { "class": "hosting-hint", text: hint }) : null);
   }
 
-  function call(method, path, body) {
+  function call(method, path, body, url) {
     var h = { "Content-Type": "application/json" };
     if (session) h.Authorization = "Bearer " + session;
-    return root.fetch(API + path, { method: method, headers: h, body: body ? JSON.stringify(body) : undefined, credentials: "omit",
+    return root.fetch(url || API + path, { method: method, headers: h, body: body ? JSON.stringify(body) : undefined, credentials: "omit",
                                     referrerPolicy: "no-referrer", cache: "no-store" })
       .then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (j) {
@@ -277,7 +315,7 @@
 
   function signOut() {
     call("POST", "/signout").then(function () { return true; }, function () { return false; }).then(function (ok) {
-      session = null; who = null; repos = null; fresh();
+      session = null; who = null; fresh();
       say(ok ? "Signed out. Your GitHub sign-in for this page has ended too." : "Signed out of this page.");
       render();
     });
@@ -307,7 +345,7 @@
       if (who.maker) sel.value = who.maker;
       box.appendChild(field("You order for", sel, "Your GitHub account is linked to more than one hosting account. What you pay is that account's."));
       box.appendChild(button("Use this one", function () {
-        call("POST", "/choose", { maker: sel.value }).then(function (w) { who = w; ownSteps(); say(""); render(); refreshApps(); loadRepos(); }, fail);
+        call("POST", "/choose", { maker: sel.value }).then(function (w) { who = w; ownSteps(); say(""); render(); refreshApps(); }, fail);
       }, true));
     }
     if (who.maker) {
@@ -334,7 +372,7 @@
           who = w;
           say(w.maker ? "Approved: your hosting account is " + (w.name || w.maker) + "." :
             w.request ? "Not answered yet." : "Your request is no longer waiting: it was declined. Ask your CitiXsys contact, or ask again below.");
-          if (w.maker) { ownSteps(); refreshApps(); loadRepos(); }
+          if (w.maker) { ownSteps(); refreshApps(); }
           render();
         }, fail);
       }, true));
@@ -391,73 +429,20 @@
 
   function beforeYouStart() {
     var kit = "https://github.com/ivendnext-developers/partner-kit/blob/main/";
-    return el("details", { "class": "hosting-before", open: !s.repo },
-      el("summary", { text: "Before you start: four things to have ready" }),
+    return el("details", { "class": "hosting-before", open: !s.appJson },
+      el("summary", { text: "Before you start: three things to have ready" }),
       el("ol", {},
         el("li", {}, "Your app, made with the kit: a sample started with ", code("tools/manifest/start.py"), " or the ",
           el("a", { href: kit + "tools/app_template/README.md", text: "app template" }),
           ". Its folder holds ", code("app.json"), ", which this page asks for."),
-        el("li", {}, "Your app in a GitHub repository, with the kit's ", code("tools/deploy_app/hosting-workflow.yml"),
-          " copied to ", code(".github/workflows/"), " in it."),
-        el("li", {}, "The ", el("a", { href: cfg.install_url, text: "iVendNext App Hosting GitHub App" }),
-          " installed on that repository. Then this page lists it, finds its sign-in subject and sets its Variables for you. It writes the repository's Actions variables and nothing else: it never reads your code."),
-        el("li", {}, "The values of your app's settings (the plain ones in ", code("app.json"), "), and for a customer's app, the customer's code.")),
+        el("li", {}, "The values of your app's settings (the plain ones in ", code("app.json"), "), and for a customer's app, the customer's code."),
+        el("li", {}, "Once it is paid, the app's folder as a zip: you upload it here, and the hosting builds it. No GitHub repository and no workflow.")),
       p("The whole page, screen by screen, with a real sample: ",
         el("a", { href: "recipes/host_from_the_web_page.html", text: "Host your app from the web page" }), "."));
   }
 
   function appStep() {
     var box = el("div", { "class": "hosting-step" }, el("h3", { text: "1. Your app" }));
-    var repoIn = el("input", { type: "text", value: s.repo || "", placeholder: "owner/name", autocomplete: "off", spellcheck: "false" });
-    var list = el("select", {}, el("option", { value: "", text: repos ? "Choose from your list" : "Loading your list" }));
-    (repos || []).forEach(function (r) { list.appendChild(el("option", { value: r.repo, text: r.repo + (r.private ? " (private)" : "") })); });
-    list.value = (repos || []).some(function (r) { return r.repo === s.repo; }) ? s.repo : "";
-    list.addEventListener("change", function () {
-      var r = pick(list.value);
-      if (r) { s.repo = r.repo; s.branch = r.branch; }
-      save(); render();
-    });
-    repoIn.addEventListener("change", function () {
-      s.repo = repoIn.value.trim(); s.subject = ""; s.subjectSet = false; s.looked = null; save(); render(); lookUp(true);
-    });
-    box.appendChild(field("Repository", list));
-    box.appendChild(field("Or type it", repoIn, "The repository your GitHub workflow pushes each version from."));
-    var branch = el("input", { type: "text", value: s.branch || "main", spellcheck: "false" });
-    branch.addEventListener("change", function () { s.branch = branch.value.trim(); save(); });
-    box.appendChild(field("Branch", branch));
-    var folder = el("input", { type: "text", value: s.folder || ".", spellcheck: "false" });
-    folder.addEventListener("change", function () { s.folder = folder.value.trim() || "."; save(); });
-    box.appendChild(field("Folder that holds app.json", folder));
-
-    var r = pick(s.repo);
-    if (r) {
-      var plain = el("input", { type: "checkbox", checked: !!s.plainSubject });
-      plain.addEventListener("change", function () { s.plainSubject = plain.checked; s.subject = subjectFor(r, s.plainSubject); save(); render(); });
-      s.subject = subjectFor(r, s.plainSubject);
-      box.appendChild(p("GitHub signs your workflow in as ", code(s.subject || "repo:" + r.repo),
-        ". A repository made since 2025 uses the first form, with its ids, and then a repository deleted and made again under the same name can never push your app."));
-      box.appendChild(el("p", {}, el("label", {}, plain, " This repository signs in with its plain name (an older repository)")));
-      box.appendChild(p("Not sure? Ask GitHub: ", code("gh api repos/" + r.repo + "/actions/oidc/customization/sub --jq .sub_claim_prefix"),
-        " prints the first form if your repository uses it."));
-    } else if (s.repo) {
-      var lk = s.looked && s.looked.asked === s.repo ? s.looked : null;
-      if (!lk) {
-        box.appendChild(p("Looking for ", code(s.repo), " on GitHub."));
-      } else if (lk.found && lk.can_push === false) {
-        box.appendChild(el("p", { "class": "hosting-bad", text: "You cannot push to " + lk.repo + " on GitHub: check the repository's name. An order trusts only the repository you push your app from." }));
-      } else if (lk.found) {
-        box.appendChild(p("Found ", code(lk.repo), " on GitHub. Its sign-in subject is filled in below."));
-      } else {
-        box.appendChild(p("This page cannot see ", code(s.repo), ". Check the name. If the repository is private, ",
-          el("a", { href: cfg.install_url, text: "install the GitHub App on it" }), " and press Look again, or paste below the line this command prints on your computer:"));
-        box.appendChild(copyable("gh api repos/" + s.repo + "/actions/oidc/customization/sub --jq .sub_claim_prefix"));
-      }
-      box.appendChild(button("Look again", function () { s.looked = null; keep(); render(); lookUp(true); }, true));
-      var subj = el("input", { type: "text", value: s.subject || "", spellcheck: "false", placeholder: "repo:owner@id/name@id" });
-      subj.addEventListener("change", function () { s.subject = subj.value.trim(); s.subjectSet = true; save(); });
-      box.appendChild(field("Its sign-in subject", subj, "How GitHub signs your workflow in: repo: then the owner and the repository, each with its number. Empty means the plain name, for a repository made before 2025."));
-    }
-
     var file = el("input", { type: "file", accept: ".json,application/json" });
     var text = el("textarea", { rows: "6", spellcheck: "false" });
     text.value = s.appJson || "";
@@ -488,26 +473,13 @@
       });
       var gap = missingRequired(m, s.settings);
       if (gap.length) box.appendChild(el("p", { "class": "hosting-bad", text: "Give a value for " + gap.join(", ") + ": your app.json marks it required." }));
-      box.appendChild(p("The page checks app.json with the hosting. The Dockerfile, the licence files and the package need your repository: check them on your computer first, as the hosting will."));
+      box.appendChild(p("The page checks app.json with the hosting. The Dockerfile, the licence files and the package need your app's folder: check them on your computer first, as the hosting will."));
       box.appendChild(copyable(checkCommand(s, who.maker, m)));
     }
-    var lkd = s.looked && s.looked.asked === s.repo ? s.looked : null;
-    var notYours = lkd && lkd.found && lkd.can_push === false;
-    var waiting = s.repo && !pick(s.repo) && !lkd;   // the lookup has not answered yet
-    box.appendChild(nav(null, (s.repo && m && !scheduled(m) && !missingRequired(m, s.settings).length && !notYours && !waiting) ? "customer" : null));
+    box.appendChild(nav(null, (m && !scheduled(m) && !missingRequired(m, s.settings).length) ? "customer" : null));
     return box;
   }
 
-  function lookUp(again) {   // a typed repository: its sign-in subject, found by the hosting with your own GitHub access
-    if (!s.repo || pick(s.repo) || (!again && s.looked && s.looked.asked === s.repo)) return;
-    var asked = s.repo;
-    call("POST", "/repo", { repo: asked }).then(function (r) {
-      if (s.repo !== asked) return;
-      s = prefill(s, asked, r); keep(); redraw();
-    }, function (e) { if (s.repo === asked) { s.looked = { asked: asked, found: false, failed: true }; keep(); } fail(e); });
-  }
-
-  function pick(name) { return (repos || []).filter(function (r) { return r.repo === name; })[0] || null; }
   function parsed() {
     if (!s.appJson) return null;
     try { var m = JSON.parse(s.appJson); return m && typeof m === "object" ? m : false; } catch (e) { return false; }
@@ -645,8 +617,8 @@
       current = o;
       redraw();
       // every 5 seconds for two minutes, then every 30: a build takes minutes, an invoice days
-      if (!settled(o)) poller = root.setTimeout(function () { follow(true); }, Date.now() - since < 120000 ? 5000 : 30000);
-      else refreshApps();
+      if (!settled(o, s.uploaded)) poller = root.setTimeout(function () { follow(true); }, Date.now() - since < 120000 ? 5000 : 30000);
+      else { if (s.uploaded) { s.uploaded = null; keep(); } refreshApps(); }
     }, function (e) {
       if (e.code === "no_order") {   // not this account's order: let it go, and say where orders are
         s.order = null; s.step = "app"; current = null; keep();
@@ -673,7 +645,7 @@
         " Not paid yet: Stripe opens in a new tab."));
     }
     var paid = (o.copies || [o]).some(function (c) { return c.status !== "pending" && c.status !== "expired"; });
-    if (paid) box.appendChild(variablesPanel(o));
+    if (paid) box.appendChild(uploadPanel(o));
     if (paid && o.secrets && o.secrets.length) box.appendChild(secretsPanel(o));
     if ((o.copies || [o]).every(function (c) { return c.status === "live"; })) {
       box.appendChild(p("It is live. Put it on your customer's shelf: publish it from the App library's Publish page, or with the kit's command where your signing key and recipient.pem live" +
@@ -688,28 +660,42 @@
     return box;
   }
 
-  function variablesPanel(o) {
-    var box = el("div", {}, el("h4", { text: "Your GitHub workflow" }));
-    var roles = JSON.stringify((o.copies || [o]).map(function (c) { return c.upload.github_role; }));
-    box.appendChild(p("Copy ", code("tools/deploy_app/hosting-workflow.yml"), " to ", code(".github/workflows/"),
-      " in your repository, and give it these Variables."));
-    box.appendChild(button("Set them on your repository", function (ev) {
-      ev.target.disabled = true;
-      call("POST", "/variables", { order: o.order }).then(function (r) {
-        s.variables = r; keep(); say(r.set.length ? "Set on " + r.repo + ": " + r.set.join(", ") + "." : ""); redraw();
-      }, function (e) { ev.target.disabled = false; fail(e); });
-    }, true));
-    var left = s.variables ? s.variables.to_set_by_hand : null;
-    if (left && Object.keys(left).length) {
-      box.appendChild(p("This page could not set these (install the GitHub App on the repository, or ask someone who can change its settings). Set them under Settings > Secrets and variables > Actions > Variables:"));
-      Object.keys(left).forEach(function (k) { box.appendChild(copyable(k + " = " + left[k])); });
-    } else if (!s.variables) {
-      box.appendChild(p("Or set them yourself:"));
-      var want = o.variables || { IVN_HOSTING_ROLES: roles };   // the hosting's list for this order
-      Object.keys(want).forEach(function (k) { box.appendChild(copyable(k + " = " + want[k])); });
+  // ── Upload a version: the app's folder as a zip; the hosting builds it for every copy and puts it live ──
+
+  function uploadPanel(o) {
+    var box = el("div", {}, el("h4", { text: "Upload a version" }));
+    var built = (o.copies || [o]).every(function (c) { return c.status === "waiting" || c.status === "live"; });
+    var lines = buildLines(o);
+    if (lines.length) {
+      box.appendChild(p(lines[0]));
+      if (lines.length > 1) box.appendChild(el("pre", { "class": "hosting-build", text: lines.slice(1).join("\n") }));
     }
-    box.appendChild(p("Then push to " + ((o.github || {}).branch || "main") + " on " + ((o.github || {}).repo || "your repository") +
-      ": each copy gets the version in your app.json."));
+    if (!built) {
+      box.appendChild(p("Once every copy is built, upload your app's folder here as a zip: the hosting builds it and puts it live."));
+      return box;
+    }
+    box.appendChild(p("Zip your app's folder (the one that holds app.json) and choose the zip. The hosting builds it on its side for every copy and puts it live. Raise app.json's version for each upload." +
+      (o.versions && o.versions.length ? " Versions so far: " + o.versions.join(", ") + "." : "")));
+    var file = el("input", { type: "file", accept: ".zip,application/zip" });
+    file.addEventListener("change", function () {
+      var f = file.files[0];
+      if (!f) return;
+      file.disabled = true;
+      var again = function (e) { file.disabled = false; file.value = ""; fail(e); };
+      zipAppJson({ size: f.size, read: function (a, b) { return f.slice(a, b).arrayBuffer().then(function (x) { return new Uint8Array(x); }); } }).then(function (m) {
+        say("Uploading " + m.version + ".");
+        return call("POST", "", { order: o.order, version: m.version, size: f.size }, UPLOAD).then(function (r) {
+          return root.fetch(r.upload.url, { method: "PUT", headers: r.upload.headers || {}, body: f, credentials: "omit",
+                                            referrerPolicy: "no-referrer", cache: "no-store" }).then(function (x) {
+            if (x.status === 412) throw new Error(m.version + " was uploaded already: raise app.json's version and upload again.");
+            if (!x.ok) throw new Error("The upload was not kept. Nothing was built: choose the zip again.");
+            file.value = ""; file.disabled = false; s.uploaded = m.version; keep();
+            say("Uploaded " + m.version + ". The hosting builds it now: this page follows it."); follow();
+          }, function () { throw new Error("The upload did not finish. Nothing was built: choose the zip again."); });
+        });
+      }).catch(again);
+    });
+    box.appendChild(field("The app's folder, as a zip", file));
     return box;
   }
 
@@ -755,10 +741,6 @@
 
   // ── My apps ──
 
-  function loadRepos() {
-    call("GET", "/repos").then(function (x) { repos = x.repos; redraw(); lookUp(); }, function () { repos = []; redraw(); lookUp(); });
-  }
-
   var mine = null;
   function refreshApps() {
     if (!session || !who || !who.maker) return;
@@ -778,7 +760,7 @@
         (o.copies || [o]).map(function (c) { return COPY_WORDS[c.env] + " " + copyWords(c); }).join("; ") + " ");
       li.appendChild(button("Follow", function () {
         if (!mayLeave()) return;
-        toTop(); s.order = o.order; s.checkout = null; s.invoice = o.kind === "invoice"; s.variables = null; s.step = "follow";
+        toTop(); s.order = o.order; s.checkout = null; s.invoice = o.kind === "invoice"; s.step = "follow";
         keep(); current = null; render(); follow();
       }, true));
       var unpaid = o.status === "pending";
@@ -811,10 +793,9 @@
 
   function toTop() { tool.scrollIntoView({ block: "start" }); }   // a shorter step must not leave the reader below the form
 
-  function newOrder() {   // a fresh order: the repository and its folder stay, the rest starts again
-    s = { step: "app", maker: s.maker, login: s.login, repo: s.repo, branch: s.branch, folder: s.folder, subject: s.subject,
-          subjectSet: s.subjectSet, plainSubject: s.plainSubject };
-    current = null; stopPolling(); keep(); render(); toTop(); lookUp(true);
+  function newOrder() {   // a fresh order: the rest starts again
+    s = { step: "app", maker: s.maker, login: s.login };
+    current = null; stopPolling(); keep(); render(); toTop();
   }
 
   var view = el("div", {});
@@ -854,7 +835,6 @@
       render();
       if (who.maker) {
         refreshApps();
-        loadRepos();
         if (s.order) follow();   // the saved order's state, so an order that has ended offers a new one
       }
     }, fail);
