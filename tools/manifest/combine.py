@@ -9,13 +9,17 @@ The merge rules, the same every time two or more samples are named:
   * each sample's names take its three-letter tag after the app's prefix: record types ``ACME HK TGR Settings``, fields
     ``acme_hk_tgr_…``; connection-point keys ``tgr_guard``; till keys, webhooks and roles the same way;
   * every sample's ``<PREFIX> Integration`` role is the single ``ACME HK Integration``, with the union of their rights;
-  * the samples' event feeds are one registration, with the union of their record types;
+  * the samples' event feeds are one registration, with the union of their record types, read once by the app: the
+    samples that read it on their own (a scheduled pass) run as parts of one reader, each handed the events of the record
+    types it registered, and an event is done only when every part that wants it has handled it (``dispatch.json``
+    ``feed``, the schedule ``feed``);
   * the services are one service (``service/app.py``) that sends each call to its sample's part, mounted under ``/<tag>/``;
     a function unless a sample runs all the time; each sample's ``<TAG>_PREFIX`` setting is filled in and never shown.
 An app made from one sample keeps its names untagged (``ACME HK Settings``). *Add a sample* never renames a name already
 in the app: only the added sample's names take its tag.
 
-The real product limits are refused in plain words (M01-M03), naming the samples; *Add a sample*'s
+The real product limits are refused in plain words (M01-M03), naming the samples, and so are the samples an app cannot
+hold: one that answers the till from its own server (M34) and one with no manifest of its own (M35); *Add a sample*'s
 own refusals are M04 (an entry the developer changed) and M05 (a name the developer's code uses). A refusal writes
 nothing: the app is written whole in a scratch folder and moved into place only when the kit's check passes.
 
@@ -52,10 +56,12 @@ from validate import app_for, validate  # noqa: E402
 TEMPLATE = KIT / "tools" / "app_template"
 COMBINED = HERE / "combined"
 SKIP_TOP = {"README.md", "manifest.json", "app.json", "Dockerfile", "screenshots", "tests", "__pycache__", ".env.local",
-            ".env", "outside"}
+            ".env"}
+SKIP_FILES = {"outside/manifest.json"}      # S3's manifest beside its code: the app's holds it (its tests get their own)
 TEXT = rename.TEXT
 TEXT_NAMES = rename.TEXT_NAMES
 RUNTIME_TOOL = re.compile(r"""(["'])\.\.\1\s*,\s*\1\.\.\1\s*,\s*\1tools\1\s*,\s*\1(\w+)\1|(["'])tools\3\s*,\s*\3(\w+)\3""")
+PATH_TOOL = re.compile(r"""/\s*(["'])tools\1\s*/\s*\1(\w+)\1""")    # HERE.parents[2] / "tools" / "feed_client"
 TOOLS_REF = re.compile(r"""(?:["']tools["']\s*,\s*["']|/\s*["']tools["']\s*/\s*["']|\btools/)([a-z_]+)""")
 COPY_HEADER = ("# COPY of the iVendNext partner kit's {path} at {commit}. A defect here is a defect there: report it on\n"
                "# the kit's board. Leave it as it is: Add a sample and a newer sample version replace it.\n")
@@ -66,6 +72,8 @@ EVENT_WORDS = {"scan": ("at the scan", "scan"), "qty_change": ("when a quantity 
                "customer_add": ("when a customer is added", "customer"),
                "customer_select": ("when a customer is chosen", "customer")}
 CHECKS_MAX, CHECK_SECONDS_MAX = 3, 10
+FEED_SCHEDULE = "feed"          # the app's one reader of its feed (dispatch.json ``feed``)
+RATE = re.compile(r"rate\((\d+) (minute|hour|day)s?\)")
 
 
 class Refused(Exception):
@@ -162,12 +170,18 @@ def mount_url(url: str, tag: str) -> str:
     return urllib.parse.urlunsplit(parts._replace(path=f"/{tag}{parts.path or '/'}"))
 
 
+def readme_title(folder: pathlib.Path) -> str:
+    """A sample's own title from its README's heading, without its number (``S5 — the configuration pack…``)."""
+    m = re.search(r"^# +(.+?)\s*$", sample_info.readme(folder), re.M)
+    return re.sub(r"^S\d+\s*[—–-]\s*", "", re.sub(r"[`*]", "", m.group(1)).strip()) if m else folder.name
+
+
 def make_part(sample: str, prefix: str, app: str, tagged: bool, samples_dir: pathlib.Path) -> Part:
     folder = sample_folder(sample, samples_dir)
     m = sample_info.manifest(folder)
     if not m or not isinstance(m.get("prefix"), str) or not isinstance(m.get("app"), str):
-        raise Refused(f"{number(sample)} has no manifest of its own: it cannot be made into an app. Copy it by hand as "
-                      "its README says.", code="no_manifest")
+        raise Refused(f"{number(sample)} {(m or {}).get('title') or readme_title(folder)} has no manifest of its own: it "
+                      "cannot be made into an app. Copy it by hand as its README says.", code="M35")
     words = m["prefix"].split()
     tag = (words[1] if len(words) > 1 else words[0]).lower()
     sp = f"{prefix} {tag.upper()}" if tagged else prefix
@@ -281,15 +295,10 @@ def limits(parts: list[Part]) -> None:
                            for p, s in checks)
         raise Refused(f"This app would run {len(checks)} checks at Pay: {listed}. A sale runs at most 3 checks, 10 seconds "
                       "together. Untick one.", code="M02")
-    readers = [p for p in parts if p.app_json and p.app_json.get("schedule")]
-    if len(readers) > 1:            # one feed, one reader: two readers of one feed would take each other's events
-        raise Refused(f"These samples both read the site's new sales and customers on their own: "
-                      f"{' and '.join(p.label for p in readers)}. One app reads them once, so their two readers cannot "
-                      "share it yet. Untick one of them.", code="readers")
     for p in parts:
-        if routes(app_view(p)) and not handler_of(p):
+        if own_server(p) and not handler_of(p):
             raise Refused(f"{p.label} answers the till from its own server, with no hosting order (app.json) the app's "
-                          "one service can run. Untick it, or copy it by hand as its README says.", code="unhosted")
+                          "one service can run. Untick it, or copy it by hand as its README says.", code="M34")
     owners: dict = {}
     for p in parts:
         for e in p.manifest.get("extension_modules") or []:
@@ -300,6 +309,41 @@ def limits(parts: list[Part]) -> None:
         if len(ps) > 1:
             raise Refused(f"{ps[0].label} and {ps[1].label} both add a module at the same extension point ({point}). A "
                           "partner may add one module per extension point. Untick one.", code="M03")
+
+
+def reads(part: Part) -> list[str] | None:
+    """The record types a part reads from the feed on its own (a scheduled pass of its own over the feed it registered),
+    else None: a part that reads only what it is sent is not a reader."""
+    if not (part.app_json and part.app_json.get("schedule")):
+        return None
+    types = [e for r in part.manifest.get("registered_applications") or [] if isinstance(r, dict)
+             for e in r.get("events") or [] if isinstance(e, str)]
+    return list(dict.fromkeys(types)) or None
+
+
+def feed_pass(part: Part) -> str:
+    """The name of a reader's scheduled pass over the feed: ``pass``, else its one schedule."""
+    sched = part.app_json.get("schedule") or {}
+    return "pass" if "pass" in sched else sorted(sched)[0]
+
+
+def faster(a: str | None, b: str) -> str:
+    """The more frequent of two schedules (``rate(1 minute)``); the one already set when either cannot be read."""
+    def seconds(r):
+        m = RATE.fullmatch(r or "")
+        return int(m.group(1)) * {"minute": 60, "hour": 3600, "day": 86400}[m.group(2)] if m else None
+    if a is None:
+        return b
+    sa, sb = seconds(a), seconds(b)
+    return b if sa is not None and sb is not None and sb < sa else a
+
+
+def feed_entry(parts: list[Part], base: dict | None = None) -> dict | None:
+    """dispatch.json's ``feed``: the app's one reader, run by the schedule ``feed``, with each reading part's pass and the
+    record types it is handed (a part already in the app keeps its line when its sample is no longer in the kit)."""
+    readers = dict(((base or {}).get("feed") or {}).get("parts") or {})
+    readers.update({p.tag: {"pass": feed_pass(p), "reads": reads(p)} for p in parts if reads(p)})
+    return {"schedule": FEED_SCHEDULE, "parts": readers} if readers else None
 
 
 def feed_name(prefix: str, base: dict | None = None) -> str:
@@ -412,6 +456,10 @@ def build_app_json(parts: list[Part], app: str, base: dict | None = None) -> tup
             aj["timeout"] = int(pj["timeout"])
             owners.setdefault("app.json:timeout", []).append(p.sample)
         for name, rate in (pj.get("schedule") or {}).items():
+            if reads(p) and name == feed_pass(p):          # the app's one reader runs every reading part's pass
+                aj.setdefault("schedule", {})[FEED_SCHEDULE] = faster((aj.get("schedule") or {}).get(FEED_SCHEDULE), rate)
+                owners.setdefault(f"app.json:schedule:{FEED_SCHEDULE}", []).append(p.sample)
+                continue
             short = schedule_name(p.tag, name, aj.get("schedule") or {})
             aj.setdefault("schedule", {})[short] = rate
             sched[short] = [p.tag, name]
@@ -428,6 +476,14 @@ def build_app_json(parts: list[Part], app: str, base: dict | None = None) -> tup
         aj.pop("schedule", None)
         aj["port"] = 8000            # the README's docker run -p 8000:8000, the Dockerfile's EXPOSE and HEALTHCHECK
     return aj, owners, sched
+
+
+def own_server(part: Part) -> bool:
+    """The part answers the till from a server: a connection point its manifest names, or code of a server of its own
+    (``service/`` or ``remote/``, as S1's till wrapper calls its own service)."""
+    if routes(app_view(part)):
+        return True
+    return any((part.folder / d).is_dir() and any((part.folder / d).rglob("*.py")) for d in ("service", "remote"))
 
 
 def handler_of(part: Part) -> str | None:
@@ -486,6 +542,8 @@ def entries_of(manifest: dict, app_json: dict, dispatch: dict) -> dict:
         out[f"dispatch:{tag}"] = m
     for k, v in (dispatch.get("schedules") or {}).items():
         out[f"dispatch:schedule:{k}"] = v
+    if dispatch.get("feed"):
+        out["dispatch:feed"] = dispatch["feed"]
     return out
 
 
@@ -509,6 +567,8 @@ def plain_entry(entry: str, manifest: dict) -> str:
         return f"the connection point {x.get('label') or ident}"
     if kind == "app.json" and section == "env":
         return f"the setting {ident}"
+    if entry == "dispatch:feed":
+        return "how the app's one reader hands the site's new sales and customers to its parts"
     if kind == "dispatch":
         return f"where the service sends the calls for /{section}/"
     return entry
@@ -540,7 +600,8 @@ def part_files(part: Part, app: str, prefix: str, feed: str | None) -> dict:
     out: dict = {}
     for p in sorted(part.folder.rglob("*")):
         rel = p.relative_to(part.folder)
-        if not p.is_file() or rel.parts[0] in SKIP_TOP or "__pycache__" in rel.parts or p.suffix == ".pyc":
+        if not p.is_file() or rel.parts[0] in SKIP_TOP or rel.as_posix() in SKIP_FILES or "__pycache__" in rel.parts \
+                or p.suffix == ".pyc":
             continue
         out[f"service/{part.tag}/{rel.as_posix()}"] = p.read_bytes()
     if (part.folder / "README.md").is_file():            # a sample's own tests may read its README
@@ -565,6 +626,9 @@ def part_files(part: Part, app: str, prefix: str, feed: str | None) -> dict:
                     runtime.add(m.group(2) or m.group(4))
                 text = RUNTIME_TOOL.sub(lambda m: (f'"..", "_kit", "{m.group(2)}"' if m.group(2)
                                                    else f'"service", "_kit", "{m.group(4)}"'), text)
+                for m in PATH_TOOL.finditer(text):       # the kit's root two folders up is the app's: its copy in service/_kit
+                    runtime.add(m.group(2))
+                text = PATH_TOOL.sub(lambda m: f'/ "service" / "_kit" / "{m.group(2)}"', text)
             out[path] = text.encode("utf-8")
     commit = kit_commit()
     for t in sorted(runtime - {"app_template"}):
@@ -576,6 +640,9 @@ def part_files(part: Part, app: str, prefix: str, feed: str | None) -> dict:
     # the sample's own view, for its own tests: its names under its tagged prefix, its own feed and role
     own = copy.deepcopy(part.own or part.manifest)
     out[f"tests/{part.tag}/_manifest.json"] = dump(own).encode()
+    for skipped in sorted(SKIP_FILES):           # where the sample keeps its manifest, for its own tests (S3: outside/)
+        if (part.folder / skipped).is_file():
+            out[f"tests/{part.tag}/_manifest_path"] = (skipped + "\n").encode()
     if part.app_json:
         aj = copy.deepcopy(part.app_json)
         aj = json.loads(rewrite_text(json.dumps(aj, ensure_ascii=False), part, app, prefix, feed, code=False))
@@ -648,7 +715,8 @@ def in_folder(part: Part) -> str:
 
 def where(part: Part) -> str:
     """The folder that holds a sample's part: its code, or, for a sample of lists and settings only, its tests."""
-    has_code = any(p.is_file() and p.relative_to(part.folder).parts[0] not in SKIP_TOP for p in part.folder.rglob("*"))
+    has_code = any(p.is_file() and p.relative_to(part.folder).parts[0] not in SKIP_TOP
+                   and p.relative_to(part.folder).as_posix() not in SKIP_FILES for p in part.folder.rglob("*"))
     return f"service/{part.tag}/" if has_code else f"tests/{part.tag}/"
 
 
@@ -775,8 +843,9 @@ def run_tests(folder: pathlib.Path) -> tuple[bool, int, str]:
 
 
 def assemble(parts: list[Part], prefix: str, app: str, commit: str, base_manifest=None, base_app_json=None,
-             base_dispatch=None) -> tuple[dict, dict, dict, dict, dict]:
-    """(manifest, app.json, dispatch, files, owners) for these parts on top of what the app has."""
+             base_dispatch=None, everyone: list[Part] | None = None) -> tuple[dict, dict, dict, dict, dict]:
+    """(manifest, app.json, dispatch, files, owners) for these parts on top of what the app has; ``everyone`` is every
+    part of the app (the parts already in it and these), for the one reader of its feed."""
     limits(parts)
     manifest, owners = build_manifest(parts, prefix, app, base_manifest)
     routes(manifest)
@@ -791,6 +860,10 @@ def assemble(parts: list[Part], prefix: str, app: str, commit: str, base_manifes
         dispatch["mounts"][p.tag] = mount(p, manifest)
         owners.setdefault(f"dispatch:{p.tag}", []).append(p.sample)
         files.update(part_files(p, app, prefix, feed))
+    one_reader = feed_entry(everyone or parts, base_dispatch)
+    if one_reader:
+        dispatch["feed"] = one_reader
+        owners.setdefault("dispatch:feed", []).extend(p.sample for p in parts if reads(p))
     return manifest, app_json, dispatch, files, owners
 
 
@@ -1038,6 +1111,13 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
     part = make_part(name, prefix, app, tagged, samples_dir)
     others = [make_part(r["name"], prefix, app, bool(r.get("tagged", True)), samples_dir) for r in record
               if r["name"] != name and (samples_dir / r["name"]).is_dir()]
+    listed = ((cur_dispatch.get("feed") or {}).get("parts") or {})
+    scheduled = {v[0] for v in (cur_dispatch.get("schedules") or {}).values() if isinstance(v, list) and v}
+    for r in record:          # a part that reads the feed on its own must be one of the app's one reader's parts
+        if r["name"] != name and not (samples_dir / r["name"]).is_dir() and r.get("tag") in scheduled - set(listed):
+            raise Refused(f"Not added: {number(r['name'])} reads the site's feed on its own, and this kit no longer has it, "
+                          f"so the app's one reader cannot take it in beside {number(name)}. Nothing in your app was changed. "
+                          f"Add {number(name)} from a kit that has {number(r['name'])}.", code="reader_unknown")
     if again is None and part.tag in {r.get("tag") for r in record}:
         raise m05(name, f"the tag {part.tag} (another sample of this app carries it)")
     if again is None and ((app_folder / "service" / part.tag).exists() or (app_folder / "tests" / part.tag).exists()):
@@ -1053,7 +1133,7 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
             rec_entries[i] = (r["name"], h)
     cur_entries = entries_of(cur_manifest, cur_app, cur_dispatch)
     new_manifest, new_app, new_dispatch, files, owners = assemble([part], prefix, app, commit, cur_manifest, cur_app,
-                                                                   cur_dispatch)
+                                                                   cur_dispatch, everyone=others + [part])
     new_entries = entries_of(new_manifest, new_app, new_dispatch)
     # entries, one by one
     take: dict = {}                                       # entry id -> the tool's value, written
@@ -1155,6 +1235,18 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
         r["files"], r["entries"] = dict(sorted(r["files"].items())), dict(sorted(r["entries"].items()))
     final_dispatch["mounts"][part.tag] = new_dispatch["mounts"][part.tag]
     final_dispatch.setdefault("schedules", {}).update(new_dispatch.get("schedules") or {})
+    # a reading part's own schedule, from an app made before the one reader: the schedule feed runs its pass now
+    one_reader = (final_dispatch.get("feed") or {}).get("parts") or {}
+    for short, target in list(final_dispatch["schedules"].items()):
+        tag_, pass_ = (target + [None, None])[:2] if isinstance(target, list) else (None, None)
+        entry = f"app.json:schedule:{short}"
+        if tag_ in one_reader and pass_ == one_reader[tag_].get("pass") and FEED_SCHEDULE in (final_app.get("schedule") or {}) \
+                and entry in rec_entries and entry in cur_entries and sha(cur_entries[entry]) == rec_entries[entry][1]:
+            final_app["schedule"].pop(short, None)               # left as it was when the developer changed it
+            final_dispatch["schedules"].pop(short, None)
+            for r in by_name.values():
+                r["entries"].pop(entry, None)
+                r["entries"].pop(f"dispatch:schedule:{short}", None)
     # README and the notices: rewritten unless the developer changed them (the same file rule)
     first = record[0]["name"]
     ordered = [pp for n in order for pp in all_parts if pp.sample == n]
@@ -1211,7 +1303,9 @@ def _set_entry(manifest: dict, app_json: dict, dispatch: dict, entry: str, value
         return
     if kind == "dispatch":
         section, _, ident = rest.partition(":")
-        if section == "schedule":
+        if section == "feed":
+            dispatch["feed"] = value
+        elif section == "schedule":
             dispatch.setdefault("schedules", {})[ident] = value
         else:
             dispatch["mounts"][section] = value

@@ -1414,6 +1414,9 @@ The till cannot do this yet; it can stop the sale at Pay.
     # ── the samples index (samples/index.json) and the READMEs it is read from ──
     INDEX_FIELDS = {"name", "title", "version", "versions", "when_to_use", "picture", "door", "needs", "recipe", "industries",
                     "till", "config_pack"}
+    # the samples with no screenshot of their own whose door no screenshot in the kit shows (site/door_pictures.json null)
+    NO_PICTURE = {"s34_po_check": "document-check", "s41_regulated_register": "register-books",
+                  "s43_third_party_payer": "payer"}
 
     def sample_folders(self, root: pathlib.Path | None = None) -> list[pathlib.Path]:
         return sorted(p.parent for p in ((root or build.ROOT) / "samples").glob("*/README.md"))
@@ -1468,7 +1471,10 @@ The till cannot do this yet; it can stop the sale at Pay.
                          key=lambda f: int(re.sub(r"\D", "", f.name.split("_")[0])))])               # every sample, in S-number order
         census = gallery.census(build.ROOT)
         cards = {c.id for c in catalogue_cards()}
+        cited = build.catalogue.backlinks(catalogue_cards())
         doors = set(build.catalogue.DOORS.values())
+        key_of = {name: key for key, name in build.catalogue.DOORS.items()}
+        pictures = gallery.door_pictures(build.ROOT)
         for e in entries:
             name, folder = e["name"], build.ROOT / "samples" / e["name"]
             text = (folder / "README.md").read_text("utf-8")
@@ -1479,8 +1485,18 @@ The till cannot do this yet; it can stop the sale at Pay.
             self.assertEqual(e["versions"][0]["version"], e["version"], name)
             self.assertIn(e["door"], doors, name)
             self.assertTrue(set(e["needs"]) <= cards, name)
+            self.assertEqual(bool(e["needs"]), bool(cited.get(f"samples/{name}")), name)   # empty only where no card names it
             for path in (e["picture"], e["recipe"]):                     # a picture and a recipe are files of the built site
                 self.assertTrue(path is None or (self.out / path).is_file(), (name, path))
+            own = list(folder.glob("screenshots/*.png")) + list(folder.glob("screenshots/*.jp*g"))
+            if name in self.NO_PICTURE:                                  # its door has no screenshot anywhere in the kit
+                self.assertEqual((e["picture"], pictures[key_of[e["door"]]], key_of[e["door"]]), (None, None, self.NO_PICTURE[name]))
+            elif not own:                                                # no screenshot of its own: its door's picture
+                self.assertIsNone(gallery.own_still(f"samples/{name}", build.ROOT), name)
+                self.assertEqual(e["picture"], pictures[key_of[e["door"]]], name)
+                self.assertFalse(e["picture"].startswith(f"samples/{name}/"), name)
+            else:                                                        # its own, linked from its README or not (S28)
+                self.assertTrue(e["picture"].startswith(f"samples/{name}/screenshots/"), name)
             self.assertEqual(sorted(e["industries"]), sorted(gallery.census_industries(name, census)), name)
             self.assertEqual(e["till"], gallery.sample_info.till_lines(text), name)
             if gallery.sample_info.till_part(folder):
@@ -1491,6 +1507,44 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertIn("line-quantity-cap", s23["needs"])
         self.assertIn("Sell 51 of one item; the till stops it at Pay.", s23["till"])
         self.assertIn("https://developer.ivendnext.com/samples/index.json", self.html_of("llms.txt"))
+
+    def test_every_door_picture_is_a_screenshot_of_a_sample_with_that_door(self):
+        import gallery
+        pictures = gallery.door_pictures(build.ROOT)
+        self.assertEqual(sorted(pictures), sorted(d for d in build.catalogue.DOORS if d not in gallery.NO_DOOR))
+        cited = build.catalogue.backlinks(catalogue_cards())
+        by_name = {name.lower(): key for key, name in build.catalogue.DOORS.items()}
+        for door, path in pictures.items():
+            if path is None:
+                continue
+            self.assertTrue((build.ROOT / path).is_file(), (door, path))
+            folder = path.split("/screenshots/")[0]
+            own = {c.door for c in cited.get(folder, [])}
+            if not own:                                                  # no card cites it: its README's own Door line
+                line = gallery.DOOR_LINE.search((build.ROOT / folder / "README.md").read_text("utf-8"))
+                own = {by_name.get(line.group(1).strip().lower())} if line else set()
+            self.assertIn(door, own, (door, path))
+        self.assertEqual([d for d, p in pictures.items() if p is None and d in self.NO_PICTURE.values()],
+                         [d for d in pictures if d in self.NO_PICTURE.values()])
+
+    def test_canary_a_sample_with_no_screenshot_and_no_picture_fails_the_site_build(self):  # RED, then GREEN
+        import gallery
+        kit = self.planted_kit("door_pictures", also=("site",))
+        self.assertEqual(self.build_in(kit), 0)                                                         # GREEN: the copy as it is
+        f = kit / "site" / "door_pictures.json"
+        good = f.read_text("utf-8")
+        data = json.loads(good)
+        data["doors"]["outside-app"] = None              # S7, S9, S12, S22, S24, S25, S26 and S27 would carry no picture
+        f.write_text(json.dumps(data), "utf-8")
+        self.assertEqual(self.build_in(kit), 1)                                                         # RED
+        data["doors"]["outside-app"] = "samples/s23_till_guard/screenshots/till-guard-rules-notice.png"   # another door's
+        f.write_text(json.dumps(data), "utf-8")
+        self.assertEqual(self.build_in(kit), 1)                                                         # RED
+        f.write_text(good, "utf-8")
+        self.assertEqual(self.build_in(kit), 0)                                                         # GREEN again
+        index = json.loads((self.tmp / "door_pictures_out" / "samples" / "index.json").read_text("utf-8"))
+        s22 = next(e for e in index["samples"] if e["name"] == "s22_customer_loyalty")
+        self.assertEqual(s22["picture"], json.loads(good)["doors"]["outside-app"])
 
     def test_the_samples_index_is_what_newer_reads(self):
         import combine                                                   # tools/manifest/, on the path through gallery.py

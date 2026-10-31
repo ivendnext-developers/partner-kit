@@ -1,0 +1,30 @@
+{
+ "about": "Each door's picture: one real screenshot of a sample with that door, the screen that best shows the door at work. A sample with no screenshot of its own carries its door's picture in the published samples index (samples/index.json). null: no screenshot in the kit shows a sample with that door, and a sample with that door and no screenshot of its own carries no picture. The build checks every path (site/gallery.py door_picture_errors).",
+ "doors": {
+  "configure": "samples/s5_config_pack/screenshots/02_markdown_needs_a_reason.png",
+  "outside-app": "samples/s13_portal/screenshots/04_sales_list.png",
+  "event-feed": "samples/s3_price_audit/screenshots/02_deviations.png",
+  "till-key": "samples/s6_ai_till_key/screenshots/02_hint_in_the_tills_sheet.png",
+  "manifest": "samples/s2_bins/screenshots/01_workspace.png",
+  "sandboxed-function": null,
+  "check-before-payment": "samples/s23_till_guard/screenshots/till-guard-rules-most-lines-refused.png",
+  "document-check": null,
+  "capture-on-event": "samples/s20_capture/screenshots/01_warranty_capture_sheet.png",
+  "field-rules": "samples/s21_field_rules/screenshots/04_phone_is_required_here.png",
+  "save-rules": "samples/s18_rule_guard/screenshots/02_this_sale_cant_be_paid.png",
+  "desk-action": "samples/s16_pick_route/screenshots/02_dialog_filled.png",
+  "partner-page": "samples/s17_partner_page/screenshots/02_board_on_till.png",
+  "scan-source": "samples/s19_unit_codes/screenshots/01_unit_scanned.png",
+  "label-layout": null,
+  "wallet": null,
+  "fiscal-reader": null,
+  "fulfil-at-sale": null,
+  "payer": null,
+  "register-books": null,
+  "open-check": "samples/s55_front_of_house/screenshots/05_floor_counter.png",
+  "station-ticket": "samples/s59_kitchen_screen/screenshots/01_station.png",
+  "payment-connector": null,
+  "our-connector": null,
+  "receipt": null
+ }
+}

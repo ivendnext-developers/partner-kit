@@ -38,6 +38,7 @@ import json
 import os
 import sqlite3
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -203,6 +204,7 @@ class DoorFeed:
 class Store:
     def __init__(self, path: str):
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        self.path = os.path.abspath(path)
         self.db = sqlite3.connect(path, isolation_level=None)
         self.db.execute("create table if not exists seen (id text primary key, event text, doc_type text, "
                         "doc_name text, raw_event text, at text, handled_at text)")
@@ -247,7 +249,11 @@ def changed(db, doc_type: str, doc_name: str, field: str, value) -> tuple[bool, 
 
 def poll(feed, store: Store, handler, limit: int = 100, crash_after: int | None = None) -> dict:
     """One pass over the backlog: fetch the oldest not-done page, handle it, mark it done, move to the next page.
-    An event whose handler failed stays not-done (with its note); this pass steps over it and the next pass retries it."""
+    An event whose handler failed stays not-done (with its note); this pass steps over it and the next pass retries it.
+    In an app of several parts that read one feed, the app's service hands the pass to its one reader (``Handoff``)."""
+    hub = getattr(sys.modules.get(HANDOFF_MODULE), "HUB", None)
+    if hub is not None:
+        return hub.poll(feed, store, handler, limit)
     n = {"handled": 0, "skipped_seen": 0, "failed": 0, "done": 0}
     page, last_ids = None, None
     while True:
@@ -282,6 +288,162 @@ def poll(feed, store: Store, handler, limit: int = 100, crash_after: int | None 
         page = str(n["failed"]) if isinstance(feed, EngineFeed) else nxt
     n["backlog"] = feed.backlog()
     return n
+
+
+# ── one reader for an app of several parts ───────────────────────────────────────────────────────────────────────
+
+HANDOFF_MODULE = "ivn_feed_handoff"     # where an app's service puts its one reader (``HUB``), for every part's poll
+HANDOFF_RECORD = "handoff|"             # the lasting record of a shop's waiting events: a name a shop's never holds
+
+
+class Handoff:
+    """One reader for an app made of several parts that each read the feed: one registration, read once per run.
+
+    The app's service makes one (``Handoff(reads, homes)``), puts it where every part's ``poll`` finds it
+    (``sys.modules[HANDOFF_MODULE].HUB``), and for each run calls ``begin()``, then each reading part's own scheduled
+    pass, then ``finish()``:
+      * a part's ``poll`` reads nothing itself: the first part to poll a shop in a run reads the shop's not-done events
+        once (``events`` only, never ``done``), and each part is handed, in order, the events whose record type its own
+        registration names (``reads``: part -> record types);
+      * one seen-list: a part's event is recorded as seen as ``<part>|<event id>`` in the part's store, in the same
+        transaction as the part's own writes, so no part handles an event twice, whichever part failed;
+      * a part that fails leaves its note on the event (``failed``) and the event not done; a later run hands it again
+        only to the parts that have not handled it;
+      * ``finish`` marks done only the events that every part that wants them has recorded as seen, each part's store read
+        with a connection of its own; an event no part wants is done at once, as a reader that ignores it would do;
+      * an event left waiting for a part is written, with the parts that did handle it, to a lasting record (``ledger``:
+        the app's shops store, ``get``/``put``/``delete``), so a part that handled it is not run again even in another copy
+        of the function, whose working folder (and so its seen-list) starts empty. One record per shop, read once a run.
+    Every not-done event is read each run, as a pass of ``poll`` reads the whole backlog, so an event waiting for a part
+    never holds back a newer one. A part is known by the folder its handler's code is in (``homes``: part -> folder), never
+    by the order parts run in, so a part's thread still at work when the next part starts still counts as its own part."""
+
+    def __init__(self, reads: dict, homes: dict, ledger=None):
+        self.reads = {p: set(types) for p, types in reads.items()}
+        self.homes = {p: os.path.realpath(h) + os.sep for p, h in homes.items()}
+        self.ledger = ledger
+        self.run = 0
+        self.shops: dict = {}
+        self._lock = threading.Lock()
+
+    def begin(self) -> None:
+        """A new run: every shop is read again, once, by the first part that polls it."""
+        with self._lock:
+            self.run += 1
+            self.shops = {}
+
+    def part_of(self, handler) -> str:
+        code = getattr(handler, "__code__", None) or getattr(getattr(handler, "__call__", None), "__code__", None)
+        where = os.path.realpath(code.co_filename) if code is not None else ""
+        for part, home in self.homes.items():
+            if where.startswith(home):
+                return part
+        raise FeedError(f"the handler in {where or 'an unknown file'} is no part's that reads the feed: nothing was handed")
+
+    def wants(self, part: str, ev: dict) -> bool:
+        return ev.get("doc_type") in self.reads.get(part, ())
+
+    @staticmethod
+    def key(feed) -> tuple:
+        """One shop's feed, whichever part opened it: the transport, the shop's address, the door or the application."""
+        api = getattr(feed, "api", None)
+        return (type(feed).__name__, getattr(api, "base", None) or id(feed), getattr(feed, "prefix", None),
+                getattr(feed, "app", None))
+
+    def _shop(self, feed, limit: int) -> dict:
+        with self._lock:
+            shop = self.shops.setdefault(self.key(feed), {"lock": threading.Lock(), "read": False, "feed": feed,
+                                                          "events": [], "stores": {}, "backlog": 0, "handed": {}})
+        with shop["lock"]:
+            if not shop["read"]:
+                events, ids, page = [], set(), None
+                while True:
+                    got, nxt, backlog = feed.events(limit, page)
+                    new = [e for e in got if e["id"] not in ids]
+                    events += new
+                    ids |= {e["id"] for e in new}
+                    shop["backlog"] = backlog
+                    if not new or nxt is None:      # the last page, or a page that came back again
+                        break
+                    page = nxt                      # nothing is marked done while reading: the offset stays true
+                kept = (self.ledger.get(self.record(feed)) or {}).get("events") or {} if self.ledger is not None else {}
+                shop["handed"] = {i: set(parts) for i, parts in kept.items() if i in ids}
+                shop["kept"] = kept
+                shop["events"], shop["read"] = events, True
+        return shop
+
+    def record(self, feed) -> str:
+        """The name of a shop's lasting record of its waiting events, in the app's shops store."""
+        import hashlib
+        return HANDOFF_RECORD + hashlib.sha256(repr(self.key(feed)).encode()).hexdigest()[:24]
+
+    def poll(self, feed, store, handler, limit: int = 100) -> dict:
+        """One part's pass over one shop: the events read once for this run, each handed to the part when it wants it."""
+        part = self.part_of(handler)
+        path = getattr(store, "path", None)
+        if not path:
+            raise FeedError(f"{part}: its store has no path, so whether it handled an event cannot be read: nothing was handed")
+        shop = self._shop(feed, limit)
+        shop["stores"][part] = path
+        n = {"handled": 0, "skipped_seen": 0, "failed": 0, "done": 0, "part": part}
+        for ev in shop["events"]:
+            if not self.wants(part, ev):
+                continue
+            mine = dict(ev, id=f"{part}|{ev['id']}")
+            if part in shop["handed"].get(ev["id"], ()) or store.seen(mine["id"]) \
+                    or (len(self.reads) == 1 and store.seen(ev["id"])):     # an app's one reader, before the hand-off
+                n["skipped_seen"] += 1
+                continue
+            try:
+                store.handled(mine, lambda db, ev=ev: handler(dict(ev), db))
+            except Exception as e:      # the part's own failure: the event stays undone, with the part's note
+                feed.failed(ev["id"], f"{part}: {type(e).__name__}: {e}")
+                n["failed"] += 1
+                continue
+            n["handled"] += 1
+        n["backlog"] = shop["backlog"]
+        return n
+
+    def _seen(self, shop: dict) -> dict:
+        """{part: the ids it recorded as seen} among this run's events, read with a connection of this thread's own."""
+        out = {}
+        for part, path in shop["stores"].items():
+            want = [f"{part}|{ev['id']}" for ev in shop["events"] if self.wants(part, ev)]
+            db = sqlite3.connect("file:" + urllib.request.pathname2url(path) + "?mode=ro", uri=True, timeout=10)
+            try:
+                got = set()
+                for i in range(0, len(want), 500):
+                    chunk = want[i:i + 500]
+                    got |= {r[0] for r in db.execute(f"select id from seen where id in ({','.join('?' * len(chunk))})",
+                                                     chunk)}
+            finally:
+                db.close()
+            out[part] = got
+        return out
+
+    def finish(self) -> dict:
+        """Mark done each event of this run that every part wanting it has handled; the others stay for the next run."""
+        out = {"done": 0, "waiting": 0, "errors": 0}
+        with self._lock:
+            shops = [s for s in self.shops.values() if s["read"]]
+        for shop in shops:
+            try:
+                seen = self._seen(shop)
+                by = {ev["id"]: {p for p in self.reads if f"{p}|{ev['id']}" in seen.get(p, ())} | shop["handed"].get(ev["id"], set())
+                      for ev in shop["events"]}
+                ids = [ev["id"] for ev in shop["events"]
+                       if all(p in by[ev["id"]] for p in self.reads if self.wants(p, ev))]
+                out["waiting"] += len(shop["events"]) - len(ids)
+                if self.ledger is not None:     # written before anything is marked done: a lost write marks nothing
+                    waiting = {i: sorted(parts) for i, parts in by.items() if parts and i not in set(ids)}
+                    if waiting != {i: sorted(v) for i, v in shop["kept"].items()}:
+                        name = self.record(shop["feed"])
+                        self.ledger.put(name, {"events": waiting}) if waiting else self.ledger.delete(name)
+                for i in range(0, len(ids), 100):
+                    out["done"] += shop["feed"].done(ids[i:i + 100])
+            except Exception:           # noqa: BLE001 — one shop's failure never stops the others: its events stay undone
+                out["errors"] += 1
+        return out
 
 
 def queued_docs(feed, limit: int = 500) -> set[tuple[str, str]]:

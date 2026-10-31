@@ -34,7 +34,8 @@ and the samples list uses the same cards; a sample README without a run section 
 card is a hand-written `{{reference-app: name | one line | doors | status | repository}}` line. The same READMEs give
 samples/index.json, the published samples index (gallery.index); a README without an Industries line or with one that
 differs from site/industries.json, a sample with a till part and no Try it at the till section, or a README without its
-Versions section fails the build (gallery.readme_errors).
+Versions section fails the build (gallery.readme_errors), and so does a door picture in site/door_pictures.json that is not a
+screenshot of a sample with that door (gallery.door_picture_errors).
 
 A relative link in a kit file becomes a link to the page it points at, an image is copied beside its page, and anything
 else in the repository (code, a folder) becomes a link to the file on GitHub. A link to a path that does not exist fails
@@ -1193,8 +1194,14 @@ def build(out_dir: pathlib.Path) -> int:
     served = catalogue.backlinks(need_cards)
     ctx.samples = gallery.collect(pages, served, catalogue.DOORS, first_use, slug, ROOT, errors)
     errors += gallery.readme_errors(ROOT)                           # Industries, Try it at the till, Versions
+    errors += gallery.door_picture_errors(ctx.samples, catalogue.DOORS, ROOT)    # a sample with no screenshot: its door's
     ctx.door_pages = {c.door for c in need_cards}
     assets.update(s["shot"] for s in ctx.samples if s["shot"])
+    try:                                                            # each sample's picture in the samples index
+        pictures = gallery.door_pictures(ROOT)
+        assets.update(p for p in (gallery.index_picture(s, pictures, ROOT) for s in ctx.samples) if p)
+    except (OSError, ValueError):
+        pass                                                        # door_picture_errors has said why
     sha = (os.environ.get("GITHUB_SHA") or "")[:7]
     if out_dir.exists():
         shutil.rmtree(out_dir)

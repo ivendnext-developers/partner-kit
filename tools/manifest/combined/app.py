@@ -13,7 +13,14 @@ reads ``service/dispatch.json`` (which part answers which routes) and sends each
     anything else                      404
 
 As a function on CitiXsys hosting it is ``service/app.lambda_handler`` (``app.json`` ``"handler"``); a schedule named
-``<tag>-<name>`` (``schedules`` in dispatch.json) runs that part's ``<name>``. On a server or a laptop it is a small web server:
+``<tag>-<name>`` (``schedules`` in dispatch.json) runs that part's ``<name>``.
+
+The app reads its one feed once. The schedule ``feed`` (``feed`` in dispatch.json) runs the parts that read the site's
+new sales and customers, one after another, each handed only the events of the record types its own sample registered
+(``_kit/feed_client`` ``Handoff``); an event is marked done on the site only once every part that wants it has handled
+it, and a part that already handled it is never run again for it.
+
+On a server or a laptop it is a small web server:
 
     python3 service/app.py            the port in PORT (default 8080)
     python3 service/app.py --local    reads ../.env.local, answers on http://localhost:8000, and accepts a call from the
@@ -78,6 +85,8 @@ def _load(tag: str):
         spec.loader.exec_module(module)
         handler = getattr(module, attr)
         own = {n: mod for n, mod in sys.modules.items() if before_modules.get(n) is not mod}
+        # the part's code imports its own service by its file's name (``import app`` in a worker): that name is the part's
+        own.setdefault(os.path.splitext(os.path.basename(file))[0], module)
         own_path = [q for q in sys.path if q not in before_path]
     finally:
         for n in [n for n in sys.modules if n not in before_modules]:
@@ -89,16 +98,22 @@ def _load(tag: str):
 
 
 def _call(tag: str, event, context=None):
-    """One call or scheduled run of a part, with its own modules and folders in place, one at a time."""
+    """One call or scheduled run of a part, with its own modules and folders in place, one at a time. A module of the
+    part's (or a copy of the kit's helpers) that it first imports during a call is kept as its own, for its calls only."""
     with _lock:
         handler, own, own_path = _load(tag)
         saved = {n: sys.modules.get(n) for n in own}
+        before = set(sys.modules)
         saved_path = list(sys.path)
         sys.modules.update(own)
         sys.path[:0] = own_path
         try:
             return handler(event, context)
         finally:
+            roots = tuple(os.path.realpath(r) + os.sep for r in (os.path.join(HERE, tag), KIT))
+            for n in [n for n in sys.modules if n not in before and n not in own]:
+                if os.path.realpath(getattr(sys.modules[n], "__file__", None) or os.sep).startswith(roots):
+                    own[n] = sys.modules.pop(n)
             for n, mod in saved.items():
                 if mod is None:
                     sys.modules.pop(n, None)
@@ -108,6 +123,92 @@ def _call(tag: str, event, context=None):
 
 
 ROUTES = {path: tag for tag, m in MOUNTS.items() for path in (m.get("points") or {})}
+FEED = DISPATCH.get("feed") or {}
+READERS = FEED.get("parts") or {}           # the parts that read the feed: tag -> {"pass": its pass, "reads": record types}
+HANDOFF_MODULE = "ivn_feed_handoff"         # feed_client.HANDOFF_MODULE: where every part's poll finds the one reader
+
+
+def _handoff():
+    """The app's one reader, put where every part's ``feed_client.poll`` finds it, for as long as the process lives: a
+    part's poll is always handed, never a pass of its own that would mark the others' events done. None when no part
+    reads the feed, or the reader's code is missing (then no reading part is run)."""
+    if not READERS:
+        return None
+    path = os.path.join(KIT, "feed_client", "feed_client.py")
+    if not os.path.isfile(path):
+        return None
+    spec = importlib.util.spec_from_file_location(HANDOFF_MODULE, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[HANDOFF_MODULE] = module
+    spec.loader.exec_module(module)
+    module.HUB = module.Handoff({t: p.get("reads") or [] for t, p in READERS.items()},
+                                {t: os.path.join(HERE, t) for t in READERS}, _Ledger())
+    return module.HUB
+
+
+class _Ledger:
+    """The reader's lasting record of the events still waiting for a part: the app's shops store (the table on hosting,
+    the file on a laptop), opened when first needed. With neither set, there is none and the seen-list alone counts."""
+
+    def __init__(self):
+        self.store = None
+
+    def _open(self):
+        if self.store is None:
+            if not ((os.environ.get("IVN_SHOPS_TABLE") or "").strip() or (os.environ.get("IVN_SHOPS_FILE") or "").strip()):
+                return None
+            self.store = shops.open_store(os.environ)
+        return self.store
+
+    def get(self, name):
+        store = self._open()
+        return store.get(name) if store is not None else None
+
+    def put(self, name, record):
+        if self._open() is not None:
+            self.store.put(name, record)
+
+    def delete(self, name):
+        if self._open() is not None:
+            self.store.delete(name)
+
+
+class _Share:
+    """The call's time as one part's pass sees it: an equal share of what is left, less the minute a pass waits beyond
+    its time, so every part runs and the reader marks done before the call ends."""
+
+    def __init__(self, context, parts_left: int):
+        left = context.get_remaining_time_in_millis() if hasattr(context, "get_remaining_time_in_millis") else 900_000
+        self.ms = max(5_000, (left - 30_000) // max(1, parts_left) - 60_000)
+        self.context = context
+
+    def get_remaining_time_in_millis(self):
+        return self.ms
+
+    def __getattr__(self, name):
+        return getattr(self.context, name)
+
+
+HUB = _handoff()
+
+
+def feed_pass(context=None) -> dict:
+    """One run of the app's one reader: each reading part's own scheduled pass in turn, handed the events its sample
+    registered; then each event that every part wanting it has handled is marked done."""
+    if HUB is None:
+        return {"feed": {"error": "the feed's reader (service/_kit/feed_client) is missing: nothing was read"}}
+    HUB.begin()
+    out = {}
+    for n, (tag, p) in enumerate(READERS.items()):
+        if not (MOUNTS.get(tag) or {}).get("handler"):
+            out[tag] = {"error": "this part has no service"}
+            continue
+        try:
+            out[tag] = _call(tag, {"ivn_schedule": p.get("pass") or "pass"}, _Share(context, len(READERS) - n))
+        except Exception as e:      # noqa: BLE001 — one part's failure: its events stay undone, the others go on
+            out[tag] = {"error": type(e).__name__}
+    out["feed"] = HUB.finish()
+    return out
 
 
 def _tag(path: str) -> str | None:
@@ -139,6 +240,10 @@ def lambda_handler(event, context=None):
     """The function's handler: a call goes to its part; a schedule ``<tag>-<name>`` (``schedules`` in dispatch.json) runs that part's ``<name>``."""
     if isinstance(event, dict) and "ivn_schedule" in event:
         tag, name = (DISPATCH.get("schedules") or {}).get(str(event["ivn_schedule"])) or [None, None]
+        if str(event["ivn_schedule"]) == FEED.get("schedule") or (tag in READERS and name == READERS[tag].get("pass")):
+            out = feed_pass(context)
+            print(json.dumps({"schedule": event["ivn_schedule"], "feed": out.get("feed")}, default=str), flush=True)
+            return {"schedule": event["ivn_schedule"], **out}
         if tag not in MOUNTS or not MOUNTS[tag].get("handler"):
             return {"schedule": event["ivn_schedule"], "error": "no part has this schedule"}
         return _call(tag, {"ivn_schedule": name}, context)
