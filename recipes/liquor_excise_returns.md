@@ -66,7 +66,7 @@ The record type `PP EXR Return`, numbered `format:EXR-R-{#####}`, tracked: `comp
 
 - **The books as they stand when it is worked out:** a back-dated entry changes the earlier books, not a filed return; the next return's opening then differs from this one's closing by it.
 - **Not stopped:** two returns for one store and period (a correction is a new return); an item moved to another class (its stock moves with no line); a period not yet over. One return a warehouse.
-- **A till's sales are dated when its day is closed** (the day's combined invoice takes the closing's date): close each till's last day of the period before midnight, or that day's sales count in the next period.
+- **A till's sales are dated by the company's till posting setting:** posted when the day is closed, they take the closing's date, so close each till's last day of the period before midnight or that day's sales count in the next period; posted as each sale is made, a sale keeps its own date.
 - **By document type:** an internal (inter-company) delivery or receipt counts as *Sold* or *Received*; a *Material Receipt* as *Received from suppliers*. An item variant needs its own three fields. Units add each item's own stock unit; a US proof gallon is twice a pure-alcohol gallon. The count difference also carries the rounding (a few thousandths).
 - **An item missing its millilitres or strength** is counted in units only for what it lacks, and the summary names it.
 - **A count and a movement at the same second** are not told apart; the sum stands.
