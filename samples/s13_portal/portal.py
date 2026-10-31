@@ -34,6 +34,7 @@ import decimal
 import hashlib
 import hmac
 import html
+import http.client
 import http.cookies
 import json
 import os
@@ -96,7 +97,7 @@ def http_to_shop(base):
                 raw, status = r.read(), r.status
         except urllib.error.HTTPError as e:
             raw, status = e.read(), e.code
-        except (urllib.error.URLError, OSError):
+        except (urllib.error.URLError, OSError, http.client.HTTPException):
             return 0, {}
         try:
             body = json.loads(raw or b"{}")

@@ -8,6 +8,7 @@ signed the way the till signs it, so the signature, the shops store and the tele
 import base64
 import hashlib
 import hmac
+import http.client
 import json
 import os
 import sys
@@ -16,6 +17,7 @@ import threading
 import time
 import unittest
 import urllib.request
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SAMPLE = os.path.dirname(HERE)
@@ -407,6 +409,36 @@ class Rules(unittest.TestCase):
     def test_words_are_plain_and_capped(self):
         self.assertEqual(plans.plain("a <b> " + "x" * 200)[:4], "a b ")
         self.assertLessEqual(len(plans.plain("x" * 300)), 140)
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_shop_answer_cut_short_is_the_shop_unreachable_never_a_crash(self):
+        import shop
+        s = shop.Shop("https://shop.example", "k", "s")
+        s._opener = mock.Mock(open=cut_answer)
+        with self.assertRaises(shop.ShopError) as e:
+            s._call("GET", "/api/resource/Card")
+        self.assertEqual(e.exception.status, 0)
+        self.assertIn("unreachable", e.exception.message)
 
 
 if __name__ == "__main__":

@@ -33,6 +33,7 @@ The key and secret are read from the environment: FEED_KEY and FEED_SECRET (neve
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import os
 import sqlite3
@@ -92,7 +93,7 @@ class Api:
                 return json.loads(r.read() or b"{}")
         except urllib.error.HTTPError as e:
             raise FeedError(f"{e.code} {_server_message(e.read())}") from None
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
             raise FeedError(f"unreachable: {e}") from None
 
 

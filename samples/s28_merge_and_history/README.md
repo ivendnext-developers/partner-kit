@@ -83,7 +83,7 @@ iVendNext must reach it over HTTPS with a real certificate: put it behind your o
 | `service/app.py` | the service: iVendNext over the record API with the app's key, the press, the page and its one read |
 | `service/history.html` | the page, drawn with the design kit (`kit/design/`), which the service serves beside it |
 | `manifest.json` | the settings, the field on the count, the two services, the button, the three roles |
-| `tests/` | 52 laptop tests (`test_merge.py`, `test_history.py`, `test_shop.py`, `test_manifest.py`); `canaries.py` removes each guard in turn and its test must go RED (37 of 37) |
+| `tests/` | 53 laptop tests (`test_merge.py`, `test_history.py`, `test_shop.py`, `test_manifest.py`); `canaries.py` removes each guard in turn and its test must go RED (38 of 38) |
 
 ## Technical notes
 

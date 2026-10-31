@@ -6,6 +6,7 @@ stand-in shop over HTTP.
     python3 -m unittest discover -s samples/s24_price_checker/tests -p 'test_*.py'
 """
 
+import http.client
 import json
 import os
 import sys
@@ -16,6 +17,7 @@ import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 sys.path[:0] = [str(HERE.parent), str(HERE.parent / "service"), str(HERE)]
@@ -368,6 +370,33 @@ class ShopApi(unittest.TestCase):
     def test_a_shop_that_does_not_answer_is_unreadable(self):
         with self.assertRaises(app.ShopUnreadable):
             self.api.scan("http://127.0.0.1:9", "k:s", "x")
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_shop_answer_cut_short_is_the_shop_unreadable_never_a_crash(self):
+        with mock.patch.object(app.urllib.request, "build_opener", return_value=mock.Mock(open=cut_answer)):
+            with self.assertRaises(app.ShopUnreadable) as e:
+                app._call("https://shop.example", "k:s", "/api/resource/Item")
+        self.assertIn("IncompleteRead", str(e.exception))
 
 
 if __name__ == "__main__":

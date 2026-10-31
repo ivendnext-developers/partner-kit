@@ -4,6 +4,7 @@ shop's install screen methods do (`docs/extending/package_install.md` §7) and r
     python3 -m unittest discover -s tools/deploy/tests -v
 """
 
+import http.client
 import io
 import json
 import os
@@ -215,6 +216,34 @@ class DeployTests(unittest.TestCase):
         self.assertEqual((code, calls), (2, []))
         code, _, calls = self.run_tool(["uninstall", NAME, "--consent"])
         self.assertEqual((code, calls), (2, []))
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_site_answer_cut_short_stops_in_words_never_a_crash(self):
+        site = D.Site("https://shop.example", "k", "s")
+        with mock.patch.object(D.urllib.request, "urlopen", cut_answer):
+            with self.assertRaises(SystemExit) as e:
+                site._req("/api/resource/Item")
+        self.assertIn("the site did not answer: IncompleteRead", str(e.exception))
 
 
 if __name__ == "__main__":

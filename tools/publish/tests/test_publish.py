@@ -7,6 +7,7 @@ from __future__ import annotations
 import base64
 import contextlib
 import hashlib
+import http.client
 import http.server
 import io
 import json
@@ -416,6 +417,33 @@ class PublishTests(unittest.TestCase):
             self.publish_with(d, d / "mem")
             self.assertEqual(Library.seen[-1]["deliveries"], [])
             self.assertNotEqual(Library.seen[-1]["deliveries"], self.SHOPS)
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_library_answer_cut_short_is_nothing_known_to_be_published_never_a_crash(self):
+        with mock.patch.object(publish.urllib.request, "urlopen", cut_answer):
+            with self.assertRaises(publish.Stop) as e:
+                publish.send("https://library.example/v1/publish", b"{}")
+        self.assertIn("(IncompleteRead); nothing is known to be published", str(e.exception))
 
 
 if __name__ == "__main__":

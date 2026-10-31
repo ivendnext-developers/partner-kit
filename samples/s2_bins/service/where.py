@@ -41,6 +41,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import http.client
 import json
 import os
 import signal
@@ -101,7 +102,7 @@ def read_list(url: str, key: str, doctype: str, fields: list, filters: list, tim
     except urllib.error.HTTPError as e:
         e.close()
         raise ShopUnreadable(f"the shop answered {e.code}", e.code) from None
-    except (urllib.error.URLError, TimeoutError, ConnectionError, ValueError) as e:
+    except (urllib.error.URLError, TimeoutError, ConnectionError, ValueError, http.client.HTTPException) as e:
         raise ShopUnreadable(type(e).__name__) from None
     if not isinstance(data, list):
         raise ShopUnreadable("not a list")

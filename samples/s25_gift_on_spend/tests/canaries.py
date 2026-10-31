@@ -131,6 +131,9 @@ CANARIES = [
      "test_manifest.Manifest.test_a_card_is_named_by_its_key_so_the_shop_refuses_a_second"),
     ("the manifest names the service its site connects", "manifest.json", '"https://gcs.partner.example"', '"https://gcs.partner.example/x"',
      "test_manifest.Manifest.test_the_shop_calls_nothing_outside_and_names_the_one_service_its_site_connects"),
+    ("a cut answer from the shop is unreachable, never a crash", "service/shop.py", 'ConnectionError, http.client.HTTPException) as e:',
+     'ConnectionError) as e:',
+     "test_service.AnswerCutShort.test_a_shop_answer_cut_short_is_the_shop_unreachable_never_a_crash"),
 ]
 
 

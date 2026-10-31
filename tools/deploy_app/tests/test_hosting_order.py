@@ -2,6 +2,7 @@
 domain (never the library upload's), the Schedule accepted out loud, and a secret's value never printed. No network:
 the send is replaced."""
 import contextlib
+import http.client
 import io
 import json
 import pathlib
@@ -220,6 +221,33 @@ class Copies(Base):
             run("secret", "--partner", "acme", "--order", "0123456789abcdef", "--env", "sandbox", "--name",
                 "IVN_POINT_SECRET", "--key", str(self.key), stdin="v")
         self.assertEqual(self.body()["env"], "sandbox")
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_hosting_answer_cut_short_is_nothing_known_to_be_done_never_a_crash(self):
+        with mock.patch.object(HO.urllib.request, "urlopen", cut_answer):
+            with self.assertRaises(HO.Stop) as e:
+                HO.send(b"{}")
+        self.assertIn("could not be reached (IncompleteRead); nothing is known to be done", str(e.exception))
 
 
 if __name__ == "__main__":

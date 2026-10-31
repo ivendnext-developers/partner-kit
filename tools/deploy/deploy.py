@@ -17,6 +17,7 @@ checked, without --consent) · 1 refused or failed · 2 usage · 3 the job had n
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import os
 import pathlib
@@ -53,8 +54,8 @@ class Site:
                 return json.loads(r.read() or b"null")
         except urllib.error.HTTPError as e:
             raise SystemExit(f"the site answered HTTP {e.code} to {path.split('?')[0]}: {_why(e.read())}")
-        except urllib.error.URLError as e:
-            raise SystemExit(f"the site did not answer: {e.reason}")
+        except (urllib.error.URLError, http.client.HTTPException) as e:
+            raise SystemExit(f"the site did not answer: {getattr(e, 'reason', type(e).__name__)}")
 
     def call(self, method, **args):
         return (self._req("/api/method/" + API + method, args) or {}).get("message")

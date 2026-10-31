@@ -54,7 +54,7 @@ The App library's *Bin locations* (1.1.0) is S2's records with only its till key
 - **Its limits.** A record's Location is copied from its bin when the record is saved: after you move a bin to another aisle, save its records under *What is in each bin* again, and a record saved before manifest 0.1.1 is found once it is saved again. The till's message shows about ten items, so a sale's items after the thirtieth are only counted (*and N more*), and such a sale is coloured as a warning. A variant is looked up by its own code: record the variant in a bin, not its template. The time limit is per network step, so a retailer that trickles its answer can still pass the till's 3 seconds.
 - **How it runs.** As a function, paid per call (`app.json`, `"runs": "function"`): it only answers presses. One retailer on your own server: `IVN_POINT_SECRET`, `IVN_SHOP_URL`, `IVN_SHOP_KEY`; many retailers: `IVN_LIBRARY_APP` with a store (see the file's header).
 
-Tests: `tests/test_where.py`; their canaries: `python3 samples/s2_bins/tests/canaries.py` (each must be RED).
+Tests: `tests/test_where.py`, and `tests/test_tenant.py` for the door into iVendNext; their canaries: `python3 samples/s2_bins/tests/canaries.py` (each must be RED).
 
 ## Make it your own
 

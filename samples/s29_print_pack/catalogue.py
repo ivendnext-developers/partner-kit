@@ -24,6 +24,7 @@ import base64
 import csv
 import datetime
 import html
+import http.client
 import io
 import json
 import os
@@ -87,8 +88,8 @@ class Shop:
         except urllib.error.HTTPError as e:
             e.close()
             raise Unreadable(f"the shop answered HTTP {e.code}")
-        except urllib.error.URLError as e:
-            raise Unreadable(f"the shop could not be reached ({e.reason})")
+        except (urllib.error.URLError, http.client.HTTPException) as e:
+            raise Unreadable(f"the shop could not be reached ({getattr(e, 'reason', type(e).__name__)})")
         return None if len(data) > limit else data
 
 

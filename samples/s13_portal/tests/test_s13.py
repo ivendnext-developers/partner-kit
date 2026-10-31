@@ -4,12 +4,14 @@
 """
 import base64
 import hashlib
+import http.client
 import json
 import pathlib
 import re
 import sys
 import unittest
 import urllib.parse
+from unittest import mock
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path[:0] = [str(HERE.parent)]
@@ -346,6 +348,32 @@ class T(unittest.TestCase):
     def test_responses_do_not_name_the_server_software(self):
         h = P.make_handler(self.p)
         self.assertEqual((h.server_version, h.sys_version), ("portal", ""))
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_shop_answer_cut_short_is_the_shop_not_reached_never_a_crash(self):
+        with mock.patch.object(P.urllib.request, "build_opener", return_value=mock.Mock(open=cut_answer)):
+            call = P.http_to_shop(SHOP)
+            self.assertEqual(call("GET", "/api/resource/POS%20Invoice", token=TOKEN), (0, {}))
 
 
 if __name__ == "__main__":
