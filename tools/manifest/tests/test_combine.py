@@ -2,7 +2,7 @@
 
     python3 -m unittest discover -s tools/manifest/tests -p 'test_combine.py' -v
 
-Each refusal's words are fixed (M01-M05). Each app is made in a scratch folder; the samples are
+Each refusal's words are fixed (M01-M05, M34, M35). Each app is made in a scratch folder; the samples are
 the kit's own, except where a refusal needs a pair the kit does not have (two modules at one extension point, two samples
 answering the same route): those are made from the kit's samples in a scratch samples folder.
 """
@@ -142,7 +142,9 @@ class Combine(Base):
         names = [e["name"] for e in aj["env"]]
         self.assertNotIn("TGR_PREFIX", names)
         self.assertNotIn("LYL_PREFIX", names)
-        self.assertEqual(aj["schedule"], {"lyl-pass": "rate(1 minute)"})
+        self.assertEqual(aj["schedule"], {"feed": "rate(1 minute)"})      # the app's one reader runs S22's pass
+        self.assertEqual(d["feed"], {"schedule": "feed", "parts": {"lyl": {"pass": "pass", "reads": [
+            "Customer", "POS Invoice", "Purchase Receipt"]}}})
 
     def test_every_setting_carries_purpose_required_and_together(self):
         for e in self.app_json(self.app)["env"]:
@@ -241,11 +243,30 @@ class Refusals(Base):
     def test_m01_two_samples_capture_at_the_scan(self):
         with self.assertRaises(combine.Refused) as e:
             self.make(["s20_capture", "s23_till_guard"])
+        self.assertEqual(e.exception.code, "M01")
         self.assertEqual(e.exception.text,
                          "These samples both capture at the scan: S20 Warranty capture and a member code and S23 Till guard "
                          "rules. A till event takes one capture. Untick one of them, or take S23's scan rule into S20's code "
                          "by hand after the app is made.")
         self.assertFalse((self.into / "apps" / "acme_hk").exists())
+
+    def test_m34_a_sample_that_answers_the_till_from_its_own_server(self):
+        with self.assertRaises(combine.Refused) as e:
+            self.make(["s1_warranty", "s23_till_guard"])
+        self.assertEqual(e.exception.code, "M34")
+        self.assertEqual(e.exception.text,
+                         "S1 Warranty terms answers the till from its own server, with no hosting order (app.json) the app's "
+                         "one service can run. Untick it, or copy it by hand as its README says.")
+        self.assertFalse((self.into / "apps").exists())                  # nothing is made
+
+    def test_m35_a_sample_with_no_manifest_of_its_own(self):
+        with self.assertRaises(combine.Refused) as e:
+            self.make(["s5_config_pack", "s23_till_guard"])
+        self.assertEqual(e.exception.code, "M35")
+        self.assertEqual(e.exception.text,
+                         "S5 the configuration pack: reasons, IMEI, a line detail, member pricing has no manifest of its "
+                         "own: it cannot be made into an app. Copy it by hand as its README says.")
+        self.assertFalse((self.into / "apps").exists())
 
     def test_m02_four_checks_at_pay(self):
         with self.assertRaises(combine.Refused) as e:
@@ -449,16 +470,10 @@ class ReviewFolds(Base):
         self.assertTrue(e.exception.text.startswith("This app would run 4 checks at Pay: "))
         self.assertEqual(tree(folder), before)
 
-    def test_two_samples_that_each_read_the_feed_are_refused_in_words(self):
-        with self.assertRaises(combine.Refused) as e:
-            self.make(["s22_customer_loyalty", "s25_gift_on_spend"])
-        self.assertEqual(e.exception.code, "readers")
-        self.assertIn("S22 Customer-owned loyalty and S25 Gift card on spend", e.exception.text)
-
     def test_a_sample_whose_service_has_no_hosting_order_is_refused_in_words(self):
         with self.assertRaises(combine.Refused) as e:
             self.make(["s23_till_guard", "s28_merge_and_history"])
-        self.assertEqual(e.exception.code, "unhosted")
+        self.assertEqual(e.exception.code, "M34")
         self.assertIn("S28 ", e.exception.text)
 
     def test_a_sample_whose_titles_repeat_is_one_app(self):
@@ -533,6 +548,151 @@ class ReviewFolds(Base):
         self.assertTrue((folder / "service" / "dispatch.json").is_file())
         self.assertEqual(start.main(["--add", "s22_customer_loyalty", "--into", str(folder)]), 0)
         self.assertEqual([r["name"] for r in self.app_json(folder)["samples"]], ["s23_till_guard", "s22_customer_loyalty"])
+
+
+class OneReader(Base):
+    """Two samples that each read the site's feed (S22 and S25): one registration, read once by the app, each event handed
+    to every part that registered its record type, and marked done only when every one of them has handled it. The run
+    itself is one_reader.py, in a process of its own, with each part's real code and its own sample's fake shop."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.ctmp = tempfile.TemporaryDirectory()
+        cls.app = combine.combine(["s22_customer_loyalty", "s25_gift_on_spend"], PREFIX, pathlib.Path(cls.ctmp.name))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.ctmp.cleanup()
+
+    def drive(self, scenario: str, app=None) -> dict:
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("IVN_", "LIBRARY_", "PP_"))}
+        with tempfile.TemporaryDirectory() as state:
+            r = subprocess.run([sys.executable, str(HERE / "one_reader.py"), str(app or self.app), state, scenario],
+                               capture_output=True, text=True, timeout=600, env=dict(env, PYTHONDONTWRITEBYTECODE="1"))
+        self.assertEqual(r.returncode, 0, r.stderr[-3000:])
+        return json.loads(r.stdout.strip().splitlines()[-1])
+
+    def test_one_feed_registration_and_one_reader_for_both_parts(self):
+        feeds = self.manifest(self.app)["registered_applications"]
+        self.assertEqual([(f["name"], f["events"]) for f in feeds],
+                         [("ACME HK Feed", ["Customer", "POS Invoice", "Purchase Receipt"])])
+        self.assertEqual(self.app_json(self.app)["schedule"], {"feed": "rate(1 minute)"})
+        d = json.loads((self.app / "service" / "dispatch.json").read_text(encoding="utf-8"))
+        self.assertEqual(d["feed"], {"schedule": "feed", "parts": {
+            "lyl": {"pass": "pass", "reads": ["Customer", "POS Invoice", "Purchase Receipt"]},
+            "gcs": {"pass": "pass", "reads": ["POS Invoice"]}}})
+        self.assertEqual(d["schedules"], {})
+        self.check(self.app)
+
+    def test_one_sale_reaches_both_parts_from_one_read(self):
+        out = self.drive("handed")
+        self.assertEqual((out["readers"], out["handoff"]), (["gcs", "lyl"], True))
+        first, second = out["runs"]
+        self.assertEqual(first["reads"], 1)                               # the feed is read once a run, for both parts
+        self.assertEqual(first["earned"], ["POS Invoice:S1:earn"])        # S22's part: cash back on the sale
+        self.assertEqual(first["cards"], ["S1:1"])                        # S25's part: a gift card for the same sale
+        self.assertIn("C2", first["members"])                             # a new customer: S22's alone (S25 reads no Customer)
+        self.assertEqual(first["marked"], ["e1", "e2"])
+        self.assertEqual((first["loyalty_calls"], first["gift_card_calls"]), (1, 1))
+        self.assertEqual((second["loyalty_calls"], second["gift_card_calls"]), (1, 1))     # nothing handed twice
+        self.assertEqual(second["notes"], {})
+
+    def test_a_part_that_fails_leaves_the_event_and_the_other_part_is_not_run_twice(self):
+        first, second = self.drive("fails-once")["runs"]
+        self.assertEqual(first["marked"], ["e2"])                         # the sale is not done: S25 has not handled it
+        self.assertEqual(first["notes"], {"e1": ["gcs: RuntimeError: the gift card service did not answer"]})
+        self.assertEqual((first["earned"], first["cards"]), (["POS Invoice:S1:earn"], []))
+        self.assertEqual(second["marked"], ["e2", "e1"])                  # done once both parts have handled it
+        self.assertEqual(second["cards"], ["S1:1"])
+        self.assertEqual(second["gift_card_calls"], 2)                    # S25 tried again
+        self.assertEqual(second["loyalty_calls"], 1)                      # S22 not run again for the same sale
+        self.assertEqual((first["waiting_record"], second["waiting_record"]), ([{"e1": ["lyl"]}], []))
+
+    def test_a_part_that_handled_an_event_is_not_run_again_in_a_new_copy_of_the_function(self):
+        first, second = self.drive("new-copy")["runs"]                  # run 2 starts with every seen-list gone
+        self.assertEqual((first["marked"], first["waiting_record"]), (["e2"], [{"e1": ["lyl"]}]))
+        self.assertEqual((second["loyalty_calls"], second["gift_card_calls"]), (1, 2))
+        self.assertEqual((second["marked"], second["cards"], second["waiting_record"]), (["e2", "e1"], ["S1:1"], []))
+
+    def test_each_part_opens_the_shop_with_its_own_code(self):
+        log = self.drive("unreachable")["log"]
+        errors = [line["error"].split()[0] for line in log if "site" in line]
+        self.assertEqual(errors, ["FeedError", "FeedError"])              # each part reached the feed: none failed to open
+        self.assertEqual(log[-1]["feed"], {"done": 0, "waiting": 0, "errors": 0})
+
+
+class AddToAnAppMadeBefore(Base):
+    """An app made before the one reader: its reading part has a schedule of its own (lyl-pass) and no feed entry."""
+
+    def older_app(self):
+        folder, _ = self.make(["s22_customer_loyalty"])
+        aj, dp = self.app_json(folder), json.loads((folder / "service" / "dispatch.json").read_text(encoding="utf-8"))
+        aj["schedule"] = {"lyl-pass": aj["schedule"].pop("feed")}
+        dp.pop("feed")
+        dp["schedules"] = {"lyl-pass": ["lyl", "pass"]}
+        entries = aj["samples"][0]["entries"]
+        for gone in ("app.json:schedule:feed", "dispatch:feed"):
+            entries.pop(gone)
+        entries["app.json:schedule:lyl-pass"] = combine.sha("rate(1 minute)")
+        entries["dispatch:schedule:lyl-pass"] = combine.sha(["lyl", "pass"])
+        (folder / "app.json").write_text(combine.dump(aj), encoding="utf-8")
+        (folder / "service" / "dispatch.json").write_text(combine.dump(dp), encoding="utf-8")
+        return folder
+
+    def test_adding_a_second_reader_takes_the_first_into_the_one_reader(self):
+        folder = self.older_app()
+        combine.add("s25_gift_on_spend", folder)
+        d = json.loads((folder / "service" / "dispatch.json").read_text(encoding="utf-8"))
+        self.assertEqual(set(d["feed"]["parts"]), {"lyl", "gcs"})
+        self.assertEqual((self.app_json(folder)["schedule"], d["schedules"]), ({"feed": "rate(1 minute)"}, {}))
+        self.check(folder)
+
+    def test_a_reader_the_kit_no_longer_has_is_refused_and_nothing_changes(self):
+        folder = self.older_app()
+        samples = self.into / "samples"
+        samples.mkdir()
+        shutil.copytree(KIT / "samples" / "s25_gift_on_spend", samples / "s25_gift_on_spend",
+                        ignore=shutil.ignore_patterns("__pycache__"))
+        before = tree(folder)
+        with self.assertRaises(combine.Refused) as e:
+            combine.add("s25_gift_on_spend", folder, samples_dir=samples)
+        self.assertEqual(e.exception.code, "reader_unknown")
+        self.assertTrue(e.exception.text.startswith("Not added: S22 reads the site's feed on its own"))
+        self.assertEqual(tree(folder), before)
+
+
+class ReadersUnderTheirNames(Base):
+    """Each reading sample's own tests stay green under the app's names, and S3 and S52 combine with another reader."""
+
+    def test_s22_and_s25_tests_pass_under_the_apps_names(self):
+        folder, out = self.make(["s22_customer_loyalty", "s25_gift_on_spend"], test=True)
+        self.assertRegex(out.splitlines()[0], r"^Made\. 2 samples, 1 app\. CHECK GREEN · (\d+) tests run, \1 passed\.$")
+
+    def test_s52_combines_with_another_reader(self):
+        folder, out = self.make(["s22_customer_loyalty", "s52_phone_plans"], test=True)
+        self.assertRegex(out.splitlines()[0], r"^Made\. 2 samples, 1 app\. CHECK GREEN · (\d+) tests run, \1 passed\.$")
+        d = json.loads((folder / "service" / "dispatch.json").read_text(encoding="utf-8"))
+        self.assertEqual(d["feed"]["parts"]["tel"], {"pass": "pass", "reads": ["POS Invoice"]})
+        self.assertEqual(set(d["feed"]["parts"]), {"lyl", "tel"})
+        self.assertEqual(self.app_json(folder)["schedule"], {"feed": "rate(1 minute)"})
+
+    @unittest.skipIf(hasattr(os, "geteuid") and os.geteuid() == 0,
+                     "S3's own tests include one no root user can pass (a folder root can always write)")
+    def test_s3_tests_pass_under_the_apps_names(self):
+        folder, out = self.make(["s3_price_audit", "s25_gift_on_spend"], test=True)
+        self.assertRegex(out.splitlines()[0], r"^Made\. 2 samples, 1 app\. CHECK GREEN · (\d+) tests run, \1 passed\.$")
+        self.assertEqual((folder / "tests" / "pdo" / "_manifest_path").read_text(encoding="utf-8"), "outside/manifest.json\n")
+
+    def test_s3_combines_with_another_reader_and_its_part_runs(self):
+        folder, _ = self.make(["s3_price_audit", "s25_gift_on_spend"])
+        d = json.loads((folder / "service" / "dispatch.json").read_text(encoding="utf-8"))
+        self.assertEqual(d["feed"]["parts"]["pdo"], {"pass": "pass", "reads": ["POS Invoice", "Sales Invoice"]})
+        self.assertEqual(set(d["feed"]["parts"]), {"pdo", "gcs"})
+        self.assertTrue((folder / "service" / "pdo" / "outside" / "app.py").is_file())      # its code, kept in outside/
+        self.assertFalse((folder / "service" / "pdo" / "outside" / "manifest.json").exists())
+        self.check(folder)
+        log = OneReader.drive(self, "unreachable", folder)["log"]       # each part opens the shop and reaches its feed
+        self.assertEqual(sorted(line["error"].split()[0] for line in log if "site" in line), ["FeedError", "FeedError"])
 
 
 class ThreeSamples(Base):

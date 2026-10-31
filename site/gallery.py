@@ -16,7 +16,11 @@ A sample that lacks a run section or a door fails the build. Reference-app cards
 
 The samples index (samples/index.json on the built site, published at each kit merge) is built here too, from the same cards
 and READMEs: per sample its title, when to use it, picture, door, the needs it serves, its recipe, its industries, its
-version and Versions lines, its Try it at the till lines, and whether it is a configuration pack. The New app page reads it
+version and Versions lines, its Try it at the till lines, and whether it is a configuration pack. A sample with no
+screenshot of its own carries its door's picture: one real screenshot of another sample with that door, chosen per door in
+site/door_pictures.json (a door no screenshot in the kit shows maps to null, and its samples carry no picture). The build
+fails when that file names a door that is not needs.py's, a path that is not a still screenshot of a sample with that door,
+or no picture for a door some sample's screenshots show (door_picture_errors). The New app page reads it
 for its ways in, and tools/manifest/combine.py's newer() reads it for the notice of newer samples. What a README says is read
 by one definition, tools/manifest/sample_info.py. readme_errors() is the build's check of those READMEs: a README with no
 Industries line, or one that differs from the census site/industries.json, a sample with a till part and no Try it at the
@@ -139,6 +143,8 @@ def reference_app(spec: str, org_url: str, doors: dict, errors: list, src: str, 
 
 # ── the samples index and the check of what it is read from ────────────────────────────────────────────────────────
 CENSUS = "site/industries.json"
+DOOR_PICTURES = "site/door_pictures.json"
+STILL = re.compile(r"samples/[a-z0-9_]+/screenshots/[^/]+\.(?:png|jpe?g|webp)")
 RECIPE_LINK = re.compile(r"\]\(((?:\.\./)+recipes/[a-z0-9_]+\.md)\)|`(recipes/[a-z0-9_]+\.md)`")   # a link, or a kit path in code
 GENERIC_RECIPES = {"recipes/make_it_your_own.md"}           # every README names it: it is how to start, not the sample's recipe
 
@@ -196,6 +202,48 @@ def readme_errors(root) -> list[str]:
     return errors
 
 
+def own_still(folder: str, root) -> str | None:
+    """The first still in a sample's own screenshots/ folder, when its README links none (the index's picture)."""
+    stills = sorted(f"{folder}/screenshots/{q.name}" for q in (pathlib.Path(root) / folder / "screenshots").glob("*")
+                    if q.is_file() and STILL.fullmatch(f"{folder}/screenshots/{q.name}"))
+    return stills[0] if stills else None
+
+
+def index_picture(s: dict, pictures: dict, root) -> str | None:
+    """A sample's picture in the index: its card's screenshot, else a screenshot of its own, else its door's picture."""
+    return s["shot"] or own_still(s["folder"], root) or (pictures.get(s["doors"][0]) if s["doors"] else None) or None
+
+
+def door_pictures(root) -> dict:
+    """{door: the kit path of the one screenshot a sample with that door and no screenshot of its own carries, or None}."""
+    return json.loads((pathlib.Path(root) / DOOR_PICTURES).read_text("utf-8")).get("doors") or {}
+
+
+def door_picture_errors(samples: list[dict], doors: dict, root) -> list[str]:
+    """The build's check of site/door_pictures.json against the sample cards (``collect``): every door of needs.py, each a
+    still screenshot of a sample that has that door, and null only where no sample with that door has a screenshot."""
+    root = pathlib.Path(root)
+    try:
+        pictures = door_pictures(root)
+    except (OSError, ValueError) as e:
+        return [f"{DOOR_PICTURES}: cannot be read ({e})"]
+    errors = []
+    want = [d for d in doors if d not in NO_DOOR]
+    if sorted(pictures) != sorted(want):
+        errors.append(f"{DOOR_PICTURES}: its doors must be needs.py's: {', '.join(want)}")
+    for door, path in pictures.items():
+        stills = [f"{s['folder']}/screenshots/{q.name}" for s in samples if door in s["doors"]
+                  for q in sorted((root / s["folder"] / "screenshots").glob("*"))
+                  if q.is_file() and STILL.fullmatch(f"{s['folder']}/screenshots/{q.name}")]
+        if path is None:
+            if stills:
+                errors.append(f"{DOOR_PICTURES}: {door} has no picture, but {stills[0]} shows a sample with that door: a sample "
+                              "with this door and no screenshot of its own would carry none")
+        elif path not in stills:
+            errors.append(f"{DOOR_PICTURES}: {door}: {path!r} is not a still screenshot, in the kit, of a sample with that door")
+    return errors
+
+
 def recipe_of(folder: str, text: str, cited: list, root) -> str | None:
     """The sample's recipe, as a kit path: the recipe its needs cards cite most (on a tie, one that names the sample's folder,
     then the first cited); with no card naming one, the recipe its README names that also names the sample's folder."""
@@ -216,6 +264,7 @@ def recipe_of(folder: str, text: str, cited: list, root) -> str | None:
 def index(samples: list[dict], pages: list, backlinks: dict, doors: dict, root) -> dict:
     """The published samples index: one entry per sample card, in the cards' order (S-number)."""
     texts = {p.src.removesuffix("/README.md"): p.text for p in pages if p.group == "samples"}
+    pictures = door_pictures(root)
     out = []
     for s in samples:
         folder, text = s["folder"], texts[s["folder"]]
@@ -224,7 +273,8 @@ def index(samples: list[dict], pages: list, backlinks: dict, doors: dict, root) 
         recipe = recipe_of(folder, text, cited, root)
         out.append({"name": path.name, "title": s["title"], "version": sample_info.version(path),
                     "versions": [{"version": v, "lines": lines} for v, lines in sample_info.versions(text)],
-                    "when_to_use": s["line"] or None, "picture": s["shot"] or None,
+                    "when_to_use": s["line"] or None,
+                    "picture": index_picture(s, pictures, root),
                     "door": doors[s["doors"][0]] if s["doors"] else None,
                     "needs": [c.id for c in cited], "recipe": recipe.removesuffix(".md") + ".html" if recipe else None,
                     "industries": sample_info.industries(text) or [], "till": sample_info.till_lines(text),

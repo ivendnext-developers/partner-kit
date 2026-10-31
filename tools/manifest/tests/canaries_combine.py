@@ -17,9 +17,11 @@ import sys
 import tempfile
 
 KIT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-SAMPLES = ("s2_bins", "s11_approvals", "s20_capture", "s22_customer_loyalty", "s23_till_guard", "s25_gift_on_spend",
-           "s32_coupon_rules", "s42_optical_prescriptions", "s46_payment_method_rules", "s57_donation_intake")
+SAMPLES = ("s1_warranty", "s2_bins", "s3_price_audit", "s5_config_pack", "s11_approvals", "s20_capture", "s22_customer_loyalty",
+           "s23_till_guard", "s25_gift_on_spend", "s32_coupon_rules", "s42_optical_prescriptions", "s46_payment_method_rules",
+           "s57_donation_intake")
 C = "tools/manifest/combine.py"
+F = "tools/feed_client/feed_client.py"
 T = "test_combine."
 
 CANARIES = [
@@ -46,8 +48,26 @@ CANARIES = [
     ("a link is followed", C,
      "    if links:\n        raise Refused(", "    if False:\n        raise Refused(",
      T + "ReviewFolds.test_add_never_writes_through_a_link"),
-    ("two feed readers share one feed", C, "    if len(readers) > 1:", "    if False:",
-     T + "ReviewFolds.test_two_samples_that_each_read_the_feed_are_refused_in_words"),
+    ("an event is marked done before every part has handled it", F,
+     "                       if all(p in by[ev[\"id\"]] for p in self.reads if self.wants(p, ev))]",
+     "                       if any(p in by[ev[\"id\"]] for p in self.reads if self.wants(p, ev))]",
+     T + "OneReader.test_a_part_that_fails_leaves_the_event_and_the_other_part_is_not_run_twice"),
+    ("a part handled again for an event it has handled", F,
+     "            if part in shop[\"handed\"].get(ev[\"id\"], ()) or store.seen(mine[\"id\"]) \\\n",
+     "            if False and (part in shop[\"handed\"].get(ev[\"id\"], ()) or store.seen(mine[\"id\"])) \\\n",
+     T + "OneReader.test_a_part_that_fails_leaves_the_event_and_the_other_part_is_not_run_twice"),
+    ("a part handled again in a new copy of the function", F,
+     "                kept = (self.ledger.get(self.record(feed)) or {}).get(\"events\") or {} if self.ledger is not None else {}",
+     "                kept = {}",
+     T + "OneReader.test_a_part_that_handled_an_event_is_not_run_again_in_a_new_copy_of_the_function"),
+    ("S3's code is left out of the app", C, "SKIP_FILES = {\"outside/manifest.json\"}", "SKIP_FILES = set()\nSKIP_TOP.add(\"outside\")",
+     T + "ReadersUnderTheirNames.test_s3_combines_with_another_reader_and_its_part_runs"),
+    ("a part reads the feed on its own in an app", "tools/manifest/combined/app.py",
+     "    sys.modules[HANDOFF_MODULE] = module\n", "    pass\n",
+     T + "OneReader.test_one_sale_reaches_both_parts_from_one_read"),
+    ("a sample with a server of its own and no hosting order is made into an app", C,
+     "        if own_server(p) and not handler_of(p):", "        if routes(app_view(p)) and not handler_of(p):",
+     T + "Refusals.test_m34_a_sample_that_answers_the_till_from_its_own_server"),
     ("add counts only the added sample against the limits", C, "    limits(others + [part])", "    limits([part])",
      T + "ReviewFolds.test_add_gives_the_limits_words_over_the_whole_app"),
     ("a refused add still writes", C,

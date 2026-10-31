@@ -45,10 +45,15 @@ def scratch_sample(tag: str, root: pathlib.Path) -> pathlib.Path:
         shutil.copytree(SERVICE / tag, part, ignore=shutil.ignore_patterns("__pycache__"))
     part.mkdir(parents=True, exist_ok=True)
     own = APP / "tests" / tag
-    shutil.copytree(own, part / "tests", ignore=shutil.ignore_patterns("__pycache__", "_manifest.json", "_app.json", "_README.md"))
+    shutil.copytree(own, part / "tests", ignore=shutil.ignore_patterns("__pycache__", "_manifest.json", "_app.json", "_README.md",
+                                                                      "_manifest_path"))
     for name in ("manifest.json", "app.json", "README.md"):
         if (own / f"_{name}").is_file():
-            shutil.copyfile(own / f"_{name}", part / name)
+            at = name
+            if name == "manifest.json" and (own / "_manifest_path").is_file():     # kept beside its code (S3: outside/)
+                at = (own / "_manifest_path").read_text(encoding="utf-8").strip()
+            (part / at).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(own / f"_{name}", part / at)
     # the sample's own view: in an app of several samples its code names the app's one Integration role; its own tests
     # (written for the sample alone) read its own role, so the scratch copy names that one
     app_role, own_role = f"{DISPATCH.get('prefix')} Integration", f"{MOUNTS[tag]['prefix']} Integration"
@@ -122,6 +127,15 @@ class TheService(unittest.TestCase):
         with redirect_stdout(io.StringIO()) as log:
             out = self.service.lambda_handler(event(path, body, headers if headers is not None else sign(body), method))
         return out["statusCode"], json.loads(out["body"]), log.getvalue()
+
+    def test_the_parts_that_read_the_feed_are_handed_by_one_reader(self):
+        readers = (DISPATCH.get("feed") or {}).get("parts") or {}
+        if not readers:
+            self.skipTest("no part of this app reads the site's feed")
+        self.assertIsNotNone(self.service.HUB)             # every part's poll is handed: none marks the others' events done
+        self.assertIs(sys.modules[self.service.HANDOFF_MODULE].HUB, self.service.HUB)
+        self.assertEqual(set(self.service.HUB.reads), set(readers))
+        self.assertEqual(DISPATCH["feed"]["schedule"], "feed")
 
     def test_health(self):
         self.assertEqual(self.call("/health", {}, b"", "GET")[:2], (200, {"status": "ok"}))
