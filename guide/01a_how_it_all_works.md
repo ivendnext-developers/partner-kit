@@ -100,12 +100,12 @@ A customer asks you for four things. Do you build four apps in four containers, 
 
 ## 9. Publishing is not handing us your code
 
-![Who sends what to whom. One: you publish your manifest and its card to the App library, signed with your key. Two, only if CitiXsys runs your service: you send iVendNext App Hosting a hosting order with your app.json and an image, or a function's package of the files it runs, never your repository. Three: the App library shows your app on its public list or on one chain's Made for you shelf. Four: the chain's administrator reads What it will do, ticks consent and installs. Five: the chain's iVendNext connects to your service, handing over its address, its key and the secrets the install made. Your code stays in your own repository.](img/publish-and-host.svg)
+![Who sends what to whom. One: you publish your manifest and its card to the App library, signed with your key. Two, only if CitiXsys runs your service: you send iVendNext App Hosting a hosting order, then each version as your app's folder in one zip, which we build, never your repository. Three: the App library shows your app on its public list or on one chain's Made for you shelf. Four: the chain's administrator reads What it will do, ticks consent and installs. Five: the chain's iVendNext connects to your service, handing over its address, its key and the secrets the install made. Your code stays in your own repository.](img/publish-and-host.svg)
 
 Publishing and hosting are **two separate steps**. Publishing never sends your code, and neither gives us your repository.
 
 - **Publish:** your manifest and its card go to an App library shelf, signed with your own key ([Publish your app](../site/pages/publish.md)). This is all a no-service app ever sends.
-- **Hosting, only if CitiXsys runs your service:** a separate hosting order, with your `app.json` and either an **image** you built or a **function's package** (the files the function runs, zipped by the kit), never your repository or access to it ([chapter 14b](14b_deploying_your_app.md#let-citixsys-host-it)). On your own server you send us nothing.
+- **Hosting, only if CitiXsys runs your service:** a separate hosting order; then each version is your app's folder, uploaded as one zip, which we build (or, through your partner manager, an **image** you built or a **function's package**), never your repository or access to it ([chapter 14b](14b_deploying_your_app.md#let-citixsys-host-it)). On your own server you send us nothing.
 - **The customer installs with consent.** The chain's administrator reads *What it will do*, written by iVendNext from your manifest, ticks the box and installs.
 
 ## 10. What the customer sees

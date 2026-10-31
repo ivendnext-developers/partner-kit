@@ -11,7 +11,7 @@ How to run your own service so a retailer can reach it: what it must do, how to 
 - **Your app runs on a server you choose,** in any cloud or on your own machines. Nothing of yours is installed in the customer's iVendNext (chapter 3, rule 3).
 - **iVendNext calls your app over HTTPS** (a till key, a Desk button, a webhook) and **your app calls iVendNext's API** with the key you were given. Till keys and Desk buttons are extension points (chapter 9).
 - **Package it as a container.** One image runs the same on your laptop, on a test copy and in production.
-- **Or let CitiXsys host it.** Send us the image, or a function's package (the files it runs), and its settings file, never your repository; we run it at `https://<app>.ivendnext.app` ([below](#let-citixsys-host-it)).
+- **Or let CitiXsys host it.** Order it, then upload your app's folder as one zip and we build it (or, through your partner manager, send us the image or a function's package), never your repository; we run it at `https://<app>.ivendnext.app` ([below](#let-citixsys-host-it)).
 - **iVendNext checks nothing about where you run it.** It checks your answers: the signature, the time to answer and the shape of the reply.
 
 ## When to use it
@@ -82,15 +82,15 @@ A managed container service in your own cloud account is the least work. A small
 
 ## Let CitiXsys host it
 
-If you would rather not run a server, CitiXsys runs your app for you on our own cloud, beside iVendNext. **Your code stays in your own repository.** We never need access to your code repository: we run the image you build, or your function's package, which holds only the files the function runs.
+If you would rather not run a server, CitiXsys runs your app for you on our own cloud, beside iVendNext. **Your code stays in your own repository.** We never need access to your code repository: you upload your app's folder as one zip and we build it (or, for an app ordered through your partner manager, we run the image you build or your function's package, which holds only the files the function runs).
 
-**Build the image for ARM64** (`docker build --platform linux/arm64 …`). Our hosting runs ARM processors; an image built only for x86 does not start.
+**Ordered through your partner manager? Build the image for ARM64** (`docker build --platform linux/arm64 …`). Our hosting runs ARM processors; an image built only for x86 does not start.
 
 **What you send us** — one hosting order:
 
 - your app's `app.json` and `Dockerfile` (names only, never a value, and no secret in either);
 - your app's licence file and its list of third-party components (`LICENSE` and `THIRD_PARTY.md`, as in the template). We host a component under the GNU Affero GPL only when you publish its source: its line names the `https://` address where you do;
-- where your image is: the image registry, the version tag, and how we may pull it. Never put a token in the order: your partner manager tells you how to send a read-only token safely. We copy that version into your app's own registry with us;
+- ordered through your partner manager: where your image is, the image registry, the version tag, and how we may pull it. Never put a token in the order: your partner manager tells you how to send a read-only token safely. We copy that version into your app's own registry with us;
 - the plan: Starter, Standard or Managed (below);
 - your partner name, and the customer the app is for, if it is built for one.
 
