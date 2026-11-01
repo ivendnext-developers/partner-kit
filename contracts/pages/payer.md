@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ c39b1449937a, copied unchanged except the links, plus the payer record's change to sections 4b, 4c and 4d (the release after 2.1.0.669): its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ c39b1449937a, copied unchanged except the links, plus the payer record's change to sections 4b, 4c and 4d (iVendNext POS 2.1.0.672, train T24, merged as aee0c9beb): its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Payer — your service pays part of a sale for someone else
 
 **Contract:** [`payer.v1.schema.json`](../extension_contracts/payer.v1.schema.json)

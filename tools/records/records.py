@@ -57,6 +57,8 @@ RECORDS = [
      "The goods handed over or shipped against an order, which takes them out of stock."),
     ("Quotation", "Sales and returns", True,
      "A price offered to a customer before the sale, which can become an order."),
+    ("Retail Payer Record", "Sales and returns", False,
+     "An insurer's (payer's) part of one sale: who pays it, the claim, the shares line by line and the payer journal. One per payer sale, payer return and back-office payer invoice, linked from that sale; written only by the payer door, read by a System Manager."),
     # Till sales
     ("POS Invoice", "Till sales", True,
      "One sale rung up at a till: its lines, payments, customer and store. A till return is a POS Invoice with *Is Return* ticked."),
@@ -287,8 +289,6 @@ FORM_TOOL = "a Desk tool that changes a form; your manifest's own kinds do this 
 A_LABEL = "the word here is a field's, a view's or a header's label, not the record type"
 SKIP = {
     "DocType": "a record type's definition, which this tool reads; not a business record",
-    "Retail Payer Record": "a payer sale's details, which the payer door writes from the POS release after 2.1.0.669 "
-                           "(the payer page, section 4b); its page here comes when that release is read",
     "Error Log": "the site's own error log, which the sign-in tool reads for a failed sign-in",
     "Deleted Document": "a housekeeping step for the retailer's administrator in a sample's walk; no app reads or writes it",
     "Data Export": "a Desk tool named as one more way a register's columns are read",

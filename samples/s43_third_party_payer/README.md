@@ -112,6 +112,10 @@ Recipe: [`recipes/third_party_payer.md`](../../recipes/third_party_payer.md).
 
 ## Versions
 
+### 0.3.0
+
+- Reads a payer sale's details from its payer record (POS 2.1.0 build 672 or later): the sale, then the Retail Payer Record it names, each record line matched to its sale line by position. Asks for a read on seven record types.
+
 ### 0.2.0
 
 - Installs the payer service on the POS app's payer door (POS 2.1.0 build 667 or later) and the claims clerk's Bill to the customer button, in one manifest.
