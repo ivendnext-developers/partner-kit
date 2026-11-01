@@ -98,9 +98,16 @@
   function allApps(name) { return "All of " + name + "'s apps"; }
 
   function appTitle(app) { return String(app || "").replace(/_/g, " ").toUpperCase(); }
+  // J5-14: after *Accept*, the app is yours, and the hosting it brings asks for your card from the next month
+  function acceptedWords(app, answer) {
+    var pay = (((answer || {}).hosting || {}).orders || []).filter(function (x) { return x.checkout_url; });
+    return appTitle(app) + " is yours." + (pay.length ? " Give your card for its hosting from the next month: " +
+      pay.map(function (x) { return x.checkout_url; }).join(" ") : "");
+  }
 
   var api = { WORDS: WORDS, PAGE: PAGE, readReturn: readReturn, authorizeUrl: authorizeUrl, challengeOf: challengeOf,
-              suggestWord: suggestWord, wordHint: wordHint, scheduleLine: scheduleLine, allApps: allApps, appTitle: appTitle };
+              suggestWord: suggestWord, wordHint: wordHint, scheduleLine: scheduleLine, allApps: allApps, appTitle: appTitle,
+              acceptedWords: acceptedWords };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -246,9 +253,9 @@
     row.appendChild(button(WORDS.accept, function (ev) {
       ev.target.disabled = true;
       call("POST", "/handover/accept", { app: o.app }).then(function (r) {
-        var pay = ((r.hosting || {}).orders || []).filter(function (x) { return x.checkout_url; });
-        say(appTitle(o.app) + " is yours." + (pay.length ? " Give your card for its hosting from the next month: " + pay.map(function (x) { return x.checkout_url; }).join(" ") : ""));
-        go("home");
+        go("home");   // first: going home clears the last message
+        say(acceptedWords(o.app, r));
+        render();
       }, function (e) { ev.target.disabled = false; fail(e); });
     }));
     row.appendChild(button(WORDS.refuse, function () {

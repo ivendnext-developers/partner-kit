@@ -60,6 +60,14 @@ const csp = (page.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/
 check("the page's own content policy reaches only the hosting", csp.includes("connect-src https://hosting.ivendnext.app") && !csp.includes("'unsafe"));
 check("its one script, none of the site's others", page.includes("assets/apps.js") && !page.includes("assets/search.js") && !page.includes("assets/analytics.js"));
 check("without script the page says what it is", page.includes("Sign in to make, try and publish your apps."));
+// J5-14: after Accept the app is yours, with its hosting's checkout; going home must not clear it (walk, 2026-11-01)
+check("Accept says the app is yours, with its hosting's checkout",
+  a.acceptedWords("acme_member_till", { hosting: { orders: [{ checkout_url: "https://checkout.stripe.com/c/pay/x" }] } }) ===
+    "ACME MEMBER TILL is yours. Give your card for its hosting from the next month: https://checkout.stripe.com/c/pay/x" &&
+  a.acceptedWords("acme_member_till", { hosting: { orders: [] } }) === "ACME MEMBER TILL is yours.");
+const src = readFileSync(path.join(out, "assets/apps.js"), "utf8");
+check("Accept's words are said after going home, which clears the last message",
+  /go\("home"\);[^\n]*\n\s*say\(acceptedWords\(o\.app, r\)\);\s*\n\s*render\(\);/.test(src));
 
 console.log(red ? `${red} FAILED` : "ALL PASS");
 process.exit(red ? 1 : 0);
