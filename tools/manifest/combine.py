@@ -523,6 +523,9 @@ def mount(part: Part, app_manifest: dict) -> dict:
             "prefix_setting": f"{part.tag.upper()}_PREFIX", "aliases": part.aliases, "strip": part.strip, "points": points}
 
 
+NOT_COMPARED = ("app.json:version", "app.json:base")   # set for the developer, never their edit
+
+
 def entries_of(manifest: dict, app_json: dict, dispatch: dict) -> dict:
     """{entry id: value} of the three shared files the tool writes, compared entry by entry."""
     out = {}
@@ -1133,6 +1136,8 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
         for path, h in r.get("files", {}).items():
             rec_files[path] = (r["name"], h)
         for i, h in r.get("entries", {}).items():
+            if i in NOT_COMPARED:                         # a record written before these were left out (kit #156)
+                continue
             rec_entries[i] = (r["name"], h)
     cur_entries = entries_of(cur_manifest, cur_app, cur_dispatch)
     new_manifest, new_app, new_dispatch, files, owners = assemble([part], prefix, app, commit, cur_manifest, cur_app,
