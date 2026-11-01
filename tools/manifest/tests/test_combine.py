@@ -239,6 +239,26 @@ class Combine(Base):
                 self.assertEqual(mis[0], 401, path)
 
 
+class DeskButtons(Base):
+    """A Desk button names its subscription by key (its `service`): combined or added, it names the tagged key, so the
+    kit's check passes (found by EASY3a's walk, 2026-11-01: S23 with S49 was refused by the check)."""
+
+    def test_a_desk_button_names_its_tagged_subscription_combined_and_added(self):
+        folder, _ = self.make(["s23_till_guard", "s49_post_sale_feedback"])
+        m = self.manifest(folder)
+        keys = {s["key"] for s in m["extension_subscriptions"]}
+        self.assertEqual([a["service"] for a in m["desk_actions"]], ["psf_send"])
+        self.assertIn("psf_send", keys)
+        self.assertEqual(combine.kit_check(folder)[0], 0, combine.kit_check(folder)[1])
+        other = pathlib.Path(self.tmp.name) / "add"
+        other.mkdir()
+        app = combine.combine(["s23_till_guard", "s22_customer_loyalty"], "ACME AD", other, out=io.StringIO())
+        combine.add("s49_post_sale_feedback", app)
+        m2 = self.manifest(app)
+        self.assertEqual([a["service"] for a in m2["desk_actions"]], ["psf_send"])
+        self.assertEqual(combine.kit_check(app)[0], 0, combine.kit_check(app)[1])
+
+
 class Refusals(Base):
     def test_m01_two_samples_capture_at_the_scan(self):
         with self.assertRaises(combine.Refused) as e:

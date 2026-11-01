@@ -258,6 +258,9 @@ def app_view(part: Part) -> dict:
             for x in m.get(k) or []:
                 if isinstance(x.get("key"), str):
                     x["key"] = part.aliases.get(x["key"], x["key"]) if not x["key"].startswith(part.app_name + "_") else x["key"]
+        for x in m.get("desk_actions") or []:   # a Desk button names its subscription by key: the same tagged key
+            if isinstance(x, dict) and isinstance(x.get("service"), str):
+                x["service"] = part.aliases.get(x["service"], x["service"])
     if part.strip:
         for k in KEYED:
             for x in m.get(k) or []:
