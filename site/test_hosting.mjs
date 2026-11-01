@@ -32,6 +32,10 @@ check("a code with this tab's state is taken, with its verifier", r.kind === "si
 check("a code with another state is refused", h.readReturn("?code=abc12345&state=other", pending).kind === "refused");
 check("a code when no sign-in was started (or it was used) is refused", h.readReturn(`?code=abc12345&state=${pending.state}`, null).kind === "refused");
 check("GitHub's refusal is refused", h.readReturn("?error=access_denied&state=x", pending).kind === "refused");
+r = h.readReturn("?error=access_denied&state=apps-state", pending, { state: "apps-state", verifier: "v" });
+check("GitHub's refusal of a sign-in My apps started goes back to My apps, the address as GitHub gave it",
+  r.kind === "apps" && r.to === "/apps?error=access_denied&state=apps-state", JSON.stringify(r));
+check("a refusal with another My apps state stays here", h.readReturn("?error=access_denied&state=x", pending, { state: "apps-state" }).kind === "refused");
 check("Stripe's return names the order and claims no payment", h.readReturn("?order=0123456789abcdef", null).kind === "back");
 check("leaving Stripe's checkout is told apart", h.readReturn("?order=0123456789abcdef&left=1", null).kind === "left");
 check("a plain visit is nothing", h.readReturn("", null).kind === "none");

@@ -49,8 +49,13 @@
   }
 
   // What the address says on arrival. A code is accepted only with the state this tab sent, once.
-  function readReturn(search, pending) {
+  // GitHub sends every refusal to the App's first address, this page, even for a sign-in My apps started: that one goes
+  // back to My apps with the address as GitHub gave it, and My apps says M22 (J8-22).
+  function readReturn(search, pending, appsPending) {
     var q = new URLSearchParams(search || "");
+    if (q.has("error") && appsPending && appsPending.state && appsPending.state === q.get("state")) {
+      return { kind: "apps", to: "/apps" + search };
+    }
     if (q.has("code") || q.has("state") || q.has("error")) {
       if (q.has("error")) return { kind: "refused", why: "GitHub did not sign you in. Sign in again when you are ready." };
       if (!pending || !pending.state || pending.state !== q.get("state") || !q.get("code")) {
@@ -238,7 +243,10 @@
   var pending = null;
   try { pending = JSON.parse(root.sessionStorage.getItem(PENDING) || "null"); } catch (e) { pending = null; }
   root.sessionStorage.removeItem(PENDING);   // one use, whatever the address says
-  var arrival = readReturn(root.location.search, pending);
+  var appsPending = null;
+  try { appsPending = JSON.parse(root.sessionStorage.getItem("ivn-apps-signin") || "null"); } catch (e) { appsPending = null; }
+  var arrival = readReturn(root.location.search, pending, appsPending);
+  if (arrival && arrival.kind === "apps") { root.location.replace(arrival.to); return; }
   if (root.location.search) root.history.replaceState(null, "", root.location.pathname + root.location.hash);
 
   var session = null, who = null, cfg = null, poller = null;
