@@ -30,6 +30,7 @@ check("J2-01: the lede, the button and the line under it", W.lede === "Sign in t
 check("J8-22 (M22)", W.m22 === "GitHub did not sign you in. Try again.");
 check("J2-02: the labels, the hint and the schedule line", W.company === "Your company" && W.companyName === "Company name" &&
   W.firstWord === "Your first word" && a.wordHint("acme") === "Every app you make starts with it: acme_…. It is yours once you press Continue." &&
+  a.wordHint("") === "Every app you make starts with it. It is yours once you press Continue." &&
   a.scheduleLine("3") === "I accept the App Hosting Schedule (version 3)" && W.cont === "Continue");
 check("J2-03: the button (its words come from the hosting's door, with the person's login)", W.setUp === "Set up my company");
 check("J2-04", W.addPerson === "Add a person" && W.makeOwner === "Make owner" && W.remove === "Remove");
@@ -218,6 +219,10 @@ check("J11-02: a version made with the command reads ivn", a.versionLine({ versi
   === "1.1.0 (draft) · S11 added · ci · ivn");
 check("J4-01: the Desk picture ships with the page", existsSync(path.join(out, "assets/desk_api_access.jpg")) &&
   src.includes("/assets/desk_api_access.jpg"));
+check("J7-01: Pictures, up to four, by the App library's picture rules", U.pictures === "Pictures" &&
+  a.pictureType({ type: "image/png", size: 1000 }) === "png" && a.pictureType({ type: "image/webp", size: 300 * 1024 }) === "webp" &&
+  a.pictureType({ type: "image/png", size: 300 * 1024 + 1 }) === null && a.pictureType({ type: "image/svg+xml", size: 10 }) === null &&
+  src.includes("4 - cd.pictures.length") && src.includes('"/publish/picture"'));
 check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
 check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&
   !existsSync(path.join(out, "assets/hosting.js")));

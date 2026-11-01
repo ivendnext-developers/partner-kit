@@ -106,7 +106,8 @@
   }
 
   function wordHint(word) {
-    return "Every app you make starts with it: " + (word || "…") + "_…. It is yours once you press Continue.";
+    // an empty box shows no …_… (EASY1NOTES): the example appears with the first letter typed
+    return "Every app you make starts with it" + (word ? ": " + word + "_…" : "") + ". It is yours once you press Continue.";
   }
 
   function scheduleLine(version) { return "I accept the App Hosting Schedule (version " + version + ")"; }
@@ -176,6 +177,8 @@
     withKey: "With a key: retailers ask you", setUp: "How to set it up", setUpHint: "The steps the retailer follows first, one per line.",
     guide: "Guide link", guideHint: "A page on docs.ivendnext.com or developer.ivendnext.com: the App library's rule.",
     send: "Send for listing", hours: "The last", pay: "Pay with your card",
+    pictures: "Pictures", picturesHint: "Up to four: PNG, JPEG or WebP, each at most 300 KB, at most 2400 pixels a side.",
+    pictureBad: "Not added: a picture is a PNG, JPEG or WebP file of at most 300 KB. Make it smaller and choose it again.",
     picture: "In your sandbox's Desk: your name > My Settings > API Access > Generate Keys"
   };
   // an industry the App library's card takes (its ids, as the hosting gives them), in the words the gallery shows
@@ -190,6 +193,9 @@
     return (v.sites || []).length > 0 && sent.length > 1 && sent[sent.length - 1].version !== v.version;
   }
   function pubRunning(s) { return tryRunning(s); }
+  // J7-01's Pictures, by the App library's own picture rules (its media door): the type and size checked here first
+  var PIC_TYPES = { "image/png": "png", "image/jpeg": "jpeg", "image/webp": "webp" };
+  function pictureType(file) { return file && file.size > 0 && file.size <= 300 * 1024 ? PIC_TYPES[file.type] || null : null; }
   function logFile(app, lines) { return lines.join("\n") + (lines.length ? "\n" : ""); }
   var SECTIONS = ["New in Desk", "Who can use it", "Changes to what you already have", "Print layouts",
                   "Connects outside your site"];
@@ -384,7 +390,7 @@
               covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords,
-              canGoBack: canGoBack, logFile: logFile };
+              canGoBack: canGoBack, logFile: logFile, pictureType: pictureType };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -913,6 +919,24 @@
     return el("div", {}, box, vWhere(a.app), vb, cb, more);
   }
 
+  // one picture: its size read in the browser, then put in the App library by the hosting (J7-01)
+  function addPicture(f, cd) {
+    var kind = pictureType(f);
+    if (!kind) return Promise.reject(new Error(U.pictureBad));
+    return root.createImageBitmap(f).then(function (img) {
+      var w = img.width, h = img.height;
+      if (w > 2400 || h > 2400) throw new Error(U.pictureBad.replace("of at most 300 KB", "of at most 2400 pixels a side"));
+      return f.arrayBuffer().then(function (buf) {
+        return call("POST", "/publish/picture", { app: data.appId, type: kind, data: b64(new Uint8Array(buf)), w: w, h: h });
+      });
+    }).then(function (r) { cd.pictures.push({ sha256: r.sha256, type: r.type, w: r.w, h: r.h, name: f.name }); });
+  }
+  function b64(bytes) {
+    var s = "";
+    for (var i = 0; i < bytes.length; i += 8192) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+    return btoa(s);
+  }
+
   function download() {
     call("POST", "/download", { app: data.appId }).then(function (r) { root.location.assign(r.url); }, fail);
   }
@@ -1184,6 +1208,20 @@
         inp.addEventListener("input", function () { cd.what[i] = inp.value; });
         box.appendChild(el("p", {}, inp));
       });
+      cd.pictures = cd.pictures || [];
+      var pics = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp", multiple: "" });
+      pics.disabled = cd.pictures.length >= 4;
+      pics.addEventListener("change", function () {
+        var files = Array.prototype.slice.call(pics.files || [], 0, 4 - cd.pictures.length);
+        files.reduce(function (prev, f) {
+          return prev.then(function () { return addPicture(f, cd); });
+        }, Promise.resolve()).then(function () { render(); }, fail);
+      });
+      box.appendChild(field(U.pictures, pics, U.picturesHint));
+      cd.pictures.forEach(function (x, i) {
+        box.appendChild(el("p", { "class": "hint" }, (i + 1) + ". " + x.name + " (" + x.w + " × " + x.h + ") ",
+          button(U.remove, function () { cd.pictures.splice(i, 1); render(); }, true)));
+      });
       var fs = el("fieldset", {}, el("legend", { text: U.industries }));
       (c.industries || []).forEach(function (id) {
         var cb = el("input", { type: "checkbox" });
@@ -1229,7 +1267,8 @@
       var body = { app: data.appId, to: data.pubTo, plan: form.plan || money.plan || undefined };
       if (data.pubTo === "customer") { body.sites = form.sites.filter(function (x) { return x.trim(); }); body.own = form.own; }
       else body.card = { title: form.card.title, summary: form.card.summary, what: form.card.what.filter(function (x) { return x.trim(); }),
-                         industries: form.card.industries, price: form.card.price, setup: form.card.setup, guide: form.card.guide };
+                         industries: form.card.industries, price: form.card.price, setup: form.card.setup, guide: form.card.guide,
+                         pictures: (form.card.pictures || []).map(function (x) { return { sha256: x.sha256, type: x.type, w: x.w, h: x.h }; }) };
       call("POST", "/publish", body).then(function (r) { data.pubS = r; data.pubC = null; data.pubForm = null; say(""); render(); pollPub(); },
                                          function (e) { ev.target.disabled = false; fail(e); });
     });
