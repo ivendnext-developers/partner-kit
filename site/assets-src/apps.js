@@ -929,9 +929,12 @@
       var parts = noSandboxParts(sb.words);
       box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
     }
-    var addr = el("input", { type: "url", spellcheck: "false", autocomplete: "off", placeholder: "https://acme.sandbox.ivend.co" });
-    var key = el("input", { type: "text", spellcheck: "false", autocomplete: "off" });
-    var secret = el("input", { type: "password", autocomplete: "off" });
+    // what was typed stays through a refusal (M11, M12): the person corrects one box, never all three
+    var typed = data.sbTyped || (data.sbTyped = { site: "", key: "", secret: "" });
+    var keep = function (input, k) { input.value = typed[k]; input.addEventListener("input", function () { typed[k] = input.value; }); return input; };
+    var addr = keep(el("input", { type: "url", spellcheck: "false", autocomplete: "off", placeholder: "https://acme.sandbox.ivend.co" }), "site");
+    var key = keep(el("input", { type: "text", spellcheck: "false", autocomplete: "off" }), "key");
+    var secret = keep(el("input", { type: "password", autocomplete: "off" }), "secret");
     box.appendChild(field(T.address, addr));
     box.appendChild(el("p", {}, el("strong", { text: T.keyLabel }), el("br", {}), el("span", { "class": "hint", text: T.keyHint })));
     box.appendChild(field(T.key, key));
@@ -939,7 +942,7 @@
     box.appendChild(button(T.check, function (ev) {
       ev.target.disabled = true;
       call("POST", "/sandbox/connect", { site: addr.value.trim(), key: key.value.trim(), secret: secret.value.trim() })
-        .then(function (r) { data.sandbox = r; secret.value = ""; say(r.words); render(); },
+        .then(function (r) { data.sandbox = r; data.sbTyped = null; say(r.words); render(); },
               function (e) { ev.target.disabled = false; fail(e); });
     }));
     return box;
