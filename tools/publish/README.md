@@ -10,7 +10,7 @@ Standard library only (Python 3.10+). Exit code: 0 published (or waiting for our
 python3 tools/publish/publish.py keygen
 ```
 
-It writes `~/.ivendnext/library-signing.key` (readable by you only; `--key <file>` to keep it elsewhere) and prints one line, `ivn-ed25519:…`, with its key id. Send that line to iVendNext through Help or your account manager, with your `recipient.pem` and the first word you would like for your company: every app you name under it is yours (`ACME LOYALTY` becomes `acme_loyalty`), with no reservation. The line is public; the file is not. Back the file up: a lost key means registering a new one.
+It writes `~/.ivendnext/library-signing.key` (readable by you only; `--key <file>` to keep it elsewhere) and prints one line, `ivn-ed25519:…`, with its key id. Register it yourself, signed in (`publish.py login`): `publish.py keygen --register --recipient library/recipient.pem` (an existing key at `--key` is registered as it is). Your company and its first word are set up once on My apps (`https://developer.ivendnext.com/apps`): every app you name under it is yours (`ACME LOYALTY` becomes `acme_loyalty`). With a token you need no key at all: `publish.py login`, then `publish.py publish <project>`. The line is public; the file is not. Back the file up: a lost key means registering a new one.
 
 ## Each version
 
@@ -19,7 +19,7 @@ python3 tools/publish/publish.py publish <your project> --partner <your company'
 ```
 
 1. It runs the kit's checks over `<your project>/library` (`tools/check/check.py`) and the licence check over the project (`tools/check/licence.py`). A refusal stops it: nothing is sent.
-2. It reads `library/app.json`, `manifest.json`, `library.json` and `recipient.pem`, and your customers' sites and key requests from `LIBRARY_DELIVERIES` / `LIBRARY_KEYS` or `--deliveries` / `--keys` (JSON; never from your project). After a publish that names customers, the command remembers them for that app in `~/.ivendnext/deliveries/` (beside your signing key, readable by you only, never in a project or in git), and the next publish with no list includes them and says so (*including N customers remembered from your last publish*). A list you give replaces the remembered one; `--no-remembered-deliveries` publishes to none; `--dry-run` writes nothing.
+2. It reads `library/app.json`, `manifest.json`, `library.json` and `recipient.pem`, and your customers' sites and key requests from `LIBRARY_DELIVERIES` / `LIBRARY_KEYS` or `--deliveries` / `--keys` (JSON; never from your project). The library keeps where each version went, per app and site: a publish with no list reaches every site the app is on, and a list adds sites (a site removed on My apps gets nothing new). Nothing is kept on your computer; `--dry-run` sends nothing.
 3. It signs the exact bytes it sends, with a time and a one-time number inside them, and uploads them. The library checks the signature before it reads anything, refuses an upload sent twice or more than 5 minutes old, and then applies its own rules.
 4. It prints what the library did: your preview shelf, each customer's shelf, the public list (`WAITING for iVendNext's approval` the first time, or when a version does more than the last), the keys. **Keys are written to `library-keys.json`, readable by you only, never printed.**
 

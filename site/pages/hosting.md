@@ -4,7 +4,7 @@ Your app's outside service, the part iVendNext calls, has to run on a server iVe
 
 ## Order hosting from this page
 
-Sign in with your own GitHub account, give your `app.json`, pick your customer, pick a plan and its copies, pay, upload a version, and follow your app to live, all on this page. CitiXsys's own people come straight in; anyone else presses **Request access** once and is approved on this page. You never need to join our GitHub organisation. It does what the kit's `deploy_app.py order` does, with no command ([how it works](#host-with-citixsys)).
+Sign in with your own GitHub account, give your `app.json`, pick your customer, pick a plan and its copies, pay, upload a version, and follow your app to live, all on this page. CitiXsys's own people come straight in; anyone else sets up their company once on [My apps](https://developer.ivendnext.com/apps), with no request to approve. You never need to join our GitHub organisation. It does what the kit's `deploy_app.py order` does, with no command ([how it works](#host-with-citixsys)).
 
 {{hosting: order}}
 

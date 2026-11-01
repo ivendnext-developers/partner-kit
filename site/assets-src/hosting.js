@@ -333,7 +333,7 @@
       return box;
     }
     if (!session) {
-      box.appendChild(p("Sign in with your own GitHub account. It tells us who you are; your company's hosting account says which company you order for and what it pays. CitiXsys's own people come straight in. Anyone else asks for access once, on this page, and is answered here: you never need to join our GitHub organisation."));
+      box.appendChild(p("Sign in with your own GitHub account. It tells us who you are; your company on My apps says which company you order for and what it pays. CitiXsys's own people come straight in. Anyone else sets up their company once on My apps, or is added by a colleague there: you never need to join our GitHub organisation."));
       box.appendChild(button("Sign in with GitHub", signIn));
       return box;
     }
@@ -354,74 +354,18 @@
     } else if (!who.makers.length && who.staff) {
       box.appendChild(p("Your team's hosting account is not open at the moment: ask the hosting's owner at CitiXsys."));
     } else if (!who.makers.length) {
-      box.appendChild(requestPanel());
+      box.appendChild(noCompany());
     }
     box.appendChild(button("Sign out", signOut, true));
     return box;
   }
 
-  // ── access: ask once; CitiXsys's own people answer on this page ──
+  // ── a person in no company yet: J2-03, on My apps (EASY1: no Request access, no approval by a person) ──
 
-  function requestPanel() {
-    var box = el("div", {}, el("h4", { text: "Request access" }));
-    if (who.request) {
-      box.appendChild(p("You asked for " + who.request.company + " on " + new Date(who.request.at * 1000).toISOString().slice(0, 10) +
-        ". A CitiXsys person answers it on this page, and then this page opens your hosting account. You do not need to sign in again."));
-      box.appendChild(button("Check again", function () {
-        call("GET", "/whoami").then(function (w) {
-          who = w;
-          say(w.maker ? "Approved: your hosting account is " + (w.name || w.maker) + "." :
-            w.request ? "Not answered yet." : "Your request is no longer waiting: it was declined. Ask your CitiXsys contact, or ask again below.");
-          if (w.maker) { ownSteps(); refreshApps(); }
-          render();
-        }, fail);
-      }, true));
-      return box;
-    }
-    box.appendChild(p("Your GitHub account has no hosting account yet. Tell us who you are, once: a CitiXsys person approves it here, and your company's hosting account is made for you."));
-    var company = el("input", { type: "text", maxlength: "80", autocomplete: "organization" });
-    var email = el("input", { type: "email", maxlength: "254", autocomplete: "email" });
-    var about = el("input", { type: "text", maxlength: "300" });
-    box.appendChild(field("Company name", company));
-    box.appendChild(field("Work email", email));
-    box.appendChild(field("What you build", about, "One line, for example: loyalty apps for retail chains."));
-    box.appendChild(button("Request access", function (ev) {
-      ev.target.disabled = true;
-      call("POST", "/request", { company: company.value.trim(), email: email.value.trim(), about: about.value.trim() }).then(function (r) {
-        who.request = r.request; say("Asked. A CitiXsys person answers it on this page."); render();
-      }, function (e) { ev.target.disabled = false; fail(e); });
-    }));
-    return box;
-  }
-
-  var asked = null;
-  function loadRequests() {
-    if (!session || !who || !who.staff) return;
-    call("GET", "/requests").then(function (r) { asked = r.requests; redraw(); }, function () {});
-  }
-
-  function requestsPanel() {
-    var box = el("div", { "class": "hosting-step" }, el("h3", { text: "Access requests" }));
-    box.appendChild(button("Refresh", function () { asked = null; render(); loadRequests(); }, true));
-    if (!asked) { box.appendChild(p("Reading the requests.")); return box; }
-    if (!asked.length) { box.appendChild(p("No one is waiting.")); return box; }
-    box.appendChild(p("Approve makes the company's hosting account (its own code and first word, from its name; a partner's price; open for test orders) and links the person who asked. Decline removes the request."));
-    var ul = el("ul", {});
-    asked.forEach(function (r) {
-      var li = el("li", {}, el("strong", { text: r.company }), " (" + r.login + ", " + r.email + "): " + r.about + " ");
-      li.appendChild(button("Approve", function (ev) {
-        ev.target.disabled = true;
-        call("POST", "/approve", { uid: r.uid }).then(function (a) {
-          say("Approved: " + a.name + " has the hosting account " + a.partner + "; its apps are named " + a.word + "-…"); loadRequests();
-        }, function (e) { ev.target.disabled = false; fail(e); });
-      }, true));
-      li.appendChild(button("Decline", function () {
-        if (!root.confirm("Decline the request from " + r.company + "?")) return;
-        call("POST", "/decline", { uid: r.uid }).then(function () { say("Declined."); loadRequests(); }, fail);
-      }, true));
-      ul.appendChild(li);
-    });
-    box.appendChild(ul);
+  function noCompany() {
+    var box = el("div", {});
+    box.appendChild(p(who.no_company || "You are not in a company here yet."));
+    box.appendChild(el("p", {}, el("a", { href: "apps.html", text: "Set up my company" }), " on My apps; then come back here."));
     return box;
   }
 
@@ -554,7 +498,7 @@
     if (!ready) box.lastChild.disabled = true;
     if (s.checked) {
       box.appendChild(p("The hosting takes it: " + s.checked.app + ", " + s.checked.addresses.join(", ") + ". " +
-        (s.checked.pays_usd === 0 ? "No charge to you." : "USD " + s.checked.pays_usd + " a month, for every copy together.")));
+        (s.checked.covered || (s.checked.pays_usd === 0 ? "No charge to you." : "USD " + s.checked.pays_usd + " a month, for every copy together."))));
     }
     box.appendChild(nav("customer", s.checked ? "pay" : null));
     return box;
@@ -802,7 +746,6 @@
   function render() {
     view.textContent = "";
     view.appendChild(signInPanel());
-    if (session && who && who.staff) view.appendChild(requestsPanel());
     if (session && who && who.maker && who.open) {
       var step = { app: appStep, customer: customerStep, plan: planStep, pay: payStep, follow: followStep }[s.step] || appStep;
       if (step === appStep) view.appendChild(beforeYouStart());
@@ -829,7 +772,6 @@
     return call("POST", "/signin", { code: arrival.code, verifier: arrival.verifier, redirect_uri: PAGE }).then(function (r) {
       session = r.session; who = r; delete who.session; say("");
       if (who.maker) ownSteps();
-      loadRequests();
       var back = root.sessionStorage.getItem(FOLLOW);
       if (back && who.maker) { root.sessionStorage.removeItem(FOLLOW); s.order = back; s.step = "follow"; keep(); }
       render();

@@ -23,7 +23,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
 
 ## Steps
 
-1. **Register your company once.** Through Help (`https://help.ivendnext.com`) or your account manager, send your company's name as retailers see it, the first word you want for your company (`acme`), the line `python3 tools/publish/publish.py keygen` prints, and your `recipient.pem`. Every app you name under your word is yours, and no other company can take a name under it ([Publish your app](../site/pages/publish.md), step 2).
+1. **Set up your company once,** on [My apps](https://developer.ivendnext.com/apps): sign in with GitHub, give your company's name as retailers see it and the first word you want for it (`acme`). It is yours at once. Every app you name under your word is yours, and no other company can take a name under it ([Publish your app](../site/pages/publish.md), step 2).
 
 2. **Start your repository from a copy of the kit, and copy the app into a folder of its own.** A sample's service uses the kit's app template (`tools/app_template/service`: the handshake with each retailer), so your app sits inside a copy of the kit, two folders down:
 
