@@ -57,6 +57,8 @@ RECORDS = [
      "The goods handed over or shipped against an order, which takes them out of stock."),
     ("Quotation", "Sales and returns", True,
      "A price offered to a customer before the sale, which can become an order."),
+    ("Retail Payer Record", "Sales and returns", False,
+     "An insurer's (payer's) part of one sale: who pays it, the claim, the shares line by line and the payer journal. One per payer sale, payer return and back-office payer invoice, linked from that sale; written only by the payer door, read by a System Manager."),
     # Till sales
     ("POS Invoice", "Till sales", True,
      "One sale rung up at a till: its lines, payments, customer and store. A till return is a POS Invoice with *Is Return* ticked."),

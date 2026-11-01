@@ -57,6 +57,16 @@
    "why": "retail core"
   },
   {
+   "area": "Sales and returns",
+   "fields": 25,
+   "name": "Retail Payer Record",
+   "single": 0,
+   "slug": "retail_payer_record",
+   "submittable": 0,
+   "tables": 1,
+   "why": "contract payer"
+  },
+  {
    "area": "Till sales",
    "fields": 219,
    "name": "POS Invoice",
