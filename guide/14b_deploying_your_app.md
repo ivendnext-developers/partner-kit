@@ -120,7 +120,7 @@ python3 tools/deploy_app/deploy_app.py <your app folder> --image <registry>/<rep
 
 ## Order and pay online
 
-One command orders the hosting, signed with the key you already publish to the App library with (`tools/publish`, `keygen`). Your company's hosting account holds its monthly spending cap and how many apps it holds; the web page's *Request access* makes one ([From the web page](#from-the-web-page)). The command also needs your signing key registered in the App library, under your hosting account's code.
+One command orders the hosting, signed with the key you already publish to the App library with (`tools/publish`, `keygen`). Your company's hosting account holds its monthly spending cap and how many apps it holds; setting up your company on [My apps](https://developer.ivendnext.com/apps) makes one, at once ([From the web page](#from-the-web-page)). The command also needs your signing key registered in the App library, under your hosting account's code.
 
 ```bash
 python3 tools/deploy_app/deploy_app.py order <your app folder> --plan starter --partner <your code> --accept-schedule
@@ -145,7 +145,7 @@ Plain (not secret) settings go on the order: `--set LOG_LEVEL=info`. Each must b
 
 The same order runs with no command on the developer site's hosting page, `https://developer.ivendnext.com/hosting`. Every screen of it, with a real example: [Host your app from the web page](../recipes/host_from_the_web_page.md).
 
-1. **Sign in with GitHub,** with your own GitHub account. Your hosting account says which company you order for and what it pays. CitiXsys's own people come straight in. Anyone else, the first time, presses **Request access** and gives the company's name, a work email and a line on what it builds; a CitiXsys person approves it on the same page, which makes your company's hosting account, and the page opens it. **You never need to join our GitHub organisation.** If your GitHub account orders for more than one hosting account, you choose one, and you pay that account's price.
+1. **Sign in with GitHub,** with your own GitHub account. Your hosting account says which company you order for and what it pays. CitiXsys's own people come straight in. Anyone else sets up their company once on [My apps](https://developer.ivendnext.com/apps) (or is added by a colleague there): that makes your company's hosting account at once, with no request to approve. **You never need to join our GitHub organisation.** If your GitHub account orders for more than one hosting account, you choose one, and you pay that account's price.
 2. **Your app:** drop in your `app.json`. The page checks it with the hosting and shows the command that checks the Dockerfile, the licence files and the package on your computer.
 3. **Your customer** (their code: the one on the customer's *Made for you* shelf; the page offers the ones your earlier orders named), **then the plan, its copies and the App Hosting Schedule,** as with the command. Check the order, then order it.
 4. **Pay** in Stripe's checkout, which opens in a new tab, or by an invoice. The page follows the order while you pay.

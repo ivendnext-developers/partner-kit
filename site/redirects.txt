@@ -2,3 +2,4 @@
 #   guide/old_name.html guide/new_name.html
 # GitHub Pages cannot send a 301, so the build writes a small page at the old address that names the new one as its canonical
 # and refreshes to it. The new address must be a page the build makes. Empty now.
+device.html apps.html

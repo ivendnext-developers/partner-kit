@@ -18,7 +18,7 @@ Have these three things ready. The page asks for each one.
 2. **Once it is paid, the zip you upload.** No GitHub repository, no workflow and nothing to install: you upload each version and the hosting builds it. For the example, a function made with `start.py`, make the zip from the kit's folder (its package names paths from there) with `python3 tools/deploy_app/deploy_app.py push apps/acme_rlg --root . --partner acme --save acme-rlg-1.1.1.zip`; for a container, a zip of the app's folder is enough.
 3. **Your settings' values and the customer's code.** Your `app.json` names your app's plain settings; the page shows each with a line saying what it is. The customer's code is the one on the customer's *Made for you* shelf in the App library: the code you name when you publish to that customer. Ask your account team if you do not have it.
 
-No hosting account yet? Sign in all the same: the page offers **Request access**, and a CitiXsys person approves it on the same page (below).
+No company yet? Set it up once on [My apps](https://developer.ivendnext.com/apps) (your company's name and its first word), or ask a colleague who uses My apps to add your GitHub login on its *People*; then sign in here.
 
 ## The page, screen by screen
 
@@ -29,7 +29,7 @@ Open `https://developer.ivendnext.com/hosting`. The form is at the top, under *O
 1. Press **Sign in with GitHub**. The first time, GitHub asks you to authorise *iVendNext App Hosting*: press **Authorize**.
 2. Back on the page, the box says **Signed in as** your GitHub login **for** your company. If your login orders for more than one company, choose it under **You order for** and press **Use this one**. What you pay is that company's price.
 
-**The first time, with no hosting account yet,** the box shows **Request access**. Fill in **Company name** (`Acme Stores`), **Work email** (`dev@acme.example`) and **What you build** (`Rule apps for retail chains`), and press **Request access**. A CitiXsys person sees it on this page and presses **Approve**: your company's hosting account is made, with its own first word from the company's name (`acme`, so the example's app names start `acme-`). Press **Check again**: the box now says **Signed in as** your login **for** your company, and the steps below open. You never join our GitHub organisation. (CitiXsys's own people skip this step: they come straight in.)
+**The first time, in no company yet,** the box says you are not in a company here yet, with **Set up my company**, which opens [My apps](https://developer.ivendnext.com/apps). There, give **Company name** (`Acme Stores`) and **Your first word** (`acme`, so the example's app names start `acme-`), accept the App Hosting Schedule, and press **Continue**: your company's hosting account is made at once, with no request and no one to approve it. Come back and sign in: the box now says **Signed in as** your login **for** your company, and the steps below open. You never join our GitHub organisation. (CitiXsys's own people skip this step: they come straight in.)
 
 ### 1. Your app
 
@@ -75,6 +75,6 @@ Open `https://developer.ivendnext.com/hosting`. The form is at the top, under *O
 - **An app that runs on a schedule:** CitiXsys puts it live; ask through your partner contact.
 - **A required setting left empty:** the app would not start; give it a value.
 - **Production for a customer, ordered by one of CitiXsys's own teams:** the customer orders and pays for it, through the account team.
-- **A GitHub login with no hosting account:** press **Request access** on the page and wait for the answer there. If it is declined, **Check again** says so: ask your CitiXsys contact.
+- **A GitHub login in no company:** set your company up on [My apps](https://developer.ivendnext.com/apps), or ask a colleague there to add your GitHub login on *People*.
 
 The same order with the kit's command, and every rule behind these steps: [chapter 14b](../guide/14b_deploying_your_app.md#order-and-pay-online).
