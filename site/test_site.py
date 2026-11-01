@@ -44,6 +44,9 @@ def missing_downloads(out: pathlib.Path) -> list[str]:
                    for m in DOWNLOAD.finditer(text) if not (out / m.group(1)).is_file()})
 
 
+STUBS = {old for old, _ in seo.read_redirects(build.REDIRECTS)}   # a moved page's small stub: no script, no search, no counter
+
+
 def indexable(text: str) -> bool:
     """A page search engines may index: every page but one that says noindex (the 404 and search.html; later lanes add their own)."""
     return 'name="robots" content="noindex"' not in text
@@ -360,6 +363,8 @@ class SiteTests(unittest.TestCase):
     def test_the_content_policy_is_on_every_page_and_follows_the_list(self):
         tag = re.compile(r'<meta http-equiv="Content-Security-Policy" content="([^"]+)">')
         for f in self.out.rglob("*.html"):
+            if f.relative_to(self.out).as_posix() in STUBS:
+                continue
             m = tag.search(f.read_text("utf-8"))
             self.assertTrue(m, f"{f}: no content policy")
             self.assertIn("script-src 'self'", m.group(1))
@@ -382,6 +387,8 @@ class SiteTests(unittest.TestCase):
     def test_every_page_names_the_counter_loads_analytics_before_search_and_says_so_in_the_footer(self):
         want = f'<meta name="ivn-analytics" content="https://{check_links.ANALYTICS_HOST}">'
         for f in self.out.rglob("*.html"):
+            if f.relative_to(self.out).as_posix() in STUBS:
+                continue
             t = f.read_text("utf-8")
             if f.relative_to(self.out).as_posix() in build.OWN_POLICY:   # no counter on the page that holds a sign-in
                 self.assertNotIn("ivn-analytics", t, f.name)
@@ -449,6 +456,8 @@ class SiteTests(unittest.TestCase):
 
     def test_every_page_has_the_search_box_and_without_script_it_opens_all_needs(self):
         for f in self.out.rglob("*.html"):
+            if f.relative_to(self.out).as_posix() in STUBS:
+                continue
             text = f.read_text("utf-8")
             up = "/" if f.name == "404.html" else "../" * f.relative_to(self.out).as_posix().count("/")
             self.assertIn(f'<form class="site-search" role="search" action="{up}needs/all.html" method="get" data-root="{up}">', text, f.name)
@@ -1361,7 +1370,12 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertTrue((out / "guide" / "04_configure_first.html").is_file())                 # the new address is a built page
         self.assertNotIn("old_chapter", (out / "sitemap.xml").read_text("utf-8"))              # the old address is not listed
         self.assertEqual(check_links.check(out), [])
-        self.assertEqual(seo.read_redirects(build.REDIRECTS), [])                              # the real table is empty
+        for old, new in seo.read_redirects(build.REDIRECTS):                                   # the real table: each a stub
+            stub = (self.out / old).read_text("utf-8")                                         # to a built page
+            self.assertIn(f'<link rel="canonical" href="https://developer.ivendnext.com/{new}">', stub, old)
+            self.assertFalse(indexable(stub), old)
+            self.assertNotIn("<script", stub, old)
+            self.assertTrue((self.out / new).is_file(), new)
 
     def test_a_redirect_to_a_page_that_is_not_built_or_over_a_page_is_red(self):
         self.assertEqual(self.redirect_build("redirect_gone", "guide/old.html guide/no_such_page.html\n")[0], 1)
