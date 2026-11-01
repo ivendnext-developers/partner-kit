@@ -1035,7 +1035,8 @@
       if ((money.plans || []).length && !plan) { say(T.choosePlan, true); render(); return; }
       ev.target.disabled = true;
       call("POST", "/try/install", { app: data.appId, sha: c.sha, agree: true, plan: plan || undefined })
-        .then(function (r) { data.tryS = r; say(""); render(); pollTry(); }, function (e) { ev.target.disabled = false; fail(e); });
+        // the consent goes once the install starts: the steps alone, never a second Install and try under them
+        .then(function (r) { data.tryS = r; data.tryC = null; say(""); render(); pollTry(); }, function (e) { ev.target.disabled = false; fail(e); });
     }));
     return box;
   }
