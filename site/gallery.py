@@ -264,6 +264,7 @@ def recipe_of(folder: str, text: str, cited: list, root) -> str | None:
 def index(samples: list[dict], pages: list, backlinks: dict, doors: dict, root) -> dict:
     """The published samples index: one entry per sample card, in the cards' order (S-number)."""
     texts = {p.src.removesuffix("/README.md"): p.text for p in pages if p.group == "samples"}
+    titles = {p.src: p.title for p in pages if p.group == "recipes"}          # New app's By recipe names each recipe
     pictures = door_pictures(root)
     out = []
     for s in samples:
@@ -271,15 +272,18 @@ def index(samples: list[dict], pages: list, backlinks: dict, doors: dict, root) 
         path = pathlib.Path(root) / folder
         cited = backlinks.get(folder, [])
         recipe = recipe_of(folder, text, cited, root)
-        out.append({"name": path.name, "title": s["title"], "version": sample_info.version(path),
+        short = (sample_info.manifest(path) or {}).get("title") or re.sub(r"^S\d+\s*\u2014\s*", "", s["title"])
+        out.append({"name": path.name, "title": s["title"], "short": short, "version": sample_info.version(path),
                     "versions": [{"version": v, "lines": lines} for v, lines in sample_info.versions(text)],
                     "when_to_use": s["line"] or None,
                     "picture": index_picture(s, pictures, root),
                     "door": doors[s["doors"][0]] if s["doors"] else None,
                     "needs": [c.id for c in cited], "recipe": recipe.removesuffix(".md") + ".html" if recipe else None,
+                    "recipe_title": titles.get(recipe, "").removesuffix(" \u2014 the recipe") or None if recipe else None,
                     "industries": sample_info.industries(text) or [], "till": sample_info.till_lines(text),
                     "config_pack": sample_info.config_pack(path)})
     return {"about": "Every kit sample, read from its README at the kit merge this site was built from: the New app page's "
                      "ways in and the notice of newer sample versions read it. picture and recipe are paths on this site; "
-                     "needs are the ids of the needs cards (catalogue.json) that cite the sample.",
+                     "needs are the ids of the needs cards (catalogue.json) that cite the sample; short is the sample's own title, the "
+                     "one New app names it by.",
             "samples": out}

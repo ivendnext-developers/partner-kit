@@ -57,7 +57,7 @@ check("nothing when it cannot start with a letter", a.suggestWord("9to5 Stores")
 
 // 4. the page: its own policy, its one script
 const csp = (page.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/) || [])[1] || "";
-check("the page's own content policy reaches only the hosting", csp.includes("connect-src https://hosting.ivendnext.app") && !csp.includes("'unsafe"));
+check("the page's own content policy reaches only this site and the hosting", csp.includes("connect-src 'self' https://hosting.ivendnext.app") && !csp.includes("'unsafe"));
 check("its one script, none of the site's others", page.includes("assets/apps.js") && !page.includes("assets/search.js") && !page.includes("assets/analytics.js"));
 check("without script the page says what it is", page.includes("Sign in to make, try and publish your apps."));
 // J5-14: after Accept the app is yours, with its hosting's checkout; going home must not clear it (walk, 2026-11-01)
@@ -68,6 +68,86 @@ check("Accept says the app is yours, with its hosting's checkout",
 const src = readFileSync(path.join(out, "assets/apps.js"), "utf8");
 check("Accept's words are said after going home, which clears the last message",
   /go\("home"\);[^\n]*\n\s*say\(acceptedWords\(o\.app, r\)\);\s*\n\s*render\(\);/.test(src));
+
+
+// ── EASY3a: the list, New app's gallery, Name, Made, Settings, the app's page ──
+const G = a.G;
+const index = JSON.parse(readFileSync(path.join(out, "samples/index.json"), "utf8"));
+const catalogue = JSON.parse(readFileSync(path.join(out, "catalogue.json"), "utf8"));
+const plan = require(path.join(out, "assets/plan.js"));
+const by = Object.fromEntries(index.samples.map((s) => [s.name, s]));
+
+check("J2-05: the empty list and New app", G.noApps === "You have no apps yet." && G.newApp === "New app");
+check("J1-03: the search's label and the three tabs", G.search === "Search by sample (S23, till guard) or by what your customer asked" &&
+  JSON.stringify(G.tabs.slice(1).map((t) => t[1])) === JSON.stringify(["By industry", "By what it does", "By recipe"]));
+check("J1-05: the App library's twelve industries", a.INDUSTRIES.length === 12 && a.INDUSTRIES.includes("Distribution and warehousing"));
+check("J1-06: the doors' plain words, as the row's examples", a.doorWords("Check before payment") === "A check when the cashier presses Pay" &&
+  a.doorWords("Till key") === "A key the cashier taps" && a.doorWords("Manifest") === "Your own lists and forms in Desk" &&
+  a.doorWords("Desk action") === "A button in Desk" && a.doorWords("Event feed") === "Something that happens after each sale");
+const doors = [...new Set(index.samples.filter((s) => !s.config_pack && s.door).map((s) => s.door))];
+check("J1-06: every door a sample has is said in plain words (D14)", doors.every((d) => a.DOOR_WORDS[d]), doors.filter((d) => !a.DOOR_WORDS[d]).join(", "));
+
+let f = a.search(index, catalogue, "S23");
+check("J1-13: S23 is first, once", f.samples[0].name === "s23_till_guard" && f.samples.filter((s) => s.name === "s23_till_guard").length === 1);
+f = a.search(index, catalogue, "till guard");
+check("J1-13: till guard finds S23 first", f.samples[0] && f.samples[0].name === "s23_till_guard");
+f = a.search(index, catalogue, "no more than 50 of one item");
+check("J1-04: a need in the customer's words finds its sample, with the need it serves", f.samples.length > 0 &&
+  Object.values(f.forNeeds).flat().some((n) => /50/.test(n)), JSON.stringify(f.samples.map((s) => s.name)));
+check("J1-04: each sample once", f.samples.length === new Set(f.samples.map((s) => s.name)).size);
+f = a.search(index, catalogue, "zzqx flibbertigibbet");
+check("J1-03: no match says so, with Ask for it", f.none && G.none + G.ask === "No sample or need matches these words. Try other words, or ask for it: Ask for it");
+f = a.search(index, catalogue, "");
+check("J1-08: with no words every sample is a card, the configuration packs apart, never ticked",
+  f.samples.length === index.samples.filter((s) => !s.config_pack).length && f.packs.every((s) => s.config_pack) && f.packs.length >= 2);
+const desk = catalogue.find((c) => c.door === "configure");
+f = a.search(index, catalogue, desk.asks);
+check("J1-08 (D2): a Configure need is listed under Set in Desk first, never a card", f.desk.some((c) => c.id === desk.id) && G.desk === "Set in Desk first: no app needed");
+const nope = catalogue.find((c) => c.status === "not-yet");
+f = a.search(index, catalogue, nope.asks);
+check("J1-09 (D3): a need not yet possible is under Cannot be built today", f.cannot.some((c) => c.id === nope.id) && G.cannot === "Cannot be built today: ");
+check("J1-09: Claim a need's words", G.claim === "Claim a need: we hold back from it for 90 days while you build it.");
+check("J1-12: Ask for it opens the request form, its title the need's words", a.askUrl(nope).startsWith(a.POINT_FORM + "&title=") &&
+  decodeURIComponent(a.askUrl(nope)).endsWith(nope.asks));
+const formed = catalogue.find((c) => (c.request_forms || []).length);
+check("J1-12: a need whose card names its form opens that form", a.askUrl(formed) === formed.request_forms[0].url);
+check("J1-11: the shortlist and the gallery label a need the same way, every card",
+  catalogue.every((c) => plan.needKind(c) === a.needKind(c)) && JSON.stringify(plan.KIND_WORDS) === JSON.stringify(a.KIND_WORDS) &&
+  JSON.stringify(Object.values(a.KIND_WORDS)) === JSON.stringify(["Built as an app", "Set in Desk", "Cannot be built today"]));
+check("J1-02: the shortlist's button and the line beside it", plan.START === "Start an app from these needs" &&
+  plan.START_HINT === "Opens New app on My apps with these samples ticked. Needs set in Desk are listed, not added." &&
+  plan.startHref([{ id: "a-b" }, { id: "c" }]) === "apps.html?needs=a-b,c");
+check("J1-09 on the shortlist: the line, as the row", plan.cannotLine(nope) === "Cannot be built today: " + nope.asks + ". " + plan.instead(nope));
+
+const built = catalogue.find((c) => a.needKind(c) === "app" && a.needSamples(c).some((n) => by[n] && !by[n].config_pack));
+const fn = a.fromNeeds(index, catalogue, [built.id, desk.id, nope.id, "no-such-need"]);
+check("J1-02: the shortlist's needs tick their samples, list the Desk one, keep the one that cannot be built apart",
+  fn.ticks.length > 0 && fn.desk[0].id === desk.id && fn.cannot[0].id === nope.id && fn.built[0].id === built.id);
+check("J1-02, J1-14: what the address brought", JSON.stringify(a.readStart("?needs=a-b,cc")) === JSON.stringify({ needs: ["a-b", "cc"], sample: "" }) &&
+  a.readStart("?sample=s23_till_guard").sample === "s23_till_guard" && a.readStart("?sample=../x") === null && a.readStart("") === null);
+check("J2-05: the bar's words", a.barText([by.s23_till_guard, by.s22_customer_loyalty]) ===
+  "2 samples ticked: S23 Till guard rules, S22 Customer-owned loyalty." && a.barText([]) === "Tick one or several samples.");
+check("J2-06: the name and its line", G.name === "Name your app" && G.appName === "App name" && G.make === "Make the app" &&
+  a.nameHint("ACME MEMBER TILL", "acme") === "acme_member_till: your first word, then your words. Installed names never change, so choose with care.");
+check("J2-07: Making, and the next step", a.making("ACME MEMBER TILL", 2) === "Making ACME MEMBER TILL from 2 samples…" && G.nextSettings === "Next: its settings");
+check("J2-09: the settings' words", G.settingsLede === "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's settings in their Desk. Connection secrets come from each site: you never type them." &&
+  G.addresses === "Outside addresses" && G.secrets === "Secrets your own service needs" &&
+  a.settingNote({ required: true, together: ["X"] }) === "Required: publishing waits until it is set. Set both, or neither" &&
+  a.settingNote({ required: false, together: [] }) === "Optional: the feature behind it stays off until you set it" &&
+  a.isAddress({ name: "HKD_WALLET_URL" }) && !a.isAddress({ name: "HKD_WALLET_SECRET", purpose: "the key your wallet provider gave you" }));
+check("J2-10: the app's four buttons and Not yet on any site", G.tryIt === "Try on my sandbox" && G.publish === "Publish" &&
+  G.download === "Download the app folder" && G.addSample === "Add a sample" && G.notOnSite === "Not yet on any site");
+check("J3-06: Upload's words", G.upload === "Upload a new version" && G.uploadHint === "Choose the app folder's zip. We check it before we keep it.");
+check("J11-02: a version names what, who and how", a.versionLine({ version: "1.1.0", what: "S11 added", by: "Priya", how: "page", sites: [] }) ===
+  "1.1.0 (draft) · S11 added · Priya · on the page" &&
+  a.versionLine({ version: "1.0.1", what: "upload", by: "dev", how: "ivn", sites: [] }) === "1.0.1 (draft) · upload · dev · ivn push");
+check("D14: every draft says it is on no site yet", /no site yet/.test(a.whereWent({ sites: [] })));
+check("J6-08: Take it and Not now", G.take === "Take it" && G.notNow === "Not now");
+const cv = a.covers({ app: "acme_x", needs: { built: [built.id], desk: [desk.id], cannot: [nope.id], asked: [nope.id] } }, catalogue);
+check("J6-12: What it covers, from the needs the app was started from", cv.built[0].id === built.id && cv.desk[0].id === desk.id &&
+  a.coversText({ app: "acme_x" }, cv, "2026-11-01").includes("Cannot be built today: " + nope.asks + " (asked 2026-11-01)"));
+check("the samples index names each sample by its own title, and each recipe", by.s23_till_guard.short === "Till guard rules" &&
+  index.samples.filter((s) => s.recipe).every((s) => s.recipe_title && !/the recipe$/.test(s.recipe_title)));
 
 console.log(red ? `${red} FAILED` : "ALL PASS");
 process.exit(red ? 1 : 0);
