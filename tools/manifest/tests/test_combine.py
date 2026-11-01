@@ -259,6 +259,21 @@ class DeskButtons(Base):
         self.assertEqual(combine.kit_check(app)[0], 0, combine.kit_check(app)[1])
 
 
+class NewerTitle(Base):
+    """The notice names a sample by its number and its own title (J6-08), as the published index gives it (`short`)."""
+
+    def test_the_notice_says_the_samples_own_title_not_its_card_heading(self):
+        folder, _ = self.make(["s23_till_guard", "s22_customer_loyalty"])
+        mine = {s["name"]: s["version"] for s in json.loads((folder / "app.json").read_text(encoding="utf-8"))["samples"]}
+        long = "S22 \u2014 Customer-owned loyalty (pp_lyl): your logic outside, the records inside iVendNext"
+        for entry in ({"title": long, "short": "Customer-owned loyalty"}, {"title": long}):
+            idx = {"samples": [{"name": "s22_customer_loyalty", "version": "99.0.0", **entry,
+                                "versions": [{"version": "99.0.0", "lines": ["A fix."]}]}]}
+            n = combine.newer(folder, idx)
+            want = f"A newer version of S22 Customer-owned loyalty{'' if 'short' in entry else ' (pp_lyl): your logic outside, the records inside iVendNext'} is available: 99.0.0 (yours is {mine['s22_customer_loyalty']})."
+            self.assertEqual(n[0].text(), want)
+
+
 class Refusals(Base):
     def test_m01_two_samples_capture_at_the_scan(self):
         with self.assertRaises(combine.Refused) as e:

@@ -1382,5 +1382,6 @@ def newer(app_folder, index) -> list[Newer]:
             continue
         lines = [(v.get("version"), list(v.get("lines") or [])) for v in s.get("versions") or []
                  if sample_info.vtuple(v.get("version")) > sample_info.vtuple(r.get("version"))]
-        out.append(Newer(r["name"], s.get("title") or r["name"], r.get("version"), s["version"], lines))
+        title = s.get("short") or re.sub(r"^S\d+\s*\u2014\s*", "", s.get("title") or "") or r["name"]   # its own title
+        out.append(Newer(r["name"], title, r.get("version"), s["version"], lines))
     return out
