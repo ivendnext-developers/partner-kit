@@ -258,6 +258,9 @@ def app_view(part: Part) -> dict:
             for x in m.get(k) or []:
                 if isinstance(x.get("key"), str):
                     x["key"] = part.aliases.get(x["key"], x["key"]) if not x["key"].startswith(part.app_name + "_") else x["key"]
+        for x in m.get("desk_actions") or []:   # a Desk button names its subscription by key: the same tagged key
+            if isinstance(x, dict) and isinstance(x.get("service"), str):
+                x["service"] = part.aliases.get(x["service"], x["service"])
     if part.strip:
         for k in KEYED:
             for x in m.get(k) or []:
@@ -531,7 +534,7 @@ def entries_of(manifest: dict, app_json: dict, dispatch: dict) -> dict:
             for i, x in zip(ids(section, items), items):
                 out[f"manifest:{section}:{i}"] = x
     for k, v in app_json.items():
-        if k in ("env", "samples", "version", "schedule"):
+        if k in ("env", "samples", "version", "base", "schedule"):   # base: the version My apps kept it as, not an edit
             continue
         out[f"app.json:{k}"] = v
     for e in app_json.get("env") or []:
@@ -1379,5 +1382,6 @@ def newer(app_folder, index) -> list[Newer]:
             continue
         lines = [(v.get("version"), list(v.get("lines") or [])) for v in s.get("versions") or []
                  if sample_info.vtuple(v.get("version")) > sample_info.vtuple(r.get("version"))]
-        out.append(Newer(r["name"], s.get("title") or r["name"], r.get("version"), s["version"], lines))
+        title = s.get("short") or re.sub(r"^S\d+\s*\u2014\s*", "", s.get("title") or "") or r["name"]   # its own title
+        out.append(Newer(r["name"], title, r.get("version"), s["version"], lines))
     return out

@@ -239,6 +239,59 @@ class Combine(Base):
                 self.assertEqual(mis[0], 401, path)
 
 
+class DeskButtons(Base):
+    """A Desk button names its subscription by key (its `service`): combined or added, it names the tagged key, so the
+    kit's check passes (found by EASY3a's walk, 2026-11-01: S23 with S49 was refused by the check)."""
+
+    def test_a_desk_button_names_its_tagged_subscription_combined_and_added(self):
+        folder, _ = self.make(["s23_till_guard", "s49_post_sale_feedback"])
+        m = self.manifest(folder)
+        keys = {s["key"] for s in m["extension_subscriptions"]}
+        self.assertEqual([a["service"] for a in m["desk_actions"]], ["psf_send"])
+        self.assertIn("psf_send", keys)
+        self.assertEqual(combine.kit_check(folder)[0], 0, combine.kit_check(folder)[1])
+        other = pathlib.Path(self.tmp.name) / "add"
+        other.mkdir()
+        app = combine.combine(["s23_till_guard", "s22_customer_loyalty"], "ACME AD", other, out=io.StringIO())
+        combine.add("s49_post_sale_feedback", app)
+        m2 = self.manifest(app)
+        self.assertEqual([a["service"] for a in m2["desk_actions"]], ["psf_send"])
+        self.assertEqual(combine.kit_check(app)[0], 0, combine.kit_check(app)[1])
+
+
+class NewerTitle(Base):
+    """The notice names a sample by its number and its own title (J6-08), as the published index gives it (`short`)."""
+
+    def test_the_notice_says_the_samples_own_title_not_its_card_heading(self):
+        folder, _ = self.make(["s23_till_guard", "s22_customer_loyalty"])
+        mine = {s["name"]: s["version"] for s in json.loads((folder / "app.json").read_text(encoding="utf-8"))["samples"]}
+        long = "S22 \u2014 Customer-owned loyalty (pp_lyl): your logic outside, the records inside iVendNext"
+        for entry in ({"title": long, "short": "Customer-owned loyalty"}, {"title": long}):
+            idx = {"samples": [{"name": "s22_customer_loyalty", "version": "99.0.0", **entry,
+                                "versions": [{"version": "99.0.0", "lines": ["A fix."]}]}]}
+            n = combine.newer(folder, idx)
+            want = f"A newer version of S22 Customer-owned loyalty{'' if 'short' in entry else ' (pp_lyl): your logic outside, the records inside iVendNext'} is available: 99.0.0 (yours is {mine['s22_customer_loyalty']})."
+            self.assertEqual(n[0].text(), want)
+
+
+class BaseIsNotAnEdit(Base):
+    """`base` in app.json is the version My apps kept the folder as (D6): Add a sample never names it as the developer's
+    change (found by EASY3a's walk: *Take it* said "Your changes are kept: app.json:base.")."""
+
+    def test_add_to_a_folder_carrying_base_names_no_kept_change(self):
+        def keep_as(folder, version):   # what My apps does to every folder it keeps (myapps.set_base)
+            aj = json.loads((folder / "app.json").read_text(encoding="utf-8"))
+            aj["version"] = aj["base"] = version
+            (folder / "app.json").write_text(json.dumps(aj, indent=1) + "\n", encoding="utf-8")
+        folder, _ = self.make(["s23_till_guard"])
+        keep_as(folder, "1.0.0")
+        combine.add("s22_customer_loyalty", folder)   # its record now holds base 1.0.0
+        keep_as(folder, "1.1.0")                      # kept as the next draft
+        added = combine.add("s11_approvals", folder)
+        lines = added.lines(self.manifest(folder))
+        self.assertFalse(any("base" in line for line in lines), lines)
+
+
 class Refusals(Base):
     def test_m01_two_samples_capture_at_the_scan(self):
         with self.assertRaises(combine.Refused) as e:
