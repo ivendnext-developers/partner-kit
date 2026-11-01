@@ -8,6 +8,8 @@
 
 When the cashier presses **Pay**, the retailer's server prices the basket and asks this service. It **refuses** a sale that holds a members-only item for a customer who is not a member, in its own words, and **asks** the cashier for ID when the sale is at or above the retailer's limit. Everything else is allowed. A refused sale books nothing.
 
+**Industries:** every industry
+
 The recipe: [`recipes/rule_guard.md`](../../recipes/rule_guard.md).
 
 ## What the retailer does
@@ -69,6 +71,12 @@ To start the service, run this from the sample's own folder, `samples/s18_rule_g
 python3 service/app.py service/.env.local
 ```
 
+## Try it at the till
+
+- Sell a members-only item to a walk-in customer; the till stops it at Pay.
+- Choose a member and press Pay again; the sale goes through.
+- Close the till day when you are done.
+
 ## What it looks like
 
 Taken on our test bench on 2026-10-10 (product pin: the iVendNext POS app `87812e141`), on iVendNext POS's counter frame (the till, `/pos?frame=terminal`) in a 1440 px wide browser window, light mode, and on its phone frame (`/pos` in a 390 × 844 phone viewport) for the rows marked *the phone*. The cashier is shown as *Thabo Nkosi*, at the kit's demo site *Demo Retail*, store *Store 1 — R1*. The counter frame's basket screens stop above the till's key row (other samples' keys); the GIF's frames are all cut by that one box, and the phone stills are the whole screen. The member is the bench's placeholder customer *PP SET5 Member*; the item is the bench's probe item (`PP-KIT-ITEM`). The card is the bench's simulated terminal (the demo button *demo: verified* was pressed; the screen then reads *✓ verified*), and the sale was booked on the bench (`ACC-PSINV-2026-08670`). On the phone the member's sale was answered *No* and voided.
@@ -83,3 +91,11 @@ Taken on our test bench on 2026-10-10 (product pin: the iVendNext POS app `87812
 | 6. The sale is booked: tendered R 300.00 | the till | ![](screenshots/06_paid_and_booked.png) |
 | 7. The phone: the walk-in's sale refused at Checkout | the phone | ![](screenshots/07_phone_this_sale_cant_be_paid.png) |
 | 8. The phone: the member's sale asks the same question | the phone | ![](screenshots/08_phone_asks_for_id.png) |
+
+## Versions
+
+### 1.1.1
+
+- First version in the kit: a members-only rule checked before payment, each retailer judged by its own rule records.
+- A line quantity that is not a whole number is refused, and an item handed back inside a sale is no longer refused.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.

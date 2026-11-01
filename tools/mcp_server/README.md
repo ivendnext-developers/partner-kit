@@ -57,7 +57,7 @@ One JSON line per tool call (`--audit`, default `mcp_audit.jsonl`): time, transp
 
 ### Proven (2026-10-04)
 
-- **Laptop, 14 tests** against a stand-in iVendNext: read-only by default; an unconfirmed write sends nothing; a confirmed write carries the caller's own key; no key → refused before iVendNext; arguments checked against the schema; a path value cannot escape its segment; **no redirect is followed with the key** (this test found a real defect — a redirect was reported as a success — fixed); the audit log holds no secret and no value; stdio and HTTP end to end; standard library only.
+- **Laptop, 16 tests** against a stand-in iVendNext: read-only by default; an unconfirmed write sends nothing; a confirmed write carries the caller's own key; no key → refused before iVendNext; arguments checked against the schema; a path value cannot escape its segment; **no redirect is followed with the key** (this test found a real defect — a redirect was reported as a success — fixed); the audit log holds no secret and no value; stdio and HTTP end to end; standard library only.
 - **Bench, 18 checks, two real keys of different roles:** the stdio server lists 19 read tools and refuses a write even when confirmed; over HTTP with `--writes`, an unconfirmed write is refused with a preview and nothing is written; the writer's confirmed write lands (exactly one comment); **the reader's key, confirmed, is refused by iVendNext (403) — a key cannot exceed its person's role**; neither key may book stock or read customers (their roles say so); the audit log has one line per call and no key, secret or argument value.
 
 ### Bounds

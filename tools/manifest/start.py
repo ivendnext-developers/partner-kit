@@ -19,6 +19,17 @@ is yours to keep, its default is already your prefix). The sample's screenshots 
 placeholder names, not yours, and the pictures are taken out of the README.
 
 It reads only the sample and writes only the new folder under ``apps/``. It calls no network and reads no secret.
+NEW APP (``combine.py``): name one sample or several and you get one app folder that runs on its own, with one prefix
+(``--copy`` with one sample keeps the copy described above, inside a copy of the kit):
+
+    python3 tools/manifest/start.py s23_till_guard s22_customer_loyalty --prefix "ACME HK" --test
+
+Each sample's names take its tag (``ACME HK TGR Settings``), one Integration role, one feed, one service that mounts each
+sample under ``/<tag>/``, a README that says what is in the folder, its licence files, and the kit's helpers copied in, so
+the folder runs on its own. Add a sample to an app made that way, keeping every change you made:
+
+    python3 tools/manifest/start.py --add s11_approvals --into apps/acme_hk
+
 Exit codes: 0 done · 1 refused · 2 usage.
 """
 from __future__ import annotations
@@ -227,16 +238,40 @@ def leftovers(target: pathlib.Path, m: dict, sample: str) -> list[str]:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Copy one of the kit's samples under your own prefix, ready to build on.")
-    ap.add_argument("sample", help="the sample's folder name, e.g. s11_approvals")
-    ap.add_argument("--prefix", required=True, help='your company\'s first word, then one or two words ("ACME APR")')
-    ap.add_argument("--into", type=pathlib.Path, default=KIT, help="the repository made from the kit to put the app in (default: this kit)")
+    ap.add_argument("sample", nargs="*", help="the sample's folder name, e.g. s11_approvals; several make one app")
+    ap.add_argument("--prefix", help='your company\'s first word, then one or two words ("ACME APR")')
+    ap.add_argument("--into", type=pathlib.Path, default=None,
+                    help="the repository to put the app in (default: this kit); with --add, the app's folder")
+    ap.add_argument("--add", metavar="SAMPLE", help="add this sample to the app in --into (apps/<your app>)")
     ap.add_argument("--test", action="store_true", help="also run the copied tests under the new names")
+    ap.add_argument("--copy", action="store_true",
+                    help="one sample only: copy it as it is into apps/<your app>/ inside a copy of the kit (the way before "
+                         "New app), instead of an app folder that runs on its own")
     try:
         a = ap.parse_args(argv)
     except SystemExit as e:
         return 2 if e.code else 0
+    import combine  # noqa: E402
     try:
-        return run(a.sample, a.prefix, a.into, a.test, sys.stdout)
+        if a.add:
+            if a.sample or a.prefix or a.into is None:
+                print("usage: start.py --add <sample> --into apps/<your app>")
+                return 2
+            combine.add(a.add, a.into, test=a.test, out=sys.stdout)
+            return 0
+        if not a.sample or not a.prefix:
+            print('usage: start.py <sample> [<sample> ...] --prefix "ACME HK"')
+            return 2
+        if a.copy:
+            if len(a.sample) != 1:
+                print("usage: --copy copies one sample")
+                return 2
+            return run(a.sample[0], a.prefix, a.into or KIT, a.test, sys.stdout)
+        combine.combine(a.sample, a.prefix, a.into or KIT, test=a.test, out=sys.stdout)
+        return 0
+    except combine.Refused as e:
+        print(f"REFUSED: {e.text}")
+        return 1
     except Refused as e:
         print(f"REFUSED: {e}")
         return 1

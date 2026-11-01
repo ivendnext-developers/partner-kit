@@ -311,5 +311,45 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(route.store_for("A", lambda n: tree.get(n)), (None, None))
 
 
+class TestCall(unittest.TestCase):
+    """The test call (``X-iVendNext-Test: 1``, tools/app_template/service/testcall.py) at each signed point route: checked
+    exactly as a real call to that route, then answered 200 {"test": "ok", "point": <key>} without the point's handler;
+    a route the service does not have is 404."""
+    BAD = b"not a call"          # a body the point's handler refuses: a real call with it is never answered 200
+
+    def setUp(self):
+        self.svc = app.Service({"PP_POINT_SECRET": SECRET}, object())
+        # route -> (the point's key as the site knows it, its secret)
+        self.routes = {"/press/route": (app.SUB, SECRET)}
+
+    def call(self, path, raw, secret, test=True):
+        import base64, hashlib, hmac, time
+        ts = str(int(time.time()))
+        sig = base64.b64encode(hmac.new(secret.encode(), ts.encode() + b"." + raw, hashlib.sha256).digest()).decode()
+        h = {"X-iVendNext-Timestamp": ts, "X-iVendNext-Signature": sig}
+        if test:
+            h["X-iVendNext-Test"] = "1"
+        return self.svc.handle("POST", path, h, raw)
+
+    def test_a_signed_test_call_is_answered_ok_without_the_handler(self):
+        for path, (key, secret) in self.routes.items():
+            with self.subTest(path):
+                self.assertNotEqual(self.call(path, self.BAD, secret, test=False)[0], 200)   # the handler ran, and refused
+                self.assertEqual(self.call(path, self.BAD, secret), (200, {"test": "ok", "point": key}))   # it did not run
+
+    def test_a_mis_signed_test_call_gets_the_real_refusal(self):
+        for path in self.routes:
+            with self.subTest(path):
+                real = self.call(path, self.BAD, "not-the-secret", test=False)
+                self.assertEqual(real[0], 401)
+                self.assertEqual(self.call(path, self.BAD, "not-the-secret"), real)
+
+    def test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404(self):
+        path, (_, secret) = next(iter(self.routes.items()))
+        for wrong in ("/point/nothing", path + "/extra", path.rsplit("/", 1)[0] + "/nothing"):
+            with self.subTest(wrong):
+                self.assertEqual(self.call(wrong, self.BAD, secret)[0], 404)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -100,6 +100,13 @@ CANARIES = [
      M + "test_one_check_switched_off_that_lets_the_sale_go_on_when_down"),
     ("the details table is never required", "manifest.json", '"options": "PP RSD Rule Detail",', '"options": "PP RSD Rule Detail",\n   "reqd": 1,',
      M + "test_one_rule_per_group_named_by_it_with_the_fields_the_service_reads"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path != ROUTE:\n            return 404, {"error": "not found"}\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path != ROUTE:\n            return 404, {"error": "not found"}\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 def run(name, path, anchor, mutant, test) -> tuple[str, str]:

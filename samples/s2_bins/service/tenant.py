@@ -7,6 +7,7 @@ makes the same requests. Standard library only. (Same shape as samples/s1_warran
 
 from __future__ import annotations
 
+import http.client
 import json
 import urllib.error
 import urllib.parse
@@ -36,7 +37,7 @@ class Tenant:
                 return json.loads(r.read() or b"{}").get("data")
         except urllib.error.HTTPError as e:
             raise TenantError(f"{method} {path} -> HTTP {e.code}", e.code) from None
-        except (urllib.error.URLError, TimeoutError) as e:
+        except (urllib.error.URLError, TimeoutError, http.client.HTTPException) as e:
             raise TenantError(f"{method} {path} -> {e}") from None
 
     def get(self, doctype, name):

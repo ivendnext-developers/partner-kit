@@ -13,12 +13,31 @@ A sample's card is read at site build; nothing generated is committed, so a new 
 
 A sample that lacks a run section or a door fails the build. Reference-app cards are written by hand in the page, one
 `{{reference-app: …}}` line each, until their repositories are public. A card holds no script; the site's script rules are in build.py's header.
+
+The samples index (samples/index.json on the built site, published at each kit merge) is built here too, from the same cards
+and READMEs: per sample its title, when to use it, picture, door, the needs it serves, its recipe, its industries, its
+version and Versions lines, its Try it at the till lines, and whether it is a configuration pack. A sample with no
+screenshot of its own carries its door's picture: one real screenshot of another sample with that door, chosen per door in
+site/door_pictures.json (a door no screenshot in the kit shows maps to null, and its samples carry no picture). The build
+fails when that file names a door that is not needs.py's, a path that is not a still screenshot of a sample with that door,
+or no picture for a door some sample's screenshots show (door_picture_errors). The New app page reads it
+for its ways in, and tools/manifest/combine.py's newer() reads it for the notice of newer samples. What a README says is read
+by one definition, tools/manifest/sample_info.py. readme_errors() is the build's check of those READMEs: a README with no
+Industries line, or one that differs from the census site/industries.json, a sample with a till part and no Try it at the
+till section, and a README whose Versions section is missing or whose newest heading is not the sample's version.
 """
 from __future__ import annotations
 
+import collections
 import html
+import json
+import pathlib
 import posixpath
 import re
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools" / "manifest"))
+import sample_info  # noqa: E402  (what the kit knows about one sample, read from its folder: one definition)
 
 RUN_HEAD = re.compile(r"^## (?:How to )?run it\s*$", re.I | re.M)
 DOOR_LINE = re.compile(r"^\*\*Door:\*\*[ \t]*(.*?)[ \t]*$", re.M)
@@ -120,3 +139,147 @@ def reference_app(spec: str, org_url: str, doors: dict, errors: list, src: str, 
     return (f'<li class="card"><h3>{html.escape(name)}</h3><p>{html.escape(line)}</p><p class="door">Doors: {html.escape(door_text)}</p>'
             f'<p class="status">{html.escape(status)}</p><p class="links"><a href="{base}">The repository</a> · '
             f'<a href="{base}/blob/main/BRIEF.md">BRIEF.md</a></p><p class="note">{html.escape(note[:1].upper() + note[1:])}.</p></li>')
+
+
+# ── the samples index and the check of what it is read from ────────────────────────────────────────────────────────
+CENSUS = "site/industries.json"
+DOOR_PICTURES = "site/door_pictures.json"
+STILL = re.compile(r"samples/[a-z0-9_]+/screenshots/[^/]+\.(?:png|jpe?g|webp)")
+RECIPE_LINK = re.compile(r"\]\(((?:\.\./)+recipes/[a-z0-9_]+\.md)\)|`(recipes/[a-z0-9_]+\.md)`")   # a link, or a kit path in code
+GENERIC_RECIPES = {"recipes/make_it_your_own.md"}           # every README names it: it is how to start, not the sample's recipe
+
+
+def census(root) -> dict:
+    return json.loads((pathlib.Path(root) / CENSUS).read_text("utf-8"))
+
+
+def census_industries(name: str, data: dict) -> list[str] | None:
+    """The industries the census lists the sample under, in the App library's order; ["every industry"] when it lists it
+    under none and among every_industry; None when it lists it nowhere."""
+    mine = [i for i in sample_info.INDUSTRIES if name in (data.get("industries") or {}).get(i, [])]
+    if mine:
+        return mine
+    return [sample_info.EVERY] if name in (data.get("every_industry") or []) else None
+
+
+def readme_errors(root) -> list[str]:
+    """The build's check of the sample READMEs the index is read from. Each message names the README."""
+    root = pathlib.Path(root)
+    errors: list[str] = []
+    try:
+        data = census(root)
+    except (OSError, ValueError) as e:
+        return [f"{CENSUS}: cannot be read ({e})"]
+    folders = sorted(p.parent for p in (root / "samples").glob("*/README.md"))
+    names = {f.name for f in folders}
+    listed = {s for i in (data.get("industries") or {}).values() for s in i}
+    if set(data.get("industries") or {}) != set(sample_info.INDUSTRIES):
+        errors.append(f"{CENSUS}: its industries must be the App library's twelve: {', '.join(sample_info.INDUSTRIES)}")
+    errors += [f"{CENSUS}: {s} is under an industry and also under every_industry; a sample of every industry is listed under none"
+               for s in sorted(listed & set(data.get("every_industry") or []))]
+    errors += [f"{CENSUS}: names {s}, which is not a sample folder with a README" for s in sorted((listed | set(data.get("every_industry") or [])) - names)]
+    for folder in folders:
+        where = f"samples/{folder.name}/README.md"
+        text = (folder / "README.md").read_text("utf-8")
+        want = census_industries(folder.name, data)
+        got = sample_info.industries(text)
+        if want is None:
+            errors.append(f"{where}: {CENSUS} lists this sample under no industry and not under every_industry")
+        if got is None:
+            errors.append(f"{where}: no **Industries:** line. Write the line {CENSUS} gives it: "
+                          f"**Industries:** {', '.join(want or ['every industry'])}")
+        elif want is not None and sorted(got) != sorted(want):
+            errors.append(f"{where}: **Industries:** {', '.join(got)} differs from {CENSUS}, which gives {', '.join(want)}")
+        if sample_info.till_part(folder) and not sample_info.till_lines(text):
+            errors.append(f"{where}: the sample puts a part at the till, so its README needs a ## Try it at the till section "
+                          "with what to try, one line each")
+        versions = sample_info.versions(text)
+        version = sample_info.version(folder)
+        if not versions:
+            errors.append(f"{where}: no ## Versions section with a ### heading for each version")
+        elif versions[0][0] != version:
+            errors.append(f"{where}: the newest heading of ## Versions is {versions[0][0]}, but the sample's version is {version}")
+    return errors
+
+
+def own_still(folder: str, root) -> str | None:
+    """The first still in a sample's own screenshots/ folder, when its README links none (the index's picture)."""
+    stills = sorted(f"{folder}/screenshots/{q.name}" for q in (pathlib.Path(root) / folder / "screenshots").glob("*")
+                    if q.is_file() and STILL.fullmatch(f"{folder}/screenshots/{q.name}"))
+    return stills[0] if stills else None
+
+
+def index_picture(s: dict, pictures: dict, root) -> str | None:
+    """A sample's picture in the index: its card's screenshot, else a screenshot of its own, else its door's picture."""
+    return s["shot"] or own_still(s["folder"], root) or (pictures.get(s["doors"][0]) if s["doors"] else None) or None
+
+
+def door_pictures(root) -> dict:
+    """{door: the kit path of the one screenshot a sample with that door and no screenshot of its own carries, or None}."""
+    return json.loads((pathlib.Path(root) / DOOR_PICTURES).read_text("utf-8")).get("doors") or {}
+
+
+def door_picture_errors(samples: list[dict], doors: dict, root) -> list[str]:
+    """The build's check of site/door_pictures.json against the sample cards (``collect``): every door of needs.py, each a
+    still screenshot of a sample that has that door, and null only where no sample with that door has a screenshot."""
+    root = pathlib.Path(root)
+    try:
+        pictures = door_pictures(root)
+    except (OSError, ValueError) as e:
+        return [f"{DOOR_PICTURES}: cannot be read ({e})"]
+    errors = []
+    want = [d for d in doors if d not in NO_DOOR]
+    if sorted(pictures) != sorted(want):
+        errors.append(f"{DOOR_PICTURES}: its doors must be needs.py's: {', '.join(want)}")
+    for door, path in pictures.items():
+        stills = [f"{s['folder']}/screenshots/{q.name}" for s in samples if door in s["doors"]
+                  for q in sorted((root / s["folder"] / "screenshots").glob("*"))
+                  if q.is_file() and STILL.fullmatch(f"{s['folder']}/screenshots/{q.name}")]
+        if path is None:
+            if stills:
+                errors.append(f"{DOOR_PICTURES}: {door} has no picture, but {stills[0]} shows a sample with that door: a sample "
+                              "with this door and no screenshot of its own would carry none")
+        elif path not in stills:
+            errors.append(f"{DOOR_PICTURES}: {door}: {path!r} is not a still screenshot, in the kit, of a sample with that door")
+    return errors
+
+
+def recipe_of(folder: str, text: str, cited: list, root) -> str | None:
+    """The sample's recipe, as a kit path: the recipe its needs cards cite most (on a tie, one that names the sample's folder,
+    then the first cited); with no card naming one, the recipe its README names that also names the sample's folder."""
+    def names_it(rel: str) -> bool:
+        f = pathlib.Path(root) / rel
+        return f.is_file() and re.search(re.escape(folder) + r"\b", f.read_text("utf-8")) is not None
+    counts = collections.Counter(r for c in cited for r in c.paths("recipe") if r.startswith("recipes/"))
+    if counts:
+        order = list(counts)
+        return max(order, key=lambda r: (counts[r], names_it(r), -order.index(r)))
+    for link, named in RECIPE_LINK.findall(text):
+        rel = posixpath.normpath(posixpath.join(folder, link)) if link else named
+        if rel not in GENERIC_RECIPES and names_it(rel):
+            return rel
+    return None
+
+
+def index(samples: list[dict], pages: list, backlinks: dict, doors: dict, root) -> dict:
+    """The published samples index: one entry per sample card, in the cards' order (S-number)."""
+    texts = {p.src.removesuffix("/README.md"): p.text for p in pages if p.group == "samples"}
+    pictures = door_pictures(root)
+    out = []
+    for s in samples:
+        folder, text = s["folder"], texts[s["folder"]]
+        path = pathlib.Path(root) / folder
+        cited = backlinks.get(folder, [])
+        recipe = recipe_of(folder, text, cited, root)
+        out.append({"name": path.name, "title": s["title"], "version": sample_info.version(path),
+                    "versions": [{"version": v, "lines": lines} for v, lines in sample_info.versions(text)],
+                    "when_to_use": s["line"] or None,
+                    "picture": index_picture(s, pictures, root),
+                    "door": doors[s["doors"][0]] if s["doors"] else None,
+                    "needs": [c.id for c in cited], "recipe": recipe.removesuffix(".md") + ".html" if recipe else None,
+                    "industries": sample_info.industries(text) or [], "till": sample_info.till_lines(text),
+                    "config_pack": sample_info.config_pack(path)})
+    return {"about": "Every kit sample, read from its README at the kit merge this site was built from: the New app page's "
+                     "ways in and the notice of newer sample versions read it. picture and recipe are paths on this site; "
+                     "needs are the ids of the needs cards (catalogue.json) that cite the sample.",
+            "samples": out}

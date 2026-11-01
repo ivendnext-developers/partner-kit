@@ -2,6 +2,8 @@
 
 *Start from this sample: copy this folder into `apps/<your app>/` of a repository made from the kit and change the names as this page says; the one-command start does not cover it, because it carries a second package with a prefix of its own ([how](../../recipes/make_it_your_own.md)).*
 
+**Industries:** Grocery
+
 ## What the retailer does
 
 The retailer is told when a store's stock falls below its reorder level, or when a batch is close to its expiry date, and finds a **draft** stock transfer request already made from those alerts: one per store and day, for a person to check, change and submit. The app never submits anything. iVendNext's own automatic reorder makes a request too, but submits it at once, and it has no expiry alert; this app is for the retailer that wants a person in between.
@@ -104,3 +106,10 @@ Each run prints one line: the alerts written, the requests made, the lines added
 - **The reminder package** (2026-10-21, a sandbox site at POS 2.0.0.658): installed with `tools/deploy`; the site's summary read *Notification PP EXP Batch Expiry on Batch (Days Before, by Email) to everyone with the role Stock Manager*, and the notification read back as written (30 days, `expiry_date`, one recipient by role); uninstalled, nothing left. Not run: a message sent (the daily scheduler cannot be run on demand on a sandbox; the product's own tests send it).
 - **The laptop tests** (`tests/`): everything above against a stand-in iVendNext; `canaries.py` turns each guard off in turn and its test goes RED.
 - **A sandbox site** (2026-10-16, POS 2.0.0.648, manifest 0.1.0, the service on a laptop with the site's integration user): installed with `tools/deploy`; a reorder row (level 25, quantity 10, *Transfer*) on an item with 20 in a store, and a batch of 12 expiring in 20 days received into that store. Run 1: **2 alerts and 1 draft request with 2 lines** (10 from the source warehouse to the store; 12 from the store to the clearance warehouse), the batch's quantity per store read from its records. Run 2: nothing new, the draft unchanged. A run for the next day: 2 new alerts, both joined the open draft, no second request, and the bell reached the role's holder and the user named in the settings. A person changed the quantity to 8 and submitted the draft by hand; the next run wrote nothing and the submitted request was unchanged; a run two days on wrote no low-stock alert (the projected stock now counts the request) and one near-expiry alert that joined the submitted request, with no new draft. The uninstall exported and removed the app's records; users, roles, permission rows and stock were as found. A second run the same day, after the review's changes: two batches of the item (12 received and 5 issued of one, 9 of the other) read **7 and 9** in the store, the outward row taken off; the request held **one row of 16 naming both batches**; a second run wrote nothing, and the next day both alerts joined that draft. The site refuses a second row of the same item on a request (its default), which the first build had not met. Not run on a sandbox: a *Purchase* row, a batch in two stores, no clearance warehouse, an item low and near expiry in one store, a key that cannot read the batch records, a person's own draft beside the service's, a run that stops between the lines and the alerts, a new line added to an existing draft (the person's edit, the same call, kept both rows), the submitted-request case after the review's changes (laptop only); not run at all: a till's unmerged sale, more than 100 expiring batches, the e-mail channel, two copies at once, a reorder row with a warehouse group, a scheduler.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: stock alerts and a draft transfer request.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

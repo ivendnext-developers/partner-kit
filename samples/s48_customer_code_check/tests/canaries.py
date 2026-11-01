@@ -130,6 +130,13 @@ CANARIES = [
      S + "ManyShops.test_the_shops_lookup_counts_against_the_budget"),
     ("a number may start with a bracket", "codecheck.py", 'r"[+ (]*[0-9]', 'r"\\+?[0-9]',
      R + "test_a_number_is_the_first_one_the_record_holds_in_the_shops_phone_shape"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path != ROUTE:\n            return 404, {"error": "not found"}\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path != ROUTE:\n            return 404, {"error": "not found"}\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

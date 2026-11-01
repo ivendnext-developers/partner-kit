@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import http.server
 import json
 import os
@@ -186,7 +187,7 @@ class Server:
                 status, payload = r.status, json.loads(r.read() or b"{}")
         except urllib.error.HTTPError as e:
             status, payload = e.code, _tenant_message(e.read())
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
             if write:            # sent, but no answer: it may have been written — never let the assistant blindly retry
                 self.audit(**row, outcome=f"unknown: no answer ({type(e).__name__})")
                 return self._text("No answer from the shop. The write may have been made: check the record before "

@@ -6,6 +6,8 @@
 
 A retailer selling regulated stock keeps a legal register an inspector can ask for at any time: a pharmacy's poisons and controlled-drug books, a liquor or tobacco register, a duty-free ledger. Today most keep it on paper. This app keeps it for them: **one app for any regulated stock**, whose books (which book, which items, which movements, which columns, which printed layout) are a **data set** per market and vertical. A second market, or a second vertical, is a new data set file with no code change.
 
+**Industries:** Liquor and wine, Pharmacy, Travel retail
+
 The first data set is **Kenya's three pharmacy books**: the Poisons Book (Rules Schedule VIII Form 16), the Prescription Book (Act s. 31(1)(b)) and the NPP Ledger Book (PPB NPP Guidelines Annex II), with the routing Kenya's law asks for: a supply on prescription goes to the Prescription Book, **not** the Poisons Book (s. 31(2)); every movement of a controlled drug goes to the NPP ledger as well. Seven more markets follow as data sets, with no code change: Jordan, Nigeria, the UAE's Abu Dhabi, Saudi Arabia, Egypt, Ghana and Mexico ([the other markets](#the-other-markets)).
 
 ⚠ **Every layout here is a starting point, not certified for the country.** It is read from the instruments named in the data set, and each print says so. A partner certifies it for a market, changes it, or adds a market.
@@ -144,3 +146,30 @@ python3 -m unittest discover -s samples/s41_regulated_register/tests -p 'test_*.
 - **Certify a layout:** set `certified: 1` once you have checked it against the market's instrument, and change its `notice`.
 
 The register door this app declares to is the POS app's (2.1.0 build 667 or later): [its page](../../contracts/pages/register_books.md).
+
+## Try it at the till
+
+- Sell an item the register covers; the till asks for the register's sale details.
+- In Desk, open the register's book for that day; the sale is in it.
+- Close the till day when you are done.
+
+## Versions
+
+### 0.2.0
+
+- Installs its books on the POS app's register door (POS 2.1.0 build 667 or later; install S39 0.1.3 or later first).
+- Each print carries its layout without comments or indentation, so the App library takes it.
+- Started with start.py, it passes its own tests.
+
+### 0.1.3
+
+- The register format: a value from the customer, a period's reminder, a date-column check, one shop's markets.
+- Prints the prescription's date where the market asks for it (Jordan, Mexico).
+
+### 0.1.2
+
+- Seven more markets as data sets: Jordan, Nigeria, Abu Dhabi, Saudi Arabia, Egypt, Ghana and Mexico.
+
+### 0.1.1
+
+- First version in the kit: each market's books as a data set, Kenya's pharmacy books first.

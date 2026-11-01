@@ -15,6 +15,7 @@ the one settings record ``PP MHS Settings`` named ``Default``: the merge rule an
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import sys
@@ -28,8 +29,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 HERE = os.path.dirname(os.path.abspath(__file__))
 SAMPLE = os.path.dirname(HERE)
 sys.path.insert(0, SAMPLE)
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(SAMPLE)), "tools", "app_template", "service"))   # the test call
 import history  # noqa: E402
 import merge  # noqa: E402
+import testcall  # noqa: E402
 
 SETTINGS = "PP MHS Settings"
 DESIGN = [os.path.join(HERE, "design"), os.path.join(SAMPLE, "..", "..", "kit", "design")]   # a copy beside, else the kit's
@@ -60,7 +63,7 @@ class Shop:
                 return json.loads(r.read() or b"{}")
         except urllib.error.HTTPError as e:
             raise ShopError(f"{method} {path} -> HTTP {e.code}", e.code) from None
-        except (urllib.error.URLError, OSError) as e:
+        except (urllib.error.URLError, OSError, http.client.HTTPException) as e:
             raise ShopError(f"{method} {path} -> {e}") from None
 
     def _list(self, doctype: str, **params) -> list[dict]:
@@ -129,6 +132,8 @@ class Service:
                            self.action_secret)
         if why:
             return 401, {"error": why}
+        if testcall.is_test(headers):     # checked as a real press; the merge itself does not run
+            return testcall.answer("merge")
         try:
             ctx = merge.context_of(json.loads(raw))
         except ValueError as e:

@@ -82,7 +82,8 @@ Run all of these from the repository root. Nothing below needs a network except 
 - a file whose name ends in `manifest.json`;
 - any folder holding a `hooks.py` (app code);
 - a `*.wasm` file;
-- an answer file: `*.contract.json`, or any JSON under a `contract_samples/` folder, shaped `{"extension_point": "...", "contract": "...", "payload": {...}}`, with `"expect_refusal": "why"` for one that must be turned away (to test how your own service handles a refusal; never to hide an answer you got wrong). The samples in `contracts/extension_contracts/samples/` show the shape.
+- an answer file: `*.contract.json`, or any JSON under a `contract_samples/` folder, shaped `{"extension_point": "...", "contract": "...", "payload": {...}}`, with `"expect_refusal": "why"` for one that must be turned away (to test how your own service handles a refusal; never to hide an answer you got wrong). The samples in `contracts/extension_contracts/samples/` show the shape;
+- an `app.json` that is a hosting settings file (it names `env`, `port`, `health` or `runs`): every setting must say its `purpose`, the line the *Settings* screen shows (with `required` and `together`, the settings set with it).
 
 It prints one verdict line and exits non-zero on any refusal. **Report that line to the person. A green verdict is required before you say anything is ready, and before anything is deployed.** Exit code 2, `NOTHING FOUND`, is not a verdict: it means nothing in the project was checkable (a configuration-only project, or a service outside the retailer's iVendNext). Say so plainly, and name the tests you ran instead. A line marked `NOTE` is for a person to read; an app (a folder with a `hooks.py`) always carries one, because app code runs inside the retailer's site and a person reviews it.
 

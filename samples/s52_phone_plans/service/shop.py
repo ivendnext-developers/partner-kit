@@ -12,6 +12,7 @@ unique key (the sale and its line), so the shop itself refuses a second row for 
 
 from __future__ import annotations
 
+import http.client
 import json
 import urllib.error
 import urllib.parse
@@ -74,7 +75,7 @@ class Shop:
         except urllib.error.HTTPError as e:
             msg = _server_message(e.read())
             raise (Duplicate if e.code == 409 else ShopError)(e.code, msg) from None
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
             raise ShopError(0, f"unreachable: {e}") from None
 
     @staticmethod

@@ -38,6 +38,7 @@ sys.path.insert(0, HERE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import cards  # noqa: E402
 import function  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
 import worker  # noqa: E402
 from shop import ShopError  # noqa: E402
@@ -58,7 +59,7 @@ def api_credentials(record: dict) -> tuple[str, str, str]:
 class Service:
     def __init__(self, conf: dict, store=None, keys=None, scheduled: bool = False):
         self.conf, self.keys, self.started, self.scheduled = conf, keys, time.monotonic(), scheduled
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         if conf.get("GCS_PREFIX"):
             cards.use_prefix(conf["GCS_PREFIX"].strip())
         self.store = (store or shops.open_store(conf)) if self.app else None
@@ -129,11 +130,12 @@ def run_one_shop(conf: dict):
     """One shop from the settings: the worker's pass every PP_WATCH seconds, its heartbeat for /health."""
     from shop import Shop
     import feed_client as F
-    t = Shop(conf["PP_BASE"], conf["PP_KEY"], conf["PP_SECRET"])
+    one = oneshop.settings(conf, ["PP_BASE", "PP_KEY", "PP_SECRET"])      # the fallback way: one shop on your own server
+    t = Shop(one["PP_BASE"], one["PP_KEY"], one["PP_SECRET"])
     state = conf.get("PP_STATE") or os.path.join(HERE, "state")
     os.makedirs(state, exist_ok=True)
     seen = F.Store(os.path.join(state, "feed.sqlite"))
-    feed = F.DoorFeed(F.Api(conf["PP_BASE"], conf["PP_KEY"], conf["PP_SECRET"]))
+    feed = F.DoorFeed(F.Api(one["PP_BASE"], one["PP_KEY"], one["PP_SECRET"]))
     while True:
         try:
             print(json.dumps(worker.one_pass(t, feed, seen), default=str), flush=True)

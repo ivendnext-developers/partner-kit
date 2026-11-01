@@ -2,6 +2,8 @@
 
 *Start from this sample: `python3 tools/manifest/start.py s45_restaurant_back_office --prefix "ACME RBO"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
+**Industries:** Hospitality
+
 ## What the retailer does
 
 A café or restaurant rings its dishes at the till as it does today. A dish is a plain item that is not stocked, with the retailer's own **recipe** on it: the engine's bill of materials, the parts and how much of each makes one dish (a recipe may hold another, such as a sauce made per portion). Once a day, after the close, the manager presses **Issue ingredients** on the app's settings record, and the ingredients of everything sold come off the kitchen's stock.
@@ -82,6 +84,12 @@ python3 samples/s45_restaurant_back_office/service/app.py samples/s45_restaurant
 
 Many retailers (the app template's handshake, [chapter 14b](../../guide/14b_deploying_your_app.md#one-app-many-retailers)): set `IVN_LIBRARY_APP` and a shops store; each retailer's site connects itself to the app's one `*.ivendnext.app` address after its install and hands over the key of the app's own user (*Connect again* is only for when the site could not reach the app, or a key was lost or changed). It only answers presses, so it runs as a **function**, paid per call.
 
+## Try it at the till
+
+- Sell a dish that has a recipe.
+- In Desk, press Issue ingredients on the app's settings; the dish's ingredients come off stock.
+- Close the till day when you are done.
+
 ## Make it your own
 
 A partner usually changes: the allergen list for its market (the settings record), the day parts, the reports' columns, and a schedule instead of a press (a container on its own hosting, or a function schedule where its host has one, calling the same issue). The prefix comes from `RBO_PREFIX` (`PP RBO` here; `IVENDNEXT RBO` for the App library's copy); `tools/manifest/rename.py` makes a copy under your own reserved prefix, and `tools/deploy/copy_records.py` moves the settings records.
@@ -101,3 +109,11 @@ A partner usually changes: the allergen list for its market (the settings record
 
 - **The laptop tests** (`tests/`): the rules (recipes, groups, day parts, food cost, allergens), the service against a stand-in iVendNext (claims, retries, the stamp, short and refused, the budget, food cost, the allergen check), many retailers and the function entry, the record API on a local port, the manifest and the contract; `canaries.py` turns each guard off in turn and its test goes RED.
 - **The test bench** (a café on the Hospitality bench, at the Partner bench's pins, the service in its one-retailer form): dishes with recipes rung at the till and their day closed, one issue booked with the recipes' parts (a sauce opened through its own recipe, a burger inside a combo, water skipped and named), the booking Dr *Stock Adjustment* / Cr stock in hand, a second press booking nothing, a sale drained through the till's offline drain caught by the next press, a short store-day named and booked after the delivery, stock booked in after the sales booked at the press, a press stopped after its entry finished without a second entry, two presses at once, food cost moving by exactly a waste issue and a count, the allergen check, the allergen field on the line's rules and the receipt, the service down refused in iVendNext's words, and the uninstall leaving the schema as found. The run's record is in the programme's evidence.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: recipes off stock, allergens on the till and receipt, food cost, and sales by item, till user and day part.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

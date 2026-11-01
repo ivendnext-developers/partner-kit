@@ -8,6 +8,8 @@
 
 The retailer's own words and fields on one till theme, with no code: the sale's line reads *Product*, the customer's card says *Stars*, the new-customer sheet has no email field, and a new customer needs a phone. **Data only.**
 
+**Industries:** every industry
+
 The recipe: [`recipes/field_rules.md`](../../recipes/field_rules.md).
 
 ## What the retailer does
@@ -58,3 +60,16 @@ Taken on our test bench on 2026-10-10 (product pin: the iVendNext POS app `87812
 | 4. Create with no phone: *Phone is required here.* | the till | ![](screenshots/04_phone_is_required_here.png) |
 | 5. The phone: the line heading reads *Product* (the customer chip above it still says *points*: the rule relabels the customer's card, step 2, not this chip) | the phone | ![](screenshots/05_phone_the_line_heading_reads_product.png) |
 | 6. The phone: the new-customer sheet, no email field, and the phone rule | the phone | ![](screenshots/06_phone_phone_is_required_here.png) |
+
+## Try it at the till
+
+- Start a till that wears the app's till theme: the sale's line reads Product and the customer's card says Stars.
+- Add a new customer with no phone; the till asks for one.
+- Close the till day when you are done.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: field rules for one till theme.
+- The README says its till theme PP Partner Till must exist before you install, and how to make it.

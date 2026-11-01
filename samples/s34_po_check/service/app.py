@@ -39,7 +39,9 @@ sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the t
 import erp  # noqa: E402
 import function  # noqa: E402
 import po_check  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 ROUTE, SUB = "/poc/check", "po_check"
 
@@ -47,12 +49,12 @@ ROUTE, SUB = "/poc/check", "po_check"
 class Service:
     def __init__(self, conf: dict, store=None, ledger=None):
         self.field = (conf.get("POC_PREFIX") or "pp_poc").strip() + "_erp_number"
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         self.erp = ledger or erp.StandIn(conf.get("ERP_STANDIN") or None)
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
-            self.secret = conf["IVN_CHECK_SECRET"]
+            self.secret = oneshop.settings(conf, ["IVN_CHECK_SECRET"])["IVN_CHECK_SECRET"]
 
     def secrets(self, headers) -> list[str]:
         if not self.app:
@@ -71,6 +73,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or all(po_check.verify(ts, sig, raw, s) for s in secrets):
             return 401, {"error": "the signature does not match"}   # the same words for a site the app does not know
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(SUB)
         try:
             ctx = po_check.check_context(json.loads(raw))
         except ValueError as e:         # json's own errors are ValueErrors too
@@ -147,7 +151,7 @@ def env_file(path: str) -> dict:
 
 def main():
     conf = dict(os.environ, **(env_file(sys.argv[1]) if len(sys.argv) > 1 else {}))
-    if not (conf.get("IVN_LIBRARY_APP") or conf.get("IVN_CHECK_SECRET")):
+    if not (oneshop.many(conf) or oneshop.value(conf, "IVN_CHECK_SECRET")):
         raise SystemExit("set IVN_CHECK_SECRET (one shop), or IVN_LIBRARY_APP with a store (many shops): "
                          "the app does not start without a way to check a call")
     srv = make_server(Service(conf), int(conf.get("PORT") or 8080))

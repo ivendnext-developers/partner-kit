@@ -37,6 +37,7 @@
     "recipes/till_guard.html": "Put several till rules in one app, with settings the retailer edits in Desk: a manager for a large sale, a most-per-line quantity, a beep on a flagged item.",
     "recipes/manifest.html": "Ship your own record types and fields to a retailer's iVendNext in one manifest file, without code inside it: bins, warranty terms, a reference list.",
     "recipes/rule_guard.html": "Check a sale before payment: your service allows it, refuses it in your own words, or asks the cashier a yes or no question when Pay is pressed.",
-    "recipes/capture.html": "Capture a value at the scan, or send a one-time code before a new customer is added: your HTTPS service answers at a moment the cashier did not choose."
+    "recipes/capture.html": "Capture a value at the scan, or send a one-time code before a new customer is added: your HTTPS service answers at a moment the cashier did not choose.",
+    "apps.html": "My apps: sign in with GitHub, set up your company once, add your colleagues and make the tokens a build server publishes with."
   }
 }

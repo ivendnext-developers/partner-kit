@@ -59,7 +59,9 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import foh  # noqa: E402
 import function  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 SUBS = {"/press/book": "book", "/press/seat": "seat", "/press/noshow": "noshow", "/press/cancel": "cancel",
         "/press/change": "change"}
@@ -207,7 +209,7 @@ class Refusal(Exception):
 
 class Service:
     def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, now=None, new_key=None):
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         prefix = (conf.get("FOH_PREFIX") or "").strip()
         if self.app and not prefix:      # the library's record types are not the sample's: every read would 404
             raise SystemExit("IVN_LIBRARY_APP is set but FOH_PREFIX is not (IVENDNEXT FOH for the App library's app)")
@@ -217,7 +219,8 @@ class Service:
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
-            self.secrets = {k: conf[f"PP_SECRET_{k.upper()}"] for k in SUBS.values()}
+            one = oneshop.settings(conf, [f"PP_SECRET_{k.upper()}" for k in SUBS.values()])
+            self.secrets = {k: one[f"PP_SECRET_{k.upper()}"] for k in SUBS.values()}
             self.tenant = tenant
         self.admin = conf.get("PP_ADMIN_TOKEN") or ""
         self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
@@ -427,6 +430,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or all(foh.verify(ts, sig, raw, s) for s in secrets):
             return 401, {"error": "the signature does not match"}   # the same words for a site the app does not know
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(sub)
         try:
             body = json.loads(raw)
             kinds = (foh.dt("Reservation"), foh.dt("Waitlist Entry")) if sub == "seat" else (foh.dt("Reservation"),)
@@ -539,9 +544,9 @@ def env(path: str) -> dict:
 def main():
     conf = dict(os.environ, **(env(sys.argv[1]) if len(sys.argv) > 1 else {}))
     one = ["PP_BASE", "PP_KEY", "PP_SECRET"] + [f"PP_SECRET_{k.upper()}" for k in SUBS.values()]
-    if conf.get("IVN_LIBRARY_APP"):
+    if oneshop.many(conf):
         svc = Service(conf)
-    elif all(conf.get(k) for k in one):
+    elif all(oneshop.value(conf, k) for k in one):
         svc = Service(conf, Tenant(conf["PP_BASE"], conf["PP_KEY"], conf["PP_SECRET"]))
     else:
         raise SystemExit("set " + ", ".join(one) + " (one shop), or IVN_LIBRARY_APP with a store (many shops): the app "

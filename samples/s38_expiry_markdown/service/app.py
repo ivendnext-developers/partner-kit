@@ -50,7 +50,9 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import function  # noqa: E402
 import markdown  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 SUB = "markdown"        # the manifest's extension_subscriptions[].key; its secret is "<app>:sub:markdown"
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
@@ -157,7 +159,7 @@ PRICE_FIELDS = ["name", "item_code", "uom", "packing_unit", "batch_no", "custome
 
 class Service:
     def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, clock=time.monotonic, now=None):
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         prefix = (conf.get("EXM_PREFIX") or "").strip()
         if self.app and not prefix:      # the library's fields are not the sample's: every group would read empty
             raise SystemExit("IVN_LIBRARY_APP is set but EXM_PREFIX is not (IVENDNEXT EXM for the App library's app)")
@@ -167,7 +169,7 @@ class Service:
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
-            self.secret, self.tenant = conf["PP_POINT_SECRET"], tenant
+            self.secret, self.tenant = oneshop.settings(conf, ["PP_POINT_SECRET"])["PP_POINT_SECRET"], tenant
         self.admin = conf.get("PP_ADMIN_TOKEN") or ""
         self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
         self.received = []
@@ -270,6 +272,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or all(markdown.verify(ts, sig, raw, s) for s in secrets):
             return 401, {"error": "the signature does not match"}   # the same words for a site the app does not know
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(SUB)
         try:
             body = json.loads(raw)
             lots = markdown.lots_of(body)
@@ -368,9 +372,9 @@ def env(path: str) -> dict:
 
 def main():
     conf = dict(os.environ, **(env(sys.argv[1]) if len(sys.argv) > 1 else {}))
-    if conf.get("IVN_LIBRARY_APP"):
+    if oneshop.many(conf):
         svc = Service(conf)
-    elif all(conf.get(k) for k in ("PP_BASE", "PP_KEY", "PP_SECRET", "PP_POINT_SECRET")):
+    elif all(oneshop.value(conf, k) for k in ("PP_BASE", "PP_KEY", "PP_SECRET", "PP_POINT_SECRET")):
         svc = Service(conf, Tenant(conf["PP_BASE"], conf["PP_KEY"], conf["PP_SECRET"]))
     else:
         raise SystemExit("set PP_BASE, PP_KEY, PP_SECRET and PP_POINT_SECRET (one shop), or IVN_LIBRARY_APP with a store "

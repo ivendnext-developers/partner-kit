@@ -5,6 +5,7 @@ the price list holds every item once, with its picture or a reported placeholder
     python3 -m unittest discover -s samples/s29_print_pack/tests -p 'test_*.py'
 """
 import csv
+import http.client
 import io
 import json
 import os
@@ -14,6 +15,7 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 SAMPLE = HERE.parent
@@ -436,6 +438,34 @@ class ShopReads(unittest.TestCase):
         self.assertIn("order_by=name+asc", seen[0][0])  # not %22name+asc%22
         srv.shutdown()
         srv.server_close()
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_file_cut_short_is_the_shop_unreadable_never_a_crash(self):
+        shop = C.Shop("https://shop.example", "k", "s")
+        shop.opener = mock.Mock(open=cut_answer)
+        with self.assertRaises(C.Unreadable) as e:
+            shop.file("/files/a.jpg", 100)
+        self.assertIn("could not be reached (IncompleteRead)", str(e.exception))
 
 
 if __name__ == "__main__":

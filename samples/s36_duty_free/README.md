@@ -12,6 +12,8 @@ An airport store sells only to passengers with a valid boarding pass, and only u
 | a flight on another day | *"This boarding pass is for a flight on another day. Ask for the pass for today's flight."* (an arrivals store: *"…Ask for the pass of the flight the customer just arrived on."*) |
 | more than an item group's allowance, this sale with the passenger's earlier sales on the same pass | *"Spirits: 4.5 litres on this boarding pass; the allowance is 4. Take some off the sale."* |
 
+**Industries:** Travel retail
+
 Everything else is allowed. A refund is never judged; an exchange is judged for what it sells. The recipe: [`recipes/duty_free_allowance.md`](../../recipes/duty_free_allowance.md).
 
 | What the retailer sees (on a demo site, 2026-10-22) | |
@@ -66,6 +68,12 @@ python3 samples/s36_duty_free/service/app.py samples/s36_duty_free/service/.env.
 
 **Settings, one retailer** (`service/.env.local`, never committed): `IVN_CHECK_SECRET` (handed back at install as `pp_dfa:sub:allowance`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. **Many retailers** (the [app template](../../tools/app_template/README.md)'s handshake): `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`); each retailer hands over the check's secret and the key of the app's own user when it connects (*Connect again* is only for when the site could not reach the app, or a key was lost or changed); until the key arrives the service answers 503 and the down answer applies. `DFA_PREFIX` names the record type, the fields and the sale detail (default `PP DFA`).
 
+## Try it at the till
+
+- Sell a bottle of spirits with no boarding pass; the till stops it at Pay.
+- Scan the boarding pass into Sale details and press Pay again.
+- Close the till day when you are done.
+
 ## Technical notes
 
 - **The boarding pass** is IATA's bar-coded boarding pass (format `M`, one to four legs): the service reads each leg's airports, flight and day of the year. A leg that leaves from one of the retailer's airports, dated the airport's today or tomorrow, passes. An arrivals store takes a leg that arrives at one of its airports dated today or the two days before: a pass carries the day its flight leaves, and a long flight arrives up to two days later. A pass's second leg passes too when it fits in the till's 140 characters; on most real passes the first leg's own data fills that space, so a connecting passenger shows the pass of the flight that leaves here. The airport's day is UTC plus the settings' hours from UTC.
@@ -84,3 +92,11 @@ python3 samples/s36_duty_free/service/app.py samples/s36_duty_free/service/.env.
 - **On the laptop:** the tests and canaries above.
 - **On a demo site** (2026-10-22, iVendNext POS 2.0.0.658): installed from the App library with a free key and set up in the card's order; at the till, a sale with no pass, over the allowance and from another airport refused in the app's words, and one within the allowance opened the payment screen, against the service hosted by CitiXsys (the pictures above). Then uninstalled, the walk's data removed and its key withdrawn.
 - **On our test bench** (2026-10-22, the iVendNext POS app at `84185344` (the programme's own clone the bench mounts), the engine at `dc65d832`; the service in its one-retailer form, reading iVendNext with a user holding only the app's role and a read on Item Group, Item and POS Invoice; the retailer's settings DXB, departing, UTC+4; a group *Spirits* allowed 4 litres, with a 1-litre whisky in a group below it and a 75 cl vodka), **12 of 12, twice**, through the till's own calls inside one day that was closed after: a sale with no pass refused in the app's words, the card push refused, no sale booked · a pass for a flight from London refused, naming LHR and DXB · a pass dated three days ago refused as another day · a passenger's 2 whiskies and 2 vodkas (3.5 litres) allowed and booked with the pass on the sale · that passenger's next sale of 1 whisky refused at 4.5 litres (the booked sale found by its pass and counted live) · an item of no limited group allowed and booked · another passenger's 3.75 litres allowed · the service received the pass whole, as the sale detail, with each line's item group. Before the scenario, each read the service makes was made as the app's user and none was refused. The install, the uninstall (the schema as found; the sale detail kept, switched off) and the rights put back were checked too, and no POS day was left open. **In a browser** on that bench, as a System Manager with Item Manager: the settings record and the allowance on the item group opened as set, and an item's measure changed and saved; at the till as a cashier: 5 bottles of the whisky and no pass refused, the pass typed into *Sale details*, 5 litres refused, 4 litres allowed to the payment screen (the sale voided, nothing paid). **The library copy rehearsed** on a new site with developer mode off: check, install, update, export and uninstall, reinstall, each without error; the site as found after the uninstall; the reinstall made the app's role. **Not run on the bench:** an arrivals store, a pass with two legs, an earlier return taking its amount back, a line in another unit, many retailers (each in the laptop tests), offline.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a check before payment that reads the boarding pass and each passenger's allowance.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

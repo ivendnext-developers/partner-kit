@@ -4,6 +4,8 @@
 
 The worked sample for an optical store: eye tests, lab jobs and one rule at the till. This sample gives the retailer its **prescriptions** and **lab orders** as its own records in Desk, with a workflow, a lab job sheet and the fields the retailer's own messages need. At the till, a check refuses a lens line when the customer has no prescription of that kind in date. It is for a developer who wants a retailer's own records with a workflow, and one rule at the till that asks for **only the two fields it needs** of them.
 
+**Industries:** Optical
+
 **When to use it:** a store keeps a record about its customers that decides whether some items may be sold, and the till must hold the rule while the record's contents stay in the retailer's iVendNext.
 
 ## What happens
@@ -70,6 +72,12 @@ python3 tests/canaries.py
 python3 service/app.py service/.env.local      # IVN_CHECK_SECRET, IVN_SHOP_URL, IVN_SHOP_KEY, OPT_PREFIX, PORT
 ```
 
+## Try it at the till
+
+- Sell a prescription lens to a customer with no valid prescription; the till stops it at Pay.
+- In Desk, enter the customer's prescription, then press Pay again.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The App library's *Optical prescriptions and lab orders* runs this same `service/app.py` for every retailer that installs it, as a function on CitiXsys hosting (`app.json`): it costs nothing between calls. Set `IVN_LIBRARY_APP` (the library's id), a shops store (`IVN_SHOPS_TABLE` on hosting, `IVN_SHOPS_FILE` on your own server) and `OPT_PREFIX` (`IVENDNEXT OPT`: the mark is then `ivendnext_opt_needs`, and the record types *IVENDNEXT OPT …*).
@@ -115,3 +123,11 @@ A manifest cannot notify a customer (its notifications go to the retailer's own 
 - **One customer record, one person's prescriptions:** the check passes a line on any prescription of the sale's customer, so a family sharing one record shares its prescriptions. Never enter a prescription on your walk-in customer: every walk-in sale would pass.
 - **One time zone per site:** *Hours from UTC* holds for every store of the site.
 - A newer eye test does not stop the older prescription's reminder: untick the older one's **E-mail reminders**.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: eye tests and lab jobs as the retailer's own records, and lenses refused at Pay without a prescription of their kind in date.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

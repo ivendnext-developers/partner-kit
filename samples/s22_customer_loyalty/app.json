@@ -12,8 +12,8 @@
  "schedule": {"pass": "rate(1 minute)"},
  "timeout": 900,
  "env": [
-  {"name": "IVN_LIBRARY_APP", "about": "Your app's id in the App library, in lower case with underscores: for the prefix ACME PTS, acme_pts. Each shop that installs your app connects with a key that names this id.", "required": true},
-  {"name": "LYL_PREFIX", "about": "The prefix your app's names in the shop start with, in capitals: the --prefix you gave start.py (for example ACME PTS).", "required": true},
-  {"name": "PP_STATE", "required": true}
+  {"name": "IVN_LIBRARY_APP", "about": "Your app's id in the App library, in lower case with underscores: for the prefix ACME PTS, acme_pts. Each shop that installs your app connects with a key that names this id.", "purpose": "Your app's id in the App library, like acme_pts for the prefix ACME PTS", "required": true, "together": []},
+  {"name": "LYL_PREFIX", "about": "The prefix your app's names in the shop start with, in capitals: the --prefix you gave start.py (for example ACME PTS).", "purpose": "Filled in for you: the prefix your app's names start with, like ACME PTS", "required": true, "together": []},
+  {"name": "PP_STATE", "purpose": "A folder the service may write to, where it keeps what it has already handled", "required": true, "together": []}
  ]
 }

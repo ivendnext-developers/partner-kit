@@ -4,6 +4,8 @@
 
 A fashion retailer's buyer wants to know which sizes and colours of each style sell out and which sit on the shelf, store by store, so the next order and the next transfer follow the sizes that sell. A buyer names a range, the stores and a start date, and presses a button: the app writes, for each style, colour, size and store, the units sold at the till since that date, the units still in stock, and the sell-through. It is the worked sample of the recipe [reading the retailer's own reports](../../recipes/shop_reports.md): both figures come from the retailer's own reports, never from a copy.
 
+**Industries:** Fashion
+
 **When to use it:** the retailer sells styles in sizes and colours (clothing, footwear, sportswear) and wants sell-through per size in each store, from its own till sales and stock.
 
 ## What happens
@@ -68,6 +70,12 @@ python3 samples/s54_sell_through/service/app.py samples/s54_sell_through/service
 
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's presses never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
 
+## Try it at the till
+
+- Sell a few sizes of one style.
+- In Desk, make a run for that style and press Work out sell-through; the sales show by size.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The service is the [app template](../../tools/app_template/README.md)'s shape: set `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`). Each retailer connects itself after its install and hands over the press's secret and the key of the app's own user (*Connect again* is only for when the site could not reach the app, or a key was lost or changed). Until the key arrives a press is answered in words. Every press names its retailer's iVendNext (`X-iVendNext-Site`), so each retailer is read with its own key.
@@ -118,3 +126,10 @@ What a partner usually changes:
 - **At most** 20 stores, 5,000 item attribute rows and 1,000 rows a run.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. The first press after a quiet spell starts the function (1 to 2.5 seconds, measured on earlier apps), inside the button's 10.
 - It logs one line per call: the route, the status and the milliseconds, never a body or a key.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: sell-through by size and colour, store by store, from two of the retailer's own reports.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.

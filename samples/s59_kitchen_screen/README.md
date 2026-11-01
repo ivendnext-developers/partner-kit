@@ -2,6 +2,8 @@
 
 *Start from this sample: `python3 tools/manifest/start.py s59_kitchen_screen --prefix "ACME KSC"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
+**Industries:** Hospitality
+
 ## What the retailer does
 
 The kitchen runs from screens instead of paper. When a till presses *Send*, each kitchen station's ticket shows on that station's screen, oldest first, with how long it has waited. A cook taps it **Start**, then **Ready**, then **Bump**. At the pass, an expo screen shows every station's tickets of one order together and adds up what is still to make. A *Now serving* board in the dining room or at the counter shows the call numbers that are ready. A cook can mark a dish **sold out** at the store, and the tills stop selling it at once (a sale at a till is refused; a dish an app adds to an open check, such as guest ordering, is refused only when the check is paid). The app never voids, comps, changes a line or touches money.
@@ -82,6 +84,24 @@ The tests drive the service with a stand-in site. The page's own rules run in `t
 
 The service: `python3 service/app.py service/.env.local` for one store (the env file names the app's user's key, the *Make link* secret the install handed back and the page's address), or as a function on CitiXsys hosting for many (`app.json`). It serves the screen's page itself (`service/page.html`, `page.js`, `page.css`, and its pinned copy of the kit's `ivn-kit.css` and `ivn-kit.js`: no inline script, nothing from another site). The live service: `IVN_LIBRARY_APP=… KSC_PREFIX=… KSC_PAGE_URL=… IVN_SHOPS_FILE=… python3 live/live.py` beside a service that serves many retailers (it reads the same store of retailers), and `KSC_LIVE_URL` on the service names where the screens reach it.
 
+## Try it at the till
+
+- In Desk, press Make link on a station's screen and open the link in a browser.
+- Send a check from the till; its ticket shows on the screen. Tap Start, Ready, Bump.
+- Close the till day when you are done.
+
 ## Make it your own
 
 What a partner usually changes: the ticket's layout and its languages (`page.css`, the `WORDS` table in `page.js`), the timers' colours, a bump bar or a foot pedal, and the screens' sounds. The live service (`live/`) is the path that tells screens at once (the station-ticket page §6); it runs beside a service that serves many retailers (it reads the same store of retailers), or not at all. Give its `live/app.json` your own app name too: `start.py` renames the sample's names, not that one. The prefix the service reads is `KSC_PREFIX` (`IVENDNEXT KSC` for the App library's copy).
+
+## Versions
+
+### 1.1.0
+
+- Kitchen screens update within a second, through a small always-on service beside this one (live/).
+- The sold-out list names a dish no ticket on the board names, by its item name.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+
+### 1.0.0
+
+- First version in the kit: station screens, an expo and a Now serving board that fit the screen.

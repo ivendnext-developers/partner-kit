@@ -2,6 +2,8 @@
 
 *Start from this sample: `python3 tools/manifest/start.py s26_derived_prices --prefix "ACME DPL"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
+**Industries:** every industry
+
 ## What the retailer does
 
 iVendNext keeps one price list worked out from another: the selling list is 1.5 times the buying list, or the wholesale list is 0.9 of the retail list. When someone changes a price on the source list, the app changes the derived price within seconds. Nothing changes at the till: the cashier sells at the list's price as before.
@@ -77,3 +79,10 @@ DPL_KEY=… DPL_SECRET=… python3 samples/s26_derived_prices/sync.py reconcile 
 
 - **The laptop tests** (`tests/`): everything above against a stand-in iVendNext; `canaries.py` turns each guard off in turn and its test goes RED.
 - **A sandbox site** (2026-10-16, POS 2.0.0.648, manifest 0.1.0, the service on a laptop with the site's integration user): install with `tools/deploy`; a 1.5× rule backfilled 3 prices (29.985 → 29.99, 120.555 → 120.56, 75); a source changed to 66.67 and the target read 100.01 after 14.2 seconds; the retailer's own pricer (`ivendnext_mpos.api.v1.get_item_details`) returned 100.01 on the derived list; the same source saved again made 0 writes; a derived price a person edited and a person's own price were both held and reported; a deleted source sent `item_price.deleted` and its row was ended in 15.3 seconds, after which the pricer found no price; a full replay wrote 0; the reconcile read 0 differences with the 2 held prices listed; the uninstall exported and removed the rule, and the site's records, roles and permissions were as found. A second run the same day, after the review's changes (manifest 0.1.1, the decimal places field set to 2): the backfill wrote 2, a change followed in 12.6 seconds, a person's price that had ended did not block its item, a source price moved to another item moved its made row (no second row), the reconcile read 0 with nothing held, a replay wrote 0, and the site was as found again. Not run on a sandbox: a chain of lists, a loop, a crash in a backfill, a zero-decimal currency, a rule switched off and on, a unit corrected (the site has one unit), a source made a price for one customer: laptop only.
+
+## Versions
+
+### 0.1.1
+
+- First version in the kit: a price list worked out from another and kept in step.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

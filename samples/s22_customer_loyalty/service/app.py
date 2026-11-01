@@ -50,7 +50,9 @@ sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the t
 import function  # noqa: E402
 import loyalty  # noqa: E402
 import receipts  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 import money  # noqa: E402
 import outside  # noqa: E402
 import wallet  # noqa: E402
@@ -135,15 +137,18 @@ class Service:
     def __init__(self, conf: dict, shop=None, store=None, client=None, keys=None, scheduled: bool = False):
         self.conf, self.client, self.keys, self.started = conf, client or shop_client, keys, time.monotonic()
         self.scheduled = scheduled          # a function: each scheduled call is its own pass, logged as it ends
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         if conf.get("LYL_PREFIX"):
             use_prefix(conf["LYL_PREFIX"].strip())
+        # the member key as the site knows it (the manifest's remote_keys[].key): <app>_member, or the sample's pp_lyl_member
+        self.key = f"{self.app or (conf.get('LYL_PREFIX') or 'PP LYL').strip().lower().replace(' ', '_')}_member"
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
-            self.secret_name = f"{self.app}:{self.app}_member"
+            self.secret_name = f"{self.app}:{self.key}"
         else:                                           # one shop, from the settings
-            self.secret = conf["PP_KEY_SECRET"]
-            self.t = shop or Shop(conf["PP_BASE"], conf["PP_KEY"], conf["PP_SECRET"])
+            one = oneshop.settings(conf, ["PP_KEY_SECRET"] + ([] if shop else ["PP_BASE", "PP_KEY", "PP_SECRET"]))
+            self.secret = one["PP_KEY_SECRET"]
+            self.t = shop or Shop(one["PP_BASE"], one["PP_KEY"], one["PP_SECRET"])
         loyalty.LOCKS = os.path.join(conf.get("PP_STATE") or os.path.join(HERE, "state"), "locks")
 
     def caller(self, headers, raw: bytes):
@@ -167,6 +172,8 @@ class Service:
             return 503, {"error": f"unavailable ({type(e).__name__})"}
         if why:
             return 401, {"error": why}
+        if testcall.is_test(headers):               # checked as a real call; the member key itself does not run
+            return testcall.answer(self.key)
         try:
             body = json.loads(raw)
             if not ((body or {}).get("context") or {}).get("customer"):

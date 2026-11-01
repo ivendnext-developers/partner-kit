@@ -7,6 +7,7 @@ from __future__ import annotations
 import base64
 import contextlib
 import hashlib
+import http.client
 import http.server
 import io
 import json
@@ -62,8 +63,21 @@ class Library(http.server.BaseHTTPRequestHandler):
     reply: tuple = (200, {})
     seen: list = []
 
+    token: str = ""
+
     def do_POST(self):  # noqa: N802
         env = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        if self.headers.get("Authorization"):  # a token's upload (EASY1): the plain payload, no envelope
+            ok = self.headers["Authorization"] == "Bearer " + Library.token
+            Library.seen.append(env if ok else None)
+            status, out = Library.reply if ok else (401, {"refused": "token_revoked", "words": "This token was revoked"})
+            data = json.dumps(out).encode()
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         body, sig = publish.unb64u(env["body"]), publish.unb64u(env["sig"])
         ok = env["key"] == publish.key_id(self.public) and ed25519.verify(self.public, publish.DOMAIN + body, sig)
         Library.seen.append(json.loads(body) if ok else None)
@@ -189,7 +203,7 @@ class PublishTests(unittest.TestCase):
         Library.public = ed25519.public_key(publish.load_key(str(key)))
         out = io.StringIO()
         with mock.patch.dict(os.environ, {"IVN_LIBRARY_URL": self.url, "LIBRARY_DELIVERIES": ""}), \
-                mock.patch.object(publish, "REMEMBER_DIR", d / "mem"), contextlib.redirect_stdout(out):
+                contextlib.redirect_stdout(out):
             code = publish.main(["publish", str(proj), "--partner", "standin", "--key", str(key),
                                  "--out", str(d / "library-keys.json"), *extra])
         return code, out.getvalue()
@@ -272,150 +286,134 @@ class PublishTests(unittest.TestCase):
         self.assertEqual(Library.seen, [])
 
 
-    # ── the customers a publish remembers for the next one ──────────────────────
+    # ── EASY1: the library keeps where each version went; a token publishes with no key file ──────────────
 
-    SHOPS = [{"customer": "shop-a", "name": "Shop A", "sites": ["shop-a-test.staging.ivendnext.com", "shop-a.ivendnext.com"]},
-             {"customer": "shop-b", "name": "Shop B", "sites": ["shop-b.ivendnext.com"]}]
-    OK = {"upload": "U", "partner": "standin", "app": "pp_stn", "version": "1.2.0", "preview": {"shelf": "S", "serial": 1},
-          "preview_keys": [], "delivered": [], "keys": [], "public": "unchanged"}
+    TOKEN = "ivn_tok_" + "A" * 43
+    SITE = {"site": "shop-a.ivendnext.com", "customer": "shop-a", "version": "1.2.0", "shelf": "S1", "shelf_key": "IVNS1-K",
+            "message": {"allow": "Standin has sent you an app, PP STN 1.2.0. In iVendNext Desk open App library. Under Made "
+                                 "for you, press Allow beside Standin, then Install.",
+                        "shelf_key": "Standin has sent you an app, PP STN 1.2.0. In iVendNext Desk open App library, press "
+                                     "Open your shelf at the foot of the page, paste this key: IVNS1-K, then Install."},
+            "send": "shelf_key"}
 
-    def publish_with(self, d, mem, *extra, shops=None):
-        if shops is not None:
-            (d / "shops.json").write_text(json.dumps(shops))
-            extra = (*extra, "--deliveries", str(d / "shops.json"))
-        with mock.patch.object(publish, "REMEMBER_DIR", mem):
-            return self.run_publish(d, d / "proj" if (d / "proj").exists() else project(d), *extra)
+    def token_publish(self, d, proj, *extra, env=None):
+        out = io.StringIO()
+        with mock.patch.dict(os.environ, {"IVN_LIBRARY_URL": self.url, "LIBRARY_DELIVERIES": "", "IVN_TOKEN": self.TOKEN,
+                                          **(env or {})}), contextlib.redirect_stdout(out):
+            code = publish.main(["publish", str(proj), "--out", str(d / "library-keys.json"), *extra])
+        return code, out.getvalue()
 
-    def test_a_publish_that_names_customers_is_remembered_for_the_next_one(self):
-        Library.seen, Library.reply = [], (200, self.OK)
-        with tempfile.TemporaryDirectory() as d:
+    def test_canary_nothing_is_remembered_on_this_computer(self):  # ⭐ EASY1 step 4: the deliveries file is gone
+        """RED if publish.py kept a deliveries file again: the library keeps the sites per app."""
+        Library.seen, Library.reply = [], (200, {"upload": "U", "partner": "standin", "app": "pp_stn", "version": "1.2.0",
+                                                 "preview": {"shelf": "S", "serial": 1}, "preview_keys": [], "delivered": [],
+                                                 "keys": []})
+        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"HOME": d}):
             d = pathlib.Path(d)
-            mem = d / "mem"
-            code, out = self.publish_with(d, mem, shops=self.SHOPS)
+            (d / "shops.json").write_text(json.dumps([{"customer": "shop-a", "name": "Shop A", "sites": ["shop-a.ivendnext.com"]}]))
+            code, out = self.run_publish(d, project(d), "--deliveries", str(d / "shops.json"))
             self.assertEqual(code, 0, out)
-            [f] = list(mem.glob("*.json"))
-            self.assertEqual(stat.S_IMODE(f.stat().st_mode), 0o600)          # shop addresses: yours to read, nobody else's
-            self.assertEqual(json.loads(f.read_text()), self.SHOPS)           # each entry as given: customer, name, sites
-            self.assertNotIn("shop-a.ivendnext.com", out)                    # never printed
-            code, out = self.publish_with(d, mem)                              # an update, no list given
-            self.assertEqual(code, 0, out)
-            self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS)
-            self.assertIn("including 2 customers remembered from your last publish", out)
-            self.assertNotIn("shop-a.ivendnext.com", out)
+            code, out = self.run_publish(d, d / "proj")
+            self.assertEqual(Library.seen[-1]["deliveries"], [])  # the library, not this computer, knows where it went
+            self.assertFalse(list(d.rglob("deliveries")))
+            self.assertFalse(hasattr(publish, "REMEMBER_DIR") or hasattr(publish, "recall"))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):  # an old CI line still runs, and is told the flag does nothing now
+            publish.main(["publish", "x", "--no-remembered-deliveries"])
+        self.assertIn("does nothing now", out.getvalue())
 
-    def test_a_list_you_give_replaces_the_remembered_one(self):
-        Library.seen, Library.reply = [], (200, self.OK)
+    def test_a_token_publishes_with_no_key_file_and_prints_each_sites_message(self):  # ⭐ UX-47's command half
+        Library.token = self.TOKEN
+        Library.seen, Library.reply = [], (200, {"upload": "U3", "partner": "standin", "app": "pp_stn", "version": "1.2.0",
+                                                 "preview": {"shelf": "S", "serial": 2}, "preview_keys": [], "keys": [],
+                                                 "sites": [self.SITE], "removed": ["old.ivendnext.com"],
+                                                 "public": "awaiting_approval", "words": "Waiting for our approval. Only the "
+                                                 "first listing waits."})
         with tempfile.TemporaryDirectory() as d:
             d = pathlib.Path(d)
-            mem = d / "mem"
-            self.publish_with(d, mem, shops=self.SHOPS)
-            self.publish_with(d, mem, shops=self.SHOPS[1:])
-            self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS[1:])
-            self.publish_with(d, mem)
-            self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS[1:])
-            self.publish_with(d, mem, shops=[])                                # an empty list, given: none, and forgotten
-            self.assertEqual(Library.seen[-1]["deliveries"], [])
-            self.publish_with(d, mem)
-            self.assertEqual(Library.seen[-1]["deliveries"], [])
+            proj = project(d)
+            (proj / "library" / "recipient.pem").unlink()  # no sealing key, no signing key: the token is enough
+            code, out = self.token_publish(d, proj)
+        self.assertEqual(code, 0, out)
+        sent = Library.seen[0]
+        self.assertFalse({"partner", "at", "nonce", "recipient_sha256"} & set(sent))
+        self.assertEqual(sent["cmd"], "publish")
+        self.assertIn("paste this key: IVNS1-K, then Install.", out)
+        self.assertIn("old.ivendnext.com: removed on My apps", out)
+        self.assertIn("public list: Waiting for our approval. Only the first listing waits.", out)
 
-    def test_the_flag_publishes_to_none_and_keeps_what_is_remembered(self):
-        Library.seen, Library.reply = [], (200, self.OK)
+    def test_no_token_and_no_key_is_refused_before_anything_is_sent(self):
+        Library.seen = []
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(publish, "TOKEN_FILE", pathlib.Path(d) / "none"):
+            d = pathlib.Path(d)
+            out = io.StringIO()
+            with mock.patch.dict(os.environ, {"IVN_TOKEN": ""}), contextlib.redirect_stdout(out):
+                code = publish.main(["publish", str(project(d))])
+        self.assertEqual(code, 1)
+        self.assertIn("sign in first: publish.py login", out.getvalue())
+        self.assertEqual(Library.seen, [])
+
+    def test_login_keeps_the_token_only_you_can_read(self):  # ⭐ step 3
+        answers = [(200, {"device_code": "d" * 43, "user_code": "BCDF-GHJK", "interval": 5, "expires_in": 600,
+                          "verification_uri_complete": "https://developer.ivendnext.com/apps?code=BCDF-GHJK"}),
+                   (428, {"refused": "device_pending"}), (200, {"token": self.TOKEN, "company": "standin"})]
+        asked = []
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(publish, "TOKEN_FILE", pathlib.Path(d) / ".ivendnext" / "token"):
+            said = []
+            company = publish.login(post=lambda path, body: (asked.append(path), answers.pop(0))[1], wait=lambda s: None,
+                                    out=said.append)
+            tf = publish.TOKEN_FILE
+            self.assertEqual((company, tf.read_text().strip(), stat.S_IMODE(tf.stat().st_mode)), ("standin", self.TOKEN, 0o600))
+        self.assertEqual(asked, ["/v1/device", "/v1/device/token", "/v1/device/token"])
+        self.assertIn("BCDF-GHJK", said[0])
+        with self.assertRaises(publish.Stop):
+            publish.login(post=lambda path, body: (200, {"device_code": "d", "user_code": "X", "interval": 5, "expires_in": 5,
+                                                         "verification_uri_complete": "u"}) if path == "/v1/device"
+                          else (410, {"refused": "device_expired", "words": "this code has expired"}), wait=lambda s: None,
+                          out=lambda x: None)
+
+    def test_keygen_register_sends_the_public_line_and_the_sealing_key_with_the_token(self):  # step 4: no Help request
+        Library.token = self.TOKEN
+        Library.seen, Library.reply = [], (200, {"partner": "standin", "key": "abcd", "keys": ["abcd"]})
         with tempfile.TemporaryDirectory() as d:
             d = pathlib.Path(d)
-            mem = d / "mem"
-            self.publish_with(d, mem, shops=self.SHOPS)
-            code, out = self.publish_with(d, mem, "--no-remembered-deliveries")
-            self.assertEqual(code, 0, out)
-            self.assertEqual(Library.seen[-1]["deliveries"], [])
-            self.assertNotIn("remembered", out)
-            self.publish_with(d, mem)
-            self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS)
+            (d / "r.pem").write_text(PEM)
+            out = io.StringIO()
+            with mock.patch.dict(os.environ, {"IVN_LIBRARY_URL": self.url, "IVN_TOKEN": self.TOKEN}), contextlib.redirect_stdout(out):
+                code = publish.main(["keygen", "--key", str(d / "k.key"), "--register", "--recipient", str(d / "r.pem")])
+            self.assertEqual(code, 0, out.getvalue())
+            sent = Library.seen[0]
+            self.assertEqual((sent["cmd"], sent["recipient"]), ("signing-key", PEM))
+            self.assertTrue(sent["signing_key"].startswith("ivn-ed25519:"))
+            self.assertNotIn("secret", json.dumps(sent))
+            self.assertNotIn((d / "k.key").read_text().strip(), json.dumps(sent))
 
-    def test_a_dry_run_writes_nothing_and_names_the_count_not_an_address(self):
-        Library.seen, Library.reply = [], (200, self.OK)
-        with tempfile.TemporaryDirectory() as d:
-            d = pathlib.Path(d)
-            mem = d / "mem"
-            code, out = self.publish_with(d, mem, "--dry-run", shops=self.SHOPS)
-            self.assertEqual(code, 0, out)
-            self.assertFalse(mem.exists())                                     # nothing remembered from a dry run
-            self.publish_with(d, mem, shops=self.SHOPS[:1])
-            before = [(f.name, f.read_bytes()) for f in mem.glob("*")]
-            code, out = self.publish_with(d, mem, "--dry-run")
-            self.assertIn("including 1 customer remembered", out)
-            self.assertIn("1 customer(s)", out)
-            self.assertNotIn("shop-a", out)
-            self.assertEqual([(f.name, f.read_bytes()) for f in mem.glob("*")], before)
-            code, out = self.publish_with(d, mem, "--dry-run", shops=self.SHOPS)
-            self.assertEqual([(f.name, f.read_bytes()) for f in mem.glob("*")], before)
 
-    def test_a_publish_the_library_refuses_remembers_nothing_new(self):
-        Library.seen, Library.reply = [], (403, {"refused": "not_your_app", "words": "no"})
-        with tempfile.TemporaryDirectory() as d:
-            d = pathlib.Path(d)
-            mem = d / "mem"
-            code, out = self.publish_with(d, mem, shops=self.SHOPS)
-            self.assertEqual(code, 1)
-            self.assertFalse(mem.exists())
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
 
-    def test_a_remembered_file_that_cannot_be_read_stops_the_publish_instead_of_dropping_customers(self):
-        Library.seen, Library.reply = [], (200, self.OK)
-        with tempfile.TemporaryDirectory() as d:
-            d = pathlib.Path(d)
-            mem = d / "mem"
-            self.publish_with(d, mem, shops=self.SHOPS)
-            [f] = list(mem.glob("*.json"))
-            f.write_text("{not json")
-            Library.seen = []
-            code, out = self.publish_with(d, mem)
-            self.assertEqual(code, 1)
-            self.assertIn("--no-remembered-deliveries", out)
-            self.assertEqual(Library.seen, [])
+        def __enter__(self):
+            return self
 
-    def test_a_smaller_list_says_it_replaces_the_remembered_one_and_a_blank_file_names_no_one(self):
-        Library.seen, Library.reply = [], (200, self.OK)
-        with tempfile.TemporaryDirectory() as d:
-            d = pathlib.Path(d)
-            mem = d / "mem"
-            self.publish_with(d, mem, shops=self.SHOPS)
-            code, out = self.publish_with(d, mem, shops=self.SHOPS[1:])
-            self.assertIn("this list leaves out 1 of the 2 customers remembered", out)
-            self.assertNotIn("shop-", out)
-            self.publish_with(d, mem, shops=self.SHOPS)
-            (d / "blank.json").write_text("\n")
-            code, out = self.publish_with(d, mem, "--deliveries", str(d / "blank.json"))
-            self.assertEqual(Library.seen[-1]["deliveries"], self.SHOPS)         # the blank file did not wipe it
+        def __exit__(self, *exc):
+            return False
 
-    def test_a_swapped_list_and_a_dry_run_both_say_who_is_left_out(self):
-        Library.seen, Library.reply = [], (200, self.OK)
-        swap = [self.SHOPS[0], {"customer": "shop-c", "name": "Shop C", "sites": ["shop-c.ivendnext.com"]}]
-        with tempfile.TemporaryDirectory() as d:
-            d = pathlib.Path(d)
-            mem = d / "mem"
-            self.publish_with(d, mem, shops=self.SHOPS)
-            code, out = self.publish_with(d, mem, "--dry-run", shops=swap)         # same length, one customer different
-            self.assertIn("this list leaves out 1 of the 2 customers remembered", out)
-            self.assertNotIn("shop-", out)
-            self.assertEqual(json.loads(next(mem.glob("*.json")).read_text()), self.SHOPS)
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
 
-    def test_a_memory_that_cannot_be_written_does_not_fail_a_publish_the_library_accepted(self):
-        Library.seen, Library.reply = [], (200, self.OK)
-        with tempfile.TemporaryDirectory() as d:
-            d = pathlib.Path(d)
-            (d / "mem").write_text("a file where the folder should be")
-            code, out = self.publish_with(d, d / "mem", shops=self.SHOPS)
-            self.assertEqual(code, 0, out)
-            self.assertIn("could not be remembered", out)
 
-    def test_canary_without_the_write_the_next_publish_misses_the_customers(self):
-        """If the write is dropped, the scenario of the first test above goes red: the second publish carries nobody."""
-        Library.seen, Library.reply = [], (200, self.OK)
-        with tempfile.TemporaryDirectory() as d, mock.patch.object(publish, "remember", lambda *a: None):
-            d = pathlib.Path(d)
-            self.publish_with(d, d / "mem", shops=self.SHOPS)
-            self.publish_with(d, d / "mem")
-            self.assertEqual(Library.seen[-1]["deliveries"], [])
-            self.assertNotEqual(Library.seen[-1]["deliveries"], self.SHOPS)
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_library_answer_cut_short_is_nothing_known_to_be_published_never_a_crash(self):
+        with mock.patch.object(publish.urllib.request, "urlopen", cut_answer):
+            with self.assertRaises(publish.Stop) as e:
+                publish.send("https://library.example/v1/publish", b"{}")
+        self.assertIn("(IncompleteRead); nothing is known to be published", str(e.exception))
 
 
 if __name__ == "__main__":

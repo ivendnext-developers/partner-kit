@@ -9,6 +9,7 @@ import base64
 import datetime
 import hashlib
 import hmac
+import http.client
 import io
 import json
 import os
@@ -21,6 +22,7 @@ import time
 import unittest
 import urllib.error
 import urllib.request
+from unittest import mock
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "service"))
@@ -489,6 +491,34 @@ class FileClaim(unittest.TestCase):
         self.assertEqual(f.sites(), [A])
         f.delete("press|x|k")
         self.assertTrue(f.claim("press|x|k", 1062.0, 60))
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_table_answer_cut_short_is_a_store_error_never_a_crash(self):
+        t = dynamo.TableStore("t", "us-east-1", creds=mock.Mock(get=lambda: {"key": "AKIDEXAMPLE", "secret": "x", "token": "t"}))
+        with mock.patch.object(dynamo.urllib.request, "urlopen", cut_answer):
+            with self.assertRaises(dynamo.StoreError) as e:
+                t.get("a.b")
+        self.assertIn("unreachable (IncompleteRead)", str(e.exception))
 
 
 if __name__ == "__main__":

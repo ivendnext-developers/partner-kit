@@ -2,6 +2,8 @@
 
 *Start from this sample: `python3 tools/manifest/start.py s55_front_of_house --prefix "ACME FOH"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
+**Industries:** Hospitality
+
 ## What the retailer does
 
 A restaurant's host keeps the evening in iVendNext Desk: a **reservation** for each booking (the store, the date and time, the party size, the guest, a table if chosen) and a **waiting list** of walk-ins. Five buttons do the work, each answered by the app's service:
@@ -76,6 +78,19 @@ python3 tools/check/check.py samples/s55_front_of_house                         
 
 The service: `python3 service/app.py service/.env.local` for one store (the env file names the app's user's key and the five secrets the install handed back), or as a function on CitiXsys hosting for many (`app.json`).
 
+## Try it at the till
+
+- In Desk, make a reservation with a table, press Book, then Seat.
+- The party's check opens on the till at that table; add dishes and take the payment.
+- Close the till day when you are done.
+
 ## Make it your own
 
 What a partner usually changes: the booking length and the deposit's words; a booking platform's link (its bookings written as reservations through the record API); an SMS provider of the retailer's choice (SMS Settings, never the app); a reminder Notification the day before. The prefix the service reads is `FOH_PREFIX` (`IVENDNEXT FOH` for the App library's copy), and `tools/deploy/copy_records.py` moves the settings between sites. The guest's fields keep their roles: a copy that names the app's own role in `read_roles` sends the guest's data to the service.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: reservations, a waiting list and seating that opens the table's check.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.

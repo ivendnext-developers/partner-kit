@@ -4,6 +4,8 @@
 
 A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it sells before it is thrown away. The retailer sets its markdown steps once on its item groups: 25% off from 5 days before expiry, 50% off from 2 days, say. Each morning a manager ticks the lots in the Batch list and presses **Mark down**. Every ticked lot inside a step gets its own price on the retailer's selling price list, valid until its expiry date. The till already rings a lot at its own price and prints its lot label, so the cashier does nothing new. This sample is for a developer who wants a button on a Desk list whose service **writes the retailer's own records** by a rule the retailer keeps.
 
+**Industries:** Beauty and cosmetics, Grocery, Liquor and wine, Pharmacy
+
 **When to use it:** the retailer's rule decides a value on many records at once, a person decides when to apply it, and iVendNext already reads the value where it matters (here: a lot's own Item Price, which the till honours).
 
 ## What happens
@@ -79,6 +81,12 @@ python3 tests/canaries.py
 python3 service/app.py service/.env.local      # PP_BASE, PP_KEY, PP_SECRET, PP_POINT_SECRET, PP_PORT
 ```
 
+## Try it at the till
+
+- In Desk, tick a lot close to its expiry date on the Batch list and press Mark down.
+- Scan that lot at the till; it rings at its marked-down price.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The App library's *Expiry markdown* runs this same `service/app.py` for every retailer that installs it, as a function on CitiXsys hosting (`app.json`): it costs nothing between presses. Set `IVN_LIBRARY_APP` (the library's id), a shops store (`IVN_SHOPS_TABLE` on hosting, `IVN_SHOPS_FILE` on your own server) and `EXM_PREFIX` (`IVENDNEXT EXM`: the step fields are then `ivendnext_exm_days_1` and so on, and the note *IVENDNEXT EXM: …*).
@@ -133,3 +141,11 @@ A manifest cannot write an Item Price: a save rule's derived value writes only n
 - **A customer with their own price.** With a customer on the sale who has a price of their own for the item, a scanned lot rings the customer's price, not the lot's markdown (the retailer's own price order).
 - **The retailer's day** is the hours from UTC in the settings: change it when your clocks change. A press made just before midnight on a site ahead of UTC with the hours left at 0 writes yesterday's date, which the till reads as valid.
 - **The app's own rows** are those whose note starts with its prefix and a colon. A price you edit on such a row is the app's again at the next press; to keep a lot price of your own, write your own note.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a Desk button on the Batch list that writes each lot's own price by the retailer's steps, until its expiry date.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

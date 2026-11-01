@@ -8,6 +8,8 @@
 
 S2 records only **where** items sit inside a store — locations (back room, shop floor), aisles, bins and what is in each bin — and answers the cashier's **"Where is it?"** key. The retailer's stock and valuation stay in iVendNext. It is for a developer who wants to add their own records and screens to a retailer's iVendNext, kept up to date by their own service.
 
+**Industries:** Electronics and phones, Fashion, Grocery, Hardware and DIY, Distribution and warehousing
+
 **When to use it:** your product keeps its own data beside the retailer's (here, bins) and staff should see it in Desk and at the till.
 
 ## What it looks like
@@ -54,7 +56,7 @@ The App library's *Bin locations* (1.1.0) is S2's records with only its till key
 - **Its limits.** A record's Location is copied from its bin when the record is saved: after you move a bin to another aisle, save its records under *What is in each bin* again, and a record saved before manifest 0.1.1 is found once it is saved again. The till's message shows about ten items, so a sale's items after the thirtieth are only counted (*and N more*), and such a sale is coloured as a warning. A variant is looked up by its own code: record the variant in a bin, not its template. The time limit is per network step, so a retailer that trickles its answer can still pass the till's 3 seconds.
 - **How it runs.** As a function, paid per call (`app.json`, `"runs": "function"`): it only answers presses. One retailer on your own server: `IVN_POINT_SECRET`, `IVN_SHOP_URL`, `IVN_SHOP_KEY`; many retailers: `IVN_LIBRARY_APP` with a store (see the file's header).
 
-Tests: `tests/test_where.py`; their canaries: `python3 samples/s2_bins/tests/canaries.py` (each must be RED).
+Tests: `tests/test_where.py`, and `tests/test_tenant.py` for the door into iVendNext; their canaries: `python3 samples/s2_bins/tests/canaries.py` (each must be RED).
 
 ## Make it your own
 
@@ -90,6 +92,11 @@ python3 samples/s2_bins/service/app.py samples/s2_bins/service/.env.local
 ```
 The env file (never committed), kept at `samples/s2_bins/service/.env.local`, holds `PP_BASE`, `PP_KEY`, `PP_SECRET`, `PP_WEBHOOK_SECRETS` (the manifest's two webhooks, comma-separated), `PP_ADMIN_TOKEN`, `PP_POINT_SECRET` (the remote key's signing secret), `PP_COMPANY`, and optionally `PP_PORT` (8123), `PP_DB` and `PP_SINCE`.
 
+## Try it at the till
+
+- Put an item on a sale and press the key Where is it? The till names the bin it sits in.
+- Close the till day when you are done.
+
 ## Technical notes
 
 ### The walk
@@ -109,3 +116,11 @@ In step 3, one row: 6 units put away in the back-room bin. The workspace still (
 ### The env file's path
 
 `service/app.py` opens the path it is given from the current directory (`_env(sys.argv[1])`), so from the kit's root the command passes `samples/s2_bins/service/.env.local`. With no argument it reads `.env.local` beside `app.py`, the same file. Our test bench runs it from the sample's own folder as `python3 service/app.py service/.env.local`.
+
+## Versions
+
+### 1.1.0
+
+- First version in the kit: the Where is it? till key, hosted as a function for many retailers.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+- A cut-short answer from a retailer's site is handled as an unknown outcome, like a site that cannot be reached, never a crash.

@@ -24,13 +24,16 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path[:0] = [HERE, os.path.dirname(HERE), os.path.join(os.path.dirname(os.path.dirname(HERE)), "s1_warranty", "service")]
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "tools", "app_template", "service"))
 import bins  # noqa: E402
 import core  # noqa: E402
 from receiver import replay_key, verify  # noqa: E402  (S1's webhook receiver, unchanged: samples/s1_warranty/service)
 from store import Store  # noqa: E402
 from tenant import Tenant, TenantError  # noqa: E402
+import testcall  # noqa: E402  (the template's test call)
 
 BODY_MAX, SKEW_S = 64 * 1024, 300
+ROUTES = ("/webhook", "/point/where_is_it", "/putaway", "/pick", "/reconcile")     # every POST route below
 
 
 def _env(path):
@@ -110,12 +113,16 @@ class Handler(BaseHTTPRequestHandler):
         if n < 0 or n > BODY_MAX:
             return self._send(413, {"error": "too large"})
         raw = self.rfile.read(n)
+        if testcall.is_test(self.headers) and self.path not in ROUTES:   # a test is answered only where a route matches
+            return self._send(404, {"error": "no such route"})
         try:
             if self.path == "/webhook":
                 return self._webhook(raw)
             if self.path == "/point/where_is_it":
                 if not point_verified(self.headers, raw):
                     return self._send(401, {"error": "bad signature"})
+                if testcall.is_test(self.headers):      # checked as a real call; the bins are not read
+                    return self._send(*testcall.answer("where_is_it"))
                 ctx = json.loads(raw)["context"]
                 return self._send(200, core.where_answer(ctx, bins.point_rows(TENANT, ctx)))
             if not self._admin():
@@ -144,6 +151,8 @@ class Handler(BaseHTTPRequestHandler):
         if not data:
             STORE.event("refused", how)
             return self._send(401, {"error": how})
+        if testcall.is_test(self.headers):              # checked as a real webhook; no sale is read, nothing is stored
+            return self._send(*testcall.answer("webhook"))
         key = replay_key(data)
         if not key or data.get("doctype") not in SALE_TYPES:
             return self._send(400, {"error": "not a booked sale"})

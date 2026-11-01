@@ -4,6 +4,8 @@
 
 A fashion store's ticket for each alteration and each made-to-measure piece, kept in iVendNext Desk: what to do to which garment, the measurements, the fitting, the date it is ready, the tailor's progress, a slip for the customer with a tag for the garment, the tickets due, and who collected it. The charge and any deposit are rung at the till as before. The app itself calls nothing outside: no service, no outside address. The [recipe](../../recipes/alteration_tickets.md) walks a store through it.
 
+**Industries:** Fashion
+
 It uses the manifest's `doctypes` (a record type and two child tables), `workflows`, `print_formats`, `reports`, `links` and a `documentation` property setter. **When to use it:** a store alters what it sells (a hem, a waist, a sleeve) or makes to measure (a suit, a dress), and its tickets are on paper today.
 
 ## What happens
@@ -79,3 +81,9 @@ A manifest only. The till already charges an alteration (a service item, or a li
 - **A workflow's *who may edit* is a screen rule.** Over the record API, anyone with write may change a ticket in any state; the buttons are the workflow's.
 - **A cancelled ticket refunds nothing**: a refund is the till's return.
 - **The measurements are personal data** the retailer keeps under its own policy; uninstalling the app removes the tickets (its export keeps a copy).
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: alterations and made-to-measure tickets, from a manifest only.

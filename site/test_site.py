@@ -44,6 +44,9 @@ def missing_downloads(out: pathlib.Path) -> list[str]:
                    for m in DOWNLOAD.finditer(text) if not (out / m.group(1)).is_file()})
 
 
+STUBS = {old for old, _ in seo.read_redirects(build.REDIRECTS)}   # a moved page's small stub: no script, no search, no counter
+
+
 def indexable(text: str) -> bool:
     """A page search engines may index: every page but one that says noindex (the 404 and search.html; later lanes add their own)."""
     return 'name="robots" content="noindex"' not in text
@@ -360,12 +363,14 @@ class SiteTests(unittest.TestCase):
     def test_the_content_policy_is_on_every_page_and_follows_the_list(self):
         tag = re.compile(r'<meta http-equiv="Content-Security-Policy" content="([^"]+)">')
         for f in self.out.rglob("*.html"):
+            if f.relative_to(self.out).as_posix() in STUBS:
+                continue
             m = tag.search(f.read_text("utf-8"))
             self.assertTrue(m, f"{f}: no content policy")
             self.assertIn("script-src 'self'", m.group(1))
-            if f.relative_to(self.out).as_posix() in build.OWN_POLICY:   # its own, in place of the site's: one address
+            if f.relative_to(self.out).as_posix() in build.OWN_POLICY:   # its own, in place of the site's: two addresses
                 self.assertEqual(m.group(1), build.page_policy(), f.name)
-                self.assertEqual(re.findall(r"https://[^\s;]+", m.group(1)), [build.HOSTING_API], f.name)
+                self.assertEqual(re.findall(r"https://[^\s;]+", m.group(1)), [build.HOSTING_API, build.UPLOAD_STORE], f.name)
                 self.assertEqual(len(tag.findall(f.read_text("utf-8"))), 1, f.name)
                 continue
             self.assertEqual(set(re.findall(r"https://[^\s;]+", m.group(1))), {f"https://{h}" for h in check_links.ALLOWED_HOSTS}, f.name)
@@ -382,6 +387,8 @@ class SiteTests(unittest.TestCase):
     def test_every_page_names_the_counter_loads_analytics_before_search_and_says_so_in_the_footer(self):
         want = f'<meta name="ivn-analytics" content="https://{check_links.ANALYTICS_HOST}">'
         for f in self.out.rglob("*.html"):
+            if f.relative_to(self.out).as_posix() in STUBS:
+                continue
             t = f.read_text("utf-8")
             if f.relative_to(self.out).as_posix() in build.OWN_POLICY:   # no counter on the page that holds a sign-in
                 self.assertNotIn("ivn-analytics", t, f.name)
@@ -449,6 +456,8 @@ class SiteTests(unittest.TestCase):
 
     def test_every_page_has_the_search_box_and_without_script_it_opens_all_needs(self):
         for f in self.out.rglob("*.html"):
+            if f.relative_to(self.out).as_posix() in STUBS:
+                continue
             text = f.read_text("utf-8")
             up = "/" if f.name == "404.html" else "../" * f.relative_to(self.out).as_posix().count("/")
             self.assertIn(f'<form class="site-search" role="search" action="{up}needs/all.html" method="get" data-root="{up}">', text, f.name)
@@ -873,6 +882,20 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertEqual(self.build_in(kit), 0)
 
     # ── reference apps and samples: one card each, built from the READMEs (row SITECARDS) ──────────────────────────────
+    PLANTED_VERSIONS = "\n## Versions\n\n### 1.0.0\n\n- The planted sample.\n"     # a planted sample's README carries its versions
+
+    def plant_census(self, kit: pathlib.Path, *every: str) -> None:
+        """The kit copy's own site/industries.json (its other site files linked), with `every` listed under every_industry."""
+        site = kit / "site"
+        site.unlink()
+        site.mkdir()
+        for entry in (build.ROOT / "site").iterdir():
+            if entry.name != "industries.json":
+                (site / entry.name).symlink_to(entry)
+        data = json.loads((build.ROOT / "site" / "industries.json").read_text("utf-8"))
+        data["every_industry"] += list(every)
+        (site / "industries.json").write_text(json.dumps(data, indent=2), "utf-8")
+
     def edit_readme(self, kit: pathlib.Path, sample: str, edit) -> None:
         f = kit / "samples" / sample / "README.md"
         f.write_text(edit(f.read_text("utf-8")), "utf-8")
@@ -958,7 +981,8 @@ The till cannot do this yet; it can stop the sale at Pay.
         folder = kit / "samples" / "s99_planted"
         folder.mkdir()
         (folder / "README.md").write_text("# S99 — a planted sample\n\nIt only exists in this test of the site build, and this first paragraph is long enough to be its description.\n\n**When to use it:** never.\n\n"
-                                          "## Run it\n\n```bash\npython3 -m unittest\n```\n", "utf-8")
+                                          "**Industries:** every industry\n\n## Run it\n\n```bash\npython3 -m unittest\n```\n" + self.PLANTED_VERSIONS, "utf-8")
+        self.plant_census(kit, "s99_planted")
         card = self.plant_not_yet(kit) / "needs" / "till" / "a-planted-need.md"         # a not-yet card: its door is Request
         card.write_text(card.read_text("utf-8").replace("sample: none", "sample: samples/s99_planted"), "utf-8")
         self.assertEqual(self.build_in(kit), 1)                                          # no door from the card, none in the README
@@ -977,7 +1001,9 @@ The till cannot do this yet; it can stop the sale at Pay.
         folder = kit / "samples" / "s99_planted"
         folder.mkdir()
         (folder / "README.md").write_text("# S99 — a planted sample\n\nIt only exists in this test of the site build, and this first paragraph is long enough to be its description.\n\n**When to use it:** never.\n\n"
-                                          "**Door:** Manifest\n\n## Run it\n\n```bash\npython3 -m unittest\n```\n", "utf-8")
+                                          "**Door:** Manifest\n\n**Industries:** every industry\n\n## Run it\n\n```bash\npython3 -m unittest\n```\n"
+                                          + self.PLANTED_VERSIONS, "utf-8")
+        self.plant_census(kit, "s99_planted")
         with (kit / "needs" / "reference.txt").open("a", encoding="utf-8") as f:
             f.write("samples/s99_planted — a planted sample\n")
         self.assertEqual(self.build_in(kit), 0)
@@ -1344,7 +1370,12 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertTrue((out / "guide" / "04_configure_first.html").is_file())                 # the new address is a built page
         self.assertNotIn("old_chapter", (out / "sitemap.xml").read_text("utf-8"))              # the old address is not listed
         self.assertEqual(check_links.check(out), [])
-        self.assertEqual(seo.read_redirects(build.REDIRECTS), [])                              # the real table is empty
+        for old, new in seo.read_redirects(build.REDIRECTS):                                   # the real table: each a stub
+            stub = (self.out / old).read_text("utf-8")                                         # to a built page
+            self.assertIn(f'<link rel="canonical" href="https://developer.ivendnext.com/{new}">', stub, old)
+            self.assertFalse(indexable(stub), old)
+            self.assertNotIn("<script", stub, old)
+            self.assertTrue((self.out / new).is_file(), new)
 
     def test_a_redirect_to_a_page_that_is_not_built_or_over_a_page_is_red(self):
         self.assertEqual(self.redirect_build("redirect_gone", "guide/old.html guide/no_such_page.html\n")[0], 1)
@@ -1393,6 +1424,195 @@ The till cannot do this yet; it can stop the sale at Pay.
                 self.assertRegex(tag, r'width="\d+"')
                 self.assertRegex(tag, r'height="\d+"')
         self.assertIsNotNone(seo.image_size(build.ROOT / "samples/s5_config_pack/screenshots/s5_flow.gif"))
+
+    # ── the samples index (samples/index.json) and the READMEs it is read from ──
+    INDEX_FIELDS = {"name", "title", "version", "versions", "when_to_use", "picture", "door", "needs", "recipe", "industries",
+                    "till", "config_pack"}
+    # the samples with no screenshot of their own whose door no screenshot in the kit shows (site/door_pictures.json null)
+    NO_PICTURE = {"s34_po_check": "document-check", "s41_regulated_register": "register-books",
+                  "s43_third_party_payer": "payer"}
+
+    def sample_folders(self, root: pathlib.Path | None = None) -> list[pathlib.Path]:
+        return sorted(p.parent for p in ((root or build.ROOT) / "samples").glob("*/README.md"))
+
+    def test_each_readmes_industries_line_is_the_census(self):
+        import gallery
+        census = gallery.census(build.ROOT)
+        for folder in self.sample_folders():
+            want = gallery.census_industries(folder.name, census)
+            self.assertIsNotNone(want, f"{folder.name}: site/industries.json lists it nowhere")
+            got = gallery.sample_info.industries((folder / "README.md").read_text("utf-8"))
+            self.assertIsNotNone(got, f"{folder.name}: no **Industries:** line")
+            self.assertEqual(sorted(got), sorted(want), folder.name)
+
+    def test_a_sample_under_no_industry_is_every_industry_and_appears_under_none(self):
+        import gallery
+        census = gallery.census(build.ROOT)
+        self.assertEqual(list(census["industries"]), list(gallery.sample_info.INDUSTRIES))       # the App library's twelve, in order
+        under = {s for names in census["industries"].values() for s in names}
+        every = set(census["every_industry"])
+        self.assertTrue(every)
+        self.assertEqual(under & every, set())
+        self.assertEqual(under | every, {f.name for f in self.sample_folders()})
+        for name in every:
+            self.assertEqual(gallery.sample_info.industries((build.ROOT / "samples" / name / "README.md").read_text("utf-8")),
+                             [gallery.sample_info.EVERY], name)
+
+    def test_every_readme_has_a_versions_section_whose_newest_heading_is_the_samples_version(self):
+        import gallery
+        for folder in self.sample_folders():
+            versions = gallery.sample_info.versions((folder / "README.md").read_text("utf-8"))
+            self.assertTrue(versions, f"{folder.name}: no ## Versions section")
+            self.assertTrue(all(lines for _, lines in versions), folder.name)
+            self.assertEqual(versions[0][0], gallery.sample_info.version(folder), folder.name)
+
+    def test_every_sample_with_a_till_part_says_what_to_try_at_the_till(self):
+        import gallery
+        till = [f for f in self.sample_folders() if gallery.sample_info.till_part(f)]
+        self.assertIn(build.ROOT / "samples" / "s23_till_guard", till)
+        for folder in till:
+            self.assertTrue(gallery.sample_info.till_lines((folder / "README.md").read_text("utf-8")), folder.name)
+
+    def test_the_readme_check_is_green_on_the_kit(self):
+        import gallery
+        self.assertEqual(gallery.readme_errors(build.ROOT), [])
+
+    def test_the_samples_index_carries_every_field_for_every_sample(self):
+        import gallery
+        index = json.loads((self.out / "samples" / "index.json").read_text("utf-8"))
+        entries = index["samples"]
+        self.assertEqual([e["name"] for e in entries], [f.name for f in sorted(self.sample_folders(),
+                         key=lambda f: int(re.sub(r"\D", "", f.name.split("_")[0])))])               # every sample, in S-number order
+        census = gallery.census(build.ROOT)
+        cards = {c.id for c in catalogue_cards()}
+        cited = build.catalogue.backlinks(catalogue_cards())
+        doors = set(build.catalogue.DOORS.values())
+        key_of = {name: key for key, name in build.catalogue.DOORS.items()}
+        pictures = gallery.door_pictures(build.ROOT)
+        for e in entries:
+            name, folder = e["name"], build.ROOT / "samples" / e["name"]
+            text = (folder / "README.md").read_text("utf-8")
+            self.assertEqual(set(e), self.INDEX_FIELDS, name)
+            self.assertTrue(e["title"] and e["when_to_use"], name)
+            self.assertEqual(e["version"], gallery.sample_info.version(folder), name)
+            self.assertEqual(e["versions"], [{"version": v, "lines": lines} for v, lines in gallery.sample_info.versions(text)], name)
+            self.assertEqual(e["versions"][0]["version"], e["version"], name)
+            self.assertIn(e["door"], doors, name)
+            self.assertTrue(set(e["needs"]) <= cards, name)
+            self.assertEqual(bool(e["needs"]), bool(cited.get(f"samples/{name}")), name)   # empty only where no card names it
+            for path in (e["picture"], e["recipe"]):                     # a picture and a recipe are files of the built site
+                self.assertTrue(path is None or (self.out / path).is_file(), (name, path))
+            own = list(folder.glob("screenshots/*.png")) + list(folder.glob("screenshots/*.jp*g"))
+            if name in self.NO_PICTURE:                                  # its door has no screenshot anywhere in the kit
+                self.assertEqual((e["picture"], pictures[key_of[e["door"]]], key_of[e["door"]]), (None, None, self.NO_PICTURE[name]))
+            elif not own:                                                # no screenshot of its own: its door's picture
+                self.assertIsNone(gallery.own_still(f"samples/{name}", build.ROOT), name)
+                self.assertEqual(e["picture"], pictures[key_of[e["door"]]], name)
+                self.assertFalse(e["picture"].startswith(f"samples/{name}/"), name)
+            else:                                                        # its own, linked from its README or not (S28)
+                self.assertTrue(e["picture"].startswith(f"samples/{name}/screenshots/"), name)
+            self.assertEqual(sorted(e["industries"]), sorted(gallery.census_industries(name, census)), name)
+            self.assertEqual(e["till"], gallery.sample_info.till_lines(text), name)
+            if gallery.sample_info.till_part(folder):
+                self.assertTrue(e["till"], name)
+            self.assertIs(e["config_pack"], name in ("s5_config_pack", "s8_estate_rollout"), name)
+        s23 = next(e for e in entries if e["name"] == "s23_till_guard")
+        self.assertEqual((s23["door"], s23["recipe"], s23["industries"]), ("Check before payment", "recipes/till_guard.html", ["Electronics and phones"]))
+        self.assertIn("line-quantity-cap", s23["needs"])
+        self.assertIn("Sell 51 of one item; the till stops it at Pay.", s23["till"])
+        self.assertIn("https://developer.ivendnext.com/samples/index.json", self.html_of("llms.txt"))
+
+    def test_every_door_picture_is_a_screenshot_of_a_sample_with_that_door(self):
+        import gallery
+        pictures = gallery.door_pictures(build.ROOT)
+        self.assertEqual(sorted(pictures), sorted(d for d in build.catalogue.DOORS if d not in gallery.NO_DOOR))
+        cited = build.catalogue.backlinks(catalogue_cards())
+        by_name = {name.lower(): key for key, name in build.catalogue.DOORS.items()}
+        for door, path in pictures.items():
+            if path is None:
+                continue
+            self.assertTrue((build.ROOT / path).is_file(), (door, path))
+            folder = path.split("/screenshots/")[0]
+            own = {c.door for c in cited.get(folder, [])}
+            if not own:                                                  # no card cites it: its README's own Door line
+                line = gallery.DOOR_LINE.search((build.ROOT / folder / "README.md").read_text("utf-8"))
+                own = {by_name.get(line.group(1).strip().lower())} if line else set()
+            self.assertIn(door, own, (door, path))
+        self.assertEqual([d for d, p in pictures.items() if p is None and d in self.NO_PICTURE.values()],
+                         [d for d in pictures if d in self.NO_PICTURE.values()])
+
+    def test_canary_a_sample_with_no_screenshot_and_no_picture_fails_the_site_build(self):  # RED, then GREEN
+        import gallery
+        kit = self.planted_kit("door_pictures", also=("site",))
+        self.assertEqual(self.build_in(kit), 0)                                                         # GREEN: the copy as it is
+        f = kit / "site" / "door_pictures.json"
+        good = f.read_text("utf-8")
+        data = json.loads(good)
+        data["doors"]["outside-app"] = None              # S7, S9, S12, S22, S24, S25, S26 and S27 would carry no picture
+        f.write_text(json.dumps(data), "utf-8")
+        self.assertEqual(self.build_in(kit), 1)                                                         # RED
+        data["doors"]["outside-app"] = "samples/s23_till_guard/screenshots/till-guard-rules-notice.png"   # another door's
+        f.write_text(json.dumps(data), "utf-8")
+        self.assertEqual(self.build_in(kit), 1)                                                         # RED
+        f.write_text(good, "utf-8")
+        self.assertEqual(self.build_in(kit), 0)                                                         # GREEN again
+        index = json.loads((self.tmp / "door_pictures_out" / "samples" / "index.json").read_text("utf-8"))
+        s22 = next(e for e in index["samples"] if e["name"] == "s22_customer_loyalty")
+        self.assertEqual(s22["picture"], json.loads(good)["doors"]["outside-app"])
+
+    def test_the_samples_index_is_what_newer_reads(self):
+        import combine                                                   # tools/manifest/, on the path through gallery.py
+        app = self.tmp / "newer_app"
+        app.mkdir()
+        (app / "app.json").write_text(json.dumps({"samples": [{"name": "s23_till_guard", "version": "1.0.0"},
+                                                              {"name": "s22_customer_loyalty", "version": "99.0.0"}]}), "utf-8")
+        found = combine.newer(app, self.out / "samples" / "index.json")
+        self.assertEqual([n.sample for n in found], ["s23_till_guard"])                 # s22 is up to date: nothing said
+        self.assertTrue(found[0].lines and all(v for v, _ in found[0].lines))
+
+    def test_canary_a_readme_without_its_industries_line_or_with_another_fails_the_site_build(self):  # RED, then GREEN
+        import gallery
+        kit = self.planted_kit("industries")
+        self.assertEqual(gallery.readme_errors(kit), [])                                                # GREEN: the copy as it is
+        readme = kit / "samples" / "s39_pharmacy_counter" / "README.md"
+        good = readme.read_text("utf-8")
+        readme.write_text(re.sub(r"^\*\*Industries:\*\*.*\n", "", good, flags=re.M), "utf-8")         # RED: the line removed
+        self.assertIn("samples/s39_pharmacy_counter/README.md: no **Industries:** line. Write the line site/industries.json gives it: "
+                      "**Industries:** Pharmacy", gallery.readme_errors(kit))
+        self.assertEqual(self.build_in(kit), 1)
+        readme.write_text(re.sub(r"^\*\*Industries:\*\*.*$", "**Industries:** Pharmacy, Grocery", good, flags=re.M), "utf-8")   # RED: changed
+        self.assertIn("samples/s39_pharmacy_counter/README.md: **Industries:** Pharmacy, Grocery differs from site/industries.json, "
+                      "which gives Pharmacy", gallery.readme_errors(kit))
+        readme.write_text(good, "utf-8")
+        self.assertEqual(gallery.readme_errors(kit), [])                                                # GREEN again
+
+    def test_canary_a_sample_with_a_till_part_and_no_try_it_at_the_till_fails_the_site_build(self):  # RED, then GREEN
+        import gallery
+        kit = self.planted_kit("till")
+        self.assertEqual(gallery.readme_errors(kit), [])                                                # GREEN: the copy as it is
+        readme = kit / "samples" / "s23_till_guard" / "README.md"
+        good = readme.read_text("utf-8")
+        self.assertTrue(gallery.sample_info.till_part(readme.parent))
+        readme.write_text(re.sub(r"^## Try it at the till\n.*?(?=^## )", "", good, flags=re.M | re.S), "utf-8")   # RED: the section removed
+        self.assertIn("samples/s23_till_guard/README.md: the sample puts a part at the till, so its README needs a ## Try it at the "
+                      "till section with what to try, one line each", gallery.readme_errors(kit))
+        self.assertEqual(self.build_in(kit), 1)
+        readme.write_text(good, "utf-8")
+        self.assertEqual(gallery.readme_errors(kit), [])                                                # GREEN again
+
+    def test_canary_a_readme_without_versions_or_behind_its_version_fails_the_check(self):
+        import gallery
+        kit = self.planted_kit("versions")
+        readme = kit / "samples" / "s22_customer_loyalty" / "README.md"
+        good = readme.read_text("utf-8")
+        version = gallery.sample_info.version(readme.parent)
+        readme.write_text(good.replace(f"### {version}\n", "### 0.0.1\n", 1), "utf-8")
+        self.assertIn(f"samples/s22_customer_loyalty/README.md: the newest heading of ## Versions is 0.0.1, but the sample's version is {version}",
+                      gallery.readme_errors(kit))
+        readme.write_text(good.replace("## Versions\n", "## Older notes\n", 1), "utf-8")
+        self.assertIn("samples/s22_customer_loyalty/README.md: no ## Versions section with a ### heading for each version", gallery.readme_errors(kit))
+        readme.write_text(good, "utf-8")
+        self.assertEqual(gallery.readme_errors(kit), [])
 
 
 class MapTests(unittest.TestCase):

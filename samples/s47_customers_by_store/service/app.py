@@ -55,7 +55,9 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import storerules  # noqa: E402
 import function  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 KEY, ROUTE = "on_select", "/cbs/select"   # the subscription's key in the manifest; its secret is "<app>:sub:<key>"
 RULES_TTL, READ_TIMEOUT = 60, 0.9      # one step (the rules and the tree at once) inside the select's 3 s
@@ -107,13 +109,14 @@ class ShopApi:
 class Service:
     def __init__(self, conf: dict, store=None, api=None, clock=time.monotonic):
         self.prefix = (conf.get("CBS_PREFIX") or "PP CBS").strip()
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         self.api, self.clock, self.kept, self.lock = api or ShopApi(), clock, {}, threading.Lock()
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
-            self.secret = conf["IVN_CAPTURE_SECRET"]
-            self.shop = {"url": conf["IVN_SHOP_URL"].rstrip("/"), "key": conf["IVN_SHOP_KEY"]}
+            one = oneshop.settings(conf, ["IVN_CAPTURE_SECRET", "IVN_SHOP_URL", "IVN_SHOP_KEY"])
+            self.secret = one["IVN_CAPTURE_SECRET"]
+            self.shop = {"url": one["IVN_SHOP_URL"].rstrip("/"), "key": one["IVN_SHOP_KEY"]}
 
     def caller(self, headers) -> tuple[str, list[str], dict | None]:
         """(the shop's name for the cache, the secrets this call may be signed with, the shop's address and key)."""
@@ -154,6 +157,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or all(storerules.verify(ts, sig, raw, s) for s in secrets):
             return 401, {"error": "the signature does not match"}   # the same words for a site the app does not know
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(KEY)
         try:
             ctx = storerules.select_context(json.loads(raw))
         except ValueError as e:         # json's own errors are ValueErrors too
@@ -237,7 +242,7 @@ def env_file(path: str) -> dict:
 
 def main():
     conf = dict(os.environ, **(env_file(sys.argv[1]) if len(sys.argv) > 1 else {}))
-    if not (conf.get("IVN_LIBRARY_APP") or all(conf.get(k) for k in ("IVN_CAPTURE_SECRET", "IVN_SHOP_URL", "IVN_SHOP_KEY"))):
+    if not (oneshop.many(conf) or all(oneshop.value(conf, k) for k in ("IVN_CAPTURE_SECRET", "IVN_SHOP_URL", "IVN_SHOP_KEY"))):
         raise SystemExit("set IVN_CAPTURE_SECRET, IVN_SHOP_URL and IVN_SHOP_KEY (one shop), "
                          "or IVN_LIBRARY_APP with a store (many shops): the app does not start without a way to check a call")
     srv = make_server(Service(conf), int(conf.get("PORT") or 8080))

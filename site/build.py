@@ -31,7 +31,11 @@ site/test_plan.mjs tests it in node. Without script the page is its seven steps.
 
 Every sample gets a card (site/gallery.py) built from its README: `{{samples: cards}}` puts them all on a page, grouped by door,
 and the samples list uses the same cards; a sample README without a run section or a door fails the build. A reference app's
-card is a hand-written `{{reference-app: name | one line | doors | status | repository}}` line.
+card is a hand-written `{{reference-app: name | one line | doors | status | repository}}` line. The same READMEs give
+samples/index.json, the published samples index (gallery.index); a README without an Industries line or with one that
+differs from site/industries.json, a sample with a till part and no Try it at the till section, or a README without its
+Versions section fails the build (gallery.readme_errors), and so does a door picture in site/door_pictures.json that is not a
+screenshot of a sample with that door (gallery.door_picture_errors).
 
 A relative link in a kit file becomes a link to the page it points at, an image is copied beside its page, and anything
 else in the repository (code, a folder) becomes a link to the file on GitHub. A link to a path that does not exist fails
@@ -272,6 +276,7 @@ def render(text: str, ctx: Ctx, seen: dict, toc: list | None, depth: int = 0) ->
     here = posixpath.dirname(ctx.out)
     text = re.sub(r"^\{\{plan: shortlist\}\}\s*$", lambda m: raw(plan_tool(here)), text, flags=re.M)
     text = re.sub(r"^\{\{hosting: order\}\}\s*$", lambda m: raw(hosting_tool(here)), text, flags=re.M)
+    text = re.sub(r"^\{\{apps: my apps\}\}\s*$", lambda m: raw(apps_tool(here)), text, flags=re.M)
     text = re.sub(r"^\{\{publish: button\}\}\s*$", lambda m: raw(  # the App library's Publish page (PUBLISHWEB)
         f'<p class="hero-cta"><a class="site-btn" href="{PUBLISH_PAGE}">Publish</a></p>'), text, flags=re.M)
     text = re.sub(r"^\{\{samples: cards\}\}\s*$", lambda m: raw(gallery.grouped(
@@ -994,8 +999,9 @@ def plan_tool(here: str) -> str:
             f'<script src="{up}assets/plan.js" defer></script>')
 
 
-HOSTING_API = "https://hosting.ivendnext.app"            # the hosting's web door: hosting.js calls only this
-OWN_POLICY = {"hosting.html"}                              # pages that carry their own content policy, no site-wide scripts
+HOSTING_API = "https://hosting.ivendnext.app"            # the hosting's web door: hosting.js calls this
+UPLOAD_STORE = "https://ivn-selfserve-work-416648266684.s3.us-east-1.amazonaws.com"  # and puts an upload's zip here
+OWN_POLICY = {"hosting.html", "apps.html"}                # pages that carry their own content policy, no site-wide scripts
 
 
 def hosting_tool(here: str) -> str:
@@ -1006,11 +1012,20 @@ def hosting_tool(here: str) -> str:
             f'<script src="{up}assets/hosting.js" defer></script>')
 
 
+def apps_tool(here: str) -> str:
+    """My apps' first screens (EASY1): site/assets-src/apps.js fills it, on the hosting page's own policy (one script, the
+    hosting's door), so the page that holds a sign-in runs nothing else."""
+    up = "../" * (here.count("/") + 1) if here else ""
+    return (f'<section id="apps-tool" class="hosting-tool" hidden></section>'
+            f'<script src="{up}assets/apps.js" defer></script>')
+
+
 def page_policy() -> str:
-    """The hosting page's own content policy, in place of the site-wide one: its one script, and the one address it may
-    reach (the hosting's web door). No counter and no search script on it: the page that holds a sign-in runs nothing
+    """The hosting page's own content policy, in place of the site-wide one: its one script, and the two addresses it may
+    reach (the hosting's door, and the hosting's upload store, where a version's zip goes by the address the door
+    signed). No counter and no search script on it: the page that holds a sign-in runs nothing
     else. A meta tag cannot send frame-ancestors: hosting.js refuses to run inside a frame."""
-    return "; ".join(["default-src 'self'", "script-src 'self'", f"connect-src {HOSTING_API}", "img-src 'self' data:",
+    return "; ".join(["default-src 'self'", "script-src 'self'", f"connect-src {HOSTING_API} {UPLOAD_STORE}", "img-src 'self' data:",
                       "font-src 'self'", "style-src 'self'", "object-src 'none'", "base-uri 'self'",
                       "form-action 'self'"])
 
@@ -1187,8 +1202,15 @@ def build(out_dir: pathlib.Path) -> int:
     errors += synonym_errors(groups)
     served = catalogue.backlinks(need_cards)
     ctx.samples = gallery.collect(pages, served, catalogue.DOORS, first_use, slug, ROOT, errors)
+    errors += gallery.readme_errors(ROOT)                           # Industries, Try it at the till, Versions
+    errors += gallery.door_picture_errors(ctx.samples, catalogue.DOORS, ROOT)    # a sample with no screenshot: its door's
     ctx.door_pages = {c.door for c in need_cards}
     assets.update(s["shot"] for s in ctx.samples if s["shot"])
+    try:                                                            # each sample's picture in the samples index
+        pictures = gallery.door_pictures(ROOT)
+        assets.update(p for p in (gallery.index_picture(s, pictures, ROOT) for s in ctx.samples) if p)
+    except (OSError, ValueError):
+        pass                                                        # door_picture_errors has said why
     sha = (os.environ.get("GITHUB_SHA") or "")[:7]
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -1300,6 +1322,7 @@ def build(out_dir: pathlib.Path) -> int:
     proof_pages = {k: v.out for k, v in registry.items() if isinstance(v, (Page, ListPage)) and k != "recipes" and k != "samples"}
     write("catalogue.json", catalogue_json(need_cards, titles, proof_pages, related))
     import json
+    write("samples/index.json", json.dumps(gallery.index(ctx.samples, pages, served, catalogue.DOORS, ROOT), ensure_ascii=False, indent=1) + "\n")
     write("search-index.json", json.dumps(search_docs(pages, need_cards, groups, rec_pages), ensure_ascii=False, separators=(",", ":")) + "\n")
     write("search.html", shell("Search", search_page(), "search.html", sha=sha, noindex=True,
                                desc="Search the iVendNext Developers site: the needs catalogue first, then the recipes, samples and guide."))
@@ -1364,7 +1387,7 @@ def build(out_dir: pathlib.Path) -> int:
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: https://{DOMAIN}/sitemap.xml\n")
 
     START = ["index.html", "start.html", "build.html", "plan.html", "sandbox.html", "security.html", "map.html", "api.html", "hosting.html",
-             "publish.html",
+             "apps.html", "publish.html",
              "reference_apps.html", "feedback.html"]
 
     def rows(pred) -> list[tuple[str, str, str]]:
@@ -1381,6 +1404,8 @@ def build(out_dir: pathlib.Path) -> int:
         ("Record types", rows(lambda o, m: o.startswith("records/"))),
         ("Machine-readable", [("The needs catalogue as JSON", f"https://{DOMAIN}/catalogue.json",
                                "Every need card with its verdict, door, recipes, samples and limits, for an assistant."),
+                              ("The samples index as JSON", f"https://{DOMAIN}/samples/index.json",
+                               "Every kit sample with its version and versions, industries, door, needs, recipe and what to try at the till."),
                               ("The AI chapter", canonical("guide/13_ai.html"), ai.desc if ai else "How to use an assistant with the kit."),
                               ("Sitemap", f"https://{DOMAIN}/sitemap.xml", "Every indexed page of the site.")])]))
     write("downloads/blueprint_template.md", (ROOT / "kit/blueprint_template.md").read_text("utf-8"))   # to fill on screen; the PDFs: site/pdf/

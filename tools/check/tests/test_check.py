@@ -238,6 +238,32 @@ class CheckTest(unittest.TestCase):
         r = subprocess.run([sys.executable, str(CHECK), "/nonexistent/folder"], capture_output=True, text=True)
         self.assertEqual(r.returncode, 2)
 
+    def test_canary_a_setting_with_no_purpose_is_refused_then_green_with_it(self):
+        p = self.project().good()
+        settings = json.loads((ROOT / "samples" / "s22_customer_loyalty" / "app.json").read_text("utf-8"))
+        state = next(e for e in settings["env"] if e["name"] == "PP_STATE")
+        state.pop("purpose")
+        p.write("service/app.json", settings)
+        code, out = p.run()
+        self.assertEqual(code, 1, out)
+        self.assertIn("service/app.json: the setting PP_STATE in app.json has no purpose: the line the Settings screen shows",
+                      out)
+        state["purpose"] = "A folder the service may write to"
+        p.write("service/app.json", settings)
+        code, out = p.run()
+        self.assertEqual(code, 0, out)
+        self.assertIn("service/app.json: settings file valid", out)
+        self.assertRegex(out, r"CHECK GREEN — 1 manifest, 1 app, 1 module, 2 answers, 1 settings file")
+
+    def test_another_tools_app_json_is_left_alone(self):
+        p = self.project().good()
+        p.write("mobile/app.json", {"expo": {"name": "till helper"}})
+        p.write("library/app.json", {"app": "pp_tst", "title": {"en": "A card"}, "category": "Stock"})   # the library's card
+        code, out = p.run()
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("mobile/app.json", out)
+        self.assertNotIn("library/app.json", out)
+
     def test_the_kits_own_samples_pass(self):
         for name in ("s1_warranty", "s2_bins", "s5_config_pack", "s11_approvals"):
             r = subprocess.run([sys.executable, str(CHECK), str(ROOT / "samples" / name)], capture_output=True, text=True)

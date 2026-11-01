@@ -117,6 +117,9 @@ CANARIES = [
      T + "PriceListFormat.test_every_general_price_prints_with_its_photo_page_by_page"),
     ("the price list reads every page", "price_list/price_list.html", "{%- for start in [0, 200, 400, 600, 800] %}",
      "{%- for start in [0] %}", T + "PriceListFormat.test_every_general_price_prints_with_its_photo_page_by_page"),
+    ("a cut file from the shop is unreadable, never a crash", C, 'except (urllib.error.URLError, http.client.HTTPException) as e:',
+     'except urllib.error.URLError as e:',
+     T + "AnswerCutShort.test_a_file_cut_short_is_the_shop_unreadable_never_a_crash"),
 ]
 
 

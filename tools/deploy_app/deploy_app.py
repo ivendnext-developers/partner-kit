@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Plan an app for CitiXsys App Hosting, and order it online: check it, refuse what the service refuses, print what it
-would create; then `order` it, pay, and run it (`order`, `status`, `secret`, `cancel`: `hosting_order.py`).
+would create; then `order` it, pay, upload each version and run it (`order`, `push`, `back`, `status`, `secret`,
+`cancel`: `hosting_order.py`).
 
     python3 tools/deploy_app/deploy_app.py <app folder> --image <registry>/<repo>:<version> --plan starter --partner <you>
                                            [--env prod|staging|sandbox] [--customer <name>] [--json]
@@ -19,7 +20,8 @@ It reads the app's settings file (`app.json`) and Dockerfile, checks them with t
 the name is not reserved. It prints the address, the size, what the plan enforces and includes, the block the service
 adds to its infrastructure, and the order to put it live in. Planning changes nothing anywhere. Ordering is its own
 command (`deploy_app.py order …`, guide 14b *Order and pay online*): signed with your publishing key, paid online, and
-built by the hosting with no person. Exit code: 0 planned · 1 refused · 2 usage.
+built by the hosting with no person; each version is then uploaded with `deploy_app.py push` and built on the hosting's
+side. Exit code: 0 planned · 1 refused · 2 usage.
 Standard library only. The plans are data: `plans.json` beside this file, prices included. This tool prints no price.
 """
 from __future__ import annotations
@@ -256,7 +258,7 @@ def block(m: dict, plan: str, partner: str, env: str, secrets: list[str], image:
             f'}}\n')
 
 
-ORDER_COMMANDS = ("order", "status", "secret", "cancel")
+ORDER_COMMANDS = ("order", "push", "back", "status", "secret", "cancel")
 
 
 def main(argv=None) -> int:
@@ -319,7 +321,8 @@ def main(argv=None) -> int:
     if d["settings_to_supply"]:
         print(f"  settings the service asks you for: {', '.join(d['settings_to_supply'])}")
     print("\nNothing was changed. To order it online and have it built with no person: deploy_app.py order "
-          f"{a.folder} --plan {d['plan']} --partner {d['partner']} --github <owner>/<repo> --accept-schedule (guide 14b).\n"
+          f"{a.folder} --plan {d['plan']} --partner {d['partner']} --accept-schedule, then deploy_app.py push {a.folder} "
+          "--order <id> for each version (guide 14b).\n"
           "For an app put live by hand instead, CitiXsys adds this to the hosting infrastructure after review:\n")
     print(d["infrastructure_block"])
     print("and puts it live in this order:" if d.get("runs") == "function" else

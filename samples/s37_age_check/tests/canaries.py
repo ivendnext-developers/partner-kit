@@ -125,6 +125,13 @@ CANARIES = [
      M + "test_two_services_switched_off_that_let_the_sale_go_on_when_down"),
     ("the scan filters on the app's age field", "manifest.json", '"item_field": "pp_age_min_age"', '"item_field": "stock_uom"',
      M + "test_the_scan_asks_about_the_items_the_app_gives_an_age"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path not in ROUTES:\n            return 404, {"error": "not found"}\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path not in ROUTES:\n            return 404, {"error": "not found"}\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

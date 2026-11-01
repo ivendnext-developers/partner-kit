@@ -4,6 +4,8 @@
 
 The retailer decides which payment methods each group of its customers may use at the till: customers who order through a delivery platform pay only by that platform's method, only account customers may buy on account, a group that settles in dollars pays only in dollars. When the cashier presses **Pay**, the app leaves every other method off that sale's payment screen, dimmed, with the retailer's reason beside it.
 
+**Industries:** every industry
+
 **When to use it:** a rule about the sale's customer decides which payment methods the till may take, and iVendNext keeps the rule itself, in Desk.
 
 ## What happens
@@ -77,6 +79,11 @@ python3 samples/s46_payment_method_rules/service/app.py samples/s46_payment_meth
 
 **Settings, one retailer** (`service/.env.local`, never committed): `IVN_CHECK_SECRET` (handed back at install as `pp_pmr:sub:methods`), `IVN_SHOP_URL`, `IVN_SHOP_KEY` (`<api key>:<api secret>` of the integration user), `PORT`. `PMR_PREFIX` names the rule record type (default `PP PMR`).
 
+## Try it at the till
+
+- Choose a customer in a group with a rule and press Pay; the methods it may not use are dimmed, with the reason.
+- Close the till day when you are done.
+
 ## Many retailers, hosted
 
 The service is the [app template](../../tools/app_template/README.md)'s shape: set `IVN_LIBRARY_APP` and a store (`IVN_SHOPS_TABLE` on CitiXsys hosting, else `IVN_SHOPS_FILE`). Each retailer connects itself after its install and hands over the check's secret and the key of the app's own user (*Connect again* is only for when the site could not reach the app, or a key was lost or changed). Until the key arrives the service answers 503 and the down answer applies. Every call names its retailer (`X-iVendNext-Site`), and each retailer is answered from its own rules with its own key.
@@ -131,3 +138,14 @@ What a partner usually changes:
 - **Three checks a POS Profile.** At most three checks answer one POS Profile, ten seconds together; this one asks for 3.
 - **Where it runs:** the App library's copy runs in CitiXsys hosting's US region. On CitiXsys hosting the first Pay after a quiet spell starts the function; past 3 s the down answer applies, flagged.
 - It logs one line per call: the route, the status and the milliseconds, never the body.
+
+## Versions
+
+### 1.1.0
+
+- A payment method can pay only from a minimum sale (From a sale of); below it the till leaves the method out and says the amount needed.
+- Each setting in app.json says its purpose (the line the Settings screen shows), whether it is required, and which settings go with it.
+
+### 1.0.0
+
+- First version in the kit: which payment methods each customer group may use at the till.

@@ -8,14 +8,14 @@ This site helps you **build** an app. The **App library** (`https://library.iven
 
 ## How it works
 
-1. **Make your signing key, once.** On your computer, from the kit's folder:
+1. **Sign this computer in, once.** From the kit's folder:
 
    ```bash
-   python3 tools/publish/publish.py keygen
+   python3 tools/publish/publish.py login
    ```
 
-   It keeps the private half in `~/.ivendnext/library-signing.key` and prints one line starting `ivn-ed25519:`. That line is public.
-2. **We register your company once.** Send us, through Help (`https://help.ivendnext.com`) or your account manager: your company's name as retailers see it, the line `keygen` printed, your `recipient.pem` (below) and the first word you would like for your company (for example `acme`: letters and digits, starting with a letter, 2 to 12 in all; not one that is ours or another company's, and not one of the 22 words iVendNext's checker refuses as a prefix's first word, listed on the save rules page: `is`, `for`, `set`, `base`, `free`, `price` …). We give each company its own word, once, and a company registered before we gave words asks for its word through Help; you then name every app under it yourself (`ACME LOYALTY` becomes `acme_loyalty`), with no wait on us, and no other company can take a name under it. The *App listing request* form is for your first app's listing; send the key line and `recipient.pem` through Help, not in the form.
+   It prints a code; enter it on My apps, signed in with GitHub. The token it keeps (`~/.ivendnext/token`, readable by you only) is all publishing needs: no key file. A build server uses a token made on My apps > Tokens, in its secret `IVN_TOKEN`.
+2. **Set up your company once, on [My apps](https://developer.ivendnext.com/apps)** (before step 1, the first time). Sign in with GitHub and give your company's name as retailers see it and the first word you would like for it. Until the signed upload goes, a company that still signs registers its key itself, with `publish.py keygen --register --recipient library/recipient.pem`, not through Help. The first word (for example `acme`: letters and digits, starting with a letter, 2 to 12 in all; not one that is ours or another company's, and not one of the 22 words iVendNext's checker refuses as a prefix's first word, listed on the save rules page: `is`, `for`, `set`, `base`, `free`, `price` …) is your company's the moment you press Continue; you then name every new app under it yourself (`ACME LOYALTY` becomes `acme_loyalty`), with no wait on us, and no other company can take a name under it. An app you have published is your company's, whatever its first word, until you hand it over to another company on My apps.
 3. **You publish.** From your project's folder:
 
    ```bash
@@ -59,7 +59,7 @@ The shapes, the template and the exact words are in the manifest recipe, [*What 
 Never in your project or the kit: give them to the command from the environment or from a file you name.
 
 - **A customer's shelf:** `LIBRARY_DELIVERIES` (or `--deliveries <file>`), for example `[{"customer": "shop-a", "name": "Shop A", "sites": ["shop-a-test.staging.ivendnext.com", "shop-a.ivendnext.com"]}]`.
-- **Remembered for the next update:** after a publish that names customers, your computer keeps that list for the app (in `~/.ivendnext/deliveries/`, beside your signing key, readable by you only), and a later publish with no list includes those customers and says how many. A list you give replaces it; `--no-remembered-deliveries` publishes to none. So an update with the command cannot leave a customer on the old version because you forgot to name them, as long as every publish keeps that one file up to date (the web page offers you the updated file to save over it). A build server has no such folder between runs: keep the customers in `LIBRARY_DELIVERIES` there. The web page remembers nothing: give it that file ([From the web page](#from-the-web-page)).
+- **The library keeps where each version went:** per app and site. A publish with no list reaches every site the app is on, and a list adds sites, so an update cannot leave a customer on the old version because you forgot to name them. A site taken off with *Remove this site* on My apps gets no new version and keeps what it has installed. Nothing is kept on your computer.
 - **Keys:** every app is free unless you choose `access: key`; a retailer then presses *Get a free key* in its Desk. For an app that needs a key, `LIBRARY_KEYS` (or `--keys <file>`), for example `[{"app": "acme_bins", "host": "shop-a.ivendnext.com", "to": "customer:shop-a", "expires": "2027-10-31"}]`. Keys are issued for your own apps only.
 - **Keys and shelf keys come back sealed** to your `recipient.pem`. With the command they go to `library-keys.json` (readable by you only), never on the screen: open each with your private key (`tools/publish/README.md` has the command). On the web page they are opened in your browser with your private key and shown once, each with a copy button. Send each to its customer.
 
@@ -69,17 +69,17 @@ You can publish without a command. The App library's **Publish** page, at `https
 
 {{publish: button}}
 
-- **A hosting account approved on the hosting page** hosts your app at once. Publishing needs your company registered in the App library too (step 2 above), under the code and first word the hosting page gave you: send them with the rest of step 2, once.
+- **Your company on My apps** is your hosting account and your App library company at once: one account, one word, for both.
 - **What you give it:** the files in your project's `library/` folder (`app.json`, `manifest.json`, `library.json`, `recipient.pem`), your licence file and your list of third-party components, your partner code, your signing key file (`library-signing.key`, which the command's `keygen` wrote in `~/.ivendnext/`) and, when keys will come back (a preview site, a customer or a key request), your sealing key's private half (`recipient-private.pem`, as `openssl genpkey` made it; a file with a passphrase cannot be used). It needs a browser that signs with Ed25519: Chrome or Edge 137 or later, Firefox 129 or later, or Safari 17 or later.
 - **Your keys stay in your browser.** The page reads each key file once, keeps a key it cannot read back, and sends only the signed upload, to the App library itself. Nothing is stored: leaving the page forgets everything, keys included. The page's code is served by the App library, and it is what holds your keys while you publish; if you would rather no served code ever held them, publish with the command.
 - **What it checks:** the App library checks every upload the same way, from the page or the command: your key, the manifest, the rules a shop's install applies, your card. The page checks your licence files itself; it sends neither. It does not show the manifest checker's warnings, which never stop a publish: run the kit's `tools/check/check.py` for those.
-- **Your customers on an update.** The command remembers the customers of your last publish that named them; the page remembers nothing. Give the page this app's remembered customers file, `~/.ivendnext/deliveries/<partner>.<app>.json`, and it names any customer in it you leave out before you publish (it refuses another app's file). After the publish it offers the updated file: save it as that same file (make the folder if it is not there; on a Mac or Linux, `chmod 600` it, as the command keeps it), so the command and the page keep one list. Without the file the page cannot tell which customers your earlier publishes reached, and says so: a customer you leave out stays on the old version. A publish to no customer at all needs a tick, so it is never by omission.
+- **Your customers on an update.** The library keeps every site the app is on: an update from the page or the command reaches them all.
 - **The keys are shown on the page,** each once, with a copy button and who it is for: give each site key to that customer's administrator, who pastes it under *App library > Open your shelf*. Copy them before you leave the page; publishing the same version again returns the same keys.
 - **If the page cannot read the answer** (the library was busy, or the connection dropped), it says it does not know whether the app was published: publish again, and the keys come back the same.
 
 ## From a build server
 
-The same command runs in any build system. Keep the key's line (the content of `~/.ivendnext/library-signing.key`) in the build system's secrets as `IVN_LIBRARY_KEY`, and the customers' sites as `LIBRARY_DELIVERIES` and `LIBRARY_KEYS`. Keep `library-keys.json` out of anything others can read.
+The same command runs in any build system: give it a token made on My apps > Tokens, in the build system's secret `IVN_TOKEN`, and it needs no key. With the signed upload instead, keep the key's line (the content of `~/.ivendnext/library-signing.key`) in the build system's secrets as `IVN_LIBRARY_KEY`, and the customers' sites as `LIBRARY_DELIVERIES` and `LIBRARY_KEYS`. Keep `library-keys.json` out of anything others can read.
 
 ## What we check, and what we refuse
 
@@ -109,7 +109,7 @@ A guide address on any other site is refused as `bad_entry`.
 
 ## If your key is lost or copied
 
-Tell us at once through Help. We register a new key for your company, and the old one stops working the moment we do. We confirm every new or changed key (signing key or `recipient.pem`) with your company's registered contact, and read its key id back to you, before we register it. You can hold up to three keys (one per build server, say) and we remove any of them on request.
+Make a new key and register it in place of the others: `publish.py keygen --key <new file> --register --replace`; every other key stops working at once. A token you lose is revoked on My apps > Tokens, in one press.
 
 ## What a retailer sees
 

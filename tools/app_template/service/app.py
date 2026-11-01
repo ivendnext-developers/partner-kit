@@ -1,6 +1,8 @@
 """A deployable app: one signed route, one health route, standard library only.
 
     POST /point/hello          the remote till key's call (signed by iVendNext)   -> 200 {"message": {...}}
+                               with X-iVendNext-Test: 1, a test call: checked the same way, answered
+                               200 {"test": "ok", "point": "hello"} without running the key (testcall.py)
     GET  /health               is the process up                                   -> 200 {"status": "ok"}
     POST /ivendnext/connect    a shop's site hands over its library key and secrets (many shops; shops.py)
     POST /ivendnext/disconnect the shop is uninstalled: forget it
@@ -19,10 +21,14 @@ It runs in one of two ways. Settings come from the environment, never from a fil
     the one the install made for your till key: "<IVN_LIBRARY_APP>:<KEY>". A site the app does not know gets 401.
   PORT                          optional — default 8080
 
+ON YOUR LAPTOP: ``python3 service/app.py --local`` reads the folder's ``.env.local`` (test values, never a real secret),
+answers on http://localhost:8000 (or its PORT), and accepts a call signed with its ``IVN_TEST_SECRET``: a test call
+(``X-iVendNext-Test: 1``) is how you check it, with no shop and no sale.
+
 Every call is verified against the RAW body before it is parsed: base64(HMAC-SHA256(secret, "<timestamp>.<raw body>")),
 a timestamp within five minutes of your clock. The same check as samples/s6_ai_till_key/service.py (a defect there is a
-defect here). One log line per request: the request id, the status, the milliseconds. Never the body, the context, the
-secret or the signature.
+defect here). One log line per request (calllog.py): the site, the connection point in plain words, the outcome, the record it
+was about, the request id, the status, the milliseconds. Never the body, the context, the secret or the signature.
 """
 
 from __future__ import annotations
@@ -40,12 +46,16 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+import calllog  # noqa: E402
 import core  # noqa: E402
 import function  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 BODY_MAX, SKEW_S, ROUTE = 64 * 1024, 300, "/point/hello"
 KEY = "hello"           # the till key's name in your manifest (remote_keys[].key); its secret is "<app>:<key>"
+POINT = calllog.plain("remote_key", KEY)       # the till key in the words Logs shows
+LOCAL_PORT = 8000
 CONNECT, DISCONNECT, SITE = shops.CONNECT, shops.DISCONNECT, shops.SITE_HEADER
 
 
@@ -84,6 +94,7 @@ def call_secrets(conf: dict, headers) -> list:
 def handle(conf: dict, method: str, path: str, headers, raw: bytes | None, log=sys.stdout) -> tuple[int, dict]:
     """One call: (status, answer). The web server below and the function entry (``function.py``) both call this."""
     t0, rid, code = time.monotonic(), (headers.get("X-iVendNext-Request-Id") or "-")[:40], 500
+    test, record = testcall.is_test(headers), None
     try:
         if method == "GET":
             code, out = (200, {"status": "ok"}) if path == "/health" else (404, {"error": "not found"})
@@ -94,6 +105,9 @@ def handle(conf: dict, method: str, path: str, headers, raw: bytes | None, log=s
         if "store" in conf and path in (CONNECT, DISCONNECT):
             code, out = shops.handle(conf["store"], conf["app"], path, headers, raw, conf.get("keys"))
             return code, out
+        if test and path != ROUTE:                  # a test is answered only where the route matches
+            code = 404
+            return code, {"error": "no such route"}
         try:
             secrets = call_secrets(conf, headers)
         except Exception as e:      # noqa: BLE001 — the store did not answer: nothing was checked
@@ -106,8 +120,12 @@ def handle(conf: dict, method: str, path: str, headers, raw: bytes | None, log=s
         if path != ROUTE:
             code = 404
             return code, {"error": "no such route"}
+        if test:                                    # checked as a real call; the key itself does not run
+            code, out = testcall.answer(KEY)
+            return code, out
         try:
             context = json.loads(raw)["context"]
+            record = calllog.record_of(context)
             result = core.answer(context)
         except Exception as e:      # noqa: BLE001 — log the class only: a message can carry shop data
             log.write(json.dumps({"request": rid, "error": type(e).__name__}) + "\n")
@@ -117,7 +135,9 @@ def handle(conf: dict, method: str, path: str, headers, raw: bytes | None, log=s
         return code, result
     finally:
         if method != "GET":
-            log.write(json.dumps({"request": rid, "status": code, "ms": int((time.monotonic() - t0) * 1000)}) + "\n")
+            ms = int((time.monotonic() - t0) * 1000)
+            entry = json.loads(calllog.line(shops.site_of(headers.get(SITE)), POINT, code, ms / 1000, record, rid, test))
+            log.write(json.dumps({**entry, "ms": ms}) + "\n")
             log.flush()
 
 
@@ -145,11 +165,34 @@ def make_server(conf: dict, port: int | None = None, log=sys.stdout):
         def log_message(self, fmt, *args):  # the framework's own access line carries the path; keep it off
             pass
 
-    return ThreadingHTTPServer(("0.0.0.0", conf["port"] if port is None else port), Handler)
+    return ThreadingHTTPServer((conf.get("host") or "0.0.0.0", conf["port"] if port is None else port), Handler)
 
 
-def main():
-    conf = settings(os.environ)
+def local_env(folder: str, env) -> dict:
+    """The settings for ``--local``: the folder's ``.env.local`` under the process's own, port 8000, and the test secret as
+    the one shop's secret (a laptop has no site that connects)."""
+    out = dict(env)
+    path = os.path.join(folder, ".env.local")
+    if os.path.isfile(path):
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                name, sep, val = line.strip().partition("=")
+                if sep and name and not name.startswith("#"):
+                    out.setdefault(name.strip(), val.strip().strip('"'))
+    out.setdefault("PORT", str(LOCAL_PORT))
+    if not (out.get("IVN_LIBRARY_APP") or out.get("IVN_POINT_SECRET")):
+        if not out.get("IVN_TEST_SECRET"):
+            raise SystemExit(f"--local reads IVN_TEST_SECRET from {path}: write one there (any long random text)")
+        out["IVN_POINT_SECRET"] = out["IVN_TEST_SECRET"]
+    return out
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    env = local_env(os.path.dirname(HERE), os.environ) if "--local" in argv else os.environ
+    conf = settings(env)
+    if "--local" in argv:
+        conf["host"] = "127.0.0.1"          # a laptop's test service answers this machine only
     srv = make_server(conf)
     # A platform stops a container with SIGTERM: finish the call in hand, then exit 0.
     signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=srv.shutdown, daemon=True).start())

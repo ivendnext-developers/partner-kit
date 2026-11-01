@@ -4,6 +4,8 @@
 
 A retailer sets up a coupon for *Supplements* and expects it to cover every supplement. But the till's coupon and promotion engines match an item's **own** item group exactly. A row naming the parent group *Supplements* matches only items placed directly in it, never those in *Supplements › Protein*.
 
+**Industries:** Beauty and cosmetics
+
 This sample's service, outside the retailer's iVendNext, writes the parent out as its child groups and keeps it that way: when the coupon is saved, and when a new group is added under the parent. It is for an iVendNext Partner building for a retailer whose item groups are a tree.
 
 **The doors it combines:** an outside app on the event feed, and the record API. **The limit:** a row appears a few seconds after the save, not in the same save. A promotion's buy and get rows are reported, never written out (below).
@@ -95,3 +97,10 @@ python3 tools/check/check.py samples/s31_parent_groups
 - *An outside app on the feed* — picked. About 260 lines (the core and the service; the tests are apart), and the retailer's records stay the retailer's.
 - *A person listing child groups by hand* — the null option. It works, but a group added later is missed.
 - *A change to the engines to match a group's descendants* — product work, and not needed: the kit composes it.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: parent item groups in coupons and promotions.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

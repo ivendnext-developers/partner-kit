@@ -57,6 +57,13 @@ CANARIES = [
     ("a cut answer is unreadable", "service/app.py", "except (OSError, http.client.HTTPException, ValueError, AttributeError)",
      "except (urllib.error.URLError, TimeoutError, ConnectionError, ValueError, AttributeError)",
      "test_shop_rules.TheRealRead.test_canary_a_cut_answer_is_the_shop_unreadable_not_a_crash"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path == ROUTE:\n            return self.check(headers, raw)\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path == ROUTE:\n            return self.check(headers, raw)\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

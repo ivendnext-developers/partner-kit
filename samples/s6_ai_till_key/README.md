@@ -8,6 +8,8 @@
 
 A remote till key. The till calls this small service during a sale; the service builds a prompt from the sale's item codes, quantities and the store name, asks **a provider the customer configures**, and answers a **message only**. It is for a developer who wants to add a key to the till that is answered by their own service — here, a hint from an AI model the customer chooses and pays for. The recipe is [`recipes/ai_till_key.md`](../../recipes/ai_till_key.md).
 
+**Industries:** every industry
+
 **When to use it:** the cashier needs an answer, during the sale, that only your service can give.
 
 **Door:** Till key
@@ -73,3 +75,14 @@ Our test bench runs the service and the stub provider on ports 8126 and 8127. Be
 ### Why this way (R6)
 
 *Pure core + a tiny service, provider behind one function* (picked: ~240 lines in all; a developer reads it unaided; the same shape as S1) · *a provider SDK* (rejected: ties the sample to one vendor and adds an install) · *the model call inside the retailer's iVendNext as a hosted key* (rejected: partner Python in the tenant, and no deadline on the call).
+
+## Try it at the till
+
+- On a sale, press AI tip; a short hint comes back in the till's own sheet.
+- Close the till day when you are done.
+
+## Versions
+
+### 1.0.0
+
+- First version in the kit: a till key that shows a short hint from the customer's own AI model.

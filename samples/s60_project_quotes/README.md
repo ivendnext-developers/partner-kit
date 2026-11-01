@@ -4,6 +4,8 @@
 
 A hardware or DIY store's **builder projects**, kept in iVendNext Desk. A builder buys for a job (a house, an extension, a store fit-out): the store quotes the job's materials, the builder takes all or part of the quote, and the goods go to site as the work reaches each stage, often over months and several orders. iVendNext already quotes, orders, takes deposits and delivers an order in parts, at the till and in Desk; what nothing holds is **the builder's project**. This sample adds it: one record per job, a **Project** field on the quote, the order, each delivery and the invoice (and one of its own on the till's sales and orders), a **Stage** on the lines of the quote, the order and each delivery, and a **project sheet** that lists the job's documents together. The app moves no money and no stock, and calls nothing outside: no service, no outside address. The [recipe](../../recipes/project_quotes.md) walks a store through it.
 
+**Industries:** Hardware and DIY
+
 It uses the manifest's `doctypes` (a record type and a child table), `custom_fields` (the project on four documents and on the till's own, the stage on three line tables), `print_formats` (the project sheet, reading the documents with `ivn_rows`), `links` and a `documentation` property setter. **When to use it:** a store sells to builders or contractors whose jobs run over several quotes, orders and deliveries, and today it keeps the job on paper or in the builder's purchase order numbers.
 
 
@@ -86,3 +88,9 @@ A manifest only. iVendNext keeps the quotes and their validity, the orders and t
 - **The sheet prints its documents' dates as year-month-day** (the rows `ivn_rows` returns are plain values); the project's own dates and the stages print in the site's format.
 - **Desk shows the records with the prefix** (*IVENDNEXT PQT Project* in the library app).
 - **The builder's details are the retailer's**, kept as it keeps its customers; uninstalling the app removes the projects (its export keeps a copy of them) and the Project and Stage fields from every document, and with the fields goes which project each document named: the export does not keep that.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: a builder's project across its quotes, orders and deliveries in stages, from a manifest only.

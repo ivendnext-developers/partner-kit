@@ -32,6 +32,7 @@ sys.path.insert(0, HERE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import function  # noqa: E402
 import service  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
 import worker  # noqa: E402
 
@@ -42,7 +43,7 @@ HEALTH_GRACE_S = 180
 class Service:
     def __init__(self, conf: dict, store=None, keys=None, scheduled: bool = False):
         self.conf, self.keys, self.started, self.scheduled = conf, keys, time.monotonic(), scheduled
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         if not self.app:
             raise SystemExit("IVN_LIBRARY_APP is not set: for one shop, run service.py")
         if conf.get("PDO_PREFIX"):

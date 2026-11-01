@@ -5,6 +5,7 @@
 """
 
 import copy
+import http.client
 import io
 import json
 import os
@@ -13,6 +14,7 @@ import sys
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -241,6 +243,20 @@ class SandboxCheck(unittest.TestCase):
         self.assertIn("c39b1449937adac83d9be35bcfa2a6e3e41871ef",
                       open(os.path.join(HERE, "..", "..", "manifest", "validate.py")).read(1000))
         self.assertEqual(sorted(C.POINT_TYPES), sorted([*point_dt.values(), "Retail Extension Log"]))
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_site_answer_cut_short_is_no_answer_never_a_crash(self):
+        site = C.Site("https://shop.example", "k", "s")
+        conn = mock.Mock()
+        conn.getresponse.return_value.read.side_effect = http.client.IncompleteRead(b"")
+        with mock.patch.object(site, "_conn", return_value=conn):
+            status, body = site.get("/api/resource/Item")
+        self.assertEqual(status, 0)
+        self.assertIn("IncompleteRead", body["error"])
+        conn.close.assert_called_once()
 
 
 if __name__ == "__main__":

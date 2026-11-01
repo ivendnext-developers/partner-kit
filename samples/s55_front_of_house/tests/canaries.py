@@ -137,6 +137,13 @@ CANARIES = [
     ("the function checks the signature too", S, "    code, out = svc.handle(method, path, headers, raw)\n",
      "    code, out = (200, {'ok': 1}) if path != '/health' else svc.handle(method, path, headers, raw)\n",
      M + "AsAFunction.test_health_a_signed_press_either_body_form_and_a_refusal"),
+    # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+     "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
+    ("a test call is answered only where its route matches", "service/app.py",
+     '        if path in SUBS:\n            return self.press(path, headers, raw)\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path in SUBS:\n            return self.press(path, headers, raw)\n',
+     "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
 

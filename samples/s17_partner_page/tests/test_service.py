@@ -7,6 +7,7 @@ the signature and takes one answer per nonce, as the shop does. Contexts are min
 On our test bench the page was opened through the shop's own calls; these prove
 the service's own duties fast, and are what the mutation canary turns RED."""
 
+import http.client
 import json
 import os
 import sys
@@ -16,6 +17,7 @@ import unittest
 import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path[:0] = [os.path.dirname(HERE), os.path.join(os.path.dirname(HERE), "service")]
@@ -163,6 +165,32 @@ class BoardTest(unittest.TestCase):
     def test_desk_takes_no_answer(self):
         code, _ = self.call("/board/api/answer", {"ctx": ctx(doctype="Sales Order", name="SO-1")})
         self.assertEqual((code, self.shop.got), (400, []))
+
+
+def cut_answer(*args, **kwargs):
+    """What ``urlopen`` / ``opener.open`` give back when the answer starts and the connection closes before its end: reading it
+    raises ``http.client.IncompleteRead``, an ``HTTPException`` that is not an ``OSError``."""
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self, *n):
+            raise http.client.IncompleteRead(b"")
+    return Answer()
+
+
+class AnswerCutShort(unittest.TestCase):
+    """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
+
+    def test_a_shop_answer_cut_short_releases_the_answer_like_an_unreachable_shop(self):
+        board = app.Board({"PP_BASE": "http://shop.invalid", "PP_PAGE_SECRET": SECRET})
+        with mock.patch.object(app.urllib.request, "urlopen", cut_answer):
+            self.assertEqual(board._http_post("http://shop.invalid/x", b"{}", {}), (0, b""))
 
 
 if __name__ == "__main__":

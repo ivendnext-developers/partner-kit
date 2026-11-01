@@ -8,6 +8,8 @@
 
 Your own screen, shown inside iVendNext: on the till as a sheet over the sale, and in Desk as a page for a record. This sample is for a developer whose service has a screen of its own (here, a delivery board) and who wants cashiers and staff to use it without leaving iVendNext POS.
 
+**Industries:** every industry
+
 **When to use it:** your service needs its own screen in the till or in Desk, and may hand one answer back to the sale.
 
 ## What happens
@@ -75,6 +77,12 @@ cd samples/s17_partner_page
 python3 service/app.py service/.env.local
 ```
 
+## Try it at the till
+
+- Press Deliveries on a sale; the delivery board opens over the sale.
+- Press Attach to sale; the delivery number is on the sale.
+- Close the till day when you are done.
+
 ## What is refused, and why
 
 - **A second answer for one context.** The board refuses it itself, and iVendNext refuses it again (*"This page has already answered."*). Either lock is enough on its own: the till takes the first answer only.
@@ -125,3 +133,11 @@ On our test bench the page was opened through the till's own press and pick-up a
 - **The sale the till sends** (`page_send_sale` 1) includes the cashier's login and the customer's id: the board shows only the line count and the store. A partner that does not use the sale sets it to 0.
 - **Test routes.** `/test/once` and `/test/opened` exist only with `PP_TEST_MODES=1` and the admin token. A partner's copy deletes them.
 - **`allowed_urls`** names our test bench's HTTPS front. A partner writes its own page address, on its own host: iVendNext refuses a page on the retailer's own address.
+
+## Versions
+
+### 0.1.0
+
+- First version in the kit: an order board as a partner page.
+- A cut-short answer from a retailer's site is handled as an unknown outcome, like a site that cannot be reached, never a crash.
+- The README says to put your own service's address in the manifest before you install.

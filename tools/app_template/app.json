@@ -6,7 +6,7 @@
  "size": "small",
  "region": "us",
  "env": [
-  {"name": "IVN_POINT_SECRET", "secret": true, "required": true},
-  {"name": "IVN_POINT_SECRET_PREVIOUS", "secret": true, "required": false}
+  {"name": "IVN_POINT_SECRET", "secret": true, "purpose": "The secret the shop gave your app at install, for a server that serves one shop", "required": true, "together": []},
+  {"name": "IVN_POINT_SECRET_PREVIOUS", "secret": true, "purpose": "The secret before the last change, kept while the shop moves to the new one", "required": false, "together": []}
  ]
 }

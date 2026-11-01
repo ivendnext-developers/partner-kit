@@ -81,7 +81,7 @@ What you send is the **function's package** (`acme-rgd.zip`, the files `app.json
 
 ![The developer site's hosting page: order hosting from this page, signed in with GitHub](img/1b-04-hosting-page.png)
 
-Once it is live, each push to your repository's branch puts the new version live through the same checks ([chapter 14b](14b_deploying_your_app.md#updates-from-your-github)).
+Once it is live, each version you upload (`deploy_app.py push`, or *Upload a version* on the page) is built on our side and put live through the same checks ([chapter 14b](14b_deploying_your_app.md#upload-a-new-version)).
 
 ## 5. The retailer installs it, with consent
 

@@ -58,7 +58,9 @@ sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the template's handshake, never a copy
 import agecheck  # noqa: E402
 import function  # noqa: E402
+import oneshop  # noqa: E402
 import shops  # noqa: E402
+import testcall  # noqa: E402
 
 KEPT_TTL, READ_TIMEOUT = 60, 0.45    # three steps of reads at most (settings and groups; the items; their templates), each
                                      # 0.45 s per wait on its connection, inside the scan's 1.5 s; a slower shop gets the down answer
@@ -124,14 +126,15 @@ class ShopApi:
 class Service:
     def __init__(self, conf: dict, store=None, api=None, clock=time.monotonic, now=time.time):
         self.prefix = (conf.get("AGE_PREFIX") or "PP AGE").strip()
-        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()
+        self.app = oneshop.value(conf, oneshop.MANY)
         self.api, self.clock, self.now, self.lock = api or ShopApi(), clock, now, threading.Lock()
         self.kept, self.item_ages, self.asked = {}, {}, agecheck.Asked(clock)
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
-            self.secrets = {"scan": conf["IVN_SCAN_SECRET"], "check": conf["IVN_CHECK_SECRET"]}
-            self.shop = {"url": conf["IVN_SHOP_URL"].rstrip("/"), "key": conf["IVN_SHOP_KEY"]}
+            one = oneshop.settings(conf, ["IVN_SCAN_SECRET", "IVN_CHECK_SECRET", "IVN_SHOP_URL", "IVN_SHOP_KEY"])
+            self.secrets = {"scan": one["IVN_SCAN_SECRET"], "check": one["IVN_CHECK_SECRET"]}
+            self.shop = {"url": one["IVN_SHOP_URL"].rstrip("/"), "key": one["IVN_SHOP_KEY"]}
 
     def caller(self, route_key: str, headers) -> tuple[str, list[str], dict | None]:
         """(the shop's name for the caches, the secrets this route's call may be signed with, the shop's address and key)."""
@@ -205,6 +208,8 @@ class Service:
         ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
         if not secrets or all(agecheck.verify(ts, sig, raw, s) for s in secrets):
             return 401, {"error": "the signature does not match"}   # the same words for a site the app does not know
+        if testcall.is_test(headers):               # checked as a real call; the point itself does not run
+            return testcall.answer(route_key)
         try:
             ctx = read(json.loads(raw))
         except ValueError as e:         # json's own errors are ValueErrors too
@@ -285,7 +290,7 @@ def env_file(path: str) -> dict:
 
 def main():
     conf = dict(os.environ, **(env_file(sys.argv[1]) if len(sys.argv) > 1 else {}))
-    if not (conf.get("IVN_LIBRARY_APP") or all(conf.get(k) for k in ("IVN_SCAN_SECRET", "IVN_CHECK_SECRET",
+    if not (oneshop.many(conf) or all(oneshop.value(conf, k) for k in ("IVN_SCAN_SECRET", "IVN_CHECK_SECRET",
                                                                        "IVN_SHOP_URL", "IVN_SHOP_KEY"))):
         raise SystemExit("set IVN_SCAN_SECRET, IVN_CHECK_SECRET, IVN_SHOP_URL and IVN_SHOP_KEY (one shop), "
                          "or IVN_LIBRARY_APP with a store (many shops): the app does not start without a way to check a call")

@@ -49,7 +49,7 @@ def repository(d: str) -> pathlib.Path:
 def run(*args):
     out = io.StringIO()
     with contextlib.redirect_stdout(out), mock.patch.dict(os.environ, {"PYTHONDONTWRITEBYTECODE": "1"}):
-        rc = start.main(list(args))
+        rc = start.main(list(args) + (["--copy"] if "--prefix" in args else []))   # the one-sample copy
     return rc, out.getvalue()
 
 

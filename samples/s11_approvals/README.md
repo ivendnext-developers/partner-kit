@@ -8,6 +8,8 @@
 
 A price change that needs a manager's yes before it reaches the retailer's prices. This sample is for a developer who wants an approval step in iVendNext without building a screen: iVendNext's own workflow does the approving, and a small outside service applies the result.
 
+**Industries:** Thrift and resale
+
 **When to use it:** a change must be requested, approved by someone else, and only then applied, with a record of who did what.
 
 ## What happens
@@ -97,3 +99,10 @@ Each step was taken by that person's own key (S11's bench driver), and photograp
 | (our test bench, 0.1.0) | the same flow against a real site: 29 checks, passed; and the nightly export run by its cron line |
 
 Measured: iVendNext accepts an edit of the price after approval; the service refuses to apply it. A permission row that omits a right gets it ON, so the manifest checker refuses such a row.
+
+## Versions
+
+### 0.2.0
+
+- First version in the kit: price-change approvals by workflow, with a nightly export.
+- The set-up steps say the install makes the app's own user (POS 2.1.0.667 or later).

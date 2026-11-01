@@ -25,8 +25,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(HERE)), "tools", "app_template", "service"))   # the test call
 import core  # noqa: E402
 import providers  # noqa: E402
+import testcall  # noqa: E402
 
 BODY_MAX, SKEW_S = 64 * 1024, 300
 
@@ -71,12 +73,18 @@ def make_server(conf: dict, provider, port: int = 0, log=sys.stderr):
                     code = 413
                     return self._send(code, {"error": "too large"})
                 raw = self.rfile.read(n)
+                if testcall.is_test(self.headers) and self.path != "/point/ai_tip":   # a test only where it matches
+                    code = 404
+                    return self._send(code, {"error": "no such point"})
                 if not verified(secret, self.headers, raw):
                     code = 401
                     return self._send(code, {"error": "bad signature"})
                 if self.path != "/point/ai_tip":
                     code = 404
                     return self._send(code, {"error": "no such point"})
+                if testcall.is_test(self.headers):  # checked as a real call; no prompt is built, no provider asked
+                    code, out = testcall.answer("ai_tip")
+                    return self._send(code, out)
                 try:
                     context = json.loads(raw)["context"]
                     result = core.answer(context, provider)
