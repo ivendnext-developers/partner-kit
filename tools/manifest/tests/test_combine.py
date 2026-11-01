@@ -292,6 +292,20 @@ class BaseIsNotAnEdit(Base):
         self.assertFalse(any("base" in line for line in lines), lines)
 
 
+class BaseInAnOldRecord(Base):
+    """An app made before base was left out carries app.json:base in its samples record: Add a sample still never names
+    it as the developer's change (found by EASY3a's walk after the pin moved, on an app made the hour before)."""
+
+    def test_an_old_records_base_entry_is_not_a_kept_change(self):
+        folder, _ = self.make(["s23_till_guard"])
+        aj = json.loads((folder / "app.json").read_text(encoding="utf-8"))
+        aj["version"] = aj["base"] = "1.1.0"
+        aj["samples"][0].setdefault("entries", {})["app.json:base"] = hashlib.sha256(b'"1.0.0"').hexdigest()
+        (folder / "app.json").write_text(json.dumps(aj, indent=1) + "\n", encoding="utf-8")
+        lines = combine.add("s22_customer_loyalty", folder).lines(self.manifest(folder))
+        self.assertFalse(any("base" in line for line in lines), lines)
+
+
 class Refusals(Base):
     def test_m01_two_samples_capture_at_the_scan(self):
         with self.assertRaises(combine.Refused) as e:
