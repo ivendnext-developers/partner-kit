@@ -98,8 +98,39 @@
     return head + "\n" + order(cards).map(function (c, i) { return "| " + (i + 1) + " " + c.blueprint_row; }).join("\n") + "\n";
   }
 
+  // a need's label in plain words (spec J1-11), the same as My apps' gallery (apps.js needKind; site/test_apps.mjs holds
+  // the two equal over the catalogue)
+  var DESK_DOORS = { configure: 1, receipt: 1 };
+  function needKind(c) {
+    if (c.status === "not-yet" || c.status === "not-possible" || c.door === "request" || c.door === "none") return "cannot";
+    return DESK_DOORS[c.door] ? "desk" : "app";
+  }
+  var KIND_WORDS = { app: "Built as an app", desk: "Set in Desk", cannot: "Cannot be built today" };
+  function label(c) { return c.verdict + " \u00b7 " + KIND_WORDS[needKind(c)]; }
+
+  // J1-02: New app on My apps, with these needs (its samples ticked there, the Desk ones listed)
+  var START = "Start an app from these needs";
+  var START_HINT = "Opens New app on My apps with these samples ticked. Needs set in Desk are listed, not added.";
+  function startHref(cards) { return "apps.html?needs=" + cards.map(function (c) { return encodeURIComponent(c.id); }).join(","); }
+
+  // J1-09: a need that cannot be built today, its card's what to do instead, and Ask for it (the request form, with the
+  // need's words: its own form when the card names one)
+  var POINT_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=2_point_request.yml";
+  var CLAIM_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=6_claim_a_need.yml";
+  function instead(c) {
+    var l = (c.limits || []).filter(function (x) { return /^\*\*Instead:\*\*|^Today\b/.test(x); })[0];
+    return plain(l || c.tell || "");
+  }
+  function askUrl(c) {
+    var f = (c.request_forms || [])[0];
+    return f && f.url ? f.url : POINT_FORM + "&title=" + encodeURIComponent("Extension-point request: " + c.asks);
+  }
+  function cannotLine(c) { return "Cannot be built today: " + c.asks + ". " + instead(c); }
+
   var api = { ids: ids, choose: choose, order: order, steps: steps, proofs: proofs, limits: limits, limitsText: limitsText,
-              requests: requests, blueprint: blueprint, plain: plain };
+              requests: requests, blueprint: blueprint, plain: plain, needKind: needKind, KIND_WORDS: KIND_WORDS,
+              label: label, START: START, START_HINT: START_HINT, startHref: startHref, instead: instead, askUrl: askUrl,
+              cannotLine: cannotLine, CLAIM_FORM: CLAIM_FORM };
 
   // ── the page ──────────────────────────────────────────────────────────────────────────────────────────────────────
   function track(how) {
@@ -187,7 +218,7 @@
       chosen.forEach(function (c) {
         var li = el("li");
         li.appendChild(needLink(c));
-        li.appendChild(el("span", "plan-meta", " " + c.verdict + " · " + c.door_name));
+        li.appendChild(el("span", "plan-meta", " " + label(c)));
         var rm = el("button", "plan-rm", "Remove");
         rm.type = "button";
         rm.setAttribute("aria-label", "Remove: " + c.asks);
@@ -213,6 +244,11 @@
       // (c) the recipes and samples, once each
       var pr = proofs(cards);
       out.appendChild(h2("plan-proofs", "Recipes and samples, once each"));
+      var start = el("p", "plan-btns"), go = el("a", "site-btn", START);
+      go.href = base + startHref(cards);
+      start.appendChild(go);
+      start.appendChild(el("span", "plan-meta", " " + START_HINT));
+      out.appendChild(start);
       [["recipes", "Recipes"], ["samples", "Samples"]].forEach(function (k) {
         if (!pr[k[0]].length) { out.appendChild(el("p", null, k[1] + ": none for these needs.")); return; }
         out.appendChild(el("h3", null, k[1] + " (" + pr[k[0]].length + ")"));
@@ -252,9 +288,24 @@
       }
 
       // (e) the requests to file
-      var rq = requests(cards);
+      var cannot = cards.filter(function (c) { return needKind(c) === "cannot"; });
+      var rq = requests(cards.filter(function (c) { return needKind(c) !== "cannot"; }));
       out.appendChild(h2("plan-requests", "The requests to file"));
-      if (!rq.forms.length && !rq.askUs.length && !rq.instead.length) out.appendChild(el("p", null, "None: every need here can be built today."));
+      if (!cannot.length && !rq.forms.length && !rq.askUs.length && !rq.instead.length) out.appendChild(el("p", null, "None: every need here can be built today."));
+      cannot.forEach(function (c) {                 // J1-09: what to do instead, and Ask for it
+        var box = el("div", "plan-cannot");
+        box.appendChild(el("p", null, cannotLine(c)));
+        var b = el("p", "plan-btns"), ask = el("a", "site-btn site-btn-ghost", "Ask for it");
+        ask.href = askUrl(c); ask.target = "_blank"; ask.rel = "noopener";
+        b.appendChild(ask);
+        box.appendChild(b);
+        if (c.next) {
+          var cl = el("a", null, "Claim a need: we hold back from it for 90 days while you build it.");
+          cl.href = CLAIM_FORM; cl.target = "_blank"; cl.rel = "noopener";
+          var cp = el("p"); cp.appendChild(cl); box.appendChild(cp);
+        }
+        out.appendChild(box);
+      });
       var rl = el("ul", "plan-list");
       rq.forms.forEach(function (f) {
         var li = el("li"), a = el("a", null, "Ask for the extension point " + f.handle);
@@ -300,16 +351,16 @@
     function showFound(results) {
       found.textContent = "";
       results.slice(0, 8).forEach(function (c, n) {
-        var li = el("li"), box = el("input"), label = el("label", null, c.asks);
+        var li = el("li"), box = el("input"), lab = el("label", null, c.asks);
         box.type = "checkbox";
         box.id = "plan-f-" + n;
         box.value = c.id;
         box.checked = chosen.indexOf(c) >= 0;
         box.addEventListener("change", function () { toggle(c, box.checked); });
-        label.htmlFor = box.id;
-        label.appendChild(el("span", "plan-meta", " " + c.verdict + " · " + c.door_name));
+        lab.htmlFor = box.id;
+        lab.appendChild(el("span", "plan-meta", " " + label(c)));
         li.appendChild(box);
-        li.appendChild(label);
+        li.appendChild(lab);
         found.appendChild(li);
       });
       if (!results.length) {

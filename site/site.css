@@ -290,6 +290,19 @@ tr:last-child td { border-block-end: 0; }
 .hosting-before { margin-block-end: var(--ivn-s4); }
 .hosting-build { max-block-size: 20rem; overflow: auto; padding: 0.5rem; border: 1px solid var(--site-line); border-radius: var(--ivn-radius); font-size: 0.8125rem; white-space: pre-wrap; overflow-wrap: anywhere; }   /* a failed build's last 50 lines */
 .hosting-before summary { font-weight: 600; cursor: pointer; }
+/* My apps (EASY3a): the gallery's cards, the bar at its foot, the page's fields; the shortlist's Cannot be built today */
+.hosting-tool .hint { font-size: 0.875rem; color: var(--ivn-text-muted); }
+.hosting-tool input[type=text], .hosting-tool input[type=search], .hosting-tool input[type=url],
+.hosting-tool input[type=password] { font: inherit; inline-size: 100%; max-inline-size: 40rem; padding: 0.5rem;
+  border: 1px solid var(--site-line); border-radius: var(--ivn-radius); box-sizing: border-box; }
+.hosting-tool table { inline-size: 100%; border-collapse: collapse; display: block; overflow-x: auto; }
+.hosting-tool th, .hosting-tool td { text-align: start; padding: 0.375rem 0.5rem; border-block-end: 1px solid var(--site-line); vertical-align: top; }
+.gallery-card { padding: var(--ivn-s3); border: 1px solid var(--site-line); border-radius: var(--site-radius-card); }
+.gallery-card img { float: inline-end; max-inline-size: 40%; block-size: auto; margin-inline-start: var(--ivn-s3); border-radius: var(--ivn-radius); }
+.gallery-card::after { content: ""; display: block; clear: both; }
+.gallery-bar { position: sticky; inset-block-end: 0; padding: var(--ivn-s3); background: var(--ivn-surface); border: 1px solid var(--site-line); border-radius: var(--site-radius-card); }
+.start-app { margin-block: var(--ivn-s4); }
+.plan-cannot { padding: var(--ivn-s2) var(--ivn-s3); margin-block: var(--ivn-s3); border-inline-start: 3px solid #a4262c; background: var(--site-tint); }
 .hosting-tool label:has(input:disabled) { color: var(--ivn-text-muted); }   /* a copy that cannot be chosen reads as such */
 .hosting-tool button:focus-visible, .hosting-tool input:focus-visible, .hosting-tool select:focus-visible,
 .hosting-tool textarea:focus-visible { outline: 2px solid var(--site-focus); outline-offset: 2px; }

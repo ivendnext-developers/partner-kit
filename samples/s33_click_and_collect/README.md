@@ -2,7 +2,7 @@
 
 *Start from this sample: `python3 tools/manifest/start.py s33_click_and_collect --prefix "ACME CCB"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
 
-A store's board for the web orders it must pick and hand over, in Desk, from a manifest alone. A report lists the web orders still to pick; two fields on the delivery note record the hand-over, and the Delivery Note list filtered on one of them lists the orders waiting for their customer. Nothing leaves the retailer's iVendNext: no service, no outside address.
+A store's board for the web orders it must pick and hand over, in Desk, with no code of its own. A report lists the web orders still to pick; two fields on the delivery note record the hand-over, and the Delivery Note list filtered on one of them lists the orders waiting for their customer. Nothing leaves the retailer's iVendNext: no service, no outside address.
 
 **Industries:** Electronics and phones, Fashion, Grocery, Thrift and resale
 

@@ -960,6 +960,7 @@ def catalogue_json(cards: list, titles: dict | None = None, pages: dict | None =
     it, without the row number (the shortlist numbers the rows it joins)."""
     import json
     titles, pages, related = titles or {}, pages or {}, related or {}
+    nxt = next_list()                         # the roadmap's next list: Claim a need is shown for a card it names (J1-09)
 
     def proofs(c, kind):                     # a page of this site, or (a contract page, a tool) the file in the kit on GitHub
         out = []
@@ -978,7 +979,8 @@ def catalogue_json(cards: list, titles: dict | None = None, pages: dict | None =
                         "recipes": proofs(c, "recipe"), "samples": proofs(c, "sample"),
                         "request_forms": [{"handle": h, "url": request_url(h, c), "note": MEMBERS_ONLY} for h in c.requests],
                         "related": [o.id for o in related.get(c.id, [])],
-                        "blueprint_row": catalogue.blueprint_rows([c], [c.id])[0][0].removeprefix("| 1 ")}
+                        "blueprint_row": catalogue.blueprint_rows([c], [c.id])[0][0].removeprefix("| 1 "),
+                        "next": on_next(c, nxt)}
                        for c in by_asks(cards)], indent=1, ensure_ascii=False) + "\n"
 
 
@@ -1012,6 +1014,39 @@ def hosting_tool(here: str) -> str:
             f'<script src="{up}assets/hosting.js" defer></script>')
 
 
+START_BUTTON = "Start an app from this sample"        # spec J1-14: opens New app on My apps with the sample ticked
+
+
+def start_button(html_text: str, folder: str, up: str) -> str:
+    """A sample's page: *Start an app from this sample* beside its *Run it* section (J1-14), opening My apps' New app with
+    the sample ticked (through sign-in, the tick kept). A configuration pack is set in Desk, never ticked (J1-08): none."""
+    name = folder.rsplit("/", 1)[-1]
+    if gallery.sample_info.config_pack(ROOT / folder):
+        return html_text
+    button = (f'<p class="start-app"><a class="site-btn" href="{up}apps.html?sample={name}">{START_BUTTON}</a></p>')
+    return re.sub(r'(<h2 id="(?:how-to-)?run-it">)', button + r"\1", html_text, count=1)
+
+
+def next_list(path: pathlib.Path | None = None) -> list[str]:
+    """The roadmap's *next* list (site/roadmap_lists.md, `## Next`): each item not yet listed or being built (one with no
+    link), the names *Claim a need* may be shown for (spec J1-09)."""
+    path = path or SITE / "roadmap_lists.md"
+    text = path.read_text("utf-8") if path.is_file() else ""
+    m = re.search(r"^## Next\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+    out = []
+    for line in (m.group(1) if m else "").splitlines():
+        if line.startswith("- "):
+            items = re.split(r"\):\s|:\s", line[2:], maxsplit=1)[-1]
+            out += [x.strip() for x in items.split("\u00b7") if x.strip() and "[" not in x]
+    return out
+
+
+def on_next(c, names: list[str]) -> bool:
+    """A card is on the *next* list when the list names its title (spec J1-09)."""
+    t = c.title.lower()
+    return any(n.lower() in t or t in n.lower() for n in names)
+
+
 def apps_tool(here: str) -> str:
     """My apps' first screens (EASY1): site/assets-src/apps.js fills it, on the hosting page's own policy (one script, the
     hosting's door), so the page that holds a sign-in runs nothing else."""
@@ -1021,11 +1056,11 @@ def apps_tool(here: str) -> str:
 
 
 def page_policy() -> str:
-    """The hosting page's own content policy, in place of the site-wide one: its one script, and the two addresses it may
-    reach (the hosting's door, and the hosting's upload store, where a version's zip goes by the address the door
-    signed). No counter and no search script on it: the page that holds a sign-in runs nothing
+    """The hosting page's own content policy, in place of the site-wide one: its one script, and the addresses it may
+    reach (this site, for My apps' gallery: the samples index and the needs catalogue; the hosting's door; and the
+    hosting's upload store, where a version's zip goes by the address the door signed). No counter and no search script on it: the page that holds a sign-in runs nothing
     else. A meta tag cannot send frame-ancestors: hosting.js refuses to run inside a frame."""
-    return "; ".join(["default-src 'self'", "script-src 'self'", f"connect-src {HOSTING_API} {UPLOAD_STORE}", "img-src 'self' data:",
+    return "; ".join(["default-src 'self'", "script-src 'self'", f"connect-src 'self' {HOSTING_API} {UPLOAD_STORE}", "img-src 'self' data:",
                       "font-src 'self'", "style-src 'self'", "object-src 'none'", "base-uri 'self'",
                       "form-action 'self'"])
 
@@ -1286,6 +1321,8 @@ def build(out_dir: pathlib.Path) -> int:
         toc: list = []
         p.html = render(p.text, ctx, {}, toc)
         up = up_of(p.out)
+        if p.group == "samples":
+            p.html = start_button(p.html, p.src.removesuffix("/README.md"), up)
         src_link = ("" if p.src.startswith("site/pages/")
                     else f'<p class="src"><a href="{REPO_URL}/blob/main/{p.src}">This page in the kit</a></p>')
         hero, body = hero_of(p.html) if p.out == "index.html" else ("", p.html)

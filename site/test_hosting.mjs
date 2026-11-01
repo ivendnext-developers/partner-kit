@@ -134,7 +134,7 @@ check("the customer field offers the customers earlier orders named, once each",
 const policies = page.match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/g) || [];
 check("one content policy on the page", policies.length === 1, String(policies.length));
 check("it reaches only the hosting and its upload store",
-  /connect-src https:\/\/hosting\.ivendnext\.app https:\/\/ivn-selfserve-work-416648266684\.s3\.us-east-1\.amazonaws\.com;/.test(policies[0] || ""), policies[0]);
+  /connect-src 'self' https:\/\/hosting\.ivendnext\.app https:\/\/ivn-selfserve-work-416648266684\.s3\.us-east-1\.amazonaws\.com;/.test(policies[0] || ""), policies[0]);
 check("the page's upload store is the one its policy allows", (policies[0] || "").includes(h.STORE.replace(/\/$/, "") + ";"));
 check("no inline script is allowed", !/unsafe-inline[^;]*/.test((policies[0] || "").split("script-src")[1].split(";")[0]));
 check("no other script on the page (the search data block runs nothing)", (page.match(/<script(?! type="application\/ld\+json")[^>]*>/g) || []).length === 1 && page.includes("assets/hosting.js"));

@@ -1426,11 +1426,35 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertIsNotNone(seo.image_size(build.ROOT / "samples/s5_config_pack/screenshots/s5_flow.gif"))
 
     # ── the samples index (samples/index.json) and the READMEs it is read from ──
-    INDEX_FIELDS = {"name", "title", "version", "versions", "when_to_use", "picture", "door", "needs", "recipe", "industries",
-                    "till", "config_pack"}
+    INDEX_FIELDS = {"name", "title", "short", "version", "versions", "when_to_use", "picture", "door", "needs", "recipe",
+                    "recipe_title", "recipes", "industries", "till", "config_pack"}
     # the samples with no screenshot of their own whose door no screenshot in the kit shows (site/door_pictures.json null)
     NO_PICTURE = {"s34_po_check": "document-check", "s41_regulated_register": "register-books",
                   "s43_third_party_payer": "payer"}
+
+    # ── My apps' ways in (EASY3a): a sample's page, the roadmap's next list ──
+    def test_a_samples_page_starts_an_app_from_it_and_a_configuration_pack_has_no_button(self):  # spec J1-14, J1-08
+        for folder in self.sample_folders():
+            page = (self.out / "samples" / folder.name / "index.html").read_text("utf-8")
+            pack = build.gallery.sample_info.config_pack(folder)
+            want = f'<a class="site-btn" href="../../apps.html?sample={folder.name}">Start an app from this sample</a>'
+            if pack:
+                self.assertNotIn("Start an app from this sample", page, folder.name)
+            else:
+                self.assertRegex(page, re.escape(want) + r'</p><h2 id="(how-to-)?run-it">', folder.name)
+
+    def test_claim_a_need_is_shown_only_for_a_card_the_next_list_names(self):  # spec J1-09
+        names = build.next_list()
+        self.assertTrue(names, "the roadmap's next list reads as empty")
+        cat = json.loads((self.out / "catalogue.json").read_text("utf-8"))
+        self.assertTrue(all("next" in c for c in cat))
+        with tempfile.TemporaryDirectory() as tmp:
+            f = pathlib.Path(tmp) / "lists.md"
+            f.write_text("## Next\n\n- Pharmacy (an app with a link is listed): [Listed one](https://x) · Final receipt offline\n\n## Starters\n", "utf-8")
+            self.assertEqual(build.next_list(f), ["Final receipt offline"])
+        card = type("C", (), {"title": "A final receipt while the till is offline"})()
+        self.assertFalse(build.on_next(card, ["Final receipt offline"]))   # the list must name the card's title
+        self.assertTrue(build.on_next(type("C", (), {"title": "Room charge"})(), names))
 
     def sample_folders(self, root: pathlib.Path | None = None) -> list[pathlib.Path]:
         return sorted(p.parent for p in ((root or build.ROOT) / "samples").glob("*/README.md"))
