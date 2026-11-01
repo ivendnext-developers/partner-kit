@@ -222,7 +222,16 @@ check("J4-01: the Desk picture ships with the page", existsSync(path.join(out, "
 check("J7-01: Pictures, up to four, by the App library's picture rules", U.pictures === "Pictures" &&
   a.pictureType({ type: "image/png", size: 1000 }) === "png" && a.pictureType({ type: "image/webp", size: 300 * 1024 }) === "webp" &&
   a.pictureType({ type: "image/png", size: 300 * 1024 + 1 }) === null && a.pictureType({ type: "image/svg+xml", size: 10 }) === null &&
-  src.includes("4 - cd.pictures.length") && src.includes('"/publish/picture"'));
+  src.includes("4 - cd.pictures.length") && src.includes('"/publish/picture"') &&
+  U.picturesOnly.replace("{n}", "2") === "Only the first 2 were added: a card has up to four." &&
+  U.pictureBad.startsWith("Not added: {name} is not"));
+const cb = a.cardBody({ title: "T", summary: "S", what: ["a", " "], industries: ["grocery"], price: "free", setup: ["x"], guide: "g",
+                        pictures: [{ sha256: "c", type: "webp", w: 2400, h: 1350, name: "shot.png" }] });
+check("J7-01: Send for listing carries the card's fields and each picture as the library knows it",
+  JSON.stringify(cb.pictures) === JSON.stringify([{ sha256: "c", type: "webp", w: 2400, h: 1350 }]) && cb.what.length === 1 &&
+  cb.guide === "g" && cb.price === "free");
+const big = new Uint8Array(20000).map((_, i) => (i * 7) & 255);
+check("J7-01: a picture's bytes reach the hosting as standard base64", a.b64(big) === Buffer.from(big).toString("base64"));
 check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
 check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&
   !existsSync(path.join(out, "assets/hosting.js")));

@@ -177,8 +177,9 @@
     withKey: "With a key: retailers ask you", setUp: "How to set it up", setUpHint: "The steps the retailer follows first, one per line.",
     guide: "Guide link", guideHint: "A page on docs.ivendnext.com or developer.ivendnext.com: the App library's rule.",
     send: "Send for listing", hours: "The last", pay: "Pay with your card",
-    pictures: "Pictures", picturesHint: "Up to four: PNG, JPEG or WebP, each at most 300 KB, at most 2400 pixels a side.",
-    pictureBad: "Not added: a picture is a PNG, JPEG or WebP file of at most 300 KB. Make it smaller and choose it again.",
+    pictures: "Pictures", picturesHint: "Up to four: PNG, JPEG or WebP. A big one is made smaller for the card.",
+    pictureBad: "Not added: {name} is not a PNG, JPEG or WebP picture we could make small enough. Choose another.",
+    picturesBusy: "Adding pictures\u2026", picturesOnly: "Only the first {n} were added: a card has up to four.",
     picture: "In your sandbox's Desk: your name > My Settings > API Access > Generate Keys"
   };
   // an industry the App library's card takes (its ids, as the hosting gives them), in the words the gallery shows
@@ -193,6 +194,12 @@
     return (v.sites || []).length > 0 && sent.length > 1 && sent[sent.length - 1].version !== v.version;
   }
   function pubRunning(s) { return tryRunning(s); }
+  // what Send for listing sends: the card's fields (J7-01), each picture as the App library knows it
+  function cardBody(cd) {
+    return { title: cd.title, summary: cd.summary, what: (cd.what || []).filter(function (x) { return x.trim(); }),
+             industries: cd.industries, price: cd.price, setup: cd.setup, guide: cd.guide,
+             pictures: (cd.pictures || []).map(function (x) { return { sha256: x.sha256, type: x.type, w: x.w, h: x.h }; }) };
+  }
   // J7-01's Pictures, by the App library's own picture rules (its media door): the type and size checked here first
   var PIC_TYPES = { "image/png": "png", "image/jpeg": "jpeg", "image/webp": "webp" };
   function pictureType(file) { return file && file.size > 0 && file.size <= 300 * 1024 ? PIC_TYPES[file.type] || null : null; }
@@ -390,7 +397,7 @@
               covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords,
-              canGoBack: canGoBack, logFile: logFile, pictureType: pictureType };
+              canGoBack: canGoBack, logFile: logFile, pictureType: pictureType, b64: b64, cardBody: cardBody };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -921,14 +928,25 @@
 
   // one picture: its size read in the browser, then put in the App library by the hosting (J7-01)
   function addPicture(f, cd) {
-    var kind = pictureType(f);
-    if (!kind) return Promise.reject(new Error(U.pictureBad));
+    var bad = U.pictureBad.replace("{name}", f.name);
+    if (!PIC_TYPES[f.type]) return Promise.reject(new Error(bad));
     return root.createImageBitmap(f).then(function (img) {
-      var w = img.width, h = img.height;
-      if (w > 2400 || h > 2400) throw new Error(U.pictureBad.replace("of at most 300 KB", "of at most 2400 pixels a side"));
-      return f.arrayBuffer().then(function (buf) {
-        return call("POST", "/publish/picture", { app: data.appId, type: kind, data: b64(new Uint8Array(buf)), w: w, h: h });
-      });
+      // a screenshot too big for the card is made smaller here (2400 pixels a side, WebP), never refused for its size
+      var w = img.width, h = img.height, kind = pictureType(f);
+      if (kind && w <= 2400 && h <= 2400) return f.arrayBuffer().then(function (buf) { return [kind, buf, w, h]; });
+      var k = Math.min(1, 2400 / Math.max(w, h)), cv = root.document.createElement("canvas");
+      cv.width = Math.round(w * k); cv.height = Math.round(h * k);
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      var shrink = function (q) {
+        return new Promise(function (ok) { cv.toBlob(ok, "image/webp", q); }).then(function (b) {
+          if (b && b.size <= 300 * 1024 && b.type === "image/webp") return b.arrayBuffer().then(function (buf) { return ["webp", buf, cv.width, cv.height]; });
+          if (q > 0.5) return shrink(q - 0.15);
+          throw new Error(bad);
+        });
+      };
+      return shrink(0.85);
+    }).then(function (x) {
+      return call("POST", "/publish/picture", { app: data.appId, type: x[0], data: b64(new Uint8Array(x[1])), w: x[2], h: x[3] });
     }).then(function (r) { cd.pictures.push({ sha256: r.sha256, type: r.type, w: r.w, h: r.h, name: f.name }); });
   }
   function b64(bytes) {
@@ -1106,6 +1124,7 @@
 
   // J5-01 to J5-04, J5-15, J5-19, J6-02, J7-01, J9-01 to J9-03: Publish, then its steps, one per ask (as Try's)
   function openPublish(app) {
+    if (data.appId !== app) data.pubForm = null;   // one app's card never shows on another's
     data.appId = app; data.pubC = null; data.pubS = null; data.pubTo = data.pubTo || "customer"; screen = "publish"; say(""); render();
     call("POST", "/publish/status", { app: app }).then(function (s) {
       if (s.step) data.pubS = s;
@@ -1210,14 +1229,20 @@
       });
       cd.pictures = cd.pictures || [];
       var pics = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp", multiple: "" });
-      pics.disabled = cd.pictures.length >= 4;
+      pics.disabled = cd.pictures.length >= 4 || !!cd.busy;
       pics.addEventListener("change", function () {
-        var files = Array.prototype.slice.call(pics.files || [], 0, 4 - cd.pictures.length);
-        files.reduce(function (prev, f) {
-          return prev.then(function () { return addPicture(f, cd); });
-        }, Promise.resolve()).then(function () { render(); }, fail);
+        var all = Array.prototype.slice.call(pics.files || []), room = 4 - cd.pictures.length, files = all.slice(0, room);
+        cd.notes = all.length > room ? [U.picturesOnly.replace("{n}", String(room))] : [];
+        cd.busy = true; render();
+        files.reduce(function (prev, f) {   // one by one; a file refused is said by its name, and the rest still go
+          return prev.then(function () {
+            return addPicture(f, cd).then(null, function (e) { cd.notes.push(e.message); });
+          });
+        }, Promise.resolve()).then(function () { cd.busy = false; render(); });
       });
       box.appendChild(field(U.pictures, pics, U.picturesHint));
+      if (cd.busy) box.appendChild(el("p", { "class": "hint", text: U.picturesBusy }));
+      (cd.notes || []).forEach(function (t) { box.appendChild(el("p", { "class": "hosting-bad", text: t })); });
       cd.pictures.forEach(function (x, i) {
         box.appendChild(el("p", { "class": "hint" }, (i + 1) + ". " + x.name + " (" + x.w + " × " + x.h + ") ",
           button(U.remove, function () { cd.pictures.splice(i, 1); render(); }, true)));
@@ -1262,17 +1287,17 @@
     }
     var stop = data.pubTo === "customer" && c.nothing_new && !form.sites.some(function (x) { return x.trim(); }) ? c.nothing_new : c.m16;
     var go = button(data.pubTo === "customer" ? c.button : U.send, function (ev) {
+      if (form.card.busy) return;   // the pictures still going up: Send waits for them
       if (askPlan && !form.plan) { say(T.choosePlan, true); render(); return; }
       ev.target.disabled = true;
       var body = { app: data.appId, to: data.pubTo, plan: form.plan || money.plan || undefined };
       if (data.pubTo === "customer") { body.sites = form.sites.filter(function (x) { return x.trim(); }); body.own = form.own; }
-      else body.card = { title: form.card.title, summary: form.card.summary, what: form.card.what.filter(function (x) { return x.trim(); }),
-                         industries: form.card.industries, price: form.card.price, setup: form.card.setup, guide: form.card.guide,
-                         pictures: (form.card.pictures || []).map(function (x) { return { sha256: x.sha256, type: x.type, w: x.w, h: x.h }; }) };
+      else body.card = cardBody(form.card);
       call("POST", "/publish", body).then(function (r) { data.pubS = r; data.pubC = null; data.pubForm = null; say(""); render(); pollPub(); },
                                          function (e) { ev.target.disabled = false; fail(e); });
     });
     if (stop) { go.disabled = true; box.appendChild(el("p", { "class": "hint", text: stop })); }
+    if (form.card.busy) go.disabled = true;
     box.appendChild(el("p", {}, go));
     return box;
   }
