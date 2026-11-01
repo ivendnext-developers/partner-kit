@@ -534,7 +534,7 @@ def entries_of(manifest: dict, app_json: dict, dispatch: dict) -> dict:
             for i, x in zip(ids(section, items), items):
                 out[f"manifest:{section}:{i}"] = x
     for k, v in app_json.items():
-        if k in ("env", "samples", "version", "schedule"):
+        if k in ("env", "samples", "version", "base", "schedule"):   # base: the version My apps kept it as, not an edit
             continue
         out[f"app.json:{k}"] = v
     for e in app_json.get("env") or []:

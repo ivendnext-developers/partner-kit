@@ -274,6 +274,24 @@ class NewerTitle(Base):
             self.assertEqual(n[0].text(), want)
 
 
+class BaseIsNotAnEdit(Base):
+    """`base` in app.json is the version My apps kept the folder as (D6): Add a sample never names it as the developer's
+    change (found by EASY3a's walk: *Take it* said "Your changes are kept: app.json:base.")."""
+
+    def test_add_to_a_folder_carrying_base_names_no_kept_change(self):
+        def keep_as(folder, version):   # what My apps does to every folder it keeps (myapps.set_base)
+            aj = json.loads((folder / "app.json").read_text(encoding="utf-8"))
+            aj["version"] = aj["base"] = version
+            (folder / "app.json").write_text(json.dumps(aj, indent=1) + "\n", encoding="utf-8")
+        folder, _ = self.make(["s23_till_guard"])
+        keep_as(folder, "1.0.0")
+        combine.add("s22_customer_loyalty", folder)   # its record now holds base 1.0.0
+        keep_as(folder, "1.1.0")                      # kept as the next draft
+        added = combine.add("s11_approvals", folder)
+        lines = added.lines(self.manifest(folder))
+        self.assertFalse(any("base" in line for line in lines), lines)
+
+
 class Refusals(Base):
     def test_m01_two_samples_capture_at_the_scan(self):
         with self.assertRaises(combine.Refused) as e:
