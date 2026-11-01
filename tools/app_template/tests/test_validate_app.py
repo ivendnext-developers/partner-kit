@@ -28,6 +28,9 @@ class Settings(unittest.TestCase):
     def test_a_setting_may_say_what_it_is(self):  # the hosting page shows it under the setting's box
         self.assertEqual(bad(env=[setting("REGION_X", about="The region your app reports in.")]), [])
 
+    def test_a_folder_from_my_apps_names_the_version_it_was_downloaded_as(self):
+        self.assertEqual(bad(base="1.2.0"), [])
+
     def test_a_container_may_ask_for_a_scratch_folder(self):
         self.assertEqual(bad(scratch=True), [])
 
@@ -46,7 +49,7 @@ class Settings(unittest.TestCase):
             (bad(env=[setting("REGION_X", about=3)]), "about is one line"),
             (bad(env=[setting("REGION_X", purpose="two\nlines")]), "its purpose is one line"),
             (bad(env=[setting("REGION_X", required="yes")]), "required is true or false"),
-            (bad(scratch="yes"), "scratch:"),
+            (bad(scratch="yes"), "scratch:"), (bad(base="latest"), "base:"),
         ]
         for errors, word in cases:
             self.assertTrue(any(word in e for e in errors), (word, errors))

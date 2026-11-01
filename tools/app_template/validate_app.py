@@ -23,9 +23,11 @@ import re
 import sys
 
 KEYS = {"app", "version", "port", "health", "size", "region", "env", "shops", "scratch", "runs", "handler", "package",
-        "schedule", "timeout", "samples"}
+        "schedule", "timeout", "samples", "base"}
 # samples: the record New app writes (tools/manifest/combine.py): each sample the app was made from, its version and the
 # hashes of what was written, so Add a sample can tell what the developer changed. The hosting order does not read it.
+# base: the version of the app on My apps this folder was downloaded as (written there); an upload names it, so one made
+# from an older version than the server's latest is refused instead of undoing a colleague's change. Not read by a host.
 ENV_KEYS = {"name", "secret", "required", "about", "purpose", "together"}
 # about: one line the hosting page shows under the setting. purpose: the line the Settings screen shows a functional
 # person, what to put there (every setting has one). together: the other settings set with it, both or neither.
@@ -59,6 +61,8 @@ def check_settings(m) -> list[str]:
         bad.append("region: a two-letter lower-case country code, like us")
     if "shops" in m and not isinstance(m["shops"], bool):
         bad.append("shops: true or false (true: the app serves many shops, each connecting itself; chapter 14b)")
+    if "base" in m and not (isinstance(m["base"], str) and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", m["base"])):
+        bad.append("base: the version this folder was downloaded as, three numbers, like 1.0.0 (My apps writes it)")
     if "scratch" in m and not isinstance(m["scratch"], bool):
         bad.append("scratch: true or false (true: a writable /scratch folder, lost on a restart; chapter 14b)")
     bad += check_form(m)
