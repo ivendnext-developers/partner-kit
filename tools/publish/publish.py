@@ -30,8 +30,6 @@ library keeps where each version went**, per app and site: a publish with no lis
 this computer. The token is read from `IVN_TOKEN`, else `~/.ivendnext/token`. The signing key (only with `--key`, or
 `--partner`) is read from `--key`, else `IVN_LIBRARY_KEY`, else `~/.ivendnext/library-signing.key`.
 
-The App library's Publish page (`https://library.ivendnext.app/publish.js`, kept in the hosting repository as
-`library/functions/site/publish.js`) builds the same payload in a browser: a change here is a change there.
 
 Exit code: 0 published (or waiting for the approval) · 1 refused (by the checks or by the library) · 2 usage.
 Standard library only.

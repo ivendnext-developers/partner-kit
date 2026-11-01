@@ -174,12 +174,11 @@
     cancel: "Cancel at month end", makeKey: "Make a key", keySite: "The retailer's site address",
     title: "Title", oneLine: "One line", whatItDoes: "What it does", industries: "Industries", price: "Price", free: "Free",
     withKey: "With a key: retailers ask you", setUp: "How to set it up", setUpHint: "The steps the retailer follows first, one per line.",
-    guide: "Guide link", send: "Send for listing", hours: "The last", pay: "Pay with your card",
+    guide: "Guide link", guideHint: "A page on docs.ivendnext.com or developer.ivendnext.com: the App library's rule.",
+    send: "Send for listing", hours: "The last", pay: "Pay with your card",
     picture: "In your sandbox's Desk: your name > My Settings > API Access > Generate Keys"
   };
-  // the App library's twelve industries, by the ids its card takes, in the words the gallery shows (INDUSTRIES above)
-  var INDUSTRY_IDS = ["beauty-and-cosmetics", "electronics-and-phones", "fashion", "grocery", "hardware-and-diy", "hospitality",
-                      "liquor-and-wine", "optical", "pharmacy", "distribution-and-warehousing", "thrift-and-resale", "travel-retail"];
+  // an industry the App library's card takes (its ids, as the hosting gives them), in the words the gallery shows
   function industryWords(id) {
     var w = String(id || "").replace(/-and-/g, " and ").replace(/-/g, " ");
     return INDUSTRIES.filter(function (x) { return x.toLowerCase() === w; })[0] || w.charAt(0).toUpperCase() + w.slice(1);
@@ -384,7 +383,7 @@
               making: making, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
               covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
-              noSandboxParts: noSandboxParts, U: U, INDUSTRY_IDS: INDUSTRY_IDS, industryWords: industryWords,
+              noSandboxParts: noSandboxParts, U: U, industryWords: industryWords,
               canGoBack: canGoBack, logFile: logFile };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
@@ -1135,6 +1134,10 @@
   function vPublish() {
     var box = card(G.publish), s = data.pubS, c = data.pubC;
     crumbsTo(box);
+    (data.backMessages || []).forEach(function (m) {
+      box.appendChild(el("p", {}, el("strong", { text: m.site + ": " }), m.message));
+      box.appendChild(copyRow(m.message));
+    });
     if (s && s.step && (pubRunning(s) || s.done || !c)) {
       vPubSteps(box, s);
       if (!c) return box;
@@ -1161,7 +1164,7 @@
       box.appendChild(el("p", {}, button(U.addSite, function () { form.sites.push(""); render(); }, true)));
       var own = el("input", { type: "checkbox" });
       own.checked = form.own;
-      own.addEventListener("change", function () { form.own = own.checked; });
+      own.addEventListener("change", function () { form.own = own.checked; render(); });
       box.appendChild(el("p", {}, el("label", {}, own, " " + c.own_site)));
       box.appendChild(p(c.only_these + (c.also_sandbox ? " " + c.also_sandbox : "")));
     } else {
@@ -1182,7 +1185,7 @@
         box.appendChild(el("p", {}, inp));
       });
       var fs = el("fieldset", {}, el("legend", { text: U.industries }));
-      INDUSTRY_IDS.forEach(function (id) {
+      (c.industries || []).forEach(function (id) {
         var cb = el("input", { type: "checkbox" });
         cb.checked = cd.industries.indexOf(id) >= 0;
         cb.addEventListener("change", function () {
@@ -1203,11 +1206,13 @@
       steps.value = (cd.setup || []).join("\n");
       steps.addEventListener("input", function () { cd.setup = steps.value.split("\n").filter(function (x) { return x.trim(); }); });
       box.appendChild(field(U.setUp, steps, U.setUpHint));
-      text(U.guide, "guide");
+      text(U.guide, "guide", U.guideHint);
     }
     var money = c.money || {};
     (money.lines || []).forEach(function (l) { box.appendChild(p(l)); });
-    if ((money.plans || []).length) {
+    // our own teams order no customer's production: the plan is asked only for the company's own site (J5-03, J5-19)
+    var askPlan = (money.plans || []).length && (!money.own_only || (data.pubTo === "customer" && form.own));
+    if (askPlan) {
       var fsp = el("fieldset", {}, el("legend", { text: T.plan }));
       money.plans.forEach(function (x) {
         var r = el("input", { type: "radio", name: "pub-plan", value: x.plan });
@@ -1219,7 +1224,7 @@
     }
     var stop = data.pubTo === "customer" && c.nothing_new && !form.sites.some(function (x) { return x.trim(); }) ? c.nothing_new : c.m16;
     var go = button(data.pubTo === "customer" ? c.button : U.send, function (ev) {
-      if ((money.plans || []).length && !form.plan) { say(T.choosePlan, true); render(); return; }
+      if (askPlan && !form.plan) { say(T.choosePlan, true); render(); return; }
       ev.target.disabled = true;
       var body = { app: data.appId, to: data.pubTo, plan: form.plan || money.plan || undefined };
       if (data.pubTo === "customer") { body.sites = form.sites.filter(function (x) { return x.trim(); }); body.own = form.own; }
@@ -1329,7 +1334,8 @@
     box.appendChild(button(U.goBackBtn, function (ev) {
       ev.target.disabled = true;
       call("POST", "/rollback", { app: data.appId, to: b.to, go: true }).then(function (r) {
-        data.back = { messages: r.messages }; data.pubS = r; render();
+        // the republish's steps run on Publish, followed there; the messages wait there too (review MAJOR 3)
+        data.back = null; data.backMessages = r.messages; openPublish(data.appId);
       }, function (e) { ev.target.disabled = false; fail(e); });
     }));
     box.appendChild(root.document.createTextNode(" "));

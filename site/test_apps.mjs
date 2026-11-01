@@ -202,8 +202,10 @@ check("J5-01, J5-19: the customer's sites and the own-site line", U.toCustomer =
 check("J7-01: the card's fields", U.title === "Title" && U.oneLine === "One line" && U.whatItDoes === "What it does" &&
   U.industries === "Industries" && U.price === "Price" && U.free === "Free" && U.withKey === "With a key: retailers ask you" &&
   U.setUp === "How to set it up" && U.guide === "Guide link" && U.send === "Send for listing");
-check("J7-01: the library's twelve industries, by its own ids", a.INDUSTRY_IDS.length === 12 &&
-  a.industryWords("hardware-and-diy") === "Hardware and DIY" && a.industryWords("grocery") === "Grocery");
+check("J7-01: an industry id in the gallery's words", a.industryWords("hardware-and-diy") === "Hardware and DIY" &&
+  a.industryWords("grocery") === "Grocery" && a.industryWords("thrift-and-resale") === "Thrift and resale");
+check("J12-01: after Go back the republish is followed on Publish, with each administrator's message (review MAJOR 3)",
+  src.includes("data.backMessages = r.messages; openPublish(data.appId);"));
 check("J6-01, J13-01, J10-01, J6-06, J12-01, J13-03, J7-07: the labels", U.whereRuns === "Where it runs" &&
   U.removeSite === "Remove this site" && U.serviceRuns === "Where the service runs" && U.itsAddress === "Its https address" &&
   U.logs === "Logs" && U.search === "Search" && U.downloadLogs === "Download" && U.goBack === "Go back to this version" &&
