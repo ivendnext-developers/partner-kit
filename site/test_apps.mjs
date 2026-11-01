@@ -169,5 +169,27 @@ check("EASY1NOTES: purposes, the folded command code, a way back", W.peopleWhy &
 // the walk's folds (2026-11-01)
 check("J2-06: the first word alone reads as the name will start", a.nameHint("CXSINT ", "cxsint").startsWith("cxsint_\u2026: your first word"));
 check("a plain button carries the site's plain style", src.includes('"site-btn site-btn-ghost"') && !src.includes('"site-btn ghost"'));
+// EASY3a part 3: Try on my sandbox (J4-01, J4-02, J4-05, §3b); the doors' own words are the hosting's tests
+const T = a.T;
+check("J4-01: the panel's labels and the Desk clicks", T.address === "Your sandbox's address" &&
+  T.keyLabel === "An administrator's key and secret" && T.check === "Check" &&
+  T.keyHint === "In your sandbox's Desk: your name (top right) > My Settings > API Access > Generate Keys. The secret is shown once: paste it here.");
+const parts = a.noSandboxParts("No sandbox yet? Request one. Everything else here works without it.");
+check("J4-01: with no sandbox, Request one is the link", parts.join("") === "No sandbox yet? Request one. Everything else here works without it." &&
+  parts[1] === "Request one");
+check("J4-02: the sections as the hosting drew them, in order, each with its lines", a.SECTIONS.join("|") ===
+  "New in Desk|Who can use it|Changes to what you already have|Print layouts|Connects outside your site" &&
+  a.consentSections({ sections: [{ title: "Who can use it", lines: [] }, { title: "New in Desk", lines: ["x"] }, { title: "Other", lines: ["y"] }] })
+    .map((x) => x.title).join() === "New in Desk,Other" &&
+  T.changes === "What installing it changes" && T.wording === "Show the exact wording" && T.installTry === "Install and try");
+check("J4-05: Test again; a try is asked again until done or stopped", T.testAgain === "Test again" &&
+  a.tryRunning({ step: "build" }) && !a.tryRunning({ step: "done" }) && !a.tryRunning({ step: "stopped" }) && !a.tryRunning({}));
+check("J4-05 after a fix: a newer draft than the one tried is offered again; a finished try of the latest is not",
+  a.offerAgain({ step: "done", version: "1.0.0", latest: "1.0.1" }) && !a.offerAgain({ step: "done", version: "1.0.1", latest: "1.0.1" }) &&
+  a.offerAgain({ step: "stopped" }) && a.offerAgain(null) && !a.offerAgain({ step: "build" }));
+check("J5-15: the plan's lines as the row writes them, nothing added", !src.includes("perMonth") && T.plan === "Per month");
+check("J2-10: Try on my sandbox is on; Publish waits for part 4", src.includes('button(G.tryIt, function () { openTry(a.app); })') &&
+  src.includes("pubB.disabled = true"));
+
 console.log(red ? `${red} FAILED` : "ALL PASS");
 process.exit(red ? 1 : 0);

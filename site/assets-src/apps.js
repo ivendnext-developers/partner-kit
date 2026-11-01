@@ -152,6 +152,34 @@
     take: "Take it", notNow: "Not now", covers: "What it covers", versions: "Versions"
   };
 
+  // EASY3a part 3: Try on my sandbox (spec J4-01 to J4-05, J4-11, J5-15, J9-02, §3b). The words a door answers (Connected,
+  // M11 to M14, M18 to M21, the results, the till lines, who pays) are the hosting's and are shown as given (§0b rule 8).
+  var T = {
+    yourSandbox: "Your sandbox", address: "Your sandbox's address", keyLabel: "An administrator's key and secret",
+    keyHint: "In your sandbox's Desk: your name (top right) > My Settings > API Access > Generate Keys. The secret is shown " +
+      "once: paste it here.",
+    key: "Key", secret: "Secret", check: "Check", request: "Request one",
+    changes: "What installing it changes", wording: "Show the exact wording", installTry: "Install and try",
+    testAgain: "Test again", tryAgain: "Try again", pay: "Pay with your card", plan: "Per month",
+    updates: "What the update changes", choosePlan: "Choose a plan first."
+  };
+  var SECTIONS = ["New in Desk", "Who can use it", "Changes to what you already have", "Print layouts",
+                  "Connects outside your site"];
+
+  // the consent's sections as the hosting drew them from the site's own check (J4-02), in its order, as given (§0b rule 8)
+  function consentSections(r) {
+    return ((r && r.sections) || []).filter(function (s) { return s && s.title && (s.lines || []).length; });
+  }
+  // a try still moving: the page asks again until it is done or stopped
+  function tryRunning(s) { return !!(s && s.step && s.step !== "done" && s.step !== "stopped"); }
+  // a newer draft than the one tried, or a try that stopped: the consent is offered again (J4-05 after a fix)
+  function offerAgain(s) { return !s || !s.step || s.step === "stopped" || (s.step === "done" && s.latest && s.latest !== s.version); }
+  // J4-01's line with no sandbox, its "Request one" a link to the sandbox page
+  function noSandboxParts(words) {
+    var i = String(words || "").indexOf(T.request);
+    return i < 0 ? [String(words || "")] : [words.slice(0, i), T.request, words.slice(i + T.request.length)];
+  }
+
   // the industries (spec J1-05: the App library's twelve)
   var INDUSTRIES = ["Beauty and cosmetics", "Electronics and phones", "Fashion", "Grocery", "Hardware and DIY", "Hospitality",
                     "Liquor and wine", "Optical", "Pharmacy", "Thrift and resale", "Travel retail", "Distribution and warehousing"];
@@ -325,7 +353,9 @@
               sampleTitle: sampleTitle, sampleLabel: sampleLabel, needSamples: needSamples, search: search,
               fromNeeds: fromNeeds, readStart: readStart, barText: barText, appFor: appFor, nameHint: nameHint,
               making: making, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
-              covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM };
+              covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
+              SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
+              noSandboxParts: noSandboxParts };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -402,6 +432,7 @@
     if (screen === "home") {
       call("GET", "/handovers").then(function (r) { data.handovers = r; render(); }, function () {});
       call("GET", "/apps").then(function (r) { data.apps = r; render(); }, fail);
+      call("GET", "/sandbox").then(function (r) { data.sandbox = r; render(); }, function () {});
     }
     if ((screen === "app" || screen === "settings") && data.appId) openApp(data.appId);
   }
@@ -777,8 +808,8 @@
     box.appendChild(el("p", {}, el("strong", { text: sent.length ? a.line : G.notOnSite }),
       sent.length ? null : " · " + vs[vs.length - 1].version + " (draft)"));
     var acts = el("p", {});
-    var tryB = button(G.tryIt, function () {}), pubB = button(G.publish, function () {});
-    tryB.disabled = true; pubB.disabled = true;   // parts 3 and 4 of the lane
+    var tryB = button(G.tryIt, function () { openTry(a.app); }), pubB = button(G.publish, function () {});
+    pubB.disabled = true;   // part 4 of the lane
     [tryB, pubB, button(G.download, download, true), button(G.addSample, function () { startGallery("add"); }, true)]
       .forEach(function (b) { acts.appendChild(b); acts.appendChild(root.document.createTextNode(" ")); });
     box.appendChild(acts);
@@ -887,13 +918,122 @@
 
   // the company's own sandbox (J4-01's address; its key and Check are EASY3a's panel): the preview shelf carries a
   // hosted app's key there only
+  // J4-01, D4: Connect your sandbox, once. The key is checked on the site itself, then kept by the hosting (never here)
   function vSandbox() {
-    var box = el("details", {}, el("summary", { text: "Your sandbox" }));
-    var addr = el("input", { type: "text", spellcheck: "false", placeholder: "https://acme.sandbox.ivend.co" });
-    box.appendChild(field("Your sandbox's address", addr));
-    box.appendChild(button("Save", function () {
-      call("POST", "/sandbox", { site: addr.value.trim() }).then(function (r) { say("Saved: " + r.sandboxes.join(", ")); render(); }, fail);
-    }, true));
+    var sb = data.sandbox || {}, box = el("details", {}, el("summary", { text: T.yourSandbox }));
+    if (!sb.sandbox) box.open = true;
+    if (sb.sandbox) {
+      box.appendChild(el("p", { "class": "hosting-ok", text: sb.words }));
+      if (sb.waiting) box.appendChild(el("p", {}, button(sb.install_now, function () { openTry(sb.waiting); })));
+    } else if (sb.words) {
+      var parts = noSandboxParts(sb.words);
+      box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
+    }
+    var addr = el("input", { type: "url", spellcheck: "false", autocomplete: "off", placeholder: "https://acme.sandbox.ivend.co" });
+    var key = el("input", { type: "text", spellcheck: "false", autocomplete: "off" });
+    var secret = el("input", { type: "password", autocomplete: "off" });
+    box.appendChild(field(T.address, addr));
+    box.appendChild(el("p", {}, el("strong", { text: T.keyLabel }), el("br", {}), el("span", { "class": "hint", text: T.keyHint })));
+    box.appendChild(field(T.key, key));
+    box.appendChild(field(T.secret, secret));
+    box.appendChild(button(T.check, function (ev) {
+      ev.target.disabled = true;
+      call("POST", "/sandbox/connect", { site: addr.value.trim(), key: key.value.trim(), secret: secret.value.trim() })
+        .then(function (r) { data.sandbox = r; secret.value = ""; say(r.words); render(); },
+              function (e) { ev.target.disabled = false; fail(e); });
+    }));
+    return box;
+  }
+
+  // J4-02 to J4-05, J4-11: Try on my sandbox. The consent first (the site's own check), then the steps, one per ask
+  function openTry(app) {
+    data.appId = app; data.tryC = null; data.tryS = null; screen = "try"; say(""); render();
+    call("POST", "/try/status", { app: app }).then(function (s) {
+      if (s.step) data.tryS = s;
+      if (tryRunning(s)) { render(); pollTry(); return; }
+      if (!offerAgain(s)) { render(); return; }
+      return call("POST", "/try", { app: app }).then(function (c) { data.tryC = c; render(); });
+    }).then(null, fail);
+  }
+
+  function pollTry(errors) {
+    if (screen !== "try" || !tryRunning(data.tryS)) return;
+    root.setTimeout(function () {
+      if (screen !== "try") return;
+      call("POST", "/try/status", { app: data.appId }).then(function (s) { data.tryS = s; say(""); render(); pollTry(0); },
+        function (e) { if ((errors || 0) >= 3) { fail(e); return; } pollTry((errors || 0) + 1); });   // a passing error: ask again
+    }, 3000);
+  }
+
+  function vTry() {
+    var box = card(G.tryIt), s = data.tryS, c = data.tryC;
+    var crumbs = el("p", { "class": "hint" }), back = el("a", { href: "#", text: appTitle(data.appId) });
+    back.addEventListener("click", function (ev) { ev.preventDefault(); screen = "app"; say(""); openApp(data.appId); });
+    crumbs.appendChild(back);
+    box.insertBefore(crumbs, box.firstChild);
+    if (s && s.step) {
+      (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });
+      if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, "class": "site-btn", text: T.pay })));
+      if (s.stop) {
+        box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
+        if ((s.build_lines || []).length) box.appendChild(el("pre", { text: s.build_lines.join("\n") }));
+      }
+      if (s.done) {
+        var res = card("Connection points");
+        (s.head || []).forEach(function (l, i) { res.appendChild(el("p", { "class": i ? "" : "hint", text: l })); });
+        var ul = el("ul", {});
+        (s.results || []).forEach(function (l) { ul.appendChild(el("li", { "class": /: Passed/.test(l) ? "hosting-ok" : "hosting-bad", text: l })); });
+        res.appendChild(ul);
+        res.appendChild(button(T.testAgain, function (ev) {
+          ev.target.disabled = true;
+          call("POST", "/test", { app: data.appId }).then(function (r) { data.tryS = r; render(); },
+                                                        function (e) { ev.target.disabled = false; fail(e); });
+        }));
+        box.appendChild(res);
+        if ((s.till || []).length) {
+          var till = card(s.till[0]);
+          s.till.slice(1).forEach(function (l) { till.appendChild(p(l)); });
+          box.appendChild(till);
+        }
+      }
+      if (!c) return box;
+    }
+    if (!c) { box.appendChild(p("Reading what installing it changes on your sandbox…")); return box; }
+    box.appendChild(el("h3", { text: (c.version ? c.version + ": " : "") + T.changes }));
+    consentSections(c).forEach(function (sec) {
+      box.appendChild(el("h4", { text: sec.title }));
+      var ul = el("ul", {});
+      sec.lines.forEach(function (l) { ul.appendChild(el("li", { text: l })); });
+      box.appendChild(ul);
+    });
+    if ((c.changes || []).length) {
+      box.appendChild(el("h4", { text: T.updates }));
+      var cu = el("ul", {});
+      c.changes.forEach(function (l) { cu.appendChild(el("li", { text: l })); });
+      box.appendChild(cu);
+    }
+    box.appendChild(el("details", {}, el("summary", { text: T.wording }), el("pre", { text: c.wording || "" })));
+    var money = c.money || {}, plan = c.plan || null;
+    if (money.line) box.appendChild(p(money.line));
+    if ((money.plans || []).length) {
+      var fs = el("fieldset", {}, el("legend", { text: T.plan }));
+      money.plans.forEach(function (x) {
+        var r = el("input", { type: "radio", name: "try-plan", value: x.plan });
+        if (x.plan === plan) r.checked = true;
+        r.addEventListener("change", function () { plan = x.plan; });
+        fs.appendChild(el("p", {}, el("label", {}, r, " " + x.words)));
+      });
+      box.appendChild(fs);
+    }
+    var agree = el("input", { type: "checkbox" });
+    box.appendChild(el("p", {}, el("label", {}, agree, " " + c.agree)));
+    box.appendChild(button(s && s.stop ? T.tryAgain : T.installTry, function (ev) {
+      if (!agree.checked) { say(c.tick_first, true); render(); return; }
+      if ((money.plans || []).length && !plan) { say(T.choosePlan, true); render(); return; }
+      ev.target.disabled = true;
+      call("POST", "/try/install", { app: data.appId, sha: c.sha, agree: true, plan: plan || undefined })
+        .then(function (r) { data.tryS = r; say(""); render(); pollTry(); }, function (e) { ev.target.disabled = false; fail(e); });
+    }));
     return box;
   }
 
@@ -1013,7 +1153,7 @@
     if (!session) { view.appendChild(vSignIn()); return; }
     if (!who.company) { view.appendChild(screen === "company" ? vCompany() : vJoin()); return; }
     var v = { people: vPeople, tokens: vTokens, gallery: g && vGallery, name: g && vName, made: data.made && data.made.words && vMade,
-              settings: vSettings, app: vApp }[screen];
+              settings: vSettings, app: vApp, "try": vTry }[screen];
     view.appendChild((v || vHome)());
   }
 
