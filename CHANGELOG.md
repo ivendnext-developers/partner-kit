@@ -4,6 +4,7 @@ Versions will follow our product releases once the kit is versioned; until then 
 
 ## Unreleased
 
+- **2026-11-01 — *Try on my sandbox* on My apps.** Connect your sandbox once (its address and an administrator's key, checked on the site). Then *Try on my sandbox* shows what installing the app changes, in the five sections your sandbox's own install shows. On *Install and try*, the app's sandbox copy is started, the app is installed with your consent and connects itself, and each connection point is tested from our server as your sandbox would call it. *Test again* runs the test again, and *Try it at the till* says what to try at the till.
 - **2026-11-01 — An app made from a sample with a Desk button and any other sample passes the kit's check.** Combined or added, a sample's points take its tag (`psf_send`), but its Desk button still named the untagged one (`send`), so New app and *Add a sample* refused S49 (and every sample with a Desk button) beside another sample. The button now names the tagged point ([`combine.py`](tools/manifest/combine.py)).
 - **2026-11-01 — The newer-version notice names a sample by its own title.** *"A newer version of S22 Customer-owned loyalty is available: …"*, from the samples index's short title, not its card heading.
 - **2026-11-01 — *Add a sample* and *Take it* no longer name `base` as a change of yours.** `base` is the version My apps kept the folder as; it is set for you and is never your edit. An app made before this change, whose samples record still lists `base`, is read the same way.
