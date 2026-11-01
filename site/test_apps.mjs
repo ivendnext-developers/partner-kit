@@ -166,5 +166,8 @@ check("By recipe: every recipe a sample's needs cite", index.samples.every((s) =
 check("EASY1NOTES: purposes, the folded command code, a way back", W.peopleWhy && W.tokensWhy && W.handOverWhy && W.commandQ === "Signing in a command?" &&
   !src.includes('{ open: data.deviceCode ? "" : null }'));
 
+// the walk's folds (2026-11-01)
+check("J2-06: the first word alone reads as the name will start", a.nameHint("CXSINT ", "cxsint").startsWith("cxsint_\u2026: your first word"));
+check("a plain button carries the site's plain style", src.includes('"site-btn site-btn-ghost"') && !src.includes('"site-btn ghost"'));
 console.log(red ? `${red} FAILED` : "ALL PASS");
 process.exit(red ? 1 : 0);

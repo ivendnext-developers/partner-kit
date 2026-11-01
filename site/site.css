@@ -303,6 +303,7 @@ tr:last-child td { border-block-end: 0; }
 .gallery-bar { position: sticky; inset-block-end: 0; padding: var(--ivn-s3); background: var(--ivn-surface); border: 1px solid var(--site-line); border-radius: var(--site-radius-card); }
 .start-app { margin-block: var(--ivn-s4); }
 .plan-cannot { padding: var(--ivn-s2) var(--ivn-s3); margin-block: var(--ivn-s3); border-inline-start: 3px solid #a4262c; background: var(--site-tint); }
+.hosting-tool button:disabled { opacity: 0.5; cursor: not-allowed; }   /* a button that is off reads as off */
 .hosting-tool label:has(input:disabled) { color: var(--ivn-text-muted); }   /* a copy that cannot be chosen reads as such */
 .hosting-tool button:focus-visible, .hosting-tool input:focus-visible, .hosting-tool select:focus-visible,
 .hosting-tool textarea:focus-visible { outline: 2px solid var(--site-focus); outline-offset: 2px; }

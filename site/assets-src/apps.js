@@ -279,7 +279,10 @@
 
   // J2-06: the app's name, as the kit makes it (tools/manifest/validate.py app_for)
   function appFor(name) { return String(name || "").trim().toLowerCase().replace(/ /g, "_"); }
-  function nameHint(name, word) { return (appFor(name) || (word || "acme") + "_…") + G.nameHint; }
+  function nameHint(name, word) {   // the first word alone reads as it will start: acme_…
+    var a = appFor(name);
+    return (a && a.indexOf("_") > 0 ? a : (a || word || "acme") + "_…") + G.nameHint;
+  }
 
   function making(name, n) { return "Making " + name + " from " + n + " sample" + (n === 1 ? "" : "s") + "…"; }
 
@@ -351,7 +354,7 @@
   }
   function p(text) { return el("p", { text: text }); }
   function button(text, fn, ghost) {
-    var b = el("button", { type: "button", "class": ghost ? "site-btn ghost" : "site-btn", text: text });
+    var b = el("button", { type: "button", "class": ghost ? "site-btn site-btn-ghost" : "site-btn", text: text });
     b.addEventListener("click", fn);
     return b;
   }
@@ -481,6 +484,7 @@
     });
     var list = card(null);
     var apps = (data.apps || {}).apps;
+    if (!data.apps) list.appendChild(p("Reading your apps\u2026"));
     if (apps && !apps.length) list.appendChild(p(G.noApps));
     (apps || []).forEach(function (a) {
       var row = el("div", { "class": "hosting-step" });
@@ -632,6 +636,10 @@
         fn.built.forEach(function (c) { needSamples(c).forEach(function (n) { (forNeeds[n] = forNeeds[n] || []).push(c.asks); }); });
         var first = fn.ticks.map(byName).filter(Boolean);
         found.samples = first.concat(found.samples.filter(function (s) { return first.indexOf(s) < 0; }));
+      }
+      if (!fn && !g.q.trim()) {   // the samples a sample's page or an earlier tick brought, first
+        var ticked0 = g.ticks.map(byName).filter(Boolean);
+        found.samples = ticked0.concat(found.samples.filter(function (s) { return ticked0.indexOf(s) < 0; }));
       }
       found.samples.forEach(function (s) { wrap.appendChild(sampleCard(s, forNeeds[s.name])); });
     } else {
@@ -995,7 +1003,10 @@
     call("POST", "/signout").then(function () {}, function () {}).then(function () { session = null; who = null; data = {}; go("home"); });
   }
 
+  var shown = null;
   function render() {
+    if (shown !== null && shown !== screen && view.getBoundingClientRect().top < 0) view.scrollIntoView();   // a new screen at its top
+    shown = screen;
     view.textContent = "";
     view.hidden = false;
     if (flash) view.appendChild(el("p", { "class": flash.bad ? "hosting-bad" : "hosting-ok", text: flash.text }));
