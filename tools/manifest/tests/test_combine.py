@@ -370,11 +370,11 @@ class Add(Base):
         before = tree(folder)
         with self.assertRaises(combine.Refused) as e:
             combine.add("s22_customer_loyalty", folder)
-        self.assertEqual(e.exception.text, "Not added: S22 must change the entry manifest:registered_applications:ACME HK "
-                                           "Feed, which you changed. Nothing in your app was changed. Put that entry back "
+        self.assertEqual(e.exception.text, "Not added: S22 Customer-owned loyalty must change the entry "
+                                           "manifest:registered_applications:ACME HK Feed, which you changed. Nothing in your app was changed. Put that entry back "
                                            "as it was, or add S22's part by hand.")
-        self.assertEqual(e.exception.page, "Not added: S22 must change the entry what the app reads from the site (new "
-                                           "sales and customers), which you changed. Nothing in your app was changed. Ask "
+        self.assertEqual(e.exception.page, "Not added: S22 Customer-owned loyalty must change the entry what the app "
+                                           "reads from the site (new sales and customers), which you changed. Nothing in your app was changed. Ask "
                                            "your developer to put that entry back, or to add S22's part by hand.")
         self.assertEqual(tree(folder), before)
 
@@ -384,8 +384,8 @@ class Add(Base):
         before = tree(folder)
         with self.assertRaises(combine.Refused) as e:
             combine.add("s22_customer_loyalty", folder)
-        self.assertEqual(e.exception.text, "Not added: S22 needs the name ACME HK LYL Member, which your own code already "
-                                           "uses. Nothing in your app was changed. Rename yours, then add S22 again.")
+        self.assertEqual(e.exception.text, "Not added: S22 Customer-owned loyalty needs the name ACME HK LYL Member, which "
+                                           "your own code already uses. Nothing in your app was changed. Rename yours, then add S22 again.")
         self.assertEqual(tree(folder), before)
 
     def test_kept_files_are_named_and_the_samples_copy_saved(self):
@@ -657,7 +657,9 @@ class AddToAnAppMadeBefore(Base):
         with self.assertRaises(combine.Refused) as e:
             combine.add("s25_gift_on_spend", folder, samples_dir=samples)
         self.assertEqual(e.exception.code, "reader_unknown")
-        self.assertTrue(e.exception.text.startswith("Not added: S22 reads the site's feed on its own"))
+        self.assertEqual(e.exception.text, "Not added: S22 reads the site's feed on its own, and this kit no longer has "
+                                           "it, so the app's one reader cannot take it in beside S25. Nothing in your app "
+                                           "was changed. Add S25 from a kit that has S22.")
         self.assertEqual(tree(folder), before)
 
 

@@ -1033,16 +1033,16 @@ class Added:
 
 def m04(part_label: str, sample: str, entry: str, manifest: dict) -> Refused:
     n = number(sample)
-    return Refused(f"Not added: {n} must change the entry {entry}, which you changed. Nothing in your app was changed. "
-                   f"Put that entry back as it was, or add {n}'s part by hand.",
-                   f"Not added: {n} must change the entry {plain_entry(entry, manifest)}, which you changed. Nothing in "
+    return Refused(f"Not added: {part_label} must change the entry {entry}, which you changed. Nothing in your app was "
+                   f"changed. Put that entry back as it was, or add {n}'s part by hand.",
+                   f"Not added: {part_label} must change the entry {plain_entry(entry, manifest)}, which you changed. Nothing in "
                    f"your app was changed. Ask your developer to put that entry back, or to add {n}'s part by hand.",
                    code="M04")
 
 
-def m05(sample: str, name: str) -> Refused:
+def m05(part_label: str, sample: str, name: str) -> Refused:
     n = number(sample)
-    return Refused(f"Not added: {n} needs the name {name}, which your own code already uses. Nothing in your app was "
+    return Refused(f"Not added: {part_label} needs the name {name}, which your own code already uses. Nothing in your app was "
                    f"changed. Rename yours, then add {n} again.", code="M05")
 
 
@@ -1119,9 +1119,9 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
                           f"so the app's one reader cannot take it in beside {number(name)}. Nothing in your app was changed. "
                           f"Add {number(name)} from a kit that has {number(r['name'])}.", code="reader_unknown")
     if again is None and part.tag in {r.get("tag") for r in record}:
-        raise m05(name, f"the tag {part.tag} (another sample of this app carries it)")
+        raise m05(part.label, name, f"the tag {part.tag} (another sample of this app carries it)")
     if again is None and ((app_folder / "service" / part.tag).exists() or (app_folder / "tests" / part.tag).exists()):
-        raise m05(name, f"service/{part.tag}/")
+        raise m05(part.label, name, f"service/{part.tag}/")
     limits(others + [part])                               # M01-M03 over the whole app, in plain words
     commit = kit_commit()
     rec_files: dict = {}
@@ -1149,7 +1149,7 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
         elif sha(cur) == sha(v):
             take[i] = v
         elif rec is None:                                 # the developer's own entry, which the sample would replace
-            raise m05(name, i.split(":", 2)[-1])
+            raise m05(part.label, name, i.split(":", 2)[-1])
         elif sha(v) == rec[1]:                            # the sample does not change it: the developer's stays
             kept_entries.append(i)
         elif sha(cur) != rec[1]:                          # the developer changed it, and the sample must change it
@@ -1166,7 +1166,7 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
         for n in sorted(names_of(app_view(part)) - names_of(cur_manifest)):
             for path, text in own.items():
                 if re.search(rf"(?<![A-Za-z0-9_]){re.escape(n)}(?![A-Za-z0-9_])", text):
-                    raise m05(name, n)
+                    raise m05(part.label, name, n)
     # files, whole: the sample's own and the tool's (the kit's helpers, the one service, the README)
     tool_files = {k: v for k, v in kit_files(commit).items()}
     ver = sample_info.version(part.folder) or "1.0.0"
@@ -1189,7 +1189,7 @@ def add(sample: str, app_folder, samples_dir=None, test: bool = False, out=None)
             written[path] = data
             continue
         if rec is None:
-            raise m05(name, path)
+            raise m05(part.label, name, path)
         if sha(cur) != rec[1]:                            # the developer changed it: kept, the sample's copy beside it
             kept_files.append(path)
             if path.startswith((f"service/{part.tag}/", f"tests/{part.tag}/")):
