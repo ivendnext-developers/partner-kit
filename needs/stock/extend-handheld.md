@@ -16,7 +16,7 @@ verified: carried 2026-10-15 · not re-run
 Nothing inside Handheld: it has no extension point today.
 
 ## Limits
-- Today: react to what Handheld books, through the API and the event feed.
+- Today: react to what Handheld books, from your own service reading the new records on the site.
 - **Ask us:** the step you need in Handheld.
 
 ## Tell the customer

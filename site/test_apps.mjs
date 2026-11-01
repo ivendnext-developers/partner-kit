@@ -79,7 +79,7 @@ const by = Object.fromEntries(index.samples.map((s) => [s.name, s]));
 
 check("J2-05: the empty list and New app", G.noApps === "You have no apps yet." && G.newApp === "New app");
 check("J1-03: the search's label and the three tabs", G.search === "Search by sample (S23, till guard) or by what your customer asked" &&
-  JSON.stringify(G.tabs.slice(1).map((t) => t[1])) === JSON.stringify(["By industry", "By what it does", "By recipe"]));
+  JSON.stringify(G.tabs.map((t) => t[1])) === JSON.stringify(["By industry", "By what it does", "By recipe"]));
 check("J1-05: the App library's twelve industries", a.INDUSTRIES.length === 12 && a.INDUSTRIES.includes("Distribution and warehousing"));
 check("J1-06: the doors' plain words, as the row's examples", a.doorWords("Check before payment") === "A check when the cashier presses Pay" &&
   a.doorWords("Till key") === "A key the cashier taps" && a.doorWords("Manifest") === "Your own lists and forms in Desk" &&
@@ -148,6 +148,23 @@ check("J6-12: What it covers, from the needs the app was started from", cv.built
   a.coversText({ app: "acme_x" }, cv, "2026-11-01").includes("Cannot be built today: " + nope.asks + " (asked 2026-11-01)"));
 check("the samples index names each sample by its own title, and each recipe", by.s23_till_guard.short === "Till guard rules" &&
   index.samples.filter((s) => s.recipe).every((s) => s.recipe_title && !/the recipe$/.test(s.recipe_title)));
+
+// the review's folds: the shortlist search runs; the gallery's search keeps its id; a buildable need with no sample shows
+const planSrc = readFileSync(path.join(out, "assets/plan.js"), "utf8");
+check("the shortlist's search appends its own label element, never the label() function",
+  /lab\.htmlFor = box\.id;[\s\S]{0,120}li\.appendChild\(lab\);/.test(planSrc) && !/li\.appendChild\(label\)/.test(planSrc));
+check("the gallery's search box has one id, so it keeps its focus", src.includes('q.id = "g-q"') && src.includes('getElementById("g-q")'));
+const nos = catalogue.filter((c) => a.needKind(c) === "app" && !a.needSamples(c).some((n) => by[n] && !by[n].config_pack));
+check("a need built as an app with no sample is found by its own words, never 'no match'",
+  nos.length > 0 && nos.every((c) => { const r = a.search(index, catalogue, c.asks); return !r.none && r.nosample.some((x) => x.id === c.id); }),
+  nos.filter((c) => a.search(index, catalogue, c.asks).none).map((c) => c.id).join(", "));
+const D14 = /event feed|\bcontainer\b|byte for byte|extension point|internal coupon|signature accepted|CHECK GREEN|\bmanifest\b/i;
+check("D14: no inside word in a card's When to use it, or in a need's what to do instead",
+  index.samples.every((s) => !D14.test(s.when_to_use || "")) && catalogue.filter((c) => a.needKind(c) === "cannot").every((c) => !D14.test(a.instead(c))));
+check("the samples' short titles start with a capital", index.samples.every((s) => /^[A-Z0-9"]/.test(s.short)));
+check("By recipe: every recipe a sample's needs cite", index.samples.every((s) => Array.isArray(s.recipes) && (!s.recipe || s.recipes[0].path === s.recipe)));
+check("EASY1NOTES: purposes, the folded command code, a way back", W.peopleWhy && W.tokensWhy && W.handOverWhy && W.commandQ === "Signing in a command?" &&
+  !src.includes('{ open: data.deviceCode ? "" : null }'));
 
 console.log(red ? `${red} FAILED` : "ALL PASS");
 process.exit(red ? 1 : 0);

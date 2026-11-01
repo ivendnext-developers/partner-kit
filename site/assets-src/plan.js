@@ -357,10 +357,10 @@
         box.value = c.id;
         box.checked = chosen.indexOf(c) >= 0;
         box.addEventListener("change", function () { toggle(c, box.checked); });
-        label.htmlFor = box.id;
+        lab.htmlFor = box.id;
         lab.appendChild(el("span", "plan-meta", " " + label(c)));
         li.appendChild(box);
-        li.appendChild(label);
+        li.appendChild(lab);
         found.appendChild(li);
       });
       if (!results.length) {

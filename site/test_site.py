@@ -1427,7 +1427,7 @@ The till cannot do this yet; it can stop the sale at Pay.
 
     # ── the samples index (samples/index.json) and the READMEs it is read from ──
     INDEX_FIELDS = {"name", "title", "short", "version", "versions", "when_to_use", "picture", "door", "needs", "recipe",
-                    "recipe_title", "industries", "till", "config_pack"}
+                    "recipe_title", "recipes", "industries", "till", "config_pack"}
     # the samples with no screenshot of their own whose door no screenshot in the kit shows (site/door_pictures.json null)
     NO_PICTURE = {"s34_po_check": "document-check", "s41_regulated_register": "register-books",
                   "s43_third_party_payer": "payer"}

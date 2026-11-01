@@ -56,7 +56,13 @@
     moves: "They accept on their My apps. The app keeps its name; its versions, sites, secrets and hosting move to them, and their card pays from the next month.",
     deviceWarn: "Enter a code only from a command you ran yourself, just now: it signs that command in as you, for your company.",
     accept: "Accept",
-    refuse: "Refuse"
+    refuse: "Refuse",
+    // the purpose lines and small answers KK's review asked for (board row EASY1NOTES, 2026-11-01)
+    peopleWhy: "Everyone here can make, try and publish your company's apps. An owner adds and removes people.",
+    tokensWhy: "A token lets a build server publish your company's apps without a person signing in.",
+    handOverWhy: "For when your customer wants to own this app: it moves to their company on My apps, and their people keep it up to date from then on.",
+    commandQ: "Signing in a command?",
+    back: "Back"
   };
 
   function b64u(bytes) {
@@ -122,11 +128,12 @@
     lede: "Every sample is below. Search one by name, or search what your customer asked, or browse. Tick the ones you want.",
     addLede: "The samples already in your app are marked. Your changes are kept.",
     search: "Search by sample (S23, till guard) or by what your customer asked",
-    tabs: [["all", "All samples"], ["industry", "By industry"], ["door", "By what it does"], ["recipe", "By recipe"]],
+    tabs: [["industry", "By industry"], ["door", "By what it does"], ["recipe", "By recipe"]],
     none: "No sample or need matches these words. Try other words, or ask for it: ",
     ask: "Ask for it",
     desk: "Set in Desk first: no app needed",
     cannot: "Cannot be built today: ",
+    noSample: "Built as an app, with no sample to start from: ",
     claim: "Claim a need: we hold back from it for 90 days while you build it.",
     noIndustry: "No sample is tagged for this industry yet. Browse by what it does.",
     tick: "Use in my app", tickAdd: "Add to the app", inApp: "In this app", recipe: "Read the recipe",
@@ -214,7 +221,7 @@
   function search(index, catalogue, q) {
     var ws = words(q), samples = (index && index.samples) || [], by = {};
     samples.forEach(function (s) { by[s.name] = s; });
-    var out = { samples: [], forNeeds: {}, desk: [], packs: [], cannot: [], none: false };
+    var out = { samples: [], forNeeds: {}, desk: [], packs: [], cannot: [], nosample: [], none: false };
     var add = function (n) { if (by[n] && !by[n].config_pack && out.samples.indexOf(by[n]) < 0) out.samples.push(by[n]); };
     if (!ws.length) {
       samples.forEach(function (s) { if (s.config_pack) out.packs.push(s); else out.samples.push(s); });
@@ -231,18 +238,17 @@
       var k = needKind(c);
       if (k === "desk") { out.desk.push(c); return; }
       if (k === "cannot") { out.cannot.push(c); return; }
-      needSamples(c).forEach(function (n) {
-        add(n);
-        if (by[n] && !by[n].config_pack) (out.forNeeds[n] = out.forNeeds[n] || []).push(c.asks);
-      });
+      var ns = needSamples(c).filter(function (n) { return by[n] && !by[n].config_pack; });
+      if (!ns.length) { out.nosample.push(c); return; }   // built as an app, from its recipe: no sample to tick
+      ns.forEach(function (n) { add(n); (out.forNeeds[n] = out.forNeeds[n] || []).push(c.asks); });
     });
-    out.none = !out.samples.length && !out.desk.length && !out.cannot.length && !out.packs.length;
+    out.none = !out.samples.length && !out.desk.length && !out.cannot.length && !out.packs.length && !out.nosample.length;
     return out;
   }
 
   // J1-02: the needs a shortlist brings: the samples to tick, the Configure needs to list, the needs that cannot be built
   function fromNeeds(index, catalogue, ids) {
-    var by = {}, have = {}, out = { ticks: [], built: [], desk: [], cannot: [] };
+    var by = {}, have = {}, out = { ticks: [], built: [], desk: [], cannot: [], nosample: [] };
     (catalogue || []).forEach(function (c) { by[c.id] = c; });
     ((index && index.samples) || []).forEach(function (s) { have[s.name] = s; });
     (ids || []).forEach(function (id) {
@@ -251,9 +257,9 @@
       var k = needKind(c);
       if (k !== "app") { out[k].push(c); return; }
       out.built.push(c);
-      needSamples(c).forEach(function (n) {
-        if (have[n] && !have[n].config_pack && out.ticks.indexOf(n) < 0) out.ticks.push(n);
-      });
+      var ns = needSamples(c).filter(function (n) { return have[n] && !have[n].config_pack; });
+      if (!ns.length) out.nosample.push(c);
+      ns.forEach(function (n) { if (out.ticks.indexOf(n) < 0) out.ticks.push(n); });
     });
     return out;
   }
@@ -426,7 +432,7 @@
     box.appendChild(p(who.no_company));
     box.appendChild(button(WORDS.setUp, function () { go("company"); }));
     box.appendChild(button("Check again", function () {
-      call("GET", "/whoami").then(function (w) { who = w; go("home"); }, fail);
+      call("GET", "/whoami").then(function (w) { who = w; if (!(w.company && arrive())) go("home"); }, fail);
     }, true));
     return box;
   }
@@ -445,7 +451,7 @@
     word.addEventListener("input", function () { touched = true; data.coWord = word.value; hint.textContent = " " + wordHint(word.value.trim().toLowerCase()); });
     box.appendChild(field(WORDS.companyName, name));
     var w = field(WORDS.firstWord, word);
-    w.insertBefore(hint, w.childNodes[1]);
+    w.appendChild(el("br", {})); w.appendChild(hint);
     box.appendChild(w);
     var sched = el("input", { type: "checkbox", id: "a-sched" });
     box.appendChild(el("p", {}, sched, " ", el("label", { "for": "a-sched" },
@@ -457,6 +463,8 @@
         .then(function () { return call("GET", "/whoami"); })
         .then(function (r) { who = r; data = {}; if (!arrive()) go("home"); }, function (e) { ev.target.disabled = false; fail(e); });
     }));
+    box.appendChild(root.document.createTextNode(" "));
+    box.appendChild(button(WORDS.back, function () { go("home"); }, true));   // back to J2-03's two choices
     return box;
   }
 
@@ -509,11 +517,11 @@
   // the bar's refusals before Next (M01 to M03, M34, M35): the hosting's dry run, its words as given (spec rule 8)
   function dry() {
     g.refused = "";
-    if (g.mode !== "new" || !g.ticks.length) return;
+    g.checking = g.mode === "new" && g.ticks.length > 0;   // Next waits for the answer: a refusal shows before Next
+    if (!g.checking) return;
     var ticks = g.ticks.slice();
-    call("POST", "/new", { samples: ticks, dry: true }).then(function () {
-      if (g && g.ticks.join() === ticks.join()) { g.refused = ""; render(); }
-    }, function (e) { if (g && g.ticks.join() === ticks.join()) { g.refused = e.message; render(); } });
+    var done = function (words) { if (g && g.ticks.join() === ticks.join()) { g.refused = words; g.checking = false; render(); } };
+    call("POST", "/new", { samples: ticks, dry: true }).then(function () { done(""); }, function (e) { done(e.message); });
   }
 
   function tick(n, on) {
@@ -555,14 +563,24 @@
     if (!needs.length && !packs.length) return null;
     var box = el("div", { "class": "hosting-step" }, el("p", {}, el("strong", { text: G.desk })));
     needs.forEach(function (c) {
-      var r = (c.recipes || [])[0];
-      box.appendChild(el("p", {}, c.asks + ": ", r ? el("a", { href: "/" + (r.page || ""), target: "_blank", rel: "noopener", text: r.title }) : null,
-        r ? " (recipe)" : null));
+      box.appendChild(el("p", {}, c.asks, recipeLink(c, ": ", " (recipe)")));
     });
     packs.forEach(function (s) {
       box.appendChild(el("p", {}, sampleLabel(s) + (s.recipe ? ": " : ""),
         s.recipe ? el("a", { href: "/" + s.recipe, target: "_blank", rel: "noopener", text: G.recipe }) : null));
     });
+    return box;
+  }
+
+  function recipeLink(c, before, after) {   // a need's first recipe, a page of this site or the kit file it names
+    var r = (c.recipes || [])[0];
+    if (!r || !(r.page || r.url)) return null;
+    return el("span", {}, before, el("a", { href: r.page ? "/" + r.page : r.url, target: "_blank", rel: "noopener", text: r.title }), after);
+  }
+  function noSampleBox(cs) {
+    if (!cs.length) return null;
+    var box = el("div", { "class": "hosting-step" });
+    cs.forEach(function (c) { box.appendChild(el("p", {}, G.noSample + c.asks, recipeLink(c, ". Its recipe: ", ""))); });
     return box;
   }
 
@@ -577,28 +595,37 @@
     wrap.appendChild(el("h2", { text: g.mode === "add" ? G.addSample : G.newApp }));
     wrap.appendChild(p(g.mode === "add" ? G.addLede : G.lede));
     if (!site.index) { wrap.appendChild(p("Reading the samples…")); return wrap; }
-    var tabs = el("p", { role: "tablist" });
+    var q = el("input", { type: "search", value: g.q, placeholder: "S23, till guard, or no more than 50 of one item", spellcheck: "false" });
+    var timer = null;
+    q.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        g.q = q.value; if (g.q.trim()) { g.tab = "all"; g.pick = ""; }   // typing searches every sample
+        render();
+        var f = root.document.getElementById("g-q");
+        if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); }
+      }, 200);
+    });
+    var sf = field(G.search, q);
+    q.id = "g-q"; sf.querySelector("label").setAttribute("for", "g-q");   // one id, so the box keeps its focus
+    wrap.appendChild(sf);
+    var tabs = el("p", {});
     G.tabs.forEach(function (t) {
-      var b = button(t[1], function () { g.tab = t[0]; g.pick = ""; render(); }, g.tab !== t[0]);
-      b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(g.tab === t[0]));
+      var b = button(t[1], function () { g.tab = g.tab === t[0] ? "all" : t[0]; g.pick = ""; render(); }, g.tab !== t[0]);
+      b.setAttribute("aria-pressed", String(g.tab === t[0]));
       tabs.appendChild(b); tabs.appendChild(root.document.createTextNode(" "));
     });
     wrap.appendChild(tabs);
     var samples = site.index.samples || [];
     if (g.tab === "all") {
-      var q = el("input", { type: "search", value: g.q, placeholder: "S23, till guard, or no more than 50 of one item", spellcheck: "false" });
-      var timer = null;
-      q.addEventListener("input", function () {
-        clearTimeout(timer);
-        timer = setTimeout(function () { g.q = q.value; render(); var f = root.document.getElementById(q.id); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } }, 200);
-      });
-      wrap.appendChild(field(G.search, q));
       var found = search(site.index, site.catalogue, g.q);
       var fn = g.fromNeeds && !g.q.trim() ? g.fromNeeds : null;
       if (found.none) wrap.appendChild(el("div", { "class": "hosting-step" }, el("p", {}, G.none, askButton(null, g.q))));
       var desk = deskBox(fn ? fn.desk : found.desk, fn ? [] : found.packs);
       if (desk) wrap.appendChild(desk);
       (fn ? fn.cannot : found.cannot).forEach(function (c) { wrap.appendChild(cannotBox(c)); });
+      var ns = noSampleBox(fn ? fn.nosample : found.nosample);
+      if (ns) wrap.appendChild(ns);
       var forNeeds = found.forNeeds;
       if (fn) {   // the shortlist's samples first, each with the needs it serves
         forNeeds = {};
@@ -608,9 +635,10 @@
       }
       found.samples.forEach(function (s) { wrap.appendChild(sampleCard(s, forNeeds[s.name])); });
     } else {
+      var recipesOf = function (s) { return (s.recipes || []).map(function (r) { return r.path; }); };
       var keys = g.tab === "industry" ? INDUSTRIES :
         g.tab === "door" ? uniq(samples.filter(function (s) { return !s.config_pack && s.door; }).map(function (s) { return s.door; })) :
-        uniq(samples.filter(function (s) { return !s.config_pack && s.recipe; }).map(function (s) { return s.recipe; }));
+        uniq([].concat.apply([], samples.filter(function (s) { return !s.config_pack; }).map(recipesOf)));
       var nav = el("p", {});
       keys.forEach(function (k) {
         var label = g.tab === "door" ? doorWords(k) : g.tab === "recipe" ? recipeTitle(k) : k;
@@ -623,7 +651,7 @@
         var list = samples.filter(function (s) {
           if (s.config_pack) return false;
           if (g.tab === "industry") return (s.industries || []).indexOf(g.pick) >= 0;
-          return g.tab === "door" ? s.door === g.pick : s.recipe === g.pick;
+          return g.tab === "door" ? s.door === g.pick : recipesOf(s).indexOf(g.pick) >= 0;
         });
         if (!list.length) wrap.appendChild(p(G.noIndustry));
         list.forEach(function (s) { wrap.appendChild(sampleCard(s)); });
@@ -642,7 +670,7 @@
       bar.appendChild(add);
     } else {
       var next = button(G.next, function () { screen = "name"; say(""); render(); });
-      next.disabled = !ticked.length || !!g.refused;
+      next.disabled = !ticked.length || !!g.refused || !!g.checking;
       bar.appendChild(next);
     }
     wrap.appendChild(bar);
@@ -650,8 +678,9 @@
   }
   function uniq(xs) { return xs.filter(function (x, i) { return xs.indexOf(x) === i; }).sort(); }
   function recipeTitle(path) {
-    var s = ((site.index || {}).samples || []).filter(function (x) { return x.recipe === path && x.recipe_title; })[0];
-    return s ? s.recipe_title : path.replace(/^recipes\//, "").replace(/\.html$/, "").replace(/_/g, " ");
+    var t = "";
+    ((site.index || {}).samples || []).forEach(function (x) { (x.recipes || []).forEach(function (r) { if (r.path === path && r.title) t = r.title; }); });
+    return t || path.replace(/^recipes\//, "").replace(/\.html$/, "").replace(/_/g, " ");
   }
 
   // J2-06, J2-07: Name your app, then Made
@@ -695,7 +724,6 @@
   // J2-09: Settings
   function vSettings() {
     var box = card("Settings");
-    box.appendChild(p(G.settingsLede));
     var a = data.app;
     if (!a) { box.appendChild(p("Reading the app…")); return box; }
     var inputs = {};
@@ -724,6 +752,7 @@
     }));
     box.appendChild(root.document.createTextNode(" "));
     box.appendChild(button("Back to " + appTitle(a.app), function () { go("app"); }, true));
+    box.appendChild(el("p", { "class": "hint", text: G.settingsLede }));   // J2-09: below the fields
     return box;
   }
 
@@ -831,7 +860,7 @@
 
   // J5-14: the receiving owner's screen
   function vOffer(o) {
-    var row = el("div", { "class": "hosting-step" }, p(o.words));
+    var row = el("div", { "class": "hosting-step" }, p(String(o.words || "").replace(/\s*Accept \/ Refuse\.?\s*$/, "")));
     row.appendChild(button(WORDS.accept, function (ev) {
       ev.target.disabled = true;
       call("POST", "/handover/accept", { app: o.app }).then(function (r) {
@@ -841,7 +870,9 @@
       }, function (e) { ev.target.disabled = false; fail(e); });
     }));
     row.appendChild(button(WORDS.refuse, function () {
-      call("POST", "/handover/refuse", { app: o.app }).then(function () { go("home"); }, fail);
+      call("POST", "/handover/refuse", { app: o.app }).then(function () {
+        go("home"); say("You refused " + appTitle(o.app) + ". Nothing moved."); render();
+      }, fail);
     }, true));
     return row;
   }
@@ -861,6 +892,7 @@
   // J5-14: the giving owner's form, on the app's own page
   function vHandOver(app) {
     var box = el("details", {}, el("summary", { text: WORDS.handOver }));
+    box.appendChild(p(WORDS.handOverWhy));
     var to = el("input", { type: "text", spellcheck: "false" });
     box.appendChild(field(WORDS.toWhich, to));
     box.appendChild(p(WORDS.moves));
@@ -873,7 +905,8 @@
 
   // step 3: the command's login, a code typed here
   function vDevice() {
-    var box = el("details", { open: data.deviceCode ? "" : null }, el("summary", { text: "A code from your terminal" }));
+    var box = el("details", {}, el("summary", { text: WORDS.commandQ }));
+    if (data.deviceCode) box.setAttribute("open", "");   // open only when the address brought a code
     var code = el("input", { type: "text", maxlength: "9", value: data.deviceCode || "", autocapitalize: "characters" });
     // a code someone else sends you would sign THEIR command in as you: say so where the code is entered
     box.appendChild(el("p", { "class": "hosting-bad", text: WORDS.deviceWarn }));
@@ -891,6 +924,7 @@
   // J2-04
   function vPeople() {
     var box = card(WORDS.people);
+    box.appendChild(p(WORDS.peopleWhy));
     var t = el("table", {}, el("thead", {}, el("tr", {}, el("th", { text: WORDS.person }), el("th", { text: WORDS.login }), el("th", {}))));
     var body = el("tbody", {});
     (data.people || []).forEach(function (m) {
@@ -921,6 +955,7 @@
   // J2-13
   function vTokens() {
     var box = card(WORDS.tokens);
+    box.appendChild(p(WORDS.tokensWhy));
     var name = el("input", { type: "text", maxlength: "60", spellcheck: "false" });
     var which = el("select", {}, el("option", { value: "", text: allApps(who.name || who.company) }),
       el("option", { value: "one", text: "One app" }));
@@ -947,7 +982,7 @@
         el("td", { text: new Date(x.at * 1000).toISOString().slice(0, 10) }),
         el("td", {}, button(WORDS.revoke, function () {
           call("POST", "/tokens/revoke", { id: x.id }).then(function () { return call("GET", "/tokens"); })
-            .then(function (r) { data.tokens = r.tokens; render(); }, fail);
+            .then(function (r) { data.tokens = r.tokens; say("Revoked: " + x.name + " no longer works."); render(); }, fail);
         }, true))));
     });
     t.appendChild(body);
