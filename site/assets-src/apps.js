@@ -163,6 +163,35 @@
     testAgain: "Test again", tryAgain: "Try again", pay: "Pay with your card", plan: "Per month",
     updates: "What the update changes", choosePlan: "Choose a plan first."
   };
+  // EASY3a part 4: Publish and keep it going (spec J5-01, J5-04, J5-16, J5-19, J6-06, J7-01, J7-07, J10-01, J12-01, J13-03,
+  // §3b). The words a door answers (who pays, M15 to M17, M23, M30, M33, the message to send, a site's state, the go-back
+  // and cancel lines, a key) are the hosting's and are shown as given (§0b rule 8).
+  var U = {
+    toCustomer: "To a customer", toEveryone: "To everyone", sitesLabel: "The customer's site addresses",
+    addSite: "+ Add another site", copy: "Copy", copied: " Copied.", whereRuns: "Where it runs", removeSite: "Remove this site",
+    remove: "Remove", serviceRuns: "Where the service runs", itsAddress: "Its https address", save: "Save", logs: "Logs",
+    search: "Search", downloadLogs: "Download", goBack: "Go back to this version", goBackBtn: "Go back",
+    cancel: "Cancel at month end", makeKey: "Make a key", keySite: "The retailer's site address",
+    title: "Title", oneLine: "One line", whatItDoes: "What it does", industries: "Industries", price: "Price", free: "Free",
+    withKey: "With a key: retailers ask you", setUp: "How to set it up", setUpHint: "The steps the retailer follows first, one per line.",
+    guide: "Guide link", send: "Send for listing", hours: "The last", pay: "Pay with your card",
+    picture: "In your sandbox's Desk: your name > My Settings > API Access > Generate Keys"
+  };
+  // the App library's twelve industries, by the ids its card takes, in the words the gallery shows (INDUSTRIES above)
+  var INDUSTRY_IDS = ["beauty-and-cosmetics", "electronics-and-phones", "fashion", "grocery", "hardware-and-diy", "hospitality",
+                      "liquor-and-wine", "optical", "pharmacy", "distribution-and-warehousing", "thrift-and-resale", "travel-retail"];
+  function industryWords(id) {
+    var w = String(id || "").replace(/-and-/g, " and ").replace(/-/g, " ");
+    return INDUSTRIES.filter(function (x) { return x.toLowerCase() === w; })[0] || w.charAt(0).toUpperCase() + w.slice(1);
+  }
+  // Go back shows only on a version that reached a site and is not the newest such (J12-01); every draft says it is on no
+  // site yet (D14)
+  function canGoBack(vs, v) {
+    var sent = (vs || []).filter(function (x) { return (x.sites || []).length; });
+    return (v.sites || []).length > 0 && sent.length > 1 && sent[sent.length - 1].version !== v.version;
+  }
+  function pubRunning(s) { return tryRunning(s); }
+  function logFile(app, lines) { return lines.join("\n") + (lines.length ? "\n" : ""); }
   var SECTIONS = ["New in Desk", "Who can use it", "Changes to what you already have", "Print layouts",
                   "Connects outside your site"];
 
@@ -323,7 +352,7 @@
   }
 
   // J11-02: a version's line: its number (a draft when on no site), what was done, who, and how
-  var HOW = { page: "on the page", upload: "an upload", ivn: "ivn push" };
+  var HOW = { page: "on the page", upload: "an upload", ivn: "ivn push", ivn_cmd: "ivn" };
   function versionLine(v) {
     var draft = !(v.sites || []).length;
     return [v.version + (draft ? " (draft)" : ""), v.what, v.by, HOW[v.how] || v.how].filter(Boolean).join(" · ");
@@ -355,7 +384,8 @@
               making: making, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
               covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
-              noSandboxParts: noSandboxParts };
+              noSandboxParts: noSandboxParts, U: U, INDUSTRY_IDS: INDUSTRY_IDS, industryWords: industryWords,
+              canGoBack: canGoBack, logFile: logFile };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -434,7 +464,7 @@
       call("GET", "/apps").then(function (r) { data.apps = r; render(); }, fail);
       call("GET", "/sandbox").then(function (r) { data.sandbox = r; render(); }, function () {});
     }
-    if ((screen === "app" || screen === "settings") && data.appId) openApp(data.appId);
+    if ((screen === "app" || screen === "settings") && data.appId) { data.where = null; data.whereAsked = null; openApp(data.appId); }
   }
 
   function openApp(app) {
@@ -808,9 +838,9 @@
     box.appendChild(el("p", {}, el("strong", { text: sent.length ? a.line : G.notOnSite }),
       sent.length ? null : " · " + vs[vs.length - 1].version + " (draft)"));
     var acts = el("p", {});
-    var tryB = button(G.tryIt, function () { openTry(a.app); }), pubB = button(G.publish, function () {});
-    pubB.disabled = true;   // part 4 of the lane
-    [tryB, pubB, button(G.download, download, true), button(G.addSample, function () { startGallery("add"); }, true)]
+    var tryB = button(G.tryIt, function () { openTry(a.app); }), pubB = button(G.publish, function () { openPublish(a.app); });
+    [tryB, pubB, button(G.download, download, true), button(G.addSample, function () { startGallery("add"); }, true),
+     button(U.logs, function () { data.logs = null; go("logs"); loadLogs(); }, true)]
       .forEach(function (b) { acts.appendChild(b); acts.appendChild(root.document.createTextNode(" ")); });
     box.appendChild(acts);
     // J3-06: Upload a new version
@@ -840,10 +870,16 @@
     var t = el("table", {}, el("thead", {}, el("tr", {}, el("th", { text: "Version" }), el("th", { text: "Made" }), el("th", { text: "Where it went" }))));
     var body = el("tbody", {});
     vs.slice().reverse().forEach(function (v) {
-      body.appendChild(el("tr", {}, el("td", { text: versionLine(v) }), el("td", { text: day(v.at) }), el("td", { text: whereWent(v) })));
+      var went = el("td", { text: whereWent(v) });
+      if (canGoBack(vs, v)) {
+        went.appendChild(el("br", {}));
+        went.appendChild(button(U.goBack, function (ev) { goBack(ev.target, v.version); }, true));
+      }
+      body.appendChild(el("tr", {}, el("td", { text: versionLine(v) }), el("td", { text: day(v.at) }), went));
     });
     t.appendChild(body);
     vb.appendChild(t);
+    if (data.back) vb.appendChild(vBack());
     // What it covers (J6-12)
     var cb = card(G.covers);
     var fill = function () {
@@ -872,8 +908,10 @@
     if (site.catalogue) fill(); else siteData().then(function () { render(); }, function () {});
     // More: Hand over this app (EASY1's door, J5-14)
     var more = card(null);
+    more.appendChild(vKey(a.app));
     if (who.role === "owner") more.appendChild(vHandOver(a.app));
-    return el("div", {}, box, vb, cb, more);
+    more.appendChild(vCancel(a.app));
+    return el("div", {}, box, vWhere(a.app), vb, cb, more);
   }
 
   function download() {
@@ -937,6 +975,8 @@
     var secret = keep(el("input", { type: "password", autocomplete: "off" }), "secret");
     box.appendChild(field(T.address, addr));
     box.appendChild(el("p", {}, el("strong", { text: T.keyLabel }), el("br", {}), el("span", { "class": "hint", text: T.keyHint })));
+    box.appendChild(el("p", {}, el("img", { src: "/assets/desk_api_access.jpg", alt: U.picture, width: "600", height: "270",
+                                            loading: "lazy", "class": "apps-pic" })));
     box.appendChild(field(T.key, key));
     box.appendChild(field(T.secret, secret));
     box.appendChild(button(T.check, function (ev) {
@@ -1039,6 +1079,300 @@
         .then(function (r) { data.tryS = r; data.tryC = null; say(""); render(); pollTry(); }, function (e) { ev.target.disabled = false; fail(e); });
     }));
     return box;
+  }
+
+  // J5-01 to J5-04, J5-15, J5-19, J6-02, J7-01, J9-01 to J9-03: Publish, then its steps, one per ask (as Try's)
+  function openPublish(app) {
+    data.appId = app; data.pubC = null; data.pubS = null; data.pubTo = data.pubTo || "customer"; screen = "publish"; say(""); render();
+    call("POST", "/publish/status", { app: app }).then(function (s) {
+      if (s.step) data.pubS = s;
+      if (pubRunning(s)) { render(); pollPub(); return; }
+      return call("POST", "/publish/start", { app: app }).then(function (c) { data.pubC = c; render(); });
+    }).then(null, fail);
+  }
+
+  function pollPub(errors) {
+    if (screen !== "publish" || !pubRunning(data.pubS)) return;
+    root.setTimeout(function () {
+      if (screen !== "publish") return;
+      call("POST", "/publish/status", { app: data.appId }).then(function (s) { data.pubS = s; say(""); render(); pollPub(0); },
+        function (e) { if ((errors || 0) >= 3) { fail(e); return; } pollPub((errors || 0) + 1); });
+    }, 3000);
+  }
+
+  function copyRow(text) {
+    var st = el("span", { "class": "hint", "aria-live": "polite" });
+    return el("p", {}, button(U.copy, function () {
+      root.navigator.clipboard.writeText(text).then(function () { st.textContent = U.copied; });
+    }, true), st);
+  }
+
+  function crumbsTo(box) {
+    var crumbs = el("p", { "class": "hint" }), back = el("a", { href: "#", text: appTitle(data.appId) });
+    back.addEventListener("click", function (ev) { ev.preventDefault(); screen = "app"; say(""); openApp(data.appId); });
+    crumbs.appendChild(back);
+    box.insertBefore(crumbs, box.firstChild);
+  }
+
+  function vPubSteps(box, s) {
+    (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });
+    if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, "class": "site-btn", text: U.pay })));
+    if (s.stop) {
+      box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
+      if ((s.build_lines || []).length) box.appendChild(el("pre", { text: s.build_lines.join("\n") }));
+    }
+    if (s.public_words) box.appendChild(el("p", { "class": "hosting-ok", text: s.public_words }));
+    if (s.card_url) box.appendChild(el("p", {}, el("a", { href: s.card_url, target: "_blank", rel: "noopener", text: s.card_url })));
+    (s.send || []).forEach(function (m) {
+      if (!m.message) return;
+      var sb = card(s.send_head + ": " + m.site);
+      sb.appendChild(el("pre", { text: m.message, "class": "apps-msg" }));
+      sb.appendChild(copyRow(m.message));
+      box.appendChild(sb);
+    });
+  }
+
+  function vPublish() {
+    var box = card(G.publish), s = data.pubS, c = data.pubC;
+    crumbsTo(box);
+    if (s && s.step && (pubRunning(s) || s.done || !c)) {
+      vPubSteps(box, s);
+      if (!c) return box;
+    }
+    if (s && s.stop) vPubSteps(box, { stop: s.stop, build_lines: s.build_lines });
+    if (!c) { box.appendChild(p("Reading the app…")); return box; }
+    var tabs = el("p", {});
+    [["customer", U.toCustomer], ["everyone", U.toEveryone]].forEach(function (t) {
+      var b = button(t[1], function () { data.pubTo = t[0]; render(); }, data.pubTo !== t[0]);
+      b.setAttribute("aria-pressed", String(data.pubTo === t[0]));
+      tabs.appendChild(b); tabs.appendChild(root.document.createTextNode(" "));
+    });
+    box.appendChild(tabs);
+    var form = data.pubForm || (data.pubForm = { sites: [""], own: false, plan: null, card: { what: ["", "", ""], industries: [] } });
+    if (data.pubTo === "customer") {
+      if ((c.sites || []).length && c.goes_to) box.appendChild(p(c.goes_to));
+      box.appendChild(el("p", {}, el("strong", { text: U.sitesLabel })));
+      form.sites.forEach(function (v, i) {
+        var inp = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "retailer.ivendnext.com" });
+        inp.value = v;
+        inp.addEventListener("input", function () { form.sites[i] = inp.value; });
+        box.appendChild(el("p", {}, inp));
+      });
+      box.appendChild(el("p", {}, button(U.addSite, function () { form.sites.push(""); render(); }, true)));
+      var own = el("input", { type: "checkbox" });
+      own.checked = form.own;
+      own.addEventListener("change", function () { form.own = own.checked; });
+      box.appendChild(el("p", {}, el("label", {}, own, " " + c.own_site)));
+      box.appendChild(p(c.only_these + (c.also_sandbox ? " " + c.also_sandbox : "")));
+    } else {
+      var cd = form.card;
+      var text = function (label, k, hint) {
+        var inp = el("input", { type: "text" });
+        inp.value = cd[k] || "";
+        inp.addEventListener("input", function () { cd[k] = inp.value; });
+        box.appendChild(field(label, inp, hint));
+      };
+      text(U.title, "title");
+      text(U.oneLine, "summary");
+      box.appendChild(el("p", {}, el("strong", { text: U.whatItDoes })));
+      cd.what.forEach(function (v, i) {
+        var inp = el("input", { type: "text" });
+        inp.value = v;
+        inp.addEventListener("input", function () { cd.what[i] = inp.value; });
+        box.appendChild(el("p", {}, inp));
+      });
+      var fs = el("fieldset", {}, el("legend", { text: U.industries }));
+      INDUSTRY_IDS.forEach(function (id) {
+        var cb = el("input", { type: "checkbox" });
+        cb.checked = cd.industries.indexOf(id) >= 0;
+        cb.addEventListener("change", function () {
+          cd.industries = cd.industries.filter(function (x) { return x !== id; }).concat(cb.checked ? [id] : []);
+        });
+        fs.appendChild(el("label", {}, cb, " " + industryWords(id) + " "));
+      });
+      box.appendChild(fs);
+      var pr = el("fieldset", {}, el("legend", { text: U.price }));
+      [["free", U.free], ["key", U.withKey]].forEach(function (x) {
+        var r = el("input", { type: "radio", name: "pub-price", value: x[0] });
+        r.checked = cd.price === x[0];
+        r.addEventListener("change", function () { cd.price = x[0]; });
+        pr.appendChild(el("p", {}, el("label", {}, r, " " + x[1])));
+      });
+      box.appendChild(pr);
+      var steps = el("textarea", { rows: "4" });
+      steps.value = (cd.setup || []).join("\n");
+      steps.addEventListener("input", function () { cd.setup = steps.value.split("\n").filter(function (x) { return x.trim(); }); });
+      box.appendChild(field(U.setUp, steps, U.setUpHint));
+      text(U.guide, "guide");
+    }
+    var money = c.money || {};
+    (money.lines || []).forEach(function (l) { box.appendChild(p(l)); });
+    if ((money.plans || []).length) {
+      var fsp = el("fieldset", {}, el("legend", { text: T.plan }));
+      money.plans.forEach(function (x) {
+        var r = el("input", { type: "radio", name: "pub-plan", value: x.plan });
+        r.checked = form.plan === x.plan;
+        r.addEventListener("change", function () { form.plan = x.plan; });
+        fsp.appendChild(el("p", {}, el("label", {}, r, " " + x.words)));
+      });
+      box.appendChild(fsp);
+    }
+    var stop = data.pubTo === "customer" && c.nothing_new && !form.sites.some(function (x) { return x.trim(); }) ? c.nothing_new : c.m16;
+    var go = button(data.pubTo === "customer" ? c.button : U.send, function (ev) {
+      if ((money.plans || []).length && !form.plan) { say(T.choosePlan, true); render(); return; }
+      ev.target.disabled = true;
+      var body = { app: data.appId, to: data.pubTo, plan: form.plan || money.plan || undefined };
+      if (data.pubTo === "customer") { body.sites = form.sites.filter(function (x) { return x.trim(); }); body.own = form.own; }
+      else body.card = { title: form.card.title, summary: form.card.summary, what: form.card.what.filter(function (x) { return x.trim(); }),
+                         industries: form.card.industries, price: form.card.price, setup: form.card.setup, guide: form.card.guide };
+      call("POST", "/publish", body).then(function (r) { data.pubS = r; data.pubC = null; data.pubForm = null; say(""); render(); pollPub(); },
+                                         function (e) { ev.target.disabled = false; fail(e); });
+    });
+    if (stop) { go.disabled = true; box.appendChild(el("p", { "class": "hint", text: stop })); }
+    box.appendChild(el("p", {}, go));
+    return box;
+  }
+
+  // J5-16, J5-12, J13-01, M15, J10-01, J5-11: Where it runs, read when the app's page opens
+  function vWhere(app) {
+    var box = card(U.whereRuns), w = data.where;
+    if (!w || w.app !== app) {
+      if (!data.whereAsked || data.whereAsked !== app) {
+        data.whereAsked = app;
+        call("POST", "/where", { app: app }).then(function (r) { data.where = r; render(); }, function () {});
+      }
+      box.appendChild(p("Reading where it runs…"));
+      return box;
+    }
+    if (w.state) box.appendChild(el("p", { "class": /not answering/.test(w.state) ? "hosting-bad" : "hosting-ok", text: w.state }));
+    var ul = el("ul", {});
+    (w.sites || []).forEach(function (s) {
+      var li = el("li", {}, el("strong", { text: s.site }), s.state ? ": " + s.state : (s.version ? ": " + s.version : ""));
+      if (s.customer) {
+        var d = el("details", {}, el("summary", { text: U.removeSite }), p(s.remove_words));
+        d.appendChild(button(U.remove, function (ev) {
+          ev.target.disabled = true;
+          call("POST", "/sites/remove", { app: app, site: s.site }).then(function (r) { data.where = null; data.whereAsked = null; say(r.words); openApp(app); },
+                                                                          function (e) { ev.target.disabled = false; fail(e); });
+        }, true));
+        li.appendChild(d);
+      }
+      ul.appendChild(li);
+    });
+    if ((w.sites || []).length) box.appendChild(ul); else box.appendChild(p(G.notOnSite));
+    if (w.customer_test) box.appendChild(el("p", { "class": "hint", text: w.customer_test }));
+    // J10-01: where the service runs
+    var sv = el("fieldset", {}, el("legend", { text: U.serviceRuns }));
+    var addr = el("input", { type: "url", spellcheck: "false", placeholder: "https://apps.acme.example" });
+    addr.value = w.service || "";
+    var ours = el("input", { type: "radio", name: "svc" }), mine = el("input", { type: "radio", name: "svc" });
+    ours.checked = !w.service; mine.checked = !!w.service;
+    sv.appendChild(el("p", {}, el("label", {}, ours, " " + w.service_words[0])));
+    sv.appendChild(el("p", {}, el("label", {}, mine, " " + w.service_words[1])));
+    sv.appendChild(field(U.itsAddress, addr));
+    if (w.service) sv.appendChild(el("p", { "class": "hint", text: w.service_line }));
+    sv.appendChild(button(U.save, function (ev) {
+      ev.target.disabled = true;
+      call("POST", "/service", { app: app, own_server: mine.checked ? addr.value.trim() : "" })
+        .then(function () { data.where = null; data.whereAsked = null; render(); }, function (e) { ev.target.disabled = false; fail(e); });
+    }, true));
+    box.appendChild(sv);
+    return box;
+  }
+
+  // J6-06: Logs, the last hour by default, searched, newest first, downloaded as text
+  function loadLogs() {
+    var q = data.logQ || "", hours = data.logH || 1;
+    call("POST", "/logs", { app: data.appId, q: q, hours: hours }).then(function (r) { data.logs = r; render(); }, fail);
+  }
+  function vLogs() {
+    var box = card(U.logs), r = data.logs;
+    crumbsTo(box);
+    var q = el("input", { type: "search", spellcheck: "false" });
+    q.value = data.logQ || "";
+    var hs = el("select", {});
+    [1, 6, 24, 168].forEach(function (h) {
+      var o = el("option", { value: String(h), text: h === 1 ? "hour" : h + " hours" });
+      if ((data.logH || 1) === h) o.selected = true;
+      hs.appendChild(o);
+    });
+    box.appendChild(el("p", {}, U.hours + " ", hs, " ", q, " ", button(U.search, function () {
+      data.logQ = q.value.trim(); data.logH = parseInt(hs.value, 10); data.logs = null; render(); loadLogs();
+    })));
+    if (!r) { box.appendChild(p("Reading the log…")); return box; }
+    if (r.words) box.appendChild(p(r.words));
+    var pre = el("pre", { text: (r.lines || []).join("\n") });
+    if ((r.lines || []).length) {
+      box.appendChild(pre);
+      box.appendChild(el("p", {}, button(U.downloadLogs, function () {
+        var a = el("a", { href: root.URL.createObjectURL(new root.Blob([logFile(data.appId, r.lines)], { type: "text/plain" })),
+                          download: data.appId + "-log.txt" });
+        root.document.body.appendChild(a); a.click(); a.remove();
+      }, true)));
+    }
+    return box;
+  }
+
+  // J12-01, M30: Go back, its words first, then the message for each administrator
+  function goBack(btn, version) {
+    btn.disabled = true;
+    call("POST", "/rollback", { app: data.appId, to: version }).then(function (r) { data.back = r; render(); },
+                                                                       function (e) { btn.disabled = false; fail(e); });
+  }
+  function vBack() {
+    var b = data.back, box = el("div", { "class": "hosting-step" });
+    if (b.messages) {
+      b.messages.forEach(function (m) { box.appendChild(el("p", {}, el("strong", { text: m.site + ": " }), m.message)); box.appendChild(copyRow(m.message)); });
+      return box;
+    }
+    box.appendChild(p(b.words));
+    box.appendChild(button(U.goBackBtn, function (ev) {
+      ev.target.disabled = true;
+      call("POST", "/rollback", { app: data.appId, to: b.to, go: true }).then(function (r) {
+        data.back = { messages: r.messages }; data.pubS = r; render();
+      }, function (e) { ev.target.disabled = false; fail(e); });
+    }));
+    box.appendChild(root.document.createTextNode(" "));
+    box.appendChild(button(G.notNow, function () { data.back = null; render(); }, true));
+    return box;
+  }
+
+  // J13-03: Cancel at month end, naming the sites still using the service before it asks
+  function vCancel(app) {
+    var d = el("details", {}, el("summary", { text: U.cancel }));
+    var c = data.cancel && data.cancel.app === app ? data.cancel : null;
+    d.addEventListener("toggle", function () {
+      if (d.open && !c) call("POST", "/cancel", { app: app }).then(function (r) { data.cancel = r; render(); }, fail);
+    });
+    if (c) {
+      d.open = true;
+      d.appendChild(p(c.words));
+      if (c.button) {
+        d.appendChild(button(c.button, function (ev) {
+          ev.target.disabled = true;
+          call("POST", "/cancel", { app: app, go: true }).then(function (r) { data.cancel = { app: app, words: r.words }; render(); },
+                                                             function (e) { ev.target.disabled = false; fail(e); });
+        }));
+        d.appendChild(root.document.createTextNode(" "));
+        d.appendChild(button(c.keep, function () { data.cancel = null; render(); }, true));
+      }
+    }
+    return d;
+  }
+
+  // J7-07: Make a key for a retailer's site (a paid listed app)
+  function vKey(app) {
+    var d = el("details", {}, el("summary", { text: U.makeKey })), site = el("input", { type: "text", spellcheck: "false" });
+    d.appendChild(field(U.keySite, site));
+    var out = el("div", {});
+    d.appendChild(button(U.makeKey, function (ev) {
+      ev.target.disabled = true;
+      call("POST", "/key", { app: app, site: site.value.trim() }).then(function (r) {
+        out.textContent = ""; out.appendChild(p(r.words)); out.appendChild(copyRow(r.words)); ev.target.disabled = false;
+      }, function (e) { ev.target.disabled = false; fail(e); });
+    }, true));
+    d.appendChild(out);
+    return d;
   }
 
   // J5-14: the giving owner's form, on the app's own page
@@ -1157,7 +1491,7 @@
     if (!session) { view.appendChild(vSignIn()); return; }
     if (!who.company) { view.appendChild(screen === "company" ? vCompany() : vJoin()); return; }
     var v = { people: vPeople, tokens: vTokens, gallery: g && vGallery, name: g && vName, made: data.made && data.made.words && vMade,
-              settings: vSettings, app: vApp, "try": vTry }[screen];
+              settings: vSettings, app: vApp, "try": vTry, publish: vPublish, logs: vLogs }[screen];
     view.appendChild((v || vHome)());
   }
 

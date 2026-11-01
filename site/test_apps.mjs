@@ -7,7 +7,7 @@
 // GitHub's; the first word is suggested by the hosting's own rule; and the page carries the hosting page's own content
 // policy (only the hosting's door) and none of the site's other scripts.
 import { createRequire } from "node:module";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -188,11 +188,36 @@ check("J4-05 after a fix: a newer draft than the one tried is offered again; a f
   a.offerAgain({ step: "done", version: "1.0.0", latest: "1.0.1" }) && !a.offerAgain({ step: "done", version: "1.0.1", latest: "1.0.1" }) &&
   a.offerAgain({ step: "stopped" }) && a.offerAgain(null) && !a.offerAgain({ step: "build" }));
 check("J5-15: the plan's lines as the row writes them, nothing added", !src.includes("perMonth") && T.plan === "Per month");
-check("J2-10: Try on my sandbox is on; Publish waits for part 4", src.includes('button(G.tryIt, function () { openTry(a.app); })') &&
-  src.includes("pubB.disabled = true"));
+check("J2-10: the four buttons are on: Try on my sandbox and Publish open their screens", src.includes('button(G.tryIt, function () { openTry(a.app); })') &&
+  src.includes("button(G.publish, function () { openPublish(a.app); })") && !src.includes("pubB.disabled = true"));
 
 check("J4-01: what was typed stays through a refusal, and is forgotten once connected (walk 2026-11-01)",
   src.includes("data.sbTyped || (data.sbTyped =") && src.includes("data.sbTyped = null"));
 check("J4-03: the consent goes once Install and try starts (walk 2026-11-01)", src.includes("data.tryS = r; data.tryC = null;"));
+
+// EASY3a part 4: Publish and keep it going (the page's own words; a door's words are shown as given, §0b rule 8)
+const U = a.U;
+check("J5-01, J5-19: the customer's sites and the own-site line", U.toCustomer === "To a customer" && U.toEveryone === "To everyone" &&
+  U.sitesLabel === "The customer's site addresses" && U.addSite === "+ Add another site");
+check("J7-01: the card's fields", U.title === "Title" && U.oneLine === "One line" && U.whatItDoes === "What it does" &&
+  U.industries === "Industries" && U.price === "Price" && U.free === "Free" && U.withKey === "With a key: retailers ask you" &&
+  U.setUp === "How to set it up" && U.guide === "Guide link" && U.send === "Send for listing");
+check("J7-01: the library's twelve industries, by its own ids", a.INDUSTRY_IDS.length === 12 &&
+  a.industryWords("hardware-and-diy") === "Hardware and DIY" && a.industryWords("grocery") === "Grocery");
+check("J6-01, J13-01, J10-01, J6-06, J12-01, J13-03, J7-07: the labels", U.whereRuns === "Where it runs" &&
+  U.removeSite === "Remove this site" && U.serviceRuns === "Where the service runs" && U.itsAddress === "Its https address" &&
+  U.logs === "Logs" && U.search === "Search" && U.downloadLogs === "Download" && U.goBack === "Go back to this version" &&
+  U.goBackBtn === "Go back" && U.cancel === "Cancel at month end" && U.makeKey === "Make a key");
+const vs = [{ version: "1.0.0", sites: ["a"] }, { version: "1.0.1", sites: ["a"] }, { version: "1.1.0", sites: [] }];
+check("J12-01: Go back shows only on a version that reached a site and is not the newest such",
+  a.canGoBack(vs, vs[0]) && !a.canGoBack(vs, vs[1]) && !a.canGoBack(vs, vs[2]) && !a.canGoBack([vs[0]], vs[0]));
+check("J6-06: the log downloads as the lines shown, one per line", a.logFile("x", ["b", "a"]) === "b\na\n" && a.logFile("x", []) === "");
+check("J11-02: a version made with the command reads ivn", a.versionLine({ version: "1.1.0", what: "S11 added", by: "ci", how: "ivn_cmd", sites: [] })
+  === "1.1.0 (draft) · S11 added · ci · ivn");
+check("J4-01: the Desk picture ships with the page", existsSync(path.join(out, "assets/desk_api_access.jpg")) &&
+  src.includes("/assets/desk_api_access.jpg"));
+check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
+check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&
+  !existsSync(path.join(out, "assets/hosting.js")));
 console.log(red ? `${red} FAILED` : "ALL PASS");
 process.exit(red ? 1 : 0);

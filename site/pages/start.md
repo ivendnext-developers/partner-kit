@@ -46,6 +46,6 @@ Each [sample](../../samples/) is a small working example of one way in, with its
 
 [Chapter 3](../../guide/03_ladder_and_never_list.md) is the order in which to try the ways in: configure first, then an outside app, a till key, a manifest, a sandboxed function, and last a request for a new extension point. Most needs stop at the first two. The [recipes](../../recipes/) are one per way in. Before you quote a customer, place every need on the ladder with the [project blueprint](../../kit/blueprint.md).
 
-Before your app talks to a retailer's iVendNext, read [Security and the handshake](security.md): consent, your app's own user, the signed call and its check. Every record call the samples make is in the [API reference](api.md). When your service is ready to leave your laptop: [Host with CitiXsys or run your own](hosting.md).
+Before your app talks to a retailer's iVendNext, read [Security and the handshake](security.md): consent, your app's own user, the signed call and its check. Every record call the samples make is in the [API reference](api.md). When your service is ready to leave your laptop: [Host with CitiXsys or run your own](apps.md).
 
 When something is missing or broken, [tell us](feedback.md).

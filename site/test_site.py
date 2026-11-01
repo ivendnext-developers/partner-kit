@@ -1147,7 +1147,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertEqual(seo.desc_problems(descs), [])
         hand = seo.load(build.SEO_JSON)[0]["descriptions"]
         self.assertGreaterEqual(len(hand), 20)
-        spec = {"index.html", "start.html", "needs/index.html", "build.html", "plan.html", "sandbox.html", "publish.html", "hosting.html",
+        spec = {"index.html", "start.html", "needs/index.html", "build.html", "plan.html", "sandbox.html", "publish.html",
                 "reference_apps.html", "samples/index.html", "recipes/index.html", "guide/03_ladder_and_never_list.html",
                 "guide/04_configure_first.html", "guide/09_points_and_requests.html", "guide/16_possible_not_possible.html",
                 "recipes/connected_app.html", "recipes/configure_no_code.html", "recipes/till_guard.html", "recipes/manifest.html",

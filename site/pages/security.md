@@ -62,4 +62,4 @@ Each app's card in the [App library](https://library.ivendnext.app) says where t
 
 ## See also
 
-[Host with CitiXsys or run your own](hosting.md) · [API reference](api.md) · [Chapter 14b: Deploying your app](../../guide/14b_deploying_your_app.md) · [Reporting a security problem](../../SECURITY.md)
+[Host with CitiXsys or run your own](apps.md) · [API reference](api.md) · [Chapter 14b: Deploying your app](../../guide/14b_deploying_your_app.md) · [Reporting a security problem](../../SECURITY.md)

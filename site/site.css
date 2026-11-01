@@ -307,3 +307,7 @@ tr:last-child td { border-block-end: 0; }
 .hosting-tool label:has(input:disabled) { color: var(--ivn-text-muted); }   /* a copy that cannot be chosen reads as such */
 .hosting-tool button:focus-visible, .hosting-tool input:focus-visible, .hosting-tool select:focus-visible,
 .hosting-tool textarea:focus-visible { outline: 2px solid var(--site-focus); outline-offset: 2px; }
+
+/* My apps, part 4 (EASY3a): J4-01's picture; the message to send, wrapped as written */
+.apps-pic { max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; }
+.apps-msg { white-space: pre-wrap; }

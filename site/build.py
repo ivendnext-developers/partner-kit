@@ -85,7 +85,7 @@ import seo  # noqa: E402  (titles, descriptions, structured data, preview images
 import devmap  # noqa: E402  (the developer's map, {{map: …}}, and the record-type pages, from the kit's own files)
 REPO_URL = "https://github.com/ivendnext-developers/partner-kit"
 ORG_URL = "https://github.com/ivendnext-developers"
-PUBLISH_PAGE = "https://library.ivendnext.app/publish"   # the App library's Publish page: {{publish: button}}
+PUBLISH_PAGE = "https://developer.ivendnext.com/apps"     # My apps, where a company publishes (EASY3a): {{publish: button}}
 DOMAIN = seo.DOMAIN
 SEO_JSON = SITE / "seo.json"                        # the hand-written descriptions and the verification values
 REDIRECTS = SITE / "redirects.txt"                  # one "old new" pair a line; the build writes a stub at each old address
@@ -275,7 +275,6 @@ def render(text: str, ctx: Ctx, seen: dict, toc: list | None, depth: int = 0) ->
 
     here = posixpath.dirname(ctx.out)
     text = re.sub(r"^\{\{plan: shortlist\}\}\s*$", lambda m: raw(plan_tool(here)), text, flags=re.M)
-    text = re.sub(r"^\{\{hosting: order\}\}\s*$", lambda m: raw(hosting_tool(here)), text, flags=re.M)
     text = re.sub(r"^\{\{apps: my apps\}\}\s*$", lambda m: raw(apps_tool(here)), text, flags=re.M)
     text = re.sub(r"^\{\{publish: button\}\}\s*$", lambda m: raw(  # the App library's Publish page (PUBLISHWEB)
         f'<p class="hero-cta"><a class="site-btn" href="{PUBLISH_PAGE}">Publish</a></p>'), text, flags=re.M)
@@ -1001,17 +1000,11 @@ def plan_tool(here: str) -> str:
             f'<script src="{up}assets/plan.js" defer></script>')
 
 
-HOSTING_API = "https://hosting.ivendnext.app"            # the hosting's web door: hosting.js calls this
+HOSTING_API = "https://hosting.ivendnext.app"            # the hosting's web door: apps.js calls this
 UPLOAD_STORE = "https://ivn-selfserve-work-416648266684.s3.us-east-1.amazonaws.com"  # and puts an upload's zip here
-OWN_POLICY = {"hosting.html", "apps.html"}                # pages that carry their own content policy, no site-wide scripts
+OWN_POLICY = {"apps.html"}                                # a page that carries its own content policy, no site-wide scripts
 
 
-def hosting_tool(here: str) -> str:
-    """Host your app from the page (HOSTWEB): site/assets-src/hosting.js fills it. Hidden until the script shows it, so
-    without script the page is its text and the kit's command."""
-    up = "../" * (here.count("/") + 1) if here else ""
-    return (f'<section id="hosting-tool" class="hosting-tool" data-publish="{PUBLISH_PAGE}" hidden></section>'
-            f'<script src="{up}assets/hosting.js" defer></script>')
 
 
 START_BUTTON = "Start an app from this sample"        # spec J1-14: opens New app on My apps with the sample ticked
@@ -1059,7 +1052,7 @@ def page_policy() -> str:
     """The hosting page's own content policy, in place of the site-wide one: its one script, and the addresses it may
     reach (this site, for My apps' gallery: the samples index and the needs catalogue; the hosting's door; and the
     hosting's upload store, where a version's zip goes by the address the door signed). No counter and no search script on it: the page that holds a sign-in runs nothing
-    else. A meta tag cannot send frame-ancestors: hosting.js refuses to run inside a frame."""
+    else. A meta tag cannot send frame-ancestors."""
     return "; ".join(["default-src 'self'", "script-src 'self'", f"connect-src 'self' {HOSTING_API} {UPLOAD_STORE}", "img-src 'self' data:",
                       "font-src 'self'", "style-src 'self'", "object-src 'none'", "base-uri 'self'",
                       "form-action 'self'"])
@@ -1423,7 +1416,7 @@ def build(out_dir: pathlib.Path) -> int:
     write("sitemap.xml", seo.sitemap({canonical(o): m.modified for o, m in metas.items()}))
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: https://{DOMAIN}/sitemap.xml\n")
 
-    START = ["index.html", "start.html", "build.html", "plan.html", "sandbox.html", "security.html", "map.html", "api.html", "hosting.html",
+    START = ["index.html", "start.html", "build.html", "plan.html", "sandbox.html", "security.html", "map.html", "api.html",
              "apps.html", "publish.html",
              "reference_apps.html", "feedback.html"]
 

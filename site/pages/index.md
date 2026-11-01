@@ -12,7 +12,7 @@ For iVendNext Partners, developers and licensed customers' IT teams. This guide 
 
 - **A customer sent me a list of needs.** Find each one in the [needs catalogue](../../needs/README.md), or straight in its [A to Z list](../../needs/README.md#a-to-z) of what customers ask for, in their words. Each card says whether you can build it today, by which door, from which recipe, and what to tell the customer. Then [plan the project](plan.md).
 - **I know what I'm building.** [Build](build.md): the ladder, the recipes, the samples and your sandbox.
-- **I'm new.** [Get started in five steps](start.md), from a sandbox to your first call. [Request a sandbox](sandbox.md) · [Host with CitiXsys or run your own](hosting.md).
+- **I'm new.** [Get started in five steps](start.md), from a sandbox to your first call. [Request a sandbox](sandbox.md) · [Host with CitiXsys or run your own](apps.md).
 
 ## What you can build
 
