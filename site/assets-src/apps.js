@@ -1214,13 +1214,14 @@
     });
     box.appendChild(tabs);
     var form = data.pubForm || (data.pubForm = { sites: [""], own: false, plan: null, card: { what: ["", "", ""], industries: [] } });
+    var recheck = function () {};   // set once the button exists: a typed site is something new to publish (walk 11-02)
     if (data.pubTo === "customer") {
       if ((c.sites || []).length && c.goes_to) box.appendChild(p(c.goes_to));
       box.appendChild(el("p", {}, el("strong", { text: U.sitesLabel })));
       form.sites.forEach(function (v, i) {
         var inp = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "retailer.ivendnext.com" });
         inp.value = v;
-        inp.addEventListener("input", function () { form.sites[i] = inp.value; });
+        inp.addEventListener("input", function () { form.sites[i] = inp.value; recheck(); });
         box.appendChild(el("p", {}, inp));
       });
       box.appendChild(el("p", {}, button(U.addSite, function () { form.sites.push(""); render(); }, true)));
@@ -1304,7 +1305,10 @@
       });
       box.appendChild(fsp);
     }
-    var stop = data.pubTo === "customer" && c.nothing_new && !form.sites.some(function (x) { return x.trim(); }) ? c.nothing_new : c.m16;
+    var stopNow = function () {
+      return data.pubTo === "customer" && c.nothing_new && !form.sites.some(function (x) { return x.trim(); }) ? c.nothing_new : c.m16;
+    };
+    var stop = stopNow();
     var go = button(data.pubTo === "customer" ? c.button : U.send, function (ev) {
       if (form.card.busy) return;   // the pictures still going up: Send waits for them
       if (askPlan && !form.plan) { say(T.choosePlan, true); render(); return; }
@@ -1315,8 +1319,16 @@
       call("POST", "/publish", body).then(function (r) { data.pubS = r; data.pubC = null; data.pubForm = null; say(""); render(); pollPub(); },
                                          function (e) { ev.target.disabled = false; fail(e); });
     });
-    if (stop) { go.disabled = true; box.appendChild(el("p", { "class": "hint", text: stop })); }
+    var stopLine = el("p", { "class": "hint", text: stop || "" });
+    if (stop) { go.disabled = true; box.appendChild(stopLine); }
     if (form.card.busy) go.disabled = true;
+    recheck = function () {
+      var now = stopNow();
+      go.disabled = !!now || !!form.card.busy;
+      stopLine.textContent = now || "";
+      if (now && !stopLine.parentNode) box.insertBefore(stopLine, go.parentNode || null);
+      if (!now && stopLine.parentNode) stopLine.parentNode.removeChild(stopLine);
+    };
     box.appendChild(el("p", {}, go));
     return box;
   }
