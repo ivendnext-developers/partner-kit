@@ -227,6 +227,12 @@
         ul.appendChild(li);
       });
       out.appendChild(ul);
+      // J1-02, EASYLOOK: the one thing this list is for, straight under it
+      var start = el("p", "plan-btns"), go = el("a", "site-btn", START);
+      go.href = base + startHref(cards);
+      start.appendChild(go);
+      start.appendChild(el("span", "plan-meta", " " + START_HINT));
+      out.appendChild(start);
 
       // (b) the order to build them
       out.appendChild(h2("plan-order", "The order to build them"));
@@ -244,11 +250,6 @@
       // (c) the recipes and samples, once each
       var pr = proofs(cards);
       out.appendChild(h2("plan-proofs", "Recipes and samples, once each"));
-      var start = el("p", "plan-btns"), go = el("a", "site-btn", START);
-      go.href = base + startHref(cards);
-      start.appendChild(go);
-      start.appendChild(el("span", "plan-meta", " " + START_HINT));
-      out.appendChild(start);
       [["recipes", "Recipes"], ["samples", "Samples"]].forEach(function (k) {
         if (!pr[k[0]].length) { out.appendChild(el("p", null, k[1] + ": none for these needs.")); return; }
         out.appendChild(el("h3", null, k[1] + " (" + pr[k[0]].length + ")"));
@@ -356,7 +357,11 @@
         box.id = "plan-f-" + n;
         box.value = c.id;
         box.checked = chosen.indexOf(c) >= 0;
-        box.addEventListener("change", function () { toggle(c, box.checked); });
+        box.addEventListener("change", function () {
+          var on = box.checked;
+          toggle(c, on);
+          if (on) { input.value = ""; found.textContent = ""; }   // ticked: the list stops pushing the shortlist down (EASYLOOK)
+        });
         lab.htmlFor = box.id;
         lab.appendChild(el("span", "plan-meta", " " + label(c)));
         li.appendChild(box);

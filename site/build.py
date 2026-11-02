@@ -93,7 +93,7 @@ IMAGE_EXT = {".png", ".gif", ".jpg", ".jpeg", ".svg", ".webp"}
 
 NAV = [("How it works", "guide/01a_how_it_all_works.html"), ("What you can use", "map.html"), ("Needs", "needs/index.html"),
        ("Get started", "start.html"), ("Guide", "guide/index.html"), ("Recipes", "recipes/index.html"), ("Samples", "samples/index.html"),
-       ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("Roadmap", "roadmap.html"),
+       ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("My apps", "apps.html"), ("Roadmap", "roadmap.html"),
        ("Feedback", "feedback.html")]
 CORP = "https://www.ivendnext.com"
 FOOT_CORP = [("ivendnext.com", CORP + "/"), ("Documentation", "https://docs.ivendnext.com/"), ("Application suite", CORP + "/application-suite/"), ("Partners", CORP + "/partners/"),
@@ -395,7 +395,7 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
     foot_site = li([("Needs catalogue", up + "needs/index.html"), ("Plan a project", up + "plan.html"),
                     ("Get started", up + "start.html"), ("Guide", up + "guide/index.html"), ("Recipes", up + "recipes/index.html"),
                     ("Samples", up + "samples/index.html"), ("Reference apps", up + "reference_apps.html"),
-                    ("Request a sandbox", up + "sandbox.html"), ("Publish your app", up + "publish.html"),
+                    ("Request a sandbox", up + "sandbox.html"), ("My apps", up + "apps.html"), ("Publish your app", up + "publish.html"),
                     ("App library", seo.LIBRARY), ("App library: for partners", seo.LIBRARY + "/build")])
     foot_kit = li([("The kit on GitHub", REPO_URL), ("Possible, not possible", up + "guide/16_possible_not_possible.html"),
                    ("Tell us what is missing", up + "feedback.html")])
@@ -1011,13 +1011,13 @@ START_BUTTON = "Start an app from this sample"        # spec J1-14: opens New ap
 
 
 def start_button(html_text: str, folder: str, up: str) -> str:
-    """A sample's page: *Start an app from this sample* beside its *Run it* section (J1-14), opening My apps' New app with
+    """A sample's page: *Start an app from this sample* under its title (J1-14), opening My apps' New app with
     the sample ticked (through sign-in, the tick kept). A configuration pack is set in Desk, never ticked (J1-08): none."""
     name = folder.rsplit("/", 1)[-1]
     if gallery.sample_info.config_pack(ROOT / folder):
         return html_text
     button = (f'<p class="start-app"><a class="site-btn" href="{up}apps.html?sample={name}">{START_BUTTON}</a></p>')
-    return re.sub(r'(<h2 id="(?:how-to-)?run-it">)', button + r"\1", html_text, count=1)
+    return re.sub(r'(</h1>)', r"\1" + button, html_text, count=1)   # the first thing under the title (EASYLOOK)
 
 
 def next_list(path: pathlib.Path | None = None) -> list[str]:

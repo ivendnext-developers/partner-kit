@@ -1441,7 +1441,7 @@ The till cannot do this yet; it can stop the sale at Pay.
             if pack:
                 self.assertNotIn("Start an app from this sample", page, folder.name)
             else:
-                self.assertRegex(page, re.escape(want) + r'</p><h2 id="(how-to-)?run-it">', folder.name)
+                self.assertRegex(page, r'</h1><p class="start-app">' + re.escape(want), folder.name)
 
     def test_claim_a_need_is_shown_only_for_a_card_the_next_list_names(self):  # spec J1-09
         names = build.next_list()

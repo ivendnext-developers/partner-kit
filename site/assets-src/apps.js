@@ -50,12 +50,12 @@
     makeOwner: "Make owner",
     remove: "Remove",
     tokens: "Tokens",
-    makeToken: "Make a token for a build server",
+    makeToken: "Make a token for a build server", makeTokenBtn: "Make a token",
     forWhich: "For which apps",
     revoke: "Revoke",
     copy: "Copy",
     handOver: "Hand over this app",
-    toWhich: "To which company? It must have signed in to My apps once.",
+    toWhich: "Their company's first word. They must have signed in to My apps once.",
     moves: "They accept on their My apps. The app keeps its name; its versions, sites, secrets and hosting move to them, and their card pays from the next month.",
     deviceWarn: "Enter a code only from a command you ran yourself, just now: it signs that command in as you, for your company.",
     accept: "Accept",
@@ -142,17 +142,17 @@
     claim: "Claim a need: we hold back from it for 90 days while you build it.",
     noIndustry: "No sample is tagged for this industry yet. Browse by what it does.",
     tick: "Use in my app", tickAdd: "Add to the app", inApp: "In this app", recipe: "Read the recipe",
-    tickOne: "Tick one or several samples.", next: "Next",
+    tickOne: "Tick one or several samples.", tickAddOne: "Tick the sample to add.", next: "Next", everySample: "Show every sample",
     name: "Name your app", appName: "App name",
     nameHint: ": your first word, then your words. Installed names never change, so choose with care.",
     make: "Make the app", nextSettings: "Next: its settings",
     noApps: "You have no apps yet.", newApp: "New app",
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
-      "settings in their Desk. Connection secrets come from each site: you never type them.",
+      "settings in their Desk.",
     addresses: "Outside addresses", secrets: "Secrets your own service needs",
     required: "Required: publishing waits until it is set", optional: "Optional: the feature behind it stays off until you set it",
     together: "Set both, or neither", notOnSite: "Not yet on any site",
-    upload: "Upload a new version", uploadHint: "Choose the app folder's zip. We check it before we keep it.",
+    upload: "Upload a new version", uploadHint: "Choose the app folder's zip. We check it before we keep it.", toBuild: "Still to build from its recipe: ", extra: "Also in this app: ",
     download: "Download the app folder", addSample: "Add a sample", tryIt: "Try on my sandbox", publish: "Publish",
     take: "Take it", notNow: "Not now", covers: "What it covers", versions: "Versions"
   };
@@ -166,7 +166,8 @@
     key: "Key", secret: "Secret", check: "Check", request: "Request one",
     changes: "What installing it changes", wording: "Show the exact wording", installTry: "Install and try",
     testAgain: "Test again", tryAgain: "Try again", pay: "Pay with your card", plan: "Per month",
-    updates: "What the update changes", choosePlan: "Choose a plan first.", noCharge: "Confirm in Stripe: no charge"
+    updates: "What the update changes", choosePlan: "Choose a plan first.", noCharge: "Confirm in Stripe: no charge",
+    starting: "Starting the sandbox copy of your app\u2026", wait: "This takes about 4 minutes. You may leave this page and come back.", openTill: "Open the till", connect: "Connect your sandbox"
   };
   // EASY3a part 4: Publish and keep it going (spec J5-01, J5-04, J5-16, J5-19, J6-06, J7-01, J7-07, J10-01, J12-01, J13-03,
   // §3b). The words a door answers (who pays, M15 to M17, M23, M30, M33, the message to send, a site's state, the go-back
@@ -180,11 +181,11 @@
     title: "Title", oneLine: "One line", whatItDoes: "What it does", industries: "Industries", price: "Price", free: "Free",
     withKey: "With a key: retailers ask you", setUp: "How to set it up", setUpHint: "The steps the retailer follows first, one per line.",
     guide: "Guide link", guideHint: "A page on docs.ivendnext.com or developer.ivendnext.com: the App library's rule.",
-    send: "Send for listing", hours: "The last", pay: "Pay with your card",
+    send: "Send for listing", hours: "The last", pay: "Pay with your card", publishing: "Publishing\u2026", wait: "This takes about 3 minutes. You may leave this page and come back.", anotherSite: "Another customer's site address",
     pictures: "Pictures", picturesHint: "Up to four: PNG, JPEG or WebP. A big one is made smaller for the card.",
     pictureBad: "Not added: {name} is not a PNG, JPEG or WebP picture we could make small enough. Choose another.",
     picturesBusy: "Adding pictures\u2026", picturesOnly: "Only the first {n} were added: a card has up to four.",
-    picture: "In your sandbox's Desk: your name > My Settings > API Access > Generate Keys"
+    picture: "In your sandbox's Desk: your name > My Settings > API Access > Generate Keys", onSandboxOnly: "On your sandbox only"
   };
   // an industry the App library's card takes (its ids, as the hosting gives them), in the words the gallery shows
   function industryWords(id) {
@@ -347,12 +348,16 @@
     return needs.length || sample ? { needs: needs, sample: sample } : null;
   }
 
-  function barText(ticked) {
-    if (!ticked.length) return G.tickOne;
+  function barText(ticked, mode) {
+    if (!ticked.length) return mode === "add" ? G.tickAddOne : G.tickOne;
     return ticked.length + " sample" + (ticked.length > 1 ? "s" : "") + " ticked: " + ticked.map(sampleLabel).join(", ") + ".";
   }
 
   // J2-06: the app's name, as the kit makes it (tools/manifest/validate.py app_for)
+  // the name starts as the first word and the first sample, so one press never makes an app called only the first word
+  function defaultName(word, title) {
+    return (String(word || "").toUpperCase() + " " + String(title || "").toUpperCase().replace(/[^A-Z0-9 ]+/g, " ").replace(/\s+/g, " ").trim()).slice(0, 60);
+  }
   function appFor(name) { return String(name || "").trim().toLowerCase().replace(/ /g, "_"); }
   function nameHint(name, word) {   // the first word alone reads as it will start: acme_…
     var a = appFor(name);
@@ -373,7 +378,14 @@
   var HOW = { page: "on the page", upload: "an upload", ivn: "ivn push", ivn_cmd: "ivn" };
   function versionLine(v) {
     var draft = !(v.sites || []).length;
-    return [v.version + (draft ? " (draft)" : ""), v.what, v.by, HOW[v.how] || v.how].filter(Boolean).join(" · ");
+    var how = HOW[v.how] || v.how;
+    return [v.version + (draft ? " (draft)" : ""), v.what, v.by, v.what === v.how || how === "an " + v.what ? "" : how].filter(Boolean).join(" · ");
+  }
+  // a draft a later version replaced can never reach a site: it leaves the list. The newest draft stays
+  function versionsShown(vs) {
+    var last = -1;
+    (vs || []).forEach(function (v, i) { if ((v.sites || []).length) last = i; });
+    return (vs || []).filter(function (v, i) { return (v.sites || []).length || i > last && i === vs.length - 1; });
   }
   function whereWent(v) { return (v.sites || []).length ? v.sites.join(", ") : "On no site yet: a draft, a version on our server that no site has yet."; }
   function day(at) { return at ? new Date(at * 1000).toISOString().slice(0, 10) : ""; }
@@ -383,11 +395,16 @@
     var by = {};
     (catalogue || []).forEach(function (c) { by[c.id] = c; });
     var n = app.needs || {}, pick = function (ids) { return (ids || []).map(function (i) { return by[i]; }).filter(Boolean); };
-    return { built: pick(n.built), desk: pick(n.desk), cannot: pick(n.cannot), asked: n.asked || [] };
+    var have = app.samples || [], from = {}, built = pick(n.built);
+    var inApp = function (c) { return app.samples ? needSamples(c).filter(function (x) { return have.indexOf(x) >= 0; }) : [1]; };
+    built.forEach(function (c) { inApp(c).forEach(function (x) { from[x] = 1; }); });
+    return { built: built.filter(function (c) { return inApp(c).length; }), tobuild: built.filter(function (c) { return !inApp(c).length; }),
+             extra: built.length ? have.filter(function (x) { return !from[x]; }) : [], desk: pick(n.desk), cannot: pick(n.cannot), asked: n.asked || [] };
   }
   function coversText(app, cv, made) {
     var lines = [G.covers + ": " + appTitle(app.app)];
     cv.built.forEach(function (c) { lines.push("Built in this app: " + c.asks); });
+    (cv.tobuild || []).forEach(function (c) { lines.push(G.toBuild + c.asks); });
     cv.desk.forEach(function (c) { lines.push("Set in Desk: " + c.asks); });
     cv.cannot.forEach(function (c) { lines.push("Cannot be built today: " + c.asks + (cv.asked.indexOf(c.id) >= 0 ? " (asked " + made + ")" : "")); });
     return lines.join("\n") + "\n";
@@ -403,7 +420,7 @@
               covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords,
-              canGoBack: canGoBack, logFile: logFile, payWords: payWords, pictureType: pictureType, b64: b64, cardBody: cardBody };
+              canGoBack: canGoBack, defaultName: defaultName, versionsShown: versionsShown, logFile: logFile, payWords: payWords, pictureType: pictureType, b64: b64, cardBody: cardBody };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -502,7 +519,11 @@
   // J2-01
   function vSignIn() {
     var box = card(null);
-    if (!cfg.ready) { box.appendChild(p("The sign-in could not be reached. Try again in a minute.")); return box; }
+    if (!cfg.ready) {
+      box.appendChild(p("The sign-in could not be reached. Try again in a minute."));
+      box.appendChild(button("Try again", function () { root.location.reload(); }, true));
+      return box;
+    }
     box.appendChild(button(WORDS.signin, signIn));
     box.appendChild(el("p", { "class": "hint" }, WORDS.noGitHub[0],
       el("a", { href: "https://github.com/signup", target: "_blank", rel: "noopener", text: WORDS.noGitHub[1] }), WORDS.noGitHub[2]));
@@ -524,7 +545,7 @@
   function vCompany() {
     var box = card(WORDS.company);
     var name = el("input", { type: "text", maxlength: "80", autocomplete: "organization", value: data.coName || "" });
-    var word = el("input", { type: "text", maxlength: "12", autocapitalize: "off", spellcheck: "false", value: data.coWord || "" });
+    var word = el("input", { type: "text", maxlength: "12", autocapitalize: "off", spellcheck: "false", value: data.coWord || suggestWord(data.coName) });
     var hint = el("span", { "class": "hint", text: " " + wordHint(word.value) });
     var touched = !!data.coWord;
     name.addEventListener("input", function () {
@@ -537,6 +558,8 @@
     w.appendChild(el("br", {})); w.appendChild(hint);
     box.appendChild(w);
     var sched = el("input", { type: "checkbox", id: "a-sched" });
+    sched.checked = !!data.coTick;   // a refusal keeps the tick, the name and the word
+    sched.addEventListener("change", function () { data.coTick = sched.checked; });
     box.appendChild(el("p", {}, sched, " ", el("label", { "for": "a-sched" },
       el("a", { href: who.schedule_url || "#", target: "_blank", rel: "noopener", text: scheduleLine(who.schedule_version) }))));
     box.appendChild(button(WORDS.cont, function (ev) {
@@ -557,6 +580,7 @@
     box.appendChild(p("Signed in as " + who.login + (who.role === "owner" ? ", an owner." : ".")));
     box.appendChild(el("p", {}, button(WORDS.people, function () { go("people"); }, true), " ",
       button(WORDS.tokens, function () { go("tokens"); }, true), " ", button("Sign out", signOut, true)));
+    var tail = el("div", {});
     var offers = (data.handovers || {}).offered_to_you || [];
     if (who.role === "owner") offers.forEach(function (o) { box.appendChild(vOffer(o)); });   // J5-14: the receiving OWNER
     ((data.handovers || {}).offered_by_you || []).forEach(function (o) {
@@ -576,9 +600,9 @@
       list.appendChild(row);
     });
     list.appendChild(button(G.newApp, function () { startGallery("new"); }));
-    var out = el("div", {}, box, list);
-    box.appendChild(vDevice());
-    if (who.role === "owner") box.appendChild(vSandbox());
+    var out = el("div", {}, box, list, tail);
+    if (who.role === "owner") tail.appendChild(vSandbox());
+    tail.appendChild(vDevice());
     return out;
   }
 
@@ -705,7 +729,7 @@
       var found = search(site.index, site.catalogue, g.q);
       var fn = g.fromNeeds && !g.q.trim() ? g.fromNeeds : null;
       if (found.none) wrap.appendChild(el("div", { "class": "hosting-step" }, el("p", {}, G.none, askButton(null, g.q))));
-      var desk = deskBox(fn ? fn.desk : found.desk, fn ? [] : found.packs);
+      var desk = g.mode === "add" && !g.q.trim() ? null : deskBox(fn ? fn.desk : found.desk, fn ? [] : found.packs);
       if (desk) wrap.appendChild(desk);
       (fn ? fn.cannot : found.cannot).forEach(function (c) { wrap.appendChild(cannotBox(c)); });
       var ns = noSampleBox(fn ? fn.nosample : found.nosample);
@@ -715,13 +739,16 @@
         forNeeds = {};
         fn.built.forEach(function (c) { needSamples(c).forEach(function (n) { (forNeeds[n] = forNeeds[n] || []).push(c.asks); }); });
         var first = fn.ticks.map(byName).filter(Boolean);
-        found.samples = first.concat(found.samples.filter(function (s) { return first.indexOf(s) < 0; }));
+        found.samples = first.concat(g.every || !first.length ? found.samples.filter(function (s) { return first.indexOf(s) < 0; }) : []);
       }
       if (!fn && !g.q.trim()) {   // the samples a sample's page or an earlier tick brought, first
         var ticked0 = g.ticks.map(byName).filter(Boolean);
         found.samples = ticked0.concat(found.samples.filter(function (s) { return ticked0.indexOf(s) < 0; }));
       }
       found.samples.forEach(function (s) { wrap.appendChild(sampleCard(s, forNeeds[s.name])); });
+      if (fn && !g.every && fn.ticks.length) {   // a shortlist shows its own samples; the other cards wait for this press
+        wrap.appendChild(el("p", {}, button(G.everySample, function () { g.every = true; render(); }, true)));
+      }
     } else {
       var recipesOf = function (s) { return (s.recipes || []).map(function (r) { return r.path; }); };
       var keys = g.tab === "industry" ? INDUSTRIES :
@@ -747,9 +774,9 @@
     }
     // the bar at the foot (J2-05): the ticks, the refusal before Next, and Next (or Add)
     var ticked = g.ticks.map(byName).filter(Boolean);
-    var bar = el("div", { "class": "hosting-step gallery-bar" });
+    var bar = el("div", { "class": "hosting-step gallery-bar" + (ticked.length ? " on" : "") });   // it follows the person only once a sample is ticked
     if (g.refused) bar.appendChild(el("p", { "class": "hosting-bad", text: g.refused }));
-    bar.appendChild(p(barText(ticked)));
+    bar.appendChild(p(barText(ticked, g.mode)));
     if (g.mode === "add") {
       bar.appendChild(button("Back to " + appTitle(data.appId), function () { g = null; go("app"); }, true));
       bar.appendChild(root.document.createTextNode(" "));
@@ -775,7 +802,7 @@
   function vName() {
     var box = card(G.name);
     var name = el("input", { type: "text", maxlength: "60", autocapitalize: "characters", spellcheck: "false",
-                             value: data.newName || ((who.word || "").toUpperCase() + " ") });
+                             value: data.newName || defaultName(who.word, sampleTitle(byName(g.ticks[0]))) });
     var hint = el("span", { "class": "hint", text: nameHint(name.value, who.word) });
     name.addEventListener("input", function () { data.newName = name.value; hint.textContent = nameHint(name.value, who.word); });
     var f = field(G.appName, name);
@@ -792,7 +819,7 @@
                              needs: { built: ids(fn.built), desk: ids(fn.desk), cannot: ids(fn.cannot), asked: g.asked.slice() } })
         .then(function (r) {
           data.made = { making: data.made.making, words: r.words }; data.appId = r.app; data.app = null; g = null;
-          screen = "made"; render();
+          screen = "made"; render(); openApp(r.app);
         }, function (e) { data.made = null; screen = "name"; fail(e); });
     }));
     if (data.made && data.made.making) box.appendChild(p(data.made.making));
@@ -805,7 +832,8 @@
     var w = data.made.words || [];
     if (w[0]) box.appendChild(el("p", { "class": "hosting-ok", text: w[0] }));
     w.slice(1).forEach(function (x) { box.appendChild(p(x)); });
-    box.appendChild(button(G.nextSettings, function () { data.made = null; go("settings"); }));
+    var none = data.app && data.app.app === data.appId && !(data.app.settings || []).length;   // nothing to fill: straight to the app
+    box.appendChild(button(none ? G.next : G.nextSettings, function () { data.made = null; go(none ? "app" : "settings"); }));
     return box;
   }
 
@@ -835,7 +863,7 @@
       Object.keys(inputs).forEach(function (k) { values[k] = inputs[k].value; });
       ev.target.disabled = true;
       call("POST", "/settings", { app: a.app, values: values }).then(function (r) {
-        a.set = r.set; say(r.words, !!r.missing.length); render();
+        a.set = r.set; say(r.words); render();
       }, function (e) { ev.target.disabled = false; fail(e); });
     }));
     box.appendChild(root.document.createTextNode(" "));
@@ -854,20 +882,22 @@
     box.insertBefore(crumbs, box.firstChild);
     if (!a) { box.appendChild(p("Reading the app…")); return box; }
     var vs = a.versions || [], sent = vs.filter(function (v) { return (v.sites || []).length; });
-    box.appendChild(el("p", {}, el("strong", { text: sent.length ? a.line : G.notOnSite }),
+    var w0 = data.where && data.where.app === a.app ? data.where : null;
+    var tried = !!w0 && (w0.sites || []).some(function (x) { return !x.customer && x.state; });
+    box.appendChild(el("p", {}, el("strong", { text: sent.length ? a.line : tried ? U.onSandboxOnly : G.notOnSite }),
       sent.length ? null : " · " + vs[vs.length - 1].version + " (draft)"));
     var acts = el("p", {});
-    var tryB = button(G.tryIt, function () { openTry(a.app); }), pubB = button(G.publish, function () { openPublish(a.app); });
-    [tryB, pubB, button(G.download, download, true), button(G.addSample, function () { startGallery("add"); }, true),
-     button(U.logs, function () { data.logs = null; go("logs"); loadLogs(); }, true)]
-      .forEach(function (b) { acts.appendChild(b); acts.appendChild(root.document.createTextNode(" ")); });
-    box.appendChild(acts);
-    // J3-06: Upload a new version
-    var file = el("input", { type: "file", accept: ".zip,application/zip" });
-    var up = field(G.upload, file, G.uploadHint);
+    // one next step in blue: Try until it is tried, then Publish
+    var tryB = button(G.tryIt, function () { openTry(a.app); }, tried || sent.length > 0), pubB = button(G.publish, function () { openPublish(a.app); }, !(tried || sent.length > 0));
+    // J3-06: Upload a new version, one button; the file box stays out of sight
+    var file = el("input", { type: "file", accept: ".zip,application/zip", hidden: "", "aria-label": G.upload });
     file.addEventListener("change", function () { if (file.files[0]) upload(file.files[0]); });
-    box.appendChild(up);
-    box.appendChild(el("p", {}, button("Settings", function () { go("settings"); }, true)));
+    [tryB, pubB, button(G.download, download, true), button(G.upload, function () { file.click(); }, true),
+     button(G.addSample, function () { startGallery("add"); }, true), button(U.logs, function () { data.logs = null; go("logs"); loadLogs(); }, true),
+     (a.settings || []).length ? button("Settings", function () { go("settings"); }, true) : null]
+      .forEach(function (b) { if (b) { acts.appendChild(b); acts.appendChild(root.document.createTextNode(" ")); } });
+    box.appendChild(acts);
+    box.appendChild(file);
     // J6-08: the newer-version notice
     (a.newer || []).forEach(function (n) {
       var nb = el("div", { "class": "hosting-step" }, el("p", {}, el("strong", { text: n.text })));
@@ -888,7 +918,7 @@
     var vb = card(G.versions);
     var t = el("table", {}, el("thead", {}, el("tr", {}, el("th", { text: "Version" }), el("th", { text: "Made" }), el("th", { text: "Where it went" }))));
     var body = el("tbody", {});
-    vs.slice().reverse().forEach(function (v) {
+    versionsShown(vs).reverse().forEach(function (v) {
       var went = el("td", { text: whereWent(v) });
       if (canGoBack(vs, v)) {
         went.appendChild(el("br", {}));
@@ -903,7 +933,7 @@
     var cb = card(G.covers);
     var fill = function () {
       var cv = covers(a, site.catalogue), made = day((vs[0] || {}).at);
-      if (!cv.built.length && !cv.desk.length && !cv.cannot.length) {
+      if (!cv.built.length && !cv.tobuild.length && !cv.desk.length && !cv.cannot.length) {
         cb.appendChild(p("Built in this app: " + (a.samples || []).map(function (n) { var s = byName(n); return s ? sampleLabel(s) : n; }).join(", ") + "."));
         return;
       }
@@ -911,6 +941,8 @@
         var ss = needSamples(c).filter(function (n) { return (a.samples || []).indexOf(n) >= 0; }).map(byName).filter(Boolean);
         cb.appendChild(p("Built in this app: " + c.asks + (ss.length ? " (" + ss.map(sampleLabel).join(", ") + ")" : "")));
       });
+      cv.tobuild.forEach(function (c) { cb.appendChild(el("p", {}, G.toBuild + c.asks, recipeLink(c, " (", ")"))); });
+      cv.extra.forEach(function (n) { var s = byName(n); cb.appendChild(p(G.extra + (s ? sampleLabel(s) : n) + ".")); });
       cv.desk.forEach(function (c) {
         var r = (c.recipes || [])[0];
         cb.appendChild(el("p", {}, "Set in Desk: " + c.asks + (r ? " (" : ""),
@@ -927,9 +959,9 @@
     if (site.catalogue) fill(); else siteData().then(function () { render(); }, function () {});
     // More: Hand over this app (EASY1's door, J5-14)
     var more = card(null);
-    more.appendChild(vKey(a.app));
+    if (a.with_key !== false) more.appendChild(vKey(a.app));
     if (who.role === "owner") more.appendChild(vHandOver(a.app));
-    more.appendChild(vCancel(a.app));
+    if (sent.length || tried) more.appendChild(vCancel(a.app));   // nothing runs yet: nothing to cancel
     return el("div", {}, box, vWhere(a.app), vb, cb, more);
   }
 
@@ -1017,9 +1049,15 @@
       form.open = !!data.sbForm;
       form.addEventListener("toggle", function () { data.sbForm = form.open; });
       box.appendChild(form);
-    } else if (sb.words) {
-      var parts = noSandboxParts(sb.words);
-      box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
+    } else {
+      if (sb.words) {
+        var parts = noSandboxParts(sb.words);
+        box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
+      }
+      form = el("details", {}, el("summary", { text: T.connect }));
+      form.open = !!data.sbForm;
+      form.addEventListener("toggle", function () { data.sbForm = form.open; });
+      box.appendChild(form);
     }
     // what was typed stays through a refusal (M11, M12): the person corrects one box, never all three
     var typed = data.sbTyped || (data.sbTyped = { site: "", key: "", secret: "" });
@@ -1051,7 +1089,7 @@
 
   // J4-02 to J4-05, J4-11: Try on my sandbox. The consent first (the site's own check), then the steps, one per ask
   function openTry(app) {
-    data.appId = app; data.tryC = null; data.tryS = null; screen = "try"; say(""); render();
+    data.appId = app; data.tryC = null; data.tryS = null; data.tryPlan = null; data.tryAgree = false; data.tryPress = false; screen = "try"; say(""); render();
     call("POST", "/try/status", { app: app }).then(function (s) {
       if (s.step) data.tryS = s;
       if (tryRunning(s)) { render(); pollTry(); return; }
@@ -1083,8 +1121,14 @@
     back.addEventListener("click", function (ev) { ev.preventDefault(); screen = "app"; say(""); openApp(data.appId); });
     crumbs.appendChild(back);
     box.insertBefore(crumbs, box.firstChild);
+    if (data.tryPress) {   // from the press on: no old refusal, and the words say it started
+      box.appendChild(p(T.starting));
+      box.appendChild(el("p", { "class": "hint", text: T.wait }));
+      return box;
+    }
     if (s && s.step) {
-      (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });
+      if (!s.done) (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });   // the steps go once the result is in
+      if (tryRunning(s)) box.appendChild(el("p", { "class": "hint", text: T.wait }));
       if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, target: "_blank", rel: "noopener", "class": "site-btn", text: payWords() })));
       if (s.stop) {
         box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
@@ -1096,21 +1140,32 @@
         var ul = el("ul", {});
         (s.results || []).forEach(function (l) { ul.appendChild(el("li", { "class": /: Passed/.test(l) ? "hosting-ok" : "hosting-bad", text: l })); });
         res.appendChild(ul);
+        var pointsOk = (s.results || []).every(function (l) { return /: Passed/.test(l); });
         res.appendChild(button(T.testAgain, function (ev) {
           ev.target.disabled = true;
           call("POST", "/test", { app: data.appId }).then(function (r) { data.tryS = r; render(); },
                                                         function (e) { ev.target.disabled = false; fail(e); });
-        }));
+        }, pointsOk));
         box.appendChild(res);
         if ((s.till || []).length) {
           var till = card(s.till[0]);
+          var at = /till of (\S+)/.exec(s.till[0]);
+          if (at) till.appendChild(el("p", {}, el("a", { href: "https://" + at[1] + "/pos", target: "_blank", rel: "noopener", text: T.openTill })));
           s.till.slice(1).forEach(function (l) { till.appendChild(p(l)); });
           box.appendChild(till);
         }
+        if (pointsOk) box.appendChild(el("p", {}, button(G.publish, function () { openPublish(data.appId); })));
       }
       if (!c) return box;
     }
-    if (!c) { box.appendChild(p("Reading what installing it changes on your sandbox…")); return box; }
+    if (!c) {
+      if (flash && flash.bad) {   // refused: the way on, never a line that waits for nothing
+        if (data.sandbox && !data.sandbox.sandbox) box.appendChild(button(T.connect, function () { data.sbForm = true; go("home"); }));
+        return box;
+      }
+      box.appendChild(p("Reading what installing it changes on your sandbox…"));
+      return box;
+    }
     box.appendChild(el("h3", { text: (c.version ? c.version + ": " : "") + T.changes }));
     consentSections(c).forEach(function (sec) {
       box.appendChild(el("h4", { text: sec.title }));
@@ -1125,27 +1180,29 @@
       box.appendChild(cu);
     }
     box.appendChild(el("details", {}, el("summary", { text: T.wording }), el("pre", { text: c.wording || "" })));
-    var money = c.money || {}, plan = c.plan || null;
+    var money = c.money || {}, plan = data.tryPlan || c.plan || null;
     if (money.line) box.appendChild(p(money.line));
     if ((money.plans || []).length) {
       var fs = el("fieldset", {}, el("legend", { text: T.plan }));
       money.plans.forEach(function (x) {
         var r = el("input", { type: "radio", name: "try-plan", value: x.plan });
         if (x.plan === plan) r.checked = true;
-        r.addEventListener("change", function () { plan = x.plan; });
+        r.addEventListener("change", function () { plan = data.tryPlan = x.plan; });
         fs.appendChild(el("p", {}, el("label", {}, r, " " + x.words)));
       });
       box.appendChild(fs);
     }
     var agree = el("input", { type: "checkbox" });
+    agree.checked = !!data.tryAgree;   // a refusal keeps the plan and the tick
+    agree.addEventListener("change", function () { data.tryAgree = agree.checked; });
     box.appendChild(el("p", {}, el("label", {}, agree, " " + c.agree)));
     box.appendChild(button(s && s.stop ? T.tryAgain : T.installTry, function (ev) {
       if (!agree.checked) { say(c.tick_first, true); render(); return; }
       if ((money.plans || []).length && !plan) { say(T.choosePlan, true); render(); return; }
-      ev.target.disabled = true;
+      data.tryPress = true; say(""); render();
       call("POST", "/try/install", { app: data.appId, sha: c.sha, agree: true, plan: plan || undefined })
         // the consent goes once the install starts: the steps alone, never a second Install and try under them
-        .then(function (r) { data.tryS = r; data.tryC = null; say(""); render(); pollTry(); }, function (e) { ev.target.disabled = false; fail(e); });
+        .then(function (r) { data.tryPress = false; data.tryS = r; data.tryC = null; say(""); render(); pollTry(); }, function (e) { data.tryPress = false; fail(e); });
     }));
     return box;
   }
@@ -1154,11 +1211,10 @@
   function openPublish(app) {
     if (data.appId !== app) data.pubForm = null;   // one app's card never shows on another's
     data.added = null;   // "Added to a new draft …, on no site yet" is old once the person publishes (walk 11-02)
-    data.appId = app; data.pubC = null; data.pubS = null; data.pubTo = data.pubTo || "customer"; screen = "publish"; say(""); render();
+    data.appId = app; data.pubC = null; data.pubS = null; data.pubPress = false; data.pubTo = data.pubTo || "customer"; screen = "publish"; say(""); render();
     call("POST", "/publish/status", { app: app }).then(function (s) {
-      if (s.step) data.pubS = s;
-      if (pubRunning(s)) { render(); pollPub(); return; }
-      return call("POST", "/publish/start", { app: app }).then(function (c) { data.pubC = c; render(); });
+      if (pubRunning(s)) { data.pubS = s; render(); pollPub(); return; }
+      return call("POST", "/publish/start", { app: app }).then(function (c) { if (s.step) data.pubS = s; data.pubC = c; render(); });
     }).then(null, fail);
   }
 
@@ -1191,6 +1247,10 @@
 
   function vPubSteps(box, s) {
     (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });
+    if (pubRunning(s)) {   // never an empty page while it works
+      if (!(s.lines || []).length) box.appendChild(p(U.publishing));
+      box.appendChild(el("p", { "class": "hint", text: U.wait }));
+    }
     if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, target: "_blank", rel: "noopener", "class": "site-btn", text: payWords() })));
     if (s.stop) {
       box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
@@ -1200,13 +1260,15 @@
     if (s.card_url) box.appendChild(el("p", {}, el("a", { href: s.card_url, target: "_blank", rel: "noopener", text: s.card_url })));
     (s.send || []).forEach(function (m) {
       if (!m.message) return;
-      var sb = card(s.send_head + ": " + m.site);
+      var sb = card(s.send_head);
+      sb.appendChild(el("p", { "class": "hint", text: m.site }));
       sb.appendChild(el("pre", { text: m.message, "class": "apps-msg" }));
       sb.appendChild(copyRow(m.message));
       box.appendChild(sb);
     });
   }
 
+  function go2settings() { screen = "settings"; say(""); openApp(data.appId); render(); }
   function vPublish() {
     var box = card(G.publish), s = data.pubS, c = data.pubC;
     crumbsTo(box);
@@ -1214,7 +1276,13 @@
       box.appendChild(el("p", {}, el("strong", { text: m.site + ": " }), m.message));
       box.appendChild(copyRow(m.message));
     });
-    if (s && s.step && (pubRunning(s) || s.done || !c)) {
+    if (data.pubPress) {   // from the press on: no old refusal, and the words say it started
+      box.appendChild(p(U.publishing));
+      box.appendChild(el("p", { "class": "hint", text: U.wait }));
+      return box;
+    }
+    // the last message shows while nothing newer waits; a new version's form never sits under an old version's key
+    if (s && s.step && (pubRunning(s) || !c || (s.done && c.nothing_new))) {
       vPubSteps(box, s);
       if (!c) return box;
     }
@@ -1227,11 +1295,11 @@
       tabs.appendChild(b); tabs.appendChild(root.document.createTextNode(" "));
     });
     box.appendChild(tabs);
-    var form = data.pubForm || (data.pubForm = { sites: [""], own: false, plan: null, card: { what: ["", "", ""], industries: [] } });
+    var form = data.pubForm || (data.pubForm = { sites: [""], own: false, plan: null, card: { title: appTitle(data.appId), what: ["", "", ""], industries: [] } });
     var recheck = function () {};   // set once the button exists: a typed site is something new to publish (walk 11-02)
     if (data.pubTo === "customer") {
-      if ((c.sites || []).length && c.goes_to) box.appendChild(p(c.goes_to));
-      box.appendChild(el("p", {}, el("strong", { text: U.sitesLabel })));
+      if ((c.sites || []).length && c.goes_to && !c.nothing_new) box.appendChild(p(c.goes_to));
+      box.appendChild(el("p", {}, el("strong", { text: (c.sites || []).length ? U.anotherSite : U.sitesLabel })));
       form.sites.forEach(function (v, i) {
         var inp = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "retailer.ivendnext.com" });
         inp.value = v;
@@ -1243,7 +1311,7 @@
       own.checked = form.own;
       own.addEventListener("change", function () { form.own = own.checked; render(); });
       box.appendChild(el("p", {}, el("label", {}, own, " " + c.own_site)));
-      box.appendChild(p(c.only_these + (c.also_sandbox ? " " + c.also_sandbox : "")));
+      if (!(c.sites || []).length) box.appendChild(p(c.only_these + (c.also_sandbox ? " " + c.also_sandbox : "")));   // "every site" says it for an update
     } else {
       var cd = form.card;
       var text = function (label, k, hint) {
@@ -1326,15 +1394,22 @@
     var go = button(data.pubTo === "customer" ? c.button : U.send, function (ev) {
       if (form.card.busy) return;   // the pictures still going up: Send waits for them
       if (askPlan && !form.plan) { say(T.choosePlan, true); render(); return; }
-      ev.target.disabled = true;
+      data.pubPress = true; say(""); render();
       var body = { app: data.appId, to: data.pubTo, plan: form.plan || money.plan || undefined };
       if (data.pubTo === "customer") { body.sites = form.sites.filter(function (x) { return x.trim(); }); body.own = form.own; }
       else body.card = cardBody(form.card);
-      call("POST", "/publish", body).then(function (r) { data.pubS = r; data.pubC = null; data.pubForm = null; say(""); render(); pollPub(); },
-                                         function (e) { ev.target.disabled = false; fail(e); });
+      call("POST", "/publish", body).then(function (r) {
+        data.pubPress = false;
+        if (r.stop) { openPublish(data.appId); return; }   // stopped at once: the form under the stop's words, its addresses kept
+        data.pubForm = null;
+        data.pubS = r; data.pubC = null; say(""); render(); pollPub();
+      }, function (e) { data.pubPress = false; fail(e); });
     });
-    var stopLine = el("p", { "class": "hint", text: stop || "" });
-    if (stop) { go.disabled = true; box.appendChild(stopLine); }
+    var stopLine = el("p", { text: stop || "" });
+    if (stop) {
+      go.disabled = true; box.appendChild(stopLine);
+      if (c.m16 && stop === c.m16) box.appendChild(el("p", {}, button("Settings", function () { go2settings(); }, true)));
+    }
     if (form.card.busy) go.disabled = true;
     recheck = function () {
       var now = stopNow();
@@ -1373,7 +1448,7 @@
       }
       ul.appendChild(li);
     });
-    if ((w.sites || []).length) box.appendChild(ul); else box.appendChild(p(G.notOnSite));
+    if ((w.sites || []).length) box.appendChild(ul);
     if (w.customer_test) box.appendChild(el("p", { "class": "hint", text: w.customer_test }));
     // J5-15, D15: the plan, changed from the next month
     if (w.plans) {
@@ -1393,14 +1468,18 @@
       box.appendChild(fp);
     }
     // J10-01: where the service runs
-    var sv = el("fieldset", {}, el("legend", { text: U.serviceRuns }));
+    var sv = el("details", {}, el("summary", { text: U.serviceRuns }));
+    sv.open = !!w.service;
     var addr = el("input", { type: "url", spellcheck: "false", placeholder: "https://apps.acme.example" });
     addr.value = w.service || "";
     var ours = el("input", { type: "radio", name: "svc" }), mine = el("input", { type: "radio", name: "svc" });
     ours.checked = !w.service; mine.checked = !!w.service;
     sv.appendChild(el("p", {}, el("label", {}, ours, " " + w.service_words[0])));
     sv.appendChild(el("p", {}, el("label", {}, mine, " " + w.service_words[1])));
-    sv.appendChild(field(U.itsAddress, addr));
+    var at = field(U.itsAddress, addr);
+    at.hidden = !w.service;   // the address only for one's own server
+    [ours, mine].forEach(function (r) { r.addEventListener("change", function () { at.hidden = !mine.checked; }); });
+    sv.appendChild(at);
     if (w.service) sv.appendChild(el("p", { "class": "hint", text: w.service_line }));
     sv.appendChild(button(U.save, function (ev) {
       ev.target.disabled = true;
@@ -1582,7 +1661,7 @@
     box.appendChild(field(WORDS.makeToken, name, "its name"));
     box.appendChild(field(WORDS.forWhich, which));
     box.appendChild(one);
-    box.appendChild(button("Make it", function () {
+    box.appendChild(button(WORDS.makeTokenBtn, function () {
       var app = which.value === "one" ? one.value.trim() : "";
       call("POST", "/tokens/make", app ? { name: name.value.trim(), app: app } : { name: name.value.trim() }).then(function (r) {
         data.shown = r; return call("GET", "/tokens");
@@ -1604,7 +1683,7 @@
         }, true))));
     });
     t.appendChild(body);
-    box.appendChild(t);
+    if (body.children.length) box.appendChild(t);   // no empty table
     box.appendChild(button("Back to My apps", function () { data.shown = null; go("home"); }, true));
     return box;
   }
@@ -1620,6 +1699,8 @@
     view.textContent = "";
     view.hidden = false;
     if (flash) view.appendChild(el("p", { "class": flash.bad ? "hosting-bad" : "hosting-ok", text: flash.text }));
+    var lede = view.previousElementSibling;   // "Sign in to…" says nothing once signed in
+    if (lede && lede.tagName === "P") lede.hidden = !!session;
     if (!session) { view.appendChild(vSignIn()); return; }
     if (!who.company) { view.appendChild(screen === "company" ? vCompany() : vJoin()); return; }
     var v = { people: vPeople, tokens: vTokens, gallery: g && vGallery, name: g && vName, made: data.made && data.made.words && vMade,
@@ -1644,11 +1725,11 @@
   call("GET", "/config").then(function (c) {
     cfg = c;
     if (arrival.kind === "refused") say(arrival.why, true);
-    if (arrival.kind === "checkout") say(WORDS.backFromCheckout[arrival.left ? 1 : 0]);
+    if (arrival.kind === "checkout") say(WORDS.backFromCheckout[arrival.left ? 1 : 0], arrival.left);
     if (arrival.kind !== "signin") { render(); return; }
     return call("POST", "/signin", { code: arrival.code, verifier: arrival.verifier, redirect_uri: PAGE }).then(function (r) {
       session = r.session; who = r; delete who.session;
       if (!arrive()) { render(); load(); }
     }, function () { say(WORDS.m22, true); render(); });
-  }, function (e) { cfg = { ready: false }; say(e.message, true); render(); });
+  }, function () { cfg = { ready: false }; render(); });
 })(typeof globalThis !== "undefined" ? globalThis : this);
