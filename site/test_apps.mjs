@@ -234,6 +234,7 @@ const big = new Uint8Array(20000).map((_, i) => (i * 7) & 255);
 check("J7-01: a picture's bytes reach the hosting as standard base64", a.b64(big) === Buffer.from(big).toString("base64"));
 check("EASY1NOTES: our own teams' checkout says no charge", a.payWords(true) === "Confirm in Stripe: no charge" &&
   a.payWords(false) === "Pay with your card");
+check("D14: the draft line goes once Publish is opened", /function openPublish\(app\) \{[^}]*data\.added = null;/.test(src));
 check("J6-06: each log line wraps, never cut", src.includes('"class": "log-lines"'));
 check("J5-16: where it runs is read afresh each time the app's page opens", /function openApp\(app\) \{\s*data\.where = null; data\.whereAsked = null;/.test(src));
 check("J8-13: a try that stops while watched offers Try again", src.includes("!tryRunning(s) && offerAgain(s) && !data.tryC"));
