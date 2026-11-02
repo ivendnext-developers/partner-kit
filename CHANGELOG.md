@@ -4,6 +4,7 @@ Versions will follow our product releases once the kit is versioned; until then 
 
 ## Unreleased
 
+- **2026-11-02 — *Your sandbox* once it is connected.** The page says it is connected and offers *Install on it now*, and asks for nothing more. The boxes wait under *Use a different sandbox or key*, with the address filled in. *Check* stays off until all three boxes are filled, and the panel stays open after it. Site check: `node site/test_apps.mjs site/_out`.
 - **2026-11-02 — *Install on it now* straight after *Check*.** When an app is waiting, *Your sandbox* offers *Install ⟨app⟩ on it now* as soon as the sandbox connects, with no reload. Site check: `node site/test_apps.mjs site/_out`.
 - **2026-11-02 — Change an app's plan on *Where it runs*.** The three plans show there with the one in force; *Change plan* moves the app to another from its next month (*"Standard from 1 Dec 2026."*), with no part-month charge. Site check: `node site/test_apps.mjs site/_out`.
 - **2026-11-02 — Publish a version to one more customer.** Typing a new site's address turns *Publish* back on when the version is already on every other site.
