@@ -1152,7 +1152,11 @@
     if (screen !== "publish" || !pubRunning(data.pubS)) return;
     root.setTimeout(function () {
       if (screen !== "publish") return;
-      call("POST", "/publish/status", { app: data.appId }).then(function (s) { data.pubS = s; say(""); render(); pollPub(0); },
+      call("POST", "/publish/status", { app: data.appId }).then(function (s) {
+        // stopped while watched: the form comes back under the stop's words, so Publish can be pressed again (walk 11-02)
+        if (s.stop && !data.pubC) { openPublish(data.appId); return; }
+        data.pubS = s; say(""); render(); pollPub(0);
+      },
         function (e) { if ((errors || 0) >= 3) { fail(e); return; } pollPub((errors || 0) + 1); });
     }, 3000);
   }
