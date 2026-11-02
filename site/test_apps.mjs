@@ -49,6 +49,12 @@ check("GitHub's refusal reads M22", a.readReturn("?error=access_denied&state=x",
 r = a.readReturn("?code=bcdf-ghjk", null);
 check("a code the command printed is the command's, not GitHub's", r.kind === "device" && r.code === "BCDF-GHJK");
 check("a plain visit is nothing", a.readReturn("", null).kind === "none");
+// the checkout opens in its own tab (this tab keeps its sign-in); its tab comes back to a line, never a sign-in alone
+r = a.readReturn("?order=0649c34008d66ea5", null);
+check("back from a paid checkout says where to carry on", r.kind === "checkout" && !r.left && /another tab, carry on there/.test(W.backFromCheckout[0]));
+check("both checkout links open in their own tab", (readFileSync(path.join(out, "assets/apps.js"), "utf8")
+  .match(/href: s\.checkout_url, target: "_blank", rel: "noopener"/g) || []).length === 2);
+check("back from a closed checkout says it was not paid", a.readReturn("?order=0649c34008d66ea5&left=1", null).left === true);
 check("the sign-in returns to My apps", new URL(a.authorizeUrl("Iv1.x", "st", "ch")).searchParams.get("redirect_uri") === "https://developer.ivendnext.com/apps");
 
 // 3. J2-02: the word the name suggests (web.code_from's rule)
