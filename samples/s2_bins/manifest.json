@@ -378,7 +378,15 @@
    "property": "in_standard_filter",
    "value": "1",
    "property_type": "Check"
-  }
+  },
+  {"doc_type": "PP BLN Location", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"},
+  {"doc_type": "PP BLN Aisle", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"},
+  {"doc_type": "PP BLN Bin", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"},
+  {"doc_type": "PP BLN Item In Bin", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s2_bins/index.html"}
  ],
  "print_formats": [
   {

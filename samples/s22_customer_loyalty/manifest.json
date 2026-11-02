@@ -524,5 +524,17 @@
    "returns_sale_attributes": 0,
    "timeout_seconds": 3
   }
+ ],
+ "property_setters": [
+  {"doc_type": "PP LYL Settings", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s22_customer_loyalty/index.html"},
+  {"doc_type": "PP LYL Plan", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s22_customer_loyalty/index.html"},
+  {"doc_type": "PP LYL Member", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s22_customer_loyalty/index.html"},
+  {"doc_type": "PP LYL Ledger", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s22_customer_loyalty/index.html"},
+  {"doc_type": "PP LYL Balance", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s22_customer_loyalty/index.html"}
  ]
 }

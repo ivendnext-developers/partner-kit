@@ -27,5 +27,9 @@
  "scan_sources": [
   {"source_name": "PP UNC Units", "record_type": "PP UNC Unit", "barcode_field": "unit_code", "item_from": "item",
    "batch_from": "batch", "status_field": "status", "available_values": ["Available"], "sequence": 10}
+ ],
+ "property_setters": [
+  {"doc_type": "PP UNC Unit", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s19_unit_codes/index.html"}
  ]
 }

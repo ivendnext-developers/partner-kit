@@ -50,7 +50,7 @@ class Config(unittest.TestCase):
     def test_only_the_manager_and_the_service_may_submit_a_receipt(self):
         self.run_all()
         self.assertEqual(sorted(r["role"] for r in self.shop.effective("Purchase Receipt") if r["submit"]),
-                         ["PP LYL Integration", "Stock Manager"])
+                         sorted(["PP LYL Integration", "Stock Manager"]))  # the app's own role sorts by its prefix
 
     def test_the_service_may_make_and_submit_a_receipts_batch_bundle(self):
         # walked on a sandbox: Verify on a batch-tracked receipt makes and submits its Serial and Batch Bundle as the

@@ -49,5 +49,9 @@
    "send_fields": "name",
    "confirm_text": "Merge the ticked draft counts into one new draft? The ticked counts are not changed; each gets a comment."
   }
+ ],
+ "property_setters": [
+  {"doc_type": "PP MHS Settings", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s28_merge_and_history/index.html"}
  ]
 }

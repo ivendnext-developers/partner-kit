@@ -170,5 +170,9 @@
     "new_rate"
    ]
   }
+ ],
+ "property_setters": [
+  {"doc_type": "PP APR Price Change Request", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s11_approvals/index.html"}
  ]
 }

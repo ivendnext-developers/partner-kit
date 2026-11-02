@@ -55,7 +55,7 @@ class ManifestTest(unittest.TestCase):
     def test_only_the_apps_role_writes_without_creating_and_buyers_keep_the_runs(self):
         perms = {p["role"]: p for p in self.types[sst.RUN]["permissions"]}
         self.assertEqual(sorted(k for k, v in perms["PP SST Integration"].items() if v == 1), ["read", "write"])
-        self.assertEqual(sorted(perms), ["PP SST Integration", "Sales Manager", "Stock Manager", "System Manager"])
+        self.assertEqual(sorted(perms), sorted(["PP SST Integration", "Sales Manager", "Stock Manager", "System Manager"]))
 
     def test_the_button_is_on_the_run_for_the_buyers_and_sends_only_its_name(self):
         (a,) = self.m["desk_actions"]

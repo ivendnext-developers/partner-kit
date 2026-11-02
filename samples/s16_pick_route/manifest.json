@@ -67,5 +67,9 @@
    "send_fields": "name, customer, set_warehouse, delivery_date, items(item_code, qty, warehouse)",
    "confirm_text": "Send this order's lines to the pick route service?"
   }
+ ],
+ "property_setters": [
+  {"doc_type": "PP PCK Pick Task", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s16_pick_route/index.html"}
  ]
 }
