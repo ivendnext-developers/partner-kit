@@ -357,11 +357,7 @@
         box.id = "plan-f-" + n;
         box.value = c.id;
         box.checked = chosen.indexOf(c) >= 0;
-        box.addEventListener("change", function () {
-          var on = box.checked;
-          toggle(c, on);
-          if (on) { input.value = ""; found.textContent = ""; }   // ticked: the list stops pushing the shortlist down (EASYLOOK)
-        });
+        box.addEventListener("change", function () { toggle(c, box.checked); });
         lab.htmlFor = box.id;
         lab.appendChild(el("span", "plan-meta", " " + label(c)));
         li.appendChild(box);

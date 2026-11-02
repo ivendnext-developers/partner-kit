@@ -313,7 +313,7 @@ pre.log-lines { white-space: pre-wrap; overflow-wrap: anywhere; }
 /* My apps, part 4 (EASY3a): J4-01's picture; the message to send, wrapped as written */
 .apps-pic { max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; }
 .apps-msg { white-space: pre-wrap; overflow-wrap: anywhere; }
-/* the versions table stacks at a phone's width: its three columns squeeze to one word a line */
+/* My apps' tables stack at a phone's width: three columns squeeze to one word a line */
 @media (max-width: 560px) {
   .hosting-tool table, .hosting-tool tbody, .hosting-tool tr, .hosting-tool td { display: block; }
   .hosting-tool thead { display: none; }

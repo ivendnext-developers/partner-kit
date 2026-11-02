@@ -200,7 +200,7 @@ check("J2-10: the four buttons are on: Try on my sandbox and Publish open their 
 
 check("J4-01: what was typed stays through a refusal, and is forgotten once connected (walk 2026-11-01)",
   src.includes("data.sbTyped || (data.sbTyped =") && src.includes("data.sbTyped = null"));
-check("J4-03: the consent goes once Install and try starts (walk 2026-11-01)", src.includes("data.tryS = r; data.tryC = null;"));
+check("J4-03: the consent goes once Install and try starts (walk 2026-11-01)", src.includes("data.tryS = r; if (!r.stop) data.tryC = null;"));
 check("M14: a refused new try leaves no last try's lines under the refusal (walk 2026-11-02)", src.includes("function (e) { data.tryS = null; throw e; }"));
 
 // EASY3a part 4: Publish and keep it going (the page's own words; a door's words are shown as given, §0b rule 8)
@@ -241,7 +241,7 @@ const big = new Uint8Array(20000).map((_, i) => (i * 7) & 255);
 check("J7-01: a picture's bytes reach the hosting as standard base64", a.b64(big) === Buffer.from(big).toString("base64"));
 check("EASY1NOTES: our own teams' checkout says no charge", a.payWords(true) === "Confirm in Stripe: no charge" &&
   a.payWords(false) === "Pay with your card");
-check("D14: the draft line goes once Publish is opened", /function openPublish\(app\) \{[^}]*data\.added = null;/.test(src));
+check("D14: the draft line goes once Publish is opened", /function openPublish\(app\) \{[\s\S]{0,200}data\.added = null;/.test(src));
 check("J6-06: each log line wraps, never cut", src.includes('"class": "log-lines"'));
 check("J5-16: where it runs is read afresh each time the app's page opens", /function openApp\(app\) \{\s*data\.where = null; data\.whereAsked = null;/.test(src));
 check("J5-15, D15 (K173): Where it runs offers the plans and changes the plan from the next month",
@@ -256,21 +256,26 @@ check("J4-01 (KK 11-02): Check stays off until all three boxes are filled",
 check("J8-13: a try that stops while watched offers Try again", src.includes("!tryRunning(s) && offerAgain(s) && !data.tryC"));
 // ── EASYLOOK: what two people who had not read the spec stalled on ──
 check("EASYLOOK: the name starts as the first word and the sample, never the first word alone (06)",
-  a.defaultName("northwind", "Till guard rules") === "NORTHWIND TILL GUARD RULES" &&
-  a.defaultName("acme", "Customer-owned loyalty") === "ACME CUSTOMER OWNED LOYALTY" && a.defaultName("acme", "") === "ACME ");
+  a.defaultName("northwind", "Till guard rules") === "NORTHWIND TILL GUARD" &&
+  a.defaultName("acme", "Customer-owned loyalty") === "ACME CUSTOMER OWNED" && a.defaultName("acme", "") === "ACME " &&
+  a.defaultName("acme", "A 2nd look at stock") === "ACME LOOK AT" &&
+  // the kit's own rule: one to three words, each starting with a letter (tools/manifest/validate.py); the door's 40 characters
+  ["Till guard rules", "A 2nd look at stock", "Customer-owned loyalty", "Supercalifragilisticexpialidocious anything"].every((t) => {
+    const n = a.defaultName("northwind", t); return /^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$/.test(n) && n.length <= 40; }));
 const cvApp = { samples: ["s23_till_guard", "s51_refund_rules"], needs: { built: ["cap", "feed"], desk: [], cannot: [], asked: [] } };
 const cvCat = [{ id: "cap", asks: "No more than 50", sample: "samples/s23_till_guard" }, { id: "feed", asks: "Hears about every sale" }];
 const cvL = a.covers(cvApp, cvCat);
 check("EASYLOOK: What it covers never says Built for a need with no sample in the app (08)",
   cvL.built.map((c) => c.id).join() === "cap" && cvL.tobuild.map((c) => c.id).join() === "feed" &&
-  a.coversText({ app: "x_y" }, cvL, "2026-11-02").includes("Still to build from its recipe: Hears about every sale") &&
+  a.coversText({ app: "x_y" }, cvL, "2026-11-02").includes("From its recipe, not a sample: Hears about every sale") &&
   !a.coversText({ app: "x_y" }, cvL, "2026-11-02").includes("Built in this app: Hears"));
-check("EASYLOOK: a sample added later is named in What it covers (33)", cvL.extra.join() === "s51_refund_rules");
+check("EASYLOOK: a sample added later is named in What it covers, and in the customer's copy (33)", a.coversText({ app: "x_y" }, cvL, "2026-11-02").includes("Also in this app: s51_refund_rules") && cvL.extra.join() === "s51_refund_rules");
 const vs3 = [{ version: "1.0.0", sites: ["a"] }, { version: "1.0.1", sites: [] }, { version: "1.1.0", sites: ["a"] }, { version: "1.2.0", sites: [] }];
 check("EASYLOOK: a draft a later version replaced leaves the list; the newest draft stays (33)",
-  a.versionsShown(vs3).map((v) => v.version).join() === "1.0.0,1.1.0,1.2.0");
+  a.versionsShown(vs3).map((v) => v.version).join() === "1.0.0,1.1.0,1.2.0" &&
+  a.versionsShown([{ version: "1.0.0", sites: [] }, { version: "1.0.1", sites: [] }]).length === 2);
 check("EASYLOOK: a version's line does not say upload twice (27)", a.versionLine({ version: "1.0.1", what: "upload", by: "sam", how: "upload", sites: [] }) === "1.0.1 (draft) · upload · sam");
-check("EASYLOOK: the wait says how long and that the person may leave", /about 4 minutes/.test(a.T.wait) && /may leave/.test(a.T.wait) && /about 3 minutes/.test(a.U.wait) && a.U.publishing === "Publishing…");
+check("EASYLOOK: the wait says how long, and to keep the page open: the steps run while it asks", /about 4 minutes/.test(a.T.wait) && /Keep this page open/.test(a.T.wait) && /about 3 minutes/.test(a.U.wait) && a.U.publishing === "Publishing…");
 check("EASYLOOK: Add a sample's bar asks for one (29)", a.barText([], "add") === "Tick the sample to add." && a.barText([], "new") === "Tick one or several samples.");
 check("EASYLOOK: the settings' footnote no longer says you never type secrets under the secrets' boxes (065)", !G.settingsLede.includes("you never type"));
 check("EASYLOOK: Hand over says which word it wants (073)", a.WORDS.toWhich.startsWith("Their company's first word"));
@@ -280,6 +285,9 @@ check("EASYLOOK: a publish that stops keeps the form and its addresses (20, 085)
 check("EASYLOOK: a finished try leads on to Publish (14)", /if \(s\.done\) \{[\s\S]{0,1400}button\(G\.publish, function \(\) \{ openPublish\(data\.appId\); \}\)/.test(src));
 check("EASYLOOK: home puts the apps before the sandbox and the command (134)", src.includes("var out = el(\"div\", {}, box, list, tail)"));
 check("EASYLOOK: Settings is offered only when the app has some (07)", src.includes("(a.settings || []).length ? button(\"Settings\""));
+check("EASYLOOK: a failed press never leaves Starting on the page", /data\.tryPress = false; fail\(e\)/.test(src) && /data\.pubPress = false; fail\(e\)/.test(src));
+check("EASYLOOK: one app's publish form never shows on another's", src.includes("(data.pubForm || {}).app !== app"));
+check("EASYLOOK: Cancel stays reachable: a paid try that stopped still has a way to stop paying", src.includes("more.appendChild(vCancel(a.app));"));
 check("EASYLOOK: Upload is one button, its file box hidden (08)", src.includes('hidden: ""') && src.includes("file.click()"));
 check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
 check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&

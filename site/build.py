@@ -93,7 +93,7 @@ IMAGE_EXT = {".png", ".gif", ".jpg", ".jpeg", ".svg", ".webp"}
 
 NAV = [("How it works", "guide/01a_how_it_all_works.html"), ("What you can use", "map.html"), ("Needs", "needs/index.html"),
        ("Get started", "start.html"), ("Guide", "guide/index.html"), ("Recipes", "recipes/index.html"), ("Samples", "samples/index.html"),
-       ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("My apps", "apps.html"), ("Roadmap", "roadmap.html"),
+       ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("Roadmap", "roadmap.html"),
        ("Feedback", "feedback.html")]
 CORP = "https://www.ivendnext.com"
 FOOT_CORP = [("ivendnext.com", CORP + "/"), ("Documentation", "https://docs.ivendnext.com/"), ("Application suite", CORP + "/application-suite/"), ("Partners", CORP + "/partners/"),
@@ -435,7 +435,7 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
 {search_box(up)}
 <nav class="nav-wide" aria-label="Main"><ul>{nav}</ul></nav>
 <a class="site-btn cta" href="{up}sandbox.html">Request a sandbox</a>
-<details class="menu"><summary>Menu</summary><nav aria-label="Main"><ul>{nav}<li><a href="{up}sandbox.html">Request a sandbox</a></li></ul></nav></details>
+<details class="menu"><summary>Menu</summary><nav aria-label="Main"><ul>{nav}<li><a href="{up}apps.html">My apps</a></li><li><a href="{up}sandbox.html">Request a sandbox</a></li></ul></nav></details>
 </div>
 </header>
 {(f'<main id="main" class="home">{hero}<div class="wrap"><div class="content">{body}{foot}</div>{on_page}</div></main>') if hero else
