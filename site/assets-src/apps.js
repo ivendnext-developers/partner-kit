@@ -1043,7 +1043,8 @@
       if (s.step) data.tryS = s;
       if (tryRunning(s)) { render(); pollTry(); return; }
       if (!offerAgain(s)) { render(); return; }
-      return call("POST", "/try", { app: app }).then(function (c) { data.tryC = c; render(); });
+      return call("POST", "/try", { app: app }).then(function (c) { data.tryC = c; render(); },
+        function (e) { data.tryS = null; throw e; });   // refused (M14): the last try's lines are not this one's (walk 11-02)
     }).then(null, fail);
   }
 

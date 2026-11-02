@@ -201,6 +201,7 @@ check("J2-10: the four buttons are on: Try on my sandbox and Publish open their 
 check("J4-01: what was typed stays through a refusal, and is forgotten once connected (walk 2026-11-01)",
   src.includes("data.sbTyped || (data.sbTyped =") && src.includes("data.sbTyped = null"));
 check("J4-03: the consent goes once Install and try starts (walk 2026-11-01)", src.includes("data.tryS = r; data.tryC = null;"));
+check("M14: a refused new try leaves no last try's lines under the refusal (walk 2026-11-02)", src.includes("function (e) { data.tryS = null; throw e; }"));
 
 // EASY3a part 4: Publish and keep it going (the page's own words; a door's words are shown as given, §0b rule 8)
 const U = a.U;
