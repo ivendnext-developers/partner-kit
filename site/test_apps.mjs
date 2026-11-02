@@ -246,6 +246,8 @@ check("J6-06: each log line wraps, never cut", src.includes('"class": "log-lines
 check("J5-16: where it runs is read afresh each time the app's page opens", /function openApp\(app\) \{\s*data\.where = null; data\.whereAsked = null;/.test(src));
 check("J5-15, D15 (K173): Where it runs offers the plans and changes the plan from the next month",
   src.includes('call("POST", "/plan", { app: app, plan: pick })') && src.includes("w.plan_line"));
+check("J4-01: after Check the panel reads the sandbox afresh, so Install on it now shows at once",
+  /say\(r\.words\); render\(\);\s*\n[^\n]*\n\s*return call\("GET", "\/sandbox"\)\.then\(function \(s\) \{ data\.sandbox = s; render\(\); \}/.test(src));
 check("J8-13: a try that stops while watched offers Try again", src.includes("!tryRunning(s) && offerAgain(s) && !data.tryC"));
 check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
 check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&

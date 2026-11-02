@@ -1030,7 +1030,9 @@
     box.appendChild(button(T.check, function (ev) {
       ev.target.disabled = true;
       call("POST", "/sandbox/connect", { site: addr.value.trim(), key: key.value.trim(), secret: secret.value.trim() })
-        .then(function (r) { data.sandbox = r; data.sbTyped = null; say(r.words); render(); },
+        .then(function (r) { data.sandbox = r; data.sbTyped = null; say(r.words); render();
+              // J4-01: the panel's own read names the app waiting, so Install on it now shows at once, not after a reload
+              return call("GET", "/sandbox").then(function (s) { data.sandbox = s; render(); }, function () {}); },
               function (e) { ev.target.disabled = false; fail(e); });
     }));
     return box;
