@@ -259,6 +259,7 @@ tr:last-child td { border-block-end: 0; }
 .plan-note { padding: var(--ivn-s2) var(--ivn-s3); border-inline-start: 3px solid var(--site-accent); background: var(--site-tint); }
 .plan-copy { display: block; inline-size: 100%; margin-block-start: var(--ivn-s2); font: .85rem/1.4 var(--ivn-font-mono, monospace); }
 .plan-rows pre { overflow-x: auto; }
+pre.log-lines { white-space: pre-wrap; overflow-wrap: anywhere; }
 .plan-print-only { display: none; }
 @media print {                                  /* the plan page prints its shortlist only */
   .top, .bottom, .skip, .toc, .plan-q, #plan-found, .plan-btns, .plan-status, .plan-rm, .plan-tool > p:not(.plan-print-only) { display: none !important; }
