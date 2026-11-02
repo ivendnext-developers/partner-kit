@@ -161,6 +161,12 @@ def resolve(name: str, samples_dir: pathlib.Path) -> str:
     raise Refused(f"No sample called {name} in the kit.", code="no_sample")
 
 
+def address_field(section: str) -> str:
+    """Where a connection point keeps its address: a webhook's is ``url`` (the manifest's own rule), every other's
+    ``endpoint_url``."""
+    return "url" if section == "webhooks" else "endpoint_url"
+
+
 def endpoint_path(url: str) -> str:
     return urllib.parse.urlsplit(url).path or "/"
 
@@ -195,8 +201,8 @@ def make_part(sample: str, prefix: str, app: str, tagged: bool, samples_dir: pat
     if tagged:
         out = rename._walk(out, lambda s: re.sub(rf"(?<![A-Za-z0-9]){re.escape(integ_old)}(?![A-Za-z0-9])", integ_new, s))
     aliases, strip = {}, False
-    paths = [endpoint_path(x["endpoint_url"]) for k in KEYED for x in out.get(k) or [] if isinstance(x, dict)
-             and isinstance(x.get("endpoint_url"), str)]
+    paths = [endpoint_path(x[address_field(k)]) for k in KEYED for x in out.get(k) or [] if isinstance(x, dict)
+             and isinstance(x.get(address_field(k)), str)]
     if paths and tagged:
         strip = not all(p.startswith(f"/{tag}/") for p in paths)
     if tagged:
@@ -264,10 +270,10 @@ def app_view(part: Part) -> dict:
     if part.strip:
         for k in KEYED:
             for x in m.get(k) or []:
-                if isinstance(x.get("endpoint_url"), str):
-                    x["endpoint_url"] = mount_url(x["endpoint_url"], part.tag)
+                if isinstance(x.get(address_field(k)), str):
+                    x[address_field(k)] = mount_url(x[address_field(k)], part.tag)
         m["allowed_urls"] = [mount_url(u, part.tag) if isinstance(u, str) and any(
-            u == y.get("endpoint_url") for k in KEYED for y in part.manifest.get(k) or []) else u
+            u == y.get(address_field(k)) for k in KEYED for y in part.manifest.get(k) or []) else u
             for u in m.get("allowed_urls") or []]
     return m
 
@@ -419,7 +425,7 @@ def routes(m: dict) -> dict:
     out = {}
     for section in KEYED:
         for x in m.get(section) or []:
-            url = x.get("endpoint_url")
+            url = x.get(address_field(section))
             if not isinstance(url, str):
                 continue
             path = endpoint_path(url)

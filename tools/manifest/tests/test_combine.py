@@ -16,6 +16,7 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.parse
 import tempfile
 import unittest
 
@@ -383,10 +384,17 @@ class Refusals(Base):
         scratch_sample(samples, "s2_bins", "s93_bins_again", "PP BLY")
         folder, _ = self.make(["s2_bins", "s93_bins_again"], samples_dir=samples)
         d = json.loads((folder / "service" / "dispatch.json").read_text(encoding="utf-8"))
-        self.assertEqual(set(d["mounts"]["bln"]["points"]), {"/bln/point/where_is_it"})
-        self.assertEqual(set(d["mounts"]["bly"]["points"]), {"/bly/point/where_is_it"})
-        urls = [k["endpoint_url"] for k in self.manifest(folder)["remote_keys"]]
+        # a webhook's address is its `url`: mounted and routed like the part's other points (EASY3a walk 2026-11-02)
+        self.assertEqual(set(d["mounts"]["bln"]["points"]), {"/bln/point/where_is_it", "/bln/webhook"})
+        self.assertEqual(set(d["mounts"]["bly"]["points"]), {"/bly/point/where_is_it", "/bly/webhook"})
+        self.assertEqual(d["mounts"]["bln"]["points"]["/bln/webhook"]["kind"], "webhook")
+        m = self.manifest(folder)
+        urls = [k["endpoint_url"] for k in m["remote_keys"]]
         self.assertEqual(len(urls), len(set(urls)))
+        hooks = {urllib.parse.urlsplit(h["url"]).path for h in m["webhooks"]}
+        self.assertEqual(hooks, {"/bln/webhook", "/bly/webhook"})
+        self.assertTrue(all(h["url"] in m["allowed_urls"] for h in m["webhooks"]))  # the kit's check needs each listed
+        self.check(folder)
 
 
 class Add(Base):
