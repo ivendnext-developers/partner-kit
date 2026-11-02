@@ -160,7 +160,7 @@
   // EASY3a part 3: Try on my sandbox (spec J4-01 to J4-05, J4-11, J5-15, J9-02, §3b). The words a door answers (Connected,
   // M11 to M14, M18 to M21, the results, the till lines, who pays) are the hosting's and are shown as given (§0b rule 8).
   var T = {
-    yourSandbox: "Your sandbox", address: "Your sandbox's address", keyLabel: "An administrator's key and secret",
+    yourSandbox: "Your sandbox", otherSandbox: "Use a different sandbox or key", address: "Your sandbox's address", keyLabel: "An administrator's key and secret",
     keyHint: "In your sandbox's Desk: your name (top right) > My Settings > API Access > Generate Keys. The secret is shown " +
       "once: paste it here.",
     key: "Key", secret: "Secret", check: "Check", request: "Request one",
@@ -1007,34 +1007,45 @@
   // J4-01, D4: Connect your sandbox, once. The key is checked on the site itself, then kept by the hosting (never here)
   function vSandbox() {
     var sb = data.sandbox || {}, box = el("details", {}, el("summary", { text: T.yourSandbox }));
-    if (!sb.sandbox) box.open = true;
+    box.open = true;   // its words and Install on it now are never folded away, after Check or on arrival (J4-01)
+    var form = box;
     if (sb.sandbox) {
       box.appendChild(el("p", { "class": "hosting-ok", text: sb.words }));
       if (sb.waiting) box.appendChild(el("p", {}, button(sb.install_now, function () { openTry(sb.waiting); })));
+      // connected: nothing more is needed, so the boxes are only for another sandbox or a new key (KK 2026-11-02)
+      form = el("details", {}, el("summary", { text: T.otherSandbox }));
+      form.open = !!data.sbForm;
+      form.addEventListener("toggle", function () { data.sbForm = form.open; });
+      box.appendChild(form);
     } else if (sb.words) {
       var parts = noSandboxParts(sb.words);
       box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
     }
     // what was typed stays through a refusal (M11, M12): the person corrects one box, never all three
     var typed = data.sbTyped || (data.sbTyped = { site: "", key: "", secret: "" });
+    if (!typed.site && sb.sandbox) typed.site = "https://" + sb.sandbox.site;
     var keep = function (input, k) { input.value = typed[k]; input.addEventListener("input", function () { typed[k] = input.value; }); return input; };
     var addr = keep(el("input", { type: "url", spellcheck: "false", autocomplete: "off", placeholder: "https://acme.sandbox.ivend.co" }), "site");
     var key = keep(el("input", { type: "text", spellcheck: "false", autocomplete: "off" }), "key");
     var secret = keep(el("input", { type: "password", autocomplete: "off" }), "secret");
-    box.appendChild(field(T.address, addr));
-    box.appendChild(el("p", {}, el("strong", { text: T.keyLabel }), el("br", {}), el("span", { "class": "hint", text: T.keyHint })));
-    box.appendChild(el("p", {}, el("img", { src: "/assets/desk_api_access.jpg", alt: U.picture, width: "600", height: "270",
+    form.appendChild(field(T.address, addr));
+    form.appendChild(el("p", {}, el("strong", { text: T.keyLabel }), el("br", {}), el("span", { "class": "hint", text: T.keyHint })));
+    form.appendChild(el("p", {}, el("img", { src: "/assets/desk_api_access.jpg", alt: U.picture, width: "600", height: "270",
                                             loading: "lazy", "class": "apps-pic" })));
-    box.appendChild(field(T.key, key));
-    box.appendChild(field(T.secret, secret));
-    box.appendChild(button(T.check, function (ev) {
+    form.appendChild(field(T.key, key));
+    form.appendChild(field(T.secret, secret));
+    var check = button(T.check, function (ev) {
       ev.target.disabled = true;
       call("POST", "/sandbox/connect", { site: addr.value.trim(), key: key.value.trim(), secret: secret.value.trim() })
-        .then(function (r) { data.sandbox = r; data.sbTyped = null; say(r.words); render();
+        .then(function (r) { data.sandbox = r; data.sbTyped = null; data.sbForm = false; say(r.words); render();
               // J4-01: the panel's own read names the app waiting, so Install on it now shows at once, not after a reload
               return call("GET", "/sandbox").then(function (s) { data.sandbox = s; render(); }, function () {}); },
               function (e) { ev.target.disabled = false; fail(e); });
-    }));
+    });
+    var ready = function () { check.disabled = !(addr.value.trim() && key.value.trim() && secret.value.trim()); };
+    [addr, key, secret].forEach(function (input) { input.addEventListener("input", ready); });
+    ready();
+    form.appendChild(check);
     return box;
   }
 
