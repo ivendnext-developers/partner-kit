@@ -132,6 +132,7 @@
   var G = {
     lede: "Every sample is below. Search one by name, or search what your customer asked, or browse. Tick the ones you want.",
     addLede: "The samples already in your app are marked. Your changes are kept.",
+    ledeNeeds: "These samples meet your customer's needs. Search for another, or tick the ones you want.",
     search: "Search by sample (S23, till guard) or by what your customer asked",
     tabs: [["industry", "By industry"], ["door", "By what it does"], ["recipe", "By recipe"]],
     none: "No sample or need matches these words. Try other words, or ask for it: ",
@@ -709,7 +710,7 @@
     crumbs.appendChild(root.document.createTextNode(g.mode === "add" ? " > " + appTitle(data.appId) + " > " + G.addSample : " > " + G.newApp));
     wrap.appendChild(crumbs);
     wrap.appendChild(el("h2", { text: g.mode === "add" ? G.addSample : G.newApp }));
-    wrap.appendChild(p(g.mode === "add" ? G.addLede : G.lede));
+    wrap.appendChild(p(g.mode === "add" ? G.addLede : g.fromNeeds && !g.every ? G.ledeNeeds : G.lede));
     if (!site.index) { wrap.appendChild(p("Reading the samples…")); return wrap; }
     var q = el("input", { type: "search", value: g.q, placeholder: "S23, till guard, or no more than 50 of one item", spellcheck: "false" });
     var timer = null;
@@ -1452,7 +1453,8 @@
     }
     if (w.state) box.appendChild(el("p", { "class": /not answering/.test(w.state) ? "hosting-bad" : "hosting-ok", text: w.state }));
     var ul = el("ul", {});
-    (w.sites || []).forEach(function (s) {
+    var shown = (w.sites || []).filter(function (s) { return s.customer || s.state || s.version; });   // a connected sandbox with nothing on it runs nothing
+    shown.forEach(function (s) {
       var li = el("li", {}, el("strong", { text: s.site }), s.state ? ": " + s.state : (s.version ? ": " + s.version : ""));
       if (s.customer) {
         var d = el("details", {}, el("summary", { text: U.removeSite }), p(s.remove_words));
@@ -1465,7 +1467,7 @@
       }
       ul.appendChild(li);
     });
-    if ((w.sites || []).length) box.appendChild(ul);
+    if (shown.length) box.appendChild(ul);
     if (w.customer_test) box.appendChild(el("p", { "class": "hint", text: w.customer_test }));
     // J5-15, D15: the plan, changed from the next month
     if (w.plans) {

@@ -288,6 +288,8 @@ check("EASYLOOK: Settings is offered only when the app has some (07)", src.inclu
 check("EASYLOOK: a failed press never leaves Starting on the page", /data\.tryPress = false; fail\(e\)/.test(src) && /data\.pubPress = false; fail\(e\)/.test(src));
 check("EASYLOOK: one app's publish form never shows on another's", src.includes("(data.pubForm || {}).app !== app"));
 check("EASYLOOK: Cancel stays reachable: a paid try that stopped still has a way to stop paying", src.includes("more.appendChild(vCancel(a.app));"));
+check("EASYLOOK: a shortlist's gallery does not say every sample is below (A02)", G.ledeNeeds.startsWith("These samples") && src.includes("g.fromNeeds && !g.every ? G.ledeNeeds"));
+check("EASYLOOK: a sandbox with nothing on it is not listed where the app runs (A05)", src.includes("s.customer || s.state || s.version"));
 check("EASYLOOK: Upload is one button, its file box hidden (08)", src.includes('hidden: ""') && src.includes("file.click()"));
 check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
 check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&
