@@ -294,5 +294,11 @@
     "new_rate"
    ]
   }
+ ],
+ "property_setters": [
+  {"doc_type": "PP APS Price Change Request", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s14_approvals_stores/index.html"},
+  {"doc_type": "PP APS Approval Rule", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s14_approvals_stores/index.html"}
  ]
 }

@@ -99,5 +99,9 @@
     }
    ]
   }
+ ],
+ "property_setters": [
+  {"doc_type": "PP WRC Warranty Term", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s1_warranty/index.html"}
  ]
 }

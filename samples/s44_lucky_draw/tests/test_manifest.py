@@ -58,7 +58,7 @@ class ManifestTest(unittest.TestCase):
 
     def test_the_manager_runs_campaigns_and_the_apps_role_reads_and_writes_them_only(self):
         perms = {p["role"]: p for p in self.types["PP LDW Campaign"]["permissions"]}
-        self.assertEqual(sorted(perms), ["PP LDW Integration", "PP LDW Manager", "System Manager"])
+        self.assertEqual(sorted(perms), sorted(["PP LDW Integration", "PP LDW Manager", "System Manager"]))
         self.assertEqual(sorted(k for k, v in perms["PP LDW Integration"].items() if v == 1), ["read", "write"])
         self.assertEqual((perms["PP LDW Manager"]["create"], perms["PP LDW Manager"]["delete"]), (1, 0))   # no delete-and-redraw
 

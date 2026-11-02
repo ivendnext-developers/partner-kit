@@ -244,5 +244,11 @@
    "timeout_seconds": 3,
    "down_answer": "allow_and_flag"
   }
+ ],
+ "property_setters": [
+  {"doc_type": "PP TEL Settings", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s52_phone_plans/index.html"},
+  {"doc_type": "PP TEL Activation", "property": "documentation", "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s52_phone_plans/index.html"}
  ]
 }
