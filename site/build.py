@@ -395,7 +395,7 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
     foot_site = li([("Needs catalogue", up + "needs/index.html"), ("Plan a project", up + "plan.html"),
                     ("Get started", up + "start.html"), ("Guide", up + "guide/index.html"), ("Recipes", up + "recipes/index.html"),
                     ("Samples", up + "samples/index.html"), ("Reference apps", up + "reference_apps.html"),
-                    ("Request a sandbox", up + "sandbox.html"), ("Publish your app", up + "publish.html"),
+                    ("Request a sandbox", up + "sandbox.html"), ("My apps", up + "apps.html"), ("Publish your app", up + "publish.html"),
                     ("App library", seo.LIBRARY), ("App library: for partners", seo.LIBRARY + "/build")])
     foot_kit = li([("The kit on GitHub", REPO_URL), ("Possible, not possible", up + "guide/16_possible_not_possible.html"),
                    ("Tell us what is missing", up + "feedback.html")])
@@ -435,7 +435,7 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
 {search_box(up)}
 <nav class="nav-wide" aria-label="Main"><ul>{nav}</ul></nav>
 <a class="site-btn cta" href="{up}sandbox.html">Request a sandbox</a>
-<details class="menu"><summary>Menu</summary><nav aria-label="Main"><ul>{nav}<li><a href="{up}sandbox.html">Request a sandbox</a></li></ul></nav></details>
+<details class="menu"><summary>Menu</summary><nav aria-label="Main"><ul>{nav}<li><a href="{up}apps.html">My apps</a></li><li><a href="{up}sandbox.html">Request a sandbox</a></li></ul></nav></details>
 </div>
 </header>
 {(f'<main id="main" class="home">{hero}<div class="wrap"><div class="content">{body}{foot}</div>{on_page}</div></main>') if hero else
@@ -1011,13 +1011,13 @@ START_BUTTON = "Start an app from this sample"        # spec J1-14: opens New ap
 
 
 def start_button(html_text: str, folder: str, up: str) -> str:
-    """A sample's page: *Start an app from this sample* beside its *Run it* section (J1-14), opening My apps' New app with
+    """A sample's page: *Start an app from this sample* under its title (J1-14), opening My apps' New app with
     the sample ticked (through sign-in, the tick kept). A configuration pack is set in Desk, never ticked (J1-08): none."""
     name = folder.rsplit("/", 1)[-1]
     if gallery.sample_info.config_pack(ROOT / folder):
         return html_text
     button = (f'<p class="start-app"><a class="site-btn" href="{up}apps.html?sample={name}">{START_BUTTON}</a></p>')
-    return re.sub(r'(<h2 id="(?:how-to-)?run-it">)', button + r"\1", html_text, count=1)
+    return re.sub(r'(</h1>)', r"\1" + button, html_text, count=1)   # the first thing under the title (EASYLOOK)
 
 
 def next_list(path: pathlib.Path | None = None) -> list[str]:

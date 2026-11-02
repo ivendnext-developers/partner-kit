@@ -36,7 +36,7 @@ check("J2-03: the button (its words come from the hosting's door, with the perso
 check("J2-04", W.addPerson === "Add a person" && W.makeOwner === "Make owner" && W.remove === "Remove");
 check("J2-13", W.makeToken === "Make a token for a build server" && W.forWhich === "For which apps" &&
   a.allApps("Acme") === "All of Acme's apps" && W.revoke === "Revoke" && W.copy === "Copy");
-check("J5-14", W.handOver === "Hand over this app" && W.toWhich === "To which company? It must have signed in to My apps once." &&
+check("J5-14", W.handOver === "Hand over this app" && W.toWhich === "Their company's first word. They must have signed in to My apps once." &&
   W.moves === "They accept on their My apps. The app keeps its name; its versions, sites, secrets and hosting move to them, and their card pays from the next month." &&
   W.accept === "Accept" && W.refuse === "Refuse" && a.appTitle("acme_member_till") === "ACME MEMBER TILL");
 
@@ -137,7 +137,7 @@ check("J2-05: the bar's words", a.barText([by.s23_till_guard, by.s22_customer_lo
 check("J2-06: the name and its line", G.name === "Name your app" && G.appName === "App name" && G.make === "Make the app" &&
   a.nameHint("ACME MEMBER TILL", "acme") === "acme_member_till: your first word, then your words. Installed names never change, so choose with care.");
 check("J2-07: Making, and the next step", a.making("ACME MEMBER TILL", 2) === "Making ACME MEMBER TILL from 2 samples…" && G.nextSettings === "Next: its settings");
-check("J2-09: the settings' words", G.settingsLede === "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's settings in their Desk. Connection secrets come from each site: you never type them." &&
+check("J2-09: the settings' words", G.settingsLede === "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's settings in their Desk." &&
   G.addresses === "Outside addresses" && G.secrets === "Secrets your own service needs" &&
   a.settingNote({ required: true, together: ["X"] }) === "Required: publishing waits until it is set. Set both, or neither" &&
   a.settingNote({ required: false, together: [] }) === "Optional: the feature behind it stays off until you set it" &&
@@ -195,12 +195,12 @@ check("J4-05 after a fix: a newer draft than the one tried is offered again; a f
   a.offerAgain({ step: "done", version: "1.0.0", latest: "1.0.1" }) && !a.offerAgain({ step: "done", version: "1.0.1", latest: "1.0.1" }) &&
   a.offerAgain({ step: "stopped" }) && a.offerAgain(null) && !a.offerAgain({ step: "build" }));
 check("J5-15: the plan's lines as the row writes them, nothing added", !src.includes("perMonth") && T.plan === "Per month");
-check("J2-10: the four buttons are on: Try on my sandbox and Publish open their screens", src.includes('button(G.tryIt, function () { openTry(a.app); })') &&
-  src.includes("button(G.publish, function () { openPublish(a.app); })") && !src.includes("pubB.disabled = true"));
+check("J2-10: the four buttons are on: Try on my sandbox and Publish open their screens", src.includes('button(G.tryIt, function () { openTry(a.app); }') &&
+  src.includes("button(G.publish, function () { openPublish(a.app); }") && !src.includes("pubB.disabled = true"));
 
 check("J4-01: what was typed stays through a refusal, and is forgotten once connected (walk 2026-11-01)",
   src.includes("data.sbTyped || (data.sbTyped =") && src.includes("data.sbTyped = null"));
-check("J4-03: the consent goes once Install and try starts (walk 2026-11-01)", src.includes("data.tryS = r; data.tryC = null;"));
+check("J4-03: the consent goes once Install and try starts (walk 2026-11-01)", src.includes("data.tryS = r; if (!r.stop) data.tryC = null;"));
 check("M14: a refused new try leaves no last try's lines under the refusal (walk 2026-11-02)", src.includes("function (e) { data.tryS = null; throw e; }"));
 
 // EASY3a part 4: Publish and keep it going (the page's own words; a door's words are shown as given, §0b rule 8)
@@ -241,7 +241,7 @@ const big = new Uint8Array(20000).map((_, i) => (i * 7) & 255);
 check("J7-01: a picture's bytes reach the hosting as standard base64", a.b64(big) === Buffer.from(big).toString("base64"));
 check("EASY1NOTES: our own teams' checkout says no charge", a.payWords(true) === "Confirm in Stripe: no charge" &&
   a.payWords(false) === "Pay with your card");
-check("D14: the draft line goes once Publish is opened", /function openPublish\(app\) \{[^}]*data\.added = null;/.test(src));
+check("D14: the draft line goes once Publish is opened", /function openPublish\(app\) \{[\s\S]{0,200}data\.added = null;/.test(src));
 check("J6-06: each log line wraps, never cut", src.includes('"class": "log-lines"'));
 check("J5-16: where it runs is read afresh each time the app's page opens", /function openApp\(app\) \{\s*data\.where = null; data\.whereAsked = null;/.test(src));
 check("J5-15, D15 (K173): Where it runs offers the plans and changes the plan from the next month",
@@ -254,6 +254,41 @@ check("J4-01 (KK 11-02): connected, the boxes fold under one line with the addre
 check("J4-01 (KK 11-02): Check stays off until all three boxes are filled",
   src.includes("check.disabled = !(addr.value.trim() && key.value.trim() && secret.value.trim())"));
 check("J8-13: a try that stops while watched offers Try again", src.includes("!tryRunning(s) && offerAgain(s) && !data.tryC"));
+// ── EASYLOOK: what two people who had not read the spec stalled on ──
+check("EASYLOOK: the name starts as the first word and the sample, never the first word alone (06)",
+  a.defaultName("northwind", "Till guard rules") === "NORTHWIND TILL GUARD" &&
+  a.defaultName("acme", "Customer-owned loyalty") === "ACME CUSTOMER OWNED" && a.defaultName("acme", "") === "ACME " &&
+  a.defaultName("acme", "A 2nd look at stock") === "ACME LOOK AT" &&
+  // the kit's own rule: one to three words, each starting with a letter (tools/manifest/validate.py); the door's 40 characters
+  ["Till guard rules", "A 2nd look at stock", "Customer-owned loyalty", "Supercalifragilisticexpialidocious anything"].every((t) => {
+    const n = a.defaultName("northwind", t); return /^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$/.test(n) && n.length <= 40; }));
+const cvApp = { samples: ["s23_till_guard", "s51_refund_rules"], needs: { built: ["cap", "feed"], desk: [], cannot: [], asked: [] } };
+const cvCat = [{ id: "cap", asks: "No more than 50", sample: "samples/s23_till_guard" }, { id: "feed", asks: "Hears about every sale" }];
+const cvL = a.covers(cvApp, cvCat);
+check("EASYLOOK: What it covers never says Built for a need with no sample in the app (08)",
+  cvL.built.map((c) => c.id).join() === "cap" && cvL.tobuild.map((c) => c.id).join() === "feed" &&
+  a.coversText({ app: "x_y" }, cvL, "2026-11-02").includes("From its recipe, not a sample: Hears about every sale") &&
+  !a.coversText({ app: "x_y" }, cvL, "2026-11-02").includes("Built in this app: Hears"));
+check("EASYLOOK: a sample added later is named in What it covers, and in the customer's copy (33)", a.coversText({ app: "x_y" }, cvL, "2026-11-02").includes("Also in this app: s51_refund_rules") && cvL.extra.join() === "s51_refund_rules");
+const vs3 = [{ version: "1.0.0", sites: ["a"] }, { version: "1.0.1", sites: [] }, { version: "1.1.0", sites: ["a"] }, { version: "1.2.0", sites: [] }];
+check("EASYLOOK: a draft a later version replaced leaves the list; the newest draft stays (33)",
+  a.versionsShown(vs3).map((v) => v.version).join() === "1.0.0,1.1.0,1.2.0" &&
+  a.versionsShown([{ version: "1.0.0", sites: [] }, { version: "1.0.1", sites: [] }]).length === 2);
+check("EASYLOOK: a version's line does not say upload twice (27)", a.versionLine({ version: "1.0.1", what: "upload", by: "sam", how: "upload", sites: [] }) === "1.0.1 (draft) · upload · sam");
+check("EASYLOOK: the wait says how long, and to keep the page open: the steps run while it asks", /about 4 minutes/.test(a.T.wait) && /Keep this page open/.test(a.T.wait) && /about 3 minutes/.test(a.U.wait) && a.U.publishing === "Publishing…");
+check("EASYLOOK: Add a sample's bar asks for one (29)", a.barText([], "add") === "Tick the sample to add." && a.barText([], "new") === "Tick one or several samples.");
+check("EASYLOOK: the settings' footnote no longer says you never type secrets under the secrets' boxes (065)", !G.settingsLede.includes("you never type"));
+check("EASYLOOK: Hand over says which word it wants (073)", a.WORDS.toWhich.startsWith("Their company's first word"));
+check("EASYLOOK: a refusal keeps the tick, the plan and the suggested word (11, 133)", src.includes("data.tryAgree") && src.includes("data.tryPlan") && src.includes("data.coTick") && /suggestWord\(data\.coName\)/.test(src));
+check("EASYLOOK: pressing clears the last refusal and says it started (12)", src.includes("data.tryPress = true") && src.includes("data.pubPress = true"));
+check("EASYLOOK: a publish that stops keeps the form and its addresses (20, 085)", src.includes("if (r.stop) { openPublish(data.appId); return; }"));
+check("EASYLOOK: a finished try leads on to Publish (14)", /if \(s\.done\) \{[\s\S]{0,1400}button\(G\.publish, function \(\) \{ openPublish\(data\.appId\); \}\)/.test(src));
+check("EASYLOOK: home puts the apps before the sandbox and the command (134)", src.includes("var out = el(\"div\", {}, box, list, tail)"));
+check("EASYLOOK: Settings is offered only when the app has some (07)", src.includes("(a.settings || []).length ? button(\"Settings\""));
+check("EASYLOOK: a failed press never leaves Starting on the page", /data\.tryPress = false; fail\(e\)/.test(src) && /data\.pubPress = false; fail\(e\)/.test(src));
+check("EASYLOOK: one app's publish form never shows on another's", src.includes("(data.pubForm || {}).app !== app"));
+check("EASYLOOK: Cancel stays reachable: a paid try that stopped still has a way to stop paying", src.includes("more.appendChild(vCancel(a.app));"));
+check("EASYLOOK: Upload is one button, its file box hidden (08)", src.includes('hidden: ""') && src.includes("file.click()"));
 check("no inline style on the page's elements (the policy has no unsafe-inline)", !/\bstyle:\s*"/.test(src));
 check("P-04: /hosting forwards to My apps", readFileSync(path.join(out, "hosting.html"), "utf8").includes("url=apps.html") &&
   !existsSync(path.join(out, "assets/hosting.js")));
