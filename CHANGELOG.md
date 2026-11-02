@@ -4,6 +4,7 @@ Versions will follow our product releases once the kit is versioned; until then 
 
 ## Unreleased
 
+- **2026-11-02 — Publish a version to one more customer.** Typing a new site's address turns *Publish* back on when the version is already on every other site.
 - **2026-11-02 — A publish that stops shows the form again.** When a publish stops while you watch, its words stay and the form comes back under them, so *Publish* can be pressed again.
 - **2026-11-02 — Every sample can be listed for every retailer.** Nine samples (S1, S2, S11, S14, S16, S19, S22, S28, S52) gave a record type no guide address, which the App library needs for a public listing, so an app made from them was refused at *Send for listing*. Each now points at its sample's page. Three samples' tests (S22, S44, S54) assumed the app's own role sorted first; they now pass whatever your first word is.
 - **2026-11-02 — The card checkout opens in its own tab.** My apps keeps you signed in while you pay; the checkout's tab, when it comes back, says where to carry on.
