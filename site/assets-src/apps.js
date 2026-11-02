@@ -1362,6 +1362,23 @@
     });
     if ((w.sites || []).length) box.appendChild(ul); else box.appendChild(p(G.notOnSite));
     if (w.customer_test) box.appendChild(el("p", { "class": "hint", text: w.customer_test }));
+    // J5-15, D15: the plan, changed from the next month
+    if (w.plans) {
+      var pick = w.plan_chosen, fp = el("fieldset", {}, el("legend", { text: T.plan }));
+      w.plans.forEach(function (x) {
+        var r = el("input", { type: "radio", name: "where-plan", value: x.plan });
+        r.checked = x.plan === w.plan_chosen;
+        r.addEventListener("change", function () { pick = x.plan; });
+        fp.appendChild(el("p", {}, el("label", {}, r, " " + x.words)));
+      });
+      if (w.plan_line) fp.appendChild(el("p", { "class": "hint", text: w.plan_line }));
+      fp.appendChild(button(w.change_plan, function (ev) {
+        ev.target.disabled = true;
+        call("POST", "/plan", { app: app, plan: pick }).then(function (r) { data.where = null; data.whereAsked = null; say(r.words); render(); },
+                                                             function (e) { ev.target.disabled = false; fail(e); });
+      }, true));
+      box.appendChild(fp);
+    }
     // J10-01: where the service runs
     var sv = el("fieldset", {}, el("legend", { text: U.serviceRuns }));
     var addr = el("input", { type: "url", spellcheck: "false", placeholder: "https://apps.acme.example" });
