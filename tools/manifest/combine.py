@@ -161,6 +161,12 @@ def resolve(name: str, samples_dir: pathlib.Path) -> str:
     raise Refused(f"No sample called {name} in the kit.", code="no_sample")
 
 
+def address_field(section: str) -> str:
+    """Where a connection point keeps its address: a webhook's is ``url`` (the manifest's own rule), every other's
+    ``endpoint_url``."""
+    return "url" if section == "webhooks" else "endpoint_url"
+
+
 def endpoint_path(url: str) -> str:
     return urllib.parse.urlsplit(url).path or "/"
 
@@ -194,9 +200,20 @@ def make_part(sample: str, prefix: str, app: str, tagged: bool, samples_dir: pat
     integ_old, integ_new = f"{sp} Integration", f"{prefix} Integration"
     if tagged:
         out = rename._walk(out, lambda s: re.sub(rf"(?<![A-Za-z0-9]){re.escape(integ_old)}(?![A-Za-z0-9])", integ_new, s))
+    aj = sample_info.app_json(folder)
+    if aj is not None:
+        aj, _ = rename.rename_app_json(copy.deepcopy(aj), folder, None, sa)
+    if (aj or {}).get("shops") and out.get("webhooks"):
+        # hosted for many retailers, the sample answers no webhook: a webhook carries no key and no site, so one service
+        # cannot check it per retailer (S2's hosted form is its till key alone, its README). Its webhooks stay out of the app.
+        hooks = {x.get("url") for x in out["webhooks"] if isinstance(x, dict)}
+        out.pop("webhooks")
+        if isinstance(out.get("allowed_urls"), list):
+            used = {x.get("endpoint_url") for k in KEYED for x in out.get(k) or [] if isinstance(x, dict)}
+            out["allowed_urls"] = [u for u in out["allowed_urls"] if u not in hooks or u in used]
     aliases, strip = {}, False
-    paths = [endpoint_path(x["endpoint_url"]) for k in KEYED for x in out.get(k) or [] if isinstance(x, dict)
-             and isinstance(x.get("endpoint_url"), str)]
+    paths = [endpoint_path(x[address_field(k)]) for k in KEYED for x in out.get(k) or [] if isinstance(x, dict)
+             and isinstance(x.get(address_field(k)), str)]
     if paths and tagged:
         strip = not all(p.startswith(f"/{tag}/") for p in paths)
     if tagged:
@@ -209,9 +226,6 @@ def make_part(sample: str, prefix: str, app: str, tagged: bool, samples_dir: pat
                     aliases[app + key[len(sa):]] = key        # the code names it <app>_member
                 else:
                     aliases[key] = f"{tag}_{key}"
-    aj = sample_info.app_json(folder)
-    if aj is not None:
-        aj, _ = rename.rename_app_json(copy.deepcopy(aj), folder, None, sa)
     feed = None
     if out.get("registered_applications"):
         feed = out["registered_applications"][0].get("name")
@@ -264,10 +278,10 @@ def app_view(part: Part) -> dict:
     if part.strip:
         for k in KEYED:
             for x in m.get(k) or []:
-                if isinstance(x.get("endpoint_url"), str):
-                    x["endpoint_url"] = mount_url(x["endpoint_url"], part.tag)
+                if isinstance(x.get(address_field(k)), str):
+                    x[address_field(k)] = mount_url(x[address_field(k)], part.tag)
         m["allowed_urls"] = [mount_url(u, part.tag) if isinstance(u, str) and any(
-            u == y.get("endpoint_url") for k in KEYED for y in part.manifest.get(k) or []) else u
+            u == y.get(address_field(k)) for k in KEYED for y in part.manifest.get(k) or []) else u
             for u in m.get("allowed_urls") or []]
     return m
 
@@ -419,7 +433,7 @@ def routes(m: dict) -> dict:
     out = {}
     for section in KEYED:
         for x in m.get(section) or []:
-            url = x.get("endpoint_url")
+            url = x.get(address_field(section))
             if not isinstance(url, str):
                 continue
             path = endpoint_path(url)

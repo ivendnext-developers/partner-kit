@@ -16,6 +16,7 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.parse
 import tempfile
 import unittest
 
@@ -385,8 +386,21 @@ class Refusals(Base):
         d = json.loads((folder / "service" / "dispatch.json").read_text(encoding="utf-8"))
         self.assertEqual(set(d["mounts"]["bln"]["points"]), {"/bln/point/where_is_it"})
         self.assertEqual(set(d["mounts"]["bly"]["points"]), {"/bly/point/where_is_it"})
-        urls = [k["endpoint_url"] for k in self.manifest(folder)["remote_keys"]]
+        m = self.manifest(folder)
+        urls = [k["endpoint_url"] for k in m["remote_keys"]]
         self.assertEqual(len(urls), len(set(urls)))
+        self.check(folder)
+
+    def test_a_sample_hosted_for_many_retailers_brings_no_webhook(self):  # EASY3a walk 2026-11-02
+        # S2's hosted form is its till key alone: its webhook receiver is not in the hosted service, and a webhook carries
+        # no key and no site to be checked per retailer. Kept, the app's site called a dead address on every sale.
+        folder, out = self.make(["s23_till_guard", "s2_bins"])
+        m = self.manifest(folder)
+        self.assertNotIn("webhooks", m)
+        self.assertFalse([u for u in m.get("allowed_urls") or [] if urllib.parse.urlsplit(u).path.endswith("/webhook")])
+        self.assertIn("where_is_it", json.dumps(m["remote_keys"]))  # the rest of S2 comes in: its till key
+        self.assertNotIn("a notice of each sale", out)
+        self.check(folder)
 
 
 class Add(Base):
