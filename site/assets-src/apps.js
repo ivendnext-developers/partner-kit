@@ -1135,6 +1135,7 @@
   // J5-01 to J5-04, J5-15, J5-19, J6-02, J7-01, J9-01 to J9-03: Publish, then its steps, one per ask (as Try's)
   function openPublish(app) {
     if (data.appId !== app) data.pubForm = null;   // one app's card never shows on another's
+    data.added = null;   // "Added to a new draft …, on no site yet" is old once the person publishes (walk 11-02)
     data.appId = app; data.pubC = null; data.pubS = null; data.pubTo = data.pubTo || "customer"; screen = "publish"; say(""); render();
     call("POST", "/publish/status", { app: app }).then(function (s) {
       if (s.step) data.pubS = s;
