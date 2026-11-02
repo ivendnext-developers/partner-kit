@@ -200,6 +200,17 @@ def make_part(sample: str, prefix: str, app: str, tagged: bool, samples_dir: pat
     integ_old, integ_new = f"{sp} Integration", f"{prefix} Integration"
     if tagged:
         out = rename._walk(out, lambda s: re.sub(rf"(?<![A-Za-z0-9]){re.escape(integ_old)}(?![A-Za-z0-9])", integ_new, s))
+    aj = sample_info.app_json(folder)
+    if aj is not None:
+        aj, _ = rename.rename_app_json(copy.deepcopy(aj), folder, None, sa)
+    if (aj or {}).get("shops") and out.get("webhooks"):
+        # hosted for many retailers, the sample answers no webhook: a webhook carries no key and no site, so one service
+        # cannot check it per retailer (S2's hosted form is its till key alone, its README). Its webhooks stay out of the app.
+        hooks = {x.get("url") for x in out["webhooks"] if isinstance(x, dict)}
+        out.pop("webhooks")
+        if isinstance(out.get("allowed_urls"), list):
+            used = {x.get("endpoint_url") for k in KEYED for x in out.get(k) or [] if isinstance(x, dict)}
+            out["allowed_urls"] = [u for u in out["allowed_urls"] if u not in hooks or u in used]
     aliases, strip = {}, False
     paths = [endpoint_path(x[address_field(k)]) for k in KEYED for x in out.get(k) or [] if isinstance(x, dict)
              and isinstance(x.get(address_field(k)), str)]
@@ -215,9 +226,6 @@ def make_part(sample: str, prefix: str, app: str, tagged: bool, samples_dir: pat
                     aliases[app + key[len(sa):]] = key        # the code names it <app>_member
                 else:
                     aliases[key] = f"{tag}_{key}"
-    aj = sample_info.app_json(folder)
-    if aj is not None:
-        aj, _ = rename.rename_app_json(copy.deepcopy(aj), folder, None, sa)
     feed = None
     if out.get("registered_applications"):
         feed = out["registered_applications"][0].get("name")
