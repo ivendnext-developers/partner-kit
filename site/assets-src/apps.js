@@ -478,7 +478,7 @@
       call("GET", "/apps").then(function (r) { data.apps = r; render(); }, fail);
       call("GET", "/sandbox").then(function (r) { data.sandbox = r; render(); }, function () {});
     }
-    if ((screen === "app" || screen === "settings") && data.appId) { data.where = null; data.whereAsked = null; openApp(data.appId); }
+    if ((screen === "app" || screen === "settings") && data.appId) openApp(data.appId);
   }
 
   function openApp(app) {
