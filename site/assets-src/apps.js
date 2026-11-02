@@ -162,7 +162,7 @@
     key: "Key", secret: "Secret", check: "Check", request: "Request one",
     changes: "What installing it changes", wording: "Show the exact wording", installTry: "Install and try",
     testAgain: "Test again", tryAgain: "Try again", pay: "Pay with your card", plan: "Per month",
-    updates: "What the update changes", choosePlan: "Choose a plan first."
+    updates: "What the update changes", choosePlan: "Choose a plan first.", noCharge: "Confirm in Stripe: no charge"
   };
   // EASY3a part 4: Publish and keep it going (spec J5-01, J5-04, J5-16, J5-19, J6-06, J7-01, J7-07, J10-01, J12-01, J13-03,
   // §3b). The words a door answers (who pays, M15 to M17, M23, M30, M33, the message to send, a site's state, the go-back
@@ -194,6 +194,8 @@
     return (v.sites || []).length > 0 && sent.length > 1 && sent[sent.length - 1].version !== v.version;
   }
   function pubRunning(s) { return tryRunning(s); }
+  // the checkout's button: our own teams' copies are covered, so theirs says no charge (EASY1NOTES, walk 11-02)
+  function payWords(internal) { return (arguments.length ? internal : who && who.internal) ? T.noCharge : T.pay; }
   // what Send for listing sends: the card's fields (J7-01), each picture as the App library knows it
   function cardBody(cd) {
     return { title: cd.title, summary: cd.summary, what: (cd.what || []).filter(function (x) { return x.trim(); }),
@@ -397,7 +399,7 @@
               covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords,
-              canGoBack: canGoBack, logFile: logFile, pictureType: pictureType, b64: b64, cardBody: cardBody };
+              canGoBack: canGoBack, logFile: logFile, payWords: payWords, pictureType: pictureType, b64: b64, cardBody: cardBody };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -476,10 +478,11 @@
       call("GET", "/apps").then(function (r) { data.apps = r; render(); }, fail);
       call("GET", "/sandbox").then(function (r) { data.sandbox = r; render(); }, function () {});
     }
-    if ((screen === "app" || screen === "settings") && data.appId) { data.where = null; data.whereAsked = null; openApp(data.appId); }
+    if ((screen === "app" || screen === "settings") && data.appId) openApp(data.appId);
   }
 
   function openApp(app) {
+    data.where = null; data.whereAsked = null;   // where it runs is read afresh each time: a try or a publish changes it
     return call("POST", "/app", { app: app }).then(function (r) { data.app = r; render(); return r; }, fail);
   }
 
@@ -1044,7 +1047,14 @@
     if (screen !== "try" || !tryRunning(data.tryS)) return;
     root.setTimeout(function () {
       if (screen !== "try") return;
-      call("POST", "/try/status", { app: data.appId }).then(function (s) { data.tryS = s; say(""); render(); pollTry(0); },
+      call("POST", "/try/status", { app: data.appId }).then(function (s) {
+        data.tryS = s; say(""); render();
+        // a try that stopped while watched offers Try again at once, as one opened afresh does (walk 11-02)
+        if (!tryRunning(s) && offerAgain(s) && !data.tryC) {
+          call("POST", "/try", { app: data.appId }).then(function (c) { data.tryC = c; render(); }, fail);
+        }
+        pollTry(0);
+      },
         function (e) { if ((errors || 0) >= 3) { fail(e); return; } pollTry((errors || 0) + 1); });   // a passing error: ask again
     }, 3000);
   }
@@ -1057,7 +1067,7 @@
     box.insertBefore(crumbs, box.firstChild);
     if (s && s.step) {
       (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });
-      if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, "class": "site-btn", text: T.pay })));
+      if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, "class": "site-btn", text: payWords() })));
       if (s.stop) {
         box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
         if ((s.build_lines || []).length) box.appendChild(el("pre", { text: s.build_lines.join("\n") }));
@@ -1158,7 +1168,7 @@
 
   function vPubSteps(box, s) {
     (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });
-    if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, "class": "site-btn", text: U.pay })));
+    if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, "class": "site-btn", text: payWords() })));
     if (s.stop) {
       box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
       if ((s.build_lines || []).length) box.appendChild(el("pre", { text: s.build_lines.join("\n") }));
@@ -1370,7 +1380,7 @@
     })));
     if (!r) { box.appendChild(p("Reading the log…")); return box; }
     if (r.words) box.appendChild(p(r.words));
-    var pre = el("pre", { text: (r.lines || []).join("\n") });
+    var pre = el("pre", { "class": "log-lines", text: (r.lines || []).join("\n") });   // each line wraps, never cut
     if ((r.lines || []).length) {
       box.appendChild(pre);
       box.appendChild(el("p", {}, button(U.downloadLogs, function () {
