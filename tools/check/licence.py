@@ -21,8 +21,6 @@ The App library's publish command (``tools/publish``) runs this on your project;
 Standard library only. Read-only. A green line is not legal advice: you answer for your app's licences (the partner
 terms).
 
-The App library's Publish page (``https://library.ivendnext.app/publish.js``, kept in the hosting repository as
-``library/functions/site/publish.js``) runs the same licence check in a browser: a change here is a change there.
 """
 from __future__ import annotations
 

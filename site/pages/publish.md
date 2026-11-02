@@ -4,7 +4,7 @@
 
 This site helps you **build** an app. The **App library** (`https://library.ivendnext.app`) is where retailers **find** it and install it from iVendNext Desk. You publish it yourself, with one command from any computer (your laptop or your own build server, with or without GitHub, whatever language your app is written in), or [from the web page](#from-the-web-page) in your browser, with no command at all.
 
-**Publishing and hosting are two separate steps.** Publishing sends the library only your app's manifest and its card. Hosting, only if CitiXsys runs your service, is a separate order that sends App Hosting your app's built image or its function's package, the files the function runs ([Host with CitiXsys or run your own](hosting.md)). We never need access to your repository, which stays wherever you keep it ([How it all works, section 9](../../guide/01a_how_it_all_works.md#9-publishing-is-not-handing-us-your-code)).
+**Publishing and hosting are two separate steps.** Publishing sends the library only your app's manifest and its card. Hosting, only if CitiXsys runs your service, is a separate order that sends App Hosting your app's built image or its function's package, the files the function runs ([Host with CitiXsys or run your own](apps.md)). We never need access to your repository, which stays wherever you keep it ([How it all works, section 9](../../guide/01a_how_it_all_works.md#9-publishing-is-not-handing-us-your-code)).
 
 ## How it works
 
@@ -65,17 +65,7 @@ Never in your project or the kit: give them to the command from the environment 
 
 ## From the web page
 
-You can publish without a command. The App library's **Publish** page, at `https://library.ivendnext.app/publish`, does in your browser what the command does on your computer: it signs your app with your company's key, puts it on your preview shelf, on each customer's shelf you name and, if you choose, on the public list, and opens the keys that come back so you can give each one to its customer.
-
-{{publish: button}}
-
-- **Your company on My apps** is your hosting account and your App library company at once: one account, one word, for both.
-- **What you give it:** the files in your project's `library/` folder (`app.json`, `manifest.json`, `library.json`, `recipient.pem`), your licence file and your list of third-party components, your partner code, your signing key file (`library-signing.key`, which the command's `keygen` wrote in `~/.ivendnext/`) and, when keys will come back (a preview site, a customer or a key request), your sealing key's private half (`recipient-private.pem`, as `openssl genpkey` made it; a file with a passphrase cannot be used). It needs a browser that signs with Ed25519: Chrome or Edge 137 or later, Firefox 129 or later, or Safari 17 or later.
-- **Your keys stay in your browser.** The page reads each key file once, keeps a key it cannot read back, and sends only the signed upload, to the App library itself. Nothing is stored: leaving the page forgets everything, keys included. The page's code is served by the App library, and it is what holds your keys while you publish; if you would rather no served code ever held them, publish with the command.
-- **What it checks:** the App library checks every upload the same way, from the page or the command: your key, the manifest, the rules a shop's install applies, your card. The page checks your licence files itself; it sends neither. It does not show the manifest checker's warnings, which never stop a publish: run the kit's `tools/check/check.py` for those.
-- **Your customers on an update.** The library keeps every site the app is on: an update from the page or the command reaches them all.
-- **The keys are shown on the page,** each once, with a copy button and who it is for: give each site key to that customer's administrator, who pastes it under *App library > Open your shelf*. Copy them before you leave the page; publishing the same version again returns the same keys.
-- **If the page cannot read the answer** (the library was busy, or the connection dropped), it says it does not know whether the app was published: publish again, and the keys come back the same.
+On [My apps](https://developer.ivendnext.com/apps), open your app and press **Publish**: name your customer's sites, or tick *This is my own company's site*, or choose *To everyone* and fill the card. No key file and no command: My apps signs you in with GitHub, sends it, and gives you the message to send each site's administrator, ready to copy.
 
 ## From a build server
 

@@ -42,7 +42,7 @@ The next retailer with the same need can buy the same version from you. When it 
 4. **Make it your customer's.** One command renames it to your company's name. Then change what your customer needs. Your AI assistant can do much of this: point it at the kit's [`AGENTS.md`](../../AGENTS.md).
 5. **Check it and try it.** The kit's check runs the same checks your customer's site will run, before anyone sees your app. Then install it on your sandbox.
 6. **Deliver it.** For one customer, publish it to that customer's own *Made for you* shelf, with no approval needed from us. Their administrator installs it from their App library and agrees to what it does.
-7. **Host its service, if it has one.** On your own cloud, or on iVendNext App Hosting at `<your app>.ivendnext.app` ([Host with CitiXsys or run your own](hosting.md)).
+7. **Host its service, if it has one.** On your own cloud, or on iVendNext App Hosting at `<your app>.ivendnext.app` ([Host with CitiXsys or run your own](apps.md)).
 8. **Sell it again.** To your next customer, or to every iVendNext retailer through the App library, after one review by us.
 
 Every command, with *Bin locations* as the worked example: [Make one of our apps your own](../../recipes/make_it_your_own.md).
@@ -56,7 +56,7 @@ Every command, with *Bin locations* as the worked example: [Make one of our apps
 | Delivering to a customer's *Made for you* shelf, or listing in the App library | Free |
 | Running your app's service on your own cloud | Only your cloud provider. You bill your customer |
 | Running it on iVendNext App Hosting, when it runs as a function (it only answers presses, such as a till key, a check or a button, or works in short runs) and is listed in the App library | Free. You bill your customer what you choose |
-| Running any other app on iVendNext App Hosting, if you choose | $49, $129 or $399 per app per month, by plan ([the plans](hosting.md)). You bill your customer what you choose |
+| Running any other app on iVendNext App Hosting, if you choose | $49, $129 or $399 per app per month, by plan ([the plans](apps.md)). You bill your customer what you choose |
 
 Your customer pays its iVendNext subscription as usual.
 

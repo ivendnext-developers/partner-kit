@@ -256,4 +256,4 @@ Your app is ready to connect when the template's checks pass for your copy, `val
 
 ## See also
 
-[Security and the handshake](../site/pages/security.md) · [Host with CitiXsys or run your own](../site/pages/hosting.md) · [5. Outside apps and the event feed](05_outside_apps_and_event_feed.md) · [6. Till keys](06_till_keys.md) · [14. Testing and release](14_testing_and_release.md) · [14a. Deploying to a chain of stores](14a_deploying_to_a_chain.md) · [A till key](../recipes/point_handler.md)
+[Security and the handshake](../site/pages/security.md) · [Host with CitiXsys or run your own](../site/pages/apps.md) · [5. Outside apps and the event feed](05_outside_apps_and_event_feed.md) · [6. Till keys](06_till_keys.md) · [14. Testing and release](14_testing_and_release.md) · [14a. Deploying to a chain of stores](14a_deploying_to_a_chain.md) · [A till key](../recipes/point_handler.md)

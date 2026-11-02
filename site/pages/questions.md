@@ -154,7 +154,7 @@ Run the template's and your app's tests with no iVendNext at all, call your serv
 
 ### What does it cost, and who pays?
 
-The kit, a sandbox site, publishing and listing in the App library are free. App Hosting is per app per month (Starter $49, Standard $129, Managed $399), paid by whoever orders it, and an app that runs as a function and is listed in the App library carries no hosting charge. You bill your customer what you choose. [Build your business on iVendNext's apps, *What it costs*](business.md#what-it-costs) · [Hosting](hosting.md).
+The kit, a sandbox site, publishing and listing in the App library are free. App Hosting is per app per month (Starter $49, Standard $129, Managed $399), paid by whoever orders it, and an app that runs as a function and is listed in the App library carries no hosting charge. You bill your customer what you choose. [Build your business on iVendNext's apps, *What it costs*](business.md#what-it-costs) · [Hosting](apps.md).
 
 ### Where do I see my app's logs?
 
