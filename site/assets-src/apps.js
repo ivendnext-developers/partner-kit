@@ -33,6 +33,9 @@
     signin: "Sign in with GitHub",
     noGitHub: ["No GitHub account? ", "Make a free one", " in two minutes with any e-mail, then come back."],
     m22: "GitHub did not sign you in. Try again.",
+    // the checkout opens in its own tab, so this tab keeps its sign-in; the checkout's tab comes back here
+    backFromCheckout: ["Back from the checkout: paid. If My apps is open in another tab, carry on there; otherwise sign in here.",
+                       "The checkout was closed without paying. If My apps is open in another tab, it still offers it; otherwise sign in here."],
     company: "Your company",
     companyName: "Company name",
     firstWord: "Your first word",
@@ -96,6 +99,7 @@
       }
       return { kind: "signin", code: code, verifier: pending.verifier };
     }
+    if (q.has("order")) return { kind: "checkout", left: q.get("left") === "1" };
     return { kind: "none" };
   }
 
@@ -1067,7 +1071,7 @@
     box.insertBefore(crumbs, box.firstChild);
     if (s && s.step) {
       (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });
-      if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, "class": "site-btn", text: payWords() })));
+      if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, target: "_blank", rel: "noopener", "class": "site-btn", text: payWords() })));
       if (s.stop) {
         box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
         if ((s.build_lines || []).length) box.appendChild(el("pre", { text: s.build_lines.join("\n") }));
@@ -1169,7 +1173,7 @@
 
   function vPubSteps(box, s) {
     (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });
-    if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, "class": "site-btn", text: payWords() })));
+    if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, target: "_blank", rel: "noopener", "class": "site-btn", text: payWords() })));
     if (s.stop) {
       box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
       if ((s.build_lines || []).length) box.appendChild(el("pre", { text: s.build_lines.join("\n") }));
@@ -1593,6 +1597,7 @@
   call("GET", "/config").then(function (c) {
     cfg = c;
     if (arrival.kind === "refused") say(arrival.why, true);
+    if (arrival.kind === "checkout") say(WORDS.backFromCheckout[arrival.left ? 1 : 0]);
     if (arrival.kind !== "signin") { render(); return; }
     return call("POST", "/signin", { code: arrival.code, verifier: arrival.verifier, redirect_uri: PAGE }).then(function (r) {
       session = r.session; who = r; delete who.session;
