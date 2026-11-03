@@ -5,20 +5,16 @@
   "titles": {
     "recipes/till_guard.html": "Several till rules in one app with the retailer's own settings",
     "samples/s25_gift_on_spend/index.html": "S25 — Gift card on spend",
-    "samples/s7_system_sync/index.html": "S7 — System sync: a customer's own system kept in step",
-    "samples/s9_bi_feed/index.html": "S9 — A BI feed: sales, payments and returns into a warehouse file"
+    "samples/s7_system_sync/index.html": "S7 — System sync: a customer's own system kept in step"
   },
   "descriptions": {
     "index.html": "Guide, recipes, samples and a needs catalogue for building custom retail POS apps, integrations and extensions on iVendNext without changing the product.",
     "guide/01a_how_it_all_works.html": "What an iVendNext app is, where it runs (Docker, a container, a function or nowhere), where customer data lives, and why two customers never collide.",
-    "guide/01b_one_app_end_to_end.html": "One iVendNext app from a laptop to the till: run its tests, read its manifest, publish it, host it as a function, install with consent, press Pay.",
-    "questions.html": "The first questions a developer asks about iVendNext apps: Docker, containers, tenants, data, endpoints, fields, screens, publishing, hosting and cost.",
-    "start.html": "Five steps from nothing to your first working call against an iVendNext sandbox: request a site, get the kit, make your app's user and key, run a sample.",
     "needs/index.html": "What retailers ask for, in their own words, and whether you can build it on iVendNext today: the verdict, the door, the recipe and the limits to state.",
     "build.html": "You know what you are building: the ladder of ways in, the recipe and sample for each rung, your sandbox and the tests that let an iVendNext app ship.",
     "plan.html": "Plan an iVendNext project from a customer's list of needs to a release: tick the needs, get the order to build them in and the limits to put in the quote.",
     "sandbox.html": "Request a sandbox: your own iVendNext site with made-up demo data, hosted by us, where you build and test before you touch a customer's site.",
-    "publish.html": "Publish your app to the iVendNext App library with one command or on a web page, so retailers can find and install it. We never take your source code.",
+    "publish.html": "Make your app, try it on your sandbox, send it to your customer and list it for every retailer, on My apps or with ivn. What each step costs.",
     "starters.html": "Starting points for connecting a local ERP, payment gateway or wallet, loyalty provider, messaging gateway or delivery app to iVendNext.",
     "security.html": "How a retailer and your app trust each other: its consent, your app's own user, the signed call and its check, rotation, and the till when your app is down.",
     "map.html": "Every iVendNext API endpoint your app calls and every call iVendNext makes to your service, everything a manifest can add, and every screen you can build.",
@@ -37,6 +33,7 @@
     "recipes/manifest.html": "Ship your own record types and fields to a retailer's iVendNext in one manifest file, without code inside it: bins, warranty terms, a reference list.",
     "recipes/rule_guard.html": "Check a sale before payment: your service allows it, refuses it in your own words, or asks the cashier a yes or no question when Pay is pressed.",
     "recipes/capture.html": "Capture a value at the scan, or send a one-time code before a new customer is added: your HTTPS service answers at a moment the cashier did not choose.",
-    "apps.html": "My apps: sign in with GitHub, set up your company once, add your colleagues and make the tokens a build server publishes with."
+    "apps.html": "My apps: sign in with GitHub, set up your company once, add your colleagues and make the tokens a build server publishes with.",
+    "first_app.html": "From one of the kit's samples to your customer's App library in six steps: sign in, make the app, change it, check it, try it on your sandbox and publish it."
   }
 }

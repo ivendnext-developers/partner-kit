@@ -12,8 +12,10 @@ If you build for an iVendNext customer and find something missing or broken, fou
 | [Extension-point request](https://github.com/ivendnext-developers/partner-feedback/issues/new?template=2_point_request.yml) | no rung of the ladder, alone or combined with others, can meet a need, or a published extension point is missing something |
 | [Recipe or document gap](https://github.com/ivendnext-developers/partner-feedback/issues/new?template=3_recipe_or_document_gap.yml) | a guide chapter, recipe or reference page is missing, wrong or unclear |
 | [Sample request](https://github.com/ivendnext-developers/partner-feedback/issues/new?template=4_sample_request.yml) | you want a worked example of a pattern we do not show yet, or a manifest installed on your sandbox |
-| [App listing request](https://github.com/ivendnext-developers/partner-feedback/issues/new?template=5_app_listing.yml) | your company's first app works on your sandbox: ask us to register your company and give it its first word; from then on you publish yourself ([Publish your app](publish.md)) |
+| [App listing request](https://github.com/ivendnext-developers/partner-feedback/issues/new?template=5_app_listing.yml) | you cannot list your app yourself with `ivn publish --public` ([Publish your app](publish.md)) |
 | [Claim a need](https://github.com/ivendnext-developers/partner-feedback/issues/new?template=6_claim_a_need.yml) | you will build and sell something on our roadmap's *next* list: claim it, and once we accept the claim we do not start it for 90 days ([What iVendNext builds](roadmap.md#claim-a-need)) |
+
+Sent here from *My apps* or *Plan a project*? The need's words are already copied: paste them into the form.
 
 Each form opens on GitHub, in a private repository. Signed in to GitHub as an onboarded member, you see the form. Anyone else sees GitHub's "page not found": that is the repository being private, not a broken link.
 

@@ -1,0 +1,10 @@
+{
+  "extension_point": "station_ticket",
+  "contract": "send_order_request",
+  "about": "Which order: an empty name names none.",
+  "expect_refusal": "No Sales Order named",
+  "payload": {
+    "sales_order": "",
+    "service_mode": "Delivery"
+  }
+}

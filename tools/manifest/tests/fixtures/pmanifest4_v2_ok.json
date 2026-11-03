@@ -1,0 +1,198 @@
+{
+  "manifest_version": 2,
+  "app": "pp_mf4",
+  "prefix": "PP MF4",
+  "version": "0.1.0",
+  "doctypes": [
+    {
+      "name": "PP MF4 Gender",
+      "fields": [
+        {
+          "fieldname": "title",
+          "fieldtype": "Data",
+          "label": "Title"
+        }
+      ]
+    },
+    {
+      "name": "PP MF4 Gender Pick",
+      "istable": 1,
+      "fields": [
+        {
+          "fieldname": "gender",
+          "fieldtype": "Link",
+          "label": "Gender",
+          "options": "PP MF4 Gender",
+          "in_list_view": 1
+        }
+      ]
+    },
+    {
+      "name": "PP MF4 Brand Pick",
+      "istable": 1,
+      "fields": [
+        {
+          "fieldname": "brand",
+          "fieldtype": "Link",
+          "label": "Brand",
+          "options": "Brand",
+          "in_list_view": 1
+        }
+      ]
+    },
+    {
+      "name": "PP MF4 Tag Row",
+      "istable": 1,
+      "fields": [
+        {
+          "fieldname": "note",
+          "fieldtype": "Data",
+          "label": "Note",
+          "in_list_view": 1
+        }
+      ]
+    },
+    {
+      "name": "PP MF4 Setting Row",
+      "istable": 1,
+      "fields": [
+        {
+          "fieldname": "note",
+          "fieldtype": "Data",
+          "label": "Note",
+          "in_list_view": 1
+        }
+      ]
+    },
+    {
+      "name": "PP MF4 Settings",
+      "issingle": 1,
+      "description": "Shelf-life and bypass settings",
+      "track_changes": 1,
+      "fields": [
+        {
+          "fieldname": "threshold_days",
+          "fieldtype": "Int",
+          "label": "Threshold (days)"
+        },
+        {
+          "fieldname": "bypass_role",
+          "fieldtype": "Link",
+          "label": "Bypass role",
+          "options": "Role"
+        },
+        {
+          "fieldname": "rows",
+          "fieldtype": "Table",
+          "label": "Rows",
+          "options": "PP MF4 Setting Row"
+        }
+      ],
+      "permissions": [
+        {
+          "role": "System Manager",
+          "read": 1,
+          "write": 1,
+          "create": 1,
+          "delete": 1,
+          "report": 0,
+          "export": 0,
+          "share": 1,
+          "print": 1,
+          "email": 1
+        }
+      ]
+    },
+    {
+      "name": "PP MF4 Complaint",
+      "fields": [
+        {
+          "fieldname": "title",
+          "fieldtype": "Data",
+          "label": "Title"
+        }
+      ]
+    }
+  ],
+  "custom_fields": [
+    {
+      "dt": "Item",
+      "fieldname": "pp_mf4_genders",
+      "fieldtype": "Table MultiSelect",
+      "label": "Gender",
+      "options": "PP MF4 Gender Pick"
+    },
+    {
+      "dt": "Item",
+      "fieldname": "pp_mf4_brands",
+      "fieldtype": "Table MultiSelect",
+      "label": "Brands",
+      "options": "PP MF4 Brand Pick"
+    },
+    {
+      "dt": "Item",
+      "fieldname": "pp_mf4_tags",
+      "fieldtype": "Table",
+      "label": "Tags",
+      "options": "PP MF4 Tag Row"
+    }
+  ],
+  "property_setters": [
+    {
+      "doc_type": "PP MF4 Settings",
+      "property": "description",
+      "value": "Set once by the shop"
+    },
+    {
+      "doc_type": "PP MF4 Settings",
+      "field_name": "threshold_days",
+      "property": "bold",
+      "value": 1
+    }
+  ],
+  "print_formats": [
+    {
+      "name": "PP MF4 Complaint Slip",
+      "doc_type": "PP MF4 Complaint",
+      "html": "<h3>{{ doc.title }}</h3>"
+    }
+  ],
+  "notifications": [
+    {
+      "name": "PP MF4 Complaint Mail",
+      "document_type": "PP MF4 Complaint",
+      "event": "New",
+      "channel": "Email",
+      "subject": "Complaint {{ doc.title }}",
+      "message": "A complaint was raised.",
+      "recipients": [
+        {
+          "receiver_by_role": "System Manager"
+        }
+      ],
+      "attach_print": 1,
+      "print_format": "PP MF4 Complaint Slip"
+    }
+  ],
+  "workspaces": [
+    {
+      "name": "PP MF4 Space",
+      "blocks": [
+        {
+          "type": "shortcut",
+          "data": {
+            "shortcut_name": "Settings",
+            "col": 3
+          }
+        }
+      ],
+      "shortcuts": [
+        {
+          "type": "DocType",
+          "link_to": "PP MF4 Settings",
+          "label": "Settings"
+        }
+      ]
+    }
+  ]
+}

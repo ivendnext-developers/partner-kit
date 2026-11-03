@@ -190,6 +190,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "openapi.yaml; recipe connected_app; recipe restaurant_back_office; recipe stock_alerts; the MCP server; the request collection; retail core",
+ "why": "openapi.yaml; recipe connected_app; recipe restaurant_back_office; recipe stock_alerts; sample S2; sample S27; sample S45; sample S7; the MCP server; the kit's tool moneykit; the request collection; retail core",
  "written_elsewhere": "iVendNext keeps it from every stock document; move stock with a Stock Entry."
 }

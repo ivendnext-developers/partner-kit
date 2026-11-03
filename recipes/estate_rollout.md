@@ -64,7 +64,6 @@ The recipe is **proven** on our test bench.
 - **An edit by hand** (one store's receipt format): `verify` RED naming the profile and the field; the plan lists that one row; `apply` repairs only it. **An orphan warehouse:** named by `verify`.
 - **A promoted sale at a roll-out store:** the same basket, promotion off then on, is 198.00 then 178.20 (10% less); **the booked sale equals the till's preview**; the retailer's own profile, same basket, has **no discount** — the promotion reaches the roll-out stores only (its sources are the stores' warehouses).
 - **Remove:** nothing live left (no enabled profile, warehouse, user or active promotion); the reason switch is back to its earlier value; the store a sale was rung at is retired, not deleted.
-- **The money kit** with the estate applied (51 stores, their promotions limited to the roll-out stores): **GREEN, 67 of 67 matched**, 32 with a discount, no POS day left open — the retailer's own recorded baskets are untouched by the roll-out.
 
 ### Bounds, stated
 

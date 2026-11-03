@@ -1,0 +1,19 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "Words come in a language: an entry without one is refused.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_wrd",
+    "prefix": "PP WRD",
+    "version": "0.1.0",
+    "translations": [
+      {
+        "words": {
+          "Patient": "المريض"
+        }
+      }
+    ]
+  },
+  "expect_refusal": "names its language"
+}

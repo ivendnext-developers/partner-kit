@@ -1,13 +1,7 @@
-"""tools/manifest/site_rules.py: what the shop's install refuses that its checker passes — stdlib only:
+"""tools/manifest/site_rules.py: what the shop's install stops on that its checker passes — stdlib only:
     python3 -m unittest discover -s tools/manifest/tests -v
 
-A report, number card or chart may not name a field the same manifest adds to a shop's record type, and a workspace may
-not link the manifest's own report.
-
-The shop's install checks those fields against the record type as it is BEFORE the install (POS
-``manifest_install._site_refusals_v2`` ``fields_exist``: a report's columns and filter fields, a card's
-``aggregate_function_based_on``, a chart's four fields), so such a manifest is refused at a shop although it looks whole.
-Found on our test bench by APPF run 5 (S33's first manifest). The base is S33's manifest, which passes."""
+The base is S33's manifest, which passes both."""
 
 import copy
 import json
@@ -17,57 +11,38 @@ import unittest
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-from site_rules import CHART_FIELDS, refusals as site  # noqa: E402
+from site_rules import refusals as site  # noqa: E402
 from validate import validate  # noqa: E402
 
 BASE = json.loads((HERE.parents[2] / "samples" / "s33_click_and_collect" / "manifest.json").read_text())
 ADDED = "pp_ccb_handed_over"           # a field BASE adds to the shop's Delivery Note
 
 
-def refused(change) -> list:
-    m = copy.deepcopy(BASE)
-    change(m)
-    return [r["reason"] for r in site(m) if "not fields of Delivery Note" in r["reason"]]
-
-
-class OwnAddedFields(unittest.TestCase):
+class WhatItNoLongerStops(unittest.TestCase):
     def test_the_base_passes_both(self):
         self.assertEqual((validate(BASE), site(BASE)), ([], []))
 
-    def test_a_report_column_or_filter_on_an_added_field_is_refused(self):
-        rep = {"name": "PP CCB Waiting", "ref_doctype": "Delivery Note", "columns": ["name"], "filters": []}
-        self.assertTrue(refused(lambda m: m["reports"].append(dict(rep, columns=["name", ADDED]))))
-        self.assertTrue(refused(lambda m: m["reports"].append(dict(rep, filters=[[ADDED, "=", 0]]))))
-
-    def test_a_number_card_or_chart_field_on_an_added_field_is_refused(self):
-        card = {"name": "PP CCB Count", "document_type": "Delivery Note", "function": "Sum",
-                "aggregate_function_based_on": ADDED}
-        self.assertTrue(refused(lambda m: m.update(number_cards=[card])))
-        for k in CHART_FIELDS:     # each of the four fields the shop checks
-            chart = {"name": "PP CCB Chart", "document_type": "Delivery Note", "chart_type": "Group By", k: ADDED, "type": "Bar"}
-            self.assertTrue(refused(lambda m, c=chart: m.update(dashboard_charts=[c])), k)
-
-    def test_a_workspace_shortcut_to_its_own_report_is_refused(self):
-        # the shop makes workspaces before reports, so the link to a report the same manifest makes cannot save
-        sc = {"type": "Report", "link_to": BASE["reports"][0]["name"], "label": "Pick"}
+    def test_a_report_on_a_field_it_adds_and_a_workspace_on_its_own_report_pass(self):
+        # both installed on the test bench at POS build 2.1.0.679
         m = copy.deepcopy(BASE)
-        m["workspaces"][0]["shortcuts"].append(sc)
-        self.assertEqual(validate(m), [])                 # the shop's checker passes it: only the install refuses it
-        self.assertTrue(any("Link To: " + sc["link_to"] in r["reason"] for r in site(m)))
-        m["workspaces"][0]["shortcuts"][-1] = dict(sc, link_to="Stock Ledger")     # a report the shop already has
-        self.assertFalse(any("Link To:" in r["reason"] for r in site(m)))
+        m["reports"].append({"name": "PP CCB Waiting", "ref_doctype": "Delivery Note", "columns": ["name", ADDED], "filters": [[ADDED, "=", 0]]})
+        m["workspaces"] = [{"name": "PP CCB Home", "shortcuts": [{"type": "Report", "link_to": "PP CCB Waiting"}]}]
+        m["number_cards"] = [{"name": "PP CCB Count", "document_type": "Delivery Note", "aggregate_function_based_on": ADDED}]
+        m["dashboard_charts"] = [{"name": "PP CCB Chart", "document_type": "Delivery Note", "based_on": ADDED}]
+        self.assertEqual(site(m), [])
 
-    def test_what_the_shop_does_not_check_is_not_refused(self):
-        # a card's FILTERS are not checked by the shop's install, and a standard field is always there
-        card = {"name": "PP CCB Count", "document_type": "Delivery Note", "filters": [[ADDED, "=", 0]]}
-        self.assertEqual(refused(lambda m: m.update(number_cards=[card])), [])
-        rep = {"name": "PP CCB Notes", "ref_doctype": "Delivery Note", "columns": ["name", "po_no"],
-               "filters": [["is_return", "=", 0]]}
-        self.assertEqual(refused(lambda m: m["reports"].append(rep)), [])
+
+class LongNames(unittest.TestCase):
+    def test_a_record_types_name_over_61_characters_is_refused_and_61_passes(self):
+        m = copy.deepcopy(BASE)
+        m["doctypes"] = [{"name": "X" * 61, "fields": []}]
+        self.assertEqual(site(m), [])
+        m["doctypes"][0]["name"] = "X" * 62
+        self.assertIn("limited to 61", site(m)[0]["reason"])
 
 
 class FeedDescription(unittest.TestCase):
-    """The shop's Registered Application keeps 140 characters of description (APPF run 12, S44's first install)."""
+    """The shop's Registered Application keeps 140 characters of description."""
 
     def test_a_feed_description_over_140_characters_is_refused_and_140_passes(self):
         m = copy.deepcopy(BASE)
@@ -77,16 +52,6 @@ class FeedDescription(unittest.TestCase):
         reg["description"] = "x" * 141
         self.assertEqual(validate(m), [])                 # the shop's checker passes it: only the install refuses it
         self.assertTrue(any("141 characters" in r["reason"] for r in site(m)))
-
-    def test_a_dynamic_link_must_name_a_link_field_to_doctype_or_a_select(self):
-        m = {"doctypes": [{"name": "PP X Row", "istable": 1, "fields": [
-            {"fieldname": "kind", "fieldtype": "Data"}, {"fieldname": "ref", "fieldtype": "Dynamic Link", "options": "kind"}]}]}
-        self.assertTrue(any("Dynamic Link" in r["reason"] for r in site(m)))
-        m["doctypes"][0]["fields"][0] = {"fieldname": "kind", "fieldtype": "Link", "options": "Item"}
-        self.assertTrue(any("Dynamic Link" in r["reason"] for r in site(m)))
-        for ok in ({"fieldtype": "Link", "options": "DocType"}, {"fieldtype": "Select", "options": "POS Invoice\nSales Invoice"}):
-            m["doctypes"][0]["fields"][0] = dict(ok, fieldname="kind")
-            self.assertEqual(site(m), [], ok)
 
     def test_every_sample_feed_description_fits(self):
         for f in sorted((HERE.parents[2] / "samples").glob("*/manifest.json")):

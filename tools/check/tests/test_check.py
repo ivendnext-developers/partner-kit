@@ -92,16 +92,13 @@ class CheckTest(unittest.TestCase):
         self.assertIn("a server script runs partner code", out)
         self.assertIn("CHECK RED: 1 refusal(s)", out)
 
-    def test_planted_defect_a_report_on_a_field_its_own_manifest_adds(self):
-        # the shop's install refuses it after the checker passes it (tools/manifest/site_rules.py; APPF run 5, S33)
+    def test_planted_defect_a_record_type_with_a_name_too_long(self):
+        # the install stops on it after the checker passes it (tools/manifest/site_rules.py)
         p = self.project().good()
-        bad = {**GOOD_MANIFEST, "manifest_version": 2, "custom_fields": [{"dt": "Delivery Note", "fieldname": "pp_wrc_flag", "fieldtype": "Check",
-                                                    "label": "Flag", "insert_after": "po_no"}],
-               "reports": [{"name": "PP WRC Flags", "ref_doctype": "Delivery Note", "columns": ["name", "pp_wrc_flag"]}]}
-        p.write("manifest.json", bad)
+        p.write("manifest.json", {**GOOD_MANIFEST, "manifest_version": 2, "doctypes": [{"name": "PP WRC " + "X" * 60, "fields": [{"fieldname": "note", "fieldtype": "Data", "label": "Note"}]}]})
         code, out = p.run()
         self.assertEqual(code, 1, out)
-        self.assertIn("not fields of Delivery Note: ['pp_wrc_flag']", out)
+        self.assertIn("Doctype name is limited to 61 characters", out)
 
     def test_planted_defect_a_sample_answer_that_breaks_its_schema(self):
         p = self.project().good()

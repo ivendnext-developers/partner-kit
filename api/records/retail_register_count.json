@@ -187,6 +187,6 @@
    ]
   }
  },
- "why": "contract register_books; recipe regulated_register",
+ "why": "contract register_books; recipe regulated_register; sample S41",
  "written_elsewhere": ""
 }

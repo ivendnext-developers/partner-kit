@@ -19,7 +19,7 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 1. **Declare the settings record and the check in your manifest** (`samples/s51_refund_rules/manifest.json`):
    - a record type `<PREFIX> Settings` named by its title, the service reads `Default`: *Refund by the sale's own methods* (a **Check**), *Store credit method* (a **Link** to *Mode of Payment*, required with the tick: `"mandatory_depends_on": "same_methods"`), *Always allowed* and *Without its sale, only these methods* (each a **Table** of one child type, `<PREFIX> Method`, a **Link** to *Mode of Payment*; neither required). Give **System Manager** the rights to edit it and your integration role **read only**; name the role `<PREFIX> Integration`, so the install makes it;
    - one `check` subscription at your service's address, and that address alone in `allowed_urls`;
-   - a feed registration, one per app, with no user named (its description at most 140 characters): from POS version 2.1.0.667 the install makes your app's own user, `<app>@integration.invalid`, and names it, and the retailer's site hands that user's key to your hosted service after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed);
+   - a feed registration, one per app, with no user named (its description at most 140 characters): the install makes your app's own user, `<app>@integration.invalid`, and names it, and the retailer's site hands that user's key to your hosted service after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed);
    - a help address on the settings record type (a `documentation` property setter).
 
 2. **Choose what happens when your service is down.** The sample declares `allow_and_flag`: an outage never stops a refund, and it is flagged on *Sales to review*. A retailer that must never refund outside its rules changes its subscription to `refuse` once the site has handed your service its user's key. A key withdrawn or a user disabled (401 or 403) is iVendNext unreadable too: log it apart from an outage.
@@ -41,7 +41,6 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 - Whole sales only (every line returned) is your version: read the sale's lines with the integration user.
 - Offline, the till does not call your service. The check does not run on a park, a layaway deposit, an account collection, a gift card's balance paid out in cash or the Desk's own POS screen.
 - At a till with a cash drawer, an exchange whose replacement costs less pays its difference in cash: refused at its credit note when your rule leaves cash out. Say so in your guide: return the items, then ring the new ones.
-- Before POS version 2.1.0.669, `return_of.paid_by` lists a sale's tender rows, so a zero-amount row counts as a method that paid; from 2.1.0.669 it names only the methods that paid.
 - A layaway plan's refund is payable at any store of the company, whatever *Use inter-store transactions* says.
 - The till asks every check at each Pay too: answer a sale at once, but it is still a call, and it carries the sale's details.
 - Not checked: a return sent to a register (refunded in Desk) and a refund made in Desk.

@@ -84,5 +84,5 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 ## Technical notes
 
 - **Why not the engine's *Get Items*.** A Material Issue *from BOM* explodes one recipe per entry (`fg_completed_qty` of one `bom_no`), so a day of many dishes would be one entry per dish. The service reads the same recipe rows (`stock_qty` per `quantity` made) and books one entry per store-day.
-- **Cost of goods sold** is the retailer's own default chain for an issue row: the item's default expense account, else its group's, else the company's stock adjustment account. A client that sends a row's account is kept by iVendNext; this recipe sends none, so the retailer's own setting holds.
+- **Cost of goods sold** is the retailer's own default chain for an issue row: the item's default expense account, else its group's, else the company's stock adjustment account. A caller that sends a row's account is kept by iVendNext; this recipe sends none, so the retailer's own setting holds.
 - **Food cost.** Theoretical = used by recipe + sold as it is; actual = that + other issues + missing at the count. Receipts and transfers between stores are not use.

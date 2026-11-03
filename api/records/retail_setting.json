@@ -611,7 +611,7 @@
   {
    "added": 1,
    "choices": [],
-   "description": "The staff discount rate on a staff member's own purchase. Default 10%.",
+   "description": "The staff rate when neither the staff member nor their group sets one. Default 10%.",
    "fieldname": "custom_mpos_employee_discount_pct",
    "hidden": 0,
    "label": "Employee Discount (%)",
@@ -623,7 +623,7 @@
   {
    "added": 1,
    "choices": [],
-   "description": "Monthly staff-discount budget per employee. Once spent, full price. 0 turns it off.",
+   "description": "Monthly staff budget if neither the staff member nor their group sets one. 0 turns it off.",
    "fieldname": "custom_mpos_employee_discount_monthly_allowance",
    "hidden": 0,
    "label": "Employee Monthly Allowance",
@@ -635,26 +635,14 @@
   {
    "added": 1,
    "choices": [],
-   "description": "For items with no list price: a price above this needs a manager's approval. Default 500.",
-   "fieldname": "custom_mpos_open_price_max_amount",
+   "description": "Count the staff rate in the cumulative discount threshold. Off: it never needs a manager.",
+   "fieldname": "custom_mpos_staff_rate_counts_toward_threshold",
    "hidden": 0,
-   "label": "Open Price Ceiling (No-List Items)",
+   "label": "Staff Discount Counts Toward Threshold",
    "links_to": "",
    "read_only": 0,
    "required": 0,
-   "type": "Currency"
-  },
-  {
-   "added": 1,
-   "choices": [],
-   "description": "The most parts a split payment may have on the POS. 0 or blank means no limit.",
-   "fieldname": "custom_mpos_split_max_legs",
-   "hidden": 0,
-   "label": "Split Tender Max Legs",
-   "links_to": "",
-   "read_only": 0,
-   "required": 0,
-   "type": "Int"
+   "type": "Check"
   },
   {
    "added": 1,
@@ -766,6 +754,18 @@
    "read_only": 0,
    "required": 0,
    "type": "Percent"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "The most lines one sale may carry on the POS. The till refuses the line that would go over it. 0 or blank means no limit.",
+   "fieldname": "custom_mpos_max_sale_lines",
+   "hidden": 0,
+   "label": "Most Lines on One Sale",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
   },
   {
    "added": 1,
@@ -889,6 +889,30 @@
    "read_only": 0,
    "required": 0,
    "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "For items with no list price: a price above this needs a manager's approval. Default 500.",
+   "fieldname": "custom_mpos_open_price_max_amount",
+   "hidden": 0,
+   "label": "Open Price Ceiling (No-List Items)",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "The most parts a split payment may have on the POS. 0 or blank means no limit.",
+   "fieldname": "custom_mpos_split_max_legs",
+   "hidden": 0,
+   "label": "Split Tender Max Legs",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Int"
   }
  ],
  "lede": "The till's settings for the whole site: one record.",
@@ -898,6 +922,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "card staff-discount-monthly-allowance; guide chapter 04; recipe configure_no_code",
+ "why": "card staff-discount-monthly-allowance; guide chapter 04; recipe configure_no_code; sample S5; sample S8",
  "written_elsewhere": ""
 }

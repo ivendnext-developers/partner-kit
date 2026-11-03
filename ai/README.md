@@ -1,5 +1,7 @@
 # Prompt recipes for an AI assistant
 
+**To build an app, read [Build your first app](../site/pages/first_app.md) first.** The recipes below go further, one way in at a time.
+
 One recipe per way into iVendNext, plus one for building a whole reference app from a brief. Each is written for an assistant that has read [AGENTS.md](../AGENTS.md) and is working with a person. A recipe gives the goal, the files to read, the steps, the check to run and what "done" looks like. Each links the sample whose shape you copy. Each recipe is a short route into the full recipe and chapter it names; read those too.
 
 | Way in | Recipe |
@@ -11,7 +13,7 @@ One recipe per way into iVendNext, plus one for building a whole reference app f
 | 5. Sandboxed function | [5_sandboxed_function.md](5_sandboxed_function.md) |
 | A reference app from a brief | [6_build_from_a_brief.md](6_build_from_a_brief.md) |
 
-Before any recipe, if the person asks how an iVendNext app runs, where the data lives, whether customers collide or how many apps to build, answer from [`guide/01a_how_it_all_works.md`](../guide/01a_how_it_all_works.md) and [`site/pages/questions.md`](../site/pages/questions.md); how data travels through an outside system is chapter 1c, [`guide/01c_how_the_data_travels.md`](../guide/01c_how_the_data_travels.md).
+Before any recipe, if the person asks how an iVendNext app runs, where the data lives, whether customers collide or how many apps to build, answer from [`guide/01a_how_it_all_works.md`](../guide/01a_how_it_all_works.md); how data travels through an outside system is chapter 1c, [`guide/01c_how_the_data_travels.md`](../guide/01c_how_the_data_travels.md).
 
 Before choosing a recipe, find the need's card in the needs catalogue: `python3 tools/needs/needs.py search <the customer's words>` gives its verdict and its door, and the door picks the recipe below (AGENTS.md, step 2). A need with no card is placed on the ladder by hand.
 

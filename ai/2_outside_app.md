@@ -2,7 +2,7 @@
 
 **Goal.** A service that runs on your own server (any language) and reads and writes a retailer's records, or reacts to what happens in the retailer's iVendNext: a booked sale, a changed customer, a stock movement.
 
-**Read.** [guide/05_outside_apps_and_event_feed.md](../guide/05_outside_apps_and_event_feed.md) · [recipes/connected_app.md](../recipes/connected_app.md) · [recipes/event_feed.md](../recipes/event_feed.md) · [recipes/integration_user.md](../recipes/integration_user.md) · [recipes/webhook_receiver.md](../recipes/webhook_receiver.md) · [api/README.md](../api/README.md) and `api/openapi.yaml`.
+**Read.** [Build your first app](../site/pages/first_app.md) · [recipes/connected_app.md](../recipes/connected_app.md) · [recipes/event_feed.md](../recipes/event_feed.md) · [recipes/integration_user.md](../recipes/integration_user.md) · [recipes/webhook_receiver.md](../recipes/webhook_receiver.md) · [api/README.md](../api/README.md) and `api/openapi.yaml`.
 
 **Samples to copy.**
 - React to every sale and write a comment on it: [samples/s1_warranty/](../samples/s1_warranty/) (its `service/`).

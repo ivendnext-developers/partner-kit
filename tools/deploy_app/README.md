@@ -4,8 +4,8 @@ If you would rather not run a server, CitiXsys can host your app for you. This c
 hosting service does, and shows what it would create: the address, the size, what your plan includes. **Planning
 changes nothing.** To order it, use `ivn` or *My apps* ([Order and run it](#order-and-run-it)).
 
-**It is for** a builder whose app follows the template in [`../app_template/`](../app_template/README.md) (guide
-[chapter 14b](../../guide/14b_deploying_your_app.md)) and who wants it hosted by CitiXsys instead of on their own cloud.
+**It is for** a builder whose app follows the template in [`../app_template/`](../app_template/README.md) (see
+[Publish your app](../../site/pages/publish.md)) and who wants it hosted by CitiXsys instead of on their own cloud.
 
 ## Use it
 
@@ -19,7 +19,7 @@ changes nothing.** To order it, use `ivn` or *My apps* ([Order and run it](#orde
 
    A staging copy: add `--env staging`. As JSON: add `--json`.
 
-   **An app that only answers presses** (its `app.json` says `"runs": "function"`) is hosted as a function, run only when called: give `--zip <file>` instead of `--image`, and this writes the package to send us (`--root <folder>` when its `package` paths start above the app's folder). Chapter 14b, *A function or a container*.
+   **An app that only answers presses** (its `app.json` says `"runs": "function"`) is hosted as a function, run only when called: give `--zip <file>` instead of `--image`, and this writes the package to send us (`--root <folder>` when its `package` paths start above the app's folder). [Chapter 1a](../../guide/01a_how_it_all_works.md).
 
 It prints `PLANNED:` and what would be created, or one `REFUSED:` line per problem. Exit code: 0 planned · 1 refused · 2 usage.
 

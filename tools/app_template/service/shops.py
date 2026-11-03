@@ -1,6 +1,6 @@
 """The shops an app serves, and the handshake that adds them: one app, many shops, each with its own secrets.
 
-After a shop installs the app from the App library, the shop's site sends ONE call (guide chapter 14b):
+After a shop installs the app from the App library, the shop's site sends ONE call (guide chapter 1a):
 
     POST /ivendnext/connect      X-iVendNext-Site: shop-a.ivendnext.com
     {"key": "IVN1-…", "site": "shop-a.ivendnext.com", "secrets": {"<the record's name>": "<its secret>", …}}

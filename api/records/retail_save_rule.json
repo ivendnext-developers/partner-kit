@@ -531,6 +531,6 @@
    ]
   }
  },
- "why": "contract save_rules; recipe event_feed; recipe save_rules",
+ "why": "contract save_rules; recipe consignment_payouts; recipe donation_intake; recipe event_feed; recipe liquor_excise_returns; recipe save_rules; sample S22; sample S40; sample S61; sample S62; the kit's tool manifest; the kit's tool sandbox_check",
  "written_elsewhere": ""
 }

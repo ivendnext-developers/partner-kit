@@ -382,6 +382,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "recipe restaurant_back_office; retail core",
+ "why": "recipe liquor_excise_returns; recipe restaurant_back_office; sample S45; sample S62; the kit's tool manifest; the kit's tool scale_profile; retail core",
  "written_elsewhere": "iVendNext writes it when a stock document is booked."
 }

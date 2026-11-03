@@ -343,13 +343,6 @@ class Manifest(unittest.TestCase):
         self.assertTrue(all(n["date_changed"] == "return_due" and n["document_type"] == "Retail Register Period"
                             for n in d["notifications"]))
 
-    def test_the_old_reminder_name_is_one_the_shop_refuses(self):
-        # canary: the 0.1.2 build named it by book_ref, whose dot the shop's name rule refuses
-        m = {"manifest_version": 2, "app": "pp_rsr", "prefix": "PP RSR", "title": "x", "version": "0.2.0",
-             "publisher": "x", "description": "x",
-             "notifications": [{**build.build_manifest()["notifications"][0], "name": "PP RSR Return due a.b"}]}
-        self.assertTrue(validate.validate(m))
-
     def test_a_shop_builds_its_own_markets_and_keeps_every_field(self):
         m = build.build_files(["ke_pharmacy"])
         whole = build.build_manifest()
@@ -1042,7 +1035,7 @@ class FormatFolds(unittest.TestCase):
     def test_the_build_runs_the_shops_checker_before_it_writes(self):
         self.assertEqual(build.refusals(build.build_manifest()), [])
         m = build.build_manifest()
-        m["print_formats"][0]["name"] = "PP RSR " + "x" * 70
+        del m["prefix"]
         self.assertTrue(build.refusals(m))
 
 

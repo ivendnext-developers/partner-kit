@@ -31,13 +31,13 @@ A till key is a button on the till, an extension point the retailer switches on.
 
 3. **Test the core without a retailer's iVendNext.** Record a few real contexts once, then unit-test against them: `python3 -m unittest discover -s samples/s1_warranty/tests -p 'test_core.py'`.
 
-4. **Switch the key on — the retailer decides.** iVendNext Desk → **POS Studio** → open the theme → **Apps** tab → tick the key → **Save**. Every till whose profile wears that theme shows the key on the counter layout; the phone layout shows none. A press for a key that is not switched on is refused.
+4. **The key is on from the install.** A key your manifest declares shows on every store's till, on the counter layout; the phone layout shows none. A key added by hand as a record (step 6) is switched on in iVendNext Desk → **POS Studio** → open the theme → **Apps** tab → tick the key → **Save**. A press for a key that is not switched on is refused.
 
 5. **Press it the way the till does.** The till calls `POST /api/method/ivendnext_mpos.api.app_button.press` with `app`, `key`, the basket and its device id. The press needs the sell permission, an enrolled device and (where seats are enforced) an open day. A press with no device is refused.
 
 6. **Remote binding — the same core on your own server, with nothing installed in the retailer's iVendNext.** The retailer sets it up in two places:
    - a **System Manager** opens **Retail Remote App Key** in Desk and adds one record per key: your name as the partner, an app name, the key, its label, what it may return, your **HTTPS** address, a signing secret you both hold, and the time to answer — 3 seconds unless raised, at most 10 on this record; a manifest may declare at most 5 (`recipes/manifest.md`). The System Manager also ticks **the customer's consent** to send the listed sale details to that address;
-   - then the store switches the key on in **POS Studio → Apps**, like any other key.
+   - then the store switches the key on in **POS Studio → Apps**.
 
    Your side is about ten lines around the core, behind your HTTPS endpoint:
 
@@ -75,7 +75,7 @@ The till refuses in words, with **nothing added to the sale**, never a partial a
 
 ## What is coming
 
-- **Keys declared from data:** a System Manager adds the Retail Remote App Key record by hand (step 6), or your manifest declares it (`remote_keys`: `recipes/manifest.md`). **From POS build 2.0.0.646** a key your manifest declares is ready in POS Studio > Apps once the app is installed: the consent on the install screen is the key's consent, and the store switches the key on there. On an older build it installs switched off with consent not given.
+- **Keys declared from data:** a System Manager adds the Retail Remote App Key record by hand (step 6), or your manifest declares it (`remote_keys`: `recipes/manifest.md`). A key your manifest declares is on every store's till from the install, under the install's one consent.
 - **Shipped since:** a check before tender that may allow, refuse with a reason, or ask the cashier, before payment: its own door ([the till guard recipe](till_guard.md), `samples/s23_till_guard/`).
 
 ## Technical notes

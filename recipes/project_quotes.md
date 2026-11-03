@@ -67,8 +67,7 @@ The print format *PP PQT Project sheet* (Jinja) places the store's **Letter Head
 1. **Add the record types above** to your manifest (`doctypes`, the stage table with `"istable": 1`), with no money field: the quotes, orders and invoices hold the money. Never make the stage table `reqd`.
 2. **Add the two fields** (`custom_fields`): the project as a Link of one name (your reserved field prefix, then `_project`) on the four documents Desk's Create chains (Quotation, Sales Order, Delivery Note, Sales Invoice) and, under a name of its own (`_till_project`), on POS Invoice, `allow_on_submit` 1, `in_standard_filter` 1, never `reqd`; the stage as a text field of one name on the three line tables, `allow_on_submit` 1 on the order's line, placed after its `delivery_date`.
 3. **Add the project sheet** (`print_formats`, above), the builder's projects under Customer (`links`), and a `documentation` property setter that points at your help.
-4. **Leave out** a Connections list of the documents under the project (a manifest's link may only list its own records under a retailer's record) and a report on the Sales Order naming your field (the retailer's site checks a report against its record type before the install, when your field is not there yet): the sheet and the lists' filter do that work.
-5. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s60_project_quotes`.
+4. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s60_project_quotes`.
 
 ## What the retailer does
 
@@ -86,5 +85,4 @@ The print format *PP PQT Project sheet* (Jinja) places the store's **Letter Head
 - **The sheet lists every document naming the project**, drafts, cancelled ones and returns included; each section stops at 200.
 - **A document made from several others takes the last one's project** (*Get Items From* over two orders): keep one job per document.
 - **The sheet prints its documents' dates as year-month-day:** the rows `ivn_rows` returns are plain values.
-- **Desk shows the records with the app's prefix** (*PP PQT Project*).
 - **The builder's details are the retailer's.** Uninstalling removes the projects (the install's export keeps a copy of them) and the Project and Stage fields from every document; which project each document named goes with the fields, and the export does not keep it.

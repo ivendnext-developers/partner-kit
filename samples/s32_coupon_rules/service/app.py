@@ -24,7 +24,7 @@ ONE SHOP (env or an env file):
     IVN_CHECK_SECRET   the check's secret (handed back at install as pp_cpn:sub:coupons)
     IVN_SHOP_URL       the shop's address, e.g. https://shop.example.com
     IVN_SHOP_KEY       the app's integration user's key, "<api key>:<api secret>"
-MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
+MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_cpn), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
                        Each shop connects itself after its install and hands over the check's secret and its integration
                        user's key ("user:<email>": "<api key>:<api secret>"); every call names its shop (X-iVendNext-Site).
@@ -244,7 +244,7 @@ def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[i
     return code, out
 
 
-# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b): settings from the environment.
+# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a): settings from the environment.
 lambda_handler = function.entry(lambda: Service(dict(os.environ)), handle)
 
 

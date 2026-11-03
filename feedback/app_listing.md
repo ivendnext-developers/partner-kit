@@ -1,6 +1,6 @@
 # App listing request — ask us to list your app in the App library, for every retailer
 
-**You can publish yourself.** A company we have registered publishes its apps with one kit command, from any computer and wherever it keeps its code (`tools/publish/publish.py`): we take only the manifest and the card, never your source. An app's first listing waits for one approval by us ([Publish your app](../site/pages/publish.md)). Your company and its first word are set up by you, once, on [My apps](https://developer.ivendnext.com/apps): no form. ⛔ **Never put a token, your signing key's line or your `recipient.pem` in a form.**
+**You can list it yourself.** `ivn publish --public`, or **Publish** then **To everyone** on [My apps](https://developer.ivendnext.com/apps), lists your app from any computer: the first listing waits for one approval by us, and that is all ([Publish your app](../site/pages/publish.md)). Use this form only if that does not work for you.
 
 **For:** an iVendNext Partner, a licensed customer's IT team or the CitiXsys Consulting Team who has built an app (a manifest) that any retailer could use, and wants it listed in the App library (`https://library.ivendnext.app`), where retailers find it and install it from iVendNext Desk. These forms are for onboarded members ([who can file](README.md)). **Reference:** guide chapter 7 ([manifests](../guide/07_manifests.md)) and the developer site's *Publish your app* page.
 
@@ -31,23 +31,7 @@ App name: <its name under your company's first word, as in the manifest, for exa
 
 ## What the card and the guide must say
 
-A retailer reads two things before and after it installs your app: the **card** in the App library, and your app's **guide page**. The library will not list an app whose card cannot help a retailer, so the form asks for both up front.
-
-**The card (`library/app.json`)** carries, besides its title, one line, category, who uses it and changelog:
-
-- `details`: one **lead** sentence in a retailer's words, at least one point under **what** the app does, at least one **step** under **setup** (the steps a retailer takes after the install, in the order it meets them), and **notes** (good to know). Each list holds up to ten points of one to 300 characters.
-- `docs`: one to six `{title, url}` addresses, the first of them your guide page.
-- `industries`: `["all"]` for an app every retailer can use, standing alone, or one to six of the App library's industries (the list and how to choose are on the [publishing page](../site/pages/publish.md)). Required on a public card.
-
-**The guide page** has five headings, in this order, written for the retailer's owner or manager, not for a developer:
-
-1. **What it does** — two or three sentences; who uses it.
-2. **What you set up first** — numbered; each step names the Desk screen by the name a retailer searches for.
-3. **Where it shows** — Desk, the till, POS Studio, print layouts.
-4. **What leaves your iVendNext** — taken from your manifest: outside addresses, till keys, webhooks, services, event feeds, print and label layouts. *Nothing* only when the manifest names nothing.
-5. **How to remove it** — from the app's **Details**, **Export and uninstall**, and what is kept.
-
-An app with **three or more screens a retailer opens** (record types that are not a table inside another, reports, Desk pages) gets a **section** of pages in place of one page, with a heading for each screen. The docs site also groups every app as an **App** (it adds records a retailer works in every day, or a screen of its own) or a **Rule** (it adds one check, field or layout to a screen the retailer already uses, with only the settings it needs). Say which yours is when you describe the app in the listing request. Each of your record types has one `documentation` property setter at its page and heading. The section *What a retailer reads: the card and the guide* of the recipe [*Shipping your own data in a manifest*](../recipes/manifest.md) has the shapes and the five refusals the library gives, word for word.
+The card is `app.json`'s `card`: `title`, `summary`, `what`, `pictures`, `industries`, `price` and `guide`. The guide link may be any https page; your repository's README is enough. `industries` is `["all"]` for an app every retailer can use, or one to six of the App library's industries.
 
 ## What we may ask you next, in the issue
 
@@ -56,6 +40,6 @@ Who answers a retailer's questions about it · whether it sends anything outside
 ## What happens after you send it
 
 - It is given an **id**, which comes back to you in the issue.
-- We check the app against the listing bar, on our own bench, with developer mode off.
-- It is answered in the issue with one of: **registered** (your company, its signing key and its first word: publish the app with `tools/publish/publish.py`, and its first listing waits for our one approval), **needs more** or **declined** (with the reason).
+- We check the app against the listing bar.
+- It is answered in the issue with one of: **listed**, **needs more** or **declined** (with the reason).
 - A listed app shows your company as its maker. A later version you publish yourself: a new version number and a changelog line, listed at once unless it does more than the one before.

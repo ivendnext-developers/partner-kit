@@ -30,14 +30,14 @@ A Desk action is a button on a record in iVendNext Desk. When a user presses it,
 
    - `placement`: `form`, `list` (the list's Actions menu, on several records at once) or `both`. A bulk press needs `list` or `both`.
    - `inputs`: up to 10, each of one of eight types: `Data`, `Int`, `Float`, `Date`, `Select`, `Link`, `Check`, `Small Text` ([the library page](../contracts/pages/desk_action.md) holds the list at the product's head). Any other type, `Currency` included, is refused at install (*"Input 1: choose one of the listed types."*). **An amount is typed as a `Float`.** It reaches your service as a JSON number, so read it with `Decimal(str(value))` and never add amounts up in float (S22's `money.py` does this).
-   - `send_fields` **is the retailer's consent.** iVendNext reads it before it switches your service on: name exactly what you need, and nothing more. Money leaves as whole minor units with its currency; **a quantity leaves in thousandths** (2 units arrive as `2000`).
-   - The manifest installs **switched off**: your service unconsented and off, the button off. The service's signing secret is handed back **once**, at install.
+   - `send_fields` **is the retailer's consent.** iVendNext shows it at install: name exactly what you need, and nothing more. Money leaves as whole minor units with its currency; **a quantity leaves in thousandths** (2 units arrive as `2000`).
+   - The service and the button are on from the install. The service's signing secret is handed back **once**, at install.
 
    The Connections link is what puts your record under the retailer's record. Here the pick task is listed under *Picking* on the order:
 
    ![the task under the order's Connections](../samples/s16_pick_route/screenshots/05_order_connections.png)
 
-2. **What the retailer does after install.** A System Manager opens your service (*Retail Extension Subscription*), reads what is sent, ticks the consent and switches it on, then switches the button on (*Retail Desk Action*). The server stamps the consent (who, when, for which address and which list). A change to the address or the list clears it.
+2. **What the retailer does after install.** Nothing to switch on: the install consent lists what is sent (*Retail Extension Subscription*), and the service and the button (*Retail Desk Action*) are on. A change to the address or the list asks for the consent again.
 
    Once it is on, the button sits in the record's menu — here in the **Warehouse** menu of a submitted order:
 
@@ -92,19 +92,19 @@ A Desk action is a button on a record in iVendNext Desk. When a user presses it,
 The approver must say why when rejecting (a purchase order, a price change), and the reason is kept on the document. **The doors it combines:** a Desk action with one required input, your service, the workflow call, and a save rule as the net. **The limit:** the approver presses your button, not the workflow's own *Reject*, and the reject is recorded as your integration user.
 
 1. **Your manifest** adds two fields to the document (`<prefix>_rejection_reason`, Small Text; `<prefix>_rejected_by`, Data, read only) and a Desk action **Reject with reason** with one input, `reason` (Small Text, `"reqd": 1`), on the workflow states that may be rejected, with `roles` set to **the roles that held the workflow's reject before** (step 3 takes it from them, so the button's roles become the only gate on who may reject). The dialog asks for the reason before anything is sent.
-2. **Your service** writes the reason and the pressing user (`context.user`) into those fields, **then** takes the workflow's reject (`/api/method/ivendnext_mpos.api.v1.apply_workflow`). In that order: the workflow call reads the saved document again, so a reason sent with it would be dropped. Sample S11 (`samples/s11_approvals/approvals.py`, `reject`):
+2. **Your service** writes the reason and the pressing user (`context.user`) into those fields, **then** takes the workflow's reject (`/api/method/ivendnext_mpos.api.v1.apply_workflow`). In that order: the workflow call reads the saved document again, so a reason sent with it would be dropped:
 
    ```python
    if len(reason.strip()) < 5:
        return {"message": {"title": "A reason is needed", "body": "Write why it is rejected …", "level": "warning"}}
    api.call("PUT", f"/api/resource/{DT}/{name}", body={"rejection_reason": reason, "rejected_by": presser})
-   api.call("POST", "/api/method/ivendnext_mpos.api.v1.apply_workflow", body={"doc": json.dumps(doc), "action": "PP APR Reject"})
+   api.call("POST", "/api/method/ivendnext_mpos.api.v1.apply_workflow", body={"doc": json.dumps(doc), "action": "Reject"})
    return {"message": {"title": "Rejected", "body": "… The reason is kept on it.", "level": "success"}, "refresh": True}
    ```
 
-   A second press finds the document already rejected and says so. If iVendNext refuses the transition (the service's role may not take it), the service puts the two fields back and says so: a document is never left carrying a reason it was not rejected for. If the answer is lost (a timeout) the service reads the document again first, so a reject that went through keeps its reason. Sample S11's `reject`, six tests.
-3. **Configuration, all at once:** take the reject transition away from the approvers' roles and give it to the service's integration user's role, switch the button on, and add **the net**: a save rule `required_when` on the reason field, condition `workflow_state = <your rejected state>`, mode `refuse`. A document rejected any other way (an import, the API) is then refused without a reason.
-   ⚠ Not one without the others. The save rule alone leaves the approvers unable to reject at all: they may not write the reason in a state another role edits, and their own *Reject* is then refused. S11 ships neither the button nor the rule, because it has no press service.
+   A second press finds the document already rejected and says so. If iVendNext refuses the transition (the service's role may not take it), the service puts the two fields back and says so: a document is never left carrying a reason it was not rejected for. If the answer is lost (a timeout) the service reads the document again first, so a reject that went through keeps its reason.
+3. **Configuration, all at once:** take the reject transition away from the approvers' roles and give it to the service's integration user's role, and add **the net**: a save rule `required_when` on the reason field, condition `workflow_state = <your rejected state>`, mode `refuse`. A document rejected any other way (an import, the API) is then refused without a reason.
+   ⚠ Not one without the others. The save rule alone leaves the approvers unable to reject at all: they may not write the reason in a state another role edits, and their own *Reject* is then refused.
 
 Limits to tell the customer:
 - the workflow records your integration user as the one who rejected; `rejected_by` holds the person who pressed;
@@ -128,8 +128,8 @@ Limits to tell the customer:
 
 Proven on our test bench on 2026-10-07.
 
-- Install, step 1. **On the bench:** both manifests passed the checker (`VALID`) and installed **switched off**: the service unconsented and off, the button off, the service's signing secret handed back **once**, as `pp_pck:sub:route`.
-- Switch-on, step 2. **On the bench:** done as data by the System Manager; the service was then callable, with the consent text naming `items(item_code, qty, warehouse)`.
+- Install, step 1. **On the bench:** both manifests passed the checker (`VALID`) and installed, the service's signing secret handed back **once**, as `pp_pck:sub:route`.
+- Consent, step 2. **On the bench:** the service was callable, with the consent text naming `items(item_code, qty, warehouse)`.
 - The signature check, step 3. **On the bench:** a fresh, well-formed press signed with the wrong secret was refused (401, nothing written), over HTTPS. With this check removed, S16's own tests go RED (we prove that with a mutation run on every change). The canary proves the sample's signature check.
 - Pressing it, step 6. **On the bench**, as a Stock User:
 

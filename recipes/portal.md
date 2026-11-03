@@ -4,7 +4,7 @@
 
 This recipe builds a **web app of your own, on your own server**, for people who already have accounts in a retailer's iVendNext: a head-office view, a franchise portal, a manager's dashboard. The person signs in with their iVendNext account, and the portal shows only what **that person's own permissions** allow. **Reference implementation:** `samples/s13_portal/` (the portal, its tests).
 
-**When to use it.** When the screen cannot live inside the retailer's iVendNext. If it can, use iVendNext's own screens first (guide chapter 13a, rung 1–4); a portal is rung 5.
+**When to use it.** When the screen cannot live inside the retailer's iVendNext. If it can, use iVendNext's own screens first (`guide/03_ladder_and_never_list.md`, rungs 1–4); a portal is rung 5.
 
 ## Steps
 

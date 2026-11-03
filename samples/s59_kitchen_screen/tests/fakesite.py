@@ -51,7 +51,7 @@ class FakeSite:
                         return self._send(502, "bad gateway")
                     if self.headers.get("Authorization") != f"token {site.key}":
                         return self._send(403, "no")
-                    return self._send(200, '<script>frappe.boot = {"sitename": "%s"}</script>' % site.name
+                    return self._send(200, '<script>window.boot = {"sitename": "%s"}</script>' % site.name
                                       if site.named else "<html>a Desk page with no boot data" + " " * 70000 + "</html>",
                                       "text/html")
                 q = dict(urllib.parse.parse_qsl(url.query))

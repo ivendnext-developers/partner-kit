@@ -7,7 +7,9 @@ import json
 import pathlib
 import sys
 import tempfile
+import os
 import unittest
+import unittest.mock
 import urllib.parse
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -20,19 +22,12 @@ GW, SAN = "Store A", "Store B"
 
 
 class Shop:
-    """requests, price rows, approval rules and the Version log, with the calls the service makes. ``calls`` records every write."""
+    """requests, price rows and the Version log, with the calls the service makes. ``calls`` records every write."""
 
     def __init__(self):
         self.reqs, self.prices, self.versions, self.calls, self.n = {}, {}, [], [], 0
         self.prices["IP-1"] = {"name": "IP-1", "item_code": "SKU-1", "price_list": "Retail", "selling": 1, "price_list_rate": 100.0, "modified": f"{DAY} 08:00:00"}
         self.clock = 0
-        self.rules = {"mgr-a@x": {"name": "mgr-a@x", "level": "Store", "store": GW, "limit_pct": 10.0},
-                      "mgr-b@x": {"name": "mgr-b@x", "level": "Store", "store": SAN, "limit_pct": 10.0},
-                      "ho@x": {"name": "ho@x", "level": "Head Office", "store": None, "limit_pct": None},
-                      "both@x": {"name": "both@x", "level": "Store", "store": GW, "limit_pct": 10.0},
-                      "hoboth@x": {"name": "hoboth@x", "level": "Head Office", "store": None, "limit_pct": None}}
-        for k, r in self.rules.items():
-            r["user"] = k
 
     def request(self, item="SKU-1", rate=105.0, state=A.REQUESTED, owner="req@x", store=GW, day=DAY):
         self.n += 1
@@ -64,7 +59,7 @@ class Shop:
             return {"data": dict(self.reqs[parts[1]])}
         if method == "GET":
             flt = json.loads(params.get("filters", "[]"))
-            rows = {A.DT: list(self.reqs.values()), "Item Price": list(self.prices.values()), A.RULE: list(self.rules.values())}[parts[0]]
+            rows = {A.DT: list(self.reqs.values()), "Item Price": list(self.prices.values())}[parts[0]]
             for f, op, v in flt:
                 rows = [r for r in rows if _ok(r.get(f), op, v)]
             return {"data": [dict(r) for r in sorted(rows, key=lambda r: (r.get("creation", ""), r.get("name", "")))]}
@@ -113,6 +108,15 @@ class T(unittest.TestCase):
         self.assertEqual(self.run_apply(), {"applied": [], "not_applied": [], "skipped": []})
         self.assertEqual(len(self.shop.calls), n)
 
+    def test_the_limit_is_the_setting(self):
+        for setting, want in (("5", 5.0), ("12.5", 12.5), ("", 10.0), ("abc", 10.0), ("0", 10.0)):
+            with self.subTest(setting), unittest.mock.patch.dict(os.environ, {"LIMIT_PCT": setting}):
+                self.assertEqual(A.setting_limit(), want)
+        with unittest.mock.patch.dict(os.environ, {"LIMIT_PCT": "5"}):            # an 8% change, within the default, waits at 5%
+            r = self.shop.request(rate=108.0)
+            self.shop.store_ok(r)
+            self.assertIn("limit", self.why(self.run_apply(), r))
+
     def test_a_change_above_the_store_limit_waits_for_head_office_and_nothing_is_written(self):
         r = self.shop.request(rate=111.0)                      # 11 %
         self.shop.store_ok(r)
@@ -133,46 +137,6 @@ class T(unittest.TestCase):
         r = self.shop.request(rate=150.0)
         self.shop.ho_ok(r)
         self.assertEqual(len(self.run_apply()["applied"]), 1)
-
-    def test_a_store_manager_who_writes_the_head_office_state_himself_is_not_believed(self):
-        r = self.shop.request(rate=150.0)
-        self.shop.store_ok(r)
-        self.shop.ho_ok(r, who="mgr-a@x")                      # the shop accepts a state written straight in; the service checks who
-        rep = self.run_apply()
-        self.assertIn("not a head-office approver", self.why(rep, r))
-        self.assertEqual((self.price(), self.shop.calls), (100.0, []))
-
-    def test_a_store_approver_of_another_store_is_not_believed(self):
-        r = self.shop.request(rate=105.0, store=GW)
-        self.shop.store_ok(r, who="mgr-b@x")
-        self.assertIn("not an approver for store", self.why(self.run_apply(), r))
-        self.assertEqual(self.shop.calls, [])
-
-    def test_an_approver_with_no_rule_row_is_not_believed_the_check_fails_closed(self):
-        r = self.shop.request()
-        self.shop.store_ok(r, who="nobody@x")
-        self.assertIn("no approval rule", self.why(self.run_apply(), r))
-        r2 = self.shop.request()
-        self.shop.store_ok(r2)
-        del self.shop.rules["mgr-a@x"]                          # the rule was taken away after the approval
-        self.assertIn("no approval rule", self.why(self.run_apply(), r2))
-        self.assertEqual(self.shop.calls, [])
-
-    def test_a_rule_row_that_is_not_whole_gives_no_authority(self):
-        r = self.shop.request()
-        self.shop.rules["mgr-a@x"]["limit_pct"] = 0.0           # a blank limit is stored by the shop as 0, never as nothing
-        self.shop.store_ok(r)
-        self.assertIn("rule", self.why(self.run_apply(), r))
-        self.assertEqual(self.shop.calls, [])
-        self.shop.rules["mgr-a@x"]["limit_pct"] = None
-        self.assertIn("rule", self.why(self.run_apply(), r))
-
-    def test_a_rule_row_whose_name_is_not_its_person_gives_no_authority(self):
-        r = self.shop.request()
-        self.shop.rules["mgr-a@x"]["user"] = "someone-else@x"   # an administrator edited the Person field of an existing row
-        self.shop.store_ok(r)
-        self.assertIn("no approval rule", self.why(self.run_apply(), r))
-        self.assertEqual(self.shop.calls, [])
 
     def test_a_limit_cannot_be_climbed_in_steps_one_approved_request_after_another(self):
         r1, r2 = self.shop.request(rate=110.0), self.shop.request(rate=120.0)      # +10 % and +20 % of the price both managers saw

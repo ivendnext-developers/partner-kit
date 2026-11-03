@@ -64,7 +64,7 @@ A second record type, numbered (`format:OPT-LAB-{#####}`), linked to its prescri
 - A report on `closed = 0` lists the open orders. ⚠ Never mark `closed` (or any field a report filters on) `in_standard_filter`: Desk moves a saved filter on a standard-filter field into that field, and an unticked tick filters nothing, so the report lists closed orders too (measured).
 - A print format of your own is the job sheet: print each value with `doc.get_formatted("<field>")`, so `-0.50` prints as the lab reads it.
 - A state's *who may edit* is a screen rule: over the record API anyone with write can change an order in any state.
-- The states and actions carry your prefix (*PP OPT Send to lab*): they are site-wide records your install and uninstall own by it.
+- The states and actions are site-wide records: your install makes them and your uninstall removes them.
 
 ## Settings
 
@@ -80,7 +80,7 @@ A settings record type whose record *Default* holds the retailer's **hours from 
    ```
 
    An item's mark is its own, else its template's (a variant does not inherit a field its template gained later), else the nearest group above it with one; *Not needed* frees it.
-2. **Add the check before payment** ([rule guard recipe](rule_guard.md)), and a feed registration for the app's user (switched off):
+2. **Add the check before payment** ([rule guard recipe](rule_guard.md)), and a feed registration for the app's user:
 
    ```json
    "extension_subscriptions": [{"key": "check", "point": "check", "label": "Prescription check",
@@ -98,12 +98,11 @@ A settings record type whose record *Default* holds the retailer's **hours from 
 
 ## What the retailer does
 
-1. **Install the app.** The check comes in switched off. The install adds the records, the mark, the workflow, the job sheet, the report and the roles.
+1. **Install the app.** The install adds the records, the mark, the workflow, the job sheet, the report, the roles and the check, which runs at Pay in every store.
 2. **Give the optometrist role and Sales User** to whoever writes prescriptions (Sales User reads customers for the picker and holds the lab order's buttons); store staff keep **Sales User**. Whoever chooses a lab order's **Lab** (a supplier) also needs a role that can see suppliers, such as **Stock User** or **Purchase User**.
 3. **Give the app's role its reads.** The install made the app's own user, `pp_opt@integration.invalid`, with the role *PP OPT Integration* (from POS version 2.1.0.667). In **Role Permissions** give that role a plain **Read** on **Item Group** and **Item**. A hosted service is connected by the site itself, after the install or an update (**Connect again** only if the site could not reach the app, or a key was lost or changed).
 4. **Fill in the settings** (*Default*: hours from UTC) and **mark the lens item groups**.
-5. **Switch the check on** in **Retail Extension Subscription** for the optical stores' POS Profiles (read what it is sent, tick the consent).
-6. **Tell customers, with the retailer's own Notifications** (a manifest may only notify the retailer's own users; a retailer's own Notification may carry a condition): *Lab Order*, **Value Change** on **Ready to collect**, condition `doc.ready_to_collect in (1, "1")` (the workflow writes the tick as text, `"0"` or `"1"`, so a bare `doc.ready_to_collect` also fires on the remake's untick), to **Customer's e-mail**; *Prescription*, **Days Before** **Valid until** (30 days), condition `doc.remind`, to **Customer's e-mail**. The e-mail is filled from the customer whenever it is empty, so untick a prescription's **E-mail reminders** to send it none; the SMS channel works the same way through iVendNext's SMS gateway.
+5. **Tell customers, with the retailer's own Notifications** (a manifest may only notify the retailer's own users; a retailer's own Notification may carry a condition): *Lab Order*, **Value Change** on **Ready to collect**, condition `doc.ready_to_collect in (1, "1")` (the workflow writes the tick as text, `"0"` or `"1"`, so a bare `doc.ready_to_collect` also fires on the remake's untick), to **Customer's e-mail**; *Prescription*, **Days Before** **Valid until** (30 days), condition `doc.remind`, to **Customer's e-mail**. The e-mail is filled from the customer whenever it is empty, so untick a prescription's **E-mail reminders** to send it none; the SMS channel works the same way through iVendNext's SMS gateway.
 
 ## Limits
 
@@ -112,7 +111,7 @@ A settings record type whose record *Default* holds the retailer's **hours from 
 - **When the service is down,** the sale is paid and flagged for review (`allow_and_flag`); offline, the same.
 - **A lab order's copied values** are its prescription's at the order's last save.
 - **A newer eye test** does not stop the older prescription's reminder: untick the older one's **E-mail reminders**.
-- **An insurer's or optical plan's share** of the payment is the POS board's payer split (`PB-8`), not this recipe's.
+- **An insurer's or optical plan's share** of the payment is a payer's split, not this recipe's.
 - **One customer record, one person's prescriptions:** the check passes a line on any prescription of the sale's customer, so a family sharing one record shares its prescriptions. Never enter a prescription on your walk-in customer: every walk-in sale would pass.
 - **One time zone per site:** *Hours from UTC* holds for every store of the site.
 

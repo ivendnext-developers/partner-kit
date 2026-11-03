@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_page.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_page.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner page
 
 **Contract:** [`partner_page.v1.schema.json`](../extension_contracts/partner_page.v1.schema.json)
@@ -36,7 +36,8 @@ Version 1: the context carries `"v": 1`.
 **The declaration** — a **Retail Extension Subscription** of extension point `page`: your page's address
 (HTTPS; its host is the only one we frame, never the shop's own), a secret, where it opens (*Till key*,
 *Desk page*, or *Till key and Desk page*), who may open the Desk page (roles), whether the signed-in
-user's id and the sale are sent, what the page may answer on the till (`message`, `sale_attributes`), its
+user's id and the sale are sent, what the page may answer on the till (`message`, `sale_attributes`, or
+nothing: a board of your own, whose key then opens on an empty basket too), its
 height on the counter (40 to 100 percent), and optionally the POS Profiles whose tills may open it — ⚠ a
 page limited to POS Profiles never opens in Desk, nor from a Desk action's `open_page`. On the
 till the page is a key like any app key: switch it on in **POS Studio → Apps** (the phone places no app
@@ -76,7 +77,9 @@ HMAC-SHA256 of `<timestamp>.<raw body>`. `result` is judged exactly as a [remote
 answer](remote_till_key.md#3-what-is-sent-and-what-you-answer): only the kinds the page may answer, one
 bad part refuses the whole. One answer per nonce. **Then** your page posts `{"type": "ivendnext:done"}`
 to its parent; the till hears it only from your frame on your origin, closes the sheet, picks the answer
-up and shows its confirm sheet.
+up and shows its confirm sheet. A page that answers nothing (a board of your own) submits nothing; it may
+post `done` to close itself, or leave the sheet to the cashier, and the till says nothing either way. Pressed
+on an empty basket, its context carries an empty `sale_ref` and no lines.
 
 ## 4. Every refusal, in the product's words
 
@@ -91,7 +94,8 @@ up and shows its confirm sheet.
 - *"This answer cannot be used: ⟨why⟩"* — the reason is one of the [remote till key's](remote_till_key.md#4-every-refusal-in-the-products-words).
   A refused answer may be corrected and sent again while the context lives.
 
-**On the till:** *"Add an item to the sale first, then press this button."* · *"This button's app is not
+**On the till:** *"Add an item to the sale first, then press this button."* (a page that may answer
+something; one that answers nothing opens on an empty basket too) · *"This button's app is not
 available right now. Nothing was added to the sale."* · *"This button is not switched on for this till.
 Nothing was added to the sale."* · *"The sale changed. Nothing was added. Press the button again."* (the
 sale changed while the confirm sheet was open) · *"⟨label⟩ did not send an answer. Nothing was added to
@@ -114,14 +118,12 @@ right now."*
   characters."* · *"Write its host in plain letters (a name in another script in its xn-- form)."* · *"Its
   path must not contain . or .. parts, a backslash, ; or an encoded / or %."* · *"A partner page cannot be
   on this site's own address."*
-- *"Choose who may open the Desk page."* · *"Choose at least one thing the page may answer on the till."* ·
-  *"The height on the till must be from 40 to 100."*
+- *"Choose who may open the Desk page."* · *"The height on the till must be from 40 to 100."*
 - *"The time to answer must be more than 0 and at most 10 seconds."* · *"When the service is down, this
   extension point can only: refuse."* · *"The extension point's settings must be a JSON object."*
 
 **In POS Studio → Apps:** *"Its record name is not one the till can use."* · *"It is switched off on its
-record."* · *"The customer's consent is not recorded, or its address is not one this till can open."* ·
-*"It names a result this till does not know."*
+record."* · *"The customer's consent is not recorded, or its address is not one this till can open."*
 
 ## 5. Consent, and when your page is down
 
@@ -193,5 +195,5 @@ through your own API calls.
 > fragment (base64url, HMAC-SHA256 over the payload bytes with the shared secret), `$defs/submit` is the
 > signed body your server posts to `/api/method/ivendnext_mpos.api.page.submit`, `$defs/declaration` the
 > Retail Extension Subscription. Verify the context on your server, refuse an expired one or a nonce you
-> have seen, never read the context in the browser's storage or query, answer once, then post
-> `{"type": "ivendnext:done"}` to the parent window.
+> have seen, never read the context in the browser's storage or query; if the page answers, answer once,
+> then post `{"type": "ivendnext:done"}` to the parent window.

@@ -117,6 +117,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "recipe desk_action",
+ "why": "recipe coupon_rules; recipe desk_action; recipe payment_method_rules; sample S14; sample S22; sample S24; sample S25; sample S26; sample S29; sample S3; sample S32; sample S38; sample S43; sample S44; sample S45; sample S46; sample S55; sample S61",
  "written_elsewhere": ""
 }

@@ -368,6 +368,18 @@
     {
      "added": 0,
      "choices": [],
+     "description": "A weighed article's scale reading or typed weight, kept from the add: the sale at Pay takes it from here.",
+     "fieldname": "weighed",
+     "hidden": 0,
+     "label": "Weight Reading",
+     "links_to": "",
+     "read_only": 1,
+     "required": 0,
+     "type": "Small Text"
+    },
+    {
+     "added": 0,
+     "choices": [],
      "description": "",
      "fieldname": "options",
      "hidden": 0,
@@ -637,6 +649,6 @@
    ]
   }
  },
- "why": "guide chapter 07",
+ "why": "retail core",
  "written_elsewhere": "only the open check's calls write it (`check_open`, `check_add_lines` and the rest); the record API is refused."
 }

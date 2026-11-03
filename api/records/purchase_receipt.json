@@ -2833,6 +2833,6 @@
    ]
   }
  },
- "why": "recipe expiry_recall; sample S22; sample S40; retail core",
+ "why": "recipe expiry_recall; sample S22; sample S40; sample S41; sample S62; the feed client; the kit's tool manifest; retail core",
  "written_elsewhere": ""
 }

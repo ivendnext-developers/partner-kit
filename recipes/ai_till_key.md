@@ -25,7 +25,7 @@ This recipe adds a key to the till that gives the cashier a short, AI-written hi
 
    *The key's record in Desk: enabled, message only, your HTTPS address.*
 
-3. **Switch the key on in the store:** **POS Studio → the theme → Apps → tick the key → Save**, as for any till key. The key then shows among the store's keys on the till.
+3. **The key is on every store's till** from the install. A store moves or hides it in **POS Studio → the theme → Apps**; a profile with no theme offers no key.
 
    ![the key on the till](../samples/s6_ai_till_key/screenshots/01_till_ai_tip_key.png)
 

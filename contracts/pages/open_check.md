@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/open_check.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/open_check.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Open check — a table's running order, paid once (`open_check/1`)
 
 **Who this is for:** a partner building a front-of-house app (reservations, a waiting list) or a guest
@@ -32,8 +32,8 @@ take `GET` too). Each runs the shop's own function, under the rights of the user
 
 | Verb | Right it asks | What it does |
 |---|---|---|
-| `check_open(store, pos_profile, key, place?, label?, covers?, server?, service_mode?, suggested_customer?, source?, source_ref?)` | open a check | opens a check at `place`, or a tab or pre-order named `label` (one at least); returns the check, version 1 |
-| `check_add_lines(check, lines, key)` | add to a check | appends lines; two callers adding at once both land |
+| `check_open(store, pos_profile, key, place?, label?, covers?, server?, service_mode?, suggested_customer?, source?, source_ref?, only_if_free?, lines?)` | open a check (with `lines`: add to a check too) | opens a check at `place`, or a tab or pre-order named `label` (one at least); returns the check, version 1. `only_if_free`: refused (`PlaceTakenError`) when the place already holds an open check, so a guest's first order and a till opening the same table at that moment leave one check (a tab has no place to hold). `lines`: the check's first lines, written with it under the add's rules; a refused line opens nothing, so no empty check is left behind. Use both for a guest's first order |
+| `check_add_lines(check, lines, key, source?)` | add to a check | appends lines; two callers adding at once both land. `source`: your app's word for where the lines came from, as `check_open`'s |
 | `check_change_line(check, line_id, version, …, weighed?)` · `check_remove_line(check, line_id, version, reason?)` | change own lines / change any line | an unsent line nobody is paying (`concession_note`, `seat` and `course` alone: a sent line too; `concession_note` a till only); `weighed` weighs a line again (alone, a sent line's first weighing too) |
 | `check_move(check, place?, label?)` · `check_move_lines(check, into, line_ids)` · `check_merge(check, into)` · `check_split_line(check, line_id, qty, version)` | move, merge or split | — |
 | `check_transfer_server(check, server)` | hand a check over | a shift's handover |
@@ -82,6 +82,9 @@ line) you last saw: a change is refused when someone changed it since, and you r
 **What you get back:** the check, as `open_check.v1.schema.json` `check` states it — never a payment token
 or a sale key, and to your app no staff identity (who opened, serves, added or is paying), no register and
 no concession note; the suggested customer only on a check your own user opened.
+Each line says where it came from, `source`: `till`, your app's own word (the `source` you sent with the
+open or the add), or `kit` when you sent none. A till marks an app's line *From an app*, so a server
+pressing *Send* sees which lines a guest's phone added.
 A line's `options` come back with each choice's `item_name` and its `per` (how many of it go with one of its
 dish) beside `item_code` and `option_group`, so a screen can draw the choice lines; send only `item_code` and
 `option_group`.
@@ -91,6 +94,20 @@ its open checks: *free*, *seated*, *ordered*, *paying*) and its tabs. Each check
 `last_write_at`, when it was last written by any till or app. A till also gets the server's name, the till of
 that last write (*"Updated 20:41 at Till 3"*), `servers` (the store's operators a check can be handed to) and
 `realtime` (the live wiring it listens on); to your app those are absent or null.
+
+**`item_names(lang, items)`** answers the names of the items you list (1 to 500 item codes, a JSON list) in
+the language you name, for a guest who reads another language than your integration user:
+`{lang, items: [{item_code, item_name, display_name, translated}]}`. `display_name` is the store's translation of
+the item name (its own translation rows, else the shipped word list; `es-AR` reads `es` too), else the name as
+written, and `translated` says which. ⚠ The till itself shows the name as written, so a translated dish reads
+differently on the guest page than on the till, the kitchen ticket and the receipt. It needs Item read. The answer
+keeps your order, lists each item once under its own code (a code in another letter case finds it), and leaves out
+an item that does not exist or that your user may not read; a disabled item is answered. The language is checked
+for its shape only (`es`, `es-AR`): one the store has no words for answers every item `translated: false`. This
+call answers item names only; a translation the store scoped to a context is not read. Refusals: *"Unknown language."* · *"Name 1 to 500 item codes."* · no Item read →
+a permission error. GET or POST (use POST for a long list: a GET address has a length limit). Cache the answer per
+language, and refresh it when the menu or the store's translations change. Schema: `item_names_request` and
+`item_names_answer`.
 
 ## 2a. The kitchen
 
@@ -191,8 +208,11 @@ A refusal comes back as the framework's error with `exc_type` set to a stable co
 | `LineNotOpenError` | the line was paid, removed or voided, or is not on this check |
 | `LineNotSentError` | voiding a line that never went to the kitchen: take it off with `check_remove_line` |
 | `ItemRefusedError` | the item cannot be sold (disabled, not a sales item, a template, a gift card, a choice on its own) or its choices break the item's groups |
+| `ItemNotSoldHereError` | the item is outside the item groups the check's POS Profile lists (a cloud kitchen's other brand): *"Not sold at this till: {item}. Take it off to carry on."* — the line was not added; on `check_open` with `lines`, nothing opens |
+| `ItemUnavailableError` | the item, or one of its choices, is sold out at the check's store or outside the hours it is sold there: *"Not available now: {item} (sold out). Take it off to carry on."*; the bracket also reads *sold out until {when}*, *available {from} to {to}*, *available from {from}* or *available until {to}* (for a choice: *"… Change the options on {dish}, or take it off, to carry on."*). Show the guest these words. The line was not added; on `check_open` with `lines`, nothing opens. `check_change_line` does not judge it, so a choice changed after the add, or an item marked after it was added, meets the same refusal at payment |
 | `ServiceModeMismatchError` | merging or moving lines between checks in different service modes, or paying a check at a register that does not ring its mode |
 | `CheckHasOpenLinesError` | closing a check that still has lines |
+| `PlaceTakenError` | `check_open` with `only_if_free` at a place that already holds an open check: *"Table 12 already has an open check."* — read the floor and add to that check |
 | `CheckRequestError` | a missing or malformed argument (no `key`, no place and no label, a price on a line, a version newer than the check's, a server who does not work at the store, a key already used for something else) |
 | `PermissionError` | your user lacks the right, or the store — or your app sent a manager's sign-in (*"A manager approves this in person, at a till."*: a manager approves at a till, never through an app) |
 | `ProfileNotAssignedError` | `pos_profile` is not your user's register at that store |
@@ -236,7 +256,8 @@ The shop gives it the store in iVendNext Desk, on the user: keep *Is Desk User* 
 then Save; *Generate Keys* after that. The store table shows only with *Is POS User* ticked, and a user without it
 loses its store rows at its next save (*Generate Keys* is a save), so its key works but every call is refused
 *"You are not assigned to this outlet."* An app's own user (`…@integration.invalid`) takes the same ticks; it still
-takes no password and no other role.
+takes no password and no other role. An uninstall clears them (the user is kept, switched off, while a check names it),
+so after a reinstall the shop ticks them again.
 **Which guest may see which check is your app's job:** the door scopes by store, and cannot tell one guest
 from another behind one integration user.
 
@@ -274,10 +295,18 @@ either: the line comes off the check, so the sale never carries it.
 covers=4, source="front_of_house", source_ref="RES-2210", suggested_customer="⟨the guest⟩")` → version 1,
 server unassigned. The first till that adds a round becomes its server.
 
-**A kiosk order.** `check_open(…, key="⟨a fresh UUID⟩", label="Order 42", covers=1, source="guest_ordering")`,
-then `check_add_lines(check, [{"item_code": "LATTE", "options": [{"item_code": "OAT-MILK"}]}], key="⟨another
-fresh UUID⟩")`.
+**A kiosk order.** `check_open(…, key="⟨a fresh UUID⟩", label="Order 42", covers=1, source="guest_ordering",
+lines=[{"item_code": "LATTE", "options": [{"item_code": "OAT-MILK"}]}])` opens the tab with its first line in one
+call; the next round is `check_add_lines(check, […], key="⟨another fresh UUID⟩", source="guest_ordering")`.
 A latte whose *Milk* group needs a choice and gets none is refused at the add, not at the counter.
+
+**A guest's first order at a table.** `check_open(…, place="⟨Table 12's id⟩", only_if_free=true,
+source="guest_ordering", lines=[…])`: on `PlaceTakenError` the table already has a check; read the floor and
+add the order to that check with `check_add_lines`. `only_if_free` holds against every other open at that
+place; a check that reaches the place another way at the same instant (a till moves one there, or a cancelled
+sale reopens its paid check there) can still sit beside yours, so read the floor if your app must know.
+A line your app adds is marked *From an app* on the till from the till's next read of the check: a server who
+presses *Send* in the same instant sends it unmarked on that till's screen.
 
 ## 9. Telling an AI assistant
 

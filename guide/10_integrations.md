@@ -3,7 +3,7 @@
 **For:** a builder connecting a large retailer's own ERP, order system, warehouse system or analytics to iVendNext, or setting up many stores the same way.
 **Reference implementation:** [Keep a customer's own system in step](../recipes/system_sync.md) with [`../samples/s7_system_sync/`](../samples/s7_system_sync/) · [Set up fifty stores from one file](../recipes/estate_rollout.md) with [`../samples/s8_estate_rollout/`](../samples/s8_estate_rollout/) · [Feed a data warehouse](../recipes/bi_feed.md) with [`../samples/s9_bi_feed/`](../samples/s9_bi_feed/). All three are Python, standard library only; any language can do the same.
 
-This chapter covers the three integrations a large retailer asks for first. Each is a program you run on your own server, beside iVendNext, talking to it over the record API and the event feed (chapter 5).
+This chapter covers the three integrations a large retailer asks for first. Each is a program you run on your own server, beside iVendNext, talking to it over the record API and the [event feed](../recipes/event_feed.md).
 
 ## When to use it
 
@@ -20,7 +20,7 @@ Our own WooCommerce and Acumatica connectors are ours to build; the kit does not
 - Each can be re-run safely.
 - A check reports differences and **never fixes them**, because a difference in money is a person's decision.
 - The sync and the BI feed pull from the event feed and key their writes, so a retry finds its own work. The sync also keeps a map between your ids and the retailer's.
-- Those two use the engine transport's feed grant (chapter 5), which cannot be scoped to one application. These samples have not been run against the scoped event feed extension point. Use them where the integration is the retailer's one consumer of the feed.
+- Those two use the engine transport's feed grant ([the event feed recipe](../recipes/event_feed.md)), which cannot be scoped to one application. These samples have not been run against the scoped event feed extension point. Use them where the integration is the retailer's one consumer of the feed.
 - The roll-out uses the record API only.
 
 ## Steps: the system sync
@@ -32,7 +32,7 @@ Our own WooCommerce and Acumatica connectors are ours to build; the kit does not
    - a **stock movement** is a Stock Entry iVendNext books (Material Receipt in, Material Issue out). **The sync never sets a quantity.**
 
    Each stock write carries a key in its remarks, `PP-SYNC <your system's own id> mv:<movement number>`. The sync looks the key up before every write. The cursor moves only after the change is fully written, so a crash repeats that change and finds it by its key. ⚠ **The key must contain your system's own id.** Without it, the key can match another system's entry, and the stock is never written.
-3. **IN: what iVendNext booked comes to your system, once each.** Run the feed client's loop (chapter 5). For `sale.booked` and `return.booked`, read the invoice over the API and record it in your system, **keyed on the retailer's invoice number**, so a second delivery writes nothing. A return links to its sale. Follow *POS Invoice* only, so the day's merged back-office invoice never counts a sale twice.
+3. **IN: what iVendNext booked comes to your system, once each.** Run the feed client's loop ([the event feed recipe](../recipes/event_feed.md)). For `sale.booked` and `return.booked`, read the invoice over the API and record it in your system, **keyed on the retailer's invoice number**, so a second delivery writes nothing. A return links to its sale. Follow *POS Invoice* only, so the day's merged back-office invoice never counts a sale twice.
 4. **Reconcile every night.** The check only reads, on both sides. It names each difference: a sale on one side only, a total that differs (both figures), an unlinked return, an item the sync never pushed, a price that differs, and stock on hand on each side:
 
    ```bash
@@ -99,7 +99,7 @@ Our own WooCommerce and Acumatica connectors are ours to build; the kit does not
 
 - **A stock figure typed in, or a price written onto a sale.** Stock is a movement iVendNext books; prices go to the price list.
 - **Deleting an item or a store a sale points at.** iVendNext keeps its history, so the item is disabled and the store retired; a later run switches it back on.
-- **The roll-out as a manifest.** A manifest may not touch a retailer's own stores, users or prices.
+- **The roll-out as a manifest.** A manifest has no kind for a retailer's stores, users or prices.
 - **A report that fixes money.** Both reconciliations list differences and change nothing.
 
 ## When your service is down, and when the till is offline
@@ -112,13 +112,13 @@ Our own WooCommerce and Acumatica connectors are ours to build; the kit does not
 
 ### What the kit has proven
 
-- **Sync, on the test site:** a full cycle with stock on hand equal on both sides; a crash on the way out (eight movements, eight Stock Entries, no key twice) and one on the way in (all four sales exactly once); a sale and its return arrived once, linked, with the units back in stock; an item deleted in the ERP was disabled, not deleted; the reconciliation named a deleted sale, a total one unit off and unpushed stock, and changed nothing. With the money kit ringing iVendNext, the sync ran as a service from the kit's start until it was stopped: **69 of 69 baskets matched**, 414 events in 27 passes, reconciliation clean with 69 sales on each side.
-- **Roll-out:** `plan` on an empty estate listed all 51 stores, their price lists, prices, promotions, users and permissions, and wrote nothing; the second `apply` changed nothing; changing one region's price moved exactly two records; `verify` went red on a store edited by hand and on a stray warehouse; the same basket cost 198.00 then 178.20 with the region's promotion on, and **the booked sale equalled the till's preview**; `remove` left nothing live; the money kit matched 67 of 67 with the estate applied.
+- **Sync, on the test site:** a full cycle with stock on hand equal on both sides; a crash on the way out (eight movements, eight Stock Entries, no key twice) and one on the way in (all four sales exactly once); a sale and its return arrived once, linked, with the units back in stock; an item deleted in the ERP was disabled, not deleted; the reconciliation named a deleted sale, a total one unit off and unpushed stock, and changed nothing. With the money kit ringing iVendNext, the sync ran as a service from the kit's start until it was stopped: **every basket matched**, 414 events in 27 passes, reconciliation clean with 69 sales on each side.
+- **Roll-out:** `plan` on an empty estate listed all 51 stores, their price lists, prices, promotions, users and permissions, and wrote nothing; the second `apply` changed nothing; changing one region's price moved exactly two records; `verify` went red on a store edited by hand and on a stray warehouse; the same basket cost 198.00 then 178.20 with the region's promotion on, and **the booked sale equalled the till's preview**; `remove` left nothing live; the money kit matched every basket with the estate applied.
 - **BI feed:** every header, line and payment equalled the retailer's record; a second load added only the new invoices; a crash mid-load left each invoice once; a cancelled sale was not revenue; all five closings agreed, and a total one unit off or an invoice deleted turned the check red; a rebuild equalled the incremental file; one `backfill` healed a missing tail.
 
 ### What it has not
 
-- **The scoped feed** (chapter 5): every run used today's unscoped grant. **A real ERP:** the other side is a local file.
+- **The scoped feed** ([the event feed recipe](../recipes/event_feed.md)): every run used today's unscoped grant. **A real ERP:** the other side is a local file.
 - **Volume:** the largest run was 69 sales and 414 events, one at a time. Nothing is measured near a large retailer's day.
 - **Roll-out:** the site had **one real store**; the 51 were warehouses and profiles made for the test. No sale was rung at a store of another region. Roles, user permissions and the `plan` blockers (a missing receipt format, item or role) are tested on a laptop only.
 - **Sync:** a price change, an item rename, a second price list, the cancelled-sale handler and a return whose sale predates the sync were laptop tests only; a Material Issue iVendNext refuses for negative stock stops the run; one warehouse, one company, items in Nos only.
@@ -134,4 +134,4 @@ Our own WooCommerce and Acumatica connectors are ours to build; the kit does not
 
 ## See also
 
-[4. Configure first](04_configure_first.md) · [5. Outside apps and the event feed](05_outside_apps_and_event_feed.md) · [14. Testing and release](14_testing_and_release.md) · [16. Possible, not possible, limits](16_possible_not_possible.md)
+[4. Configure first](04_configure_first.md) · [Outside apps and the event feed](../recipes/event_feed.md) · [16. Possible, not possible, limits](16_possible_not_possible.md)

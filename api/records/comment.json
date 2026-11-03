@@ -162,6 +162,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "openapi.yaml; recipe merge_documents; the MCP server; the request collection",
+ "why": "openapi.yaml; recipe merge_documents; sample S1; sample S28; sample S49; the MCP server; the request collection",
  "written_elsewhere": ""
 }

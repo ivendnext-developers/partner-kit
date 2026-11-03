@@ -20,7 +20,7 @@ Always first: rung 1 of the ladder (chapter 3, which lists everything that is co
 | A member price | one **Customer Group** per tier, and one **promotion** per tier. A promotion cannot be pointed *at* a customer group; it can only *exclude* groups. So each tier's promotion excludes every other group: the other tiers and every non-member group | [member-price-by-tier](../needs/prices/member-price-by-tier.md) |
 | A receipt for your market: tax number, address, logo, a line per VAT rate, a second language | a print format (chapter 7), then chosen on the till's **POS Profile**. For the address, tax number and a second-language footer alone, the register's *Receipt Header* and *Receipt Footer* print on the shipped receipt without copying it (chapter 9) | [receipt-for-your-market](../needs/documents/receipt-for-your-market.md) |
 | A customer statement, printed or sent on a schedule | **Process Statement Of Accounts**: pick the customers, the layout, the dates, the frequency and the sender. The schedule needs an outgoing e-mail account; run the ageing on the customer's site before you promise it | [debtors-statement](../needs/reports/debtors-statement.md) |
-| One branch to see only its own stock and the head office's | in Desk, a **User Permission** on *Warehouse*, one row for each store, for each user. Three stock reports ignore it (one only in its default layout): test every stock report the user may open. At the till, from POS build 2.0.0.654, the **POS Profile**'s *Stores this till may see*: the listed stores only, a head office in the item card only (the card *branch-sees-own-stock*) | [branch-sees-own-stock](../needs/stock/branch-sees-own-stock.md) |
+| One branch to see only its own stock and the head office's | in Desk, a **User Permission** on *Warehouse*, one row for each store, for each user. Three stock reports ignore it (one only in its default layout): test every stock report the user may open. At the till, the **POS Profile**'s *Stores this till may see*: the listed stores only, a head office in the item card only (the card *branch-sees-own-stock*) | [branch-sees-own-stock](../needs/stock/branch-sees-own-stock.md) |
 | A reminder when a store's stock is below its level | **Item Reorder** rows on the item (store, level, quantity, type) and the automatic-request setting in **Stock Settings**; leave the row's warehouse group empty. The request it makes is submitted, never a draft | [low-stock-reminder](../needs/stock/low-stock-reminder.md) |
 | A column the retailer wants on a record's list | the list's own column settings, or the record type's list settings. Only the record's own fields; no total of its rows | [list-columns](../needs/setup/list-columns.md) |
 
@@ -59,7 +59,7 @@ Limits to know before you rely on these settings:
 *A sale at two VAT rates, then its tax invoice in the till's Print sheet: logo, address, tax number, each line's VAT rate and the taxable value per rate, in English beside Arabic.*
 
 1. **Put the facts where iVendNext keeps them, not in the layout:** the **tax ID** on the Company, an **Address** linked to it, and the **Company Address** on the till's POS Profile. iVendNext copies them onto each sale when it is saved (the sample adds one field for the tax ID), and the layout prints what the sale holds and reads no other record, so one layout serves every company. A sale saved before the package was installed has no tax number.
-2. **Copy `receipt.html` and `logo.png` and edit** the words, the order and the logo; the format's name starts with your prefix. VAT rates are read from each sale's own lines, never typed in, so a reprint should keep its old rate. Arabic sits beside English in a row marked right-to-left; the logo is written into the page. A script, a frame or an event attribute in a template is refused.
+2. **Copy `receipt.html` and `logo.png` and edit** the words, the order and the logo. VAT rates are read from each sale's own lines, never typed in, so a reprint should keep its old rate. Arabic sits beside English in a row marked right-to-left; the logo is written into the page. A script, a frame or an event attribute in a template is refused.
 3. **Build and check, before anyone installs it:**
 
    ```bash
@@ -67,8 +67,8 @@ Limits to know before you rely on these settings:
    python3 tools/manifest/validate.py samples/s4_receipt_pack/manifest.json     # VALID, exit 0
    ```
 
-4. **Install the manifest**: on your sandbox with `deploy`; on a customer's site, by its administrator from the install screen (chapter 7).
-5. **Choose it on the till profile: Desk → POS Profile → the profile → Print Format → Save.** This step is configuration; a manifest cannot do it yet. The till reads the format at each print, so it is live on the next receipt. The save is refused, with the reason, if the format is not one for a POS sale or cannot print the register's latest booked sale.
+4. **Install the manifest**: on your sandbox with `ivn try`; on a customer's site, by its administrator from the App library, once you have published it (chapter 7).
+5. **Choose it on the till profile: Desk → POS Profile → the profile → Print Format → Save.** This step is configuration; a manifest has no kind for it. The till reads the format at each print, so it is live on the next receipt. The save is refused, with the reason, if the format is not one for a POS sale or cannot print the register's latest booked sale.
 6. **Book a sale and open the Print sheet** to see it.
 
 Limits to know before you ship a receipt:
@@ -79,8 +79,8 @@ Limits to know before you ship a receipt:
 ## What is refused, and why
 
 - **A price, tax or total set in code.** Member pricing is a promotion, not a pricing rule: a selling pricing rule is refused today. A receipt prints money iVendNext has already worked out; it never decides it.
-- **A manifest that edits the retailer's own settings or stock.** That is why the set-up is a script run by the administrator, not a manifest.
-- **A new customer's phone or email made required at the till, or a listed field hidden or relabelled,** is a field rule (chapter 9 says which fields), set in POS Studio's Fields tab or declared in a manifest (chapters 7 and 9); field rules are an extension point. **A tax authority's QR code and seal on the receipt** (a fiscal reader, chapter 11) **and labels printed from the till** (a label layout, chapter 9) are extension points too. This chapter does not set them up. (A wrong value refused on save is a save rule: chapter 9.)
+- **A retailer's settings values or stock in a manifest.** A manifest has no kind for them. That is why the set-up is a script run by the administrator, not a manifest.
+- **A new customer's phone or email made required at the till, or a listed field hidden or relabelled,** is a field rule (chapter 9 says which fields), set in POS Studio's Fields tab or declared in a manifest (chapters 7 and 9); field rules are an extension point. **A tax authority's QR code and seal on the receipt** ([a fiscal reader](../contracts/pages/fiscal_reader.md)) **and labels printed from the till** (a label layout, chapter 9) are extension points too. This chapter does not set them up. (A wrong value refused on save is a save rule: chapter 9.)
 - **A customised receipt gets none of our later fixes** (where the retailer's own lines are enough, the register's *Receipt Header* and *Receipt Footer* keep the shipped receipt), and the seeded receipt carries more than the sample (per-item charge rows, serial and batch lines, deposit and balance lines, offline-sale lines). Copy back what your market needs and test it.
 
 ## When your service is down, and when the till is offline
@@ -102,7 +102,7 @@ Both were walked on our test bench on 2026-10-10, iVendNext POS app at `87812e14
 - **Reasons:** a sale discount keeps its type and code on the invoice; a line markdown keeps its type, code and the cashier's comment.
 - **IMEI:** no IMEI, two units on one line, and one unit with two IMEIs are each refused in the till's words; a right sale books and takes the IMEI out of stock; the same IMEI cannot be sold twice.
 - **Run twice, then removed:** the second run creates nothing; after `--remove` nothing live is left (a record a booked sale points at is retired, and a later run switches it back on).
-- **The receipt,** on three sales (standard-rated, zero-rated, both): logo, company name, tax number, address, English and Arabic labels, right-to-left, each item's booked VAT rate, taxable value per rate, and Total and VAT equal to the booked figures. Uninstall then reinstall leaves the schema as found. With either pack applied, preview equalled booking on every basket (chapter 14).
+- **The receipt,** on three sales (standard-rated, zero-rated, both): logo, company name, tax number, address, English and Arabic labels, right-to-left, each item's booked VAT rate, taxable value per rate, and Total and VAT equal to the booked figures. Uninstall then reinstall leaves the schema as found. With either pack applied, preview equalled booking on every basket ([the money kit](../tools/moneykit/README.md)).
 
 ### What it has not
 
@@ -117,4 +117,4 @@ Both were walked on our test bench on 2026-10-10, iVendNext POS app at `87812e14
 
 ## See also
 
-[3. The ladder and the four rules](03_ladder_and_never_list.md) · [7. Manifests](07_manifests.md) · [9. The extension-point catalogue and requests](09_points_and_requests.md) · [14. Testing and release](14_testing_and_release.md) · [16. Possible, not possible, limits](16_possible_not_possible.md)
+[3. The ladder and the four rules](03_ladder_and_never_list.md) · [7. Manifests](07_manifests.md) · [9. The extension-point catalogue and requests](09_points_and_requests.md) · [Build your first app](../site/pages/first_app.md) · [16. Possible, not possible, limits](16_possible_not_possible.md)

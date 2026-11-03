@@ -1,6 +1,6 @@
 # Alerts before expiry and below the minimum, and a draft transfer request — the recipe
 
-A retailer wants to know when a store's stock falls below its minimum or a batch is about to expire, and wants the stock transfer request made for it, as a **draft** a person checks and submits. iVendNext's automatic reorder makes the request but **submits** it, and it has no expiry alert; a manifest's notification runs only on your own record types, never on the retailer's batch. This recipe builds it as **an outside app on a schedule** that reads the stock, writes alerts on a record type of its own (which a manifest notification announces) and makes one draft request per store and day. It is for an iVendNext developer who has made an outside app before ([chapter 5](../guide/05_outside_apps_and_event_feed.md)).
+A retailer wants to know when a store's stock falls below its minimum or a batch is about to expire, and wants the stock transfer request made for it, as a **draft** a person checks and submits. iVendNext's automatic reorder makes the request but **submits** it, and it has no expiry alert. This recipe builds it as **an outside app on a schedule** that reads the stock, writes alerts on a record type of its own (which a manifest notification announces) and makes one draft request per store and day. It is for an iVendNext developer who has made an outside app before ([the event feed recipe](event_feed.md)).
 
 **Reference implementation:** `samples/s27_stock_alerts/` — *Stock alerts and a draft transfer request*.
 
@@ -16,27 +16,27 @@ A retailer wants to know when a store's stock falls below its minimum or a batch
 6. **Never touch a request that is not yours, or not a draft.** A request without your stamp is a person's: never read or changed. A submitted one is never changed. Before adding a line, look on your open requests for that store (drafts, and submitted ones not yet transferred, stopped or cancelled): a line already there is not added again, so tomorrow's alert joins today's request.
 7. **Write the lines before the alerts.** A run that stops in between finds its lines next time and writes only the alerts.
 8. **Never submit.** Send `docstatus` 0 on insert and never send it on an update.
-9. **Tell people through your own record.** A manifest notification on your alert type, event *New*, to a role with your prefix and to a link-to-user field of the alert.
+9. **Tell people through your own record.** A manifest notification on your alert type, event *New*, to a role of yours and to a link-to-user field of the alert.
 10. **Run it on a schedule.** Any scheduler; one cron line is in the sample's README. Run one copy per retailer.
 
 ## The settings
 
-One record of your type `⟨PREFIX⟩ Settings`, named `Default`: enabled · the source warehouse (low stock is moved from here to the store) · an optional clearance warehouse (a near-expiry batch is moved there from the store) · the days before expiry · the stores watched (a table; empty means every store but the source and the clearance) · an optional user also told.
+One record of your settings type, named `Default`: enabled · the source warehouse (low stock is moved from here to the store) · an optional clearance warehouse (a near-expiry batch is moved there from the store) · the days before expiry · the stores watched (a table; empty means every store but the source and the clearance) · an optional user also told.
 
 ## The alert
 
-One record of your type `⟨PREFIX⟩ Alert` per alert, named by its key: the kind (*Low stock* or *Near expiry*) · the store · the item · the batch · the quantity (the store's projected stock; for a batch, its quantity in the store, or its total when that is not known) · whether that quantity is the store's own · the reorder level · the expiry date · the day · the transfer request it is on · the user also told.
+One record of your alert type per alert, named by its key: the kind (*Low stock* or *Near expiry*) · the store · the item · the batch · the quantity (the store's projected stock; for a batch, its quantity in the store, or its total when that is not known) · whether that quantity is the store's own · the reorder level · the expiry date · the day · the transfer request it is on · the user also told.
 
 ## What iVendNext needs from you
 
-- **The role's rights on the retailer's own record types** (a manifest grants rights only on its own): read on Warehouse, Item, Bin, Batch and Serial and Batch Bundle; read, create and write on Material Request ([the integration user recipe](integration_user.md)). Say what they reach: the key can change **any** draft transfer request in the retailer's iVendNext.
+- **The role's rights on the retailer's own record types**: read on Warehouse, Item, Bin, Batch and Serial and Batch Bundle; read, create and write on Material Request ([the integration user recipe](integration_user.md)). Say what they reach: the key can change **any** draft transfer request in the retailer's iVendNext.
 - **The settings filled in and enabled**, and the alerts role given to named people.
 - **Reorder rows on the items**, and the retailer's automatic reorder left **off**, or both ask for the same stock.
 
 ## Bounds — tell the customer
 
 - **The standard automatic reorder submits its request**, never a draft (run on a sandbox: the card *A reminder for each store when stock is below its level*). This app is how a person gets in between.
-- **A notification works only on your own record.** A manifest cannot put one on the retailer's batch ([chapter 7](../guide/07_manifests.md)); the alert record is what is announced. The retailer's administrator can still set a notification on a batch in Desk (the card *A notification a number of days before a date on a retailer's record*).
+- **The alert record is what is announced.** It names the store, the item and the batch. The retailer's administrator can also set a plain notification on a batch in Desk (the card *A notification a number of days before a date on a retailer's record*).
 - **The Administrator is never told by role.** iVendNext leaves its built-in *Administrator* out of a role's recipients (read on a sandbox, 2026-10-16: no bell entry until the role went to a named user); give the role to named people.
 - **A request line has no batch column.** Its description names the batches; the person picks them when the stock moves.
 - **A request holds an item once.** An item low in a store and near expiry there on the same day gets one line; the other alert has none.

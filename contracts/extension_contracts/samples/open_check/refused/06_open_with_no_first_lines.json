@@ -1,0 +1,13 @@
+{
+  "extension_point": "open_check",
+  "contract": "open_request",
+  "about": "An open with an empty list of first lines: leave lines out instead.",
+  "expect_refusal": "Add between 1 and 50 lines at a time.",
+  "payload": {
+    "store": "Main Store - MTC",
+    "pos_profile": "MPOS-TEST-OPEN",
+    "key": "k-0106",
+    "place": "TABLE-12",
+    "lines": []
+  }
+}

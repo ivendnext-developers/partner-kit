@@ -1,6 +1,6 @@
 # A price list worked out from another, kept in step — the recipe
 
-A retailer wants one price list to follow another: the selling list is one and a half times the buying list, or the wholesale list is nine tenths of the retail list, and when the source price changes the derived price changes by itself. iVendNext's price list has no formula, and a selling pricing rule is the wrong tool (it is a promotion, chapter 4). This recipe builds it as **an outside app on the event feed** that writes the derived list's item prices. It is for an iVendNext developer who has made an outside app before ([chapter 5](../guide/05_outside_apps_and_event_feed.md)).
+A retailer wants one price list to follow another: the selling list is one and a half times the buying list, or the wholesale list is nine tenths of the retail list, and when the source price changes the derived price changes by itself. iVendNext's price list has no formula, and a selling pricing rule is the wrong tool (it is a promotion, chapter 4). This recipe builds it as **an outside app on the event feed** that writes the derived list's item prices. It is for an iVendNext developer who has made an outside app before ([the event feed](event_feed.md)).
 
 **Reference implementation:** `samples/s26_derived_prices/` — *Derived price lists*.
 
@@ -24,13 +24,13 @@ One record per derived list, of your own type `⟨PREFIX⟩ Rule`, named by a sh
 
 ## What iVendNext needs from you
 
-- **The role's rights on the retailer's own record types** (a manifest grants rights only on its own): read on Price List; read, create and write on Item Price ([the integration user recipe](integration_user.md)). Say what they reach: the key can change **any** item price in the retailer's iVendNext.
-- **The app's own user on the feed registration** (from POS version 2.1.0.667 the install makes it, `<app>@integration.invalid`, and names it; the retailer ticks Item Price and gives its role the rights above). A key registered to two applications is refused.
+- **The role's rights:** read on Price List; read, create and write on Item Price ([the integration user recipe](integration_user.md)). Say what they reach: the key can change **any** item price in the retailer's iVendNext.
+- **The app's own user on the feed registration** (from POS version 2.1.0.667 the install makes it, `<app>@integration.invalid`, and names it; the retailer gives its role the rights above). A key registered to two applications is refused.
 - **The rule filled in and enabled**, after the service runs: its first pass writes every target price no person has set. A target list that already has prices keeps them (each is a person's price): to hand a list to the rule, end those prices first, or derive into a new list.
 
 ## Bounds — tell the customer
 
-- **Seconds, not instantly.** The new price arrives seconds after the source is saved (14 seconds on a sandbox, polling every 5; about a minute at worst when the retailer's background worker is busy, chapter 5). A sale in those seconds is priced at the old price; a price is never changed after the cashier has seen it.
+- **Seconds, not instantly.** The new price arrives seconds after the source is saved (14 seconds on a sandbox, polling every 5; about a minute at worst when the retailer's background worker is busy; [the event feed](event_feed.md)). A sale in those seconds is priced at the old price; a price is never changed after the cashier has seen it.
 - **Tills take it at their next sync.** An offline till sells at the list it holds.
 - **Only the item price rows.** A promotion or a member discount still applies on top, as always.
 - **Prices for everyone only.** A price for one customer, one supplier or one batch is not derived.

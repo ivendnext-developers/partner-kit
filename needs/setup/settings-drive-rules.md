@@ -17,7 +17,7 @@ A settings record of your own (named `Default`); when it is saved, your service 
 
 ## Limits
 - For the seconds between the settings save and the copy, the rules hold the old values.
-- From POS build 2.0.0.654 a save rule can read its limit and its role from a settings record itself (`value_from_type`, `contracts/pages/save_rules.md`), with no copy and no delay; this route remains for a notification's recipients and for an older build.
+- A save rule can read its limit and its role from a settings record itself (`value_from_type`, `contracts/pages/save_rules.md`), with no copy and no delay; this route remains for a notification's recipients.
 - Not run on a retailer's iVendNext.
 
 ## Tell the customer

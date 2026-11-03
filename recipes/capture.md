@@ -34,9 +34,9 @@ This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, buildi
    - On scan: `item_groups` (at most 50; a group names every group below it) and/or `item_field` (an Item field that is set); 1.5 seconds unless raised, 3 at most.
    - On customer add: 3 seconds unless raised, 10 at most.
    - `down_answer`: `allow_and_flag` (the default: the scan goes on, or the customer may be created, and the log row is flagged) or `refuse`.
-   - Both install **switched off**; each signing secret is handed back **once**.
+   - Both are on from the install; each signing secret is handed back **once**.
 
-2. **What the retailer does after install.** A System Manager reads what each service is sent, ticks the consent, chooses the POS Profiles and switches it on. For a value on the line, iVendNext keeps an **active line attribute** (*Transaction Item Attribute*) and tells you its name.
+2. **What the retailer does after install.** Nothing to switch on: the services are on for every store. For a value on the line, iVendNext keeps an **active line attribute** (*Transaction Item Attribute*) and tells you its name.
 
 3. **Check every call is the retailer's** — the same signature as every extension point (base64 HMAC-SHA256 of `<timestamp>.<raw body>`), with **each subscription's own secret**, over the raw bytes, before you parse anything (`samples/s20_capture/service/app.py`).
 
@@ -100,7 +100,7 @@ Proven on our test bench on 2026-10-08 (iVendNext POS app at `577a8d41`), **16 o
 
 | Case | Result |
 |---|---|
-| Install | two services **switched off**, one per event; each secret handed back once |
+| Install | two services, one per event; each secret handed back once |
 | A handset of the named groups scanned | the service's reference lands as a value of the retailer's attribute (`{"transaction_item_attribute": "Warranty ref", "attribute_value": "WR-CED7D457F2"}`) — the product hands it to the till in that shape |
 | An item outside the groups | nobody is called, no log row |
 | The service down · the capture itself failing | the scan still finds the item and the line goes on, flagged (`allow_and_flag`) |
@@ -114,6 +114,6 @@ Proven on our test bench on 2026-10-08 (iVendNext POS app at `577a8d41`), **16 o
 | The same phone again | challenged again (no phone skips the code) |
 | Three wrong codes | the check ends; even the right code is then refused (*"This code check has ended. Add the customer again."*) |
 
-The captured reference on a **booked** sale: the money kit's label for this sample. Results: **GREEN** on 2026-10-08: the booked line carries the service's reference; every other sale as the baseline. With S20 left off, the line carries none and the label goes RED.
+The captured reference on a **booked** sale: the booked line carries the service's reference; every other sale as the baseline. With S20 left off, the line carries none.
 
 Not run here: a quantity change or a notice on a till (both walked by the product at POS train T12, counter, phone and tablet frames; S20's quantity service and S23's notice run in their laptop tests); a customer added offline (created at sync, flagged) and the receipt's contact after payment; a *confirm* or *refuse* on scan; the camera's pause.

@@ -313,6 +313,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "openapi.yaml; recipe units_as_serials; the MCP server; the request collection; retail core",
+ "why": "openapi.yaml; recipe repairs_by_serial; recipe units_as_serials; sample S30; sample S5; sample S58; the MCP server; the request collection; retail core",
  "written_elsewhere": ""
 }

@@ -17,7 +17,7 @@ A save rule of kind *derived*, held on every save.
 
 ## Limits
 - On a till sale and the till close a save rule only flags, never refuses.
-- From POS build 2.0.0.654 the derived rule also works out a total or a count of a table's rows and the days between two dates; a limit can be judged when its value changes, a row rule can read its record (`parent.`), and a limit can be read from a settings record (`contracts/pages/save_rules.md`).
+- The derived rule also works out a total or a count of a table's rows and the days between two dates; a limit can be judged when its value changes, a row rule can read its record (`parent.`), and a limit can be read from a settings record (`contracts/pages/save_rules.md`).
 - A worked-out figure is shown as a number, never money.
 
 ## Tell the customer

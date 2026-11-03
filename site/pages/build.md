@@ -9,8 +9,8 @@ You know what you are building. This page is the way from a placed need to a wor
 ## Where to go next
 
 - **The recipes** — [one recipe for each job](../../recipes/), with its steps and commands.
-- **The samples** — [small working examples](../../samples/), each with its tests: copy the nearest one.
+- **The samples** — [small working examples](../../samples/), each with its tests: start from the nearest one with [Build your first app](first_app.md).
 - **Your sandbox** — [request a sandbox](sandbox.md): your own hosted site to build and test on.
 - **The extension points** — [chapter 9](../../guide/09_points_and_requests.md) lists each one, and how to ask for a new one.
-- **Testing and release** — [chapter 14](../../guide/14_testing_and_release.md): the release gate in the customer's own CI.
+- **Testing and release** — [the release gate](../../recipes/release_gate.md) in the customer's own CI.
 - **Not sure the need is placed?** Look it up in the [needs catalogue](../../needs/README.md) first.

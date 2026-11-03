@@ -1,0 +1,32 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "Manifest version 2: a record type and its own words in Arabic. A label or option of the package's own record type is written for that record type only; its name and help text for the whole site, unless the site already translates the word.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_wrd",
+    "prefix": "PP WRD",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "PP WRD Dispensing",
+        "fields": [
+          {
+            "fieldname": "patient",
+            "fieldtype": "Data",
+            "label": "Patient"
+          }
+        ]
+      }
+    ],
+    "translations": [
+      {
+        "language": "ar",
+        "words": {
+          "PP WRD Dispensing": "صرف دواء",
+          "Patient": "المريض"
+        }
+      }
+    ]
+  }
+}

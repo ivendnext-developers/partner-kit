@@ -110,6 +110,8 @@ def make_handler(svc: Service):
             if data is None:
                 svc.store.event("refused", how)
                 return self._send(401, {"error": how})
+            if self.headers.get("X-iVendNext-Test") == "1":   # the site's Test connection: checked as a real call, no work done
+                return self._send(200, {"test": "ok", "point": "webhook"})
             key = replay_key(data)
             if key is None or data.get("doctype") not in DOCTYPES:
                 svc.store.event("refused", f"unexpected payload {sorted(data)}")

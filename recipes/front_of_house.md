@@ -22,10 +22,10 @@ A restaurant's host takes bookings on the phone, keeps walk-ins waiting in order
 
 ### Settings
 
-1. Install the manifest. It adds the settings (one per company, with a row per store), the reservation, the waiting-list entry, the roles **PP FOH Host** and **PP FOH Integration**, six buttons and their five services (off), and the feed registration that makes the app's own user (`pp_foh@integration.invalid`, from POS 2.1.0.667; leave the feed off).
+1. Install the manifest. It adds the settings (one per company, with a row per store), the reservation, the waiting-list entry, the roles **PP FOH Host** and **PP FOH Integration**, six buttons and their five services, and the feed registration that makes the app's own user (`pp_foh@integration.invalid`).
 2. Give the app's user its store and its key, in this order, on its User record: keep *Is Desk User*, tick **Is POS User**, choose a **Shift Profile**, link a **Retail Permission** with *Open Checks*: **open a check** and **see the checks** only; add one row to the store access table (the store and its register, *Table Service* on); **Save**; then **Generate Keys**. Without *Is POS User* the save drops the store row and the till answers *"You are not assigned to this outlet."* Never give it write on *Floor Section*: that is every check verb, a comp included.
 3. On **PP FOH Settings**, one row per store: **the same register** the app's user holds there, the usual booking length (90 minutes to start), whether a table with an open check may take a second check, and the **No-show deposit** rule (*Keep it* or *Return it*).
-4. Give **PP FOH Host** to the hosts and managers, with **Read** on *Retail Floor Place* and **Select** on *Warehouse*, *POS Invoice* and *Customer* (Role Permissions Manager); consent to the five services and switch the six buttons on; press **Connect again** on the app's package record if the site could not reach the app.
+4. Give **PP FOH Host** to the hosts and managers, with **Read** on *Retail Floor Place* and **Select** on *Warehouse*, *POS Invoice* and *Customer* (Role Permissions Manager); press **Connect again** on the app's package record if the site could not reach the app.
 
 ### Reservations
 
@@ -64,4 +64,4 @@ Day to day the host presses the five buttons and the server works the table at t
 
 ## Make it your own
 
-A partner usually adds a booking platform's link (its bookings written as reservations through the record API, the guard pressed by the service), the retailer's SMS provider (SMS Settings, never the app), a reminder Notification before a booking, and the store's own deposit words. Start with `python3 tools/manifest/start.py s55_front_of_house --prefix "ACME FOH"`.
+A partner usually adds a booking platform's link (its bookings written as reservations through the record API, the guard pressed by the service), the retailer's SMS provider (SMS Settings, never the app), a reminder Notification before a booking, and the store's own deposit words. Start with `ivn new acme_foh --from s55`.

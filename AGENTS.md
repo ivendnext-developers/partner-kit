@@ -1,10 +1,12 @@
 # AGENTS.md — read this first if you are an AI assistant working in this repository
 
+**To build an app, follow [Build your first app](site/pages/first_app.md): `ivn new`, change it, `ivn check`, `ivn try`, `ivn publish`.** This file holds the rules around it.
+
 This is the iVendNext partner kit. A person is using you to build something for an iVendNext customer: a retailer that runs iVendNext, a retail system with a till (the point of sale), a back office called Desk, and an API. Your job is to build it **without changing iVendNext itself**. This file is short on purpose. The guide in `guide/` is the full text; when this file and the guide disagree, the guide is right and the person should be told.
 
 ## When the person asks how iVendNext apps work
 
-Where an app runs, whether it is Docker, where the customer's data lives, whether two customers collide, how many apps or containers to build, what publishing and hosting hand over: answer from `guide/01a_how_it_all_works.md` (the plain answers, each proved in its Technical notes) and the questions page, `site/pages/questions.md`, never from what another platform does. How the data travels through a link to an outside system is chapter 1c, [`guide/01c_how_the_data_travels.md`](guide/01c_how_the_data_travels.md). One app end to end, with every command: `guide/01b_one_app_end_to_end.md`. What an app can call, change and add (every endpoint in both directions, every manifest kind, every screen, every record type with its fields): the developer's map, `site/pages/map.md`, and `api/records/`.
+Where an app runs, whether it is Docker, where the customer's data lives, whether two customers collide, how many apps or containers to build, what publishing and hosting hand over: answer from `guide/01a_how_it_all_works.md` (the plain answers, each proved in its Technical notes). How the data travels through a link to an outside system is chapter 1c, [`guide/01c_how_the_data_travels.md`](guide/01c_how_the_data_travels.md). One app end to end, with every command: `site/pages/first_app.md`. What an app can call, change and add (every endpoint in both directions, every manifest kind, every screen, every record type with its fields): the developer's map, `site/pages/map.md`, and `api/records/`.
 
 ## What you may rely on
 
@@ -19,10 +21,10 @@ Take the first one that does the job. Go down only when the one above cannot. Mo
 | # | Way in | Your code runs | Recipe for you | Guide |
 |---|---|---|---|---|
 | 1 | **Configure** what iVendNext already has: pricing, promotions, coupons, reasons, till keys and layouts, receipt formats, workflows, numbering, permissions, reports | nowhere | `ai/1_configure.md` | `guide/04_configure_first.md` |
-| 2 | **Outside app**: your service reads and writes records over the API and reacts to the event feed | your server or the customer's | `ai/2_outside_app.md` | `guide/05_outside_apps_and_event_feed.md` |
-| 3 | **Till key**: the cashier taps a key; the till calls your HTTPS service and shows your message or sale details | your server | `ai/3_till_key.md` | `guide/06_till_keys.md` |
+| 2 | **Outside app**: your service reads and writes records over the API and reacts to the event feed | your server or the customer's | `ai/2_outside_app.md` | `recipes/connected_app.md` |
+| 3 | **Till key**: the cashier taps a key; the till calls your HTTPS service and shows your message or sale details | your server | `ai/3_till_key.md` | `recipes/point_handler.md` |
 | 4 | **Manifest**: your own record types, fields, print formats, notifications and workspaces, and the other kinds `recipes/manifest.md` lists (among them reports and dashboards, workflows, webhooks, a remote till key, Desk buttons, save rules and label layouts), declared as data and installed by the retailer's administrator | nowhere: it is data (a print format is a template the server runs when it prints; webhooks, a remote till key and Desk buttons call your service; a module it carries runs in our sandbox) | `ai/4_manifest.md` | `guide/07_manifests.md` |
-| 5 | **Sandboxed function**: a compiled WebAssembly function at an extension point that offers one | a sandbox we run. **Two extension points take one, the check before payment and pricing, and only a module we have certified runs** (`guide/08_sandboxed_functions.md`): read the chapter before you start | `ai/5_sandboxed_function.md` | `guide/08_sandboxed_functions.md` |
+| 5 | **Sandboxed function**: a compiled WebAssembly function at an extension point that offers one | a sandbox we run. **Two extension points take one, the check before payment and pricing, and only a module we have certified runs** (`tools/wasm_kit/README.md`): read the chapter before you start | `ai/5_sandboxed_function.md` | `tools/wasm_kit/README.md` |
 
 If no single door fits, **compose doors** before you ask for one. An outside app with a document check, a Desk button that asks for inputs, a partner page opened from a button, a capture at the scan, save rules and configuration combine to meet most needs. A composition with its limit stated (a separate screen, a tap, seconds of delay) is the answer to give, never a workaround to hide. Request an extension point only when no composition meets the customer's outcome, and say in the request which compositions you tried and why each falls short. Composing keeps the four rules: it is never code inside the retailer's iVendNext, a script in Desk, or a price changed after the cashier has seen it. The sixth step is to **request an extension point** (`guide/09_points_and_requests.md`, the form in `feedback/point_request.md`). Tell the person which compositions you tried.
 
@@ -48,7 +50,7 @@ What this means for what you write:
 ## Ask the person before any write to a live site
 
 - **Read first, write second.** Reading records is fine on any retailer the person gives you a key for. Anything that creates, changes or deletes a record, installs a manifest, or sends a message to a customer needs the person's **yes, in this conversation, for that one action**. Show what you are about to send first.
-- **Writes go to the person's own sandbox.** Run the request collection (`api/collection/run.sh`), `tools/deploy/deploy.py` with `--consent`, `uninstall` or `finish`, and any MCP server with `--writes`, only against the sandbox the person names. A write to any other retailer needs the person's yes for that one action, and you never do it on your own.
+- **Writes go to the person's own sandbox.** Run the request collection (`api/collection/run.sh`), `ivn try`, and any MCP server with `--writes`, only against the sandbox the person names. A write to any other retailer needs the person's yes for that one action, and you never do it on your own.
 - **Keys and secrets stay out of files, logs and chat.** Take them from the environment; never write one into a file you create, a commit, a screenshot or a message. Use made-up customers and sales in everything you write.
 - **The MCP server is read-only by default** (`tools/mcp_server/README.md`). Start it with `--writes` only if the person asks for a write, and set `confirm: true` on a call only after the person has said yes to that exact change.
 
@@ -63,12 +65,11 @@ Run all of these from the repository root. Nothing below needs a network except 
 | Check one manifest and read its refusals | `python3 tools/manifest/validate.py <manifest.json>` |
 | Check app code the way our intake does | `python3 tools/selfcheck/selfcheck.py <app folder>` |
 | Check an answer against an extension point's contract | `python3 -c "import sys; sys.path.insert(0,'tools/contracts'); from check import errors; print(errors('desk_action','answer',{...}))"` (the points and their schemas: `contracts/README.md`) |
-| Install your manifest on **your own sandbox** (check only, nothing installed) | `BASE=https://<sandbox> KEY=<key> SECRET=<secret> python3 tools/deploy/deploy.py manifest.json` |
-| Install it for real, after the person has read the summary it printed and said yes | the same command with `--consent` |
+| Try it on **your own sandbox**, after the person has said yes (it installs at once and asks nothing) | `ivn try` |
 | Send the example API calls to your sandbox | `BASE=… KEY=… SECRET=… bash api/collection/run.sh` (it **writes** test records: sandbox only) |
 | Let an assistant read a retailer's records | `IVN_BASE=… IVN_KEY=… IVN_SECRET=… python3 tools/mcp_server/server.py` (read-only; the person's own key; `tools/mcp_server/README.md`) |
 | Read the events a retailer's iVendNext produces | `tools/feed_client/README.md` |
-| Start from one of our samples under the person's own prefix, in one command (copies it into `apps/`, renames it, checks it; refuses to finish while any of our names is left) | `python3 tools/manifest/start.py <sample folder> --prefix "<THEIR PREFIX>"` ([recipe](recipes/make_it_your_own.md)) |
+| Make an app from one of our samples, in one command | `ivn new <app> --from sNN` (`tools/ivn`) |
 | Make a copy of one of our apps the person's own (their company's prefix; iVendNext's checker runs on the result) | `python3 tools/manifest/rename.py <copy>/manifest.json --prefix "<THEIR PREFIX>" --write` ([recipe](recipes/make_it_your_own.md)) |
 | Move a retailer's records from our app to the person's version of it (only after the person has said yes: it **writes** to that site) | `BASE=… KEY=… SECRET=… python3 tools/deploy/copy_records.py <our app> <their app> --write` |
 | Publish to the App library (only after the person has said yes: it lists the app or sends it to a customer's shelf) | `ivn publish --to <site>` or `ivn publish --public` (`tools/ivn`) |
@@ -118,8 +119,8 @@ It prints one verdict line and exits non-zero on any refusal. **Report that line
 
 - Call the product **iVendNext**. Do not name the framework it is built on, in text you write for the person, in a README, a comment or a message; code identifiers that a checker or the API requires stay as they are.
 - Call iVendNext by its iVendNext names: records at `/api/resource/<record type>`, and every other call at `/api/method/ivendnext_mpos.api.v1.<name>` (the names: `api/README.md`). Never write an upstream package path into a call, except the sign-in addresses in `recipes/sign_in.md`.
-- Prefix every name you create with the person's prefix (for example `ACME WRC` for record types, `acme_wrc` for the app and for fields added to the retailer's own record types).
-- In a sandboxed function money is whole numbers in minor units and quantity is whole thousandths (`guide/08_sandboxed_functions.md`). Elsewhere, follow the recipe's own figures.
+- A field you add to the retailer's own record type starts with the person's prefix (`acme_wrc_`). No other name needs it.
+- In a sandboxed function money is whole numbers in minor units and quantity is whole thousandths (`tools/wasm_kit/README.md`). Elsewhere, follow the recipe's own figures.
 
 ## When you are stuck
 

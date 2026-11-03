@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/list_mark.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/list_mark.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # List mark
 
 **Contract:** [`list_mark.v1.schema.json`](../extension_contracts/list_mark.v1.schema.json)
@@ -14,15 +14,15 @@ of ours draws it. No partner JavaScript runs in Desk, and nothing is saved or re
 display only.
 
 Desk already colours a row's label from a workflow, a status field or the record type's own list
-script. A partner can add none of those to a shop's records (a prefixed field is never `status`; a
-workflow or a list script on a shop's record type is refused), which is the gap a mark fills.
+script. A mark adds a label beside those without a script or a workflow of its own (a prefixed
+field is never `status`; a list script is code, which a manifest carries none of).
 
 ## 2. What is declared
 
 | Setting | Value |
 |---|---|
 | Record type | a record type that is **not submitted and has no active workflow** (Item, Customer, Supplier, Batch, Item Price, your own record types) |
-| Only when | 1 to 3 conditions `field operator value`, all of which must hold: `=`, `!=`, `>`, `>=`, `<`, `<=`, `is set`, `is not set`; any field of the record type, standard or prefixed, except a password or a long text |
+| Only when | 1 to 3 conditions `field operator value`, all of which must hold: `=`, `!=`, `>`, `>=`, `<`, `<=`, `is set`, `is not set`; any field of the record type, standard or prefixed, except a password or a long text; a date takes no `<` `<=` `>` `>=`, and a date-and-time or a time only *is set* / *is not set* (as a save rule's; a mark saved before 2026-10-30 with such a condition is refused at its next save, switching it on or off included) |
 | Label | at most 24 characters, plain text, translated when drawn |
 | Colour | `green`, `blue`, `orange`, `red`, `gray` or `purple` |
 | Sequence, Enabled | when two marks match a row, the lower sequence shows; a mark that is off shows nowhere |
@@ -101,5 +101,5 @@ press reveals a bit of the field; a mark is simply not sent to such a user.)
 
 The manifest checker refuses what needs no site (the colours, the label, the conditions' shape, a sixth
 mark on one record type); the record's own checks run again at install and refuse the rest word for word.
-Each mark arrives **switched off**; the shop switches it on in **Retail List Mark**. An uninstall removes
-it with nothing left behind (package_install.md).
+Each mark arrives **switched on**, under the install's one consent; the shop can switch it off in **Retail List Mark**. An uninstall removes
+it with nothing left behind ([package_install.md](package_install.md)).

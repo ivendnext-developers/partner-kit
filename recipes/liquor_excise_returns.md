@@ -48,8 +48,8 @@ The record type `PP EXR Return`, numbered `format:EXR-R-{#####}`, tracked: `comp
 
 ## Steps
 
-1. **Add the record types above** to your manifest (`doctypes`, the lines table with `"istable": 1`, every line field `read_only`), and the three Item fields (`custom_fields`; never `reqd` or `precision` on the retailer's own record type).
-2. **Add the workflow** (`workflows`) and **the lock** (`save_rules`) over the figures and their source. It installs switched off: the retailer switches it on.
+1. **Add the record types above** to your manifest (`doctypes`, the lines table with `"istable": 1`, every line field `read_only`), and the three Item fields (`custom_fields`).
+2. **Add the workflow** (`workflows`) and **the lock** (`save_rules`) over the figures and their source. It is on from the install.
 3. **Add the button** (`desk_actions`, `send_fields` `name`, `conditions` on `workflow_state` your Draft) and its service (`extension_subscriptions`, point `desk_action`). The service reads the return, the duty classes, the items with a class, and the store's ledger with the list API's own sums (`fields` `["item_code","voucher_type","sum(actual_qty) as qty"]` and `group_by`), never a row per sale; then writes the lines, carrying the return's `modified` as read.
 4. **Add the worksheet** (`print_formats`, Jinja, placing the letter head itself, grouping the lines with `groupby("duty_class")`) and a `documentation` property setter per record type.
 5. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s62_liquor_excise_returns`.
@@ -57,9 +57,9 @@ The record type `PP EXR Return`, numbered `format:EXR-R-{#####}`, tracked: `comp
 ## What the retailer does
 
 1. **Install the app.** It adds the duty class, the return, the three Item fields, the workflow, the lock, the worksheet and the button, and makes the role `PP EXR Integration` and the app's own user with that role alone.
-2. **Switch the lock on:** Desk › *Retail Save Rule* › *PP EXR return locked once filed* › **Enabled**. The press refuses while it is off (it reads the rule's `enabled` and `mode`).
+2. **The lock is on from the install** (Desk › *Retail Save Rule* › *PP EXR return locked once filed*). The press refuses if someone switches it off (it reads the rule's `enabled` and `mode`).
 3. **Give the app's role Read** on Stock Ledger Entry, Stock Entry, Item and Retail Save Rule (Role Permissions Manager).
-4. **Switch the service and the button on** (Retail Extension Subscription: read, consent, enable; Retail Desk Action: enable).
+4. **Read what the service sends** (Retail Extension Subscription); the service and the button are on from the install.
 5. **Make the duty classes and fill the three fields** on each liquor item. Write on Item decides what a return counts: give it to whom you trust with the return.
 
 ## Limits

@@ -15,7 +15,7 @@ fails is logged (its site and the error's class) and the others go on; a shop st
 never run twice at once. The service's /health answers 503 when no HEALTHY pass (the shops store answered, no shop
 stuck) has finished for three minutes, so the platform restarts it. The shop's site hands over the key of the app's own
 user (the install made it) at connect, after the install or an update; the shop presses *Connect again* only if the key
-is lost (guide chapter 14b). ⚠ ``api_credentials`` takes the first ``user:`` key a shop handed over;
+is lost (guide chapter 1a). ⚠ ``api_credentials`` takes the first ``user:`` key a shop handed over;
 S25's manifest registers one feed user, so there is one.
 """
 

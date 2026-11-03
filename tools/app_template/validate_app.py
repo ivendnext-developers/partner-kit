@@ -63,11 +63,11 @@ def check_settings(m) -> list[str]:
     if not isinstance(m.get("region"), str) or not re.fullmatch(r"[a-z]{2}", m.get("region") or ""):
         bad.append("region: a two-letter lower-case country code, like us")
     if "shops" in m and not isinstance(m["shops"], bool):
-        bad.append("shops: true or false (true: the app serves many shops, each connecting itself; chapter 14b)")
+        bad.append("shops: true or false (true: the app serves many shops, each connecting itself; tools/deploy_app/README.md)")
     if "base" in m and not (isinstance(m["base"], str) and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", m["base"])):
         bad.append("base: the version this folder was downloaded as, three numbers, like 1.0.0 (My apps writes it)")
     if "scratch" in m and not isinstance(m["scratch"], bool):
-        bad.append("scratch: true or false (true: a writable /scratch folder, lost on a restart; chapter 14b)")
+        bad.append("scratch: true or false (true: a writable /scratch folder, lost on a restart; tools/deploy_app/README.md)")
     if "address" in m and not (isinstance(m["address"], str)
                                and re.fullmatch(r"https://[a-z0-9.-]+(:[0-9]{2,5})?(/[A-Za-z0-9._~/-]*)?", m["address"])):
         bad.append("address: the service's https address (ivn publish writes it)")
@@ -149,7 +149,7 @@ def check_together(env: list) -> list[str]:
 
 
 def check_form(m: dict) -> list[str]:
-    """``runs``: a container (the default: what an app that says nothing gets) or a function (chapter 14b)."""
+    """``runs``: a container (the default: what an app that says nothing gets) or a function (tools/deploy_app/README.md)."""
     runs = m.get("runs", "container")
     if runs not in RUNS:
         return [f"runs: one of {', '.join(RUNS)} (leave it out for a container)"]
@@ -172,7 +172,7 @@ def check_form(m: dict) -> list[str]:
             isinstance(x, str) and all(PART.fullmatch(part) and part != ".." for part in x.split("/")) for x in pkg):
         bad.append("package: a list of the files and folders the function is zipped from, relative paths like service")
     if m.get("shops") is not True:
-        bad.append("shops: a function serves many shops, each connecting itself (\"shops\": true; chapter 14b)")
+        bad.append("shops: a function serves many shops, each connecting itself (\"shops\": true; tools/deploy_app/README.md)")
     if m.get("scratch"):
         bad.append("scratch: a function has no folder that lasts between calls (a container's)")
     env = m.get("env", [])

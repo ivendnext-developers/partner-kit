@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/register_books.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/register_books.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Register books
 
 **Contract:** [`register_book.v1.schema.json`](../extension_contracts/register_book.v1.schema.json)
@@ -278,10 +278,8 @@ kit's prints to them.
   value (`KE Controlled`) are not checked: a misnamed one matches no item and the book takes no
   line.
 - The register stores mapping is not checked against a premises: the shop maps it.
-- A person's columns are held back by their permission level, which the framework does not apply
-  everywhere: the Desk's group-by count on a list's sidebar and a link search still answer on a field
-  above a reader's level (each asked of the framework, as for any role-limited field). System
-  Manager reads them only when a book names it its count role (Administrator always does).
+- A person's columns are held back by their permission level. System Manager reads them only when
+  a book names it its count role (Administrator always does).
 - Two *Erase persons' details* run at once on one store may list an entry in both records; each
   record is still true.
 - A print format typed on *Retail Register Line* itself prints the line as the user rendering it may

@@ -43,14 +43,14 @@ A till puts any customer on a sale, and with them their loyalty points, store cr
 
 8. **Tell iVendNext to lock the customer's group, and to decide about the phone.** Your rule trusts the group the customer record holds and texts the number it holds, and the till's edit sheet lets a cashier change both (the retailer's cashier role saves customers): a member moved into a group that is never asked goes on with no code, and a number changed to the cashier's own sends the code there. The retailer closes the group by putting *Customer Group* at permission level 1 in *Customize Form* and giving level-1 write only to its managers ([Customers by store](customers_by_store.md), rule 7). The phone field the till edits (*Phone Number*, else *Mobile No*) takes the same lock, at a cost to say plainly: a customer the cashier creates at the till is then saved with no phone, and with the default customer group in Selling Settings or none, until a manager sets them (measured on the programme's bench). Put both in the setup, the phone as the retailer's choice.
 
-9. **Tell iVendNext to switch it on for every till.** The capture asks only at the POS Profiles its subscription answers: with none chosen, every one.
+9. **Check the tills it asks at.** The capture asks only at the POS Profiles its subscription answers: with none chosen, every one.
 
 ## The text message
 
 The code reaches the customer through iVendNext, never through your service:
 
 - The retailer sets its **SMS Settings** once, for its own SMS gateway (the gateway's address and parameters; the receiver's parameter takes the number).
-- iVendNext makes one **Notification**: *Document Type* `<PREFIX> Code`, *Send Alert On* **New**, *Channel* **SMS**, a recipient *Receiver By Document Field* **mobile**, and a message with `{{ doc.code }}`. A manifest's own notification goes only to the retailer's users, so this one is the retailer's: put it in your setup steps.
+- iVendNext makes one **Notification**: *Document Type* `<PREFIX> Code`, *Send Alert On* **New**, *Channel* **SMS**, a recipient *Receiver By Document Field* **mobile**, and a message with `{{ doc.code }}`. A manifest's notification is e-mail or the in-app bell only, so this SMS one is the retailer's: tell the retailer to make it.
 - The framework sends a Notification's text inside the save of the record, and never fails the save for it: a gateway that answers an error or cannot be reached is written to the retailer's *Error Log* (*Failed to send Notification*), a Notification switched off sends nothing, and SMS Settings with no gateway address only print a message. In each the customer gets no code and cannot be put on the sale: a gateway fault closes the door, never opens it. Your setup's last step is a test pick; tell iVendNext to watch its Error Log.
 - Reading iVendNext's SMS log to learn whether a text went would give your role every text iVendNext sends: do not.
 - A retailer with the WhatsApp app can likely send the same record by its own WhatsApp notification (not measured).

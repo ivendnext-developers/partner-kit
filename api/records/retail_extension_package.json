@@ -90,7 +90,7 @@
   {
    "added": 0,
    "choices": [],
-   "description": "Every record this app adds starts with this.",
+   "description": "Every field this app adds to your record types starts with this.",
    "fieldname": "prefix",
    "hidden": 0,
    "label": "Name prefix",
@@ -363,6 +363,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "guide chapter 07; guide chapter 08; guide chapter 14a; recipe approvals; recipe manifest",
+ "why": "contract package_install; guide chapter 07; recipe approvals; recipe manifest; the kit's tool deploy",
  "written_elsewhere": "the retailer's administrator installs your manifest on it, with consent."
 }

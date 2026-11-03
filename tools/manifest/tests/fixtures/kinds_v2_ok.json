@@ -5,7 +5,7 @@
  "title": "Every extension-point kind that installs, once (row KINDS)",
  "version": "0.0.1",
  "publisher": "PP KND",
- "description": "A test manifest carrying a Desk action, the two kinds of extension subscription (Desk action and page) and two save rules, installed switched off and removed by our test bench's install cycle.",
+ "description": "A test manifest carrying a Desk action, the two kinds of extension subscription (Desk action and page) and two save rules, the services installed switched off, the rules switched on, and removed by our test bench's install cycle.",
  "allowed_urls": ["https://partner.example/knd/press", "https://partner.example/knd/page/"],
  "extension_subscriptions": [
   {"key": "route", "point": "desk_action", "label": "Pick route service",

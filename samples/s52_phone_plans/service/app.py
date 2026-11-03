@@ -26,7 +26,7 @@ ONE RETAILER (env or an env file):
     IVN_CHECK_SECRET   the check's secret (handed back at install as pp_tel:sub:plans)
     IVN_SHOP_URL       the retailer's address, e.g. https://retailer.example.com
     IVN_SHOP_KEY       the app's own user's key, "<api key>:<api secret>"
-MANY RETAILERS (guide chapter 14b): IVN_LIBRARY_APP (the App library's id) with IVN_SHOPS_TABLE (CitiXsys hosting) or
+MANY RETAILERS (guide chapter 1a): IVN_LIBRARY_APP (the App library's id) with IVN_SHOPS_TABLE (CitiXsys hosting) or
     IVN_SHOPS_FILE. Each retailer connects itself after its install and hands over the two secrets
     ("<app>:<app>_plans", "<app>:sub:plans") and its app user's key ("user:<email>": "<api key>:<api secret>").
 TEL_API (the telecom company's address; the stand-in: http://127.0.0.1:8154) · TEL_PREFIX (default PP TEL) ·

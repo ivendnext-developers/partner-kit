@@ -5,7 +5,7 @@
  "description": "Extension point payer: what iVendNext POS sends a payer service (an insurer, an optical plan, a company paying for its staff) to learn which covers a customer holds (covers_request) and what a picked cover pays, line by line, before the tender (coverage_request), and what the service answers. Money is a whole number of minor units of the sale's currency (currency_exponent digits), never a decimal. Answers are judged whole by business_logic/partner_payer.py validate_covers and validate_coverage: one bad key or value refuses the whole answer, which then reads as no cover. A cover answer is also judged against the ask it answers: every line asked answered exactly once, a line's two shares adding up to its amount_minor, the totals the sums and equal to the sale's total_minor. The service is asked again whenever the basket, the customer or the prescription moves, and at Pay when its answer is older than 10 minutes.",
  "$defs": {
   "settings": {
-   "description": "The subscription's settings (a JSON object, stored as text on the Retail Extension Subscription of extension point payer). prescription names the sale details sent as the prescription (each a Sale Attribute; empty = not sent); bill_back_role is the role that may bill a rejected claim back to the customer (Accounts User when empty); clearing_mode is the shop's own Custom mode of payment whose balance sheet account carries the payer's share until it is moved to the payer, required before the service is switched on (a manifest never carries it).",
+   "description": "The subscription's settings (a JSON object, stored as text on the Retail Extension Subscription of extension point payer). prescription names the sale details sent as the prescription (each a Sale Attribute; empty = not sent); bill_back_role is the role that may bill a rejected claim back to the customer (Accounts User when empty); clearing_mode is the shop's own Custom mode of payment whose balance sheet account carries the payer's share until it is moved to the payer, required before the service is switched on (a manifest never carries it). line_net: true asks for each line's net (net_minor) in every coverage ask; off or absent, the lines carry exactly the ten keys below.",
    "type": "object",
    "additionalProperties": false,
    "properties": {
@@ -39,6 +39,10 @@
      "type": "string",
      "minLength": 1,
      "maxLength": 140
+    },
+    "line_net": {
+     "type": "boolean",
+     "description": "Added after version 1 first shipped. true: every coverage line also carries net_minor. Changes the consent text, so the calls stop until the shop ticks consent again."
     }
    }
   },
@@ -304,7 +308,11 @@
     },
     "amount_minor": {
      "type": "integer",
-     "description": "The line's total after every discount (the sale's own spread by the tax calculation) plus its share of tax. The lines add up to total_minor exactly."
+     "description": "The line's total after every discount (the sale's own spread by the tax calculation) plus its share of tax and charges. The lines add up to total_minor exactly."
+    },
+    "net_minor": {
+     "type": "integer",
+     "description": "Sent only to a service whose settings carry line_net: true (added after version 1 first shipped; a service validating against an older copy refuses it). The line's net after every discount (the sale's own spread by the tax calculation), before tax and charges. amount_minor - net_minor is everything the line carries on top of its net: its taxes and charges (on the largest line also the sale's rounding, as for amount_minor). On prices without tax, a discount on the amount's basis is discount_minor x amount_minor / net_minor (the discount's own tax only where every tax and charge on the line is a percentage of its net); a line with net_minor 0 has no ratio, so its discount is read as sent. The lines' net_minor add up to the sale's net total, each line rounded on its own (to within a minor unit a line where the shop keeps more decimal places than the currency has)."
     }
    }
   },

@@ -9,7 +9,7 @@ never run twice at once. ``/health`` answers 503 when no HEALTHY pass (the shops
 finished for three minutes, so the platform restarts the service.
 
 A shop's site hands over the key of the app's own user ("user:<email>": "<api key>:<api secret>") when it connects, after
-the install or an update (guide chapter 14b). Until then the shop is skipped with
+the install or an update (guide chapter 1a). Until then the shop is skipped with
 ``no_user``. ⚠ ``api_credentials`` takes the first ``user:`` key a shop handed over; the manifest registers one feed user,
 so there is one. The note of handled events is only a cache: each deviation is named by its sale line, so the shop
 itself refuses a second one after a restart loses the note.

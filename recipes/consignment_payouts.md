@@ -48,9 +48,9 @@ The record type `PP CSG Payout`, numbered `format:CSG-P-{#####}`, tracked: `cons
 
 ## Steps
 
-1. **Add the record types above** to your manifest (`doctypes`, the lines table with `"istable": 1`, every line field `read_only`), and the two Item fields (`custom_fields`; never `reqd` on the retailer's own record type).
+1. **Add the record types above** to your manifest (`doctypes`, the lines table with `"istable": 1`, every line field `read_only`), and the two Item fields (`custom_fields`).
 2. **Add the workflow** (`workflows`): the move to Paid `allowed` your integration role, the role the install makes for your feed registration. A manifest's record types are never submittable, so the workflow, not a submit, is what makes a payout final.
-3. **Add the lock** (`save_rules`) over every field the payout's money rests on. It installs switched off: the retailer switches it on, and your *Pay* service refuses while it is off (it reads the rule's `enabled` and `mode` from **Retail Save Rule**, so your role needs Read there).
+3. **Add the lock** (`save_rules`) over every field the payout's money rests on. It is on from the install, and your *Pay* service refuses if someone switches it off (it reads the rule's `enabled` and `mode` from **Retail Save Rule**, so your role needs Read there).
 4. **Add the two buttons** (`desk_actions`, `send_fields` `name`, `conditions` on `workflow_state` your Draft) and their services (`extension_subscriptions`, point `desk_action`). *Work out*: read the consignor's share and items, their sale lines through each sale type's table (`parent`), those sales' headers, and the lines other payouts hold; write the lines that are owed. *Pay*: read all of that again, check the payout's own lines against it (`consign.check_to_pay`), then write the step. Each write carries the payout's `modified` as read.
 5. **Add the statement** (`print_formats`, Jinja, placing the letter head itself), the Connections (`links`) and a `documentation` property setter per record type.
 6. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s61_consignment_payouts`.
@@ -58,10 +58,9 @@ The record type `PP CSG Payout`, numbered `format:CSG-P-{#####}`, tracked: `cons
 ## What the retailer does
 
 1. **Install the app.** It adds the consignor, the payout, the two Item fields, the workflow, the lock, the statement and the buttons, and makes the role `PP CSG Integration` and the app's own user with that role alone.
-2. **Switch the lock on:** Desk › *Retail Save Rule* › *PP CSG payout locked once paid* › **Enabled**.
-3. **Give the app's role Read** on POS Invoice, Sales Invoice, Item and Retail Save Rule (Role Permissions Manager).
-4. **Switch the services and buttons on** (Retail Extension Subscription: read, consent, enable; Retail Desk Action: enable).
-5. **Decide who does what:** intake (Sales User, Item Manager), payouts and how each was paid (Accounts User), the press that pays and a cancel (Accounts Manager). Write on Item and on consignors is a money right here: an item's consignor and share, and a consignor's share and *Consigned since*, decide what a payout pays. A payout's consignor and company are set once.
+2. **Give the app's role Read** on POS Invoice, Sales Invoice, Item and Retail Save Rule (Role Permissions Manager).
+3. **Read what the services send** (Retail Extension Subscription); the services and buttons, and the lock, are on from the install.
+4. **Decide who does what:** intake (Sales User, Item Manager), payouts and how each was paid (Accounts User), the press that pays and a cancel (Accounts Manager). Write on Item and on consignors is a money right here: an item's consignor and share, and a consignor's share and *Consigned since*, decide what a payout pays. A payout's consignor and company are set once.
 
 ## Limits
 

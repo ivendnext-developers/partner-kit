@@ -17,7 +17,7 @@ An outside app on a schedule reads stock, reorder rows and batches over the reco
 
 ## Limits
 - The standard automatic reorder submits the request, never a draft (run, card low-stock-reminder): a draft needs this app.
-- A manifest's notification cannot run on a retailer's own record, such as a batch (chapter 7), so the alert is a record of your own and the notification is on that; the retailer's administrator can set a notification on a batch in Desk (the card expiry-alert-before-date).
+- The alert is a record of your own and the notification is on that; a notification on a batch itself is the card expiry-alert-before-date.
 - A transfer request has no batch column and holds an item once (run: a second row of one item was refused): batches of one item share a line whose description names them; an item low and near expiry in one store the same day gets one line (not run).
 - A batch's quantity per store is read from its stock movements' batch records; with no right to read them the alert says the batch's total and makes no line.
 - The retailer's built-in Administrator is never told by role: give the alerts role to named people (run).

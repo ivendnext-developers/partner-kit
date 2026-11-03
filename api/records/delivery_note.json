@@ -1036,6 +1036,30 @@
    "type": "Date"
   },
   {
+   "added": 1,
+   "choices": [],
+   "description": "When this web order was handed over on the till's pickup board.",
+   "fieldname": "custom_mpos_pickup_handed_at",
+   "hidden": 0,
+   "label": "POS Pickup Handed At",
+   "links_to": "",
+   "read_only": 1,
+   "required": 0,
+   "type": "Datetime"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "Who handed this web order over on the till's pickup board.",
+   "fieldname": "custom_mpos_pickup_handed_by",
+   "hidden": 0,
+   "label": "POS Pickup Handed By",
+   "links_to": "User",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
+  },
+  {
    "added": 0,
    "choices": [],
    "description": "",
@@ -3061,6 +3085,6 @@
    ]
   }
  },
- "why": "recipe click_and_collect; sample S33; sample S39; sample S41; retail core",
+ "why": "recipe click_and_collect; recipe project_quotes; sample S30; sample S33; sample S39; sample S40; sample S41; sample S45; sample S60; sample S62; the kit's tool manifest; the kit's tool selfcheck; retail core",
  "written_elsewhere": ""
 }

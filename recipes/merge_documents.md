@@ -8,7 +8,7 @@ A retailer counts stock in parts — one count per aisle, per shift or per perso
 
 ## Steps
 
-1. **Declare the button on the list, for drafts only.** `placement` `list`, `on_draft` 1, `on_submitted` 0, roles of your own prefix, and a confirm sentence that says what will happen. Send only `name`: your service reads each record itself.
+1. **Declare the button on the list, for drafts only.** `placement` `list`, `on_draft` 1, `on_submitted` 0, the roles that may press it, and a confirm sentence that says what will happen. Send only `name`: your service reads each record itself.
 
    ```json
    "desk_actions": [{"record_type": "Stock Reconciliation", "label": "Merge counts", "placement": "list",
@@ -28,7 +28,7 @@ A retailer counts stock in parts — one count per aisle, per shift or per perso
 
 ## The settings
 
-One record of your type `⟨PREFIX⟩ Settings`, named `Default`: the rule for the same item in the same warehouse (*Sum* or *Last*). S28's record also holds the number of sales its page shows.
+One record of your own settings type, named `Default`: the rule for the same item in the same warehouse (*Sum* or *Last*). S28's record also holds the number of sales its page shows.
 
 ## Bounds
 

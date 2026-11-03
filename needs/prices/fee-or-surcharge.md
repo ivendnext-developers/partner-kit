@@ -13,7 +13,7 @@ request: -
 verified: carried 2026-10-16 · not re-run
 ---
 ## What you build
-Nothing: money may never change after the cashier has seen the sale (rule 1, chapter 3).
+Nothing: money may never change after the cashier has seen the sale (rule 1).
 
 ## Limits
 - **Instead:** put the fee on the sale as an item the cashier adds before payment; a check before payment can refuse the sale, with your sentence, until that line is there (not run; not yet in the guide).

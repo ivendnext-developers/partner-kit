@@ -2,9 +2,9 @@
 
 A **partner wallet** is a balance you keep for the retailer's customers (cash back, store credit, points with a money value), spent at the till as its own payment method. The cashier taps the wallet's tile with a customer on the sale, sees the balance and the most this sale may use, enters an amount, and the sale is paid. Nothing of yours runs inside the retailer's iVendNext: your service answers the till's questions over HTTPS.
 
-**Reference implementation:** `samples/s22_customer_loyalty/` — *Member cash*, the cash back of a customer's own loyalty programme spent at the till ([its README](../samples/s22_customer_loyalty/README.md#member-cash-spending-the-cash-back-at-the-till)).
+**Reference implementation:** `samples/s22_customer_loyalty/` — *Member cash*, the cash back of a customer's own loyalty programme spent at the till ([its README](../samples/s22_customer_loyalty/README.md)).
 
-**When to use it.** The customer wants a balance they already keep, or that you keep for them, to pay for a sale. If the retailer's own loyalty or gift cards do the job, configure them instead (chapter 4). On your sandbox, ask us to add the remote-wallet payments app first ([chapter 11](../guide/11_payments_fiscal_hardware.md)).
+**When to use it.** The customer wants a balance they already keep, or that you keep for them, to pay for a sale. If the retailer's own loyalty or gift cards do the job, configure them instead (chapter 4). On your sandbox, ask us to add the remote-wallet payments app first ([the payment connector recipe](payment_connector.md)).
 
 ## The till's four questions
 

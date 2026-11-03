@@ -1356,6 +1356,6 @@
    ]
   }
  },
- "why": "openapi.yaml; api/README.md; guide chapter 05; recipe connected_app; sample S40; sample S45; the MCP server; the request collection; retail core",
+ "why": "openapi.yaml; api/README.md; contract save_rules; recipe connected_app; recipe repairs_by_serial; recipe restaurant_back_office; sample S2; sample S30; sample S40; sample S41; sample S45; sample S5; sample S57; sample S58; sample S62; sample S7; the MCP server; the feed client; the kit's tool manifest; the kit's tool moneykit; the request collection; retail core",
  "written_elsewhere": ""
 }

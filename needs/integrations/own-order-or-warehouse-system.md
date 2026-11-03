@@ -17,7 +17,6 @@ Your outside app over the API and the event feed; the customer's systems stay it
 
 ## Limits
 - The feed reports a change after it is saved, so your app corrects after the fact.
-- The kit's samples read the shared feed, whose key is not limited to one app (a feed scoped to your app is an extension point, chapter 9).
 
 ## Tell the customer
 The order and warehouse systems exchange records with iVendNext through our app.

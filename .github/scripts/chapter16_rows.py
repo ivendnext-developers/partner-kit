@@ -25,6 +25,8 @@ TITLE_DOOR = {
     "Fiscal reader": "fiscal-reader",
     "Label layout": "label-layout",
     "List mark": "manifest",           # a manifest kind (list_marks): any ready manifest card satisfies this door
+    "Installing a manifest (self-service install)": "manifest",       # how every manifest installs
+    "What an app may not do": "manifest",                             # the checker's one list of refusals
     "Open check — a table's running order, paid once (`open_check/1`)": "open-check",
     "Station ticket — the kitchen's tickets on a kitchen screen (`station_ticket/1`)": "station-ticket",
     "Partner fulfil — a code your service makes for a paid sale line": "fulfil-at-sale",

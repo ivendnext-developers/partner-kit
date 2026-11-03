@@ -1,0 +1,31 @@
+{
+  "manifest_version": 2,
+  "app": "pp_prf",
+  "prefix": "PP PRF",
+  "version": "0.1.0",
+  "custom_fields": [
+    {
+      "dt": "Customer",
+      "fieldname": "pp_prf_licence",
+      "fieldtype": "Data",
+      "label": "Licence",
+      "insert_after": "customer_name",
+      "read_roles": [
+        "PP PRF Pharmacist"
+      ],
+      "write_roles": [
+        "PP PRF Pharmacist"
+      ]
+    },
+    {
+      "dt": "Customer",
+      "fieldname": "pp_prf_barred",
+      "fieldtype": "Check",
+      "label": "Barred",
+      "insert_after": "customer_name",
+      "write_roles": [
+        "PP PRF Claims"
+      ]
+    }
+  ]
+}

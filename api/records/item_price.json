@@ -238,6 +238,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "guide chapter 01c; guide chapter 07; recipe approvals; recipe approvals_stores; recipe derived_price_lists; recipe estate_rollout; recipe expiry_markdown; recipe print_pack; recipe system_sync; sample S11; sample S14; sample S23; sample S26; retail core",
+ "why": "card price-list-with-photos; contract print_template_readers; guide chapter 01c; recipe ai_manager; recipe approvals_stores; recipe derived_price_lists; recipe estate_rollout; recipe expiry_markdown; recipe print_pack; recipe system_sync; sample S10; sample S14; sample S23; sample S26; sample S29; sample S30; sample S38; sample S43; sample S5; sample S52; sample S7; sample S8; the kit's tool moneykit; the kit's tool selfcheck; retail core",
  "written_elsewhere": ""
 }

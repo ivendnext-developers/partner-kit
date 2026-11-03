@@ -1,7 +1,7 @@
 """Run an app as a function behind CitiXsys's load balancer, paid per call, instead of an always-on container.
 
 A press-only app (a till key, a check before payment, a webhook) only works when it is called. As a function it costs
-nothing between calls (guide chapter 14b, *A function or a container*). The app's code does not change: its
+nothing between calls (guide chapter 1a). The app's code does not change: its
 ``handle(conf, method, path, headers, raw)`` answers both the web server (``app.py``'s ``main``) and this entry.
 
     lambda_handler = function.entry(lambda: settings(os.environ), handle)     # at the bottom of your app.py

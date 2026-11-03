@@ -7,7 +7,7 @@ The help pages ARE the kit's guide, recipes, sample READMEs and feedback forms, 
 the kit cannot drift apart. The few pages that are not in the kit (home, get started, request a sandbox, reference apps,
 feedback) are in site/pages/; they pull whole sections out of the kit's files with a line of their own:
 
-    {{include guide/02_getting_started.md#The first call, in five steps}}     the section's text, without its heading
+    {{include recipes/hosted_sandbox.md#What you receive}}                     the section's text, without its heading
     {{include? guide/01_welcome.md#~Welcome}}                                  optional; "~" matches part of a heading
 
 The needs catalogue (needs/<area>/<id>.md) is built here too, from the cards, through the loader and checker of
@@ -92,7 +92,7 @@ REDIRECTS = SITE / "redirects.txt"                  # one "old new" pair a line;
 IMAGE_EXT = {".png", ".gif", ".jpg", ".jpeg", ".svg", ".webp"}
 
 NAV = [("How it works", "guide/01a_how_it_all_works.html"), ("What you can use", "map.html"), ("Needs", "needs/index.html"),
-       ("Get started", "start.html"), ("Guide", "guide/index.html"), ("Recipes", "recipes/index.html"), ("Samples", "samples/index.html"),
+       ("Get started", "first_app.html"), ("Guide", "guide/index.html"), ("Recipes", "recipes/index.html"), ("Samples", "samples/index.html"),
        ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("Roadmap", "roadmap.html"),
        ("Feedback", "feedback.html")]
 CORP = "https://www.ivendnext.com"
@@ -393,7 +393,7 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
                   for label, href in NAV)
     li = lambda items: "".join(f'<li><a href="{h}">{html.escape(t)}</a></li>' for t, h in items)
     foot_site = li([("Needs catalogue", up + "needs/index.html"), ("Plan a project", up + "plan.html"),
-                    ("Get started", up + "start.html"), ("Guide", up + "guide/index.html"), ("Recipes", up + "recipes/index.html"),
+                    ("Get started", up + "first_app.html"), ("Guide", up + "guide/index.html"), ("Recipes", up + "recipes/index.html"),
                     ("Samples", up + "samples/index.html"), ("Reference apps", up + "reference_apps.html"),
                     ("Request a sandbox", up + "sandbox.html"), ("My apps", up + "apps.html"), ("Publish your app", up + "publish.html"),
                     ("App library", seo.LIBRARY), ("App library: for partners", seo.LIBRARY + "/build")])
@@ -500,12 +500,12 @@ def prev_next(page: Page, pages: list[Page], up: str) -> str:
 
 # ── the needs catalogue ───────────────────────────────────────────────────────────────────────────────────────────
 # Where the guide explains each door: a card's door links its facet page, and the facet page links this.
-DOOR_HOW = {"configure": "guide/04_configure_first.md", "outside-app": "guide/05_outside_apps_and_event_feed.md",
-            "event-feed": "guide/05_outside_apps_and_event_feed.md", "till-key": "guide/06_till_keys.md",
-            "manifest": "guide/07_manifests.md", "sandboxed-function": "guide/08_sandboxed_functions.md",
-            "our-connector": "guide/10_integrations.md", "payment-connector": "guide/11_payments_fiscal_hardware.md",
-            "wallet": "guide/11_payments_fiscal_hardware.md", "fiscal-reader": "guide/11_payments_fiscal_hardware.md",
-            "desk-action": "guide/13a_screens_and_ux.md", "partner-page": "guide/13a_screens_and_ux.md",
+DOOR_HOW = {"configure": "guide/04_configure_first.md", "outside-app": "recipes/connected_app.md",
+            "event-feed": "recipes/event_feed.md", "till-key": "recipes/point_handler.md",
+            "manifest": "guide/07_manifests.md", "sandboxed-function": "guide/09_points_and_requests.md",
+            "our-connector": "guide/10_integrations.md", "payment-connector": "recipes/payment_connector.md",
+            "wallet": "recipes/wallet.md", "fiscal-reader": "guide/09_points_and_requests.md",
+            "desk-action": "recipes/desk_action.md", "partner-page": "recipes/partner_page.md",
             "none": "guide/03_ladder_and_never_list.md"}           # every other door is an extension point: chapter 9
 FIRST_RUNGS = {"configure", "outside-app", "our-connector"}      # chapter 16's first table; the rest is its second
 
@@ -662,15 +662,11 @@ def map_part(kind: str, ctx: "Ctx") -> str:
 # ── what next: the steps under every card, written by rule from its verdict and door ──────────────────────────────────
 # Data, not branches: a card's panel is NEXT_STEPS[its status] (a not-yet card: by what blocks it), each step's words from
 # step_lines() below, then DOOR_NEXT's line for its door if there is one. Every link is to a page of this site (the build and
-# the link check hold them), except the request form, which lives in a private repository: test_site.py holds that address
-# equal to the one on the feedback page.
-POINT_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=2_point_request.yml"
-# The words beside every link to a private repository of the org. MEMBERS_ONLY: the request form (partner-feedback, which
-# onboarded members can read), on the needs pages and, through catalogue.json, on Plan a project. NOT_OPEN_YET: the reference
+# the link check hold them). A request for an extension point opens the public feedback page, which says who may file a form.
+POINT_FORM = "/feedback.html#open-a-form"
+# The words beside every link to a private repository of the org. NOT_OPEN_YET: the reference
 # apps (gallery.py), whose repositories only the kit's maintainers can open. Both carry "page not found", the clause
 # check_links.py looks for on a page that links a private repository.
-MEMBERS_ONLY = ("members only: the form is in a private repository on GitHub, so anyone not signed in as an onboarded member "
-                "sees GitHub's \"page not found\"")
 NOT_OPEN_YET = ("not open yet: the repository is private to the kit's maintainers, so anyone else, members included, sees "
                 "GitHub's \"page not found\"")
 NEXT_STEPS = {"ready": ("recipe", "sample", "sandbox", "checks", "release", "more"),
@@ -731,9 +727,8 @@ def order_errors() -> list[str]:
     return bad + [f"site/build.py BUILD_ORDER: {d} is not a door" for doors, _ in BUILD_ORDER for d in doors if d not in catalogue.DOORS]
 
 
-def request_url(handle: str, c) -> str:            # the request form, its title prefilled with the handle and the need
-    from urllib.parse import quote
-    return POINT_FORM + "&title=" + quote(f"Extension-point request: {handle} — {c.asks}", safe="")
+def request_url(handle: str, c) -> str:            # where a request for an extension point is made
+    return POINT_FORM
 
 
 def unbold(line: str) -> str:
@@ -773,18 +768,18 @@ def step_lines(c, titles: dict, src: str, by_id: dict | None = None) -> list[str
         "sandbox": lambda: [f"**Build and test it on your sandbox** ([request one]({rel('site/pages/sandbox.md', src)}) if you "
                             f"have none; [what is on it]({rel('site/pages/sandbox.md', src)}#what-is-on-your-site))."],
         "checks": lambda: [f"**Run the checks:** your own tests, the kit's checks and the money kit's release gate "
-                           f"([testing and release]({rel('guide/14_testing_and_release.md', src)}#steps))."],
-        "release": lambda: [f"**Release** through the customer's own release gate ({link('guide/14_testing_and_release.md')}); "
-                            f"an app other shops install goes through the [App library]({rel('site/pages/publish.md', src)})."],
+                           f"([the release gate]({rel('recipes/release_gate.md', src)}))."],
+        "release": lambda: [f"**Release** through the customer's own release gate ({link('recipes/release_gate.md')}); "
+                            f"an app other retailers install goes through the [App library]({rel('site/pages/publish.md', src)})."],
         "check-settings": lambda: [f"**Check it on your sandbox** as the people who will use it; where it touches a price or a "
-                                   f"total, the money kit's release gate proves it ([testing and release]"
-                                   f"({rel('guide/14_testing_and_release.md', src)}#steps))."],
+                                   f"total, the money kit's release gate proves it ([the release gate]"
+                                   f"({rel('recipes/release_gate.md', src)}))."],
         "release-settings": lambda: ["**Make the same settings on the customer's site**, from the list you wrote down, through "
                                      "the customer's own change process."],
-        "more": lambda: ([f"**To lift a limit, ask for** " + " · ".join(f"[{h}]({request_url(h, c)})" for h in c.requests)
-                          + f" (the extension-point request; {MEMBERS_ONLY})."] if c.requests else []),
-        "ask": lambda: [f"**Ask for it:** " + " · ".join(f"[the extension-point request for {h}]({request_url(h, c)})" for h in c.requests)
-                        + f" ({MEMBERS_ONLY}; [how requests work]({rel('guide/09_points_and_requests.md', src)}#asking-for-a-new-extension-point-or-for-more-from-one))."],
+        "more": lambda: ([f"**To lift a limit, ask for** " + " · ".join(f"[{h}]({rel('site/pages/feedback.md', src)}#open-a-form)" for h in c.requests)
+                          + " (the extension-point request)."] if c.requests else []),
+        "ask": lambda: [f"**Ask for it:** " + " · ".join(f"[the extension-point request for {h}]({rel('site/pages/feedback.md', src)}#open-a-form)" for h in c.requests)
+                        + f" ([how requests work]({rel('guide/09_points_and_requests.md', src)}#asking-for-a-new-extension-point-or-for-more-from-one))."],
         "ask-us": lambda: [l for l in c.limits if l.startswith("**Ask us:**")],
         "until": lambda: ([f"**Until then, today:** {named(' '.join(TODAY.sub('', unbold(l)) for l in today))}"] if today else [])
                          + ([f"**Today's way round it:** {' · '.join(link(p) for p in c.paths('recipe') + c.paths('sample'))}."]
@@ -798,16 +793,6 @@ def step_lines(c, titles: dict, src: str, by_id: dict | None = None) -> list[str
 
 
 # ── related needs ──────────────────────────────────────────────────────────────────────────────────────────────────
-ARCHETYPES = "guide/15_customer_archetypes.md"
-
-
-def named_together(root: pathlib.Path = ROOT) -> list[set[str]]:
-    """The rows of chapter 15's tables that name two or more cards: needs a customer of that shape asks for together."""
-    rows = [set(re.findall(r"needs/[a-z]+/([a-z0-9-]+)\.md", ln)) for ln in (root / ARCHETYPES).read_text("utf-8").splitlines()
-            if ln.startswith("|")]
-    return [r for r in rows if len(r) > 1]
-
-
 def related_needs(cards: list, rows: list[set[str]]) -> dict:
     """Each card's related needs, at most four: its own `related:` line first, then the cards its text names (*the card
     <id>*), then those that cite one of its samples, those named with it in a row of chapter 15 (asked for together), those
@@ -976,7 +961,7 @@ def catalogue_json(cards: list, titles: dict | None = None, pages: dict | None =
                         "door_name": door_name(c.door), "topic_name": topic_name(c),
                         "build_step": build_step(c.door), "build_why": build_why(c.door),
                         "recipes": proofs(c, "recipe"), "samples": proofs(c, "sample"),
-                        "request_forms": [{"handle": h, "url": request_url(h, c), "note": MEMBERS_ONLY} for h in c.requests],
+                        "request_forms": [{"handle": h, "url": request_url(h, c)} for h in c.requests],
                         "related": [o.id for o in related.get(c.id, [])],
                         "blueprint_row": catalogue.blueprint_rows([c], [c.id])[0][0].removeprefix("| 1 "),
                         "next": on_next(c, nxt)}
@@ -1111,11 +1096,11 @@ def page_words(text: str) -> tuple[list[str], str]:
     return heads, " ".join(paras)[:600]
 
 
-ASKED_PAGES = {"questions.html"}                   # pages whose ### headings are questions in the asker's own words: they count as
-                                                   # the page's asks line, as a card's does (Questions developers ask)
-# Two pages answer a developer's question without ### headings; their asks line is written here, in the developer's words, so
-# the header's six show them for "screen", "field" and "loyalty" ahead of the recipes that also use those words (HOWITWORKS-CHECK).
 ASKS_ADDED = {
+    "guide/01a_how_it_all_works.html": "Is an app a Docker container or an image? Is it multi-tenant, one copy per tenant, multitenant? "
+                "Where does the data live? Can two customers conflict or clash? What is the callback url? What does it cost? "
+                "What does publishing hand over?",
+    "first_app.html": "How do I publish an app? How do I add a field? How do I add a screen? What does an app cost? How do I start?",
     "map.html": "Is there a list of all the endpoints my app can call? Which record types and fields can my app read or change, "
                 "and which are required or read-only? Which screens can my app add, on the till and in the back office?",
     "guide/01c_how_the_data_travels.html": "A chain has its own loyalty system outside iVendNext: which calls go where on each sale, "
@@ -1139,7 +1124,7 @@ def search_docs(pages: list, cards: list, groups: list[list[str]], records: list
         if p.out == "index.html":
             continue
         heads, first = page_words(p.text)
-        asks = " ".join(plain(q) for q in re.findall(r"^### (.+)$", p.text, re.M)) if p.out in ASKED_PAGES else ASKS_ADDED.get(p.out, "")
+        asks = ASKS_ADDED.get(p.out, "")
         docs.append({"id": p.out, "k": SEARCH_GROUPS.get(p.group, "guide"), "t": p.title, "a": asks,
                      "s": expand(p.title + " " + " ".join(heads), groups), "tp": "", "l": "", "c": "",
                      "b": " · ".join(heads) + " " + first, "u": p.out, "v": "", "ar": "", "d": "", "st": ""})
@@ -1200,7 +1185,7 @@ def not_found_body(cards: list) -> str:
             '<label for="q-404">Search for</label><input id="q-404" name="q" type="search" autocomplete="off" spellcheck="false">'
             '<button class="site-btn" type="submit">Search</button></p></form>'
             '<ul class="plain"><li><a href="/needs/index.html">A customer sent me a list of needs</a></li>'
-            '<li><a href="/build.html">I know what I\'m building</a></li><li><a href="/start.html">I\'m new</a></li></ul>'
+            '<li><a href="/build.html">I know what I\'m building</a></li><li><a href="/first_app.html">I\'m new</a></li></ul>'
             f'<h2>Every need, A to Z</h2>{az}')
 
 
@@ -1208,7 +1193,7 @@ def build(out_dir: pathlib.Path) -> int:
     pages = collect()
     need_cards = catalogue.load(ROOT)
     titles = {p.src: p.short for p in pages} | {posixpath.dirname(p.src): p.short for p in pages if p.src.endswith("/README.md")}
-    related = related_needs(need_cards, named_together())
+    related = related_needs(need_cards, [])
     by_id = {c.id: c for c in need_cards}
     gen = [card_page(c, titles, related[c.id], by_id) for c in need_cards] + catalogue_pages(need_cards, titles)
     rec_pages = [GenPage(src, out, title, text, desc, "records") for src, out, title, text, desc in devmap.record_pages()]
@@ -1417,7 +1402,7 @@ def build(out_dir: pathlib.Path) -> int:
     write("sitemap.xml", seo.sitemap({canonical(o): m.modified for o, m in metas.items()}))
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: https://{DOMAIN}/sitemap.xml\n")
 
-    START = ["index.html", "start.html", "build.html", "plan.html", "sandbox.html", "security.html", "map.html", "api.html",
+    START = ["index.html", "first_app.html", "build.html", "plan.html", "sandbox.html", "security.html", "map.html", "api.html",
              "apps.html", "publish.html",
              "reference_apps.html", "feedback.html"]
 
@@ -1425,7 +1410,6 @@ def build(out_dir: pathlib.Path) -> int:
         picked = [(o, m) for o, m in metas.items() if pred(o, m)]
         picked.sort(key=lambda om: START.index(om[0]) if om[0] in START else 0)        # the top-level pages in reading order
         return [(seo.SITE_NAME if m.home else seo.clean_name(m.name), canonical(o), m.desc) for o, m in picked]
-    ai = metas.get("guide/13_ai.html")
     write("llms.txt", seo.llms_txt([
         ("Start here", rows(lambda o, m: "/" not in o)),
         ("Needs", rows(lambda o, m: o.startswith("needs/") and re.fullmatch(r"needs/(index|not-possible|[a-z]+/index)\.html", o) is not None)),
@@ -1437,7 +1421,6 @@ def build(out_dir: pathlib.Path) -> int:
                                "Every need card with its verdict, door, recipes, samples and limits, for an assistant."),
                               ("The samples index as JSON", f"https://{DOMAIN}/samples/index.json",
                                "Every kit sample with its version and versions, industries, door, needs, recipe and what to try at the till."),
-                              ("The AI chapter", canonical("guide/13_ai.html"), ai.desc if ai else "How to use an assistant with the kit."),
                               ("Sitemap", f"https://{DOMAIN}/sitemap.xml", "Every indexed page of the site.")])]))
     write("downloads/blueprint_template.md", (ROOT / "kit/blueprint_template.md").read_text("utf-8"))   # to fill on screen; the PDFs: site/pdf/
     write("downloads/blueprint_example.md", (ROOT / EXAMPLE).read_text("utf-8"))

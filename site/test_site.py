@@ -255,7 +255,7 @@ class SiteTests(unittest.TestCase):
         self.assertTrue(any("broken link no_such_page.html" in b for b in bad), bad)
 
     def test_broken_fragment_is_red(self):
-        bad = self.planted("b", lambda h: h.replace("</main>", '<a href="02_getting_started.html#no-such-heading">x</a></main>'))
+        bad = self.planted("b", lambda h: h.replace("</main>", '<a href="03_ladder_and_never_list.html#no-such-heading">x</a></main>'))
         self.assertTrue(any("no #no-such-heading" in b for b in bad), bad)
 
     def test_broken_image_is_red(self):
@@ -720,24 +720,20 @@ class SiteTests(unittest.TestCase):
         kit = self.plant_not_yet(self.planted_kit("not_yet"))
         self.assertEqual(self.build_in(kit), 0)
         ask = (self.tmp / "not_yet_out" / "needs/till/a-planted-need.html").read_text("utf-8")
-        self.assertIn(build.POINT_FORM + "&amp;title=Extension-point%20request%3A%20P-PLANTED", ask)
-        self.assertIn(f"({build.MEMBERS_ONLY}; ", html_unescape(ask))         # the request form is members-only: it says so
+        self.assertIn("feedback.html#open-a-form", ask)
+        self.assertNotIn("partner-feedback", ask)
         self.assertIn("Until then, today:</strong> the check before payment", ask)
         self.assertNotIn("Copy the sample", ask[ask.index('id="what-next"'):])
 
     def test_every_private_link_says_so_where_it_is_rendered(self):
-        # the request steps (build.py; the ask step: the Not yet test above), the reference apps (gallery.py) and Plan a
-        # project's requests (catalogue.json; plan.js: test_plan.mjs)
-        note = build.MEMBERS_ONLY
-        lift = html_unescape((self.out / "needs/documents/invoice-layout-per-customer.html").read_text("utf-8"))
-        self.assertIn(f"(the extension-point request; {note}).", lift.split('id="what-next"')[1])
+        # the reference apps (gallery.py); the requests open the public feedback page
         apps = html_unescape((self.out / "reference_apps.html").read_text("utf-8"))
         cards = re.findall(r'<li class="card"><h3>.*?</li>', apps)
         self.assertGreaterEqual(len(cards), 2)
         self.assertTrue(all(f'<p class="note">N{build.NOT_OPEN_YET[1:]}.</p>' in c for c in cards), cards)
         forms = [f for d in json.loads((self.out / "catalogue.json").read_text("utf-8")) for f in d["request_forms"]]
-        self.assertTrue(forms and all(f["note"] == note for f in forms))
-        self.assertTrue(all(check_links.PRIVATE_CLAUSE in n for n in (note, build.NOT_OPEN_YET)))
+        self.assertTrue(forms and all(f["url"] == build.POINT_FORM for f in forms))
+        self.assertIn(check_links.PRIVATE_CLAUSE, build.NOT_OPEN_YET)
 
     def test_a_private_link_on_a_page_that_does_not_say_so_is_red_and_an_unlisted_repository_too(self):
         repo = "https://github.com/ivendnext-developers/"
@@ -750,9 +746,9 @@ class SiteTests(unittest.TestCase):
         bad = self.planted("unlisted", lambda h: h.replace("</main>", f'<a href="{repo.upper()}New-Repo.git">x</a></main>'))
         self.assertTrue(any("links ivendnext-developers/new-repo, which is on neither list" in b for b in bad), bad)
 
-    def test_the_request_form_is_the_feedback_pages_own_address(self):
-        # the form lives in a private repository the link check does not follow: hold it to the feedback page's address
-        self.assertIn(f"]({build.POINT_FORM})", (build.SITE / "pages/feedback.md").read_text("utf-8"))
+    def test_a_request_opens_the_feedback_pages_own_list_of_forms(self):
+        self.assertIn('## Open a form', (build.SITE / "pages/feedback.md").read_text("utf-8"))
+        self.assertEqual(build.POINT_FORM, "/feedback.html#open-a-form")
 
     def test_a_panel_with_a_broken_link_is_red(self):
         out = self.tmp / "broken-panel"
@@ -766,12 +762,11 @@ class SiteTests(unittest.TestCase):
         with mock.patch.object(build, "BUILD_ORDER", build.BUILD_ORDER[1:]):
             self.assertTrue(any("door configure is in no step" in e for e in build.order_errors()))
 
-    def test_related_needs_named_first_then_sample_then_chapter_15_at_most_four(self):
+    def test_related_needs_named_first_then_sample_at_most_four(self):
         cards = build.catalogue.load(build.ROOT)
-        rel = build.related_needs(cards, build.named_together())
+        rel = build.related_needs(cards, [])
         self.assertTrue(all(len(v) <= 4 and all(o.id != k for o in v) for k, v in rel.items()))
         self.assertEqual(rel["question-on-quantity-change"][0].id, "line-quantity-cap")      # named in its limit
-        self.assertIn("prescription-before-payment", [o.id for o in rel["prescriptions-as-records"]])   # a chapter 15 row
         text = (self.out / "needs/till/question-on-quantity-change.html").read_text("utf-8")
         self.assertIn('id="related-needs"', text)
 
@@ -916,7 +911,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         page = (self.out / "reference_apps.html").read_text("utf-8")
         card = page.split('<h4><a href="samples/s23_till_guard/index.html"', 1)[1].split("</li>")[0]   # a card with a picture has a thumbnail link first
         self.assertIn("Check before payment", card)
-        self.assertIn("python3 -m unittest discover -s samples/s23_till_guard/tests", card)
+        self.assertIn("ivn check", card)
         self.assertIn("index.html#run-it", card)
         self.assertIn(f"{build.REPO_URL}/tree/main/samples/s23_till_guard", card)
 
@@ -1147,7 +1142,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertEqual(seo.desc_problems(descs), [])
         hand = seo.load(build.SEO_JSON)[0]["descriptions"]
         self.assertGreaterEqual(len(hand), 20)
-        spec = {"index.html", "start.html", "needs/index.html", "build.html", "plan.html", "sandbox.html", "publish.html",
+        spec = {"index.html", "first_app.html", "needs/index.html", "build.html", "plan.html", "sandbox.html", "publish.html",
                 "reference_apps.html", "samples/index.html", "recipes/index.html", "guide/03_ladder_and_never_list.html",
                 "guide/04_configure_first.html", "guide/09_points_and_requests.html", "guide/16_possible_not_possible.html",
                 "recipes/connected_app.html", "recipes/configure_no_code.html", "recipes/till_guard.html", "recipes/manifest.html",
@@ -1204,27 +1199,27 @@ The till cannot do this yet; it can stop the sale at Pay.
         kit = self.planted_kit("title_override")
         table = self.tmp / "title_override_seo.json"
         data = json.loads(build.SEO_JSON.read_text("utf-8"))
-        data["titles"]["start.html"] = "A title written where the heading is short enough"        # start.html's own heading is short
+        data["titles"]["first_app.html"] = "A title written where the heading is short enough"        # first_app.html's own heading is short
         table.write_text(json.dumps(data), "utf-8")
         with mock.patch.object(build, "SEO_JSON", table):
             self.assertEqual(self.build_in(kit), 1)
-        data["titles"].pop("start.html")
+        data["titles"].pop("first_app.html")
         data["titles"]["needs/till/warranty-check-at-till.html"] = "x" * 20                    # a card's title is its own line, unchanged
         table.write_text(json.dumps(data), "utf-8")
         with mock.patch.object(build, "SEO_JSON", table):
             self.assertEqual(self.build_in(kit), 1)
 
     def test_a_planted_bad_block_is_red(self):
-        locs = {"https://developer.ivendnext.com/", "https://developer.ivendnext.com/start.html"}
+        locs = {"https://developer.ivendnext.com/", "https://developer.ivendnext.com/first_app.html"}
         page = lambda block, nav="": ('<nav class="crumbs"><ol><li><a href="x">Home</a></li><li aria-current="page">Start</li></ol></nav>'
                                       '<script type="application/ld+json">' + block + "</script>")
         crumb = ('{"@context": "https://schema.org", "@graph": [{"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", '
                  '"position": 1, "name": "Home", "item": "https://developer.ivendnext.com/"}, {"@type": "ListItem", "position": 2, '
-                 '"name": "Start", "item": "https://developer.ivendnext.com/start.html"}]}]}')
+                 '"name": "Start", "item": "https://developer.ivendnext.com/first_app.html"}]}]}')
         self.assertEqual(seo.ld_problems(page(crumb), locs), [])
         self.assertTrue(any("not JSON" in b for b in seo.ld_problems(page('{"@type": '), locs)))
         self.assertTrue(any("FAQPage" in b for b in seo.ld_problems(page('{"@context": "https://schema.org", "@type": "FAQPage"}'), locs)))
-        self.assertTrue(any("not a page of the site" in b for b in seo.ld_problems(page(crumb.replace("start.html", "gone.html")), locs)))
+        self.assertTrue(any("not a page of the site" in b for b in seo.ld_problems(page(crumb.replace("first_app.html", "gone.html")), locs)))
         self.assertTrue(any("not the line the page shows" in b for b in seo.ld_problems(page(crumb.replace('"Start"', '"Begin"')), locs)))
 
     # preview images
@@ -1274,7 +1269,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         got = re.search(rf"<loc>https://developer.ivendnext.com/{card}.html</loc><lastmod>([^<]*)</lastmod>", xml).group(1)
         self.assertGreaterEqual(got, git(card + ".md"))
         own = subprocess.run(["git", "-C", str(build.ROOT), "log", "-1", "--format=%cs", "--", "site/pages/start.md"], capture_output=True, text=True).stdout.strip()
-        got = re.search(r"<loc>https://developer.ivendnext.com/start.html</loc><lastmod>([^<]*)</lastmod>", xml).group(1)
+        got = re.search(r"<loc>https://developer.ivendnext.com/first_app.html</loc><lastmod>([^<]*)</lastmod>", xml).group(1)
         self.assertGreaterEqual(got, own)                                                # a page that pulls in sections: the newest of its sources
         self.assertNotIn("<lastmod></lastmod>", xml)
 
@@ -1338,7 +1333,6 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertTrue(text.startswith("# iVendNext Developers\n\n> "))
         self.assertNotIn("github.com/ivendnext-developers/partner-kit", text)             # the kit is private until Stage 2
         self.assertIn("https://developer.ivendnext.com/catalogue.json", text)
-        self.assertIn("https://developer.ivendnext.com/guide/13_ai.html", text)
         links = re.findall(r"^- \[[^\]]+\]\((https://developer\.ivendnext\.com/[^)]*)\): \S", text, re.M)
         self.assertGreater(len(links), 60)
         for url in links:
@@ -1379,7 +1373,7 @@ The till cannot do this yet; it can stop the sale at Pay.
 
     def test_a_redirect_to_a_page_that_is_not_built_or_over_a_page_is_red(self):
         self.assertEqual(self.redirect_build("redirect_gone", "guide/old.html guide/no_such_page.html\n")[0], 1)
-        self.assertEqual(self.redirect_build("redirect_over", "start.html build.html\n")[0], 1)
+        self.assertEqual(self.redirect_build("redirect_over", "first_app.html build.html\n")[0], 1)
         self.assertEqual(self.redirect_build("redirect_bare", "guide/old.html\n")[0], 1)
 
     # the 404 page
@@ -1387,7 +1381,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         text = self.html_of("404.html")
         self.assertFalse(indexable(text))
         self.assertIn('<form class="search-page" action="/search.html" method="get" role="search">', text)
-        for href in ("/needs/index.html", "/build.html", "/start.html"):
+        for href in ("/needs/index.html", "/build.html", "/first_app.html"):
             self.assertIn(f'<a href="{href}">', text)
         cards = len(catalogue_cards())
         self.assertEqual(len(re.findall(r'<li><a href="/needs/[a-z]+/[a-z0-9-]+\.html">', text)), cards)
@@ -1409,7 +1403,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         home = (out / "index.html").read_text("utf-8")
         self.assertIn('<meta name="google-site-verification" content="g00gle-t0ken_abc123">', home)
         self.assertIn('<meta name="msvalidate.01" content="B1ng-t0ken_abc123">', home)
-        self.assertNotIn("google-site-verification", (out / "start.html").read_text("utf-8"))
+        self.assertNotIn("google-site-verification", (out / "first_app.html").read_text("utf-8"))
         data["google_site_verification"] = "bad value<script>"                               # never a value that is not one
         table.write_text(json.dumps(data), "utf-8")
         with mock.patch.object(build, "SEO_JSON", table):

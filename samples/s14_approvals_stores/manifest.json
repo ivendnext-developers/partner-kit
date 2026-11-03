@@ -3,9 +3,9 @@
  "app": "pp_aps",
  "prefix": "PP APS",
  "title": "Price change approvals across stores",
- "version": "0.1.0",
+ "version": "0.3.0",
  "publisher": "Partner Programme sample",
- "description": "A request to change a selling price names its STORE and moves Requested -> Store Approved -> Head Office Approved -> Applied by a native workflow. A store manager sees and approves only their own store's requests (a User Permission on the store, set per person); head office sees all. The workflow cannot hold a limit (a manifest carries no condition) and the shop accepts a state written straight in when the writer's roles allow that move, so the limit and the right to approve are decided by an outside service from the approval-rule table in this manifest: a store manager approves up to a percentage of the price, above it the change waits for head office. Nothing here changes a price: the service applies an approved request through the record API, once, and refuses one whose item, price list, price or store changed after it was raised, one approved by the person who raised it at any step, one approved by a person with no rule for it, and one with ten or more recorded changes. Every right a role has is written out (read, write, create, delete, report, export, share, print, email): a permission row that leaves one out gets it ON. The shop must have the four roles named below before this is installed; no one may hold a raising role and an approving role, or both approving roles.",
+ "description": "A request to change a selling price names its STORE and moves Requested -> Store Approved -> Head Office Approved -> Applied by a native workflow. A store manager sees and approves only their own store's requests (a User Permission on the store, one per person); head office sees all. An outside service applies an approved change through the record API: within the store's limit (a percentage it reads from its own setting), or whatever head office approved.",
  "doctypes": [
   {
    "name": "PP APS Price Change Request",
@@ -114,68 +114,6 @@
      "role": "PP APS Applier",
      "read": 1,
      "write": 1,
-     "create": 0,
-     "delete": 0,
-     "report": 0,
-     "export": 0,
-     "share": 0,
-     "print": 0,
-     "email": 0
-    }
-   ]
-  },
-  {
-   "name": "PP APS Approval Rule",
-   "autoname": "field:user",
-   "track_changes": 1,
-   "fields": [
-    {
-     "fieldname": "user",
-     "fieldtype": "Link",
-     "label": "Person",
-     "options": "User",
-     "reqd": 1,
-     "in_list_view": 1
-    },
-    {
-     "fieldname": "level",
-     "fieldtype": "Select",
-     "label": "Level",
-     "options": "Store\nHead Office",
-     "reqd": 1,
-     "in_list_view": 1
-    },
-    {
-     "fieldname": "store",
-     "fieldtype": "Link",
-     "label": "Store (for a Store level)",
-     "options": "POS Profile",
-     "in_list_view": 1
-    },
-    {
-     "fieldname": "limit_pct",
-     "fieldtype": "Float",
-     "label": "Limit, percent of the price now (for a Store level)",
-     "in_list_view": 1
-    }
-   ],
-   "permissions": [
-    {
-     "role": "System Manager",
-     "read": 1,
-     "write": 1,
-     "create": 1,
-     "delete": 1,
-     "report": 1,
-     "export": 1,
-     "share": 0,
-     "print": 1,
-     "email": 0
-    },
-    {
-     "role": "PP APS Applier",
-     "read": 1,
-     "write": 0,
      "create": 0,
      "delete": 0,
      "report": 0,
@@ -296,9 +234,11 @@
   }
  ],
  "property_setters": [
-  {"doc_type": "PP APS Price Change Request", "property": "documentation", "property_type": "Data",
-   "value": "https://developer.ivendnext.com/samples/s14_approvals_stores/index.html"},
-  {"doc_type": "PP APS Approval Rule", "property": "documentation", "property_type": "Data",
-   "value": "https://developer.ivendnext.com/samples/s14_approvals_stores/index.html"}
+  {
+   "doc_type": "PP APS Price Change Request",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s14_approvals_stores/index.html"
+  }
  ]
 }

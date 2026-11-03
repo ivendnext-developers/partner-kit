@@ -18,7 +18,6 @@ Your outside app on the API and the event feed, keeping its own map of record id
 
 ## Limits
 - The feed reports a change after it is saved, so your app corrects after the fact.
-- The kit's samples read the shared feed, whose key is not limited to one app (a feed scoped to your app is an extension point, chapter 9).
 - Webhooks try three times, then stop: use the feed for anything you must not miss.
 - One ERP per company.
 

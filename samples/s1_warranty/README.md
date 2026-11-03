@@ -1,156 +1,47 @@
-# S1 — warranty check (`pp_wrc`), connected leg
+# S1 — warranty check (`pp_wrc`)
 
-*Start from this sample: `python3 tools/manifest/start.py s1_warranty --prefix "ACME WRC"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
+When the till books a sale, this app registers a warranty for each covered item sold, by its serial number, and leaves one comment on the sale in Desk: one line per warranty, and a line for each item not covered. A return, or a day's roll-up of till sales, registers nothing. A cashier can also press *Warranty* at the till to see an item's months. The retailer keeps the terms (covered item or item group, and months) in Desk.
 
-![A covered phone sold at the till, and the warranty service's comment on the sale](screenshots/s1_flow.gif)
+![A covered phone sold at the till](screenshots/01_till_sale.png)
 
-*A phone is sold at the till with its serial number scanned; seconds later the warranty service's comment is on the sale in Desk.*
-
-This sample is a small Python service that registers a warranty for every covered item a retailer sells, and tells staff on the sale. A sale that is a return, or a consolidated roll-up of till sales, registers nothing, and the sale webhooks themselves were not exercised by its tests. It runs on your own server, outside the retailer's iVendNext: a developer new to iVendNext can copy it to react to any booked sale without putting code inside the retailer's iVendNext.
+**What is in it:** a till key, a warranty registered on each booked sale and one list (warranty term).
 
 **Industries:** Electronics and phones, Hardware and DIY
 
 **When to use it:** you want to do something with every booked sale (register it, notify someone, audit it) and show the result to staff on the sale itself.
 
-**What is in it:** a till key, a warranty registered on each booked sale and one list (warranty term).
+## Start from it
 
-## What it looks like
+```bash
+ivn new acme_warranty --from s1
+```
 
-The phone is the sample's own test item (`PP-WRC-PHONE`, covered for 24 months by `service/terms.json`). The comment is signed by iVendNext's integration user, *PP Integration*.
+## What to change
 
-| Step | Frame | Screenshot |
-|---|---|---|
-| 1. A sale on the till: the covered phone and a leather case, for a named customer | the till, 1440 wide | ![](screenshots/01_till_sale.png) |
-| 2. The till asks for the phone's serial number before it charges | the till | ![](screenshots/02_serial_capture.png) |
-| 3. The sale is booked (here with a demo card) | the till | ![](screenshots/03_sale_booked.png) |
-| 4. The warranty service's comment on the sale: one warranty, until 2028-10-10; the case not covered | Desk | ![](screenshots/04_warranty_comment.png) |
+What a partner usually changes:
 
-## Made on My apps
+- **The terms:** the retailer's own *PP WRC Warranty Term* records, one per item or item group (**Applies to**, the item or group, **Months**). An item's own term wins over its group's. On your own server, `service/terms.json` holds the same terms.
+- **The answer the till gives:** `warranty_answer` in `core.py`.
+- **The comment on the sale:** `comment_text` in `core.py`.
+- **What is registered:** `registrations` in `core.py`, which decides which sale lines count.
+- **The app's id:** `IVN_LIBRARY_APP` in `app.json`.
 
-**New app makes this sample into an app we host, for many retailers.** The retailer keeps the **Warranty terms** in Desk. Every few minutes the app reads the sales booked since its last look, registers a warranty per covered serial number and writes one Comment on the sale; that Comment is the record. Sales from before the install are left alone. A cashier presses *Warranty* for an item's months.
+More: the [recipe](../../recipes/point_handler.md).
 
-The retailer's administrator gives the role **PP WRC Integration**, in **Role Permissions**: read on **Sales Invoice**, **POS Invoice**, **Serial and Batch Bundle** and **Item**, and read and create on **Comment**. Until then no Comment comes, and each look tries again: the app's *Logs* say why, and the cashier is told only if *Warranty* itself cannot read.
-
-It looks at the sales on a schedule, so it runs all the time: the plan is charged, and listing it does not make it free.
-
-The steps below that name a webhook, a service's own user or a *terms.json* are for running it on your own server.
-
-## What the retailer does
-
-A retailer that wants a warranty registered for every covered item it sells does this, in the order it meets it:
-
-1. **Install the package (optional).** The retailer's administrator opens **Retail Extension Package** in Desk, pastes `manifest.json`, presses **Check**, reads the summary, ticks the consent and installs. It adds one record type, `PP WRC Warranty Term`, a **Warranty terms** workspace, the *Warranty* till key and the app's own user (POS 2.1.0.667 or later). The record type is open to the retailer's own System Manager and Retail Manager, and its role **PP WRC Integration** reads it.
-2. **Enter the terms.** In the **Warranty terms** workspace a System Manager or a Retail Manager adds one `PP WRC Warranty Term` for each covered item or item group: **Applies to** (*Item* or *Item Group*), the item or the group, and **Months**. An item's own term wins over its item group's. The service in this folder keeps the same kind of terms in its own file, `service/terms.json` (item or item group, and months).
-3. **The service's own user (your own server only for the rest of this step).** The install makes the app's own user, from its feed registration (the feed stays off), holding **PP WRC Integration**, which reads the terms and nothing else. The service on your own server reads and writes more: the administrator gives that user one narrow role, as the [integration user recipe](../../recipes/integration_user.md) describes: read on the retailer's sales (*Sales Invoice*, *POS Invoice*), items and serial numbers on a sale (*Serial and Batch Bundle*), and the right to add a **Comment**. Its API key goes to the service. The comment on the sale is signed by this user.
-4. **On your own server: have the retailer call the service on every booked sale.** A System Manager creates a **Webhook** for *Sales Invoice* and for *POS Invoice* on **Submit**, with **Enable Security** on, a long **Webhook Secret** (the service holds the same one) and a thin JSON body that names the record and when it changed ([`recipes/webhook_receiver.md`](../../recipes/webhook_receiver.md)). Its address is the service's `/webhook`.
-5. **Sell.** The cashier sells a covered item and scans its serial number, as the till asks. Within seconds the service's comment is on the sale in Desk: one warranty per covered serial number, and a line for each item not covered.
-6. **Optional: the "Warranty" till key.** The record is a **Retail Remote App Key** in Desk: the partner's name, an app name, the key, its label, *message* as the only thing it may return, the service's HTTPS address (`/point/warranty`), a signing secret both sides hold and the time to answer. The manifest declares the till key, so the install makes this record, with the address and the secret: tick the customer's consent. Then the store switches the key on in **POS Studio > Apps**.
-
-**Where it shows.** In Desk: one Comment on each covered sale, and the **Warranty terms** workspace if the package is installed. At the till: the serial-number prompt, and with the till key a short message titled *Warranty* that names each item and its months. In POS Studio: the key, under **Apps**. No print layout, report or number card.
-
-**What leaves the retailer's iVendNext.** The manifest names the till key and the app's own user, with its feed left off; a press sends the sale's context (below). On your own server, the first line below applies too; on our hosting there is no webhook, and the app reads the sales itself. The service:
-- the **webhook** sends the service a signed message that names the record and when it changed, and nothing more (record type, name, event, time, company);
-- the **service** then reads the sale's lines and their serial numbers with the integration user's key, and writes one Comment on the sale; nothing else is added to iVendNext;
-- the service keeps, in its own store outside the retailer's iVendNext, each warranty's serial number, item code, sale name, months and dates, and the sales it has handled;
-- with the till key, each press makes the till's server send the service the sale's context: the item codes, quantities and units, the store, the customer on the sale, the cashier, the sale's reference, the register's profile, the company and the currency. No prices, totals, payment details or serial numbers. The service reads the items' groups with the same key.
-
-## How it works
-
-When a sale is booked in iVendNext, this small Python service, running on the partner's own server:
-1. receives the signed webhook and checks it ([`recipes/webhook_receiver.md`](../../recipes/webhook_receiver.md));
-2. reads the sale's lines and their serial numbers over the record API, as an integration user;
-3. registers a warranty per covered serial number in **its own** store (SQLite), using **its own** terms;
-4. writes **one Comment on the sale**, which staff see on the sale in iVendNext Desk.
-
-A reconciliation pull finds every sale whose webhook never arrived. Nothing is added to the retailer's database except that Comment.
-
-## The files
-
-| File | What |
-|---|---|
-| `core.py` | **The pure core.** `warranty_answer(context, terms)` gives the till's answer, `registrations(...)` the warranties of a booked sale, and `comment_text(...)` the Comment. It imports no framework. `context` is shaped exactly like the till's app-button context, and the answer uses only the till's closed vocabulary, so the same file can be bound at the till unchanged |
-| `service/app.py` | the HTTP service (standard library): `POST /webhook`, `POST /reconcile` and `GET /status` (both need `X-PP-Admin`), `GET /health` |
-| `service/receiver.py` | signature check and the replay key |
-| `service/tenant.py` | the only door into iVendNext: the record API calls of `api/collection/` |
-| `service/store.py` | the partner's own store: terms, warranties, handled sales, seen-set, watermark, events |
-| `service/terms.json` | the partner's warranty terms (item or item group → months) |
-| `tests/test_core.py` | tests of the core on recorded sale contexts (`tests/contexts/`) |
-| `tests/test_tenant.py` | the door into iVendNext: an answer cut short is an error the service handles, never a crash |
-
-## Two ways to use the same core
-
-Outsiders never write Python inside a retailer's site. Both forms below run on your own server, and both are public: an iVendNext Partner may build either.
-
-| Form | What | Who may use it |
-|---|---|---|
-| **Connected** — `service/` | the partner's own service: reads booked sales (a webhook nudges it today; the reliable route is now the event feed, [`recipes/event_feed.md`](../../recipes/event_feed.md)), keeps warranties in its own store, comments on the sale | **public** — the form an iVendNext Partner builds |
-| **Remote till key** — `remote/wrapper.py` | the same pure core answering the till's "Warranty" key from the partner's own server (the remote key contract) | **public** |
+**The customer sets:** the warranty terms, and the role **PP WRC Integration** with read on Sales Invoice, POS Invoice, Serial and Batch Bundle and Item, and read and create on Comment. Until then no comment comes.
 
 ## Run it
 
 ```bash
-python3 -m unittest discover -s samples/s1_warranty/tests -p 'test_core.py' -v
+ivn check
+ivn try
 ```
-
-```bash
-python3 samples/s1_warranty/service/app.py samples/s1_warranty/service/.env.local
-```
-
-The service reads one env file (never committed; `chmod 600`), kept at `samples/s1_warranty/service/.env.local`: `PP_BASE` (the retailer's address), `PP_KEY` and `PP_SECRET` (the integration user's API key), `PP_WEBHOOK_SECRET`, `PP_ADMIN_TOKEN` (for `/reconcile` and `/status`), and optionally `PP_PORT` (8121), `PP_DB`, `PP_TERMS`, `PP_SINCE` and `PP_RECONCILE_SECONDS`. Run it on a server that stays up, so no delivery is dropped; the retailer's webhook points at its `/webhook`.
-
-## What is refused, and why
-
-The service refuses a delivery whose signature does not check, and a delivery it has already seen (a replay). That way nobody but the retailer can make it register a warranty, and a sale delivered twice is handled once.
-
-A sale that is a return, or a consolidated roll-up of till sales, registers nothing.
-
-## When your service is down
-
-A sale booked while your service is down is not lost. The reconciliation pull (`POST /reconcile`) finds every sale whose webhook never arrived. Run it nightly and after every restart.
-
-## Technical notes
-
-### The walk
-
-The GIF: a cashier sells a covered phone and a leather case to a customer, scans the phone's serial number, and takes the card; seconds later the warranty service's comment is on the sale in Desk: one warranty registered, the case not covered. Frames: the till (`/pos?frame=terminal`, 1440 wide), then Desk. Walked on our test bench on 2026-10-10, iVendNext POS app at `87812e141`. Built from the same screens as the stills below, uncropped.
-
-The stills: walked in a real browser on our test bench, 2026-10-10, iVendNext POS app at `87812e141`. The iVendNext shown is the kit's demo site, *Demo Retail*. The cashier is the bench's *Thabo Nkosi*, the customer *Naledi Khumalo*; the phone is the sample's own test item (`PP-WRC-PHONE`, covered for 24 months by `service/terms.json`). The comment is signed by iVendNext's integration user, *PP Integration*. Step 3's card is the bench's demo card.
-
-### The tests
-
-| File | What |
-|---|---|
-| `tests/test_core.py` | core tests on contexts **recorded** from the bench's own `build_context` (`tests/contexts/`) |
-| `tests/test_tenant.py` | the door into iVendNext: an answer cut short is an error the service handles, never a crash |
-| *our test bench's own run (not in the kit)* | the end-to-end tests: functional, signature, replay, idempotency, three failed deliveries → reconciliation |
-| *our test bench's own run (not in the kit)* | a canary that proves the end-to-end tests can fail: a receiver with no signature check and no replay set must turn them red |
-
-On our test bench the service ran beside iVendNext and passed its end-to-end test (signed delivery, replay refused, reconciliation).
-
-### The two forms
-
-The forms table dates from 2026-10-04 — the rule: outsiders never write Python inside a tenant. The remote till key was, on our test bench, pressed through the released key over HTTPS on 2026-10-07: through the till's own press endpoint, called from the bench's console as the cashier, not from the till's screen. A press of *Warranty* from the till's screen or from a physical till device was not tried.
-
-### The env file's path
-
-`service/app.py` opens the path it is given from the current directory (`load_env`, `open(path)`), so from the kit's root the command passes `samples/s1_warranty/service/.env.local`. The remote binding reads the same file at that place (`remote/wrapper.py`: `os.path.join(SAMPLE, "service", ".env.local")`), so keep it there. Our test bench runs the same command from the sample's own folder as `python3 service/app.py service/.env.local`.
-
-### Why it is built this way (R6)
-
-| Option | Cost | Verdict |
-|---|---|---|
-| **Standard library only** (`http.server`, `urllib`, `sqlite3`) | ~300 lines; nothing to install on the partner's server or the test machine | **picked**: any Python developer reads it unaided |
-| Flask or FastAPI | shorter handlers; a virtual environment and dependencies on the test machine | rejected for a reference sample |
-| A generated client from `api/openapi.yaml` | adds a build step; the calls are six plain HTTP requests | not needed (G3 makes it optional) |
-
-### Bounds, stated
-
-The reconciliation timer is off on the bench (`PP_RECONCILE_SECONDS=0`) so the tests drive it. A partner runs it nightly and after every restart. A sale that is a return, or a consolidated roll-up of till sales, registers nothing. POS Invoice webhooks are subscribed but not exercised by these tests, which open no POS day.
 
 ## Try it at the till
 
-- In Desk, add a warranty term for an item, and switch the Warranty key on in POS Studio > Apps. Start a sale with that item and press Warranty; the till names the item and its months.
+- In Desk, add a warranty term for an item. Start a sale with that item and press Warranty; the till names the item and its months.
 - Sell it and scan its serial number. Within a few minutes the warranty's comment is on the sale in Desk.
+- The Warranty key was pressed through the released key over HTTPS from a console as the cashier, not from the till's screen or a physical till; a press from the till itself has not been tried.
 - Close the till day when you are done.
 
 ## Versions

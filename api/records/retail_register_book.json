@@ -246,7 +246,7 @@
   {
    "added": 0,
    "choices": [],
-   "description": "At most three, all of which must hold: field of the line, operator, value. A date column takes is set or is not set only.",
+   "description": "At most three, all of which must hold: field of the line, operator, value. A date column accepts only \"is set\" or \"is not set\".",
    "fieldname": "conditions",
    "hidden": 0,
    "label": "Conditions",
@@ -258,7 +258,7 @@
   {
    "added": 0,
    "choices": [],
-   "description": "The columns a person's Desk submit may not leave empty.",
+   "description": "The columns a person or an integration may not leave empty when submitting.",
    "fieldname": "required",
    "hidden": 0,
    "label": "Required columns",
@@ -335,6 +335,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract register_books; guide chapter 07; recipe manifest",
+ "why": "contract register_books; guide chapter 07; recipe manifest; sample S41",
  "written_elsewhere": ""
 }

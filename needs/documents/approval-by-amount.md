@@ -10,14 +10,16 @@ blocked-by: -
 recipe: recipes/approvals.md
 sample: samples/s11_approvals
 request: -
-verified: carried 2026-10-16 · not re-run
+verified: POS 2.1.0.679 · S11 installed on our test bench and walked: approve submits, reject holds, the condition decides who may act
 popular: yes
 ---
 ## What you build
-A workflow on the document, with an approval step by amount. Configuration only.
+Often nothing. **If the amount and the approver are all the customer wants, it is one record in iVendNext Desk, with no app:** **Authorization Rule**, on *Purchase Order*, based on *Grand Total*, with the amount and who approves above it. Anyone else who tries to submit an order over the amount is refused.
+
+**If they want named steps, a Reject, mail, or the same thing on many sites,** a workflow on the document, in a manifest: sample S11, with no service and no key. Approving submits the order, and a condition on the amount decides who may act.
 
 ## Limits
-- Who may edit a record in a workflow state is checked in the browser only: follow the four safeguards in chapter 13a.
+- A workflow cannot run on the till's own records, such as POS Invoice: a sale must never wait for an approval nobody at the counter gives.
 
 ## Tell the customer
 Documents over the amount wait for the approver before they can be submitted.

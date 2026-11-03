@@ -4,3 +4,4 @@
 # and refreshes to it. The new address must be a page the build makes. Empty now.
 device.html apps.html
 hosting.html apps.html
+start.html first_app.html

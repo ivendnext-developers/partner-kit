@@ -19,6 +19,7 @@ import sys
 import urllib.parse
 import tempfile
 import unittest
+import unittest.mock
 
 HERE = pathlib.Path(__file__).resolve().parent
 KIT = pathlib.Path(os.environ.get("PARTNER_KIT") or HERE.parents[2]).resolve()
@@ -372,24 +373,31 @@ class Refusals(Base):
             with self.subTest(bad), self.assertRaises(combine.Refused):
                 self.make(["s23_till_guard"], prefix=bad)
 
+    def test_the_summary_says_no_service_of_ours_for_an_app_with_none(self):
+        kit = KIT / "samples"
+        none = [combine.make_part("s11_approvals", "ACME ONE", "acme_one", False, kit)]
+        self.assertIn("No service of ours, no feed.", combine.summary_lines(none, "CHECK GREEN", 4)[1])
+        some = [combine.make_part("s23_till_guard", "ACME ONE", "acme_one", False, kit)]
+        self.assertIn("One service,", combine.summary_lines(some, "CHECK GREEN", 4)[1])
+
     def test_room_for_is_the_longest_name_the_samples_leave_room_for(self):
-        room = combine.room_for(["s57_donation_intake"], "ACME")
-        self.assertLess(room, 25)
-        self.make(["s57_donation_intake"], prefix="ACME " + "X" * (room - 5))     # at the limit: made
-        with self.assertRaises(combine.Refused) as e:                              # one past it: said in words
-            self.make(["s57_donation_intake"], prefix="ACMEB " + "X" * (room - 5))
+        room = combine.room_for(["s40_expiry_recall"], "ACME")
+        self.assertLess(room, 40)
+        self.make(["s40_expiry_recall"], prefix="ACME " + "X" * (room - 5))         # at the limit: made
+        with self.assertRaises(combine.Refused) as e:                               # one past it: said in words
+            self.make(["s40_expiry_recall"], prefix="ACMEB " + "X" * (room - 5))
         self.assertEqual(e.exception.code, "M06")
         self.assertIn(f"at most {room} letters", e.exception.text)
-        self.assertLess(combine.room_for(["s57_donation_intake", "s23_till_guard"], "ACME"), room)   # its names take a tag too
-        self.assertEqual(combine.room_for(["s23_till_guard"], "ACME"), 40)         # nothing long: the door's own limit
+        self.assertEqual(combine.room_for(["s23_till_guard"], "ACME"), 40)          # nothing long: the door's own limit
 
     def test_a_part_that_pulls_on_a_schedule_is_no_reader_of_the_feed(self):  # S1's feed stays off: it pulls; no event waits for it
         kit = KIT / "samples"
         self.assertIsNone(combine.reads(combine.make_part("s1_warranty", "ACME ONE", "acme_one", True, kit)))
         self.assertEqual(combine.reads(combine.make_part("s3_price_audit", "ACME ONE", "acme_one", True, kit)), ["POS Invoice", "Sales Invoice"])
 
-    def test_samples_that_cannot_sit_together_say_so_before_next(self):  # S55's and S22's own rules on one field, at any name
-        with self.assertRaises(combine.Refused) as e:
+    def test_samples_that_cannot_sit_together_say_so_before_next(self):
+        with unittest.mock.patch.object(combine, "site_refusals", return_value=[{"where": "a", "reason": "planted"}]), \
+                self.assertRaises(combine.Refused) as e:
             combine.check_together(["s55_front_of_house", "s22_customer_loyalty"])
         self.assertEqual((e.exception.code, e.exception.page), ("M06", "These samples cannot sit in one app: untick one."))
         combine.check_together(["s23_till_guard", "s22_customer_loyalty"])

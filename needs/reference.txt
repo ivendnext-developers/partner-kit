@@ -1,22 +1,19 @@
 # Recipes and samples that are reference, not the answer to a customer's need. One line each: <path> — <reason>.
 # needs.py check fails a recipe or sample that no card cites and that is not listed here.
-recipes/ai_manager.md — an AI assistant for a manager on the user's own key (chapter 13)
-recipes/ai_till_key.md — an AI answer behind a till key (chapter 13); the till key needs are carded
+recipes/ai_manager.md — an AI assistant for a manager on the user's own key
+recipes/ai_till_key.md — an AI answer behind a till key; the till key needs are carded
 recipes/bulk_reads.md — a technique every outside app uses
-recipes/common_custom_projects.md — the catalogue's front door, not a need
-recipes/estate_rollout.md — rolling a set-up out to many stores (chapter 14a)
-recipes/hosted_sandbox.md — the builder's own sandbox (chapter 2)
-recipes/host_from_the_web_page.md — ordering CitiXsys App Hosting from the developer site, screen by screen (chapter 14b)
-recipes/integration_user.md — the app's user and key (chapter 2)
-recipes/money_kit.md — testing money on recorded baskets (chapter 14)
+recipes/estate_rollout.md — rolling a set-up out to many stores
+recipes/hosted_sandbox.md — the builder's own sandbox
+recipes/integration_user.md — the app's user and key
 recipes/make_it_your_own.md — a partner's own version of one of our apps, for any need an app of ours answers
-recipes/portal.md — a standalone portal for the customer's users (chapter 13a)
-recipes/release_gate.md — the release gate in the customer's CI (chapter 14)
+recipes/portal.md — a standalone portal for the customer's users
+recipes/release_gate.md — the release gate in the customer's CI
 recipes/sign_in.md — sign in with iVendNext
-recipes/webhook_receiver.md — receiving webhooks, the nudge (chapter 5)
+recipes/webhook_receiver.md — receiving webhooks, the nudge
 samples/s10_ai_manager — the AI manager's sample
 samples/s12_release_gate — the release gate's sample
 samples/s13_portal — the portal's sample
-samples/s3_price_audit — a price-deviation audit on the feed, read through a stand-in (chapter 5)
+samples/s3_price_audit — a price-deviation audit on the feed, read through a stand-in
 samples/s6_ai_till_key — the AI till key's sample
 samples/s8_estate_rollout — the estate roll-out's sample

@@ -303,6 +303,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract partner_fulfil",
+ "why": "contract partner_fulfil; the kit's tool manifest",
  "written_elsewhere": "iVendNext writes it from your service's answer to fulfil at sale."
 }

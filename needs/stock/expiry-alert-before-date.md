@@ -13,7 +13,7 @@ request: -
 verified: run on a sandbox 2026-10-21 · POS 2.0.0.658 · S27's reminder package installed: a Days Before notification on Batch, 30 days before its expiry date, to the Stock Manager role, by e-mail, read back, then uninstalled; not run: a message sent (the daily send rests on the product's tests)
 ---
 ## What you build
-From POS build 2.0.0.654, a manifest ships the reminder: a notification on Batch, *Days Before* its expiry date, to a role, by e-mail or the bell (`guide/07_manifests.md`, *A reminder before or after a date on a retailer's record*). Sample S27 carries the package (`batch_expiry_package.json`). Before that build, the retailer's administrator sets the same notification in Desk.
+A manifest ships the reminder: a notification on Batch, *Days Before* its expiry date, to a role, by e-mail or the bell (`guide/07_manifests.md`, *A reminder before or after a date on a retailer's record*). Sample S27 carries the package (`batch_expiry_package.json`).
 
 ## Limits
 - No cap: one message per batch on the day.

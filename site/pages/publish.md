@@ -1,106 +1,56 @@
 # Publish your app
 
-**Starting from one of our apps?** Copy it, make it your customer's, and sell it as yours: [Build your business on iVendNext's apps](business.md).
+Make your app, try it on your sandbox, send it to your customer and list it for every retailer, on [My apps](https://developer.ivendnext.com/apps) or with the `ivn` command. New to it? [Build your first app](first_app.md) takes you from a sample to your customer in six steps.
 
-This site helps you **build** an app. The **App library** (`https://library.ivendnext.app`) is where retailers **find** it and install it from iVendNext Desk. You publish it yourself, with one command from any computer (your laptop or your own build server, with or without GitHub, whatever language your app is written in), or [from the web page](#from-the-web-page) in your browser, with no command at all.
+## The steps
 
-**Publishing and hosting are two separate steps.** Publishing sends the library only your app's manifest and its card. Hosting, only if CitiXsys runs your service, is a separate order that sends App Hosting your app's built image or its function's package, the files the function runs ([Host with CitiXsys or run your own](apps.md)). We never need access to your repository, which stays wherever you keep it ([How it all works, section 9](../../guide/01a_how_it_all_works.md#9-publishing-is-not-handing-us-your-code)).
+**Make it.** On My apps, **New app**, or from a terminal:
 
-## How it works
+```bash
+ivn new acme_bins --from s2
+```
 
-1. **Sign this computer in, once.** From the kit's folder:
+It makes one app from one sample or several.
 
-   ```bash
-   python3 tools/publish/publish.py login
-   ```
+**Try it on your sandbox.** On My apps, **Try on my sandbox**, or `ivn try`. It shows what installing it changes, installs it on your sandbox and tests each connection. Trying is free, and it asks for no key, no plan and no card. No sandbox yet? [Request one](sandbox.md).
 
-   It prints a code; enter it on My apps, signed in with GitHub. The token it keeps (`~/.ivendnext/token`, readable by you only) is all publishing needs: no key file. A build server uses a token made on My apps > Tokens, in its secret `IVN_TOKEN`.
-2. **Set up your company once, on [My apps](https://developer.ivendnext.com/apps)** (before step 1, the first time). Sign in with GitHub and give your company's name as retailers see it and the first word you would like for it. Until the signed upload goes, a company that still signs registers its key itself, with `publish.py keygen --register --recipient library/recipient.pem`, not through Help. The first word (for example `acme`: letters and digits, starting with a letter, 2 to 12 in all; not one that is ours or another company's, and not one of the 22 words iVendNext's checker refuses as a prefix's first word, listed on the save rules page: `is`, `for`, `set`, `base`, `free`, `price` …) is your company's the moment you press Continue; you then name every new app under it yourself (`ACME LOYALTY` becomes `acme_loyalty`), with no wait on us, and no other company can take a name under it. An app you have published is your company's, whatever its first word, until you hand it over to another company on My apps.
-3. **You publish.** From your project's folder:
+**Publish it to a customer.** On My apps, **Publish**, then **To a customer**, or:
 
-   ```bash
-   python3 <the kit>/tools/publish/publish.py publish . --partner <your company's code>
-   ```
+```bash
+ivn publish --to retailer.ivendnext.com
+```
 
-   It runs the kit's checks on your `library/` folder and your licence files, signs what it sends with your key, and uploads it. Nothing is sent if a check refuses. Or publish [from the web page](#from-the-web-page), with the same files and keys.
-4. **Your preview shelf** has the version at once. Only the test sites you name see it: each one opens it with its shelf key, pasted once under *App library > Open your shelf*.
-5. **The App library, for every retailer:** your app is listed with your company as its maker.
-   - **The first time**, the listing waits for one approval by us. The command says so, with the request's id.
-   - **A later version** is listed at once, unless it does more than the one before: a new outside address, an outside service with its own user, or more Desk users. That waits for one approval again.
-6. **An app made for one customer** goes to that customer's own *Made for you* shelf, with **no approval by us**. Their administrator pastes the shelf key you send them, once on their test site and once on their live site, and agrees to each install.
-   - **An app hosted by CitiXsys** carries its own key for the customer's sites on the shelf, so the site connects it by itself, as an app from the public list. A site the customer adds later gets its key the next time you publish that app to the shelf; a site that installed the app before its key arrived connects once you publish a higher version and the retailer takes the update.
-   - **A site can hold several shelves**, from several companies: each opens with its own shelf key and shows as its own section. Your app takes its updates only from your shelf.
+It puts the version on the customer's own shelf and prints the message to send their administrator, with the key in it. An app that CitiXsys hosts connects by itself when the customer installs it. Add a site later with the same command.
 
-A listed version never changes: any change, even a word, is a higher version with a changelog line.
+**List it for every retailer.** On My apps, **Publish**, then **To everyone**, or:
 
-## What goes in your project
+```bash
+ivn publish --public
+```
 
-- **A `library/` folder** — the only files the command uploads:
-  - `app.json`, the card: title, one-line summary, category, who uses it, changelog, **and what a retailer needs to set the app up and find its guide** (the next section);
-  - `manifest.json`, your app;
-  - `library.json`: `{"public": true, "preview_sites": ["your-test-site.staging.ivendnext.com"]}` (`public: false` for an app made for one customer only);
-  - `recipient.pem`, your sealing key's public half, so keys reach only you. Make the pair with `openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out recipient-private.pem`, then `openssl pkey -in recipient-private.pem -pubout -out library/recipient.pem`. Keep `recipient-private.pem` out of the project. On Windows, `openssl` comes with Git for Windows or WSL, and `python3` is `py -3`.
-- **A licence file and a list of third-party components** at your project's root: `LICENSE` (your choice of licence; the App library shows it on your card) and `THIRD_PARTY.md`, one line per component your app ships with its licence, or `None`. The command refuses a project without them, or with an empty one (`tools/check/licence.py`).
+It lists the app in the [App library](https://library.ivendnext.app). The first time, the listing waits for one approval by us; the command says so. The card's fields go in `app.json`'s `card`: you are asked once. For the guide link, any https page will do: your repository's README is enough. A later version is listed at once, unless it does more than the one before (a new outside address, an outside service with its own user), which waits for one approval again.
 
-## What a retailer must be able to read
-
-A retailer decides from your card and finds its way from your guide, so the library lists an app only when both can help. **Write them before you publish,** in a retailer's words, for the owner or the manager.
-
-- **Setup steps on the card.** `details` in `app.json`: one lead sentence, at least one point under **what** the app does, **at least one step under setup** (what a retailer does after the install, in the order it meets it, naming the Desk screen as a retailer searches for it), and notes.
-- **The industries it is for.** `industries` in `app.json`, required on a public card. Either `["all"]`, for an app every retailer can use, standing alone, or **one to six** of these industries, for an app made especially for them: `fashion`, `grocery`, `pharmacy`, `beauty-and-cosmetics`, `electronics-and-phones`, `hardware-and-diy`, `liquor-and-wine`, `hospitality`, `travel-retail`, `distribution-and-warehousing`, `optical`, `thrift-and-resale`. Your app then shows on each of those industries' pages in the App library, and your company shows as a partner who builds for them. Name an industry only where your app is especially used; a card for one customer's shelf needs none.
-- **A guide page.** `docs` in `app.json` links it. It has five headings, in this order: **What it does** · **What you set up first** · **Where it shows** · **What leaves your iVendNext** · **How to remove it**. An app that adds three or more screens a retailer opens gets a **section** of pages, with a heading for each screen. The docs site also groups every app as an **App** (it adds records a retailer works in every day, or a screen of its own) or a **Rule** (it adds one check, field or layout to a screen the retailer already uses, with only the settings it needs). Say which yours is when you describe the app in the listing request.
-- **An address for each screen.** Each record type your manifest adds, other than a table inside another, has one `documentation` property setter at its page and heading. The install makes only the roles that start with your prefix.
-- **Where the page lives.** The library accepts a guide address on `docs.ivendnext.com`, `developer.ivendnext.com`, `help.ivendnext.com` or `www.ivendnext.com`. Send the page's text with your listing request ([the form](../../feedback/app_listing.md)); we put it on the docs site and send you its address. Until you have it, publish with `"public": false` in `library.json`: that goes to your preview shelf and is not checked this way; a `public: true` upload is checked before anything is written.
-
-The shapes, the template and the exact words are in the manifest recipe, [*What a retailer reads: the card and the guide*](../../recipes/manifest.md).
-
-## Your customers' sites and your keys
-
-Never in your project or the kit: give them to the command from the environment or from a file you name.
-
-- **A customer's shelf:** `LIBRARY_DELIVERIES` (or `--deliveries <file>`), for example `[{"customer": "shop-a", "name": "Shop A", "sites": ["shop-a-test.staging.ivendnext.com", "shop-a.ivendnext.com"]}]`.
-- **The library keeps where each version went:** per app and site. A publish with no list reaches every site the app is on, and a list adds sites, so an update cannot leave a customer on the old version because you forgot to name them. A site taken off with *Remove this site* on My apps gets no new version and keeps what it has installed. Nothing is kept on your computer.
-- **Keys:** every app is free unless you choose `access: key`; a retailer then presses *Get a free key* in its Desk. For an app that needs a key, `LIBRARY_KEYS` (or `--keys <file>`), for example `[{"app": "acme_bins", "host": "shop-a.ivendnext.com", "to": "customer:shop-a", "expires": "2027-10-31"}]`. Keys are issued for your own apps only.
-- **Keys and shelf keys come back sealed** to your `recipient.pem`. With the command they go to `library-keys.json` (readable by you only), never on the screen: open each with your private key (`tools/publish/README.md` has the command). On the web page they are opened in your browser with your private key and shown once, each with a copy button. Send each to its customer.
-
-## From the web page
-
-On [My apps](https://developer.ivendnext.com/apps), open your app and press **Publish**: name your customer's sites, or tick *This is my own company's site*, or choose *To everyone* and fill the card. No key file and no command: My apps signs you in with GitHub, sends it, and gives you the message to send each site's administrator, ready to copy.
-
-## From a build server
-
-The same command runs in any build system: give it a token made on My apps > Tokens, in the build system's secret `IVN_TOKEN`, and it needs no key. With the signed upload instead, keep the key's line (the content of `~/.ivendnext/library-signing.key`) in the build system's secrets as `IVN_LIBRARY_KEY`, and the customers' sites as `LIBRARY_DELIVERIES` and `LIBRARY_KEYS`. Keep `library-keys.json` out of anything others can read.
-
-## What we check, and what we refuse
-
-Our service checks your app again when you publish, whatever your computer says. The refusals you are most likely to meet:
-
-- a key we did not register to your company, a `--partner` that is not the code your key is registered to, or an upload changed after it was signed;
-- an upload sent twice, or with a time more than 5 minutes from ours (check your computer's clock);
-- an app name not under your company's first word (nor reserved to you before you had one);
-- a card whose maker is another company;
-- a version that is not the manifest's;
-- a version lower than, or the same as, one already listed with other content;
-- a site address that is not an iVendNext site;
-- a `recipient.pem` other than the one we registered (ask us to register the new one);
-- more than 10 sites, 10 customers or 20 keys in one upload.
-
-Each refusal is printed by the command, or shown on the web page, in words. A public listing is also refused, in these words, when it cannot help a retailer (`<app>` is your app's name; the recipe has the same table):
-
-- `help_details`: *<app>: the card must say what the app does and how to set it up: details needs a lead, at least one point under what and at least one step under setup* (with ` (in es)` or ` (in ar)` added when that language is the short one);
-- `help_guide`: *<app>: the card must link its guide: docs is one to six {title, url} addresses on docs.ivendnext.com, developer.ivendnext.com, help.ivendnext.com, www.ivendnext.com*;
-- `help_nothing_leaves`: *<app>: the card says nothing leaves the shop, but the app has <an outside address (host) · webhooks · till keys · event feeds · extensions · print formats · label layouts · an outside service that signs in to read and write>: say what it sends or runs outside, or take that line out*;
-- `help_roles`: *<app>: a setup step tells the shop to create the app's own roles ('<the step>'): the install makes them, so say which roles the install adds and make the step giving them to people*;
-- `help_record_guide`: *<app>: the record type <name> has no guide address: add a property setter {doc_type: '<name>', property: 'documentation', value: <https address of its page in your guide>} on docs.ivendnext.com, developer.ivendnext.com, help.ivendnext.com, www.ivendnext.com* (and, when a setter exists but its address is off those hosts, ` (its address '<value>' is not https on one of them)`).
-
-A public card with no industries is refused as `bad_entry`: *<app>: a public card names its industries: industries is ["all"] for every retailer, or one to six of fashion, grocery, pharmacy, beauty-and-cosmetics, electronics-and-phones, hardware-and-diy, liquor-and-wine, hospitality, travel-retail, distribution-and-warehousing, optical, thrift-and-resale*. A card naming an industry not in that list, or `all` beside another, is refused the same way.
-
-A guide address on any other site is refused as `bad_entry`.
-
-## If your key is lost or copied
-
-Make a new key and register it in place of the others: `publish.py keygen --key <new file> --register --replace`; every other key stops working at once. A token you lose is revoked on My apps > Tokens, in one press.
+A version that has reached a customer never changes: any change to what it installs is a higher version.
 
 ## What a retailer sees
 
-Each listed app has a card in the App library: what it does, who uses it, whether it is free or needs a key, whether anything leaves the retailer's iVendNext, the industries it is for, **the steps a retailer takes first, and a link to the app's guide**. Browse the cards at [library.ivendnext.app](https://library.ivendnext.app).
+Each listed app has a card in the App library: what it does, who uses it, whether it is free or needs a key, whether anything leaves the retailer's iVendNext, the industries it is for, and a link to the app's guide. Browse the cards at [library.ivendnext.app](https://library.ivendnext.app).
+
+The retailer's administrator presses **Install**, reads what it will change, ticks **I agree** and presses **Install**. Everything the app adds is on from that moment, for every store, and they give their staff the roles. Only what is theirs to decide waits, and the install screen lists it. A paid app asks for its key first.
+
+## What it costs
+
+- **Trying:** free.
+- **An app with no service of ours** (lists, fields, workflows, Desk settings): free. We run nothing for it.
+- **An app with a service we host,** per month: Starter $49, Standard $129, Managed $399. Billed monthly by card; cancel at any month end. Production for a customer may be ordered by the customer through their account team.
+- **One that runs only when called** (a till key, a check at Pay, a webhook), once it is listed in the App library: free, all its copies, sandbox included. The billing stops at its next renewal, and nothing already paid is refunded. Until it is listed, it pays its plan.
+- **An app on your own server:** nothing to us. Run the folder at any public https address (`ivn package` writes `package.zip` for your own function host).
+
+## More you can do
+
+- **Copy and sell one of our apps.** Most apps iVendNext lists in the App library start as working code in this kit, and each such app's page links that code: copy it, change it, put your company's name on it, and sell it. [Build your business on iVendNext's apps](business.md).
+- **Publish from a build server.** `ivn token new <name>` makes a token, shown once; on the server it goes in `IVN_TOKEN`. A token you lose is revoked on My apps > Tokens, in one press.
+- **Go back to an earlier version.** `ivn rollback <version>` publishes an earlier version's content as a new, higher version.
+- **Keep your copy up to date.** `ivn pull` brings in the server's latest draft and keeps your changes. `ivn take <sample>` takes a sample's newer version.
+- **Hand the app to another company.** `ivn handover <word>` asks for the app's name first; the other company accepts on their My apps, and their card pays from the next month.
+- **Everything else `ivn` does** is in [its README](../../tools/ivn/README.md).

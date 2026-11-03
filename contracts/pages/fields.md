@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/fields.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/fields.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Field rules
 
 **Contract:** [`fields.v1.schema.json`](../extension_contracts/fields.v1.schema.json)
@@ -109,7 +109,7 @@ group: it is the shop's choice to put more of a customer on its tills. With the 
 setting on, the whole book is withheld from the device, shown fields included.
 
 **A field only some roles read** (one at a permission level above 0: set by the shop in Customize Form, or by
-an app's `read_roles` / `write_roles`, `package_install.md`): a shown **Customer** field
+an app's `read_roles` / `write_roles`, [`package_install.md`](package_install.md)): a shown **Customer** field
 reaches the card, the search and the scan only for a cashier whose roles read its level, online; for anyone
 else it is left out, as if the theme did not show it. It never rides the offline book, for anyone (the book is
 the device's, and a teammate who takes the till offline reads it), so a till that starts offline draws

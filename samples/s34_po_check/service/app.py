@@ -13,7 +13,7 @@ and the shop applies the subscription's down answer: ``refuse`` in this manifest
 
 ONE SHOP (env or an env file):
     IVN_CHECK_SECRET   the check's secret (handed back at install as pp_poc:sub:po_check)
-MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
+MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id, with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE. Each shop
                        connects itself after its install and hands over the secret; every call names its shop.
 POC_PREFIX (default pp_poc: the fill field is <prefix>_erp_number) · ERP_STANDIN (default: erp_standin.json) · PORT (8080)
@@ -136,7 +136,7 @@ def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[i
     return code, out
 
 
-# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b): settings from the environment.
+# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a): settings from the environment.
 lambda_handler = function.entry(lambda: Service(dict(os.environ)), handle)
 
 

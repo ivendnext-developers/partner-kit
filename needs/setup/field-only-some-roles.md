@@ -14,7 +14,7 @@ verified: run by the product 2026-10-24 (the role-limited field lane's walk, pho
 related: permissions-by-role, extra-fields-on-shop-documents
 ---
 ## What you build
-A field your manifest adds carries `write_roles` (who change it, and so read it) and `read_roles` (who read it), from POS version 2.1.0; the installer gives it a permission level of its own. The keys and refusals: the manifest recipe, *A field only named roles read or change*.
+A field your manifest adds carries `write_roles` (who change it, and so read it) and `read_roles` (who read it); the installer gives it a permission level of its own. The keys and refusals: the manifest recipe, *A field only named roles read or change*.
 
 ## Limits
 - Only a field your manifest adds: a field iVendNext already has keeps the retailer's own permissions.

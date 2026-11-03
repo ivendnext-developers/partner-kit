@@ -5,6 +5,8 @@ schema per point, with accepted and refused sample files. A partner's service, a
 can check an answer against these before it reaches a shop. They are what the [samples](../samples/) and the
 [recipes](../recipes/) are tested against.
 
+**Two pages are about every app:** [What an app may not do](pages/what_an_app_may_not_do.md), the one list of what the install refuses, and [Installing a manifest](pages/package_install.md), the install itself.
+
 | Point | Page | Schema |
 |---|---|---|
 | Desk action | [pages/desk_action.md](pages/desk_action.md) | [desk_action.v1.schema.json](extension_contracts/desk_action.v1.schema.json) |

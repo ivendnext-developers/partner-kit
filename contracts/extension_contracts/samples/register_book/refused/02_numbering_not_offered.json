@@ -49,5 +49,5 @@
       }
     ]
   },
-  "expect_refusal": "numbering is book_store or book_store_item"
+  "expect_refusal": "Numbering cannot be \"per_day\""
 }

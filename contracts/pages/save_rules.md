@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/save_rules.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/save_rules.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Save rules
 
 **Contract:** [`save_rules.v1.schema.json`](../extension_contracts/save_rules.v1.schema.json)
@@ -19,6 +19,9 @@ it to the *Sales to review* report.
 It fires at **every save** of that record type — a Desk form, an import and an API write alike — and
 when a row of a ruled table is saved on its own (a row deleted on its own is checked by a lock only). With no enabled rule on a record type the
 check returns after one cached read and no query.
+
+A rule you switch on or change holds from the next request: a save already running at that moment finishes under the
+rules it read.
 
 A `role_for_action` rule fires at the **submit** or the **cancel** it names — on every door: the Desk's
 Submit and Cancel, an import that submits, the API's submit (`ivendnext_mpos.api.v1.submit`), the API's cancel and the REST API — and
@@ -64,6 +67,14 @@ or in an import). Nothing is sent to a partner service and nothing is answered.
 
 A condition's operator is `=`, `!=`, `>`, `>=`, `<`, `<=`, `is set` or `is not set`; on a `count_per_day`
 rule also `in`: the value is one of up to 10 values written in `value`, separated by commas.
+`>`, `>=`, `<` and `<=` compare numbers, and `=`, `!=` and `in` compare a value as written (a number field as a
+number). So a rule is refused when it is saved (2026-10-30) where its condition could never be judged: `>`, `>=`,
+`<` or `<=` on a date field (read as a number it is 0, and the condition would hold on every row or on none), and any
+operator but `is set` / `is not set` on a date-and-time or a time field (stored to the microsecond, it never equals
+what a rule wrote). Compare a date with `=` or `!=` as `2026-10-30`. A link, a choice or a text field keeps every
+operator: it may hold a number (a choice of 1, 2, 3). The same refusal applies to a desk action's and a list mark's
+conditions. ⚠ A rule saved before 2026-10-30 with such a condition is refused at its next save, switching it off
+included: rewrite the condition (or delete the rule) first.
 
 Every rule also takes `message` (at most 140 characters; shown instead of the kind's own sentence),
 `mode` (`refuse`, or `flag`), `sequence` and `enabled`.
@@ -132,7 +143,9 @@ threshold or required rule on rows says *"Row ⟨n⟩: …"*):
   from Stock Settings, Selling Settings, Buying Settings."* · *"Limit from: ⟨field⟩ must be a field of type Int,
   Float, Percent."* · *"⟨field⟩: a role is read from a text field or a link to Role."*
 - required_when: *"Give 1 to 3 conditions."* · *"Choose how the condition compares."* · *"A condition with
-  ⟨operator⟩ needs a number."* · *"parent.⟨field⟩ reads the record's header: it is for a rule on a table's
+  ⟨operator⟩ needs a number."* · *"⟨field⟩ is a date: compare it with =, != or is set."* ·
+  *"⟨field⟩ holds a time: a condition on it uses "is set" or "is not set"."* ·
+  *"parent.⟨field⟩ reads the record's header: it is for a rule on a table's
   rows."* · *"Condition: ⟨record type⟩ has no field named ⟨field⟩."* · *"parent.⟨field⟩ holds no value to
   compare."* (a table, a layout break or a virtual field)
 - unique_across, role_for_action and count_per_day: *"A ⟨kind⟩ rule checks the record itself, not a
@@ -281,8 +294,8 @@ role every user holds (All, Guest, Desk User, Administrator) is ignored and logg
 made yet, renamed (`value_from_name` is the name as written), or its record type removed with its package —
 reads as no record, so the rule's own value and roles hold, logged once. `db.set_value` clears the record's cache too;
 only a raw SQL write to it is seen when the cache next clears. A package update changes its
-record type's fields, never its rows, so the shop's value survives; the update brings a rule it changed back
-switched off, until a System Manager switches it on; a version that drops `value_from_*` or `judge_on_change`
+record type's fields, never its rows, so the shop's value survives; the update keeps a rule it changed on
+or off as this site set it; a version that drops `value_from_*` or `judge_on_change`
 from a rule clears them on the installed rule. Only the record's SHAPE is checked when the rule is saved
 (the record type, the fields, a single's name), never the record itself, so a package can ship the rule before
 the shop has made the row.
@@ -376,8 +389,8 @@ record, so none needs No Copy; and a settings record with a limit (Percent) and 
 into shelf days (20); `percent` of days left over shelf days into shelf % (30, 2 decimals); a threshold *shelf
 days > 0* judged at every save (40 — an expiry before manufacture would otherwise read as more than 100 %, and an
 expiry on the manufacturing day as an empty %; shelf days is recomputed at every save, so judging it every time
-refuses only a real 0 or less — ⚠ switch it off together with the shelf-days rule: while that rule is off (or back off
-after a package update) the limit judges the stored 0 of every batch with no expiry, and a batch whose expiry is on
+refuses only a real 0 or less — ⚠ switch it off together with the shelf-days rule: while that rule is off
+the limit judges the stored 0 of every batch with no expiry, and a batch whose expiry is on
 or before its manufacturing date is refused at every save until its dates are fixed); a
 threshold *shelf % ≥ 60* judged on change, its limit and role from the settings record (50). A batch made on 2
 April, manufactured 1 January and expiring next 1 January has 274 of 365 days left: 75.07 %. At 40 % a Stock
@@ -387,7 +400,7 @@ And on Stock Entry: `{"child_table": "items", "kind": "required_when", "field": 
 "conditions": [{"field": "parent.purpose", "operator": "=", "value": "Material Transfer"}]}` — a transfer
 whose second row names no request is refused with *"Row 2: Material Request is required."*; an issue or a
 receipt saves. A batch a receipt makes is judged at its first later save (§7): list batches with no shelf %
-(Desk's Batch list, filtered on an empty shelf %) before switching the rules on.
+(Desk's Batch list, filtered on an empty shelf %) before you install the package or switch the rules on: a package's rules arrive switched on.
 
 ## 9. Telling an AI assistant
 

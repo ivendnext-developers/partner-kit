@@ -16,7 +16,7 @@ the run in one save, before it answers. A press that runs out of time before its
 ONE RETAILER (env or an env file):
     IVN_SHOP_URL, IVN_SHOP_KEY ("<api key>:<api secret>" of the integration user), IVN_WORK_SECRET (handed back at
     install as pp_sst:sub:work), PORT (8080)
-MANY RETAILERS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
+MANY RETAILERS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_sst), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 SST_PREFIX (default PP SST; IVENDNEXT SST for the library's app)
 
@@ -376,7 +376,7 @@ _KEPT: dict = {}   # the function's settings, opened on the first call of each c
 
 
 def lambda_handler(event, context=None):
-    """As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b)."""
+    """As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a)."""
     if "svc" not in _KEPT:
         _KEPT["svc"] = Service(dict(os.environ))
     method, path, headers, raw = function.request(event)

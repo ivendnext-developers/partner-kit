@@ -16,7 +16,7 @@ headers a byte at a time cannot hold the caller past it (a per-read socket timeo
     stated_answer(url, secret, payload, label, validate) -> {"state": "result", ...} | {"state": "refused", ...}
 
 ``call(..., site=…)`` adds the ``X-iVendNext-Site`` header every call to an app that serves many shops carries (the app
-template's handshake, guide chapter 14b), so the app checks the call with that shop's secret.
+template's handshake, guide chapter 1a), so the app checks the call with that shop's secret.
 """
 
 from __future__ import annotations

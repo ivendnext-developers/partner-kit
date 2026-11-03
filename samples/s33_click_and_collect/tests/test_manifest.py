@@ -83,14 +83,6 @@ class ManifestTest(unittest.TestCase):
         m = copy.deepcopy(MANIFEST)
         m["reports"][0]["report_type"] = "Query Report"
         self.assertTrue(any("Report Builder" in r["reason"] for r in validate.validate(m)))
-        m = copy.deepcopy(MANIFEST)                       # the waiting list as a report: the shop refused it (APPF run 5)
-        m["reports"].append({"name": "PP CCB Waiting For Collection", "ref_doctype": "Delivery Note",
-                             "report_type": "Report Builder", "columns": ["name", "pp_ccb_collected_by"],
-                             "filters": [["docstatus", "=", 1], ["pp_ccb_handed_over", "=", 0]]})
-        self.assertTrue(any("not fields of Delivery Note" in r["reason"] for r in site_rules.refusals(m)))
-        m = copy.deepcopy(MANIFEST)                       # a shortcut to its own report: the shop refused it (APPF run 5)
-        m["workspaces"][0]["shortcuts"].append({"type": "Report", "link_to": PICK, "label": "Pick"})
-        self.assertTrue(any("Link To: " + PICK in r["reason"] for r in site_rules.refusals(m)))
 
 
 if __name__ == "__main__":

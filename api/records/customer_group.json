@@ -39,6 +39,30 @@
    "type": "Check"
   },
   {
+   "added": 1,
+   "choices": [],
+   "description": "Staff rate for staff in this group and below. 0 uses the parent group's, then the store's.",
+   "fieldname": "custom_mpos_staff_discount_pct",
+   "hidden": 0,
+   "label": "Staff Discount (%)",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Percent"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "Monthly budget per staff member, this group and below. 0 uses the parent's or the store's.",
+   "fieldname": "custom_mpos_staff_monthly_allowance",
+   "hidden": 0,
+   "label": "Staff Monthly Allowance",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
+  },
+  {
    "added": 0,
    "choices": [],
    "description": "",
@@ -213,6 +237,6 @@
    ]
   }
  },
- "why": "guide chapter 04; recipe configure_no_code; recipe coupon_rules; recipe customer_code_check; recipe customer_owned_loyalty; recipe customers_by_store; recipe gift_card_on_spend; recipe lucky_draw; recipe payment_method_rules; recipe required_sale_details; recipe rule_guard; sample S46; sample S47; sample S48; sample S50; retail core",
+ "why": "guide chapter 04; recipe configure_no_code; recipe coupon_rules; recipe customer_code_check; recipe customer_owned_loyalty; recipe customers_by_store; recipe gift_card_on_spend; recipe lucky_draw; recipe payment_method_rules; recipe required_sale_details; recipe rule_guard; sample S18; sample S22; sample S32; sample S44; sample S46; sample S47; sample S48; sample S5; sample S50; retail core",
  "written_elsewhere": ""
 }

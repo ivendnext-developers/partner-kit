@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/price.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/price.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Pricing extension point
 
 **Contract:** [`price.v1.schema.json`](../extension_contracts/price.v1.schema.json)
@@ -140,7 +140,7 @@ on the till, and at the drain the server's judges undo it, so the sale goes to r
   the qualifying items stays 10% of those items, whichever line your module cut.
 - Your module's money never counts toward a cashier's own discount limit (the stack threshold).
 - A partner's package can carry your certified module and its pricing service
-  (installing a manifest §11). The service arrives switched off and the shop's limit stays 0
+  ([installing a manifest](package_install.md) §11). The service arrives switched on and the shop's limit stays 0
   until the shop raises it: a manifest never carries the limit.
 - Your module sees a line's price however it was set: a list price, a price the cashier typed, or a price
   read from a weighed item's barcode. A shelf label priced at the till shows what a customer with no group

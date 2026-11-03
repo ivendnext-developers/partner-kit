@@ -10,7 +10,7 @@ A store that sells on the web and lets its customers collect in store needs two 
 
 ## Steps
 
-1. **Add the two fields to Delivery Note**, both settable after the note is submitted (`allow_on_submit`), with no default (the checker refuses a default on a retailer's own record type):
+1. **Add the two fields to Delivery Note**, both settable after the note is submitted (`allow_on_submit`), with no default (the checker refuses a default on a record the till's booking writes, Delivery Note included):
 
    ```json
    "custom_fields": [
@@ -34,7 +34,7 @@ A store that sells on the web and lets its customers collect in store needs two 
 
    ![The report Web orders to pick on a demo store, one web order to pick](../samples/s33_click_and_collect/screenshots/02_web_orders_to_pick.png)
 
-   ⚠ **Not a report for the waiting list.** A report on Delivery Note filtered on `pp_ccb_handed_over` looks right, but iVendNext refuses it: its install checks a report's columns and filters (and a card's or chart's field) against the record type as it is before the install, so a field the same manifest adds is *not a field* yet. `tools/check/check.py` and `tools/deploy/deploy.py` refuse it too (`tools/manifest/site_rules.py`). The waiting list is the Delivery Note list itself, where *Handed over* is a list column and a standard filter (`in_list_view`, `in_standard_filter`).
+   ⚠ **Not a report for the waiting list.** A report on Delivery Note filtered on `pp_ccb_handed_over` looks right, but iVendNext refuses it: its install checks a report's columns and filters (and a card's or chart's field) against the record type as it is before the install, so a field the same manifest adds is *not a field* yet. `ivn check` refuses it too (`tools/manifest/site_rules.py`). The waiting list is the Delivery Note list itself, where *Handed over* is a list column and a standard filter (`in_list_view`, `in_standard_filter`).
 
 3. **Add the workspace**: a header, a line naming the report and the waiting list's filter, and shortcuts to the **Sales Order** and **Delivery Note** lists. ⚠ Not a shortcut to the report: iVendNext makes a workspace before the manifest's own reports, so that link cannot be saved, and `site_rules.py` refuses it.
 

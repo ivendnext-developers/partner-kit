@@ -3306,6 +3306,6 @@
    ]
   }
  },
- "why": "recipe call_centre_orders; recipe click_and_collect; sample S16; sample S33; sample S35; sample S39; retail core",
+ "why": "contract desk_action; contract save_rules; recipe call_centre_orders; recipe click_and_collect; recipe desk_action; recipe project_quotes; sample S16; sample S33; sample S35; sample S39; sample S53; sample S60; site/pages/starters.md; the feed client; the kit's tool manifest; the kit's tool selfcheck; retail core",
  "written_elsewhere": ""
 }

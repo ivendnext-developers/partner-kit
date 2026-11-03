@@ -6,7 +6,7 @@ uploading and running it are `ivn publish`, `ivn push` and `ivn status` (`tools/
                                            [--env prod|staging|sandbox] [--customer <name>] [--json]
     python3 tools/deploy_app/deploy_app.py <app folder> --zip <out.zip> [--root <folder>] --plan starter --partner <you> …
 
-An app whose `app.json` says `"runs": "function"` (a press-only app: a till key, a check, a webhook; chapter 14b) is
+An app whose `app.json` says `"runs": "function"` (a press-only app: a till key, a check, a webhook; chapter 1a) is
 hosted as a function paid per call, not an always-on container (an app with background work too, when its `schedule`
 runs it: a feed pass, a daily job, each call at most its `timeout`, 900 seconds): it takes `--zip`, where this tool writes the package
 (the `package` paths of `app.json`, read from `--root`, by default the app's folder; never a file whose name starts with
@@ -178,7 +178,7 @@ def describe(m: dict, image: str, plan: str, partner: str, env: str, customer: s
 
 
 def describe_function(m: dict, plan: str, partner: str, env: str, customer: str, package: str) -> dict:
-    """A press-only app: a function paid per call behind the shared load balancer, no container (chapter 14b)."""
+    """A press-only app: a function paid per call behind the shared load balancer, no container (chapter 1a)."""
     p = PLANS["plans"][plan]
     ident = m["app"] if env == "prod" else f"{m['app']}-{env}"
     plain = [e["name"] for e in m.get("env", []) if not e.get("secret")]

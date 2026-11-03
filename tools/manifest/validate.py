@@ -1,13 +1,17 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/business_logic/manifest_check.py,
-# at development c39b1449937adac83d9be35bcfa2a6e3e41871ef. The shop's own checker (the install screen runs it) is the source;
+# at development cff85a09aa4d9391bd0de4af68964d2181a753a5. The shop's own checker (the install screen runs it) is the source;
 # this copy lets you check a manifest before you send it, and refuses the same manifests in the same words. Everything
 # below this header equals the source. A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """The companion manifest — the VALIDATOR. Pure Python: no framework import, no network.
 
 A partner's own data (record types, fields, print formats, notifications, workspaces, sale details, webhooks)
-ships as one ``manifest.json``. This file decides, before anything touches a shop, whether every element is
-one a manifest may carry, and names the reason for every refusal. The shop's installer (``manifest_install.py``, which
-the install screen runs inside the shop's site) calls the same ``validate()`` again before it installs anything.
+ships as one ``manifest.json``. Allow by default: a manifest may do what the shop's
+administrator can do in Desk. It is refused only where it would book a wrong money, tax, stock or fiscal figure
+(A), stop the till's own sale or customer saving (T), send the shop's data somewhere the consent does not show
+(B), or let someone act as someone else, code in the shop's saves included (C); and where the installer cannot
+read it (S). Every refusal is on one list, with its reason: ``docs/extending/what_an_app_may_not_do.md``
+(``ci/check_gate_list.py`` fails the build on a refusal outside it). The framework and the product refuse the rest at
+insert, in their own words. The shop's installer (``manifest_install.py``) calls ``validate()`` before it installs.
 
     python3 tools/manifest/validate.py samples/s2_bins/manifest.json      # exit 0 = valid; 1 = refused
 
@@ -56,16 +60,10 @@ manifest, and which packages a site holds changes after it). ``ivn_rows`` and ``
 
 from __future__ import annotations
 
-import base64
-import binascii
-import hashlib
 import json
 import re
 import sys
-import unicodedata
 
-MANIFEST_VERSION = 2  # v2 reads every v1 manifest unchanged
-VERSIONS = (1, 2)
 KINDS_V1 = (
     "doctypes",
     "custom_fields",
@@ -103,29 +101,130 @@ KINDS_V2 = (
     "list_marks",
     # the regulated-stock register books (the register door)
     "register_books",
+    # the package's own words, one entry per language (the framework's Translation records)
+    "translations",
 )
 KINDS = KINDS_V1 + KINDS_V2
-# The declaration records of extension points that have NOT shipped: kind -> (the extension point, its spec). Each is
-# REFUSED, with the extension point it waits on, until that extension point has shipped on the site; its installer is
-# written when the extension point is. None waits today: P-RECEIPT shipped (2026-10-10) with no manifest kind, so
-# `receipt_blocks` is refused for good (REFUSED_KINDS).
-POINT_KINDS: dict[str, tuple[str, str]] = {}
-# Kinds refused for another reason a partner reads.
-WAITING_KINDS = {
-    "point_subscriptions": "the kind is called 'extension_subscriptions' now (the record is Retail Extension Subscription)",
-}
-TOP_KEYS = {
-    "manifest_version",
-    "app",
-    "prefix",
-    "title",
-    "version",
-    "publisher",
-    "description",
-    "allowed_urls",
-    *KINDS,
-}
+# the manifest's own keys beside its kinds
+TOP_KEYS = {"manifest_version", "app", "prefix", "title", "version", "publisher", "description"}
+TOP_KEYS |= {"allowed_urls"}
 STD_FIELDS = {"name", "owner", "creation", "modified", "modified_by", "docstatus", "idx"}
+
+# ── the till's own records: ONE list (save_rules and partner_doccheck read it from here) ──
+# a sale the till booked and the day close (save rules only flag them; FLAG_ONLY)
+TILL_SALE = frozenset({"POS Invoice", "POS Closing Entry", "POS Invoice Merge Log"})
+# ... and the day's opening (never a document check's target; REFUSED_TARGETS)
+TILL_DAY = TILL_SALE | {"POS Opening Entry"}
+# what the back office writes for each sale or stock move (ENGINE_POSTED)
+ENGINE_POSTED = frozenset(
+    {"Serial and Batch Bundle", "Repost Item Valuation", "Stock Reservation Entry"}
+)
+# what the till's booking inserts (TILL_INSERTS)
+TILL_INSERTS = frozenset(
+    {"Sales Order", "Sales Invoice", "Delivery Note", "Payment Entry", "Journal Entry"}
+)
+# a new customer at the counter (api/customer.py, api/capture.py, api/fulfilment.py)
+TILL_PARTIES = frozenset({"Customer", "Contact", "Address"})
+# the engine's ledgers, written from code at every posting (A), the till's included
+LEDGERS = frozenset(
+    {"GL Entry", "Stock Ledger Entry", "Payment Ledger Entry", "Advance Payment Ledger Entry"}
+)
+# a cash expense the till's Cash In Out submits (it posts to the books)
+TILL_EXPENSE = frozenset({"Store Expense"})
+# what the till writes inside its own saves: a manager's override, a sale's loyalty points and
+# coupon count, a card terminal's log, a partner's code
+TILL_WRITES = frozenset(
+    {
+        "Manager Override Log",
+        "Loyalty Point Entry",
+        "Coupon Code",
+        "Retail Card Terminal Txn",
+        "Retail Partner Code",
+    }
+)
+TILL_RECORDS = (
+    TILL_DAY | ENGINE_POSTED | TILL_INSERTS | TILL_PARTIES | LEDGERS | TILL_EXPENSE | TILL_WRITES
+)
+# record types that post to the ledgers (A: a default or precision there changes a posted figure)
+POSTING = (
+    TILL_DAY
+    | TILL_INSERTS
+    | LEDGERS
+    | TILL_EXPENSE
+    | {
+        "Purchase Invoice",
+        "Purchase Receipt",
+        "Stock Entry",
+        "Stock Reconciliation",
+        "Landed Cost Voucher",
+        "Asset",
+        "Asset Capitalization",
+        "Asset Value Adjustment",
+        "Period Closing Voucher",
+        "Invoice Discounting",
+        "Exchange Rate Revaluation",
+        "Subcontracting Receipt",
+    }
+)
+# rows several of those share (a sale's or a purchase's own rows are named after it, e.g. POS Invoice Item)
+SHARED_ROWS = frozenset(
+    {
+        "Sales Taxes and Charges",
+        "Purchase Taxes and Charges",
+        "Advance Taxes and Charges",
+        "Payment Schedule",
+        "Serial and Batch Entry",
+        "Packed Item",
+        "Sales Team",
+        "Landed Cost Item",
+        "Landed Cost Taxes and Charges",
+        "Dynamic Link",
+    }
+)
+# what stops a save when set on a field (T on the till's records)
+SAVE_STOPPERS = {
+    "reqd",
+    "unique",
+    "non_negative",
+    "length",
+    "set_only_once",
+    "default",
+    "precision",
+    "options",
+    "fieldtype",
+}
+POSTED_FIGURES = {"default", "precision"}  # A on a record type that posts
+# a name that starts like one of those but is a master, never its rows (Customer Group)
+MASTERS = {"Group", "Template", "Type", "Category", "Settings"}
+
+
+def _within(dt, types) -> bool:
+    """``dt`` is one of ``types`` or one of their rows (named after the record type, or a shared row)."""
+    return isinstance(dt, str) and (
+        dt in types
+        or (dt in SHARED_ROWS and types is not LEDGERS)
+        or any(dt.startswith(t + " ") and dt.rsplit(" ", 1)[1] not in MASTERS for t in types)
+    )
+
+
+def field_refusal(dt, props, own_field=False) -> str | None:
+    """Why a field change on ``dt`` is refused (A or T), or None. ``props``: the field keys it sets;
+    ``own_field``: a field the app adds (prefixed, so the engine never reads its default)."""
+    props = set(props)
+    if _within(dt, LEDGERS) and props & (POSTED_FIGURES | {"reqd"}):
+        return (
+            "the engine writes every ledger row from code: a required field, a default or a "
+            "precision there changes the books"
+        )
+    if _within(dt, TILL_RECORDS) and props & SAVE_STOPPERS:
+        return (
+            f"{sorted(props & SAVE_STOPPERS)[0]} on {dt} can stop the till saving a sale or a new "
+            "customer at the counter"
+        )
+    if _within(dt, POSTING) and props & POSTED_FIGURES and not own_field:
+        return f"{dt} posts to the books: a default or a precision there changes a posted figure"
+    return None
+
 
 # Kinds a manifest may NOT carry, each with the reason a partner reads.
 REFUSED_KINDS = {
@@ -135,45 +234,61 @@ REFUSED_KINDS = {
     "web_pages": "a web page is published on the shop's own web address and can carry script or pass itself "
     "off as the shop",
     "web_templates": "a web template puts partner markup on every web page that uses it",
-    "receipt_blocks": "a shop's own receipt lines are the register's Receipt Header and Footer, two fields the shop "
-    "or a partner sets on the register; a tax authority's QR and seal reach the receipt through fiscal_readers",
 }
+# S: what the installer reads each kind's entries by
+KEYED = {
+    "doctypes": ("name", "fields"),
+    "custom_fields": ("dt", "fieldname"),
+    "property_setters": ("doc_type", "property", "value"),
+    "print_formats": ("name", "doc_type"),
+    "notifications": ("name", "document_type"),
+    "workspaces": ("name",),
+    "sale_attributes": ("name",),
+    "webhooks": ("name", "doctype", "event", "url"),
+    "reports": ("name", "ref_doctype", "columns"),
+    "number_cards": ("name", "document_type"),
+    "dashboard_charts": ("name", "document_type", "chart_type"),
+    "dashboards": ("name", "charts"),
+    "list_settings": ("doctype",),
+    "workflows": ("name", "document_type", "states", "transitions"),
+    "naming_rules": ("document_type", "prefix"),
+    "links": ("doctype", "link_doctype", "link_fieldname"),
+    "registered_applications": ("name", "events"),
+    "remote_keys": ("key", "label", "endpoint_url"),
+    "extension_modules": ("key", "point", "sha256", "version"),
+    "extension_subscriptions": ("key", "point"),
+    "desk_actions": ("record_type", "service"),
+    "save_rules": ("rule_name", "record_type"),
+    "fiscal_readers": ("writer_role",),
+    "scan_sources": ("source_name", "record_type"),
+    "field_rules": ("theme", "field"),
+    "label_layouts": ("label_name",),
+    "list_marks": ("record_type", "label"),
+    "register_books": ("book",),
+    "translations": ("language",),
+}
+NUMBERING = {"autoname", "naming_rule"}  # a record type's own numbering, set by a property setter
+RECIPIENT_KEYS = {
+    "receiver_by_role",
+    "receiver_by_document_field",
+    "condition",
+}  # condition: C below
+ATTACH_FILE_KEYS = ("attach_files", "from_attach_field")
+# a notification's condition: a field compared with a plain value, joined by and / or (no call)
+_PLAIN_TERM = (
+    r"doc\.[a-z][a-z0-9_]*(\s*(==|!=|<=|>=|<|>)\s*"
+    r"('[^'\\\n]*'|\"[^\"\\\n]*\"|-?\d+(\.\d+)?|None|True|False))?"
+)
+_PLAIN_CONDITION_RE = re.compile(rf"(not\s+)?{_PLAIN_TERM}(\s+(and|or)\s+(not\s+)?{_PLAIN_TERM})*")
+NOTIFY_CODE_REASON = (
+    "a notification's condition, subject and message are evaluated with a Server Script's globals, "
+    "database writes included, inside the save that sends it: compare the record's own fields "
+    "(doc.grand_total > 50000) and show them ({{ doc.field }}), with no call"
+)
+SHORTCUT_SCRIPT_KEYS = {"stats_filter", "format", "color"}
 
-# Field types a manifest's own fields may use. HTML and Button are left out on purpose (HTML shows its own
-# markup in Desk; a Button needs a script to do anything).
-FIELD_TYPES = {
-    "Data",
-    "Int",
-    "Float",
-    "Currency",
-    "Percent",
-    "Check",
-    "Select",
-    "Link",
-    "Dynamic Link",
-    "Date",
-    "Datetime",
-    "Time",
-    "Small Text",
-    "Text",
-    "Long Text",
-    "Text Editor",
-    "Table",
-    "Table MultiSelect",  # each choice is a row of the manifest's own child type holding one link
-    "Section Break",
-    "Column Break",
-    "Tab Break",
-    "Read Only",
-    "Attach",
-    "Attach Image",
-    "Barcode",
-    "Phone",
-    "Rating",
-    "Duration",
-}
 REFUSED_FIELD_TYPES = {
     "HTML": "an HTML field shows its own markup in Desk, which can carry script",
-    "Button": "a button does nothing without a script, and a manifest carries none",
 }
 # The nine rights the framework's permission record switches ON by default (its permission record's definition file; every other
 # right defaults 0). Re-read that file on a framework update: a new default-ON right must join this list.
@@ -181,11 +296,6 @@ RIGHTS = ("read", "write", "create", "delete", "report", "export", "share", "pri
 # Roles the framework gives users by itself (its permission module's automatic roles; `Guest` is refused on its own, below): `All` goes to every
 # signed-in user, website customers included, `Desk User` to every staff user, `Administrator` is the superuser. A manifest names none of them.
 AUTOMATIC_ROLES = ("All", "Desk User", "Administrator")
-AUTOMATIC_REASON = (
-    "a manifest may not name All, Desk User or Administrator: the framework gives those to users by itself (All to every "
-    "signed-in user, website customers included, Desk User to every staff user), so naming one puts users the shop's "
-    "administrator never chose behind it"
-)
 
 
 def _norm(role: str) -> str:
@@ -197,10 +307,6 @@ def _norm(role: str) -> str:
 # ... and without regard to accents either (`Àll`, `Guèst` were stored as All, Guest; measured), and the same collation ignores hidden
 # characters. A Python compare cannot follow it, so a role name is plain ASCII: the shop's roles are (Retail Manager, System Manager).
 _PLAIN_ROLE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 _-]*$")
-PLAIN_ROLE_REASON = (
-    "a role name is plain letters (a to z, no accents), digits, spaces, hyphens or underscores: the database finds a "
-    "role without regard to accents or hidden characters, so any other spelling could be stored as a role you did not name"
-)
 
 
 def _odd(role) -> bool:
@@ -215,136 +321,22 @@ def _automatic(role) -> bool:
     return isinstance(role, str) and _norm(role) in {_norm(r) for r in AUTOMATIC_ROLES}
 
 
-DOCTYPE_KEYS = {
-    "name",
-    "istable",
-    "issingle",
-    "fields",
-    "permissions",
-    "autoname",
-    "naming_rule",
-    "title_field",
-    "sort_field",
-    "sort_order",
-    "search_fields",
-    "track_changes",
-    "description",
-    "quick_entry",
-    "show_title_field_in_link",
-}
-REFUSED_DOCTYPE_KEYS = {
-    "is_submittable": "a submittable record type joins the shop's accounting and stock lifecycle; a manifest's "
-    "record types hold the partner's own data only",
-    "issubmittable": None,  # same reason (alias), filled below
-    "is_virtual": "a virtual record type needs partner code to read its data",
-    "module": "the installer chooses the module, so the uninstall can find everything",
-    "custom": "the installer marks every record type as custom",
-    "is_tree": "a tree record type is not supported by this installer yet",
-}
-REFUSED_DOCTYPE_KEYS["issubmittable"] = REFUSED_DOCTYPE_KEYS["is_submittable"]
-FIELD_KEYS = {
-    "fieldname",
-    "fieldtype",
-    "label",
-    "options",
-    "reqd",
-    "default",
-    "in_list_view",
-    "in_standard_filter",
-    "mandatory_depends_on",
-    "read_only_depends_on",
-    "bold",
-    "read_only",
-    "hidden",
-    "unique",
-    "description",
-    "insert_after",
-    "length",
-    "precision",
-    "non_negative",
-    "search_index",
-    "in_preview",
-    "allow_on_submit",
-    "fetch_from",
-    "depends_on",
-    "collapsible",
-    "columns",
-    "set_only_once",
-    "translatable",
-}
-ENGINE_GUARDED_PROPS = {
-    "reqd": "making a field mandatory on a shop's own record type can stop its saves, a till sale included",
-    "read_only": "making a field read-only on a shop's own record type can stop a person or the till setting it",
-    "hidden": "hiding a field on a shop's own record type can hide a value the shop or the engine needs",
-}
-# Enforced by the server on every save of the record (a till sale included): on the shop's own record types a field
-# the manifest adds may not carry them, and a property setter may not set them.
-SAVE_ENFORCED = {"default", "unique", "non_negative", "length", "set_only_once", "precision"}
-SAVE_ENFORCED_REASON = (
-    "is enforced on every save of a shop's own record type, a till sale included, so a "
-    "manifest may not set it there"
+PUBLIC_REASON = (
+    "Guest and All open the app's records to people outside the shop's staff (visitors who are not "
+    "signed in, and the shop's website customers): name a role of the shop's staff"
 )
+
+
+def _public(role) -> bool:
+    return _guest(role) or isinstance(role, str) and _norm(role) == "all"
+
+
 # A field the manifest adds names the roles that change it (``write_roles``, who read it too) and,
 # optionally, the roles that read it (``read_roles``; left out: every role that reads the record type when
 # the app installs). The installer puts the field at a permission level of its own on that record type,
 # with one permission row per role (``manifest_install._apply_limits``); the till shows, searches and
 # carries offline a Customer field only for a user who reads it, and an Item field above level 0 never.
 LIMIT_KEYS = ("read_roles", "write_roles")
-# fields that hold no value of their own to read or change
-LIMIT_NO_VALUE = {
-    "Section Break",
-    "Column Break",
-    "Tab Break",
-    "Table",
-    "Table MultiSelect",
-    "Read Only",
-}
-LIMIT_WRITE_REASON = (
-    "a field limited to roles names write_roles, the roles that change it (they read it too); "
-    "read_roles, the roles that read it, is optional (left out: every role that reads the record type)"
-)
-LIMIT_REQUIRED_REASON = (
-    "a field only some roles may change cannot be mandatory: every other role's saves would fail"
-)
-LIMIT_FETCH_REASON = (
-    "copies {0}, a field only some roles read, into a field every role that reads this record "
-    "reads (fetch_from)"
-)
-LIMIT_TEMPLATE_REASON = (
-    "names {0}, a field only some roles read: a template prints or sends what it names to whoever "
-    "prints or receives it, whatever their roles"
-)
-LIMIT_BOOK_REASON = (
-    "names {0}, a field only some roles read, for a register column every reader of the book's "
-    "lines reads: name it in a detail slot (detail_1 … detail_6), which only a role given a "
-    "person's columns reads"
-)
-LIMIT_BOOK_CLASS_REASON = (
-    "names {0}, a field only some roles read, as the item's class, which every reader of the "
-    "book's lines reads and the book routes on: take the book's items by item_groups instead"
-)
-# What a property setter MAY change on a shop's own record type (on the manifest's own added field): display only.
-ENGINE_DISPLAY_PROPS = {
-    "bold",
-    "in_list_view",
-    "in_standard_filter",
-    "label",
-    "description",
-    "columns",
-    "collapsible",
-    "in_preview",
-    "depends_on",
-    "documentation_url",
-}
-OWN_DOCTYPE_SETTER_HINTS = {
-    "title_field": "the name of one of this record type's fields",
-    "sort_field": "the name of one of this record type's fields",
-    "sort_order": "ASC or DESC",
-    "search_fields": "names of this record type's fields, separated by commas",
-    "track_changes": "0 or 1",
-    "quick_entry": "0 or 1",
-    "show_title_field_in_link": "0 or 1",
-}
 NOTIFY_KEYS = {
     "name",
     "document_type",
@@ -362,39 +354,8 @@ NOTIFY_KEYS = {
     "attach_print",  # the manifest's own print format, on its own record types only
     "print_format",
 }
-# P-MANIFEST4: the framework's two other attachment keys (on its later versions) mail a file a field names
-ATTACH_FILE_KEYS = ("attach_files", "from_attach_field")
-ATTACH_FILE_REASON = "a file named by a field can be any private file on the site, and it is mailed with no rights check"
-ATTACH_PRINT_REASON = (
-    "a notification attaches a print only on the manifest's own record types, and only one of the manifest's own "
-    "print formats for that record type, named in print_format"
-)
-ATTACH_READER_REASON = (
-    "an attached print is rendered with no rights applied, so its print format may not use the framework, "
-    "its reading helpers or another template (it would mail whatever they read); show the record's own "
-    "fields, formatted with doc.get_formatted"
-)
-# a template another app ships runs with this print's context (and may read through the framework)
-_TEMPLATE_LOAD_RE = re.compile(r"\{%[-+]?\s*(include|import|from|extends)\b")
-# A settings record (issingle) of the manifest's own — one record, no list, its values in the shared Singles
-# table. What it may carry, and the only places that may name it (anything else that names a record type would
-# read a table it does not have: a list, a report, a date notification's daily read, a webhook, a link).
-SINGLE_KEYS = {"name", "issingle", "fields", "permissions", "description", "track_changes"}
-SINGLE_SETTER_PROPS = {"description", "track_changes"}
-SINGLE_FIELD_KEYS = {"unique", "search_index"}  # the framework clears both on a single's fields
 SINGLE_RIGHTS = ("report", "export")  # the framework strips both from a single's permission rows
-# kind -> the keys of its elements that may name a single; None: the whole element (a setter's value never names a
-# record type). A save rule's value_from reads a single by its own name (P-MANIFEST4 §3B); its
-# record type, field and conditions still may not name one.
-SINGLE_NAMERS = {"property_setters": None, "save_rules": ("value_from_type", "value_from_name")}
-SINGLE_REASON = (
-    "is a settings record (one record, no list): only a property setter, a workspace shortcut "
-    "or a save rule's value_from may name it"
-)
 NOTIFY_CHANNELS = {"Email", "System Notification"}
-NOTIFY_EVENTS = {"New", "Save", "Submit", "Cancel", "Days Before", "Days After", "Value Change"}
-WORKSPACE_BLOCKS = {"header", "paragraph", "spacer", "shortcut", "card"}
-SHORTCUT_TYPES = {"DocType", "Report", "URL"}
 
 _APP_RE = re.compile(r"^[a-z][a-z0-9_]{1,39}$")
 _PREFIX_RE = re.compile(r"^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$")
@@ -427,7 +388,6 @@ RESERVED_PREFIX_WORDS = frozenset(
         "NOT",  # ivend_loyality's not_valid_for_loyalty on a sale's line
     }
 )
-_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 _\-]{0,60}$")
 _FIELD_RE = re.compile(r"^[a-z][a-z0-9_]{0,62}$")
 _URL_RE = re.compile(r"^https?://[A-Za-z0-9.\-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~/\-]*)?$")
 # A help address. Desk writes a record type's `documentation` into the empty list's Need Help? link and a
@@ -437,46 +397,18 @@ _HELP_URL_RE = re.compile(
     r"https://[A-Za-z0-9.\-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~/\-]*)?(#[A-Za-z0-9._~\-]*)?"
 )
 HELP_PROPS = {"documentation", "documentation_url"}
-HELP_REASON = (
-    "a help address is an https address written only in letters A to Z or a to z (no accents), digits and . _ ~ / -, "
-    "with an optional #heading (no query, quote, space, < or >), because Desk shows it as a link"
-)
 
 
 def help_address_ok(value) -> bool:
     return isinstance(value, str) and _HELP_URL_RE.fullmatch(value) is not None
 
 
-# What a property setter may change on the manifest's OWN record type. Record-type level: what the
-# manifest's record type may carry itself, less its structure (name, fields, permissions, naming — the checks
-# the manifest runs on those do not run on a setter), plus its help address. Field level: how a field is
-# shown and used, never its type, options or name (an HTML type or markup options would step round
-# REFUSED_FIELD_TYPES) — change those in the record type itself. A setter's value never meets the
-# framework's own record-type save, so its shape is checked here.
-OWN_DOCTYPE_SETTER_PROPS = (
-    DOCTYPE_KEYS
-    - {"name", "istable", "issingle", "fields", "permissions", "autoname", "naming_rule"}
-) | {"documentation"}
-OWN_FIELD_SETTER_PROPS = (FIELD_KEYS - {"fieldname", "fieldtype", "options", "insert_after"}) | {
-    "documentation_url"
-}
-_FLAG_RE = re.compile(r"[01]")
-OWN_DOCTYPE_SETTER_VALUES = {
-    "title_field": _FIELD_RE,
-    "sort_field": _FIELD_RE,
-    "sort_order": re.compile(r"ASC|DESC"),
-    "search_fields": re.compile(r"[a-z][a-z0-9_]*(\s*,\s*[a-z][a-z0-9_]*)*"),
-    "track_changes": _FLAG_RE,
-    "quick_entry": _FLAG_RE,
-    "show_title_field_in_link": _FLAG_RE,
-}
 # Script in markup: a script, frame or object element, an inline event handler, or a javascript: address.
 # What leaves the shop. A manifest may hold templates that read the shop's data (the framework gives every template
 # get_all, get_doc, db.get_value — verified); that is fine where the output stays with the shop's
 # staff, and a leak wherever it leaves: a webhook body sent to the partner, an address a print format loads (an image
 # URL can carry data out), a notification sent to an address the manifest names.
 _OUTSIDE_URL_RE = re.compile(r"(https?:)?//[A-Za-z0-9]", re.I)
-_LANG_RE = re.compile(r"^[a-z]{2,3}(-[A-Za-z]{2,4})?$")
 # the framework is reachable by its other names too (the pattern names them)
 _SHOP_DATA_RE = re.compile(r"\b(frappe|ivendframework|frappeclient)\b", re.I)
 # in a print format, the framework's raw SQL, its query builder and its outside fetchers are
@@ -578,11 +510,12 @@ PRINT_SERVED_TYPES = frozenset(
             "Retail Label Layout|Retail Layaway Plan|Retail List Mark",
             "Retail Open Check|Retail Open Check Claim|Retail Open Check Event",
             "Retail Option Group|Retail Override Request|Retail PIN Event|Retail POS Theme",
-            "Retail Permission|Retail Provisional Series|Retail Register Book",
+            "Retail Payer Record|Retail Permission|Retail Provisional Series|Retail Register Book",
             "Retail Register Count|Retail Register Erasure|Retail Register Line",
             "Retail Register Period|Retail Register Sequence|Retail Register State",
             "Retail Save Rule",
-            "Retail Save Rule Count|Retail Scan Source|Retail UX Metric|Routing|SMS Log",
+            "Retail Save Rule Count|Retail Scan Source|Retail Time Clock Entry|Retail UX Metric",
+            "Routing|SMS Log",
             "Sale Attribute|Sales Invoice|Sales Order|Sales Partner|Sales Partner Type",
             "Sales Person|Sales Stage|Sales Taxes and Charges Template|Serial No",
             "Serial and Batch Bundle|Service Level Agreement|Session Lock|Share Transfer",
@@ -602,103 +535,10 @@ PRINT_SERVED_TYPES = frozenset(
         )
     ).split("|")
 )
-# on this framework a notification's condition is evaluated on the server WITH
-# its database (notification get_context), as a workflow transition's would be, so a manifest carries none
-NOTIFY_CONDITION_REASON = (
-    "a notification condition is an expression evaluated on the server with the shop's database; a "
-    "manifest carries none (send on the event, and filter in your own service)"
-)
-NOTIFY_FIELD_REASON = (
-    "a notification sent to a field of the record goes to a user of the shop: that field is a Link to "
-    "User on the manifest's own record type (any other field can be given an address the manifest chose)"
-)
 # P-NOTIFYDATE: the two date events match no save event (the framework's save runs only the notifications
 # whose event is the save's own); the daily scheduler sends them. So on a shop's own record type a manifest may ship
 # those two, and nothing that would read more than the record or write back into it from the scheduler.
 DATE_EVENTS = {"Days Before", "Days After"}
-NOTIFY_SHOP_EVENT_REASON = (
-    "on a shop's own record type a notification may only be Days Before or Days After a date: any other event "
-    "runs inside every save of it, and an error in it stops that save (a till sale included)"
-)
-# every template helper a shop's apps register is a template global in a notification too, so a list of refused
-# names fails by omission: on a shop's type the text allows only plain text and {{ doc.<field> }}
-_DOC_PLACEHOLDER_RE = re.compile(r"\{\{\s*doc\.([a-z][a-z0-9_]*)\s*\}\}")
-_TEMPLATE_RE = re.compile(r"\{[{%#]|[}%#]\}")
-# the framework renders a one-line text ending in one of these as a template FILE of any installed app
-# (its path test), so such a message would run that file with the notification's context
-_TEMPLATE_PATH_EXTS = ("html", "css", "scss", "py", "md", "json", "js", "xml", "txt")
-
-
-def _template_path(text: str) -> bool:
-    return "\n" not in text and "." in text and text.rsplit(".")[-1] in _TEMPLATE_PATH_EXTS
-
-
-def doc_placeholders(text) -> list:
-    """The fields a subject or message names as {{ doc.<field> }} (the installer checks each is the record type's)."""
-    return _DOC_PLACEHOLDER_RE.findall(text) if isinstance(text, str) else []
-
-
-def _date_notification(v, w: str, name, n: dict):
-    """A Days Before / Days After notification on a shop's own record type (the installer checks the record type
-    itself: a table or single-record type, and date_changed a Date or Datetime field of it)."""
-    days = n.get("days_in_advance")
-    if isinstance(days, bool) or not isinstance(days, int) or not 1 <= days <= 365:
-        v.refuse(w, name, "days_in_advance is a whole number of days from 1 to 365")
-    if not (isinstance(n.get("date_changed"), str) and _FIELD_RE.match(n["date_changed"])):
-        v.refuse(w, name, "date_changed names the record's date field")
-    if n.get("set_property_after_alert") or "property_value" in n:
-        v.refuse(
-            w,
-            name,
-            "on a shop's own record type a notification may not set a field after it is sent: that saves the "
-            "shop's record from the scheduler, running every rule of that save",
-        )
-    for k in ("subject", "message"):
-        text = n.get(k)
-        if isinstance(text, str) and (
-            _TEMPLATE_RE.search(_DOC_PLACEHOLDER_RE.sub("", text)) or _template_path(text)
-        ):
-            v.refuse(
-                f"{w}.{k}",
-                name,
-                "on a shop's own record type a notification's subject and message are plain text and "
-                "{{ doc.<field> }} only: no call, no filter, no {% %} block, and no one-line text ending "
-                "in a file name (it would be read as a template file)",
-            )
-    for j, rcp in enumerate(n.get("recipients") or []):
-        if isinstance(rcp, dict) and rcp.get("receiver_by_document_field"):
-            v.refuse(
-                f"{w}.recipients[{j}]",
-                name,
-                "on a shop's own record type a notification goes to a role: the manifest cannot know who the "
-                "shop writes into a field of its record",
-            )
-
-
-def _recipient_field_is_user(v, doctype, value) -> bool:
-    """The framework reads 'field' or 'field,table' (the field on the table's rows),
-    so the field named must be a Link to User — the one kind whose value is a shop user, whatever a default, a
-    fetch, a property setter, a workflow or the notification itself writes into it."""
-    parts = [x.strip() for x in str(value).split(",")]
-    if (
-        parts[0] in ("owner", "modified_by") and len(parts) == 1
-    ):  # set by the framework: always a user
-        return True
-    fields = {
-        d.get("name"): {
-            f.get("fieldname"): f for f in d.get("fields") or [] if isinstance(f, dict)
-        }
-        for d in v.m.get("doctypes") or []
-        if isinstance(d, dict)
-    }
-    holder = fields.get(doctype) or {}
-    if len(parts) == 2:
-        table = holder.get(parts[1]) or {}
-        holder = (
-            fields.get(table.get("options")) or {} if table.get("fieldtype") == "Table" else {}
-        )
-    f = holder.get(parts[0]) or {}
-    return len(parts) in (1, 2) and f.get("fieldtype") == "Link" and f.get("options") == "User"
 
 
 _SCRIPT_RE = re.compile(r"<\s*(script|iframe|object|embed)\b|\bon[a-z]+\s*=|javascript\s*:", re.I)
@@ -743,16 +583,6 @@ class _V:
         self.prefix = m.get("prefix") if isinstance(m.get("prefix"), str) else ""
         self.fprefix = field_prefix(self.prefix) if self.prefix else "\0"
         self.own = {d.get("name") for d in m.get("doctypes") or [] if isinstance(d, dict)}
-        self.tables = {
-            d.get("name")
-            for d in m.get("doctypes") or []
-            if isinstance(d, dict) and d.get("istable")
-        }
-        self.own_fields = {
-            (c.get("dt"), c.get("fieldname"))
-            for c in m.get("custom_fields") or []
-            if isinstance(c, dict)
-        }
         self.urls = (
             set(m.get("allowed_urls") or []) if isinstance(m.get("allowed_urls"), list) else set()
         )
@@ -762,21 +592,6 @@ class _V:
         self.out.append(
             {"where": where, "name": name if isinstance(name, str) else None, "reason": reason}
         )
-
-    def named(self, where: str, name) -> bool:
-        """Every name a manifest creates starts with its prefix — site names are shared and carry no owner."""
-        if not isinstance(name, str) or not _NAME_RE.match(name):
-            self.refuse(where, name, "the name is missing or uses characters a name may not use")
-            return False
-        if not self.prefix or not name.startswith(self.prefix + " "):
-            self.refuse(
-                where,
-                name,
-                f"every name a manifest creates must start with its prefix "
-                f"'{self.prefix}' (names on a site are shared and carry no owner)",
-            )
-            return False
-        return True
 
     def no_script(self, where: str, name, text):
         if isinstance(text, str) and _SCRIPT_RE.search(text):
@@ -794,58 +609,51 @@ class _V:
         return v
 
 
-def _fields(
-    v: _V, where: str, owner: str, fields: list, engine: bool, single: bool = False, limits=False
-):
+def _keyed(v: _V):
+    """S: an entry names what the installer reads it by (the framework and the product refuse the rest)."""
+    for kind, keys in KEYED.items():
+        items = v.m.get(kind)
+        for i, el in enumerate(items if isinstance(items, list) else []):
+            missing = [k for k in keys if isinstance(el, dict) and el.get(k) in (None, "", [])]
+            if missing:
+                v.refuse(
+                    f"{kind}[{i}]",
+                    el.get("name"),
+                    f"an entry of {kind} names its {', '.join(missing)}: the installer reads it by them",
+                )
+
+
+def _numbered(dt) -> str | None:
+    """A: the sale's own records are numbered by the shop's series, which the books and the tax authority read."""
+    if dt in TILL_DAY | {"Sales Invoice"}:
+        return (
+            f"{dt} is numbered by the shop's own series, which its books and its tax authority "
+            "read: a manifest numbers other record types"
+        )
+    return None
+
+
+def _fields(v: _V, where: str, owner: str, fields: list, engine: bool, single: bool = False):
     for i, f in enumerate(fields):
         w = where if single else f"{where}[{i}]"
         if not isinstance(f, dict):
             v.refuse(w, None, "a field must be an object")
             continue
         fn, ft = f.get("fieldname"), f.get("fieldtype")
-        extra = (
-            set(f)
-            - FIELD_KEYS
-            - {"dt"}
-            - (FISCAL_FIELD_KEYS if (owner, fn) in v.results else set())
-            - (set(LIMIT_KEYS) if limits else set())
-        )
-        if extra:
-            v.refuse(w, fn, f"keys a field may not carry here: {sorted(extra)}")
-        if not isinstance(fn, str) or not _FIELD_RE.match(fn):
-            v.refuse(w, fn, "a field name must be lower-case letters, digits and underscores")
-        elif engine and not fn.startswith(v.fprefix):
-            v.refuse(
-                w, fn, f"a field added to a shop's own record type must start with '{v.fprefix}'"
-            )
-        if ft in REFUSED_FIELD_TYPES:
-            v.refuse(w, fn, REFUSED_FIELD_TYPES[ft])
-        elif ft not in FIELD_TYPES:
-            v.refuse(w, fn, f"'{ft}' is not a field type a manifest may use")
-        if ft == "Table" and f.get("options") not in v.tables:
-            v.refuse(
-                w, fn, "a table field must point at one of the manifest's own child record types"
-            )
-        if ft == "Table MultiSelect" and not (
-            f.get("options") in v.tables
-            and any(
-                x.get("fieldtype") == "Link" and x.get("in_list_view")
-                for x in _own_doctype(v, f.get("options"))
-            )
-        ):  # the framework's own rule, refused first in our words, and Desk's: a form
-            # save drops every row none of whose fields is shown in the list (its form's save)
+        if engine and isinstance(fn, str) and not fn.startswith(v.fprefix):
             v.refuse(
                 w,
                 fn,
-                "a multi-select field points at one of the manifest's own child record types that has a "
-                "Link field shown in the list (in_list_view: 1): each choice is a row holding one link, and "
-                "Desk drops, when it saves, a row with no field shown in the list",
+                f"a field added to a shop's own record type starts with '{v.fprefix}': the engine "
+                "reads fields named like its own flags",
             )
-        if engine and f.get("reqd"):
-            v.refuse(w, fn, ENGINE_GUARDED_PROPS["reqd"])
-        if engine:
-            for k in sorted(set(f) & SAVE_ENFORCED):
-                v.refuse(w, fn, f"'{k}' {SAVE_ENFORCED_REASON}")
+        if ft in REFUSED_FIELD_TYPES:
+            v.refuse(w, fn, REFUSED_FIELD_TYPES[ft])
+        why = engine and field_refusal(
+            owner, {k for k, x in f.items() if x} - {"fieldtype", "options"}, own_field=True
+        )
+        if why:
+            v.refuse(w, fn, why)
         for k in sorted(set(f) & DEPENDS_KEYS):
             if not isinstance(f[k], str) or not _COND_RE.match(f[k].strip()):
                 v.refuse(w, fn, EVAL_REASON)
@@ -856,239 +664,35 @@ def _fields(
 def _doctypes(v: _V):
     for i, d in enumerate(v.list_of("doctypes")):
         w, name = f"doctypes[{i}]", d.get("name")
-        v.named(w, name)
-        for k in sorted(set(d) & set(REFUSED_DOCTYPE_KEYS)):
-            if k in ("is_submittable", "issubmittable", "is_virtual") and not d.get(k):
-                continue  # an explicit 0 is harmless
-            v.refuse(f"{w}.{k}", name, REFUSED_DOCTYPE_KEYS[k])
         v.no_script(f"{w}.description", name, d.get("description"))  # the empty list shows it raw
-        extra = set(d) - DOCTYPE_KEYS - set(REFUSED_DOCTYPE_KEYS)
-        if extra:
-            v.refuse(w, name, f"keys a record type may not carry here: {sorted(extra)}")
-        if d.get("issingle"):
-            _single(v, w, name, d)
-        fields = d.get("fields")
-        if not isinstance(fields, list) or not fields:
-            v.refuse(w, name, "a record type needs at least one field")
-        else:
-            _fields(v, f"{w}.fields", name, fields, engine=False)
-        for j, p in enumerate(d.get("permissions") or []):
-            if not isinstance(p, dict) or not isinstance(p.get("role"), str):
-                v.refuse(f"{w}.permissions[{j}]", name, "a permission row needs a role")
-            elif _guest(p["role"]):
-                v.refuse(
-                    f"{w}.permissions[{j}]",
-                    name,
-                    "a manifest may not open its records to visitors who " "are not signed in",
-                )
-            elif _automatic(p["role"]):
-                v.refuse(f"{w}.permissions[{j}]", name, AUTOMATIC_REASON)
-            elif _odd(p["role"]):
-                v.refuse(f"{w}.permissions[{j}]", name, PLAIN_ROLE_REASON)
-            else:
-                left = [r for r in RIGHTS if r not in p]
-                if (
-                    left
-                ):  # the framework stores a right a row leaves out as ON (measured), so every row states all nine
-                    v.refuse(
-                        f"{w}.permissions[{j}]",
-                        name,
-                        f"a permission row leaves out {', '.join(left)}: a right left out is "
-                        f"switched ON, so write all nine rights as 0 or 1",
-                    )
-                elif any(p[r] not in (0, 1) for r in RIGHTS):
-                    v.refuse(
-                        f"{w}.permissions[{j}]", name, "every right in a permission row is 0 or 1"
-                    )
-
-
-def _single(v: _V, w: str, name, d: dict):
-    """A settings record of the manifest's own (``issingle: 1``)."""
-    if d["issingle"] != 1:
-        v.refuse(f"{w}.issingle", name, "issingle is 0 or 1")
-    extra = set(d) - SINGLE_KEYS
-    if extra:
-        v.refuse(
-            w,
-            name,
-            f"a settings record carries only {', '.join(sorted(SINGLE_KEYS))}, not {sorted(extra)} "
-            "(it is one record: not a table of rows, with no list, naming or search)",
-        )
-    for j, f in enumerate(d.get("fields") if isinstance(d.get("fields"), list) else []):
-        for k in sorted(set(f) & SINGLE_FIELD_KEYS if isinstance(f, dict) else ()):
-            v.refuse(
-                f"{w}.fields[{j}]",
-                name,
-                f"a settings record's field carries no '{k}': it has one record",
-            )
-    for j, p in enumerate(d.get("permissions") if isinstance(d.get("permissions"), list) else []):
-        if isinstance(p, dict) and any(p.get(r) for r in SINGLE_RIGHTS):
-            v.refuse(
-                f"{w}.permissions[{j}]",
-                name,
-                "a settings record has no list to report on or export: report and export are 0",
-            )
-
-
-def _fold(name: str) -> str:
-    return " ".join(name.split()).casefold()
-
-
-def _singles(v: _V):
-    """A settings record is named only where SINGLE_NAMERS allows (and by a workspace shortcut that opens its
-    form). Every other kind is read whole, so a kind or a key added later is covered without a list to keep.
-    """
-    declared = sorted(
-        d["name"]
-        for d in v.m.get("doctypes") or []
-        if isinstance(d, dict) and isinstance(d.get("name"), str) and d.get("issingle")
-    )
-    singles = {_fold(n) for n in declared}
-    if not singles:
-        return
-
-    def names(x) -> bool:
-        if isinstance(x, dict):
-            return any(names(y) for y in x.values())
-        if isinstance(x, list):
-            return any(names(y) for y in x)
-        return isinstance(x, str) and _fold(x) in singles  # the database finds a name in any case
-
-    for kind in KINDS:
-        items = v.m.get(kind)
-        for i, el in enumerate(items if isinstance(items, list) else []):
-            w = f"{kind}[{i}]"
-            if not isinstance(el, dict) or SINGLE_NAMERS.get(kind, ()) is None:
-                continue
-            if (
-                kind == "doctypes"
-            ):  # the single's own declaration names itself; a field's options may not
-                hits = [
-                    f
-                    for f in el.get("fields") or []
-                    if isinstance(f, dict) and names(f.get("options"))
-                ]
-            elif (
-                kind == "workspaces"
-            ):  # a shortcut opens the form; any other view is a list it has not got
-                hits = [
-                    s
-                    for s in el.get("shortcuts") or []
-                    if isinstance(s, dict)
-                    and names(s.get("link_to"))
-                    and (s.get("type") != "DocType" or s.get("doc_view"))
-                ]
-            else:
-                hits = (
-                    [el]
-                    if names({k: x for k, x in el.items() if k not in SINGLE_NAMERS.get(kind, ())})
-                    else []
-                )
-            if hits:
-                v.refuse(w, el.get("name"), f"'{', '.join(declared)}' {SINGLE_REASON}")
+        if isinstance(d.get("fields"), list):
+            _fields(v, f"{w}.fields", name, d["fields"], engine=False)
+        for j, p in enumerate(
+            d.get("permissions") if isinstance(d.get("permissions"), list) else []
+        ):
+            if isinstance(p, dict):
+                _roles(v, f"{w}.permissions[{j}]", name, [p.get("role")])
 
 
 def _custom_fields(v: _V):
     for i, c in enumerate(v.list_of("custom_fields")):
         w, dt = f"custom_fields[{i}]", c.get("dt")
-        if not isinstance(dt, str) or not dt:
-            v.refuse(
-                w, c.get("fieldname"), "a custom field must name the record type it is added to"
-            )
-            continue
-        _fields(v, w, dt, [c], engine=dt not in v.own, single=True, limits=True)
+        _fields(v, w, dt, [c], engine=dt not in v.own, single=True)
         _limits(v, w, dt, c)
 
 
 def _limits(v: _V, w: str, dt: str, c: dict):
     """``read_roles`` / ``write_roles`` on a field the manifest adds."""
     fn = c.get("fieldname")
-    given = [k for k in LIMIT_KEYS if k in c]
-    if not given:
-        return
-    for k in given:
-        roles = c[k]
-        if (
-            not isinstance(roles, list)
-            or not roles
-            or any(not isinstance(r, str) or not r.strip() for r in roles)
-            or len({_norm(r) for r in roles}) != len(roles)
-        ):
-            v.refuse(w, fn, f"{k} is a list of role names, each named once")
-            continue
-        for r in roles:
-            if _guest(r):
-                v.refuse(
-                    w, fn, "a manifest may not open its records to visitors who are not signed in"
-                )
-            elif _automatic(r):
-                v.refuse(w, fn, AUTOMATIC_REASON)
-            elif _odd(r):
-                v.refuse(w, fn, PLAIN_ROLE_REASON)
-    if "write_roles" not in c:
-        v.refuse(w, fn, LIMIT_WRITE_REASON)
-    if c.get("reqd") or c.get("mandatory_depends_on"):
-        v.refuse(w, fn, LIMIT_REQUIRED_REASON)
-    if c.get("fieldtype") in LIMIT_NO_VALUE:
-        v.refuse(w, fn, "a layout or table field holds no value to limit to roles")
-    if (dt, fn) in v.results:
+    for k in LIMIT_KEYS:
+        _roles(v, w, fn, c.get(k))
+    if (dt, fn) in v.results and any(k in c for k in LIMIT_KEYS):
         v.refuse(
             w,
             fn,
             "a fiscal reader's result field sits at the reader's writer_level; its writer role is the "
             "reader's",
         )
-
-
-def _limited_in_templates(v: _V):
-    """Nothing else the manifest ships may name a field it limits to readers (a field
-    everyone reads but only some change may be printed): a print format, a notification, a
-    report, a number card or a chart on that record type prints, sends or counts it for whoever
-    looks, and a ``fetch_from`` copies it into a field everyone reads."""
-    read_limited = {
-        (c.get("dt"), c.get("fieldname"))
-        for c in v.m.get("custom_fields") or []
-        if isinstance(c, dict) and "read_roles" in c and isinstance(c.get("fieldname"), str)
-    }
-    if not read_limited:
-        return
-    names = {fn for _, fn in read_limited}
-    # on ANY record type: a template on a sale can read the customer's field (fieldnames carry the
-    # manifest's prefix, so a hit is the manifest's own field)
-    for kind in ("print_formats", "notifications", "reports", "number_cards", "dashboard_charts"):
-        for i, x in enumerate(v.m.get(kind) or []):
-            if not isinstance(x, dict):
-                continue
-            text = json.dumps(x)
-            for fn in sorted(names):
-                if re.search(rf"\b{re.escape(fn)}\b", text):
-                    v.refuse(f"{kind}[{i}]", x.get("name"), LIMIT_TEMPLATE_REASON.format(fn))
-    # a register book writes what it names whoever submits (register_line._header). A detail slot
-    # and the counterparty columns are a person's columns, read at the line's level 1; the
-    # authority, licence, class and reference columns are read by every reader of the line
-    for i, b in enumerate(v.m.get("register_books") or []):
-        if not isinstance(b, dict):
-            continue
-        auth = b.get("authority") if isinstance(b.get("authority"), dict) else {}
-        froms = b.get("columns_from") if isinstance(b.get("columns_from"), dict) else {}
-        shown = [auth.get("desk_fields"), auth.get("dispenser_licence")]
-        shown += [f.get("reference_no") for f in froms.values() if isinstance(f, dict)]
-        # the class is written and routed on; the dated table's from_field only picks its row
-        cls = b.get("class_source") if isinstance(b.get("class_source"), dict) else {}
-        cls = [cls.get(k) for k in ("item_field", "class_field", "group_field")]
-        for words, part in ((LIMIT_BOOK_REASON, shown), (LIMIT_BOOK_CLASS_REASON, cls)):
-            text = json.dumps(part)
-            for fn in sorted(names):
-                if re.search(rf"\b{re.escape(fn)}\b", text):
-                    v.refuse(f"register_books[{i}]", b.get("book"), words.format(fn))
-    fields = [(f"custom_fields[{i}]", c) for i, c in enumerate(v.m.get("custom_fields") or [])]
-    for i, d in enumerate(v.m.get("doctypes") or []):
-        if isinstance(d, dict) and isinstance(d.get("fields"), list):
-            fields += [(f"doctypes[{i}].fields[{j}]", f) for j, f in enumerate(d["fields"])]
-    for w, f in fields:
-        source = f.get("fetch_from") if isinstance(f, dict) else None
-        if isinstance(source, str) and source.rpartition(".")[2].strip() in names:
-            v.refuse(w, f.get("fieldname"), LIMIT_FETCH_REASON.format(source.rpartition(".")[2]))
 
 
 def _property_setters(v: _V):
@@ -1100,99 +704,22 @@ def _property_setters(v: _V):
             p.get("property"),
         )
         label = f"{dt}-{fn or ''}-{prop}"
-        if not isinstance(dt, str) or not isinstance(prop, str) or "value" not in p:
-            v.refuse(w, label, "a property setter needs doc_type, property and value")
-            continue
-        if prop in DEPENDS_KEYS and not _COND_RE.match(str(p["value"]).strip()):
+        if prop in DEPENDS_KEYS and not _COND_RE.match(str(p.get("value")).strip()):
             v.refuse(w, label, EVAL_REASON)
-            continue
-        if prop in HELP_PROPS and not help_address_ok(p["value"]):
-            v.refuse(w, label, HELP_REASON)
-            continue
         # Desk writes several setter values raw (a field's description and label, a record type's
         # description), so every setter is checked as the text the installer stores, str(value)
-        if _SCRIPT_RE.search(str(p["value"])):
-            v.no_script(w, label, str(p["value"]))
-            continue
+        v.no_script(w, label, str(p.get("value")))
         if dt in v.own:
-            _own_setter(v, w, label, dt, fn, prop, p["value"])
             continue
-        if prop in ENGINE_GUARDED_PROPS:
-            v.refuse(w, label, ENGINE_GUARDED_PROPS[prop])
-        elif not (isinstance(fn, str) and fn.startswith(v.fprefix) and (dt, fn) in v.own_fields):
-            v.refuse(
-                w,
-                label,
-                "on a shop's own record type a manifest may only change the fields it adds itself",
-            )
-        elif prop in SAVE_ENFORCED:
-            v.refuse(w, label, f"'{prop}' {SAVE_ENFORCED_REASON}")
-        elif prop not in ENGINE_DISPLAY_PROPS:
-            v.refuse(
-                w,
-                label,
-                f"on a shop's own record type a manifest may only change how its own field is shown, "
-                f"not '{prop}'",
-            )
-
-
-def _own_setter(v: _V, w: str, label: str, dt: str, fn, prop: str, value):
-    """A property setter on the manifest's own record type: no more than the manifest could set there."""
-    single = dt in {
-        d.get("name")
-        for d in v.m.get("doctypes") or []
-        if isinstance(d, dict) and d.get("issingle")
-    }
-    if fn:
-        if prop not in OWN_FIELD_SETTER_PROPS or single and prop in SINGLE_FIELD_KEYS:
-            v.refuse(
-                w,
-                label,
-                f"on its own record type's field a property setter may only change how the field "
-                f"is shown; change '{prop}' in the record type itself",
-            )
-        return
-    if prop in REFUSED_DOCTYPE_KEYS:
-        v.refuse(w, label, REFUSED_DOCTYPE_KEYS[prop])
-    elif single and prop not in SINGLE_SETTER_PROPS:  # no more than the settings record may carry
-        v.refuse(
-            w,
-            label,
-            f"on a settings record a property setter may set only {', '.join(sorted(SINGLE_SETTER_PROPS))}",
-        )
-    elif prop not in OWN_DOCTYPE_SETTER_PROPS:
-        v.refuse(
-            w,
-            label,
-            f"on its own record type a property setter may not change '{prop}': it may set "
-            f"{', '.join(sorted(OWN_DOCTYPE_SETTER_PROPS))}",
-        )
-    elif prop in OWN_DOCTYPE_SETTER_VALUES:
-        text, names = str(value), _own_fields(v, dt)
-        named = re.split(r"\s*,\s*", text) if prop == "search_fields" else [text]
-        if not OWN_DOCTYPE_SETTER_VALUES[prop].fullmatch(text) or (
-            prop in ("title_field", "sort_field", "search_fields")
-            and any(x not in names for x in named)
-        ):
-            v.refuse(
-                w,
-                label,
-                f"'{value}' is not a value '{prop}' may take: {OWN_DOCTYPE_SETTER_HINTS[prop]}",
-            )
+        why = field_refusal(dt, {prop}) if fn else _numbered(dt) if prop in NUMBERING else None
+        if why:
+            v.refuse(w, label, why)
 
 
 def _print_formats(v: _V):
     own = _own_served(v.m)
     for i, p in enumerate(v.list_of("print_formats")):
         w, name = f"print_formats[{i}]", p.get("name")
-        v.named(w, name)
-        if not isinstance(p.get("doc_type"), str):
-            v.refuse(w, name, "a print format must name its record type")
-        lang = p.get("default_print_language")
-        if lang is not None and not (isinstance(lang, str) and _LANG_RE.match(lang)):
-            # the language it prints in (the core sets the page's direction from it); the
-            # site's own Language record is checked at install
-            v.refuse(w, name, "default_print_language is a language code, such as ar or pt-BR")
         if p.get("print_format_type", "Jinja") != "Jinja":
             v.refuse(
                 w,
@@ -1294,110 +821,75 @@ def _print_format_warnings(m: dict) -> list[dict]:
 
 def _notifications(v: _V):
     for i, n in enumerate(v.list_of("notifications")):
-        w, name = f"notifications[{i}]", n.get("name")
-        v.named(w, name)
+        w, name, dt = f"notifications[{i}]", n.get("name"), n.get("document_type")
         if n.get("channel", "Email") not in NOTIFY_CHANNELS:
             v.refuse(
                 w,
                 name,
-                "a notification may only use e-mail or the in-app bell; other channels send to an "
-                "outside service",
+                "a notification uses e-mail or the in-app bell: another channel sends through an "
+                "outside service the consent cannot name",
             )
-        if n.get("event") not in NOTIFY_EVENTS:
+        if _within(dt, TILL_RECORDS) and n.get("event") not in DATE_EVENTS:
             v.refuse(
-                w, name, f"'{n.get('event')}' is not an event a manifest notification may use"
+                w,
+                name,
+                f"on {dt}, one of the till's own records, a notification is Days Before or Days After "
+                "a date: any other event runs inside the till's save, and an error in it stops the sale",
             )
-        shop = n.get("document_type") not in v.own
-        if shop and n.get("event") not in DATE_EVENTS:
-            v.refuse(w, name, NOTIFY_SHOP_EVENT_REASON)
-        elif shop:
-            _date_notification(v, w, name, n)
-        for k in ATTACH_FILE_KEYS:
-            if k in n:
-                v.refuse(f"{w}.{k}", name, ATTACH_FILE_REASON)
-        extra = set(n) - NOTIFY_KEYS - set(ATTACH_FILE_KEYS)
-        if extra:
-            v.refuse(w, name, f"keys a manifest notification may not set: {sorted(extra)}")
-        if "attach_print" in n or "print_format" in n:
-            _attach_print(v, w, name, n, shop)
         v.no_script(f"{w}.message", name, n.get("message"))
+        # its condition, subject and message are evaluated with a Server Script's globals (database
+        # writes included), inside the save that sends it: a condition is a plain comparison only
+        conditions = [n.get("condition")] + [
+            r.get("condition") for r in n.get("recipients") or [] if isinstance(r, dict)
+        ]
+        if any(c and not _PLAIN_CONDITION_RE.fullmatch(str(c).strip()) for c in conditions):
+            v.refuse(w, name, NOTIFY_CODE_REASON)
         for k in ("subject", "message"):
             if isinstance(n.get(k), str) and _SHOP_DATA_RE.search(n[k]):
+                v.refuse(f"{w}.{k}", name, NOTIFY_CODE_REASON)
+        # the framework sets this field after each alert and saves the record: the app's own field only
+        prop = n.get("set_property_after_alert")
+        if prop and (prop not in _own_fields(v, dt) - STD_FIELDS or (dt, prop) in v.results):
+            v.refuse(
+                w,
+                name,
+                "set_property_after_alert names one of the app's own fields: the record is saved after "
+                "each alert, so a standard field (a discount, a status) would change a figure",
+            )
+        for k in ATTACH_FILE_KEYS:
+            if k in n:
                 v.refuse(
                     f"{w}.{k}",
                     name,
-                    "a notification shows its own record's fields only; it may not read the shop's "
-                    "other data (it can be sent out of the shop)",
+                    "a file named by a field can be any private file on the site, mailed with no "
+                    "rights check to an address the consent does not show",
                 )
-        if "condition" in n:
-            v.refuse(w, name, NOTIFY_CONDITION_REASON)
+        defaults = {f.get("fieldname") for f in _added_fields(v, dt) if f.get("default")}
         for j, rcp in enumerate(n.get("recipients") or []):
-            if isinstance(rcp, dict) and "condition" in rcp:
-                v.refuse(f"{w}.recipients[{j}]", name, NOTIFY_CONDITION_REASON)
-                continue
-            if isinstance(rcp, dict) and rcp.get("receiver_by_document_field") and not shop:
-                if not _recipient_field_is_user(
-                    v, n.get("document_type"), rcp["receiver_by_document_field"]
-                ):
-                    v.refuse(f"{w}.recipients[{j}]", name, NOTIFY_FIELD_REASON)
-            if not isinstance(rcp, dict) or set(rcp) - {
-                "receiver_by_role",
-                "receiver_by_document_field",
-            }:
+            if not isinstance(rcp, dict) or set(rcp) - RECIPIENT_KEYS:
                 v.refuse(
                     f"{w}.recipients[{j}]",
                     name,
-                    "a notification goes to the shop's own people — by role, or by a "
-                    "field of the record — never to an address the manifest names",
+                    "a notification goes to the shop's own people, by role or by a field of the record "
+                    "(the consent names both), never to an address the manifest names",
                 )
-            elif rcp.get("receiver_by_role"):  # falsy = the framework ignores it too
-                _roles(
-                    v, f"{w}.recipients[{j}]", name, [rcp["receiver_by_role"]]
-                )  # the sixth place a role is named
-
-
-def _attach_print(v: _V, w: str, name, n: dict, shop: bool):
-    """A notification on the manifest's own record type may attach one of its own print formats for
-    that record type; the format reads no framework helper, because the attached print is rendered with no rights.
-    """
-    if n.get("attach_print") not in (0, 1, None):
-        v.refuse(f"{w}.attach_print", name, "attach_print is 0 or 1")
-    pf = next(
-        (
-            p
-            for p in v.m.get("print_formats") or []
-            if isinstance(p, dict)
-            and p.get("name") == n.get("print_format")
-            and p.get("doc_type") == n.get("document_type")
-        ),
-        None,
-    )
-    if shop or pf is None and (n.get("attach_print") or "print_format" in n):
-        v.refuse(f"{w}.print_format", name, ATTACH_PRINT_REASON)
-    elif pf and any(
-        isinstance(pf.get(k), str)
-        and (
-            _SHOP_DATA_RE.search(pf[k])
-            or _PRINT_READER_RE.search(pf[k])
-            or _TEMPLATE_LOAD_RE.search(pf[k])
-        )
-        for k in ("html", "css")
-    ):
-        v.refuse(f"{w}.print_format", name, ATTACH_READER_REASON)
+            elif rcp.get("receiver_by_document_field") in defaults:
+                v.refuse(
+                    f"{w}.recipients[{j}]",
+                    name,
+                    "a recipient field the app gives a default would mail an address the consent does "
+                    "not show: leave the default out and let the shop fill the field",
+                )
+            else:
+                _roles(v, f"{w}.recipients[{j}]", name, [rcp.get("receiver_by_role")])
 
 
 _ICON_RE = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
-# Desk runs a shortcut's stats_filter as JavaScript (utils.process_filter_expression, new Function)
-# and writes its label, format and color raw — so a shortcut carries these keys only, and a plain label
-SHORTCUT_KEYS = {"type", "link_to", "url", "label", "doc_view"}
-# the framework's Workspace Shortcut doc_view options (workspace_shortcut.json at 83a8bd1d09), blank allowed
-SHORTCUT_VIEWS = ("", "List", "Report Builder", "Dashboard", "Tree", "New", "Calendar", "Kanban")
 
 
 def _workspaces(v: _V):
     for i, ws in enumerate(v.list_of("workspaces")):
         w, name = f"workspaces[{i}]", ws.get("name")
-        v.named(w, name)
         # Desk writes the icon into an unquoted attribute and an href, raw
         icon = ws.get("icon")
         if "icon" in ws and not (
@@ -1410,57 +902,35 @@ def _workspaces(v: _V):
             )
         for j, b in enumerate(ws.get("blocks") or []):
             bw = f"{w}.blocks[{j}]"
-            kind = b.get("type") if isinstance(b, dict) else None
-            if kind == "custom_block":
+            if isinstance(b, dict) and b.get("type") == "custom_block":
                 v.refuse(
                     bw,
                     name,
                     "a custom block carries script that runs in the browser of everyone who opens "
                     "the workspace, administrators included",
                 )
-            elif kind not in WORKSPACE_BLOCKS:
-                v.refuse(bw, name, f"'{kind}' is not a workspace block a manifest may use")
-            else:
+            elif isinstance(b, dict):
                 v.no_script(bw, name, json.dumps(b.get("data") or {}))
         for j, s in enumerate(ws.get("shortcuts") or []):
             sw = f"{w}.shortcuts[{j}]"
-            target = (
-                (s.get("url") if s.get("type") == "URL" else s.get("link_to"))
-                if isinstance(s, dict)
-                else None
-            )
-            if not isinstance(s, dict) or s.get("type") not in SHORTCUT_TYPES or not target:
+            if isinstance(s, dict) and set(s) & SHORTCUT_SCRIPT_KEYS:
                 v.refuse(
                     sw,
                     name,
-                    "a shortcut needs a label, a type (record type, report or address) and a target "
-                    "(link_to, or url for an address)",
+                    "a shortcut carries no stats_filter, format or color: Desk runs the filter as "
+                    "script in every viewer's browser and writes the other two raw",
                 )
-            elif s["type"] == "URL" and target not in v.urls:
-                v.refuse(sw, name, "a shortcut may only open an address the manifest lists")
-            elif set(s) - SHORTCUT_KEYS:
-                v.refuse(
-                    sw,
-                    name,
-                    "a shortcut carries only type, link_to, url, label and doc_view (a stats "
-                    "filter, for one, runs as script in every viewer's browser)",
-                )
-            elif not (isinstance(s.get("label"), str) and s["label"].strip()) or set(
-                s["label"]
-            ) & set('<>"&'):
-                v.refuse(sw, name, 'a shortcut needs a label in plain text, with no <, >, " or &')
-            elif "doc_view" in s and s["doc_view"] not in SHORTCUT_VIEWS:
-                v.refuse(sw, name, f"a shortcut's doc_view is one of: {', '.join(SHORTCUT_VIEWS)}")
+            label = s.get("label") if isinstance(s, dict) else None
+            if isinstance(label, str) and set(label) & set('<>"&'):
+                v.refuse(sw, name, 'a shortcut label is plain text, with no <, >, " or &')
 
 
 def _sale_attributes(v: _V):
     for i, a in enumerate(v.list_of("sale_attributes")):
-        w, name = f"sale_attributes[{i}]", a.get("name")
-        v.named(w, name)
         if a.get("required"):
             v.refuse(
-                w,
-                name,
+                f"sale_attributes[{i}]",
+                a.get("name"),
                 "a required sale detail would stop every sale on every till that does not fill it",
             )
 
@@ -1468,55 +938,31 @@ def _sale_attributes(v: _V):
 def _webhooks(v: _V):
     for i, h in enumerate(v.list_of("webhooks")):
         w, name = f"webhooks[{i}]", h.get("name")
-        v.named(w, name)
-        if not isinstance(h.get("doctype"), str) or not isinstance(h.get("event"), str):
-            v.refuse(w, name, "a webhook must name its record type and event")
         if h.get("url") not in v.urls:
             v.refuse(
-                w, name, "a webhook may only call an address the manifest lists in allowed_urls"
-            )
-        if h.get("condition") and h.get("doctype") not in v.own:
-            v.refuse(
                 w,
                 name,
-                "a webhook condition on a shop's own record type is evaluated inside every save of it, "
-                "a till sale included, and an error in it stops that save; filter in your own service",
-            )
-        if "secret" in h or "webhook_secret" in h:
-            v.refuse(
-                w,
-                name,
-                "a manifest carries no secret; the installer makes one and hands it to the partner",
+                "a webhook calls an address the manifest lists in allowed_urls: the consent shows the "
+                "shop each one",
             )
         if "json" in h:
             v.refuse(
                 w,
                 name,
-                "a webhook sends the fixed, thin body only (record type, name, event, time): your service "
-                "reads the record with its own key, which is what the shop granted it",
+                "a webhook sends the thin body (record type, name, event, time): a body of its own is a "
+                "template that can read any record without rights and send it to the address; your "
+                "service reads the record with its own key",
             )
-        extra = set(h) - {
-            "name",
-            "doctype",
-            "event",
-            "url",
-            "condition",
-            "timeout",
-            "json",
-            "secret",
-            "webhook_secret",
-        }
-        if extra:
-            v.refuse(w, name, f"keys a webhook may not carry: {sorted(extra)}")
+        if h.get("condition") and _within(h.get("doctype"), TILL_RECORDS):
+            v.refuse(
+                w,
+                name,
+                f"a webhook condition on {h.get('doctype')}, one of the till's own records, runs inside "
+                "every save of it, and an error in it stops the sale; filter in your own service",
+            )
 
 
 # ── v2 kinds ─────────────────────────────────────────────────────────────────
-
-
-def _keys(v: _V, w: str, name, obj: dict, allowed: set):
-    extra = set(obj) - allowed
-    if extra:
-        v.refuse(w, name, f"keys this kind may not carry: {sorted(extra)}")
 
 
 def _own_doctype(v: _V, dt: str) -> list:
@@ -1527,38 +973,22 @@ def _own_doctype(v: _V, dt: str) -> list:
     return [f for f in (d or {}).get("fields") or [] if isinstance(f, dict)]
 
 
+def _added_fields(v: _V, dt: str) -> list:
+    """The fields a manifest gives ``dt``: its own record type's, or the ones it adds to the shop's."""
+    added = [
+        c for c in v.m.get("custom_fields") or [] if isinstance(c, dict) and c.get("dt") == dt
+    ]
+    return _own_doctype(v, dt) + added
+
+
 def _own_fields(v: _V, dt: str) -> set:
-    return {f.get("fieldname") for f in _own_doctype(v, dt)} | STD_FIELDS
-
-
-def _filters(v: _V, w: str, name, filters, field_re=_FIELD_RE):
-    """Filters are data: [[field, operator, value], …]. Operators from a fixed list; values plain scalars."""
-    ops = {"=", "!=", ">", "<", ">=", "<=", "like", "not like", "in", "not in", "is", "between"}
-    if filters is None:
-        return
-    if not isinstance(filters, list) or any(
-        not isinstance(f, list)
-        or len(f) != 3
-        or f[1] not in ops
-        or not isinstance(f[0], str)
-        or not field_re.match(f[0])
-        or isinstance(f[2], (dict, list))
-        and f[1] not in ("in", "not in", "between")
-        for f in filters
-    ):
-        v.refuse(w, name, "filters are a list of [field, operator, value] with a plain operator")
-
-
-# P-REPORTCOLS: a report's column or filter is `field` or `table.field` — one table of the record type
-_COLUMN_RE = re.compile(r"^[a-z][a-z0-9_]{0,62}(\.[a-z][a-z0-9_]{0,62})?$")
-NUMBER_TYPES = {
-    "Int",
-    "Float",
-    "Currency",
-    "Percent",
-    "Duration",
-}  # what Desk's totals row adds
-ONE_TABLE_REASON = "a column from a table is table.field, one table per report: two tables multiply each other's rows"
+    """The fields a manifest gives ``dt``: its own record type's, or the ones it adds to the shop's."""
+    added = {
+        c.get("fieldname")
+        for c in v.m.get("custom_fields") or []
+        if isinstance(c, dict) and c.get("dt") == dt
+    }
+    return {f.get("fieldname") for f in _own_doctype(v, dt)} | added | STD_FIELDS
 
 
 def report_names(r: dict) -> list:
@@ -1577,72 +1007,9 @@ def report_tables(r: dict) -> set:
     return {c.split(".")[0] for c in report_names(r) if "." in c}
 
 
-def report_table_refusals(r: dict, dt: str, fields: list, rows) -> list:
-    """What a report reading one table owes, one rule for both homes: the checker passes a package's
-    own record type, the installer the shop's. ``fields`` are the record type's fields (fieldname, fieldtype,
-    options, permlevel); ``rows`` the names of the table's row fields, or None when they are checked elsewhere.
-    Desk's report screen names a row column by its record type alone (its field list for the report), so it joins
-    rows by parent and record type: rows two tables share would mix, a record type with a - is not read as a
-    row column, and the table field's own permission level is not checked."""
-    if len(report_tables(r)) != 1:
-        return []
-    (t,) = report_tables(r)
-    by = {f.get("fieldname"): f for f in fields if isinstance(f, dict)}
-    if (by.get(t) or {}).get("fieldtype") != "Table":
-        return [f"{t} is not a table of {dt}"]
-    rows_dt, out = by[t].get("options") or "", []
-    if any(
-        f.get("fieldtype") == "Table" and f.get("options") == rows_dt and n != t
-        for n, f in by.items()
-    ):
-        out.append(
-            f"{t}'s rows share their record type with another table of {dt}: Desk's report screen "
-            "joins rows by their record type, so it would mix them"
-        )
-    if "-" in rows_dt:
-        out.append(
-            f"Desk's report screen cannot show a column from {rows_dt}: a record type with a - in its name"
-        )
-    if by[t].get("permlevel") not in (
-        None,
-        0,
-        "0",
-        "",
-    ):  # a malformed level is refused by its own rule
-        out.append(
-            f"{t} of {dt} sits behind a permission level, which Desk's report screen does not check "
-            "for a table's rows: leave its rows out"
-        )
-    if rows is not None:
-        missing = {c.split(".")[1] for c in report_names(r) if "." in c} - set(rows) - STD_FIELDS
-        out += [f"{f} is not a field of {t}'s rows" for f in sorted(missing)]
-    if r.get("add_total_row"):
-        out += [
-            f"with a table's rows and a totals row, {c} of the document would be added once per line: "
-            "leave it out or drop the totals row"
-            for c in report_names({"columns": r.get("columns")})
-            if "." not in c and (by.get(c) or {}).get("fieldtype") in NUMBER_TYPES
-        ]
-    return out
-
-
-REPORT_KEYS = {
-    "name",
-    "ref_doctype",
-    "columns",
-    "filters",
-    "order_by",
-    "roles",
-    "add_total_row",
-    "report_type",
-}
-
-
 def _reports(v: _V):
     for i, r in enumerate(v.list_of("reports")):
         w, name = f"reports[{i}]", r.get("name")
-        v.named(w, name)
-        _keys(v, w, name, r, REPORT_KEYS)
         kind = r.get("report_type", "Report Builder")
         if kind == "Query Report":
             v.refuse(
@@ -1652,466 +1019,63 @@ def _reports(v: _V):
             )
         elif kind == "Script Report":
             v.refuse(w, name, "a script report is Python run inside the shop; use Report Builder")
-        elif kind != "Report Builder":
-            v.refuse(w, name, f"'{kind}' is not a report type a manifest may use")
-        if not isinstance(r.get("ref_doctype"), str):
-            v.refuse(w, name, "a report must name its record type (ref_doctype)")
-        cols = r.get("columns")
-        if (
-            not isinstance(cols, list)
-            or not cols
-            or any(not isinstance(c, str) or not _COLUMN_RE.match(c) for c in cols)
-        ):
-            v.refuse(w, name, "columns is a list of field names (a table's column is table.field)")
-        elif r.get("ref_doctype") in v.own and {c for c in cols if "." not in c} - _own_fields(
-            v, r["ref_doctype"]
-        ):
-            plain = {c for c in cols if "." not in c}
-            v.refuse(
-                w,
-                name,
-                f"columns not on {r['ref_doctype']}: {sorted(plain - _own_fields(v, r['ref_doctype']))}",
-            )
-        _filters(v, w, name, r.get("filters"), _COLUMN_RE)
-        if len(report_tables(r)) > 1:
-            v.refuse(w, name, ONE_TABLE_REASON)
-        elif (
-            r.get("ref_doctype") in v.own
-        ):  # the shop's record types: at install (manifest_install)
-            fields = _own_doctype(v, r["ref_doctype"])
-            t = next(iter(report_tables(r)), None)
-            rows_dt = next((f.get("options") for f in fields if f.get("fieldname") == t), None)
-            rows = _own_fields(v, rows_dt) if rows_dt in v.own else None
-            for why in report_table_refusals(r, r["ref_doctype"], fields, rows):
-                v.refuse(w, name, why)
         ob = r.get("order_by")
         if ob is not None and not (
             isinstance(ob, str) and re.match(r"^[a-z][a-z0-9_]{0,62}( (asc|desc))?$", ob)
         ):
-            v.refuse(w, name, "order_by is one field name, optionally followed by asc or desc")
+            v.refuse(
+                w,
+                name,
+                "order_by is one field name, optionally followed by asc or desc: it is written into "
+                "the report's database query",
+            )
         _roles(v, w, name, r.get("roles"))
 
 
 def _roles(v: _V, w, name, roles):
-    if roles is None:
-        return
-    if not isinstance(roles, list) or any(not isinstance(x, str) for x in roles):
-        v.refuse(w, name, "roles is a list of role names")
-    elif any(_guest(x) for x in roles):
-        v.refuse(w, name, "a manifest may not open anything to visitors who are not signed in")
-    elif any(_automatic(x) for x in roles):
-        v.refuse(w, name, AUTOMATIC_REASON)
-    elif any(_odd(x) for x in roles):
-        v.refuse(w, name, PLAIN_ROLE_REASON)
-
-
-CARD_KEYS = {
-    "name",
-    "document_type",
-    "function",
-    "aggregate_function_based_on",
-    "filters",
-    "color",
-    "type",
-    "is_public",
-    "show_percentage_stats",
-    "stats_time_interval",
-}
-CARD_FUNCTIONS = {"Count", "Sum", "Average", "Minimum", "Maximum"}
-
-
-def _number_cards(v: _V):
-    for i, c in enumerate(v.list_of("number_cards")):
-        w, name = f"number_cards[{i}]", c.get("name")
-        v.named(w, name)
-        _keys(v, w, name, c, CARD_KEYS)
-        kind = c.get("type", "Document Type")
-        if kind == "Custom":
-            v.refuse(
-                w,
-                name,
-                "a custom number card calls a server method; a manifest's card counts records",
-            )
-        elif kind != "Document Type":
-            v.refuse(
-                w,
-                name,
-                f"'{kind}' number cards are not supported by this installer; use 'Document Type'",
-            )
-        if not isinstance(c.get("document_type"), str):
-            v.refuse(w, name, "a number card must name its record type")
-        fn = c.get("function", "Count")
-        if fn not in CARD_FUNCTIONS:
-            v.refuse(w, name, f"'{fn}' is not a number-card function")
-        if (
-            fn in CARD_FUNCTIONS
-            and fn != "Count"
-            and not isinstance(c.get("aggregate_function_based_on"), str)
-        ):
-            v.refuse(
-                w,
-                name,
-                "a Sum/Average/Minimum/Maximum card names its field (aggregate_function_based_on)",
-            )
-        _named_fields(v, w, name, c, ("aggregate_function_based_on",))
-        _filters(v, w, name, c.get("filters"))
-
-
-CHART_KEYS = {
-    "name",
-    "document_type",
-    "chart_type",
-    "based_on",
-    "value_based_on",
-    "group_by_based_on",
-    "group_by_type",
-    "aggregate_function_based_on",
-    "timespan",
-    "time_interval",
-    "type",
-    "filters",
-    "color",
-    "number_of_groups",
-    "is_public",
-    "roles",
-}
-
-
-def _named_fields(v: _V, w, name, obj, keys):
-    """A field a card or chart reads: a plain field name, and on the manifest's own type one of its fields."""
-    dt = obj.get("document_type")
-    for k in keys:
-        f = obj.get(k)
-        if f is None:
-            continue
-        if (
-            not isinstance(f, str)
-            or not _FIELD_RE.match(f)
-            or (dt in v.own and f not in _own_fields(v, dt))
-        ):
-            v.refuse(w, name, f"{k} must be a field of {dt}")
+    if isinstance(roles, list) and any(_public(x) for x in roles):
+        v.refuse(w, name, PUBLIC_REASON)
 
 
 def _dashboard_charts(v: _V):
     for i, c in enumerate(v.list_of("dashboard_charts")):
-        w, name = f"dashboard_charts[{i}]", c.get("name")
-        v.named(w, name)
-        _keys(v, w, name, c, CHART_KEYS)
-        ct = c.get("chart_type")
-        if ct == "Custom":
-            v.refuse(
-                w,
-                name,
-                "a custom chart's data comes from a server method; a manifest's chart reads records",
-            )
-        elif ct == "Report":
-            v.refuse(
-                w,
-                name,
-                "a report chart is not supported by this installer; chart the record type directly",
-            )
-        elif ct not in ("Count", "Sum", "Average", "Group By"):
-            v.refuse(w, name, "chart_type is Count, Sum, Average or Group By")
-        if not isinstance(c.get("document_type"), str):
-            v.refuse(w, name, "a chart must name its record type")
-        if ct in ("Count", "Sum", "Average") and not isinstance(c.get("based_on"), str):
-            v.refuse(w, name, "a time-series chart names its date field (based_on)")
-        if ct == "Group By" and not isinstance(c.get("group_by_based_on"), str):
-            v.refuse(w, name, "a group-by chart names its field (group_by_based_on)")
-        _named_fields(
-            v,
-            w,
-            name,
-            c,
-            ("based_on", "value_based_on", "group_by_based_on", "aggregate_function_based_on"),
-        )
-        if c.get("type", "Line") not in ("Line", "Bar", "Percentage", "Pie", "Donut"):
-            v.refuse(w, name, "type is Line, Bar, Percentage, Pie or Donut")
-        _filters(v, w, name, c.get("filters"))
-        _roles(v, w, name, c.get("roles"))
-
-
-def _dashboards(v: _V):
-    charts = {c.get("name") for c in v.m.get("dashboard_charts") or [] if isinstance(c, dict)}
-    cards = {c.get("name") for c in v.m.get("number_cards") or [] if isinstance(c, dict)}
-    for i, d in enumerate(v.list_of("dashboards")):
-        w, name = f"dashboards[{i}]", d.get("name")
-        v.named(w, name)
-        _keys(v, w, name, d, {"name", "charts", "cards"})
-        if not isinstance(d.get("charts"), list) or not d["charts"]:
-            v.refuse(w, name, "a dashboard holds at least one chart")
-        for k, own in (("charts", charts), ("cards", cards)):
-            for x in d.get(k) or []:
-                if not isinstance(x, str) or x not in own:
-                    v.refuse(
-                        w,
-                        name,
-                        f"a dashboard may only hold the manifest's own {k}: '{x}' is not one",
-                    )
-
-
-LIST_KEYS = {
-    "doctype",
-    "fields",
-    "disable_count",
-    "disable_sidebar_stats",
-    "disable_comment_count",
-    "disable_auto_refresh",
-    "total_fields",
-}
-
-
-def _list_settings(v: _V):
-    for i, ls in enumerate(v.list_of("list_settings")):
-        w, dt = f"list_settings[{i}]", ls.get("doctype")
-        _keys(v, w, dt, ls, LIST_KEYS)
-        if dt not in v.own:
-            v.refuse(
-                w,
-                dt,
-                "a record type has one list setting, the shop's own; a manifest sets it on its own record "
-                "types only (show its own fields on a shop's list with in_list_view instead)",
-            )
-            continue
-        flds = ls.get("fields") or []
-        if not isinstance(flds, list) or set(flds) - _own_fields(v, dt):
-            v.refuse(w, dt, "fields is a list of the record type's own field names")
-
-
-WF_KEYS = {"name", "document_type", "states", "transitions", "send_email_alert", "override_status"}
-WF_STATE_KEYS = {
-    "state",
-    "allow_edit",
-    "update_field",
-    "update_value",
-    "style",
-    "message",
-    "doc_status",
-}
-WF_TRANSITION_KEYS = {"state", "action", "next_state", "allowed", "allow_self_approval"}
-_STATE_RE = re.compile(r"^[A-Za-z][A-Za-z0-9 \-]{0,60}$")
+        _roles(v, f"dashboard_charts[{i}]", c.get("name"), c.get("roles"))
 
 
 def _workflows(v: _V):
     for i, wf in enumerate(v.list_of("workflows")):
-        w, name = f"workflows[{i}]", wf.get("name")
-        v.named(w, name)
-        _keys(v, w, name, wf, WF_KEYS)
-        dt = wf.get("document_type")
-        if dt not in v.own:
+        w, name, dt = f"workflows[{i}]", wf.get("name"), wf.get("document_type")
+        if _within(dt, TILL_RECORDS):
             v.refuse(
                 w,
                 name,
-                "a workflow on a shop's own record type changes how every user and the till save it; a "
-                "manifest's workflows run on its own record types (approvals by workflow)",
+                f"a workflow on {dt}, one of the till's own records, would hold the till's sale or new "
+                "customer for an approval nobody at the counter gives",
             )
             continue
-        if dt in v.tables:
-            v.refuse(w, name, "a workflow runs on a record type, not a child table")
-            continue
-        states = wf.get("states")
-        if not isinstance(states, list) or len(states) < 2:
-            v.refuse(w, name, "a workflow has at least two states")
-            continue
-        names = set()
-        for j, st in enumerate(states):
-            sw = f"{w}.states[{j}]"
+        own = _own_fields(v, dt) - STD_FIELDS
+        states, trs = wf.get("states"), wf.get("transitions")
+        for j, st in enumerate(states if isinstance(states, list) else []):
             if not isinstance(st, dict):
-                v.refuse(sw, name, "a state is an object")
                 continue
-            _keys(v, sw, name, st, WF_STATE_KEYS)
-            if not isinstance(st.get("state"), str) or not _STATE_RE.match(st["state"]):
-                v.refuse(sw, name, "a state needs a plain name")
-            names.add(st.get("state"))
-            if st.get("doc_status", 0) not in (0, "0"):
+            _roles(v, f"{w}.states[{j}]", name, [st.get("allow_edit")])
+            if st.get("update_field") and st["update_field"] not in own:
                 v.refuse(
-                    sw,
+                    f"{w}.states[{j}]",
                     name,
-                    "a manifest's workflow never submits or cancels: every state keeps the record a draft "
-                    "(its record types are not submittable)",
+                    "update_field is one of the app's own fields: a workflow writes it and then submits, "
+                    "so a standard field (a warehouse, a tax, a discount) would post a figure nobody chose",
                 )
-            if not isinstance(st.get("allow_edit"), str):
-                v.refuse(sw, name, "a state names the role that may edit in it (allow_edit)")
-            elif _guest(st["allow_edit"]):
-                v.refuse(
-                    sw, name, "a manifest may not open anything to visitors who are not signed in"
-                )
-            elif _automatic(st["allow_edit"]):
-                v.refuse(sw, name, AUTOMATIC_REASON)
-            elif _odd(st["allow_edit"]):
-                v.refuse(sw, name, PLAIN_ROLE_REASON)
-            if (
-                st.get("update_field")
-                and st["update_field"] not in _own_fields(v, dt or "") - STD_FIELDS
-            ):
-                v.refuse(
-                    sw,
-                    name,
-                    "update_field must be one of the record type's own fields (never a standard one "
-                    "such as docstatus or owner)",
-                )
-        trs = wf.get("transitions")
-        if not isinstance(trs, list) or not trs:
-            v.refuse(w, name, "a workflow has at least one transition")
-            trs = []
-        for j, t in enumerate(trs):
-            tw = f"{w}.transitions[{j}]"
-            if not isinstance(t, dict):
-                v.refuse(tw, name, "a transition is an object")
-                continue
-            if "condition" in t:
-                v.refuse(
-                    tw,
-                    name,
-                    "a transition condition is an expression evaluated on the server; a manifest "
-                    "carries none (use a role per transition)",
-                )
-            _keys(v, tw, name, t, WF_TRANSITION_KEYS | {"condition"})
-            for k in ("state", "next_state"):
-                if t.get(k) not in names:
-                    v.refuse(tw, name, f"{k} '{t.get(k)}' is not one of the workflow's states")
-            if not isinstance(t.get("action"), str) or not _STATE_RE.match(t["action"]):
-                v.refuse(tw, name, "a transition needs a plain action name")
-            if not isinstance(t.get("allowed"), str) or _guest(t.get("allowed")):
-                v.refuse(tw, name, "a transition names the role allowed to take it (not Guest)")
-            elif _automatic(t["allowed"]):
-                v.refuse(tw, name, AUTOMATIC_REASON)
-            elif _odd(t["allowed"]):
-                v.refuse(tw, name, PLAIN_ROLE_REASON)
-
-
-NAMING_KEYS = {"document_type", "prefix", "prefix_digits", "priority", "conditions"}
+        for j, t in enumerate(trs if isinstance(trs, list) else []):
+            if isinstance(t, dict):
+                _roles(v, f"{w}.transitions[{j}]", name, [t.get("allowed")])
 
 
 def _naming_rules(v: _V):
     for i, n in enumerate(v.list_of("naming_rules")):
-        w, dt = f"naming_rules[{i}]", n.get("document_type")
-        _keys(v, w, dt, n, NAMING_KEYS)
-        if dt not in v.own:
-            v.refuse(
-                w,
-                dt,
-                "numbering a shop's own records — a sale's number included — is the shop's (and its "
-                "fiscal rules'); a manifest numbers its own record types only",
-            )
-        if not isinstance(n.get("prefix"), str) or not re.match(
-            r"^[A-Z0-9][A-Z0-9.\-/]{0,30}$", n["prefix"]
-        ):
-            v.refuse(w, dt, "prefix is upper-case letters, digits and . - / (e.g. 'WRC-.YYYY.-')")
-        if (
-            not isinstance(n.get("prefix_digits", 5), int)
-            or not 1 <= n.get("prefix_digits", 5) <= 10
-        ):
-            v.refuse(w, dt, "prefix_digits is 1 to 10")
-        for j, c in enumerate(n.get("conditions") or []):
-            if (
-                not isinstance(c, dict)
-                or c.get("field") not in _own_fields(v, dt or "")
-                or c.get("condition") not in ("=", "!=", ">", "<", ">=", "<=")
-                or not isinstance(c.get("value"), str)
-            ):
-                v.refuse(
-                    f"{w}.conditions[{j}]",
-                    dt,
-                    "a condition is {field (own), condition (= != > < >= <=), value}",
-                )
-
-
-def _links(v: _V):
-    for i, ln in enumerate(v.list_of("links")):
-        w, dt = f"links[{i}]", ln.get("doctype")
-        _keys(v, w, dt, ln, {"doctype", "link_doctype", "link_fieldname", "group"})
-        own_dt = ln.get("link_doctype")
-        if own_dt not in v.own or own_dt in v.tables:
-            v.refuse(
-                w,
-                dt,
-                "a Connections link lists the manifest's own records under a record (link_doctype is one "
-                "of the manifest's own record types)",
-            )
-            continue
-        d = next(d for d in v.m["doctypes"] if d.get("name") == own_dt)
-        f = next(
-            (f for f in d.get("fields") or [] if f.get("fieldname") == ln.get("link_fieldname")),
-            None,
-        )
-        if not f or f.get("fieldtype") != "Link" or f.get("options") != dt:
-            v.refuse(w, dt, f"link_fieldname must be a Link field on {own_dt} pointing at {dt}")
-
-
-def _registered_applications(v: _V):
-    for i, r in enumerate(v.list_of("registered_applications")):
-        w, name = f"registered_applications[{i}]", r.get("name")
-        v.named(w, name)
-        _keys(
-            v,
-            w,
-            name,
-            r,
-            {"name", "description", "events", "user", "application_user", "enable", "enabled"},
-        )
-        ev = r.get("events")
-        if not isinstance(ev, list) or not ev or any(not isinstance(x, str) for x in ev):
-            v.refuse(w, name, "events is a list of the record types the application follows")
-        for k in ("user", "application_user", "enable", "enabled"):
-            if k in r:
-                v.refuse(
-                    w,
-                    name,
-                    "the install makes the user the application reads as and the shop switches it on; "
-                    "a manifest installs the registration switched off",
-                )
-        # the app's own user serves one feed (the feed's door: one user, one registration)
-        if i:
-            v.refuse(
-                w,
-                name,
-                "an app has one event feed: list every record type it follows in the first one's events",
-            )
-
-
-REMOTE_KEYS = {
-    "key",
-    "label",
-    "endpoint_url",
-    "returns_message",
-    "returns_sale_attributes",
-    "timeout_seconds",
-    "partner_name",
-}
-
-
-# What the shop does and a manifest never does (the remote till key's words, kept for every kind that calls out):
-SHOP_SWITCHES = {"enabled", "consent_given", "consent_by", "consent_on"}
-SHOP_CONSENT = {"consent_fields", "consent_url"}
-
-
-def _installed_off(v: _V, w: str, name, obj: dict, what: str = "key"):
-    """A record that calls a partner's service carries no switch, consent or secret of its own. POS
-    CHANGE: a till key's consent is stamped by the site from the shop's install consent."""
-    if SHOP_SWITCHES & set(obj):
-        v.refuse(
-            w,
-            name,
-            "the site stamps the key's consent from the shop's consent to the install, and a store "
-            "switches it on in POS Studio; a manifest never sets it"
-            if what == "key"
-            else f"the shop's administrator ticks the consent and switches the {what} on; a "
-            "manifest installs it switched off, consent not given",
-        )
-    if "secret" in obj:
-        v.refuse(
-            w,
-            name,
-            "a manifest carries no secret; the installer makes one and hands it to the partner",
-        )
-    if SHOP_CONSENT & set(obj):
-        v.refuse(
-            w,
-            name,
-            "what the till sends and the consent text are the POS app's own, stamped by the server when "
-            "the shop ticks consent; a manifest declares neither",
-        )
+        why = _numbered(n.get("document_type"))
+        if why:
+            v.refuse(f"naming_rules[{i}]", n.get("document_type"), why)
 
 
 def _endpoint(v: _V, w: str, name, url):
@@ -2123,17 +1087,7 @@ def _endpoint(v: _V, w: str, name, url):
 
 def _remote_keys(v: _V):
     for i, k in enumerate(v.list_of("remote_keys")):
-        w, key = f"remote_keys[{i}]", k.get("key")
-        _installed_off(v, w, key, k)
-        _keys(v, w, key, k, REMOTE_KEYS | SHOP_SWITCHES | SHOP_CONSENT | {"secret"})
-        if not isinstance(key, str) or not re.match(r"^[a-z][a-z0-9_]{0,39}$", key):
-            v.refuse(w, key, "key is lower-case letters, digits and underscores")
-        if not isinstance(k.get("label"), str) or not 1 <= len(k["label"]) <= 24:
-            v.refuse(w, key, "label is 1 to 24 characters (it is a till button)")
-        _endpoint(v, w, key, k.get("endpoint_url"))
-        t = k.get("timeout_seconds", 3)
-        if not isinstance(t, (int, float)) or not 0 < t <= 5:
-            v.refuse(w, key, "timeout_seconds is above 0 and at most 5 (a cashier is waiting)")
+        _endpoint(v, f"remote_keys[{i}]", k.get("key"), k.get("endpoint_url"))
 
 
 # ── the shipped extension points ─────────────────────────────────────────────
@@ -2141,19 +1095,6 @@ def _remote_keys(v: _V):
 # reported word for word; these checks refuse EARLY, in words a partner reads, only what the kit itself decides: what is
 # switched on, what carries a secret, which address, which role, which record a declaration points at.
 
-# Each extension point on this product and its own time-to-answer maximum (ivendnext_mpos partner_point.POINTS
-# `timeout_max`). An extension point the product adds needs a row here before a manifest names it.
-SUB_POINTS = {
-    "desk_action": 10,
-    "page": 10,
-    "check": 10,
-    "capture": 10,
-    "doccheck": 10,
-    "fulfil": 10,
-    "price": 10,
-    # a payer answers in at most 5 seconds (the cashier waits at the tender)
-    "payer": 5,
-}
 # each extension point's answers when its service is down (`Point.down_answers`, the first the product's default)
 DOWN_ANSWERS = {
     "desk_action": ("refuse",),
@@ -2168,46 +1109,6 @@ DOWN_ANSWERS = {
     # fixed — a payer service that cannot answer means no cover
     "payer": ("no_cover",),
 }
-# The extension points a partner's sandboxed module may answer (the product's points that take a module), and those that
-# take a module only (a price cannot wait on a network). A module a till runs is at most 256 KB. An extension point the
-# product opens to modules needs a row here before a manifest names a module for it.
-MODULE_POINTS = ("check", "price")
-MODULE_ONLY = ("price",)
-TILL_MODULE_MAX = 256 * 1024
-MODULE_KEYS = {
-    "key",
-    "point",
-    "version",
-    "metered",
-    "sha256",
-    "certificate",
-    "wasm",
-    "partner_name",
-}
-# P-CHECK (partner_check.PER_SCOPE_MAX, SCOPE_SECONDS_MAX): a manifest's checks answer every POS Profile (a
-# manifest names no scope), so they all share each one; the product checks it again, with the site's other checks, when
-# the shop switches one on
-CHECKS_MAX, CHECK_SECONDS_MAX = 3, 10
-# P-CAPTURE (partner_capture.EVENTS, TIMEOUTS, GROUPS_MAX): one service per event; a scan or a quantity change answers in
-# at most 3 seconds
-CAPTURE_EVENTS = {
-    "scan": ({"event", "item_groups", "item_field"}, 3),
-    "customer_add": ({"event"}, 10),
-    "customer_select": ({"event"}, 10),
-    "qty_change": ({"event", "item_groups", "item_field"}, 3),
-}
-CAPTURE_GROUPS_MAX = 50
-SUB_KEYS = {
-    "key",
-    "point",
-    "partner_name",
-    "label",
-    "endpoint_url",
-    "timeout_seconds",
-    "sequence",
-    "transport",
-    "down_answer",
-}
 PAGE_KEYS = {
     "page_placement",
     "page_roles",
@@ -2217,176 +1118,11 @@ PAGE_KEYS = {
     "page_returns_sale_attributes",
     "page_height",
 }
-SWITCHED_OFF = "the shop switches it on; a manifest installs it switched off"
-
-
-def _strings(v: _V, w, name, obj, key):
-    x = obj.get(key)
-    if x is not None and (not isinstance(x, list) or any(not isinstance(s, str) for s in x)):
-        v.refuse(w, name, f"{key} is a list of plain values")
-
-
-def _objects(v: _V, w, name, obj, key):
-    x = obj.get(key)
-    if x is not None and (not isinstance(x, list) or any(not isinstance(s, dict) for s in x)):
-        v.refuse(w, name, f"{key} is a list of objects")
-
-
-def _base64(text) -> bytes | None:
-    if not isinstance(text, str):
-        return None
-    try:
-        return base64.b64decode(text, validate=True)
-    except (binascii.Error, ValueError):
-        return None
-
-
-def _partner(m: dict, x: dict):
-    """The partner name the installer gives a module or a service: its own, else the publisher's, else the prefix."""
-    return x.get("partner_name") or m.get("publisher") or m.get("prefix")
-
-
-def _extension_modules(v: _V):
-    """A module our certify service signed. Its bytes, its point, its version and the meters are checked here; the
-    signature is checked by the shop when it installs the module (it is our certify service's, and the shop holds
-    the key)."""
-    seen, owners = set(), set()
-    for i, e in enumerate(v.list_of("extension_modules")):
-        w, key = f"extension_modules[{i}]", e.get("key")
-        _keys(v, w, key, e, MODULE_KEYS)
-        # the shop finds a partner's modules by name, trimmed and in any case
-        partner = _partner(v.m, e)
-        if not isinstance(partner, str) or not partner.strip():
-            v.refuse(
-                w,
-                key,
-                "the module's partner name (its partner_name, else the publisher, else the prefix) is "
-                "plain text",
-            )
-        elif (e.get("point"), partner.strip().casefold()) in owners:
-            v.refuse(
-                w,
-                key,
-                "a manifest carries one module per partner and extension point: a newer version "
-                "replaces the older one when it is added",
-            )
-        else:
-            owners.add((e.get("point"), partner.strip().casefold()))
-        if not isinstance(key, str) or not re.match(r"^[a-z][a-z0-9_]{0,39}$", key):
-            v.refuse(
-                w,
-                key,
-                "key is lower-case letters, digits and underscores (a service names its module by it)",
-            )
-        elif key in seen:
-            v.refuse(w, key, "a module key is used twice")
-        seen.add(key)
-        if e.get("point") not in MODULE_POINTS:
-            v.refuse(
-                w,
-                key,
-                f"the extension point {e.get('point')} runs no module; a module answers one of: "
-                f"{', '.join(MODULE_POINTS)}",
-            )
-        version = e.get("version")
-        if isinstance(version, bool) or not isinstance(version, int) or version < 1:
-            v.refuse(
-                w, key, "version is a whole number from 1 (the version the certificate names)"
-            )
-        if e.get("metered") is not True:
-            v.refuse(w, key, "metered is true: a module a till runs must carry the kit's meters")
-        signature = _base64(e.get("certificate"))
-        if signature is None or len(signature) != 64:
-            v.refuse(
-                w,
-                key,
-                "certificate is our certify service's signature, in base64, as its certificate file "
-                "gives it (the shop checks it when it installs the module)",
-            )
-        b = _base64(e.get("wasm"))
-        if b is None:
-            v.refuse(w, key, "wasm is the module's bytes in base64")
-        elif len(b) > TILL_MODULE_MAX:
-            v.refuse(
-                w,
-                key,
-                f"the module is {len(b)} bytes; a module a till runs is at most {TILL_MODULE_MAX} bytes",
-            )
-        elif hashlib.sha256(b).hexdigest() != e.get("sha256"):
-            v.refuse(w, key, "sha256 is not the SHA-256 of the module's bytes (wasm)")
-
-
-def _module_service(v: _V, w: str, key, s: dict):
-    """A service a module this manifest carries answers: it runs inside the shop, so it has no address."""
-    point = s.get("point")
-    if not isinstance(_partner(v.m, s), str) or not _partner(v.m, s).strip():
-        v.refuse(
-            w,
-            key,
-            "the service's partner name (its partner_name, else the publisher) is plain text",
-        )
-        return
-    if "endpoint_url" in s:
-        v.refuse(
-            w, key, "a module's service runs inside the shop and has no address (endpoint_url)"
-        )
-    modules = {}
-    for e in v.m.get("extension_modules") or []:
-        if isinstance(e, dict):
-            modules.setdefault(e.get("key"), e)  # a key used twice is refused once, at its module
-    e = modules.get(s.get("module"))
-    if point not in MODULE_POINTS:
-        v.refuse(w, key, f"the {point} extension point runs no module")
-    elif e is None:
-        v.refuse(
-            w,
-            key,
-            "module names no module of this manifest (the key of one of its extension_modules)",
-        )
-    elif e.get("point") != point:
-        v.refuse(w, key, f"its module {s['module']} is for the {e.get('point')} extension point")
-    elif _partner(v.m, e) != _partner(v.m, s):
-        v.refuse(
-            w,
-            key,
-            f"its module {s['module']} is another partner's (a module's service takes its module's "
-            "partner_name)",
-        )
 
 
 def _extension_subscriptions(v: _V):
-    seen = set()
     for i, s in enumerate(v.list_of("extension_subscriptions")):
         w, key = f"extension_subscriptions[{i}]", s.get("key")
-        _installed_off(v, w, key, s, "service")
-        if "scope" in s:
-            v.refuse(
-                w,
-                key,
-                "the shop chooses which stores' tills a service answers (scope); a manifest's service "
-                "answers every store until the shop narrows it",
-            )
-        point = s.get("point")
-        transport = s.get("transport", "remote")
-        if transport not in ("remote", "wasm"):
-            v.refuse(
-                w,
-                key,
-                "transport is remote (a partner's https address) or wasm (a module this manifest "
-                "carries)",
-            )
-        elif transport == "remote" and "module" in s:
-            v.refuse(
-                w, key, "the service names a module, so its transport is wasm (it has no address)"
-            )
-        elif transport == "remote" and point in MODULE_ONLY:
-            v.refuse(
-                w,
-                key,
-                f"the {point} extension point takes a module only (a price cannot wait on a network)",
-            )
-        elif transport == "wasm":
-            _module_service(v, w, key, s)
         if "max_discount_percent" in s:
             v.refuse(
                 w,
@@ -2394,194 +1130,16 @@ def _extension_subscriptions(v: _V):
                 "the most a module may take off a line is the shop's to set: a manifest's service is "
                 "installed at 0 and the shop raises it",
             )
-        if s.get("may_approve"):
-            v.refuse(
-                w,
-                key,
-                "the shop decides whether a manager may approve past a check (it needs the shop's own "
-                "approvers); a manifest installs it off",
-            )
-        _keys(
-            v,
-            w,
-            key,
-            s,
-            SUB_KEYS
-            | PAGE_KEYS
-            | SHOP_SWITCHES
-            | SHOP_CONSENT
-            | {"secret", "scope", "module", "may_approve", "max_discount_percent"}
-            # a document check names its record type and fields there (the product checks them); a pricing
-            # module reads its own configuration there
-            | (
-                {"settings"}
-                if point in ("check", "capture", "doccheck", "fulfil", "price", "payer")
-                else set()
-            ),
-        )
-        if not isinstance(key, str) or not re.match(r"^[a-z][a-z0-9_]{0,39}$", key):
-            v.refuse(
-                w,
-                key,
-                "key is lower-case letters, digits and underscores (a Desk action names its service by it)",
-            )
-        elif key in seen:
-            v.refuse(w, key, "a subscription key is used twice")
-        seen.add(key)
-        if point not in SUB_POINTS:
-            v.refuse(
-                w,
-                key,
-                f"point is one of the extension points on this product: {', '.join(SUB_POINTS)}",
-            )
-        elif point != "page" and PAGE_KEYS & set(s):
-            v.refuse(w, key, "the page_… settings belong to a page subscription")
-        if not isinstance(s.get("label"), str) or not 1 <= len(s["label"].strip()) <= 40:
-            v.refuse(w, key, "label is 1 to 40 characters")
-        if transport != "wasm":
+        if s.get("transport", "remote") != "wasm":
             _endpoint(v, w, key, s.get("endpoint_url"))
-        top = SUB_POINTS.get(point, 10)
-        if point == "check" and "settings" in s:
-            _check_settings(v, w, key, s.get("settings"), transport)
-        if point == "capture":
-            top = _capture_settings(v, w, key, s.get("settings"))
-        if point == "fulfil":
-            _fulfil_settings(v, w, key, s.get("settings"))
-        if point == "payer":
+        if s.get("point") == "payer":
             _payer_settings(v, w, key, s.get("settings"))
-        if not _seconds(s.get("timeout_seconds", min(3, top)), top):
-            v.refuse(
-                w,
-                key,
-                f"timeout_seconds is above 0 and at most {top} (the extension point's own limit)",
-            )
-        down = s.get("down_answer")
-        if down is not None and point in DOWN_ANSWERS and down not in DOWN_ANSWERS[point]:
-            # the product's own sentence (partner_point.validate_subscription)
-            v.refuse(
-                w,
-                key,
-                f"When the service is down, this extension point can only: {', '.join(DOWN_ANSWERS[point])}.",
-            )
         _roles(v, w, key, s.get("page_roles"))
-    subs = [s for s in v.m.get("extension_subscriptions") or [] if isinstance(s, dict)]
-    checks = [s for s in subs if s.get("point") == "check"]
-    if len(checks) > CHECKS_MAX:
-        v.refuse(
-            "extension_subscriptions",
-            None,
-            f"At most {CHECKS_MAX} checks may answer one POS Profile.",
-        )
-    elif (
-        all(_seconds(s.get("timeout_seconds", 3), SUB_POINTS["check"]) for s in checks)
-        and sum(s.get("timeout_seconds", 3) for s in checks) > CHECK_SECONDS_MAX
-    ):  # a bad one is refused on its own
-        v.refuse(
-            "extension_subscriptions",
-            None,
-            f"The checks of one POS Profile may take at most {CHECK_SECONDS_MAX} seconds together.",
-        )
-    events = {}
-    for s in subs:
-        ev = (
-            (s.get("settings") or {}).get("event")
-            if s.get("point") == "capture" and isinstance(s.get("settings"), dict)
-            else None
-        )
-        if ev in CAPTURE_EVENTS and ev in events:
-            v.refuse(
-                "extension_subscriptions",
-                s.get("key"),
-                f"{events[ev]} already answers {ev} for these POS Profiles. One service answers each.",
-            )
-        events.setdefault(ev, s.get("key"))
-
-
-def _seconds(t, top) -> bool:
-    return isinstance(t, (int, float)) and not isinstance(t, bool) and 0 < t <= top
-
-
-def _capture_settings(v: _V, w, key, settings) -> int:
-    """P-CAPTURE's settings, in the product's own sentences (``partner_capture.validate_subscription``); the most
-    seconds the event allows. What needs the site (an item group, an Item field) the product checks at insert.
-    """
-    event = settings.get("event") if isinstance(settings, dict) else None
-    if event not in CAPTURE_EVENTS:
-        v.refuse(
-            w,
-            key,
-            "Name the event in the settings: scan, customer_add, customer_select or qty_change.",
-        )
-        return 10
-    known, top = CAPTURE_EVENTS[event]
-    if "page" in settings:
-        # a page subscription's name is the shop's record id, minted at its own install: a package cannot know it
-        v.refuse(
-            w,
-            key,
-            "A package cannot name a page in a capture's settings. The shop sets page after the install.",
-        )
-    elif set(settings) - known:
-        v.refuse(
-            w,
-            key,
-            f"The settings of a {event} capture may only carry: {', '.join(sorted(known))}.",
-        )
-    elif event in ("scan", "qty_change"):
-        groups, field = settings.get("item_groups") or [], settings.get("item_field") or ""
-        if not isinstance(groups, list) or any(not isinstance(g, str) for g in groups):
-            v.refuse(w, key, "item_groups must be a list of item group names.")
-        elif len(groups) > CAPTURE_GROUPS_MAX:
-            v.refuse(w, key, f"A {event} capture names at most {CAPTURE_GROUPS_MAX} item groups.")
-        elif not isinstance(field, str):
-            v.refuse(w, key, "item_field must be the name of one field on Item.")
-        elif not groups and not field:
-            v.refuse(
-                w,
-                key,
-                f"Say which items a {event} capture asks about: item groups, an item field, or both.",
-            )
-    return top
-
-
-def _check_settings(v: _V, w, key, settings, transport) -> None:
-    """The one setting a check may carry: the sale details its answer may fill
-    (``partner_check._validate_fill_list``; the site's sale details are checked by the
-    product at insert). What a check is sent stays the extension point's own."""
-    if not isinstance(settings, dict) or set(settings) != {"fill_attributes"}:
-        v.refuse(
-            w,
-            key,
-            "a check's settings carry only fill_attributes (the sale details its answer may "
-            "fill): what it is sent is the extension point's own",
-        )
-        return
-    names = settings["fill_attributes"]
-    if (
-        not isinstance(names, list)
-        or not 1 <= len(names) <= 10
-        or any(not isinstance(n, str) or not n.strip() for n in names)
-        or len(set(names)) != len(names)
-    ):
-        v.refuse(w, key, "fill_attributes must list 1 to 10 different sale details")
-    if transport == "wasm":
-        v.refuse(
-            w,
-            key,
-            "a partner module cannot fill a sale detail: a fill is checked again on the server, "
-            "which a till offline cannot do",
-        )
 
 
 def _payer_settings(v: _V, w, key, settings) -> None:
-    """The payer settings a manifest may carry: the prescription's sale details and the
-    bill-back role (``partner_payer.validate_subscription``; the site's sale details and
-    roles are checked by the product at insert). The clearing mode is the shop's: its
-    account is on the shop's own books."""
-    if settings is None:
-        return
+    """The clearing mode is the shop's: its account is on the shop's own books."""
     if not isinstance(settings, dict):
-        v.refuse(w, key, "The extension point's settings must be a JSON object.")
         return
     if "clearing_mode" in settings:
         v.refuse(
@@ -2590,74 +1148,7 @@ def _payer_settings(v: _V, w, key, settings) -> None:
             "the clearing mode is the shop's to pick (its account is on the shop's books): a "
             "manifest installs the payer service without one",
         )
-    if set(settings) - {"prescription", "bill_back_role", "clearing_mode"}:
-        v.refuse(
-            w,
-            key,
-            "The settings of a payer service may only carry: bill_back_role, clearing_mode, "
-            "prescription.",
-        )
-    rx = settings.get("prescription") or {}
-    if not isinstance(rx, dict) or set(rx) - {"reference", "prescriber", "prescriber_licence"}:
-        v.refuse(
-            w,
-            key,
-            "prescription names up to three sale details: reference, prescriber, "
-            "prescriber_licence.",
-        )
-    elif any(not isinstance(n, str) or not n.strip() for n in rx.values()):
-        v.refuse(w, key, "each prescription detail is the name of one sale detail")
-    role = settings.get("bill_back_role")
-    if role is not None and (not isinstance(role, str) or not role.strip()):
-        v.refuse(w, key, "bill_back_role is the name of one role")
-    elif role is not None:
-        _roles(v, w, key, [role])
-
-
-def _fulfil_settings(v: _V, w, key, settings) -> None:
-    """P-FULFIL's settings: the scan capture's filter, in the product's own sentences
-    (``partner_fulfil.validate_subscription``); the site's item groups and fields are
-    checked by the product at insert."""
-    if not isinstance(settings, dict):
-        settings = {}
-    groups, field = settings.get("item_groups") or [], settings.get("item_field") or ""
-    if set(settings) - {"item_groups", "item_field"}:
-        v.refuse(
-            w, key, "The settings of a fulfil service may only carry: item_field, item_groups."
-        )
-    elif not isinstance(groups, list) or any(not isinstance(g, str) for g in groups):
-        v.refuse(w, key, "item_groups must be a list of item group names.")
-    elif len(groups) > CAPTURE_GROUPS_MAX:
-        v.refuse(w, key, f"A fulfil service names at most {CAPTURE_GROUPS_MAX} item groups.")
-    elif not isinstance(field, str):
-        v.refuse(w, key, "item_field must be the name of one field on Item.")
-    elif not groups and not field:
-        v.refuse(
-            w, key, "Say which items a fulfil service makes: item groups, an item field, or both."
-        )
-
-
-# a Desk action's input types: the product's own list (ivendnext_mpos desk_action.INPUT_TYPES, pinned equal by a POS
-# test); any other type is refused when the installer inserts the action, after the shop consented. The action's other
-# rules (its placement, the label, menu and confirm lengths) and an input's (its field name, label, choices, link
-# target, how many) are the product's own, refused at install
-DESK_INPUT_TYPES = ("Data", "Int", "Float", "Date", "Select", "Link", "Check", "Small Text")
-DESK_KEYS = {
-    "record_type",
-    "label",
-    "group",
-    "placement",
-    "service",
-    "roles",
-    "on_draft",
-    "on_submitted",
-    "on_cancelled",
-    "states",
-    "conditions",
-    "inputs",
-    "confirm_text",
-    "send_fields",
-}
+    _roles(v, w, key, [settings.get("bill_back_role")])
 
 
 def _desk_actions(v: _V):
@@ -2668,11 +1159,6 @@ def _desk_actions(v: _V):
     }
     for i, a in enumerate(v.list_of("desk_actions")):
         w, label = f"desk_actions[{i}]", a.get("label")
-        if "enabled" in a:
-            v.refuse(w, label, SWITCHED_OFF)
-        _keys(v, w, label, a, DESK_KEYS | {"enabled"})
-        if not isinstance(a.get("record_type"), str):
-            v.refuse(w, label, "a Desk action names its record type")
         if a.get("service") not in services:
             v.refuse(
                 w,
@@ -2681,17 +1167,6 @@ def _desk_actions(v: _V):
                 "desk_action extension point (the installer makes the subscription first)",
             )
         _roles(v, w, label, a.get("roles"))
-        _strings(v, w, label, a, "states")
-        _objects(v, w, label, a, "conditions")
-        _objects(v, w, label, a, "inputs")
-        for j, inp in enumerate(a.get("inputs") if isinstance(a.get("inputs"), list) else []):
-            t = inp.get("fieldtype") if isinstance(inp, dict) else None
-            if t is not None and t not in DESK_INPUT_TYPES:
-                v.refuse(
-                    f"{w}.inputs[{j}]",
-                    label,
-                    f"an input's fieldtype is one of {', '.join(DESK_INPUT_TYPES)}",
-                )
 
 
 RULE_KEYS = {
@@ -2739,295 +1214,20 @@ RULE_KEYS = {
 def _save_rules(v: _V):
     for i, r in enumerate(v.list_of("save_rules")):
         w, name = f"save_rules[{i}]", r.get("rule_name")
-        v.named(w, name)
-        if "enabled" in r:
-            v.refuse(w, name, SWITCHED_OFF)
-        _keys(v, w, name, r, RULE_KEYS | {"enabled"})
-        if not isinstance(r.get("record_type"), str):
-            v.refuse(w, name, "a save rule names its record type")
         _roles(v, w, name, r.get("bypass_roles"))
         v.no_script(
             f"{w}.message", name, r.get("message")
         )  # the product shows it as the refusal, unescaped
-        _strings(v, w, name, r, "states")
-        _strings(v, w, name, r, "locked_fields")
-        _strings(v, w, name, r, "scope_fields")
-        _objects(v, w, name, r, "conditions")
-
-
-# ── the scan and field declarations ──────────────────────────────────────────
-# P-SCAN: a Retail Scan Source is data, read by the till's scan on a miss (ivendnext_mpos business_logic/scan_source.py
-# validate_source). The product's own sentences where the kit can tell from the manifest alone (a source over
-# the manifest's own table); a shop table's fields the product checks at insert, and that refusal comes back word for word.
-SCAN_KEYS = {
-    "source_name",
-    "record_type",
-    "barcode_field",
-    "item_from",
-    "batch_from",
-    "serial_from",
-    "status_field",
-    "available_values",
-    "warehouse_field",
-    "capture_as",
-    "sequence",
-}
-SCAN_LINKS = {
-    "item_from": "Item",
-    "batch_from": "Batch",
-    "serial_from": "Serial No",
-    "warehouse_field": "Warehouse",
-}
-
-
-def _scan_sources(v: _V):
-    for i, src in enumerate(v.list_of("scan_sources")):
-        w, name = f"scan_sources[{i}]", src.get("source_name")
-        v.named(w, name)
-        if "enabled" in src:
-            v.refuse(w, name, SWITCHED_OFF)
-        _keys(v, w, name, src, SCAN_KEYS | {"enabled"})
-        dt, code, item = src.get("record_type"), src.get("barcode_field"), src.get("item_from")
-        if not all(isinstance(x, str) and x for x in (dt, code, item)):
-            v.refuse(
-                w,
-                name,
-                "a scan source names the table its codes are kept in (record_type), the code field "
-                "(barcode_field) and the field linking to Item (item_from)",
-            )
-            continue
-        _strings(v, w, name, src, "available_values")
-        mine = next(
-            (d for d in v.m.get("doctypes") or [] if isinstance(d, dict) and d.get("name") == dt),
-            None,
-        )
-        if mine is not None:
-            fields = {
-                f.get("fieldname"): f for f in mine.get("fields") or [] if isinstance(f, dict)
-            }
-
-            def field(fn):
-                if fn not in fields:
-                    v.refuse(w, name, f"{dt} has no field {fn}.")
-                return fields.get(fn)
-
-            if code != "name" and (f := field(code)) and not f.get("unique"):
-                v.refuse(w, name, f"Set {code} unique on {dt} first, so one code names one unit.")
-            for k, target in SCAN_LINKS.items():
-                fn = src.get(k)
-                if (
-                    fn
-                    and fn != "parent"
-                    and (f := field(fn))
-                    and (f.get("fieldtype") != "Link" or f.get("options") != target)
-                ):
-                    v.refuse(w, name, f"{fn} must link to {target}.")
-            if src.get("status_field"):
-                field(src["status_field"])
-        if src.get("status_field") and not src.get("available_values"):
-            v.refuse(w, name, "Name at least one status a unit can be sold in.")
-        if src.get("capture_as") and not src.get("status_field"):
-            v.refuse(
-                w,
-                name,
-                "Recording the code needs a status field, so a returned unit can be sold again.",
-            )
-
-
-# P-FIELDS: rows of a till theme's field rules (Retail POS Theme Field on a named Retail POS Theme; ivendnext_mpos
-# business_logic/pos_fields.py SURFACES, validate_field_rules), in the product's own sentences. A rule has no
-# switch: it reaches every till on that theme at its next start, which the install's todo says. ⚠ A copy of the product's
-# allow-lists — a defect here is a defect there: report it with a Kit defect issue.
-FIELD_SURFACES = {
-    "customer_create": (
-        None,
-        {
-            "customer_name": ("relabel",),
-            "phone": ("hide", "relabel", "require"),
-            "email": ("hide", "relabel", "require"),
-            "more_details": ("hide",),
-        },
-    ),
-    "customer_card": (
-        "Customer",
-        {
-            "phone": ("hide",),
-            "member_since": ("hide", "relabel"),
-            "lifetime": ("hide", "relabel"),
-            "visits": ("hide", "relabel"),
-            "points": ("hide", "relabel"),
-        },
-    ),
-    "cart_line": (
-        "Item",
-        {
-            "item_name": ("relabel",),
-            "qty": ("relabel",),
-            # v3: the line's money figures, relabel only (list_price: shown)
-            "price": ("relabel",),
-            "discount": ("relabel",),
-            "amount": ("relabel",),
-        },
-    ),
-    "item_result": ("Item", {"item_code": ("hide", "relabel")}),
-    "sale_details": (
-        None,
-        None,
-    ),  # its fields are the shop's active sale details: hide or relabel (the product checks)
-    # the receipt, show only — up to three Item fields under each line
-    "receipt_preview": ("Item", {}),
-    # v3: the online basket's totals words, relabel only
-    "totals": (
-        None,
-        {
-            "discount": ("relabel",),
-            "charges": ("relabel",),
-            "delivery": ("relabel",),
-            "tax": ("relabel",),
-            "grand_total": ("relabel",),
-        },
-    ),
-}
-# v3: the figure `show` draws beside the line (no Item field, no cap), and every
-# rule whose label sits beside money — its label carries no digit, % or currency sign. ⚠ The
-# checker runs without the site, so it reads the symbol characters only; the product also
-# refuses the site's own letter signs (the rand's R) at save.
-FIELD_SHOWN_FIGURES = {("cart_line", "list_price")}
-FIELD_MONEY = {("cart_line", f) for f in ("price", "discount", "amount", "list_price")} | {
-    ("totals", f) for f in FIELD_SURFACES["totals"][1]
-}
-FIELD_MONEY_LABEL = "A money label can't carry a digit, a % or a currency sign: the figure beside it is the till's."
-
-
-def _money_label(label: str) -> bool:
-    return any(
-        c == "%" or unicodedata.category(c) == "Sc" or unicodedata.category(c).startswith("N")
-        for c in label
-    )
-
-
-# the product's words for a receipt rule other than show (pos_fields.validate_field_rules)
-FIELD_RECEIPT_ONLY_SHOW = (
-    "On the receipt a rule can only show an item field. Money, tax and the receipt's own "
-    "lines print as they are."
-)
-FIELD_ACTIONS = ("hide", "relabel", "require", "show")
-FIELD_LABEL_MAX, FIELD_SHOW_MAX = 40, 3
-# ``show`` on ``customer_create`` asks for one of the app's own Customer fields at
-# customer add and edit (pos_fields.INPUT_SURFACE / INPUT_MAX); the product checks the field
-FIELD_INPUT_SURFACE, FIELD_INPUT_MAX = "customer_create", 3
-FIELD_RULE_KEYS = {"theme", "surface", "field", "action", "label", "language", "sequence"}
-
-
-def _field_rules(v: _V):
-    actions, seen, shown = {}, set(), {}
-    for i, r in enumerate(v.list_of("field_rules")):
-        w = f"field_rules[{i}]"
-        theme, surface, field, action = (
-            r.get("theme"),
-            r.get("surface"),
-            r.get("field"),
-            r.get("action"),
-        )
-        _keys(v, w, field, r, FIELD_RULE_KEYS)
-        if not isinstance(theme, str) or not theme.strip():
-            v.refuse(
-                w,
-                field,
-                "a field rule names its till theme (theme): the shop's Retail POS Theme it is added to",
-            )
-            continue
-        v.no_script(f"{w}.label", field, r.get("label"))
-        if surface not in FIELD_SURFACES:
-            v.refuse(w, field, f"{surface} is not a till screen field rules apply to.")
-            continue
-        if action not in FIELD_ACTIONS:
-            v.refuse(w, field, f"{action} is not a field action.")
-            continue
-        if not isinstance(field, str) or not field.strip():
-            v.refuse(w, field, "Name the field each rule applies to.")
-            continue
-        if actions.setdefault((theme, surface, field), action) != action:
-            v.refuse(w, field, f"{field} on {surface} has two different rules. Keep one.")
-            continue
-        key = (theme, surface, field, r.get("language") if action in ("relabel", "show") else None)
-        if key in seen:
-            v.refuse(w, field, f"{field} on {surface} has the same rule twice.")
-            continue
-        seen.add(key)
-        label = r.get("label")
-        if isinstance(label, str) and len(label.strip()) > FIELD_LABEL_MAX:
-            v.refuse(w, field, f"A label is at most {FIELD_LABEL_MAX} characters.")
-        elif action == "relabel" and not (isinstance(label, str) and label.strip()):
-            v.refuse(w, field, f"Give {field} its new label.")
-        elif isinstance(label, str) and (surface, field) in FIELD_MONEY and _money_label(label):
-            v.refuse(w, field, FIELD_MONEY_LABEL)
-        doctype, named = FIELD_SURFACES[surface]
-        if action == "show" and (surface, field) in FIELD_SHOWN_FIGURES:
-            continue
-        if action == "show" and doctype and (surface, field) in FIELD_MONEY:
-            v.refuse(w, field, f"{field} on {surface} can't take this rule.")
-            continue
-        if action == "show" and surface == FIELD_INPUT_SURFACE:
-            shown.setdefault((theme, FIELD_INPUT_SURFACE), set()).add(field)
-            continue
-        if action == "show":
-            if not doctype:
-                v.refuse(w, field, f"Nothing more can be shown on {surface}.")
-            else:
-                shown.setdefault((theme, doctype), set()).add(field)
-            continue
-        if surface == "receipt_preview":
-            v.refuse(w, field, FIELD_RECEIPT_ONLY_SHOW)
-            continue
-        if named is None:
-            allowed = ("hide", "relabel")
-        else:
-            allowed = named.get(field, ())
-        if action not in allowed:
-            if action == "hide" and "relabel" in allowed:
-                v.refuse(w, field, f"{field} can't be hidden: the sale needs it.")
-            else:
-                v.refuse(w, field, f"{field} on {surface} can't take this rule.")
-    for (theme, doctype), fields in shown.items():
-        if doctype == FIELD_INPUT_SURFACE:
-            if len(fields) > FIELD_INPUT_MAX:
-                v.refuse(
-                    "field_rules",
-                    theme,
-                    f"Up to {FIELD_INPUT_MAX} customer fields can be asked for. This theme "
-                    f"asks for {len(fields)}.",
-                )
-            continue
-        if len(fields) > FIELD_SHOW_MAX:
-            v.refuse(
-                "field_rules",
-                theme,
-                f"Up to {FIELD_SHOW_MAX} more {doctype} fields can be shown. This theme "
-                f"shows {len(fields)}.",
-            )
 
 
 FISCAL_DT = "POS Invoice"
 OUTSIDE_SERVICE = "Outside service"  # ivendnext_mpos fiscal_app_reader.OUTSIDE_SERVICE
-FISCAL_KEYS = {
-    "source",
-    "status_field",
-    "ref_field",
-    "qr_field",
-    "signature_field",  # the authority's seal, beside its QR
-    "status_map",
-    "writer_role",
-    "writer_level",
-    "writer_users",
-}
 # signature_field joins the result keys, optional like qr_field
 RESULT_KEYS = ("status_field", "ref_field", "qr_field", "signature_field")
 OPTIONAL_RESULT_KEYS = ("qr_field", "signature_field")
 # the QR and seal fields hold text (fiscal_app_reader.MARK_TEXT_TYPES,
 # less Code: FIELD_TYPES lets no manifest make a Code field)
 MARK_TEXT_TYPES = ("Data", "Small Text", "Text", "Long Text")
-FISCAL_FIELD_KEYS = {"permlevel", "no_copy"}  # set on a reader's result fields only
 
 
 def _result_fields(m) -> set:
@@ -3041,43 +1241,13 @@ def _result_fields(m) -> set:
 
 
 def _fiscal_readers(v: _V):
-    readers = v.list_of("fiscal_readers")
-    if len(readers) > 1:
-        v.refuse(
-            "fiscal_readers",
-            None,
-            "one fiscal reader per site: the reader is named by its source, and a "
-            "manifest's source is the outside service",
-        )
     own = {
         c.get("fieldname"): c
         for c in v.m.get("custom_fields") or []
         if isinstance(c, dict) and c.get("dt") == FISCAL_DT
     }
-    for i, r in enumerate(readers[:1]):
+    for i, r in enumerate(v.list_of("fiscal_readers")):
         w, role = f"fiscal_readers[{i}]", r.get("writer_role")
-        if "enabled" in r:
-            v.refuse(
-                w,
-                role,
-                "the shop switches the reader on once its writer rule holds; a manifest installs it "
-                "switched off",
-            )
-        if "companies" in r:
-            v.refuse(
-                w,
-                role,
-                "the reader serves the shop's own company (one per site); the installer names it",
-            )
-        if r.get("source", OUTSIDE_SERVICE) != OUTSIDE_SERVICE:
-            v.refuse(
-                w,
-                role,
-                f"a manifest carries no code, so its reader reads an outside service ('{OUTSIDE_SERVICE}'); "
-                "an installed fiscal app declares its own reader",
-            )
-        _keys(v, w, role, r, FISCAL_KEYS | {"enabled", "companies"})
-        v.named(f"{w}.writer_role", role)
         level = r.get("writer_level")
         if not isinstance(level, int) or isinstance(level, bool) or not 1 <= level <= 9:
             v.refuse(
@@ -3107,226 +1277,6 @@ def _fiscal_readers(v: _V):
                     f"{k} '{fn}' is a field of type {own[fn].get('fieldtype')}: the receipt prints the QR and "
                     f"the seal from text, so the field is one of {', '.join(MARK_TEXT_TYPES)}",
                 )
-        sm = r.get("status_map")
-        if (
-            not isinstance(sm, list)
-            or not sm
-            or any(not isinstance(x, dict) or set(x) != {"source_value", "status"} for x in sm)
-        ):
-            v.refuse(w, role, "status_map is a list of {source_value, status} rows")
-        users = r.get("writer_users", [])
-        if (
-            not isinstance(users, list)
-            or len(set(map(str, users))) != len(users)
-            or any(
-                not isinstance(u, str) or not re.match(r"^[a-z][a-z0-9_]{0,19}$", u) for u in users
-            )
-        ):
-            v.refuse(
-                w,
-                role,
-                "writer_users is a list of short keys (lower-case letters, digits, underscores); the "
-                "installer makes one integration user per key, with no API key (the shop makes it)",
-            )
-
-
-# ── P-LABEL's layout record ─────────────────────────────────────────────────
-# A Retail Label Layout is data, filled on the server (ivendnext_mpos business_logic/label_print.py validate_layout).
-# ⚠ A copy of the product's rules — a defect here is a defect there: report it with a Kit defect issue. The product runs
-# the record's own validate at insert as well, and that refusal comes back word for word.
-LABEL_KINDS = ("html", "zpl")
-LABEL_PLACEHOLDERS = (
-    "item_code",
-    "item_name",
-    "barcode",
-    "barcode_svg",
-    "price",
-    "currency",
-    "uom",
-    "batch_no",
-    "expiry_date",
-    "manufacturing_date",
-    "weight",
-    "unit_price",
-    "store",
-)
-# A template may name up to three of the item's fields and one line detail; whether the
-# field exists, has a type the till shows and the detail is an active attribute is the product's
-# check at insert (it reads the site)
-LABEL_ITEM_FIELDS_MAX, LABEL_LINE_DETAILS_MAX = 3, 1
-LABEL_UNKNOWN_TOKEN_PATTERN = (
-    r"\{(?!(?:"
-    + "|".join(LABEL_PLACEHOLDERS)
-    + r"|item\.[a-z][a-z0-9_]{0,139}|detail\.[^{}]+)\})[^{}]*\}"
-)
-LABEL_SIZE_MM, LABEL_PER_ROW_MAX, LABEL_TEMPLATE_MAX = (10, 150), 10, 20000
-LABEL_KEYS = {"label_name", "kind", "width_mm", "height_mm", "per_row", "template"}
-_LABEL_TOKEN_RE = re.compile(r"\{([^{}]*)\}")
-
-
-def _label_ci(word: str) -> str:
-    return "".join(f"[{c.upper()}{c.lower()}]" for c in word)
-
-
-LABEL_ACTIVE_PATTERN = (
-    r"<\s*/?\s*(?:"
-    + "|".join(
-        _label_ci(t)
-        for t in (
-            "script",
-            "iframe",
-            "frameset",
-            "frame",
-            "object",
-            "embed",
-            "link",
-            "meta",
-            "base",
-            "form",
-        )
-    )
-    + r")\b"
-    r"|" + _label_ci("javascript") + r"\s*:"
-    r"|(?<![A-Za-z0-9_-])" + _label_ci("on") + r"[A-Za-z]+\s*="
-)
-
-
-def _label_layouts(v: _V):
-    import html as _html
-
-    for i, lay in enumerate(v.list_of("label_layouts")):
-        w, name = f"label_layouts[{i}]", lay.get("label_name")
-        v.named(w, name)
-        if "enabled" in lay:
-            v.refuse(w, name, SWITCHED_OFF)
-        _keys(v, w, name, lay, LABEL_KEYS | {"enabled"})
-        if lay.get("kind", "html") not in LABEL_KINDS:
-            v.refuse(w, name, f"a label layout's kind is one of {', '.join(LABEL_KINDS)}")
-        t = lay.get("template")
-        if not isinstance(t, str) or not t.strip():
-            v.refuse(w, name, "A label layout needs a template.")
-            continue
-        if len(t) > LABEL_TEMPLATE_MAX:
-            v.refuse(w, name, f"A label template holds at most {LABEL_TEMPLATE_MAX} characters.")
-        if "{{" in t or "{%" in t:
-            v.refuse(w, name, "A label template takes placeholders like {item_name}, not code.")
-            continue
-        if lay.get("kind") == "zpl":
-            if not (t.strip().startswith("^XA") and t.strip().endswith("^XZ")):
-                v.refuse(w, name, "A zpl label template starts with ^XA and ends with ^XZ.")
-            if "{barcode_svg}" in t:
-                v.refuse(
-                    w,
-                    name,
-                    "A zpl label template draws its barcode with the printer's own barcode command over "
-                    "{barcode}, not {barcode_svg}.",
-                )
-        unknown = sorted({x[1:-1] for x in re.findall(LABEL_UNKNOWN_TOKEN_PATTERN, t)})
-        if unknown:
-            v.refuse(
-                w, name, f"{', '.join('{' + x + '}' for x in unknown)} is not a label placeholder."
-            )
-        tokens = _LABEL_TOKEN_RE.findall(t)
-        fields = {x for x in tokens if x.startswith("item.")}
-        details = {x for x in tokens if x.startswith("detail.")}
-        if len(fields) > LABEL_ITEM_FIELDS_MAX:
-            v.refuse(
-                w, name, f"A label prints at most {LABEL_ITEM_FIELDS_MAX} of the item's fields."
-            )
-        if len(details) > LABEL_LINE_DETAILS_MAX:
-            v.refuse(w, name, "A label prints one line detail.")
-        if re.search(LABEL_ACTIVE_PATTERN, re.sub(r"[\t\r\n]", "", _html.unescape(t))):
-            v.refuse(
-                w, name, "A label template cannot hold scripts, frames, forms or event handlers."
-            )
-        lo, hi = LABEL_SIZE_MM
-        for key in ("width_mm", "height_mm"):
-            n = lay.get(key)
-            if not isinstance(n, (int, float)) or isinstance(n, bool) or not lo <= n <= hi:
-                v.refuse(w, name, f"{key} must be between {lo} and {hi} mm.")
-        per = lay.get("per_row", 1)
-        if not isinstance(per, int) or isinstance(per, bool) or not 1 <= per <= LABEL_PER_ROW_MAX:
-            v.refuse(w, name, f"Labels per row must be between 1 and {LABEL_PER_ROW_MAX}.")
-
-
-# ── P-LISTMARK's list mark ──────────────────────────────────────────────────
-# A Retail List Mark is data the POS app's Desk script draws as a list row's label (ivendnext_mpos
-# business_logic/list_mark.py validate_mark). ⚠ A copy of the product's rules that need no site — a defect here is a
-# defect there: report it with a Kit defect issue. The rules that read the site (the record type is not submitted and
-# has no workflow; it has each field, none a password or long text) are the product's own, refused at install word
-# for word.
-LIST_MARK_COLOURS = ("green", "blue", "orange", "red", "gray", "purple")
-LIST_MARK_OPERATORS = ("=", "!=", ">", ">=", "<", "<=", "is set", "is not set")
-LIST_MARK_LABEL_MAX, LIST_MARK_CONDITIONS_MAX, LIST_MARKS_MAX = 24, 3, 5
-LIST_MARK_KEYS = {"record_type", "label", "colour", "sequence", "conditions"}
-_LIST_MARK_MARKUP_RE = re.compile("[<>&\"'`]")
-
-
-def _list_mark_conditions(v: _V, w: str, label, conds):
-    if not isinstance(conds, list) or not 1 <= len(conds) <= LIST_MARK_CONDITIONS_MAX:
-        v.refuse(w, label, f"Give one to {LIST_MARK_CONDITIONS_MAX} conditions.")
-        return
-    for j, c in enumerate(conds):
-        cw = f"{w}.conditions[{j}]"
-        if not isinstance(c, dict):
-            v.refuse(cw, label, "a condition is an object: field, operator, value")
-            continue
-        _keys(v, cw, label, c, {"field", "operator", "value"})
-        if not isinstance(c.get("field"), str) or not c["field"]:
-            v.refuse(cw, label, "a condition names its field")
-        if c.get("operator") not in LIST_MARK_OPERATORS:
-            v.refuse(
-                cw, label, f"a condition's operator is one of {', '.join(LIST_MARK_OPERATORS)}"
-            )
-        value = c.get("value")
-        if value is not None and (
-            not isinstance(value, (str, int, float)) or isinstance(value, bool)
-        ):
-            v.refuse(cw, label, "a condition's value is a plain value")
-        elif c.get("operator") in (">", ">=", "<", "<="):
-            try:
-                float(value)
-            except (TypeError, ValueError):
-                v.refuse(cw, label, f"A condition with {c['operator']} needs a number.")
-
-
-def _list_marks(v: _V):
-    per: dict[str, int] = {}
-    seen: set = set()
-    for i, mk in enumerate(v.list_of("list_marks")):
-        w, label = f"list_marks[{i}]", mk.get("label")
-        if "enabled" in mk:
-            v.refuse(w, label, SWITCHED_OFF)
-        _keys(v, w, label, mk, LIST_MARK_KEYS | {"enabled"})
-        dt = mk.get("record_type")
-        if not isinstance(dt, str) or not dt:
-            v.refuse(w, label, "a list mark names its record type")
-        elif dt != dt.strip():
-            # the record stores it trimmed; the uninstall matches it as written
-            v.refuse(w, label, "The record type has no space before or after it.")
-        else:
-            per[dt] = per.get(dt, 0) + 1
-        if isinstance(dt, str) and isinstance(label, str):
-            if (dt, label) in seen:
-                # an update matches a mark by its record type and label: one OR is one label
-                v.refuse(w, label, "two marks on one record type need two labels")
-            seen.add((dt, label))
-        if isinstance(label, str) and label != label.strip():
-            # the record stores it trimmed; the uninstall matches the label as written
-            v.refuse(w, label, "The label has no space before or after it.")
-        elif not isinstance(label, str) or not 1 <= len(label.strip()) <= LIST_MARK_LABEL_MAX:
-            v.refuse(w, label, f"The label must be 1 to {LIST_MARK_LABEL_MAX} characters.")
-        elif _LIST_MARK_MARKUP_RE.search(label):
-            v.refuse(w, label, "The label is plain text: it cannot hold < > & \" ' or `.")
-        if mk.get("colour") not in LIST_MARK_COLOURS:
-            v.refuse(w, label, f"Choose one of the colours: {', '.join(LIST_MARK_COLOURS)}.")
-        seq = mk.get("sequence", 10)
-        if not isinstance(seq, int) or isinstance(seq, bool):
-            v.refuse(w, label, "sequence is a whole number")
-        _list_mark_conditions(v, w, label, mk.get("conditions"))
-    for dt, n in per.items():
-        if n > LIST_MARKS_MAX:
-            v.refuse("list_marks", dt, f"{dt} holds at most {LIST_MARKS_MAX} marks.")
 
 
 # ── the register books ───────────────────────────────────────────────────────
@@ -3389,13 +1339,6 @@ REGISTER_DATE_COLUMNS = (
 )
 REGISTER_OPERATORS = ("=", "!=", ">", ">=", "<", "<=", "is set", "is not set")
 REGISTER_CONDITIONS_MAX = 3
-REGISTER_NUMBERING = ("book_store", "book_store_item")
-REGISTER_CORRECTIONS = (
-    "reversing_line",
-    "dated_note",
-    "signed_strike_through",
-    "signed_amendment",
-)
 REGISTER_PERIOD_MONTHS = (1, 2, 3, 4, 6, 12)
 # what a book is kept on: its printed pages · this system · the authority's own numbered
 # book · the authority's own system, the shop's lines then a working register
@@ -3403,173 +1346,14 @@ REGISTER_MEDIA = ("printed_book", "system_of_record", "official_book", "regulato
 # what a print may show beside the line's own columns, worked out when it prints (never routed on,
 # never required): the balance before a line
 REGISTER_PRINT_COLUMNS = ("balance_before",)
-BOOK_KEYS = {
-    "book",
-    "title",
-    "data_set",
-    "cite",
-    "certified",
-    "enabled",
-    "medium",
-    "numbering",
-    "balance",
-    "correction",
-    "retention_years",
-    "period_months",
-    "return_due_days",
-    "count_role",
-    "count_witness",
-    "loss_count_hours",
-    "items",
-    "class_source",
-    "conditions",
-    "required",
-    "columns",
-    "details",
-    "authority",
-    "columns_from",
-}
-_BOOK_RE = re.compile(r"^[a-z][a-z0-9_]{0,60}(\.[a-z][a-z0-9_]{0,60})?$")
-_DATA_SET_RE = re.compile(r"^[a-z][a-z0-9_]{0,60}$")
 
 
-def _flag(v) -> bool:
-    return isinstance(v, int) and not isinstance(v, bool) and v in (0, 1)
-
-
-def _register_condition_refusals(conds, details: dict) -> list[str]:
-    if not isinstance(conds, list) or len(conds) > REGISTER_CONDITIONS_MAX:
-        return [f"Give at most {REGISTER_CONDITIONS_MAX} conditions."]
-    out = []
-    for c in conds:
-        if not isinstance(c, dict) or set(c) - {"field", "operator", "value"}:
-            out.append("a condition is an object: field, operator, value")
-            continue
-        field, op = c.get("field"), c.get("operator")
-        if field not in REGISTER_COLUMNS:
-            out.append(f"a condition names {field}, which is not a register column")
-        if op not in REGISTER_OPERATORS:
-            out.append(f"a condition's operator is one of {', '.join(REGISTER_OPERATORS)}")
-            continue
-        dated = field in REGISTER_DATE_COLUMNS or (details.get(field) or {}).get("type") == "Date"
-        if dated and op not in ("is set", "is not set"):
-            out.append(f'{field} is a date: a condition on it uses "is set" or "is not set"')
-        elif op not in ("is set", "is not set") and (
-            c.get("value") is None or isinstance(c.get("value"), (bool, dict, list))
-        ):
-            out.append(f"The condition on {field} needs a plain value.")
-        elif op in (">", ">=", "<", "<="):
-            try:
-                float(c.get("value"))
-            except (TypeError, ValueError):
-                out.append(f"A condition with {op} needs a number.")
-    return out
-
-
-def _register_books(v: _V):
-    seen: set = set()
-    for i, b in enumerate(v.list_of("register_books")):
-        w, name = f"register_books[{i}]", b.get("book")
-        if "register_stores" in b:
-            v.refuse(
-                w,
-                name,
-                "register_stores is the shop's own setup, mapped on its Desk; a manifest does not carry it",
-            )
-        _keys(v, w, name, b, BOOK_KEYS | {"register_stores"})
-        if not isinstance(name, str) or not _BOOK_RE.match(name):
-            v.refuse(w, name, "book is the book's id: lower-case words, optionally data_set.book")
-        elif name in seen:
-            v.refuse(w, name, "two books with one id")
-        seen.add(name)
-        if not isinstance(b.get("data_set"), str) or not _DATA_SET_RE.match(b["data_set"]):
-            v.refuse(w, name, "data_set is the id of the set of books, lower-case words")
-        for key in ("title", "cite", "count_role"):
-            if not isinstance(b.get(key), str) or not b[key].strip():
-                v.refuse(w, name, f"a book names its {key}")
-            v.no_script(f"{w}.{key}", name, b.get(key))
-        for key in ("enabled", "certified", "balance"):
-            if not _flag(b.get(key)):
-                v.refuse(w, name, f"{key} is 0 or 1")
-        if "count_witness" in b and not _flag(b["count_witness"]):
-            v.refuse(w, name, "count_witness is 0 or 1")
-        if b.get("numbering") not in REGISTER_NUMBERING:
-            v.refuse(w, name, f"numbering is {' or '.join(REGISTER_NUMBERING)}")
-        if "medium" in b and b["medium"] not in REGISTER_MEDIA:
-            v.refuse(w, name, f"medium is one of {', '.join(REGISTER_MEDIA)}")
-        if b.get("correction") not in REGISTER_CORRECTIONS:
-            v.refuse(w, name, f"correction is one of {', '.join(REGISTER_CORRECTIONS)}")
-        if (
-            not isinstance(b.get("retention_years"), int)
-            or isinstance(b.get("retention_years"), bool)
-            or b["retention_years"] < 1
-        ):
-            v.refuse(w, name, "retention_years is a whole number of years, at least 1")
-        if ("period_months" in b) != ("return_due_days" in b):
-            v.refuse(w, name, "period_months and return_due_days: both or neither")
-        elif "period_months" in b and (
-            b["period_months"] not in REGISTER_PERIOD_MONTHS
-            or not isinstance(b["return_due_days"], int)
-            or b["return_due_days"] < 0
-        ):
-            v.refuse(
-                w,
-                name,
-                "a period is 1, 2, 3, 4, 6 or 12 months, its return due 0 or more days after",
-            )
-        items = b.get("items")
-        if (
-            not isinstance(items, dict)
-            or len(items) != 1
-            or set(items) - {"classes", "item_groups"}
-        ):
-            v.refuse(w, name, "items names classes or item_groups, one of the two")
-        elif not isinstance(next(iter(items.values())), list) or not next(iter(items.values())):
-            v.refuse(w, name, "items lists at least one class or item group")
-        elif "classes" in items and not isinstance(b.get("class_source"), dict):
-            v.refuse(w, name, "a book that takes classes names its class_source")
-        details = b.get("details") if isinstance(b.get("details"), dict) else {}
-        if "details" in b and not isinstance(b["details"], dict):
-            v.refuse(w, name, "details maps detail_1 … detail_6 to a label and a source")
-        for slot, d in details.items():
-            if slot not in REGISTER_DETAILS or not isinstance(d, dict):
-                v.refuse(w, name, f"{slot} is not a detail slot (detail_1 … detail_6)")
-            else:
-                v.no_script(f"{w}.details.{slot}", name, d.get("label"))
-        for r in _register_condition_refusals(b.get("conditions", []), details):
-            v.refuse(f"{w}.conditions", name, r)
-        req = b.get("required", [])
-        if not isinstance(req, list) or any(k not in REGISTER_COLUMNS for k in req):
-            v.refuse(w, name, "required lists register columns")
-        else:
-            for k in req:
-                d = details.get(k) if isinstance(details.get(k), dict) else {}
-                if k in REGISTER_DETAILS and not (
-                    d.get("pos_sale_detail") or d.get("desk_field") or d.get("record")
-                ):
-                    v.refuse(w, name, f"{k} is required but has no source to fill it.")
-        cols = b.get("columns")
-        if not isinstance(cols, list) or not cols:
-            v.refuse(w, name, "a book prints at least one column")
-        else:
-            for col in cols:
-                if (
-                    not isinstance(col, dict)
-                    or not isinstance(col.get("label"), str)
-                    or not isinstance(col.get("value"), list)
-                    or not col["value"]
-                    or any(
-                        k not in REGISTER_COLUMNS + REGISTER_PRINT_COLUMNS for k in col["value"]
-                    )
-                    or not isinstance(col.get("group", "-"), str)
-                    or not col.get("group", "-").strip()
-                ):
-                    v.refuse(w, name, "a column is a label and the register columns it prints")
-                    break
-                v.no_script(f"{w}.columns", name, col.get("label"))
-        for key in ("authority", "columns_from", "class_source"):
-            if key in b and not isinstance(b[key], dict):
-                v.refuse(w, name, f"{key} is an object")
+def _translations(v: _V):
+    for i, t in enumerate(v.list_of("translations")):
+        words = t.get("words")
+        for source, text in words.items() if isinstance(words, dict) else ():
+            v.no_script(f"translations[{i}]", t.get("language"), source)
+            v.no_script(f"translations[{i}]", t.get("language"), text)
 
 
 def warnings(m) -> list[dict]:
@@ -3579,10 +1363,15 @@ def warnings(m) -> list[dict]:
     out = []
     if not isinstance(m, dict):
         return out
+    out += [
+        {"what": "unknown_kind", "where": k, "text": f"'{k}' is not a kind this product installs"}
+        for k in m
+        if k not in KINDS and k not in TOP_KEYS and k not in REFUSED_KINDS
+    ]
     # print formats warn with or without fiscal readers
     pf = _print_format_warnings(m)
     if not isinstance(m.get("fiscal_readers"), list):
-        return pf
+        return out + pf
     own = {
         c.get("fieldname"): c
         for c in m.get("custom_fields") or []
@@ -3639,15 +1428,11 @@ def validate(m) -> list[dict]:
     if not isinstance(m, dict):
         return [{"where": "", "name": None, "reason": "a manifest is a JSON object"}]
     v = _V(m)
-    if m.get("manifest_version") not in VERSIONS:
-        v.refuse(
-            "manifest_version",
-            None,
-            f"this installer reads manifest_version {' or '.join(map(str, VERSIONS))}",
-        )
     if not isinstance(m.get("prefix"), str) or not _PREFIX_RE.match(m["prefix"]):
         v.refuse(
-            "prefix", m.get("prefix"), "the prefix is one to three upper-case words, e.g. 'PP BLN'"
+            "prefix",
+            m.get("prefix"),
+            "the prefix is one to three upper-case words, e.g. 'PP BLN' (the app's own fields start with it)",
         )
     elif m["prefix"].split()[0] in RESERVED_PREFIX_WORDS:
         v.refuse(
@@ -3675,51 +1460,16 @@ def validate(m) -> list[dict]:
     for k in m:
         if k in REFUSED_KINDS:
             v.refuse(k, None, REFUSED_KINDS[k])
-        elif k in WAITING_KINDS:
-            v.refuse(k, None, WAITING_KINDS[k])
-        elif k in POINT_KINDS:
-            point, spec = POINT_KINDS[k]
-            v.refuse(
-                k,
-                None,
-                f"'{k}' is a declaration the '{point}' extension point reads; it is refused until the "
-                f"'{point}' extension point has shipped on this site ({spec})",
-            )
-        elif k in KINDS_V2 and m.get("manifest_version") != 2:
-            v.refuse(k, None, f"'{k}' needs manifest_version 2")
-        elif k not in TOP_KEYS:
-            v.refuse(k, None, f"'{k}' is not a kind a manifest may carry")
     if "allowed_urls" in m and (
         not isinstance(m["allowed_urls"], list)
         or any(not isinstance(u, str) or not _URL_RE.match(u) for u in m["allowed_urls"])
     ):
-        v.refuse("allowed_urls", None, "allowed_urls is a list of plain http(s) addresses")
-    v2 = (
-        (
-            _reports,
-            _number_cards,
-            _dashboard_charts,
-            _dashboards,
-            _list_settings,
-            _workflows,
-            _naming_rules,
-            _links,
-            _registered_applications,
-            _remote_keys,
-            _extension_modules,
-            _extension_subscriptions,
-            _desk_actions,
-            _save_rules,
-            _fiscal_readers,
-            _scan_sources,
-            _field_rules,
-            _label_layouts,
-            _list_marks,
-            _register_books,
+        v.refuse(
+            "allowed_urls",
+            None,
+            "allowed_urls is a list of plain http(s) addresses: the consent shows the shop each one",
         )
-        if m.get("manifest_version") == 2
-        else ()
-    )
+    _keyed(v)
     for check in (
         _doctypes,
         _custom_fields,
@@ -3729,9 +1479,16 @@ def validate(m) -> list[dict]:
         _workspaces,
         _sale_attributes,
         _webhooks,
-        *v2,
-        _singles,
-        _limited_in_templates,
+        _reports,
+        _dashboard_charts,
+        _workflows,
+        _naming_rules,
+        _remote_keys,
+        _extension_subscriptions,
+        _desk_actions,
+        _save_rules,
+        _fiscal_readers,
+        _translations,
     ):
         check(v)
     return v.out

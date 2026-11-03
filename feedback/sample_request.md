@@ -1,6 +1,6 @@
 # Sample request — ask for a worked example, or a manifest installed
 
-**For:** an iVendNext Partner, a licensed customer's IT team or the CitiXsys Consulting Team who has placed a need on the ladder but cannot find a sample close enough to start from, or who has a manifest to be installed on a sandbox. These forms are for onboarded members ([who can file](README.md)). **Reference:** the samples ([`../samples/`](../samples/)), the customer archetypes in guide chapter 15 ([Customer archetypes](../guide/15_customer_archetypes.md)) and the blueprint ([`../kit/blueprint.md`](../kit/blueprint.md)).
+**For:** an iVendNext Partner, a licensed customer's IT team or the CitiXsys Consulting Team who has placed a need on the ladder but cannot find a sample close enough to start from, or who has a manifest to be installed on a sandbox. These forms are for onboarded members ([who can file](README.md)). **Reference:** the samples ([`../samples/`](../samples/)), the customer archetypes in guide chapter 15 ([Customer archetypes](../needs/README.md)) and the blueprint ([`../kit/blueprint.md`](../kit/blueprint.md)).
 
 A sample is a small, complete, working example of one pattern, with its recipe and tests, run on our own bench. A request that names the pattern is the one that moves a sample up the order.
 
@@ -28,7 +28,7 @@ What you need: <A worked example | An installed manifest>
 
 ## What we may ask you next, in the issue
 
-The doors the sample would use · the nearest customer archetype in guide chapter 15 and how yours differs · your blueprint and the rows it would serve · your language and stack · whether money is nearby · the size (stores, tills, the busiest hour) · the test you would want it to ship with · where you will use it.
+The doors the sample would use · your blueprint and the rows it would serve · your language and stack · whether money is nearby · the size (stores, tills, the busiest hour) · the test you would want it to ship with · where you will use it.
 
 ## What happens after you send it
 

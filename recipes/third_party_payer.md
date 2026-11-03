@@ -6,7 +6,7 @@ the till, and **claims** the rest from the payer afterwards. This recipe keeps t
 a payer service that answers the POS app's **payer** extension point, and keeps everything the retailer must see (payers, plans,
 members, claims, remittances) as records in the retailer's iVendNext. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
-**The door:** the payer extension point (`payer/1`), in the POS app from version 2.1.0.666 ([the payer page](../contracts/pages/payer.md)).
+**The door:** the payer extension point (`payer/1`), in the POS app ([the payer page](../contracts/pages/payer.md)).
 The page is the contract; this recipe is the order to build it in.
 
 **Reference implementation:** [`samples/s43_third_party_payer/`](../samples/s43_third_party_payer/README.md) —
@@ -44,7 +44,7 @@ use the till's own *On Account* tender instead: there is nothing to split.
    - **Desk buttons** (`desk_actions` with `extension_subscriptions` of point `desk_action`): build claims, make
      the claims file, match a remittance, bill a rejected claim back;
    - **the feed registration** (`registered_applications`) on POS Invoice and Sales Invoice.
-2. **Declare the payer service** in `extension_subscriptions`, installed switched off:
+2. **Declare the payer service** in `extension_subscriptions`:
 
    ```json
    {"key": "payer", "point": "payer", "label": "Insurer co-pay", "endpoint_url": "https://your.server/payer",
@@ -61,14 +61,14 @@ use the till's own *On Account* tender instead: there is nothing to split.
      (a pharmacy counter app's sale details, for example), so leave it out where none is installed. Changing it
      changes the consent text, and the calls stop until the administrator ticks consent again.
    - `bill_back_role` is the role that may bill a claim back (empty: the shop's accounts role).
-   - ⛔ **No `clearing_mode`.** It is the shop's own, picked at switch-on; the kit's checker refuses it in a manifest
+   - ⛔ **No `clearing_mode`.** It is the customer's own. The service stays off until the customer names it; the kit's checker refuses it in a manifest
      (*"the clearing mode is the shop's to pick"*).
-3. **The shop's set-up before switch-on** (tell the retailer's administrator, payer page §2): an enabled **Custom**
+3. **The customer's set-up, which switches the payer on** (tell the retailer's administrator, payer page §2): an enabled **Custom**
    mode of payment with no tender discount, minimum, maximum, over-tender, counting at the close or rounding, whose
    account in each company is its own open balance-sheet account in the company's currency (not a receivable,
    payable, bank, cash, stock or temporary one); that mode on each of the service's POS Profiles' payment methods with **Allow in Returns**
    ticked, and never as the default. Name it for what it is, such as *Billed to payer*: the posted invoice lists
-   it among its payments. Then the subscription's clearing mode, consent, and the switch. One payer service per
+   it among its payments. Then the customer names that mode as the subscription's clearing mode, and the payer is on. One payer service per
    POS Profile.
 4. **Answer `covers`** (a signed POST, `{"point": "payer/1", "context": …}`, payer page §3.1): every cover the
    customer holds today, each with your `member` reference, the payer's `payer_customer` (its Customer record on
@@ -90,7 +90,7 @@ use the till's own *On Account* tender instead: there is nothing to split.
    answer and each line's shares (payer page §4b). On each booked sale the feed names, read the POS Invoice (never
    the posted Sales Invoice, which may merge several sales), then the `Retail Payer Record` it names in
    `custom_mpos_payer_record`, with your integration user, and make its claim. A submitted sale whose record has an
-   empty `journal` is no claim: its day's closing was cancelled after it was booked, on a shop that posts each sale at once (from POS version 2.1.0.667 a posted sale's own cancel is refused while its Sales Invoice stands, and cancelling that invoice cancels the sale with it).
+   empty `journal` is no claim: its day's closing was cancelled after it was booked, on a shop that posts each sale at once (a posted sale's own cancel is refused while its Sales Invoice stands, and cancelling that invoice cancels the sale with it).
 7. **A return gives your share back, never the customer** (payer page §4c): the till's Returns works out each
    returned line's share and books a `Return` journal. Read the return from the feed, then its payer record, and
    reduce the claim's lines by each record line's `back`, once.

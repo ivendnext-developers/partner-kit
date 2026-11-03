@@ -152,7 +152,7 @@
   {
    "added": 0,
    "choices": [],
-   "description": "Some extension points only. Scan: {\"event\": \"scan\", \"item_groups\": [\"Restricted\"]}; a quantity change: the same with \"qty_change\". Customer: {\"event\": \"customer_add\"} or \"customer_select\". A partner's code (fulfil): {\"item_groups\": [\"Vouchers\"]}.",
+   "description": "Some extension points only. Scan: {\"event\": \"scan\", \"item_groups\": [\"Restricted\"]}; a quantity change: the same with \"qty_change\". Customer: {\"event\": \"customer_add\"} or \"customer_select\". A partner's code (fulfil): {\"item_groups\": [\"Vouchers\"]}. A check that fills sale details: {\"fill_attributes\": [\"Rx Date\"]}.",
    "fieldname": "settings",
    "hidden": 0,
    "label": "Settings for this extension point",
@@ -388,6 +388,6 @@
    ]
   }
  },
- "why": "contract desk_action; contract partner_capture; contract partner_check; contract partner_fulfil; contract partner_page; contract payer; contract price; guide chapter 09; recipe call_centre_orders; recipe configure_no_code; recipe desk_action; recipe expiry_markdown; recipe optical_prescriptions; recipe rule_guard",
+ "why": "contract desk_action; contract partner_capture; contract partner_check; contract partner_fulfil; contract partner_page; contract payer; contract price; guide chapter 09; recipe call_centre_orders; recipe configure_no_code; recipe desk_action; recipe expiry_markdown; recipe rule_guard; the kit's tool deploy; the kit's tool sandbox_check",
  "written_elsewhere": ""
 }

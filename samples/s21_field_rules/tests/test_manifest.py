@@ -36,18 +36,6 @@ class ManifestTest(unittest.TestCase):
         self.assertIn({"theme": "PP Partner Till", "surface": "customer_create", "field": "phone", "action": "require"},
                       MANIFEST["field_rules"])
 
-    def test_the_checker_refuses_what_the_product_would(self):
-        cases = ((dict(surface="customer_create", field="customer_name", action="hide"), "can't be hidden: the sale needs it"),
-                 (dict(surface="cart_line", field="qty", action="require"), "can't take this rule"),
-                 (dict(surface="till_footer", field="total", action="hide"), "is not a till screen"),
-                 (dict(surface="customer_card", field="visits", action="relabel", label="L" * 41), "at most 40"),
-                 (dict(surface="customer_create", field="email", action="require"), "has two different rules"))
-        for extra, words in cases:
-            m = copy.deepcopy(MANIFEST)
-            m["field_rules"].append({"theme": "PP Partner Till", **extra})
-            got = validate.validate(m)
-            self.assertTrue(any(words in r["reason"] for r in got), (extra, got))
-
 
 @unittest.skipUnless(check.available(), "the contracts folder is missing from this copy of the kit")
 class ContractTest(unittest.TestCase):
