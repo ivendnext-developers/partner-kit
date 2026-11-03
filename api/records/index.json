@@ -24,7 +24,7 @@
    "slug": "sales_invoice",
    "submittable": 1,
    "tables": 10,
-   "why": "openapi.yaml; api/validate.sh; guide chapter 02; recipe bulk_reads; recipe customer_history_page; recipe price_checker; recipe print_pack; recipe project_quotes; recipe repairs_by_serial; recipe webhook_receiver; sample S1; sample S2; sample S24; sample S28; sample S29; sample S3; sample S30; sample S32; sample S39; sample S40; sample S41; sample S43; sample S45; sample S56; sample S60; sample S61; sample S62; the MCP server; the feed client; the kit's tool manifest; the kit's tool moneykit; the kit's tool scale_profile; the kit's tool selfcheck; the request collection; retail core"
+   "why": "openapi.yaml; api/validate.sh; recipe bulk_reads; recipe customer_history_page; recipe price_checker; recipe print_pack; recipe project_quotes; recipe repairs_by_serial; recipe webhook_receiver; sample S1; sample S2; sample S24; sample S28; sample S29; sample S3; sample S30; sample S32; sample S39; sample S40; sample S41; sample S43; sample S45; sample S56; sample S60; sample S61; sample S62; the MCP server; the feed client; the kit's tool manifest; the kit's tool moneykit; the kit's tool scale_profile; the kit's tool selfcheck; the request collection; retail core"
   },
   {
    "area": "Sales and returns",
@@ -64,7 +64,7 @@
    "slug": "retail_payer_record",
    "submittable": 0,
    "tables": 1,
-   "why": "contract payer"
+   "why": "contract payer; recipe third_party_payer; sample S43"
   },
   {
    "area": "Till sales",
@@ -74,7 +74,7 @@
    "slug": "pos_invoice",
    "submittable": 1,
    "tables": 19,
-   "why": "openapi.yaml; contract event_feed; contract fiscal_reader; guide chapter 01c; guide chapter 05; guide chapter 10; recipe customer_history_page; recipe duty_free_allowance; recipe event_feed; recipe front_of_house; recipe gift_card_on_spend; recipe loyalty_provider; recipe lucky_draw; recipe money_kit; recipe portal; recipe post_sale_feedback; recipe project_quotes; recipe receipt_format; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe webhook_receiver; sample S1; sample S13; sample S2; sample S22; sample S25; sample S27; sample S28; sample S3; sample S30; sample S32; sample S36; sample S39; sample S4; sample S40; sample S41; sample S42; sample S43; sample S44; sample S45; sample S49; sample S52; sample S53; sample S55; sample S58; sample S60; sample S61; sample S62; sample S7; sample S9; site/pages/starters.md; the MCP server; the feed client; the kit's tool manifest; the kit's tool moneykit; the kit's tool scale_profile; the kit's tool selfcheck; the request collection; retail core"
+   "why": "openapi.yaml; contract event_feed; contract fiscal_reader; guide chapter 01c; guide chapter 10; recipe customer_history_page; recipe duty_free_allowance; recipe event_feed; recipe front_of_house; recipe gift_card_on_spend; recipe loyalty_provider; recipe lucky_draw; recipe portal; recipe post_sale_feedback; recipe project_quotes; recipe receipt_format; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe webhook_receiver; sample S1; sample S13; sample S2; sample S22; sample S25; sample S27; sample S28; sample S3; sample S30; sample S32; sample S36; sample S39; sample S4; sample S40; sample S41; sample S42; sample S43; sample S44; sample S45; sample S49; sample S52; sample S53; sample S55; sample S58; sample S60; sample S61; sample S62; sample S7; sample S9; site/pages/starters.md; the MCP server; the feed client; the kit's tool manifest; the kit's tool moneykit; the kit's tool scale_profile; the kit's tool selfcheck; the request collection; retail core"
   },
   {
    "area": "Till sales",
@@ -114,7 +114,7 @@
    "slug": "retail_open_check",
    "submittable": 0,
    "tables": 1,
-   "why": "guide chapter 07"
+   "why": "retail core"
   },
   {
    "area": "Till sales",
@@ -124,7 +124,7 @@
    "slug": "retail_floor_section",
    "submittable": 0,
    "tables": 0,
-   "why": "guide chapter 07; recipe front_of_house; recipe guest_ordering; sample S55; sample S56"
+   "why": "recipe front_of_house; recipe guest_ordering; sample S55"
   },
   {
    "area": "Till sales",
@@ -134,7 +134,7 @@
    "slug": "retail_floor_place",
    "submittable": 0,
    "tables": 0,
-   "why": "guide chapter 07; recipe front_of_house; recipe guest_ordering; sample S55; sample S56"
+   "why": "recipe front_of_house; recipe guest_ordering; sample S55; sample S56"
   },
   {
    "area": "Items",
@@ -144,7 +144,7 @@
    "slug": "item",
    "submittable": 0,
    "tables": 11,
-   "why": "openapi.yaml; api/README.md; card price-list-with-photos; card products-on-promotion-colour; contract fields; contract list_mark; contract package_install; contract print_template_readers; guide chapter 02; guide chapter 07; recipe age_check; recipe bulk_reads; recipe consignment_payouts; recipe duty_free_allowance; recipe guest_ordering; recipe integration_user; recipe liquor_excise_returns; recipe optical_prescriptions; recipe print_pack; recipe repairs_by_serial; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe unit_codes; sample S1; sample S11; sample S14; sample S16; sample S18; sample S19; sample S2; sample S23; sample S25; sample S27; sample S29; sample S3; sample S30; sample S36; sample S37; sample S38; sample S39; sample S40; sample S42; sample S43; sample S45; sample S5; sample S52; sample S53; sample S54; sample S56; sample S58; sample S61; sample S62; sample S7; sample S8; the MCP server; the feed client; the kit's tool app_template; the kit's tool moneykit; the kit's tool selfcheck; the kit's tool sign_in; the request collection; retail core"
+   "why": "openapi.yaml; api/README.md; card price-list-with-photos; card products-on-promotion-colour; contract fields; contract list_mark; contract package_install; contract print_template_readers; guide chapter 07; recipe age_check; recipe bulk_reads; recipe consignment_payouts; recipe duty_free_allowance; recipe guest_ordering; recipe integration_user; recipe liquor_excise_returns; recipe optical_prescriptions; recipe print_pack; recipe repairs_by_serial; recipe restaurant_back_office; recipe stock_alerts; recipe system_sync; recipe unit_codes; sample S1; sample S14; sample S16; sample S18; sample S19; sample S2; sample S23; sample S25; sample S27; sample S29; sample S3; sample S30; sample S36; sample S37; sample S38; sample S39; sample S40; sample S42; sample S43; sample S45; sample S5; sample S52; sample S53; sample S54; sample S56; sample S58; sample S61; sample S62; sample S7; sample S8; the MCP server; the feed client; the kit's tool app_template; the kit's tool moneykit; the kit's tool selfcheck; the kit's tool sign_in; the request collection; retail core"
   },
   {
    "area": "Items",
@@ -184,7 +184,7 @@
    "slug": "item_price",
    "submittable": 0,
    "tables": 0,
-   "why": "card price-list-with-photos; contract print_template_readers; guide chapter 01c; guide chapter 07; recipe ai_manager; recipe approvals; recipe approvals_stores; recipe derived_price_lists; recipe estate_rollout; recipe expiry_markdown; recipe print_pack; recipe system_sync; sample S10; sample S11; sample S14; sample S23; sample S26; sample S29; sample S30; sample S38; sample S43; sample S5; sample S52; sample S7; sample S8; the kit's tool moneykit; the kit's tool selfcheck; retail core"
+   "why": "card price-list-with-photos; contract print_template_readers; guide chapter 01c; recipe ai_manager; recipe approvals_stores; recipe derived_price_lists; recipe estate_rollout; recipe expiry_markdown; recipe print_pack; recipe system_sync; sample S10; sample S14; sample S23; sample S26; sample S29; sample S30; sample S38; sample S43; sample S5; sample S52; sample S7; sample S8; the kit's tool moneykit; the kit's tool selfcheck; retail core"
   },
   {
    "area": "Prices and price lists",
@@ -194,7 +194,7 @@
    "slug": "price_list",
    "submittable": 0,
    "tables": 1,
-   "why": "card price-list-with-photos; guide chapter 07; recipe approvals; recipe estate_rollout; sample S11; sample S14; sample S23; sample S24; sample S26; sample S29; sample S38; sample S43; sample S52; sample S8; retail core"
+   "why": "card price-list-with-photos; recipe estate_rollout; sample S14; sample S23; sample S24; sample S26; sample S29; sample S38; sample S43; sample S52; sample S8; retail core"
   },
   {
    "area": "Prices and price lists",
@@ -214,7 +214,7 @@
    "slug": "customer",
    "submittable": 0,
    "tables": 5,
-   "why": "openapi.yaml; contract fields; contract package_install; contract save_rules; recipe alteration_tickets; recipe click_and_collect; recipe customer_code_check; recipe customer_history_page; recipe donation_intake; recipe front_of_house; recipe loyalty_provider; recipe manifest; recipe optical_prescriptions; recipe print_pack; recipe repairs_by_serial; recipe save_rules; sample S16; sample S18; sample S22; sample S24; sample S25; sample S28; sample S29; sample S32; sample S33; sample S39; sample S40; sample S41; sample S42; sample S43; sample S44; sample S46; sample S47; sample S48; sample S49; sample S5; sample S50; sample S52; sample S53; sample S55; sample S57; sample S58; sample S60; the MCP server; the feed client; the kit's tool manifest; the request collection; retail core"
+   "why": "openapi.yaml; contract fields; contract package_install; contract save_rules; recipe alteration_tickets; recipe click_and_collect; recipe customer_code_check; recipe customer_history_page; recipe donation_intake; recipe front_of_house; recipe loyalty_provider; recipe manifest; recipe optical_prescriptions; recipe print_pack; recipe repairs_by_serial; recipe save_rules; sample S16; sample S22; sample S24; sample S25; sample S28; sample S39; sample S40; sample S41; sample S42; sample S43; sample S44; sample S47; sample S48; sample S49; sample S5; sample S52; sample S53; sample S55; sample S57; sample S58; sample S60; the MCP server; the feed client; the kit's tool manifest; the request collection; retail core"
   },
   {
    "area": "Customers and groups",
@@ -224,7 +224,7 @@
    "slug": "customer_group",
    "submittable": 0,
    "tables": 2,
-   "why": "guide chapter 04; recipe configure_no_code; recipe coupon_rules; recipe customer_code_check; recipe customer_owned_loyalty; recipe customers_by_store; recipe gift_card_on_spend; recipe lucky_draw; recipe payment_method_rules; recipe required_sale_details; recipe rule_guard; sample S18; sample S22; sample S25; sample S31; sample S32; sample S44; sample S46; sample S47; sample S48; sample S5; sample S50; retail core"
+   "why": "guide chapter 04; recipe configure_no_code; recipe coupon_rules; recipe customer_code_check; recipe customer_owned_loyalty; recipe customers_by_store; recipe gift_card_on_spend; recipe lucky_draw; recipe payment_method_rules; recipe required_sale_details; recipe rule_guard; sample S18; sample S22; sample S32; sample S44; sample S46; sample S47; sample S48; sample S5; sample S50; retail core"
   },
   {
    "area": "Customers and groups",
@@ -264,7 +264,7 @@
    "slug": "warehouse",
    "submittable": 0,
    "tables": 0,
-   "why": "openapi.yaml; guide chapter 04; recipe call_centre_orders; recipe customers_by_store; recipe desk_action; recipe estate_rollout; recipe front_of_house; recipe guest_ordering; recipe kitchen_screen; recipe shop_reports; sample S16; sample S2; sample S22; sample S24; sample S27; sample S30; sample S35; sample S39; sample S40; sample S42; sample S43; sample S45; sample S47; sample S5; sample S53; sample S54; sample S55; sample S56; sample S57; sample S58; sample S59; sample S60; sample S62; sample S7; sample S8; the MCP server; the kit's tool sandbox_check; the request collection; retail core"
+   "why": "openapi.yaml; guide chapter 04; recipe call_centre_orders; recipe customers_by_store; recipe desk_action; recipe estate_rollout; recipe front_of_house; recipe guest_ordering; recipe kitchen_screen; recipe shop_reports; sample S16; sample S2; sample S22; sample S24; sample S27; sample S30; sample S35; sample S39; sample S40; sample S42; sample S43; sample S45; sample S47; sample S5; sample S53; sample S54; sample S55; sample S56; sample S57; sample S58; sample S59; sample S60; sample S62; sample S8; the MCP server; the kit's tool sandbox_check; the request collection; retail core"
   },
   {
    "area": "Stock and stores",
@@ -284,7 +284,7 @@
    "slug": "stock_entry",
    "submittable": 1,
    "tables": 2,
-   "why": "openapi.yaml; api/README.md; contract save_rules; guide chapter 05; recipe connected_app; recipe repairs_by_serial; recipe restaurant_back_office; sample S2; sample S30; sample S40; sample S41; sample S45; sample S5; sample S57; sample S58; sample S62; sample S7; the MCP server; the feed client; the kit's tool manifest; the kit's tool moneykit; the request collection; retail core"
+   "why": "openapi.yaml; api/README.md; contract save_rules; recipe connected_app; recipe repairs_by_serial; recipe restaurant_back_office; sample S2; sample S30; sample S40; sample S41; sample S45; sample S5; sample S57; sample S58; sample S62; sample S7; the MCP server; the feed client; the kit's tool manifest; the kit's tool moneykit; the request collection; retail core"
   },
   {
    "area": "Stock and stores",
@@ -314,7 +314,7 @@
    "slug": "material_request",
    "submittable": 1,
    "tables": 1,
-   "why": "recipe save_rules; sample S27; retail core"
+   "why": "recipe approvals; recipe save_rules; sample S27; retail core"
   },
   {
    "area": "Stock and stores",
@@ -324,7 +324,7 @@
    "slug": "company",
    "submittable": 0,
    "tables": 0,
-   "why": "contract print_template_readers; recipe lucky_draw; sample S24; sample S30; sample S4; sample S44; sample S45; sample S55; sample S56; sample S59; sample S61; sample S62; the kit's tool sandbox_check; retail core"
+   "why": "contract print_template_readers; recipe lucky_draw; sample S24; sample S30; sample S44; sample S45; sample S55; sample S56; sample S59; sample S61; sample S62; the kit's tool sandbox_check; retail core"
   },
   {
    "area": "Stock and stores",
@@ -454,7 +454,7 @@
    "slug": "retail_coupon_draw",
    "submittable": 1,
    "tables": 1,
-   "why": "guide chapter 07"
+   "why": "retail core"
   },
   {
    "area": "Payments and payment methods",
@@ -504,7 +504,7 @@
    "slug": "purchase_order",
    "submittable": 1,
    "tables": 5,
-   "why": "contract doccheck; recipe configure_no_code; recipe document_check; sample S22; sample S34; retail core"
+   "why": "card approval-by-amount; contract doccheck; guide chapter 07; recipe approvals; recipe configure_no_code; recipe document_check; sample S11; sample S22; sample S34; site/pages/first_app.md; retail core"
   },
   {
    "area": "Purchase and transfer documents",
@@ -574,7 +574,7 @@
    "slug": "retail_open_check_claim",
    "submittable": 0,
    "tables": 0,
-   "why": "guide chapter 07"
+   "why": "retail core"
   },
   {
    "area": "Till sales",
@@ -584,7 +584,7 @@
    "slug": "retail_open_check_event",
    "submittable": 0,
    "tables": 0,
-   "why": "guide chapter 07"
+   "why": "retail core"
   },
   {
    "area": "Till sales",
@@ -674,7 +674,7 @@
    "slug": "payment_account",
    "submittable": 0,
    "tables": 1,
-   "why": "recipe payment_connector; recipe wallet; sample S22"
+   "why": "recipe payment_connector; recipe wallet"
   },
   {
    "area": "Payments and payment methods",
@@ -684,7 +684,7 @@
    "slug": "payment_connection",
    "submittable": 0,
    "tables": 0,
-   "why": "recipe payment_connector; recipe wallet; sample S22"
+   "why": "recipe payment_connector; recipe wallet"
   },
   {
    "area": "Payments and payment methods",
@@ -734,7 +734,7 @@
    "slug": "currency",
    "submittable": 0,
    "tables": 0,
-   "why": "recipe coupon_rules; recipe desk_action; recipe payment_method_rules; sample S11; sample S14; sample S22; sample S24; sample S25; sample S26; sample S29; sample S3; sample S32; sample S38; sample S43; sample S44; sample S45; sample S46; sample S55; sample S61"
+   "why": "recipe coupon_rules; recipe desk_action; recipe payment_method_rules; sample S14; sample S22; sample S24; sample S25; sample S26; sample S29; sample S3; sample S32; sample S38; sample S43; sample S44; sample S45; sample S46; sample S55; sample S61"
   },
   {
    "area": "The retailer's setup",
@@ -754,7 +754,7 @@
    "slug": "notification",
    "submittable": 0,
    "tables": 1,
-   "why": "recipe alteration_tickets; recipe configure_no_code; recipe customer_code_check; recipe donation_intake; recipe event_feed; recipe front_of_house; recipe post_sale_feedback; recipe repairs_by_serial; sample S22; sample S48; sample S49; sample S55"
+   "why": "recipe alteration_tickets; recipe configure_no_code; recipe customer_code_check; recipe donation_intake; recipe event_feed; recipe front_of_house; recipe post_sale_feedback; recipe repairs_by_serial; sample S22; sample S48; sample S49"
   },
   {
    "area": "The retailer's setup",
@@ -764,7 +764,7 @@
    "slug": "auto_email_report",
    "submittable": 0,
    "tables": 0,
-   "why": "sample S40"
+   "why": "retail core"
   },
   {
    "area": "The retailer's setup",
@@ -784,7 +784,7 @@
    "slug": "webhook",
    "submittable": 0,
    "tables": 2,
-   "why": "recipe webhook_receiver; sample S1; the kit's tool deploy; the kit's tool moneykit"
+   "why": "recipe webhook_receiver; the kit's tool deploy; the kit's tool moneykit"
   },
   {
    "area": "The retailer's setup",
@@ -814,7 +814,7 @@
    "slug": "workflow_state",
    "submittable": 0,
    "tables": 0,
-   "why": "contract package_install; recipe donation_intake; recipe repairs_by_serial; sample S22"
+   "why": "contract package_install; guide chapter 07; recipe donation_intake; recipe repairs_by_serial; sample S22"
   },
   {
    "area": "The retailer's setup",
@@ -864,7 +864,7 @@
    "slug": "item_variant_settings",
    "submittable": 0,
    "tables": 1,
-   "why": "recipe age_check; recipe restaurant_back_office; sample S37; sample S39; sample S45"
+   "why": "recipe age_check; recipe restaurant_back_office"
   },
   {
    "area": "The retailer's setup",
@@ -884,7 +884,7 @@
    "slug": "retail_extension_package",
    "submittable": 0,
    "tables": 0,
-   "why": "contract package_install; guide chapter 07; guide chapter 08; guide chapter 14a; recipe approvals; recipe manifest; sample S1; sample S11; sample S14; sample S2; sample S23; sample S3; sample S32; sample S34; sample S36; sample S37; sample S39; sample S4; sample S46; sample S47; sample S48; sample S49; sample S50; sample S51; sample S54; sample S61; sample S62; the kit's tool deploy"
+   "why": "contract package_install; guide chapter 07; recipe approvals; recipe manifest; the kit's tool deploy"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -904,7 +904,7 @@
    "slug": "retail_extension_subscription",
    "submittable": 0,
    "tables": 2,
-   "why": "contract desk_action; contract partner_capture; contract partner_check; contract partner_fulfil; contract partner_page; contract payer; contract price; guide chapter 09; recipe call_centre_orders; recipe configure_no_code; recipe desk_action; recipe expiry_markdown; recipe optical_prescriptions; recipe rule_guard; sample S16; sample S17; sample S18; sample S20; sample S23; sample S28; sample S32; sample S34; sample S35; sample S36; sample S37; sample S38; sample S42; sample S44; sample S45; sample S46; sample S47; sample S48; sample S49; sample S50; sample S51; sample S54; sample S55; sample S56; sample S59; sample S61; sample S62; the kit's tool deploy; the kit's tool sandbox_check"
+   "why": "contract desk_action; contract partner_capture; contract partner_check; contract partner_fulfil; contract partner_page; contract payer; contract price; guide chapter 09; recipe call_centre_orders; recipe configure_no_code; recipe desk_action; recipe expiry_markdown; recipe rule_guard; the kit's tool deploy; the kit's tool sandbox_check"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -914,7 +914,7 @@
    "slug": "retail_extension_log",
    "submittable": 0,
    "tables": 0,
-   "why": "contract desk_action; contract doccheck; contract partner_capture; contract partner_check; guide chapter 09; recipe document_check; sample S34; the kit's tool sandbox_check"
+   "why": "contract desk_action; contract doccheck; contract partner_capture; contract partner_check; guide chapter 09; recipe document_check; the kit's tool sandbox_check"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -924,7 +924,7 @@
    "slug": "retail_extension_module",
    "submittable": 0,
    "tables": 0,
-   "why": "contract package_install; contract partner_check; contract price; guide chapter 07; guide chapter 08; guide chapter 09; recipe configure_no_code; recipe manifest"
+   "why": "contract package_install; contract partner_check; contract price; guide chapter 07; guide chapter 09; recipe configure_no_code; recipe manifest"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -934,7 +934,7 @@
    "slug": "retail_desk_action",
    "submittable": 0,
    "tables": 3,
-   "why": "contract desk_action; recipe call_centre_orders; recipe desk_action; recipe expiry_markdown; sample S16; sample S28; sample S35; sample S38; sample S44; sample S45; sample S49; sample S54; sample S55; sample S56; sample S59; sample S61; sample S62; the kit's tool sandbox_check"
+   "why": "contract desk_action; recipe desk_action; the kit's tool sandbox_check"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -944,7 +944,7 @@
    "slug": "retail_remote_app_key",
    "submittable": 0,
    "tables": 0,
-   "why": "contract remote_till_key; guide chapter 06; guide chapter 13; recipe ai_till_key; recipe point_handler; sample S1; sample S2; sample S22; sample S6; the kit's tool deploy"
+   "why": "contract remote_till_key; recipe ai_till_key; recipe point_handler; sample S22; sample S6; the kit's tool deploy"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -954,7 +954,7 @@
    "slug": "retail_save_rule",
    "submittable": 0,
    "tables": 1,
-   "why": "contract save_rules; recipe consignment_payouts; recipe donation_intake; recipe event_feed; recipe liquor_excise_returns; recipe repairs_by_serial; recipe save_rules; sample S22; sample S40; sample S57; sample S58; sample S61; sample S62; the kit's tool manifest; the kit's tool sandbox_check"
+   "why": "contract save_rules; recipe consignment_payouts; recipe donation_intake; recipe event_feed; recipe liquor_excise_returns; recipe save_rules; sample S22; sample S40; sample S61; sample S62; the kit's tool manifest; the kit's tool sandbox_check"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -964,7 +964,7 @@
    "slug": "retail_override_request",
    "submittable": 0,
    "tables": 0,
-   "why": "contract save_rules; recipe save_rules; recipe till_guard; sample S18; sample S23"
+   "why": "contract save_rules; recipe save_rules; recipe till_guard"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -974,7 +974,7 @@
    "slug": "retail_scan_source",
    "submittable": 0,
    "tables": 0,
-   "why": "contract scan_source; recipe unit_codes; sample S19; sample S30"
+   "why": "contract scan_source"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -984,7 +984,7 @@
    "slug": "retail_list_mark",
    "submittable": 0,
    "tables": 1,
-   "why": "card products-on-promotion-colour; contract list_mark; guide chapter 07"
+   "why": "contract list_mark"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -994,7 +994,7 @@
    "slug": "retail_label_layout",
    "submittable": 0,
    "tables": 0,
-   "why": "contract label_layout; guide chapter 14a"
+   "why": "contract label_layout"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -1034,7 +1034,7 @@
    "slug": "retail_permission",
    "submittable": 0,
    "tables": 0,
-   "why": "contract open_check; contract station_ticket; recipe front_of_house; recipe guest_ordering; recipe kitchen_screen; recipe open_check; sample S55; sample S56; sample S59"
+   "why": "contract open_check; contract station_ticket; recipe front_of_house; recipe guest_ordering; recipe kitchen_screen; recipe open_check"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -1044,7 +1044,7 @@
    "slug": "user",
    "submittable": 0,
    "tables": 6,
-   "why": "recipe customer_history_page; recipe desk_action; recipe integration_user; sample S10; sample S11; sample S14; sample S16; sample S22; sample S27; sample S28; sample S39; sample S40; sample S45; sample S8; the kit's tool sandbox_check"
+   "why": "recipe customer_history_page; recipe desk_action; recipe integration_user; sample S16; sample S22; sample S27; sample S28; sample S39; sample S40; sample S45; sample S8; site/pages/first_app.md; the kit's tool sandbox_check"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -1054,7 +1054,7 @@
    "slug": "user_permission",
    "submittable": 0,
    "tables": 0,
-   "why": "guide chapter 04; recipe approvals; recipe approvals_stores; recipe estate_rollout; recipe kitchen_screen; recipe portal; sample S11; sample S13; sample S14; sample S56; sample S59; sample S8"
+   "why": "card approval-by-store; guide chapter 04; recipe approvals_stores; recipe estate_rollout; recipe kitchen_screen; recipe portal; sample S13; sample S8"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -1074,7 +1074,7 @@
    "slug": "registered_application",
    "submittable": 0,
    "tables": 1,
-   "why": "contract event_feed; recipe event_feed; recipe integration_user; recipe system_sync; sample S22; sample S7; sample S9"
+   "why": "contract event_feed; recipe event_feed; recipe integration_user; recipe system_sync; sample S22"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -1084,7 +1084,7 @@
    "slug": "integration_sync_log",
    "submittable": 0,
    "tables": 0,
-   "why": "guide chapter 05; recipe event_feed; the feed client; the kit's tool scale_profile"
+   "why": "recipe event_feed; the feed client; the kit's tool scale_profile"
   },
   {
    "area": "Your app: its install, its user and its doors",
@@ -1094,7 +1094,7 @@
    "slug": "prepared_report",
    "submittable": 0,
    "tables": 0,
-   "why": "recipe shop_reports; sample S54"
+   "why": "recipe shop_reports"
   }
  ],
  "release": "POS 2.1.0.679"

@@ -388,6 +388,6 @@
    ]
   }
  },
- "why": "contract desk_action; contract partner_capture; contract partner_check; contract partner_fulfil; contract partner_page; contract payer; contract price; guide chapter 09; recipe call_centre_orders; recipe configure_no_code; recipe desk_action; recipe expiry_markdown; recipe optical_prescriptions; recipe rule_guard; sample S16; sample S17; sample S18; sample S20; sample S23; sample S28; sample S32; sample S34; sample S35; sample S36; sample S37; sample S38; sample S42; sample S44; sample S45; sample S46; sample S47; sample S48; sample S49; sample S50; sample S51; sample S54; sample S55; sample S56; sample S59; sample S61; sample S62; the kit's tool deploy; the kit's tool sandbox_check",
+ "why": "contract desk_action; contract partner_capture; contract partner_check; contract partner_fulfil; contract partner_page; contract payer; contract price; guide chapter 09; recipe call_centre_orders; recipe configure_no_code; recipe desk_action; recipe expiry_markdown; recipe rule_guard; the kit's tool deploy; the kit's tool sandbox_check",
  "written_elsewhere": ""
 }

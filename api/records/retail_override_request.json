@@ -379,6 +379,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract save_rules; recipe save_rules; recipe till_guard; sample S18; sample S23",
+ "why": "contract save_rules; recipe save_rules; recipe till_guard",
  "written_elsewhere": ""
 }

@@ -237,6 +237,6 @@
    ]
   }
  },
- "why": "guide chapter 04; recipe configure_no_code; recipe coupon_rules; recipe customer_code_check; recipe customer_owned_loyalty; recipe customers_by_store; recipe gift_card_on_spend; recipe lucky_draw; recipe payment_method_rules; recipe required_sale_details; recipe rule_guard; sample S18; sample S22; sample S25; sample S31; sample S32; sample S44; sample S46; sample S47; sample S48; sample S5; sample S50; retail core",
+ "why": "guide chapter 04; recipe configure_no_code; recipe coupon_rules; recipe customer_code_check; recipe customer_owned_loyalty; recipe customers_by_store; recipe gift_card_on_spend; recipe lucky_draw; recipe payment_method_rules; recipe required_sale_details; recipe rule_guard; sample S18; sample S22; sample S32; sample S44; sample S46; sample S47; sample S48; sample S5; sample S50; retail core",
  "written_elsewhere": ""
 }

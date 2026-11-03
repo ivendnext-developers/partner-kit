@@ -364,6 +364,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "recipe payment_connector; recipe wallet; sample S22",
+ "why": "recipe payment_connector; recipe wallet",
  "written_elsewhere": ""
 }

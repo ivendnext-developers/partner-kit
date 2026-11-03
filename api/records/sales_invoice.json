@@ -4509,6 +4509,6 @@
    ]
   }
  },
- "why": "openapi.yaml; api/validate.sh; guide chapter 02; recipe bulk_reads; recipe customer_history_page; recipe price_checker; recipe print_pack; recipe project_quotes; recipe repairs_by_serial; recipe webhook_receiver; sample S1; sample S2; sample S24; sample S28; sample S29; sample S3; sample S30; sample S32; sample S39; sample S40; sample S41; sample S43; sample S45; sample S56; sample S60; sample S61; sample S62; the MCP server; the feed client; the kit's tool manifest; the kit's tool moneykit; the kit's tool scale_profile; the kit's tool selfcheck; the request collection; retail core",
+ "why": "openapi.yaml; api/validate.sh; recipe bulk_reads; recipe customer_history_page; recipe price_checker; recipe print_pack; recipe project_quotes; recipe repairs_by_serial; recipe webhook_receiver; sample S1; sample S2; sample S24; sample S28; sample S29; sample S3; sample S30; sample S32; sample S39; sample S40; sample S41; sample S43; sample S45; sample S56; sample S60; sample S61; sample S62; the MCP server; the feed client; the kit's tool manifest; the kit's tool moneykit; the kit's tool scale_profile; the kit's tool selfcheck; the request collection; retail core",
  "written_elsewhere": ""
 }

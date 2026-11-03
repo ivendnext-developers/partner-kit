@@ -649,6 +649,6 @@
    ]
   }
  },
- "why": "guide chapter 07",
+ "why": "retail core",
  "written_elsewhere": "only the open check's calls write it (`check_open`, `check_add_lines` and the rest); the record API is refused."
 }

@@ -670,6 +670,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract open_check; contract station_ticket; recipe front_of_house; recipe guest_ordering; recipe kitchen_screen; recipe open_check; sample S55; sample S56; sample S59",
+ "why": "contract open_check; contract station_ticket; recipe front_of_house; recipe guest_ordering; recipe kitchen_screen; recipe open_check",
  "written_elsewhere": ""
 }

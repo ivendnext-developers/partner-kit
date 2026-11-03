@@ -268,6 +268,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract desk_action; contract doccheck; contract partner_capture; contract partner_check; guide chapter 09; recipe document_check; sample S34; the kit's tool sandbox_check",
+ "why": "contract desk_action; contract doccheck; contract partner_capture; contract partner_check; guide chapter 09; recipe document_check; the kit's tool sandbox_check",
  "written_elsewhere": "iVendNext writes it for each call to your service."
 }

@@ -194,6 +194,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract package_install; recipe donation_intake; recipe repairs_by_serial; sample S22",
+ "why": "contract package_install; guide chapter 07; recipe donation_intake; recipe repairs_by_serial; sample S22",
  "written_elsewhere": ""
 }

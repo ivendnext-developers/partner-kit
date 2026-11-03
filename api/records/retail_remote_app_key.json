@@ -202,6 +202,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract remote_till_key; guide chapter 06; guide chapter 13; recipe ai_till_key; recipe point_handler; sample S1; sample S2; sample S22; sample S6; the kit's tool deploy",
+ "why": "contract remote_till_key; recipe ai_till_key; recipe point_handler; sample S22; sample S6; the kit's tool deploy",
  "written_elsewhere": ""
 }

@@ -363,6 +363,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract package_install; guide chapter 07; guide chapter 08; guide chapter 14a; recipe approvals; recipe manifest; sample S1; sample S11; sample S14; sample S2; sample S23; sample S3; sample S32; sample S34; sample S36; sample S37; sample S39; sample S4; sample S46; sample S47; sample S48; sample S49; sample S50; sample S51; sample S54; sample S61; sample S62; the kit's tool deploy",
+ "why": "contract package_install; guide chapter 07; recipe approvals; recipe manifest; the kit's tool deploy",
  "written_elsewhere": "the retailer's administrator installs your manifest on it, with consent."
 }

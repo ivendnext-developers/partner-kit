@@ -154,6 +154,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract scan_source; recipe unit_codes; sample S19; sample S30",
+ "why": "contract scan_source",
  "written_elsewhere": ""
 }

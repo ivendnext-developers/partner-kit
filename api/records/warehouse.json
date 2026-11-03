@@ -382,6 +382,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "openapi.yaml; guide chapter 04; recipe call_centre_orders; recipe customers_by_store; recipe desk_action; recipe estate_rollout; recipe front_of_house; recipe guest_ordering; recipe kitchen_screen; recipe shop_reports; sample S16; sample S2; sample S22; sample S24; sample S27; sample S30; sample S35; sample S39; sample S40; sample S42; sample S43; sample S45; sample S47; sample S5; sample S53; sample S54; sample S55; sample S56; sample S57; sample S58; sample S59; sample S60; sample S62; sample S7; sample S8; the MCP server; the kit's tool sandbox_check; the request collection; retail core",
+ "why": "openapi.yaml; guide chapter 04; recipe call_centre_orders; recipe customers_by_store; recipe desk_action; recipe estate_rollout; recipe front_of_house; recipe guest_ordering; recipe kitchen_screen; recipe shop_reports; sample S16; sample S2; sample S22; sample S24; sample S27; sample S30; sample S35; sample S39; sample S40; sample S42; sample S43; sample S45; sample S47; sample S5; sample S53; sample S54; sample S55; sample S56; sample S57; sample S58; sample S59; sample S60; sample S62; sample S8; the MCP server; the kit's tool sandbox_check; the request collection; retail core",
  "written_elsewhere": ""
 }

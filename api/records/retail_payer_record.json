@@ -388,6 +388,6 @@
    ]
   }
  },
- "why": "contract payer",
+ "why": "contract payer; recipe third_party_payer; sample S43",
  "written_elsewhere": ""
 }
