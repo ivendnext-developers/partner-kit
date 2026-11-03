@@ -59,7 +59,7 @@ class WarrantyKey(Base):
     def service(self, tenant, user=True):
         secrets = {f"{APP}:warranty": "s" * 32, **({"user:app@integration.invalid": "key:secret"} if user else {})}
         self.store.put(SITE, {"site": SITE, "url": f"https://{SITE}", "secrets": secrets, "previous": {}})
-        return app.Service({"IVN_LIBRARY_APP": APP}, self.store, lambda url, key, secret: tenant)
+        return app.Service({"IVN_LIBRARY_APP": APP}, self.store, lambda url, key, secret, timeout=1: tenant)
 
     def press(self, svc, lines=("PHONE",), secret="s" * 32, site=SITE):
         raw = json.dumps({"context": {"lines": [{"item_code": c, "qty": 1} for c in lines]}}).encode()
@@ -100,6 +100,90 @@ class WarrantyKey(Base):
         with mock.patch.dict(os.environ, env):
             out = app.lambda_handler(event("/health", method="GET"))
         self.assertEqual((out["statusCode"], json.loads(out["body"])), (200, {"status": "ok"}))
+
+
+class SaleTenant(FakeTenant):
+    """A site with two booked sales, one covered with a serial number, one of a return."""
+
+    def __init__(self, rows, sales, why_get=None):
+        super().__init__(rows, {"PHONE": "Phones"})
+        self.sales, self.comments, self.why_get, self.asked = sales, [], why_get, []
+
+    def list(self, doctype, fields, filters, order_by, limit):
+        if doctype == app.TERM:
+            return super().list(doctype, fields, filters, order_by, limit)
+        self.asked.append((doctype, filters[1][2]))
+        return [{"name": n, "modified": d["modified"]} for n, d in self.sales.get(doctype, {}).items()
+                if d["modified"] >= filters[1][2]]
+
+    def get(self, doctype, name):
+        if self.why_get:
+            raise app.TenantError(self.why_get)
+        return self.sales[doctype][name]
+
+    def serials_of(self, row):
+        return row.get("serials") or []
+
+    def has_our_comment(self, doctype, name):
+        return False
+
+    def add_comment(self, doctype, name, text):
+        self.comments.append((doctype, name, text))
+        return "C-1"
+
+
+class RegisteringPass(Base):
+    TODAY = time.strftime("%Y-%m-%d")
+
+    def sale(self, **kw):
+        return {"docstatus": 1, "posting_date": self.TODAY, "modified": f"{self.TODAY} 10:00:00",
+                "items": [{"item_code": "PHONE", "serials": ["SN-1"]}], **kw}
+
+    def service(self, tenant):
+        self.store.put(SITE, {"site": SITE, "url": f"https://{SITE}", "previous": {},
+                              "secrets": {f"{APP}:warranty": "s" * 32, "user:app@integration.invalid": "key:secret"}})
+        return app.Service({"IVN_LIBRARY_APP": APP}, self.store, lambda url, key, secret, timeout=1: tenant)
+
+    TERM = [{"applies_to": "Item", "item": "PHONE", "months": 24}]
+
+    def test_a_booked_sale_gets_its_warranty_and_one_comment_and_a_second_pass_adds_none(self):
+        t = SaleTenant(self.TERM, {"POS Invoice": {"S-1": self.sale()}, "Sales Invoice": {}})
+        svc = self.service(t)
+        out = app.scheduled(svc, "pass", 900)
+        self.assertEqual(out[SITE]["POS Invoice"], 1)
+        self.assertEqual(len(t.comments), 1)
+        self.assertIn("SN-1", t.comments[0][2])
+        self.assertIn("24 months", t.comments[0][2])
+        app.scheduled(svc, "pass", 900)
+        self.assertEqual(len(t.comments), 1)
+        kept = self.store.get(shops.CLAIM_MARK.join(("wrc", SITE, "sale", "POS Invoice", "S-1")))
+        self.assertEqual(kept["warranties"][0]["serial_no"], "SN-1")     # kept outside the site, as the own-server store does
+
+    def test_a_first_pass_starts_from_that_day_and_never_comments_on_old_sales(self):
+        old = self.sale(modified="2020-01-01 10:00:00", posting_date="2020-01-01")
+        t = SaleTenant(self.TERM, {"POS Invoice": {"OLD": old}, "Sales Invoice": {}})
+        app.scheduled(self.service(t), "pass", 900)
+        self.assertEqual(t.comments, [])
+
+    def test_a_sale_that_cannot_be_read_keeps_the_place_for_the_next_pass(self):
+        t = SaleTenant(self.TERM, {"POS Invoice": {"S-1": self.sale()}, "Sales Invoice": {}}, why_get="HTTP 403")
+        svc = self.service(t)
+        app.scheduled(svc, "pass", 900)
+        self.assertIsNone(self.store.get(shops.CLAIM_MARK.join(("wrc", SITE, "mark", "POS Invoice"))))
+        t.why_get = None
+        app.scheduled(svc, "pass", 900)
+        self.assertEqual(len(t.comments), 1)
+
+    def test_a_site_that_cannot_be_read_stops_nothing_and_frees_its_claim(self):
+        svc = self.service(FakeTenant(why="GET -> HTTP 403"))
+        self.assertEqual(app.scheduled(svc, "pass", 900)[SITE], {"site": SITE, "skipped": "could not read"})
+        self.assertEqual(self.store.sites(), [SITE])
+        self.assertIsNone(self.store.get(f"pass{shops.CLAIM_MARK}{SITE}"))
+
+    def test_the_schedule_reaches_the_pass_through_the_function(self):
+        env = {"IVN_LIBRARY_APP": APP, "IVN_SHOPS_FILE": os.path.join(self.dir.name, "shops.json")}
+        with mock.patch.dict(os.environ, env):
+            self.assertEqual(app.lambda_handler({"ivn_schedule": "pass"}).get("error"), None)
 
 
 if __name__ == "__main__":

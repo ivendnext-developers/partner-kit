@@ -12,6 +12,8 @@ This sample is a small Python service that registers a warranty for every covere
 
 **When to use it:** you want to do something with every booked sale (register it, notify someone, audit it) and show the result to staff on the sale itself.
 
+**What is in it:** a till key, a warranty registered on each booked sale and one list (warranty term).
+
 ## What it looks like
 
 The phone is the sample's own test item (`PP-WRC-PHONE`, covered for 24 months by `service/terms.json`). The comment is signed by iVendNext's integration user, *PP Integration*.
@@ -25,7 +27,7 @@ The phone is the sample's own test item (`PP-WRC-PHONE`, covered for 24 months b
 
 ## Made on My apps
 
-**New app makes this sample into an app we host: the *Warranty* till key and the retailer's own terms.** A cashier presses *Warranty* and reads, for each item on the sale, its term from the **Warranty terms** the retailer keeps in Desk. It reads and writes nothing else. The service below that registers a warranty per serial number and keeps its own store runs on your own server: copy this folder to build it. A term set on an item group needs the app's user to read **Item**: where the site does not already let it, the cashier is told, and the retailer's administrator gives the role **PP WRC Integration** read on **Item** in **Role Permissions**.
+**New app makes this sample into an app we host, for many retailers.** The retailer keeps the **Warranty terms** in Desk. Every few minutes the app reads the sales booked since its last pass, registers a warranty per covered serial number and writes one Comment on the sale, keeping what it handled on our hosting; a cashier presses *Warranty* for an item's months. Earlier sales are left alone. The retailer's administrator gives the role **PP WRC Integration**, in **Role Permissions**: read on **Sales Invoice**, **POS Invoice**, **Serial and Batch Bundle** and **Item**, and read and create on **Comment**. Until then the cashier is told, and each pass tries again. On your own server the same logic runs from a webhook instead, below.
 
 ## What the retailer does
 
@@ -36,11 +38,11 @@ A retailer that wants a warranty registered for every covered item it sells does
 3. **The service's own user.** The install makes the app's own user, from its feed registration (the feed stays off), holding **PP WRC Integration**, which reads the terms and nothing else. The service on your own server reads and writes more: the administrator gives that user one narrow role, as the [integration user recipe](../../recipes/integration_user.md) describes: read on the retailer's sales (*Sales Invoice*, *POS Invoice*), items and serial numbers on a sale (*Serial and Batch Bundle*), and the right to add a **Comment**. Its API key goes to the service. The comment on the sale is signed by this user.
 4. **Have the retailer call the service on every booked sale.** A System Manager creates a **Webhook** for *Sales Invoice* and for *POS Invoice* on **Submit**, with **Enable Security** on, a long **Webhook Secret** (the service holds the same one) and a thin JSON body that names the record and when it changed ([`recipes/webhook_receiver.md`](../../recipes/webhook_receiver.md)). Its address is the service's `/webhook`.
 5. **Sell.** The cashier sells a covered item and scans its serial number, as the till asks. Within seconds the service's comment is on the sale in Desk: one warranty per covered serial number, and a line for each item not covered.
-6. **Optional: the "Warranty" till key.** A System Manager adds a **Retail Remote App Key** record in Desk: the partner's name, an app name, the key, its label, *message* as the only thing it may return, the service's HTTPS address (`/point/warranty`), a signing secret both sides hold and the time to answer. The manifest declares no till key, so this record is made by hand: tick it enabled and tick the customer's consent. Then the store switches the key on in **POS Studio > Apps**.
+6. **Optional: the "Warranty" till key.** The record is a **Retail Remote App Key** in Desk: the partner's name, an app name, the key, its label, *message* as the only thing it may return, the service's HTTPS address (`/point/warranty`), a signing secret both sides hold and the time to answer. The manifest declares the till key, so the install makes this record, with the address and the secret: tick the customer's consent. Then the store switches the key on in **POS Studio > Apps**.
 
 **Where it shows.** In Desk: one Comment on each covered sale, and the **Warranty terms** workspace if the package is installed. At the till: the serial-number prompt, and with the till key a short message titled *Warranty* that names each item and its months. In POS Studio: the key, under **Apps**. No print layout, report or number card.
 
-**What leaves the retailer's iVendNext.** The manifest names the till key and the app's own user, with its feed left off; a press sends the sale's context (below). The connected form also sends, on your own server:
+**What leaves the retailer's iVendNext.** The manifest names the till key and the app's own user, with its feed left off; a press sends the sale's context (below). On our hosting or on your own server, the service:
 - the **webhook** sends the service a signed message that names the record and when it changed, and nothing more (record type, name, event, time, company);
 - the **service** then reads the sale's lines and their serial numbers with the integration user's key, and writes one Comment on the sale; nothing else is added to iVendNext;
 - the service keeps, in its own store outside the retailer's iVendNext, each warranty's serial number, item code, sale name, months and dates, and the sales it has handled;
@@ -143,9 +145,14 @@ The reconciliation timer is off on the bench (`PP_RECONCILE_SECONDS=0`) so the t
 
 - In Desk, add a warranty term for an item in **Warranty terms**, and switch the *Warranty* key on in POS Studio > Apps.
 - Start a sale with that item and press Warranty; the till names the item and its months.
+- Sell it and scan its serial number. Within a few minutes the warranty's comment is on the sale in Desk.
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.3.0
+
+- As an app we host, it registers warranties too: a scheduled pass over each site's booked sales (`service/hosted.py`, `service/register.py`).
 
 ### 0.2.0
 

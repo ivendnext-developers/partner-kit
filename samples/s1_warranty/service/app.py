@@ -20,17 +20,16 @@ import os
 import sys
 import threading
 import time
-from datetime import date
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-import core  # noqa: E402
+import register  # noqa: E402
 from receiver import HEADER, replay_key, verify  # noqa: E402
 from store import Store  # noqa: E402
 from tenant import Tenant, TenantError  # noqa: E402
 
-DOCTYPES = ("Sales Invoice", "POS Invoice")
+DOCTYPES = register.DOCTYPES
 MAX_BODY = 64 * 1024   # a thin webhook body is a few hundred bytes
 
 
@@ -55,62 +54,12 @@ class Service:
         self.store = Store(os.path.join(HERE, env.get("PP_DB", "warranty.sqlite3")))
         self.store.load_terms(os.path.join(HERE, env.get("PP_TERMS", "terms.json")))
 
-    # ---- idempotent: safe for a webhook, a retry, a replay and a reconciliation to reach the same sale ----
     def process(self, doctype: str, name: str, via: str) -> str:
-        with self.store.lock:
-            if self.store.is_processed(doctype, name):
-                return "already processed"
-            doc = self.tenant.get(doctype, name)
-            if doc.get("docstatus") != 1:
-                return "not submitted — left for a later pass"
-            if doc.get("is_return") or doc.get("is_consolidated"):
-                # a return gives no new warranty; a consolidated invoice repeats POS sales already handled
-                self.store.record(doctype, name, [], None, via)
-                return "skipped (return or consolidated)"
-            items = [r for r in doc.get("items") or [] if r.get("item_code")]
-            terms = self.store.terms()
-            terms["item_group"] = self.tenant.item_groups([r["item_code"] for r in items])
-            lines = [{"item_code": r["item_code"],
-                      "serials": self.tenant.serials_of(r) if core.term_for(r["item_code"], terms)[0] == core.COVERED else []}
-                     for r in items]
-            regs, skipped = core.registrations(lines, terms, date.fromisoformat(doc["posting_date"]))
-            comment = None
-            if regs or any(s["reason"] == "no serial numbers on the line" for s in skipped):
-                if self.tenant.has_our_comment(doctype, name):
-                    comment = "(already present)"   # a crash after the comment, before the commit: never twice
-                else:
-                    comment = self.tenant.add_comment(doctype, name, core.comment_text(name, regs, skipped))
-            added = self.store.record(doctype, name, regs, comment, via)
-            msg = f"{doctype} {name} via {via}: {added} warranty(ies) registered, {len(skipped)} line(s) skipped, comment {comment}"
-            self.store.event("processed", msg)
-            return msg
+        return register.process(self.store, self.tenant, doctype, name, via)
 
     def reconcile(self) -> dict:
         """The pull that recovers missed deliveries: every submitted sale modified since the watermark."""
-        out = {}
-        for dt in DOCTYPES:
-            wm = self.store.watermark(dt, self.env.get("PP_SINCE", "2000-01-01 00:00:00"))
-            done = 0
-            while True:
-                rows = self.tenant.list(dt, ["name", "modified"], [["docstatus", "=", 1], ["modified", ">=", wm]],
-                                        "modified asc", 200)
-                newest = wm
-                for r in rows:
-                    try:
-                        self.process(dt, r["name"], "reconcile")
-                    except Exception as e:   # any failure: stop here, keep the watermark before it, say so
-                        self.store.event("error", f"reconcile {dt} {r['name']}: {type(e).__name__}: {e}"[:300])
-                        rows = []   # stop here: the watermark stays before the failure, so it is retried
-                        break
-                    newest, done = r["modified"], done + 1
-                if newest != wm:
-                    self.store.set_watermark(dt, newest)
-                if len(rows) < 200 or newest == wm:
-                    break
-                wm = newest
-            out[dt] = done
-        self.store.event("reconcile", json.dumps(out))
-        return out
+        return register.reconcile(self.store, self.tenant, self.env.get("PP_SINCE", "2000-01-01 00:00:00"))
 
 
 def make_handler(svc: Service):

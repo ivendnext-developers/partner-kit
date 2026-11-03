@@ -272,6 +272,7 @@ check("MAKEEASY: a long title stays inside the field's 60 characters", a.default
 check("MAKEEASY: a refusal stands under the name, and the door answers the name as it is typed (F1, F4, item 7)",
   src.includes('box.appendChild(bad);   // a refusal stands under the field') && src.includes('data.nameBad = e.message') &&
   src.includes('{ title: name.value.trim() || fallback, samples: g.ticks }') && !src.includes("defaultName"));
+check("MAKEEASY: browsing, the cards with ticks come before the lists with none", src.indexOf("found.samples.forEach(function (s) { wrap.appendChild(sampleCard(s, forNeeds[s.name])); });") < src.indexOf("if (!g.q.trim() && !fn) apart();"));
 check("MAKEEASY: a second press never makes a second app", src.includes("make.disabled = !!(data.made && data.made.making)"));
 check("MAKEEASY: a name past three words gets no records-start line beside its refusal", src.includes('start.textContent = past ? "" : recordsStart(prefix)'));
 check("MAKEEASY: an expert's name past three words is said as it is typed (F2)", G.threeWords ===

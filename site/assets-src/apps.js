@@ -754,9 +754,9 @@
       var fn = g.fromNeeds && !g.q.trim() ? g.fromNeeds : null;
       if (found.none) wrap.appendChild(el("div", { "class": "hosting-step" }, el("p", {}, G.none, askButton(null, g.q))));
       var desk = g.mode === "add" && !g.q.trim() ? null : deskBox(fn ? fn.desk : found.desk, fn ? [] : found.packs);
-      if (desk) wrap.appendChild(desk);
       var hand = g.mode === "add" && !g.q.trim() ? null : handBox(fn ? [] : found.hand);
-      if (hand) wrap.appendChild(hand);
+      var apart = function () { if (desk) wrap.appendChild(desk); if (hand) wrap.appendChild(hand); };
+      if (g.q.trim() || fn) apart();    // what a search or a shortlist asked for first; browsing, the ticks come first (MAKEEASY)
       (fn ? fn.cannot : found.cannot).forEach(function (c) { wrap.appendChild(cannotBox(c)); });
       var ns = noSampleBox(fn ? fn.nosample : found.nosample);
       if (ns) wrap.appendChild(ns);
@@ -772,6 +772,7 @@
         found.samples = ticked0.concat(found.samples.filter(function (s) { return ticked0.indexOf(s) < 0; }));
       }
       found.samples.forEach(function (s) { wrap.appendChild(sampleCard(s, forNeeds[s.name])); });
+      if (!g.q.trim() && !fn) apart();
       if (fn && !g.every && fn.ticks.length) {   // a shortlist shows its own samples; the other cards wait for this press
         wrap.appendChild(el("p", {}, button(G.everySample, function () { g.every = true; render(); }, true)));
       }

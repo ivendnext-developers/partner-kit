@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""S1 — the *Warranty* till key on its own, for CitiXsys hosting (standard library only).
+"""S1 — warranty terms on CitiXsys hosting, for many retailers (standard library only).
 
     POST /point/warranty      the till key's call (signed by the shop)   →  200 {"message": {...}}
+    the schedule ``pass``     every few minutes: each site's booked sales since the last pass get their warranties
     GET  /health              200 {"status": "ok"}
     POST /ivendnext/connect · /ivendnext/disconnect   many shops: the app template's handshake (shops.py)
 
-On CitiXsys hosting it runs as a FUNCTION, paid per call (app.json "runs": "function"; ``lambda_handler`` below): it only
-answers presses. It is the till key alone, as S2's hosted form is: it READS the retailer's own terms (``PP WRC Warranty
-Term``) and the sale's item groups with the app's own user, and writes nothing. ``app.py`` beside it is the whole S1 service
-for your own server: it registers a warranty per serial number from a webhook, in a store of its own.
+It runs as a FUNCTION (app.json "runs": "function", "schedule"; ``lambda_handler`` below). The terms are the retailer's own
+(``PP WRC Warranty Term``). A pass does what ``app.py`` does on your own server from a webhook (``register.py``): one warranty
+per covered serial number and one Comment on the sale, with what was handled kept in the shops store (the table on hosting)
+instead of a file. A site's first pass starts from that day: earlier sales are left alone.
 
 When the app has no user's key yet, the shop refuses that key, or the shop cannot be read in time, the cashier is told so
-in words (200, a warning message), never a guess.
+in words (200, a warning message), never a guess. A pass that cannot read a site says so in the log and tries again next time.
 
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
     IVN_LIBRARY_APP    the app's id in the App library, with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE. Each shop
@@ -27,6 +28,7 @@ import hmac
 import json
 import os
 import sys
+import threading
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +39,7 @@ sys.path.append(os.path.join(KIT, "tools", "app_template", "service"))   # the t
 import core  # noqa: E402  (the sample's pure core, unchanged)
 import function  # noqa: E402
 import oneshop  # noqa: E402
+import register  # noqa: E402
 import shops  # noqa: E402
 import testcall  # noqa: E402
 from tenant import Tenant, TenantError  # noqa: E402  (the sample's only door into iVendNext)
@@ -44,6 +47,7 @@ from tenant import Tenant, TenantError  # noqa: E402  (the sample's only door in
 ROUTE, KEY = "/point/warranty", "warranty"     # the manifest's remote_keys[].key; its secret is "<app>:<key>"
 TERM = "PP WRC Warranty Term"
 BODY_MAX, SKEW_S, READ_S, TERMS_MAX = 64 * 1024, 300, 1.2, 1000     # two reads, inside the till's 3 seconds
+PASS_READ_S, MARGIN_S = 8, 30       # a pass reads with more patience, and stops in time for the function's limit
 TITLE = "Warranty"
 NOT_SET_UP = ("Warranty terms is not set up yet: no key from this site has reached it. Ask your manager to press Connect "
               "again on the app.")
@@ -70,6 +74,35 @@ def terms_of(rows: list[dict]) -> dict:
     return out
 
 
+class SiteStore:
+    """What ``register`` keeps, for one site, in the shops store (never taken for a shop: its names hold ``CLAIM_MARK``)."""
+
+    def __init__(self, store, site: str, terms: dict):
+        self.store, self.site, self._terms, self.lock = store, site, terms, threading.Lock()
+
+    def _name(self, kind: str, *rest: str) -> str:
+        return shops.CLAIM_MARK.join(("wrc", self.site, kind, *rest))
+
+    def terms(self) -> dict:
+        return dict(self._terms)
+
+    def is_processed(self, doctype: str, name: str) -> bool:
+        return self.store.get(self._name("sale", doctype, name)) is not None
+
+    def record(self, doctype: str, name: str, regs: list, comment, via: str) -> int:
+        self.store.put(self._name("sale", doctype, name), {"warranties": regs, "comment": comment, "via": via})
+        return len(regs)
+
+    def watermark(self, doctype: str, default: str) -> str:
+        return (self.store.get(self._name("mark", doctype)) or {}).get("at") or default
+
+    def set_watermark(self, doctype: str, at: str) -> None:
+        self.store.put(self._name("mark", doctype), {"at": at})
+
+    def event(self, kind: str, what: str) -> None:
+        print(json.dumps({"site": self.site, "event": kind, "what": what[:300]}), flush=True)
+
+
 def _warning(body: str) -> dict:
     return {"message": {"title": TITLE, "body": body, "level": "warning"}}
 
@@ -80,12 +113,26 @@ class Service:
         if not self.app:
             raise SystemExit("this form is for many shops: set IVN_LIBRARY_APP. For one shop run service/app.py")
         self.store = store or shops.open_store(conf)
-        self.tenant_of = tenant_of or (lambda url, key, secret: Tenant(url, key, secret, timeout=READ_S))
+        self.tenant_of = tenant_of or (lambda url, key, secret, timeout=READ_S: Tenant(url, key, secret, timeout=timeout))
 
-    def tenant(self, record: dict):
+    def tenant(self, record: dict, timeout: float = READ_S):
         users = sorted(k for k in (record.get("secrets") or {}) if k.startswith("user:"))
         key, _, secret = (record["secrets"][users[0]] if users else "").partition(":")
-        return self.tenant_of(record["url"], key, secret) if key and secret else None
+        return self.tenant_of(record["url"], key, secret, timeout) if key and secret else None
+
+    def one_pass(self, site: str, time_left) -> dict:
+        """One site's booked sales since its last pass. A site that cannot be read keeps its place for the next pass."""
+        record = self.store.get(site)
+        door = self.tenant(record, PASS_READ_S) if record else None
+        if not door:
+            return {"site": site, "skipped": "no user's key yet"}
+        try:
+            rows = door.list(TERM, ["applies_to", "item", "item_group", "months"], [], "modified asc", TERMS_MAX)
+            today = time.strftime("%Y-%m-%d 00:00:00", time.gmtime())
+            return register.reconcile(SiteStore(self.store, site, terms_of(rows)), door, today, time_left)
+        except TenantError as e:
+            print(json.dumps({"site": site, "pass": "could not read", "why": str(e)[:200]}), flush=True)
+            return {"site": site, "skipped": "could not read"}
 
     def answer(self, headers, raw: bytes) -> tuple[int, dict]:
         site = shops.site_of(headers.get(shops.SITE_HEADER))
@@ -134,5 +181,17 @@ def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[i
     return code, out
 
 
+def scheduled(svc: Service, name: str, seconds: float = 900) -> dict:
+    """One scheduled pass: the sites this call claims, each freed as it finishes (``function.Claimed``)."""
+    end = time.monotonic() + seconds - MARGIN_S
+    store, out = function.Claimed(svc.store, seconds), {}
+    for site in store.sites():
+        try:
+            out[site] = svc.one_pass(site, lambda: end - time.monotonic())
+        finally:
+            store.release(site)
+    return out
+
+
 # As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b): settings from the environment.
-lambda_handler = function.entry(lambda: Service(dict(os.environ)), handle)
+lambda_handler = function.entry(lambda: Service(dict(os.environ)), handle, scheduled)
