@@ -17,6 +17,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest import mock
 import unittest.mock
 
 KIT = pathlib.Path(__file__).resolve().parents[3]
@@ -700,6 +701,30 @@ class AddAndTake(Base):
             rc, out = self.run_ivn("take", "s22")
         self.assertEqual(rc, 1)
         self.assertIn("Put that entry back as it was, or add S22's part by hand.", out)
+
+
+class FoundOnTheRealDoors(Base):
+    """What the live walk found (EASY3b): a door's words name a command, and a test of nothing does not read as a test."""
+
+    def test_a_refusal_names_the_command_not_a_button(self):
+        self.assertEqual(ivn.terminal("Uninstall an app, then press Try again."), "Uninstall an app, then run ivn try.")
+        self.assertEqual(ivn.terminal("Not tested yet: the time for one test ran out. Press Test again."),
+                         "Not tested yet: the time for one test ran out. Run ivn test.")
+
+    def test_a_wrong_industry_is_asked_again_never_kept(self):
+        folder, _ = self.made()
+        answers = iter(["T", "S", "a|b|c", "", "Retail", "grocery", "free", "one", "https://x.example/g"])
+        with mock.patch.object(ivn, "ask_or_none", lambda _: next(answers)):
+            card = ivn.ask_card(folder, "acme_member_till", ["grocery", "fashion"])
+        self.assertEqual(card["industries"], ["grocery"])
+
+    def test_test_with_nothing_to_test_says_so(self):
+        folder, _ = self.made()
+        self.in_app(folder)
+        self.stub.test_results = []
+        rc, out = self.run_ivn("test")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("This app has no connection points to test.", out)
 
 
 class Status(Base):
