@@ -551,7 +551,7 @@ def entries_of(manifest: dict, app_json: dict, dispatch: dict) -> dict:
             for i, x in zip(ids(section, items), items):
                 out[f"manifest:{section}:{i}"] = x
     for k, v in app_json.items():
-        if k in ("env", "samples", "version", "base", "schedule"):   # base: the version My apps kept it as, not an edit
+        if k in ("env", "samples", "version", "base", "schedule", "address", "card"):   # base, address: written for the person
             continue
         out[f"app.json:{k}"] = v
     for e in app_json.get("env") or []:
@@ -614,6 +614,9 @@ def tools_used(folder: pathlib.Path) -> set:
     return {t for t in found if (KIT / "tools" / t).is_dir() and t not in ("app_template",)}
 
 
+PREFIX_THREE_WORDS = rb'_PREFIX_RE = re.compile(r"^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$")'
+
+
 def part_files(part: Part, app: str, prefix: str, feed: str | None) -> dict:
     """{path in the app: bytes} for the files the sample brings: its code under service/<tag>/, its tests under
     tests/<tag>/ with the sample's own manifest and app.json as the app names them (for its tests only)."""
@@ -671,7 +674,13 @@ def part_files(part: Part, app: str, prefix: str, feed: str | None) -> dict:
         for p in sorted((KIT / "tools" / t).rglob("*")):
             rel = p.relative_to(KIT / "tools" / t)
             if p.is_file() and not ({"tests", "__pycache__"} & set(rel.parts)) and p.suffix != ".pyc":
-                out[f"tests/_kit/tools/{t}/{rel.as_posix()}"] = p.read_bytes()
+                data = p.read_bytes()
+                if t == "manifest" and rel.as_posix() == "validate.py":
+                    # a sample's own view takes its tag after the app's prefix, so a three-word prefix (ACME MEMBER TILL)
+                    # gives it four words. It is a test's view, never installed: the app's own manifest keeps three
+                    assert PREFIX_THREE_WORDS in data, "validate.py's prefix rule moved"
+                    data = data.replace(PREFIX_THREE_WORDS, PREFIX_THREE_WORDS.replace(b"{0,2}", b"{0,3}"))
+                out[f"tests/_kit/tools/{t}/{rel.as_posix()}"] = data
     return out
 
 
@@ -976,7 +985,7 @@ def combine(samples, prefix: str, into, test: bool = False, samples_dir=None, ou
     files["LICENSE"] = (TEMPLATE / "LICENSE").read_bytes()
     files["THIRD_PARTY.md"] = third_party(parts, commit).encode()
     files[".env.local"] = env_local(app, app_json).encode()
-    files[".gitignore"] = b".env.local\n.env\n.local/\n__pycache__/\n"
+    files[".gitignore"] = b".env.local\n.env\n.local/\n__pycache__/\n.ivn-state\npackage.zip\n"
     if app_json.get("runs") == "container":
         files["Dockerfile"] = dockerfile().encode()
     entries = entries_of(manifest, app_json, dispatch)

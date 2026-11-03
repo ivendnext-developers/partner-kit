@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""The kit's `ivn` command. Put this folder on your PATH, or run `python3 tools/ivn/ivn.py`."""
+import pathlib
+import runpy
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+runpy.run_path(str(pathlib.Path(__file__).resolve().parent / "ivn.py"), run_name="__main__")

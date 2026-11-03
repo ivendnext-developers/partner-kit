@@ -17,7 +17,7 @@ component lines are the list's items or table rows (``- …``, ``| … |``); a l
 the address is read, not visited, so it must be the component's source, not its licence's text; and a component's
 licence belongs on its own line, since a licence on a line below it is not read.
 
-The App library's publish command (``tools/publish``) runs this on your project; ``tools/deploy_app`` runs it with ``--hosted``.
+``ivn`` runs this through the kit's check before any upload; ``tools/deploy_app`` runs it with ``--hosted``.
 Standard library only. Read-only. A green line is not legal advice: you answer for your app's licences (the partner
 terms).
 
