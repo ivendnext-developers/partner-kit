@@ -5,7 +5,7 @@ CitiXsys hosting). ``store`` keeps what was handled; ``tenant`` is the only door
 from __future__ import annotations
 
 import json
-from datetime import date
+from datetime import date, datetime, timedelta
 
 import core
 
@@ -43,15 +43,25 @@ def process(store, tenant, doctype: str, name: str, via: str) -> str:
         return msg
 
 
-def reconcile(store, tenant, since: str, time_left=None) -> dict:
+def _before(at: str, seconds: int) -> str:
+    return (datetime.fromisoformat(at[:19]) - timedelta(seconds=seconds)).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def reconcile(store, tenant, since: str, time_left=None, overlap_s: int = 0, floor=None) -> dict:
     """The pull that finds every submitted sale modified since the watermark. ``time_left()`` says when to stop for now: the
-    watermark stays where it got to, so the next pass goes on from there."""
+    watermark stays where it got to, so the next pass goes on from there. A pull with no webhook beside it reads ``overlap_s``
+    back: tills commit out of order, so a sale can be stamped before one already seen. ``floor(doctype)`` is ``(the first
+    stamp, the first posting date)`` to read: a sale from before those is not new, also when it is saved again today."""
     out = {}
     for dt in DOCTYPES:
         wm = store.watermark(dt, since)
-        done = 0
+        done, (first, from_day) = 0, floor(dt) if floor else (None, None)
+        look = max(_before(wm, overlap_s), first or "") if overlap_s else wm
         while True:
-            rows = tenant.list(dt, ["name", "modified"], [["docstatus", "=", 1], ["modified", ">=", wm]], "modified asc", 200)
+            filters = [["docstatus", "=", 1], ["modified", ">=", look]]
+            if from_day:
+                filters.append(["posting_date", ">=", from_day])
+            rows = tenant.list(dt, ["name", "modified"], filters, "modified asc", 200)
             newest = wm
             for r in rows:
                 if time_left is not None and time_left() <= 0:
@@ -63,12 +73,12 @@ def reconcile(store, tenant, since: str, time_left=None) -> dict:
                     store.event("error", f"reconcile {dt} {r['name']}: {type(e).__name__}: {e}"[:300])
                     rows = []   # stop here: the watermark stays before the failure, so it is retried
                     break
-                newest, done = r["modified"], done + 1
+                newest, done = max(newest, r["modified"]), done + 1
             if newest != wm:
                 store.set_watermark(dt, newest)
             if len(rows) < 200 or newest == wm:
                 break
-            wm = newest
+            wm = look = newest
         out[dt] = done
     store.event("reconcile", json.dumps(out))
     return out

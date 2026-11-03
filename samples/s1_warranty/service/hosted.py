@@ -8,8 +8,9 @@
 
 It runs as a FUNCTION (app.json "runs": "function", "schedule"; ``lambda_handler`` below). The terms are the retailer's own
 (``PP WRC Warranty Term``). A pass does what ``app.py`` does on your own server from a webhook (``register.py``): one warranty
-per covered serial number and one Comment on the sale, with what was handled kept in the shops store (the table on hosting)
-instead of a file. A site's first pass starts from that day: earlier sales are left alone.
+per covered serial number and one Comment on the sale. The Comment is the record: the shops store (the table on hosting) keeps
+only each site's place, one row per record type, because every pass reads that table's list of sites. A site's first pass
+marks the site's own newest sale: older sales are left alone, also when one is saved again later.
 
 When the app has no user's key yet, the shop refuses that key, or the shop cannot be read in time, the cashier is told so
 in words (200, a warning message), never a guess. A pass that cannot read a site says so in the log and tries again next time.
@@ -30,6 +31,7 @@ import os
 import sys
 import threading
 import time
+from datetime import datetime, timedelta
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SAMPLE = os.path.dirname(HERE)
@@ -48,6 +50,8 @@ ROUTE, KEY = "/point/warranty", "warranty"     # the manifest's remote_keys[].ke
 TERM = "PP WRC Warranty Term"
 BODY_MAX, SKEW_S, READ_S, TERMS_MAX = 64 * 1024, 300, 1.2, 1000     # two reads, inside the till's 3 seconds
 PASS_READ_S, MARGIN_S = 8, 30       # a pass reads with more patience, and stops in time for the function's limit
+OVERLAP_S, HANDLED_MAX = 600, 50000  # tills commit out of order; what this copy has handled, so the overlap costs little
+EARLIEST = "2000-01-01 00:00:00"
 TITLE = "Warranty"
 NOT_SET_UP = ("Warranty terms is not set up yet: no key from this site has reached it. Ask your manager to press Connect "
               "again on the app.")
@@ -75,10 +79,12 @@ def terms_of(rows: list[dict]) -> dict:
 
 
 class SiteStore:
-    """What ``register`` keeps, for one site, in the shops store (never taken for a shop: its names hold ``CLAIM_MARK``)."""
+    """What ``register`` keeps for one site. In the shops store, each record type's place alone (never taken for a shop: its
+    names hold ``CLAIM_MARK``). What was handled is on the sale, as its Comment (``has_our_comment``), and this copy of the
+    function remembers it, to read less."""
 
-    def __init__(self, store, site: str, terms: dict):
-        self.store, self.site, self._terms, self.lock = store, site, terms, threading.Lock()
+    def __init__(self, store, site: str, terms: dict, handled: set):
+        self.store, self.site, self._terms, self.handled, self.lock = store, site, terms, handled, threading.Lock()
 
     def _name(self, kind: str, *rest: str) -> str:
         return shops.CLAIM_MARK.join(("wrc", self.site, kind, *rest))
@@ -87,17 +93,31 @@ class SiteStore:
         return dict(self._terms)
 
     def is_processed(self, doctype: str, name: str) -> bool:
-        return self.store.get(self._name("sale", doctype, name)) is not None
+        return (self.site, doctype, name) in self.handled
 
     def record(self, doctype: str, name: str, regs: list, comment, via: str) -> int:
-        self.store.put(self._name("sale", doctype, name), {"warranties": regs, "comment": comment, "via": via})
+        if len(self.handled) >= HANDLED_MAX:
+            self.handled.clear()
+        self.handled.add((self.site, doctype, name))
         return len(regs)
 
+    def mark(self, doctype: str) -> dict | None:
+        return self.store.get(self._name("mark", doctype))
+
+    def start(self, doctype: str, newest: str) -> None:
+        """The first pass: this site's place starts just after its own newest sale, on its own clock."""
+        at = (datetime.fromisoformat(newest[:19]) + timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S")
+        self.store.put(self._name("mark", doctype), {"at": at, "first": at, "from": at[:10]})
+
+    def floor(self, doctype: str) -> tuple:
+        m = self.mark(doctype) or {}
+        return m.get("first"), m.get("from")
+
     def watermark(self, doctype: str, default: str) -> str:
-        return (self.store.get(self._name("mark", doctype)) or {}).get("at") or default
+        return (self.mark(doctype) or {}).get("at") or default
 
     def set_watermark(self, doctype: str, at: str) -> None:
-        self.store.put(self._name("mark", doctype), {"at": at})
+        self.store.put(self._name("mark", doctype), {**(self.mark(doctype) or {}), "at": at})
 
     def event(self, kind: str, what: str) -> None:
         print(json.dumps({"site": self.site, "event": kind, "what": what[:300]}), flush=True)
@@ -114,6 +134,7 @@ class Service:
             raise SystemExit("this form is for many shops: set IVN_LIBRARY_APP. For one shop run service/app.py")
         self.store = store or shops.open_store(conf)
         self.tenant_of = tenant_of or (lambda url, key, secret, timeout=READ_S: Tenant(url, key, secret, timeout=timeout))
+        self.handled: set = set()
 
     def tenant(self, record: dict, timeout: float = READ_S):
         users = sorted(k for k in (record.get("secrets") or {}) if k.startswith("user:"))
@@ -128,8 +149,12 @@ class Service:
             return {"site": site, "skipped": "no user's key yet"}
         try:
             rows = door.list(TERM, ["applies_to", "item", "item_group", "months"], [], "modified asc", TERMS_MAX)
-            today = time.strftime("%Y-%m-%d 00:00:00", time.gmtime())
-            return register.reconcile(SiteStore(self.store, site, terms_of(rows)), door, today, time_left)
+            kept = SiteStore(self.store, site, terms_of(rows), self.handled)
+            for dt in register.DOCTYPES:
+                if not kept.mark(dt):
+                    newest = door.list(dt, ["modified"], [["docstatus", "=", 1]], "modified desc", 1)
+                    kept.start(dt, newest[0]["modified"] if newest else EARLIEST)
+            return register.reconcile(kept, door, EARLIEST, time_left, OVERLAP_S, kept.floor)
         except TenantError as e:
             print(json.dumps({"site": site, "pass": "could not read", "why": str(e)[:200]}), flush=True)
             return {"site": site, "skipped": "could not read"}
@@ -184,10 +209,14 @@ def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[i
 def scheduled(svc: Service, name: str, seconds: float = 900) -> dict:
     """One scheduled pass: the sites this call claims, each freed as it finishes (``function.Claimed``)."""
     end = time.monotonic() + seconds - MARGIN_S
-    store, out = function.Claimed(svc.store, seconds), {}
+    store, out = function.Claimed(svc.store, seconds, kind="wrc"), {}     # a claim of its own: a feed reader works beside it
     for site in store.sites():
         try:
-            out[site] = svc.one_pass(site, lambda: end - time.monotonic())
+            if end - time.monotonic() > 0:
+                out[site] = svc.one_pass(site, lambda: end - time.monotonic())
+        except Exception as e:  # noqa: BLE001 — one site down never stops the others; it keeps its place
+            print(json.dumps({"site": site, "pass": "stopped", "why": type(e).__name__}), flush=True)
+            out[site] = {"site": site, "skipped": "stopped"}
         finally:
             store.release(site)
     return out

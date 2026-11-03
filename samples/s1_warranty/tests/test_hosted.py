@@ -112,9 +112,12 @@ class SaleTenant(FakeTenant):
     def list(self, doctype, fields, filters, order_by, limit):
         if doctype == app.TERM:
             return super().list(doctype, fields, filters, order_by, limit)
-        self.asked.append((doctype, filters[1][2]))
-        return [{"name": n, "modified": d["modified"]} for n, d in self.sales.get(doctype, {}).items()
-                if d["modified"] >= filters[1][2]]
+        rows = [(n, d) for n, d in self.sales.get(doctype, {}).items()]
+        for field, op, value in filters:
+            if op == ">=":
+                rows = [(n, d) for n, d in rows if d.get(field, "") >= value]
+        rows.sort(key=lambda x: x[1]["modified"], reverse="desc" in order_by)
+        return [{"name": n, "modified": d["modified"]} for n, d in rows][:limit]
 
     def get(self, doctype, name):
         if self.why_get:
@@ -133,7 +136,15 @@ class SaleTenant(FakeTenant):
 
 
 class RegisteringPass(Base):
-    TODAY = time.strftime("%Y-%m-%d")
+    TODAY = "2026-11-03"
+    FIRST = {"POS Invoice": "2026-11-03 09:00:00", "Sales Invoice": "2026-11-03 09:00:00"}
+    PLACE = "2026-11-03 09:00:01"       # just after the site's newest sale
+
+    def started(self, svc, site=SITE):   # the place a first pass would have taken, so a test starts from a known one
+        kept = app.SiteStore(self.store, site, {}, svc.handled)
+        for dt, at in self.FIRST.items():
+            kept.start(dt, at)
+        return svc
 
     def sale(self, **kw):
         return {"docstatus": 1, "posting_date": self.TODAY, "modified": f"{self.TODAY} 10:00:00",
@@ -148,7 +159,7 @@ class RegisteringPass(Base):
 
     def test_a_booked_sale_gets_its_warranty_and_one_comment_and_a_second_pass_adds_none(self):
         t = SaleTenant(self.TERM, {"POS Invoice": {"S-1": self.sale()}, "Sales Invoice": {}})
-        svc = self.service(t)
+        svc = self.started(self.service(t))
         out = app.scheduled(svc, "pass", 900)
         self.assertEqual(out[SITE]["POS Invoice"], 1)
         self.assertEqual(len(t.comments), 1)
@@ -156,20 +167,90 @@ class RegisteringPass(Base):
         self.assertIn("24 months", t.comments[0][2])
         app.scheduled(svc, "pass", 900)
         self.assertEqual(len(t.comments), 1)
-        kept = self.store.get(shops.CLAIM_MARK.join(("wrc", SITE, "sale", "POS Invoice", "S-1")))
-        self.assertEqual(kept["warranties"][0]["serial_no"], "SN-1")     # kept outside the site, as the own-server store does
+
+    def test_a_new_copy_of_the_function_writes_no_second_comment(self):  # what was handled is on the sale
+        t = SaleTenant(self.TERM, {"POS Invoice": {"S-1": self.sale()}, "Sales Invoice": {}})
+        svc = self.started(self.service(t))
+        app.scheduled(svc, "pass", 900)
+        t.has_our_comment = lambda doctype, name: bool(t.comments)
+        svc.handled.clear()
+        app.scheduled(svc, "pass", 900)
+        self.assertEqual(len(t.comments), 1)
+
+    def test_the_store_keeps_one_place_per_record_type_and_no_row_per_sale(self):  # every pass scans this table
+        sales = {f"S-{i}": self.sale() for i in range(30)}
+        app.scheduled(self.started(self.service(SaleTenant(self.TERM, {"POS Invoice": sales, "Sales Invoice": {}}))), "pass", 900)
+        rows = json.loads(open(os.path.join(self.dir.name, "shops.json")).read())
+        self.assertEqual(sorted(n for n in rows if n != SITE), [f"wrc|{SITE}|mark|POS Invoice", f"wrc|{SITE}|mark|Sales Invoice"])
+
+    def test_a_return_and_a_consolidated_invoice_get_no_comment(self):
+        t = SaleTenant(self.TERM, {"POS Invoice": {"R-1": self.sale(is_return=1)}, "Sales Invoice": {"C-1": self.sale(is_consolidated=1)}})
+        app.scheduled(self.started(self.service(t)), "pass", 900)
+        self.assertEqual(t.comments, [])
+
+    def test_a_sale_committed_late_with_an_older_stamp_is_still_found(self):  # tills commit out of order
+        t = SaleTenant(self.TERM, {"POS Invoice": {"S-3": self.sale(modified=f"{self.TODAY} 10:00:05")}, "Sales Invoice": {}})
+        svc = self.started(self.service(t))
+        app.scheduled(svc, "pass", 900)
+        t.sales["POS Invoice"]["S-2"] = self.sale(modified=f"{self.TODAY} 10:00:03")
+        app.scheduled(svc, "pass", 900)
+        self.assertEqual(sorted(c[1] for c in t.comments), ["S-2", "S-3"])
+
+    def test_time_up_stops_the_site_and_keeps_its_place(self):
+        t = SaleTenant(self.TERM, {"POS Invoice": {"S-1": self.sale()}, "Sales Invoice": {}})
+        svc = self.started(self.service(t))
+        out = svc.one_pass(SITE, lambda: 0)
+        self.assertEqual((out["POS Invoice"], t.comments), (0, []))
+        self.assertEqual(app.SiteStore(self.store, SITE, {}, svc.handled).watermark("POS Invoice", ""), self.PLACE)
+
+    def test_two_sites_keep_their_own_places_and_a_sale_of_one_name_is_two_sales(self):
+        t = SaleTenant(self.TERM, {"POS Invoice": {"S-1": self.sale()}, "Sales Invoice": {}})
+        svc = self.started(self.service(t))
+        self.store.put(OTHER, {"site": OTHER, "url": f"https://{OTHER}", "previous": {}, "secrets": {"user:a@integration.invalid": "k:s"}})
+        self.started(svc, OTHER)
+        app.scheduled(svc, "pass", 900)
+        self.assertEqual(len(t.comments), 2)
+
+    def test_one_site_down_stops_nothing_else_and_frees_its_claim(self):
+        good = SaleTenant(self.TERM, {"POS Invoice": {"S-1": self.sale()}, "Sales Invoice": {}})
+        class Down(FakeTenant):
+            def list(self, *a):
+                raise ConnectionResetError("reset")
+        self.store.put(SITE, {"site": SITE, "url": f"https://{SITE}", "previous": {}, "secrets": {"user:a@integration.invalid": "k:s"}})
+        self.store.put(OTHER, {"site": OTHER, "url": f"https://{OTHER}", "previous": {}, "secrets": {"user:a@integration.invalid": "k:s"}})
+        svc = app.Service({"IVN_LIBRARY_APP": APP}, self.store, lambda url, key, secret, timeout=1: Down() if SITE in url else good)
+        self.started(svc, OTHER)
+        out = app.scheduled(svc, "pass", 900)
+        self.assertEqual(out[SITE]["skipped"], "stopped")
+        self.assertEqual(len(good.comments), 1)
+        self.assertIsNone(self.store.get(f"wrc{shops.CLAIM_MARK}{SITE}"))
+
+    def test_its_claim_leaves_a_feed_reader_alone(self):  # S1 with S22: a pass of S1's must not hold the loyalty app up
+        svc = self.started(self.service(SaleTenant(self.TERM, {"POS Invoice": {}, "Sales Invoice": {}})))
+        self.assertTrue(self.store.claim(f"pass{shops.CLAIM_MARK}{SITE}", time.time() + 900, 900))
+        self.assertIn(SITE, app.scheduled(svc, "pass", 900))
 
     def test_a_first_pass_starts_from_that_day_and_never_comments_on_old_sales(self):
-        old = self.sale(modified="2020-01-01 10:00:00", posting_date="2020-01-01")
-        t = SaleTenant(self.TERM, {"POS Invoice": {"OLD": old}, "Sales Invoice": {}})
-        app.scheduled(self.service(t), "pass", 900)
+        old = self.sale(modified="2019-01-01 10:00:00", posting_date="2019-01-01")
+        newest = self.sale(modified="2026-11-03 09:59:00", posting_date="2026-11-03")
+        t = SaleTenant(self.TERM, {"POS Invoice": {"OLD": old, "NEWEST": newest}, "Sales Invoice": {}})
+        svc = self.service(t)
+        app.scheduled(svc, "pass", 900)
+        self.assertEqual(t.comments, [])                                             # not even the newest from before
+        app.scheduled(svc, "pass", 900)
         self.assertEqual(t.comments, [])
+        t.sales["POS Invoice"]["OLD"] = {**old, "modified": "2026-11-03 10:00:00"}   # the closing saves it again
+        app.scheduled(svc, "pass", 900)
+        self.assertEqual(t.comments, [])
+        t.sales["POS Invoice"]["NEW"] = self.sale(modified="2026-11-03 10:01:00", posting_date="2026-11-03")
+        app.scheduled(svc, "pass", 900)
+        self.assertEqual([c[1] for c in t.comments], ["NEW"])
 
     def test_a_sale_that_cannot_be_read_keeps_the_place_for_the_next_pass(self):
         t = SaleTenant(self.TERM, {"POS Invoice": {"S-1": self.sale()}, "Sales Invoice": {}}, why_get="HTTP 403")
-        svc = self.service(t)
+        svc = self.started(self.service(t))
         app.scheduled(svc, "pass", 900)
-        self.assertIsNone(self.store.get(shops.CLAIM_MARK.join(("wrc", SITE, "mark", "POS Invoice"))))
+        self.assertEqual(app.SiteStore(self.store, SITE, {}, svc.handled).watermark("POS Invoice", ""), self.PLACE)
         t.why_get = None
         app.scheduled(svc, "pass", 900)
         self.assertEqual(len(t.comments), 1)
@@ -178,7 +259,7 @@ class RegisteringPass(Base):
         svc = self.service(FakeTenant(why="GET -> HTTP 403"))
         self.assertEqual(app.scheduled(svc, "pass", 900)[SITE], {"site": SITE, "skipped": "could not read"})
         self.assertEqual(self.store.sites(), [SITE])
-        self.assertIsNone(self.store.get(f"pass{shops.CLAIM_MARK}{SITE}"))
+        self.assertIsNone(self.store.get(f"wrc{shops.CLAIM_MARK}{SITE}"))
 
     def test_the_schedule_reaches_the_pass_through_the_function(self):
         env = {"IVN_LIBRARY_APP": APP, "IVN_SHOPS_FILE": os.path.join(self.dir.name, "shops.json")}
