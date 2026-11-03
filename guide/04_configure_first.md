@@ -117,4 +117,4 @@ Both were walked on our test bench on 2026-10-10, iVendNext POS app at `87812e14
 
 ## See also
 
-[3. The ladder and the four rules](03_ladder_and_never_list.md) · [7. Manifests](07_manifests.md) · [9. The extension-point catalogue and requests](09_points_and_requests.md) · [14. Testing and release](14_testing_and_release.md) · [16. Possible, not possible, limits](16_possible_not_possible.md)
+[3. The ladder and the four rules](03_ladder_and_never_list.md) · [7. Manifests](07_manifests.md) · [9. The extension-point catalogue and requests](09_points_and_requests.md) · [14. Testing and release](../site/pages/first_app.md) · [16. Possible, not possible, limits](16_possible_not_possible.md)

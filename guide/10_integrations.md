@@ -134,4 +134,4 @@ Our own WooCommerce and Acumatica connectors are ours to build; the kit does not
 
 ## See also
 
-[4. Configure first](04_configure_first.md) · [5. Outside apps and the event feed](05_outside_apps_and_event_feed.md) · [14. Testing and release](14_testing_and_release.md) · [16. Possible, not possible, limits](16_possible_not_possible.md)
+[4. Configure first](04_configure_first.md) · [5. Outside apps and the event feed](../recipes/event_feed.md) · [14. Testing and release](../site/pages/first_app.md) · [16. Possible, not possible, limits](16_possible_not_possible.md)

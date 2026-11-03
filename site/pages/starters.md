@@ -19,7 +19,7 @@ Why this is yours to build, and what stays yours: [Build your business on iVendN
 - **What you build:** a payment connector on your own server for a card, mobile-money or pay-later provider we do not connect; or a wallet, a balance your service keeps that a customer spends at the till.
 - **Start from:** the recipe [Your own card or mobile-money connector](../../recipes/payment_connector.md) and its reference implementation, [the payments team's stand-in connector](../../contracts/paygw/partner_stub.py). For a stored balance: [A partner wallet at the till](../../recipes/wallet.md), with sample [S22](../../samples/s22_customer_loyalty/)'s *Member cash*.
 - **The need:** [A card or mobile-money provider we do not connect](../../needs/integrations/own-payment-connector.md), and [A store wallet or a loyalty points balance spent at the till](../../needs/customers/store-wallet-at-till.md).
-- **The door:** the gateway contract `paygw/1` ([chapter 11](../../guide/11_payments_fiscal_hardware.md)), reached in the customer's site through [Partner payment gateways](https://library.ivendnext.app/apps/ivendnext_pay_remote) in the App library. Your connector passes our conformance kit before it takes money.
+- **The door:** the gateway contract `paygw/1` ([chapter 11](../../recipes/payment_connector.md)), reached in the customer's site through [Partner payment gateways](https://library.ivendnext.app/apps/ivendnext_pay_remote) in the App library. Your connector passes our conformance kit before it takes money.
 - **What changes per market:** the provider's API and its sign-in, its approval flow (at the terminal, or on the customer's phone), its currency and minor units, how it settles and refunds.
 
 ## A loyalty provider

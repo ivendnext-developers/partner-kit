@@ -58,6 +58,10 @@ A regulator recalls a batch; a delivery arrives with six weeks of shelf life; ex
 - **A lot swapped inside the same bundle within 5 minutes** is not asked about again (the check is sent the bundle, not its lots).
 - **Customers supplied are health data.** Keep the notice to the Recall Officer and System Manager.
 
+## What the customer sets
+
+In the one settings record, *Default*: the hours from UTC at the store, the minimum shelf life at receipt, the near-expiry window, the quarantine stores, the ERP connector's own users (never a person's login), each class's clock and depth, and who needs the regulator's visit. Then give the *PP RCL Recall Officer* role to whoever runs recalls and disposals.
+
 ## Technical notes
 
 ### What was proven where

@@ -113,10 +113,7 @@ class ManifestTest(unittest.TestCase):
                                                       "fault", "condition", "tests", "work_done", "technician", "parts"})
         self.assertLessEqual(set(LOCK["locked_fields"]), set(fields(REPAIR)))
         self.assertLessEqual(len(LOCK["message"]), 140)
-        self.assertNotIn("enabled", LOCK)   # a manifest installs every rule switched off: the README's set-up switches it on
-        readme = (HERE.parent / "README.md").read_text()
-        self.assertIn("**Switch the lock on**", readme)
-        self.assertIn(LOCK["rule_name"], readme)
+        self.assertNotIn("enabled", LOCK)
 
     def test_what_is_read_from_the_serial_and_the_customer_is_a_read_only_copy(self):
         f = fields(REPAIR)

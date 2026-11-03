@@ -138,7 +138,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
 
    It copies in the order the links need (locations, aisles, bins, then what is in each bin), with each record's table rows, and moves each item's default bin into your field, never over a value already set in yours. Bin locations names its records from their own fields (a bin by its code), so you can run it again at any time: it copies only what is new. Check the counts it prints, then uninstall our app from its package record. Its uninstall also keeps a copy of every record in a file.
 
-10. **Keep it running.** Each version of what your app relies on (an extension point's contract, an API call, the manifest format) is served for 12 months after its successor ships, so your customer's upgrades keep your app running ([chapter 18](../guide/18_versioning_and_support.md)). Read the kit's changelog before each release of yours.
+10. **Keep it running.** Each version of what your app relies on (an extension point's contract, an API call, the manifest format) is served for 12 months after its successor ships, so your customer's upgrades keep your app running ([chapter 18](../CHANGELOG.md)). Read the kit's changelog before each release of yours.
 
 11. **Sell it again.** The next customer with zones gets *ACME Bins* on its own shelf. When it suits many retailers, list it once for every retailer (step 7).
 

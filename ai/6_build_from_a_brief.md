@@ -2,7 +2,7 @@
 
 **Goal.** From a customer's written brief, produce a small working reference app that uses the right way in for each need, with a green check and a plan for what happens next. The person owns the decisions; you do the legwork.
 
-**Read.** [kit/blueprint.md](../kit/blueprint.md) · [guide/03_ladder_and_never_list.md](../guide/03_ladder_and_never_list.md) · [guide/15_customer_archetypes.md](../guide/15_customer_archetypes.md) · the needs catalogue ([needs/README.md](../needs/README.md)) and [guide/16_possible_not_possible.md](../guide/16_possible_not_possible.md) · [guide/09_points_and_requests.md](../guide/09_points_and_requests.md).
+**Read.** [kit/blueprint.md](../kit/blueprint.md) · [guide/03_ladder_and_never_list.md](../guide/03_ladder_and_never_list.md) · [guide/15_customer_archetypes.md](../needs/README.md) · the needs catalogue ([needs/README.md](../needs/README.md)) and [guide/16_possible_not_possible.md](../guide/16_possible_not_possible.md) · [guide/09_points_and_requests.md](../guide/09_points_and_requests.md).
 
 **Samples that combine ways in.** [samples/s1_warranty/](../samples/s1_warranty/) (outside service, a record type and a till key) · [samples/s22_customer_loyalty/](../samples/s22_customer_loyalty/) (logic outside, records inside the retailer's iVendNext) · [samples/s11_approvals/](../samples/s11_approvals/) (a manifest with a workflow, and a nightly export).
 

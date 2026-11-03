@@ -2,9 +2,9 @@
 
 For iVendNext Partners, developers and licensed customers' IT teams. This guide shows how to build a customer's own behaviour on iVendNext without changing iVendNext itself. It is for anyone who builds for an iVendNext customer: an iVendNext Partner, a licensed customer's IT team, and the CitiXsys Consulting Team, our own team, which uses this same guide.
 
-**New here? [How it all works](../../guide/01a_how_it_all_works.md)**: where your app runs, where the data lives, and why customers never collide, in ten minutes. · [Questions developers ask](questions.md)
+**New here? [How it all works](../../guide/01a_how_it_all_works.md)**: where your app runs, where the data lives, and why customers never collide, in ten minutes. · [Questions developers ask](../../guide/01a_how_it_all_works.md)
 
-[A customer sent me a list of needs](../../needs/README.md) · [I know what I'm building](build.md) · [I'm new](start.md) · [Build your business on iVendNext's apps](business.md)
+[A customer sent me a list of needs](../../needs/README.md) · [I know what I'm building](build.md) · [I'm new](first_app.md) · [Build your business on iVendNext's apps](business.md)
 
 > Every page on this site is built from the kit's own guide. Chapter 9 lists each extension point, and every chapter says what the kit has proven and what it has not.
 
@@ -12,7 +12,7 @@ For iVendNext Partners, developers and licensed customers' IT teams. This guide 
 
 - **A customer sent me a list of needs.** Find each one in the [needs catalogue](../../needs/README.md), or straight in its [A to Z list](../../needs/README.md#a-to-z) of what customers ask for, in their words. Each card says whether you can build it today, by which door, from which recipe, and what to tell the customer. Then [plan the project](plan.md).
 - **I know what I'm building.** [Build](build.md): the ladder, the recipes, the samples and your sandbox.
-- **I'm new.** [Get started in five steps](start.md), from a sandbox to your first call. [Request a sandbox](sandbox.md) · [Host with CitiXsys or run your own](apps.md).
+- **I'm new.** [Get started in five steps](first_app.md), from a sandbox to your first call. [Request a sandbox](sandbox.md) · [Host with CitiXsys or run your own](apps.md).
 
 ## What you can build
 
@@ -26,7 +26,7 @@ A customer's own behaviour, without changing iVendNext itself: the customer's ru
 4. **Run a sample** against your sandbox and watch it work.
 5. **Choose your way in and build.**
 
-Each step is on the [Get started](start.md) page, with its commands.
+Each step is on the [Get started](first_app.md) page, with its commands.
 
 ## The ways in, simplest first
 

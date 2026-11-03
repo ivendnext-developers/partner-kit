@@ -1,10 +1,10 @@
 # The app template — a service you can deploy
 
-A small service that does what every deployable app does ([guide chapter 14b](../../guide/14b_deploying_your_app.md)): it checks each call's signature and time, answers inside the deadline, logs one line per call without retailer data, has a health address, runs as a user that is not root, stops cleanly, and refuses to start without its signing secret. It answers one remote till key (`POST /point/hello`) so you can see the whole path. Standard library only.
+A small service that does what every deployable app does ([guide chapter 14b](../../site/pages/publish.md)): it checks each call's signature and time, answers inside the deadline, logs one line per call without retailer data, has a health address, runs as a user that is not root, stops cleanly, and refuses to start without its signing secret. It answers one remote till key (`POST /point/hello`) so you can see the whole path. Standard library only.
 
 **It is for** a builder who has an outside app (chapters 5 and 6) and wants it running on a server iVendNext can reach. Copy this folder, replace `service/core.py` with your own logic, and keep the rest.
 
-**One retailer or many.** Run it for one retailer with that retailer's secret (`IVN_POINT_SECRET`). Or, for an app in the App library, run it for many: each retailer connects itself after its install, and every call is checked with that retailer's own secret ([chapter 14b, One app, many retailers](../../guide/14b_deploying_your_app.md#one-app-many-retailers)). A library key works like a password for its retailer: whoever holds it can connect as that retailer and replace its secrets, and the retailer's next install connects it again.
+**One retailer or many.** Run it for one retailer with that retailer's secret (`IVN_POINT_SECRET`). Or, for an app in the App library, run it for many: each retailer connects itself after its install, and every call is checked with that retailer's own secret ([chapter 14b, One app, many retailers](../../site/pages/publish.md)). A library key works like a password for its retailer: whoever holds it can connect as that retailer and replace its secrets, and the retailer's next install connects it again.
 
 | File | What it is |
 |---|---|

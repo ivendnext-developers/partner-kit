@@ -1,108 +1,38 @@
 # S43 — Third-party payer (`pp_icp`): an insurer, or anyone else, paying part of a sale
 
-*Start from this sample: `python3 tools/manifest/start.py s43_third_party_payer --prefix "ACME ICP"` copies it into `apps/` of your repository under your own prefix (your company's first word, then a short name for the app) and checks it ([how](../../recipes/make_it_your_own.md)).*
-
-In many markets a pharmacy cannot sell to most of its patients without their insurer: the insurer pays part of the sale and the patient pays the rest. The same shape serves an optical plan, and a company paying for what its staff buy. This app is **one payer service for any third party that pays part of a sale**. Its payers, plans, formularies and members are records the retailer fills; it answers the POS app's **payer door** line by line, makes a **claim** from each sale the door books, files claims as a file, and follows each claim to payment.
+In many markets a pharmacy cannot sell to most of its patients without their insurer: the insurer pays part of the sale and the patient pays the rest. The same shape serves an optical plan, and a company paying for what its staff buy. This app is one payer service for any third party that pays part of a sale. Its payers, plans, formularies and members are records the retailer fills. It answers the till's payer door line by line, so the customer pays only their share, makes a claim from each sale, files the claims as a file, and follows each claim to payment. The payer's share plus the customer's always equals the sale, to the minor unit.
 
 **Industries:** Optical, Pharmacy
 
-Its first data set is **one generic insurer**, with the co-pay rules of an iVend Retail add-on we built for a pharmacy chain and an insurer price-list rule a pharmacy customer ran. A second data set, **a company paying 70% of what its staff buy**, loads and answers with no code change.
-
-⚠ **The generic insurer is a sample, not a real insurer.** A partner replaces it with each real payer's terms, and writes each payer's own claim link (NHIF/SHA, NPHIES, eClaimLink, Shafafiya, NHIA) against the same door.
+The first data set is one generic insurer, a sample and not a real insurer: a partner replaces it with each real payer's terms. A second data set, a company paying 70% of what its staff buy, loads with no code change.
 
 **When to use it:** a third party pays part of a sale, the retailer claims it afterwards, and the customer pays only their share at the till.
 
-## The payer door
+## Start from it
 
-The payer's share must be **owed by the payer**, booked as money the payer owes the retailer, never as money already taken (a wallet leg reads *paid*). An app installed from a manifest cannot book that, so the POS app carries a **payer door** (iVendNext POS 2.1.0 build 667 or later; [the recipe](../../recipes/third_party_payer.md)). The door asks this service which covers the customer holds and what the picked cover pays, line by line, before the tender; books the payer's share against the payer's own customer record; prints *Billed to* and *Paid by you* on the receipt; gives the payer's share back on a return; and bills a rejected claim back to the customer on their own sale.
+```bash
+ivn new acme_payer --from s43
+```
 
-| Part | What it is |
-|---|---|
-| `manifest.json` | the payer service the door calls (`point: "payer"`, the `payer/1` contract, installed switched off), the records (Payer, Plan, Formulary, Member, Claim, Claim Batch, Remittance), the tick *Barred from sales a third party pays* on Customer, the roles **PP ICP Claims Clerk** and **PP ICP Integration**, six Desk buttons (*Build claims*, *Make the claims file*, *Match*, *Mark ready*, *Settle as it stands*, *Bill to the customer*), four reports and two charts |
-| `service/app.py` | the service: the door's two calls, `covers` and `coverage`, answered in the contract's own shape (money in whole minor units of the sale's currency, each line's quantity in its own unit), and the six buttons |
-| `copay.py` · `claims.py` | the plan's rules and the claims, as pure functions over plain data |
+## What to change
 
-**What the shop sets before it switches the payer service on** (the door refuses the switch until each is there; `docs/extending/payer.md` §2):
+What a partner usually changes:
 
-1. **The clearing mode**: the shop's own mode of payment of type Custom, with no discount, minimum, maximum, over-tender, counting at the close or rounding, on an open balance sheet account of its own in each company, in the company's currency (not a bank, cash, receivable, payable, stock or temporary account; name it for what it is, e.g. *Billed to payer*: the day's reads list it), named in the subscription's settings as `clearing_mode`. A manifest never carries it: the account is on the shop's books. It carries the payer's share for an instant, until the door moves it onto the payer.
-2. **The clearing mode on each payer till's POS Profile**, with *Allow in Returns* ticked and never as the default: a return gives the payer's share back on it. The till never shows it as a tender.
-3. **The right to sell on a payer**: tick *May Sell on a Payer* on the cashiers' Retail Permission.
-4. **No plan's price list as a customer group's default**: it would price every sale of the member, insured or not. The door switches the sale to the plan's list when the cashier picks the cover.
-5. **The prescription, where the payer needs one.** This version sends none (the subscription's `prescription` setting is empty), so a claim for a payer that needs the prescription (the generic insurer's data set does) is *Incomplete* until the clerk types it, or until the shop names the details as below. The pharmacy counter app ([S39](../s39_pharmacy_counter/README.md)) keeps a prescription's number, prescriber and the prescriber's licence as sale details; with it installed, the administrator adds `"prescription": {"reference": "<its number detail>", "prescriber": "<its prescriber detail>", "prescriber_licence": "<its licence detail>"}` to the payer service's settings, each the name of a sale detail on the site, and ticks consent again (the consent text then names them). The door refuses a name the site does not have, so this version cannot carry S39's names for a shop without S39.
+- the payers, plans and formularies: the data set files in `datasets/` (`generic_insurer.json`, `corporate_account.json`); `python3 samples/s43_third_party_payer/dataset.py records datasets/generic_insurer.json` lists the records a set makes;
+- how a sale is split: `copay.py`;
+- how claims are made, filed and matched: `claims.py` and `service/app.py`;
+- the service's address: `allowed_urls` and the payer service's endpoint in `manifest.json` name the sample's test address; write your own.
 
-## How a sale is split
+More: the [recipe](../../recipes/third_party_payer.md).
 
-The plan's rules, all data (`copay.py`, the tests' 1,728 combinations):
-
-| Rule | What it does |
-|---|---|
-| **Co-pay %** | the customer's share of the covered amount inside the limit |
-| **Invoice upper limit** | the payer covers at most this much of one sale; the rest of the covered amount is the customer's (0: none) |
-| **Maximum co-pay** | the co-pay never exceeds it (0: none). The excess over the limit and extra-item pay are not co-pay |
-| **Extra-item pay** (a formulary row) | a fixed amount per stock unit the customer always pays, at face, before anything else |
-| **The limit is compared with the amount** before or after the sale's discount | *Before the limit*: after the discount · *After the limit*: before it |
-| **The co-pay % is taken** before or after the discount | *Before*: the payer keeps the whole discount · *After*: the customer shares it |
-| **Returned whole or not at all** | a sale on the plan is returned whole, or not at all |
-| **Most units on a sale** (a formulary row) | units past it are the customer's |
-| **Covers** formulary items or every item | a line the plan does not cover is the customer's |
-| **Price list** | when set, a till sale on the plan is priced on it (an invoice made in iVendNext Desk keeps its own list: put it on the plan's, or the app answers *no cover* in words), and an item it does not carry, or carries at zero, **cannot be sold on the plan** (a row counts only as the engine applies it: in force today, in the line's unit or none, for no other customer, for no batch) |
-| **The shop's own promotions apply** | off: the payer door prices a sale on the plan with the retailer's promotions switched off, so a retail promotion is not stacked on the payer's list (the add-on cleared them on every insured line). A coupon or a staff discount the cashier chose still applies, and so can an old-style pricing rule (`payer.md` §7) |
-
-⭐ **The payer's share plus the customer's always equals the sale, to the minor unit**, and the payer's share is spread over the covered lines in proportion. **The sale's prices are never changed here**: the retailer's own pricing (the plan's price list, its pricing rules) prices the sale, and these rules only split it. So the excess over the limit carries the sale's own discount. (The original add-on re-priced each line and added a surcharge so the patient paid the excess undiscounted; a retailer wanting that sets it in its pricing.)
-
-⚠ **The price-list rule reads the plan's list itself, never the line's price.** The door keeps the price the till would otherwise give a line the plan's list does not carry (the customer's own default list, else the store's), so a line's price proves nothing: the service reads the retailer's Item Prices on the plan's list and answers `refuse` with `not_on_list` or `zero_on_list` for that line. The cashier takes it off, or sells the whole sale without the payer.
-
-⚠ **Bounds, stated:** on prices without tax, a discount on the whole sale is read with less of its tax than it carries (the door sends no tax per line), so a co-pay taken before the discount, or a limit compared after it, sees slightly less than the sale's own figure; a line's own discount is read exactly when the sale has no discount of its own and its prices are at the currency's places. The over-limit message counts the plan's limit in the item's stock unit. A claim's amounts in the buttons' messages are the records' numbers (*12.8*), not set to the currency's places. A bill-back's reason is always *claim not paid*: one claim is billed back once.
-
-**What the door is answered, beside the rules:** the payer's share is never more than the sale's rounded total (the rounding is always the customer's); a sale the plan would pay nothing on is answered *no cover* (the door takes no cover that pays nothing); where the prices exclude tax, a line's discount is read with its tax (the line's amount includes it), so the limit and a co-pay taken before the discount compare like with like; the extra-item pay stays inside the customer's share (the contract carries no key for it).
-
-## Claims
-
-1. The door books a sale with its payer details (its claim reference, the cover, each line's two shares, the prescription details it sent). The event feed says so.
-2. **Build claims** (a button on the Payer list) reads the feed and makes one **Claim** per booked sale, named by its claim reference, so a sale is never claimed twice. A return reduces its claim's lines by what it gave back to the payer, once.
-3. A claim missing what its payer needs (the payer's ticks: member number, card serial, prescription, each line's GTIN, dose and frequency) is **Incomplete**: the claims clerk fills it on the Desk and presses **Mark ready**, which is refused while anything is still missing. A claim's status is never typed: the claims file, *Match*, *Mark ready* and *Settle as it stands* (a short-paid claim closed with its shortfall left on the payer's account) move it. ⚠ The pharmacy counter-rules app (S39) keeps a prescription's directions as free text, so the clerk types the dose and frequency where a payer asks for them (Abu Dhabi's Shafafiya does, on every line).
-4. **Make the claims file** (a button on a Payer) puts every Ready claim of that payer into one **Claim Batch**: a CSV, one row per claim line, the file you send to the payer. Each claim becomes **Submitted** (**Resubmitted** when it was corrected after a rejection). A cell is never written so that a spreadsheet runs it as a formula.
-5. The payer's **Remittance** is entered line by line (claim, paid, rejected, the payer's reason); **Match** sums every line of one claim, then compares it with what the claim is still owed, so a payer paying a claim line by line, or in parts over several remittances, is followed to the cent: **Paid**, **Short paid**, **Rejected**, or *Unmatched* (a reference the payer sent that is not ours, or a claim of another payer). The money itself is the retailer's own payment from the payer's customer record, allocated against what the door booked.
-6. A rejected claim is corrected and made Ready again with *Mark ready* (the next file sends it as *Resubmitted*), or **billed to the customer** with *Bill to the customer* (on a rejected or short-paid claim): the door books what the payer did not pay against the customer's own sale, which the till's *Take a payment* then lists for them (a sale made in iVendNext Desk is collected on the Desk, against its Sales Invoice). A till sale is billed back only once it is posted: at once on a shop that posts each sale, else at the day's close (until then the door says so in its own words, and the claim stays as it was); the app's user bills it, with the role **PP ICP Integration** the payer service's settings name (`bill_back_role`).
-
-Reports: *PP ICP Claims*, *PP ICP Rejected and short-paid claims*, *PP ICP Incomplete claims*, *PP ICP Remittances*; charts *PP ICP Payer share by month* and *PP ICP Claims by status*.
-
-## What leaves the retailer's iVendNext
-
-The service reads iVendNext with its integration user's key and answers the door. ⚠ **Members and claims are health data for a pharmacy**: run the service where the law of the retailer's country lets that data go. What it receives: each cover asked (the customer, the store, the till, the cashier, each line's item and amounts, and the prescription's details where the shop names them); and, each time *Build claims* is pressed, every sale booked on the site since the last press, read in full to find the payer's. It makes claims and claims files from each member's number, card and policy numbers, and any prescription, prescriber, licence, dose and frequency. The claims file goes to the payer, which is the point of a claim; send it nowhere else. The service keeps no sale or patient data between calls (a hosted copy keeps each site's address and key). A member number reaches the till only masked to its last four characters.
-
-## What the retailer does (now)
-
-**Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6). ⚠ An update that changes the payer service switches it off and sets its settings from the manifest again: name the clearing mode (and the prescription details, if you set them) again before you switch it back on. An update from 0.1.0 also hands back two new secrets, the payer service's and *Bill to the customer*'s: add them to a one-shop service's file before restarting it.
-
-1. **Install the app** (the retailer's administrator; iVendNext POS 2.1.0 build 667 or later). Then set up and switch on the payer service (*The payer door* above).
-2. **Give the role PP ICP Claims Clerk** to whoever sets up payers and files claims. Members and claims are read by that role, the service's user and a System Manager only, never by a till role. ⚠ The *Barred* tick is on Customer, so anyone who can edit a customer can clear it; to stop a cover for certain, the clerk also switches the customer's Member off.
-3. **Make each payer**: its own **Customer record** first (what it owes is booked against it), then the Payer, its formulary, and each plan with its rules and price list. A data set file (`datasets/`) loads a payer in one go: `python3 dataset.py records datasets/generic_insurer.json` lists the records it makes.
-4. **Make each customer's cover**: a Member per policy (customer, plan, member number exactly as on the card).
-5. **Give the price list its prices**: the retailer's own Item Prices on the plan's list. ⚠ Do not make the plan's list a customer group's default: it would price every sale of the member, insured or not; the door switches the sale to the plan's list when a cover is picked.
-6. **The app's user**: the install makes it (`pp_icp@integration.invalid`, with the role **PP ICP Integration** alone) and names it on the app's registration *PP ICP Claims*. Give that role a plain **read** on POS Invoice, Sales Invoice, Retail Payer Record, Item, Item Price, Price List and Customer (*Role Permissions*): without them the service cannot read a cover, and the till says the payer cannot be reached; without *Retail Payer Record* it makes no claim (a sale's payer details are on that record). Give it no User Permissions. On *PP ICP Claims*, tick its record types on (POS Invoice, Sales Invoice) and save: without them *Build claims* makes no claim. A hosted service is handed the user's key by the retailer's site itself, after the install or an update (press **Connect again** only if the site could not reach the app, or a key was lost or changed); your own one-shop service takes the key you make on that user (*Generate Keys*, User, API Access). The role also bills a rejected claim back (the payer service's `bill_back_role`); the user needs no right to submit a journal.
-7. **Switch on the six Desk buttons** (each installs switched off, with its service) and the payer service (*The payer door* above).
-
-## Data sets
-
-A data set is a JSON file: its payer (code, title, kind, its customer record, what a claim needs), its price list's name, its formularies and its plans. `dataset.py`'s `check()` is the whole format: it refuses a plan naming a formulary the file does not have, a co-pay outside 0–100, an unknown key, a payer kind or claims format the standard version does not know, each in words.
-
-| File | Payer | Shows |
-|---|---|---|
-| `datasets/generic_insurer.json` | *Generic Insurer* | two plans (Gold: 10% after the discount, at most 500; Silver: 20% before the discount, a 5,000 limit), a formulary by item group with extra-item pay and a quantity limit on over-the-counter medicine, the insurer's price list |
-| `datasets/corporate_account.json` | *Acme Ltd (staff purchases)* | a company paying 70% of every item, up to 2,000 a sale: no price list, no formulary |
+**The customer sets:** the clearing mode (its own mode of payment of type Custom, named in the payer service's settings as `clearing_mode`, and on each payer till's POS Profile), *May Sell on a Payer* on the cashiers' Retail Permission, the payers and members, and a plain read for the role **PP ICP Integration** on POS Invoice, Sales Invoice, Retail Payer Record, Item, Item Price, Price List and Customer. Members and claims are health data for a pharmacy: run the service where the retailer's country's law lets that data go.
 
 ## Run it
 
 ```bash
-python3 -m unittest discover -s samples/s43_third_party_payer/tests -p 'test_*.py'
-python3 samples/s43_third_party_payer/tests/canaries.py
-python3 tools/check/check.py samples/s43_third_party_payer
+ivn check
+ivn try
 ```
-
-The service: `python3 samples/s43_third_party_payer/service/app.py service/.env.local` (one retailer; the file holds `IVN_SHOP_URL`, `IVN_SHOP_KEY` and the seven secrets the install handed back, `IVN_SECRET_PAYER`, `_CLAIMS`, `_FILE`, `_REMIT`, `_READY`, `_SETTLE`, `_BILLBACK`), or many retailers through the app template's handshake. It runs as a function: it only answers calls and presses.
-
-Recipe: [`recipes/third_party_payer.md`](../../recipes/third_party_payer.md).
 
 ## Try it at the till
 

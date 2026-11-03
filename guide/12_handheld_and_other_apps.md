@@ -64,4 +64,4 @@ If the need is to **change what a Handheld screen does or shows**, that is produ
 
 ## See also
 
-[5. Outside apps and the event feed](05_outside_apps_and_event_feed.md) · [9. The extension points](09_points_and_requests.md) · [10. Integrations](10_integrations.md) · [16. Possible, not possible, limits](16_possible_not_possible.md)
+[5. Outside apps and the event feed](../recipes/event_feed.md) · [9. The extension points](09_points_and_requests.md) · [10. Integrations](10_integrations.md) · [16. Possible, not possible, limits](16_possible_not_possible.md)

@@ -1,7 +1,7 @@
 """What the shop's INSTALL stops on that its checker (``validate.py``, a byte-equal copy of the shop's own) passes.
 
 The install screen runs ``validate.py`` first; then the installer saves each record, and iVendNext's own save rules stop the
-install, which takes back what it had made. Two of those stops are worth knowing before you send the app, so ``ivn check`` says
+install, which takes back what it had made. Three of those stops are worth knowing before you send the app, so ``ivn check`` says
 them first, in the words the install would use:
 
 1. **A feed registration's description holds at most 140 characters.** The shop's Registered Application keeps its description
@@ -10,10 +10,12 @@ them first, in the words the install would use:
    field its ``options`` names, which must be a field of the same record type: a Link whose own ``options`` is *DocType*, or a
    Select. The install stops on any other with *"Options 'Dynamic Link' type of field must point to another Link Field with
    options as 'DocType'"*.
+3. **A record type's name holds at most 61 characters.** iVendNext keeps a table for each: *"Doctype name is limited to 61
+   characters"*. A long app name with a sample's long names can reach it.
 
     python3 tools/manifest/site_rules.py samples/s33_click_and_collect/manifest.json    # exit 0 = none; 1 = refused
 
-Copied from no file: both were run against the installer on our test bench at POS build 2.1.0.679, and both stopped the install in
+Copied from no file: each was run against the installer on our test bench at POS build 2.1.0.679, and each stopped the install in
 those words. A defect here is a defect there: report it with the Kit defect form (feedback/README.md). ``tools/check/check.py`` and
 ``tools/selfcheck/selfcheck.py`` run it after ``validate.py``. Retire a rule when the shop's install no longer stops on it.
 """
@@ -24,6 +26,7 @@ import json
 import sys
 
 DESCRIPTION_MAX = 140    # Registered Application's description field
+NAME_MAX = 61            # a record type's name
 
 
 def _rows(m, kind):
@@ -37,6 +40,10 @@ def refusals(m: dict) -> list[dict]:
         return []
     out = []
     for i, d in enumerate(_rows(m, "doctypes")):
+        name = d.get("name")
+        if isinstance(name, str) and len(name) > NAME_MAX:
+            out.append({"where": f"doctypes[{i}]", "name": name,
+                        "reason": f"Doctype name is limited to {NAME_MAX} characters ({len(name)}): use a shorter app name"})
         fields = {f.get("fieldname"): f for f in d.get("fields") or [] if isinstance(f, dict)}
         for f in fields.values():
             if f.get("fieldtype") == "Dynamic Link":

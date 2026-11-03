@@ -1,6 +1,6 @@
 # A gift card for a big spend, spendable after a hold — the recipe
 
-A retailer wants a sale over a set amount to earn the customer the retailer's **own** gift card, which can be spent only after a hold (24 hours is common: the customer cannot buy, earn and spend in one visit). This recipe builds it as **an outside app that reads the event feed** and keeps every change of value in the retailer's own gift card records. It is for an iVendNext developer who has made an outside app before ([chapter 5](../guide/05_outside_apps_and_event_feed.md)).
+A retailer wants a sale over a set amount to earn the customer the retailer's **own** gift card, which can be spent only after a hold (24 hours is common: the customer cannot buy, earn and spend in one visit). This recipe builds it as **an outside app that reads the event feed** and keeps every change of value in the retailer's own gift card records. It is for an iVendNext developer who has made an outside app before ([chapter 5](event_feed.md)).
 
 **Reference implementation:** `samples/s25_gift_on_spend/` — *Gift card on spend*.
 

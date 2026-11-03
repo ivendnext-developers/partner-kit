@@ -84,7 +84,7 @@ class Started(unittest.TestCase):
             self.assertNotIn("samples/", a)
         with tempfile.TemporaryDirectory() as d:
             repo = repository(d)
-            self.assertEqual(run("s11_approvals", "--prefix", PREFIX, "--into", str(repo))[0], 0)
+            self.assertEqual(run("s14_approvals_stores", "--prefix", PREFIX, "--into", str(repo))[0], 0)
             self.assertIn("ACME-TST-.YYYY.-", (repo / "apps" / "acme_tst" / "manifest.json").read_text())
 
 
@@ -203,7 +203,7 @@ class Canary(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             repo = repository(d)
             with mock.patch.object(start, "rewrite", broken):
-                rc, out = run("s11_approvals", "--prefix", PREFIX, "--into", str(repo))
+                rc, out = run("s14_approvals_stores", "--prefix", PREFIX, "--into", str(repo))
             self.assertEqual(rc, 1, out)
             self.assertIn("a name of the sample is still in the copy", out)
             self.assertFalse((repo / "apps").exists())

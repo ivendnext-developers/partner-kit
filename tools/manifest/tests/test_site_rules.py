@@ -30,6 +30,15 @@ class WhatItNoLongerStops(unittest.TestCase):
         self.assertEqual(site(m), [])
 
 
+class LongNames(unittest.TestCase):
+    def test_a_record_types_name_over_61_characters_is_refused_and_61_passes(self):
+        m = copy.deepcopy(BASE)
+        m["doctypes"] = [{"name": "X" * 61, "fields": []}]
+        self.assertEqual(site(m), [])
+        m["doctypes"][0]["name"] = "X" * 62
+        self.assertIn("limited to 61", site(m)[0]["reason"])
+
+
 class FeedDescription(unittest.TestCase):
     """The shop's Registered Application keeps 140 characters of description."""
 

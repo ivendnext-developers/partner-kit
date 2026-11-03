@@ -45,4 +45,4 @@ Design for both from the first day:
 
 Every chapter ends with the tests for its door, in its Technical notes. The checks you can run yourself are in chapter 14 (the manifest checker, the money kit, the customer's release gate); iVendNext's install runs the same manifest checker again, inside the site (chapter 7).
 
-**Read next:** [2. Getting started](02_getting_started.md) · [3. The ladder and the four rules](03_ladder_and_never_list.md).
+**Read next:** [2. Getting started](../site/pages/first_app.md) · [3. The ladder and the four rules](03_ladder_and_never_list.md).

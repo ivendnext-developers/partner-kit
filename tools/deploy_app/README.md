@@ -5,7 +5,7 @@ hosting service does, and shows what it would create: the address, the size, wha
 changes nothing.** To order it, use `ivn` or *My apps* ([Order and run it](#order-and-run-it)).
 
 **It is for** a builder whose app follows the template in [`../app_template/`](../app_template/README.md) (guide
-[chapter 14b](../../guide/14b_deploying_your_app.md)) and who wants it hosted by CitiXsys instead of on their own cloud.
+[chapter 14b](../../site/pages/publish.md)) and who wants it hosted by CitiXsys instead of on their own cloud.
 
 ## Use it
 

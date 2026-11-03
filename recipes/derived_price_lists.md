@@ -1,6 +1,6 @@
 # A price list worked out from another, kept in step — the recipe
 
-A retailer wants one price list to follow another: the selling list is one and a half times the buying list, or the wholesale list is nine tenths of the retail list, and when the source price changes the derived price changes by itself. iVendNext's price list has no formula, and a selling pricing rule is the wrong tool (it is a promotion, chapter 4). This recipe builds it as **an outside app on the event feed** that writes the derived list's item prices. It is for an iVendNext developer who has made an outside app before ([chapter 5](../guide/05_outside_apps_and_event_feed.md)).
+A retailer wants one price list to follow another: the selling list is one and a half times the buying list, or the wholesale list is nine tenths of the retail list, and when the source price changes the derived price changes by itself. iVendNext's price list has no formula, and a selling pricing rule is the wrong tool (it is a promotion, chapter 4). This recipe builds it as **an outside app on the event feed** that writes the derived list's item prices. It is for an iVendNext developer who has made an outside app before ([chapter 5](event_feed.md)).
 
 **Reference implementation:** `samples/s26_derived_prices/` — *Derived price lists*.
 

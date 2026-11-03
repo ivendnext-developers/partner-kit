@@ -17,7 +17,7 @@ Then read [that sample's README](samples/s32_coupon_rules/README.md): what the r
 
 **Building with an AI assistant?** Point it at [AGENTS.md](AGENTS.md) first: it holds the rules, the commands and a prompt recipe for each way in, in [`ai/`](ai/README.md).
 
-> **Generally released.** iVendNext POS 2.0.0.652 (18 October 2026) is the general release of the extension points, the API calls the kit describes and the manifest format. From it, each version is served for 12 months after its successor ships ([guide ch. 18](guide/18_versioning_and_support.md)), and every change is a dated entry in [the changelog](CHANGELOG.md).
+> **Generally released.** iVendNext POS 2.0.0.652 (18 October 2026) is the general release of the extension points, the API calls the kit describes and the manifest format. From it, each version is served for 12 months after its successor ships ([guide ch. 18](CHANGELOG.md)), and every change is a dated entry in [the changelog](CHANGELOG.md).
 
 **Anyone may read the kit. To get a sandbox or build for an iVendNext customer, [become an iVendNext Partner](https://www.ivendnext.com/partners/apply/).**
 
@@ -43,7 +43,7 @@ The same path, step by step, is on [developer.ivendnext.com](https://developer.i
 
 Use the kit before you quote a customer or start a build.
 
-1. New to iVendNext? Read [1a. How it all works](guide/01a_how_it_all_works.md) first: where your app runs (Docker, a container, a function or nowhere), where the customer's data lives, why two customers never collide, and what publishing and hosting hand over. Then [1b](guide/01b_one_app_end_to_end.md), one app from your laptop to the till, and [Questions developers ask](https://developer.ivendnext.com/questions.html).
+1. New to iVendNext? Read [1a. How it all works](guide/01a_how_it_all_works.md) first: where your app runs (Docker, a container, a function or nowhere), where the customer's data lives, why two customers never collide, and what publishing and hosting hand over. Then [1b](site/pages/first_app.md), one app from your laptop to the till, and [Questions developers ask](https://developer.ivendnext.com/questions.html).
    Then [What you can use](site/pages/map.md): every endpoint your app can call and every one iVendNext calls on your service, everything a manifest can add, every screen, and [every record type with its fields](tools/records/README.md).
 2. Read [the guide](guide/README.md), starting with [1. Welcome and the one path](guide/01_welcome.md) and [3. The ladder and the four rules](guide/03_ladder_and_never_list.md).
 3. Fill in [the blueprint](kit/blueprint.md) for your project before you quote or build.
@@ -57,7 +57,7 @@ Use the kit before you quote a customer or start a build.
 | 2 | An outside app over the API and the event feed, in any language | your server | [connected app](recipes/connected_app.md) · [event feed](recipes/event_feed.md) |
 | 3 | A till key the cashier taps; the till calls your HTTPS service | your server | [till key](recipes/point_handler.md) |
 | 4 | A manifest: your own record types, fields and formats, as data | nowhere — it is data | [manifest](recipes/manifest.md) |
-| 5 | A sandboxed function compiled to WebAssembly, at an extension point that offers one | a sandbox we run | [guide ch. 8](guide/08_sandboxed_functions.md) |
+| 5 | A sandboxed function compiled to WebAssembly, at an extension point that offers one | a sandbox we run | [guide ch. 8](tools/wasm_kit/README.md) |
 | 6 | Compose doors, then request an extension point only when no combination meets the need | — | [guide ch. 9](guide/09_points_and_requests.md) |
 
 **The four rules every build keeps** ([guide ch. 3](guide/03_ladder_and_never_list.md)): money enters the sale visibly, before payment; never override or patch iVendNext; your code runs on your server, and inside a customer's site you ship data, not code; your screens come through our doors (on the till, your page as a sheet over the sale, the till's own sheets when an item is scanned, a customer is picked or a quantity changes, and extra fields; in Desk, buttons, your pages and native screens), and what you can't do is put your JavaScript inside our screens.
@@ -87,7 +87,7 @@ Rung 5 rests on one measured question: can a partner's function give the same an
 - **Hostile modules are stopped** on both, each with a named reason.
 - **JavaScript compiled with Javy: not on the till.** It gave the same answers, but it starts too slowly for the cashier. You may use it for a function that runs on the server only, where start-up time is not on the cashier's path.
 
-The kit in [`tools/wasm_kit/`](tools/wasm_kit/README.md) builds, meters, checks and runs your function on both hosts locally. Two extension points take a sandboxed function today, the check before payment and pricing, and only one CitiXsys has certified runs ([guide ch. 8](guide/08_sandboxed_functions.md)). The measurements are in the Technical notes below.
+The kit in [`tools/wasm_kit/`](tools/wasm_kit/README.md) builds, meters, checks and runs your function on both hosts locally. Two extension points take a sandboxed function today, the check before payment and pricing, and only one CitiXsys has certified runs ([guide ch. 8](tools/wasm_kit/README.md)). The measurements are in the Technical notes below.
 
 ## Feedback, contributing and security
 

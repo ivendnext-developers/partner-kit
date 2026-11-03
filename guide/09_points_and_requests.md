@@ -129,4 +129,4 @@ Every extension point states both before it ships. For the ones above:
 
 ## See also
 
-[3. The ladder and the four rules](03_ladder_and_never_list.md) · [5. Outside apps and the event feed](05_outside_apps_and_event_feed.md) · [6. Till keys](06_till_keys.md) · [7. Manifests](07_manifests.md) · [11. Payments, fiscal, hardware](11_payments_fiscal_hardware.md) · [16. Possible, not possible, limits](16_possible_not_possible.md) · [17. Submitting, support, feedback](17_submit_support_feedback.md)
+[3. The ladder and the four rules](03_ladder_and_never_list.md) · [5. Outside apps and the event feed](../recipes/event_feed.md) · [6. Till keys](../contracts/pages/remote_till_key.md) · [7. Manifests](07_manifests.md) · [11. Payments, fiscal, hardware](../recipes/payment_connector.md) · [16. Possible, not possible, limits](16_possible_not_possible.md) · [17. Submitting, support, feedback](../site/pages/feedback.md)

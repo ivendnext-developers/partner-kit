@@ -1,6 +1,6 @@
 # A price checker on the shop floor (a kiosk page your app serves) — the recipe
 
-A retailer wants a screen on its floor where a customer scans an item and reads its price, without asking a cashier. iVendNext's own guide calls this *a genuinely different screen*, a separate application, not a till key. This recipe builds it as **a page your app serves**, priced **by iVendNext itself** for each scan. It is for an iVendNext developer who has made an outside app before ([chapter 5](../guide/05_outside_apps_and_event_feed.md)).
+A retailer wants a screen on its floor where a customer scans an item and reads its price, without asking a cashier. iVendNext's own guide calls this *a genuinely different screen*, a separate application, not a till key. This recipe builds it as **a page your app serves**, priced **by iVendNext itself** for each scan. It is for an iVendNext developer who has made an outside app before ([chapter 5](event_feed.md)).
 
 **Reference implementation:** `samples/s24_price_checker/` — *Price-checker kiosk*.
 
@@ -50,7 +50,7 @@ What the retailer does after install, in its own words:
 ## Technical notes
 
 - **Many retailers:** the template's handshake hands your app iVendNext's integration user's key when the retailer connects. iVendNext makes that user at the install, and the retailer's site hands the key over when it connects, after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed); until the key arrives the kiosk says it is not set up. Name your service's one `*.ivendnext.app` address in the manifest's `allowed_urls`: the site connects only to that address (the POS release that carries the hosted handshake, train T10).
-- **Hosting:** a page and a press-only answer, so on CitiXsys hosting it runs as a function, paid per call (`app.json` `"runs": "function"`, [chapter 14b](../guide/14b_deploying_your_app.md)); the sample's `lambda_handler` returns the page with its own content type.
+- **Hosting:** a page and a press-only answer, so on CitiXsys hosting it runs as a function, paid per call (`app.json` `"runs": "function"`, [chapter 14b](../site/pages/publish.md)); the sample's `lambda_handler` returns the page with its own content type.
 - **Bounds:** a typed item code is not looked up (the sample's 1.0); the price is shown in the till profile's currency, converted by the retailer's own exchange rate when its list is in another (read in the engine's pricer, not run); whoever holds a real kiosk's address can check as often as they like (two calls to iVendNext each); a walk-in customer whose customer group has its own price list is priced on the store's list; online only.
 
 ### What was proven where

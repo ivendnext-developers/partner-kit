@@ -62,7 +62,7 @@ Your customer pays its iVendNext subscription as usual.
 
 ## We keep supporting you
 
-- **The platform is ours to support:** the ways in and their versions, the install, the App library and the hosting. Each version of what your app relies on is served for 12 months after its successor ships, so your customer's upgrades keep your app running ([guide chapter 18](../../guide/18_versioning_and_support.md)).
+- **The platform is ours to support:** the ways in and their versions, the install, the App library and the hosting. Each version of what your app relies on is served for 12 months after its successor ships, so your customer's upgrades keep your app running ([guide chapter 18](../../CHANGELOG.md)).
 - **Our code comes as is, under its licence,** and we fix its faults in the kit like any other. You support what you deliver to your customer.
 - **Ask when you need something.** A missing door, a gap in a recipe, a sample you need: the [feedback forms](feedback.md) reach the team that builds the kit. Help and your account manager are there for everything else.
 

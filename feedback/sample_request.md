@@ -1,6 +1,6 @@
 # Sample request — ask for a worked example, or a manifest installed
 
-**For:** an iVendNext Partner, a licensed customer's IT team or the CitiXsys Consulting Team who has placed a need on the ladder but cannot find a sample close enough to start from, or who has a manifest to be installed on a sandbox. These forms are for onboarded members ([who can file](README.md)). **Reference:** the samples ([`../samples/`](../samples/)), the customer archetypes in guide chapter 15 ([Customer archetypes](../guide/15_customer_archetypes.md)) and the blueprint ([`../kit/blueprint.md`](../kit/blueprint.md)).
+**For:** an iVendNext Partner, a licensed customer's IT team or the CitiXsys Consulting Team who has placed a need on the ladder but cannot find a sample close enough to start from, or who has a manifest to be installed on a sandbox. These forms are for onboarded members ([who can file](README.md)). **Reference:** the samples ([`../samples/`](../samples/)), the customer archetypes in guide chapter 15 ([Customer archetypes](../needs/README.md)) and the blueprint ([`../kit/blueprint.md`](../kit/blueprint.md)).
 
 A sample is a small, complete, working example of one pattern, with its recipe and tests, run on our own bench. A request that names the pattern is the one that moves a sample up the order.
 

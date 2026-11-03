@@ -10,7 +10,7 @@ The forms are for **onboarded members**: an iVendNext Partner, a licensed custom
 
 **When to use it:** a piece of the kit failed, a page is wrong, you want a worked example, or no extension point meets your need.
 
-**Reference:** the six forms in this folder; guide chapter 17 ([Submitting, support, feedback](../guide/17_submit_support_feedback.md)); the extension-point catalogue (guide chapter 9, [The extension points, and how to ask for a new one](../guide/09_points_and_requests.md)).
+**Reference:** the six forms in this folder; guide chapter 17 ([Submitting, support, feedback](../site/pages/feedback.md)); the extension-point catalogue (guide chapter 9, [The extension points, and how to ask for a new one](../guide/09_points_and_requests.md)).
 
 We do not interview builders or customers. The analysis we already hold is the evidence, and **a form is how a new need reaches us**. The forms ask only what we need to start. Anything else we need, we ask in the issue.
 

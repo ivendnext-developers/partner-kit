@@ -1,6 +1,6 @@
 # The money kit — preview against booking, on your staging site
 
-The money kit checks that what the till shows a customer is what iVendNext books. It rings baskets through the till's own calls — the **preview** the customer sees, then the **booked** sale, then the back-office invoice the sale is merged into when the day closes — and fails any basket whose total, tax or line amounts differ. Why and how: [the recipe](../../recipes/money_kit.md).
+The money kit checks that what the till shows a customer is what iVendNext books. It rings baskets through the till's own calls — the **preview** the customer sees, then the **booked** sale, then the back-office invoice the sale is merged into when the day closes — and fails any basket whose total, tax or line amounts differ. Why and how: [the recipe](../../recipes/save_rules.md).
 
 **When to use it:** to check, on a staging site with your app installed, that no basket books a different amount from the one the till showed. From a pipeline you run it through the release gate, [`samples/s12_release_gate/`](../../samples/s12_release_gate/README.md).
 
