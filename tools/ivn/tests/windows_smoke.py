@@ -26,6 +26,8 @@ def ivn(cwd, env, *argv):
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):  # a runner's console that cannot show a word never stops the smoke
+        sys.stdout.reconfigure(errors="replace")
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
         stub = Stub(tmp)
