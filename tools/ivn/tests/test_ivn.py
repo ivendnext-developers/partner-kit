@@ -245,7 +245,10 @@ class Stub:
         out = {"step": "done", "done": True, "version": r["latest"], "lines": ["Publishing…"],
                "send": [{"site": SITE, "message": self.message}], "published": "door's form"}
         if self.sent.get("to") == "everyone":
-            out.update(public="awaiting_approval", public_words="Waiting for our approval. Only the first listing waits.")
+            if self.listed and "card" not in self.sent and not getattr(self, "awaiting", False):  # a first listing carries its card
+                out.update(public="listed", public_words="Listed in the App library.")
+            else:
+                out.update(public="awaiting_approval", public_words="Waiting for our approval. Only the first listing waits.")
         return out
 
     def picture(self, b):
@@ -764,7 +767,7 @@ class FoundOnTheRealDoors(Base):
         version = self.stub.apps["acme_member_till"]["versions"][-1]["version"]
         sites = {"sites": [{"site": SITE, "customer": True, "state": "Waiting for their administrator to install."},
                            {"site": "acme.sandbox.ivend.co", "sandbox": True, "version": version, "state": f"Installed {version}."}]}
-        with unittest.mock.patch.dict(Stub.ROUTES, {"/v1/sites": lambda s, b: sites}):
+        with unittest.mock.patch.dict(Stub.ROUTES, {"/v1/where": lambda s, b: sites}):  # the door `where`, as the live walk found
             rc, out = self.run_ivn("status")
         self.assertEqual(rc, 0, out)
         self.assertIn(f"{version} a draft, on your sandbox only.", out)
@@ -1072,6 +1075,14 @@ class Publish(Base):
         self.assertEqual(rc, 0, out)
         self.assertEqual(self.stub.sent["to"], "everyone")
         self.assertRegex(out, r"1\.0\.0 published to the App library and \d+ sites?\.")
+
+    def test_a_later_version_while_the_first_listing_waits_says_it_waits(self):  # UX-146: EASY3b's live walk
+        self.stub.listed, self.stub.awaiting = True, True
+        self.stub.money = {"lines": ["Publishing is free."], "plan": "starter", "plans": None}
+        rc, out = self.run_ivn("publish")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("Waiting for our approval. Only the first listing waits.", out)
+        self.assertNotIn("published to the App library", out)
 
     def test_a_message_with_no_key_yet_is_said_to_the_developer_not_under_send_this(self):  # J5-04's library words
         self.stub.message = "Its key is not ready yet: publish again in a minute."

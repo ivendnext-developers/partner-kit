@@ -1219,7 +1219,8 @@ def cmd_publish(a) -> int:
     row = online(door, "/v1/app", {"app": app})
     went = next((v.get("sites") or [] for v in row.get("versions") or [] if v.get("version") == shipped), [])
     n, lead = len(went), WORDS["uploaded"].format(version=uploaded) if uploaded else ""
-    if a.public and done.get("public_words"):
+    waiting = str(done.get("public_words") or "").startswith("Waiting")  # a later version while the first listing still waits
+    if (a.public or waiting) and done.get("public_words"):
         print(lead + str(done["public_words"]) + (f" {done['card_url']}" if done.get("card_url") else ""))
     elif public:
         print(lead + WORDS["published_listed"].format(version=shipped, n=n, s="" if n == 1 else "s"))
@@ -1285,7 +1286,7 @@ def cmd_status(a) -> int:
     sites = []
     if row:
         try:
-            sites = door("/v1/sites", {"app": app}).get("sites") or []
+            sites = door("/v1/where", {"app": app}).get("sites") or []
         except (Refused, Offline):
             pass
     for s in sites:  # §14: a draft a try installed is on the sandbox, not on no site
