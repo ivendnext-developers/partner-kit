@@ -201,6 +201,11 @@
   }
   function pubRunning(s) { return tryRunning(s); }
   // the checkout's button: our own teams' copies are covered, so theirs says no charge (EASY1NOTES, walk 11-02)
+  // K176: Starter chosen beforehand for an app that runs only when called; the person's own choice and a plan in force come first
+  function tryPlanNow(picked, c) { return picked || c.plan || (c.money || {}).suggested || null; }
+  // a plan goes only where the screen asked for one: a form kept from an earlier look never overrides the plan in force
+  function pubPlan(asked, form, money) { return (asked ? form.plan : money.plan) || undefined; }
+  function payLabel(s) { return s.pay || payWords(); }   // K176: the amount, when the door names one
   function payWords(internal) { return (arguments.length ? internal : who && who.internal) ? T.noCharge : T.pay; }
   // what Send for listing sends: the card's fields (J7-01), each picture as the App library knows it
   function cardBody(cd) {
@@ -427,7 +432,7 @@
               covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords,
-              canGoBack: canGoBack, defaultName: defaultName, versionsShown: versionsShown, logFile: logFile, payWords: payWords, pictureType: pictureType, b64: b64, cardBody: cardBody };
+              canGoBack: canGoBack, defaultName: defaultName, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, tryPlanNow: tryPlanNow, pubPlan: pubPlan, pictureType: pictureType, b64: b64, cardBody: cardBody };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -1034,6 +1039,7 @@
   // J5-14: the receiving owner's screen
   function vOffer(o) {
     var row = el("div", { "class": "hosting-step" }, p(String(o.words || "").replace(/\s*Accept \/ Refuse\.?\s*$/, "")));
+    if (o.pays) row.appendChild(p(o.pays));   // K176: who pays, said before Accept
     row.appendChild(button(WORDS.accept, function (ev) {
       ev.target.disabled = true;
       call("POST", "/handover/accept", { app: o.app }).then(function (r) {
@@ -1146,7 +1152,7 @@
     if (s && s.step) {
       if (!s.done) (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });   // the steps go once the result is in
       if (tryRunning(s)) box.appendChild(el("p", { "class": "hint", text: T.wait }));
-      if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, target: "_blank", rel: "noopener", "class": "site-btn", text: payWords() })));
+      if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, target: "_blank", rel: "noopener", "class": "site-btn", text: payLabel(s) })));
       if (s.stop) {
         box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
         if ((s.build_lines || []).length) box.appendChild(el("pre", { text: s.build_lines.join("\n") }));
@@ -1197,7 +1203,7 @@
       box.appendChild(cu);
     }
     box.appendChild(el("details", {}, el("summary", { text: T.wording }), el("pre", { text: c.wording || "" })));
-    var money = c.money || {}, plan = data.tryPlan || c.plan || null;
+    var money = c.money || {}, plan = tryPlanNow(data.tryPlan, c);
     if (money.line) box.appendChild(p(money.line));
     if ((money.plans || []).length) {
       var fs = el("fieldset", {}, el("legend", { text: T.plan }));
@@ -1269,7 +1275,7 @@
       if (!(s.lines || []).length) box.appendChild(p(U.publishing));
       box.appendChild(el("p", { "class": "hint", text: U.wait }));
     }
-    if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, target: "_blank", rel: "noopener", "class": "site-btn", text: payWords() })));
+    if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, target: "_blank", rel: "noopener", "class": "site-btn", text: payLabel(s) })));
     if (s.stop) {
       box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
       if ((s.build_lines || []).length) box.appendChild(el("pre", { text: s.build_lines.join("\n") }));
@@ -1396,6 +1402,7 @@
     // our own teams order no customer's production: the plan is asked only for the company's own site (J5-03, J5-19)
     var askPlan = (money.plans || []).length && (!money.own_only || (data.pubTo === "customer" && form.own));
     if (askPlan) {
+      if (!form.plan && money.suggested) form.plan = money.suggested;   // Starter chosen beforehand (K176)
       var fsp = el("fieldset", {}, el("legend", { text: T.plan }));
       money.plans.forEach(function (x) {
         var r = el("input", { type: "radio", name: "pub-plan", value: x.plan });
@@ -1413,7 +1420,7 @@
       if (form.card.busy) return;   // the pictures still going up: Send waits for them
       if (askPlan && !form.plan) { say(T.choosePlan, true); render(); return; }
       data.pubPress = true; say(""); render();
-      var body = { app: data.appId, to: data.pubTo, plan: form.plan || money.plan || undefined };
+      var body = { app: data.appId, to: data.pubTo, plan: pubPlan(askPlan, form, money) };
       if (data.pubTo === "customer") { body.sites = form.sites.filter(function (x) { return x.trim(); }); body.own = form.own; }
       else body.card = cardBody(form.card);
       call("POST", "/publish", body).then(function (r) {
