@@ -69,7 +69,7 @@ Your app lands on your preview shelf at once, and on a customer's *Made for you*
 
 ## 4. Its hosting order
 
-Only if CitiXsys runs your service. S18 only answers a press, so it runs as a **function**: it runs only when a till calls it, and an app that runs as a function and is listed in the App library carries no hosting charge. Its `app.json` says so (`"runs": "function"`, `"shops": true`). First check, on your laptop, what the order would make. It changes nothing:
+Only if CitiXsys runs your service. S18 only answers a press, so it runs as a **function**: it runs only when a till calls it, and such an app is free once its listing in the App library is approved: the billing stops at its next renewal, and nothing already paid is refunded. Its `app.json` says so (`"runs": "function"`, `"shops": true`). First check, on your laptop, what the order would make. It changes nothing:
 
 ```bash
 python3 tools/deploy_app/deploy_app.py apps/acme_rgd --zip acme-rgd.zip --root . --plan starter --partner acme
