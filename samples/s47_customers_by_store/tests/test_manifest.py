@@ -1,4 +1,4 @@
-"""S47's manifest passes the kit's checker; the capture on customer select installs switched off and keeps the customer
+"""S47's manifest passes the kit's checker; the capture on customer select is on from the install and keeps the customer
 on the sale when down; the rule record is one per customer group with a table of places, readable by the integration
 role only, and opens its help."""
 import json

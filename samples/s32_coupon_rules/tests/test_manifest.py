@@ -1,4 +1,4 @@
-"""S32's manifest passes the kit's checker; the check installs switched off and lets the sale go on when down; the rule
+"""S32's manifest passes the kit's checker; the check is on from the install and lets the sale go on when down; the rule
 record is one per coupon, readable by the integration role only, and opens its help."""
 import json
 import sys

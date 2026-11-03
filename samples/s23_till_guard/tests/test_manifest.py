@@ -1,4 +1,4 @@
-"""S23's manifest passes the kit's checker; both services install switched off and let the sale go on when down; the
+"""S23's manifest passes the kit's checker; both services are on from the install and let the sale go on when down; the
 scan service is filtered by the item's own tick; the settings record is readable by the integration role only."""
 import json
 import sys

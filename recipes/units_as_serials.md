@@ -35,4 +35,3 @@ Supplements, phones and pharmacy packs often carry a printed code per pack, and 
 - **Till sales read *Active* until the day's sales are posted** to the back office.
 - **A pack from an expired batch** is refused at payment on its own line.
 - **Offline,** the cashier scans the item, then the code as its serial; it is checked when the sale is sent (not walked).
-- **What was run, and what was not:** S30's README, *What was proven where*.

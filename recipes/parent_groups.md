@@ -34,4 +34,4 @@ A retailer sets up a coupon for *Supplements* and expects it to cover every supp
 - **While the service is down,** nothing is written; when it is back, the feed's events are read in order, and `reconcile` catches up everything at once.
 - **Every item group save reads every coupon and promotion.** Cheap for tens of them; with thousands, run `reconcile` on a schedule and leave Item Group off the registration.
 - **Keep the service's state.** Lose it, and the service takes every child row for a person's: it adds none twice, but removes none when the parent goes.
-- **Not walked on a till:** a sale applying a written-out coupon (S31's README, *What was proven where*).
+- **Not walked on a till:** a sale applying a written-out coupon.

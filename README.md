@@ -15,7 +15,7 @@ ivn new acme_po_approval --from s11
 
 **Building with an AI assistant?** Point it at [AGENTS.md](AGENTS.md) first.
 
-> **Generally released.** iVendNext POS 2.0.0.652 (18 October 2026) is the general release of the extension points, the API calls the kit describes and the manifest format. From it, each version is served for 12 months after its successor ships. Every change is a dated entry in [the changelog](CHANGELOG.md).
+> **Generally released.** iVendNext POS 2.0.0.652 (18 October 2026) is the general release of the extension points, the API calls the kit describes and the manifest format. From the general release, each version is served for 12 months after its successor ships. Every change is a dated entry in [the changelog](CHANGELOG.md).
 
 ## When you go further
 

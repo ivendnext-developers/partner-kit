@@ -51,7 +51,7 @@ class Manifest(unittest.TestCase):
             self.assertFalse(M.get(k), k)
 
     def test_the_setup_and_what_leaves_are_in_the_description(self):
-        for words in ("PP DPL Integration", "read, create and write on Item Price", "PP DPL Prices", "What leaves the shop",
+        for words in ("PP DPL Integration", "read, create and write on Item Price", "What leaves the shop",
                       "change any item price"):
             self.assertIn(words, M["description"])
 

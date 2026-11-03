@@ -1,4 +1,4 @@
-"""S39's manifest passes the kit's checker; five services install switched off with the down answers the design names
+"""S39's manifest passes the kit's checker; five services are on from the install with the down answers the design names
 (the dispensary refuses, the front lets the sale through, the Desk refuses); the two till checks fit one POS Profile's
 10 seconds beside the age check; the record types, fields and sale details are the ones the service reads; only the
 pharmacist-in-charge writes the Pharmacist list, only pharmacists write prescriptions, only the service writes dispensings;

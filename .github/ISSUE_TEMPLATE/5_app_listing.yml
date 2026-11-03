@@ -24,7 +24,7 @@ body:
     id: s2
     attributes:
       label: "2. The manifest, its guide page and its changelog"
-      placeholder: "Attach the manifest (version 1.0.0 or later), the text of its guide page in the five headings of the guide template, and one line on what is new in this version."
+      placeholder: "Attach the manifest (version 1.0.0 or later), a link to its guide (any https page), and one line on what is new in this version."
     validations:
       required: true
   - type: checkboxes

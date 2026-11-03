@@ -1,4 +1,4 @@
-"""S36's manifest passes the kit's checker; the check installs switched off and lets the sale go on when down; the fields,
+"""S36's manifest passes the kit's checker; the check is on from the install and lets the sale go on when down; the fields,
 the sale detail and the settings are the ones the service reads; the integration role only reads the settings, and the
 settings open their help."""
 import json

@@ -103,7 +103,6 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual((s["key"], s["point"], s["timeout_seconds"]), ("work", "desk_action", 10))
         (reg,) = self.m["registered_applications"]
         self.assertLessEqual(len(reg["description"]), 140)
-        self.assertIn("leave the feed off", reg["description"])
 
 
 if __name__ == "__main__":

@@ -42,7 +42,7 @@
    "value": "https://developer.ivendnext.com/recipes/expiry_markdown.html#settings"}
  ],
  "registered_applications": [
-  {"name": "PP EXM Markdown feed", "description": "the markdown service reads lots, items and item groups and writes lots' prices as this feed's user; leave the feed switched off", "events": ["PP EXM Settings"]}
+  {"name": "PP EXM Markdown feed", "description": "the markdown service reads lots, items and item groups and writes lots' prices as this feed's user", "events": ["PP EXM Settings"]}
  ],
  "extension_subscriptions": [
   {"key": "markdown", "point": "desk_action", "label": "Mark down service", "endpoint_url": "https://host.docker.internal:8125/press/markdown", "timeout_seconds": 10}

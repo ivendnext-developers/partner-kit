@@ -49,7 +49,7 @@ class ManifestTest(unittest.TestCase):
     def test_m4_one_feed_that_makes_the_apps_user(self):
         (f,) = self.m["registered_applications"]
         self.assertEqual(f["events"], [SCREEN])
-        self.assertIn("leave the feed off", f["description"])
+        self.assertLessEqual(len(f["description"]), 140)
 
     def test_m5_no_guest_field_and_no_money_anywhere(self):
         words = json.dumps([d["fields"] for d in self.m["doctypes"]]).lower()

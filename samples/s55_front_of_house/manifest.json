@@ -603,7 +603,7 @@
  "registered_applications": [
   {
    "name": "PP FOH Front of house feed",
-   "description": "the front of house service opens checks and keeps its bookings as this feed's user; leave the feed switched off",
+   "description": "the front of house service opens checks and keeps its bookings as this feed's user",
    "events": [
     "PP FOH Reservation"
    ]

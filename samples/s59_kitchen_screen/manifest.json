@@ -309,7 +309,7 @@
  "registered_applications": [
   {
    "name": "PP KSC Kitchen screen feed",
-   "description": "the kitchen screen service reads the store's tickets and moves them as this feed's user; leave the feed off",
+   "description": "the kitchen screen service reads the store's tickets and moves them as this feed's user",
    "events": [
     "PP KSC Screen"
    ]

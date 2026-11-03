@@ -1366,7 +1366,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertEqual(check_links.check(out), [])
         for old, new in seo.read_redirects(build.REDIRECTS):                                   # the real table: each a stub
             stub = (self.out / old).read_text("utf-8")                                         # to a built page
-            self.assertIn(f'<link rel="canonical" href="https://developer.ivendnext.com/{new}">', stub, old)
+            self.assertIn(f'<link rel="canonical" href="https://developer.ivendnext.com/{new.removesuffix("index.html")}">', stub, old)
             self.assertFalse(indexable(stub), old)
             self.assertNotIn("<script", stub, old)
             self.assertTrue((self.out / new).is_file(), new)

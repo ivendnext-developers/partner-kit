@@ -420,7 +420,7 @@
  "registered_applications": [
   {
    "name": "PP LDW Draw feed",
-   "description": "the draw service reads till sales, tills and customer groups and writes campaigns as this user; leave the feed off",
+   "description": "the draw service reads till sales, tills and customer groups and writes campaigns as this user",
    "events": [
     "PP LDW Campaign"
    ]

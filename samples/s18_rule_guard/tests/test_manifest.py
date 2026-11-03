@@ -1,4 +1,4 @@
-"""S18's manifest passes the kit's checker: one check, installed switched off, refusing when its service is down."""
+"""S18's manifest passes the kit's checker: one check, on from the install, refusing when its service is down."""
 import json
 import sys
 import unittest

@@ -900,7 +900,7 @@
  "registered_applications": [
   {
    "name": "PP RBO Back office feed",
-   "description": "the back office service reads sales, recipes and stock and writes stock issues as this feed's user; leave the feed switched off",
+   "description": "the back office service reads sales, recipes and stock and writes stock issues as this feed's user",
    "events": [
     "PP RBO Settings"
    ]
