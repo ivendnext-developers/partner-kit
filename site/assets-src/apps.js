@@ -138,6 +138,7 @@
     none: "No sample or need matches these words. Try other words, or ask for it: ",
     ask: "Ask for it",
     desk: "Set in Desk first: no app needed",
+    hand: "Copy by hand: not an app made here",
     cannot: "Cannot be built today: ",
     noSample: "Built as an app, with no sample to start from: ",
     claim: "Claim a need: we hold back from it for 90 days while you build it.",
@@ -145,7 +146,8 @@
     tick: "Use in my app", tickAdd: "Add to the app", inApp: "In this app", recipe: "Read the recipe",
     tickOne: "Tick one or several samples.", tickAddOne: "Tick the sample to add.", next: "Next", everySample: "Show every sample",
     name: "Name your app", appName: "App name",
-    nameHint: ": your first word, then your words. Installed names never change, so choose with care.",
+    threeWords: "A name is one to three words of letters and digits, each starting with a letter: ACME BINS.",
+    change: "Change", yourName: "Its name in Desk", yourNameHint: "Your first word, then one or two words of your own. Installed names never change, so choose with care.",
     make: "Make the app", nextSettings: "Next: its settings",
     noApps: "You have no apps yet.", newApp: "New app",
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
@@ -297,34 +299,37 @@
   function words(q) { return String(q || "").toLowerCase().split(/\s+/).filter(Boolean); }
   function every(ws, text) { text = String(text || "").toLowerCase(); return ws.every(function (w) { return text.indexOf(w) >= 0; }); }
 
+  // a sample offered with a tick: one that can be made into an app (a pack is set in Desk, one with no manifest is copied by hand)
+  function tickable(s) { return !s.config_pack && !s.by_hand; }
+
   // J1-03, J1-04, J1-13: the one search. Samples whose number or name match come first, then the needs every word matches;
   // each sample once, with the needs it was matched for; Configure needs and configuration packs apart (D2), needs that
   // cannot be built apart (D3). No words: every sample.
   function search(index, catalogue, q) {
     var ws = words(q), samples = (index && index.samples) || [], by = {};
     samples.forEach(function (s) { by[s.name] = s; });
-    var out = { samples: [], forNeeds: {}, desk: [], packs: [], cannot: [], nosample: [], none: false };
-    var add = function (n) { if (by[n] && !by[n].config_pack && out.samples.indexOf(by[n]) < 0) out.samples.push(by[n]); };
+    var out = { samples: [], forNeeds: {}, desk: [], packs: [], hand: [], cannot: [], nosample: [], none: false };
+    var add = function (n) { if (by[n] && tickable(by[n]) && out.samples.indexOf(by[n]) < 0) out.samples.push(by[n]); };
+    var apart = function (s) { if (s.config_pack) out.packs.push(s); else if (s.by_hand) out.hand.push(s); else add(s.name); };
     if (!ws.length) {
-      samples.forEach(function (s) { if (s.config_pack) out.packs.push(s); else out.samples.push(s); });
+      samples.forEach(apart);
       return out;
     }
     var number = ws.length === 1 && /^s\d+$/.test(ws[0]) ? ws[0] : null;
     samples.forEach(function (s) {
       var hit = number ? sampleNumber(s.name).toLowerCase() === number : every(ws, sampleNumber(s.name) + " " + sampleTitle(s) + " " + s.title);
-      if (!hit) return;
-      if (s.config_pack) out.packs.push(s); else add(s.name);
+      if (hit) apart(s);
     });
     (catalogue || []).forEach(function (c) {
       if (!every(ws, c.asks + " " + c.title)) return;
       var k = needKind(c);
       if (k === "desk") { out.desk.push(c); return; }
       if (k === "cannot") { out.cannot.push(c); return; }
-      var ns = needSamples(c).filter(function (n) { return by[n] && !by[n].config_pack; });
+      var ns = needSamples(c).filter(function (n) { return by[n] && tickable(by[n]); });
       if (!ns.length) { out.nosample.push(c); return; }   // built as an app, from its recipe: no sample to tick
       ns.forEach(function (n) { add(n); (out.forNeeds[n] = out.forNeeds[n] || []).push(c.asks); });
     });
-    out.none = !out.samples.length && !out.desk.length && !out.cannot.length && !out.packs.length && !out.nosample.length;
+    out.none = !out.samples.length && !out.desk.length && !out.cannot.length && !out.packs.length && !out.hand.length && !out.nosample.length;
     return out;
   }
 
@@ -339,7 +344,7 @@
       var k = needKind(c);
       if (k !== "app") { out[k].push(c); return; }
       out.built.push(c);
-      var ns = needSamples(c).filter(function (n) { return have[n] && !have[n].config_pack; });
+      var ns = needSamples(c).filter(function (n) { return have[n] && tickable(have[n]); });
       if (!ns.length) out.nosample.push(c);
       ns.forEach(function (n) { if (out.ticks.indexOf(n) < 0) out.ticks.push(n); });
     });
@@ -359,21 +364,16 @@
     return ticked.length + " sample" + (ticked.length > 1 ? "s" : "") + " ticked: " + ticked.map(sampleLabel).join(", ") + ".";
   }
 
-  // J2-06: the app's name, as the kit makes it (tools/manifest/validate.py app_for)
-  // the name starts as the first word and the first sample, so one press never makes an app called only the first word
-  // (the kit takes one to three words, each starting with a letter; the door 40 characters)
-  function defaultName(word, title) {
-    var ws = String(title || "").toUpperCase().replace(/[^A-Z0-9 ]+/g, " ").split(/\s+/)
-      .filter(function (w) { return /^[A-Z]/.test(w) && !/^(A|AN|THE)$/.test(w); }).slice(0, 2);
-    var name = String(word || "").toUpperCase() + " ";
-    ws.forEach(function (w) { if ((name + w).length <= 40) name += w + " "; });
-    return ws.length ? name.trim() : name;
+  // J2-06: the app's name is a title in any words; the door makes its technical name (accounts.py `free_name`, one place)
+  function defaultTitle(titles) {
+    var joined = titles.join(" and ");
+    if (joined.length <= 60) return joined;
+    var more = titles.length > 1 ? " and " + (titles.length - 1) + " more" : "";
+    return titles[0].slice(0, 60 - more.length) + more;
   }
-  function appFor(name) { return String(name || "").trim().toLowerCase().replace(/ /g, "_"); }
-  function nameHint(name, word) {   // the first word alone reads as it will start: acme_…
-    var a = appFor(name);
-    return (a && a.indexOf("_") > 0 ? a : (a || word || "acme") + "_…") + G.nameHint;
-  }
+  function appFor(name) { return String(name || "").trim().toLowerCase().replace(/ +/g, "_"); }
+  var THREE_WORDS = /^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$/;     // the kit's rule (rename.py), said as an expert types
+  function recordsStart(prefix) { return "In Desk its records start with " + prefix + "."; }
 
   function making(name, n) { return "Making " + name + " from " + n + " sample" + (n === 1 ? "" : "s") + "…"; }
 
@@ -427,12 +427,12 @@
               acceptedWords: acceptedWords, G: G, INDUSTRIES: INDUSTRIES, DOOR_WORDS: DOOR_WORDS, doorWords: doorWords,
               needKind: needKind, KIND_WORDS: KIND_WORDS, instead: instead, askUrl: askUrl, sampleNumber: sampleNumber,
               sampleTitle: sampleTitle, sampleLabel: sampleLabel, needSamples: needSamples, search: search,
-              fromNeeds: fromNeeds, readStart: readStart, barText: barText, appFor: appFor, nameHint: nameHint,
+              fromNeeds: fromNeeds, readStart: readStart, barText: barText, appFor: appFor, recordsStart: recordsStart, tickable: tickable,
               making: making, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
               covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords,
-              canGoBack: canGoBack, defaultName: defaultName, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, tryPlanNow: tryPlanNow, pubPlan: pubPlan, pictureType: pictureType, b64: b64, cardBody: cardBody };
+              canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, tryPlanNow: tryPlanNow, pubPlan: pubPlan, pictureType: pictureType, b64: b64, cardBody: cardBody };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -622,11 +622,11 @@
   // ── New app and Add a sample: the gallery (J1-03 to J1-09, J1-13, J2-05, J6-05) ──
 
   function startGallery(mode, start) {
-    if (mode === "new") data.newName = null;
+    if (mode === "new") { data.newName = null; data.newPrefix = null; data.nameBad = ""; data.nameStart = ""; }
     g = { mode: mode, ticks: [], tab: "all", q: "", pick: "", start: start || null, refused: "", asked: [] };
     screen = "gallery"; say(""); render();
     siteData().then(function () {
-      if (start && start.sample) g.ticks = [start.sample].filter(function (n) { return byName(n); });
+      if (start && start.sample) g.ticks = [start.sample].filter(function (n) { return byName(n) && tickable(byName(n)); });
       if (start && start.needs.length) {
         var f = fromNeeds(site.index, site.catalogue, start.needs);
         g.fromNeeds = f; g.ticks = f.ticks.slice();
@@ -694,6 +694,16 @@
     return box;
   }
 
+  function handBox(list) {   // no manifest of its own: its page or recipe says how to copy it
+    if (!list.length) return null;
+    var box = el("div", { "class": "hosting-step" }, el("p", {}, el("strong", { text: G.hand })));
+    list.forEach(function (s) {
+      box.appendChild(el("p", {}, sampleLabel(s) + ": ",
+        el("a", { href: "/" + (s.recipe || "samples/" + s.name + "/"), target: "_blank", rel: "noopener", text: G.recipe })));
+    });
+    return box;
+  }
+
   function recipeLink(c, before, after) {   // a need's first recipe, a page of this site or the kit file it names
     var r = (c.recipes || [])[0];
     if (!r || !(r.page || r.url)) return null;
@@ -712,7 +722,7 @@
     var home = el("a", { href: "#", text: "My apps" });
     home.addEventListener("click", function (ev) { ev.preventDefault(); g = null; go("home"); });
     crumbs.appendChild(home);
-    crumbs.appendChild(root.document.createTextNode(g.mode === "add" ? " > " + appTitle(data.appId) + " > " + G.addSample : " > " + G.newApp));
+    crumbs.appendChild(root.document.createTextNode(g.mode === "add" ? " > " + shownTitle() + " > " + G.addSample : " > " + G.newApp));
     wrap.appendChild(crumbs);
     wrap.appendChild(el("h2", { text: g.mode === "add" ? G.addSample : G.newApp }));
     wrap.appendChild(p(g.mode === "add" ? G.addLede : g.fromNeeds && !g.every ? G.ledeNeeds : G.lede));
@@ -745,6 +755,8 @@
       if (found.none) wrap.appendChild(el("div", { "class": "hosting-step" }, el("p", {}, G.none, askButton(null, g.q))));
       var desk = g.mode === "add" && !g.q.trim() ? null : deskBox(fn ? fn.desk : found.desk, fn ? [] : found.packs);
       if (desk) wrap.appendChild(desk);
+      var hand = g.mode === "add" && !g.q.trim() ? null : handBox(fn ? [] : found.hand);
+      if (hand) wrap.appendChild(hand);
       (fn ? fn.cannot : found.cannot).forEach(function (c) { wrap.appendChild(cannotBox(c)); });
       var ns = noSampleBox(fn ? fn.nosample : found.nosample);
       if (ns) wrap.appendChild(ns);
@@ -766,8 +778,8 @@
     } else {
       var recipesOf = function (s) { return (s.recipes || []).map(function (r) { return r.path; }); };
       var keys = g.tab === "industry" ? INDUSTRIES :
-        g.tab === "door" ? uniq(samples.filter(function (s) { return !s.config_pack && s.door; }).map(function (s) { return s.door; })) :
-        uniq([].concat.apply([], samples.filter(function (s) { return !s.config_pack; }).map(recipesOf)));
+        g.tab === "door" ? uniq(samples.filter(function (s) { return tickable(s) && s.door; }).map(function (s) { return s.door; })) :
+        uniq([].concat.apply([], samples.filter(tickable).map(recipesOf)));
       var nav = el("p", {});
       keys.forEach(function (k) {
         var label = g.tab === "door" ? doorWords(k) : g.tab === "recipe" ? recipeTitle(k) : k;
@@ -778,7 +790,7 @@
       wrap.appendChild(nav);
       if (g.pick) {
         var list = samples.filter(function (s) {
-          if (s.config_pack) return false;
+          if (!tickable(s)) return false;
           if (g.tab === "industry") return (s.industries || []).indexOf(g.pick) >= 0;
           return g.tab === "door" ? s.door === g.pick : recipesOf(s).indexOf(g.pick) >= 0;
         });
@@ -792,7 +804,7 @@
     if (g.refused) bar.appendChild(el("p", { "class": "hosting-bad", text: g.refused }));
     bar.appendChild(p(barText(ticked, g.mode)));
     if (g.mode === "add") {
-      bar.appendChild(button("Back to " + appTitle(data.appId), function () { g = null; go("app"); }, true));
+      bar.appendChild(button("Back to " + shownTitle(), function () { g = null; go("app"); }, true));
       bar.appendChild(root.document.createTextNode(" "));
       var add = button(ticked.length ? "Add " + sampleLabel(ticked[0]) : G.addSample, function (ev) { addSample(ev.target, ticked[0].name, false); });
       add.disabled = !ticked.length;
@@ -805,6 +817,8 @@
     wrap.appendChild(bar);
     return wrap;
   }
+  // what the person called the app, once its row is read; its technical name until then
+  function shownTitle() { return (data.app && data.app.app === data.appId && data.app.title) || appTitle(data.appId); }
   function uniq(xs) { return xs.filter(function (x, i) { return xs.indexOf(x) === i; }).sort(); }
   function recipeTitle(path) {
     var t = "";
@@ -812,36 +826,71 @@
     return t || path.replace(/^recipes\//, "").replace(/\.html$/, "").replace(/_/g, " ");
   }
 
-  // J2-06, J2-07: Name your app, then Made
+  // J2-06, J2-07: Name your app, then Made. Any words; the door answers its name in Desk as the person types
   function vName() {
     var box = card(G.name);
-    var name = el("input", { type: "text", maxlength: "60", autocapitalize: "characters", spellcheck: "false",
-                             value: data.newName || defaultName(who.word, sampleTitle(byName(g.ticks[0]))) });
-    var hint = el("span", { "class": "hint", text: nameHint(name.value, who.word) });
-    name.addEventListener("input", function () { data.newName = name.value; hint.textContent = nameHint(name.value, who.word); });
+    var fallback = defaultTitle(g.ticks.map(function (n) { return sampleTitle(byName(n)); }));
+    var name = el("input", { type: "text", maxlength: "60", value: data.newName === null || data.newName === undefined ? fallback : data.newName });
+    var start = el("span", { "class": "hint", text: data.nameStart ? recordsStart(data.nameStart) : "" });
+    var bad = el("p", { "class": "hosting-bad", role: "alert", text: data.nameBad || "" });
+    bad.hidden = !data.nameBad;
+    var own = data.newPrefix === null || data.newPrefix === undefined ? null :
+      el("input", { type: "text", maxlength: "40", autocapitalize: "characters", spellcheck: "false", value: data.newPrefix, "data-own-name": "1" });
+    var asked = 0;
+    var show = function (words) { bad.textContent = words; bad.hidden = !words; data.nameBad = words; };
+    var look = function () {     // the door's answer; a late answer to older words is dropped
+      var mine = ++asked;
+      var answer = own ? call("POST", "/name", { app: appFor(own.value) }).then(function () { return own.value.trim().toUpperCase(); })
+        : call("POST", "/name", { title: name.value.trim() || fallback, samples: g.ticks }).then(function (r) { return r.prefix; });
+      answer.then(function (prefix) {
+        if (mine !== asked) return;
+        data.nameStart = prefix; start.textContent = recordsStart(prefix);
+        show(own && !THREE_WORDS.test(prefix) ? G.threeWords : "");
+      }, function (e) { if (mine === asked) { start.textContent = ""; show(e.message); } });
+    };
+    var timer = null;
+    var soon = function () { clearTimeout(timer); timer = setTimeout(look, 300); };
+    name.addEventListener("input", function () { data.newName = name.value; if (!own) soon(); });
     var f = field(G.appName, name);
-    f.appendChild(el("br", {})); f.appendChild(hint);
+    f.appendChild(el("br", {})); f.appendChild(start);
+    if (!own) {
+      var change = el("a", { href: "#", text: G.change });
+      change.addEventListener("click", function (ev) {
+        ev.preventDefault(); data.newPrefix = data.nameStart || ""; render();
+        var opened = root.document.querySelector("[data-own-name]"); if (opened) opened.focus();
+      });
+      f.appendChild(root.document.createTextNode(" ")); f.appendChild(change);
+    }
     box.appendChild(f);
-    box.appendChild(button("Back", function () { screen = "gallery"; say(""); render(); }, true));
+    if (own) {
+      own.addEventListener("input", function () { data.newPrefix = own.value; soon(); });
+      box.appendChild(field(G.yourName, own, G.yourNameHint));
+    }
+    box.appendChild(bad);   // a refusal stands under the field it is about
+    box.appendChild(button("Back", function () { screen = "gallery"; data.nameBad = ""; say(""); render(); }, true));
     box.appendChild(root.document.createTextNode(" "));
-    box.appendChild(button(G.make, function (ev) {
-      ev.target.disabled = true;
-      var n = g.ticks.length, title = name.value.trim().toUpperCase();
-      data.made = { making: making(title, n) }; say(""); render();
+    var make = button(G.make, function (ev) {
+      ev.target.disabled = true; clearTimeout(timer); asked++;
+      var n = g.ticks.length, title = name.value.trim() || fallback;
+      data.made = { making: making(title, n), title: title }; data.nameBad = ""; say(""); render();
       var fn = g.fromNeeds || { built: [], desk: [], cannot: [] }, ids = function (cs) { return cs.map(function (c) { return c.id; }); };
-      call("POST", "/new", { samples: g.ticks, name: title,
-                             needs: { built: ids(fn.built), desk: ids(fn.desk), cannot: ids(fn.cannot), asked: g.asked.slice() } })
+      var body = { samples: g.ticks, title: title, needs: { built: ids(fn.built), desk: ids(fn.desk), cannot: ids(fn.cannot), asked: g.asked.slice() } };
+      if (own) body.name = own.value.trim().toUpperCase();
+      call("POST", "/new", body)
         .then(function (r) {
-          data.made = { making: data.made.making, words: r.words }; data.appId = r.app; data.app = null; g = null;
+          data.made = { making: data.made.making, title: r.title || title, words: r.words }; data.appId = r.app; data.app = null; g = null;
           screen = "made"; render(); openApp(r.app);
-        }, function (e) { data.made = null; screen = "name"; fail(e); });
-    }));
+        }, function (e) { data.made = null; screen = "name"; data.nameBad = e.message; render(); });
+    });
+    make.disabled = !!(data.made && data.made.making);   // a second press would make a second app, under the next number
+    box.appendChild(make);
     if (data.made && data.made.making) box.appendChild(p(data.made.making));
+    else if (!data.nameBad) look();
     return box;
   }
 
   function vMade() {
-    var box = card(appTitle(data.appId));
+    var box = card(data.made.title || appTitle(data.appId));
     box.appendChild(p(data.made.making));
     var w = data.made.words || [];
     if (w[0]) box.appendChild(el("p", { "class": "hosting-ok", text: w[0] }));
@@ -881,7 +930,7 @@
       }, function (e) { ev.target.disabled = false; fail(e); });
     }));
     box.appendChild(root.document.createTextNode(" "));
-    box.appendChild(button("Back to " + appTitle(a.app), function () { go("app"); }, true));
+    box.appendChild(button("Back to " + (a.title || appTitle(a.app)), function () { go("app"); }, true));
     box.appendChild(el("p", { "class": "hint", text: G.settingsLede }));   // J2-09: below the fields
     return box;
   }
@@ -889,7 +938,7 @@
   // J2-10, J6-01: the app's page
   function vApp() {
     var a = data.app;
-    var box = card(appTitle(data.appId));
+    var box = card(shownTitle());
     var crumbs = el("p", { "class": "hint" }), home = el("a", { href: "#", text: "My apps" });
     home.addEventListener("click", function (ev) { ev.preventDefault(); go("home"); });
     crumbs.appendChild(home);
@@ -1140,7 +1189,7 @@
 
   function vTry() {
     var box = card(G.tryIt), s = data.tryS, c = data.tryC;
-    var crumbs = el("p", { "class": "hint" }), back = el("a", { href: "#", text: appTitle(data.appId) });
+    var crumbs = el("p", { "class": "hint" }), back = el("a", { href: "#", text: shownTitle() });
     back.addEventListener("click", function (ev) { ev.preventDefault(); screen = "app"; say(""); openApp(data.appId); });
     crumbs.appendChild(back);
     box.insertBefore(crumbs, box.firstChild);
@@ -1263,7 +1312,7 @@
   }
 
   function crumbsTo(box) {
-    var crumbs = el("p", { "class": "hint" }), back = el("a", { href: "#", text: appTitle(data.appId) });
+    var crumbs = el("p", { "class": "hint" }), back = el("a", { href: "#", text: shownTitle() });
     back.addEventListener("click", function (ev) { ev.preventDefault(); screen = "app"; say(""); openApp(data.appId); });
     crumbs.appendChild(back);
     box.insertBefore(crumbs, box.firstChild);
@@ -1319,7 +1368,7 @@
       tabs.appendChild(b); tabs.appendChild(root.document.createTextNode(" "));
     });
     box.appendChild(tabs);
-    var form = data.pubForm || (data.pubForm = { app: data.appId, sites: [""], own: false, plan: null, card: { title: appTitle(data.appId), what: ["", "", ""], industries: [] } });
+    var form = data.pubForm || (data.pubForm = { app: data.appId, sites: [""], own: false, plan: null, card: { title: shownTitle(), what: ["", "", ""], industries: [] } });
     var recheck = function () {};   // set once the button exists: a typed site is something new to publish (walk 11-02)
     if (data.pubTo === "customer") {
       if ((c.sites || []).length && c.goes_to && !c.nothing_new) box.appendChild(p(c.goes_to));

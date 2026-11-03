@@ -16,21 +16,31 @@ logged.
          pp_cap:sub:on_scan, pp_cap:sub:on_customer and pp_cap:sub:on_qty), PP_LINE_ATTRIBUTE (the shop's active line
          attribute for the reference), PP_QTY_ASK_ABOVE (3) and PP_QTY_MOST (5) (handsets on a line),
          PP_BARRED_PHONES (comma list), PP_OUTBOX (the stand-in gateway's file), PP_PORT (8142)
+
+On CitiXsys hosting it runs as a FUNCTION for many sites (app.json; ``lambda_handler`` below): each site connects itself
+(``shops.py``) and its calls name it. The codes are kept in the shops store, so any copy of the function checks a code another
+sent. A code goes to your message gateway (CAP_MESSAGE_URL, posted {"phone", "code"}); with no gateway set, a customer is added
+with no code.
 """
 
 from __future__ import annotations
 
+import hmac
 import json
 import os
 import sys
 import threading
 import time
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 SAMPLE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(SAMPLE)), "tools", "app_template", "service"))   # the test call
 import capture  # noqa: E402
+import function  # noqa: E402
+import oneshop  # noqa: E402
+import shops  # noqa: E402
 import testcall  # noqa: E402
 
 
@@ -62,11 +72,15 @@ class Service:
                         if key != "PP_POINT_SECRET_QTY" or conf.get(key)}           # start; the quantity one is optional (0.1.0's)
         self.conf, self.send, self.codes = capture.settings_from(conf), send, capture.Codes()
 
-    def call(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
+    def refusal(self, path: str, headers, raw: bytes) -> str:
+        """Why this call is not the shop's, else nothing."""
         if path not in self.secrets:                    # a subscription this shop has not handed a secret for
-            return 401, {"error": "the signature does not match"}
-        why = capture.verify(headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature"), raw,
-                             self.secrets[path])
+            return "the signature does not match"
+        return capture.verify(headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature"), raw,
+                              self.secrets[path])
+
+    def call(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
+        why = self.refusal(path, headers, raw)
         if why:
             return 401, {"error": why}
         if testcall.is_test(headers):                   # checked as a real call; the capture itself does not run
@@ -82,8 +96,77 @@ class Service:
         if ctx["event"] == "qty_change":
             return 200, capture.on_qty(ctx, self.conf)
         if ctx["event"] == "customer_add":
+            if not self.send and capture.phone(ctx["customer"].get("phone")):   # no gateway set: no way to send a code
+                return 200, {"verdict": "allow"}
             return 200, capture.on_customer(ctx, self.conf, self.codes, self.send)
         return 200, capture.on_verify(ctx, self.codes)
+
+
+class StoreCodes:
+    """``capture.Codes``' two calls, kept in the shops store: a code sent by one copy of the function is checked by another."""
+
+    def __init__(self, store, clock=time.time):
+        self.store, self.clock = store, clock
+
+    def issue(self, challenge_id: str, number: str) -> str:
+        code = capture.new_code()
+        self.store.put(f"code{shops.CLAIM_MARK}{challenge_id}", {"code": code, "at": self.clock()})
+        return code
+
+    def check(self, challenge_id: str, code: str) -> str:
+        name = f"code{shops.CLAIM_MARK}{challenge_id}"
+        found = self.store.get(name)
+        if not found or self.clock() - float(found.get("at") or 0) >= capture.CODE_TTL_S:
+            return "unknown"
+        if not hmac.compare_digest(str(found.get("code")), code):
+            return "wrong"
+        self.store.delete(name)
+        return "ok"
+
+
+def gateway(url: str):
+    """The partner's own message gateway, posted the phone and the code."""
+    def send(phone: str, code: str) -> None:
+        req = urllib.request.Request(url, data=json.dumps({"phone": phone, "code": code}).encode(), method="POST",
+                                     headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=2):
+            pass
+    return send
+
+
+class Hosted(Service):
+    """The same answers for many sites: the site the call names gives the secret for that address."""
+
+    def __init__(self, conf: dict, store=None):
+        self.app = oneshop.value(conf, oneshop.MANY)
+        self.store = store or shops.open_store(conf)
+        self.conf = capture.settings_from(conf)
+        url = oneshop.value(conf, "CAP_MESSAGE_URL")
+        self.send, self.codes = gateway(url) if url else None, StoreCodes(self.store)
+
+    def refusal(self, path: str, headers, raw: bytes) -> str:
+        site = shops.site_of(headers.get(shops.SITE_HEADER))
+        record = self.store.get(site) if site else None
+        secrets = shops.secrets_for(record, f"{self.app}:sub:{self.KEYS[path]}")
+        why = "the signature does not match"
+        for secret in secrets:
+            why = capture.verify(headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature"), raw, secret.decode())
+            if not why:
+                return ""
+        return why
+
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
+        if method == "GET":
+            return (200, {"status": "ok"}) if path == "/health" else (404, {"error": "not found"})
+        if len(raw) > capture.BODY_MAX:
+            return 413, {"error": "too large"}
+        if path in (shops.CONNECT, shops.DISCONNECT):
+            return shops.handle(self.store, self.app, path, headers, raw)
+        return self.call(path, headers, raw) if path in self.PATHS else (404, {"error": "not found"})
+
+
+# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b): settings from the environment.
+lambda_handler = function.entry(lambda: Hosted(dict(os.environ)), lambda svc, method, path, headers, raw: svc.handle(method, path, headers, raw))
 
 
 def make_handler(svc: Service):

@@ -39,6 +39,10 @@ The names in the pictures are a demo site's: a cashier selling to a customer on 
 
 The sale detail reads *PP PGE Delivery Order* because our samples carry the placeholder prefix `PP`; a partner's copy shows its own name, under its company's first word.
 
+## Made on My apps
+
+**New app makes this sample into an app we host:** the order board, for many sites. The page's context says which site opened it, and the board answers that site.
+
 ## What the retailer does
 
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
@@ -135,6 +139,10 @@ On our test bench the page was opened through the till's own press and pick-up a
 - **`allowed_urls`** names our test bench's HTTPS front. A partner writes its own page address, on its own host: iVendNext refuses a page on the retailer's own address.
 
 ## Versions
+
+### 0.2.0
+
+- New app makes it into an app we host, for many sites (`Hosted` in `service/app.py`, `app.json`).
 
 ### 0.1.0
 

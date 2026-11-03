@@ -14,6 +14,8 @@ For each booked sale, this sample records each line charged below its price-list
 
 **Door:** Event feed
 
+**What is in it:** runs on its own server and keeps one list (deviation).
+
 ## What it looks like
 
 | Step | Frame | Screenshot |

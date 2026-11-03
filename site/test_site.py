@@ -1427,16 +1427,16 @@ The till cannot do this yet; it can stop the sale at Pay.
 
     # ── the samples index (samples/index.json) and the READMEs it is read from ──
     INDEX_FIELDS = {"name", "title", "short", "version", "versions", "when_to_use", "picture", "door", "needs", "recipe",
-                    "recipe_title", "recipes", "industries", "till", "config_pack"}
+                    "recipe_title", "recipes", "industries", "till", "config_pack", "by_hand"}
     # the samples with no screenshot of their own whose door no screenshot in the kit shows (site/door_pictures.json null)
     NO_PICTURE = {"s34_po_check": "document-check", "s41_regulated_register": "register-books",
                   "s43_third_party_payer": "payer"}
 
     # ── My apps' ways in (EASY3a): a sample's page, the roadmap's next list ──
-    def test_a_samples_page_starts_an_app_from_it_and_a_configuration_pack_has_no_button(self):  # spec J1-14, J1-08
+    def test_a_samples_page_starts_an_app_from_it_and_one_that_cannot_be_ticked_has_no_button(self):  # spec J1-14, J1-08, §16
         for folder in self.sample_folders():
             page = (self.out / "samples" / folder.name / "index.html").read_text("utf-8")
-            pack = build.gallery.sample_info.config_pack(folder)
+            pack = build.gallery.sample_info.config_pack(folder) or build.gallery.sample_info.by_hand(folder)
             want = f'<a class="site-btn" href="../../apps.html?sample={folder.name}">Start an app from this sample</a>'
             if pack:
                 self.assertNotIn("Start an app from this sample", page, folder.name)

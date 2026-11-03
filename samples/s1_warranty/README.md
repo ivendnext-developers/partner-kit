@@ -23,20 +23,24 @@ The phone is the sample's own test item (`PP-WRC-PHONE`, covered for 24 months b
 | 3. The sale is booked (here with a demo card) | the till | ![](screenshots/03_sale_booked.png) |
 | 4. The warranty service's comment on the sale: one warranty, until 2028-10-10; the case not covered | Desk | ![](screenshots/04_warranty_comment.png) |
 
+## Made on My apps
+
+**New app makes this sample into an app we host: the *Warranty* till key and the retailer's own terms.** A cashier presses *Warranty* and reads, for each item on the sale, its term from the **Warranty terms** the retailer keeps in Desk. It reads and writes nothing else. The service below that registers a warranty per serial number and keeps its own store runs on your own server: copy this folder to build it. On the made app, the retailer's administrator gives the role **PP WRC Integration** read on **Item** in **Role Permissions**, so a term set on an item group is found; until then the cashier is told so.
+
 ## What the retailer does
 
 A retailer that wants a warranty registered for every covered item it sells does this, in the order it meets it:
 
-1. **Install the package (optional).** The retailer's administrator opens **Retail Extension Package** in Desk, pastes `manifest.json`, presses **Check**, reads the summary, ticks the consent and installs. It adds one record type, `PP WRC Warranty Term`, and a **Warranty terms** workspace. It adds no role: the record type is open to the retailer's own System Manager and Retail Manager.
+1. **Install the package (optional).** The retailer's administrator opens **Retail Extension Package** in Desk, pastes `manifest.json`, presses **Check**, reads the summary, ticks the consent and installs. It adds one record type, `PP WRC Warranty Term`, a **Warranty terms** workspace, the *Warranty* till key and the app's own user (POS 2.1.0.667 or later). The record type is open to the retailer's own System Manager and Retail Manager, and its role **PP WRC Integration** reads it.
 2. **Enter the terms.** In the **Warranty terms** workspace a System Manager or a Retail Manager adds one `PP WRC Warranty Term` for each covered item or item group: **Applies to** (*Item* or *Item Group*), the item or the group, and **Months**. An item's own term wins over its item group's. The service in this folder keeps the same kind of terms in its own file, `service/terms.json` (item or item group, and months).
-3. **Make the service's own user.** This app has no event feed, so the install makes no user for it: the administrator makes one integration user for the service, holding one narrow role, as the [integration user recipe](../../recipes/integration_user.md) describes: read on the retailer's sales (*Sales Invoice*, *POS Invoice*), items and serial numbers on a sale (*Serial and Batch Bundle*), and the right to add a **Comment**. Its API key goes to the service. The comment on the sale is signed by this user.
+3. **The service's own user.** The install makes the app's own user, from its feed registration (the feed stays off), holding **PP WRC Integration**, which reads the terms and nothing else. The service on your own server reads and writes more: the administrator gives that user one narrow role, as the [integration user recipe](../../recipes/integration_user.md) describes: read on the retailer's sales (*Sales Invoice*, *POS Invoice*), items and serial numbers on a sale (*Serial and Batch Bundle*), and the right to add a **Comment**. Its API key goes to the service. The comment on the sale is signed by this user.
 4. **Have the retailer call the service on every booked sale.** A System Manager creates a **Webhook** for *Sales Invoice* and for *POS Invoice* on **Submit**, with **Enable Security** on, a long **Webhook Secret** (the service holds the same one) and a thin JSON body that names the record and when it changed ([`recipes/webhook_receiver.md`](../../recipes/webhook_receiver.md)). Its address is the service's `/webhook`.
 5. **Sell.** The cashier sells a covered item and scans its serial number, as the till asks. Within seconds the service's comment is on the sale in Desk: one warranty per covered serial number, and a line for each item not covered.
 6. **Optional: the "Warranty" till key.** A System Manager adds a **Retail Remote App Key** record in Desk: the partner's name, an app name, the key, its label, *message* as the only thing it may return, the service's HTTPS address (`/point/warranty`), a signing secret both sides hold and the time to answer. The manifest declares no till key, so this record is made by hand: tick it enabled and tick the customer's consent. Then the store switches the key on in **POS Studio > Apps**.
 
 **Where it shows.** In Desk: one Comment on each covered sale, and the **Warranty terms** workspace if the package is installed. At the till: the serial-number prompt, and with the till key a short message titled *Warranty* that names each item and its months. In POS Studio: the key, under **Apps**. No print layout, report or number card.
 
-**What leaves the retailer's iVendNext.** The manifest alone sends nothing: it names no outside address, webhook, till key, event-feed registration or service. The connected form does send, on your own server:
+**What leaves the retailer's iVendNext.** The manifest names the till key and the app's own user, with its feed left off; a press sends the sale's context (below). The connected form also sends, on your own server:
 - the **webhook** sends the service a signed message that names the record and when it changed, and nothing more (record type, name, event, time, company);
 - the **service** then reads the sale's lines and their serial numbers with the integration user's key, and writes one Comment on the sale; nothing else is added to iVendNext;
 - the service keeps, in its own store outside the retailer's iVendNext, each warranty's serial number, item code, sale name, months and dates, and the sales it has handled;
@@ -142,6 +146,10 @@ The reconciliation timer is off on the bench (`PP_RECONCILE_SECONDS=0`) so the t
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.2.0
+
+- New app makes it into an app we host: the *Warranty* till key, reading the retailer's own terms (`service/hosted.py`, `app.json`).
 
 ### 0.1.0
 

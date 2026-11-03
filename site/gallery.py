@@ -286,7 +286,7 @@ def index(samples: list[dict], pages: list, backlinks: dict, doors: dict, root) 
                     "recipe_title": titles.get(recipe, "").removesuffix(" \u2014 the recipe") or None if recipe else None,
                     "recipes": [{"path": html_of(r), "title": titles.get(r, "").removesuffix(" \u2014 the recipe") or None} for r in uses],
                     "industries": sample_info.industries(text) or [], "till": sample_info.till_lines(text),
-                    "config_pack": sample_info.config_pack(path)})
+                    "config_pack": sample_info.config_pack(path), "by_hand": sample_info.by_hand(path)})
     return {"about": "Every kit sample, read from its README at the kit merge this site was built from: the New app page's "
                      "ways in and the notice of newer sample versions read it. picture and recipe are paths on this site; "
                      "needs are the ids of the needs cards (catalogue.json) that cite the sample; short is the sample's own title, the "

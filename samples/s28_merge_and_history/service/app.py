@@ -11,6 +11,10 @@ the one settings record ``PP MHS Settings`` named ``Default``: the merge rule an
     python3 service/app.py service/.env.local
     env: PP_BASE, PP_KEY, PP_SECRET (the integration user), PP_ACTION_SECRET (pp_mhs:sub:merge, handed back once at
          install), PP_PAGE_SECRET (pp_mhs:sub:history), PP_PORT (8133)
+
+On CitiXsys hosting it runs as a FUNCTION for many sites (app.json; ``lambda_handler`` below): each site connects itself
+(``shops.py``) and hands over its secrets and the key of the app's own user. A press names its site; a page's context is
+signed for its site. A copy of the function remembers the contexts it saw.
 """
 
 from __future__ import annotations
@@ -30,11 +34,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SAMPLE = os.path.dirname(HERE)
 sys.path.insert(0, SAMPLE)
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(SAMPLE)), "tools", "app_template", "service"))   # the test call
+import function  # noqa: E402
 import history  # noqa: E402
 import merge  # noqa: E402
+import oneshop  # noqa: E402
+import shops  # noqa: E402
 import testcall  # noqa: E402
 
 SETTINGS = "PP MHS Settings"
+NOT_SET_UP = "This app is not set up yet: its user's key has not reached it. Ask your manager to press Connect again on the app."
 DESIGN = [os.path.join(HERE, "design"), os.path.join(SAMPLE, "..", "..", "kit", "design")]   # a copy beside, else the kit's
 
 
@@ -202,6 +210,101 @@ def design_file(name: str) -> bytes | None:
         if os.path.isfile(path):
             return open(path, "rb").read()
     return None
+
+
+class Hosted:
+    """The same two doors for many sites: each connected site gets its own ``Service``, with its secrets and its user's key."""
+
+    def __init__(self, conf: dict, store=None, shop_of=Shop):
+        self.app, self.shop_of = oneshop.value(conf, oneshop.MANY), shop_of
+        self.store = store or shops.open_store(conf)
+        self.opened = history.OnceSet()
+        with open(os.path.join(HERE, "history.html"), "rb") as f:
+            self.html = f.read()
+
+    def service(self, record: dict, action_secret: str = "", page_secret: str = "") -> Service | None:
+        users = sorted(k for k in (record.get("secrets") or {}) if k.startswith("user:"))
+        key, _, secret = (record["secrets"][users[0]] if users else "").partition(":")
+        if not (key and secret):
+            return None
+        svc = Service({"PP_ACTION_SECRET": action_secret, "PP_PAGE_SECRET": page_secret}, self.shop_of(record["url"], key, secret))
+        svc.opened = self.opened
+        return svc
+
+    def press(self, headers, raw: bytes) -> tuple[int, dict]:
+        site = shops.site_of(headers.get(shops.SITE_HEADER))
+        record = self.store.get(site) if site else None
+        for secret in shops.secrets_for(record, f"{self.app}:sub:merge"):
+            secret = secret.decode()
+            if not merge.verify(headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature"), raw, secret):
+                if testcall.is_test(headers):
+                    return testcall.answer("merge")
+                svc = self.service(record, action_secret=secret)
+                return svc.press(headers, raw) if svc else (200, merge.refused(NOT_SET_UP))
+        return 401, {"error": "the signature does not match"}
+
+    def page_test(self, headers, raw: bytes) -> tuple[int, dict]:
+        site = shops.site_of(headers.get(shops.SITE_HEADER))
+        record = self.store.get(site) if site else None
+        if any(not merge.verify(headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature"), raw, s.decode())
+               for s in shops.secrets_for(record, f"{self.app}:sub:history")):
+            return testcall.answer("history")
+        return 401, {"error": "the signature does not match"}
+
+    def open_page(self, raw: bytes) -> tuple[int, dict]:
+        try:
+            data = json.loads(raw or b"{}")
+        except ValueError:
+            return 400, {"error": "not JSON"}
+        data = data if isinstance(data, dict) else {}
+        def holds(secret: str) -> bool:     # signed by this site: one run out says so in the page's own words
+            payload, why = history.read_context(data.get("ctx"), secret)
+            return bool(payload) or "run out" in why
+        record, secret = shops.site_signed(self.store, f"{self.app}:sub:history", holds)
+        if not record:
+            return 403, {"error": "the context is not one the shop made"}
+        svc = self.service(record, page_secret=secret)
+        return svc.open(data) if svc else (502, {"error": NOT_SET_UP})
+
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, bytes, str]:
+        path = path.split("?", 1)[0]
+        if method == "GET":
+            if path in ("/mhs/history", "/mhs/history/"):
+                return 200, self.html, "text/html; charset=utf-8"
+            if path in ("/mhs/history/ivn-kit.css", "/mhs/history/ivn-kit.js"):
+                data = design_file(path.rsplit("/", 1)[1])
+                if data is not None:
+                    return 200, data, "text/css" if path.endswith(".css") else "text/javascript"
+            return _json(200, {"status": "ok"}) if path == "/health" else _json(404, {"error": "not found"})
+        if len(raw) > merge.BODY_MAX:
+            return _json(413, {"error": "too large"})
+        if path in (shops.CONNECT, shops.DISCONNECT):
+            return _json(*shops.handle(self.store, self.app, path, headers, raw))
+        if path == "/mhs/merge":
+            return _json(*self.press(headers, raw))
+        if path in ("/mhs/history", "/mhs/history/") and testcall.is_test(headers):
+            return _json(*self.page_test(headers, raw))
+        if path == "/mhs/history/api/open":
+            return _json(*self.open_page(raw))
+        return _json(404, {"error": "not found"})
+
+
+def _json(code: int, body: dict) -> tuple[int, bytes, str]:
+    return code, json.dumps(body).encode(), "application/json"
+
+
+_KEPT: dict = {}   # the function's settings, opened on the first call of each copy and kept while it lives
+
+
+def lambda_handler(event, context=None):
+    """As a function on CitiXsys hosting (app.json "runs": "function"). The answer carries its own content type: this app
+    also serves a page."""
+    if "svc" not in _KEPT:
+        _KEPT["svc"] = Hosted(dict(os.environ))
+    method, path, headers, raw = function.request(event)
+    code, body, ctype = _KEPT["svc"].handle(method, path, headers, raw)
+    return {"statusCode": code, "statusDescription": f"{code} {'OK' if code == 200 else 'Error'}", "isBase64Encoded": False,
+            "headers": {"Content-Type": ctype, "Cache-Control": "no-store"}, "body": body.decode("utf-8")}
 
 
 def make_handler(svc: Service):

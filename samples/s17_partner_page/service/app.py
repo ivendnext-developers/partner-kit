@@ -15,10 +15,15 @@ and ``GET /test/opened`` lists the contexts opened. A partner's copy deletes the
 
     python3 service/app.py service/.env.local
     env: PP_BASE (the shop), PP_PAGE_SECRET (handed back at install as pp_pge:sub:board), PP_ADMIN_TOKEN, PP_PORT (8132)
+
+On CitiXsys hosting it runs as a FUNCTION for many sites (app.json; ``lambda_handler`` below): each site connects itself
+(``shops.py``), and the context's signature says which site opened the page. A copy of the function remembers the contexts
+it saw; the shop's own one-answer check holds across copies.
 """
 
 from __future__ import annotations
 
+import hmac
 import http.client
 import json
 import os
@@ -30,8 +35,14 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(HERE))
+SAMPLE = os.path.dirname(HERE)
+sys.path.insert(0, SAMPLE)
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(SAMPLE)), "tools", "app_template", "service"))   # the handshake
+import function  # noqa: E402
+import oneshop  # noqa: E402
 import page  # noqa: E402
+import shops  # noqa: E402
+import testcall  # noqa: E402
 
 SUBMIT = "/api/method/ivendnext_mpos.api.page.submit"
 BODY_MAX = 32 * 1024
@@ -105,6 +116,77 @@ class Board:
                     return 502, {"error": "the shop could not be reached; try again", "refused_by": "network"}
                 return 409 if code == 409 else 502, {"error": shop_words(raw), "refused_by": "shop", "status": code}
         return 200, {"ok": 1, "delivery_order": order}
+
+
+class Hosted:
+    """The same board for many sites: each connected site gets its own ``Board``, with its address and its secret."""
+
+    KEY = "board"
+
+    def __init__(self, conf: dict, store=None, post=None):
+        self.app, self.post = oneshop.value(conf, oneshop.MANY), post
+        self.store = store or shops.open_store(conf)
+        self.boards: dict = {}
+        with open(os.path.join(HERE, "board.html"), "rb") as f:
+            self.html = f.read()
+
+    def board(self, ctx) -> Board | None:
+        def holds(secret: str) -> bool:     # signed by this site: one run out says so in the board's own words
+            payload, why = page.read_context(ctx, secret)
+            return bool(payload) or "run out" in why
+        record, secret = shops.site_signed(self.store, f"{self.app}:sub:{self.KEY}", holds)
+        if not record:
+            return None
+        return self.boards.setdefault((record["site"], secret), Board({"PP_BASE": record["url"], "PP_PAGE_SECRET": secret}, self.post))
+
+    def tested(self, headers, raw: bytes) -> bool:
+        site = shops.site_of(headers.get(shops.SITE_HEADER))
+        record = self.store.get(site) if site else None
+        ts, sig = headers.get("X-iVendNext-Timestamp") or "", headers.get("X-iVendNext-Signature") or ""
+        fresh = ts.isascii() and ts.isdigit() and abs(time.time() - int(ts)) <= 300
+        return fresh and any(hmac.compare_digest(page.sign(s.decode(), ts, raw), sig)
+                             for s in shops.secrets_for(record, f"{self.app}:sub:{self.KEY}"))
+
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, bytes, str]:
+        path = path.split("?", 1)[0]
+        if method == "GET":
+            if path in ("/board", "/board/"):
+                return 200, self.html, "text/html; charset=utf-8"
+            return _json(200, {"status": "ok"}) if path == "/health" else _json(404, {"error": "not found"})
+        if len(raw) > BODY_MAX:
+            return _json(413, {"error": "too large"})
+        if path in (shops.CONNECT, shops.DISCONNECT):
+            return _json(*shops.handle(self.store, self.app, path, headers, raw))
+        if path in ("/board", "/board/") and testcall.is_test(headers):
+            return _json(*testcall.answer(self.KEY)) if self.tested(headers, raw) else _json(401, {"error": "the signature does not match"})
+        if path not in ("/board/api/open", "/board/api/answer"):
+            return _json(404, {"error": "not found"})
+        try:
+            data = json.loads(raw or b"{}")
+        except ValueError:
+            return _json(400, {"error": "not JSON"})
+        board = self.board(data.get("ctx")) if isinstance(data, dict) else None
+        if board is None:
+            return _json(403, {"error": "the context is not one the shop made"})
+        return _json(*(board.open(data) if path.endswith("/open") else board.answer(data)))
+
+
+def _json(code: int, body: dict) -> tuple[int, bytes, str]:
+    return code, json.dumps(body).encode(), "application/json"
+
+
+_KEPT: dict = {}   # the function's settings, opened on the first call of each copy and kept while it lives
+
+
+def lambda_handler(event, context=None):
+    """As a function on CitiXsys hosting (app.json "runs": "function"). The answer carries its own content type: this app
+    also serves a page."""
+    if "svc" not in _KEPT:
+        _KEPT["svc"] = Hosted(dict(os.environ))
+    method, path, headers, raw = function.request(event)
+    code, body, ctype = _KEPT["svc"].handle(method, path, headers, raw)
+    return {"statusCode": code, "statusDescription": f"{code} {'OK' if code == 200 else 'Error'}", "isBase64Encoded": False,
+            "headers": {"Content-Type": ctype, "Cache-Control": "no-store"}, "body": body.decode("utf-8")}
 
 
 def make_handler(board: Board):

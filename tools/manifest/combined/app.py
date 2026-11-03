@@ -216,6 +216,9 @@ def _tag(path: str) -> str | None:
     path = path.split("?", 1)[0]
     if path in ROUTES:
         return ROUTES[path]
+    for route, tag in ROUTES.items():       # a page's own calls, under its address
+        if route.endswith("/") and path.startswith(route):
+            return tag
     first = path.strip("/").split("/", 1)[0]
     return first if first in MOUNTS else None
 
@@ -288,7 +291,7 @@ def make_server(port: int, host: str = "0.0.0.0"):
             out = lambda_handler(_event(method, self.path, self.headers, raw))
             body = (out.get("body") or "").encode()
             self.send_response(int(out.get("statusCode") or 500))
-            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Type", (out.get("headers") or {}).get("Content-Type") or "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)

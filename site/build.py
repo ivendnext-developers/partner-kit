@@ -1012,9 +1012,10 @@ START_BUTTON = "Start an app from this sample"        # spec J1-14: opens New ap
 
 def start_button(html_text: str, folder: str, up: str) -> str:
     """A sample's page: *Start an app from this sample* under its title (J1-14), opening My apps' New app with
-    the sample ticked (through sign-in, the tick kept). A configuration pack is set in Desk, never ticked (J1-08): none."""
+    the sample ticked (through sign-in, the tick kept). A configuration pack is set in Desk, never ticked (J1-08), and a
+    sample with no manifest is copied by hand: none."""
     name = folder.rsplit("/", 1)[-1]
-    if gallery.sample_info.config_pack(ROOT / folder):
+    if gallery.sample_info.config_pack(ROOT / folder) or gallery.sample_info.by_hand(ROOT / folder):
         return html_text
     button = (f'<p class="start-app"><a class="site-btn" href="{up}apps.html?sample={name}">{START_BUTTON}</a></p>')
     return re.sub(r'(</h1>)', r"\1" + button, html_text, count=1)   # the first thing under the title (EASYLOOK)
