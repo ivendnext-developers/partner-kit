@@ -329,7 +329,7 @@ class Manifest(unittest.TestCase):
         self.assertTrue(all(p["doc_type"] == "Retail Register Period" for p in d["print_formats"] if " slip " not in p["name"]))
         self.assertEqual([p["doc_type"] for p in d["print_formats"] if " slip " in p["name"]], ["POS Invoice", "Sales Invoice"])
         arabic = {p["name"] for p in d["print_formats"] if p.get("default_print_language") == "ar"}
-        self.assertEqual({n.split()[2] for n in arabic}, {"jo_pharmacy", "sa_pharmacy", "eg_pharmacy",
+        self.assertEqual({n.removeprefix(d["prefix"] + " ").split()[0] for n in arabic}, {"jo_pharmacy", "sa_pharmacy", "eg_pharmacy",
                                                           "ae_abu_dhabi_pharmacy"})  # their print language
 
     def test_every_reminder_passes_the_shops_checker_and_none_shares_a_name(self):

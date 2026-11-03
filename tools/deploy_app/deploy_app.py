@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-"""Plan an app for CitiXsys App Hosting, and order it online: check it, refuse what the service refuses, print what it
-would create; then `order` it, pay, upload each version and run it (`order`, `push`, `back`, `status`, `secret`,
-`cancel`: `hosting_order.py`).
+"""Plan an app for CitiXsys App Hosting: check it, refuse what the service refuses, print what it would create. Ordering,
+uploading and running it are `ivn publish`, `ivn push` and `ivn status` (`tools/ivn`), or *My apps* in your browser.
 
     python3 tools/deploy_app/deploy_app.py <app folder> --image <registry>/<repo>:<version> --plan starter --partner <you>
                                            [--env prod|staging|sandbox] [--customer <name>] [--json]
@@ -18,10 +17,8 @@ It reads the app's settings file (`app.json`) and Dockerfile, checks them with t
 (`tools/check/licence.py --hosted`: an AGPL component needs its published source), then checks the image and the plan: the image is tagged with the app's version
 (never `latest`), the size and the copy (prod, staging, sandbox) are ones the plan allows, the region is one we serve,
 the name is not reserved. It prints the address, the size, what the plan enforces and includes, the block the service
-adds to its infrastructure, and the order to put it live in. Planning changes nothing anywhere. Ordering is its own
-command (`deploy_app.py order …`, guide 14b *Order and pay online*): signed with your publishing key, paid online, and
-built by the hosting with no person; each version is then uploaded with `deploy_app.py push` and built on the hosting's
-side. Exit code: 0 planned · 1 refused · 2 usage.
+adds to its infrastructure, and the order to put it live in. Planning changes nothing anywhere. Exit code: 0 planned · 1
+refused · 2 usage.
 Standard library only. The plans are data: `plans.json` beside this file, prices included. This tool prints no price.
 """
 from __future__ import annotations
@@ -258,16 +255,10 @@ def block(m: dict, plan: str, partner: str, env: str, secrets: list[str], image:
             f'}}\n')
 
 
-ORDER_COMMANDS = ("order", "push", "back", "status", "secret", "cancel")
-
-
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else list(argv)
-    if argv and argv[0] in ORDER_COMMANDS:
-        import hosting_order  # noqa: PLC0415  (only an order needs the signing key)
-        return hosting_order.main(argv)
-    ap = argparse.ArgumentParser(description="Plan an app for CitiXsys App Hosting (this changes nothing). To order it "
-                                             "online: deploy_app.py order <folder> … (guide 14b).")
+    ap = argparse.ArgumentParser(description="Plan an app for CitiXsys App Hosting (this changes nothing). To order it: "
+                                             "ivn publish, or My apps.")
     ap.add_argument("folder", help="the app's folder: app.json and Dockerfile")
     ap.add_argument("--image", default="", help="a container: <registry>/<repository>:<version>, the version from app.json")
     ap.add_argument("--zip", default="", help="a function (app.json \"runs\": \"function\"): where to write its package")
@@ -320,9 +311,7 @@ def main(argv=None) -> int:
         print(f"  added when you need them: {', '.join(d['secrets_added_when_used'])}")
     if d["settings_to_supply"]:
         print(f"  settings the service asks you for: {', '.join(d['settings_to_supply'])}")
-    print("\nNothing was changed. To order it online and have it built with no person: deploy_app.py order "
-          f"{a.folder} --plan {d['plan']} --partner {d['partner']} --accept-schedule, then deploy_app.py push {a.folder} "
-          "--order <id> for each version (guide 14b).\n"
+    print("\nNothing was changed. To order it and have it built with no person: ivn publish, or My apps in your browser.\n"
           "For an app put live by hand instead, CitiXsys adds this to the hosting infrastructure after review:\n")
     print(d["infrastructure_block"])
     print("and puts it live in this order:" if d.get("runs") == "function" else

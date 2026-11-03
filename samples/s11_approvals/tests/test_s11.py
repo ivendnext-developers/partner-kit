@@ -280,7 +280,9 @@ class Reject(unittest.TestCase):
     def setUp(self):
         self.shop = Shop()
         sys.path.insert(0, str(HERE.parents[2] / "tools" / "contracts"))
-        from check import errors
+        from check import available, errors
+        if not available():
+            self.skipTest("the contracts folder is missing from this copy of the kit")
         self.errors = errors
 
     def test_the_reason_and_who_pressed_are_kept_then_the_request_is_rejected(self):

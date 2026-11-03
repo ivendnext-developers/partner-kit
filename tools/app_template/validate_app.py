@@ -23,11 +23,14 @@ import re
 import sys
 
 KEYS = {"app", "version", "port", "health", "size", "region", "env", "shops", "scratch", "runs", "handler", "package",
-        "schedule", "timeout", "samples", "base"}
+        "schedule", "timeout", "samples", "base", "card", "address"}
 # samples: the record New app writes (tools/manifest/combine.py): each sample the app was made from, its version and the
 # hashes of what was written, so Add a sample can tell what the developer changed. The hosting order does not read it.
 # base: the version of the app on My apps this folder was downloaded as (written there); an upload names it, so one made
 # from an older version than the server's latest is refused instead of undoing a colleague's change. Not read by a host.
+# card: the App library's card, kept here so it is asked once (`ivn publish --public`; tools/ivn). address: the service's own
+# https address, written by `ivn publish`: nobody types it.
+CARD_KEYS = {"title", "summary", "what", "pictures", "industries", "price", "setup", "guide"}
 ENV_KEYS = {"name", "secret", "required", "about", "purpose", "together"}
 # about: one line the hosting page shows under the setting. purpose: the line the Settings screen shows a functional
 # person, what to put there (every setting has one). together: the other settings set with it, both or neither.
@@ -65,6 +68,10 @@ def check_settings(m) -> list[str]:
         bad.append("base: the version this folder was downloaded as, three numbers, like 1.0.0 (My apps writes it)")
     if "scratch" in m and not isinstance(m["scratch"], bool):
         bad.append("scratch: true or false (true: a writable /scratch folder, lost on a restart; chapter 14b)")
+    if "address" in m and not (isinstance(m["address"], str)
+                               and re.fullmatch(r"https://[a-z0-9.-]+(:[0-9]{2,5})?(/[A-Za-z0-9._~/-]*)?", m["address"])):
+        bad.append("address: the service's https address (ivn publish writes it)")
+    bad += check_card(m["card"]) if "card" in m else []
     bad += check_form(m)
     env = m.get("env", [])
     if not isinstance(env, list):
@@ -99,6 +106,22 @@ def check_settings(m) -> list[str]:
         if SECRETISH.search(name) and e.get("secret") is not True:
             bad.append(f"{w}: {name} looks like a secret: mark it \"secret\": true")
     bad += check_together(env)
+    return bad
+
+
+def check_card(card) -> list[str]:
+    """``card``: the App library's card (the library's own rules read it when it is sent). Here only its shape."""
+    if not isinstance(card, dict):
+        return ["card: the App library's card, an object (ivn publish --public asks for it)"]
+    bad = [f"card: unknown key {k!r}" for k in sorted(set(card) - CARD_KEYS)]
+    for k in ("title", "summary", "guide"):
+        if k in card and not isinstance(card[k], str):
+            bad.append(f"card: {k} is text")
+    for k in ("what", "pictures", "industries", "setup"):
+        if k in card and not (isinstance(card[k], list) and all(isinstance(x, str) for x in card[k])):
+            bad.append(f"card: {k} is a list of text")
+    if "price" in card and card["price"] not in ("free", "key"):
+        bad.append("card: price is free, or key (with a key: retailers ask you)")
     return bad
 
 

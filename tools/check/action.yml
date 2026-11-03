@@ -1,4 +1,4 @@
-# The kit's checks as a step any GitHub workflow can use (to publish to the App library, use tools/publish instead):
+# The kit's checks as a step any GitHub workflow can use (to publish to the App library, use tools/ivn: ivn publish):
 #   - uses: ivendnext-developers/partner-kit/tools/check@main
 #     with:
 #       path: library

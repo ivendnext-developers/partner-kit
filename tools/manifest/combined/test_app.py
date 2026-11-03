@@ -111,7 +111,12 @@ class TheService(unittest.TestCase):
                 names[f"{app}:sub:{p['key']}"] = SECRET
                 names[f"{app}:{p['key']}"] = SECRET
         store.write_text(json.dumps({SITE: {"site": SITE, "url": f"https://{SITE}", "secrets": names, "previous": {}}}))
-        cls.env = {k: os.environ.get(k) for k in ("IVN_LIBRARY_APP", "IVN_SHOPS_FILE", "PP_STATE")}
+        # the settings a part will not start without, with test values, as .env.local gives them on a laptop
+        filled = {e["name"]: "http://localhost:8000" if e["name"].endswith(("_URL", "_API")) else "test-value"
+                  for e in json.loads((APP / "app.json").read_text(encoding="utf-8")).get("env") or []
+                  if isinstance(e, dict) and e.get("name") and e.get("required") and not e.get("secret") and e["name"] not in os.environ}
+        cls.env = {k: os.environ.get(k) for k in ("IVN_LIBRARY_APP", "IVN_SHOPS_FILE", "PP_STATE", *filled)}
+        os.environ.update(filled)
         os.environ.update(IVN_LIBRARY_APP=app, IVN_SHOPS_FILE=str(store), PP_STATE=cls.tmp.name)
         sys.path.insert(0, str(SERVICE))
         import app as service  # noqa: E402

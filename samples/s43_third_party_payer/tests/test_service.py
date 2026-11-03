@@ -21,7 +21,10 @@ SAMPLE = os.path.dirname(HERE)
 sys.path[:0] = [os.path.join(SAMPLE, "service"), SAMPLE, HERE]
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(SAMPLE)), "contracts"))
 import app  # noqa: E402
-import extension_contract_check as contract  # noqa: E402
+try:
+    import extension_contract_check as contract  # noqa: E402
+except ModuleNotFoundError:  # an app folder carries no contracts: these checks run in the kit
+    contract = None
 from fake_shop import FakeShop  # noqa: E402
 
 SECRETS = {k: f"s-{k}" for k in ("payer", "claims", "file", "remit", "ready", "settle", "billback")}
@@ -197,11 +200,13 @@ class Calls(Base):
         self.assertEqual(self.svc.handle("GET", "/health", {}, b""), (200, {"status": "ok"}))
 
 
-SCHEMA = contract._schema("payer")
+SCHEMA = contract._schema("payer") if contract else None
 
 
 def contract_errors(kind, answer):
     """What the payer door's own contract (the kit's copy, equal to the POS app's) finds wrong with an answer."""
+    if contract is None:
+        raise unittest.SkipTest("the contracts folder is missing from this copy of the kit")
     return contract._errors(SCHEMA["$defs"][kind], answer, SCHEMA)
 
 
