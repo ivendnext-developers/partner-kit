@@ -91,7 +91,7 @@ check("J1-05: the App library's twelve industries", a.INDUSTRIES.length === 12 &
 check("J1-06: the doors' plain words, as the row's examples", a.doorWords("Check before payment") === "A check when the cashier presses Pay" &&
   a.doorWords("Till key") === "A key the cashier taps" && a.doorWords("Manifest") === "Your own lists and forms in Desk" &&
   a.doorWords("Desk action") === "A button in Desk" && a.doorWords("Event feed") === "Something that happens after each sale");
-const doors = [...new Set(index.samples.filter((s) => !s.config_pack && s.door).map((s) => s.door))];
+const doors = [...new Set(index.samples.filter((s) => a.tickable(s) && s.door).map((s) => s.door))];
 check("J1-06: every door a sample has is said in plain words (D14)", doors.every((d) => a.DOOR_WORDS[d]), doors.filter((d) => !a.DOOR_WORDS[d]).join(", "));
 
 let f = a.search(index, catalogue, "S23");
@@ -106,7 +106,7 @@ f = a.search(index, catalogue, "zzqx flibbertigibbet");
 check("J1-03: no match says so, with Ask for it", f.none && G.none + G.ask === "No sample or need matches these words. Try other words, or ask for it: Ask for it");
 f = a.search(index, catalogue, "");
 check("J1-08: with no words every sample is a card, the configuration packs apart, never ticked",
-  f.samples.length === index.samples.filter((s) => !s.config_pack).length && f.packs.every((s) => s.config_pack) && f.packs.length >= 2);
+  f.samples.length === index.samples.filter((s) => a.tickable(s)).length && f.packs.every((s) => s.config_pack) && f.packs.length >= 2);
 const desk = catalogue.find((c) => c.door === "configure");
 f = a.search(index, catalogue, desk.asks);
 check("J1-08 (D2): a Configure need is listed under Set in Desk first, never a card", f.desk.some((c) => c.id === desk.id) && G.desk === "Set in Desk first: no app needed");
@@ -135,7 +135,8 @@ check("J1-02, J1-14: what the address brought", JSON.stringify(a.readStart("?nee
 check("J2-05: the bar's words", a.barText([by.s23_till_guard, by.s22_customer_loyalty]) ===
   "2 samples ticked: S23 Till guard rules, S22 Customer-owned loyalty." && a.barText([]) === "Tick one or several samples.");
 check("J2-06: the name and its line", G.name === "Name your app" && G.appName === "App name" && G.make === "Make the app" &&
-  a.nameHint("ACME MEMBER TILL", "acme") === "acme_member_till: your first word, then your words. Installed names never change, so choose with care.");
+  a.recordsStart("ACME MEMBER TILL") === "In Desk its records start with ACME MEMBER TILL." && G.change === "Change" &&
+  G.yourNameHint === "Your first word, then one or two words of your own. Installed names never change, so choose with care.");
 check("J2-07: Making, and the next step", a.making("ACME MEMBER TILL", 2) === "Making ACME MEMBER TILL from 2 samples…" && G.nextSettings === "Next: its settings");
 check("J2-09: the settings' words", G.settingsLede === "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's settings in their Desk." &&
   G.addresses === "Outside addresses" && G.secrets === "Secrets your own service needs" &&
@@ -174,7 +175,6 @@ check("EASY1NOTES: purposes, the folded command code, a way back", W.peopleWhy &
   !src.includes('{ open: data.deviceCode ? "" : null }'));
 
 // the walk's folds (2026-11-01)
-check("J2-06: the first word alone reads as the name will start", a.nameHint("CXSINT ", "cxsint").startsWith("cxsint_\u2026: your first word"));
 check("a plain button carries the site's plain style", src.includes('"site-btn site-btn-ghost"') && !src.includes('"site-btn ghost"'));
 // EASY3a part 3: Try on my sandbox (J4-01, J4-02, J4-05, §3b); the doors' own words are the hosting's tests
 const T = a.T;
@@ -263,13 +263,27 @@ check("J4-01 (KK 11-02): Check stays off until all three boxes are filled",
   src.includes("check.disabled = !(addr.value.trim() && key.value.trim() && secret.value.trim())"));
 check("J8-13: a try that stops while watched offers Try again", src.includes("!tryRunning(s) && offerAgain(s) && !data.tryC"));
 // ── EASYLOOK: what two people who had not read the spec stalled on ──
-check("EASYLOOK: the name starts as the first word and the sample, never the first word alone (06)",
-  a.defaultName("northwind", "Till guard rules") === "NORTHWIND TILL GUARD" &&
-  a.defaultName("acme", "Customer-owned loyalty") === "ACME CUSTOMER OWNED" && a.defaultName("acme", "") === "ACME " &&
-  a.defaultName("acme", "A 2nd look at stock") === "ACME LOOK AT" &&
-  // the kit's own rule: one to three words, each starting with a letter (tools/manifest/validate.py); the door's 40 characters
-  ["Till guard rules", "A 2nd look at stock", "Customer-owned loyalty", "Supercalifragilisticexpialidocious anything"].every((t) => {
-    const n = a.defaultName("northwind", t); return /^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$/.test(n) && n.length <= 40; }));
+check("MAKEEASY: the title starts as the ticked samples' titles, shortened only past 60 characters (F9)",
+  a.defaultTitle(["Till guard rules"]) === "Till guard rules" &&
+  a.defaultTitle(["Bin locations", "Price-deviation audit"]) === "Bin locations and Price-deviation audit" &&
+  a.defaultTitle(["Bin locations", "Price-deviation audit", "Customer-owned loyalty"]) === "Bin locations and 2 more");
+check("MAKEEASY: a long title stays inside the field's 60 characters", a.defaultTitle(["x".repeat(40), "y".repeat(50)]) === "x".repeat(40) + " and 1 more" &&
+  a.defaultTitle(["x".repeat(90)]).length === 60);
+check("MAKEEASY: a refusal stands under the name, and the door answers the name as it is typed (F1, F4, item 7)",
+  src.includes('box.appendChild(bad);   // a refusal stands under the field') && src.includes('data.nameBad = e.message') &&
+  src.includes('{ title: name.value.trim() || fallback, samples: g.ticks }') && !src.includes("defaultName"));
+check("MAKEEASY: a second press never makes a second app", src.includes("make.disabled = !!(data.made && data.made.making)"));
+check("MAKEEASY: an expert's name past three words is said as it is typed (F2)", G.threeWords ===
+  "A name is one to three words of letters and digits, each starting with a letter: ACME BINS.");
+const byHand = index.samples.filter((s) => s.by_hand).map((s) => s.name.split("_")[0]).sort();
+check("MAKEEASY: the eight with no manifest are not offered with a tick (F6)",
+  byHand.join() === ["s10", "s12", "s13", "s29", "s30", "s6", "s7", "s9"].sort().join() && index.samples.filter((s) => s.config_pack).length === 2);
+const handFound = a.search(index, catalogue, "");
+check("MAKEEASY: they stand apart from the cards, with the packs apart again", handFound.hand.length === 8 &&
+  handFound.samples.every((s) => a.tickable(s)) && handFound.packs.every((s) => s.config_pack) &&
+  handFound.samples.length + handFound.hand.length + handFound.packs.length === index.samples.length);
+check("MAKEEASY: searching for one finds it in the same list", a.search(index, catalogue, "S6").hand.length === 1 && a.search(index, catalogue, "S6").samples.length === 0);
+check("MAKEEASY: a need never ticks one", a.fromNeeds(index, catalogue, catalogue.map((c) => c.id)).ticks.every((n) => a.tickable(by[n])));
 const cvApp = { samples: ["s23_till_guard", "s51_refund_rules"], needs: { built: ["cap", "feed"], desk: [], cannot: [], asked: [] } };
 const cvCat = [{ id: "cap", asks: "No more than 50", sample: "samples/s23_till_guard" }, { id: "feed", asks: "Hears about every sale" }];
 const cvL = a.covers(cvApp, cvCat);

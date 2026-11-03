@@ -4,6 +4,10 @@
 
 **Industries:** every industry
 
+## Made on My apps
+
+**New app makes this sample into an app we host, with both doors: the *Merge counts* button and the customer's history page.** The install makes the app's own user (POS 2.1.0.667 or later), and each site's key reaches the app when it connects. The rights below are still the retailer's to give.
+
 ## What the retailer does
 
 One small app, two doors, one settings record.
@@ -45,7 +49,7 @@ One small app, two doors, one settings record.
 
 1. Install `manifest.json` (the retailer's administrator, on the install screen; on your sandbox, `tools/deploy/deploy.py`). It adds `PP MHS Settings`, a field on the count (*Merged by press*), the two services and the button (all switched off), and the roles **PP MHS Integration**, **PP MHS Counts** and **PP MHS History** (empty).
 2. In **Role Permissions**, give PP MHS Integration **read, create and write** on Stock Reconciliation, **read and create** on Comment, and **read** on POS Invoice, Sales Invoice and User. A manifest grants rights only on its own record types ([the integration user recipe](../../recipes/integration_user.md)). On the sandbox, a read iVendNext gave to every user did not reach the app's key: give it to the role.
-3. This app has no event feed, so the install makes no user for it: make the app's integration user by hand with that role and generate its API key.
+3. The install makes the app's own user, with that role, from its feed registration (the feed stays off). On your own server, generate that user's API key for the service.
 4. Fill **PP MHS Settings** named `Default`: the rule for the same item in the same warehouse (*Sum* or *Last*) and the number of sales the page shows.
 5. Give **PP MHS Counts** to the people who merge and **PP MHS History** to the people who open the page.
 6. Open each service (*Retail Extension Subscription*), read what it receives, tick the consent and switch it on; switch the button on (*Retail Desk Action*).
@@ -91,7 +95,7 @@ iVendNext must reach it over HTTPS with a real certificate: put it behind your o
 | `service/app.py` | the service: iVendNext over the record API with the app's key, the press, the page and its one read |
 | `service/history.html` | the page, drawn with the design kit (`kit/design/`), which the service serves beside it |
 | `manifest.json` | the settings, the field on the count, the two services, the button, the three roles |
-| `tests/` | 56 laptop tests (`test_merge.py`, `test_history.py`, `test_shop.py`, `test_manifest.py`); `canaries.py` removes each guard in turn and its test must go RED (40 of 40) |
+| `tests/` | 62 laptop tests (`test_merge.py`, `test_history.py`, `test_shop.py`, `test_manifest.py`); `canaries.py` removes each guard in turn and its test must go RED (40 of 40) |
 
 ## Technical notes
 
@@ -110,6 +114,10 @@ iVendNext must reach it over HTTPS with a real certificate: put it behind your o
 - **Not run on a sandbox:** the button on the list and its dialog in Desk, and the till's own key (no one was signed in to the site's screens: every press and context came through the same server calls). The till-shaped page was opened with a context signed by the walk script with the page's secret, not by the till. Not run at all: serial-numbered counts, a batch row or a bundle, a row counted at zero, more than two counts in a press, more than 10 sales, a till sale (the sandbox has none), a till with a default walk-in customer, a return.
 
 ## Versions
+
+### 0.2.0
+
+- New app makes it into an app we host, for many sites (`Hosted` in `service/app.py`, `app.json`); the install makes the app's own user.
 
 ### 0.1.0
 

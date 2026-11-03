@@ -217,6 +217,17 @@ def secrets_for(record: dict | None, name: str) -> list[bytes]:
     return [s.encode() for s in ((record.get("secrets") or {}).get(name), (record.get("previous") or {}).get(name)) if s]
 
 
+def site_signed(store, name: str, holds) -> tuple[dict | None, str]:
+    """(the connected site, the secret) a browser's call was signed for: a page the site opens calls from the browser, which
+    names no site, so the signature says which. ``holds(secret)`` checks the call against one secret of ``name``."""
+    for site in store.sites():
+        record = store.get(site)
+        for secret in secrets_for(record, name):
+            if holds(secret.decode()):
+                return record, secret.decode()
+    return None, ""
+
+
 class FileStore:
     """The shops in one JSON file (tests, a laptop, your own server). Written whole, through a temporary file."""
 

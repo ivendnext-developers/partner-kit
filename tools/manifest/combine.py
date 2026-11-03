@@ -72,6 +72,11 @@ EVENT_WORDS = {"scan": ("at the scan", "scan"), "qty_change": ("when a quantity 
                "customer_add": ("when a customer is added", "customer"),
                "customer_select": ("when a customer is chosen", "customer")}
 CHECKS_MAX, CHECK_SECONDS_MAX = 3, 10
+PREFIX_WORDS = "A name is one to three words of letters and digits, each starting with a letter: ACME BINS."
+POINT_WORDS = {"page": "a page", "desk_action": "a button in Desk", "doccheck": "a check when a record is saved",
+               "payer": "a payer at Pay"}
+TOGETHER_WORDS = "These samples cannot sit in one app: untick one."
+NUMBERS = "zero one two three four five six seven eight nine ten eleven twelve".split()
 FEED_SCHEDULE = "feed"          # the app's one reader of its feed (dispatch.json ``feed``)
 RATE = re.compile(r"rate\((\d+) (minute|hour|day)s?\)")
 
@@ -428,6 +433,45 @@ def check_manifest(m: dict) -> None:
         raise Refused("The kit's check refused the app's manifest: " + "; ".join(bad[:5]), code="M06")
 
 
+def room_for(samples, word: str, samples_dir=None, most: int = 40) -> int:
+    """The longest prefix these samples leave room for, starting with ``word``: a record's whole name is at most 61 characters,
+    so a sample with long names of its own (S40's, S57's) needs a short prefix, and an app of several samples shorter still."""
+    samples_dir = pathlib.Path(samples_dir) if samples_dir else KIT / "samples"
+    names = [resolve(s, samples_dir) for s in samples]
+
+    def fits(n: int) -> bool:
+        prefix = f"{word.upper()} {'X' * (n - len(word) - 1)}"
+        app = app_for(prefix)
+        try:
+            check_manifest(build_manifest([make_part(s, prefix, app, len(names) > 1, samples_dir) for s in names], prefix, app)[0])
+        except Refused as e:
+            return e.code != "M06"     # any other refusal is said on its own, whatever the name's length
+        return True
+
+    low, high = len(word) + 2, most
+    if fits(high) or not fits(low):     # refused at any length: the name is not why
+        return high
+    while high - low > 1:
+        middle = (low + high) // 2
+        low, high = (middle, high) if fits(middle) else (low, middle)
+    return low
+
+
+def check_together(samples, samples_dir=None) -> None:
+    """The kit's check over a set of samples at a short name, so the page's bar says it before *Next*: a name cannot mend it."""
+    samples_dir = pathlib.Path(samples_dir) if samples_dir else KIT / "samples"
+    names = [resolve(s, samples_dir) for s in samples]
+    if len(names) < 2:
+        return
+    try:
+        parts = [make_part(s, "ACME CHECK", "acme_check", True, samples_dir) for s in names]
+        check_manifest(build_manifest(parts, "ACME CHECK", "acme_check")[0])
+    except Refused as e:
+        if e.code == "M06":
+            e.page = TOGETHER_WORDS
+        raise
+
+
 def routes(m: dict) -> dict:
     """{route path: (kind, key, label)} for every connection point the manifest names."""
     out = {}
@@ -706,8 +750,16 @@ def needs_install(parts: list[Part]) -> str | None:
     return f"python3 -m pip install {' '.join(sorted(set(lines)))}" if lines else None
 
 
+def lists_words(names: list[str]) -> str:
+    """``three lists (bin movement, location, aisle)``: the count is the whole list, the brackets its first three."""
+    n = len(names)
+    shown = ", ".join(names[:3]) + (f" and {n - 3} more" if n > 3 else "")
+    return f"{NUMBERS[n] if n < len(NUMBERS) else n} list{'' if n == 1 else 's'} ({shown})"
+
+
 def does(part: Part) -> str:
-    """What a sample puts in the app, in plain words: its own *What is in it* line, else its points."""
+    """What a sample puts in the app, in plain words and with no brackets inside brackets: its own *What is in it* line,
+    else its points and its lists."""
     line = re.search(r"^\*\*What is in it:\*\*\s*(.+?)\s*$", sample_info.readme(part.folder), re.M)
     if line:
         return line.group(1).rstrip(".")
@@ -718,14 +770,18 @@ def does(part: Part) -> str:
         elif s.get("point") == "check":
             words.append("a check at Pay")
         else:
-            words.append(f"a {s.get('point')} point")
+            words.append(POINT_WORDS.get(s.get("point"), f"a {s.get('point')} connection"))
     words += ["a till key"] * len(part.manifest.get("remote_keys") or [])
     words += ["a notice of each sale"] * len(part.manifest.get("webhooks") or [])
     words += ["a button in Desk"] if part.manifest.get("desk_actions") else []
+    words = list(dict.fromkeys(words))
     lists = [d.get("name", "")[len(part.prefix) + 1:] for d in part.manifest.get("doctypes") or []]
     lists = [l.lower() for l in lists if l and l != "Settings"]
-    out = list(dict.fromkeys(words)) + ([f"its lists ({', '.join(lists[:3])})"] if lists else [])
-    return ", ".join(out) or "its lists and settings"
+    alone = not words and bool(handler_of(part))     # no point of the till's: it runs by itself
+    items = (["runs on its own server"] if alone else words) + ([("keeps " if alone else "") + lists_words(lists)] if lists else [])
+    if not items:
+        return "its lists and settings"
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
 
 
 def in_folder(part: Part) -> str:
@@ -964,7 +1020,10 @@ def combine(samples, prefix: str, into, test: bool = False, samples_dir=None, ou
         raise Refused("Tick at least one sample.", code="none")
     if len(set(names)) != len(names):
         raise Refused("A sample is named twice: name each once.", code="twice")
-    start.refuse_new_prefix(prefix, "")
+    try:
+        start.refuse_new_prefix(prefix, "")
+    except start.Refused as e:      # the same refusal, with its words: the door and the command catch this module's
+        raise Refused(str(e), PREFIX_WORDS if not rename._PREFIX_RE.match(prefix) else None, "prefix") from None
     app = app_for(prefix)
     into = pathlib.Path(into).resolve()
     target = into / "apps" / app
@@ -976,7 +1035,16 @@ def combine(samples, prefix: str, into, test: bool = False, samples_dir=None, ou
     if len(set(tags)) != len(tags):
         raise Refused("Two of these samples carry the same short tag: untick one.", code="tag")
     commit = kit_commit()
-    manifest, app_json, dispatch, files, owners = assemble(parts, prefix, app, commit)
+    try:
+        manifest, app_json, dispatch, files, owners = assemble(parts, prefix, app, commit)
+    except Refused as e:
+        room = room_for(names, prefix.split()[0], samples_dir) if e.code == "M06" else len(prefix)
+        if len(prefix) > room:      # the check's own words name a record; the reason is the name's length
+            raise Refused(f"This name is too long for {'these samples' if tagged else parts[0].label}: at most {room} letters "
+                          "and spaces, because their records' names start with it.", code="M06") from None
+        if e.code == "M06" and tagged:
+            e.page = TOGETHER_WORDS
+        raise
     left = leftovers(files, parts)
     if left:
         raise Refused("A name of a sample is still in the app, so it is not finished:\n  " + "\n  ".join(left[:20]), code="left")
@@ -1026,7 +1094,7 @@ def summary_lines(parts: list[Part], verdict: str, tests: int | None) -> list[st
         head += f" · {tests} tests run, {tests} passed."
     else:
         head += "."
-    what = ", ".join(f"{p.title} ({p.tag}: {does(p)})" for p in parts)
+    what = "; ".join(f"{p.title} ({p.tag}): {does(p)}" for p in parts)
     feeds = "one feed" if any(p.manifest.get("registered_applications") for p in parts) else "no feed"
     return [head, f"What is in it: {what}. One service, {feeds}, one app user."]
 

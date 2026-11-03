@@ -1,9 +1,9 @@
 {
- "manifest_version": 1,
+ "manifest_version": 2,
  "app": "pp_wrc",
  "prefix": "PP WRC",
  "title": "Warranty terms",
- "version": "0.1.0",
+ "version": "0.2.0",
  "publisher": "Partner Programme sample",
  "description": "The partner's warranty terms, moved inside the shop: an item's own term wins over its item group's. The till key 'Warranty' reads them.",
  "doctypes": [
@@ -68,6 +68,18 @@
      "share": 0,
      "print": 0,
      "email": 0
+    },
+    {
+     "role": "PP WRC Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
     }
    ]
   }
@@ -101,7 +113,34 @@
   }
  ],
  "property_setters": [
-  {"doc_type": "PP WRC Warranty Term", "property": "documentation", "property_type": "Data",
-   "value": "https://developer.ivendnext.com/samples/s1_warranty/index.html"}
+  {
+   "doc_type": "PP WRC Warranty Term",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s1_warranty/index.html"
+  }
+ ],
+ "allowed_urls": [
+  "https://warranty.partner.example/point/warranty"
+ ],
+ "remote_keys": [
+  {
+   "key": "warranty",
+   "label": "Warranty",
+   "partner_name": "Partner Programme sample",
+   "endpoint_url": "https://warranty.partner.example/point/warranty",
+   "returns_message": 1,
+   "returns_sale_attributes": 0,
+   "timeout_seconds": 3
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP WRC Warranty feed",
+   "description": "the till key reads the terms and the items as this user; leave the feed off",
+   "events": [
+    "PP WRC Warranty Term"
+   ]
+  }
  ]
 }

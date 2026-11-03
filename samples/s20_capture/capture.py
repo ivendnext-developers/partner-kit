@@ -113,6 +113,10 @@ def on_qty(ctx: dict, conf: dict) -> dict:
     return {"verdict": "refuse", "reason": f"At most {conf['most']} of {item} on one line."}
 
 
+def new_code() -> str:
+    return "".join(secrets.choice("0123456789") for _ in range(CODE_LENGTH))
+
+
 class Codes:
     """The codes this service sent, by ``challenge_id`` — in this process, ten minutes each.
     A partner running several processes keeps them in its own database."""
@@ -125,7 +129,7 @@ class Codes:
         self.pending = {k: v for k, v in self.pending.items() if now - v[2] < CODE_TTL_S}
 
     def issue(self, challenge_id: str, number: str) -> str:
-        code = "".join(secrets.choice("0123456789") for _ in range(CODE_LENGTH))
+        code = new_code()
         with self._lock:
             now = self.clock()
             self._purge(now)

@@ -28,6 +28,8 @@ class TestCall(unittest.TestCase):
     def setUp(self):
         """A copy of the sample beside the template's service, with the two settings files the wrapper reads at start (the
         shop's address points nowhere: the binding, if it ran, could not read the item groups)."""
+        if '"tools", "app_template", "service"' not in (SAMPLE / "remote" / "wrapper.py").read_text("utf-8"):
+            self.skipTest("the till key on your own server is tested in the kit; an app made from S1 runs service/hosted.py")
         d = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, d, True)
         copy = Path(d, "samples", SAMPLE.name)

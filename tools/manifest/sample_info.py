@@ -7,6 +7,7 @@ and ``newer``), the developer site's samples index (``site/gallery.py``) and the
     till_lines(readme)     the README's *Try it at the till* lines
     till_part(folder)      whether the sample puts something at the till (a till key, a check, a capture, a module)
     config_pack(folder)    whether the sample is a configuration pack (set in Desk, never ticked into an app)
+    by_hand(folder)        whether the sample has no manifest of its own (copied by hand, never ticked into an app)
 
 The README's own words are the source; nothing here is written twice. Standard library only.
 """
@@ -136,6 +137,12 @@ def till_part(folder: pathlib.Path) -> bool:
 
 def config_pack(folder: pathlib.Path) -> bool:
     return folder.name in CONFIG_PACKS
+
+
+def by_hand(folder: pathlib.Path) -> bool:
+    """A sample New app cannot make: it has no manifest of its own, so it is copied by hand as its README says (a
+    configuration pack is set in Desk instead). Never offered with a tick."""
+    return not config_pack(folder) and not manifest(folder)
 
 
 def vtuple(v: str) -> tuple[int, ...]:

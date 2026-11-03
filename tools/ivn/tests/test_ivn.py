@@ -110,7 +110,7 @@ class Stub:
             app = folder.name
             self.keep(app, "1.0.0", self.with_version(folder, "1.0.0"), "acme-dev", "ivn_cmd", f"made from {len(samples)} samples")
         return {"app": app, "version": "1.0.0", "lines": [f"Made. {len(samples)} sample{'s' if len(samples) > 1 else ''}, 1 app. CHECK GREEN.",
-                                                          "What is in it: Till guard rules (tgr: a check at Pay, a capture on scan). One service, one feed, one app user."]}
+                                                          "What is in it: Till guard rules (tgr): a check at Pay, a capture on scan. One service, one feed, one app user."]}
 
     def app(self, b):
         r = self.row(b["app"])
@@ -437,7 +437,7 @@ class NewAndDownload(Base):
     def test_new_prints_j2_07_then_the_folder_and_points_at_its_readme(self):  # ⭐ UX-23 (J2-12)
         folder, out = self.made("s23", "s22")
         self.assertRegex(out, r"Made\. 2 samples, 1 app\. CHECK GREEN · (\d+) tests run, \1 passed\.")
-        self.assertIn("What is in it: Till guard rules (tgr: a check at Pay, a capture on scan).", out)
+        self.assertIn("What is in it: Till guard rules (tgr): a check at Pay, a capture on scan.", out)
         self.assertIn("Folder: apps/acme_member_till/ (service/lyl/, service/tgr/, manifest.json, app.json, tests/). "
                       "Read its README.md: what is in it and what you can change. Next: ivn try", out)
         self.assertTrue((folder / "README.md").is_file())
@@ -1261,7 +1261,7 @@ class TheOneFile(unittest.TestCase):
                 try:
                     folder = combine.combine([sample], "ACME ONE", pathlib.Path(tmp))
                 except combine.Refused as e:
-                    self.assertIn(e.code, ("M34", "M35"), e.text)  # a sample an app cannot hold (J8-32, J8-33)
+                    self.assertEqual(e.code, "M35", e.text)  # no manifest of its own (J8-33); every other sample makes an app
                     continue
                 a = json.loads((folder / "app.json").read_text("utf-8"))
                 self.assertEqual(a["samples"][0]["name"], sample)

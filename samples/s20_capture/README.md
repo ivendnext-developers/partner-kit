@@ -12,6 +12,10 @@ Three capture services, each at its own address. **On scan** of an item in the n
 
 The recipe: [`recipes/capture.md`](../../recipes/capture.md).
 
+## Made on My apps
+
+**New app makes this sample into an app we host:** the three captures, for many sites. Two settings on the app are yours and optional: `CAP_MESSAGE_URL`, your message gateway's address, which is posted the phone and the code (with none, a customer is added with no code); and `PP_LINE_ATTRIBUTE`, the line attribute that holds the warranty reference (with none, the line goes on with no reference).
+
 ## What the retailer does
 
 **Before you install:** every `host.docker.internal` address in `manifest.json` (in `allowed_urls`, and where the manifest calls it) is our test bench's own address for the sample's service, and it resolves only where Docker provides it. Replace it with your own service's address first, or iVendNext's calls never reach your service; if this manifest is already installed, raise its `version` and install it again ([the manifest recipe](../../recipes/manifest.md), step 6).
@@ -75,6 +79,10 @@ Taken on our test bench on 2026-10-10 (product pin: the iVendNext POS app `87812
 *Handset count* is not in these pictures. On a sandbox site (2026-10-21, POS 2.0.0.658) a copy of the manifest before its last change (both services on iPhone and iPad, renamed to the site's own groups) installed all three services switched off, *Handset count* with `{"event": "qty_change", …}` and `allow_and_flag`, and was uninstalled; no till asked it. Version 0.3.0 as shipped (the quantity service on *iPad* only) was not installed on a sandbox; its quantity service ran in the laptop tests, and the till's side of a quantity change was walked by the product (POS train T12, counter, phone and tablet frames).
 
 ## Versions
+
+### 0.4.0
+
+- New app makes it into an app we host, for many sites (`Hosted` in `service/app.py`, `app.json`); codes are kept so any copy can check them.
 
 ### 0.3.0
 

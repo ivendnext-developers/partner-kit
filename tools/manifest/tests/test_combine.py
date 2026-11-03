@@ -46,6 +46,27 @@ def scratch_sample(samples: pathlib.Path, src: str, name: str, prefix: str, edit
     mp.write_text(json.dumps(m, indent=1), encoding="utf-8")
 
 
+class EveryTick(unittest.TestCase):
+    """MAKEEASY: a sample offered with a tick makes an app, each on its own; the ones with no tick are those with no manifest."""
+
+    def test_every_tickable_sample_makes_a_one_sample_app_and_no_tick_means_no_manifest(self):
+        refused = []
+        for path in sorted((KIT / "samples").iterdir()):
+            if not path.is_dir():
+                continue
+            with tempfile.TemporaryDirectory() as tmp:
+                try:
+                    combine.combine([path.name], "ACME CENSUS", pathlib.Path(tmp))
+                except combine.Refused as e:
+                    refused.append((path.name, e.code))
+            with self.subTest(sample=path.name):
+                offered = not (combine.sample_info.config_pack(path) or combine.sample_info.by_hand(path))
+                self.assertEqual((path.name, "M35") in refused, not offered)
+        self.assertEqual([r for r in refused if r[1] != "M35"], [])
+        self.assertEqual(sorted(r[0].split("_")[0] for r in refused),
+                         sorted(["s5", "s6", "s7", "s8", "s9", "s10", "s12", "s13", "s29", "s30"]))
+
+
 class Base(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -87,8 +108,8 @@ class Combine(Base):
         lines = self.out.splitlines()
         self.assertRegex(lines[0], r"^Made\. 2 samples, 1 app\. CHECK GREEN · (\d+) tests run, \1 passed\.$")
         self.assertGreater(int(re.search(r"(\d+) tests run", lines[0]).group(1)), 200)   # both samples' own tests ran
-        self.assertEqual(lines[1], "What is in it: Till guard rules (tgr: a check at Pay, a capture on scan), Customer-owned "
-                                   "loyalty (lyl: members, cash back, a till key, a wallet). One service, one feed, one app "
+        self.assertEqual(lines[1], "What is in it: Till guard rules (tgr): a check at Pay, a capture on scan; Customer-owned "
+                                   "loyalty (lyl): members, cash back, a till key, a wallet. One service, one feed, one app "
                                    "user.")
         self.assertEqual(self.app.name, "acme_hk")
 
@@ -319,13 +340,65 @@ class Refusals(Base):
         self.assertFalse((self.into / "apps" / "acme_hk").exists())
 
     def test_m34_a_sample_that_answers_the_till_from_its_own_server(self):
+        samples = self.into / "samples"
+        samples.mkdir()
+        scratch_sample(samples, "s28_merge_and_history", "s91_own_server", "PP OWN")
+        (samples / "s91_own_server" / "app.json").unlink()       # every sample in the kit has a hosting order: a partner's may not
         with self.assertRaises(combine.Refused) as e:
-            self.make(["s1_warranty", "s23_till_guard"])
+            self.make(["s91_own_server"], samples_dir=samples)
         self.assertEqual(e.exception.code, "M34")
         self.assertEqual(e.exception.text,
-                         "S1 Warranty terms answers the till from its own server, with no hosting order (app.json) the app's "
-                         "one service can run. Untick it, or copy it by hand as its README says.")
+                         "S91 Merge counts, and a customer's history answers the till from its own server, with no hosting "
+                         "order (app.json) the app's one service can run. Untick it, or copy it by hand as its README says.")
         self.assertFalse((self.into / "apps").exists())                  # nothing is made
+
+    def test_a_name_past_three_words_is_refused_with_words(self):  # F2: it was the wrong class of refusal, a 500 on the page
+        with self.assertRaises(combine.Refused) as e:
+            self.make(["s23_till_guard"], prefix="ACME BIN LOCATIONS MANISH")
+        self.assertEqual(e.exception.code, "prefix")
+        self.assertEqual(e.exception.page, "A name is one to three words of letters and digits, each starting with a letter: ACME BINS.")
+        for bad in ("ACME 2BINS", "ACME BIN-LOCATIONS"):
+            with self.subTest(bad), self.assertRaises(combine.Refused):
+                self.make(["s23_till_guard"], prefix=bad)
+
+    def test_room_for_is_the_longest_name_the_samples_leave_room_for(self):
+        room = combine.room_for(["s57_donation_intake"], "ACME")
+        self.assertLess(room, 25)
+        self.make(["s57_donation_intake"], prefix="ACME " + "X" * (room - 5))     # at the limit: made
+        with self.assertRaises(combine.Refused) as e:                              # one past it: said in words
+            self.make(["s57_donation_intake"], prefix="ACMEB " + "X" * (room - 5))
+        self.assertEqual(e.exception.code, "M06")
+        self.assertIn(f"at most {room} letters", e.exception.text)
+        self.assertLess(combine.room_for(["s57_donation_intake", "s23_till_guard"], "ACME"), room)   # its names take a tag too
+        self.assertEqual(combine.room_for(["s23_till_guard"], "ACME"), 40)         # nothing long: the door's own limit
+
+    def test_samples_that_cannot_sit_together_say_so_before_next(self):  # S55's and S22's own rules on one field, at any name
+        with self.assertRaises(combine.Refused) as e:
+            combine.check_together(["s55_front_of_house", "s22_customer_loyalty"])
+        self.assertEqual((e.exception.code, e.exception.page), ("M06", "These samples cannot sit in one app: untick one."))
+        combine.check_together(["s23_till_guard", "s22_customer_loyalty"])
+
+    def test_a_pages_own_calls_reach_it_untagged_and_tagged(self):  # one-sample S17 is /board/…, under a pair /pge/board/…
+        for samples, path in ((["s17_partner_page"], "/board/api/open"), (["s17_partner_page", "s23_till_guard"], "/pge/board/api/open")):
+            with self.subTest(path), tempfile.TemporaryDirectory() as tmp:
+                folder = combine.combine(samples, "ACME ONE", pathlib.Path(tmp))
+                code = ("import importlib.util as u, json;"
+                        "s = u.spec_from_file_location('a', 'service/app.py'); m = u.module_from_spec(s); s.loader.exec_module(m);"
+                        f"e = dict(httpMethod='POST', path={path!r}, headers={{}}, body=json.dumps(dict(ctx='x.y')), isBase64Encoded=False);"
+                        "print(m.lambda_handler(e)['statusCode'])")
+                env = {"PATH": os.environ.get("PATH", ""), "IVN_LIBRARY_APP": "acme_one", "IVN_SHOPS_FILE": str(pathlib.Path(tmp) / "shops.json")}
+                r = subprocess.run([sys.executable, "-c", code], cwd=folder, env=env, capture_output=True, text=True, timeout=120)
+                self.assertEqual(r.stdout.strip().splitlines()[-1], "403", r.stderr)    # the board's own answer, not the dispatcher's 404
+
+    def test_what_is_in_it_has_no_brackets_inside_brackets(self):  # F7
+        for sample, words in (("s3_price_audit", "runs on its own server and keeps one list (deviation)"),
+                              ("s1_warranty", "a till key and one list (warranty term)"),
+                              ("s2_bins", "a till key and five lists (bin movement, location, aisle and 2 more)"),
+                              ("s28_merge_and_history", "a button in Desk and a page")):
+            with self.subTest(sample):
+                part = combine.make_part(sample, "ACME ONE", "acme_one", False, KIT / "samples")
+                self.assertEqual(combine.does(part), words)
+        self.assertEqual(combine.make_part("s3_price_audit", "ACME ONE", "acme_one", False, KIT / "samples").title, "Price-deviation audit")
 
     def test_m35_a_sample_with_no_manifest_of_its_own(self):
         with self.assertRaises(combine.Refused) as e:
@@ -550,12 +623,6 @@ class ReviewFolds(Base):
         self.assertEqual(e.exception.code, "M02")
         self.assertTrue(e.exception.text.startswith("This app would run 4 checks at Pay: "))
         self.assertEqual(tree(folder), before)
-
-    def test_a_sample_whose_service_has_no_hosting_order_is_refused_in_words(self):
-        with self.assertRaises(combine.Refused) as e:
-            self.make(["s23_till_guard", "s28_merge_and_history"])
-        self.assertEqual(e.exception.code, "M34")
-        self.assertIn("S28 ", e.exception.text)
 
     def test_a_sample_whose_titles_repeat_is_one_app(self):
         for sample, prefix in (("s41_regulated_register", "ACME RR"), ("s55_front_of_house", "ACME FH")):

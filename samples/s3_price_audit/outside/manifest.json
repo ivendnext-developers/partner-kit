@@ -2,7 +2,7 @@
  "manifest_version": 2,
  "app": "pp_pdo",
  "prefix": "PP PDO",
- "title": "Price-deviation audit (outside)",
+ "title": "Price-deviation audit",
  "version": "0.2.0",
  "publisher": "Partner Programme sample",
  "description": "S3 rebuilt so that the partner's service runs outside the shop, reads booked sales from the event feed with its own user (the role PP PDO Integration, which the install makes), and writes each line sold below list by more than the shop's threshold (PP PDO Settings, record Default; 10 when there is none) into this record type. No partner code runs inside the shop.",
