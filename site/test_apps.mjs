@@ -305,6 +305,8 @@ check("EASYLOOK: a refusal keeps the company form's tick and the suggested word 
   !src.includes("data.tryAgree") && !src.includes("data.tryPlan") && src.includes("data.coTick") && /suggestWord\(data\.coName\)/.test(src));
 check("EASYLOOK: pressing clears the last refusal and says it started (12)", src.includes("data.tryPress = true") && src.includes("data.pubPress = true"));
 check("EASYLOOK: a publish that stops keeps the form and its addresses (20, 085)", src.includes("if (r.stop) { openPublish(data.appId); return; }"));
+check("an app made with nothing to fill goes straight to Try: no Next press between Made and Try (walk 11-03)",
+  /none \? button\(G\.tryIt, function \(\) \{ data\.made = null; openTry\(data\.appId\); \}\)/.test(src));
 check("EASYLOOK: a finished try leads on to Publish (14)", /if \(s\.done\) \{[\s\S]{0,1400}button\(G\.publish, function \(\) \{ openPublish\(data\.appId\); \}\)/.test(src));
 check("EASYLOOK: home puts the apps before the sandbox and the command (134)", src.includes("var out = el(\"div\", {}, box, list, tail)"));
 check("EASYLOOK: Settings is offered only when the app has some (07)", src.includes("(a.settings || []).length ? button(\"Settings\""));

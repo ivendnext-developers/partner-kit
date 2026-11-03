@@ -901,8 +901,9 @@
     var w = data.made.words || [];
     if (w[0]) box.appendChild(el("p", { "class": "hosting-ok", text: w[0] }));
     w.slice(1).forEach(function (x) { box.appendChild(p(x)); });
-    var none = data.app && data.app.app === data.appId && !(data.app.settings || []).length;   // nothing to fill: straight to the app
-    box.appendChild(button(none ? G.next : G.nextSettings, function () { data.made = null; go(none ? "app" : "settings"); }));
+    var none = data.app && data.app.app === data.appId && !(data.app.settings || []).length;   // nothing to fill: straight to Try
+    box.appendChild(none ? button(G.tryIt, function () { data.made = null; openTry(data.appId); })
+      : button(G.nextSettings, function () { data.made = null; go("settings"); }));
     return box;
   }
 
