@@ -255,7 +255,7 @@ class SiteTests(unittest.TestCase):
         self.assertTrue(any("broken link no_such_page.html" in b for b in bad), bad)
 
     def test_broken_fragment_is_red(self):
-        bad = self.planted("b", lambda h: h.replace("</main>", '<a href="02_getting_started.html#no-such-heading">x</a></main>'))
+        bad = self.planted("b", lambda h: h.replace("</main>", '<a href="03_ladder_and_never_list.html#no-such-heading">x</a></main>'))
         self.assertTrue(any("no #no-such-heading" in b for b in bad), bad)
 
     def test_broken_image_is_red(self):
@@ -762,12 +762,11 @@ class SiteTests(unittest.TestCase):
         with mock.patch.object(build, "BUILD_ORDER", build.BUILD_ORDER[1:]):
             self.assertTrue(any("door configure is in no step" in e for e in build.order_errors()))
 
-    def test_related_needs_named_first_then_sample_then_chapter_15_at_most_four(self):
+    def test_related_needs_named_first_then_sample_at_most_four(self):
         cards = build.catalogue.load(build.ROOT)
-        rel = build.related_needs(cards, build.named_together())
+        rel = build.related_needs(cards, [])
         self.assertTrue(all(len(v) <= 4 and all(o.id != k for o in v) for k, v in rel.items()))
         self.assertEqual(rel["question-on-quantity-change"][0].id, "line-quantity-cap")      # named in its limit
-        self.assertIn("prescription-before-payment", [o.id for o in rel["prescriptions-as-records"]])   # a chapter 15 row
         text = (self.out / "needs/till/question-on-quantity-change.html").read_text("utf-8")
         self.assertIn('id="related-needs"', text)
 
@@ -912,7 +911,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         page = (self.out / "reference_apps.html").read_text("utf-8")
         card = page.split('<h4><a href="samples/s23_till_guard/index.html"', 1)[1].split("</li>")[0]   # a card with a picture has a thumbnail link first
         self.assertIn("Check before payment", card)
-        self.assertIn("python3 -m unittest discover -s samples/s23_till_guard/tests", card)
+        self.assertIn("ivn check", card)
         self.assertIn("index.html#run-it", card)
         self.assertIn(f"{build.REPO_URL}/tree/main/samples/s23_till_guard", card)
 
@@ -1334,7 +1333,6 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertTrue(text.startswith("# iVendNext Developers\n\n> "))
         self.assertNotIn("github.com/ivendnext-developers/partner-kit", text)             # the kit is private until Stage 2
         self.assertIn("https://developer.ivendnext.com/catalogue.json", text)
-        self.assertIn("AGENTS.md", text)
         links = re.findall(r"^- \[[^\]]+\]\((https://developer\.ivendnext\.com/[^)]*)\): \S", text, re.M)
         self.assertGreater(len(links), 60)
         for url in links:
@@ -1383,7 +1381,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         text = self.html_of("404.html")
         self.assertFalse(indexable(text))
         self.assertIn('<form class="search-page" action="/search.html" method="get" role="search">', text)
-        for href in ("/needs/index.html", "/build.html", "/start.html"):
+        for href in ("/needs/index.html", "/build.html", "/first_app.html"):
             self.assertIn(f'<a href="{href}">', text)
         cards = len(catalogue_cards())
         self.assertEqual(len(re.findall(r'<li><a href="/needs/[a-z]+/[a-z0-9-]+\.html">', text)), cards)

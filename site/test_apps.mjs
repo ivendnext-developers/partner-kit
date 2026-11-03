@@ -79,6 +79,7 @@ check("Accept's words are said after going home, which clears the last message",
 
 // ── EASY3a: the list, New app's gallery, Name, Made, Settings, the app's page ──
 const G = a.G;
+check("ivn login's code survives setting up the company", src.includes("data = { deviceCode: root.sessionStorage.getItem(CODE)"));
 const index = JSON.parse(readFileSync(path.join(out, "samples/index.json"), "utf8"));
 const catalogue = JSON.parse(readFileSync(path.join(out, "catalogue.json"), "utf8"));
 const plan = require(path.join(out, "assets/plan.js"));

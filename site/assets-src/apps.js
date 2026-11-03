@@ -578,7 +578,7 @@
       ev.target.disabled = true;
       call("POST", "/company", { name: name.value.trim(), word: word.value.trim().toLowerCase(), schedule_version: who.schedule_version })
         .then(function () { return call("GET", "/whoami"); })
-        .then(function (r) { who = r; data = {}; if (!arrive()) go("home"); }, function (e) { ev.target.disabled = false; fail(e); });
+        .then(function (r) { who = r; data = { deviceCode: root.sessionStorage.getItem(CODE) || undefined }; if (!arrive()) go("home"); }, function (e) { ev.target.disabled = false; fail(e); });
     }));
     box.appendChild(root.document.createTextNode(" "));
     box.appendChild(button(WORDS.back, function () { go("home"); }, true));   // back to J2-03's two choices

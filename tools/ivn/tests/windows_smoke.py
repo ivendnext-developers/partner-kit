@@ -31,7 +31,7 @@ def main():
         stub = Stub(tmp)
         srv = serve(stub)
         stub.base = f"http://127.0.0.1:{srv.server_address[1]}"
-        env = {**os.environ, "IVN_HOSTING_URL": stub.base, "IVN_TOKEN": TOKEN, "PYTHONUTF8": "1"}
+        env = {**os.environ, "IVN_HOSTING_URL": stub.base, "IVN_TOKEN": TOKEN}
         work = tmp / "repo"
         work.mkdir()
         ivn(work, env, "new", "acme_smoke", "--from", "s11")

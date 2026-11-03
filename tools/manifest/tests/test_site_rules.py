@@ -27,6 +27,8 @@ class WhatItNoLongerStops(unittest.TestCase):
         m = copy.deepcopy(BASE)
         m["reports"].append({"name": "PP CCB Waiting", "ref_doctype": "Delivery Note", "columns": ["name", ADDED], "filters": [[ADDED, "=", 0]]})
         m["workspaces"] = [{"name": "PP CCB Home", "shortcuts": [{"type": "Report", "link_to": "PP CCB Waiting"}]}]
+        m["number_cards"] = [{"name": "PP CCB Count", "document_type": "Delivery Note", "aggregate_function_based_on": ADDED}]
+        m["dashboard_charts"] = [{"name": "PP CCB Chart", "document_type": "Delivery Note", "based_on": ADDED}]
         self.assertEqual(site(m), [])
 
 
@@ -50,16 +52,6 @@ class FeedDescription(unittest.TestCase):
         reg["description"] = "x" * 141
         self.assertEqual(validate(m), [])                 # the shop's checker passes it: only the install refuses it
         self.assertTrue(any("141 characters" in r["reason"] for r in site(m)))
-
-    def test_a_dynamic_link_must_name_a_link_field_to_doctype_or_a_select(self):
-        m = {"doctypes": [{"name": "PP X Row", "istable": 1, "fields": [
-            {"fieldname": "kind", "fieldtype": "Data"}, {"fieldname": "ref", "fieldtype": "Dynamic Link", "options": "kind"}]}]}
-        self.assertTrue(any("Dynamic Link" in r["reason"] for r in site(m)))
-        m["doctypes"][0]["fields"][0] = {"fieldname": "kind", "fieldtype": "Link", "options": "Item"}
-        self.assertTrue(any("Dynamic Link" in r["reason"] for r in site(m)))
-        for ok in ({"fieldtype": "Link", "options": "DocType"}, {"fieldtype": "Select", "options": "POS Invoice\nSales Invoice"}):
-            m["doctypes"][0]["fields"][0] = dict(ok, fieldname="kind")
-            self.assertEqual(site(m), [], ok)
 
     def test_every_sample_feed_description_fits(self):
         for f in sorted((HERE.parents[2] / "samples").glob("*/manifest.json")):

@@ -39,7 +39,7 @@ ivn try
 
 ## Try it at the till
 
-- In Desk, add a warranty term for an item, and switch the Warranty key on in POS Studio > Apps. Start a sale with that item and press Warranty; the till names the item and its months.
+- In Desk, add a warranty term for an item. Start a sale with that item and press Warranty; the till names the item and its months.
 - Sell it and scan its serial number. Within a few minutes the warranty's comment is on the sale in Desk.
 - The Warranty key was pressed through the released key over HTTPS from a console as the cashier, not from the till's screen or a physical till; a press from the till itself has not been tried.
 - Close the till day when you are done.

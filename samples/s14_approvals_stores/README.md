@@ -2,7 +2,7 @@
 
 A chain wants a price change to need a yes: a store manager's yes up to a limit, and head office's yes above it, with each store seeing only its own requests. A request names its store; the store's manager approves or rejects it; within the limit a small service applies the price, above it the request waits for head office. One workflow on the sample's own record type, with a service that writes the price once.
 
-![Two stores' price-change requests: a store manager sees only their store's, approves one within their limit, an over-limit one waits for head office, and the price row ends at the approved price](screenshots/s14_flow.gif)
+![Two stores' price-change requests: a store manager sees only their store's, approves one within their limit, an over-limit one waits for head office, and the price row ends at the approved price](screenshots/01_list_store_manager.png)
 
 **Industries:** Thrift and resale
 

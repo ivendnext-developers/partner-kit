@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/list_mark.md @ 99b5d44fb7a3, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/list_mark.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # List mark
 
 **Contract:** [`list_mark.v1.schema.json`](../extension_contracts/list_mark.v1.schema.json)
@@ -101,5 +101,5 @@ press reveals a bit of the field; a mark is simply not sent to such a user.)
 
 The manifest checker refuses what needs no site (the colours, the label, the conditions' shape, a sixth
 mark on one record type); the record's own checks run again at install and refuse the rest word for word.
-Each mark arrives **switched off**; the shop switches it on in **Retail List Mark**. An uninstall removes
+Each mark arrives **switched on**, under the install's one consent; the shop can switch it off in **Retail List Mark**. An uninstall removes
 it with nothing left behind ([package_install.md](package_install.md)).

@@ -141,9 +141,18 @@ def apply_one(api, name, limit_pct, crash_after_write=False):
     return {"request": name, "result": "applied", "price_row": price["name"], "wrote_price": wrote}
 
 
+def setting_limit():
+    """The chain's limit from LIMIT_PCT, or the default when it is unset or not a positive number."""
+    try:
+        v = float(os.environ.get("LIMIT_PCT") or LIMIT_PCT)
+    except ValueError:
+        return LIMIT_PCT
+    return v if v > 0 else LIMIT_PCT
+
+
 def apply_all(api, crash_after_write=False, limit_pct=None):
     report = {"applied": [], "not_applied": [], "skipped": []}
-    limit_pct = float(os.environ.get("LIMIT_PCT") or LIMIT_PCT) if limit_pct is None else limit_pct
+    limit_pct = setting_limit() if limit_pct is None else limit_pct
     for r in _list(api, DT, [["workflow_state", "in", list(APPLY_STATES)]], ["name"]):
         try:
             res = apply_one(api, r["name"], limit_pct, crash_after_write)

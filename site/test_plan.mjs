@@ -81,7 +81,7 @@ check("every request form in the catalogue opens the public feedback page",
         same(idsOf(plan.order(cards)), ["line-quantity-cap", waiting.id, "fee-or-surcharge"]), idsOf(plan.order(cards)).join(", "));
   const rq = plan.requests(cards);
   check("not yet: one request to file, P-PLANTED, with its form",
-        rq.forms.length === 1 && rq.forms[0].handle === "P-PLANTED" && rq.forms[0].url.includes("template=2_point_request.yml"), JSON.stringify(rq.forms));
+        rq.forms.length === 1 && rq.forms[0].handle === "P-PLANTED" && rq.forms[0].url === FORM, JSON.stringify(rq.forms));
   check("not yet: the request to file opens the public feedback page", rq.forms[0].url === FORM, JSON.stringify(rq.forms[0]));
   check("not possible: its Instead line is in the requests", rq.instead.length === 1 && rq.instead[0].line.startsWith("Instead:"));
 }

@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/business_logic/manifest_check.py,
-# at development 99b5d44fb7a39d290df054788a2bfe847bc700b4. The shop's own checker (the install screen runs it) is the source;
+# at development cff85a09aa4d9391bd0de4af68964d2181a753a5. The shop's own checker (the install screen runs it) is the source;
 # this copy lets you check a manifest before you send it, and refuses the same manifests in the same words. Everything
 # below this header equals the source. A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """The companion manifest — the VALIDATOR. Pure Python: no framework import, no network.

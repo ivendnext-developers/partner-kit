@@ -20,7 +20,7 @@ What a partner usually changes:
 - **A rule:** a pharmacist's exception with a reason, a fixed price on medicine, an e-prescription link (`decide` in `rxrules.py`).
 - **The words the cashier reads:** `rxrules.py`.
 - **Your service's address:** every `host.docker.internal` address in `manifest.json` is the sample's test address; write your own.
-- **The prefix:** `tools/manifest/rename.py` renames the manifest; the service takes its prefix from `RXC_PREFIX`.
+- **The service's prefix:** `RXC_PREFIX`, in step with the app's name.
 
 More: the [recipe](../../recipes/pharmacy_counter.md).
 

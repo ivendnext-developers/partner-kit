@@ -18,9 +18,9 @@ ivn new acme_po_approval --from s11
 
 What a partner usually changes:
 
-- **The amount:** `doc.grand_total > 50000` on *Approve* and *Reject*, and `doc.grand_total <= 50000` on *Submit*, in `manifest.json`.
+- **The amount:** `doc.base_grand_total > 50000` on *Approve* and *Reject*, and `doc.base_grand_total <= 50000` on *Submit*, in `manifest.json`.
 - **Who may approve:** `allowed` on each transition. A person may not take a step on a document they raised unless the step says `"allow_self_approval": 1`, as *Submit* does and *Approve* does not. The sample uses the roles every site has, *Purchase User* and *Purchase Manager*. A role that is not on the site is made at install, empty, for the customer to give to staff.
-- **The record type:** `document_type`. Material Request or Stock Entry work the same way, with their own total or a field of their own in the condition. The till's own records, such as POS Invoice, are on [the list of what an app may not do](../../contracts/pages/what_an_app_may_not_do.md).
+- **The record type:** `document_type`. Material Request or Stock Entry work the same way, with a total or a field of their own in the condition. The till's own records, such as POS Invoice, are on [the list of what an app may not do](../../contracts/pages/what_an_app_may_not_do.md).
 - **The mail:** `send_email_alert`: 1 mails whoever may act next, 0 sends none.
 
 More steps, more states, a required budget code or a mail with the order's print attached: the [recipe](../../recipes/approvals.md).

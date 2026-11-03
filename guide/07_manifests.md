@@ -37,7 +37,7 @@ Rung 4 of the ladder (chapter 3): configuration cannot hold your data and your a
    ivn check
    ```
 
-   It runs the same checker your customer's install runs, and your app's own tests, and gives one line. Every refusal names the element and the reason, for example *"REFUSED webhooks[0] (ACME BLN Hook): a webhook calls an address the manifest lists in allowed_urls: the consent shows the shop each one"*. It also warns of three things the install stops on: a feed description over 140 characters, a Dynamic Link that does not name a Link field to DocType or a Select, and a record type's name over 61 characters.
+   It runs the same checker your customer's install runs, and your app's own tests, and gives one line. Every refusal names the element and the reason, for example *"REFUSED webhooks[0] (ACME BLN Hook): a webhook calls an address the manifest lists in allowed_urls: the consent shows the shop each one"*. It also warns of two things the install stops on: a feed description over 140 characters and a record type's name over 61 characters.
 5. **Try it, then the customer installs it.** `ivn try` installs it on your own sandbox: no key, no plan, no card and no questions. `ivn publish --to <site>` puts it on the customer's shelf and prints the message to send their administrator; `ivn publish --public` lists it for every retailer ([Publish your app](../site/pages/publish.md)). The customer's administrator opens **App library**, presses **Install**, reads a summary our code writes from the manifest itself (every record type, field and role, every outside address, everything that runs from the moment of install, and each print format as a template that runs on the server when printed, able to read, change and send the retailer's data), ticks **I agree** and presses **Install**. From a private shelf they first press **Open your shelf** and paste the key you sent. The **Retail Extension Package** screen (paste, **Check**, **Consent and install**) does the same by hand. The site checks the manifest again, refuses names another app holds, and records each element as it creates it, in a background job. If anything fails half-way it removes what it made and shows **Failed** with the reason. An app CitiXsys hosts receives its secrets when the site connects to it; for an app you host, each secret (a webhook's, a service's) is shown once to whoever installed and stays readable on its own record.
 
    **To update,** bring a higher `version`: each `ivn try` is a new version, and the screen first shows what changes from the installed version. An update adds and changes in place and removes nothing. It keeps each rule's switch, and a service the customer stopped stays stopped. A dropped or renamed record type or field is refused ([the recipe](../recipes/manifest.md), step 6). It writes a changed **service** whole, so a property the new version leaves out (its settings, time to answer, sequence, page roles) is cleared or takes the product's default. The full list is [the install page](../contracts/pages/package_install.md), §4.
@@ -140,11 +140,11 @@ A Purchase Order over 50,000 waits for a Purchase Manager, and approving it subm
   ],
   "transitions": [
     {"state": "Draft", "action": "Approve", "next_state": "Approved",
-     "allowed": "Purchase Manager", "condition": "doc.grand_total > 50000"},
+     "allowed": "Purchase Manager", "condition": "doc.base_grand_total > 50000"},
     {"state": "Draft", "action": "Reject", "next_state": "Rejected",
-     "allowed": "Purchase Manager", "condition": "doc.grand_total > 50000"},
+     "allowed": "Purchase Manager", "condition": "doc.base_grand_total > 50000"},
     {"state": "Draft", "action": "Submit", "next_state": "Approved",
-     "allowed": "Purchase User", "condition": "doc.grand_total <= 50000"},
+     "allowed": "Purchase User", "condition": "doc.base_grand_total <= 50000"},
     {"state": "Rejected", "action": "Review", "next_state": "Draft", "allowed": "Purchase User"},
     {"state": "Approved", "action": "Cancel", "next_state": "Cancelled", "allowed": "Purchase Manager"}
   ]

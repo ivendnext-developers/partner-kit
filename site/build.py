@@ -1096,11 +1096,11 @@ def page_words(text: str) -> tuple[list[str], str]:
     return heads, " ".join(paras)[:600]
 
 
-ASKED_PAGES = {"questions.html"}                   # pages whose ### headings are questions in the asker's own words: they count as
-                                                   # the page's asks line, as a card's does (Questions developers ask)
-# Two pages answer a developer's question without ### headings; their asks line is written here, in the developer's words, so
-# the header's six show them for "screen", "field" and "loyalty" ahead of the recipes that also use those words (HOWITWORKS-CHECK).
 ASKS_ADDED = {
+    "guide/01a_how_it_all_works.html": "Is an app a Docker container or an image? Is it multi-tenant, one copy per tenant, multitenant? "
+                "Where does the data live? Can two customers conflict or clash? What is the callback url? What does it cost? "
+                "What does publishing hand over?",
+    "first_app.html": "How do I publish an app? How do I add a field? How do I add a screen? What does an app cost? How do I start?",
     "map.html": "Is there a list of all the endpoints my app can call? Which record types and fields can my app read or change, "
                 "and which are required or read-only? Which screens can my app add, on the till and in the back office?",
     "guide/01c_how_the_data_travels.html": "A chain has its own loyalty system outside iVendNext: which calls go where on each sale, "
@@ -1124,7 +1124,7 @@ def search_docs(pages: list, cards: list, groups: list[list[str]], records: list
         if p.out == "index.html":
             continue
         heads, first = page_words(p.text)
-        asks = " ".join(plain(q) for q in re.findall(r"^### (.+)$", p.text, re.M)) if p.out in ASKED_PAGES else ASKS_ADDED.get(p.out, "")
+        asks = ASKS_ADDED.get(p.out, "")
         docs.append({"id": p.out, "k": SEARCH_GROUPS.get(p.group, "guide"), "t": p.title, "a": asks,
                      "s": expand(p.title + " " + " ".join(heads), groups), "tp": "", "l": "", "c": "",
                      "b": " · ".join(heads) + " " + first, "u": p.out, "v": "", "ar": "", "d": "", "st": ""})
@@ -1421,7 +1421,6 @@ def build(out_dir: pathlib.Path) -> int:
                                "Every need card with its verdict, door, recipes, samples and limits, for an assistant."),
                               ("The samples index as JSON", f"https://{DOMAIN}/samples/index.json",
                                "Every kit sample with its version and versions, industries, door, needs, recipe and what to try at the till."),
-                              ("The assistant's guide", f"{REPO_URL}/blob/main/AGENTS.md", "How an AI assistant builds with the kit: the rules, the commands and a recipe for each way in."),
                               ("Sitemap", f"https://{DOMAIN}/sitemap.xml", "Every indexed page of the site.")])]))
     write("downloads/blueprint_template.md", (ROOT / "kit/blueprint_template.md").read_text("utf-8"))   # to fill on screen; the PDFs: site/pdf/
     write("downloads/blueprint_example.md", (ROOT / EXAMPLE).read_text("utf-8"))

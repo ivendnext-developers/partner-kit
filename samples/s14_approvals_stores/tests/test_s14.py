@@ -7,7 +7,9 @@ import json
 import pathlib
 import sys
 import tempfile
+import os
 import unittest
+import unittest.mock
 import urllib.parse
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -105,6 +107,15 @@ class T(unittest.TestCase):
         n = len(self.shop.calls)
         self.assertEqual(self.run_apply(), {"applied": [], "not_applied": [], "skipped": []})
         self.assertEqual(len(self.shop.calls), n)
+
+    def test_the_limit_is_the_setting(self):
+        for setting, want in (("5", 5.0), ("12.5", 12.5), ("", 10.0), ("abc", 10.0), ("0", 10.0)):
+            with self.subTest(setting), unittest.mock.patch.dict(os.environ, {"LIMIT_PCT": setting}):
+                self.assertEqual(A.setting_limit(), want)
+        with unittest.mock.patch.dict(os.environ, {"LIMIT_PCT": "5"}):            # an 8% change, within the default, waits at 5%
+            r = self.shop.request(rate=108.0)
+            self.shop.store_ok(r)
+            self.assertIn("limit", self.why(self.run_apply(), r))
 
     def test_a_change_above_the_store_limit_waits_for_head_office_and_nothing_is_written(self):
         r = self.shop.request(rate=111.0)                      # 11 %

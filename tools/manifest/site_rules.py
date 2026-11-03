@@ -1,16 +1,12 @@
 """What the shop's INSTALL stops on that its checker (``validate.py``, a byte-equal copy of the shop's own) passes.
 
 The install screen runs ``validate.py`` first; then the installer saves each record, and iVendNext's own save rules stop the
-install, which takes back what it had made. Three of those stops are worth knowing before you send the app, so ``ivn check`` says
+install, which takes back what it had made. Two of those stops are worth knowing before you send the app, so ``ivn check`` says
 them first, in the words the install would use:
 
 1. **A feed registration's description holds at most 140 characters.** The shop's Registered Application keeps its description
    in a field of 140 characters: *"'Application Description' ... will get truncated, as max characters allowed is 140"*.
-2. **A Dynamic Link names a Link field to DocType, or a Select.** A field of type *Dynamic Link* takes its record type from the
-   field its ``options`` names, which must be a field of the same record type: a Link whose own ``options`` is *DocType*, or a
-   Select. The install stops on any other with *"Options 'Dynamic Link' type of field must point to another Link Field with
-   options as 'DocType'"*.
-3. **A record type's name holds at most 61 characters.** iVendNext keeps a table for each: *"Doctype name is limited to 61
+2. **A record type's name holds at most 61 characters.** iVendNext keeps a table for each: *"Doctype name is limited to 61
    characters"*. A long app name with a sample's long names can reach it.
 
     python3 tools/manifest/site_rules.py samples/s33_click_and_collect/manifest.json    # exit 0 = none; 1 = refused
@@ -44,16 +40,6 @@ def refusals(m: dict) -> list[dict]:
         if isinstance(name, str) and len(name) > NAME_MAX:
             out.append({"where": f"doctypes[{i}]", "name": name,
                         "reason": f"Doctype name is limited to {NAME_MAX} characters ({len(name)}): use a shorter app name"})
-        fields = {f.get("fieldname"): f for f in d.get("fields") or [] if isinstance(f, dict)}
-        for f in fields.values():
-            if f.get("fieldtype") == "Dynamic Link":
-                src = fields.get(f.get("options"))
-                if not src or src.get("fieldtype") not in ("Link", "Select") \
-                        or (src.get("fieldtype") == "Link" and src.get("options") != "DocType"):
-                    out.append({"where": f"doctypes[{i}]", "name": d.get("name"),
-                                "reason": f"Options 'Dynamic Link' type of field must point to another Link Field with "
-                                          f"options as 'DocType' ({f.get('fieldname')}: its options name a Link field "
-                                          "to DocType, or a Select, on the same record type)"})
     for i, r in enumerate(_rows(m, "registered_applications")):
         d = r.get("description")
         if isinstance(d, str) and len(d) > DESCRIPTION_MAX:

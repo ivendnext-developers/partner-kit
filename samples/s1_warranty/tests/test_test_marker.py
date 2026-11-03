@@ -55,7 +55,7 @@ class Marker(unittest.TestCase):
     def test_a_signed_test_call_is_answered_with_no_work_done(self):
         body = json.dumps({"test": 1}).encode()
         sig = base64.b64encode(hmac.new(SECRET.encode(), body, hashlib.sha256).digest()).decode()
-        self.assertEqual(self.post(sig), (200, {"test": "ok"}))
+        self.assertEqual(self.post(sig), (200, {"test": "ok", "point": "webhook"}))
 
     def test_a_test_call_with_a_bad_signature_gets_the_real_refusal(self):
         self.assertEqual(self.post("bad")[0], 401)

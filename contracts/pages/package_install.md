@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/package_install.md @ 99b5d44fb7a3, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/package_install.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Installing a manifest (self-service install)
 
 **Contract:** [`package_manifest.v1.schema.json`](../extension_contracts/package_manifest.v1.schema.json)
@@ -94,7 +94,8 @@ Version 1 of the package. The manifest itself names `manifest_version` 1 or 2 an
    service, a page, a check before payment, a capture), every Desk button, label layout, list mark, scan source and the
    event feed's record types arrive **switched on**, for every store, consented by the user who consented to the
    package and when. A **till key** arrives consented and on, placed on every store's till (in each theme's POS
-   Studio > Apps), just before the till's last key; a store moves or hides it in the Designer. A record's **Enabled**
+   Studio > Apps), just before the till's last key; a store moves or hides it in the Designer. It stands on the counter
+   and the tablet (the phone places no app keys) and on a POS Profile with a till theme. A record's **Enabled**
    box stays the administrator's off switch. **Before each part works** lists only what the shop still decides: a
    fiscal reader (its writer rule and the service's keys), a role rule (switched on it would stop everyone until
    someone holds its role), a payer service (its clearing mode is the shop's account), a pricing module's limit (0
@@ -823,10 +824,10 @@ A package can carry a partner module our certify service signed, for an extensio
   stays 0 until you raise it.
 - **What the install makes.** The module and its service are the last things a fresh install makes. The module is the same record
   a System Manager adds by hand (**Retail Extension Module**, its file private and attached to it), admitted by that
-  record's own checks. Its service arrives switched off, consent not given, and a pricing service's limit at 0: a
+  record's own checks. Its service arrives switched on under the install's one consent, and a pricing service's limit at 0: a
   manifest never carries the limit (`max_discount_percent` is refused). Installing a package that carries a module
   needs the module record's own create permission (a System Manager's by default), beside the package permission;
-  switching its service on is the System Manager's, on the service's own record.
+  switching its service off is the System Manager's, on the service's own record.
 - **A version is used once.** A module's record is never deleted: its SHA-256 and the time it was in use stay, so a
   sale drained later is checked against the version its till ran. So the check refuses, before anything is made, a
   version this site already had (even one an uninstall withdrew), a module whose bytes were added before, and a module

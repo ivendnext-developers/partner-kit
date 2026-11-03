@@ -78,7 +78,7 @@ Limits:
 
 ### A member rate after the promotions: the certified pricing module
 
-A rate the promotions cannot express (a member's percent on top of the day's promotion) is the pricing extension point, answered by a module we have certified (`guide/08_sandboxed_functions.md`, the contract `contracts/pages/price.md`).
+A rate the promotions cannot express (a member's percent on top of the day's promotion) is the pricing extension point, answered by a module we have certified (`tools/wasm_kit/README.md`, the contract `contracts/pages/price.md`).
 1. **The module.** A partner builds it from the kit's template (`tools/wasm_kit/template/`). Built through the kit's meters, the template is byte-identical to the product's own reference module, *price member* (register `4XSR0YJSBW8X`). CitiXsys certifies a module's SHA-256 for the extension point `price`, version 1, by hand; the certificate comes back with it.
 2. **The module record.** The retailer's System Manager opens **Retail Extension Module** in Desk, then fills it in:
    - *Extension point* `price`, *Partner*, *Version* 1;

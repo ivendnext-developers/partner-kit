@@ -10,7 +10,7 @@ In `manifest.json`, under `workflows`:
 
 ```json
 {
-  "name": "ACME PO Purchase Order Approval",
+  "name": "ACME PO APPROVAL Purchase Order Approval",
   "document_type": "Purchase Order",
   "send_email_alert": 1,
   "states": [
@@ -20,9 +20,9 @@ In `manifest.json`, under `workflows`:
     {"state": "Cancelled", "doc_status": 2, "allow_edit": "Purchase Manager"}
   ],
   "transitions": [
-    {"state": "Draft", "action": "Approve", "next_state": "Approved", "allowed": "Purchase Manager", "condition": "doc.grand_total > 50000"},
-    {"state": "Draft", "action": "Reject", "next_state": "Rejected", "allowed": "Purchase Manager", "condition": "doc.grand_total > 50000"},
-    {"state": "Draft", "action": "Submit", "next_state": "Approved", "allowed": "Purchase User", "allow_self_approval": 1, "condition": "doc.grand_total <= 50000"},
+    {"state": "Draft", "action": "Approve", "next_state": "Approved", "allowed": "Purchase Manager", "condition": "doc.base_grand_total > 50000"},
+    {"state": "Draft", "action": "Reject", "next_state": "Rejected", "allowed": "Purchase Manager", "condition": "doc.base_grand_total > 50000"},
+    {"state": "Draft", "action": "Submit", "next_state": "Approved", "allowed": "Purchase User", "allow_self_approval": 1, "condition": "doc.base_grand_total <= 50000"},
     {"state": "Rejected", "action": "Review", "next_state": "Draft", "allowed": "Purchase User", "allow_self_approval": 1},
     {"state": "Approved", "action": "Cancel", "next_state": "Cancelled", "allowed": "Purchase Manager", "allow_self_approval": 1}
   ]
@@ -32,15 +32,15 @@ In `manifest.json`, under `workflows`:
 - **`doc_status`:** 0 keeps the document a draft, 1 submits it, 2 cancels it. Moving into a state with 1 submits the document, so the person who presses needs the right to submit it.
 - **`allowed`:** the role that may press the action. **`allow_edit`:** the role that may edit the document in that state.
 - **`allow_self_approval`:** 1 lets the person who raised the document take this step. Without it they cannot, so nobody approves their own order; a step the buyer takes needs it.
-- **`condition`:** when the action is offered, written with the document's fields (`doc.grand_total`, `doc.company`). Keep every state reachable: above, *Submit* takes what *Approve* does not.
+- **`condition`:** when the action is offered, written with the document's fields (`doc.base_grand_total`, the total in the company's currency, or `doc.company`). Keep every state reachable: above, *Submit* takes what *Approve* does not.
 - **`send_email_alert`:** 1 mails whoever may act next.
 
 A role the site does not have is made at install, empty, for the customer to give to staff.
 
 ## More you can add in the same manifest
 
-- **A required field,** for example a budget code the order must carry: under `custom_fields`, `{"dt": "Purchase Order", "fieldname": "acme_po_budget_code", "fieldtype": "Data", "label": "Budget code", "reqd": 1, "insert_after": "supplier"}`. A field you add to the customer's record type starts with your app's prefix.
-- **A mail when the order is submitted, with its print:** under `notifications`, `{"name": "ACME PO submitted", "document_type": "Purchase Order", "event": "Submit", "channel": "Email", "subject": "Purchase Order {{ doc.name }} is submitted", "message": "{{ doc.supplier }}: {{ doc.grand_total }}", "recipients": [{"receiver_by_document_field": "owner"}], "attach_print": 1}`.
+- **A required field,** for example a budget code the order must carry: under `custom_fields`, `{"dt": "Purchase Order", "fieldname": "acme_po_approval_budget_code", "fieldtype": "Data", "label": "Budget code", "reqd": 1, "insert_after": "supplier"}`. A field you add to the customer's record type starts with your app's prefix.
+- **A mail when the order is submitted, with its print:** under `notifications`, `{"name": "ACME PO APPROVAL submitted", "document_type": "Purchase Order", "event": "Submit", "channel": "Email", "subject": "Purchase Order {{ doc.name }} is submitted", "message": "{{ doc.supplier }}: {{ doc.grand_total }}", "recipients": [{"receiver_by_document_field": "owner"}], "attach_print": 1}`.
 - **Its own numbering:** under `naming_rules`, `{"document_type": "Material Request", "prefix": "MR-BLR-", "prefix_digits": 5}`.
 - **More steps,** such as head office above a higher amount: another state and another transition, each with its own condition.
 - **A reason asked on rejecting:** [A reason asked before a document is rejected](desk_action.md#a-reason-asked-before-a-document-is-rejected).

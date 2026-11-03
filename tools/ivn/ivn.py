@@ -1424,6 +1424,9 @@ def parser() -> argparse.ArgumentParser:
 
 
 def main(argv=None) -> int:
+    for stream in (sys.stdout, sys.stderr):      # a console that cannot show a word never stops the command
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
     if hasattr(sys.stdout, "reconfigure"):  # a Windows build server's redirected output: the words hold ⟨ ⟩ and ·
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     try:

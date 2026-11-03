@@ -1,5 +1,5 @@
-"""S11 is one workflow on the customer's Purchase Order. An app made from it keeps these tests, so they hold what the sample
-promises and leave what you change alone: the amount, the roles, and anything you add to the manifest.
+"""S11 is one workflow on the customer's Purchase Order. These tests hold what the sample promises. An app made from it keeps them
+and runs them on its copy of the sample as it was made, so your own changes are the checker's to read, not theirs.
 
     python3 -m unittest discover -s samples/s11_approvals/tests -p 'test_*.py'
 """
@@ -39,8 +39,9 @@ class S11(unittest.TestCase):
             self.assertIn(t["state"], STATUS)
             self.assertIn(t["next_state"], STATUS)
 
-    def test_the_amount_is_the_same_on_each_action_that_names_one(self):
-        amounts = {n for t in FLOW["transitions"] for n in re.findall(r"\d[\d.]*", t.get("condition") or "")}
+    def test_the_amount_is_the_same_on_approve_reject_and_submit(self):
+        draft = moves("Draft")
+        amounts = {n for a in ("Approve", "Reject", "Submit") if a in draft for n in re.findall(r"base_grand_total\s*[<>]=?\s*(\d+)", draft[a].get("condition") or "")}
         self.assertLessEqual(len(amounts), 1, amounts)
 
 

@@ -912,8 +912,9 @@ def write_folder(target: pathlib.Path, files: dict) -> None:
 
 
 def kit_check(folder: pathlib.Path) -> tuple[int, str]:
-    r = subprocess.run([sys.executable, "-I", str(KIT / "tools" / "check" / "check.py"), str(folder)],
-                       capture_output=True, text=True, env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
+    r = subprocess.run([sys.executable, "-I", "-X", "utf8", str(KIT / "tools" / "check" / "check.py"), str(folder)],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace",
+                       env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
     lines = r.stdout.strip().splitlines() or ["(no verdict)"]
     why = [l.split(None, 1)[-1] for l in lines if l.startswith("REFUSED")]
     return r.returncode, lines[-1] + ("" if not why else ": " + "; ".join(why[:5]))
@@ -922,8 +923,8 @@ def kit_check(folder: pathlib.Path) -> tuple[int, str]:
 def run_tests(folder: pathlib.Path) -> tuple[bool, int, str]:
     env = {k: v for k, v in os.environ.items() if not k.startswith(("IVN_", "LIBRARY_"))}
     env.update(PYTHONDONTWRITEBYTECODE="1")
-    r = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], cwd=folder,
-                       capture_output=True, text=True, env=env, timeout=3600)
+    r = subprocess.run([sys.executable, "-X", "utf8", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], cwd=folder,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=3600)
     ran = sum(int(n) for n in re.findall(r"^SAMPLE \S+ ran=(\d+)", r.stderr, re.M))
     own = re.findall(r"^Ran (\d+) tests?", r.stderr, re.M)
     total = ran + (int(own[-1]) if own else 0)
@@ -1084,7 +1085,7 @@ def combine(samples, prefix: str, into, test: bool = False, samples_dir=None, ou
     if out is not None:
         for line in summary:
             print(line, file=out)
-        print(f"Folder: apps/{app}/ ({', '.join(where(p) for p in parts if where(p).startswith('service/'))}, manifest.json, app.json, tests/). "
+        print(f"Folder: apps/{app}/ ({', '.join([where(p) for p in parts if where(p).startswith('service/')] + ['manifest.json', 'app.json', 'tests/'])}). "
               "Read its README.md: what is in it and what you can change.", file=out)
     return target
 

@@ -25,7 +25,7 @@ sys.path.insert(0, str(HERE.parent))
 import start  # noqa: E402
 
 PREFIX = "ACME TST"
-KINDS = [("s11_approvals", "a manifest and code"), ("s16_pick_route", "a hosting order and a service"),
+KINDS = [("s14_approvals_stores", "a manifest and code"), ("s16_pick_route", "a hosting order and a service"),
          ("s4_receipt_pack", "a print format"), ("s34_po_check", "a container recipe")]
 
 

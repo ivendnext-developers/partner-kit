@@ -36,14 +36,14 @@ A version that has reached a customer never changes: any change to what it insta
 
 Each listed app has a card in the App library: what it does, who uses it, whether it is free or needs a key, whether anything leaves the retailer's iVendNext, the industries it is for, and a link to the app's guide. Browse the cards at [library.ivendnext.app](https://library.ivendnext.app).
 
-The retailer's administrator presses **Install**, reads what it will change, ticks **I agree** and presses **Install**. Everything the app adds is on from that moment, for every store, and they give their staff the roles. A paid app asks for its key first.
+The retailer's administrator presses **Install**, reads what it will change, ticks **I agree** and presses **Install**. Everything the app adds is on from that moment, for every store, and they give their staff the roles. Only what is theirs to decide waits, and the install screen lists it. A paid app asks for its key first.
 
 ## What it costs
 
-- **Trying and publishing:** free.
+- **Trying:** free.
 - **An app with no service of ours** (lists, fields, workflows, Desk settings): free. We run nothing for it.
-- **An app that runs only when called** (a till key, a check at Pay, a webhook), once listed in the App library: free, all its copies, sandbox included. If it was already billing, the billing stops at its next renewal, and nothing already paid is refunded.
-- **An app that runs all the time, or on a schedule of its own,** per month: Starter $49, Standard $129, Managed $399. Billed monthly by card; cancel at any month end. Production for a customer may be ordered by the customer through their account team.
+- **An app with a service we host,** per month: Starter $49, Standard $129, Managed $399. Billed monthly by card; cancel at any month end. Production for a customer may be ordered by the customer through their account team.
+- **One that runs only when called** (a till key, a check at Pay, a webhook), once it is listed in the App library: free, all its copies, sandbox included. The billing stops at its next renewal, and nothing already paid is refunded. Until it is listed, it pays its plan.
 - **An app on your own server:** nothing to us. Run the folder at any public https address (`ivn package` writes `package.zip` for your own function host).
 
 ## More you can do

@@ -39,21 +39,21 @@
      "action": "Approve",
      "next_state": "Approved",
      "allowed": "Purchase Manager",
-     "condition": "doc.grand_total > 50000"
+     "condition": "doc.base_grand_total > 50000"
     },
     {
      "state": "Draft",
      "action": "Reject",
      "next_state": "Rejected",
      "allowed": "Purchase Manager",
-     "condition": "doc.grand_total > 50000"
+     "condition": "doc.base_grand_total > 50000"
     },
     {
      "state": "Draft",
      "action": "Submit",
      "next_state": "Approved",
      "allowed": "Purchase User",
-     "condition": "doc.grand_total <= 50000",
+     "condition": "doc.base_grand_total <= 50000",
      "allow_self_approval": 1
     },
     {

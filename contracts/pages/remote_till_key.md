@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/remote_till_key.md @ 99b5d44fb7a3, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/remote_till_key.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Remote till key
 
 **Contract:** [`remote_till_key.v1.schema.json`](../extension_contracts/remote_till_key.v1.schema.json)
@@ -27,7 +27,9 @@ version-1 service is a new version, published beside this one.
 
 **Installed from an app's package** (a manifest's `remote_keys`, [package_install.md](package_install.md)), the key
 arrives ready: the install screen shows this section 5 list word for word, and that consent is the key's (who
-consented to the install and when). The store then switches it on in **POS Studio → Apps**.
+consented to the install and when), and it stands on the counter and the tablet just before the till's last key, on every
+POS Profile with a till theme; the phone places no app keys. A POS Profile with no till theme gets no key until it has
+one. A store moves or hides the key in **POS Studio → Apps**.
 
 **Setting it up by hand — two people, two places.** A System Manager adds one **Retail Remote App Key** record
 per key in iVendNext Desk: your name as the partner, an app name and a key (lowercase letters, digits

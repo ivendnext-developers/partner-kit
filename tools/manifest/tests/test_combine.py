@@ -373,6 +373,13 @@ class Refusals(Base):
             with self.subTest(bad), self.assertRaises(combine.Refused):
                 self.make(["s23_till_guard"], prefix=bad)
 
+    def test_the_summary_says_no_service_of_ours_for_an_app_with_none(self):
+        kit = KIT / "samples"
+        none = [combine.make_part("s11_approvals", "ACME ONE", "acme_one", False, kit)]
+        self.assertIn("No service of ours, no feed.", combine.summary_lines(none, "CHECK GREEN", 4)[1])
+        some = [combine.make_part("s23_till_guard", "ACME ONE", "acme_one", False, kit)]
+        self.assertIn("One service,", combine.summary_lines(some, "CHECK GREEN", 4)[1])
+
     def test_room_for_is_the_longest_name_the_samples_leave_room_for(self):
         room = combine.room_for(["s40_expiry_recall"], "ACME")
         self.assertLess(room, 40)

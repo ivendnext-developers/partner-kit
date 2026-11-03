@@ -19,7 +19,6 @@ ivn new acme_register --from s41
 What a partner usually changes:
 
 - another market or another trade: copy `datasets/ke_pharmacy.json`, read the market's instrument and write its books; run `build.py` and the tests; build a retailer's copy with `build.py --sets <id> --out <folder>`;
-- the app's prefix: `PREFIX`, `FPREFIX` and `ROLE` at the top of `build.py`, then build again;
 - certify a layout: set `certified: 1` in the data set once checked against the market's instrument, and change its `notice`;
 - the printed layouts: `layouts/register.html` and `layouts/purchaser_slip.html`.
 
