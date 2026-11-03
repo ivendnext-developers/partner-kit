@@ -245,7 +245,9 @@ class Stub:
         out = {"step": "done", "done": True, "version": r["latest"], "lines": ["Publishing…"],
                "send": [{"site": SITE, "message": self.message}], "published": "door's form"}
         if self.sent.get("to") == "everyone":
-            if self.listed and "card" not in self.sent and not getattr(self, "awaiting", False):  # a first listing carries its card
+            if getattr(self, "closed", False):
+                out.update(public="withdrawn")
+            elif self.listed and "card" not in self.sent and not getattr(self, "awaiting", False):  # a first listing carries its card
                 out.update(public="listed", public_words="Listed in the App library.")
             else:
                 out.update(public="awaiting_approval", public_words="Waiting for our approval. Only the first listing waits.")
@@ -1075,6 +1077,13 @@ class Publish(Base):
         self.assertEqual(rc, 0, out)
         self.assertEqual(self.stub.sent["to"], "everyone")
         self.assertRegex(out, r"1\.0\.0 published to the App library and \d+ sites?\.")
+
+    def test_a_closed_listing_request_never_claims_the_list(self):  # K181: a request closed earlier answers no words
+        self.stub.listed, self.stub.closed = True, True
+        self.stub.money = {"lines": ["Publishing is free."], "plan": "starter", "plans": None}
+        rc, out = self.run_ivn("publish")
+        self.assertEqual(rc, 0, out)
+        self.assertNotIn("published to the App library", out)
 
     def test_a_later_version_while_the_first_listing_waits_says_it_waits(self):  # UX-146: EASY3b's live walk
         self.stub.listed, self.stub.awaiting = True, True
