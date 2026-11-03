@@ -4,6 +4,7 @@ Versions will follow our product releases once the kit is versioned; until then 
 
 ## Unreleased
 
+- **2026-11-03 — S1 registers warranties as an app we host.** A pass every few minutes reads each site's booked sales, registers a warranty per covered serial number and writes one Comment on the sale. When you browse *New app*, the cards with ticks come first.
 - **2026-11-03 — S3 can be listed.** An app with the price audit could not be sent for listing: its two record types gave no guide address. S1's and S20's *Try it at the till* now say what the app made from them does.
 - **2026-11-03 — *New app* never stops on a name or a sample.** Name your app in any words: *My apps* shows the name its records will start with and makes it free for you. Every sample with a tick makes an app: S1, S17, S20 and S28 now run as a hosted service too (S1's is the *Warranty* till key and the retailer's own terms). The eight with no manifest are listed apart under *Copy by hand*. *What is in it* is one plain line per sample. A name that is too long for the samples, or past three words, is said in words instead of an error.
 - **2026-11-03 — What a listed app costs.** An app that runs only when called is free once its listing is approved, all its copies, sandbox included: the billing stops at its next renewal, and nothing already paid is refunded. A function on its own schedule and a container pay their plan ([chapter 14b](guide/14b_deploying_your_app.md)).

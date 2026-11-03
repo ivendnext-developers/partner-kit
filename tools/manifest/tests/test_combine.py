@@ -383,6 +383,11 @@ class Refusals(Base):
         self.assertLess(combine.room_for(["s57_donation_intake", "s23_till_guard"], "ACME"), room)   # its names take a tag too
         self.assertEqual(combine.room_for(["s23_till_guard"], "ACME"), 40)         # nothing long: the door's own limit
 
+    def test_a_part_that_pulls_on_a_schedule_is_no_reader_of_the_feed(self):  # S1's feed stays off: it pulls; no event waits for it
+        kit = KIT / "samples"
+        self.assertIsNone(combine.reads(combine.make_part("s1_warranty", "ACME ONE", "acme_one", True, kit)))
+        self.assertEqual(combine.reads(combine.make_part("s3_price_audit", "ACME ONE", "acme_one", True, kit)), ["POS Invoice", "Sales Invoice"])
+
     def test_samples_that_cannot_sit_together_say_so_before_next(self):  # S55's and S22's own rules on one field, at any name
         with self.assertRaises(combine.Refused) as e:
             combine.check_together(["s55_front_of_house", "s22_customer_loyalty"])
@@ -403,7 +408,7 @@ class Refusals(Base):
 
     def test_what_is_in_it_has_no_brackets_inside_brackets(self):  # F7
         for sample, words in (("s3_price_audit", "runs on its own server and keeps one list (deviation)"),
-                              ("s1_warranty", "a till key and one list (warranty term)"),
+                              ("s1_warranty", "a till key, a warranty registered on each booked sale and one list (warranty term)"),
                               ("s2_bins", "a till key and five lists (bin movement, location, aisle and 2 more)"),
                               ("s28_merge_and_history", "a button in Desk and a page")):
             with self.subTest(sample):

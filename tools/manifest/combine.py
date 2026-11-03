@@ -340,6 +340,9 @@ def reads(part: Part) -> list[str] | None:
         return None
     types = [e for r in part.manifest.get("registered_applications") or [] if isinstance(r, dict)
              for e in r.get("events") or [] if isinstance(e, str)]
+    own = {d.get("name") for d in part.manifest.get("doctypes") or [] if isinstance(d, dict)}
+    if set(types) <= own:       # its own lists alone: the registration gives it its user, its feed stays off (S1)
+        return None
     return list(dict.fromkeys(types)) or None
 
 
