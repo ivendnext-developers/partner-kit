@@ -55,7 +55,7 @@ Every command, with *Bin locations* as the worked example: [Make one of our apps
 | Becoming a partner, registering your company, your sandbox site | Free |
 | Delivering to a customer's *Made for you* shelf, or listing in the App library | Free |
 | Running your app's service on your own cloud | Only your cloud provider. You bill your customer |
-| Running it on iVendNext App Hosting, when it runs as a function (it only answers presses, such as a till key, a check or a button, or works in short runs) and is listed in the App library | Free. You bill your customer what you choose |
+| Running it on iVendNext App Hosting, when it runs only when called (it only answers presses, such as a till key, a check or a button) and its listing in the App library is approved | Free: all its copies, sandbox included. If it was billing, the billing stops at its next renewal, and nothing already paid is refunded. You bill your customer what you choose |
 | Running any other app on iVendNext App Hosting, if you choose | $49, $129 or $399 per app per month, by plan ([the plans](apps.md)). You bill your customer what you choose |
 
 Your customer pays its iVendNext subscription as usual.

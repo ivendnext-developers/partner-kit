@@ -33,10 +33,10 @@ You choose one of three:
 
 - **On your own server.** Any language, any cloud, your own machines. A Docker container is fine, and the kit's template ships one: one image runs the same on your laptop, on a test copy and in production. You connect each chain to it by hand ([chapter 14b](14b_deploying_your_app.md#where-it-can-run)).
 - **On iVendNext App Hosting, run by CitiXsys.** We run your service at `https://<app>.ivendnext.app`, in one of two ways, with the same code:
-  - **as a function**, for an app that answers presses (a till key, a check at Pay, a webhook) or works in short runs on a schedule (reading the event feed every minute, a daily job). It runs only when called;
+  - **as a function**, for an app that answers presses (a till key, a check at Pay, a webhook) or works in short runs on a schedule of its own (reading the event feed every minute, a daily job). It runs only when called, or on that schedule;
   - **as a container**, for an app that needs a process that stays up (a connection it holds open, a queue it serves) or a job longer than 15 minutes. It runs all the time.
   
-  Either way it is priced per app per month, and an app that runs as a function and is listed in the App library carries no hosting charge (section 7). Each chain that installs your app from the App library connects to it by itself ([chapter 14b](14b_deploying_your_app.md#let-citixsys-host-it)).
+  Either way it is priced per app per month. An app that runs only when called (a function with no schedule of its own) is free once its listing in the App library is approved (section 7). Each chain that installs your app from the App library connects to it by itself ([chapter 14b](14b_deploying_your_app.md#let-citixsys-host-it)).
 - **Nowhere.** An app that is only settings and records has no service.
 
 ## 4. Where the customer's data lives
@@ -80,13 +80,13 @@ So a multi-tenant app needs nothing special from you beyond the template's hands
 
 ## 7. How many apps, how many boxes
 
-![One chain needs four things. As one app: one manifest carrying two till keys, a check at Pay, three record types and a Desk button, served by one service at one address; one version, one consent, one removal; on App Hosting one box at one price, free when it runs as a function and is listed in the App library. As four apps: four manifests and four services; four versions, four consents, removed one by one; on App Hosting four boxes at four prices; on your own server they can share one container. A separate copy for one chain only when you choose it.](img/four-needs-one-app-or-four.svg)
+![One chain needs four things. As one app: one manifest carrying two till keys, a check at Pay, three record types and a Desk button, served by one service at one address; one version, one consent, one removal; on App Hosting one box at one price, free when it runs only when called and is listed in the App library. As four apps: four manifests and four services; four versions, four consents, removed one by one; on App Hosting four boxes at four prices; on your own server they can share one container. A separate copy for one chain only when you choose it.](img/four-needs-one-app-or-four.svg)
 
 A customer asks you for four things. Do you build four apps in four containers, or one?
 
 - **Usually one app.** One manifest can carry many till keys, checks, record types, fields and Desk buttons, all served by one service at one address.
 - **No container per customer.** One app serves every chain that installs it (section 6).
-- **On App Hosting, each app is one box, priced per app** (Starter $49, Standard $129, Managed $399 a month). An app that runs as a function and is listed in the App library carries no hosting charge. Four apps on App Hosting are four boxes and four prices.
+- **On App Hosting, each app is one box, priced per app** (Starter $49, Standard $129, Managed $399 a month). An app that runs only when called is free once it is listed in the App library. Four apps on App Hosting are four boxes and four prices.
 - **On your own server, apps can share one container** if you want them to: that is your own design.
 - **Split into separate apps only what has its own life.** Separate apps have separate versions, separate consent screens and separate removal: a chain can remove one without the others. That is the reason to split, not the box.
 - **A copy for one customer** only when you choose one: that customer needs its own rules, its own release dates, or its contract asks for it.
@@ -139,7 +139,7 @@ Each claim above, with the page or code that proves it:
 - **Copies per plan:** `tools/deploy_app/plans.json`, each plan's `enforced.instances` (Starter 1, Standard 1, Managed 2), the same file App Hosting enforces.
 - **Region:** `tools/deploy_app/plans.json`, `regions` (`us` = `us-east-1`) and `regions_on_request`; `deploy_app.py` refuses a region the hosting does not serve.
 - **One box per app:** each hosted app has its own address, image registry or package folder, secrets, logs and firewall rule ([chapter 14b](14b_deploying_your_app.md#let-citixsys-host-it), *What you get*); the hosting writes one listener rule per address.
-- **When hosting is free:** the hosting takes no charge for an app that runs as a function and that the App library lists as that maker's app, reaching that app's own address. A container is always charged. The plan prices: `tools/deploy_app/plans.json`, `price_usd_month`.
+- **When hosting is free:** the hosting takes no charge for an app that runs only when called (a function with no schedule of its own) and that the App library lists as that maker's app. That covers all its copies, sandbox included. If it was already billing, the billing stops at its next renewal, and nothing already paid is refunded. A function on its own schedule and a container are always charged. The plan prices: `tools/deploy_app/plans.json`, `price_usd_month`.
 - **What the shops table holds:** `tools/app_template/service/shops.py`, `connect()`: for each site, its call-back address, its secrets and the previous set, the library key's id and kind, and when it connected. On App Hosting the table is the app's own, encrypted at rest.
 - **What a function keeps between runs:** nothing but a copy's `/tmp` while that copy lives, a cache only ([chapter 14b](14b_deploying_your_app.md#a-function-or-a-container), *What a run keeps*).
 - **The handshake and per-chain secrets:** [chapter 14b](14b_deploying_your_app.md#one-app-many-retailers), *One app, many retailers*, and its call table (`POST /ivendnext/connect`, `/disconnect`, the `X-iVendNext-Site` header, 401 for an unknown site or another site's secret).

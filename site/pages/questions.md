@@ -12,7 +12,7 @@ The part inside the retail chain's iVendNext is only data (your manifest), never
 
 ### What is the difference between a function and a container on App Hosting?
 
-A function runs only when a till or a schedule calls it, for an app that answers presses or works in runs of 15 minutes or less, priced per app per month like any hosted app (free when it is listed in the App library). A container runs all the time, for an app that holds a connection open, serves a queue or runs a longer job. Your code is the same in both. [Chapter 14b, *A function or a container*](../../guide/14b_deploying_your_app.md#a-function-or-a-container).
+A function runs only when a till or a schedule calls it, for an app that answers presses or works in runs of 15 minutes or less, priced per app per month like any hosted app (one that runs only when called is free once it is listed in the App library; one on its own schedule pays its plan). A container runs all the time, for an app that holds a connection open, serves a queue or runs a longer job. Your code is the same in both. [Chapter 14b, *A function or a container*](../../guide/14b_deploying_your_app.md#a-function-or-a-container).
 
 ### Is anything of mine installed on the customer's servers?
 
@@ -154,7 +154,7 @@ Run the template's and your app's tests with no iVendNext at all, call your serv
 
 ### What does it cost, and who pays?
 
-The kit, a sandbox site, publishing and listing in the App library are free. App Hosting is per app per month (Starter $49, Standard $129, Managed $399), paid by whoever orders it, and an app that runs as a function and is listed in the App library carries no hosting charge. You bill your customer what you choose. [Build your business on iVendNext's apps, *What it costs*](business.md#what-it-costs) · [Hosting](apps.md).
+The kit, a sandbox site, publishing and listing in the App library are free. App Hosting is per app per month (Starter $49, Standard $129, Managed $399), paid by whoever orders it, and an app that runs only when called is free once its listing in the App library is approved: the billing stops at its next renewal, and nothing already paid is refunded. You bill your customer what you choose. [Build your business on iVendNext's apps, *What it costs*](business.md#what-it-costs) · [Hosting](apps.md).
 
 ### Where do I see my app's logs?
 

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 505" width="900" height="505" role="img" aria-labelledby="t d" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
-<title id="t">Four needs for one chain: one app, or four?</title><desc id="d">One chain needs four things. As one app: one manifest carrying two till keys, a check at Pay, three record types and a Desk button, served by one service at one address; one version, one consent, one removal; on App Hosting one box at one price, free when it runs as a function and is listed in the App library. As four apps: four manifests and four services; four versions, four consents, removed one by one; on App Hosting four boxes at four prices; on your own server they can share one container. A separate copy for one chain only when you choose it.</desc>
+<title id="t">Four needs for one chain: one app, or four?</title><desc id="d">One chain needs four things. As one app: one manifest carrying two till keys, a check at Pay, three record types and a Desk button, served by one service at one address; one version, one consent, one removal; on App Hosting one box at one price, free when it runs only when called and is listed in the App library. As four apps: four manifests and four services; four versions, four consents, removed one by one; on App Hosting four boxes at four prices; on your own server they can share one container. A separate copy for one chain only when you choose it.</desc>
 <rect width="900" height="505" rx="16" fill="#0d1120"/>
 <text x="24" y="38" font-size="22" font-weight="800" fill="#eef1f8" text-anchor="start">Four needs for one chain: one app, or four?</text>
 <text x="24" y="60" font-size="14" font-weight="500" fill="#a3abc0" text-anchor="start">Usually one app. Split only what has its own life.</text>
@@ -32,7 +32,7 @@
 <text x="690" y="291.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">own service</text>
 <text x="32" y="337.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">One version, one consent, one removal</text>
 <text x="32" y="361.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">On App Hosting: one box, one price</text>
-<text x="32" y="385.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">Free when it runs as a function and is listed</text>
+<text x="32" y="385.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">Free when it runs only when called and is listed</text>
 <text x="474" y="337.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">Four versions, four consents, removed one by one</text>
 <text x="474" y="361.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">On App Hosting: four boxes, four prices</text>
 <text x="474" y="385.6" font-size="13.6" font-weight="500" fill="#c3c9d8" text-anchor="start">On your own server: they can share one container</text>
