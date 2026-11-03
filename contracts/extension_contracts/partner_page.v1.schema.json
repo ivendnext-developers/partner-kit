@@ -149,41 +149,6 @@
       },
       "allOf": [
         {
-          "description": "On the till the page answers something: placed on Desk only, or at least one answer kind ticked.",
-          "anyOf": [
-            {
-              "required": [
-                "page_placement"
-              ],
-              "properties": {
-                "page_placement": {
-                  "const": "Desk page"
-                }
-              }
-            },
-            {
-              "required": [
-                "page_returns_message"
-              ],
-              "properties": {
-                "page_returns_message": {
-                  "const": 1
-                }
-              }
-            },
-            {
-              "required": [
-                "page_returns_sale_attributes"
-              ],
-              "properties": {
-                "page_returns_sale_attributes": {
-                  "const": 1
-                }
-              }
-            }
-          ]
-        },
-        {
           "description": "A page placed on Desk names who may open it.",
           "anyOf": [
             {

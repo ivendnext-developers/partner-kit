@@ -1,0 +1,31 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A sale detail the till lists from one of the shop's own record types.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_pqt",
+    "prefix": "PP PQT",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "PP PQT Project",
+        "autoname": "hash",
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ],
+    "sale_attributes": [
+      {
+        "name": "PP PQT Project ref",
+        "validation_type": "DocType",
+        "doctype_name": "Customer"
+      }
+    ]
+  }
+}

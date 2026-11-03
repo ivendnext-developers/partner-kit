@@ -1,0 +1,339 @@
+{
+  "register_books": [
+    {
+      "book": "ae_abu_dhabi_pharmacy.ph_17",
+      "title": "PH 17 Psychotropic register",
+      "data_set": "ae_abu_dhabi_pharmacy",
+      "cite": "DOH Standard DOH/HLME/DMP/1.0/2021 s. 3.6.1: SCD and CD transactions within pharmacy and drug stores; s. 3.6 (its data); errors re-entered on the following line, s. 7.3; kept 5 years after the last entry, s. 7.4; psychotropic and semi-controlled consumption reported monthly, s. 4.6",
+      "certified": 0,
+      "numbering": "book_store",
+      "balance": 1,
+      "correction": "reversing_line",
+      "retention_years": 5,
+      "count_role": "PP RSR Register Approver",
+      "conditions": [],
+      "required": [],
+      "columns": [
+        {
+          "label": "Prescription reference number",
+          "value": [
+            "authority_no"
+          ]
+        },
+        {
+          "label": "Product, strength and formulation (brand and generic name, s. 7.7)",
+          "value": [
+            "item_name"
+          ]
+        },
+        {
+          "label": "Dose",
+          "value": [
+            "detail_1"
+          ]
+        },
+        {
+          "label": "Quantity",
+          "value": [
+            "qty",
+            "uom"
+          ]
+        },
+        {
+          "label": "Balance",
+          "value": [
+            "balance"
+          ]
+        },
+        {
+          "label": "Name and license number of the prescribing physician",
+          "value": [
+            "authority_issuer",
+            "authority_issuer_licence"
+          ]
+        },
+        {
+          "label": "Name and license number of the dispensing pharmacist",
+          "value": [
+            "dispenser_name",
+            "dispenser_licence"
+          ]
+        },
+        {
+          "label": "Patient's name and address",
+          "value": [
+            "counterparty",
+            "counterparty_address"
+          ]
+        },
+        {
+          "label": "Patient identifier (s. 7.2.1)",
+          "value": [
+            "detail_2"
+          ]
+        },
+        {
+          "label": "Date issued",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Source of the medicine",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "Receiving date",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "Invoice reference number",
+          "value": [
+            "reference_no"
+          ]
+        }
+      ],
+      "details": {
+        "detail_1": {
+          "label": "Dose",
+          "pos_sale_detail": "PP RXC Directions",
+          "desk_field": "pp_rxc_directions"
+        },
+        "detail_2": {
+          "label": "Patient identifier",
+          "record": {
+            "doctype": "PP RXC Patient",
+            "match": "customer_link",
+            "field": "id_number"
+          }
+        }
+      },
+      "authority": {
+        "pos_sale_details": {
+          "authority_no": "PP RXC Rx Number",
+          "authority_issuer": "PP RXC Prescriber",
+          "authority_issuer_licence": "PP RXC Prescriber Licence"
+        },
+        "desk_fields": {
+          "authority_no": "pp_rxc_rx_number",
+          "authority_issuer": "pp_rxc_prescriber",
+          "authority_issuer_licence": "pp_rxc_prescriber_licence"
+        },
+        "dispenser_licence": {
+          "doctype": "PP RXC Pharmacist",
+          "match": "user",
+          "field": "licence_number"
+        }
+      },
+      "columns_from": {
+        "Purchase Receipt": {
+          "reference_no": "supplier_delivery_note"
+        },
+        "Purchase Invoice": {
+          "reference_no": "bill_no"
+        },
+        "Stock Entry": {
+          "reference_no": "custom_external_reference_no"
+        }
+      },
+      "enabled": 1,
+      "items": {
+        "classes": [
+          "AE Psychotropic",
+          "AE Semi-controlled"
+        ]
+      },
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "AE Controlled"
+      },
+      "period_months": 1,
+      "return_due_days": 0
+    },
+    {
+      "book": "sa_pharmacy.drug_register",
+      "title": "Narcotics and psychotropics register",
+      "data_set": "sa_pharmacy",
+      "cite": "Executive Regulation Art. 22(1): a register for each drug; (2) pages serially numbered; (3) its data; (4) indelible ink, an amendment signed; (6) kept 10 years; its data stated every six months, Art. 16(2)",
+      "certified": 0,
+      "numbering": "book_store_item",
+      "balance": 1,
+      "correction": "signed_amendment",
+      "retention_years": 10,
+      "count_role": "PP RSR Register Approver",
+      "conditions": [],
+      "required": [],
+      "columns": [
+        {
+          "label": "(ج) الكمية الواردة",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "(ج) رقم التشغيل",
+          "value": [
+            "batch_no"
+          ]
+        },
+        {
+          "label": "(ج) تاريخ الصلاحية",
+          "value": [
+            "expiry_date"
+          ]
+        },
+        {
+          "label": "(د) الجهة الوارد منها",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "(د) تاريخ الورود",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "(هـ) المجموع الكلي",
+          "value": [
+            "balance"
+          ]
+        },
+        {
+          "label": "(و) الكمية المصروفة",
+          "value": [
+            "qty"
+          ]
+        },
+        {
+          "label": "(و) رقم التشغيل",
+          "value": [
+            "batch_no"
+          ]
+        },
+        {
+          "label": "(و) تاريخ الصرف",
+          "value": [
+            "movement_date"
+          ]
+        },
+        {
+          "label": "(و) اسم من صرفها وتوقيعه",
+          "value": [
+            "dispenser_name"
+          ]
+        },
+        {
+          "label": "(ح) اسم المريض",
+          "value": [
+            "counterparty"
+          ]
+        },
+        {
+          "label": "(ح) عمره",
+          "value": [
+            "detail_1"
+          ]
+        },
+        {
+          "label": "(ح) رقم الهوية",
+          "value": [
+            "detail_2"
+          ]
+        },
+        {
+          "label": "(ح) الملف الطبي",
+          "value": [
+            "detail_3"
+          ]
+        },
+        {
+          "label": "(ح) رقم الوصفة",
+          "value": [
+            "authority_no"
+          ]
+        },
+        {
+          "label": "(ح) اسم من وصفها",
+          "value": [
+            "authority_issuer"
+          ]
+        },
+        {
+          "label": "(ط) الكمية الباقية",
+          "value": [
+            "balance"
+          ]
+        }
+      ],
+      "details": {
+        "detail_1": {
+          "label": "عمر المريض"
+        },
+        "detail_2": {
+          "label": "رقم الهوية",
+          "record": {
+            "doctype": "PP RXC Patient",
+            "match": "customer_link",
+            "field": "id_number"
+          }
+        },
+        "detail_3": {
+          "label": "الملف الطبي"
+        }
+      },
+      "authority": {
+        "pos_sale_details": {
+          "authority_no": "PP RXC Rx Number",
+          "authority_issuer": "PP RXC Prescriber",
+          "authority_issuer_licence": "PP RXC Prescriber Licence"
+        },
+        "desk_fields": {
+          "authority_no": "pp_rxc_rx_number",
+          "authority_issuer": "pp_rxc_prescriber",
+          "authority_issuer_licence": "pp_rxc_prescriber_licence"
+        },
+        "dispenser_licence": {
+          "doctype": "PP RXC Pharmacist",
+          "match": "user",
+          "field": "licence_number"
+        }
+      },
+      "columns_from": {
+        "Purchase Receipt": {
+          "reference_no": "supplier_delivery_note"
+        },
+        "Purchase Invoice": {
+          "reference_no": "bill_no"
+        },
+        "Stock Entry": {
+          "reference_no": "custom_external_reference_no"
+        }
+      },
+      "enabled": 1,
+      "items": {
+        "classes": [
+          "SA Narcotic",
+          "SA Psychotropic"
+        ]
+      },
+      "class_source": {
+        "item_table": "pp_rxc_schedules",
+        "class_field": "schedule",
+        "from_field": "effective_from",
+        "group_field": "pp_rxc_schedule",
+        "axis": "SA Narcotics and psychotropics"
+      },
+      "period_months": 6,
+      "return_due_days": 0
+    }
+  ]
+}

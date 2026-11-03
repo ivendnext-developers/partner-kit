@@ -455,6 +455,6 @@
    ]
   }
  },
- "why": "recipe payment_method_rules; recipe refund_rules; retail core",
+ "why": "recipe payment_method_rules; recipe refund_rules; sample S22; sample S46; sample S51; sample S61; retail core",
  "written_elsewhere": ""
 }

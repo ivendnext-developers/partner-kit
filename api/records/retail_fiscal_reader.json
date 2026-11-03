@@ -198,6 +198,6 @@
    ]
   }
  },
- "why": "contract fiscal_reader",
+ "why": "contract fiscal_reader; the kit's tool sandbox_check",
  "written_elsewhere": ""
 }

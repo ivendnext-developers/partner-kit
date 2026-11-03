@@ -393,6 +393,6 @@
    ]
   }
  },
- "why": "openapi.yaml; api/README.md; recipe stock_alerts; the MCP server; the request collection; retail core",
+ "why": "openapi.yaml; api/README.md; recipe expiry_recall; recipe stock_alerts; sample S1; sample S22; sample S27; sample S30; sample S40; the MCP server; the kit's tool manifest; the request collection; retail core",
  "written_elsewhere": ""
 }

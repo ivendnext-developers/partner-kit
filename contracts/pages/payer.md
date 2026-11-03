@@ -1,10 +1,10 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ c39b1449937a, copied unchanged except the links, plus the payer record's change to sections 4b, 4c and 4d (iVendNext POS 2.1.0.672, train T24, merged as aee0c9beb): its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/payer.md @ 99b5d44fb7a3, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Payer — your service pays part of a sale for someone else
 
 **Contract:** [`payer.v1.schema.json`](../extension_contracts/payer.v1.schema.json)
 · samples: [`samples/payer/`](../extension_contracts/samples/payer/)
 · code: `business_logic/partner_payer.py` (`validate_subscription`, `covers_context`, `coverage_context`,
-`line_amounts`, `fingerprint`, `validate_covers`, `validate_coverage`, `ask_covers`, `ask_coverage`).
+`line_amounts`, `sends_line_net`, `fingerprint`, `validate_covers`, `validate_coverage`, `ask_covers`, `ask_coverage`).
 
 > ⚠ **This version ships the extension point, its contract, the till's Payer tile, the booking (§4b), returns and
 > billing a claim back (§4c), the payer on a Sales Invoice made in iVendNext Desk (§4d) and the plan's price list
@@ -29,13 +29,14 @@ Nothing here names insurance, a market or a trade: the words are *payer*, *cover
 ## 2. The subscription
 
 A shop's administrator adds a **Retail Extension Subscription** with point `payer` (or your manifest installs one
-in `extension_subscriptions`, switched off). Its fields: your HTTPS address, the shared secret, the time to answer
+in `extension_subscriptions`, switched off until the shop names its clearing mode). Its fields: your HTTPS address, the shared secret, the time to answer
 (at most 5 seconds; 3 when left empty), the POS Profiles it answers (empty = all), and its settings:
 
 | Setting | What it is |
 |---|---|
 | `prescription` | up to three of the sale's own details sent as the prescription: `reference`, `prescriber`, `prescriber_licence`, each the name of a sale detail (empty: none sent) |
 | `bill_back_role` | the role that may bill a rejected claim back to the customer (empty: Accounts User) |
+| `line_net` | `true`: every `coverage` line also carries `net_minor` (section 3.2). Off or absent: the lines carry exactly the ten keys of the table there. Turning it on or off changes the consent text (section 6). Tick it only for a service built for it: a service that checks every request against an older copy of the contract refuses each ask, which reads as no cover |
 | `clearing_mode` | **the shop's own**, required before the service is switched on: an enabled mode of payment of type Custom, with no tender discount, minimum, maximum, over-tender, counting at the close or rounding, whose account in every company the service answers is its own (no other mode's), open, in the company's currency, on the balance sheet and not a receivable, payable, bank, cash, stock or temporary account. It carries your share for an instant, until it is moved to you, and it is never a tender a cashier presses. ⭐ It must also be on each of the service's POS Profiles' payment methods with **Allow in Returns** ticked: a return gives your share back on it (the product refunds only to a mode its POS Profile allows in returns). The till never shows it as a tender or as a way to pay a refund back. A manifest never carries it |
 
 A subscription is refused, in these words:
@@ -44,7 +45,7 @@ A subscription is refused, in these words:
 - *"Name the clearing mode before you switch the payer service on: the mode of payment that carries the payer's share until it is moved to the payer."*
 - *"No mode of payment named ⟨mode⟩."* · *"clearing_mode is the name of one mode of payment."* · *"The clearing mode must be an enabled mode of payment of type Custom."* · *"⟨mode⟩ must take the payer's share exactly: switch off its tender discount, minimum, maximum, over-tender, counting at the close and rounding."* · *"⟨mode⟩ has no account for ⟨company⟩."* · *"⟨mode⟩'s account for ⟨company⟩ must be an open balance sheet account in the company's currency that is not a receivable, payable, bank, cash, stock or temporary account."* · *"⟨mode⟩'s account for ⟨company⟩ is another mode of payment's too: give it its own."* · *"Add ⟨mode⟩ to ⟨POS Profile⟩'s payment methods with Allow in Returns ticked, so a payer's sale can be returned there. The till never shows it as a tender."* (for a service that answers every POS Profile, this is asked till by till, when a sale is booked) · *"⟨mode⟩ can't be ⟨POS Profile⟩'s default payment method: it carries a payer's share."* (the POS Profile's own save says the same: *"⟨mode⟩ carries a payer's share on this till: keep it here with Allow in Returns ticked, and not as the default."*)
 - *"⟨label⟩ already answers payer sales for ⟨POS Profile⟩. One payer service per POS Profile."*
-- *"The extension point's settings must be a JSON object."* · *"The settings of a payer service may only carry: bill_back_role, clearing_mode, prescription."* · *"prescription names up to three sale details: reference, prescriber, prescriber_licence."* · *"No sale detail named ⟨name⟩."* · *"No role named ⟨name⟩."* · *"The bill-back role must be a role the shop gives to some users, not ⟨role⟩."* (All, Desk User, Administrator and Guest are given by the system itself)
+- *"The extension point's settings must be a JSON object."* · *"The settings of a payer service may only carry: bill_back_role, clearing_mode, line_net, prescription."* · *"line_net is true or false."* · *"prescription names up to three sale details: reference, prescriber, prescriber_licence."* · *"No sale detail named ⟨name⟩."* · *"No role named ⟨name⟩."* · *"The bill-back role must be a role the shop gives to some users, not ⟨role⟩."* (All, Desk User, Administrator and Guest are given by the system itself)
 - *"The time to answer must be more than 0 and at most 5 seconds."* · *"When the service is down, this extension point can only: no_cover."*
 - A service sales were booked on is never deleted: *"Sales were booked on ⟨label⟩. Switch it off instead: its sales are still returned on its clearing mode."* Uninstalling your app switches its payer service off and keeps it for the same reason.
 
@@ -108,7 +109,19 @@ never asked about):
 | `item_code`, `item_group`, `gtin` | the item; `gtin` is the line's scanned barcode, else the item's first, else `null` |
 | `qty`, `uom`, `conversion_factor` | the quantity in the line's unit |
 | `rate_minor`, `discount_minor` | its price, and the discount on it, both on the price's basis (tax included where `tax_included`) |
-| `amount_minor` | **what the line costs**: after every discount (the sale's own spread across the lines), plus its share of tax |
+| `amount_minor` | **what the line costs**: after every discount (the sale's own spread across the lines), plus its share of tax and charges |
+| `net_minor` | only when your settings carry `line_net: true`: the line's net after every discount, before tax and charges. `amount_minor − net_minor` is what the line carries on top of it: its taxes and charges (on the largest line also the sale's rounding, a few minor units either way, as for `amount_minor`). The lines' `net_minor` add up to the sale's net total (each line rounded on its own, so to within a minor unit a line where the shop keeps more decimal places than the currency has) |
+
+**Prices without tax and a discount on the whole sale.** With `tax_included: false`, `discount_minor` is net of tax
+while `amount_minor` carries tax, and a discount on the whole sale is spread onto each line's net, so a rule that reads
+what a line cost before the discount (a co-pay taken before it, a limit after it) needs the discount with its tax. Ask
+for `line_net` and read it as `discount_minor × amount_minor / net_minor`; a line with `net_minor` 0 (a free line) has no
+ratio: read its discount as sent. Without `line_net` the ratio is unknown: reading the
+discount as sent puts the discount's tax on the payer (20% co-pay, 15% tax, 20% off a sale of 55.00: 0.33).
+⚠ `net_minor` was added after version 1 first shipped: it reaches only a service whose subscription asks for it, and a
+service that validates requests against an older copy of `payer.v1.schema.json` refuses it. Take this copy now, whether
+or not you ask for `line_net`: a shop's administrator can tick it on your subscription too, and this copy accepts a line
+with or without `net_minor`.
 
 The lines' `amount_minor` add up to `total_minor` exactly; `rounding_minor` is the sale's rounding, always the
 customer's. You answer one of three:
@@ -178,7 +191,8 @@ whose claim reference moved between two asks for the same sale reads as no cover
   that names only POS Invoice or Sales Invoice does not. ⚠ Before this release these were columns on the sale and
   its lines (`custom_mpos_payer_*`, `custom_mpos_patient_share`); they moved to the record to keep the sale's
   database row inside its limit, and the update copies every sale's values onto its record, checks them and
-  removes the columns.
+  removes the columns. Every text is kept exactly as your answer gave it (a `<` stays a `<`, never `&lt;`):
+  escape it yourself before you put it in a page.
 - **A cancel in iVendNext Desk:** a sale the day has not posted yet takes its journal with it. Once a sale is
   posted, its own cancel is refused while its Sales Invoice stands; cancelling that invoice takes the journal and
   cancels the sale with it (or the day's closing is cancelled, on a shop that posts each sale at once: the journal
@@ -234,7 +248,11 @@ whose claim reference moved between two asks for the same sale reads as no cover
   payment (*Take a payment*) lists that invoice for them (a till sale's; a Desk sale's bill-back is collected on
   the Desk, against its Sales Invoice). The same sale, claim, reason and amount answer the
   journal booked the first time; the same reason with another amount is refused (*"⟨amount⟩ was already billed
-  back for this reason. Give the new amount its own reason."*); a new reason books another. It needs a user who may submit a
+  back for this reason. Give the new amount its own reason."*); a new reason books another. The reason is cut to
+  140 characters, stored the way iVendNext stores any such text (markup it does not allow, and a bare `&`, escaped),
+  and cut again if that makes it longer than 140; `custom_mpos_payer_reason` holds that stored form. Reasons that
+  read the same once stored are one reason, letter case, accents and trailing spaces aside (the database's own
+  comparison). It needs a user who may submit a
   journal (the shop's accounts role), or the role your subscription names in `bill_back_role` (stored on the sale's
   payer record when it was booked). Refused: *"No sale paid by a payer is named ⟨sale⟩."* · *"That claim is not this sale's."*
   · *"Say why the claim is billed back."* · *"Bill back an amount above zero."* · *"⟨payer⟩ owes ⟨amount⟩ on this
@@ -283,14 +301,15 @@ whose claim reference moved between two asks for the same sale reads as no cover
 
 ## 6. Consent
 
-The administrator ticks consent to this text, which the product writes (a change to the prescription details
-changes it, and the calls stop until consent is ticked again):
+The administrator ticks consent to this text, which the product writes (a change to the prescription details or to
+`line_net` changes it, and the calls stop until consent is ticked again). The part in ⟨⟩ holds only what the settings
+name, in this order: each line's amount before tax and charges (`line_net`), then the prescription's details:
 
 > When a cashier sells on a payer, iVendNext sends your service: the customer's record name, the cover's
 > reference you gave, the store, the till's POS Profile, the cashier, the date, the sale's key, currency and price
 > list, and for each line its item code, item group, GTIN, quantity, unit, conversion factor, price, discount and
-> amount, and the sale's total and its rounding ⟨, and the prescription's reference, the prescriber, the
-> prescriber's licence⟩. Health data stays in the
+> amount, and the sale's total and its rounding ⟨, and each line's amount before tax and charges, the prescription's
+> reference, the prescriber, the prescriber's licence⟩. Health data stays in the
 > shop's country where the law there requires it: your service must run there. No card data, serial or batch is
 > sent.
 
@@ -328,6 +347,10 @@ changes it, and the calls stop until consent is ticked again):
 - The cover you answered in `covers` is read when the cashier picks it: a plan whose list your service changes later
   in the same sale is priced on the old list until the cashier presses Payer again (your `coverage` answer can still
   refuse).
+- **`net_minor` puts a discount on the amount's basis exactly where every tax and charge on the line is a percentage
+  of its net.** A fixed charge's share (a tax row of type *Actual*, which the product spreads across the lines by
+  their net) and an item's own surcharge with its tax are on the line too: the ratio then reads a little more of the
+  discount as tax than it was, and a rule taken before the discount leaves the payer a little less.
 - No deductible or limit carried across sales, no pre-authorisation round trip and no link to any real insurer:
   each is your service's to do, behind this contract.
 - A sale whose total carries a charge no line carries (a charge on the whole sale, not on one line, such as a

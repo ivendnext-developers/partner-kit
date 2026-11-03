@@ -381,6 +381,6 @@
    ]
   }
  },
- "why": "recipe age_check; recipe duty_free_allowance; recipe optical_prescriptions; sample S31; sample S36; sample S37; sample S38; sample S39; sample S42; retail core",
+ "why": "recipe age_check; recipe duty_free_allowance; recipe expiry_markdown; recipe optical_prescriptions; sample S1; sample S18; sample S31; sample S36; sample S37; sample S38; sample S39; sample S42; sample S43; sample S52; sample S54; retail core",
  "written_elsewhere": ""
 }

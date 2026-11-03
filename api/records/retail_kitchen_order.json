@@ -1,6 +1,6 @@
 {
  "area": "Till sales",
- "description": "What one sale sent to the kitchen, ticket by ticket. Written by the till.",
+ "description": "What one sale or one table's check sent to the kitchen, ticket by ticket. Written by the till.",
  "fields": [
   {
    "added": 0,
@@ -37,6 +37,18 @@
    "read_only": 1,
    "required": 0,
    "type": "Data"
+  },
+  {
+   "added": 0,
+   "choices": [],
+   "description": "",
+   "fieldname": "sales_order",
+   "hidden": 0,
+   "label": "Sales Order",
+   "links_to": "Sales Order",
+   "read_only": 1,
+   "required": 0,
+   "type": "Link"
   },
   {
    "added": 0,

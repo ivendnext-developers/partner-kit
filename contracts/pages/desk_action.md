@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/desk_action.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/desk_action.md @ 99b5d44fb7a3, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Desk action
 
 **Contract:** [`desk_action.v1.schema.json`](../extension_contracts/desk_action.v1.schema.json)
@@ -107,7 +107,8 @@ record"* · *"open_record names a record the user may not read"* · *"open_page 
 - *"A state is at most 140 characters."* · *"⟨record type⟩ has no workflow and no status to match."*
 - *"Give at most 3 conditions."* · *"Condition: ⟨record type⟩ has no field ⟨field⟩."* · *"Condition: ⟨field⟩
   is not readable by every reader."* · *"Condition: choose how it compares."* · *"A condition with
-  ⟨operator⟩ needs a number."*
+  ⟨operator⟩ needs a number."* · *"⟨field⟩ is a date: compare it with =, != or is set."* · *"⟨field⟩
+  holds a time: a condition on it uses "is set" or "is not set"."* (as a save rule's, `save_rules.md`; a declaration saved before 2026-10-30 with such a condition is refused at its next save, switching it off included)
 - *"A dialog asks at most 10 inputs."* · *"Input ⟨n⟩: use a new field name of lower case letters, digits
   and _."* · *"Input ⟨n⟩: the label must be 1 to 60 characters."* · *"Input ⟨n⟩: choose one of the listed
   types."* · *"Input ⟨n⟩: a choice list needs 1 to 50 lines."* · *"Input ⟨n⟩: name the record type it

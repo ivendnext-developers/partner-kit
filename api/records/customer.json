@@ -727,6 +727,30 @@
    "read_only": 1,
    "required": 0,
    "type": "Data"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "This staff member's own rate. 0 uses their customer group's, then the store's.",
+   "fieldname": "custom_mpos_staff_discount_pct",
+   "hidden": 0,
+   "label": "Staff Discount (%)",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Percent"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "This staff member's own monthly budget. 0 uses their group's, then the store's.",
+   "fieldname": "custom_mpos_staff_monthly_allowance",
+   "hidden": 0,
+   "label": "Staff Monthly Allowance",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Currency"
   }
  ],
  "lede": "A person or a business the retailer sells to, with their group, contact details and loyalty.",
@@ -930,6 +954,6 @@
    ]
   }
  },
- "why": "openapi.yaml; contract fields; recipe customer_code_check; recipe customer_history_page; recipe loyalty_provider; recipe optical_prescriptions; recipe print_pack; sample S22; sample S25; sample S39; sample S42; sample S43; sample S49; sample S52; the MCP server; the request collection; retail core",
+ "why": "openapi.yaml; contract fields; contract package_install; contract save_rules; recipe alteration_tickets; recipe click_and_collect; recipe customer_code_check; recipe customer_history_page; recipe donation_intake; recipe front_of_house; recipe loyalty_provider; recipe manifest; recipe optical_prescriptions; recipe print_pack; recipe repairs_by_serial; recipe save_rules; sample S16; sample S18; sample S22; sample S24; sample S25; sample S28; sample S29; sample S32; sample S33; sample S39; sample S40; sample S41; sample S42; sample S43; sample S44; sample S46; sample S47; sample S48; sample S49; sample S5; sample S50; sample S52; sample S53; sample S55; sample S57; sample S58; sample S60; the MCP server; the feed client; the kit's tool manifest; the request collection; retail core",
  "written_elsewhere": ""
 }

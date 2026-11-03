@@ -1099,6 +1099,8 @@ def summary_lines(parts: list[Part], verdict: str, tests: int | None) -> list[st
         head += "."
     what = "; ".join(f"{p.title} ({p.tag}): {does(p)}" for p in parts)
     feeds = "one feed" if any(p.manifest.get("registered_applications") for p in parts) else "no feed"
+    if not any(p.app_json for p in parts):      # no sample brings a service: nothing of ours runs, and a feed alone makes the user
+        return [head, f"What is in it: {what}. No service of ours, {feeds}{', one app user' if feeds == 'one feed' else ''}."]
     return [head, f"What is in it: {what}. One service, {feeds}, one app user."]
 
 

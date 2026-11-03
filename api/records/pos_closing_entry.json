@@ -846,6 +846,6 @@
    ]
   }
  },
- "why": "recipe ai_manager; recipe bi_feed; sample S9; retail core",
+ "why": "recipe ai_manager; recipe bi_feed; sample S10; sample S9; the kit's tool manifest; the kit's tool moneykit; the kit's tool scale_profile; the kit's tool selfcheck; retail core",
  "written_elsewhere": ""
 }

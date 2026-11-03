@@ -1,42 +1,27 @@
 #!/usr/bin/env python3
 """S14 — the outside half of price-change approvals ACROSS STORES. Python 3.9+, standard library only.
 
-Derived from ``samples/s11_approvals/approvals.py`` (this kit, commit daf7943, after its deep review): the history reading, the
-apply-once shape, the crash handling and the export are S11's. A defect in those parts is a defect there too: report it on the kit's
-board (``ivendnext-developers/partner-kit``).
+A chain has stores and a head office. A request names its STORE; a store manager approves up to a LIMIT (a percentage of the price
+now); above it the change waits for head office.
 
-What S14 adds to S11. A chain has stores and a head office. A request names its STORE; a store manager approves up to a LIMIT (a
-percentage of the price now); above it the change waits for head office. The shop's workflow cannot hold a limit (a manifest carries
-no condition), and it accepts a state written straight into a request when the writer's roles allow that move (measured: a person given both approving roles), so the service decides:
-
-    BASE=https://shop.example AP_KEY=… AP_SECRET=… python3 approvals_stores.py apply
+    BASE=https://shop.example AP_KEY=… AP_SECRET=… LIMIT_PCT=10 python3 approvals_stores.py apply
     BASE=… AP_KEY=… AP_SECRET=… python3 approvals_stores.py export --day 2026-10-04 --out state/export
 
-WHO MAY APPROVE is read from the shop's own table, ``PP APS Approval Rule`` (one row per person: *Store* with a store and a limit, or
-*Head Office*). A person with no row, a row that is not whole, or a store row for another store, is not believed — the check fails
-closed. APPLY, for each request in *Store Approved* or *Head Office Approved*, oldest first, takes S11's refusals — and adds:
-    * a request is not applied if ANY approval in its history was given by the person who raised it (each step, not only the last);
-    * *Store Approved*: the approver must hold a Store rule for THIS request's store, and the change (|new − now| ÷ now) must be within
-      that rule's limit; above it the request waits, named in the report, for head office;
-    * *Head Office Approved*: the approver must hold a Head Office rule — a store manager who writes that state himself is not believed;
-    * the request's store is, like its item, price list and price, fixed once raised: a change at any time after is not applied;
-    * a STORE approval is valid only while the price row is as the manager saw it: if the price row changed after the approval (an
-      earlier request applied, another role's edit) the limit was judged against a price that is gone, so the request is not applied —
-      the manager rejects it and it is raised again. This stops a limit being climbed by requests approved side by side. The limit is per
-      request, not cumulative: requests approved and applied one after another each move the price by up to the limit (a chain that wants a
-      cap per day adds it).
-Everything else is S11: the price is written only if it is not already the approved one, the workflow's Apply action moves the request on,
-a kill between the two is finished by the next run, a request with ten or more recorded changes is not applied (the shop shows only the
-latest ten). EXPORT is S11's, with the store and both approvals as columns.
+WHO MAY APPROVE is the shop's own: the workflow's roles, and one User Permission per person on their store, so a manager of another
+store cannot open the request. The limit is one number for the chain, ``LIMIT_PCT`` (10 when unset). APPLY, for each request in
+*Store Approved* or *Head Office Approved*, oldest first:
+    * a request is not applied if any approval in its history was given by the person who raised it;
+    * *Store Approved*: the change (|new − now| ÷ now) must be within the limit; above it the request waits, named in the report, for
+      head office;
+    * the request's item, price list, price and store are fixed once raised: a change after that is not applied;
+    * a STORE approval holds only while the price row is as the manager saw it: if the row changed after the approval, the limit was
+      judged against a price that is gone, so the request is not applied: the manager rejects it and it is raised again.
+The price is written only if it is not already the approved one, the workflow's Apply action moves the request, and a kill between
+the two is finished by the next run. A request with ten or more recorded changes is not applied (the shop shows only the latest ten).
+EXPORT writes the day's requests, with the store and both approvals as columns, the same bytes for the same data.
 
-Bounds: one service per shop (no lock). The rules are read at apply time, both ways: an approver whose rule was removed after approving is
-no longer believed, and one whose limit was raised after approving is believed at the new limit. A request names a price list; the service
-does not tie the price list to the store, so a store manager's approval moves the price on whatever list the request names — every store's
-price where they share one list, another store's own list where the requester named it (a shop with one list per store adds that check).
-A head-office approval names the price it wants and is applied whatever the row holds. The limit is read against the price row at apply
-time. A request edited between the service's read and its action ends *Applied* showing the edit while the price written is the approved
-one (milliseconds; the export marks it *changed_after_raise*). A reject that lands in that window fails the action: the service puts the
-price back and says so — within one run; a reject after a run killed between its price and its action is seen by no later run.
+Bounds: one service per shop (no lock). A request names a price list; a store manager's approval moves the price on whatever list it
+names (a chain with one list per store adds that check).
 """
 
 from __future__ import annotations
@@ -53,13 +38,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "tools", "feed_client"))
 import feed_client as F  # noqa: E402
 
-DT, RULE = "PP APS Price Change Request", "PP APS Approval Rule"
+DT = "PP APS Price Change Request"
 REQUESTED, STORE_OK, HO_OK = "PP APS Requested", "PP APS Store Approved", "PP APS Head Office Approved"
 REJECTED, APPLIED = "PP APS Rejected", "PP APS Applied"
 APPLY_STATES = (STORE_OK, HO_OK)
 ACTION_APPLY = "PP APS Apply"
 TRACKED_FIELDS = ("item", "price_list", "new_rate", "store")
 SHOP_VERSIONS = 10      # the form-load call returns at most the latest ten versions of a record
+LIMIT_PCT = 10.0        # a store manager's limit, a percentage of the price now, unless LIMIT_PCT is set
 
 
 def _q(s):
@@ -92,50 +78,29 @@ def tracked_changes(vs):
     return [f"{c[0]}: {c[1]!r} -> {c[2]!r} by {who}" for _, who, changed in vs for c in changed if c[0] in TRACKED_FIELDS]
 
 
-def load_rules(api):
-    """The approval rules, by person. A row that is not whole (a Store row with no store or a limit of 0 or blank, an unknown level, a row whose name is not its person) is left out."""
-    rules = {}
-    for r in _list(api, RULE, [], ["name", "user", "level", "store", "limit_pct"], order="name asc"):
-        if r.get("user") != r["name"]:                       # a row is named by its person; an edited person leaves the old one holding it
-            continue
-        if r.get("level") == "Head Office" or (r.get("level") == "Store" and r.get("store") and float(r.get("limit_pct") or 0) > 0):
-            rules[r["name"]] = r                            # (a blank limit is stored as 0, so a Store row needs a limit above 0)
-    return rules
-
-
 def change_pct(now, new):
     """How far the new price is from the one now, in percent of the one now; a price of nothing (or less) has no percentage (infinite)."""
     now, new = float(now), float(new)
     return 0.0 if now == new else float("inf") if now <= 0 else abs(new - now) / now * 100
 
 
-def authority(doc, vs, rules, now_rate):
-    """Is the approval that put the request in its present state believable? (None = yes, else the sentence why not.)"""
+def authority(doc, vs, limit_pct, now_rate):
+    """Does the approval that put the request in its present state hold? (None = yes, else the sentence why not.)"""
     steps = approvals(vs)
     if not steps:
         return "no version records the approval (change tracking is off or its history was cleared)"
     for i, state, who in steps:
         if who == doc.get("owner"):
             return f"approved by the person who raised it (the {'head office' if state == HO_OK else 'store'} step)"
-    _, state, who = [s for s in steps if s[1] == doc["workflow_state"]][-1] if any(s[1] == doc["workflow_state"] for s in steps) else (None, None, None)
-    if who is None:
-        return "no version records the approval (change tracking is off or its history was cleared)"
-    rule = rules.get(who)
-    if state == HO_OK:
-        if rule is None or rule["level"] != "Head Office":
-            return f"{who} gave the head-office approval but is not a head-office approver (no approval rule, or a store rule)"
-        return None
-    if rule is None:
-        return f"{who} approved but there is no approval rule for them (or it is not whole): their approval is not believed"
-    if rule["level"] != "Store" or rule["store"] != doc.get("store"):
-        return f"{who} is not an approver for store {doc.get('store')!r}"
-    pct = change_pct(now_rate, doc["new_rate"])
-    if pct > float(rule["limit_pct"]) + 1e-9:
-        return f"above the store manager's limit ({rule['limit_pct']}%): the change is {'more than the whole price' if pct == float('inf') else f'{pct:.1f}%'}; it waits for head office"
+    if doc["workflow_state"] == STORE_OK:
+        pct = change_pct(now_rate, doc["new_rate"])
+        if pct > limit_pct + 1e-9:
+            changed = "more than the whole price" if pct == float("inf") else f"{pct:.1f}%"
+            return f"above the store manager's limit ({limit_pct}%): the change is {changed}; it waits for head office"
     return None
 
 
-def apply_one(api, name, rules, crash_after_write=False):
+def apply_one(api, name, limit_pct, crash_after_write=False):
     doc = api.call("GET", f"/api/resource/{_q(DT)}/{_q(name)}")["data"]
     if doc.get("workflow_state") not in APPLY_STATES:
         return {"request": name, "result": "skipped", "why": f"state is {doc.get('workflow_state')}"}
@@ -150,7 +115,7 @@ def apply_one(api, name, rules, crash_after_write=False):
     if len(rows) != 1:
         return {"request": name, "result": "not applied", "why": f"{len(rows)} selling price rows for {doc['item']} in {doc['price_list']}"}
     price, wrote = rows[0], False
-    why = authority(doc, vs, rules, price["price_list_rate"])
+    why = authority(doc, vs, limit_pct, price["price_list_rate"])
     if why:
         return {"request": name, "result": "not applied", "why": why}
     if doc["workflow_state"] == STORE_OK and abs(float(price["price_list_rate"]) - float(doc["new_rate"])) > 0.0001:
@@ -176,12 +141,12 @@ def apply_one(api, name, rules, crash_after_write=False):
     return {"request": name, "result": "applied", "price_row": price["name"], "wrote_price": wrote}
 
 
-def apply_all(api, crash_after_write=False):
+def apply_all(api, crash_after_write=False, limit_pct=None):
     report = {"applied": [], "not_applied": [], "skipped": []}
-    rules = load_rules(api)
+    limit_pct = float(os.environ.get("LIMIT_PCT") or LIMIT_PCT) if limit_pct is None else limit_pct
     for r in _list(api, DT, [["workflow_state", "in", list(APPLY_STATES)]], ["name"]):
         try:
-            res = apply_one(api, r["name"], rules, crash_after_write)
+            res = apply_one(api, r["name"], limit_pct, crash_after_write)
         except F.FeedError as e:                              # the shop refused: say so, go on with the next
             res = {"request": r["name"], "result": "not applied", "why": f"the shop said: {str(e)[:200]}"}
         report["applied" if res["result"] == "applied" else "not_applied" if res["result"] == "not applied" else "skipped"].append(res)

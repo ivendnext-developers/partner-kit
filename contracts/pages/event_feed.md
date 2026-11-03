@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/event_feed.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/event_feed.md @ 99b5d44fb7a3, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Event feed
 
 **Contract:** [`event_feed.v1.schema.json`](../extension_contracts/event_feed.v1.schema.json)
@@ -27,7 +27,9 @@ whose API key you call with (`application_user`). That user holds one role, `<PR
 empty if your manifest does not declare it), works through the API only (it can never sign in to Desk,
 even with a password) and takes no seat. A hosted app receives its key at connect (`user:<email>`); for
 an app you host yourself, the shop makes the key on that user (User, Generate Keys). The uninstall
-removes the feed, then the user and its key. The shop ticks each record type on. Nobody can give
+removes the feed, then the user and its key (a user an open check or another point-of-sale record still
+names is kept switched off, its role, key and till ticks removed, and taken up again by a reinstall, which
+needs the shop's ticks again). The shop ticks each record type on. Nobody can give
 that user a password or another role; the shop gives the `<PREFIX> Integration` role the reads the
 app needs. ⚠ Disabling the user does not stop its key (a key request does not check it): to cut the
 app off, uninstall it, or make a new key on its user: that stops the app for good, except an app hosted by

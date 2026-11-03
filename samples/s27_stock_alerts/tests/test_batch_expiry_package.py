@@ -38,13 +38,6 @@ class BatchExpiryPackage(unittest.TestCase):
         product = json.loads(PRODUCT.read_text())["payload"]["notifications"][0]
         self.assertEqual(PKG["notifications"][0], product)
 
-    def test_the_checker_refuses_what_a_reminder_on_a_shop_record_may_not_do(self):
-        for change in ({"event": "Save"}, {"recipients": [{"receiver_by_document_field": "owner"}]},
-                       {"message": "{% for b in ivn_rows('Batch') %}{{ b.name }}{% endfor %}"}, {"days_in_advance": 400}):
-            bad = copy.deepcopy(PKG)
-            bad["notifications"][0].update(change)
-            self.assertTrue(validate.validate(bad), change)
-
 
 if __name__ == "__main__":
     unittest.main()

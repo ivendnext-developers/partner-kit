@@ -1,0 +1,19 @@
+{
+  "extension_point": "partner_page",
+  "contract": "declaration",
+  "about": "A partner's own board on the till that answers nothing: its key opens on an empty basket too.",
+  "payload": {
+    "doctype": "Retail Extension Subscription",
+    "point": "page",
+    "partner_name": "Acme Deliveries",
+    "transport": "remote",
+    "label": "Deliveries",
+    "endpoint_url": "https://partner.example/board",
+    "secret": "a-long-shared-secret",
+    "page_placement": "Till key",
+    "page_send_sale": 0,
+    "page_returns_message": 0,
+    "page_returns_sale_attributes": 0,
+    "page_height": 70
+  }
+}

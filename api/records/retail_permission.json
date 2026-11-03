@@ -365,7 +365,7 @@
   {
    "added": 1,
    "choices": [],
-   "description": "Lets this cashier give the staff discount. Rate and allowance are set in Retail Setting.",
+   "description": "Lets this cashier give the staff discount, at the staff member's grade or store rate.",
    "fieldname": "custom_mpos_employee_discount",
    "hidden": 0,
    "label": "May Apply Employee Discount",
@@ -489,6 +489,18 @@
    "fieldname": "custom_mpos_check_print",
    "hidden": 0,
    "label": "May Print a Check for the Table",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "Lets this person's kitchen screen read the kitchen's tickets and mark each one started, ready and bumped.",
+   "fieldname": "custom_mpos_station_ticket",
+   "hidden": 0,
+   "label": "May Work a Kitchen Screen",
    "links_to": "",
    "read_only": 0,
    "required": 0,
@@ -658,6 +670,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract open_check; recipe open_check",
+ "why": "contract open_check; contract station_ticket; recipe front_of_house; recipe guest_ordering; recipe kitchen_screen; recipe open_check; sample S55; sample S56; sample S59",
  "written_elsewhere": ""
 }

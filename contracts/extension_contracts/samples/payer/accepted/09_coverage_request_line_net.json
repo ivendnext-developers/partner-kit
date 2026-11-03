@@ -1,0 +1,55 @@
+{
+  "extension_point": "payer",
+  "contract": "coverage_request",
+  "about": "Two lines asked before the tender on prices without tax, a 10% discount on the whole sale spread onto each line, to a service whose settings carry line_net: true: each line also carries net_minor.",
+  "payload": {
+    "point": "payer/1",
+    "context": {
+      "v": 1,
+      "point": "payer",
+      "call": "coverage",
+      "sale_ref": "mpos-sale-81b2",
+      "customer": "Amal Hassan",
+      "member": "GLI-778812",
+      "date": "2026-10-25",
+      "currency": "ZAR",
+      "currency_exponent": 2,
+      "store": "Main Store - MTC",
+      "pos_profile": "Main Till",
+      "operator": "cashier@shop.example",
+      "price_list": "Generic Insurer Prices",
+      "tax_included": false,
+      "prescription": null,
+      "lines": [
+        {
+          "line_id": "L1",
+          "item_code": "AMOX-500",
+          "item_group": "Antibiotics",
+          "gtin": "06291100000017",
+          "qty": 2,
+          "uom": "Nos",
+          "conversion_factor": 1,
+          "rate_minor": 12000,
+          "discount_minor": 2400,
+          "amount_minor": 24840,
+          "net_minor": 21600
+        },
+        {
+          "line_id": "L2",
+          "item_code": "VIT-C",
+          "item_group": "Vitamins",
+          "gtin": null,
+          "qty": 1,
+          "uom": "Nos",
+          "conversion_factor": 1,
+          "rate_minor": 4550,
+          "discount_minor": 455,
+          "amount_minor": 4709,
+          "net_minor": 4095
+        }
+      ],
+      "total_minor": 29549,
+      "rounding_minor": 0
+    }
+  }
+}

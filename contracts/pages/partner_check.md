@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ c39b1449937a, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ 99b5d44fb7a3, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner check
 
 **Contract:** [`partner_check.v1.schema.json`](../extension_contracts/partner_check.v1.schema.json)
@@ -62,7 +62,8 @@ checks of each POS Profile). Then they tick the consent (section 5).
  "customer_group":"Retail","price_list":"Standard Selling","coupon_codes":["WELCOME10"],
  "sale_attributes":[{"name":"Prescription No","value":"RX-551"}],
  "lines":[{"line_no":1,"item_code":"PARA-500","item_group":"Pharmacy","qty_milli":2000,"uom":"Nos",
-           "rate_minor":1250,"amount_minor":2500,"discount_minor":0,"line_attributes":[]}],
+           "rate_minor":1250,"amount_minor":2500,"discount_minor":0,"is_free_item":0,"promo_qty_milli":0,
+           "line_attributes":[]}],
  "totals":{"net_minor":2500,"tax_minor":125,"discount_minor":0,"grand_minor":2625},
  "offered_tenders":["Cash","Credit Card"],"pos_opening":"POS-OPE-2026-00071",
  "pos_terminal":"Mall Counter 2"}}
@@ -72,6 +73,22 @@ checks of each POS Profile). Then they tick the consent (section 5).
   currency's own digits (`currency_exponent`: 2 for AED, 3 for KWD, 0 for JPY); quantity is in thousandths.
 - A line carries its row number (`line_no`), not the till's line id: one till line can become several priced
   rows. At most 500 lines are sent; past that, only the first 500, while `totals` are the whole sale's.
+  A store that sets *Most Lines on One Sale* (Retail Setting) has the till refuse the line over it when the
+  line is added, so a check need not count the till's lines at Pay for that store. It counts the lines the
+  till holds, not the priced rows you are sent (one till line can be several rows), so a check guarding a
+  printer's row cap keeps its own count.
+- A line priced 0 tells you why. `is_free_item` is 1 on a row the store's pricing rule added free (its
+  `discount_minor` is 0: the rule lists it at nothing), else 0. `promo_qty_milli` is the units of the line the
+  sale's promotions marked as theirs, in thousandths (0 when none). So a promotion's free article on a line of
+  its own reads `rate_minor` 0, its list value in `discount_minor` and in `promo_qty_milli` the units the
+  promotion marked as its own (a one-unit article: 1000); a cashier's 100% line discount reads the same with `promo_qty_milli`
+  0; an item simply priced 0 reads neither. A promotion that gives the same article free (buy one, get one) books the pair as one line
+  at part of its price rather than a line at 0: two units, half the list off, `promo_qty_milli` 1000. A till
+  offline never sends `is_free_item` 1: a pricing rule adds its free row when the sale reaches the server.
+  Both are **part of the fingerprint**, so on the shop's first deploy with them a check asked just before is
+  asked once more.
+  ⚠ Added after version 1 first shipped: a service that validates the request against an older copy of
+  this contract refuses them until it takes this copy.
 - `pos_opening` names the POS day the sale or refund is taken under, and `pos_terminal` that day's POS
   Terminal, so one rule can hold per terminal without one POS Profile per terminal; each is `""` when there
   is none. A sale synced from offline names the day it was taken under (a sale a manager posts again after
@@ -127,7 +144,7 @@ checks of each POS Profile). Then they tick the consent (section 5).
 | Answer | Shape | The till |
 |---|---|---|
 | allow | `{"verdict":"allow"}` | the payment sheet opens |
-| allow, some tenders off | `{"verdict":"allow","exclude_tenders":["Gift Certificate"],"reason":"…"}` | those tenders are drawn dimmed with *"Not for this sale: ⟨reason⟩"* |
+| allow, some tenders off | `{"verdict":"allow","exclude_tenders":["Gift Certificate"],"reason":"…"}` | those tenders are drawn dimmed with *"Not for this sale: ⟨reason⟩"*: the payment screen's tiles, its gift card and loyalty forms, and a split's legs. On a layaway plan's placement they stay off the plan: its instalments, its final payment and the cash deposit a till takes for it refuse them with the same words; on an order's placement (or a change) they stay off the order: the balance taken at its delivery, and the card push for it, refuse them the same way (a card already charged books and is flagged) |
 | refuse | `{"verdict":"refuse","reason":"…"}` | *"This sale can't be paid"* (on a refund *"This refund can't go ahead"*) and your sentence; back where the payment or refund began |
 | ask | `{"verdict":"ask","question":"…"}` | Yes / No; *No* goes back to the basket |
 | approve | `{"verdict":"approve","reason":"…"}` | a manager who is not the cashier signs in on the till |
@@ -176,6 +193,12 @@ costs, so excluding the store credit method on a return refuses every exchange. 
 return against its sale, the sale details sent are the ones carried over from the sale; a correction the
 cashier makes when iVendNext refuses a carried detail is booked after your answer, without a new call. An
 exchange's replacement is a sale: a `fill` there writes onto the replacement, never the return.
+⛔ **Never refuse a return against its sale for a missing sale detail** — a refund of a sale found by its
+receipt, or the lines an exchange takes back (`stage: "return"`, `return_of.channel` `"pos"`, or `"order"`
+for an order's delivered lines; those lines' `qty_milli` is negative): a refund is not a sale, and the money
+is already the customer's. The details sent are the sale's own and nothing the cashier adds reaches your
+check, so such a refusal leaves a refund no till can pay. Judge a line coming back only on whether it may be
+returned (a dispensed medicine), and keep your detail rules for lines being sold (`qty_milli` positive).
 
 ## 4. Every refusal, in the product's words
 
@@ -267,7 +290,7 @@ shop, on the server online and on the till offline. It has no network: nothing i
   address typed in is cleared on save), and the same label, down answer, POS Profiles and `sequence` as a
   remote check. The consent lists what the module reads and says it is not sent anywhere.
   A new version is a new module record; the subscription names the newest. A package can carry the module and
-  its subscription instead (installing a manifest §11), installed switched off.
+  its subscription instead ([installing a manifest](package_install.md) §11), installed switched on under the install's consent.
 - **A recall.** iVendNext can recall one certified module by its SHA-256, in a release. From the shop's next
   deploy the module is refused where it is added, the server stops running it, and the till's next snapshot
   names no module, so the check takes your down answer on every till. A till that stays offline runs the
@@ -339,8 +362,11 @@ the order books is refused with *"The check no longer fits this order. Try again
 again). A cash deposit cannot be sent to another store's till that runs a check this till does not: *"⟨till⟩
 runs a partner's check this till does not. Pick a till at this store, or take the deposit here."* A deposit
 sent to a till of the SAME store books on that till's own POS Profile: scope your check to every profile of
-the store (see below). An excluded tender binds only what is paid at placement (a deposit), never the balance
-paid at the order's delivery or the plan's pickup, and an order placed at the till with nothing to pay ignores it. Their
+the store (see below). An excluded tender binds what is paid at placement (a deposit) and, on a layaway plan, every
+later payment: its instalments, its final payment and the cash deposit a till takes for it refuse that tender
+with the same words (a card already charged books and is flagged). On an order it binds the balance paid at
+delivery the same way, whoever delivers it and however long after; a change takes the answer to the change, and a change saved at a till your check does not cover clears the order's excluded tenders (scope every profile of the store).
+An order placed with nothing to pay keeps it for its delivery. Their
 delivery, a layaway plan's instalments, its final payment and its pickup go on that answer and are not
 checked again — a rule that must hold at hand-over (a prescription that may have lapsed) cannot be held
 there in this version. A deposit sent as cash to another till is checked here, before it is sent; the till
@@ -355,8 +381,9 @@ the order covers what was paid).
 ## 8. Worked examples
 
 **A prescription for a product group.** Your service answers
-`{"verdict":"refuse","reason":"A prescription number is needed for Pharmacy items."}` when a line's
-`item_group` is *Pharmacy* and `sale_attributes` carries no *Prescription No*, else `{"verdict":"allow"}`.
+`{"verdict":"refuse","reason":"A prescription number is needed for Pharmacy items."}` when a line being
+sold (`qty_milli` positive) has `item_group` *Pharmacy* and `sale_attributes` carries no *Prescription No*,
+else `{"verdict":"allow"}` (section 3: a return against its sale is never refused for it).
 Declared down answer: `refuse`, so an outage never sells without the check.
 
 **Online refund only for an order paid by card.** On a return whose `offered_tenders` carries *Online
@@ -377,4 +404,6 @@ order paid by card."* An order here is one taken at the till (section 3).
 > `fill`, an object of the sale details the subscription's `fill_attributes` lists, each to a plain-text
 > value; a sale your fill changes is sent again filled: fill the same values (a changed value is dropped).
 > Nothing is filled on a return, beside a third-party payer, at a placement (an order — a quote converted to
-> an order too — a layaway plan, an order's change), or by a module.
+> an order too — a layaway plan, an order's change), or by a module. Never refuse a return against its sale
+> (`return_of.channel` `pos`, or `order` with lines) for a missing sale detail: judge a line coming back
+> (`qty_milli` negative) only on whether it may be returned.

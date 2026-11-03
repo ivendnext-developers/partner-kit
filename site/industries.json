@@ -75,7 +75,6 @@
     ],
     "Thrift and resale": [
       "s3_price_audit",
-      "s11_approvals",
       "s14_approvals_stores",
       "s33_click_and_collect",
       "s44_lucky_draw",
@@ -99,6 +98,7 @@
     "s8_estate_rollout",
     "s9_bi_feed",
     "s10_ai_manager",
+    "s11_approvals",
     "s12_release_gate",
     "s13_portal",
     "s17_partner_page",

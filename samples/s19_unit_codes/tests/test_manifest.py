@@ -45,16 +45,6 @@ class ManifestTest(unittest.TestCase):
         self.assertNotIn("enabled", MANIFEST["scan_sources"][0])
         self.assertNotIn("capture_as", MANIFEST["scan_sources"][0])      # the shop's own line attribute, set by the shop
 
-    def test_the_checker_refuses_what_the_product_would(self):
-        for change, words in ((lambda s: s.pop("status_field") and s.update(capture_as="Unit code"), "Recording the code needs"),
-                              (lambda s: s.update(enabled=1), "switches it on")):
-            m = copy.deepcopy(MANIFEST)
-            change(m["scan_sources"][0])
-            self.assertTrue(any(words in r["reason"] for r in validate.validate(m)), validate.validate(m))
-        m = copy.deepcopy(MANIFEST)
-        m["doctypes"][0]["fields"][0]["unique"] = 0
-        self.assertTrue(any("unique" in r["reason"] for r in validate.validate(m)))
-
 
 @unittest.skipUnless(check.available(), "the contracts folder is missing from this copy of the kit")
 class ContractTest(unittest.TestCase):

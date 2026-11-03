@@ -169,6 +169,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "contract partner_check; contract price; guide chapter 07; guide chapter 08; guide chapter 09; recipe configure_no_code; recipe manifest",
+ "why": "contract package_install; contract partner_check; contract price; guide chapter 07; guide chapter 08; guide chapter 09; recipe configure_no_code; recipe manifest",
  "written_elsewhere": ""
 }

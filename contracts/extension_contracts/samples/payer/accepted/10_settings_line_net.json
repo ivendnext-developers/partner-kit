@@ -1,0 +1,8 @@
+{
+  "extension_point": "payer",
+  "contract": "settings",
+  "about": "An insurer's service that asks for each line's net, to put a discount on the whole sale on the amount's basis.",
+  "payload": {
+    "line_net": true
+  }
+}

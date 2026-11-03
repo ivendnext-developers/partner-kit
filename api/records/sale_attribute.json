@@ -121,6 +121,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "recipe required_sale_details",
+ "why": "recipe required_sale_details; sample S50",
  "written_elsewhere": ""
 }

@@ -1,0 +1,33 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A sale detail a cashier picks from the app's own records, each row reading its title; the name is what the sale stores.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_pqt",
+    "prefix": "PP PQT",
+    "version": "0.1.0",
+    "doctypes": [
+      {
+        "name": "PP PQT Project",
+        "autoname": "hash",
+        "title_field": "title",
+        "show_title_field_in_link": 1,
+        "fields": [
+          {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "label": "Title"
+          }
+        ]
+      }
+    ],
+    "sale_attributes": [
+      {
+        "name": "PP PQT Project ref",
+        "validation_type": "DocType",
+        "doctype_name": "PP PQT Project"
+      }
+    ]
+  }
+}

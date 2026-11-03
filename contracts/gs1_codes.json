@@ -1,5 +1,5 @@
 {
-  "_about": "ONE table of GS1 codes graded on the server decoder (business_logic/gs1.py, tests/test_scan_source.py) and its till twin (public/js/mpos_gs1.js, js_tests/pscan.test.js): both must give exactly `out` for every `in` (lane pscan, P-SCAN spec section 11). \u001d is the group separator (FNC1).",
+  "_about": "ONE table of GS1 codes graded on the server decoder (business_logic/gs1.py, tests/test_scan_source.py) and its till twin (public/js/mpos_gs1.js, js_tests/pscan.test.js): both must give exactly `out` for every `in`. \u001d is the group separator (FNC1).",
   "cases": [
     {
       "why": "Data Matrix with the product only",

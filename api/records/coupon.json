@@ -681,6 +681,6 @@
    ]
   }
  },
- "why": "recipe coupon_rules; recipe rule_guard; sample S31; retail core",
+ "why": "card coupon-uses-per-store; recipe coupon_rules; recipe rule_guard; sample S31; sample S32; the kit's tool selfcheck; retail core",
  "written_elsewhere": ""
 }

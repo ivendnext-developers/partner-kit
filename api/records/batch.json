@@ -226,6 +226,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "recipe expiry_markdown; recipe stock_alerts; sample S23; sample S40; retail core",
+ "why": "contract package_install; recipe expiry_markdown; recipe stock_alerts; recipe unit_codes; sample S19; sample S23; sample S27; sample S30; sample S38; sample S40; retail core",
  "written_elsewhere": ""
 }

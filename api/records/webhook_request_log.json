@@ -106,6 +106,6 @@
  "submittable": 0,
  "table": 0,
  "tables": {},
- "why": "recipe webhook_receiver",
+ "why": "recipe webhook_receiver; the kit's tool moneykit",
  "written_elsewhere": "iVendNext writes it for each try of a webhook."
 }

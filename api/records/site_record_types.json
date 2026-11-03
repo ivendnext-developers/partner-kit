@@ -3993,6 +3993,12 @@
   },
   {
    "module": "iVendNext mPOS",
+   "name": "Retail Kitchen Ticket",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
    "name": "Retail Label Layout",
    "single": 0,
    "table": 0
@@ -4106,6 +4112,18 @@
    "table": 0
   },
   {
+   "module": "iVendNext mPOS",
+   "name": "Retail Payer Record",
+   "single": 0,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Payer Record Line",
+   "single": 0,
+   "table": 1
+  },
+  {
    "module": "iVendNext POS",
    "name": "Retail Permission",
    "single": 0,
@@ -4211,6 +4229,12 @@
    "module": "iVendNext POS",
    "name": "Retail Setting",
    "single": 1,
+   "table": 0
+  },
+  {
+   "module": "iVendNext mPOS",
+   "name": "Retail Time Clock Entry",
+   "single": 0,
    "table": 0
   },
   {
@@ -5570,5 +5594,5 @@
    "table": 1
   }
  ],
- "release": "POS 2.1.0.667 (till app 60147699c)"
+ "release": "POS 2.1.0.679"
 }

@@ -2,7 +2,7 @@
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://ivendnext.com/extending/contracts/station_ticket.v1.schema.json",
  "title": "Station ticket, version 1",
- "description": "The station ticket door (station_ticket/1): a kitchen display reads a kitchen station's tickets, as each Send printed them, and moves each one started, ready, bumped, strictly forward. Called through the partner API (/api/method/ivendnext_mpos.api.v1.station_tickets and .station_ticket_move) under the Retail Permission right station-ticket; the caller must have the store. Judged by business_logic/station_ticket.py. A refusal's exc_type is its stable code (TicketNotFoundError, TicketStepError, PermissionError, ProfileNotAssignedError, DeviceRequiredError, AssignedProfileDisabledError, DuplicateStoreAssignmentError, StoreAssignmentIncompleteError). After commit, each enabled user of the store whose Retail Permission ticks the right is told {store, station} on the realtime event mpos_station_ticket (the site's socket, namespace /<site name>, signed in with the API key): read the board again.",
+ "description": "The station ticket door (station_ticket/1): a kitchen display reads a kitchen station's tickets, as each Send printed them, and moves each one started, ready, bumped, strictly forward. Called through the partner API (/api/method/ivendnext_mpos.api.v1.station_tickets and .station_ticket_move) under the Retail Permission right station-ticket; the caller must have the store. A Sales Order reaches the kitchen through .sales_order_to_kitchen (right sales-order-kitchen: submit on Sales Order; judged by business_logic/sales_order_kitchen.py, refusals SalesOrderKitchenError and the store's own). Judged by business_logic/station_ticket.py. A refusal's exc_type is its stable code (TicketNotFoundError, TicketStepError, SalesOrderKitchenError, PermissionError, ProfileNotAssignedError, DeviceRequiredError, AssignedProfileDisabledError, DuplicateStoreAssignmentError, StoreAssignmentIncompleteError). After commit, each enabled user of the store whose Retail Permission ticks the right is told {store, station} on the realtime event mpos_station_ticket (the site's socket, namespace /<site name>, signed in with the API key): read the board again.",
  "$defs": {
   "board_request": {
    "type": "object",
@@ -68,7 +68,7 @@
   "ticket": {
    "type": "object",
    "additionalProperties": false,
-   "description": "One kitchen ticket: kind send (make it) or void (stop making it); source sale (a till's sale) or check (a table's or tab's check); call_number is a sale's call number or a check's place or tab name; state new until a screen moves it. A void ticket names the dish by item, quantity, guest and course on the same kitchen_order, with no link to the ticket it cancels.",
+   "description": "One kitchen ticket: kind send (make it) or void (stop making it); source sale (a till's sale), check (a table's or tab's check) or sales_order (a Sales Order sent to the kitchen, added after version 1 first shipped: a screen validating the board against an older copy refuses the whole board while one is on it); call_number is a sale's call number, a check's place or tab name, or the Sales Order's name; till is empty on a Sales Order's ticket; state new until a screen moves it. A void ticket names the dish by item, quantity, guest and course on the same kitchen_order, with no link to the ticket it cancels.",
    "required": [
     "kitchen_order",
     "ticket",
@@ -106,7 +106,8 @@
     "source": {
      "enum": [
       "sale",
-      "check"
+      "check",
+      "sales_order"
      ]
     },
     "call_number": {
@@ -260,6 +261,89 @@
     },
     "ticket": {
      "$ref": "#/$defs/ticket"
+    }
+   }
+  },
+  "send_order_request": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "sales_order_to_kitchen: a submitted Sales Order's lines to the kitchen's stations, each a ticket on its printer and on the board (source sales_order), only what the kitchen does not have yet. The register is the caller's own at the order's store, or for a caller tied to no store the store's one running register with Kitchen Printers; service_mode is kept only when that register lists it. Refused (SalesOrderKitchenError): no such order; an order not submitted, on hold or closed, of no one store, taken and sent at a till in Order mode, or with nothing new; for a caller tied to no store, a store with no register with Kitchen Printers or several. POST.",
+   "required": [
+    "sales_order"
+   ],
+   "properties": {
+    "sales_order": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "service_mode": {
+     "type": "string",
+     "maxLength": 140
+    }
+   }
+  },
+  "send_order_answer": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "Per station: handed with its ticket number, or failed with the reason (a store setting a manager fixes, or a printer that did not answer: call again, and only what failed is sent). kitchen_order is null when no kitchen took a ticket (nothing is written).",
+   "required": [
+    "sales_order",
+    "kitchen_order",
+    "results"
+   ],
+   "properties": {
+    "sales_order": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "kitchen_order": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "results": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "station",
+       "lines",
+       "state"
+      ],
+      "properties": {
+       "station": {
+        "type": "string",
+        "maxLength": 140
+       },
+       "lines": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "state": {
+        "enum": [
+         "handed",
+         "failed"
+        ]
+       },
+       "ticket": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "reason": {
+        "type": "string"
+       }
+      }
+     }
     }
    }
   }

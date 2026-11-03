@@ -2,12 +2,12 @@
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://ivendnext.com/extending/contracts/open_check.v1.schema.json",
  "title": "Open check, version 1",
- "description": "The open check door (open_check/1): a table's, a bar seat's or a named tab's running order, written by any till of the store and by a kit's integration user through the partner API (/api/method/ivendnext_mpos.api.v1.<verb>). It holds order state only, never a price. Requests are judged by business_logic/open_check.py; each verb asks its own Retail Permission right. A refusal's exc_type is its stable code (TableServiceOffError, CheckNotOpenError, CheckChangedError, LineClaimedError, LineSentError, LineNotOpenError, LineNotSentError, ItemRefusedError, ServiceModeMismatchError, CheckHasOpenLinesError, CheckRequestError, WrittenOutsideDoorError, DeviceRequiredError, ProfileNotAssignedError, AssignedProfileDisabledError, DuplicateStoreAssignmentError, StoreAssignmentIncompleteError, the engine's UOMMustBeIntegerError, PermissionError; and, to a till paying a check, ClaimRefusedError, PaymentInProgressError, ConfirmPendingError, CheckBasketMismatchError, CheckCartError, OpeningRequiredError; to a till or Desk closing a day, CheckPaymentOpenError, ChecksOpenAtCloseError; and, in a till's offline review of a queued sale for a check, OfflineCheckSaleError).",
+ "description": "The open check door (open_check/1): a table's, a bar seat's or a named tab's running order, written by any till of the store and by a kit's integration user through the partner API (/api/method/ivendnext_mpos.api.v1.<verb>). It holds order state only, never a price. Requests are judged by business_logic/open_check.py; each verb asks its own Retail Permission right. A refusal's exc_type is its stable code (TableServiceOffError, CheckNotOpenError, CheckChangedError, LineClaimedError, LineSentError, LineNotOpenError, LineNotSentError, ItemRefusedError, ItemNotSoldHereError, ItemUnavailableError, ServiceModeMismatchError, CheckHasOpenLinesError, CheckRequestError, PlaceTakenError, WrittenOutsideDoorError, DeviceRequiredError, ProfileNotAssignedError, AssignedProfileDisabledError, DuplicateStoreAssignmentError, StoreAssignmentIncompleteError, the engine's UOMMustBeIntegerError, PermissionError; and, to a till paying a check, ClaimRefusedError, PaymentInProgressError, ConfirmPendingError, CheckBasketMismatchError, CheckCartError, OpeningRequiredError; to a till or Desk closing a day, CheckPaymentOpenError, ChecksOpenAtCloseError; and, in a till's offline review of a queued sale for a check, OfflineCheckSaleError).",
  "$defs": {
   "open_request": {
    "type": "object",
    "additionalProperties": false,
-   "description": "check_open: a place, or a label for a tab or a pre-order (one at least). key is one per press: a retry with the same key returns the first answer and opens nothing twice.",
+   "description": "check_open: a place, or a label for a tab or a pre-order (one at least). key is one per press: a retry with the same key returns the first answer and opens nothing twice. only_if_free: refused (PlaceTakenError) when the place holds an open check; a tab has no place to hold. lines: the check's first lines, written with it under the add's rules and its right (check-add), the till's item groups and the store's sold-out marks among them (ItemNotSoldHereError, ItemUnavailableError, as on the add); a refused line opens nothing.",
    "required": [
     "store",
     "pos_profile",
@@ -79,6 +79,19 @@
      "type": "string",
      "minLength": 1,
      "maxLength": 140
+    },
+    "only_if_free": {
+     "type": "boolean",
+     "description": "Open only if the place holds no open check (a guest's first order and a till at the same table leave one check)."
+    },
+    "lines": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 50,
+     "items": {
+      "$ref": "#/$defs/line_in"
+     },
+     "description": "The check's first lines (an open and an add in one write)."
     }
    }
   },
@@ -109,6 +122,11 @@
      "items": {
       "$ref": "#/$defs/line_in"
      }
+    },
+    "source": {
+     "type": "string",
+     "pattern": "^[a-z0-9_]{1,20}$",
+     "description": "Your app's own word for where these lines came from (as check_open's), read back on each line."
     }
    }
   },
@@ -392,6 +410,19 @@
        "type": "null"
       }
      ]
+    },
+    "source": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 140
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "Where the line came from: till, an app's own word, or kit (an app that named none)."
     },
     "changed_at_version": {
      "type": "integer",
@@ -1689,6 +1720,73 @@
          "type": "null"
         }
        ]
+      }
+     }
+    }
+   }
+  },
+  "item_names_request": {
+   "type": "object",
+   "description": "item_names: the items whose names a guest-ordering page shows, and the guest's language. Item read; an item the caller may not read, or that does not exist, is left out of the answer.",
+   "required": [
+    "lang",
+    "items"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "lang": {
+     "type": "string",
+     "pattern": "^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})?$"
+    },
+    "items": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 500,
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140
+     }
+    }
+   }
+  },
+  "item_names_answer": {
+   "type": "object",
+   "description": "item_names' answer: the items asked for, in the order asked, once each, under each item's own code. display_name is the store's translation of the item name, else the name as written; translated says which.",
+   "required": [
+    "lang",
+    "items"
+   ],
+   "properties": {
+    "lang": {
+     "type": "string"
+    },
+    "items": {
+     "type": "array",
+     "maxItems": 500,
+     "items": {
+      "type": "object",
+      "required": [
+       "item_code",
+       "item_name",
+       "display_name",
+       "translated"
+      ],
+      "properties": {
+       "item_code": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 140
+       },
+       "item_name": {
+        "type": "string"
+       },
+       "display_name": {
+        "type": "string"
+       },
+       "translated": {
+        "type": "boolean"
+       }
       }
      }
     }

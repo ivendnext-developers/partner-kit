@@ -26,7 +26,7 @@
           "pattern": "^[a-z][a-z0-9_]{1,39}$"
         },
         "prefix": {
-          "description": "One to three upper-case words; every name the manifest creates starts with it.",
+          "description": "One to three upper-case words; every field the manifest adds to the shop's record types starts with it.",
           "type": "string",
           "pattern": "^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$",
           "not": {
@@ -342,6 +342,33 @@
           "type": "array",
           "items": {
             "type": "object"
+          }
+        },
+        "translations": {
+          "description": "The package's own words, one entry per language: each maps a source text (a record type's name, a field or section label, a help text, a Select option) to its words. A label or option of a record type the manifest names is written for that record type only; every other word for the whole site, never over a word the site already translates. Installed, changed by an update and removed at uninstall with the package. Page: docs/extending/package_install.md, Words in a language.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "language",
+              "words"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "language": {
+                "description": "A language code, e.g. ar or es-MX.",
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(-[A-Za-z]{2,4})?$"
+              },
+              "words": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
           }
         }
       }

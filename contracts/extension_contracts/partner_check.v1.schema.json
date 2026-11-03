@@ -191,6 +191,16 @@
               "serial_no": {
                 "description": "The row's serial numbers, one to a line (a newline between two); empty when none. Sent only to a check whose subscription ticks check_send_lots. Added after version 1 first shipped.",
                 "type": "string"
+              },
+              "is_free_item": {
+                "description": "1 on a row the store's pricing rule added free, else 0. Never 1 from a till offline: the rule adds its row when the sale reaches the server. Added after version 1 first shipped.",
+                "type": "integer",
+                "enum": [0, 1]
+              },
+              "promo_qty_milli": {
+                "description": "The units of the line the sale's promotions marked as theirs, in thousandths; 0 when none. A promotion's free article on a line of its own reads rate_minor 0 with promo_qty_milli equal to qty_milli; a cashier's 100% line discount reads rate_minor 0 with promo_qty_milli 0. Added after version 1 first shipped.",
+                "type": "integer",
+                "minimum": 0
               }
             }
           }

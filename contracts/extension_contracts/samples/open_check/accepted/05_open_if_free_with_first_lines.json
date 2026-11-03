@@ -1,0 +1,25 @@
+{
+  "extension_point": "open_check",
+  "contract": "open_request",
+  "about": "A guest's first order: Table 12 only if no check is open there, with its first two lines.",
+  "payload": {
+    "store": "Main Store - MTC",
+    "pos_profile": "MPOS-TEST-OPEN",
+    "key": "k-0005",
+    "place": "TABLE-12",
+    "only_if_free": true,
+    "source": "guest_ordering",
+    "lines": [
+      {
+        "item_code": "MPOS-PLAIN-A",
+        "qty": 1,
+        "seat": "1"
+      },
+      {
+        "item_code": "MPOS-PLAIN-B",
+        "qty": 2,
+        "note": "No ice"
+      }
+    ]
+  }
+}

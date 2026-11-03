@@ -453,6 +453,6 @@
    ]
   }
  },
- "why": "recipe merge_documents; sample S28; sample S41; retail core",
+ "why": "recipe merge_documents; sample S28; sample S30; sample S40; sample S41; sample S45; sample S62; the feed client; the kit's tool manifest; retail core",
  "written_elsewhere": ""
 }

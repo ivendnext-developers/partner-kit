@@ -1,0 +1,103 @@
+{
+ "manifest_version": 1,
+ "app": "pp_wrc",
+ "prefix": "PP WRC",
+ "title": "Warranty terms",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "The partner's warranty terms, moved inside the shop: an item's own term wins over its item group's. The till key 'Warranty' reads them.",
+ "doctypes": [
+  {
+   "name": "PP WRC Warranty Term",
+   "autoname": "hash",
+   "fields": [
+    {
+     "fieldname": "applies_to",
+     "fieldtype": "Select",
+     "label": "Applies to",
+     "options": "Item\nItem Group",
+     "reqd": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "item",
+     "fieldtype": "Link",
+     "label": "Item",
+     "options": "Item",
+     "depends_on": "eval:doc.applies_to=='Item'",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "item_group",
+     "fieldtype": "Link",
+     "label": "Item group",
+     "options": "Item Group",
+     "depends_on": "eval:doc.applies_to=='Item Group'",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "months",
+     "fieldtype": "Int",
+     "label": "Months",
+     "reqd": 1,
+     "non_negative": 1,
+     "in_list_view": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 1,
+     "print": 1,
+     "email": 1
+    },
+    {
+     "role": "Retail Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "workspaces": [
+  {
+   "name": "PP WRC Warranty",
+   "blocks": [
+    {
+     "type": "header",
+     "data": {
+      "text": "<span class=\"h4\">Warranty terms</span>",
+      "col": 12
+     }
+    },
+    {
+     "type": "shortcut",
+     "data": {
+      "shortcut_name": "Warranty terms",
+      "col": 4
+     }
+    }
+   ],
+   "shortcuts": [
+    {
+     "type": "DocType",
+     "link_to": "PP WRC Warranty Term",
+     "label": "Warranty terms"
+    }
+   ]
+  }
+ ]
+}

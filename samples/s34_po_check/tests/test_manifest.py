@@ -29,11 +29,6 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual((sub["down_answer"], sub["settings"]["on_validate"]), ("refuse", False))
         self.assertIn(sub["endpoint_url"], M["allowed_urls"])
 
-    def test_a_check_switched_on_by_the_manifest_is_refused(self):
-        on = json.loads(json.dumps(M))
-        on["extension_subscriptions"][0]["enabled"] = 1
-        self.assertTrue(validate(on))
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -1141,6 +1141,6 @@
    ]
   }
  },
- "why": "recipe customer_history_page; recipe integration_user",
+ "why": "recipe customer_history_page; recipe desk_action; recipe integration_user; sample S10; sample S11; sample S14; sample S16; sample S22; sample S27; sample S28; sample S39; sample S40; sample S45; sample S8; the kit's tool sandbox_check",
  "written_elsewhere": ""
 }

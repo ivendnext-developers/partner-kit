@@ -1,0 +1,9 @@
+{
+  "extension_point": "station_ticket",
+  "contract": "send_order_request",
+  "about": "A call-centre order goes to the kitchen.",
+  "payload": {
+    "sales_order": "SAL-ORD-2026-00042",
+    "service_mode": "Delivery"
+  }
+}

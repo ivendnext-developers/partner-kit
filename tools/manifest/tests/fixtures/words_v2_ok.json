@@ -1,0 +1,72 @@
+{
+ "manifest_version": 2,
+ "app": "pp_wrd",
+ "prefix": "PP WRD",
+ "title": "A dispensing record, with its words in Arabic",
+ "version": "0.1.0",
+ "publisher": "PP WRD",
+ "description": "A test manifest carrying one record type and its own Arabic words, removed by our test bench's install cycle.",
+ "doctypes": [
+  {
+   "name": "PP WRD Dispensing",
+   "autoname": "hash",
+   "fields": [
+    {
+     "fieldname": "patient",
+     "fieldtype": "Data",
+     "label": "Patient",
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "policy_number",
+     "fieldtype": "Data",
+     "label": "Policy number",
+     "description": "The number on the insurance card."
+    },
+    {
+     "fieldname": "state",
+     "fieldtype": "Select",
+     "label": "State",
+     "options": "Open\nReceived"
+    },
+    {
+     "fieldname": "details_tab",
+     "fieldtype": "Tab Break",
+     "label": "Details"
+    },
+    {
+     "fieldname": "notes",
+     "fieldtype": "Small Text",
+     "label": "Notes"
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 1,
+     "report": 1,
+     "export": 1,
+     "share": 1,
+     "print": 1,
+     "email": 1
+    }
+   ]
+  }
+ ],
+ "translations": [
+  {
+   "language": "ar",
+   "words": {
+    "PP WRD Dispensing": "صرف دواء",
+    "Patient": "المريض",
+    "Policy number": "رقم الوثيقة",
+    "The number on the insurance card.": "الرقم المطبوع على بطاقة التأمين.",
+    "Received": "مستلَم",
+    "Details": "تفاصيل الصرف"
+   }
+  }
+ ]
+}

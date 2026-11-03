@@ -88,6 +88,6 @@
    ]
   }
  },
- "why": "contract event_feed; recipe event_feed; recipe integration_user; recipe system_sync",
+ "why": "contract event_feed; recipe event_feed; recipe integration_user; recipe system_sync; sample S22; sample S7; sample S9",
  "written_elsewhere": "your manifest installs it (`registered_applications`)."
 }

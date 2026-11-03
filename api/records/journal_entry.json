@@ -892,6 +892,6 @@
    ]
   }
  },
- "why": "recipe integration_user; the request collection",
+ "why": "recipe integration_user; the kit's tool manifest; the kit's tool selfcheck; the request collection",
  "written_elsewhere": ""
 }

@@ -867,6 +867,30 @@
   {
    "added": 1,
    "choices": [],
+   "description": "Pay offers the customer a tip before cash is counted or a card is charged. The tip is booked to the Tips payable account below, never to sales.",
+   "fieldname": "custom_mpos_tips",
+   "hidden": 0,
+   "label": "Take Tips at Pay",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Check"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "The Liability account tips are owed to staff from. Each store maps its own.",
+   "fieldname": "custom_mpos_tips_payable_account",
+   "hidden": 0,
+   "label": "Tips Payable Account",
+   "links_to": "Account",
+   "read_only": 0,
+   "required": 0,
+   "type": "Link"
+  },
+  {
+   "added": 1,
+   "choices": [],
    "description": "Before loyalty points are spent or a customer's mobile number is changed at the till, a code goes by text message to the number on file and the cashier types what the customer reads out. Needs SMS Settings. Off by default.",
    "fieldname": "custom_mpos_customer_code",
    "hidden": 0,
@@ -1053,6 +1077,18 @@
    "read_only": 0,
    "required": 0,
    "type": "Table"
+  },
+  {
+   "added": 1,
+   "choices": [],
+   "description": "The percentages Pay offers, for example 10, 15, 20. Empty means 10, 15, 20. The cashier can also type an amount.",
+   "fieldname": "custom_mpos_tip_presets",
+   "hidden": 0,
+   "label": "Tip Presets (%)",
+   "links_to": "",
+   "read_only": 0,
+   "required": 0,
+   "type": "Small Text"
   },
   {
    "added": 1,
@@ -1379,6 +1415,6 @@
    ]
   }
  },
- "why": "openapi.yaml; contract receipt; guide chapter 04; recipe approvals_stores; recipe configure_no_code; recipe connected_app; recipe customers_by_store; recipe lucky_draw; recipe post_sale_feedback; recipe receipt_format; recipe required_sale_details; sample S49; the MCP server; the request collection; retail core",
+ "why": "openapi.yaml; contract receipt; guide chapter 04; recipe approvals_stores; recipe configure_no_code; recipe connected_app; recipe customers_by_store; recipe guest_ordering; recipe lucky_draw; recipe post_sale_feedback; recipe receipt_format; recipe required_sale_details; sample S14; sample S2; sample S24; sample S3; sample S39; sample S4; sample S44; sample S45; sample S47; sample S48; sample S49; sample S50; sample S55; sample S56; sample S8; the MCP server; the kit's tool moneykit; the kit's tool sandbox_check; the request collection; retail core",
  "written_elsewhere": ""
 }

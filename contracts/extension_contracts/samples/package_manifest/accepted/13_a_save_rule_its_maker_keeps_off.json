@@ -1,0 +1,28 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "Manifest version 2: two save rules. The first installs switched on; the second carries \"enabled\": 0, so its maker keeps it off until the shop switches it on.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_wrc",
+    "prefix": "PP WRC",
+    "version": "0.1.0",
+    "save_rules": [
+      {
+        "rule_name": "PP WRC Tax id is 15 digits",
+        "record_type": "Customer",
+        "kind": "pattern",
+        "field": "tax_id",
+        "pattern": "^[0-9]{15}$",
+        "message": "The tax id is 15 digits."
+      },
+      {
+        "rule_name": "PP WRC One customer per tax id",
+        "record_type": "Customer",
+        "kind": "unique_across",
+        "field": "tax_id",
+        "enabled": 0
+      }
+    ]
+  }
+}
