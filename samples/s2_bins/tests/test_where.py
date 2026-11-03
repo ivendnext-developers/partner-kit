@@ -398,6 +398,8 @@ class AsAFunction(unittest.TestCase):
 
     def test_the_built_package_imports_s2s_core(self):
         """The package the hosting runs (deploy_app's zip of app.json's list) holds one core, S2's."""
+        if not (HERE.parents[2] / "samples").is_dir():
+            self.skipTest("the package is built from the kit's own folders: this runs in the kit")
         app = json.loads((HERE.parent / "app.json").read_text())
         names = [n for p in app["package"] for n in ([p] if p.endswith(".py") else [])]
         self.assertEqual([n for n in names if n.endswith("/core.py")], ["samples/s2_bins/core.py"])
@@ -489,6 +491,8 @@ class OwnServerTestCall(unittest.TestCase):
 
     def setUp(self):
         import shutil
+        if not (HERE.parents[1] / "s1_warranty" / "service" / "receiver.py").is_file():
+            self.skipTest("this run-it-yourself path reads S1's receiver from the kit: an app folder answers through its handler")
         d = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, d, True)
         port = self.free_port()

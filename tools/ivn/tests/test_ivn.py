@@ -57,9 +57,9 @@ class Stub:
                                               {"plan": "managed", "words": "Managed $399: we also test it before each iVendNext upgrade"}],
                       "asks_pay": True}
         self.listed = False
-        self.message = ("Acme has sent you an app, ACME MEMBER TILL 1.0.0.\n1. In iVendNext Desk open App library and press "
-                        "Open your shelf at the foot of the page.\n2. Paste this key:\nIVNS1-the-key\n3. Press Install. You will see "
-                        "what it changes before anything is installed.")
+        self.message = ("Acme has sent you an app, ACME MEMBER TILL 1.0.0.\n\n1. In iVendNext Desk open App library and press "
+                        "Open your shelf at the foot of the page.\n2. Paste this key:\n\nIVNS1-the-key\n\n3. Press Install. You will "
+                        "see what it changes before anything is installed.")  # the library's own shape
 
     # ── the app's folders ──
 
@@ -577,8 +577,7 @@ class Pull(Base):
         self.assertEqual(out.strip(), "Brought in 1.1.0 from the server. Your changes are kept.")
         self.assertEqual((folder / "service" / "app.py").read_text("utf-8").count("# my own line"), 1)
         self.assertIn("# my own line", mine)
-        self.assertTrue(list((folder / "service").glob("apr*")) or (folder / "service" / "apr").exists() or
-                        "s11_approvals" in (folder / "app.json").read_text("utf-8"))
+        self.assertTrue((folder / "tests" / "apr").is_dir(), sorted(p.name for p in (folder / "tests").iterdir()))  # S11's files arrived
         a = ivn.read_json(folder / "app.json")
         self.assertEqual((a["version"], a["base"]), ("1.1.0", "1.1.0"))
         self.assertIn("s11_approvals", [s["name"] for s in a["samples"]])
@@ -606,6 +605,47 @@ class Pull(Base):
         self.assertIn("THEIRS", text)
         self.assertIn(">>>>>>>", text)
         self.assertEqual(ivn.read_json(folder / "app.json")["base"], "1.0.1")
+
+    def test_marks_left_in_a_file_stop_check_and_every_upload(self):  # ⭐ review: a marked service never reaches a shelf
+        folder, _ = self.made()
+        self.in_app(folder)
+        self.edit(folder / "service" / "app.py", "<<<<<<< your service/app.py\nx = 1\n=======\nx = 2\n>>>>>>> the server's\n")
+        rc, out = self.run_ivn("check")
+        self.assertEqual((rc, out.strip()), (1, "CHECK RED: service/app.py still marked as a conflict"))
+        before = list(self.stub.calls)
+        for argv in (["push"], ["publish", "--to", SITE], ["try"]):
+            rc, out = self.run_ivn(*argv)
+            self.assertEqual((rc, out.strip()), (1, "Not uploaded: service/app.py still marked as a conflict. Fix them, run ivn check, then ivn push."))
+        self.assertEqual(self.stub.calls, before)
+
+    def test_a_git_that_fails_is_said_and_the_folder_stays_where_it_was(self):  # review: exit 128 is no conflict
+        folder, _ = self.made()
+        self.in_app(folder)
+        self.stub.add({"app": "acme_member_till", "sample": "s11"})
+        self.edit(folder / "README.md")
+        real = ivn.subprocess.run
+
+        def fail(cmd, **k):
+            if cmd[:2] == ["git", "merge-file"]:
+                return ivn.subprocess.CompletedProcess(cmd, 128, b"", b"fatal: not a git thing")
+            return real(cmd, **k)
+        with unittest.mock.patch.object(ivn.subprocess, "run", fail):
+            rc, out = self.run_ivn("pull")
+        self.assertEqual(rc, 1)
+        self.assertIn("git could not merge README.md", out)
+        self.assertEqual(ivn.read_json(folder / "app.json")["base"], "1.0.0")
+
+    def test_a_higher_number_the_developer_set_survives_a_pull(self):  # D15, review
+        folder, _ = self.made()
+        self.in_app(folder)
+        self.stub.add({"app": "acme_member_till", "sample": "s11"})
+        a = ivn.read_json(folder / "app.json")
+        a["version"] = "2.0.0"
+        ivn.write_json(folder / "app.json", a)
+        self.assertEqual(self.run_ivn("pull")[0], 0)
+        a, m = ivn.read_json(folder / "app.json"), ivn.read_json(folder / "manifest.json")
+        self.assertEqual((a["version"], a["base"], m["version"]), ("2.0.0", "1.1.0", "2.0.0"))
+        self.assertIn("Uploaded as 2.0.0", self.run_ivn("push")[1])
 
     def test_without_git_it_refuses_and_says_to_download_again(self):  # §1: no git, no merge
         folder, _ = self.made()
@@ -681,6 +721,14 @@ class Status(Base):
         folder, _ = self.made()
         self.in_app(folder)
         self.assertNotIn("newer", self.run_ivn("status")[1])
+
+    def test_an_ide_folder_and_a_venv_are_not_part_of_the_app(self):  # review
+        folder, _ = self.made()
+        self.in_app(folder)
+        for d in (".venv/lib", ".idea", "node_modules/x", ".vscode"):
+            (folder / d).mkdir(parents=True)
+            (folder / d / "f.txt").write_text("x", "utf-8")
+        self.assertFalse(ivn.changed(folder))
 
     def test_offline_it_says_it_cannot_check(self):  # ⭐ UX-104 (J8-25)
         folder, _ = self.made()
@@ -778,6 +826,10 @@ class Try(Base):
         self.assertIn("Checked: CHECK GREEN. Uploaded as 1.0.1 (draft: on our server, on no site yet).", out)
         self.assertIn("/v1/draft/keep", self.stub.calls)
 
+    def test_try_with_a_point_failed_exits_one(self):  # review
+        self.stub.test_results = ["tgr_guard (a check at Pay): Failed: nothing answered at this address (404)."]
+        self.assertEqual(self.run_ivn("try", stdin="yes\n\n")[0], 1)
+
     def test_test_prints_a_result_per_point_and_the_refused_signature_words(self):  # ⭐ UX-42 (J4-06), Done when
         m18 = ("tgr_guard (a check at Pay): Failed: the app did not recognise the site's secret (401). In the site's Desk, search "
                "Extension Subscription, open Till guard rules (x) and press Connect again. Then press Test again.")
@@ -799,6 +851,14 @@ class TestLocal(Base):
         self.assertEqual(rc, 0, out)
         self.assertIn("Tested on http://localhost:8000 with the test secret in .env.local.", out)
         self.assertRegex(out, r"guard\s+a check at Pay\s+Passed  \d+\.\d+ s")
+
+    def test_port_8000_taken_is_said_plainly(self):  # review: not blamed on the app
+        folder = combine.combine(["s23"], "ACME LOC", self.work)
+        self.in_app(folder)
+        (folder / "service" / "app.py").write_text("raise SystemExit(1)\n", "utf-8")
+        rc, out = self.run_ivn("test", "--local")
+        self.assertEqual(rc, 1)
+        self.assertIn("Port 8000 is taken", out)
 
     def test_a_wrong_secret_says_so(self):  # J3-10
         folder = combine.combine(["s23"], "ACME LOC", self.work)
@@ -830,7 +890,7 @@ class Publish(Base):
 
     def test_the_key_stands_on_its_own_line_unindented_so_it_copies_clean(self):  # §14 (K177), EASYLOOK's note
         _, out = self.run_ivn("publish", "--to", SITE, stdin="1\n1\n")
-        self.assertIn("\nIVNS1-the-key\n", out)
+        self.assertIn("\n\nIVNS1-the-key\n\n", out)
         self.assertIn("\n2. Paste this key:\n", out)
 
     def test_an_invoice_is_asked_for_with_its_address(self):  # J5-17
@@ -859,6 +919,22 @@ class Publish(Base):
         self.run_ivn("publish", "--to", SITE, stdin="1\n1\n")
         added = combine.add("s11", self.folder)
         self.assertEqual(added.kept_entries, [])
+
+    def test_after_a_publish_ivn_add_and_a_page_add_bring_no_false_conflict(self):  # ⭐ review: nobody edited these files
+        self.run_ivn("publish", "--to", SITE, stdin="1\n1\n")
+        rc, out = self.run_ivn("add", "s11")
+        self.assertEqual(rc, 0, out)
+        self.assertNotIn("as git marks a conflict", out)
+        rc, out = self.run_ivn("check")
+        self.assertEqual(rc, 0, out)
+        a = ivn.read_json(self.folder / "app.json")
+        self.assertEqual((a["base"], a["address"]), ("1.1.0", "https://acme-member-till.ivendnext.app"))
+        urls = [x["endpoint_url"] for x in ivn.read_json(self.folder / "manifest.json")["extension_subscriptions"]]
+        self.assertTrue(any(u.startswith("https://acme-member-till.ivendnext.app/") for u in urls), urls)  # S23's stay moved
+        self.stub.add({"app": "acme_member_till", "sample": "s2"})  # now on the page
+        rc, out = self.run_ivn("pull")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("Your changes are kept.", out)
 
     def test_canary_a_manifest_whose_version_differs_is_never_published(self):  # ⭐ Done when, UX-34
         m = ivn.read_json(self.folder / "manifest.json")
@@ -919,6 +995,87 @@ class Publish(Base):
         self.assertEqual(rc, 0, out)
         self.assertEqual(self.stub.sent["to"], "everyone")
         self.assertRegex(out, r"1\.0\.0 published to the App library and \d+ sites?\.")
+
+    def test_a_message_with_no_key_yet_is_said_to_the_developer_not_under_send_this(self):  # J5-04's library words
+        self.stub.message = "Its key is not ready yet: publish again in a minute."
+        rc, out = self.run_ivn("publish", "--to", SITE, stdin="1\n1\n")
+        self.assertEqual(rc, 0, out)
+        self.assertIn(f"{SITE}: Its key is not ready yet", out)
+        self.assertNotIn("Send this to the customer's administrator:", out)
+
+    def test_published_names_the_customers_sites_never_the_sandbox(self):  # J5-17: the sandbox is on no customer's shelf
+        real = Stub.publish
+
+        def with_sandbox(stub, b):
+            out = real(stub, b)
+            stub.row(b["app"])["versions"][-1]["sites"].append("acme.sandbox.ivend.co")
+            return out
+        with unittest.mock.patch.dict(Stub.ROUTES, {"/v1/publish": with_sandbox}):
+            _, out = self.run_ivn("publish", "--to", SITE, stdin="1\n1\n")
+        self.assertIn(f"1.0.0 published to {SITE}. Published means", out)
+
+    def test_publish_from_a_folder_behind_the_server_never_marks_it_up_to_date(self):  # ⭐ review: a colleague's work is not dropped
+        self.stub.add({"app": "acme_member_till", "sample": "s11"})  # the page adds a sample: 1.1.0, and publish sends that
+        rc, out = self.run_ivn("publish", "--to", SITE, stdin="1\n1\n")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("1.1.0 published to", out)
+        self.assertIn("Your folder is behind: the server is now at 1.1.0. Run ivn pull", out)
+        self.assertEqual(ivn.read_json(self.folder / "app.json")["base"], "1.0.0")  # the next push is refused with M09, not lost
+        self.edit(self.folder / "service" / "app.py")
+        self.assertIn("this app changed on the server", self.run_ivn("push")[1])
+
+    def test_a_build_server_never_chooses_a_charge_by_its_silence(self):  # review: closed stdin
+        self.stub.money = {**self.stub.money, "suggested": "starter"}
+        rc, out = self.run_ivn("publish", "--to", SITE)
+        self.assertEqual(rc, 1)
+        self.assertIn("Choose a plan with --plan", out)
+        self.assertNotIn("/v1/publish", self.stub.calls)
+
+    def test_a_card_with_nobody_to_answer_stops_and_says_what_is_missing(self):  # J7-06, review
+        rc, out = self.run_ivn("publish", "--public", "--plan", "starter", stdin="1\n")
+        self.assertEqual(rc, 1)
+        self.assertIn("put these in app.json's card: title, summary", out)
+
+    def test_a_blank_card_answer_is_asked_again_and_a_wrong_price_too(self):  # review
+        answers = "1\n\nACME Till\nOne line\nFirst\n\nfashion\nFree of charge\nFREE\nStep\nhttps://acme.example/guide\n"
+        rc, out = self.run_ivn("publish", "--public", "--plan", "starter", stdin=answers)
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(out.count("This one is needed."), 2)
+        self.assertEqual(ivn.read_json(self.folder / "app.json")["card"]["price"], "free")
+
+    def test_an_invoice_order_ends_the_wait_and_says_what_comes_next(self):  # review: up to 14 days on terms
+        real = Stub.publish_status
+
+        def waiting(stub, b):
+            return {"step": "copy", "version": "1.0.0", "invoice_waiting": True,
+                    "lines": ["Your invoice is on its way to accounts@acme.example. Run ivn status once it is paid."]}
+        with unittest.mock.patch.dict(Stub.ROUTES, {"/v1/publish/status": waiting}):
+            rc, out = self.run_ivn("publish", "--to", SITE, stdin="1\n2\naccounts@acme.example\n")
+            self.assertEqual(rc, 0, out)
+            self.assertIn("Your invoice is on its way", out)
+            self.assertNotIn("published to", out)
+            status = self.run_ivn("status")[1]
+        self.assertIn("Your invoice is on its way", status)
+        self.assertNotIn("Building", status)
+        del real
+
+    def test_a_dropped_connection_after_the_door_took_it_never_says_nothing_changed(self):  # review
+        def down(stub, b):
+            raise ConnectionError
+        calls = []
+        real = ivn.door
+
+        def door(path, *a, **k):
+            calls.append(path)
+            if path == "/v1/publish/status":
+                raise ivn.Offline("gone")
+            return real(path, *a, **k)
+        with unittest.mock.patch.object(ivn, "door", door):
+            rc, out = self.run_ivn("publish", "--to", SITE, stdin="1\n1\n")
+        self.assertEqual(rc, 1)
+        self.assertIn("still going on our side", out)
+        self.assertNotIn("Nothing was changed", out)
+        del down
 
     def test_a_stopped_publish_prints_the_doors_words(self):  # M16, M07, M23 reach the person as given
         self.stub.pub_stop = "The payment did not go through: declined. Nothing was started. Try another card."

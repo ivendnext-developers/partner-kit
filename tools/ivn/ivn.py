@@ -123,10 +123,16 @@ WORDS = {
     "version_differs": "Not published: manifest.json says {manifest} and app.json says {app}. Run ivn push, which sets them "
                        "alike, then publish again.",
     "gave_up": "This is still going on our side. Run ivn status to see where it stands.",
+    "stopped": "Stopped.",
+    "behind": "Your folder is behind: the server is now at {version}. Run ivn pull to bring it in and keep your changes.",
+    "marked": "Not uploaded: {files} still marked as a conflict. Fix them, run ivn check, then ivn push.",
+    "port_taken": "Port 8000 is taken by something else on this computer, so the service could not start. Stop it, then run this "
+                  "again.",
     "no_plan": "Choose a plan with --plan starter, --plan standard or --plan managed.",
     "card_asks": "The card for the App library. What you type is kept in app.json, so you are asked once.",
     "card_stop": "Fill the card first: run ivn publish --public in a terminal, or put these in app.json's card: {fields}.",
-    "bad_picture": "Not a picture this command can read: {path}. Use a PNG or JPEG.",
+    "ask_again": "This one is needed.",
+    "bad_picture": "Not a picture this command can read: {path}. Use a PNG or JPEG: fix it in app.json, under card, pictures.",
     "not_function": "This app runs all the time, so it has no package: build it with docker (README: Run it on your own "
                     "server).",
     "package_done": "Wrote package.zip for your own function host.",
@@ -258,10 +264,13 @@ def hosted_address(app: str) -> str:
     return f"https://{app.replace('_', '-')}.{DOMAIN}"  # D15: one name, written two ways
 
 
+LEFT_OUT = {".git", "__pycache__", ".venv", "venv", "node_modules", ".idea", ".vscode", ".pytest_cache"}
+
+
 def _left_out(rel: str) -> bool:
     """What never leaves this computer and is never part of the app's copy on the server."""
     parts = rel.split("/")
-    return (rel == STATE or rel == "package.zip" or parts[0] == ".local" or ".git" in parts or "__pycache__" in parts
+    return (rel == STATE or rel == "package.zip" or parts[0] == ".local" or bool(LEFT_OUT & set(parts))
             or rel.endswith(".pyc") or parts[-1] == ".DS_Store" or parts[-1] == ".env" or parts[-1].startswith(".env."))
 
 
@@ -380,9 +389,9 @@ def own_paths(folder: pathlib.Path) -> set:
             if isinstance(x, dict) and x.get(f)}
 
 
-def write_published(folder: pathlib.Path, version: str, address: str) -> None:
-    """J3-09: the version and the service's address, in `app.json` and the manifest, so nothing is written twice. Entries
-    the developer did not change stay unchanged in the samples record: a moved address is not an edit (*Add a sample*)."""
+def apply_address(folder: pathlib.Path, address: str) -> None:
+    """The service's address in `app.json` and the manifest. Entries the developer did not change stay unchanged in the
+    samples record: a moved address is not an edit (*Add a sample*)."""
     import combine  # noqa: PLC0415
     ap, mp, dp = folder / "app.json", folder / "manifest.json", folder / "service" / "dispatch.json"
     a, m, d = read_json(ap), read_json(mp), read_json(dp)
@@ -402,7 +411,7 @@ def write_published(folder: pathlib.Path, version: str, address: str) -> None:
     if isinstance(m.get("allowed_urls"), list):  # an allowed address is its own entry's id, so the record follows it
         moved = {f"manifest:allowed_urls:{u}": f"manifest:allowed_urls:{move(u)}" for u in m["allowed_urls"] if isinstance(u, str)}
         m["allowed_urls"] = sorted({move(u) for u in m["allowed_urls"]})
-    m["version"], a["version"], a["base"], a["address"] = version, version, version, address
+    a["address"] = address
     if before:
         after = combine.entries_of(m, a, d)
         for rec in a.get("samples") or []:
@@ -414,14 +423,25 @@ def write_published(folder: pathlib.Path, version: str, address: str) -> None:
             rec["entries"] = entries
     write_json(mp, m)
     write_json(ap, a)
+
+
+def write_published(folder: pathlib.Path, version: str, address: str) -> None:
+    """J3-09: the version and the service's address, in both files, so nothing is written twice."""
+    apply_address(folder, address)
+    set_version(folder, version)
     remember(folder)
 
 
-def ask(prompt: str) -> str:
+def ask_or_none(prompt: str) -> str | None:
+    """A person's answer; None when nobody is there to answer (a build server)."""
     try:
         return input(prompt + " ").strip()
     except EOFError:
-        return ""
+        return None
+
+
+def ask(prompt: str) -> str:
+    return ask_or_none(prompt) or ""
 
 
 def ask_secret(prompt: str) -> str:
@@ -510,9 +530,19 @@ def folder_line(folder: pathlib.Path, app: str) -> str:
     return WORDS["folder"].format(app=app, parts=", ".join(parts))
 
 
+MARK = b"<<<<<<< your "  # the label `ivn pull` gives git's conflict marks, so nothing else reads as one
+
+
+def still_marked(folder: pathlib.Path) -> list[str]:
+    return [rel for rel, p in files_of(folder) if MARK in p.read_bytes()]
+
+
 def check_folder(folder: pathlib.Path) -> tuple[bool, str]:
     """J3-04: the kit's check over the folder and the app's own tests, one verdict line."""
     import combine  # noqa: PLC0415
+    marked = still_marked(folder)
+    if marked:
+        return False, WORDS["check_red"].format(what=f"{', '.join(marked)} still marked as a conflict")
     rc, verdict = combine.kit_check(folder)
     if rc:
         return False, WORDS["check_red"].format(what=verdict)
@@ -576,6 +606,9 @@ def upload(folder: pathlib.Path, app: str) -> str:
     """The folder as the next draft (J3-07): the kit's check first, then the same two doors as the page. A folder made away
     from My apps (`start.py`, an app older than My apps) becomes an app of the company's at its first upload."""
     import combine  # noqa: PLC0415
+    marked = still_marked(folder)
+    if marked:
+        raise Stop(WORDS["marked"].format(files=", ".join(marked)))
     sync_version(folder)
     rc, verdict = combine.kit_check(folder)
     if rc:
@@ -627,9 +660,11 @@ def _merge_one(ours: pathlib.Path, base: bytes, theirs: bytes, rel: str) -> bool
         t.write_bytes(theirs)
         r = subprocess.run(["git", "merge-file", "-L", f"your {rel}", "-L", "the version you started from", "-L", "the server's",
                             str(ours), str(b), str(t)], capture_output=True)
-    if r.returncode < 0 or r.returncode == 255:
-        raise Stop(f"git could not merge {rel}: {r.stderr.decode(errors='replace')[:200]}")
-    return r.returncode > 0
+    if r.returncode == 0:
+        return False
+    if 1 <= r.returncode <= 127 and MARK in ours.read_bytes():
+        return True
+    raise Stop(f"git could not merge {rel}: {r.stderr.decode(errors='replace')[:200]}")
 
 
 def _plain_json(data: bytes | None, rel: str, base_version: str | None) -> bytes | None:
@@ -683,21 +718,54 @@ def bring_in(folder: pathlib.Path, base_dir: pathlib.Path, theirs_dir: pathlib.P
     return conflicts
 
 
+def has_git() -> bool:
+    """git that answers: a Mac's stand-in, which only offers to install the developer tools, is not git."""
+    if shutil.which("git") is None:
+        return False
+    return subprocess.run(["git", "--version"], capture_output=True).returncode == 0
+
+
+def _vt(v) -> tuple:
+    try:
+        return tuple(int(x) for x in str(v).split("."))
+    except ValueError:
+        return (0,)
+
+
+def keep_raised(folder: pathlib.Path, version: str) -> None:
+    """The base follows the server; the higher number the developer set in `app.json` stays, and the manifest with it."""
+    for name in ("app.json", "manifest.json"):
+        p = folder / name
+        try:
+            d = json.loads(p.read_text("utf-8"))
+        except (OSError, ValueError):
+            continue
+        d["version"] = version
+        write_json(p, d)
+
+
 def merge_latest(folder: pathlib.Path, app: str, latest: str) -> list[str]:
     """The server's `latest` into the folder, against the version the folder was based on."""
     base = read_json(folder / "app.json").get("base")
     if not base:
         raise Stop(WORDS["never_on_server"])
-    if shutil.which("git") is None:
+    if not has_git():
         raise Stop(WORDS["no_git"])
+    mine = read_json(folder / "app.json")
+    raised = mine.get("version") if _vt(mine.get("version")) > _vt(latest) else None  # D15: a higher number the developer set
     with tempfile.TemporaryDirectory() as tmp:
         b, t = pathlib.Path(tmp, "base"), pathlib.Path(tmp, "theirs")
         b.mkdir()
         t.mkdir()
         unzip_into(fetch_version(app, base), b)
         unzip_into(fetch_version(app, latest), t)
+        if mine.get("address"):  # the server's copies as this folder holds them once published, or nobody's edit would conflict
+            apply_address(b, mine["address"])
+            apply_address(t, mine["address"])
         conflicts = bring_in(folder, b, t, latest)
         remember(folder, t)
+    if raised:
+        keep_raised(folder, raised)
     return conflicts
 
 
@@ -806,7 +874,10 @@ def follow(path: str, app: str) -> dict:
     address when one opens. Ends done, or stops in the door's own words."""
     said, paid, waited, out = set(), False, 0, {}
     while waited < POLL_MAX:
-        out = online(door, path, {"app": app})
+        try:
+            out = door(path, {"app": app})
+        except (Offline, KeyboardInterrupt):  # it was accepted: it goes on on our side
+            raise Stop(WORDS["gave_up"]) from None
         for line in out.get("lines") or []:
             if line not in said:
                 said.add(line)
@@ -818,9 +889,12 @@ def follow(path: str, app: str) -> dict:
             words = out.get("stop") or "It stopped."
             lines = out.get("build_lines") or []
             raise Stop("\n".join([words, *lines]))
-        if out.get("done") or out.get("step") == "done":
+        if out.get("done") or out.get("step") == "done" or out.get("invoice_waiting"):
             return out
-        time.sleep(POLL_SECONDS)
+        try:
+            time.sleep(POLL_SECONDS)
+        except KeyboardInterrupt:
+            raise Stop(WORDS["gave_up"]) from None
         waited += max(1, POLL_SECONDS)
     raise Stop(WORDS["gave_up"])
 
@@ -834,10 +908,10 @@ def choose_plan(money: dict, given: str | None) -> str | None:
     plans = sorted(plans, key=lambda p: p.get("plan") != want)
     for i, p in enumerate(plans, 1):
         print(f"{i}  {p['words']}")
-    typed = ask(WORDS["type_plan"])
+    typed = ask_or_none(WORDS["type_plan"])
     if typed in ("1", "2", "3") and int(typed) <= len(plans):
         return plans[int(typed) - 1]["plan"]
-    if not typed and want:
+    if typed == "" and want:  # a person pressed Enter; a build server's silence never chooses a charge
         return want
     raise Stop(WORDS["no_plan"])
 
@@ -871,11 +945,12 @@ def cmd_try(a) -> int:
     done = follow("/v1/try/status", app)
     for line in done.get("head") or []:
         print(line)
-    for line in result_rows(done.get("results") or []):
+    rows = result_rows(done.get("results") or [])
+    for line in rows:
         print(line)
     for line in done.get("till") or []:
         print(line)
-    return 0
+    return 0 if all("Passed" in x for x in rows) else 1
 
 
 def _local_secret(folder: pathlib.Path) -> str:
@@ -932,6 +1007,8 @@ def local_test(folder: pathlib.Path) -> list[str]:
             if _local_alive() or proc.poll() is not None:
                 break
             time.sleep(0.1)
+        if proc.poll() is not None:
+            raise Stop(WORDS["port_taken"])
     try:
         lines = []
         for p in points:
@@ -1024,14 +1101,24 @@ def ask_card(folder: pathlib.Path, app: str, industries: list[str]) -> dict:
             ("price", "Price (free, or key: With a key: retailers ask you):", str),
             ("setup", "How to set it up (the steps the retailer follows first, split by |):", split_list),
             ("guide", "Guide link:", str))
-    missing = [f for f, _, _ in asks if f not in card]
-    if missing and not sys.stdin.isatty() and sys.stdin is sys.__stdin__:
-        raise Stop(WORDS["card_stop"].format(fields=", ".join(missing)))
-    if missing:
+    if [f for f, _, _ in asks if f not in card]:
         print(WORDS["card_asks"])
     for field, prompt, read in asks:
-        if field not in card:
-            card[field] = read(ask(prompt))
+        if card.get(field) or (field == "pictures" and field in card):
+            continue
+        for _ in range(3):
+            typed = ask_or_none(prompt)
+            if typed is None:
+                raise Stop(WORDS["card_stop"].format(fields=", ".join(f for f, _, _ in asks if not card.get(f) and f != "pictures")))
+            value = read(typed)
+            if field == "price":
+                value = value.lower() if value.lower() in ("free", "key") else ""
+            if value or field == "pictures":
+                card[field] = value
+                break
+            print(WORDS["ask_again"])
+        else:
+            raise Stop(WORDS["card_stop"].format(fields=field))
     if card != a.get("card"):
         a["card"] = card
         write_json(folder / "app.json", a)
@@ -1080,8 +1167,12 @@ def cmd_publish(a) -> int:
         if uploaded:
             raise Stop(WORDS["uploaded"].format(version=uploaded) + str(e)) from None
         raise
+    if done.get("invoice_waiting"):  # it goes on when the invoice is paid; `ivn status` carries it on
+        return 0
     shipped = done.get("version") or version
-    write_published(folder, shipped, start.get("service") or hosted_address(app))
+    behind = shipped != read_json(folder / "app.json").get("base")  # the server's latest went out: a colleague's, say
+    if not behind:
+        write_published(folder, shipped, start.get("service") or hosted_address(app))
     row = online(door, "/v1/app", {"app": app})
     went = next((v.get("sites") or [] for v in row.get("versions") or [] if v.get("version") == shipped), [])
     n, lead = len(went), WORDS["uploaded"].format(version=uploaded) if uploaded else ""
@@ -1090,15 +1181,22 @@ def cmd_publish(a) -> int:
     elif public:
         print(lead + WORDS["published_listed"].format(version=shipped, n=n, s="" if n == 1 else "s"))
     elif sites:
-        print(lead + WORDS["published"].format(version=shipped, sites=", ".join(went or sites)))
+        print(lead + WORDS["published"].format(version=shipped, sites=", ".join(sites)))  # the customer's: never the sandbox
     else:
         print(lead + WORDS["published_n"].format(version=shipped, n=n, s="" if n == 1 else "s"))
     if sites and done.get("send"):  # the message, line by line, the key on its own line and unindented, so it copies clean
-        print(WORDS["send_head"])
+        ready = [x for x in done["send"] if "1. " in (x.get("message") or "")]
         for x in done["send"]:
-            if len(done["send"]) > 1:
+            if x not in ready:  # no key yet, or one we withdrew: the library's words are for the developer, not to forward
+                print(f"{x.get('site')}: {x.get('message')}")
+        if ready:
+            print(WORDS["send_head"])
+        for x in ready:
+            if len(ready) > 1:
                 print(f"{x.get('site')}:")
             print(x.get("message") or "")
+    if behind:
+        print(WORDS["behind"].format(version=shipped))
     return 0
 
 
@@ -1148,7 +1246,9 @@ def cmd_status(a) -> int:
                 s = door(path, {"app": app})
             except (Refused, Offline):
                 continue
-            if s.get("step") in ("order", "copy", "upload", "build"):
+            if s.get("invoice_waiting"):
+                print((s.get("lines") or [""])[-1])
+            elif s.get("step") in ("order", "copy", "upload", "build"):
                 print(f"Building {s.get('version')}…")
             if s.get("step") == "stopped" and s.get("stop"):
                 print("\n".join([s["stop"], *(s.get("build_lines") or [])]))
@@ -1291,6 +1391,8 @@ def parser() -> argparse.ArgumentParser:
 
 
 def main(argv=None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):  # a Windows build server's redirected output: the words hold ⟨ ⟩ and ·
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     try:
         a = parser().parse_args(argv)
     except SystemExit as e:
@@ -1304,7 +1406,7 @@ def main(argv=None) -> int:
         print(WORDS["no_reach"])
         return 1
     except KeyboardInterrupt:
-        print(WORDS["gave_up"])
+        print(WORDS["stopped"])
         return 1
 
 

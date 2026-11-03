@@ -1,6 +1,6 @@
 # ivn — make, try, publish and keep your app going from a terminal
 
-The same steps as *My apps* in your browser (`https://developer.ivendnext.com/apps`), over the same server: the page and the command change one copy of your app. Put this folder on your `PATH`, or run `python3 tools/ivn/ivn.py`. Standard library only (Python 3.10+). It needs your copy of the kit to stay where it is, and acts on the app in the current folder (any folder holding an `app.json`), or `--app <folder>`.
+The same steps as *My apps* in your browser (`https://developer.ivendnext.com/apps`), over the same server: the page and the command change one copy of your app. Put this folder on your `PATH`, or run `python3 tools/ivn/ivn.py` (on Windows, `py tools\ivn\ivn.py`, or `ivn.cmd` from this folder). Standard library only (Python 3.10+). It needs your copy of the kit to stay where it is, and acts on the app in the current folder (any folder holding an `app.json`), or `--app <folder>`.
 
 ```bash
 ivn login

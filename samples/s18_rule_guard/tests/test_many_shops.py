@@ -18,6 +18,8 @@ HERE = Path(__file__).resolve().parent
 KIT = HERE.parents[2]
 sys.path[:0] = [str(HERE.parent), str(HERE.parent / "service"), str(HERE)]
 sys.path.append(str(KIT / "tools" / "app_template" / "tests"))
+if not (KIT / "tools" / "app_template" / "tests" / "test_shops.py").is_file():
+    raise unittest.SkipTest("the template's test helpers are not in an app folder: these run in the kit")
 import app  # noqa: E402
 import function  # noqa: E402
 from test_service import RULES, body, context, signed  # noqa: E402

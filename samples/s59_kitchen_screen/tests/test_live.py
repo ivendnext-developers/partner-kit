@@ -422,6 +422,8 @@ class ImageTest(unittest.TestCase):
     def test_i1_the_container_holds_what_it_imports_and_passes_the_hosting_checks(self):
         """The image is built from the Dockerfile's COPY lines alone: copy exactly those, then start it with no settings.
         It must stop on its own words about the settings, never on a missing module (HOSP-K1b's fit.js lesson)."""
+        if not os.path.isdir(os.path.join(KIT, "samples")):
+            self.skipTest("the Dockerfile's COPY lines name the kit's own folders: this runs in the kit")
         docker = open(os.path.join(SAMPLE, "live", "Dockerfile")).read()
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp, True)
