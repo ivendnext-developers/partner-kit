@@ -854,9 +854,20 @@ RESULT = re.compile(r"^(\S+) \((.*?)\): (.*)$", re.S)
 PASSED = re.compile(r"^Passed, answered in ([\d.]+) s$")
 
 
+# the doors speak the page's words; a terminal has no button to press
+PAGE_WORDS = (("press Try again", "run ivn try"), ("Press Try again", "Run ivn try"), ("press Test again", "run ivn test"),
+              ("Press Test again", "Run ivn test"), ("Press Publish again", "Run ivn publish again"))
+
+
+def terminal(words: str) -> str:
+    for page, command in PAGE_WORDS:
+        words = words.replace(page, command)
+    return words
+
+
 def result_rows(lines: list[str]) -> list[str]:
     """J4-06: one line per connection point, its plain name beside its key: `tgr_check   a check at Pay      Passed  0.31 s`."""
-    rows = [(m.group(1), m.group(2), m.group(3)) if (m := RESULT.match(x)) else (x, "", "") for x in lines]
+    rows = [(m.group(1), m.group(2), m.group(3)) if (m := RESULT.match(x)) else (x, "", "") for x in map(terminal, lines)]
     wide_k = max((len(r[0]) for r in rows if r[1] or r[2]), default=0)
     wide_p = max((len(r[1]) for r in rows), default=0)
     out = []
@@ -1054,6 +1065,8 @@ def cmd_test(a) -> int:
     for line in out.get("head") or []:
         print(line)
     rows = result_rows(out.get("results") or [])
+    if not rows:
+        print(WORDS["no_points"])
     for line in rows:
         print(line)
     return 0 if all("Passed" in x for x in rows) else 1
@@ -1113,6 +1126,8 @@ def ask_card(folder: pathlib.Path, app: str, industries: list[str]) -> dict:
             value = read(typed)
             if field == "price":
                 value = value.lower() if value.lower() in ("free", "key") else ""
+            if field == "industries" and industries:  # a wrong one kept in app.json would never be asked again
+                value = value if value and set(value) <= set(industries) else []
             if value or field == "pictures":
                 card[field] = value
                 break
@@ -1251,7 +1266,7 @@ def cmd_status(a) -> int:
             elif s.get("step") in ("order", "copy", "upload", "build"):
                 print(f"Building {s.get('version')}…")
             if s.get("step") == "stopped" and s.get("stop"):
-                print("\n".join([s["stop"], *(s.get("build_lines") or [])]))
+                print("\n".join([terminal(s["stop"]), *(s.get("build_lines") or [])]))
     return 0
 
 
@@ -1400,7 +1415,7 @@ def main(argv=None) -> int:
     try:
         return a.fn(a)
     except Stop as e:
-        print(str(e))
+        print(terminal(str(e)))
         return 1
     except Offline:
         print(WORDS["no_reach"])
