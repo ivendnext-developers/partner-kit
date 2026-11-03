@@ -16,8 +16,7 @@ sys.path[:0] = [SAMPLE, os.path.join(SAMPLE, "service")]
 import sst  # noqa: E402
 
 FEED = {"name": "PP SST Sell-through feed",
-        "description": "the sell-through service reads the two reports and the items and writes the rows as this user; "
-                       "leave the feed off",
+        "description": "the sell-through service reads the two reports and the items and writes the rows as this user",
         "events": ["PP SST Sell-through"]}
 
 

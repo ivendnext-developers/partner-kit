@@ -1,4 +1,4 @@
-"""S51's manifest passes the kit's checker; the check installs switched off and lets the refund go on when down; the settings
+"""S51's manifest passes the kit's checker; the check is on from the install and lets the refund go on when down; the settings
 record is named Default with the fields the service reads and two tables of payment methods, readable by the integration
 role only, and opens its help."""
 import json

@@ -1,4 +1,4 @@
-"""S20's manifest passes the kit's checker: three capture services, one per event, installed switched off."""
+"""S20's manifest passes the kit's checker: three capture services, one per event, on from the install."""
 import json
 import sys
 import unittest

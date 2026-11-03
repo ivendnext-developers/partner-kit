@@ -1,4 +1,4 @@
-"""S50's manifest passes the kit's checker; the check installs switched off and lets the sale go on when down; the rule
+"""S50's manifest passes the kit's checker; the check is on from the install and lets the sale go on when down; the rule
 record is one per customer group with a table of sale details and one of POS Profiles, readable by the integration role
 only, and opens its help."""
 import json

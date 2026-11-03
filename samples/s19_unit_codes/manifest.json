@@ -5,7 +5,7 @@
  "title": "Unit codes at the scan",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "The shop's own unit codes, read by the till's scan: one record per unit (its unique code, its item, its batch and whether it is still Available or Sold) and a scan source over that table. Scanning a unit's code lands its item with its batch; a Sold unit is refused. Data only: no service, nothing leaves the shop. The scan source installs switched off; the shop switches it on, and may set Record the code as to one of its own active line attributes so the code rides the sale's line. The partner's own service writes a unit back to Available after a return and to Sold after a sale (from the event feed). Every right a role has is written out (read, write, create, delete, report, export, share, print, email).",
+ "description": "The shop's own unit codes, read by the till's scan: one record per unit (its unique code, its item, its batch and whether it is still Available or Sold) and a scan source over that table. Scanning a unit's code lands its item with its batch; a Sold unit is refused. Data only: no service, nothing leaves the shop. The scan source is on from the install; the shop may set Record the code as to one of its own active line attributes so the code rides the sale's line. The partner's own service writes a unit back to Available after a return and to Sold after a sale (from the event feed). Every right a role has is written out (read, write, create, delete, report, export, share, print, email).",
  "doctypes": [
   {
    "name": "PP UNC Unit",

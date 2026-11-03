@@ -155,7 +155,7 @@ answering presses keeps nothing.
   and the dispensing keeps no price (S39's README).
 - **The till cannot take or show the patient's identity:** enter it on the patient's record on the Desk. A clerk is
   refused that record whole, but an assignment on it, the customer's Connections count and one engine export still
-  tell a clerk something (S39's README, *Limits*).
+  tell a clerk something.
 - **A POS Invoice made on the Desk POS screen, or through the API, is not checked:** a POS Invoice cannot be a document
   check's target.
 - **The sentence shows at Pay,** not when the line is added.

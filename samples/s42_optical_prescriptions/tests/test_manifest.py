@@ -1,4 +1,4 @@
-"""S42's manifest passes the kit's checker; the check installs switched off and lets the sale go on when down; the
+"""S42's manifest passes the kit's checker; the check is on from the install and lets the sale go on when down; the
 fields are the ones the service reads; the integration role only reads (the settings and the prescriptions); the
 prescriptions are written by the optometrist and read by store staff; the lab order's workflow sets the two ticks the
 report and the shop's own messages read; each record type opens its help."""

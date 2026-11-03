@@ -5,7 +5,7 @@
  "title": "Refund rules",
  "version": "0.1.0",
  "publisher": "Partner Programme sample",
- "description": "How the till may pay a refund back. A check before payment that judges refunds only: before the refund choices open, the retailer's server sends the refund, the methods the refund chooser offers and the sale it refunds with the methods that paid it. With Refund by the sale's own methods, the service takes off every offered method that did not pay the sale, other than the store credit method and the Always allowed ones, and refuses the refund when none would stay; and with Without its sale, only these methods, a return without its sale goes back only by those and the store credit method. One record of PP RFR Settings named Default; no record: every rule off. A sale is never judged. The service reads the settings with the app's integration user and writes nothing. The install makes the role PP RFR Integration; the retailer gives it to the app's integration user. The check installs switched off; the retailer reads what it is sent, ticks the consent, chooses its POS Profiles and switches it on. When the service is down the refund goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "How the till may pay a refund back. A check before payment that judges refunds only: before the refund choices open, the retailer's server sends the refund, the methods the refund chooser offers and the sale it refunds with the methods that paid it. With Refund by the sale's own methods, the service takes off every offered method that did not pay the sale, other than the store credit method and the Always allowed ones, and refuses the refund when none would stay; and with Without its sale, only these methods, a return without its sale goes back only by those and the store credit method. One record of PP RFR Settings named Default; no record: every rule off. A sale is never judged. The service reads the settings with the app's integration user and writes nothing. The install makes the role PP RFR Integration; the retailer gives it to the app's integration user. The check is on from the install. When the service is down the refund goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/rfr/check"
  ],
@@ -108,7 +108,7 @@
  "registered_applications": [
   {
    "name": "PP RFR Settings feed",
-   "description": "the refund rules service reads the retailer's refund settings as this user; leave the feed off",
+   "description": "the refund rules service reads the retailer's refund settings as this user",
    "events": [
     "PP RFR Settings"
    ]

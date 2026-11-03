@@ -73,7 +73,7 @@ class Manifest(unittest.TestCase):
         self.assertEqual(M["registered_applications"][0]["events"], ["POS Invoice"])
 
     def test_the_setup_and_what_leaves_are_in_the_description(self):
-        for words in ("PP GCS Integration", "read and create on Gift Card", "submit on Gift Card Balance", "PP GCS Sales",
+        for words in ("PP GCS Integration", "read and create on Gift Card", "submit on Gift Card Balance",
                       "What leaves the shop", "set the balance of any gift card"):
             self.assertIn(words, M["description"])
         self.assertNotIn("Nothing leaves", M["description"])

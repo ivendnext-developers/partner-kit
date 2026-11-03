@@ -1,4 +1,4 @@
-"""S37's manifest passes the kit's checker; both services install switched off and let the item or the sale go on when
+"""S37's manifest passes the kit's checker; both services are on from the install and let the item or the sale go on when
 down; the scan's filter is the app's own age field; the fields, the sale detail and the settings are the ones the service
 reads; the integration role only reads the settings, and the settings open their help."""
 import json

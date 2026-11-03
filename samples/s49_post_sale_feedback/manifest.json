@@ -355,7 +355,7 @@
  "registered_applications": [
   {
    "name": "PP PSF Feedback feed",
-   "description": "the post-sale feedback service reads the rules and till sales and writes the requests as this user; leave the feed off",
+   "description": "the post-sale feedback service reads the rules and till sales and writes the requests as this user",
    "events": [
     "PP PSF Rule"
    ]

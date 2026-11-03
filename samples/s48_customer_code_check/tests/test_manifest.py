@@ -1,4 +1,4 @@
-"""S48's manifest passes the kit's checker; the capture on customer select installs switched off and keeps the customer
+"""S48's manifest passes the kit's checker; the capture on customer select is on from the install and keeps the customer
 on the sale when down; the rule record is one per customer group, readable by the integration role only; the code record
 is named by the till's code-check id, holds what the shop's Notification texts, and is the integration role's alone; both
 open their help."""

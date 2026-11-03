@@ -137,7 +137,7 @@
  "registered_applications": [
   {
    "name": "PP WRC Warranty feed",
-   "description": "the app reads the terms, the items and the booked sales and writes one Comment on a covered sale as this user; leave the feed off",
+   "description": "the app reads the terms, the items and the booked sales and writes one Comment on a covered sale as this user",
    "events": [
     "PP WRC Warranty Term"
    ]

@@ -1,4 +1,4 @@
-"""S46's manifest passes the kit's checker; the check installs switched off and lets the sale go on when down; the rule
+"""S46's manifest passes the kit's checker; the check is on from the install and lets the sale go on when down; the rule
 record is one per customer group with a table of methods, readable by the integration role only, and opens its help."""
 import json
 import sys
@@ -53,7 +53,7 @@ class ManifestTest(unittest.TestCase):
 
     def test_the_feed_registration_is_as_listed(self):
         """An update refuses a changed registered application (run pp-20261029T033646Z-26411): frozen as listed in 0.1.0."""
-        self.assertEqual(MANIFEST["registered_applications"], [{"name": "PP PMR Rules feed", "description": "the payment method rules service reads the shop's rules and its customer group tree as this user; leave the feed off", "events": ["PP PMR Rule"]}])
+        self.assertEqual(MANIFEST["registered_applications"], [{"name": "PP PMR Rules feed", "description": "the payment method rules service reads the shop's rules and its customer group tree as this user", "events": ["PP PMR Rule"]}])
 
     def test_the_words_fit_the_tills_sentence(self):
         rule = TYPES[MANIFEST["prefix"] + " Rule"]

@@ -7,7 +7,7 @@ From one of the kit's samples to your customer's App library in six steps. This 
 ## Before you start
 
 - **A GitHub account.** You sign in with it. No account? Make a free one in two minutes with any e-mail.
-- **A sandbox site** to try your app on: your own iVendNext site, full of made-up demo data. [Request a sandbox](sandbox.md). It is ready for you when it arrives: there is no key to paste.
+- **A sandbox site** to try your app on: your own iVendNext site, full of made-up demo data. [Request a sandbox](sandbox.md). It is ready for you when it arrives: there is no key to paste. It needs iVendNext POS 2.1.0.679 or later, and so does your customer's site: an earlier build refuses a workflow on the customer's own record type, and `ivn try` says so. [Ask us](feedback.md#open-a-form) to move your sandbox.
 - **For the `ivn` command,** also your copy of the kit and Python 3.10 or newer:
 
   ```bash

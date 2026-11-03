@@ -24,7 +24,7 @@ App name: <its name under your company's first word, as in the manifest, for exa
 <The card's one line, the roles that use it, and whether it should be free or need a key. Then the steps a retailer takes after it installs the app, in the order the retailer meets them: the Desk screen to open, what to choose or fill in, who does it.>
 
 ## 2. The manifest, its guide page and its changelog
-<Attach the manifest (version 1.0.0 or later), the text of its guide page in the five headings of the guide template, and one line on what is new in this version.>
+<Attach the manifest (version 1.0.0 or later), a link to its guide (any https page), and one line on what is new in this version.>
 
 - [ ] It meets the listing bar: its name is under your company's first word, it uninstalls cleanly on a sandbox with developer mode off, the kit's checks pass, the card says how a retailer sets the app up and links its guide, and someone answers for it.
 ```
