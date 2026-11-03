@@ -844,8 +844,9 @@
         : call("POST", "/name", { title: name.value.trim() || fallback, samples: g.ticks }).then(function (r) { return r.prefix; });
       answer.then(function (prefix) {
         if (mine !== asked) return;
-        data.nameStart = prefix; start.textContent = recordsStart(prefix);
-        show(own && !THREE_WORDS.test(prefix) ? G.threeWords : "");
+        var past = own && !THREE_WORDS.test(prefix);
+        data.nameStart = past ? "" : prefix; start.textContent = past ? "" : recordsStart(prefix);
+        show(past ? G.threeWords : "");
       }, function (e) { if (mine === asked) { start.textContent = ""; show(e.message); } });
     };
     var timer = null;
