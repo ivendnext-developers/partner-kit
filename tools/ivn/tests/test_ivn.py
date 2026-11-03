@@ -172,22 +172,16 @@ class Stub:
     def settings(self, b):
         return {"words": "Saved."}
 
-    def sandbox_connect(self, b):
-        if b.get("key") == "wrong":
-            raise Refuse("M11", f"Could not sign in to {b['site']} with this key: the site answered 401. Make the key again in Desk "
-                                "(your name > My Settings > API Access > Generate Keys) and paste both halves.", 401)
-        return {"words": "Connected to acme.sandbox.ivend.co as Administrator. It can install apps."}
-
     def try_start(self, b):
         if not self.sandbox:
-            raise Refuse("no_sandbox", "Connect your sandbox first: My apps > Your sandbox.")
+            raise Refuse("no_sandbox", "You have no sandbox yet. Request one: https://developer.ivendnext.com/sandbox.html")
         return {"sections": [{"title": "New in Desk", "lines": ["Till guard rules: a new list"]},
                              {"title": "Who can use it", "lines": ["Stock Manager"]},
                              {"title": "Changes to what you already have", "lines": ["Nothing"]},
                              {"title": "Print layouts", "lines": []},
                              {"title": "Connects outside your site", "lines": ["No outside address named."]}],
-                "wording": "THE EXACT WORDING", "sha": "f" * 64, "money": {"line": "Trying it costs the plan below each month.",
-                "plans": self.money["plans"], "suggested": "starter"}, "plan": None}
+                "wording": "THE EXACT WORDING", "sha": "f" * 64,
+                "money": {"line": "Trying it on your sandbox is free.", "charged": False, "plans": None}}
 
     def try_install(self, b):
         self.installed = b
@@ -294,7 +288,7 @@ class Stub:
         return {"words": f"Key for {b['site']}: IVN1-a-key. Send it to the retailer's administrator."}
 
     def logs(self, b):
-        return {"lines": ["14:31 HealthKart · a check at Pay · answered in 0.31 s · sale POS-0001"], "words": None}
+        return {"lines": ["14:31 Acme Retail · a check at Pay · answered in 0.31 s · sale POS-0001"], "words": None}
 
     def tokens_make(self, b):
         return {"token": ONE_APP if b.get("app") else TOKEN, "for": b.get("app") or "*",
@@ -302,7 +296,7 @@ class Stub:
 
     ROUTES = {"/v1/device": device, "/v1/device/token": device_token, "/v1/new": new, "/v1/app": app, "/v1/apps": apps_list,
               "/v1/download": download, "/v1/draft/url": draft_url, "/v1/draft/keep": draft_keep, "/v1/add": add,
-              "/v1/settings": settings, "/v1/sandbox/connect": sandbox_connect, "/v1/try": try_start,
+              "/v1/settings": settings, "/v1/try": try_start,
               "/v1/try/install": try_install, "/v1/try/status": try_status, "/v1/test": test, "/v1/secrets": secrets,
               "/v1/publish/start": publish_start, "/v1/publish": publish, "/v1/publish/status": publish_status,
               "/v1/publish/picture": picture, "/v1/sites": sites, "/v1/sites/remove": sites_remove,
@@ -446,7 +440,7 @@ class NewAndDownload(Base):
 
     def test_next_ivn_try_works_where_new_left_you(self):  # J2-12's Next, from the folder the person is in
         self.made()
-        rc, out = self.run_ivn("try", stdin="no\n")  # from the repository's root: the one app under apps/
+        rc, out = self.run_ivn("try")  # from the repository's root: the one app under apps/
         self.assertIn("What installing it changes", out)
 
     def test_download_says_who_made_it_and_writes_the_repositorys_apps_folder(self):  # ⭐ UX-26 (J3-01, J11-01)
@@ -641,7 +635,7 @@ class Pull(Base):
         self.assertIn("git could not merge README.md", out)
         self.assertEqual(ivn.read_json(folder / "app.json")["base"], "1.0.0")
 
-    def test_a_higher_number_the_developer_set_survives_a_pull(self):  # D15, review
+    def test_a_higher_number_the_developer_set_survives_a_pull(self):  # review
         folder, _ = self.made()
         self.in_app(folder)
         self.stub.add({"app": "acme_member_till", "sample": "s11"})
@@ -723,7 +717,7 @@ class FoundOnTheRealDoors(Base):
             card = ivn.ask_card(folder, "acme_member_till", ["grocery", "fashion"])
         self.assertEqual(card["industries"], ["grocery"])
 
-    def test_a_build_server_publishes_every_build_from_a_clean_checkout(self):  # ⭐ UX-143 (J2-15), completeness-critic's first
+    def test_a_build_server_publishes_every_build_from_a_clean_checkout(self):  # ⭐ UX-143 (J2-15), a review's first
         folder, _ = self.made("s23")
         self.in_app(folder)
         self.assertEqual(self.run_ivn("publish", "--to", SITE, stdin="1\n1\n")[0], 0)
@@ -837,23 +831,15 @@ class Status(Base):
 
 
 class Sandbox(Base):
-    def test_sandbox_asks_with_the_desk_clicks_and_prints_the_rows_words(self):  # ⭐ UX-132 (J4-10)
-        rc, out = self.run_ivn("sandbox", "https://acme.sandbox.ivend.co", stdin="k1\ns1\n")
-        self.assertEqual(rc, 0, out)
-        self.assertIn("In your sandbox's Desk: your name (top right) > My Settings > API Access > Generate Keys. The secret is shown once: paste it here.", out)
-        self.assertIn("Connected to acme.sandbox.ivend.co as Administrator. It can install apps.", out)
-        self.assertNotIn("s1\n", out)
-
-    def test_a_wrong_key_prints_m11(self):  # UX-132
-        rc, out = self.run_ivn("sandbox", "https://acme.sandbox.ivend.co", stdin="wrong\ns1\n")
-        self.assertEqual(rc, 1)
-        self.assertIn("Could not sign in to https://acme.sandbox.ivend.co with this key: the site answered 401.", out)
+    def test_there_is_no_sandbox_command_to_paste_a_key_into(self):  # a sandbox we hand over takes no pasted key
+        rc, out = self.run_ivn("sandbox", "https://acme.sandbox.ivend.co")
+        self.assertEqual(rc, 2, out)
 
     def test_secret_sets_a_setting_and_logs_print_newest_first(self):  # UX-132
         folder, _ = self.made()
         self.in_app(folder)
         self.assertIn("Saved.", self.run_ivn("secret", "HKD_WALLET_SECRET", stdin="value\n")[1])
-        self.assertIn("14:31 HealthKart · a check at Pay · answered in 0.31 s · sale POS-0001", self.run_ivn("logs")[1])
+        self.assertIn("14:31 Acme Retail · a check at Pay · answered in 0.31 s · sale POS-0001", self.run_ivn("logs")[1])
 
     def test_secrets_prints_each_point_with_j10_03s_words(self):  # ⭐ UX-115 (J10-03)
         folder, _ = self.made()
@@ -871,46 +857,40 @@ class Try(Base):
         self.folder, _ = self.made()
         self.in_app(self.folder)
 
-    def test_try_shows_the_five_sections_asks_yes_and_ends_with_each_point(self):  # ⭐ UX-41 (J4-06)
-        rc, out = self.run_ivn("try", stdin="yes\n\n")
+    def test_try_shows_the_five_sections_asks_nothing_and_ends_with_each_point(self):  # ⭐ UX-41 (J4-06)
+        with unittest.mock.patch("builtins.input", side_effect=AssertionError("asked")) as asked, \
+                contextlib.redirect_stdout(io.StringIO()) as buf:
+            rc = ivn.main(["try"])
+        out = buf.getvalue()
         self.assertEqual(rc, 0, out)
+        asked.assert_not_called()  # no yes, no plan, no card: trying is free
         for title in ("What installing it changes", "New in Desk", "Who can use it", "Changes to what you already have",
                       "Print layouts", "Connects outside your site"):
             self.assertIn(title, out)
-        with unittest.mock.patch("builtins.input", return_value="no") as asked, contextlib.redirect_stdout(io.StringIO()):
-            ivn.main(["try"])
-        asked.assert_called_once_with("Type yes to agree to everything above and to the exact wording (ivn try --show-wording prints it): ")
-        self.assertEqual(self.stub.installed["agree"], True)
-        self.assertEqual(self.stub.installed["sha"], "f" * 64)
-        self.assertEqual(self.stub.installed["plan"], "starter")  # §14: the suggested plan comes first
+        self.assertIn("Trying it on your sandbox is free.", out)
+        self.assertEqual(self.stub.installed, {"app": self.stub.installed["app"], "sha": "f" * 64})
         self.assertIn("Tested from our server, as your sandbox would call it.", out)
         self.assertRegex(out, r"tgr_guard\s+a check at Pay\s+Passed  0\.31 s")
         self.assertRegex(out, r"lyl_member\s+a till key\s+Passed  0\.42 s")
         self.assertIn("Try it at the till of acme.sandbox.ivend.co", out)
 
     def test_show_wording_prints_it(self):  # J4-06
-        self.assertIn("THE EXACT WORDING", self.run_ivn("try", "--show-wording", stdin="no\n")[1])
-
-    def test_without_yes_nothing_is_installed_m32(self):  # ⭐ UX-139 (J8-30)
-        rc, out = self.run_ivn("try", stdin="no\n")
-        self.assertEqual(rc, 1)
-        self.assertIn("Not installed: you did not agree. Nothing was changed on your sandbox.", out)
-        self.assertNotIn("/v1/try/install", self.stub.calls)
+        self.assertIn("THE EXACT WORDING", self.run_ivn("try", "--show-wording")[1])
 
     def test_no_sandbox_is_m31(self):  # ⭐ UX-138 (J8-29)
         self.stub.sandbox = None
-        rc, out = self.run_ivn("try", stdin="yes\n")
-        self.assertEqual((rc, out.strip()), (1, "No sandbox is connected. Connect it with ivn sandbox ⟨address⟩, or on My apps > Your sandbox."))
+        rc, out = self.run_ivn("try")
+        self.assertEqual((rc, out.strip()), (1, "You have no sandbox yet. Request one: https://developer.ivendnext.com/sandbox.html"))
 
     def test_a_changed_folder_uploads_first_and_says_so(self):  # ⭐ UX-32 (J3-07)
         self.edit(self.folder / "service" / "app.py")
-        _, out = self.run_ivn("try", stdin="no\n")
+        _, out = self.run_ivn("try")
         self.assertIn("Checked: CHECK GREEN. Uploaded as 1.0.1 (draft: on our server, on no site yet).", out)
         self.assertIn("/v1/draft/keep", self.stub.calls)
 
     def test_try_with_a_point_failed_exits_one(self):  # review
         self.stub.test_results = ["tgr_guard (a check at Pay): Failed: nothing answered at this address (404)."]
-        self.assertEqual(self.run_ivn("try", stdin="yes\n\n")[0], 1)
+        self.assertEqual(self.run_ivn("try")[0], 1)
 
     def test_test_prints_a_result_per_point_and_the_refused_signature_words(self):  # ⭐ UX-42 (J4-06), Done when
         m18 = ("tgr_guard (a check at Pay): Failed: the app did not recognise the site's secret (401). In the site's Desk, search "
@@ -1028,7 +1008,7 @@ class Publish(Base):
         self.assertIn("Not published: manifest.json says 7.7.7 and app.json says 1.0.0.", out)
         self.assertNotIn("/v1/publish", self.stub.calls)
 
-    def test_a_version_set_in_app_json_alone_reaches_the_manifest_at_the_upload(self):  # D15, J3-09: never written twice
+    def test_a_version_set_in_app_json_alone_reaches_the_manifest_at_the_upload(self):  # J3-09: never written twice
         a = ivn.read_json(self.folder / "app.json")
         a["version"] = "2.0.0"
         ivn.write_json(self.folder / "app.json", a)

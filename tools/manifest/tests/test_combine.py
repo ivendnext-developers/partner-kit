@@ -308,7 +308,7 @@ class NewerTitle(Base):
 
 
 class BaseIsNotAnEdit(Base):
-    """`base` in app.json is the version My apps kept the folder as (D6): Add a sample never names it as the developer's
+    """`base` in app.json is the version My apps kept the folder as: Add a sample never names it as the developer's
     change (found by EASY3a's walk: *Take it* said "Your changes are kept: app.json:base.")."""
 
     def test_add_to_a_folder_carrying_base_names_no_kept_change(self):

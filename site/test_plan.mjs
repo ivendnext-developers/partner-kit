@@ -58,6 +58,9 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
         JSON.stringify(r.map((p) => [p.path, idsOf(p.needs)])));
   check("mixed: no recipe listed twice", new Set(r.map((p) => p.path)).size === r.length);
   check("mixed: every step says why", plan.steps(cards).every((s) => s.why.length > 20));
+  check("Ask for it opens the public Tell us what is missing page, never the members-only form, and names the need",
+    plan.askUrl({ asks: "x" }) === "/feedback.html#open-a-form" && plan.askWords({ asks: "x" }) === "Extension-point request: x" &&
+    plan.askUrl({ asks: "x", request_forms: [{ url: "https://own.example/form" }] }) === "https://own.example/form");
 }
 
 // A Not yet card waiting on an extension point, built here: since POS train T12 no card in the kit waits on one. It is a

@@ -113,9 +113,9 @@
   var START_HINT = "Opens New app on My apps with these samples ticked. Needs set in Desk are listed, not added.";
   function startHref(cards) { return "apps.html?needs=" + cards.map(function (c) { return encodeURIComponent(c.id); }).join(","); }
 
-  // J1-09: a need that cannot be built today, its card's what to do instead, and Ask for it (the request form, with the
-  // need's words: its own form when the card names one)
-  var POINT_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=2_point_request.yml";
+  // J1-09: a need that cannot be built today, its card's what to do instead, and Ask for it: the public *Tell us what is
+  // missing* page, the need's words copied to paste there (its own form when the card names one)
+  var ASK_PAGE = "/feedback.html#open-a-form";
   var CLAIM_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=6_claim_a_need.yml";
   function instead(c) {
     var l = (c.limits || []).filter(function (x) { return /^\*\*Instead:\*\*|^Today\b/.test(x); })[0];
@@ -123,13 +123,14 @@
   }
   function askUrl(c) {
     var f = (c.request_forms || [])[0];
-    return f && f.url ? f.url : POINT_FORM + "&title=" + encodeURIComponent("Extension-point request: " + c.asks);
+    return f && f.url ? f.url : ASK_PAGE;
   }
+  function askWords(c) { return "Extension-point request: " + c.asks; }
   function cannotLine(c) { return "Cannot be built today: " + c.asks + ". " + instead(c); }
 
   var api = { ids: ids, choose: choose, order: order, steps: steps, proofs: proofs, limits: limits, limitsText: limitsText,
               requests: requests, blueprint: blueprint, plain: plain, needKind: needKind, KIND_WORDS: KIND_WORDS,
-              label: label, START: START, START_HINT: START_HINT, startHref: startHref, instead: instead, askUrl: askUrl,
+              label: label, START: START, START_HINT: START_HINT, startHref: startHref, instead: instead, askUrl: askUrl, askWords: askWords,
               cannotLine: cannotLine, CLAIM_FORM: CLAIM_FORM };
 
   // ── the page ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -298,6 +299,9 @@
         box.appendChild(el("p", null, cannotLine(c)));
         var b = el("p", "plan-btns"), ask = el("a", "site-btn site-btn-ghost", "Ask for it");
         ask.href = askUrl(c); ask.target = "_blank"; ask.rel = "noopener";
+        ask.addEventListener("click", function () {   // the need's words go with the person
+          if (ask.href.indexOf(ASK_PAGE) >= 0 && root.navigator && root.navigator.clipboard) root.navigator.clipboard.writeText(askWords(c)).then(null, function () {});
+        });
         b.appendChild(ask);
         box.appendChild(b);
         if (c.next) {
