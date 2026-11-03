@@ -3,7 +3,7 @@
  "app": "pp_pdo",
  "prefix": "PP PDO",
  "title": "Price-deviation audit",
- "version": "0.2.0",
+ "version": "0.3.0",
  "publisher": "Partner Programme sample",
  "description": "S3 rebuilt so that the partner's service runs outside the shop, reads booked sales from the event feed with its own user (the role PP PDO Integration, which the install makes), and writes each line sold below list by more than the shop's threshold (PP PDO Settings, record Default; 10 when there is none) into this record type. No partner code runs inside the shop.",
  "allowed_urls": ["https://pdo.partner.example"],
@@ -45,5 +45,6 @@
  "number_cards": [{"name": "PP PDO Deviations", "document_type": "PP PDO Deviation", "function": "Count"}],
  "list_settings": [{"doctype": "PP PDO Deviation", "fields": ["invoice", "item_code", "deviation_percent", "posting_date"]}],
  "registered_applications": [{"name": "PP PDO Feed", "description": "the price-deviation service reads booked sales",
-                              "events": ["POS Invoice", "Sales Invoice"]}]
+                              "events": ["POS Invoice", "Sales Invoice"]}],
+ "property_setters": [{"doc_type": "PP PDO Deviation", "property": "documentation", "property_type": "Data", "value": "https://developer.ivendnext.com/samples/s3_price_audit/index.html"}, {"doc_type": "PP PDO Settings", "property": "documentation", "property_type": "Data", "value": "https://developer.ivendnext.com/samples/s3_price_audit/index.html"}]
 }

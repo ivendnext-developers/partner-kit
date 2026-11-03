@@ -59,7 +59,7 @@ python3 service/app.py service/.env.local
 ## Try it at the till
 
 - Scan an iPhone; the till shows a warranty reference. Press Add with these details.
-- Add a new customer; the till asks for the code just sent to their mobile.
+- With your message gateway set, add a new customer; the till asks for the code just sent to their mobile.
 - Close the till day when you are done.
 
 ## What it looks like

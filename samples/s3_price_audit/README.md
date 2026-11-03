@@ -75,6 +75,10 @@ A pass reads at most 100 events a page and each sale once; a very large backlog 
 
 ## Versions
 
+### 1.1.1
+
+- Its two record types give a guide address, so an app with it can be listed for every retailer.
+
 ### 1.1.0
 
 - Hosted on a schedule as a function, paid per call, instead of an always-on container.

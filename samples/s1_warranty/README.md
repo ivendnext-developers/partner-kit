@@ -25,7 +25,7 @@ The phone is the sample's own test item (`PP-WRC-PHONE`, covered for 24 months b
 
 ## Made on My apps
 
-**New app makes this sample into an app we host: the *Warranty* till key and the retailer's own terms.** A cashier presses *Warranty* and reads, for each item on the sale, its term from the **Warranty terms** the retailer keeps in Desk. It reads and writes nothing else. The service below that registers a warranty per serial number and keeps its own store runs on your own server: copy this folder to build it. On the made app, the retailer's administrator gives the role **PP WRC Integration** read on **Item** in **Role Permissions**, so a term set on an item group is found; until then the cashier is told so.
+**New app makes this sample into an app we host: the *Warranty* till key and the retailer's own terms.** A cashier presses *Warranty* and reads, for each item on the sale, its term from the **Warranty terms** the retailer keeps in Desk. It reads and writes nothing else. The service below that registers a warranty per serial number and keeps its own store runs on your own server: copy this folder to build it. A term set on an item group needs the app's user to read **Item**: where the site does not already let it, the cashier is told, and the retailer's administrator gives the role **PP WRC Integration** read on **Item** in **Role Permissions**.
 
 ## What the retailer does
 
@@ -141,8 +141,8 @@ The reconciliation timer is off on the bench (`PP_RECONCILE_SECONDS=0`) so the t
 
 ## Try it at the till
 
-- Sell a covered phone and scan its serial number when the till asks for it, before it charges.
-- A few seconds later the warranty service's comment is on the sale in Desk.
+- In Desk, add a warranty term for an item in **Warranty terms**, and switch the *Warranty* key on in POS Studio > Apps.
+- Start a sale with that item and press Warranty; the till names the item and its months.
 - Close the till day when you are done.
 
 ## Versions

@@ -66,6 +66,17 @@ class EveryTick(unittest.TestCase):
         self.assertEqual(sorted(r[0].split("_")[0] for r in refused),
                          sorted(["s5", "s6", "s7", "s8", "s9", "s10", "s12", "s13", "s29", "s30"]))
 
+    def test_every_sample_can_be_listed_its_record_types_give_a_guide_address(self):  # the App library refuses one with none
+        for path in sorted((KIT / "samples").iterdir()):
+            m = combine.sample_info.manifest(path) if path.is_dir() else None
+            if not m:
+                continue
+            guides = {s.get("doc_type") for s in m.get("property_setters") or [] if s.get("property") == "documentation"}
+            for t in m.get("doctypes") or []:
+                if not t.get("istable"):
+                    with self.subTest(sample=path.name, record=t.get("name")):
+                        self.assertIn(t.get("name"), guides)
+
 
 class Base(unittest.TestCase):
     def setUp(self):
