@@ -116,7 +116,7 @@
   // J1-09: a need that cannot be built today, its card's what to do instead, and Ask for it: the public *Tell us what is
   // missing* page, the need's words copied to paste there (its own form when the card names one)
   var ASK_PAGE = "/feedback.html#open-a-form";
-  var CLAIM_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=6_claim_a_need.yml";
+  var CLAIM_FORM = "/roadmap.html#claim-a-need";   // the public page that says how to claim, never the members-only form
   function instead(c) {
     var l = (c.limits || []).filter(function (x) { return /^\*\*Instead:\*\*|^Today\b/.test(x); })[0];
     return plain(l || c.tell || "");

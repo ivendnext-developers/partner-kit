@@ -25,7 +25,7 @@
   // Ask for it opens the public *Tell us what is missing* page, never the members-only form (a 404 to anyone not
   // yet given access), with the need's words copied to paste into the form it offers (J1-12)
   var ASK_PAGE = "/feedback.html";
-  var CLAIM_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=6_claim_a_need.yml";
+  var CLAIM_FORM = "/roadmap.html#claim-a-need";   // the public page that says how to claim, never the members-only form
 
   // ── the pure parts ──────────────────────────────────────────────────────────────────────────────────────────────
 
