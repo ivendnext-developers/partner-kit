@@ -176,7 +176,7 @@
   // §3b). The words a door answers (who pays, M15 to M17, M23, M30, M33, the message to send, a site's state, the go-back
   // and cancel lines, a key) are the hosting's and are shown as given (§0b rule 8).
   var U = {
-    toCustomer: "To a customer", toEveryone: "To everyone", sitesLabel: "The customer's site addresses",
+    toCustomer: "To a customer", toEveryone: "To everyone", listedUpdate: "It goes to every site the app is on and to the App library, on the card it has.", sitesLabel: "The customer's site addresses",
     addSite: "+ Add another site", copy: "Copy", copied: " Copied.", whereRuns: "Where it runs", removeSite: "Remove this site",
     remove: "Remove", serviceRuns: "Where the service runs", itsAddress: "Its https address", save: "Save", logs: "Logs",
     search: "Search", downloadLogs: "Download", goBack: "Go back to this version", goBackBtn: "Go back",
@@ -206,6 +206,8 @@
   // K176: Starter chosen beforehand for an app that runs only when called; the person's own choice and a plan in force come first
   function tryPlanNow(picked, c) { return picked || c.plan || (c.money || {}).suggested || null; }
   // a plan goes only where the screen asked for one: a form kept from an earlier look never overrides the plan in force
+  // J7-05: a listed app's next version goes to the list too, so its Publish opens there; a form already open keeps its tab
+  function pubOpensOn(form, to, c) { return form ? to : (c && c.listed ? "everyone" : "customer"); }
   function pubPlan(asked, form, money) { return (asked ? form.plan : money.plan) || undefined; }
   function payLabel(s) { return s.pay || payWords(); }   // K176: the amount, when the door names one
   function payWords(internal) { return (arguments.length ? internal : who && who.internal) ? T.noCharge : T.pay; }
@@ -432,7 +434,7 @@
               covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords,
-              canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, tryPlanNow: tryPlanNow, pubPlan: pubPlan, pictureType: pictureType, b64: b64, cardBody: cardBody };
+              canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, tryPlanNow: tryPlanNow, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -1287,7 +1289,7 @@
     data.appId = app; data.pubC = null; data.pubS = null; data.pubPress = false; data.pubTo = data.pubTo || "customer"; screen = "publish"; say(""); render();
     call("POST", "/publish/status", { app: app }).then(function (s) {
       if (pubRunning(s)) { data.pubS = s; render(); pollPub(); return; }
-      return call("POST", "/publish/start", { app: app }).then(function (c) { if (s.step) data.pubS = s; data.pubC = c; render(); });
+      return call("POST", "/publish/start", { app: app }).then(function (c) { if (s.step) data.pubS = s; data.pubC = c; data.pubTo = pubOpensOn(data.pubForm, data.pubTo, c); render(); });
     }).then(null, fail);
   }
 
@@ -1386,6 +1388,8 @@
       own.addEventListener("change", function () { form.own = own.checked; render(); });
       box.appendChild(el("p", {}, el("label", {}, own, " " + c.own_site)));
       if (!(c.sites || []).length) box.appendChild(p(c.only_these + (c.also_sandbox ? " " + c.also_sandbox : "")));   // "every site" says it for an update
+    } else if (c.listed) {
+      box.appendChild(p(U.listedUpdate));   // J7-05: the card it has; nothing to retype
     } else {
       var cd = form.card;
       var text = function (label, k, hint) {
@@ -1466,13 +1470,13 @@
       return data.pubTo === "customer" && c.nothing_new && !form.sites.some(function (x) { return x.trim(); }) ? c.nothing_new : c.m16;
     };
     var stop = stopNow();
-    var go = button(data.pubTo === "customer" ? c.button : U.send, function (ev) {
+    var go = button(data.pubTo === "customer" || c.listed ? c.button : U.send, function (ev) {
       if (form.card.busy) return;   // the pictures still going up: Send waits for them
       if (askPlan && !form.plan) { say(T.choosePlan, true); render(); return; }
       data.pubPress = true; say(""); render();
       var body = { app: data.appId, to: data.pubTo, plan: pubPlan(askPlan, form, money) };
       if (data.pubTo === "customer") { body.sites = form.sites.filter(function (x) { return x.trim(); }); body.own = form.own; }
-      else body.card = cardBody(form.card);
+      else if (!c.listed) body.card = cardBody(form.card);   // a listed app keeps its card (J7-05)
       call("POST", "/publish", body).then(function (r) {
         data.pubPress = false;
         if (r.stop) { openPublish(data.appId); return; }   // stopped at once: the form under the stop's words, its addresses kept

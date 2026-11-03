@@ -239,6 +239,9 @@ check("J7-01: Send for listing carries the card's fields and each picture as the
   cb.guide === "g" && cb.price === "free");
 const big = new Uint8Array(20000).map((_, i) => (i * 7) & 255);
 check("J7-01: a picture's bytes reach the hosting as standard base64", a.b64(big) === Buffer.from(big).toString("base64"));
+check("J7-05: a listed app's Publish opens on To everyone; an open form keeps its tab; any other app on To a customer",
+  a.pubOpensOn(null, "customer", { listed: true }) === "everyone" && a.pubOpensOn({}, "customer", { listed: true }) === "customer" &&
+  a.pubOpensOn(null, "everyone", { listed: false }) === "customer");
 check("K176: Starter chosen beforehand; a choice or a plan in force comes first; nothing chosen when none is suggested",
   a.tryPlanNow(null, { money: { suggested: "starter" } }) === "starter" && a.tryPlanNow("managed", { money: { suggested: "starter" } }) === "managed" &&
   a.tryPlanNow(null, { plan: "standard", money: {} }) === "standard" && a.tryPlanNow(null, { money: {} }) === null);

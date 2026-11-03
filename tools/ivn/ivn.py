@@ -1222,7 +1222,7 @@ def cmd_publish(a) -> int:
     waiting = str(done.get("public_words") or "").startswith("Waiting")  # a later version while the first listing still waits
     if (a.public or waiting) and done.get("public_words"):
         print(lead + str(done["public_words"]) + (f" {done['card_url']}" if done.get("card_url") else ""))
-    elif public:
+    elif public and done.get("public_words"):  # a request closed earlier answers no words, and lists nothing
         print(lead + WORDS["published_listed"].format(version=shipped, n=n, s="" if n == 1 else "s"))
     elif sites:
         print(lead + WORDS["published"].format(version=shipped, sites=", ".join(sites)))  # the customer's: never the sandbox
