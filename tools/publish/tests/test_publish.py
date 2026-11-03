@@ -290,10 +290,11 @@ class PublishTests(unittest.TestCase):
 
     TOKEN = "ivn_tok_" + "A" * 43
     SITE = {"site": "shop-a.ivendnext.com", "customer": "shop-a", "version": "1.2.0", "shelf": "S1", "shelf_key": "IVNS1-K",
-            "message": {"allow": "Standin has sent you an app, PP STN 1.2.0. In iVendNext Desk open App library. Under Made "
-                                 "for you, press Allow beside Standin, then Install.",
-                        "shelf_key": "Standin has sent you an app, PP STN 1.2.0. In iVendNext Desk open App library, press "
-                                     "Open your shelf at the foot of the page, paste this key: IVNS1-K, then Install."},
+            "message": {"allow": "Standin has sent you an app, PP STN 1.2.0.\n\n1. In iVendNext Desk open App library.\n"
+                                 "2. Under Made for you, press Allow beside Standin.\n3. Press Install.",
+                        "shelf_key": "Standin has sent you an app, PP STN 1.2.0.\n\n1. In iVendNext Desk open App library "
+                                     "and press Open your shelf at the foot of the page.\n2. Paste this key:\n\nIVNS1-K\n\n"
+                                     "3. Press Install."},
             "send": "shelf_key"}
 
     def token_publish(self, d, proj, *extra, env=None):
@@ -338,7 +339,8 @@ class PublishTests(unittest.TestCase):
         sent = Library.seen[0]
         self.assertFalse({"partner", "at", "nonce", "recipient_sha256"} & set(sent))
         self.assertEqual(sent["cmd"], "publish")
-        self.assertIn("paste this key: IVNS1-K, then Install.", out)
+        self.assertIn("Paste this key:\n", out)
+        self.assertIn("\n    IVNS1-K\n", out)  # the key on its own line (K177)
         self.assertIn("old.ivendnext.com: removed on My apps", out)
         self.assertIn("public list: Waiting for our approval. Only the first listing waits.", out)
 

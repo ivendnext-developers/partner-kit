@@ -239,6 +239,14 @@ check("J7-01: Send for listing carries the card's fields and each picture as the
   cb.guide === "g" && cb.price === "free");
 const big = new Uint8Array(20000).map((_, i) => (i * 7) & 255);
 check("J7-01: a picture's bytes reach the hosting as standard base64", a.b64(big) === Buffer.from(big).toString("base64"));
+check("K176: Starter chosen beforehand; a choice or a plan in force comes first; nothing chosen when none is suggested",
+  a.tryPlanNow(null, { money: { suggested: "starter" } }) === "starter" && a.tryPlanNow("managed", { money: { suggested: "starter" } }) === "managed" &&
+  a.tryPlanNow(null, { plan: "standard", money: {} }) === "standard" && a.tryPlanNow(null, { money: {} }) === null);
+check("K176: a plan goes only where one was asked: a form kept from an earlier look never overrides the plan in force",
+  a.pubPlan(false, { plan: "starter" }, { plan: "standard" }) === "standard" && a.pubPlan(true, { plan: "starter" }, {}) === "starter" &&
+  a.pubPlan(false, { plan: "starter" }, {}) === undefined);
+check("K176: the Pay button says the door's amount, and today's words without one",
+  a.payLabel({ pay: "Pay $49 a month with your card" }) === "Pay $49 a month with your card" && a.payLabel({}) === a.payWords());
 check("EASY1NOTES: our own teams' checkout says no charge", a.payWords(true) === "Confirm in Stripe: no charge" &&
   a.payWords(false) === "Pay with your card");
 check("D14: the draft line goes once Publish is opened", /function openPublish\(app\) \{[\s\S]{0,200}data\.added = null;/.test(src));
