@@ -52,8 +52,8 @@ check("a plain visit is nothing", a.readReturn("", null).kind === "none");
 // the checkout opens in its own tab (this tab keeps its sign-in); its tab comes back to a line, never a sign-in alone
 r = a.readReturn("?order=0649c34008d66ea5", null);
 check("back from a paid checkout says where to carry on", r.kind === "checkout" && !r.left && /another tab, carry on there/.test(W.backFromCheckout[0]));
-check("both checkout links open in their own tab", (readFileSync(path.join(out, "assets/apps.js"), "utf8")
-  .match(/href: s\.checkout_url, target: "_blank", rel: "noopener"/g) || []).length === 2);
+check("Publish's checkout link opens in its own tab; Try has none (trying is free)", (readFileSync(path.join(out, "assets/apps.js"), "utf8")
+  .match(/href: s\.checkout_url, target: "_blank", rel: "noopener"/g) || []).length === 1);
 check("back from a closed checkout says it was not paid", a.readReturn("?order=0649c34008d66ea5&left=1", null).left === true);
 check("the sign-in returns to My apps", new URL(a.authorizeUrl("Iv1.x", "st", "ch")).searchParams.get("redirect_uri") === "https://developer.ivendnext.com/apps");
 
@@ -92,7 +92,7 @@ check("J1-06: the doors' plain words, as the row's examples", a.doorWords("Check
   a.doorWords("Till key") === "A key the cashier taps" && a.doorWords("Manifest") === "Your own lists and forms in Desk" &&
   a.doorWords("Desk action") === "A button in Desk" && a.doorWords("Event feed") === "Something that happens after each sale");
 const doors = [...new Set(index.samples.filter((s) => a.tickable(s) && s.door).map((s) => s.door))];
-check("J1-06: every door a sample has is said in plain words (D14)", doors.every((d) => a.DOOR_WORDS[d]), doors.filter((d) => !a.DOOR_WORDS[d]).join(", "));
+check("J1-06: every door a sample has is said in plain words", doors.every((d) => a.DOOR_WORDS[d]), doors.filter((d) => !a.DOOR_WORDS[d]).join(", "));
 
 let f = a.search(index, catalogue, "S23");
 check("J1-13: S23 is first, once", f.samples[0].name === "s23_till_guard" && f.samples.filter((s) => s.name === "s23_till_guard").length === 1);
@@ -109,13 +109,14 @@ check("J1-08: with no words every sample is a card, the configuration packs apar
   f.samples.length === index.samples.filter((s) => a.tickable(s)).length && f.packs.every((s) => s.config_pack) && f.packs.length >= 2);
 const desk = catalogue.find((c) => c.door === "configure");
 f = a.search(index, catalogue, desk.asks);
-check("J1-08 (D2): a Configure need is listed under Set in Desk first, never a card", f.desk.some((c) => c.id === desk.id) && G.desk === "Set in Desk first: no app needed");
+check("J1-08: a Configure need is listed under Set in Desk first, never a card", f.desk.some((c) => c.id === desk.id) && G.desk === "Set in Desk first: no app needed");
 const nope = catalogue.find((c) => c.status === "not-yet");
 f = a.search(index, catalogue, nope.asks);
-check("J1-09 (D3): a need not yet possible is under Cannot be built today", f.cannot.some((c) => c.id === nope.id) && G.cannot === "Cannot be built today: ");
+check("J1-09: a need not yet possible is under Cannot be built today", f.cannot.some((c) => c.id === nope.id) && G.cannot === "Cannot be built today: ");
 check("J1-09: Claim a need's words", G.claim === "Claim a need: we hold back from it for 90 days while you build it.");
-check("J1-12: Ask for it opens the request form, its title the need's words", a.askUrl(nope).startsWith(a.POINT_FORM + "&title=") &&
-  decodeURIComponent(a.askUrl(nope)).endsWith(nope.asks));
+check("J1-12, Ask for it opens the public Tell us what is missing page with the need's words, never the members-only form",
+  a.askUrl(nope) === a.ASK_PAGE + "#open-a-form" && !a.askUrl(nope).includes("partner-feedback") &&
+  src.includes("writeText(askWords(c, words))") && G.askCopied === "Your need's words are copied: paste them as the form's title.");
 const formed = catalogue.find((c) => (c.request_forms || []).length);
 check("J1-12: a need whose card names its form opens that form", a.askUrl(formed) === formed.request_forms[0].url);
 check("J1-11: the shortlist and the gallery label a need the same way, every card",
@@ -149,7 +150,7 @@ check("J3-06: Upload's words", G.upload === "Upload a new version" && G.uploadHi
 check("J11-02: a version names what, who and how", a.versionLine({ version: "1.1.0", what: "S11 added", by: "Priya", how: "page", sites: [] }) ===
   "1.1.0 (draft) · S11 added · Priya · on the page" &&
   a.versionLine({ version: "1.0.1", what: "upload", by: "dev", how: "ivn", sites: [] }) === "1.0.1 (draft) · upload · dev · ivn push");
-check("D14: every draft says it is on no site yet", /no site yet/.test(a.whereWent({ sites: [] })));
+check("every draft says it is on no site yet", /no site yet/.test(a.whereWent({ sites: [] })));
 check("J6-08: Take it and Not now", G.take === "Take it" && G.notNow === "Not now");
 const cv = a.covers({ app: "acme_x", needs: { built: [built.id], desk: [desk.id], cannot: [nope.id], asked: [nope.id] } }, catalogue);
 check("J6-12: What it covers, from the needs the app was started from", cv.built[0].id === built.id && cv.desk[0].id === desk.id &&
@@ -166,9 +167,9 @@ const nos = catalogue.filter((c) => a.needKind(c) === "app" && !a.needSamples(c)
 check("a need built as an app with no sample is found by its own words, never 'no match'",
   nos.length > 0 && nos.every((c) => { const r = a.search(index, catalogue, c.asks); return !r.none && r.nosample.some((x) => x.id === c.id); }),
   nos.filter((c) => a.search(index, catalogue, c.asks).none).map((c) => c.id).join(", "));
-const D14 = /event feed|\bcontainer\b|byte for byte|extension point|internal coupon|signature accepted|CHECK GREEN|\bmanifest\b/i;
-check("D14: no inside word in a card's When to use it, or in a need's what to do instead",
-  index.samples.every((s) => !D14.test(s.when_to_use || "")) && catalogue.filter((c) => a.needKind(c) === "cannot").every((c) => !D14.test(a.instead(c))));
+const INSIDE = /event feed|\bcontainer\b|byte for byte|extension point|internal coupon|signature accepted|CHECK GREEN|\bmanifest\b/i;
+check("no inside word in a card's When to use it, or in a need's what to do instead",
+  index.samples.every((s) => !INSIDE.test(s.when_to_use || "")) && catalogue.filter((c) => a.needKind(c) === "cannot").every((c) => !INSIDE.test(a.instead(c))));
 check("the samples' short titles start with a capital", index.samples.every((s) => /^[A-Z0-9"]/.test(s.short)));
 check("By recipe: every recipe a sample's needs cite", index.samples.every((s) => Array.isArray(s.recipes) && (!s.recipe || s.recipes[0].path === s.recipe)));
 check("EASY1NOTES: purposes, the folded command code, a way back", W.peopleWhy && W.tokensWhy && W.handOverWhy && W.commandQ === "Signing in a command?" &&
@@ -178,9 +179,9 @@ check("EASY1NOTES: purposes, the folded command code, a way back", W.peopleWhy &
 check("a plain button carries the site's plain style", src.includes('"site-btn site-btn-ghost"') && !src.includes('"site-btn ghost"'));
 // EASY3a part 3: Try on my sandbox (J4-01, J4-02, J4-05, §3b); the doors' own words are the hosting's tests
 const T = a.T;
-check("J4-01: the panel's labels and the Desk clicks", T.address === "Your sandbox's address" &&
-  T.keyLabel === "An administrator's key and secret" && T.check === "Check" &&
-  T.keyHint === "In your sandbox's Desk: your name (top right) > My Settings > API Access > Generate Keys. The secret is shown once: paste it here.");
+check("J4-01: no key is pasted: the panel has no key, secret or Check, and nothing calls the connect door",
+  T.yourSandbox === "Your sandbox" && T.keyHint === undefined && T.key === undefined && T.check === undefined &&
+  !src.includes("/sandbox/connect"));
 const parts = a.noSandboxParts("No sandbox yet? Request one. Everything else here works without it.");
 check("J4-01: with no sandbox, Request one is the link", parts.join("") === "No sandbox yet? Request one. Everything else here works without it." &&
   parts[1] === "Request one");
@@ -188,7 +189,10 @@ check("J4-02: the sections as the hosting drew them, in order, each with its lin
   "New in Desk|Who can use it|Changes to what you already have|Print layouts|Connects outside your site" &&
   a.consentSections({ sections: [{ title: "Who can use it", lines: [] }, { title: "New in Desk", lines: ["x"] }, { title: "Other", lines: ["y"] }] })
     .map((x) => x.title).join() === "New in Desk,Other" &&
-  T.changes === "What installing it changes" && T.wording === "Show the exact wording" && T.installTry === "Install and try");
+  T.changes === "What installing it changes" && T.wording === "Show the exact wording");
+check("J4-02: Try is one press: the install starts with the site's own fingerprint, no tick, no plan, no checkout",
+  T.installTry === undefined && !src.includes("tick_first") && !src.includes('name: "try-plan"') &&
+  /call\("POST", "\/try\/install", \{ app: app, sha: c\.sha \}\)/.test(src));
 check("J4-05: Test again; a try is asked again until done or stopped", T.testAgain === "Test again" &&
   a.tryRunning({ step: "build" }) && !a.tryRunning({ step: "done" }) && !a.tryRunning({ step: "stopped" }) && !a.tryRunning({}));
 check("J4-05 after a fix: a newer draft than the one tried is offered again; a finished try of the latest is not",
@@ -198,9 +202,6 @@ check("J5-15: the plan's lines as the row writes them, nothing added", !src.incl
 check("J2-10: the four buttons are on: Try on my sandbox and Publish open their screens", src.includes('button(G.tryIt, function () { openTry(a.app); }') &&
   src.includes("button(G.publish, function () { openPublish(a.app); }") && !src.includes("pubB.disabled = true"));
 
-check("J4-01: what was typed stays through a refusal, and is forgotten once connected (walk 2026-11-01)",
-  src.includes("data.sbTyped || (data.sbTyped =") && src.includes("data.sbTyped = null"));
-check("J4-03: the consent goes once Install and try starts (walk 2026-11-01)", src.includes("data.tryS = r; if (!r.stop) data.tryC = null;"));
 check("M14: a refused new try leaves no last try's lines under the refusal (walk 2026-11-02)", src.includes("function (e) { data.tryS = null; throw e; }"));
 
 // EASY3a part 4: Publish and keep it going (the page's own words; a door's words are shown as given, §0b rule 8)
@@ -209,7 +210,8 @@ check("J5-01, J5-19: the customer's sites and the own-site line", U.toCustomer =
   U.sitesLabel === "The customer's site addresses" && U.addSite === "+ Add another site");
 check("J7-01: the card's fields", U.title === "Title" && U.oneLine === "One line" && U.whatItDoes === "What it does" &&
   U.industries === "Industries" && U.price === "Price" && U.free === "Free" && U.withKey === "With a key: retailers ask you" &&
-  U.setUp === "How to set it up" && U.guide === "Guide link" && U.send === "Send for listing");
+  U.setUp === "How to set it up" && U.guide === "Guide link" && U.send === "Send for listing" &&
+  U.guideHint === "Any https page: your repository's README is enough.");
 check("J7-01: an industry id in the gallery's words", a.industryWords("hardware-and-diy") === "Hardware and DIY" &&
   a.industryWords("grocery") === "Grocery" && a.industryWords("thrift-and-resale") === "Thrift and resale");
 check("J12-01: after Go back the republish is followed on Publish, with each administrator's message (review MAJOR 3)",
@@ -224,8 +226,8 @@ check("J12-01: Go back shows only on a version that reached a site and is not th
 check("J6-06: the log downloads as the lines shown, one per line", a.logFile("x", ["b", "a"]) === "b\na\n" && a.logFile("x", []) === "");
 check("J11-02: a version made with the command reads ivn", a.versionLine({ version: "1.1.0", what: "S11 added", by: "ci", how: "ivn_cmd", sites: [] })
   === "1.1.0 (draft) · S11 added · ci · ivn");
-check("J4-01: the Desk picture ships with the page", existsSync(path.join(out, "assets/desk_api_access.jpg")) &&
-  src.includes("/assets/desk_api_access.jpg"));
+check("J4-01: no Desk key picture: nobody makes a key for their sandbox", !existsSync(path.join(out, "assets/desk_api_access.jpg")) &&
+  !src.includes("desk_api_access"));
 check("J7-01: Pictures, up to four, by the App library's picture rules", U.pictures === "Pictures" &&
   a.pictureType({ type: "image/png", size: 1000 }) === "png" && a.pictureType({ type: "image/webp", size: 300 * 1024 }) === "webp" &&
   a.pictureType({ type: "image/png", size: 300 * 1024 + 1 }) === null && a.pictureType({ type: "image/svg+xml", size: 10 }) === null &&
@@ -242,9 +244,6 @@ check("J7-01: a picture's bytes reach the hosting as standard base64", a.b64(big
 check("J7-05: a listed app's Publish opens on To everyone; an open form keeps its tab; any other app on To a customer",
   a.pubOpensOn(null, "customer", { listed: true }) === "everyone" && a.pubOpensOn({}, "customer", { listed: true }) === "customer" &&
   a.pubOpensOn(null, "everyone", { listed: false }) === "customer");
-check("K176: Starter chosen beforehand; a choice or a plan in force comes first; nothing chosen when none is suggested",
-  a.tryPlanNow(null, { money: { suggested: "starter" } }) === "starter" && a.tryPlanNow("managed", { money: { suggested: "starter" } }) === "managed" &&
-  a.tryPlanNow(null, { plan: "standard", money: {} }) === "standard" && a.tryPlanNow(null, { money: {} }) === null);
 check("K176: a plan goes only where one was asked: a form kept from an earlier look never overrides the plan in force",
   a.pubPlan(false, { plan: "starter" }, { plan: "standard" }) === "standard" && a.pubPlan(true, { plan: "starter" }, {}) === "starter" &&
   a.pubPlan(false, { plan: "starter" }, {}) === undefined);
@@ -252,19 +251,15 @@ check("K176: the Pay button says the door's amount, and today's words without on
   a.payLabel({ pay: "Pay $49 a month with your card" }) === "Pay $49 a month with your card" && a.payLabel({}) === a.payWords());
 check("EASY1NOTES: our own teams' checkout says no charge", a.payWords(true) === "Confirm in Stripe: no charge" &&
   a.payWords(false) === "Pay with your card");
-check("D14: the draft line goes once Publish is opened", /function openPublish\(app\) \{[\s\S]{0,200}data\.added = null;/.test(src));
+check("the draft line goes once Publish is opened", /function openPublish\(app\) \{[\s\S]{0,200}data\.added = null;/.test(src));
 check("J6-06: each log line wraps, never cut", src.includes('"class": "log-lines"'));
 check("J5-16: where it runs is read afresh each time the app's page opens", /function openApp\(app\) \{\s*data\.where = null; data\.whereAsked = null;/.test(src));
-check("J5-15, D15 (K173): Where it runs offers the plans and changes the plan from the next month",
+check("J5-15 (K173): Where it runs offers the plans and changes the plan from the next month",
   src.includes('call("POST", "/plan", { app: app, plan: pick })') && src.includes("w.plan_line"));
-check("J4-01: after Check the panel reads the sandbox afresh, so Install on it now shows at once",
-  /say\(r\.words\); render\(\);\s*\n[^\n]*\n\s*return call\("GET", "\/sandbox"\)\.then\(function \(s\) \{ data\.sandbox = s; render\(\); \}/.test(src));
-check("J4-01 (KK 11-02): connected, the boxes fold under one line with the address filled, and the panel never folds Install away",
-  T.otherSandbox === "Use a different sandbox or key" && src.includes('form = el("details", {}, el("summary", { text: T.otherSandbox }))') &&
-  src.includes('typed.site = "https://" + sb.sandbox.site') && /box\.open = true;/.test(src) && !src.includes("if (!sb.sandbox) box.open = true"));
-check("J4-01 (KK 11-02): Check stays off until all three boxes are filled",
-  src.includes("check.disabled = !(addr.value.trim() && key.value.trim() && secret.value.trim())"));
-check("J8-13: a try that stops while watched offers Try again", src.includes("!tryRunning(s) && offerAgain(s) && !data.tryC"));
+check("J4-01: everyone sees their sandbox's words, never folded away, and no key box under them",
+  /box\.open = true;/.test(src) && src.includes("tail.appendChild(vSandbox());") && !src.includes("check.disabled"));
+check("J8-13: a try that stops offers Try again under its words, one press", src.includes(
+  "button(T.tryAgain, function (ev) { ev.target.disabled = true; data.tryS = null; startTry(data.appId); })"));
 // ── EASYLOOK: what two people who had not read the spec stalled on ──
 check("MAKEEASY: the title starts as the ticked samples' titles, shortened only past 60 characters (F9)",
   a.defaultTitle(["Till guard rules"]) === "Till guard rules" &&
@@ -306,7 +301,8 @@ check("EASYLOOK: the wait says how long, and to keep the page open: the steps ru
 check("EASYLOOK: Add a sample's bar asks for one (29)", a.barText([], "add") === "Tick the sample to add." && a.barText([], "new") === "Tick one or several samples.");
 check("EASYLOOK: the settings' footnote no longer says you never type secrets under the secrets' boxes (065)", !G.settingsLede.includes("you never type"));
 check("EASYLOOK: Hand over says which word it wants (073)", a.WORDS.toWhich.startsWith("Their company's first word"));
-check("EASYLOOK: a refusal keeps the tick, the plan and the suggested word (11, 133)", src.includes("data.tryAgree") && src.includes("data.tryPlan") && src.includes("data.coTick") && /suggestWord\(data\.coName\)/.test(src));
+check("EASYLOOK: a refusal keeps the company form's tick and the suggested word (11, 133); Try has no tick or plan to keep",
+  !src.includes("data.tryAgree") && !src.includes("data.tryPlan") && src.includes("data.coTick") && /suggestWord\(data\.coName\)/.test(src));
 check("EASYLOOK: pressing clears the last refusal and says it started (12)", src.includes("data.tryPress = true") && src.includes("data.pubPress = true"));
 check("EASYLOOK: a publish that stops keeps the form and its addresses (20, 085)", src.includes("if (r.stop) { openPublish(data.appId); return; }"));
 check("EASYLOOK: a finished try leads on to Publish (14)", /if \(s\.done\) \{[\s\S]{0,1400}button\(G\.publish, function \(\) \{ openPublish\(data\.appId\); \}\)/.test(src));

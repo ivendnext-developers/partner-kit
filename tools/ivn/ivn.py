@@ -8,9 +8,8 @@
     ivn push                                  check the folder and upload it as the next draft
     ivn pull                                  bring the server's latest draft in and keep your changes
     ivn add s11 · ivn take s22                add a sample · take a sample's newer version
-    ivn sandbox https://acme.sandbox.ivend.co connect your sandbox, once
     ivn secret NAME · ivn secrets             set one of the app's settings · print each point's secret on your sandbox
-    ivn try [--show-wording]                  install the latest draft on your sandbox, and test each connection point
+    ivn try [--show-wording]                  install the latest draft on your sandbox, free, and test each connection point
     ivn test [--local]                        test each connection point again (--local: on this laptop)
     ivn publish [--to SITE ...] [--public]    send it to a customer's sites, or list it for every retailer
     ivn status · ivn logs                     where it stands · what its service logged
@@ -80,12 +79,8 @@ WORDS = {
            "and upload again.",  # J8-06
     "pushed": "Checked: CHECK GREEN. Uploaded as {version} (draft: on our server, on no site yet).",  # J3-07
     "uploaded": "Uploaded as {version}. ",  # J2-15
-    "desk_clicks": "In your sandbox's Desk: your name (top right) > My Settings > API Access > Generate Keys. The secret is "
-                   "shown once: paste it here.",  # J4-01, J4-10
     "changes_head": "What installing it changes",  # J4-02, J4-06
-    "type_yes": "Type yes to agree to everything above and to the exact wording (ivn try --show-wording prints it):",  # J4-06
-    "m31": "No sandbox is connected. Connect it with ivn sandbox ⟨address⟩, or on My apps > Your sandbox.",  # J8-29
-    "m32": "Not installed: you did not agree. Nothing was changed on your sandbox.",  # J8-30
+    "m31": "You have no sandbox yet. Request one: https://developer.ivendnext.com/sandbox.html",  # J8-29
     "tested_local": "Tested on http://localhost:8000 with the test secret in .env.local.",  # J3-10
     "type_plan": "Type 1, 2 or 3:",  # J5-17
     "pay_by": "Pay by 1 your company's card · 2 invoice to {email}",  # J5-17
@@ -255,13 +250,13 @@ def app_folder(a) -> pathlib.Path:
 
 
 def app_id(folder: pathlib.Path) -> str:
-    """The app's name: the manifest's (`acme_member_till`), or the settings file's with its hyphens read back (D15)."""
+    """The app's name: the manifest's (`acme_member_till`), or the settings file's with its hyphens read back."""
     m = read_json(folder / "manifest.json")
     return m.get("app") or str(read_json(folder / "app.json").get("app") or folder.name).replace("-", "_")
 
 
 def hosted_address(app: str) -> str:
-    return f"https://{app.replace('_', '-')}.{DOMAIN}"  # D15: one name, written two ways
+    return f"https://{app.replace('_', '-')}.{DOMAIN}"  # one name, written two ways
 
 
 LEFT_OUT = {".git", "__pycache__", ".venv", "venv", "node_modules", ".idea", ".vscode", ".pytest_cache"}
@@ -361,7 +356,7 @@ def set_version(folder: pathlib.Path, version: str) -> None:
 
 
 def sync_version(folder: pathlib.Path) -> None:
-    """A developer may set a higher number in app.json (D15): the manifest follows it, before anything is sent."""
+    """A developer may set a higher number in app.json: the manifest follows it, before anything is sent."""
     a, mp = read_json(folder / "app.json"), folder / "manifest.json"
     m = read_json(mp)
     if m and a.get("version") and m.get("version") != a["version"]:
@@ -496,7 +491,7 @@ def cmd_token(a) -> int:
 
 
 def repo_root() -> pathlib.Path:
-    """D11: the current repository (the nearest folder up holding `.git`), else the current folder."""
+    """the current repository (the nearest folder up holding `.git`), else the current folder."""
     cwd = pathlib.Path.cwd()
     return next((p for p in [cwd, *cwd.parents] if (p / ".git").exists()), cwd)
 
@@ -705,7 +700,7 @@ def _plain_json(data: bytes | None, rel: str, base_version: str | None) -> bytes
 
 
 def bring_in(folder: pathlib.Path, base_dir: pathlib.Path, theirs_dir: pathlib.Path, version: str) -> list[str]:
-    """A three-way merge per file (D6): the folder keeps its changes and takes the server's; files both changed are merged by
+    """A three-way merge per file: the folder keeps its changes and takes the server's; files both changed are merged by
     git, and what git cannot join is marked. The answer names the files left with a conflict."""
     base_version = read_json(base_dir / "app.json").get("version")
     conflicts = []
@@ -774,7 +769,7 @@ def merge_latest(folder: pathlib.Path, app: str, latest: str) -> list[str]:
     if not has_git():
         raise Stop(WORDS["no_git"])
     mine = read_json(folder / "app.json")
-    raised = mine.get("version") if _vt(mine.get("version")) > _vt(latest) else None  # D15: a higher number the developer set
+    raised = mine.get("version") if _vt(mine.get("version")) > _vt(latest) else None  # a higher number the developer set
     with tempfile.TemporaryDirectory() as tmp:
         b, t = pathlib.Path(tmp, "base"), pathlib.Path(tmp, "theirs")
         b.mkdir()
@@ -841,14 +836,6 @@ def cmd_add(a, take: bool = False) -> int:
 # ── the sandbox: connect, settings, secrets, try, test ───────────────────────
 
 
-def cmd_sandbox(a) -> int:
-    print(WORDS["desk_clicks"])
-    key = ask_secret("The key:")
-    secret = ask_secret("The secret:")
-    print(online(door, "/v1/sandbox/connect", {"site": a.address, "key": key, "secret": secret})["words"])
-    return 0
-
-
 def cmd_secret(a) -> int:
     folder = app_folder(a)
     value = ask_secret(f"The value of {a.name}:")
@@ -879,7 +866,7 @@ PASSED = re.compile(r"^Passed(?:, answered in|: reached, signature accepted, ans
 # the doors speak the page's words; a terminal has no button to press
 PAGE_WORDS = (("press Try again", "run ivn try"), ("Press Try again", "Run ivn try"), ("press Test again", "run ivn test"),
               ("Press Test again", "Run ivn test"), ("Press Publish again", "Run ivn publish again"),
-              ("press Check again", "run ivn sandbox again"), ("then press it again", "then run it again"))
+              ("then press it again", "then run it again"))
 
 
 def terminal(words: str) -> str:
@@ -972,13 +959,9 @@ def cmd_try(a) -> int:
             print(f"    {line}")
     if a.show_wording:
         print(start.get("wording") or "")
-    money = start.get("money") or {}
-    if money.get("line"):
-        print(money["line"])
-    if ask(WORDS["type_yes"]).lower() != "yes":
-        raise Stop(WORDS["m32"])
-    plan = start.get("plan") or choose_plan(money, a.plan)
-    online(door, "/v1/try/install", {"app": app, "sha": start.get("sha"), "agree": True, "plan": plan})
+    if (start.get("money") or {}).get("line"):  # trying is free: nothing is asked
+        print(start["money"]["line"])
+    online(door, "/v1/try/install", {"app": app, "sha": start.get("sha")})
     done = follow("/v1/try/status", app)
     for line in done.get("head") or []:
         print(line)
@@ -1140,8 +1123,7 @@ def ask_card(folder: pathlib.Path, app: str, industries: list[str]) -> dict:
             ("pictures", "Pictures (up to four files, split by |; leave empty for none):", split_list),
             ("industries", f"Industries, split by | ({', '.join(industries)}):", split_list),
             ("price", "Price (free, or key: With a key: retailers ask you):", str),
-            ("setup", "How to set it up (the steps the retailer follows first, split by |):", split_list),
-            ("guide", "Guide link:", str))
+            ("guide", "Guide link (any https page, your repository's README too):", str))
     if [f for f, _, _ in asks if f not in card]:
         print(WORDS["card_asks"])
     for field, prompt, read in asks:
@@ -1408,14 +1390,11 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("sample")
     p = cmd("take", lambda a: cmd_add(a, take=True), "take a sample's newer version")
     p.add_argument("sample")
-    p = cmd("sandbox", cmd_sandbox, "connect your sandbox, once", in_app=False)
-    p.add_argument("address")
     p = cmd("secret", cmd_secret, "set one of the app's own settings")
     p.add_argument("name")
     cmd("secrets", cmd_secrets, "print each connection point's secret on your own sandbox")
     p = cmd("try", cmd_try, "install the latest draft on your sandbox and test it")
-    p.add_argument("--show-wording", action="store_true", help="print the exact wording you agree to")
-    p.add_argument("--plan", choices=("starter", "standard", "managed"))
+    p.add_argument("--show-wording", action="store_true", help="print the exact wording the install shows")
     p = cmd("test", cmd_test, "test each connection point again")
     p.add_argument("--local", action="store_true", help="on this laptop, with the test secret in .env.local")
     p = cmd("publish", cmd_publish, "send it to a customer's sites, or list it for every retailer")

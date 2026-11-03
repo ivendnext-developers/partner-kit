@@ -22,8 +22,9 @@
   var PENDING = "ivn-apps-signin";                      // the state and verifier of a sign-in on its way, used once
   var CODE = "ivn-apps-code";                            // a code from the command's login, kept across the sign-in
   var START = "ivn-apps-start";                          // the ticks a shortlist or a sample's page brought, kept across it
-  // the extension-point request form (site/build.py POINT_FORM): Ask for it opens it with the need's words (J1-12)
-  var POINT_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=2_point_request.yml";
+  // Ask for it opens the public *Tell us what is missing* page, never the members-only form (a 404 to anyone not
+  // yet given access), with the need's words copied to paste into the form it offers (J1-12)
+  var ASK_PAGE = "/feedback.html";
   var CLAIM_FORM = "https://github.com/ivendnext-developers/partner-feedback/issues/new?template=6_claim_a_need.yml";
 
   // ── the pure parts ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -60,7 +61,7 @@
     deviceWarn: "Enter a code only from a command you ran yourself, just now: it signs that command in as you, for your company.",
     accept: "Accept",
     refuse: "Refuse",
-    // the purpose lines and small answers KK's review asked for (board row EASY1NOTES, 2026-11-01)
+    // the purpose lines and small answers a review asked for
     peopleWhy: "Everyone here can make, try and publish your company's apps. An owner adds and removes people.",
     tokensWhy: "A token lets a build server publish your company's apps without a person signing in.",
     handOverWhy: "For when your customer wants to own this app: it moves to their company on My apps, and their people keep it up to date from then on.",
@@ -136,7 +137,7 @@
     search: "Search by sample (S23, till guard) or by what your customer asked",
     tabs: [["industry", "By industry"], ["door", "By what it does"], ["recipe", "By recipe"]],
     none: "No sample or need matches these words. Try other words, or ask for it: ",
-    ask: "Ask for it",
+    ask: "Ask for it", askCopied: "Your need's words are copied: paste them as the form's title.",
     desk: "Set in Desk first: no app needed",
     hand: "Copy by hand: not an app made here",
     cannot: "Cannot be built today: ",
@@ -163,14 +164,11 @@
   // EASY3a part 3: Try on my sandbox (spec J4-01 to J4-05, J4-11, J5-15, J9-02, §3b). The words a door answers (Connected,
   // M11 to M14, M18 to M21, the results, the till lines, who pays) are the hosting's and are shown as given (§0b rule 8).
   var T = {
-    yourSandbox: "Your sandbox", otherSandbox: "Use a different sandbox or key", address: "Your sandbox's address", keyLabel: "An administrator's key and secret",
-    keyHint: "In your sandbox's Desk: your name (top right) > My Settings > API Access > Generate Keys. The secret is shown " +
-      "once: paste it here.",
-    key: "Key", secret: "Secret", check: "Check", request: "Request one",
-    changes: "What installing it changes", wording: "Show the exact wording", installTry: "Install and try",
+    yourSandbox: "Your sandbox", request: "Request one",
+    changes: "What installing it changes", wording: "Show the exact wording",
     testAgain: "Test again", tryAgain: "Try again", pay: "Pay with your card", plan: "Per month",
     updates: "What the update changes", choosePlan: "Choose a plan first.", noCharge: "Confirm in Stripe: no charge",
-    starting: "Starting the sandbox copy of your app\u2026", wait: "Keep this page open: this takes about 4 minutes.", openTill: "Open the till", connect: "Connect your sandbox"
+    starting: "Installing it on your sandbox\u2026", wait: "Keep this page open: this takes up to about 4 minutes.", openTill: "Open the till"
   };
   // EASY3a part 4: Publish and keep it going (spec J5-01, J5-04, J5-16, J5-19, J6-06, J7-01, J7-07, J10-01, J12-01, J13-03,
   // §3b). The words a door answers (who pays, M15 to M17, M23, M30, M33, the message to send, a site's state, the go-back
@@ -183,12 +181,12 @@
     cancel: "Cancel at month end", makeKey: "Make a key", keySite: "The retailer's site address",
     title: "Title", oneLine: "One line", whatItDoes: "What it does", industries: "Industries", price: "Price", free: "Free",
     withKey: "With a key: retailers ask you", setUp: "How to set it up", setUpHint: "The steps the retailer follows first, one per line.",
-    guide: "Guide link", guideHint: "A page on docs.ivendnext.com or developer.ivendnext.com: the App library's rule.",
+    guide: "Guide link", guideHint: "Any https page: your repository's README is enough.",
     send: "Send for listing", hours: "The last", pay: "Pay with your card", publishing: "Publishing\u2026", wait: "Keep this page open: this takes about 3 minutes.", anotherSite: "Another customer's site address",
     pictures: "Pictures", picturesHint: "Up to four: PNG, JPEG or WebP. A big one is made smaller for the card.",
     pictureBad: "Not added: {name} is not a PNG, JPEG or WebP picture we could make small enough. Choose another.",
     picturesBusy: "Adding pictures\u2026", picturesOnly: "Only the first {n} were added: a card has up to four.",
-    picture: "In your sandbox's Desk: your name > My Settings > API Access > Generate Keys", onSandboxOnly: "On your sandbox only"
+    onSandboxOnly: "On your sandbox only"
   };
   // an industry the App library's card takes (its ids, as the hosting gives them), in the words the gallery shows
   function industryWords(id) {
@@ -196,15 +194,13 @@
     return INDUSTRIES.filter(function (x) { return x.toLowerCase() === w; })[0] || w.charAt(0).toUpperCase() + w.slice(1);
   }
   // Go back shows only on a version that reached a site and is not the newest such (J12-01); every draft says it is on no
-  // site yet (D14)
+  // site yet
   function canGoBack(vs, v) {
     var sent = (vs || []).filter(function (x) { return (x.sites || []).length; });
     return (v.sites || []).length > 0 && sent.length > 1 && sent[sent.length - 1].version !== v.version;
   }
   function pubRunning(s) { return tryRunning(s); }
   // the checkout's button: our own teams' copies are covered, so theirs says no charge (EASY1NOTES, walk 11-02)
-  // K176: Starter chosen beforehand for an app that runs only when called; the person's own choice and a plan in force come first
-  function tryPlanNow(picked, c) { return picked || c.plan || (c.money || {}).suggested || null; }
   // a plan goes only where the screen asked for one: a form kept from an earlier look never overrides the plan in force
   // J7-05: a listed app's next version goes to the list too, so its Publish opens there; a form already open keeps its tab
   function pubOpensOn(form, to, c) { return form ? to : (c && c.listed ? "everyone" : "customer"); }
@@ -230,7 +226,7 @@
   }
   // a try still moving: the page asks again until it is done or stopped
   function tryRunning(s) { return !!(s && s.step && s.step !== "done" && s.step !== "stopped"); }
-  // a newer draft than the one tried, or a try that stopped: the consent is offered again (J4-05 after a fix)
+  // a newer draft than the one tried, or a try that stopped: Try installs it again (J4-05 after a fix)
   function offerAgain(s) { return !s || !s.step || s.step === "stopped" || (s.step === "done" && s.latest && s.latest !== s.version); }
   // J4-01's line with no sandbox, its "Request one" a link to the sandbox page
   function noSandboxParts(words) {
@@ -242,7 +238,7 @@
   var INDUSTRIES = ["Beauty and cosmetics", "Electronics and phones", "Fashion", "Grocery", "Hardware and DIY", "Hospitality",
                     "Liquor and wine", "Optical", "Pharmacy", "Thrift and resale", "Travel retail", "Distribution and warehousing"];
 
-  // the doors in plain words (spec J1-06; D14: no inside word on the page). A door with no line here shows its own name.
+  // the doors in plain words (spec J1-06; no inside word on the page). A door with no line here shows its own name.
   var DOOR_WORDS = {
     "Check before payment": "A check when the cashier presses Pay",
     "Till key": "A key the cashier taps",
@@ -264,7 +260,7 @@
   };
   function doorWords(door) { return DOOR_WORDS[door] || door || ""; }
 
-  // a need's kind on the shortlist and in the gallery (spec J1-11, D2, D3): set in Desk, cannot be built today, or an app
+  // a need's kind on the shortlist and in the gallery (spec J1-11): set in Desk, cannot be built today, or an app
   var DESK_DOORS = { configure: 1, receipt: 1 };
   function needKind(c) {
     if (!c) return "cannot";
@@ -274,7 +270,7 @@
   var KIND_WORDS = { app: "Built as an app", desk: "Set in Desk", cannot: "Cannot be built today" };
 
   function plainLine(s) { return String(s || "").replace(/\*\*/g, "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1"); }
-  // the card's *what to do instead* (D3): its Instead or Today line, else what to tell the customer
+  // the card's *what to do instead*: its Instead or Today line, else what to tell the customer
   function instead(c) {
     var l = ((c && c.limits) || []).filter(function (x) { return /^\*\*Instead:\*\*|^Today\b/.test(x); })[0];
     return plainLine(l || (c && c.tell) || "");
@@ -283,8 +279,9 @@
   function askUrl(c, words) {
     var f = c && (c.request_forms || [])[0];
     if (f && f.url) return f.url;
-    return POINT_FORM + "&title=" + encodeURIComponent("Extension-point request: " + ((c && c.asks) || words || ""));
+    return ASK_PAGE + "#open-a-form";
   }
+  function askWords(c, words) { return "Extension-point request: " + ((c && c.asks) || words || ""); }
 
   function sampleNumber(name) { var m = /^s(\d+)/.exec(name || ""); return m ? "S" + m[1] : ""; }
   // a sample's own short title (the samples index's `short`, else its card title without the number)
@@ -305,8 +302,8 @@
   function tickable(s) { return !s.config_pack && !s.by_hand; }
 
   // J1-03, J1-04, J1-13: the one search. Samples whose number or name match come first, then the needs every word matches;
-  // each sample once, with the needs it was matched for; Configure needs and configuration packs apart (D2), needs that
-  // cannot be built apart (D3). No words: every sample.
+  // each sample once, with the needs it was matched for; Configure needs and configuration packs apart, needs that
+  // cannot be built apart. No words: every sample.
   function search(index, catalogue, q) {
     var ws = words(q), samples = (index && index.samples) || [], by = {};
     samples.forEach(function (s) { by[s.name] = s; });
@@ -431,10 +428,10 @@
               sampleTitle: sampleTitle, sampleLabel: sampleLabel, needSamples: needSamples, search: search,
               fromNeeds: fromNeeds, readStart: readStart, barText: barText, appFor: appFor, recordsStart: recordsStart, tickable: tickable,
               making: making, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
-              covers: covers, coversText: coversText, POINT_FORM: POINT_FORM, CLAIM_FORM: CLAIM_FORM, T: T,
+              covers: covers, coversText: coversText, ASK_PAGE: ASK_PAGE, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords,
-              canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, tryPlanNow: tryPlanNow, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody };
+              canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -615,9 +612,8 @@
     });
     list.appendChild(button(G.newApp, function () { startGallery("new"); }));
     var out = el("div", {}, box, list, tail);
-    if (who.role === "owner") tail.appendChild(vSandbox());
+    tail.appendChild(vSandbox());   // the person's own sandbox, handed over: nothing to type, so everyone sees it
     (data.deviceCode ? box : tail).appendChild(vDevice());   // a code brought by the address: at the top, open
-    if (data.sbJump) { data.sbJump = false; root.setTimeout(function () { tail.scrollIntoView(); }, 0); }
     return out;
   }
 
@@ -674,7 +670,13 @@
 
   function askButton(c, words) {
     var b = el("a", { "class": "site-btn site-btn-ghost", href: askUrl(c, words), target: "_blank", rel: "noopener", text: G.ask });
-    b.addEventListener("click", function () { if (c && g.asked.indexOf(c.id) < 0) g.asked.push(c.id); });
+    b.addEventListener("click", function () {
+      if (c && g.asked.indexOf(c.id) < 0) g.asked.push(c.id);
+      var f = c && (c.request_forms || [])[0];
+      if (!(f && f.url) && root.navigator && root.navigator.clipboard) {   // the need's words go with the person
+        root.navigator.clipboard.writeText(askWords(c, words)).then(function () { say(G.askCopied); render(); }, function () {});
+      }
+    });
     return b;
   }
   function cannotBox(c) {
@@ -1109,70 +1111,42 @@
     return row;
   }
 
-  // the company's own sandbox (J4-01's address; its key and Check are EASY3a's panel): the preview shelf carries a
-  // hosted app's key there only
-  // J4-01, D4: Connect your sandbox, once. The key is checked on the site itself, then kept by the hosting (never here)
+  // J4-01: your sandbox. Nobody pastes a key: we connect our sandbox sites when we hand one over, so the
+  // panel says which one is yours, or where to ask for one
   function vSandbox() {
     var sb = data.sandbox || {}, box = el("details", {}, el("summary", { text: T.yourSandbox }));
-    box.open = true;   // its words and Install on it now are never folded away, after Check or on arrival (J4-01)
-    var form = box;
+    box.open = true;   // its words and Install on it now are never folded away (J4-01)
     if (sb.sandbox) {
       box.appendChild(el("p", { "class": "hosting-ok", text: sb.words }));
       if (sb.waiting) box.appendChild(el("p", {}, button(sb.install_now, function () { openTry(sb.waiting); })));
-      // connected: nothing more is needed, so the boxes are only for another sandbox or a new key (KK 2026-11-02)
-      form = el("details", {}, el("summary", { text: T.otherSandbox }));
-      form.open = !!data.sbForm;
-      form.addEventListener("toggle", function () { data.sbForm = form.open; });
-      box.appendChild(form);
-    } else {
-      if (sb.words) {
-        var parts = noSandboxParts(sb.words);
-        box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
-      }
-      form = el("details", {}, el("summary", { text: T.connect }));
-      form.open = !!data.sbForm;
-      form.addEventListener("toggle", function () { data.sbForm = form.open; });
-      box.appendChild(form);
+    } else if (sb.words) {
+      var parts = noSandboxParts(sb.words);
+      box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
     }
-    // what was typed stays through a refusal (M11, M12): the person corrects one box, never all three
-    var typed = data.sbTyped || (data.sbTyped = { site: "", key: "", secret: "" });
-    if (!typed.site && sb.sandbox) typed.site = "https://" + sb.sandbox.site;
-    var keep = function (input, k) { input.value = typed[k]; input.addEventListener("input", function () { typed[k] = input.value; }); return input; };
-    var addr = keep(el("input", { type: "url", spellcheck: "false", autocomplete: "off", placeholder: "https://acme.sandbox.ivend.co" }), "site");
-    var key = keep(el("input", { type: "text", spellcheck: "false", autocomplete: "off" }), "key");
-    var secret = keep(el("input", { type: "password", autocomplete: "off" }), "secret");
-    form.appendChild(field(T.address, addr));
-    form.appendChild(el("p", {}, el("strong", { text: T.keyLabel }), el("br", {}), el("span", { "class": "hint", text: T.keyHint })));
-    form.appendChild(el("p", {}, el("img", { src: "/assets/desk_api_access.jpg", alt: U.picture, width: "600", height: "270",
-                                            loading: "lazy", "class": "apps-pic" })));
-    form.appendChild(field(T.key, key));
-    form.appendChild(field(T.secret, secret));
-    var check = button(T.check, function (ev) {
-      ev.target.disabled = true;
-      call("POST", "/sandbox/connect", { site: addr.value.trim(), key: key.value.trim(), secret: secret.value.trim() })
-        .then(function (r) { data.sandbox = r; data.sbTyped = null; data.sbForm = false; say(r.words); render();
-              // J4-01: the panel's own read names the app waiting, so Install on it now shows at once, not after a reload
-              return call("GET", "/sandbox").then(function (s) { data.sandbox = s; render(); }, function () {}); },
-              function (e) { ev.target.disabled = false; fail(e); });
-    });
-    var ready = function () { check.disabled = !(addr.value.trim() && key.value.trim() && secret.value.trim()); };
-    [addr, key, secret].forEach(function (input) { input.addEventListener("input", ready); });
-    ready();
-    form.appendChild(check);
     return box;
   }
 
-  // J4-02 to J4-05, J4-11: Try on my sandbox. The consent first (the site's own check), then the steps, one per ask
+  // J4-02 to J4-05, J4-11: Try on my sandbox, one press (free, nothing to tick or choose). The site's own check
+  // first, shown as the install goes on, then the steps, one per ask
   function openTry(app) {
-    data.appId = app; data.tryC = null; data.tryS = null; data.tryPlan = null; data.tryAgree = false; data.tryPress = false; screen = "try"; say(""); render();
+    data.appId = app; data.tryC = null; data.tryS = null; data.tryPress = false; screen = "try"; say(""); render();
     if (!data.sandbox) call("GET", "/sandbox").then(function (r) { data.sandbox = r; render(); }, function () {});
     call("POST", "/try/status", { app: app }).then(function (s) {
       if (s.step) data.tryS = s;
       if (tryRunning(s)) { render(); pollTry(); return; }
       if (!offerAgain(s)) { render(); return; }
-      return call("POST", "/try", { app: app }).then(function (c) { data.tryC = c; render(); },
-        function (e) { data.tryS = null; throw e; });   // refused (M14): the last try's lines are not this one's (walk 11-02)
+      return startTry(app);
     }).then(null, fail);
+  }
+
+  // the site's check, then the install at once with the words it showed
+  function startTry(app) {
+    return call("POST", "/try", { app: app }).then(function (c) {
+      data.tryC = c; data.tryPress = true; render();
+      return call("POST", "/try/install", { app: app, sha: c.sha }).then(function (r) {
+        data.tryPress = false; data.tryS = r; say(""); render(); pollTry();
+      });
+    }, function (e) { data.tryS = null; throw e; }).then(null, function (e) { data.tryPress = false; fail(e); });   // refused (M14): the last try's lines are not this one's
   }
 
   function pollTry(errors) {
@@ -1181,10 +1155,6 @@
       if (screen !== "try") return;
       call("POST", "/try/status", { app: data.appId }).then(function (s) {
         data.tryS = s; say(""); render();
-        // a try that stopped while watched offers Try again at once, as one opened afresh does (walk 11-02)
-        if (!tryRunning(s) && offerAgain(s) && !data.tryC) {
-          call("POST", "/try", { app: data.appId }).then(function (c) { data.tryC = c; render(); }, fail);
-        }
         pollTry(0);
       },
         function (e) { if ((errors || 0) >= 3) { fail(e); return; } pollTry((errors || 0) + 1); });   // a passing error: ask again
@@ -1205,10 +1175,10 @@
     if (s && s.step) {
       if (!s.done) (s.lines || []).forEach(function (l) { box.appendChild(p(l)); });   // the steps go once the result is in
       if (tryRunning(s)) box.appendChild(el("p", { "class": "hint", text: T.wait }));
-      if (s.checkout_url) box.appendChild(el("p", {}, el("a", { href: s.checkout_url, target: "_blank", rel: "noopener", "class": "site-btn", text: payLabel(s) })));
       if (s.stop) {
         box.appendChild(el("p", { "class": "hosting-bad", text: s.stop }));
         if ((s.build_lines || []).length) box.appendChild(el("pre", { text: s.build_lines.join("\n") }));
+        box.appendChild(button(T.tryAgain, function (ev) { ev.target.disabled = true; data.tryS = null; startTry(data.appId); }));
       }
       if (s.done) {
         var res = card("Connection points");
@@ -1230,56 +1200,36 @@
           s.till.slice(1).forEach(function (l) { till.appendChild(p(l)); });
           box.appendChild(till);
         }
-        if (pointsOk && !c) box.appendChild(el("p", {}, button(G.publish, function () { openPublish(data.appId); })));
+        if (pointsOk) box.appendChild(el("p", {}, button(G.publish, function () { openPublish(data.appId); })));
       }
-      if (!c) return box;
-    }
-    if (!c) {
-      if (flash && flash.bad) {   // refused: the way on, never a line that waits for nothing
-        if (who.role === "owner" && data.sandbox && !data.sandbox.sandbox) box.appendChild(button(T.connect, function () { data.sbForm = true; data.sbJump = true; go("home"); }));
+    } else if (!c || (flash && flash.bad)) {
+      if (flash && flash.bad) {   // refused: the way on, never a page with nothing to press
+        box.appendChild(data.sandbox && !data.sandbox.sandbox ? el("p", {}, el("a", { href: "/sandbox.html", "class": "site-btn", text: T.request }))
+          : button(T.tryAgain, function (ev) { ev.target.disabled = true; say(""); startTry(data.appId); }));
         return box;
       }
       box.appendChild(p("Reading what installing it changes on your sandbox…"));
       return box;
     }
-    box.appendChild(el("h3", { text: (c.version ? c.version + ": " : "") + T.changes }));
+    if (!c) return box;
+    // what the install changes, as the site's own check drew it, read while it goes on (nothing to tick)
+    var what = el("details", {}, el("summary", { text: (c.version ? c.version + ": " : "") + T.changes }));
+    what.open = !(s && s.done);
     consentSections(c).forEach(function (sec) {
-      box.appendChild(el("h4", { text: sec.title }));
+      what.appendChild(el("h4", { text: sec.title }));
       var ul = el("ul", {});
       sec.lines.forEach(function (l) { ul.appendChild(el("li", { text: l })); });
-      box.appendChild(ul);
+      what.appendChild(ul);
     });
     if ((c.changes || []).length) {
-      box.appendChild(el("h4", { text: T.updates }));
+      what.appendChild(el("h4", { text: T.updates }));
       var cu = el("ul", {});
       c.changes.forEach(function (l) { cu.appendChild(el("li", { text: l })); });
-      box.appendChild(cu);
+      what.appendChild(cu);
     }
-    box.appendChild(el("details", {}, el("summary", { text: T.wording }), el("pre", { text: c.wording || "" })));
-    var money = c.money || {}, plan = tryPlanNow(data.tryPlan, c);
-    if (money.line) box.appendChild(p(money.line));
-    if ((money.plans || []).length) {
-      var fs = el("fieldset", {}, el("legend", { text: T.plan }));
-      money.plans.forEach(function (x) {
-        var r = el("input", { type: "radio", name: "try-plan", value: x.plan });
-        if (x.plan === plan) r.checked = true;
-        r.addEventListener("change", function () { plan = data.tryPlan = x.plan; });
-        fs.appendChild(el("p", {}, el("label", {}, r, " " + x.words)));
-      });
-      box.appendChild(fs);
-    }
-    var agree = el("input", { type: "checkbox" });
-    agree.checked = !!data.tryAgree;   // a refusal keeps the plan and the tick
-    agree.addEventListener("change", function () { data.tryAgree = agree.checked; });
-    box.appendChild(el("p", {}, el("label", {}, agree, " " + c.agree)));
-    box.appendChild(button(s && s.stop ? T.tryAgain : T.installTry, function (ev) {
-      if (!agree.checked) { say(c.tick_first, true); render(); return; }
-      if ((money.plans || []).length && !plan) { say(T.choosePlan, true); render(); return; }
-      data.tryPress = true; say(""); render();
-      call("POST", "/try/install", { app: data.appId, sha: c.sha, agree: true, plan: plan || undefined })
-        // the consent goes once the install starts: the steps alone, never a second Install and try under them
-        .then(function (r) { data.tryPress = false; data.tryS = r; if (!r.stop) data.tryC = null; say(""); render(); pollTry(); }, function (e) { data.tryPress = false; fail(e); });
-    }));
+    what.appendChild(el("details", {}, el("summary", { text: T.wording }), el("pre", { text: c.wording || "" })));
+    if ((c.money || {}).line) what.appendChild(p(c.money.line));
+    box.appendChild(what);
     return box;
   }
 
@@ -1531,7 +1481,7 @@
     });
     if (shown.length) box.appendChild(ul);
     if (w.customer_test) box.appendChild(el("p", { "class": "hint", text: w.customer_test }));
-    // J5-15, D15: the plan, changed from the next month
+    // J5-15: the plan, changed from the next month
     if (w.plans) {
       var pick = w.plan_chosen, fp = el("fieldset", {}, el("legend", { text: T.plan }));
       w.plans.forEach(function (x) {
