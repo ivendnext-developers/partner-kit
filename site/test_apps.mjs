@@ -116,6 +116,7 @@ check("J1-09: a need not yet possible is under Cannot be built today", f.cannot.
 check("J1-09: Claim a need's words", G.claim === "Claim a need: we hold back from it for 90 days while you build it.");
 check("J1-12, Ask for it opens the public Tell us what is missing page with the need's words, never the members-only form",
   a.askUrl(nope) === a.ASK_PAGE + "#open-a-form" && !a.askUrl(nope).includes("partner-feedback") &&
+  a.CLAIM_FORM === "/roadmap.html#claim-a-need" &&
   src.includes("writeText(askWords(c, words))") && G.askCopied === "Your need's words are copied: paste them as the form's title.");
 const formed = catalogue.find((c) => (c.request_forms || []).length);
 check("J1-12: a need whose card names its form opens that form", a.askUrl(formed) === formed.request_forms[0].url);
