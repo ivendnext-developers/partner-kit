@@ -718,6 +718,58 @@ class FoundOnTheRealDoors(Base):
             card = ivn.ask_card(folder, "acme_member_till", ["grocery", "fashion"])
         self.assertEqual(card["industries"], ["grocery"])
 
+    def test_a_build_server_publishes_every_build_from_a_clean_checkout(self):  # ⭐ UX-143 (J2-15), completeness-critic's first
+        folder, _ = self.made("s23")
+        self.in_app(folder)
+        self.assertEqual(self.run_ivn("publish", "--to", SITE, stdin="1\n1\n")[0], 0)
+        repo = self.tmp / "gitrepo"  # what the repository holds: never a build's own upload
+        shutil.copytree(folder, repo, ignore=shutil.ignore_patterns(".ivn-state"))
+        self.stub.money = {"lines": ["Publishing is free."], "plan": "starter", "plans": None}
+        for build in (1, 2, 3):
+            with (repo / "README.md").open("a") as f:
+                f.write(f"commit {build}\n")
+            ci = self.tmp / f"ci{build}"
+            shutil.copytree(repo, ci)
+            os.chdir(ci)
+            rc, out = self.run_ivn("publish")
+            self.assertEqual(rc, 0, out)
+            self.assertRegex(out, r"Uploaded as \d+\.\d+\.\d+\. \d+\.\d+\.\d+ published to 1 site\.")
+        self.stub.apps["acme_member_till"]["versions"][-1]["how"] = "page"  # a colleague changes it on the page: never lost
+        with (repo / "README.md").open("a") as f:
+            f.write("commit 4\n")
+        ci = self.tmp / "ci4"
+        shutil.copytree(repo, ci)
+        os.chdir(ci)
+        rc, out = self.run_ivn("publish")
+        self.assertEqual(rc, 1, out)
+        self.assertIn("as git marks a conflict", out)
+
+    def test_push_is_not_green_with_a_failing_test(self):  # ⭐ UX-32 (J3-07), J3-04's green
+        folder, _ = self.made()
+        self.in_app(folder)
+        (folder / "tests" / "test_mine.py").write_text(
+            "import unittest\nclass T(unittest.TestCase):\n    def test_x(self):\n        self.fail('no')\n")
+        rc, out = self.run_ivn("push")
+        self.assertEqual(rc, 1, out)
+        self.assertNotIn("CHECK GREEN", out)
+        self.assertIn("test_x", out)
+
+    def test_the_sites_own_test_prints_as_the_row(self):  # ⭐ UX-42 (J4-06), with J4-09's head
+        rows = ivn.result_rows(["guard (a check at Pay): Passed: reached, signature accepted, answered in 0.1 s."])
+        self.assertEqual(rows, ["guard   a check at Pay   Passed  0.1 s"])
+
+    def test_status_says_the_sandbox_and_each_customers_install(self):  # ⭐ UX-72 (§14's J2-10), J5-16
+        folder, _ = self.made()
+        self.in_app(folder)
+        version = self.stub.apps["acme_member_till"]["versions"][-1]["version"]
+        sites = {"sites": [{"site": SITE, "customer": True, "state": "Waiting for their administrator to install."},
+                           {"site": "acme.sandbox.ivend.co", "sandbox": True, "version": version, "state": f"Installed {version}."}]}
+        with unittest.mock.patch.dict(Stub.ROUTES, {"/v1/sites": lambda s, b: sites}):
+            rc, out = self.run_ivn("status")
+        self.assertEqual(rc, 0, out)
+        self.assertIn(f"{version} a draft, on your sandbox only.", out)
+        self.assertIn(f"{SITE}: Waiting for their administrator to install.", out)
+
     def test_test_with_nothing_to_test_says_so(self):
         folder, _ = self.made()
         self.in_app(folder)

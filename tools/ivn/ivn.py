@@ -605,14 +605,13 @@ def cmd_check(a) -> int:
 def upload(folder: pathlib.Path, app: str) -> str:
     """The folder as the next draft (J3-07): the kit's check first, then the same two doors as the page. A folder made away
     from My apps (`start.py`, an app older than My apps) becomes an app of the company's at its first upload."""
-    import combine  # noqa: PLC0415
     marked = still_marked(folder)
     if marked:
         raise Stop(WORDS["marked"].format(files=", ".join(marked)))
     sync_version(folder)
-    rc, verdict = combine.kit_check(folder)
-    if rc:
-        raise Stop(WORDS["m06"].format(verdict=verdict.rstrip(".")))
+    ok, verdict = check_folder(folder)  # J3-04: green is the kit's check and the app's own tests
+    if not ok:
+        raise Stop(WORDS["m06"].format(verdict=verdict.removeprefix("CHECK RED: ").rstrip(".")))
     data = zip_folder(folder)
     try:
         u = door("/v1/draft/url", {"app": app, "size": len(data)})
@@ -641,8 +640,31 @@ def cmd_push(a) -> int:
     return 0
 
 
+def catch_up(folder: pathlib.Path, app: str) -> None:
+    """J2-15: a build server starts each build from a clean checkout, whose `base` is the version last committed, not the
+    one its last build uploaded. The repository holds what a command uploaded, so it goes on from there. Something changed
+    on the page is not in the repository: that is brought in, and a conflict stops the build (M29)."""
+    a = read_json(folder / "app.json")
+    base = a.get("base")
+    if (folder / STATE).exists() or not base:  # a folder that has matched the server here is not a clean checkout
+        return
+    row = door("/v1/app", {"app": app})
+    latest = latest_of(row)
+    if not latest or latest == base:
+        return
+    if all(v.get("how") in ("ivn", "ivn_cmd") for v in row.get("versions") or [] if _vt(v.get("version")) > _vt(base)):
+        a["base"] = latest
+        write_json(folder / "app.json", a)
+        return
+    conflicts = merge_latest(folder, app, latest)
+    if conflicts:
+        n = len(conflicts)
+        raise Stop(WORDS["m29"].format(version=latest, n=n, s="" if n == 1 else "s", files=", ".join(conflicts)))
+
+
 def push_first(folder: pathlib.Path, app: str) -> str | None:
     """J3-07: `ivn try` and `ivn publish` upload first when the folder changed, and say so."""
+    online(catch_up, folder, app)
     if changed(folder) or not read_json(folder / "app.json").get("base"):
         return online(upload, folder, app)
     return None
@@ -851,12 +873,13 @@ def cmd_secrets(a) -> int:
 
 
 RESULT = re.compile(r"^(\S+) \((.*?)\): (.*)$", re.S)
-PASSED = re.compile(r"^Passed, answered in ([\d.]+) s$")
+PASSED = re.compile(r"^Passed(?:, answered in|: reached, signature accepted, answered in) ([\d.]+) s\.?$")
 
 
 # the doors speak the page's words; a terminal has no button to press
 PAGE_WORDS = (("press Try again", "run ivn try"), ("Press Try again", "Run ivn try"), ("press Test again", "run ivn test"),
-              ("Press Test again", "Run ivn test"), ("Press Publish again", "Run ivn publish again"))
+              ("Press Test again", "Run ivn test"), ("Press Publish again", "Run ivn publish again"),
+              ("press Check again", "run ivn sandbox again"), ("then press it again", "then run it again"))
 
 
 def terminal(words: str) -> str:
@@ -880,6 +903,9 @@ def result_rows(lines: list[str]) -> list[str]:
     return out
 
 
+SHELF_LINE = "Published means waiting on the customer's shelf: it is installed only when their administrator installs it."
+
+
 def follow(path: str, app: str) -> dict:
     """A try or a publish, one step per call, as the page polls it: each new line as it comes, and the card checkout's
     address when one opens. Ends done, or stops in the door's own words."""
@@ -890,7 +916,7 @@ def follow(path: str, app: str) -> dict:
         except (Offline, KeyboardInterrupt):  # it was accepted: it goes on on our side
             raise Stop(WORDS["gave_up"]) from None
         for line in out.get("lines") or []:
-            if line not in said:
+            if line not in said and line != SHELF_LINE:  # the row's own line says it, and a listing has no customer's shelf
                 said.add(line)
                 print(line, flush=True)
         if out.get("checkout_url") and not paid:
@@ -957,6 +983,8 @@ def cmd_try(a) -> int:
     for line in done.get("head") or []:
         print(line)
     rows = result_rows(done.get("results") or [])
+    if not rows:
+        print(WORDS["no_points"])
     for line in rows:
         print(line)
     for line in done.get("till") or []:
@@ -1158,7 +1186,7 @@ def cmd_publish(a) -> int:
     version = read_json(folder / "app.json").get("version")
     start = online(door, "/v1/publish/start", {"app": app})
     if start.get("m16"):
-        raise Stop(start["m16"])
+        raise Stop((WORDS["uploaded"].format(version=uploaded) if uploaded else "") + start["m16"])
     sites = list(a.to or [])
     public = a.public or bool(start.get("listed"))
     if start.get("nothing_new") and not sites and not a.public:
@@ -1254,7 +1282,19 @@ def cmd_status(a) -> int:
     row = next((r for r in rows if r.get("app") == app), None)
     line = (row or {}).get("line") or "not on our server yet: run ivn push"
     tail = newer_lines(folder)
+    sites = []
+    if row:
+        try:
+            sites = door("/v1/sites", {"app": app}).get("sites") or []
+        except (Refused, Offline):
+            pass
+    for s in sites:  # §14: a draft a try installed is on the sandbox, not on no site
+        if s.get("sandbox") and s.get("version"):
+            line = line.replace(f"{s['version']} a draft, on no site yet", f"{s['version']} a draft, on your sandbox only")
     print(f"{app} {line}." + (f" {tail}" if tail else ""))
+    for s in sites:  # J5-16: has it been installed?
+        if s.get("customer") and s.get("state"):
+            print(f"{s['site']}: {s['state']}")
     if row:
         for path in ("/v1/publish/status", "/v1/try/status"):
             try:
@@ -1286,11 +1326,9 @@ def cmd_rollback(a) -> int:
     print(first["words"])
     confirm(app)
     out = online(door, "/v1/rollback", {"app": app, "to": a.version, "go": True})
-    done = follow("/v1/publish/status", app)
+    follow("/v1/publish/status", app)
     for x in out.get("messages") or []:
         print(f"{x['site']}: {x['message']}")
-    print(WORDS["published_n"].format(version=done.get("version"), n=len(out.get("messages") or []),
-                                      s="" if len(out.get("messages") or []) == 1 else "s"))
     return 0
 
 
