@@ -2,89 +2,85 @@
 
 ![What a manifest installs, as staff see it in Desk](../samples/s2_bins/screenshots/s2_flow.gif)
 
-*What the bin-location manifest installs, as staff see it in Desk: the workspace, the bins, and what is in each bin (walked before POS version 2.1.0: from 2.1.0 the workspace is never in the Desk's menu; the retailer's administrator opens it from the App library, and your app's users find it with the search bar).*
+*What the bin-location manifest installs, as staff see it in Desk: the workspace, the bins, and what is in each bin. The workspace is never in the Desk's menu as this picture shows it: the retailer's administrator opens it from the App library, and your app's users find it with the search bar.*
 
-A manifest is one file that adds **your own record types and fields** to a retailer's iVendNext — bins and what is in them, warranty terms, a reference list — without you writing code inside the retailer's iVendNext. It is for iVendNext Partners, and for the CitiXsys Consulting Team. **Reference implementation:** `samples/s2_bins/manifest.json` (five record types, a field on Item, a print format, a workspace, two webhooks) and `samples/s1_warranty/manifest.json` (one record type the till key reads). The checker is `tools/manifest/validate.py` (a copy of iVendNext's own), and `tools/manifest/site_rules.py` adds the two refusals iVendNext's install makes after it (a report, card or chart may not name a field the same manifest adds to a retailer's record type, and a workspace may not link the manifest's own report); `tools/check/check.py` and `tools/deploy/deploy.py` run both; the installer is in the retailer's iVendNext, behind its **Retail Extension Package** screen; `tools/deploy/deploy.py` puts a manifest on your own sandbox.
+A manifest is one file that adds **your own record types and fields, and whatever else the retailer's administrator could add in Desk,** to a retailer's iVendNext, without you writing code inside the retailer's iVendNext. It is for iVendNext Partners, and for the CitiXsys Consulting Team. **Reference implementation:** `samples/s11_approvals/manifest.json` (one workflow on the customer's Purchase Order), `samples/s2_bins/manifest.json` (five record types, a field on Item, a print format, a workspace, two webhooks) and `samples/s1_warranty/manifest.json` (one record type the till key reads). The checker is `tools/manifest/validate.py` (a copy of iVendNext's own), and `tools/manifest/site_rules.py` adds three stops iVendNext's install makes after it (a feed description over 140 characters, a bad Dynamic Link, a record type's name over 61 characters); `ivn check` runs both, and `ivn try` puts a manifest on your own sandbox.
 
 **When to use it.** Rung 4 of the build ladder. Use it when configuration cannot hold your data and your app needs it **inside** the retailer's iVendNext: staff see it in Desk, a till key reads it, or a webhook reports on it. A manifest runs nothing, except a certified module it carries, which runs in our sandbox. Your logic lives on your server (a connected app) or in a till key.
 
-> **Package or module?** A **package** is your whole app: its records, fields, print formats, buttons, services and label layouts, sent as one manifest. The retailer's administrator pastes your file, reads *What it will do*, consents and installs it; later the retailer can update it or remove it, and *Connected apps* lists every one. A **module** is one small program that does one job at an extension point, such as adjusting a price or checking a sale before payment. **Two extension points take a module today: the check before payment and pricing.** The retailer's administrator adds your file in Desk, with a certificate our review team signs, and can withdraw it; from POS build 2.0.0.660 your package can carry it instead ([chapter 7](../guide/07_manifests.md), `extension_modules`). **In short:** a package is the app, and a module is one program that does one job.
+> **Package or module?** A **package** is your whole app: its records, fields, print formats, buttons, services and label layouts, sent as one manifest. The retailer's administrator presses **Install** in the App library, reads what it will change, ticks **I agree** and presses **Install**; later the retailer can update it or remove it, and *Connected apps* lists every one. A **module** is one small program that does one job at an extension point, such as adjusting a price or checking a sale before payment. **Two extension points take a module today: the check before payment and pricing.** Your package can carry it ([chapter 7](../guide/07_manifests.md), `extension_modules`), or the retailer's administrator adds your file in Desk, with a certificate our review team signs, and can withdraw it. **In short:** a package is the app, and a module is one program that does one job.
 >
-> *Technical note:* a package installs from the **Retail Extension Package** screen in Desk; a module is a **Retail Extension Module** record that the retailer's administrator adds in Desk, at an extension point that takes one ([chapter 8](../tools/wasm_kit/README.md)).
+> *Technical note:* a package installs from the **App library**, or by hand from the **Retail Extension Package** screen in Desk; a module is a **Retail Extension Module** record that the retailer's administrator adds in Desk, or your package installs, at an extension point that takes one ([the Wasm kit](../tools/wasm_kit/README.md)).
 
 ## Steps
 
-1. **Choose your prefix.** One to three upper-case words (`PP BLN`) and the matching app name (`pp_bln`). Every name you create starts with the prefix. A field you add to one of the retailer's own record types starts with the lower-case prefix (`pp_bln_default_bin`). Names on a site are shared and carry no owner, so the prefix is how an uninstall finds what is yours. Its first word is your company's own first word, so the App library accepts it as yours ([Publish your app](../site/pages/publish.md)).
+1. **Choose your prefix.** One to three upper-case words (`ACME BINS`) and the matching app name (`acme_bins`); `ivn new acme_bins --from s2` sets both. Its first word is your company's own first word, so the App library accepts it as yours ([Publish your app](../site/pages/publish.md)). A name needs no prefix: only a field you add to one of the retailer's own record types starts with the lower-case prefix (`acme_bins_default_bin`).
 
-2. **Write `manifest.json`.** The kinds a manifest may carry:
+2. **Write `manifest.json`.** Set `"manifest_version": 2`. An app may do anything the retailer's administrator can do in Desk, on the retailer's own record types too. The kinds a manifest may carry:
 
    | Kind | What it is | Example (S2) |
    |---|---|---|
-   | `doctypes` | your record types (not submittable); child tables allowed | `PP BLN Bin`, `PP BLN Item In Bin`, the child `PP BLN Bin Movement` |
-   | `custom_fields` | fields on your own types, or prefixed fields on the retailer's; from version 2.1.0 a field may carry `write_roles` and `read_roles`, so only named roles change or read it ([below](#a-field-only-named-roles-read-or-change)) | `Item.pp_bln_default_bin` |
-   | `property_setters` | display tweaks on your own types and fields | `PP BLN Bin.bin_code` bold |
-   | `print_formats` | templates for your records or the retailer's; from version 2.1.0 a format may declare `default_print_language`, the language it prints in (a language the site has; `ar` prints right to left) | `PP BLN Bin Label` |
-   | `notifications` | e-mail or in-app alerts | — |
+   | `doctypes` | your record types; child tables allowed | `PP BLN Bin`, `PP BLN Item In Bin`, the child `PP BLN Bin Movement` |
+   | `custom_fields` | fields on your own types, or on the retailer's, where the field's name starts with your prefix; a field may carry `write_roles` and `read_roles`, so only named roles change or read it ([below](#a-field-only-named-roles-read-or-change)) | `Item.pp_bln_default_bin` |
+   | `property_setters` | display changes on a record type or a field, the retailer's own included: relabel, hide or require a field | `PP BLN Bin.bin_code` bold |
+   | `print_formats` | templates for your records or the retailer's; a format may declare `default_print_language`, the language it prints in (a language the site has; `ar` prints right to left) | `PP BLN Bin Label` |
+   | `notifications` | e-mail or in-app alerts on any event of a record that is not one of the till's own; on the till's own records, a reminder before or after a date | — |
    | `workspaces` | a Desk page with headers and shortcuts | `PP BLN Bins` |
    | `sale_attributes` | an optional sale detail a till key can fill | — |
    | `webhooks` | signed calls to **addresses you list** in `allowed_urls` | a booked sale → your service |
 
-   **Manifest v2 (`"manifest_version": 2`) adds the screen kinds, approvals, the feed and the remote till key.** A v1 manifest still installs once every one of its permission rows writes all nine rights.
+   **The rest of the kinds: the screens, approvals, the feed, the till key and the extension points.**
 
    | Kind | What it is | The rules |
    |---|---|---|
-   | `reports` | a **Report Builder** report: columns, filters, order, totals row, roles | Report Builder only — a *query* report (SQL) and a *script* report (Python) are refused. Columns and filters are checked against the record type **as it is before the install**, so a field the same manifest adds to a retailer's record type cannot be used (`site_rules.py`), and a workspace cannot link the manifest's own report |
-   | `number_cards` | a count, sum, average, minimum or maximum over a record type | "Document Type" cards only; a *custom* card (a server method) is refused |
-   | `dashboard_charts` | count / sum / average over time, or group-by; line, bar, percentage, pie, donut | a *custom* chart (a server method) and a *report* chart are refused |
-   | `dashboards` | your charts and cards on one page | only the manifest's own charts and cards |
-   | `list_settings` | the list view's columns and counters | **your own record types only** — an iVendNext record type has one list setting, the retailer's |
-   | `workflows` | states, transitions, the role per transition, a field set on entering a state (approvals by workflow) | **your own record types only**; every state keeps the record a draft (never submits or cancels); **no transition condition** (it is code evaluated on the server). Missing states and actions are made, and removed again at uninstall unless another workflow uses them |
-   | `naming_rules` | a numbering rule (prefix + digits, optional conditions) | **your own record types only** — numbering the retailer's records, a sale's number included, is fiscal ground |
-   | `links` | the **Connections** panel: your records listed under an iVendNext record (e.g. claims under a Customer) | the link field must be a Link on your record type pointing at that retailer's iVendNext record type |
-   | `registered_applications` | your service's **event-feed** registration (`recipes/event_feed.md`) | **one per app**: every record type your service follows goes in its `events`, and a second entry is refused (*"an app has one event feed: list every record type it follows in the first one's events"*). Installed **switched off**; from POS version 2.1.0.667 the install makes your app's own user, `<app>@integration.invalid` (API only, one role `<PREFIX> Integration`), and names it on the feed as the user your service reads as ([chapter 5](event_feed.md), step 5, says how its key reaches you and the licence bound); the retailer ticks each record type on. At uninstall its queue rows go with it |
-   | `remote_keys` | your **remote till key** (the till calls your service) | **from POS build 2.0.0.646** the key is ready in **POS Studio > Apps** as soon as the app is installed: the consent the administrator reads on the install screen is the key's consent, and the store switches the key on there and places it on its till; **on an older build** it installs switched off, consent not given, and the retailer's administrator ticks both in Desk. The installer makes the secret and hands it to you once; `https` only, an address you list; **a manifest may declare a `timeout_seconds` above 0 and at most 5** (our checker refuses more: `tools/manifest/validate.py`). The record the installer makes accepts up to 10 in Desk (`recipes/ai_till_key.md`). Refused, with its reason, on a site whose POS app predates the remote key |
-   | `extension_subscriptions` | your service for one extension point: `desk_action`, `page`, `check`, `capture`, `doccheck`, `fulfil`, `price` (a module's service only) or, from version 2.1.0, `payer` (label 1–40, `https` address you list, `timeout_seconds` at most 10: a scan or quantity-change capture at most 3, a payer at most 5; a page's `page_…` settings and roles); a module's service has `transport: "wasm"` and no address ([below](#a-certified-module-in-your-package)) | installed **switched off, consent not given**; the installer makes the secret and hands it to you once (`<app>:sub:<key>`); each extension point's settings and refusals are in [chapter 7](../guide/07_manifests.md) (a payer's `clearing_mode` and a check's `may_approve` are the retailer's, refused in a manifest) |
-   | `desk_actions` | a button on a Desk record (roles, when it shows, its inputs, `send_fields`) answered by one of your `desk_action` subscriptions (`service` = its `key`) | installed **switched off**; a service the manifest does not install is refused; no role open to everyone |
-   | `save_rules` | a rule checked on every save of a record type, the retailer's own or yours (the seven kinds and their keys: [the save rules page](../contracts/pages/save_rules.md)) | installed **switched off**; the name carries your prefix; no markup in the message; on a sale the product lets a rule only flag; rules run in `sequence` order; **a rule may name only a field that exists at install**, so a rule on a workflow's `workflow_state` needs that workflow saved first (workflows, then the manifest, then the rest of the configuration) |
-   | `fiscal_readers` | one outside fiscal service's result on the sale: your result fields at their own permission level, the status map, the writer role and its users | installed **switched off**, in the order the product accepts; no API key is made (the retailer makes it). The steps the retailer takes are in guide chapter 7 |
-   | `extension_modules` (sandboxed modules) | a module we certified, for the check before payment or pricing, run by an `extension_subscriptions` service with `transport: "wasm"` (from POS build 2.0.0.660) | `manifest_version` 2; one module per partner and extension point; a module version is used once on a site; the fields and the rest of the rules: [chapter 7](../guide/07_manifests.md). The retailer's administrator can still add a module in Desk instead; a package is refused where the retailer already added a module of yours at that extension point |
-   | `label_layouts` | the label the till prints for an item or a basket line: HTML, or Zebra printer commands (`zpl`) for a counter's label printer, with placeholders from a closed list ([the label layout page](../contracts/pages/label_layout.md)) | installed **switched off**; `manifest_version` 2; the name starts with your prefix; kind `html` or `zpl`; placeholders from the list only, no code and no scripts; from version 2.1.0 also up to three of the item's own fields, `{item.<fieldname>}` (each a Data, Select, Int or Check field every role reads), and one line detail, `{detail.<attribute>}`; a `zpl` template starts with `^XA`, ends with `^XZ` and draws its barcode over `{barcode}`, not `{barcode_svg}`; label stock 10 to 150 mm, 1 to 10 labels per row |
-   | `receipt_blocks` | — | **refused, and the refusal says why:** a retailer's own receipt lines are the register's *Receipt Header* and *Receipt Footer*, two text fields the retailer fills in on its register, not a table a manifest fills; a tax authority's QR and seal reach the receipt through fiscal readers ([the receipt page](../contracts/pages/receipt.md)) |
-   | `register_books` | the books of a regulated-stock register (a controlled-drug register, a liquor or duty-free book), declared as data: one **Retail Register Book** per book (from version 2.1.0) | `manifest_version` 2; installed on or off as each book declares; every name a book reads must exist on the site, or the install is refused; an update cannot change a book (ship a corrected one under a new id); a book with lines is kept, switched off, at uninstall; the register stores are the retailer's own setup, never the manifest's ([the regulated register recipe](regulated_register.md), [the register books page](../contracts/pages/register_books.md)) |
-   | `field_rules` | rows on a till theme the retailer already has: a till screen, a field, and hide, relabel, require or show | a rule that hides a field the sale needs, or two rules for one field, is refused; from version 2.1.0 `show` on `customer_create` asks for up to three of the retailer's own Customer fields (an ID number, a date of birth) on the new-customer sheet and the till's customer edit ([*Field rules*](../contracts/pages/fields.md), §7e); to make one required, add a save rule |
+   | `reports` | a **Report Builder** report: columns, filters, order, totals row, roles | Report Builder only: a *query* report (SQL) and a *script* report (Python) are refused. A report may name a field the same manifest adds, and a workspace may link the manifest's own report: the install makes your fields first and your pages after your reports |
+   | `number_cards` | a count, sum, average, minimum or maximum over a record type | may name a field the same manifest adds |
+   | `dashboard_charts` | count / sum / average over time, or group-by; line, bar, percentage, pie, donut | may name a field the same manifest adds |
+   | `dashboards` | your charts and cards on one page | — |
+   | `list_settings` | the list view's columns and counters | any record type, the retailer's as well as your own; an entry with no `fields` leaves the list's columns as Desk makes them |
+   | `workflows` | states, transitions, the role per transition, a field set on entering a state (approvals by workflow) | any record type but the till's own records. A state may submit or cancel (`doc_status`), a transition may carry a `condition`, and the mail goes as `send_email_alert` says; `update_field` writes only your own field. Missing states and actions are made, and removed again at uninstall unless another workflow uses them. Sample S11 is one |
+   | `naming_rules` | a numbering rule (prefix + digits, optional conditions) | anything but the sale's own records (POS Invoice, Sales Invoice, the day's opening and closing, the merge log), which the retailer's series and its tax authority read |
+   | `links` | the **Connections** panel: your records listed under an iVendNext record (e.g. claims under a Customer) | `link_fieldname` is a Link on your record type pointing at that record type |
+   | `registered_applications` | your service's **event-feed** registration (`recipes/event_feed.md`) | **one per app**: every record type your service follows goes in its `events`; its description holds at most 140 characters. The install makes your app's own user, `<app>@integration.invalid` (API only, one role `<PREFIX> Integration`), and names it on the feed as the user your service reads as ([the event feed recipe](event_feed.md), step 1, says how its key reaches you and the licence bound). At uninstall its queue rows go with it |
+   | `remote_keys` | your **remote till key** (the till calls your service) | on every store's till from the install, just before the till's last key; a store moves or hides it in the Designer (**POS Studio > Apps**). `https` only, an address you list; time to answer 3 seconds unless raised, at most 10 ([the till key page](../contracts/pages/remote_till_key.md)) |
+   | `extension_subscriptions` | your service for one extension point: `desk_action`, `page`, `check`, `capture`, `doccheck`, `fulfil`, `price` (a module's service only) or `payer` (label 1–40, `https` address you list, `timeout_seconds` at most 10: a scan or quantity-change capture at most 3, a payer at most 5; a page's `page_…` settings and roles); a module's service has `transport: "wasm"` and no address ([below](#a-certified-module-in-your-package)) | on from the install, under its one consent, for every store; a payer stays off until the retailer names its clearing mode. The install makes the secret (`<app>:sub:<key>`). Each extension point's settings are in [chapter 7](../guide/07_manifests.md) (a payer's `clearing_mode` is the retailer's, refused in a manifest) |
+   | `desk_actions` | a button on a Desk record (roles, when it shows, its inputs, `send_fields`) answered by one of your `desk_action` subscriptions (`service` = its `key`) | a service the manifest does not install is refused, and so is the role `Guest` or `All` |
+   | `save_rules` | a rule checked on every save of a record type, the retailer's own or yours (the ten kinds and their keys: [the save rules page](../contracts/pages/save_rules.md)) | on from the install; a role rule stays off until the retailer names the role, and `"enabled": 0` keeps any rule off. No markup in the message; on a sale the product lets a rule only flag; rules run in `sequence` order; **a rule may name only a field that exists at install** (a workflow in the same manifest is made first, so a rule may read its `workflow_state`) |
+   | `fiscal_readers` | one outside fiscal service's result on the sale: your result fields at their own permission level, the status map, the writer role and its users | stays **switched off** until the retailer sets it up; no API key is made (the retailer makes it). The steps the retailer takes are in guide chapter 7 |
+   | `extension_modules` (sandboxed modules) | a module we certified, for the check before payment or pricing, run by an `extension_subscriptions` service with `transport: "wasm"` | `manifest_version` 2; one module per partner and extension point; a module version is used once on a site; the fields and the rest of the rules: [chapter 7](../guide/07_manifests.md). The retailer's administrator can still add a module in Desk instead; a package is refused where the retailer already added a module of yours at that extension point |
+   | `label_layouts` | the label the till prints for an item or a basket line: HTML, or Zebra printer commands (`zpl`) for a counter's label printer, with placeholders from a closed list ([the label layout page](../contracts/pages/label_layout.md)) | `manifest_version` 2; kind `html` or `zpl`; placeholders from the list only, no code and no scripts; also up to three of the item's own fields, `{item.<fieldname>}` (each a Data, Select, Int or Check field every role reads), and one line detail, `{detail.<attribute>}`; a `zpl` template starts with `^XA`, ends with `^XZ` and draws its barcode over `{barcode}`, not `{barcode_svg}`; label stock 10 to 150 mm, 1 to 10 labels per row |
+   | `list_marks` | a coloured label on a row of a Desk list, when the row's values say so ([the list mark page](../contracts/pages/list_mark.md)) | `manifest_version` 2; display only |
+   | `scan_sources` | a table of the retailer's own unit codes that the till's scan reads ([the scan source page](../contracts/pages/scan_source.md)) | `manifest_version` 2; nothing leaves the retailer's iVendNext |
+   | `register_books` | the books of a regulated-stock register (a controlled-drug register, a liquor or duty-free book), declared as data: one **Retail Register Book** per book | `manifest_version` 2; installed on or off as each book declares; every name a book reads must exist on the site, or the install is refused; an update cannot change a book (ship a corrected one under a new id); a book with lines is kept, switched off, at uninstall; the register stores are the retailer's own setup, never the manifest's ([the regulated register recipe](regulated_register.md), [the register books page](../contracts/pages/register_books.md)) |
+   | `field_rules` | rows on a till theme the retailer already has: a till screen, a field, and hide, relabel, require or show | no switch: a rule that requires a field holds at once, the others reach each till at its next start; `show` on `customer_create` asks for up to three of the retailer's own Customer fields (an ID number, a date of birth) on the new-customer sheet and the till's customer edit ([*Field rules*](../contracts/pages/fields.md), §7e); to make one required, add a save rule |
+   | `translations` | your own words in a language, one entry per language ([the install page](../contracts/pages/package_install.md), *Words in a language*) | no markup that carries script |
 
-   Each record type lists its permissions by role, including your app's integration role, so your service can read and write its own records. **The install makes the roles your manifest names that start with your prefix** (`ACME BINS Stock Clerk`) when iVendNext lacks them, empty and removed again at uninstall, on a site whose POS app is at `e149dce4` or later (an older install refuses a row for a role the site lacks). A role the retailer already has is used as it is; a role without your prefix that iVendNext lacks (`PP Integration` in the samples) is **refused**, so name your integration role with your prefix as well. The retailer's administrator gives each role to the right people, so never tell a retailer to *create* a role the install makes. ⚠ **Write every right out — all nine** (`read, write, create, delete, report, export, share, print, email`). A permission row that leaves one out gets it **ON**: a row of `read` only is stored with all nine on. The manifest checker refuses a row that leaves a right out, or writes one as anything but 0 or 1. All four samples write all nine; `samples/s11_approvals/manifest.json` shows the form.
+   A retailer's own receipt lines are not a kind: they are the register's *Receipt Header* and *Receipt Footer*, two text fields the retailer fills in on its register; a tax authority's QR and seal reach the receipt through fiscal readers ([the receipt page](../contracts/pages/receipt.md)).
+
+   **Everything is on from the moment of install, under the one consent, for every store,** apart from the switches the table names. What the retailer does after the install is only what is theirs to decide: give staff the roles, fill a setting only they know.
+
+   Each record type lists its permissions by role, including your app's integration role, so your service can read and write its own records. A right a row leaves out is off. **The install makes each role your manifest names that the site lacks,** with no one in it. A role named with your prefix (`ACME BINS Stock Clerk`) is your app's own and goes when no installed app uses it; any other name (*PO Approver*) is the retailer's from then on and stays at uninstall. A role the retailer already has is used as it is. The retailer's administrator gives each role to the right people, so never tell a retailer to *create* a role the install makes. Every record type your app makes also gives System Manager every right, unless your manifest gives System Manager its own row at level 0. `Guest` and `All` are refused.
 
    **What leaves the retailer's iVendNext — nothing the retailer did not grant.** A partner sees a retailer's data only through what the retailer grants: the integration key's permissions, the event feed, the remote till key's fixed context. A manifest cannot open another channel:
    - a **webhook** sends only its fixed, thin body (record type, name, event, time); the service reads the record with its own key;
    - a **print format** loads nothing from outside the retailer's iVendNext (an image address can carry data out, so embed images as files or `data:` URIs);
-   - a **notification** goes to the retailer's own people (by role, or by a field of the record), never to an address the manifest names, and shows its own record's fields only.
+   - a **notification** goes to the retailer's own people (by role, or by a field of the record), never to an address the manifest names.
 
    Templates that read other retailer data (a receipt reading the company's tax number) are allowed where the output stays with the retailer's staff.
-
-   **On the retailer's own record types a manifest may only ADD.** A field you add there may not carry anything the server enforces on save (mandatory, a default, unique, a minimum, a length, set-once, precision). A property setter there may only change how **your own** field is shown. Webhooks may listen to the retailer's record types, but without a condition, and notifications go on your own types only. Each of those is evaluated **inside iVendNext's own save**: one mistake would stop every till sale.
 
 3. **Check it yourself, before anyone installs it:**
 
    ```bash
-   python3 tools/manifest/validate.py samples/s2_bins/manifest.json      # VALID, exit 0
+   ivn check
    ```
 
-   Every refusal names the element and the reason, for example *"REFUSED webhooks[0] (PP BLN Hook): a webhook may only call an address the manifest lists in allowed_urls"*.
+   Every refusal names the element and the reason, for example *"REFUSED webhooks[0] (PP BLN Hook): a webhook calls an address the manifest lists in allowed_urls: the consent shows the shop each one"*.
 
-4. **Install.** The **retailer's own administrator** installs your manifest, from the **Retail Extension Package** screen in Desk: paste it, press *Check*, read the summary, tick the consent, install. The summary is written by our code from the manifest itself, never from your description of it, and it lists everything your manifest makes or switches on, every outside address, and each print format as a template that runs on the server when printed, able to read, change and send the retailer's data. The install runs as a background job: *Queued → Installing → Installed*. Each secret (a webhook's, a service's) is shown once to whoever installed, and can be read again on its own record. **Before each part works** lists what the retailer still switches on.
+4. **Install.** On your own sandbox, `ivn try`: it asks no key, no plan, no card and no questions. For a customer, `ivn publish --to <site>` puts it on their shelf and prints the message to send their administrator ([Publish your app](../site/pages/publish.md)). The **retailer's own administrator** installs your app from **App library** in Desk: from a private shelf they first press **Open your shelf** and paste the key you sent; then **Install**, read the summary, tick **I agree**, **Install**. The **Retail Extension Package** screen (paste, **Check**, **Consent and install**) does the same by hand. The summary is written by our code from the manifest itself, never from your description of it, and it lists everything your manifest makes or switches on, every outside address, and each print format as a template that runs on the server when printed, able to read, change and send the retailer's data. The install runs as a background job: *Queued → Installing → Installed*. An app CitiXsys hosts receives its secrets when the site connects to it; for an app you host, each secret (a webhook's, a service's) is shown once to whoever installed, and can be read again on its own record. **Before each part works** lists only what the retailer still decides.
 
-   **A sample's address is not yours.** A kit sample's manifest calls our test bench's own address for its service, `http(s)://host.docker.internal:<port>/…` (in `allowed_urls`, its webhooks and its services). That name resolves only where Docker provides it: on a Linux bench without Docker it resolves to nothing, and every webhook and call to it fails. Before you install a sample, replace that address with your own service's, everywhere it appears in the manifest; if the manifest is already installed, raise its `version` and install it again (step 6).
+   **A sample's address is not yours.** A kit sample's manifest names a placeholder address for its service, in `allowed_urls`, its webhooks, its services and its till keys. An app CitiXsys hosts gets its own address when you publish. On your own server, replace it with your service's address, everywhere it appears in the manifest.
 
-   On **your own sandbox** you do the same with one command, with your sandbox administrator's API key:
-
-   ```bash
-   BASE=https://<your-sandbox> KEY=<api key> SECRET=<api secret> python3 tools/deploy/deploy.py manifest.json
-   ```
-
-   It checks the manifest on your machine first, sends it, prints the site's summary and stops. Add `--consent` to install with exactly that summary. It waits for the job and prints the status, any secrets and the to-do list.
-
-   The site checks the manifest again, at the check and again when the job runs. It refuses names already taken by someone else, and a field on one of the retailer's single-record settings types. Then it creates everything, and records each element in an **install record** as it goes. If anything fails half-way, it removes what it made and shows **Failed** with the reason.
+   The site checks the manifest again, at the check and again when the job runs. It refuses names another app holds and a record type the site lacks. Then it creates everything, and records each element in an **install record** as it goes. If anything fails half-way, it removes what it made and shows **Failed** with the reason.
 
 5. **Use your records** over the record API, like any other type (`recipes/connected_app.md`). The bins service writes `PP BLN Item In Bin` with its movement rows, and the "Where is it?" till key reads it. In Desk:
 
@@ -100,15 +96,15 @@ A manifest is one file that adds **your own record types and fields** to a retai
 
    *What is in each bin, kept up to date by the service.*
 
-6. **Update: bring a higher version.** Raise `version` (`0.1.0` → `0.1.1`) and install it the same way. Before the consent, the screen (and `deploy`) shows what changes from the installed version. An update adds what is new and changes in place what may change; it removes nothing (a dropped webhook, notification, workflow, sale detail or service is switched off and goes at uninstall), and it switches off every changed service until the retailer consents again. **An update keeps the retailer's own switch** on a changed notification, webhook or workflow: one the retailer switched off stays off, one left on stays on. A lower or equal version, a dropped or renamed record type or field, or a field changing type is refused: ship it under a new name. The earlier version's record shows **Superseded**.
+6. **Update: bring a higher version.** Each `ivn try` is a new version, and `ivn publish` sends it. Before the consent, the screen shows what changes from the installed version. An update adds what is new and changes in place what may change; it removes nothing (a dropped webhook, notification, workflow, sale detail or service is switched off and goes at uninstall). **An update keeps each rule's switch,** and a service the customer stopped stays stopped. A lower or equal version, a dropped or renamed record type or field, a field changing type, or a change to a kind that cannot change in place (a number card, a chart, a dashboard, list settings, a naming rule, a Connections link, an event feed, a fiscal reader, a sale detail) is refused: ship it under a new name. The earlier version's record shows **Superseded**. To go back, `ivn rollback <version>` publishes an earlier version's content as a new, higher version.
 
-   **Export, then uninstall.** *Export and uninstall* on the installed version's record (or `deploy.py uninstall "<app> <version>"`) first writes every record of your types, with their child rows, and the values of the fields you added to the retailer's records, to a private file on the package, then uninstalls.
+   **Export, then uninstall.** *Export and uninstall* on the installed version's record first writes every record of your types, with their child rows, and the values of the fields you added to the retailer's records, to a private file on the package, then uninstalls.
 
 7. **Uninstall — nothing is left behind.** The installer removes everything the install record lists (and that a consented version of your manifest made), newest first: webhooks, workspace, print format, property setters, fields, record types and the module. It also:
    - **drops your tables and the columns your fields added.** iVendNext's own delete of a custom record type keeps its table and rows, and its delete of a custom field keeps the column and its values. With the drops, the site's schema after the uninstall equals the schema before the install, kind by kind;
    - removes what **the retailer** did to your types after install (a field added in Customize Form, a role-permission edit, a default print format), so a later install does not inherit a field whose column is gone.
 
-   Two cases it handles in the open. **A sale detail that booked sales already use is kept, switched off,** since a booked sale must keep its detail; a reinstall switches it back on. **If any element cannot be removed,** the uninstall says so (it does not report success); **Finish** on the package (`deploy.py finish`) completes it. Finish also takes back a job that was killed half-way.
+   Two cases it handles in the open. **A sale detail that booked sales already use is kept, switched off,** since a booked sale must keep its detail; a reinstall switches it back on. **If any element cannot be removed,** the uninstall says so (it does not report success); **Finish** on the package completes it. Finish also takes back a job that was killed half-way.
    **Comments and version history** on your records are removed with them; the export holds them with the records, so the export is where they are kept. **Attachments** stay, as files no longer linked to a record.
 
 8. **Reinstall — clean.** A reinstall gives exactly the first install's schema. None of the old data comes back.
@@ -121,17 +117,17 @@ Your app needs to keep something on a sale: a delivery slot, a prescription numb
 2. **A sale detail** (`sale_attributes`): a short value, up to 140 characters, that the cashier or a till key fills on the sale. It takes no room on the sale's row. Best for one or two short values captured at the till.
 3. **A field on the sale** (`custom_fields` on POS Invoice), only when the detail must sit on the sale itself, for example a fiscal reader's result. Declare it **`Small Text`** unless something lists, filters or searches by it: a `Small Text` field takes 10 bytes of the row, a `Data`, `Link` or `Select` field 562.
 
-**What happens when the fields do not fit.** On POS 2.1.0.669 and later the install measures each record your manifest adds fields to, and each record type it brings, before it makes anything, on a first install and on an update. Fields that would not fit are refused, in one line, for example:
+**What happens when the fields do not fit.** The install measures each record your manifest adds fields to, and each record type it brings, before it makes anything, on a first install and on an update. Fields that would not fit are refused, in one line, for example:
 
 > custom_fields[0] (POS Invoice): POS Invoice has 5,117 bytes of room left on this site (about 9 more Data, Link or Select fields), and this app's fields need 6,744 (the widest: pp_xyz_slot, pp_xyz_ref, pp_xyz_note). A record's row holds at most 65,535 bytes, shared by every app and the shop's own fields: put them in your app's own record type; a sale detail (sale_attributes) for a short value, up to 140 characters, captured on the sale; or use Small Text for text nothing searches, which uses almost no room
 
-Nothing is made, so the retailer's administrator can install a corrected version straight away. Earlier releases, and any release on a rarer database error, stop part-way through the install with the database's own error (*Row size too large*) and take back most of what they made: the field whose column failed can be left behind, and it blocks a second try until the retailer's administrator deletes it (Desk, *Custom Field* list; *Finish* on the package does not remove it).
+Nothing is made, so the retailer's administrator can install a corrected version straight away. A rarer database error (*Row size too large*) stops part-way through the install and takes back most of what it made: the field whose column failed can be left behind, and it blocks a second try until the retailer's administrator deletes it (Desk, *Custom Field* list; *Finish* on the package does not remove it).
 
 **Technical notes.** The room differs per site: it depends on the other apps installed and the retailer's own fields, so a manifest that installs on your sandbox may not fit a busy retailer's site. Your own record types have the same ceiling per row, so a record type with very many long fields is refused the same way; split it, or use a child table. An update counts only what it adds or widens: a field already installed is already counted.
 
 ## A field only named roles read or change
 
-From version 2.1.0 a field your manifest adds may carry `write_roles` (the roles that change it, and so read it too) and `read_roles` (the roles that read it; left out, every role that reads the record type):
+A field your manifest adds may carry `write_roles` (the roles that change it, and so read it too) and `read_roles` (the roles that read it; left out, every role that reads the record type):
 
 ```json
 {"dt": "Customer", "fieldname": "acme_rxc_id_number", "label": "National or residence ID", "fieldtype": "Data",
@@ -140,12 +136,11 @@ From version 2.1.0 a field your manifest adds may carry `write_roles` (the roles
 
 - **Group your limited fields into few role sets:** the installer gives each set of roles a permission level of its own, and a record type has nine.
 - **An update may add a limited field,** but may not change the roles of one already installed.
-- **What is refused,** and who else reads such a field (System Manager, the till, a print): [chapter 7](../guide/07_manifests.md), *A field only named roles read or change*.
-- ⚠ **A register book is not checked for one:** a book's column reading a limited field prints it to whoever may print the book.
+- **Who else reads such a field** (System Manager, the till, a print): [chapter 7](../guide/07_manifests.md), *A field only named roles read or change*.
 
 ## A certified module in your package
 
-From POS build 2.0.0.660 a package may carry a module our certify service signed, for the check before payment or for pricing ([chapter 8](../tools/wasm_kit/README.md)):
+A package may carry a module our certify service signed, for the check before payment or for pricing ([the Wasm kit](../tools/wasm_kit/README.md)):
 
 1. **Have the module certified.** Build it with the kit's meters; our review team signs its SHA-256 for one extension point and one version.
 2. **Declare it** in `extension_modules` (manifest version 2): `key` (lower-case letters, digits and underscores), `point`, `version` (a whole number from 1), `metered: true`, `sha256` and `certificate` (from the certificate file) and `wasm` (the module's bytes in base64, at most 256 KB).
@@ -158,59 +153,40 @@ From POS build 2.0.0.660 a package may carry a module our certify service signed
                                 "transport": "wasm", "module": "member_price"}]
    ```
 
-4. **Install it** like any package: the service installs switched off, and only the service has a switch. A module **version is used once** on a site: installing the app again, or shipping a fix, needs a higher module version, certified again.
+4. **Install it** like any package: only the service has a switch, and a pricing service's limit starts at 0 until the retailer raises it. A module **version is used once** on a site: installing the app again, or shipping a fix, needs a higher module version, certified again.
 
-- **What is refused** (an unsigned or recalled module, a module without the kit's meters, an address on its service, and the rest): [chapter 7](../guide/07_manifests.md), `extension_modules`.
+- **What the install refuses:** a module our certify service did not sign, or one iVendNext has recalled.
 - **The recall.** iVendNext can recall one certified module by its SHA-256, in a POS release: from each retailer's next deploy of that release the module is refused where it is added or installed, the server stops running it, and the extension point takes its declared down answer on every till. A till that stays offline runs the module it holds until it next reads a snapshot.
 - **Size:** the App library serves a manifest of at most 256 KB, so a library app's module stays near 190 KB.
 
 ## What a retailer reads: the card and the guide
 
-A manifest has two readers: the installer, which checks it, and the **people in the retailer's iVendNext**, who decide whether to install the app and what to do next. The App library will not list an app whose card cannot help them, and it says why in words the moment you publish. So write both before you publish, for the retailer's owner or manager, in a retailer's words, not for a developer.
+A manifest has two readers: the installer, which checks it, and the **people in the retailer's iVendNext**, who decide whether to install the app and what to do next. So write the card and the guide for the retailer's owner or manager, in a retailer's words, not for a developer.
 
-### 1. The card: what the app does and how a retailer sets it up
+### 1. The card: what the app does
 
-The card is `library/app.json`. Besides its title, one-line summary, category, who uses it and changelog, it carries three things every listed app must have (its industries, its details and its guide):
+The card is `app.json`'s `card`. `ivn publish --public` asks you once for what it does not hold yet:
 
 ```json
-{
-  "app": "acme_bins",
-  "title": {"en": "Bin locations"},
-  "summary": {"en": "Mark where each item sits in a store, by aisle and bin."},
-  "category": "Stock",
+"card": {
+  "title": "Bin locations",
+  "summary": "Mark where each item sits in a store, by aisle and bin.",
+  "what": ["Staff record each aisle and bin and what is in it.", "Each item can have a default bin."],
+  "pictures": ["screenshots/01_workspace.png"],
   "industries": ["distribution-and-warehousing", "hardware-and-diy"],
-  "used_by": ["Stock clerk", "Store manager"],
-  "details": {
-    "en": {
-      "lead": "Know where an item sits without walking the floor.",
-      "what": [
-        "Staff record each aisle and bin and what is in it.",
-        "Each item can have a default bin."
-      ],
-      "setup": [
-        "In Desk, search for ACME BINS Location and add a location for each store.",
-        "Open each person's User record and give them the role the install added: ACME BINS Stock Clerk."
-      ],
-      "notes": ["It marks where things sit. It does not move stock."]
-    }
-  },
-  "docs": [
-    {"title": {"en": "Guide to Bin locations"}, "url": "https://docs.ivendnext.com/docs/<section>/<your-page>"}
-  ],
-  "changelog": [{"version": "1.0.0", "date": "2026-10-15", "en": "First release."}]
+  "price": "free",
+  "guide": "https://github.com/acme/acme-bins#readme"
 }
 ```
 
-- **`details`** is a lead sentence, a list of points under **what** the app does, a list of **setup** steps a retailer takes after the install, in the order it meets them, and a list of **notes** (good to know). Up to ten points in each list, each 1 to 300 characters. `en` is required; `es` and `ar` are optional and checked the same way.
-- **`industries`** is required on a public card: `["all"]` for an app every retailer can use, standing alone, or one to six of `fashion`, `grocery`, `pharmacy`, `beauty-and-cosmetics`, `electronics-and-phones`, `hardware-and-diy`, `liquor-and-wine`, `hospitality`, `travel-retail`, `distribution-and-warehousing`, `optical`, `thrift-and-resale`. Name an industry only where the app is especially used; the App library lists the app on each one's page.
-- **`docs`** is one to six `{title, url}` addresses (a title up to 80 characters), the first of them your guide page.
-- **A setup step names the Desk screen** by the name a retailer searches for and says who does it: *In Desk, search for ACME BINS Location and add one for each store*, not *configure the locations*.
-- **Do not say a retailer must create your own roles.** The install makes the ones that start with your prefix (above): say which roles the install adds, and make the step the one that gives them to people.
-- **Say what leaves the retailer's iVendNext, from the manifest.** If your manifest has an outside address (`allowed_urls`), webhooks, till keys, event feeds, services, print formats or label layouts, or an outside service that signs in to read and write, the card may not say *nothing leaves your iVendNext*. Say what it sends or runs outside.
+- **`price`** is `free`, or `key`: retailers ask you for a key.
+- **`industries`** names where the app is especially used; the App library lists the app on each one's page.
+- **Do not say a retailer must create your own roles.** The install makes them: say which roles the install adds, and that a person gives them to staff.
+- **Say what leaves the retailer's iVendNext, from the manifest.** If your manifest has an outside address (`allowed_urls`), webhooks, till keys, event feeds, services, print formats or label layouts, or an outside service that signs in to read and write, say what it sends or runs outside; do not say *nothing leaves your iVendNext*.
 
-### 2. The guide page: one page, or a section for a larger app
+### 2. The guide
 
-Your `docs` link opens your app's guide page, and each of your record types opens its own heading on it. The page has five headings, in this order, in a retailer's words:
+The guide link may be any https page; your repository's README is enough. A retailer finds its way fastest with five headings, in a retailer's words:
 
 1. **What it does** — two or three sentences; who uses it.
 2. **What you set up first** — numbered; each step names the Desk screen by the name a retailer searches for.
@@ -218,84 +194,20 @@ Your `docs` link opens your app's guide page, and each of your record types open
 4. **What leaves your iVendNext** — taken from your manifest: outside addresses, till keys, webhooks, services, event feeds, print and label layouts. *Nothing* only when the manifest names nothing.
 5. **How to remove it** — from the app's **Details**, **Export and uninstall**, and what is kept.
 
-**Count the screens a retailer opens:** each record type that is not a table inside another one, each report and each Desk page you add. Workspaces, print formats, field rules, workflows and webhooks do not count: describe them on the page of the screen they belong to.
-
-- **Fewer than three screens: one page**, with a `###` heading for each screen under the five headings.
-- **Three or more: a section**, its first page carrying the five headings and then pages such as *Set it up*, *Using it every day*, *Troubleshooting* and *Removing it*. A section's address opens its first page, so the card's link is the same either way.
-- **App or Rule.** The docs site groups every library app under one of two words, in the retailer's own language: an **App** adds records a retailer works in every day (a bin, a member, a deviation, an approval) or a screen of its own; a **Rule** adds one check, field or layout to a screen the retailer already uses, with only the settings it needs (a rule record, a unit code, a warranty term). Size and kind are separate: an App may be one page and a Rule may be a section. Name the kind in your listing request, and the first line of your page says it. Use neither *package* nor *module* for either: the product already uses both words for something else.
-- **Every screen has its own heading,** named for what the screen is for. That heading is the address the screen's help opens: renaming it means changing the address in the manifest in the same release.
-
-**Where the page lives.** The library accepts a guide address on `docs.ivendnext.com`, `developer.ivendnext.com`, `help.ivendnext.com` or `www.ivendnext.com`, and on no other: an address elsewhere (your own site included) is refused today. Write the page in the template and send its text with the listing request ([the form](../feedback/app_listing.md)); we put it on the docs site and send you its address, which goes into `docs` and into each `documentation` setter below. A preview shelf and an app made for one customer are not checked this way, so you can test the whole install first, **with `"public": false` in `library.json`**: a card marked `public: true` is checked before anything is written, preview shelf included. The kit's samples predate this ask and carry no `documentation` setter, so a copy of one needs them before it lists.
-
-### 3. The address of each screen, in the manifest
-
-For **each of your record types that is not a table inside another one**, add one property setter on the record type itself (no `field_name`). It is the address that screen's help opens: the empty list's *Need Help?* link, and, from POS build 2.0.0.646, the help panel beside the screen:
-
-```json
-{"doc_type": "ACME BINS Location", "property": "documentation", "property_type": "Data",
- "value": "https://docs.ivendnext.com/docs/<section>/<your-page>#locations"}
-```
-
-The address is `https://<host>/docs/<section>/<page>#<heading>`: the heading is the text of the heading on the page, in lower case with hyphens (*Adding an extension* is `#adding-an-extension`); leave `#<heading>` out when the screen is the whole page. Write it as plain `https`, in letters A to Z or a to z (no accents), digits and `. _ ~ / -` only, with an optional `#heading` and no query, quote, space, `<` or `>`: iVendNext's own check refuses any other value, and the library refuses a value that is not `https` on one of the four hosts below. A field you add to one of iVendNext's own screens may carry its own help address (`documentation_url`, a field-level property setter) from POS build 2.0.0.646. ⛔ Do not give your workspace a *URL* shortcut to your guide: a shortcut address counts as an outside address the app may call, and the install screen lists it as one.
-
-### 4. What the library refuses, word for word
-
-The library checks the card and the manifest together on its own side when you publish, and `publish.py` prints the refusal in the library's words. A listing is refused, with one of these, when it cannot help a retailer. `{…}` is filled in with your own values:
-
-| Code | The words you read |
-|---|---|
-| `help_details` | `<app>: the card must say what the app does and how to set it up: details needs a lead, at least one point under what and at least one step under setup` (`(in es)` or `(in ar)` is added when that language is the short one) |
-| `help_guide` | `<app>: the card must link its guide: docs is one to six {title, url} addresses on docs.ivendnext.com, developer.ivendnext.com, help.ivendnext.com, www.ivendnext.com` |
-| `help_nothing_leaves` | `<app>: the card says nothing leaves the shop, but the app has <an outside address (host) · webhooks · till keys · event feeds · extensions · print formats · label layouts · an outside service that signs in to read and write>: say what it sends or runs outside, or take that line out` |
-| `help_roles` | `<app>: a setup step tells the shop to create the app's own roles ('<the step>'): the install makes them, so say which roles the install adds and make the step giving them to people` |
-| `help_record_guide` | `<app>: the record type <name> has no guide address: add a property setter {doc_type: '<name>', property: 'documentation', value: <https address of its page in your guide>} on docs.ivendnext.com, developer.ivendnext.com, help.ivendnext.com, www.ivendnext.com` (and ` (its address '<value>' is not https on one of them)` when a setter exists but its address is off those hosts) |
-
-A public card without `industries` is refused as `bad_entry`, *<app>: a public card names its industries: industries is ["all"] for every retailer, or one to six of fashion, grocery, pharmacy, beauty-and-cosmetics, electronics-and-phones, hardware-and-diy, liquor-and-wine, hospitality, travel-retail, distribution-and-warehousing, optical, thrift-and-resale*; an unknown industry, or `all` beside another, is refused as `bad_entry` too.
-
-A guide address off those hosts keeps its older code: `bad_entry`, *a document's address is on docs.ivendnext.com, developer.ivendnext.com, help.ivendnext.com, www.ivendnext.com*. All of these come back as HTTP 400 and, on the upload door, as `{refused, words}`; a refused upload writes nothing.
-
-**What the check does not do.** The two wording checks (*nothing leaves*, *create the roles*) read English only and a few phrasings, so a pass is not a promise the page is true: a retailer reads your card, and you answer for it. The library cannot read your guide page's text; whoever places it on the docs site reads it. Only a **public** card is checked.
-
 ## What is refused, and why
 
-| Element | Why |
-|---|---|
-| a server script | it runs partner code inside iVendNext's own saves; partners use a till key or a connected app instead |
-| a client script | it runs partner code in the browser of every Desk user who opens the form |
-| a web page | it is published on the retailer's own web address and can carry script or pass itself off as the retailer |
-| a web template | it puts partner markup on every web page that uses it |
-| a submittable record type | it joins the retailer's accounting and stock lifecycle; a manifest's types hold the partner's own data only |
-| making a field mandatory on the retailer's own record types — your own added field included — or making a field there mandatory, read-only or hidden through a property setter (a field you add may itself be read-only or hidden, and may use fetch-from and show-when, on a child table such as Purchase Order Item too) | it can stop iVendNext's saves (a till sale included), stop a person or the till setting a field, or hide a value the engine needs |
-| any other change to the retailer's own fields | a manifest may only change the fields it adds itself |
-| a mandatory field added to a retailer's record type | it would stop every save that does not fill it |
-| any name without the prefix | names on a site are shared and carry no owner |
-| a webhook to an address not in `allowed_urls`, or a secret in the manifest | a webhook may only call addresses you declared; secrets are made at install |
-| a custom block on a workspace, or script in markup | it runs in the browser of everyone who opens it, administrators included. ⚠ The markup check reads your manifest's text: it is a tripwire, not a guarantee (a print template's output is not escaped). The retailer's administrator decides, from a summary our installer writes, where a print format is listed as a template that runs on the server when printed, able to read, change and send the retailer's data |
-| a script print format | it runs in the viewer's browser |
-| an HTML or button field | an HTML field shows its own markup in Desk; a button needs a script |
-| a required sale detail | it would stop every sale on every till that does not fill it |
-| a notification on a retailer's own record type (from POS build 2.0.0.654 a reminder before or after a date is allowed: the rows below), to an outside service, or with keys beyond the plain ones | it runs inside every save of that record, so an error in it stops the save (a till sale included); e-mail and the in-app bell only, on your own types |
-| a webhook **condition** on a retailer's own record type | it is evaluated inside every save of that record, and an error in it stops the save; filter in your own service instead |
-| a default, unique, minimum, length, set-once or precision on a field you add to a retailer's record type, or any property setter there that is not about display | the server enforces these on every save of the retailer's record, a till sale included |
-| a tree record type, a field on a retailer's single-record type, or (before POS build 2.0.0.654) a single-record type | this installer installs and removes ordinary record types, and from build 2.0.0.654 settings records too. **For your service's own settings**, a settings record of your own (`"issingle": 1`) from that build; on an older site, an ordinary record type with one record named `Default` (S22) |
-| records open to visitors who are not signed in, or to a role the system hands out by itself (All, Desk User, Administrator) — and a notification sent to Guest or to one of those roles | a manifest's records are for the retailer's own users; a row for All reaches every signed-in user (website customers included), and one for Desk User every staff user, whatever roles the retailer's administrator chose; a notification to one reaches whoever holds a stored row for it, refused so every place a role is named follows one rule |
-| a permission row that leaves a right out, or writes one as anything but 0 or 1 | a right left out is switched on, so every row says all nine |
-| a help address (a record type's `documentation`, a field's `documentation_url`) that is not an `https` address in letters A to Z or a to z, digits and `. _ ~ / -`, with an optional `#heading` and no query, quote, space, `<` or `>` | Desk shows it as a link, so an address that can break out of the link, or that is not `https`, is refused |
-| a property setter on your own record type that changes more than the record type itself may carry (`title_field`, `sort_field`, `sort_order`, `search_fields`, `track_changes`, `description`, `quick_entry`, `show_title_field_in_link`, `documentation`), or on its fields more than how they are shown and used (never a field's type, options or name), or a value outside what that property takes (`title_field`, `sort_field` and `search_fields` must name the record type's own fields, `sort_order` is `ASC` or `DESC`, a flag is `0` or `1`) | the checks the manifest runs on the record type's structure (its name, fields, permissions and naming) do not run on a setter; change those in the record type |
-| script in a property setter's value, a record type's description, a field's label or a shortcut's label (a script element, an inline handler, a `javascript:` address), or a shortcut that carries more than its type, target, label and view, has no label, has a label with `<`, `>`, `"` or `&`, or names a view other than List, Report Builder, Dashboard, Tree, New, Calendar or Kanban | Desk writes these into pages as they are, so they would run in the browser of everyone who opens them |
-| a workspace icon that is not an icon's name (lower-case letters, digits and `-`, at most 40 characters) | it is written into the page's markup and an address |
-| **From POS build 2.0.0.654 (train T12)** | an older install screen refuses every kind below outright |
-| a report naming two tables, two dots, a field that is not a table, a row field the rows lack, a record's number column beside row columns with a totals row, two tables sharing one row record type, a row record type with a `-` in its name, a table behind a permission level above 0, or a table field the same manifest adds to a retailer's record type | one table per report and one dot keeps a report honest (one line per row); a field added in the same manifest is not yet there at install: ship it in an earlier version. These refusals fence nothing: Desk's own column picker offers the same columns |
-| a reminder on a retailer's record type that is not **Days Before** or **Days After** a Date or Datetime field, `days_in_advance` outside 1 to 365, sent to anyone but a role, by anything but e-mail or the bell, or with anything but plain text and `{{ doc.⟨field⟩ }}` in its subject and message | the daily scheduler sends it to every holder of the role in every store, with no cap and no data filter: only the record's own fields may show. A template error skips one message; an error outside it stops that day's run of every date reminder on the site |
-| `attach_print` on a retailer's record type, a retailer's print format, a format of another record type, a format that reads other records or includes another template, or attaching files by a field or an address | the attached print is rendered with no viewer's rights, so it may read nothing but its own record's fields; keep **Allow Print for Draft** on |
-| a multi-select field whose child record type is not your own, or has no Link field shown in the list | Desk drops the rows at the save without one |
-| a settings record that also carries a table, gives `report` or `export` on a permission row, or is named by anything but a property setter (`description`, `track_changes`), a workspace shortcut of type `DocType` with no view, or a save rule's `value_from_type` and `value_from_name`; an update that makes a record type a settings record or stops it being one | one record, no list: anything else naming it would treat it as a list; ship a changed one under a new name |
-| a list mark switched on; on a submitted record type, one with an active workflow, a table or a settings record; on a field the record type lacks, a virtual one, a password or a long text; a label over 24 characters, holding `<`, `>`, `&`, `"`, `'` or a backtick, or with a space before or after it; a colour off the list; a sixth mark on one record type; one label twice on one record type | a mark is display only and installs switched off; the retailer switches each on |
-| a prefix whose first word is one the system reads (`IS`, `IGNORE`, `FOR`, `HAS`, `SET`, `BASE`, `FREE`, `PRICE`, `POST`, `NOT` and twelve more, listed on the [save rules page](../contracts/pages/save_rules.md)) | the system acts on fields whose names start that way; an update of an installed app with such a prefix is refused too |
+An app may do anything the retailer's administrator can do in Desk. The install refuses only what would:
+
+- book a wrong money, tax, stock or fiscal figure;
+- stop the till saving a sale, the day's close or a new customer at the counter;
+- send the retailer's data somewhere the consent does not show;
+- let someone act as someone else, code running in the retailer's saves or in a viewer's browser included.
+
+Every refusal, with the reason for it, is on [What an app may not do](../contracts/pages/what_an_app_may_not_do.md). Everything else iVendNext checks when the install saves it, in its own words.
 
 ## When your service is down, and when the till is offline
 
-A manifest runs no code of its own, and the rules above keep anything it declares out of iVendNext's own saves, so it cannot stop a sale. Its webhooks behave as every webhook does (`recipes/webhook_receiver.md`): three tries, then your reconciliation pull. A till key that reads your records is online-only: on an offline till it is dimmed.
+A manifest runs no code of its own, and the rules above keep anything it declares out of the till's own saves, so it cannot stop a sale. Its webhooks behave as every webhook does (`recipes/webhook_receiver.md`): three tries, then your reconciliation pull. A till key that reads your records is online-only: on an offline till it is dimmed.
 
 ## What we would like to improve
 
@@ -305,15 +217,9 @@ A manifest runs no code of its own, and the rules above keep anything it declare
 
 ### What was proven where
 
-- The whole recipe was proven on our test bench.
-- Manifest v2: proven on the bench on 2026-10-04 with a manifest carrying every kind but the remote till key (this bench's POS app then predated it, so it was proven only refused; it installs on the bench since 2026-10-07, see its row) (`tools/manifest/tests/fixtures/full_v2_ok.json`; 35 of 35 checks on the bench's install–uninstall–reinstall cycle).
-- `remote_keys`: refused, with its reason, on a site whose POS app predates the remote key; installs on our test bench since 2026-10-07.
-- `extension_modules`: not walked with this recipe. From POS build 2.0.0.660 a package may carry a certified module (chapter 7); the retailer's administrator can still add one in Desk.
-- Permission rows (measured: a row of `read` only was stored with all nine on).
-- Where the install screen is: in the POS app from commit `87812e14` (2026-10-10). ⚠ A sandbox without it is updated on request (on a site without it, `deploy` stops at the check with *Failed to get method*). There is no other way to install a manifest. A manifest that carries label layouts or field rules on the receipt needs the POS app from commit `7be4333b` (2026-10-10) or later: an older install screen refuses them, although the kit's checker (copied at `06c9d483`) passes them.
-- `deploy`, **on our test bench, 2026-10-10:** the warranty sample checked without `--consent` (nothing installed, the package stayed *Checked*), installed with it (*Installed* in about 2 s), updated to `0.1.1` with one new field (the earlier version *Superseded*, an export written first), exported and uninstalled (the record type gone), and *Finish* refused with nothing to finish. The bins sample installed with its two webhooks and its till key, and `deploy` printed each secret from its own record.
-- Install, earlier (until 2026-10-10 our team ran the installer in the site's console). **On the bench:** S2 installed five record types with their tables, the Item field and its column, two property setters, the print format, the workspace and two signed webhooks.
-- Screenshots in step 5: our test bench, 2026-10-10; frame: Desk, 1440 wide.
+- The recipe's install, export, uninstall and reinstall were proven on our test bench with a manifest carrying every kind but the remote till key (`tools/manifest/tests/fixtures/full_v2_ok.json`).
+- `extension_modules`: not walked with this recipe.
+- Screenshots in step 5: our test bench; frame: Desk, 1440 wide.
 - Export, **on the bench:** the export held the bin, its item record with its movement, and the Item field's value.
 - Uninstall, **measured on the bench:** with those drops switched off, both tables and the column were still there; with them on, the site's schema after the uninstall equals the schema before the install, kind by kind. The retailer's own changes to your types: measured, all three swept, schema diff empty.
 - The kept sale detail and the failed removal: both were measured by forcing the failure on the bench.
@@ -323,5 +229,4 @@ A manifest runs no code of its own, and the rules above keep anything it declare
 
 ### Tests
 
-- `python3 -m unittest discover -s tools/manifest/tests -p 'test_validate.py'` — your manifest and the original refusals, without a running iVendNext (45 refusal cases, each with exactly its own reason); `test_validate_v2.py`, `test_validate_rights.py` and `test_validate_automatic_roles.py` in the same folder hold the later ones.
-- Our test bench's install cycle (its own run, not in the kit): refuse at install, install, the retailer's own customisations, export, uninstall, schema diff, reinstall, every allowed kind once, a removal that fails, a kept sale detail. **32 of 32 green** with all its steps (the install cycle alone is 20), including a canary that proves the diff catches leftover tables and columns.
+- `python3 -m unittest discover -s tools/manifest/tests -p 'test_manifest_check.py'`: your manifest and the refusals, without a running iVendNext; `test_allowbydefault.py` and `test_site_rules.py` in the same folder hold what is allowed and the install's three stops.

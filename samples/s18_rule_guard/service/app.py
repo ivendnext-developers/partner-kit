@@ -3,7 +3,7 @@
     POST /rgd/check            the shop's signed check (``check/1``)  →  200 {"verdict": "allow" | "refuse" | "ask", ...}
     GET  /health               200 {"ok": 1}
     POST /ivendnext/connect    many shops: a shop's site hands over its library key and secrets (the app template's
-    POST /ivendnext/disconnect handshake, tools/app_template/service/shops.py; guide chapter 14b)
+    POST /ivendnext/disconnect handshake, tools/app_template/service/shops.py; guide chapter 1a)
 
 The till sends the priced basket; the service answers by the shop's OWN rule (``rule.decide``): the shop's ``<prefix> Rule``
 records (``rule.rules_of``), read back with the shop's integration user's key once the call's signature holds, and kept
@@ -207,7 +207,7 @@ def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[i
     return code, out
 
 
-# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b): settings from the environment.
+# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a): settings from the environment.
 lambda_handler = function.entry(lambda: Service(dict(os.environ)), handle)
 
 

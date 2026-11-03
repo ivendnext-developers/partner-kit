@@ -74,7 +74,7 @@ A notification on the document, set up in Desk (or over the record API) by the r
 Limits:
 - An uploaded file (a CSV) goes as a **link** in the message, not an attachment. The installed version has no attach-from-field, and a manifest refuses one (it could mail any private file).
 - *Allow Print for Draft* is site-wide.
-- From POS build 2.0.0.654 a package may attach its **own** print format to a notification on its **own** record types ([chapter 7](../guide/07_manifests.md), *A notification's own print*). The retailer's own documents stay configuration.
+- A package may attach its **own** print format to a notification ([chapter 7](../guide/07_manifests.md), *A notification's own print*).
 
 ### A member rate after the promotions: the certified pricing module
 
@@ -110,7 +110,7 @@ Limits:
 ## Limits to know before you build
 
 - **The server does not refuse a wrong line detail, or a sale composed without a reason.** The till asks; the server does not check. If a wrong value must be refused on save, that is the save-rules extension point (P-RULES, chapter 9), not configuration.
-- **Configuration cannot make a field required or hidden at the till.** That is the field-rules extension point (P-FIELDS, chapter 9), which has shipped since this recipe was measured.
+- **Configuration cannot make a field required or hidden at the till.** That is the field-rules extension point (P-FIELDS, chapter 9).
 - **A customer group created later gets the member discount until the script is run again** (it recomputes the exclusion list each run), or until the group is added to the promotion's exclusions in Desk.
 - **One unit per line** for a serial-tracked item, by the till's design.
 - **Offline** was not tested for any part.
@@ -134,15 +134,13 @@ Proven on our test bench.
 - **IMEI:** a line with no IMEI is refused (*scan the unit's serial*); two units on one line are refused (*one unit per line*); one unit with two IMEIs is refused (*2 of 1 serials captured*); a right sale books, takes the IMEI out of stock, and the same IMEI cannot be sold twice.
 - **Line detail:** saved with the sale against the right item.
 - Applied twice: nothing created the second time. Removed: the switches back, nothing live left.
-- The money kit with the pack applied: green on our test bench (`recipes/money_kit.md`).
 
 ### Limits, stated
 
 - **The line detail's pattern is checked on the till screen only.** The server saves a value that breaks the pattern (measured: `not-a-card` was saved). If a wrong value must be refused, that is an extension point (P-RULES), not configuration.
-- **A reason is asked for and kept; a sale composed without one is not refused by the server** — measured: with the switches on, the money kit's recorded basket with a 7% sale discount and no reason code booked and matched its answer. The till's own code comment says a *return* has always demanded a reason; that was **not exercised here**, and neither was capturing an **item return** or **sale return** reason on a sale (only *Sale Discount* and *Item Discount* reach an invoice in the tests): the switches and the reason codes for those types are proven present and offered by the till's own list, nothing more. **The till screen asking was walked** (2026-10-07): the markdown asked for a reason and, for *price match*, a comment; the IMEI was captured; the **void** asked for its reason (*Void: scanned in error*) and the sale was voided with its record kept. Not proven: the return reasons on the till screen, and the voided record's stored reason read back from the database.
-- **What the recipe cannot do:** make a field required or hidden at the till (the field-rules extension point, P-FIELDS, chapter 9), or refuse a wrong value on save (the save-rules extension point, P-RULES, chapter 9): both have shipped since this recipe was measured.
+- **A reason is asked for and kept; a sale composed without one is not refused by the server** — measured: with the switches on, a recorded basket with a 7% sale discount and no reason code booked and matched its answer. The till's own code comment says a *return* has always demanded a reason; that was **not exercised here**, and neither was capturing an **item return** or **sale return** reason on a sale (only *Sale Discount* and *Item Discount* reach an invoice in the tests): the switches and the reason codes for those types are proven present and offered by the till's own list, nothing more. **The till screen asking was walked** (2026-10-07): the markdown asked for a reason and, for *price match*, a comment; the IMEI was captured; the **void** asked for its reason (*Void: scanned in error*) and the sale was voided with its record kept. Not proven: the return reasons on the till screen, and the voided record's stored reason read back from the database.
+- **What the recipe cannot do:** make a field required or hidden at the till (the field-rules extension point, P-FIELDS, chapter 9), or refuse a wrong value on save (the save-rules extension point, P-RULES, chapter 9).
 
 ### Tests
 
 - The pack's bench test (applied, three sales, removed) passed on our test bench.
-- The money kit with the pack applied (`recipes/money_kit.md`).

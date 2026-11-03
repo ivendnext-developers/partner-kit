@@ -29,11 +29,10 @@ A scan source lets the till's scan read the retailer's **own** unit codes: a cod
    - `item_from` links to Item; `batch_from`, `serial_from` and `warehouse_field` are optional links (with `warehouse_field`, a till finds only its own store's units).
    - `status_field` and `available_values`: the statuses a unit can be sold in.
    - Or point a source at a table iVendNext already keeps (a child table on Batch: `item_from` and `batch_from` are then `parent`).
-   - The source installs **switched off** (the record's own default is on; the installer turns it off).
 
-2. **What the retailer does after install.** It switches the source on (*Retail Scan Source*). Optionally it sets **Record the code as** to one of its own **active line attributes**: the unit's code then rides the sale's line, so the invoice says which unit was sold, and the same unit twice in one basket is refused. Recording needs a status field, so a returned unit can be sold again.
+2. **What the retailer does after install.** The source is on from the install. Optionally the retailer sets **Record the code as** to one of its own **active line attributes**: the unit's code then rides the sale's line, so the invoice says which unit was sold, and the same unit twice in one basket is refused. Recording needs a status field, so a returned unit can be sold again.
 
-3. **Fill the table.** Your service writes the units (over the record API; the retailer's staff can also create them by hand. A file import of a manifest's record type is not something a manifest can switch on, chapter 7 step 3). **Writing *Sold* is yours**: from the event feed (`recipes/event_feed.md`) when a sale books, and back to *Available* after a return.
+3. **Fill the table.** Your service writes the units (over the record API; the retailer's staff can also create them by hand). **Writing *Sold* is yours**: from the event feed (`recipes/event_feed.md`) when a sale books, and back to *Available* after a return.
    - **Where the code is on the booked sale.** With *Record the code as* set (step 2), read the sale (the POS Invoice) over the record API and open its child table `custom_pos_invoice_transaction_item_attribute`. Each row has `transaction_item_attribute` (which attribute: the one the retailer chose), `item_ref` (the item the row belongs to) and `attribute_value` (the unit's code). A return carries its own rows in the same table of the return, so read the return's rows to put its units back to *Available*.
 
 4. **What the cashier sees.**
@@ -55,19 +54,19 @@ A scan source lets the till's scan read the retailer's **own** unit codes: a cod
 
 ### What was proven where
 
-- **Screenshots** (our test bench, 2026-10-10, the iVendNext POS app `87812e141`, the kit's demo site *Demo Retail*; frames: the till's counter frame, 1440 wide, light mode, and the phone frame, a 390 × 844 phone viewport): one *Available* and one *Sold* unit of the bench's unit item, the source switched on with the retailer's own line attribute chosen under *Record the code as*. A real browser drove the till; the checks below drove its calls.
+- **Screenshots** (our test bench, 2026-10-10, the iVendNext POS app `87812e141`, the kit's demo site *Demo Retail*; frames: the till's counter frame, 1440 wide, light mode, and the phone frame, a 390 × 844 phone viewport): one *Available* and one *Sold* unit of the bench's unit item, the source on with the retailer's own line attribute chosen under *Record the code as*. A real browser drove the till; the checks below drove its calls.
 
 Proven on our test bench on 2026-10-08 (iVendNext POS app at `577a8d41`), **9 of 9** checks, through the till's own scan (`api.mpos_cart.scan`) as the cashier:
 
 | Case | Result |
 |---|---|
-| Install | the table and the source installed; the source **switched off** — and, off, a unit's code is not found |
-| An *Available* unit, the source switched on | its item lands with **its own batch** (the unit sits in the item's second batch, so a default pick could not match it by chance) |
+| Install | the table and the source installed |
+| An *Available* unit | its item lands with **its own batch** (the unit sits in the item's second batch, so a default pick could not match it by chance) |
 | A *Sold* unit | *"This unit is already sold."* |
 | With *Record the code as* set to the retailer's active line attribute | the unit's code rides the line (`{"transaction_item_attribute": "Unit code", "attribute_value": "PPUNC39CFBED4"}`) |
 | The same unit again in that basket | *"This unit is already in the sale."* |
 | Uninstall | the table, its units and the source gone; the schema as found |
 
-The unit's batch and code on a **booked** sale: the money kit's label for this sample (`recipes/money_kit.md`). Results: **GREEN** on 2026-10-08: the sale booked with the unit's own batch and its code on the line, every other sale as the baseline. ⚠ On a site with **no default company**, a batch or serial till sale fails to book (*"Serial and Batch Bundle: company"*) — a known behaviour of the product today; set the company default (Setup → Global Defaults) or the cashier's own.
+On a **booked** sale the unit's own batch and its code were on the line (2026-10-08). ⚠ On a site with **no default company**, a batch or serial till sale fails to book (*"Serial and Batch Bundle: company"*) — a known behaviour of the product today; set the company default (Setup → Global Defaults) or the cashier's own.
 
 Not run here: a unit sold on another till (*"This unit was just sold on another till."*), a source over a table on Batch (`parent`), a warehouse-scoped source, GS1 codes. The product's own tests cover them.

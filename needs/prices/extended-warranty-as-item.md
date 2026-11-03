@@ -19,7 +19,7 @@ Nothing of your own: the warranty is an item, and the till offers it when the pr
 
 **Pricing, one of two.** Each warranty's price on the price list (one price for every laptop; price type *System Generated*), or a fixed amount on each choice (price type *Amount*) when the price depends on the laptop, with one group per laptop price band.
 
-**What a partner adds, from doors that exist:** registering the warranty with its provider after the sale (an outside app on the event feed, `recipes/event_feed.md`); a warranty look-up during the sale (the card *warranty-check-at-till*); a certificate number printed under the warranty line (*Fulfil at sale*, chapter 9); prices kept in step from a provider (an outside app writing the items' prices over the API).
+**What a partner adds, from doors that exist:** registering the warranty with its provider after the sale (an outside app on the event feed, `recipes/event_feed.md`); a warranty look-up during the sale (the card *warranty-check-at-till*); a certificate number printed under the warranty line (*Fulfil at sale*); prices kept in step from a provider (an outside app writing the items' prices over the API).
 
 ## Limits
 - The warranty items cannot be serial- or batch-tracked.

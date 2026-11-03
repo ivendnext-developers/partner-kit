@@ -5,8 +5,7 @@
   "titles": {
     "recipes/till_guard.html": "Several till rules in one app with the retailer's own settings",
     "samples/s25_gift_on_spend/index.html": "S25 — Gift card on spend",
-    "samples/s7_system_sync/index.html": "S7 — System sync: a customer's own system kept in step",
-    "samples/s9_bi_feed/index.html": "S9 — A BI feed: sales, payments and returns into a warehouse file"
+    "samples/s7_system_sync/index.html": "S7 — System sync: a customer's own system kept in step"
   },
   "descriptions": {
     "index.html": "Guide, recipes, samples and a needs catalogue for building custom retail POS apps, integrations and extensions on iVendNext without changing the product.",
@@ -15,7 +14,7 @@
     "build.html": "You know what you are building: the ladder of ways in, the recipe and sample for each rung, your sandbox and the tests that let an iVendNext app ship.",
     "plan.html": "Plan an iVendNext project from a customer's list of needs to a release: tick the needs, get the order to build them in and the limits to put in the quote.",
     "sandbox.html": "Request a sandbox: your own iVendNext site with made-up demo data, hosted by us, where you build and test before you touch a customer's site.",
-    "publish.html": "Make your app, try it on your sandbox, send it to your customer and list it for every retailer, on My apps or with the ivn command. What each step costs, and what a retailer sees.",
+    "publish.html": "Make your app, try it on your sandbox, send it to your customer and list it for every retailer, on My apps or with ivn. What each step costs.",
     "starters.html": "Starting points for connecting a local ERP, payment gateway or wallet, loyalty provider, messaging gateway or delivery app to iVendNext.",
     "security.html": "How a retailer and your app trust each other: its consent, your app's own user, the signed call and its check, rotation, and the till when your app is down.",
     "map.html": "Every iVendNext API endpoint your app calls and every call iVendNext makes to your service, everything a manifest can add, and every screen you can build.",

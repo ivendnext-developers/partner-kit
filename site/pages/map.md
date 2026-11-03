@@ -34,4 +34,4 @@ Every record type an app commonly reads or writes, with each field: its type, wh
 
 ---
 
-**Next:** [Get started](first_app.md): your sandbox, your key and your first call.
+**Next:** [Build your first app](first_app.md).

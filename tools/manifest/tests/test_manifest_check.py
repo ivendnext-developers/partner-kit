@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_manifest_check.py,
-# at development 99b5d44fb7a39d290df054788a2bfe847bc700b4; changed: the import and the fixture folder. A defect here is a defect there:
+# at development 99b5d44fb7a39d290df054788a2bfe847bc700b4; changed: the import, the fixture folder and one id in a comment. A defect here is a defect there:
 # report it with the Kit defect form (feedback/README.md).
 """Validator tests: stdlib only, no bench. Every fixture passes; each kept gate, planted into a good
 manifest, is refused with its own reason and nothing else; what Desk allows the shop's administrator
@@ -411,7 +411,7 @@ KEPT = [
     ),
 ]
 
-# what Desk lets the shop's administrator do, which the checker refused before X98
+# what Desk lets the shop's administrator do, which the checker refused before
 ALLOWED = [
     ("a record type without the prefix", FULL, lambda m: m["doctypes"][0].update(name="Line")),
     (

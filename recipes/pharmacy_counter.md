@@ -32,7 +32,7 @@ answering presses keeps nothing.
      - only `<PREFIX> Records Officer`, a role nobody holds until iVendNext gives it, deletes a prescription, a
        dispensing or a patient record: laws keep a prescription for years, and a permission row cannot say *not once dispensed*.
 
-     Name the roles with your prefix and the install makes them;
+     the install makes any role the manifest names that the site lacks, with no one in it;
    - **fields on the retailer's record types:**
      - a schedules table on Item (one row per axis, with *effective from*);
      - a schedule on Item Group;
@@ -137,8 +137,7 @@ answering presses keeps nothing.
 - **Laptop:** `python3 -m unittest discover -s samples/s39_pharmacy_counter/tests -p 'test_*.py'`.
   - It includes two tills on real threads (exactly one is allowed) and the stand-in iVendNext's 409.
   - `canaries.py` breaks each guarded rule.
-- **A bench:** install through iVendNext's installer, with the service's user holding your role alone plus the card's
-  reads. Then run:
+- **A sandbox:** `ivn try`, with the service's user holding your role alone plus the card's reads. Then run:
   - the prescription line refused for a counter assistant and booked for the pharmacist;
   - no prescription, or an expired one, refused;
   - the last fill refused;
@@ -154,8 +153,6 @@ answering presses keeps nothing.
   is filled at Submit.
 - **The prescriptions register prints no age and no price:** a print or report may not read the patient's record yet,
   and the dispensing keeps no price (S39's README).
-- **An update that changes a Desk service's field or fill list lapses its consent,** and the Desk then submits
-  unchecked until a System Manager ticks it again (S39's README, *Updating from 0.1.2*).
 - **The till cannot take or show the patient's identity:** enter it on the patient's record on the Desk. A clerk is
   refused that record whole, but an assignment on it, the customer's Connections count and one engine export still
   tell a clerk something (S39's README, *Limits*).

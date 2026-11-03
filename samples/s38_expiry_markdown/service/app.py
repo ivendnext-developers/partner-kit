@@ -23,7 +23,7 @@ the ``X-PP-Admin`` token: ``GET /test/received`` returns the last presses as rec
 ONE SHOP (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the integration user), PP_POINT_SECRET (handed back at install as pp_exm:sub:markdown),
     PP_ADMIN_TOKEN, PP_PORT (8150)
-MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
+MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_exm), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 EXM_PREFIX (default PP EXM; IVENDNEXT EXM for the library's app) · PORT (default 8080)
 
@@ -357,7 +357,7 @@ def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[i
     return code, out
 
 
-# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b): settings from the environment.
+# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a): settings from the environment.
 lambda_handler = function.entry(lambda: Service(dict(os.environ)), handle)
 
 

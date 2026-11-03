@@ -27,7 +27,7 @@ Every sandbox site is its own database, so no builder sees or touches another's.
 | Customers | a walk-in customer, a repeat customer and a VIP customer, with a loyalty programme |
 | Gift cards | a gift card and a store credit, each with a balance |
 | History | two past purchases by the VIP customer, so returns and reports have something to read |
-| Extension points | every one present and **switched off**; nothing of ours is installed beyond the product itself |
+| Extension points | every one present; nothing of ours is installed beyond the product itself |
 
 **The retailer's defaults, and what you will see:**
 
@@ -50,8 +50,7 @@ The e-mail addresses are made up. The site also gives every user its standard ro
 ## Your first hour
 
 1. **Sign in** at your address as `admin@demo-retail.example` with the one-time password we sent. Choose your own password when the site asks.
-2. **Make your administrator's API key:** Desk → your user → Settings → API Access → **Generate Keys**. The secret is shown once; keep it in your secret store. If iVendNext answers *"Select at least one option: 'Is Desk User' or 'Is POS User'"*, tick **Is Desk User** on your user first (the field `custom_is_desk_user`), save, then generate.
-3. **Check your site** with the kit's sandbox check (Python 3, plus bash, curl and jq):
+2. **Check your site** with the kit's sandbox check (Python 3, plus bash, curl and jq):
 
    ```bash
    BASE=https://<your-site> KEY=<api key> SECRET=<api secret> python3 tools/sandbox_check/check.py
@@ -68,14 +67,14 @@ The e-mail addresses are made up. The site also gives every user its standard ro
    ```
 
    Each one left out keeps the hosted sandbox's value (`Demo Retail`, `Demo Retail — Store `, `3`, `integration@demo-retail.example`, `Demo Integration`). The other six checks are the same on every site.
-4. **Give your connected app its key:** open the integration user and press **Generate Keys**. Its role starts with one right, reading items; widen it to what your app needs, as `recipes/integration_user.md` and guide chapter 2 show. Use this key in your app, never the administrator's.
-5. **Sell on the till:** sign in to the till as a cashier with the till ID, password and PIN we sent, open a day, sell, and **close the day** before you stop.
+3. **Give your connected app its key:** open the integration user and press **Generate Keys**. Its role starts with one right, reading items; widen it to what your app needs, as `recipes/integration_user.md` shows. Use this key in your app, never the administrator's.
+4. **Sell on the till:** sign in to the till as a cashier with the till ID, password and PIN we sent, open a day, sell, and **close the day** before you stop.
 
 ## The limits
 
 - **Developer mode is off,** as on a customer's site. Anything you make in Desk stays on your own site.
 - **There is no server access** — no shell, no connection to the database (Desk's read-only reports aside), no container, no app source. You work in your own editor and language and call your site over HTTPS.
-- **You install your own manifests** with the kit's `deploy` command (`tools/deploy/deploy.py`) and your administrator's key: it shows your site's summary and installs only when you consent. ⚠ A sandbox gets the install screen with its update to the POS app of 2026-10-10 or later; if `deploy` stops at the check with *Failed to get method*, ask us and we update your sandbox. There is no other way to install a manifest.
+- **You install your own apps** with `ivn try`: it installs on your own sandbox with no key, no plan, no card and no questions.
 - **The data is test data.** Never put a real shopper's data, a real payment account, a real fiscal service or a real mail server on your site. None is connected. Your sandbox is hosted in the US. We may reset or remove a site that holds real personal data.
 - **Mail is off.** The site never sends a message to anyone. A notification that would send mail (a purchase order's, for example) fails into the site's *Error Log*; the document itself still saves.
 - **Server scripts are off.** They do not run on any of our sites.
@@ -85,7 +84,7 @@ The e-mail addresses are made up. The site also gives every user its standard ro
 | Configure anything a customer's administrator can: prices, promotions, coupons, POS Studio, receipts, workflows, numbering, permissions, reports | Install a Python app on the site or the server |
 | Make roles and users, and an API key for each connected app (one app, one user) | Reach a server, connect to the database, or reach a container or the app source |
 | Call the API from your own machine or server over HTTPS, and run `api/collection/run.sh` | Run server scripts, or rely on client scripts, custom HTML blocks or script print formats (intake refuses them) |
-| Check a manifest locally, then install, update or uninstall it on your site with `deploy` | Change a total after the cashier has seen it, or override or patch iVendNext (the four rules, guide chapter 3) |
+| Check an app with `ivn check`, then install it on your sandbox with `ivn try` | Change a total after the cashier has seen it, or override or patch iVendNext (the four rules) |
 | Register a feed reader and subscribe webhooks to your own public address | Use a hosted till key, which is for the CitiXsys Consulting Team only |
 | Make a till key answered by your own public HTTPS server (private and loopback addresses are refused; use a tunnel or a public test server) | Ask for another builder's site or data |
 | Open a POS day on a till and run sales to test your work | Leave a POS day open at the end of a test |
@@ -96,14 +95,13 @@ The e-mail addresses are made up. The site also gives every user its standard ro
 
 - **Reset.** Ask us and we remake your site from the template. Everything you made is lost: configuration, users, keys, installed manifests and records. Keep your manifests, configuration and test data in your own repository, so a reset costs you minutes. All keys are new after a reset; give your services the new ones.
 - **Removal.** When you leave the programme, your site is removed and its address released.
-- ⚠ **Proposed, not ruled yet:** a site that has been quiet for a long spell is archived with notice. You can always ask for a fresh one.
 
 ## What is refused, and why
 
 - **A copy of the site, the app source or a container for you.** A site on our hosting gives you everything you need to build, and nothing a customer's site would not.
 - **A shared login or a default password.** Every site has its own logins, generated for it, and you choose your administrator's password yourself.
 - **A sandbox with mail on.** It could write to a real person from made-up data.
-- **Python inside a site.** Outsiders never write Python inside a customer's site. Their ways in are manifests and sandboxed functions (guide chapter 3).
+- **Python inside a site.** Outsiders never write Python inside a customer's site. Their ways in are manifests and sandboxed functions.
 
 ## When your service is down, and when the till is offline
 
@@ -114,9 +112,8 @@ The sandbox does not change either rule. Your site is online whenever our hostin
 ### How a sandbox site is made
 
 - All sandbox sites run on one sandbox installation on our hosting. It runs the product's latest build, so it carries the extension points, and it runs with developer mode off.
-- Each site is made fresh, then filled by one seed, the **sandbox template**. The template reuses the product team's US demo seed with neutral names and prices, so the tax, stock and till wiring are the product's own. It then adds the administrator, the integration user and its starter role, the promotion, the settings (mail off, the stores' time zone) and the retailer's defaults (above: returnable items, the `Till-1` drawers, Cash refunds), with the site's default company stored. It installs nothing of ours and switches no extension point on.
+- Each site is made fresh, then filled by one seed, the **sandbox template**. The template reuses the product team's US demo seed with neutral names and prices, so the tax, stock and till wiring are the product's own. It then adds the administrator, the integration user and its starter role, the promotion, the settings (mail off, the stores' time zone) and the retailer's defaults (above: returnable items, the `Till-1` drawers, Cash refunds), with the site's default company stored. It installs nothing of ours.
 - The template's own check runs on every site before hand-over. It fails on: the demo seed's tax check, or prices that include tax; a store without exactly one till profile and two tills; a stocked demo item without a barcode or a price; a user whose roles differ from the table above, or a till ID that differs; an administrator role that no listed job needs, or a job no role covers; developer mode, server scripts or mail switched on; an extension point or webhook switched on; an app of ours installed; an open POS day; the site's default company not stored; a demo item (the care plan and gift cards aside), or a new item's default, not returnable for 30 days; a store whose `Till-1` has no cash drawer; a store's till profile not allowing Cash in returns.
-- **One seed per site, not a copy of a template site.** An earlier draft of this recipe proposed seeding one template site and restoring its backup for each builder. A fresh seed is simpler and always matches the installation's current product, so there is no template backup to refresh when the product moves. A reset is the same: a fresh site and the seed.
 - The administrator is a named user, not the site's built-in Administrator: the site asks a named user for a new password at first sign-in.
 
 ### The sandbox check
@@ -130,7 +127,7 @@ The sandbox does not change either rule. Your site is online whenever our hostin
 ### What was proven where
 
 - The check and its planted faults: on the kit's own tests, against the stand-in.
-- **The kit's check on a real sandbox site:** 9 of 9 passed on `demo-1` on 2026-10-12, and with a wrong secret it turned red. A later update that day moved the sites to a new installation; the check has not been run again since.
+- **The kit's check on a real sandbox site:** passed on `demo-1` on 2026-10-12, and with a wrong secret it turned red. A later update that day moved the sites to a new installation; the check has not been run again since.
 - **The template's own check, 2026-10-12:** once the retailer's defaults were applied, it read 0 gaps on eleven of our twelve sandbox sites. The twelfth reported its builder's own changes. A site keeps what its builder changes. The check reads the demo site as the template made it, so it reports a change to the demo site's own records or an extension point switched on, but not an item or a user you add.
 - **A refund paid in cash** was proven on our own rehearsal site only, not yet on a sandbox site.
 

@@ -2,6 +2,7 @@
 # needs.py check fails a recipe or sample that no card cites and that is not listed here.
 recipes/ai_manager.md — an AI assistant for a manager on the user's own key
 recipes/ai_till_key.md — an AI answer behind a till key; the till key needs are carded
+recipes/bulk_reads.md — a technique every outside app uses
 recipes/estate_rollout.md — rolling a set-up out to many stores
 recipes/hosted_sandbox.md — the builder's own sandbox
 recipes/integration_user.md — the app's user and key

@@ -14,7 +14,7 @@ verified: run by the product 2026-10-18 (POS train T12's walk, counter, phone an
 related: till-fields-shown-renamed-hidden
 ---
 ## What you build
-Two field rules on the till theme, from POS build 2.0.0.654: `cart_line · list_price · show · List price` shows each line's price before any cut, and `totals · grand_total · relabel · Total incl. VAT` gives the total the retailer's word (`recipes/field_rules.md`, *The money words*). The line's price, discount and total and the totals' discount, charges, delivery and tax take a new label too. No figure changes.
+Two field rules on the till theme: `cart_line · list_price · show · List price` shows each line's price before any cut, and `totals · grand_total · relabel · Total incl. VAT` gives the total the retailer's word (`recipes/field_rules.md`, *The money words*). The line's price, discount and total and the totals' discount, charges, delivery and tax take a new label too. No figure changes.
 
 ## Limits
 - The paper keeps its own words (*Total*, *Tax (incl.)*): for the retailer's word on the receipt, name your own print format.

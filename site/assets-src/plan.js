@@ -83,7 +83,7 @@
     var forms = [], at = {}, askUs = [], instead = [];
     order(cards).forEach(function (c) {
       (c.request_forms || []).forEach(function (f) {
-        if (!(f.handle in at)) { at[f.handle] = forms.length; forms.push({ handle: f.handle, url: f.url, note: f.note, needs: [] }); }
+        if (!(f.handle in at)) { at[f.handle] = forms.length; forms.push({ handle: f.handle, url: f.url, needs: [] }); }
         forms[at[f.handle]].needs.push(c);
       });
       c.limits.forEach(function (l) {
@@ -316,7 +316,6 @@
         var li = el("li"), a = el("a", null, "Ask for the extension point " + f.handle);
         a.href = f.url;
         li.appendChild(a);
-        if (f.note) li.appendChild(doc.createTextNode(" (" + f.note + ")"));   // build.py's MEMBERS_ONLY, carried by catalogue.json
         li.appendChild(forList(f.needs));
         rl.appendChild(li);
       });

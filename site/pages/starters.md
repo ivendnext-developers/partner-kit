@@ -2,7 +2,7 @@
 
 Some systems a retailer uses are local to a country or a region: its accounting system, its payment gateway or wallet, its loyalty provider, its messaging gateway, its delivery company. Connecting them is a partner's business, not ours: you know the market, and the customer stays yours. This page gives you a starting point for each, where the kit has one: the sample and the recipe to copy, the need it answers in the [needs catalogue](../../needs/README.md), the door it uses, and what usually changes from one market to the next.
 
-**Starting from one of our samples?** Run `python3 tools/manifest/start.py <sample> --prefix "ACME <SHORT>"` in your copy of the kit (for example `s11_approvals`). It copies the sample into `apps/` of your repository under your own prefix, changes every name that carries ours, in the manifest, the code, the tests and the page, and checks the result. Details: [Make one of our apps your own](../../recipes/make_it_your_own.md).
+**Starting from one of our samples?** [Build your first app](first_app.md) does it in six steps: `ivn new acme_erp --from s7`, for example, makes it yours, under your own name, and checks the result.
 
 Why this is yours to build, and what stays yours: [Build your business on iVendNext's apps](business.md).
 
@@ -19,7 +19,7 @@ Why this is yours to build, and what stays yours: [Build your business on iVendN
 - **What you build:** a payment connector on your own server for a card, mobile-money or pay-later provider we do not connect; or a wallet, a balance your service keeps that a customer spends at the till.
 - **Start from:** the recipe [Your own card or mobile-money connector](../../recipes/payment_connector.md) and its reference implementation, [the payments team's stand-in connector](../../contracts/paygw/partner_stub.py). For a stored balance: [A partner wallet at the till](../../recipes/wallet.md), with sample [S22](../../samples/s22_customer_loyalty/)'s *Member cash*.
 - **The need:** [A card or mobile-money provider we do not connect](../../needs/integrations/own-payment-connector.md), and [A store wallet or a loyalty points balance spent at the till](../../needs/customers/store-wallet-at-till.md).
-- **The door:** the gateway contract `paygw/1` ([chapter 11](../../recipes/payment_connector.md)), reached in the customer's site through [Partner payment gateways](https://library.ivendnext.app/apps/ivendnext_pay_remote) in the App library. Your connector passes our conformance kit before it takes money.
+- **The door:** the gateway contract `paygw/1` ([recipe](../../recipes/payment_connector.md)), reached in the customer's site through [Partner payment gateways](https://library.ivendnext.app/apps/ivendnext_pay_remote) in the App library. Your connector passes our conformance kit before it takes money.
 - **What changes per market:** the provider's API and its sign-in, its approval flow (at the terminal, or on the customer's phone), its currency and minor units, how it settles and refunds.
 
 ## A loyalty provider

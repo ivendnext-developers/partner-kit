@@ -17,7 +17,6 @@ Your outside app: orders in, stock and prices out.
 
 ## Limits
 - An online order cannot be edited at the till.
-- The kit's samples read the shared feed, whose key is not limited to one app (a feed scoped to your app is an extension point, chapter 9).
 
 ## Tell the customer
 Online orders arrive in iVendNext and the web store shows the stores' stock and prices.

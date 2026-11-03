@@ -38,7 +38,7 @@ Some back-office documents must not become final until an outside system agrees:
    | `{"verdict": "fill", "fields": {"acme_erp_number": "ERP-PO-9912"}}` | the document is submitted carrying the value |
 
    Every sentence is plain text of 1 to 140 characters. Check each answer against the contract before you ship (`tools/contracts/check.py`, `errors("doccheck", "answer", value)`).
-3. **Test it** on the laptop (S34's tests: every answer against the contract, a canary that answers wrong), then on your sandbox: install, tick the consent and switch the check on, submit a document with your service down and read the declared down answer in Desk and on the *Retail Extension Log*.
+3. **Test it** on the laptop (S34's tests: every answer against the contract, a canary that answers wrong), then on your sandbox: install, submit a document with your service down and read the declared down answer in Desk and on the *Retail Extension Log*.
 
 ## What is refused, and why
 

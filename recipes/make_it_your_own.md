@@ -23,53 +23,31 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
 
 ## Steps
 
-1. **Set up your company once,** on [My apps](https://developer.ivendnext.com/apps): sign in with GitHub, give your company's name as retailers see it and the first word you want for it (`acme`). It is yours at once. Every app you name under your word is yours, and no other company can take a name under it ([Publish your app](../site/pages/publish.md), step 2).
+1. **Set up your company once,** on [My apps](https://developer.ivendnext.com/apps): sign in with GitHub, press **Set up my company**, give your company's name as retailers see it and take the first word we suggest (`acme`). It is yours at once. Every app you name under your word is yours, and no other company can take a name under it ([Build your first app](../site/pages/first_app.md), step 1).
 
-2. **Start your repository from a copy of the kit, and copy the app into a folder of its own.** A sample's service uses the kit's app template (`tools/app_template/service`: the handshake with each retailer), so your app sits inside a copy of the kit, two folders down:
-
-   ```bash
-   git clone https://github.com/ivendnext-developers/partner-kit.git acme-apps
-   cd acme-apps
-   git remote rename origin kit            # the kit stays a remote; push to your own repository as origin
-   mkdir -p apps && cp -r samples/s2_bins apps/acme_bins
-   ```
-
-   Keep the kit's `LICENSE` and `NOTICE` for the parts you copied (Apache 2.0). Put your own licence for your changes beside your app, and list the components your app ships in `THIRD_PARTY.md`. Your repository can stay private.
-
-   **Shortcut for steps 2 and 3:** `python3 tools/manifest/start.py s2_bins --prefix "ACME BINS"` makes `apps/acme_bins` from the sample, renames it and also rewrites the code, tests and README that the rename below only lists, and finishes only when no copy of the sample's prefix, app name or folder is left and the kit's checks pass (add `--test` to run the copied tests). It needs your repository made from the kit, as step 2 sets up. The steps below are what it does for the manifest.
-
-3. **Rename it to your company's prefix, in one command.**
+2. **Make the app from the sample.** From any folder that is a git repository or an empty one (or **New app** on My apps):
 
    ```bash
-   python3 tools/manifest/rename.py apps/acme_bins/manifest.json --prefix "ACME BINS"            # shows what changes
-   python3 tools/manifest/rename.py apps/acme_bins/manifest.json --prefix "ACME BINS" --write    # writes it
+   ivn new acme_bins --from s2
+   cd apps/acme_bins
    ```
 
-   It renames every name the app creates on a retailer's site:
+   It makes `apps/acme_bins`, a copy of the sample under your names, its code, tests and README included:
    - its record types: `PP BLN Bin` → `ACME BINS Bin`;
    - its field on the retailer's items: `pp_bln_default_bin` → `acme_bins_default_bin`;
    - its role: `PP Integration` → `ACME BINS Integration`;
    - its till key and its workspace.
 
-   It renames the hosting order beside it as well (`app.json`). Your app's address name becomes `acme-bins`, and its paths point at `apps/acme_bins`. It then runs iVendNext's own checker on the result, and writes nothing unless the result passes.
+   The folder holds a `LICENSE` to replace with your own and a `THIRD_PARTY.md` with the notices of what it was made from. Your repository can stay private.
 
-   It ends by listing what is still yours to change:
-   - the lines of your code, tests and README that name the old prefix;
-   - the outside addresses in the manifest, which you replace with your own service's address (`https://acme-bins.ivendnext.app/...` on our hosting).
+3. **Give it a feed.** The app is the till key's service alone, as *Bin locations* is, and the service reads with the app's own user. The feed is what gets your service that user: the install makes the app's own user and names it on the feed, and the retailer's site hands your service its key. Add it to `manifest.json`:
 
-   Bin locations' service takes its prefix from a setting, `BLN_PREFIX`, so its code needs no change for the name.
+   ```json
+   "registered_applications": [{"name": "ACME BINS Bins feed",
+     "description": "the Where is it? service reads the bin records", "events": ["ACME BINS Item In Bin"]}]
+   ```
 
-4. **Give it the shape of the app you started from.** A library app is its sample with a few edits for our hosting, and the sample's README names them. For *Bin locations* (S2's README, *The till key alone, hosted by CitiXsys*), there are two:
-   - **Its feed.** The feed is what gets your service its user: the install makes the app's own user and names it on the feed, and the retailer's site hands your service its key:
-
-     ```json
-     "registered_applications": [{"name": "ACME BINS Bins feed",
-       "description": "the Where is it? service reads the shop's bin records", "events": ["ACME BINS Item In Bin"]}]
-     ```
-
-   - **The till key's service only.** The sample also holds a second service (`service/app.py`, reached through the manifest's two `webhooks`), which takes what each sale sells out of its bin and runs as a service that stays up. Our *Bin locations* leaves it out. Take the two `webhooks`, and their address in `allowed_urls`, out of your manifest. Or keep them and host `service/app.py` as well.
-
-5. **Make the change your customer needs.** For zones, three small changes:
+4. **Make the change your customer needs.** For zones, three small changes:
    - in `manifest.json`, a **Zone** field on `ACME BINS Bin`:
 
      ```json
@@ -77,7 +55,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
       "description": "Where in the store this bin is: Cold room, Cage, Shop floor."}
      ```
 
-   - in `service/where.py`, `bin_rows` reads each bin's zone from the bin itself, so a bin's zone shows at once, on records old and new:
+   - in `service/bln/service/where.py`, `bin_rows` reads each bin's zone from the bin itself, so a bin's zone shows at once, on records old and new:
 
      ```python
      bins = sorted({r["bin"] for r in held if r.get("location") in kind_of})
@@ -86,7 +64,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
              for r in held if r.get("location") in kind_of]
      ```
 
-   - in `core.py`, the answer names the zone after the bin, and a test pins it (`tests/test_zone.py`):
+   - in `service/bln/core.py`, the answer names the zone after the bin:
 
      ```python
      def _zone(row: dict) -> str:
@@ -94,42 +72,33 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
      # … f"{code}: shop floor {floor[0]['bin']} ({_qty(floor[0]['qty'])}){_zone(floor[0])}{more}"
      ```
 
-   Then set your own `title` (*ACME Bins*), `publisher` (your company), `version` (`1.0.0`) and `description` in the manifest.
+   The sample's test `test_the_shop_is_read_with_the_apps_key_and_only_read` (`tests/bln/test_where.py`) pins the records the key reads: add the third read, `ACME BINS Bin`'s, to its list. Add a test of your own for the zone. Then set your own `title` (*ACME Bins*) and `description` in the manifest.
 
-6. **Check it, then try it on your sandbox.**
+5. **Check it, then try it on your sandbox.** On My apps, **Try on my sandbox**. In a terminal:
 
    ```bash
-   python3 tools/check/check.py apps/acme_bins                    # the shop's checks, before anyone sees it
-   python3 -m unittest discover -s apps/acme_bins/tests            # your tests
-   BASE=https://<your sandbox> KEY=<key> SECRET=<secret> python3 tools/deploy/deploy.py apps/acme_bins/manifest.json             # shows what it will do
-   BASE=https://<your sandbox> KEY=<key> SECRET=<secret> python3 tools/deploy/deploy.py apps/acme_bins/manifest.json --consent   # installs it
+   ivn check
+   ivn try
    ```
 
-7. **Deliver it.**
-   - **To one customer:** make a `library/` folder in your app for the App library ([Publish your app](../site/pages/publish.md), *What goes in your project*). Set `{"public": false}` in its `library.json`, and publish to that customer's own *Made for you* shelf. A shelf for one customer needs no approval by us:
+6. **Publish it.**
+   - **To one customer:** on My apps, **Publish**, then **To a customer**. In a terminal:
 
      ```bash
-     LIBRARY_DELIVERIES='[{"customer": "chain-a", "name": "Chain A", "sites": ["chain-a-test.ivendnext.com", "chain-a.ivendnext.com"]}]' \
-     python3 tools/publish/publish.py publish apps/acme_bins --partner acme
+     ivn publish --to chain-a-test.ivendnext.com --to chain-a.ivendnext.com
      ```
 
-     You send the customer its shelf key. Their administrator pastes it once under **App library → Open your shelf**, reads what your app will do, and installs it, first on their test site.
-   - **To every retailer:** set `{"public": true}`, write its card and its guide, and publish the same way. Its first listing is reviewed once by us; your company is then its maker in the App library.
+     It puts the version on that customer's own shelf and prints the message to send their administrator, with the key in it. A shelf for one customer needs no approval by us. Their administrator opens **App library**, presses **Open your shelf**, pastes the key, presses **Install** on your app, reads what it will change, ticks **I agree** and presses **Install**, first on their test site.
+   - **To every retailer:** on My apps, **Publish**, then **To everyone**, or `ivn publish --public`. You are asked once for its card. Its first listing waits for one approval by us; your company is then its maker in the App library.
 
-8. **Run its service.**
-   - **On iVendNext App Hosting** (for one customer or for every retailer): run it once, as a function. Each retailer's site connects it by itself after the install, whether the retailer took it from the public list or from its *Made for you* shelf: each publish of your app to a shelf carries its own key for that customer's sites. Deploy it once:
-
-     ```bash
-     python3 tools/deploy_app/deploy_app.py apps/acme_bins --zip acme-bins.zip --root . --plan starter --partner acme
-     ```
-
-     It builds the package and prints the order we run. Your app answers at `https://acme-bins.ivendnext.app`, with `BLN_PREFIX=ACME BINS` and `IVN_LIBRARY_APP=acme_bins`. Each retailer's site connects itself after its install and hands your service the key of the app's own user (the install makes that user and names it on the feed, step 4); the retailer presses **Connect again** on your app's record only if the site could not reach the app, or a key was lost or changed. An app that only answers presses, listed on the App library's public list, carries no hosting charge.
-   - **On your own server, for one customer:** set the retailer's three values (S2's `service/where.py` names them):
+7. **Run its service.**
+   - **On iVendNext App Hosting** (for one customer or for every retailer): publishing orders it and asks for the plan the first time. Your app answers at `https://acme-bins.ivendnext.app`. Each retailer's site connects itself after its install, whether the retailer took it from the public list or from its *Made for you* shelf, and hands your service the key of the app's own user (step 3); the retailer presses **Connect again** on your app's record only if the site could not reach the app, or a key was lost or changed. An app that only answers presses, listed on the App library's public list, carries no hosting charge.
+   - **On your own server, for one customer:** put your service's address in the manifest in place of the sample's, and set the retailer's three values (`service/bln/service/where.py` names them):
      - `IVN_POINT_SECRET`, the till key's secret, which the install shows once in Desk, on the till key's record;
      - `IVN_SHOP_URL`, the retailer's address;
-     - `IVN_SHOP_KEY`, the API key of the app's user.
+     - `IVN_SHOP_KEY`, the API key of the app's user, which the retailer makes with **Generate Keys** on that user.
 
-9. **If the customer already uses our app, move its records.** Install yours beside ours: the two prefixes never share a name. Then copy every record across:
+8. **If the customer already uses our app, move its records.** Install yours beside ours: the two apps never share a name. Then copy every record across:
 
    ```bash
    BASE=https://<the customer's site> KEY=<key> SECRET=<secret> python3 tools/deploy/copy_records.py ivendnext_bln acme_bins            # shows what it would copy
@@ -138,25 +107,18 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
 
    It copies in the order the links need (locations, aisles, bins, then what is in each bin), with each record's table rows, and moves each item's default bin into your field, never over a value already set in yours. Bin locations names its records from their own fields (a bin by its code), so you can run it again at any time: it copies only what is new. Check the counts it prints, then uninstall our app from its package record. Its uninstall also keeps a copy of every record in a file.
 
-10. **Keep it running.** Each version of what your app relies on (an extension point's contract, an API call, the manifest format) is served for 12 months after its successor ships, so your customer's upgrades keep your app running ([chapter 18](../CHANGELOG.md)). Read the kit's changelog before each release of yours.
+9. **Keep it running.** Each version of what your app relies on (an extension point's contract, an API call, the manifest format) is served for 12 months after its successor ships, so your customer's upgrades keep your app running. Read [the kit's changelog](../CHANGELOG.md) before each release of yours.
 
-11. **Sell it again.** The next customer with zones gets *ACME Bins* on its own shelf. When it suits many retailers, list it once for every retailer (step 7).
+10. **Sell it again.** The next customer with zones gets *ACME Bins* on its own shelf. When it suits many retailers, list it once for every retailer (step 6).
 
 ## Good to know
 
 - **A site can hold several companies' shelves.** Each opens with its own shelf key, and your app takes its updates only from your shelf.
-- **Hosting with us** is ordered through your account manager, with the order `deploy_app.py` prints. Each new version is a new package you send us.
-- **Taking our improvements.** Your copy changes only when you change it. At each kit release, `git fetch kit` and read what changed in the sample since you copied it (`git diff <the kit commit you copied> kit/main -- samples/s2_bins`); take what you want into your copy.
+- **Taking our improvements.** Your copy changes only when you change it. `ivn status` says when a sample has a newer version, and `ivn take s2` takes it, keeping what you changed.
 - **A copied app keeps the extension points it uses.** A copy of a till key app is a till key app: the doors, their limits and what the retailer consents to are the same as the original's (each sample's README says them).
 
 ## Technical notes
 
-- **What `rename.py` changes:**
-  - every string in the manifest that names the old prefix as a whole word, or the old app name at the start of a field;
-  - a role named with the prefix's first word only (`PP Integration`);
-  - the `app`, `handler` and `package` of an `app.json` beside it.
-
-  It refuses a prefix whose first word iVendNext reads in field names (`FREE`, `PRICE`, `IS` …, listed on the save rules page), and a result iVendNext's checker or the install would refuse. It never edits your code: it lists it, line by line.
 - **What `copy_records.py` reads and writes:**
   - It reads, from the site's own record of each install, the record types each app made and the fields each added to the retailer's records.
   - It matches each record type and field by its name after the prefix (`IVENDNEXT BLN Bin` → `ACME BINS Bin`).
@@ -164,8 +126,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
   - A record whose name comes from its own fields (a bin from its code) keeps its name, and a second run skips it. A record the site names itself (a number or a random name) gets a new name, and each link to it follows; such a record type is copied only into an empty one of yours.
   - The key is a System Manager's.
 - **Tested:**
-  - **Every sample:** each manifest in the kit's samples, renamed, passes iVendNext's checker with no old name left (`tools/manifest/tests/test_rename.py`).
-  - **The worked example on a demo site:** *Bin locations* held 10 records and an item's default bin, and *ACME Bins* was installed beside it; *ACME Bins* in the form of step 4, its feed installed switched off, installs and uninstalls cleanly.
+  - **The worked example on a demo site:** *Bin locations* held 10 records and an item's default bin, and *ACME Bins* was installed beside it; *ACME Bins* in the form of step 3 installs and uninstalls cleanly.
     - The copy moved every record, field for field, and the item's default bin. A second run copied nothing.
     - With zones set on two bins, the service answered as above.
     - After *Bin locations* was uninstalled, *ACME Bins* still held every record.

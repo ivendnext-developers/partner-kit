@@ -28,7 +28,7 @@ What you need: <A worked example | An installed manifest>
 
 ## What we may ask you next, in the issue
 
-The doors the sample would use · the nearest customer archetype in guide chapter 15 and how yours differs · your blueprint and the rows it would serve · your language and stack · whether money is nearby · the size (stores, tills, the busiest hour) · the test you would want it to ship with · where you will use it.
+The doors the sample would use · your blueprint and the rows it would serve · your language and stack · whether money is nearby · the size (stores, tills, the busiest hour) · the test you would want it to ship with · where you will use it.
 
 ## What happens after you send it
 

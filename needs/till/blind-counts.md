@@ -13,7 +13,7 @@ request: -
 verified: carried 2026-10-15 · not re-run
 ---
 ## What you build
-A setting in iVendNext Desk (chapter 4). The kit has no recipe for it yet.
+A setting in iVendNext Desk. The kit has no recipe for it yet.
 
 ## Limits
 None known.

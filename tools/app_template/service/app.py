@@ -11,7 +11,7 @@ It runs in one of two ways. Settings come from the environment, never from a fil
   ONE SHOP — you hold its secret:
     IVN_POINT_SECRET            the signing secret you and the shop both hold
     IVN_POINT_SECRET_PREVIOUS   optional — the old secret, accepted while you rotate (see the chapter)
-  MANY SHOPS — each connects itself after it installs your app from the App library (guide chapter 14b):
+  MANY SHOPS — each connects itself after it installs your app from the App library (guide chapter 1a):
     IVN_LIBRARY_APP             your app's id in the App library (the key names it), e.g. ivendnext_lyl
     IVN_SHOPS_TABLE             on CitiXsys hosting: the app's own shops table (set by the hosting)
     IVN_SHOPS_FILE              elsewhere: a JSON file the app may write (tests, your laptop, your own server)
@@ -200,7 +200,7 @@ def main(argv=None):
     srv.serve_forever()
 
 
-# As a function on CitiXsys hosting (app.json "runs": "function", "handler": "service/app.lambda_handler"; chapter 14b).
+# As a function on CitiXsys hosting (app.json "runs": "function", "handler": "service/app.lambda_handler"; chapter 1a).
 lambda_handler = function.entry(lambda: settings(os.environ), handle)
 
 

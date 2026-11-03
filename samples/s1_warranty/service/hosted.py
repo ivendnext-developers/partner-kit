@@ -15,7 +15,7 @@ marks the site's own newest sale: older sales are left alone, also when one is s
 When the app has no user's key yet, the shop refuses that key, or the shop cannot be read in time, the cashier is told so
 in words (200, a warning message), never a guess. A pass that cannot read a site says so in the log and tries again next time.
 
-MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
+MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the app's id in the App library, with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE. Each shop
                        connects itself after its install and hands over the till key's secret and the key of the app's own
                        user ("user:<email>"); every call names its shop (X-iVendNext-Site).
@@ -222,5 +222,5 @@ def scheduled(svc: Service, name: str, seconds: float = 900) -> dict:
     return out
 
 
-# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b): settings from the environment.
+# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a): settings from the environment.
 lambda_handler = function.entry(lambda: Service(dict(os.environ)), handle, scheduled)

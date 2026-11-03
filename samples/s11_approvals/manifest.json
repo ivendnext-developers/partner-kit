@@ -53,19 +53,22 @@
      "action": "Submit",
      "next_state": "Approved",
      "allowed": "Purchase User",
-     "condition": "doc.grand_total <= 50000"
+     "condition": "doc.grand_total <= 50000",
+     "allow_self_approval": 1
     },
     {
      "state": "Rejected",
      "action": "Review",
      "next_state": "Draft",
-     "allowed": "Purchase User"
+     "allowed": "Purchase User",
+     "allow_self_approval": 1
     },
     {
      "state": "Approved",
      "action": "Cancel",
      "next_state": "Cancelled",
-     "allowed": "Purchase Manager"
+     "allowed": "Purchase Manager",
+     "allow_self_approval": 1
     }
    ]
   }

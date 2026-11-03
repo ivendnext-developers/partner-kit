@@ -13,7 +13,7 @@ request: -
 verified: run by the product 2026-10-16 (its tests of the three names: each builds the document as Desk's Create menu does, with the caller's rights); not run on a sandbox (no submitted request or order there)
 ---
 ## What you build
-From POS build 2.0.0.654, your service calls `/api/method/ivendnext_mpos.api.v1.material_request_to_stock_entry`, `sales_order_to_delivery_note` or `sales_order_to_sales_invoice` with the submitted source's name. Each answers an unsaved document built as Desk's *Create* menu builds it; your service checks or changes it, then saves it with `POST /api/resource/<record type>` (`api/README.md`).
+Your service calls `/api/method/ivendnext_mpos.api.v1.material_request_to_stock_entry`, `sales_order_to_delivery_note` or `sales_order_to_sales_invoice` with the submitted source's name. Each answers an unsaved document built as Desk's *Create* menu builds it; your service checks or changes it, then saves it with `POST /api/resource/<record type>` (`api/README.md`).
 
 ## Limits
 - The source must be submitted. Nothing is saved until your service saves it, and a draft is not booked until it is submitted.

@@ -11,8 +11,8 @@ From a customer's list of needs to a release, one step at a time. Each step link
 3. **Fill the blueprint**: copy [its template](../../kit/blueprint_template.md) or print [the form](https://developer.ivendnext.com/downloads/blueprint_form.pdf) ([how to fill it](../../kit/blueprint.md)).
 4. **Quote**: read every limit to the customer and write it into the proposal; each card's *Tell the customer* line is written for that. Group the needs into as few apps as you can: one app can carry many till keys, checks and records, and separate apps mean separate versions, consents and hosting prices ([How many apps, how many boxes](../../guide/01a_how_it_all_works.md#7-how-many-apps-how-many-boxes)).
 5. **Build** each need from its card's recipe and sample, on [your sandbox](sandbox.md) ([build](build.md)).
-6. **Test**: the samples' tests, the kit's checks and the money kit ([chapter 14](first_app.md)).
-7. **Release** through the customer's own release gate ([chapter 14](first_app.md)) and, for an app others install, the [App library](publish.md).
+6. **Test**: `ivn check`, and [the release gate](../../recipes/release_gate.md) where it touches money.
+7. **Release** through the customer's own release gate and, for an app others install, the [App library](publish.md).
 
 ## What is refused
 

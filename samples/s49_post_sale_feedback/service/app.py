@@ -26,7 +26,7 @@ reads that one request and its rule, and writes the answer once (with the reques
 ONE RETAILER (env or an env file):
     IVN_SHOP_URL, IVN_SHOP_KEY ("<api key>:<api secret>" of the integration user), IVN_SEND_SECRET (handed back at
     install as pp_psf:sub:send), PSF_PAGE_URL (where this service's page is reached), PORT (8080)
-MANY RETAILERS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
+MANY RETAILERS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_psf), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 PSF_PREFIX (default PP PSF; IVENDNEXT PSF for the library's app)
 
@@ -486,7 +486,7 @@ _KEPT: dict = {}   # the function's settings, opened on the first call of each c
 
 
 def lambda_handler(event, context=None):
-    """As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b). The template's ``function``
+    """As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a). The template's ``function``
     reads the load balancer's call; the answer carries its own content type, because this app also serves a page."""
     if "svc" not in _KEPT:
         _KEPT["svc"] = Service(dict(os.environ))

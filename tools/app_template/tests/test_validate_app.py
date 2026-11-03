@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
 class FunctionForm(unittest.TestCase):
     """`runs`: an app that says nothing is a container, as before; a function names its handler and package, serves
-    many shops and keeps no secret of its own (chapter 14b)."""
+    many shops and keeps no secret of its own (chapter 1a)."""
     FN = {"runs": "function", "handler": "service/app.lambda_handler", "package": ["service"], "shops": True,
           "env": [setting("IVN_LIBRARY_APP", required=True)]}
 

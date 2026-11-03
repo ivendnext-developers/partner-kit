@@ -22,10 +22,10 @@ Guests in quick service and full service expect to order from their phone at the
 
 ### Settings
 
-1. Install the manifest. It adds the settings (one per company, with a row per store), the code record, the print format *Table card*, the roles **PP GOR Manager** and **PP GOR Integration**, the button *Make code* and its service (off), and the feed registration that makes the app's own user (`pp_gor@integration.invalid`; leave the feed off).
+1. Install the manifest. It adds the settings (one per company, with a row per store), the code record, the print format *Table card*, the roles **PP GOR Manager** and **PP GOR Integration**, the button *Make code* and its service, and the feed registration that makes the app's own user (`pp_gor@integration.invalid`).
 2. Give the app's user its store and its key, in this order, on its User record: keep *Is Desk User*, tick **Is POS User**, choose a **Shift Profile**, link a **Retail Permission** with *Open Checks*: **open a check**, **add to a check** and **see the checks** only; add one row for each store to the store access table (each store once, with its register there, *Table Service* on); **Save**; then **Generate Keys**. Without *Is POS User* the save drops the store row and the till answers *"You are not assigned to this outlet."* Never give it write on *Floor Section*: that is every check verb, a comp included.
 3. In **Role Permissions Manager**, give **PP GOR Integration** **Read** on *Item*, *POS Profile* and *Retail Option Group*; give **PP GOR Manager** to the people who make the codes, with **Read** and **Select** on *Retail Floor Place* and **Select** on *Warehouse*.
-4. On **PP GOR Settings**, one row per store: **the same register** the app's user holds there (its **Item Groups** are the menu: list each group, a group's sub-groups are not read), *Orders from the tables*, *Orders from the kiosk*, the course word (*Guest order* to start), the most lines one order holds and the most of one dish (10 and 10 to start). Consent to the service and switch the button on; press **Connect again** on the app's package record if the site could not reach the app.
+4. On **PP GOR Settings**, one row per store: **the same register** the app's user holds there (its **Item Groups** are the menu: list each group, a group's sub-groups are not read), *Orders from the tables*, *Orders from the kiosk*, the course word (*Guest order* to start), the most lines one order holds and the most of one dish (10 and 10 to start). Press **Connect again** on the app's package record if the site could not reach the app.
 
 ### Codes
 
@@ -78,4 +78,4 @@ Day to day the guests order and the servers work the checks at the till as befor
 
 ## Make it your own
 
-A partner usually adds the page's own look and languages, pictures and allergens from the retailer's records, payment at the kiosk or at the table through the retailer's gateway, and delivery or collection. Start with `python3 tools/manifest/start.py s56_guest_ordering --prefix "ACME GOR"`.
+A partner usually adds the page's own look and languages, pictures and allergens from the retailer's records, payment at the kiosk or at the table through the retailer's gateway, and delivery or collection. Start with `ivn new acme_gor --from s56`.

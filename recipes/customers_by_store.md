@@ -37,7 +37,7 @@ A till puts any customer on any store's sale. Retailers ask for less: **account 
 
 7. **Tell iVendNext to lock the customer's group.** Your rule trusts the group the customer record holds, and the till's edit sheet lets a cashier change it (the retailer's cashier role saves customers). The retailer closes it by putting *Customer Group* at permission level 1 in *Customize Form* and giving level-1 write only to its managers: the cashier's change then leaves the group as it was. Put that in the setup, with what follows from it: a cashier can no longer give a new customer a group (one created at the till takes the default customer group in Selling Settings, or none), the till still says *Saved* after a group change it dropped, and no cashier's role may keep level-1 write (Sales Master Manager has it by default).
 
-8. **Tell iVendNext to switch it on for every till.** The capture asks only at the POS Profiles its subscription answers: with none chosen, every one. A POS Profile left off a list never asks, and every customer buys there.
+8. **Check the tills it asks at.** The capture asks only at the POS Profiles its subscription answers: with none chosen, every one. A POS Profile left off a list never asks, and every customer buys there.
 
 9. **Say what the pass covers.** The retailer's server records your *allow* for the cashier, the customer and the POS Profile, for twelve hours or until a booking uses it; your *refuse* withdraws an earlier one. A POS Profile has one store, so the pass never carries to another store (unless the retailer changes the POS Profile's store within those twelve hours).
 

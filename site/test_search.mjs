@@ -77,7 +77,7 @@ check("the header's list: six at most, needs first, four needs and the two best 
 // among the header's six; the last four words are on none of those pages, so only their synonym groups find them
 // (the map answers "endpoint", "field" and "screen" best, and leads for them since HOWITWORKS-CHECK, so it counts here too; for
 // "screen" it is now the only one of the three pages in the header's six, the questions page having fallen to third)
-const HOW = new Set(["guide/01a_how_it_all_works.html", "guide/01b_one_app_end_to_end.html", "questions.html", "map.html"]);
+const HOW = new Set(["guide/01a_how_it_all_works.html", "first_app.html", "map.html"]);
 const DEV_WORDS = ["docker", "container", "tenant", "multi-tenant", "endpoint", "field", "screen", "data", "conflict", "publish",
                    "image", "cost", "kubernetes", "multitenant", "clash", "callback url"];
 const unanswered = (index) => {
@@ -89,7 +89,7 @@ check(`a developer's words find How it works, its example or the questions in th
       devMiss.length === 0, devMiss.join(", "));
 const each = (q, id) => search.instant(search.rank(ms, q), 6).some((r) => r.id === id);
 check("each of the three pages is found by a developer's word: docker finds How it works and its example, field the questions",
-      each("docker", "guide/01a_how_it_all_works.html") && each("docker", "guide/01b_one_app_end_to_end.html") && each("field", "questions.html"));
+      each("docker", "guide/01a_how_it_all_works.html") && each("field", "first_app.html"));
 // planted fault 3: the docker group taken out of the pages' words turns "kubernetes" red
 const dock = "docker container containerised containerized kubernetes k8s";
 const planted3 = unanswered(docs.map((d) => ({ ...d, s: d.s.replace(dock, "") })));

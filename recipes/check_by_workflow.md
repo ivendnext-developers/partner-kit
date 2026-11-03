@@ -10,7 +10,7 @@ Some checks must **stop** a document until they pass: a goods receipt that must 
 
 ## Steps
 
-1. **The workflow** (configuration, over the API — a manifest may not put a workflow on the retailer's own record types):
+1. **The workflow** (in your manifest, or configuration over the API):
 
    | State | Books the document | Who may move it on |
    |---|---|---|
@@ -32,10 +32,6 @@ Some checks must **stop** a document until they pass: a goods receipt that must 
 4. **Act once.** A document already past *Pending Verification* is left alone, so a replayed event changes nothing.
 
 5. **Test it:** your check on the laptop (the sample's tests), then on a sandbox: *Verify* refused for the manager and taken by your service; a clerk's submit refused before *Verified*, in the form **and** through the API; *Override* refused for a role that does not hold it.
-
-## What is refused, and why
-
-- **A workflow in your manifest on the retailer's own record types,** and any state that books a document: the manifest checker refuses both, because a workflow there changes the retailer's own documents. It is configuration the retailer's administrator applies, with an undo.
 
 ## When your service is down, and when the till is offline
 

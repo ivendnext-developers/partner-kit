@@ -16,7 +16,7 @@ It finds five kinds of thing under the folder and runs the kit's own checker on 
                      samples work unchanged; ``"beyond_schema": true`` marks one only a shop's stored state refuses).
                      -> tools/contracts/check.py
   * settings files   every ``app.json`` that names an ``env`` list, a ``port``, a ``health`` or ``runs`` (the hosting
-                     order, chapter 14b; the App library's card, also ``app.json``, is not one): its
+                     order, chapter 1a; the App library's card, also ``app.json``, is not one): its
                      settings -> tools/app_template/validate_app.py (every setting says its ``purpose``, the line the
                      Settings screen shows; the Dockerfile is checked when you plan a deploy, tools/deploy_app/)
 

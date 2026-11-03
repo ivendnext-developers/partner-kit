@@ -29,7 +29,7 @@ A partner page is your own screen, served from your own server, that iVendNext s
 
    Your page must be on **your own host**. A page on the retailer's own address is refused at install, in the product's words — *"A partner page cannot be on this site's own address."* — and leaves nothing behind.
 
-2. **What the retailer does after install.** It reads what the page will receive (the consent text is built from the declaration), ticks the consent and switches the page on. Then it places the **Deliveries** key in **POS Studio → Apps** for a theme (`recipes/point_handler.md` step 4). If your address changes, the consent is cleared and the page cannot open until the retailer ticks it again: the till's key says why it cannot open. Switching the page off and on again does not bring the consent back; only ticking it does.
+2. **What the retailer does after install.** It reads what the page will receive (the consent text is built from the declaration) when it ticks the install's one consent. The page is on from the install, and its **Deliveries** key is on every store's till.
 
    ![the Deliveries key on a sale](../samples/s17_partner_page/screenshots/01_till_deliveries_key.png)
 
@@ -79,7 +79,6 @@ A partner page is your own screen, served from your own server, that iVendNext s
 
 - Proven on our test bench on 2026-10-07.
 - Own host, **on the bench:** the same manifest with the retailer's own address was refused at install, in the product's words — *"A partner page cannot be on this site's own address."* — and left nothing.
-- Consent, **on the bench:** changing the address cleared the consent and the till's key said why it could not open; switching it off and on again did not bring it back; ticking the consent did.
 - The context, **on the bench:** the board saw the till, its store and this sale; the same context opened twice was refused; a forged context and an expired one (signed with the real secret, its time gone) were refused.
 - The answer, **on the bench:** the board answered once; the till picked up the delivery order number and the message, **once** (a second pick-up found nothing). A second answer for one context was refused by the board; with the board's own check switched off, **iVendNext refused it**: *"This page has already answered."* The till still got the first answer only.
 - Desk, **on the bench:** a Stock User got the context for an order of its own customer, and the board read the record from it; a user without the roles, and a Stock User without read on another customer's order, were both told *"You can't open this page for that record."*

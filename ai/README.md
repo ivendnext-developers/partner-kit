@@ -1,5 +1,7 @@
 # Prompt recipes for an AI assistant
 
+**To build an app, read [Build your first app](../site/pages/first_app.md) first.** The recipes below go further, one way in at a time.
+
 One recipe per way into iVendNext, plus one for building a whole reference app from a brief. Each is written for an assistant that has read [AGENTS.md](../AGENTS.md) and is working with a person. A recipe gives the goal, the files to read, the steps, the check to run and what "done" looks like. Each links the sample whose shape you copy. Each recipe is a short route into the full recipe and chapter it names; read those too.
 
 | Way in | Recipe |

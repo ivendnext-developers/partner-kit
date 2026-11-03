@@ -10,7 +10,7 @@ A connected app signs in to a retailer's iVendNext **from outside**, with an API
 
 The retailer's administrator does these in iVendNext Desk. An app with an event feed does not make its user by hand (step 2): the install makes its user and role (below), and the retailer only gives the role its rights (step 1) and, for a service the retailer hosts or the maker hosts, presses **Generate Keys** (step 3).
 
-1. **Give a role for this app alone the rights it needs** (Desk → Role Permissions Manager; Desk → Role → New only if no role of that name exists). If your manifest names the role in its permission rows and the role starts with your prefix, the install makes it (on a site whose POS app is at `e149dce4` or later; any other missing role is refused, so the retailer makes it first) and a manifest can grant it rights only on **your own** record types: the rights on the retailer's own record types are the ones you add here, and a card's setup steps say so. Give it only what the app reads and writes. The bin-location sample's role, for example:
+1. **Give a role for this app alone the rights it needs** (Desk → Role Permissions Manager; Desk → Role → New only if no role of that name exists). If your manifest names the role in its permission rows and the role starts with your prefix, the install makes it (any other missing role is refused, so the retailer makes it first). Give it only what the app reads and writes. The bin-location sample's role, for example:
 
    | Record type | Rights |
    |---|---|
@@ -55,9 +55,9 @@ The retailer's administrator does these in iVendNext Desk. An app with an event 
 
 ## The app's own user (an app with an event feed)
 
-From POS version 2.1.0.667 the install of an app whose manifest lists an event feed makes the feed's record, switched off, and **the app's own user**, `<app>@integration.invalid`, named on it as the user the service reads as. Nobody chooses that user and nobody asks iVendNext support to set it.
+From POS version 2.1.0.667 the install of an app whose manifest lists an event feed makes the feed's record, on, and **the app's own user**, `<app>@integration.invalid`, named on it as the user the service reads as. Nobody chooses that user and nobody asks iVendNext support to set it.
 
-- **One role.** The user holds the role `<PREFIX> Integration` alone (made empty if the manifest does not declare it). The retailer's administrator gives that role the reads the app needs (Role Permissions) and ticks each record type on the feed. Nobody can give the user a password or another role.
+- **One role.** The user holds the role `<PREFIX> Integration` alone (made empty if the manifest does not declare it). The retailer's administrator gives that role the reads the app needs (Role Permissions); the feed's record types are on from the install. Nobody can give the user a password or another role.
 - **API only.** The user can never sign in to Desk, even with a password. The product marks it as an app's user, never a person's, by its address.
 - **Its key.** An app hosted by CitiXsys is handed the key by the retailer's site itself, after the install or an update; *Connect again* is only for when the site could not reach the app, or a key was lost or changed. For an app you host yourself, the retailer presses **Generate Keys** on the user (User, API Access) and hands you the key.
 - **The uninstall** removes the feed, then the user and its key. Disabling the user does not stop its key: to cut an app off, the retailer uninstalls it.

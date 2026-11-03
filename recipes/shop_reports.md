@@ -1,6 +1,6 @@
 # Recipe: reading the retailer's own reports
 
-**What it is for.** Your service needs a figure iVendNext already has a report for: stock by store, a stock balance over a period, sales by item. You run the retailer's own report, with its filters, and read its rows, rather than rebuilding it from records. The retailer's report stays the one source of the figure. From iVendNext POS build 2.0.0.654.
+**What it is for.** Your service needs a figure iVendNext already has a report for: stock by store, a stock balance over a period, sales by item. You run the retailer's own report, with its filters, and read its rows, rather than rebuilding it from records. The retailer's report stays the one source of the figure.
 
 **The short version.**
 - Run a report with `run_report`: the report's name and its filters. You get its columns and rows, as Desk shows them.

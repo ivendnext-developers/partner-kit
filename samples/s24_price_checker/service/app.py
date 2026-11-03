@@ -18,7 +18,7 @@ The service writes nothing to the shop and keeps nothing but the Kiosk records i
 ONE SHOP (env or an env file):
     IVN_SHOP_URL       the shop's address, e.g. https://shop.example.com
     IVN_SHOP_KEY       the app's integration user's key, "<api key>:<api secret>"
-MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
+MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_prc), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
                        Each shop connects itself after its install and hands over the key of the app's own user
                        ("user:<email>": "<api key>:<api secret>"); a kiosk's call names its shop in its body.
@@ -309,7 +309,7 @@ _KEPT: dict = {}   # the function's settings, opened on the first call of each c
 
 
 def lambda_handler(event, context=None):
-    """As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b). The template's ``function``
+    """As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a). The template's ``function``
     reads the load balancer's call; the answer carries its own content type, because this app also serves a page."""
     if "svc" not in _KEPT:
         _KEPT["svc"] = Service(dict(os.environ))

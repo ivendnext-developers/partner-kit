@@ -17,7 +17,6 @@ An outside app on the feed and bulk reads fills the BI tool.
 
 ## Limits
 - Rows are as of extraction: a later change to a booked sale, other than a return or a cancellation, is not followed.
-- The kit's samples read the shared feed, whose key is not limited to one app (a feed scoped to your app is an extension point, chapter 9).
 - Offline sales arrive late, when the till syncs.
 
 ## Tell the customer

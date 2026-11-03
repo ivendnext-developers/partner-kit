@@ -14,7 +14,7 @@ workspaces, reports, print formats, till keys, feeds, links between them), sets 
 shop's own checker (``validate.py``) and the install's extra refusals (``site_rules.py``) on the result. It writes
 nothing unless every check passes and no old name is left in the manifest.
 
-If an ``app.json`` (the hosting order, chapter 14b) sits beside the manifest, it is renamed too: its ``app`` becomes your
+If an ``app.json`` (the hosting order, chapter 1a) sits beside the manifest, it is renamed too: its ``app`` becomes your
 app's address name (``acme-bins`` → ``https://acme-bins.ivendnext.app`` on CitiXsys hosting), and its ``handler`` and
 ``package`` paths point at the folder your copy is in, relative to your repository's root. A sample's service imports
 the kit's app template (``tools/app_template/service``), so your copy lives inside a copy of the kit: a repository made

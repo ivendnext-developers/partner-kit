@@ -30,19 +30,19 @@ defect in one is a defect in its source: report it through the feedback forms ([
 
 ## The contracts: copies of the product's published files
 
-The folder [`contracts/`](contracts/README.md) holds 393 files copied from the iVendNext POS app's repository
+The folder [`contracts/`](contracts/README.md) holds 387 files copied from the iVendNext POS app's repository
 (`ivendnext/iVendNext_PWA`) at one commit, so a check runs with this repository alone. POS app commit
-`99b5d44fb7a39d290df054788a2bfe847bc700b4` (the merge of the POS app's train T21 into `development`, 2026-10-29, build 2.1.0.669; against the earlier pin (train T19's merge, `60147699c`, build 2.1.0.667, which took the *open check* extension point, the manifest schema's one event feed per app and the register's privacy) the copies take what trains T20 and T21 added: a new extension point, the *station ticket* (a kitchen screen reads a station's tickets and moves them: its page, its schema and eight samples); a check's fill (`fill_attributes` and an answer's `fill`, five samples), the open check's weighed lines (`weighed`, `sold_by_weight`), a capture's `page` (two samples), a print format reading its own manifest's record type and a register book naming a field only some roles read (two refused manifest samples); and changed words in twelve pages (the event feed, field rules, fiscal reader, label layout, open check, capture, check, partner page, payer, template readers, receipt and register books). The checker copy `tools/manifest/validate.py` is taken at the same commit. Of the 374 files copied at the earlier pin, 24 changed in content (every page's first line names the new commit) and 19 are new (346 samples now).
+`99b5d44fb7a39d290df054788a2bfe847bc700b4` (the merge of the POS app's train T31 into `development`, 2026-11-03, build 2.1.0.679). The checker copy `tools/manifest/validate.py` is taken at the same commit, and so are its two copied tests, `tools/manifest/tests/test_manifest_check.py` and `test_allowbydefault.py`, with their fixtures.
 Our kit check
-compares every file below with its source at that commit on each change; the only edits are the links inside the twenty-two
+compares every file below with its source at that commit on each change; the only edits are the links inside the
 pages, which point at the files here, and, in the samples, the framework's name in two refused print formats (by train T21 the product's pages word the framework's calls, its customers, bugs and decisions themselves, so the copies no longer reword them). Both print formats read through the framework's own value reader: the Company in one, a package's own patient record in the other. The shop refuses each only when it is called by the framework's name: without the name, this copy of each sample is warned, not refused, so read its `expect_refusal` as the shop's answer. A defect in one is a defect there: report it through the feedback forms ([feedback/README.md](feedback/README.md)).
 
 | Kit path | Source path in the POS app's repository | Files | Header |
 |---|---|---|---|
-| `contracts/pages/<point>.md` | `docs/extending/<point>.md` | 22 | yes (first line) |
+| `contracts/pages/<point>.md` | `docs/extending/<point>.md` | 24 | yes (first line) |
 | `contracts/extension_contract_check.py` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contract_check.py` | 1 | yes (first line) |
 | `contracts/extension_contracts/<point>.v1.schema.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/<point>.v1.schema.json` | 21 | no header (JSON) |
-| `contracts/extension_contracts/samples/<point>/**/*.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/samples/<point>/**/*.json` | 346 | no header (JSON) |
+| `contracts/extension_contracts/samples/<point>/**/*.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/samples/<point>/**/*.json` | 338 | no header (JSON) |
 | `contracts/extension_contracts/standins/*.py` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/standins/*.py` | 2 | yes (first line) |
 | `contracts/gs1_codes.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/gs1_codes.json` | 1 | no header (JSON) |
 

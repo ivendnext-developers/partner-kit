@@ -23,13 +23,13 @@ A check before payment is the last word on a sale before money is taken. When th
    - `label` is what the cashier reads when your service is down (*"Member rule guard did not answer. …"*).
    - `down_answer`: what the till does when your service is down, slow or answers what it cannot use — `allow_and_flag` (the default: the sale goes on and is flagged on the *Sales to review* report), `refuse` (no sale until you answer), or `ask` (the cashier decides). A rule that must hold even in an outage declares `refuse`.
    - `timeout_seconds`: 3 unless you raise it, 10 at most. At most three checks answer one POS Profile, ten seconds together.
-   - The manifest installs it **switched off**. A manager's approval (`may_approve`) is the retailer's choice, never the manifest's. The signing secret is handed back **once**, at install.
+   - The service is on from the moment of install, for every POS Profile. A manager's approval (`may_approve`) is the retailer's choice, never the manifest's. The signing secret is handed back **once**, at install.
 
-2. **What the retailer does after install.** A System Manager opens your service (*Retail Extension Subscription*), reads what is sent (the consent text lists every field), ticks the consent, chooses the POS Profiles it answers (none = all) and switches it on.
+2. **What the retailer does after install.** Nothing is needed: the consent the administrator gave at install lists every field that is sent. A retailer who wants the check on some tills only opens your service (*Retail Extension Subscription*) and chooses the POS Profiles it answers.
 
 3. **Your service checks every call is the retailer's.** One POST per Pay, body `{"point": "check/1", "context": {…}}`, with `X-iVendNext-Timestamp` and `X-iVendNext-Signature` = base64 HMAC-SHA256 of `<timestamp>.<raw body>` with the secret. Check it over the raw bytes before you decide anything, and refuse a timestamp more than five minutes from yours (`samples/s18_rule_guard/rule.py`, `verify`).
 
-4. **Decide from what you are sent.** The context is the **server's** priced basket: each line's item code, item group, quantity in thousandths and money in whole minor units (`currency_exponent` says how many digits), the sale's totals, the customer and their customer group, the coupon codes, the sale details the cashier captured, and the tenders offered. Never the till's own figures, never a card. Since the POS app's train T11 (2026-10-16) it also names the POS day and its terminal (`pos_opening`, `pos_terminal`), so one rule can hold per terminal without a POS Profile per terminal; both are among the fields the retailer consents to send, so a consent ticked before the retailer's site took that release lapses until the retailer ticks it again. Validate against the kit's current copy of the contract: an older copy refuses the two fields.
+4. **Decide from what you are sent.** The context is the **server's** priced basket: each line's item code, item group, quantity in thousandths and money in whole minor units (`currency_exponent` says how many digits), the sale's totals, the customer and their customer group, the coupon codes, the sale details the cashier captured, and the tenders offered. Never the till's own figures, never a card. It also names the POS day and its terminal (`pos_opening`, `pos_terminal`), so one rule can hold per terminal without a POS Profile per terminal.
 
    ```python
    if not member and any(line["item_code"] in members_only for line in ctx["lines"]):
@@ -58,7 +58,7 @@ A check before payment is the last word on a sale before money is taken. When th
 
 6. **When your service is down or slow.** The till waits your timeout, then applies your declared down answer. With `refuse` the cashier reads *"⟨label⟩ did not answer. This sale can't be paid until it does. Try again, or get a manager."*; with `allow_and_flag` the sale books and the round is flagged on the *Extension Log*. Offline, the till applies the down answer from its start-of-day snapshot and the sale is flagged when it syncs, never refused.
 
-7. **Test it.** Unit-test your rule and your service on your laptop with calls signed the way iVendNext signs them (`samples/s18_rule_guard/tests/`), and check every answer against the contract. Then press Pay on a sandbox. The money kit (`recipes/money_kit.md`) rings every basket through your check: an allowed sale must book exactly as without it, and a refused one must book nothing.
+7. **Test it.** Unit-test your rule and your service on your laptop with calls signed the way iVendNext signs them (`samples/s18_rule_guard/tests/`), and check every answer against the contract. Then press Pay on a sandbox. The money kit (`tools/moneykit/`) rings every basket through your check: an allowed sale must book exactly as without it, and a refused one must book nothing.
 
 ## A coupon, and what the check receives for it
 
@@ -89,9 +89,9 @@ S18's rule does not read coupons. **Sample S32** (*Coupon rules*, [recipe](coupo
 
 - **Screenshots** (our test bench, 2026-10-10, the iVendNext POS app `87812e141`, the kit's demo site *Demo Retail*; frames: the till's counter frame, 1440 wide, light mode, and the phone frame, a 390 × 844 phone viewport): the cashier *Thabo Nkosi* pressed Pay for a walk-in (refused), then for the bench's member *PP SET5 Member* (asked, *Yes*, booked as `ACC-PSINV-2026-08670` on the simulated card); on the phone the same refusal and question. A real browser drove the till; the checks below drove its calls.
 
-Proven on our test bench on 2026-10-08 (iVendNext POS app at `577a8d41`), **22 of 22** checks: install 3, the payment door and the failure cases 18, uninstall 1.
+Proven on our test bench on 2026-10-08 (iVendNext POS app at `577a8d41`), checks: install, the payment door and the failure cases, uninstall.
 
-- Install, step 1. **On the bench:** the manifest installed **switched off** — no consent, *May ask for a manager's approval* off, down answer `refuse`, 3 seconds — and the secret was handed back once, as `pp_rgd:sub:guard`. The retailer switched it on for one POS Profile; the product then selected it for that profile and no other.
+- Install, step 1. **On the bench:** the manifest installed with *May ask for a manager's approval* off, down answer `refuse`, 3 seconds, and the secret was handed back once, as `pp_rgd:sub:guard`. Limited to one POS Profile, the product selected it for that profile and no other.
 - The till's own payment door, step 5. **On the bench**, as the cashier, over HTTPS (the till's own calls: `check_before_tender`, `confirm_check`, the card push, `submit_tender`):
 
   | Case | Result |
@@ -111,9 +111,9 @@ Proven on our test bench on 2026-10-08 (iVendNext POS app at `577a8d41`), **22 o
 
   **The canary:** the same slow answer with the deadline lifted for one check comes back as the service's own refusal, not flagged — so it was the deadline that refused it.
 
-- The signature check, step 3: the laptop tests refuse a wrong secret, a changed body and an old timestamp; with the check removed they go RED (a mutation run, 9 of 9 mutants killed).
+- The signature check, step 3: the laptop tests refuse a wrong secret, a changed body and an old timestamp; with the check removed they go RED (a mutation run: every mutant killed).
 - **One thing to know about card sales:** the booking itself never refuses a card sale whose check does not hold — the card is charged by then, so the sale books and is flagged on the *Sales to review* report. The refusal is at the card push, before any money moves; that is the door this proof uses. A sale settled first by cash, a gift card or store credit is refused at the booking itself (the product's code; not run on our bench).
 
 ### The money kit
 
-The money kit rings every basket through the till's check round when a check is switched on (`tools/moneykit/till.py`: the check, the cashier's Yes to a question, then the card push's own gate). Its label for this sample switches S18 on for the kit's till, so **every** basket meets the check: an allowed or asked sale must book exactly as without it, a member's sale of the probe item books, and a walk-in's is refused and books nothing. Results: **GREEN** on 2026-10-08: every one of the 69 baseline sales booked exactly as the baseline through the check round, the member's sale booked at its price, and the walk-in's was refused and booked nothing. With S18 left switched off, the same walk-in sale booked — the label went RED, as its canary must.
+The money kit rings every basket through the till's check round when a check is switched on (`tools/moneykit/till.py`: the check, the cashier's Yes to a question, then the card push's own gate). Its label for this sample switches S18 on for the kit's till, so **every** basket meets the check: an allowed or asked sale must book exactly as without it, a member's sale of the probe item books, and a walk-in's is refused and books nothing. Results: **GREEN** on 2026-10-08: every one of the 69 baseline sales booked exactly as the baseline through the check round, the member's sale booked at its price, and the walk-in's was refused and booked nothing. With S18 left off, the same walk-in sale booked — the label went RED, as its canary must.

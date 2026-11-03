@@ -2,7 +2,7 @@
 
 **Goal.** A key on the till. When the cashier presses it during a sale, the till calls your HTTPS service, and your answer is a message for the cashier or details added to the sale. Your service runs on your own server.
 
-**Read.** [guide/06_till_keys.md](../contracts/pages/remote_till_key.md) · [recipes/point_handler.md](../recipes/point_handler.md) · the contract: [contracts/pages/remote_till_key.md](../contracts/pages/remote_till_key.md) · for an AI hint: [recipes/ai_till_key.md](../recipes/ai_till_key.md) and [guide/13_ai.md](README.md).
+**Read.** [Build your first app](../site/pages/first_app.md) · [recipes/point_handler.md](../recipes/point_handler.md) · the contract: [contracts/pages/remote_till_key.md](../contracts/pages/remote_till_key.md) · for an AI hint: [recipes/ai_till_key.md](../recipes/ai_till_key.md) and [guide/13_ai.md](README.md).
 
 **Samples to copy.** [samples/s1_warranty/](../samples/s1_warranty/) (`core.py` and the remote binding in `remote/`) · [samples/s2_bins/](../samples/s2_bins/) (`service/`) · [samples/s6_ai_till_key/](../samples/s6_ai_till_key/) (a hint from the customer's own AI model).
 

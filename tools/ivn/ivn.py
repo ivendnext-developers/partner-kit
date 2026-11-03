@@ -599,7 +599,7 @@ def cmd_check(a) -> int:
 
 def upload(folder: pathlib.Path, app: str) -> str:
     """The folder as the next draft (J3-07): the kit's check first, then the same two doors as the page. A folder made away
-    from My apps (`start.py`, an app older than My apps) becomes an app of the company's at its first upload."""
+    from My apps (an app older than My apps) becomes an app of the company's at its first upload."""
     marked = still_marked(folder)
     if marked:
         raise Stop(WORDS["marked"].format(files=", ".join(marked)))

@@ -1,17 +1,17 @@
 # The app template — a service you can deploy
 
-A small service that does what every deployable app does ([guide chapter 14b](../../site/pages/publish.md)): it checks each call's signature and time, answers inside the deadline, logs one line per call without retailer data, has a health address, runs as a user that is not root, stops cleanly, and refuses to start without its signing secret. It answers one remote till key (`POST /point/hello`) so you can see the whole path. Standard library only.
+A small service that does what every deployable app does ([Publish your app](../../site/pages/publish.md)): it checks each call's signature and time, answers inside the deadline, logs one line per call without retailer data, has a health address, runs as a user that is not root, stops cleanly, and refuses to start without its signing secret. It answers one remote till key (`POST /point/hello`) so you can see the whole path. Standard library only.
 
 **It is for** a builder who has an outside app (chapters 5 and 6) and wants it running on a server iVendNext can reach. Copy this folder, replace `service/core.py` with your own logic, and keep the rest.
 
-**One retailer or many.** Run it for one retailer with that retailer's secret (`IVN_POINT_SECRET`). Or, for an app in the App library, run it for many: each retailer connects itself after its install, and every call is checked with that retailer's own secret ([chapter 14b, One app, many retailers](../../site/pages/publish.md)). A library key works like a password for its retailer: whoever holds it can connect as that retailer and replace its secrets, and the retailer's next install connects it again.
+**One retailer or many.** Run it for one retailer with that retailer's secret (`IVN_POINT_SECRET`). Or, for an app in the App library, run it for many: each retailer connects itself after its install, and every call is checked with that retailer's own secret ([Publish your app](../../site/pages/publish.md)). A library key works like a password for its retailer: whoever holds it can connect as that retailer and replace its secrets, and the retailer's next install connects it again.
 
 | File | What it is |
 |---|---|
 | `service/core.py` | **your logic**: a pure function, `answer(context)`, no web code, no iVendNext |
 | `service/app.py` | the web part: signature check, size cap, health address, one log line per call, clean stop, secret rotation |
 | `service/shops.py` | many retailers: the handshake (`/ivendnext/connect`, `/ivendnext/disconnect`), the library key check, and the retailers kept in a file |
-| `service/function.py` | on CitiXsys hosting, an app that only answers presses runs as a function, run only when called: this turns the load balancer's call into `handle` and back (chapter 14b, *A function or a container*) |
+| `service/function.py` | on CitiXsys hosting, an app that only answers presses runs as a function, run only when called: this turns the load balancer's call into `handle` and back ([chapter 1a](../../guide/01a_how_it_all_works.md)) |
 | `service/dynamo.py` | on CitiXsys hosting: the retailers kept in the app's own encrypted table, with the standard library only |
 | `service/ed25519.py` | the key's signature check (RFC 8032's reference code), so the template needs no package |
 | `Dockerfile` · `docker-compose.yml` | the container, and a one-command run on your laptop |
@@ -46,7 +46,7 @@ Then call it with the stand-in caller (`tools/standin_caller/`) at `http://local
 | Name | Needed | What |
 |---|---|---|
 | `IVN_POINT_SECRET` | one retailer | the signing secret you and the retailer both hold |
-| `IVN_POINT_SECRET_PREVIOUS` | no | the old secret, accepted while you rotate (chapter 14b) |
+| `IVN_POINT_SECRET_PREVIOUS` | no | the old secret, accepted while you rotate ([chapter 1a](../../guide/01a_how_it_all_works.md)) |
 | `IVN_LIBRARY_APP` | many retailers | your app's id in the App library. The key a retailer connects with must name it |
 | `IVN_SHOPS_FILE` | many retailers, not hosted | a file the app may write, where it keeps the retailers and their secrets (readable by the app's user alone) |
 | `IVN_SHOPS_TABLE` | many retailers, hosted | set by CitiXsys hosting when `app.json` says `"shops": true` |
@@ -80,7 +80,7 @@ IVN_LOCAL=1 IVN_LIBRARY_APP=ivendnext_hello IVN_SHOPS_FILE=shops.local.json \
 a site on your machine never calls your laptop's app. Send the call it would send, with the key you signed and the
 secrets its install made: the till key's secret (Desk shows it once, on the till key's record), named
 `<IVN_LIBRARY_APP>:<KEY>` (`KEY` in `app.py`), and, if your app calls iVendNext back, its user's key, named `user:<email>`
-with the value `<api key>:<api secret>` (chapter 14b, *The handshake*):
+with the value `<api key>:<api secret>` ([Security and the handshake](../../site/pages/security.md)):
 
 ```bash
 curl -s http://localhost:8080/ivendnext/connect -H 'X-iVendNext-Site: shop.localhost:8000' \

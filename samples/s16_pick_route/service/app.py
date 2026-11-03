@@ -21,7 +21,7 @@ the ``X-PP-Admin`` token: ``POST /test/mode`` picks the answer (``open`` · ``re
 ONE SHOP (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the integration user), PP_POINT_SECRET (handed back at install as pp_pck:sub:route),
     PP_ADMIN_TOKEN, PP_PORT (8131)
-MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b):
+MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_pck), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
                        Each shop connects itself after its install and hands over the press's secret
                        (<app>:sub:route) and the key of the app's own user (the install made it)
@@ -304,7 +304,7 @@ def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[i
     return code, out
 
 
-# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b): settings from the environment.
+# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a): settings from the environment.
 lambda_handler = function.entry(lambda: Service(dict(os.environ)), handle)
 
 

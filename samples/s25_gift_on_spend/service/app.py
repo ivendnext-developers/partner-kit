@@ -16,7 +16,7 @@ container's single copy did: two at once could release one held card twice.
     python3 service/app.py service/.env.local     # ONE SHOP: PP_BASE, PP_KEY, PP_SECRET, PP_STATE, PP_PORT (8156),
                                                   # GCS_PREFIX; the worker runs beside it every PP_WATCH seconds
 
-MANY SHOPS (guide chapter 14b): set IVN_LIBRARY_APP (the App library's id, ivendnext_gcs) and a store (IVN_SHOPS_TABLE on
+MANY SHOPS (guide chapter 1a): set IVN_LIBRARY_APP (the App library's id, ivendnext_gcs) and a store (IVN_SHOPS_TABLE on
 CitiXsys hosting, else IVN_SHOPS_FILE). Each shop connects itself after its install and hands over its integration
 user's key ("user:<email>": "<api key>:<api secret>"); the worker then reads that shop's feed with that key. The handshake
 and ``api_credentials`` are S22's (``samples/s22_customer_loyalty/service/app.py`` @ 3546aaf; a defect there may be a

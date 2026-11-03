@@ -14,7 +14,7 @@ verified: run by the product 2026-10-25 (the customer-field lane's walk, counter
 related: require-new-customer-phone-or-email
 ---
 ## What you build
-A field rule `show` on `customer_create` (POS version 2.1.0 and later), set in POS Studio's Fields tab or declared in a manifest's `field_rules`: the new-customer sheet and the till's customer edit ask for up to three of the shop's own Customer fields. To make one required, add a save rule (`required_when`). The rules: the field rules page, §7e.
+A field rule `show` on `customer_create`, set in POS Studio's Fields tab or declared in a manifest's `field_rules`: the new-customer sheet and the till's customer edit ask for up to three of the shop's own Customer fields. To make one required, add a save rule (`required_when`). The rules: the field rules page, §7e.
 
 ## Limits
 - Only a field the shop or an app added, of type Data, Select, Int or Date; at most three per theme.

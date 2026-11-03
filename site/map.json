@@ -53,7 +53,9 @@
   "station_tickets": "A kitchen station's board now (every station's when none is named): tickets sent in the last 12 hours not yet bumped, and 30 minutes of bumped ones to recall.",
   "station_ticket_move": "Move one ticket one step, new to started to ready to bumped; the same step again answers already.",
   "item_availability": "A store's items that carry a sold-out or hours rule (or the one you name), available now or not and why.",
-  "set_item_availability": "Mark an item sold out at one store (until a time or until cleared), clear it, or set the hours it is sold; not fenced to your user's stores."
+  "set_item_availability": "Mark an item sold out at one store (until a time or until cleared), clear it, or set the hours it is sold; not fenced to your user's stores.",
+  "sales_order_to_kitchen": "Sends a submitted Sales Order's lines to the kitchen's stations: only what the kitchen does not have yet.",
+  "item_names": "Each item's name in a language you name: a guest-ordering page shows the guest's language."
  },
  "other_calls": [
   {
@@ -186,6 +188,10 @@
   "allowed_urls": [
    "Your addresses",
    "The addresses your service is reached at; the retailer sees them at install, and every call your app's points make goes only there."
+  ],
+  "translations": [
+   "Your app's words",
+   "Your app's words in a customer's language."
   ]
  },
  "app_keys": [
@@ -523,11 +529,11 @@
   },
   {
    "name": "The connect, after an install",
-   "source": "guide/14b_deploying_your_app.md",
+   "source": "guide/01a_how_it_all_works.md",
    "table": "calls",
-   "when": "After the install, the retailer's site connects itself.",
-   "sends": "It sends your app its library key, its own address and the secrets the install made.",
-   "answer": "`200 {\"connected\": \"<site>\"}`",
+   "when": "the chain's site connects by itself once it is installed",
+   "sends": "it sends your service its library key, its address and the secrets the install made",
+   "answer": "none",
    "limit": "none",
    "sees": "none"
   }

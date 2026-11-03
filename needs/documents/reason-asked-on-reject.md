@@ -8,12 +8,12 @@ status: ready-with-limits
 door: desk-action
 blocked-by: -
 recipe: recipes/desk_action.md
-sample: samples/s11_approvals
+sample: none
 request: -
-verified: laptop 2026-10-16 · S11's reject, 6 tests (the reason before the workflow, a second press, a short reason, a refused transition, a lost answer) · not run on a retailer's iVendNext
+verified: not run on a retailer's iVendNext · the recipe's code is a sketch
 ---
 ## What you build
-A Desk action *Reject with reason* on the document with one required input, *Reason* (Small Text). Your service writes the reason and who pressed into fields your manifest added, then moves the document with iVendNext's workflow call (`apply_workflow`); a save rule, added with the button, refuses a rejected document with no reason. Recipe section *A reason asked before a document is rejected*; sample S11's `reject`.
+A Desk action *Reject with reason* on the document with one required input, *Reason* (Small Text). Your service writes the reason and who pressed into fields your manifest added, then moves the document with iVendNext's workflow call (`apply_workflow`); a save rule, added with the button, refuses a rejected document with no reason. Recipe section *A reason asked before a document is rejected*.
 
 ## Limits
 - The user presses the action instead of the workflow's own reject button. Take the reject transition away from those roles (configuration), or that button still rejects without a reason.

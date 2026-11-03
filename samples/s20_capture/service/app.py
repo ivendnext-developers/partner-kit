@@ -165,7 +165,7 @@ class Hosted(Service):
         return self.call(path, headers, raw) if path in self.PATHS else (404, {"error": "not found"})
 
 
-# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 14b): settings from the environment.
+# As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a): settings from the environment.
 lambda_handler = function.entry(lambda: Hosted(dict(os.environ)), lambda svc, method, path, headers, raw: svc.handle(method, path, headers, raw))
 
 

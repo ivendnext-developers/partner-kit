@@ -123,8 +123,11 @@ CALL_COLS = [("when", "When it fires"), ("sends", "What it sends"), ("answer", "
 DECLARED_COLS = [("what", "What you declare"), ("when", "When it applies"), ("sees", "What the cashier or user sees")]
 
 
+NOT_A_POINT = {"package_install", "what_an_app_may_not_do"}    # copied pages about every app, no extension point of their own
+
+
 def contract_pages(root: pathlib.Path = ROOT) -> list[str]:
-    return sorted(p.stem for p in (root / POINTS).glob("*.md"))
+    return sorted(p.stem for p in (root / POINTS).glob("*.md") if p.stem not in NOT_A_POINT)
 
 
 def page_title(stem: str, root: pathlib.Path = ROOT) -> str:
@@ -235,8 +238,7 @@ def screens(src: str = MAP_SRC, d: dict | None = None) -> str:
     out = ["| Where | The screen | What you can show | The door | The recipe | Picture |", "|---|---|---|---|---|---|"]
     for i, s in enumerate(d["screens"], 1):
         out.append(f"| {s['where']} | {s['screen']} | {cell(s['show'])} | {s['door']} | [recipe]({s['recipe']}) | [picture {i}](#picture-{i}) |")
-    out += ["", f"Every picture is a screenshot taken on our test bench, of a kit sample unless its caption says otherwise. Find the moment first; the door follows. "
-            f"The whole story: [chapter 13a, screens and user experience]({rel('guide/13a_screens_and_ux.md', src)}).", ""]
+    out += ["", f"Every picture is a screenshot taken on our test bench, of a kit sample unless its caption says otherwise. Find the moment first; the door follows.", ""]
     for i, s in enumerate(d["screens"], 1):
         out += [f"#### Picture {i}", "", f"![{s['alt']}]({s['shot']})", "",
                 f"*{s['where']}, {s['screen'][0].lower() + s['screen'][1:]}: {s.get('credit') or 'sample ' + s['sample']}.*", ""]

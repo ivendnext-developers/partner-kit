@@ -31,14 +31,14 @@ It opens your browser; press **Sign the command in**. The first time only, set u
 
 ### 2. Make the app from a sample
 
-Start from the [sample](../../samples/) nearest your customer's need. Here it is [S11](../../samples/s11_approvals/README.md), the Purchase Order approval. On My apps: **New app**, tick the sample, **Next**, **Make the app**. In a terminal, from any folder that is a git repository or an empty one:
+Start from the [sample](../../samples/) nearest your customer's need. Here it is [S11](../../samples/s11_approvals/README.md), the Purchase Order approval. On My apps: **New app**, tick the sample, **Next**, **Make the app**. In a terminal, from any folder:
 
 ```bash
 ivn new acme_po_approval --from s11
 cd apps/acme_po_approval
 ```
 
-The name starts with your company's word. To put several samples in one app, name them all: `--from s11 --from s22`.
+The name starts with your company's word, and everything in the sample that carried the sample's name now carries yours. In `manifest.json`, `app` is that name and `prefix` is the same words in capitals: `ACME PO APPROVAL`. To put several samples in one app, name them all: `--from s11 --from s22`.
 
 You now have a folder with `manifest.json` (your app), `app.json` (its name, its version and its card in the App library), `tests/` and a `README.md` saying what is in it. If the app has a `service/` folder, it is there for the samples that run code. S11 runs none, so we host nothing for it.
 
@@ -64,12 +64,25 @@ Open `manifest.json`. This is the part that matters in S11:
 
 - `document_type` is the record type the workflow runs on. Your customer's own Purchase Order is fine.
 - `doc_status` is what a state does to the document: 0 keeps it a draft, 1 submits it, 2 cancels it. So approving this order submits it.
-- `allowed` is the role that may press the action. `condition` decides when the action is offered.
-- `send_email_alert` mails whoever may act next.
+- `allowed` is the role that may press the action. A role the site does not have is made at install, empty, for the customer to give to staff. `condition` decides when the action is offered. Nobody may take a step on a document they raised unless the step also says `"allow_self_approval": 1`.
+- `send_email_alert` mails whoever may act next. There is no separate *send for approval* step: as soon as the buyer saves an order over the amount, it is waiting for the approver.
 
 Make your change: your customer's amount, say, in the `condition` of *Approve* and *Reject* and of *Submit*. The sample's `README.md` lists what a partner usually changes, and each sample's page links a recipe when you want to go further.
 
-Other things you can add here, each one a list in the same file: `custom_fields` (a field on the customer's record type; its name starts with your app's prefix, so `acme_po_approval_budget_code`), `property_setters` (relabel, hide or require a field), `notifications`, `print_formats`, `naming_rules`, `list_settings`, `doctypes` (a record type of your own). The manifest recipe has [a table of them all](../../recipes/manifest.md).
+Other things you can add here, each one a list in the same file: `custom_fields`, `property_setters` (relabel, hide or require a field), `notifications`, `print_formats`, `naming_rules`, `list_settings`, `doctypes` (a record type of your own). The manifest recipe has [a table of them all](../../recipes/manifest.md). A field on the customer's record type starts with your app's prefix and looks like this:
+
+```json
+"custom_fields": [{"dt": "Purchase Order", "fieldname": "acme_po_approval_budget_code", "fieldtype": "Data",
+                   "label": "Budget code", "reqd": 1, "insert_after": "supplier"}]
+```
+
+And a mail to the person who raised the order, with its print, once it is submitted:
+
+```json
+"notifications": [{"name": "ACME PO APPROVAL Submitted", "document_type": "Purchase Order", "event": "Submit", "channel": "Email",
+                   "subject": "Purchase Order {{ doc.name }} is submitted", "message": "{{ doc.supplier }}: {{ doc.grand_total }}",
+                   "recipients": [{"receiver_by_document_field": "owner"}], "attach_print": 1}]
+```
 
 ### 4. Check it
 
@@ -77,7 +90,7 @@ Other things you can add here, each one a list in the same file: `custom_fields`
 ivn check
 ```
 
-It runs the same checker your customer's install runs, and the app's own tests, and gives one line: `CHECK GREEN · 6 tests run, 6 passed`. If you changed the amount, S11's tests still pass: they read the number from your manifest. If something is refused, the line says which entry and why.
+It runs the same checker your customer's install runs, and the app's own tests, and gives one line, `CHECK GREEN` and how many tests passed. S11's tests hold what the sample promises, so changing the amount or the roles does not break them. If something is refused, it says which entry and why.
 
 ### 5. Try it on your sandbox
 

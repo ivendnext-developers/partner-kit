@@ -10,12 +10,12 @@ A retailer or distributor wants the **back-office sales invoice** to look differ
 
 ## Part 1 — the invoice
 
-It is Rung 4 of the guide's build ladder: a manifest with print formats on *Sales Invoice* (a standard record type, so the formats print; a format an app installs for its **own** record type is a different case, with a known defect on the retailer's side: until iVendNext's release carries the product's fix, `/printview` answers 404 and Desk's preview keeps the standard layout; [guide chapter 7](../guide/07_manifests.md#a-print-format-on-your-own-record-type-a-known-defect) says more).
+It is Rung 4 of the guide's build ladder: a manifest with print formats on *Sales Invoice* (a standard record type).
 
 1. **Choose how the layout is picked.** Nothing in the retailer picks a print format by customer: the *Customer* record has no print-format field (read on a sandbox: its 94 fields hold only *Print Language*). So either:
    - **one template that branches on the customer** (`branch_manifest.json`): the body reads `doc.customer` and prints that customer's layout, and a plain layout for anyone else. The administrator makes it the invoice's default (Desk → **Customize Form** → *Sales Invoice* → **Default Print Format**); a manifest cannot. Or
    - **one format for each customer** (`each_manifest.json`): a person picks the format in the print dialog and the e-mail dialog, every time. Nothing makes the right one print.
-2. **Copy the sample** and edit `customers.json` (the customers' record names, exactly), `logo.png` and `layouts/*.html`. Your formats' names start with your prefix (`PP PRT …` in the sample).
+2. **Copy the sample** and edit `customers.json` (the customers' record names, exactly), `logo.png` and `layouts/*.html`. Your formats' names are your own (`PP PRT …` in the sample).
 3. **Read only the invoice.** A layout may use only what the invoice carries: `doc.company`, `doc.company_tax_id`, `doc.company_address_display`, `doc.customer_name`, `doc.address_display`, `doc.tax_id`, the dates, `doc.items` (each line's `item_name`, `qty`, `rate` …), `doc.taxes`, `doc.terms`, `doc.remarks`, `doc.po_no`. Print each amount as the document formats it, `doc.get_formatted("grand_total")`, and work nothing out. Read the field list of *Sales Invoice* on **your** site first (`/api/resource/DocType/Sales Invoice`) and name only fields that exist.
 4. **Build and check:**
 
@@ -24,11 +24,11 @@ It is Rung 4 of the guide's build ladder: a manifest with print formats on *Sale
    python3 tools/manifest/validate.py samples/s29_print_pack/branch_manifest.json
    ```
 
-5. **Install one package, on a sandbox first** (`recipes/manifest.md` step 4), set the default (branch package), and print a **draft** invoice for each customer and for a stranger, **with tax on it**. Every layout's net total, tax and total must equal the invoice's own. ⚠ Once the branch format is the default, **every** customer's invoice uses it and a customer not in `customers.json` gets the plain layout: copy what your current default carries (tax numbers, tax lines, market lines) into it first.
+5. **Try one package on your sandbox first** (`ivn try`), set the default (branch package), and print a **draft** invoice for each customer and for a stranger, **with tax on it**. Every layout's net total, tax and total must equal the invoice's own. ⚠ Once the branch format is the default, **every** customer's invoice uses it and a customer not in `customers.json` gets the plain layout: copy what your current default carries (tax numbers, tax lines, market lines) into it first.
 
 ### What a template cannot do
 
-A print template cannot read other records on a site before POS build 2.0.0.654: it may not list a document's rows, look up a price or call a helper. From that build a print format may read them through `ivn_rows` and `ivn_value`, with the viewer's rights (chapter 7, *Print formats that read other records*). The consequence for part 2 is below.
+A print template cannot read other records on a site before POS build 2.0.0.654: it may not list a document's rows, look up a price or call a helper. From that build a print format may read them through `ivn_rows` and `ivn_value`, with the viewer's rights (`guide/07_manifests.md`, *Print formats that read other records*). The consequence for part 2 is below.
 
 ## Part 2 — the price list with photos
 

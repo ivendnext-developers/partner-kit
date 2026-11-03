@@ -16,7 +16,7 @@ defect here may be a defect there — report it on the Partner feedback forms.
     python3 service/app.py service/.env.local      # ONE SHOP: PP_KEY_SECRET, PP_PORT (8152), PP_BASE, PP_KEY, PP_SECRET,
                                                    # PP_STATE; the wallet: PP_WALLET_SECRET, PP_WALLET_SITE, PP_WALLET_MERCHANT
 
-MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 14b): set IVN_LIBRARY_APP
+MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a): set IVN_LIBRARY_APP
 (the App library's id, ivendnext_lyl) and a store (IVN_SHOPS_TABLE on CitiXsys hosting, else IVN_SHOPS_FILE). Each shop
 connects itself after its install (POST /ivendnext/connect) and hands over the member key's secret
 ("<app>:<app>_member") and its integration user's key ("user:<email>": "<api key>:<api secret>"). Every press names its

@@ -78,7 +78,7 @@ The retailer's record `Default` of `<PREFIX> Settings`: *This shop's airports* (
 - **A phone's camera** cannot fill *Sale details* on the till yet: a keyboard scanner, or typing, fills it.
 - **Where the check never runs:** a park to a till, a layaway deposit, an account collection (the check page, *Not in this version*), nor a sale rung in the Desk's own POS screen.
 - **A cold start:** on CitiXsys hosting the first Pay after a quiet spell starts the function; past the check's time the down answer applies, flagged.
-- **Hosting:** the service is the app template's shape, so it serves many retailers through the template's handshake (guide chapter 14b); each retailer's site hands over the check's secret, and the key of the app's own user, when it connects after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed). It only answers presses, so on CitiXsys hosting it runs as a function, paid per call (`app.json` `"runs": "function"`). Until a retailer's user key arrives the service answers 503, so your down answer applies.
+- **Hosting:** the service is the app template's shape, so it serves many retailers through the template's handshake; each retailer's site hands over the check's secret, and the key of the app's own user, when it connects after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed). It only answers presses, so on CitiXsys hosting it runs as a function, free once listed because it runs only when called (`app.json` `"runs": "function"`). Until a retailer's user key arrives the service answers 503, so your down answer applies.
 
 ### What was proven where
 

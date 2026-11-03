@@ -69,18 +69,17 @@ The print format *PP RPR Repair slip* (Jinja) reads only the repair's own fields
 
 1. **Add the record types above** to your manifest (`doctypes`, the two tables with `"istable": 1`), with no money field: the till charges the repair. Never make a table `reqd`: Desk drops a row whose list fields are all blank, so *no tests yet* is a repair with no rows.
 2. **Add the workflow** (`workflows`), its states and actions under your prefix, with no `update_field`: what reads the repair reads the step.
-3. **Add the lock** (`save_rules`, kind `locked_in_state`, mode `refuse`), naming the closed states and every field the slip prints except the fetched copies. A lock needs an active workflow on its record type, and installs switched off: the retailer switches it on. It judges the state the record was saved in, so never lock a field the move into a closed state writes.
-4. **Tell the customer the unit is ready, with the retailer's own Notification** (a manifest notifies only the retailer's own users). In Desk, **Notification**, **+ Add**: Document Type *PP RPR Repair*, Send Alert On **Value Change**, Value Changed **Workflow State**, Condition `doc.workflow_state == "PP RPR Ready to collect" and doc.customer_phone` (your prefix in the state's name), the channel **SMS** to the document field **Customer's phone**. A refused send never fails the repair's save: it goes to the Error Log.
-5. **Add the field on Stock Entry** (`custom_fields`): a Link to your repair, named with your reserved field prefix, `allow_on_submit` 1, `depends_on` the purpose *Material Issue*, never `reqd`. A Material Issue needs a **Stock Entry Type** of that purpose: a site set up without the setup wizard's records has none, and the retailer adds *Material Issue* once. Then the report (`reports`, Report Builder, filtered `workflow_state not in` your *Collected* and *Cancelled*, ordered by `ready_by asc`), the Connections (`links`, the repair under Serial No, Customer and POS Invoice) and a `documentation` property setter that points at your help.
+3. **Add the lock** (`save_rules`, kind `locked_in_state`, mode `refuse`), naming the closed states and every field the slip prints except the fetched copies. A lock needs an active workflow on its record type. It judges the state the record was saved in, so never lock a field the move into a closed state writes.
+4. **Tell the customer the unit is ready, with the retailer's own Notification** (a manifest's notification is mail or the in-app bell only, so the SMS is the retailer's own). In Desk, **Notification**, **+ Add**: Document Type *PP RPR Repair*, Send Alert On **Value Change**, Value Changed **Workflow State**, Condition `doc.workflow_state == "PP RPR Ready to collect" and doc.customer_phone` (your prefix in the state's name), the channel **SMS** to the document field **Customer's phone**. A refused send never fails the repair's save: it goes to the Error Log.
+5. **Add the field on Stock Entry** (`custom_fields`): a Link to your repair, named with your reserved field prefix, `allow_on_submit` 1, `depends_on` the purpose *Material Issue*, never `reqd`. A Material Issue needs a **Stock Entry Type** of that purpose: a site set up without the setup wizard's records has none, and the retailer adds *Material Issue* once. Then the report (`reports`, Report Builder, filtered `workflow_state not in` your *Collected* and *Cancelled*, ordered by `ready_by asc`), and the Connections (`links`, the repair under Serial No, Customer and POS Invoice).
 6. **Check it before it reaches a retailer:** `python3 tools/check/check.py samples/s58_repairs_by_serial`.
 
 ## What the retailer does
 
-1. **Install the app.** It adds the repair, its workflow and lock, the slip, the report, the Stock Entry field and the Connections. No setting, no role, no outside address.
-2. **Switch the lock on:** Desk › *Retail Save Rule* › *PP RPR repair locked once collected* › **Enabled**. A manifest installs every save rule switched off; until it is on, a collected repair can still be changed.
-3. **Give Sales User and Sales Manager *Read* on Serial No**, so the repair counter finds a serial and the form shows its item and warranty date.
-4. **Give Sales User** to the people at the repair counter; a Sales Manager cancels a repair in work. Whoever takes parts out of stock holds Stock User; add the Stock Entry Type *Material Issue* if the site has none.
-5. **Put the store's details on the Letter Head** the store prints with, and **add its own Notification** if it tells customers by SMS (step 4).
+1. **Install the app.** Everything is on from the moment of install. It adds the repair, its workflow and lock, the slip, the report, the Stock Entry field and the Connections. No setting, no role, no outside address.
+2. **Give Sales User and Sales Manager *Read* on Serial No**, so the repair counter finds a serial and the form shows its item and warranty date.
+3. **Give Sales User** to the people at the repair counter; a Sales Manager cancels a repair in work. Whoever takes parts out of stock holds Stock User; add the Stock Entry Type *Material Issue* if the site has none.
+4. **Put the store's details on the Letter Head** the store prints with, and **add its own Notification** if it tells customers by SMS (step 4 above).
 
 ## Recall by serial, with what iVendNext already has
 
@@ -98,7 +97,7 @@ This is configuration, not an app: nothing to install for it. A recall by lot (a
 - **The app holds no charge, quote or deposit:** the till charges the repair; a quote the customer approves first is a version of your own.
 - ***Collected by*, *Paid by sale* and the notes stay editable after the hand-over:** the slip prints none of them (a cancelled repair is read only in Desk to store staff). **What is read from the serial and the customer follows them:** a slip reprinted after the customer is renamed prints the new name; the serial and the customer themselves cannot change.
 - **Duplicating a Material Issue copies its Repair:** clear it on the copy (a manifest's field cannot carry `no_copy`).
-- **The stock entry names the repair; the repair does not list its stock entries** (a manifest's link may only list its own records under a retailer's record). Filter the Stock Entry list by **Repair**.
+- **The stock entry names the repair; the repair does not list its stock entries**. Filter the Stock Entry list by **Repair**.
 - **A part's own serial is typed, not chosen:** a part tracked by serial in stock is named on the Material Issue as well.
 - **Desk shows the states and buttons with the app's prefix** (*PP RPR Hand over*).
 - **Before removing the app,** delete the retailer's own Notifications on the repair.

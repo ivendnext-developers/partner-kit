@@ -26,7 +26,7 @@ On our test bench the client also passed the exit check — two applications, th
 
 ## One feed, several readers in one app
 
-An app made from several samples that each read the feed (`tools/manifest/start.py s22_customer_loyalty s25_gift_on_spend`)
+An app made from several samples that each read the feed (`ivn new acme_loyalty --from s22 --from s25`)
 has one registration and reads it once. Its service puts one `Handoff` where every part's `poll` finds it, then on the
 schedule `feed` runs each reading part's own pass: the first part to poll a shop reads its not-done events, and each part
 is handed the events of the record types its own sample registered. Each part's handled events are recorded in the

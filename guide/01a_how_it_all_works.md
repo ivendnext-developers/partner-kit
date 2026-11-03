@@ -2,7 +2,7 @@
 
 A ten-minute read for a developer meeting iVendNext for the first time: what an app is, where it runs (Docker, a container, a function, or nowhere), where a retail chain's data lives, how one app serves many customers (multi-tenant) without a conflict, how many apps and boxes you need, which endpoints call which, and what publishing and hosting cost you. Each section starts with a picture.
 
-**Download:** [How iVendNext apps work](https://developer.ivendnext.com/downloads/how_ivendnext_apps_work.pdf) (PDF, this chapter to read offline or in a meeting); chapter 1c as [How the data travels](https://developer.ivendnext.com/downloads/how_the_data_travels.pdf). **Have one question?** [Questions developers ask](01a_how_it_all_works.md).
+**Download:** [How iVendNext apps work](https://developer.ivendnext.com/downloads/how_ivendnext_apps_work.pdf) (PDF, this chapter to read offline or in a meeting); chapter 1c as [How the data travels](https://developer.ivendnext.com/downloads/how_the_data_travels.pdf).
 
 **For:** anyone about to build for an iVendNext customer: an iVendNext Partner's developer, a licensed customer's IT team, the CitiXsys Consulting Team. No iVendNext knowledge needed.
 
@@ -23,7 +23,7 @@ Some people call a chain's site a *tenant*. In this guide it is **the chain's iV
 - **The data part: your manifest.** One JSON file that says what your app adds to the chain's iVendNext: record types and their fields, fields on existing records, roles, print formats, workflows, notifications, reports, till keys, a check at Pay, Desk buttons, and the event feed it reads. The chain's administrator installs it from Desk; iVendNext creates each record from it. Nothing of yours runs inside the site ([chapter 7](07_manifests.md)).
 - **The service part: your own web service, if you need one.** A program you write, in any language, that iVendNext calls when a cashier presses your till key or Pay, and that calls iVendNext's API to read and write records. **One service serves every chain that installs your app.**
 - **Many apps need no service at all.** Settings and records, field rules, a print format or a workflow are only data.
-- **The one exception that runs inside:** a *sandboxed function*, a small sealed WebAssembly module certified by CitiXsys, which runs inside the sale and on an offline till for two extension points: the check before payment and pricing ([chapter 8](../tools/wasm_kit/README.md)).
+- **The one exception that runs inside:** a *sandboxed function*, a small sealed WebAssembly module certified by CitiXsys, which runs inside the sale and on an offline till for two extension points: the check before payment and pricing ([the Wasm kit](../tools/wasm_kit/README.md)).
 
 ## 3. Where your service runs, and whether that is Docker
 
@@ -31,12 +31,12 @@ Some people call a chain's site a *tenant*. In this guide it is **the chain's iV
 
 You choose one of three:
 
-- **On your own server.** Any language, any cloud, your own machines. A Docker container is fine, and the kit's template ships one: one image runs the same on your laptop, on a test copy and in production. You connect each chain to it by hand ([chapter 14b](../site/pages/publish.md)).
+- **On your own server.** Any language, any cloud, your own machines. A Docker container is fine, and the kit's template ships one: one image runs the same on your laptop, on a test copy and in production. You give each chain's site your address, and each chain gives you its secrets by hand.
 - **On iVendNext App Hosting, run by CitiXsys.** We run your service at `https://<app>.ivendnext.app`, in one of two ways, with the same code:
   - **as a function**, for an app that answers presses (a till key, a check at Pay, a webhook) or works in short runs on a schedule of its own (reading the event feed every minute, a daily job). It runs only when called, or on that schedule;
   - **as a container**, for an app that needs a process that stays up (a connection it holds open, a queue it serves) or a job longer than 15 minutes. It runs all the time.
   
-  Either way it is priced per app per month. An app that runs only when called (a function with no schedule of its own) is free once its listing in the App library is approved (section 7). Each chain that installs your app from the App library connects to it by itself ([chapter 14b](../site/pages/publish.md)).
+  Either way it is priced per app per month. An app that runs only when called (a function with no schedule of its own) is free once its listing in the App library is approved (section 7). Each chain that installs your app from the App library connects to it by itself ([Publish your app](../site/pages/publish.md)).
 - **Nowhere.** An app that is only settings and records has no service.
 
 ## 4. Where the customer's data lives
@@ -46,7 +46,7 @@ You choose one of three:
 **The chain's data stays in the chain's iVendNext.** Your app reaches it through the API, as your app's own user, with only the rights the chain gives that user.
 
 - **A till-key or check calculation keeps nothing of the sale.** iVendNext sends your service the sale it needs to judge; your service answers and forgets it. What your service caches between calls, it keeps per chain (S18 keeps each chain's rule for a minute).
-- **A link to an outside system declares what leaves.** Each address your app sends data to is in your manifest, and each service that sends data is switched off until the chain's administrator reads exactly which fields go there and ticks consent.
+- **A link to an outside system declares what leaves.** Each address your app sends data to is in your manifest, and the chain's administrator reads each one, with what each service sends, before ticking the one consent that installs your app.
 - **Your app's own data** lives in the chain's own records (the record types your manifest adds), or in a store you run yourself. A store of your own is yours to declare and to look after.
 - **What App Hosting keeps:** for each chain your hosted app serves, its connection (its address, the secrets its install made and its key's id), in your app's own encrypted table, with the short claims a scheduled run takes on a chain; no chain's sales or customers. Hosting gives your app no database and no lasting disk of its own for anything else.
 - **Which region:**
@@ -94,23 +94,23 @@ A customer asks you for four things. Do you build four apps in four containers, 
 ## 8. How your app reaches the customer's iVendNext
 
 - **The install creates your records.** The chain's administrator installs your manifest; iVendNext creates each record type, field, role and button it lists. A new version is an update, not a schema migration you run.
-- **The install makes your app's own user.** If your manifest has an event feed, the install makes your app's own user, `<app>@integration.invalid`, which works through the API only and holds one role, `<PREFIX> Integration`. The chain grants that role the reads your app needs. Nobody makes or chooses it, and nobody can sign in with it. Whether the chain's user licence counts it is the hosting's to say and not yet confirmed: a site at its user limit refuses the install, naming the licence ([chapter 5](../recipes/event_feed.md)). An app with no event feed that still calls the API is given a user the chain makes for it ([chapter 2](../site/pages/first_app.md)).
+- **The install makes your app's own user.** If your manifest has an event feed, the install makes your app's own user, `<app>@integration.invalid`, which works through the API only and holds one role, `<PREFIX> Integration`. The chain grants that role the reads your app needs. Nobody makes or chooses it, and nobody can sign in with it. Whether the chain's user licence counts it is the hosting's to say and not yet confirmed: a site at its user limit refuses the install, naming the licence ([the event feed recipe](../recipes/event_feed.md)). An app with no event feed that still calls the API is given a user the chain makes for it ([the integration user recipe](../recipes/integration_user.md)).
 - **The site connects to your service.** For an app hosted on App Hosting and installed from the App library, the chain's site connects by itself once it is installed: it sends your service its library key, its address and the secrets the install made, including your app's user's key. For a service on your own server, the chain sends you those by hand.
 - **Then the three directions run.** Your service calls the API; the till calls your service at a till key or at Pay; and the event feed tells your service what changed (a sale, a return, a record), when your service reads it.
 
-## 9. Publishing is not handing us your code
+## 9. Publishing is not handing us your repository
 
-![Who sends what to whom. One: you publish your manifest and its card to the App library, signed with your key. Two, only if CitiXsys runs your service: you send iVendNext App Hosting a hosting order, then each version as your app's folder in one zip, which we build, never your repository. Three: the App library shows your app on its public list or on one chain's Made for you shelf. Four: the chain's administrator reads What it will do, ticks consent and installs. Five: the chain's iVendNext connects to your service, handing over its address, its key and the secrets the install made. Your code stays in your own repository.](img/publish-and-host.svg)
+![Who sends what to whom. One: you publish your app to the App library with ivn or My apps. Two, only if CitiXsys runs your service: the hosting builds each version from your app's folder, never your repository. Three: the App library shows your app on its public list or on one chain's Made for you shelf. Four: the chain's administrator reads what it will change, ticks I agree and installs. Five: the chain's iVendNext connects to your service, handing over its address, its key and the secrets the install made. Your repository stays your own.](img/publish-and-host.svg)
 
-Publishing and hosting are **two separate steps**. Publishing never sends your code, and neither gives us your repository.
+Neither publishing nor hosting gives us your repository.
 
-- **Publish:** your manifest and its card go to an App library shelf, signed with your own key ([Publish your app](../site/pages/publish.md)). This is all a no-service app ever sends.
-- **Hosting, only if CitiXsys runs your service:** a separate hosting order; then each version is your app's folder, uploaded as one zip, which we build (or, through your partner manager, an **image** you built or a **function's package**), never your repository or access to it ([chapter 14b](../site/pages/publish.md)). On your own server you send us nothing.
-- **The customer installs with consent.** The chain's administrator reads *What it will do*, written by iVendNext from your manifest, ticks the box and installs.
+- **Publish:** `ivn publish`, or **Publish** on My apps, uploads your app's folder and puts its manifest and card on an App library shelf ([Publish your app](../site/pages/publish.md)).
+- **Hosting, only if CitiXsys runs your service:** publishing orders it and asks for the plan the first time, and the hosting builds each version from that folder, never from your repository or with access to it. An app on your own server pays us nothing: run the folder at any public https address.
+- **The customer installs with consent.** The chain's administrator presses **Install**, reads what it will change, written by iVendNext from your manifest, ticks **I agree** and presses **Install**.
 
 ## 10. What the customer sees
 
-- **The administrator** finds your app in the App library, reads its card (what it does, where it sends data, whether it needs a key), installs it, reads *What it will do*, ticks consent, and switches each service on for the stores it should serve. *Connected apps* lists every app installed.
+- **The administrator** finds your app in the App library, reads its card (what it does, where it sends data, whether it needs a key), presses **Install**, reads what it will change, ticks **I agree** and presses **Install**. Everything the app adds is on from that moment, for every store; then they give their staff the roles. *Connected apps* lists every app installed.
 - **The cashier** sees your till key on the till, or your answer at Pay (allowed, refused in your words, or a question to ask the customer). They never see where your service runs.
 - **When your service is down or late:** the till keeps selling.
   - A till key tells the cashier it *did not answer in time* or *could not finish*, and that *nothing was added to the sale*.
@@ -123,7 +123,7 @@ Publishing and hosting are **two separate steps**. Publishing never sends your c
 |---|---|
 | tenant, instance, customer environment | the chain's iVendNext site (the retailer's site) |
 | plugin, extension, add-on | app |
-| deployment, provisioning | a hosting order (only when CitiXsys hosts your service) |
+| deployment, provisioning | `ivn publish`, or **Publish** on My apps (the hosting builds it, when CitiXsys hosts your service) |
 | schema migration, database migration | the manifest install, or an update to a higher version |
 | webhook, callback | a till key, a check, a Desk button, a webhook, or the event feed |
 | API credentials, service account | your app's own user and its key |
@@ -132,21 +132,21 @@ Publishing and hosting are **two separate steps**. Publishing never sends your c
 
 Each claim above, with the page or code that proves it:
 
-- **The one idea, and nothing of yours inside the site:** [chapter 3](03_ladder_and_never_list.md), the four rules; [chapter 14b](../site/pages/publish.md), *The short answer*.
-- **What a manifest can add:** [chapter 7](07_manifests.md) and the manifest's schema, `tools/manifest/`.
-- **The sandboxed function and its two extension points:** [chapter 8](../tools/wasm_kit/README.md), *Package or module?*
-- **A function or a container, and the 15-minute line:** [chapter 14b](../site/pages/publish.md). A function runs Python 3.13 on ARM64, 512 MB, 10 seconds per press (up to 900 on a schedule), at most 10 copies at once (its Technical notes).
+- **The one idea, and nothing of yours inside the site:** [chapter 3](03_ladder_and_never_list.md), the four rules.
+- **What a manifest can add:** [chapter 7](07_manifests.md) and the manifest's checker, `tools/manifest/`.
+- **The sandboxed function and its two extension points:** [the Wasm kit](../tools/wasm_kit/README.md).
+- **A function or a container, and the 15-minute line:** [`tools/deploy_app/`](../tools/deploy_app/README.md). A function runs Python 3.13 on ARM64, 512 MB, 10 seconds per press (up to 900 on a schedule), at most 10 copies at once.
 - **Copies per plan:** `tools/deploy_app/plans.json`, each plan's `enforced.instances` (Starter 1, Standard 1, Managed 2), the same file App Hosting enforces.
 - **Region:** `tools/deploy_app/plans.json`, `regions` (`us` = `us-east-1`) and `regions_on_request`; `deploy_app.py` refuses a region the hosting does not serve.
-- **One box per app:** each hosted app has its own address, image registry or package folder, secrets, logs and firewall rule ([chapter 14b](../site/pages/publish.md), *What you get*); the hosting writes one listener rule per address.
+- **One box per app:** each hosted app has its own address, image registry or package folder, secrets, logs and firewall rule ([`tools/deploy_app/`](../tools/deploy_app/README.md)); the hosting writes one listener rule per address.
 - **When hosting is free:** the hosting takes no charge for an app that runs only when called (a function with no schedule of its own) and that the App library lists as that maker's app. That covers all its copies, sandbox included. If it was already billing, the billing stops at its next renewal, and nothing already paid is refunded. A function on its own schedule and a container are always charged. The plan prices: `tools/deploy_app/plans.json`, `price_usd_month`.
 - **What the shops table holds:** `tools/app_template/service/shops.py`, `connect()`: for each site, its call-back address, its secrets and the previous set, the library key's id and kind, and when it connected. On App Hosting the table is the app's own, encrypted at rest.
-- **What a function keeps between runs:** nothing but a copy's `/tmp` while that copy lives, a cache only ([chapter 14b](../site/pages/publish.md), *What a run keeps*).
-- **The handshake and per-chain secrets:** [chapter 14b](../site/pages/publish.md), *One app, many retailers*, and its call table (`POST /ivendnext/connect`, `/disconnect`, the `X-iVendNext-Site` header, 401 for an unknown site or another site's secret).
-- **The signature:** `base64(HMAC-SHA256(secret, "<timestamp>.<raw body>"))`, five minutes of clock skew, 64 KB ([chapter 14b](../site/pages/publish.md), item 3).
-- **The app's own user:** made at install for a manifest with an event feed, from POS version 2.1.0.667 ([chapter 5](../recipes/event_feed.md), step 5; [chapter 7](07_manifests.md)).
-- **Consent and declared addresses:** `allowed_urls` and each service's consent ([chapter 7](07_manifests.md); [chapter 14a](../site/pages/publish.md)).
-- **What the cashier reads:** [chapter 6](../contracts/pages/remote_till_key.md); a check's `down_answer` ([chapter 7](07_manifests.md); sample [S18](../samples/s18_rule_guard/README.md), *Where it shows*).
-- **Publishing and hosting:** [Publish your app](../site/pages/publish.md); [chapter 14b](../site/pages/publish.md).
+- **What a function keeps between runs:** nothing but a copy's `/tmp` while that copy lives, a cache only.
+- **The handshake and per-chain secrets:** [the app template](../tools/app_template/README.md) and [the install page](../contracts/pages/package_install.md), §10 (`POST /ivendnext/connect`, `/disconnect`, the `X-iVendNext-Site` header, 401 for an unknown site or another site's secret).
+- **The signature:** `base64(HMAC-SHA256(secret, "<timestamp>.<raw body>"))`, five minutes of clock skew, 64 KB ([the signature](../contracts/pages/remote_till_key.md)).
+- **The app's own user:** made at install for a manifest with an event feed ([the event feed recipe](../recipes/event_feed.md); [chapter 7](07_manifests.md)).
+- **Consent and declared addresses:** `allowed_urls` and the install's one consent ([chapter 7](07_manifests.md)).
+- **What the cashier reads:** [till keys](../contracts/pages/remote_till_key.md); a check's `down_answer` ([chapter 7](07_manifests.md); sample [S18](../samples/s18_rule_guard/README.md), *Where it shows*).
+- **Publishing and hosting:** [Publish your app](../site/pages/publish.md).
 
-**Next:** [1b. One app from your laptop to the till](../site/pages/first_app.md), sample S18 followed step by step.
+**Next:** [Build your first app](../site/pages/first_app.md), from a sample to your customer in six steps.
