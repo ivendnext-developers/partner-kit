@@ -149,8 +149,7 @@ The reconciliation timer is off on the bench (`PP_RECONCILE_SECONDS=0`) so the t
 
 ## Try it at the till
 
-- In Desk, add a warranty term for an item in **Warranty terms**, and switch the *Warranty* key on in POS Studio > Apps.
-- Start a sale with that item and press Warranty; the till names the item and its months.
+- In Desk, add a warranty term for an item, and switch the Warranty key on in POS Studio > Apps. Start a sale with that item and press Warranty; the till names the item and its months.
 - Sell it and scan its serial number. Within a few minutes the warranty's comment is on the sale in Desk.
 - Close the till day when you are done.
 
