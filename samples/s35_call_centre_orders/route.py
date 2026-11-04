@@ -23,7 +23,6 @@ import time
 
 FIELD = "pp_cco_store"   # the Serving store on Territory: the manifest's own field
 SKEW_S = 300             # a request stamped further than this from our clock is refused (a replay window, not a clock)
-BODY_MAX = 256 * 1024
 DEPTH = 12               # territories walked up at most: a tree deeper than this is not a district tree
 
 

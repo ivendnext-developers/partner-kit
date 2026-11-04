@@ -54,7 +54,7 @@ import price  # noqa: E402
 import oneshop  # noqa: E402
 import shops  # noqa: E402
 
-KIOSK_TTL, READ_TIMEOUT, BODY_MAX = 60, 3.0, 2048
+KIOSK_TTL, READ_TIMEOUT = 60, 3.0
 MISSES_PER_MINUTE = 20          # unknown kiosk codes read from one shop per minute, per copy of the service: a guesser
                                 # cannot make the service hammer the shop. A code the shop has made (seen once) is never held
                                 # back, so a guesser cannot lock a real kiosk out
@@ -234,7 +234,7 @@ class Service:
         return ("default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; "
                 f"img-src {imgs}; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, bytes, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, bytes, dict]:
         """Every call: (status, body, headers). The web server and the function entry both use it."""
         path = path.split("?", 1)[0]
         if method == "GET" and path == "/health":
@@ -248,8 +248,6 @@ class Service:
                                "Cache-Control": "no-cache"}
         if method != "POST":
             return _json(404, {"error": "not found"})
-        if raw is not None and len(raw) > BODY_MAX:
-            return _json(413, {"error": "too large"})
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return _json(*shops.handle(self.store, self.app, path, headers, raw or b""))
         if path == "/prc/price":
@@ -279,9 +277,6 @@ def make_server(svc: Service, port: int):
             raw = None
             if method == "POST":
                 n = int(self.headers.get("Content-Length") or 0)
-                if n < 0 or n > BODY_MAX:
-                    code, body, hdrs = _json(413, {"error": "too large"})
-                    return self._send(code, body, hdrs)
                 raw = self.rfile.read(n)
             self._send(*handle(svc, method, self.path, self.headers, raw))
 

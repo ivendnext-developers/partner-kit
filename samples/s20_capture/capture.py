@@ -30,7 +30,6 @@ import threading
 import time
 
 SKEW_S = 300
-BODY_MAX = 256 * 1024
 CODE_TTL_S = 10 * 60       # the product's own challenge lifetime: a code older than this is never accepted
 CODE_LENGTH = 6
 _PHONE = re.compile(r"[^0-9+]")

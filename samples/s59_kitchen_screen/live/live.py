@@ -327,8 +327,8 @@ def handler(hub: Hub, origin: str, heartbeat_s: float = HEARTBEAT_S, life_s: flo
             if self.path.split("?", 1)[0] != "/ksc/live":
                 return self._json(404, {"error": "not found"})
             n = int(self.headers.get("Content-Length") or 0)
-            if n <= 0 or n > service.ksc.PAGE_BODY_MAX:
-                return self._json(413 if n > 0 else 400, {"state": "unknown"})
+            if n <= 0:
+                return self._json(400, {"state": "unknown"})
             try:
                 body = json.loads(self.rfile.read(n))
             except ValueError:

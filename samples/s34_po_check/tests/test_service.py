@@ -66,9 +66,6 @@ class OneShop(unittest.TestCase):
         self.assertEqual(self.post(path="/other")[0], 404)
         self.assertEqual(self.svc.handle("GET", "/health", {}, b""), (200, {"status": "ok"}))
 
-    def test_a_body_too_large_is_413(self):
-        self.assertEqual(self.svc.handle("POST", app.ROUTE, {}, None)[0], 413)
-
     def test_the_prefix_names_the_fill_field(self):
         svc = app.Service(dict(ONE, POC_PREFIX="ivendnext_poc"))
         raw = raw_of(context())

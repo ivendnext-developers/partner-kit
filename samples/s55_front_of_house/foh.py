@@ -25,7 +25,6 @@ import time
 
 PREFIX = "PP FOH"
 SKEW_S = 300                # a request stamped further than this from our clock is refused (a replay window, not a clock)
-BODY_MAX = 256 * 1024
 TEXT_MAX = 140              # the door keeps 140 characters of a label and a reference
 BODY_WORDS = 280            # a Desk answer's body
 SOURCE = "front_of_house"   # the door's own name for a front-of-house app (20 characters at most)

@@ -34,7 +34,6 @@ import re
 import time
 
 SKEW_S = 300          # a request stamped further than this from our clock is refused (a replay window, not a clock)
-BODY_MAX = 256 * 1024
 TEXT_MAX = 140        # every sentence the till shows: plain text, 1 to 140 characters (the extension points' rule)
 PASS = "Boarding Pass"                      # the sale detail is "<prefix> Boarding Pass"
 PASS_KEY = 60         # a pass's first 60 characters (its first leg) name the passenger and the flight: the key of

@@ -176,12 +176,10 @@ class Service:
             print(json.dumps({"error": type(e).__name__}), file=sys.stderr, flush=True)   # the class only: no retailer data
             return 503, {"error": "the retailer cannot be read"}
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
         """One call: (status, answer). The web server below and the function entry both call this."""
         if method == "GET":
             return (200, {"status": "ok"}) if path == "/health" else (404, {"error": "not found"})
-        if raw is None or len(raw) > refunds.BODY_MAX:
-            return 413, {"error": "too large"}
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw)
         return self.answer(path, headers, raw)
@@ -209,7 +207,7 @@ def make_server(svc: Service, port: int, log=sys.stdout):
             t0, rid, code = time.monotonic(), (self.headers.get("X-iVendNext-Request-Id") or "-")[:40], 500
             try:
                 n = int(self.headers.get("Content-Length") or 0)
-                code, out = svc.handle("POST", self.path, self.headers, self.rfile.read(n) if 0 <= n <= refunds.BODY_MAX else None)
+                code, out = svc.handle("POST", self.path, self.headers, self.rfile.read(n))
                 return self._send(code, out)
             finally:
                 _log(log, rid, self.path, code, t0)

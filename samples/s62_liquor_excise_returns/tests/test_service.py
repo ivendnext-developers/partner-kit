@@ -285,10 +285,9 @@ class ServiceTest(unittest.TestCase):
                                          raw)[0], 401)
         self.assertEqual((self.s.reads, self.s.writes), ([], []))
 
-    def test_s11_health_unknown_paths_and_a_large_body(self):
+    def test_s11_health_and_unknown_paths(self):
         self.assertEqual(self.svc.handle("GET", "/health", {}, b""), (200, {"ok": 1}))
         self.assertEqual(self.svc.handle("POST", "/exr/other", {}, b"{}")[0], 404)
-        self.assertEqual(self.svc.handle("POST", "/exr/work", {}, b"x" * (exr.BODY_MAX + 1))[0], 413)
 
     def test_s12_an_items_litres_and_strength_are_read_at_the_press(self):
         self.press()

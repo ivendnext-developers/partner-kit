@@ -331,12 +331,10 @@ class Service:
             # written unless the one update landed, and the return then shows it
             return 502, {"error": str(e)}
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
         """One call: (status, answer). The web server below and the function entry both call this."""
         if method == "GET":
             return (200, {"ok": 1}) if path == "/health" else (404, {"error": "not found"})
-        if raw is None or len(raw) > exr.BODY_MAX:
-            return 413, {"error": "too large"}
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw)
         if path in ROUTES:
@@ -366,9 +364,6 @@ def make_handler(svc: Service, log=sys.stderr):
             t0, rid, code = time.monotonic(), (self.headers.get("X-iVendNext-Request-Id") or "-")[:40], 500
             try:
                 n = int(self.headers.get("Content-Length") or 0)
-                if not 0 <= n <= exr.BODY_MAX:
-                    code = 413
-                    return self._send(413, {"error": "too large"})
                 code, out = svc.handle("POST", self.path, self.headers, self.rfile.read(n))
                 return self._send(code, out)
             finally:

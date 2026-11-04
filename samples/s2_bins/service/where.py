@@ -65,7 +65,7 @@ import shops  # noqa: E402
 import testcall  # noqa: E402
 
 ROUTE, KEY = "/point/where_is_it", "where_is_it"       # the manifest's remote_keys[].key; its secret is "<app>:<key>"
-BODY_MAX, SKEW_S = 64 * 1024, 300
+SKEW_S = 300
 READ_TIMEOUT, DEADLINE = 0.8, 2.2      # each read, and all of them together: inside the till's 3 seconds
 CODES_MAX, ROWS_MAX = 30, 1000      # items looked up; rows one read may return
 NOT_SET_UP = ("Bin locations is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
@@ -228,13 +228,11 @@ class Service:
             return 200, _warning(UNREADABLE)
         return 200, core.where_answer(context, rows)
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None, note: dict | None = None) -> tuple[int, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes, note: dict | None = None) -> tuple[int, dict]:
         """One call: (status, answer). The web server below and the function entry both call this. ``note`` gets why a
         press could not read the shop (a status or a word, never a value), for the log line."""
         if method == "GET":
             return (200, {"status": "ok"}) if path == "/health" else (404, {"error": "not found"})
-        if raw is None or len(raw) > BODY_MAX:
-            return 413, {"error": "too large"}
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw)
         if path != ROUTE:
@@ -265,7 +263,7 @@ def make_server(svc: Service, port: int, log=sys.stdout):
             t0, rid, code, note = time.monotonic(), (self.headers.get("X-iVendNext-Request-Id") or "-")[:40], 500, {}
             try:
                 n = int(self.headers.get("Content-Length") or 0)
-                code, out = svc.handle("POST", self.path, self.headers, self.rfile.read(n) if 0 <= n <= BODY_MAX else None, note)
+                code, out = svc.handle("POST", self.path, self.headers, self.rfile.read(n), note)
                 return self._send(code, out)
             finally:
                 _log(log, rid, self.path, code, t0, note)

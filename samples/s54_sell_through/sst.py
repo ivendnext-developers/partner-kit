@@ -29,7 +29,6 @@ import time
 PREFIX = "PP SST"
 RUN, STORE, ROW = "PP SST Sell-through", "PP SST Store", "PP SST Row"
 SKEW_S = 300                 # a press stamped further than this from our clock is refused (a replay window)
-BODY_MAX = 256 * 1024
 STORES_MAX = 20              # stores a run reads: two reports each, side by side, inside the press's 10 seconds
 ROWS_MAX = 1000              # rows a press writes on the run in one save
 ITEMS_MAX = 5000             # item-attribute rows read for the group (a variant has one per attribute)

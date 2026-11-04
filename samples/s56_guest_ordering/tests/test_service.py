@@ -395,9 +395,6 @@ class ServiceTest(unittest.TestCase):
         out = guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]
         self.assertEqual((out["state"], out["say"]), ("refused", "item_refused"))
 
-    def test_e2_a_page_call_over_its_size_is_refused(self):
-        self.assertEqual(answer(self.svc.handle("POST", "/gor/order", {}, b"{" + b" " * gor.PAGE_BODY_MAX + b"}"))[0], 413)
-
     def test_e3_no_line_the_service_sends_carries_a_price(self):
         t = made(self.shop, self.svc)
         guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte(), {"item_code": "BURGER", "options": ["BACON"]}])

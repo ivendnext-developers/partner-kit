@@ -27,7 +27,6 @@ from decimal import ROUND_FLOOR, Decimal
 PREFIX = "PP EXM"
 DAYS, PCT = ("pp_exm_days_1", "pp_exm_days_2"), ("pp_exm_pct_1", "pp_exm_pct_2")
 SKEW_S = 300             # a request stamped further than this from our clock is refused (a replay window, not a clock)
-BODY_MAX = 256 * 1024
 MOST_LOTS = 100          # the Desk action's own limit for a list press
 
 

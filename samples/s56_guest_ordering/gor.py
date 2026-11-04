@@ -24,8 +24,6 @@ import urllib.parse
 
 PREFIX = "PP GOR"
 SKEW_S = 300                 # a press stamped further than this from our clock is refused (a replay window)
-BODY_MAX = 256 * 1024        # a press
-PAGE_BODY_MAX = 16 * 1024    # a guest's call
 SIG_LEN = 22                 # 22 base64url characters: 132 bits of the HMAC
 SOURCE = "guest_ordering"    # the door's own name for the app (20 characters at most)
 NOTE_MAX = 80                # a guest's note for the kitchen

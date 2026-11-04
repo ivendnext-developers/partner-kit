@@ -59,9 +59,9 @@ import wallet  # noqa: E402
 import worker  # noqa: E402
 from shop import Shop, ShopError  # noqa: E402
 
-SKEW_S, BODY_MAX = 300, 256 * 1024
+SKEW_S = 300
 HEALTH_GRACE_S = 180   # many shops: /health is 503 once no feed pass has finished for this long
-WALLET_PREFIX, WALLET_BODY_MAX = "/paygw/1/", 64 * 1024
+WALLET_PREFIX = "/paygw/1/"
 
 
 def verify(timestamp, signature, raw: bytes, secret: str, now=None) -> str:
@@ -190,8 +190,6 @@ class Service:
         secret = self.conf.get("PP_WALLET_SECRET", "")
         if not secret or secret == "UNSET" or self.app:     # Member cash is one shop's (the module's docstring)
             return 404, {"error": "not found"}
-        if len(raw) > WALLET_BODY_MAX:
-            return 413, {"error": "too large"}
         why = verify(headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature"), raw, secret)
         if why:
             return 401, {"error": why}
@@ -210,8 +208,6 @@ class Service:
 def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
     """One request, for the web server and the function alike."""
     if method == "POST":
-        if len(raw) > BODY_MAX:
-            return 413, {"error": "too large"}
         if svc.app and path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(svc.store, svc.app, path, headers, raw, svc.keys)
         if path.startswith(WALLET_PREFIX):
@@ -256,8 +252,6 @@ def make_handler(svc: Service):
 
         def do_POST(self):
             n = int(self.headers.get("Content-Length") or 0)
-            if n < 0 or n > BODY_MAX:
-                return self._send(413, {"error": "too large"})
             self._send(*handle(svc, "POST", self.path, self.headers, self.rfile.read(n)))
 
         def do_GET(self):

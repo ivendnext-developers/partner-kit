@@ -25,7 +25,6 @@ import time
 
 PREFIX, P = "PP RCL", "pp_rcl"
 SKEW_S = 300               # a request stamped further than this from our clock is refused (a replay window)
-BODY_MAX = 256 * 1024
 MOST_LOTS = 100            # lots on one notice that one press handles
 TEXT_MAX = 140             # a check's reason, a filled value
 SALES = ("POS Invoice", "Sales Invoice", "Delivery Note")   # the documents that hand a lot to a customer

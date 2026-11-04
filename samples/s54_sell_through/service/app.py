@@ -309,15 +309,13 @@ class Service:
 
     # ---- every call ------------------------------------------------------------------------------------------------
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, bytes, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, bytes, dict]:
         """Every call: (status, body, headers). The web server and the function entry both use it."""
         path = path.split("?", 1)[0]
         if method == "GET":
             return _json(200, {"ok": 1}) if path == "/health" else _json(404, {"error": "not found"})
         if method != "POST":
             return _json(404, {"error": "not found"})
-        if raw is None or len(raw) > sst.BODY_MAX:
-            return _json(413, {"error": "too large"})
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return _json(*shops.handle(self.store, self.app, path, headers, raw))
         if path == "/sst/work":
@@ -347,8 +345,6 @@ def make_server(svc: Service, port: int):
             raw = None
             if method == "POST":
                 n = int(self.headers.get("Content-Length") or 0)
-                if n < 0 or n > sst.BODY_MAX:
-                    return self._send(*_json(413, {"error": "too large"}))
                 raw = self.rfile.read(n)
             self._send(*handle(svc, method, self.path, self.headers, raw))
 

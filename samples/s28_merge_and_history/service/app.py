@@ -270,8 +270,6 @@ class Hosted:
                 if data is not None:
                     return 200, data, "text/css" if path.endswith(".css") else "text/javascript"
             return _json(200, {"status": "ok"}) if path == "/health" else _json(404, {"error": "not found"})
-        if len(raw) > merge.BODY_MAX:
-            return _json(413, {"error": "too large"})
         if path in (shops.CONNECT, shops.DISCONNECT):
             return _json(*shops.handle(self.store, self.app, path, headers, raw))
         if path == "/mhs/merge":
@@ -329,8 +327,6 @@ def make_handler(svc: Service):
 
         def do_POST(self):
             n = int(self.headers.get("Content-Length") or 0)
-            if n > merge.BODY_MAX:
-                return self._send(413, {"error": "too large"})
             raw = self.rfile.read(n)
             if self.path == "/mhs/merge":
                 return self._send(*svc.press(self.headers, raw))

@@ -32,7 +32,6 @@ import hmac
 import time
 
 SKEW_S = 300          # a request stamped further than this from our clock is refused (a replay window, not a clock)
-BODY_MAX = 256 * 1024
 TEXT_MAX = 140        # every sentence the till shows: plain text, 1 to 140 characters (the extension points' rule)
 RULE_FIELDS = ("name", "customer_group", "words", "details.sale_attribute", "profiles.pos_profile")   # a left join: one row
 TREE_FIELDS = ("name", "lft", "rgt")                                                                # per detail and profile

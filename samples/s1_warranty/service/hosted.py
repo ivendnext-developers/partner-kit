@@ -48,7 +48,7 @@ from tenant import Tenant, TenantError  # noqa: E402  (the sample's only door in
 
 ROUTE, KEY = "/point/warranty", "warranty"     # the manifest's remote_keys[].key; its secret is "<app>:<key>"
 TERM = "PP WRC Warranty Term"
-BODY_MAX, SKEW_S, READ_S, TERMS_MAX = 64 * 1024, 300, 1.2, 1000     # two reads, inside the till's 3 seconds
+SKEW_S, READ_S, TERMS_MAX = 300, 1.2, 1000     # two reads, inside the till's 3 seconds
 PASS_READ_S, MARGIN_S = 8, 30       # a pass reads with more patience, and stops in time for the function's limit
 OVERLAP_S, HANDLED_MAX = 600, 50000  # tills commit out of order; what this copy has handled, so the overlap costs little
 EARLIEST = "2000-01-01 00:00:00"
@@ -187,11 +187,9 @@ class Service:
             return 200, _warning(NO_RIGHTS if "403" in str(e) else CANNOT_READ)
         return 200, core.warranty_answer(context, terms)
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
         if method == "GET":
             return (200, {"status": "ok"}) if path == "/health" else (404, {"error": "not found"})
-        if raw is None or len(raw) > BODY_MAX:
-            return 413, {"error": "too large"}
         if path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw)
         return self.answer(headers, raw) if path == ROUTE else (404, {"error": "not found"})

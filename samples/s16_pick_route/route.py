@@ -21,7 +21,6 @@ import time
 
 TASK = "PP PCK Pick Task"
 SKEW_S = 300          # a request stamped further than this from our clock is refused (a replay window, not a clock)
-BODY_MAX = 256 * 1024
 
 
 def use_prefix(prefix: str):

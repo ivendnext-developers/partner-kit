@@ -159,8 +159,6 @@ CANARIES = [
     # the page and the manifest
     ("the page allows no inline script", S, "script-src 'self'; ", "script-src 'self' 'unsafe-inline'; ",
      T + "test_e1_the_page_is_served_with_its_own_rules"),
-    ("a guest's call has its size limit", S, "            if len(raw) > gor.PAGE_BODY_MAX:", "            if False:",
-     T + "test_e2_a_page_call_over_its_size_is_refused"),
     ("the QR's error correction", Q, "    rem = data\n    for _ in range(10):", "    rem = data ^ 1\n    for _ in range(10):",
      R + "test_q2_the_grids_the_framework_drew_the_same"),
     ("the QR's codeword interleave", Q, "            if i != short_len - ecc_len or j >= short:", "            if True:",

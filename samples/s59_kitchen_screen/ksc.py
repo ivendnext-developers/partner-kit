@@ -26,8 +26,6 @@ import urllib.parse
 
 PREFIX = "PP KSC"
 SKEW_S = 300                 # a press stamped further than this from our clock is refused (a replay window)
-BODY_MAX = 256 * 1024        # a press
-PAGE_BODY_MAX = 4 * 1024     # a screen's call
 SIG_LEN = 22                 # 22 base64url characters: 132 bits of the HMAC
 KIND_STATION, KIND_EXPO, KIND_BOARD = "Station", "Expo", "Board"
 KINDS = (KIND_STATION, KIND_EXPO, KIND_BOARD)

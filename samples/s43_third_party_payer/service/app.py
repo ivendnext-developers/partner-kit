@@ -65,7 +65,6 @@ import oneshop  # noqa: E402
 import shops  # noqa: E402
 import testcall  # noqa: E402
 
-BODY_MAX = 256 * 1024
 REFUSAL_MAX = 250       # the door's words in a press's answer, whose body the door takes up to 280 characters
 SKEW_S = 300
 READ_TIMEOUT = 2.0      # the door waits at most 5 s for an answer; each read here waits at most this
@@ -181,7 +180,7 @@ class ShopApi:
 def _refusal(err) -> str:
     """The door's own words when it refuses a bill-back (a 417 whose body carries the shop's messages)."""
     try:
-        raw = json.loads(err.read(BODY_MAX) or b"{}")
+        raw = json.loads(err.read() or b"{}")
         msgs = json.loads(raw.get("_server_messages") or "[]")
         text = json.loads(msgs[0]).get("message") if msgs else raw.get("exception")
     except (ValueError, TypeError, AttributeError, IndexError, OSError, http.client.HTTPException):
@@ -608,8 +607,6 @@ class Service:
     def handle(self, method, path, headers, raw) -> tuple[int, dict]:
         if method == "GET":
             return (200, {"status": "ok"}) if path == "/health" else (404, {"error": "not found"})
-        if raw is None or len(raw) > BODY_MAX:
-            return 413, {"error": "too large"}
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw)
         return self.answer(path, headers, raw)
@@ -638,8 +635,7 @@ def make_server(svc: Service, port: int, log=sys.stdout):
             t0, rid, code = time.monotonic(), (self.headers.get("X-iVendNext-Request-Id") or "-")[:40], 500
             try:
                 n = int(self.headers.get("Content-Length") or 0)
-                code, out = svc.handle("POST", self.path, self.headers, self.rfile.read(n) if 0 <= n <= BODY_MAX
-                                       else None)
+                code, out = svc.handle("POST", self.path, self.headers, self.rfile.read(n))
                 return self._send(code, out)
             finally:
                 _log(log, rid, self.path, code, t0)

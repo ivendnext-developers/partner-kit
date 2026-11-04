@@ -358,7 +358,6 @@ class ServiceTest(unittest.TestCase):
         svc = self.service(FakeTenant())
         self.assertEqual(svc.handle("GET", "/health", {}, b""), (200, {"ok": 1}))
         self.assertEqual(svc.handle("POST", "/press/else", {}, b"{}")[0], 404)
-        self.assertEqual(svc.handle("POST", "/press/count", {}, b"x" * (draw.BODY_MAX + 1))[0], 413)
 
 
 class TestCall(unittest.TestCase):

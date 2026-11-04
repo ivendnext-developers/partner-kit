@@ -125,14 +125,6 @@ class Service(unittest.TestCase):
         self.addCleanup(r.close)
         self.assertEqual(r.ask()["detail"], caller.COULD_NOT.format("AI tip"))
 
-    def test_oversize_request_is_refused_before_it_is_read(self):
-        r = Running()
-        self.addCleanup(r.close)
-        big = dict(PAYLOAD, context=dict(CONTEXT, pad="x" * 70000))
-        a = r.ask(big)
-        self.assertEqual(a["state"], "refused")
-        self.assertTrue(a["why"] == "http: 413" or a["why"].startswith("down:"), a["why"])   # 413, or the server closing on the sender
-
     def test_the_prompt_the_provider_sees_has_only_what_the_consent_lists(self):
         seen = []
         r = Running(lambda p: (seen.append(p), "A tip.")[1])

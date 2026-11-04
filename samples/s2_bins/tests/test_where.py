@@ -236,7 +236,6 @@ class OneShop(unittest.TestCase):
         self.assertEqual(self.press(ctx("CASE"), path="/webhook")[0], 404)
         raw = b'{"context": "x"}'
         self.assertEqual(self.svc.handle("POST", where.ROUTE, signed(raw, SECRET), raw)[0], 400)
-        self.assertEqual(self.svc.handle("POST", where.ROUTE, {}, None)[0], 413)
         self.assertEqual(self.svc.handle("GET", "/health", {}, b""), (200, {"status": "ok"}))
 
     def test_the_shop_down_is_said_in_words(self):
