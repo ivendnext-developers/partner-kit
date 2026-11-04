@@ -1,6 +1,6 @@
 # S40 — Expiry and recall (`pp_rcl`): recalls, disposal on the record, goods-in
 
-For a pharmacy, a grocery or any retailer that sells lots with an expiry date. A Recall Officer enters the regulator's notice and presses **Block these batches**: each lot is switched off at every till and store at once, each store's stock of it is found, and so are the customers it reached. Recalled or expired stock is disposed of only against a **Disposal Record** carrying the regulator's visit. An **Expiry Worklist** lists the lots near expiry per store, and a goods receipt is refused when a lot has too few days left, unless its line carries a **Letter of Undertaking**.
+For a pharmacy, a grocery or any retailer that sells lots with an expiry date. A Recall Officer enters the regulator's notice and presses **Block these batches**: each lot is switched off at every till and store at once, each store's stock of it is found, and so are the customers it reached. Where the customer chooses a witness rule, recalled or expired stock is disposed of only against a **Disposal Record** carrying the regulator's visit. An **Expiry Worklist** lists the lots near expiry per store, and a goods receipt is refused when a lot has too few days left, unless its line carries a **Letter of Undertaking**.
 
 **Industries:** Grocery, Pharmacy
 
@@ -48,7 +48,7 @@ ivn try
 
 ### 1.0.1
 
-- With no settings record every check allows; the witness rule ships as *No disposal*; the two receipt ticks ship off and Kenya's clocks ship blank; when the service is down the checks go on and are flagged, unless the customer chooses to refuse.
+- With no settings record every check allows and a recall still blocks its lots; the witness rule ships as *No disposal*; the two receipt ticks ship off and Kenya's clocks ship blank; when the service is down the checks go on and are flagged, unless the customer chooses to refuse.
 
 ### 1.0.0
 

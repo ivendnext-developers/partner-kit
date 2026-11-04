@@ -46,7 +46,7 @@ ivn try
 
 ### 0.2.1
 
-- A page that reloads opens again.
+- The page no longer refuses a context it has seen: it may open again until it runs out.
 
 ### 0.2.0
 

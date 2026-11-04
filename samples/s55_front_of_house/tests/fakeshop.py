@@ -44,6 +44,7 @@ class FakeTenant:
     def __init__(self, reservations=(), waitlist=(), settings_=None, clock="2026-10-29 19:00:00", refuse=None,
                  door_refuse=None, lose_open=0, stale_seat=0, open_checks=()):
         self.settings = {CO: settings_ or settings()}
+        self.other_store_saves = None
         self.res = {r["name"]: copy.deepcopy(r) for r in reservations}
         self.wait = {w["name"]: copy.deepcopy(w) for w in waitlist}
         self.clock = datetime.datetime.fromisoformat(clock)
@@ -107,6 +108,10 @@ class FakeTenant:
         self.sent.append(copy.deepcopy(body))
         t = self._table(doctype)
         rec = t[name]
+        if doctype.endswith(" Store") and self.other_store_saves and ("run_started" in body) and \
+                (self.other_store_saves[0] == "any" or (self.other_store_saves[0] == "clear" and not body["run_started"])):
+            self.other_store_saves = None                       # a save at another store, between this read and this write
+            rec["modified"] = self._tick()
         if "modified" in body:
             if self.stale_seat and "seat_key" in body:          # the host saved the record a moment before
                 self.stale_seat -= 1

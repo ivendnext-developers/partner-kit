@@ -123,7 +123,7 @@ def prepare():
     if roles != [u["role"]]:
         T.update("User", u["email"], {"roles": [{"role": u["role"]}]})
         say(f"took     {sorted(set(roles) - {u['role']})} off the integration user")
-    for g in CONF["integration_rights"]:
+    for g in CONF["integration_rights"] + (CONF.get("receipt_workflow") or {}).get("integration_rights", []):
         grant(g["doctype"], u["role"], g["rights"], g["why"])
     say("now make its API key (User → Generate Keys) and give it to your service only")
 

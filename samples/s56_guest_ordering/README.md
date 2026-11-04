@@ -45,7 +45,7 @@ ivn try
 
 ### 1.0.1
 
-- Two guests at a free table land on one check with no wait; the limits on an order are blank unless the store sets them.
+- Two guests at a free table land on one check with no wait; the limits on an order are blank unless the store sets them; a dish sold out since the menu says so.
 
 ### 1.0.0
 

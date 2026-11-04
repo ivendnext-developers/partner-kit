@@ -323,7 +323,7 @@ def judge_receipt(fields: dict, items: dict, batches: dict, bundle_lots: dict, s
     if fields.get("is_return"):
         return out
     floor = whole(settings.get("min_shelf_days")) or 0
-    pack_needed = settings.get("pack_expiry_required", 0) not in (0, "0", False) and not erp   # an ERP sends none
+    pack_asked = settings.get("pack_expiry_required", 0) not in (0, "0", False)
     later = []
     for i, line in enumerate(fields.get("items") if isinstance(fields.get("items"), list) else [], 1):
         if not isinstance(line, dict):
@@ -355,16 +355,15 @@ def judge_receipt(fields: dict, items: dict, batches: dict, bundle_lots: dict, s
             if pack is not None and pack != exp:
                 out.append(f"Row {i}: lot {lot} expires {exp}, the pack says {pack}. Correct the lot.")
                 continue
-            if pack is None and life > 0:
+            if pack_asked and pack is None and life > 0:
                 # with a shelf life set the shop can work a lot's expiry out (manufacturing date + shelf life), and a
-                # later edit of either leaves no trace on the lot: the pack's own date is asked for (setting on), or the
-                # arithmetic is the only test left (setting off, a shop receiving on Handheld)
-                made = date_of((b or {}).get("manufacturing_date"))
-                if pack_needed or made is None or made + datetime.timedelta(days=life) == exp:
-                    msg = f"Row {i}: type the expiry printed on lot {lot}'s pack in Pack expiry."
-                    if not erp:
-                        out.append(msg)
-                        continue
+                # later edit of either leaves no trace on the lot: where the setting is on, the pack's own date is asked for
+                msg = f"Row {i}: type the expiry printed on lot {lot}'s pack in Pack expiry."
+                if not erp:
+                    out.append(msg)
+                    continue
+                made = date_of((b or {}).get("manufacturing_date"))     # an ERP sends none: flagged when the date was worked out
+                if made is None or made + datetime.timedelta(days=life) == exp:
                     later.append(msg)   # the ERP's flag says first what else is wrong with the lot
             left = (exp - since).days
             if left <= 0:

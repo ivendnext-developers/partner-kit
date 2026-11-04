@@ -21,7 +21,7 @@ class ContractTest(unittest.TestCase):
         cases = {"blocked": recall.block_answer({"block": 1}, 2, 3, "Consumer"),
                  "every outcome": recall.block_answer(every, 120, 9999, "Wholesale"),
                  "worklist": recall.message("Worklist", "x" * 400), "not set up": app._warning(app.NOT_SET_UP),
-                 "refused": app._warning(app.REFUSED + app.CONNECT_AGAIN), "no settings": app._warning(app.NO_SETTINGS)}
+                 "refused": app._warning(app.REFUSED + app.CONNECT_AGAIN)}
         for name, value in cases.items():
             self.assertEqual(check.errors("desk_action", "answer", value), [], name)
 

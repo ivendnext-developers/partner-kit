@@ -78,21 +78,9 @@
   {
    "doctype": "Purchase Receipt",
    "rights": [
-    "read",
-    "write",
-    "submit"
+    "read"
    ],
-   "why": "take the Verify step, which submits the receipt"
-  },
-  {
-   "doctype": "Serial and Batch Bundle",
-   "rights": [
-    "read",
-    "create",
-    "write",
-    "submit"
-   ],
-   "why": "the Verify step submits the receipt; for a batch-tracked item that makes and submits its batch bundle as the integration user"
+   "why": "the feed names each receipt, and the service reads it to see whether it waits for a check"
   }
  ]
 }

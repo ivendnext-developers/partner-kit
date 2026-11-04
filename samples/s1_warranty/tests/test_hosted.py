@@ -49,7 +49,7 @@ class FakeTenant:
     def list(self, doctype, fields, filters, order_by, limit):
         if self.why:
             raise app.TenantError(self.why)
-        return self.rows
+        return self.rows[:limit] if limit else self.rows       # 0 is every row, as the record API answers
 
     def item_groups(self, codes):
         return {c: self.groups[c] for c in codes if c in self.groups}
@@ -72,6 +72,12 @@ class WarrantyKey(Base):
         self.assertIn("PHONE", out["message"]["body"])
         self.assertIn("24", out["message"]["body"])
         self.assertIn("CABLE: 3 months", out["message"]["body"])
+
+    def test_every_term_is_read_however_many_a_chain_keeps(self):
+        rows = [{"applies_to": "Item", "item": f"OTHER-{i}", "months": 1} for i in range(1001)]
+        rows.append({"applies_to": "Item", "item": "PHONE", "months": 24})
+        code, out = self.press(self.service(FakeTenant(rows)))
+        self.assertIn("24", out["message"]["body"])
 
     def test_an_items_own_term_needs_no_right_on_item(self):
         class NoItems(FakeTenant):

@@ -13,8 +13,8 @@ The till asks at three moments the cashier did not choose (the capture extension
   without an answer it recorded (an offline sale's customer, and the receipt's contact after payment, are created and
   flagged instead — the customer has paid).
 - **on a quantity change** of a line in the named item groups (POS build 2.0.0.654 on): the till sends the line's last
-  allowed quantity and the new one, once the presses settle. Up to ``PP_QTY_ASK_ABOVE`` on a line (3) are allowed, up
-  to ``PP_QTY_MOST`` (5) asked about, more refused (a serial- or lot-tracked line is never asked): a refusal or a *No* puts the last allowed quantity back.
+  allowed quantity and the new one, once the presses settle. Up to ``PP_QTY_ASK_ABOVE`` on a line are allowed, up
+  to ``PP_QTY_MOST`` asked about, more refused; blank means no limit (a serial- or lot-tracked line is never asked): a refusal or a *No* puts the last allowed quantity back.
 
 ⛔ No answer writes a customer field, and none moves money: no price, no total, no tender.
 """

@@ -120,7 +120,8 @@ def main() -> None:
             while True:
                 time.sleep(every)
                 try:
-                    log(f"timer reconcile {svc.reconcile()}; status {svc.store.status()}")
+                    st = svc.store.status()
+                    log(f"timer reconcile {svc.reconcile()}; warranties {st['warranties']}, processed {st['processed']}, seen {st['seen']}")
                 except Exception as e:   # the timer must survive a bench restart
                     log(f"timer reconcile failed: {e}")
         threading.Thread(target=loop, daemon=True).start()

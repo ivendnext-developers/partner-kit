@@ -182,7 +182,7 @@ def _host(url: str) -> str:
 
 def user_key(record: dict | None) -> str | None:
     """The key ("<api key>:<api secret>") of the app's own user the retailer's site handed over, or None: the first user
-    by name, never Administrator (the site never sends it; nor do we use it). The live service signs in with the same."""
+    by name. The live service signs in with the same."""
     secrets = (record or {}).get("secrets") or {}
     users = sorted(k for k in secrets if k.startswith("user:"))
     return secrets[users[0]] if users else None

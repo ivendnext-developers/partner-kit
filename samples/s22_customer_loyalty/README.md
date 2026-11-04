@@ -46,7 +46,7 @@ ivn try
 
 ### 1.2.1
 
-- `receipt_workflow` leaves `config.json`, so a receiving clerk's submit is untouched until the customer adds it.
+- `receipt_workflow` leaves `config.json`, so a receiving clerk's submit is untouched until the customer adds it, and the app's user holds only a read on receipts until then.
 
 ### 1.2.0
 

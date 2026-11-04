@@ -41,7 +41,7 @@ class Context(unittest.TestCase):
         self.assertEqual((code, shop.reads), (403, []))
         self.assertIn("run out", out["error"])
 
-    def test_a_page_that_reloads_opens_again(self):
+    def test_a_context_opens_again_until_it_runs_out(self):
         svc, _ = service()
         ctx = context("Ann")
         self.assertEqual(svc.open({"ctx": ctx})[0], 200)

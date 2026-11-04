@@ -241,31 +241,36 @@ class Service:
 
     def _lock(self, door, row: str) -> tuple[str, datetime.datetime | None]:
         """The press stamp on the store's row, and the site's own clock at that moment (the row's new ``modified``). Saving a
-        row saves its settings and re-stamps every row, so a press at another store in that instant can also read as busy."""
-        s = door.doc(foh.dt("Store"), row)
-        stamp = s.get("run_started") or ""
-        try:
-            age = (_now_utc(self.now) - datetime.datetime.fromisoformat(stamp)).total_seconds() if stamp else None
-        except ValueError:
-            age = None
-        if age is not None and -LOCK_S < age < LOCK_S:
-            raise Busy()
-        mine = _now_utc(self.now).isoformat(timespec="seconds")
-        try:
-            w = door.update(foh.dt("Store"), row, {"run_started": mine, "modified": s.get("modified")})
-        except TenantError as e:
-            if e.kind == STALE:         # another press stamped it first (or someone saved the record a moment ago)
-                raise Busy() from None
-            raise
-        return mine, foh.stamp(w.get("modified"))
+        row saves its settings and re-stamps every row, so a save at another store reads as a stale write here: the row is
+        read once more, and only a fresh stamp on it, or a second stale write, means busy."""
+        for _ in range(2):
+            s = door.doc(foh.dt("Store"), row)
+            stamp = s.get("run_started") or ""
+            try:
+                age = (_now_utc(self.now) - datetime.datetime.fromisoformat(stamp)).total_seconds() if stamp else None
+            except ValueError:
+                age = None
+            if age is not None and -LOCK_S < age < LOCK_S:
+                raise Busy()
+            mine = _now_utc(self.now).isoformat(timespec="seconds")
+            try:
+                w = door.update(foh.dt("Store"), row, {"run_started": mine, "modified": s.get("modified")})
+            except TenantError as e:
+                if e.kind == STALE:
+                    continue
+                raise
+            return mine, foh.stamp(w.get("modified"))
+        raise Busy()
 
     def _unlock(self, door, row: str, mine: str):
-        try:
-            s = door.doc(foh.dt("Store"), row)
-            if s.get("run_started") == mine:
-                door.update(foh.dt("Store"), row, {"run_started": "", "modified": s.get("modified")})
-        except TenantError:
-            pass                        # the stamp then lapses after LOCK_S
+        for _ in range(3):              # a save at another store re-stamps the row between the read and the write
+            try:
+                s = door.doc(foh.dt("Store"), row)
+                if s.get("run_started") == mine:
+                    door.update(foh.dt("Store"), row, {"run_started": "", "modified": s.get("modified")})
+                return
+            except TenantError:
+                continue                # the stamp then lapses after LOCK_S
 
     def _clash(self, door, r: dict, row: dict, start: datetime.datetime, exclude: str = "") -> str:
         """Words naming the first booking that holds the table over the party's stay, or ``""``."""

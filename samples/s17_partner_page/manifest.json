@@ -5,7 +5,7 @@
  "title": "Order board (a partner page)",
  "version": "0.2.1",
  "publisher": "Partner Programme sample",
- "description": "The partner's order board, framed by the shop: a Deliveries key on the till opens it as a sheet over the sale, and in Desk it opens as a page for a record. The shop opens it with a signed context; on the till the board answers server to server, with the sale's delivery order number (a sale detail this app installs). Who may open it in Desk: every staff user; a customer narrows it on the record. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "The partner's order board, framed by the shop: a Deliveries key on the till opens it as a sheet over the sale, and in Desk it opens as a page for a record. The shop opens it with a signed context; on the till the board answers server to server, with the sale's delivery order number (a sale detail this app installs). Who may open it in Desk: every staff user; the shop narrows it on the record. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": ["https://host.docker.internal:8125/board/"],
  "sale_attributes": [
   {"name": "PP PGE Delivery Order"}
