@@ -243,6 +243,10 @@ def check_round(cart: dict, key: str) -> dict | None:
         frappe.db.commit()
     elif res["verdict"] != "allow":
         raise CheckRefused(res.get("reason") or res["verdict"])
+    if res.get("filled") and isinstance(res.get("sale_attributes"), list):
+        # a check that filled sale details (check/1 ``fill``): the till sends the filled details from then on, so the
+        # booking books the sale the check answered for (else the next door reads a changed sale)
+        cart["sale_attributes"] = res["sale_attributes"]
     # the door a real till calls before the terminal charges a card: the round must hold for THIS basket and the card
     # method the booking books. The booking itself only flags a card sale whose round does not hold (money is taken by
     # then), so without this a basket the till would refuse could book here and read as matched (SET5 review)

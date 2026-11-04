@@ -7,6 +7,7 @@ product's answer (the bench proves that).
 import pathlib
 import sys
 import types
+import json
 import unittest
 
 KIT = pathlib.Path(__file__).resolve().parents[1]
@@ -73,6 +74,17 @@ class T(unittest.TestCase):
         self.answer = {"checked": 1, "verdict": "allow"}
         self.till.book({"lines": []}, [], "k2")
         self.assertEqual(self.steps(), [("check", "k2"), ("push", "k2"), ("submit", "k2")])
+
+    def test_a_check_that_fills_books_the_filled_sale(self):
+        # check/1 ``fill`` (PB-27): the till sends the filled details from then on, so the booking carries them
+        sent = []
+        self.tender.submit_tender = lambda cart, *a, **k: (sent.append(json.loads(cart)), {"name": "INV-1"})[1]
+        filled = [{"sale_attribute": "PP RXC Rx Number", "attribute_value": "RX-1"},
+                  {"sale_attribute": "PP RXC Rx Date", "attribute_value": "2026-11-03"}]
+        self.answer = {"checked": 1, "verdict": "allow", "sale_attributes": filled,
+                       "filled": [{"sale_attribute": "PP RXC Rx Date", "from": None, "to": "2026-11-03"}]}
+        self.till.book({"lines": [], "sale_attributes": filled[:1]}, [], "k9")
+        self.assertEqual(sent[0]["sale_attributes"], filled)
 
     def test_an_ask_is_answered_yes_then_books(self):
         self.answer = {"checked": 1, "verdict": "ask", "questions": ["ID?"]}
