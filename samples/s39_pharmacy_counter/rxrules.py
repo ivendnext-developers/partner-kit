@@ -624,8 +624,13 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
                                            "different days. Sell each in a sale of its own.")
     if len(days) == 1 and on_desk and ctx.get("fillable"):   # a linked document's too, filled again from the prescription
         fill = {f"{field_prefix(prefix)}_{DESK_FIELDS[RX_DATE]}": days[0]}
-    elif len(days) == 1 and ctx.get("fillable"):              # the till: the sale detail by its name, over a typed one
+    elif len(days) == 1 and ctx.get("fillable") and typed in ("", days[0]):   # the till: the sale detail by its name
         fill = {f"{prefix} {RX_DATE}": days[0]}
+    elif len(days) == 1 and ctx.get("fillable") and rx_lines:
+        # a date typed and wrong is refused, as before: at an order's or a layaway's placement a fill is not written, so
+        # a wrong typed date would book (on a sale nobody types it now: it is filled)
+        return _refuse(lines[rx_lines[0]], f"Prescription {covering[0]['name']} was written on {days[0]}. Correct the "
+                                           "date in Sale details.")
     elif len(days) == 1 and rx_lines and not on_desk and typed != days[0] and (typed or needed):
         return _refuse(lines[rx_lines[0]], f"needs the prescription's date in Sale details: {days[0]}." if not typed else
                        f"Prescription {covering[0]['name']} was written on {days[0]}. Correct the date in Sale details.")

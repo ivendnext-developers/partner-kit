@@ -51,7 +51,7 @@
      "fieldname": "keep_years",
      "fieldtype": "Int",
      "label": "Keep a patient's records for (years)",
-     "description": "Counted from the patient's newest prescription, dispensing or change to their patient record. The period your pharmacy law sets for a prescription or its register: the app's guide lists each market's, under How long to keep prescriptions. Until it is set, nobody is listed for erasure."
+     "description": "Counted from the patient's newest prescription, dispensing or change to their patient record. The longest period your pharmacy law sets for a prescription or a register, in any market your companies are in: the app's guide lists each market's, under How long to keep prescriptions. Until it is set, nobody is listed for erasure."
     }
    ],
    "permissions": [

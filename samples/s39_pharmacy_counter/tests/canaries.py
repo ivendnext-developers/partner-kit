@@ -330,6 +330,8 @@ CANARIES = [
     ("an erase that reads another customer's records stops", SV,
      'if any(r.get("customer") != c for rs in got.values() for r in rs):', "if False:",
      S + "Erasure.test_a_shop_that_answers_for_another_customer_erases_nothing"),
+    ("a wrong typed date is refused at the filling address", RX, 'and ctx.get("fillable") and typed in ("", days[0]):',
+     'and ctx.get("fillable"):', R + "RxDate.test_a_wrong_typed_date_is_still_refused_at_the_filling_address"),
 ]
 
 

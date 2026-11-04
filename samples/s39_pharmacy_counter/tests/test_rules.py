@@ -373,10 +373,16 @@ class RxDate(unittest.TestCase):
         c["fillable"] = True                     # 0.1.4: the dispensary's filling address, at a sale
         return R.decide(c, "dispensary", shop(c, rules, rxs), TODAY, prefix)
 
-    def test_the_till_fills_the_prescriptions_date_over_a_wrong_or_empty_one(self):
+    def test_a_wrong_typed_date_is_still_refused_at_the_filling_address(self):
+        # an order's or a layaway's placement writes no fill, so a wrong typed date would book: refused, as before
+        out = self.filled([rule("POM")], [rx("RX1", "AMOX", 21, written="2026-10-19")], {"Rx Date": "19/10/2026"})
+        self.assertEqual(out["reason"], "Line 1: AMOX: Prescription RX1 was written on 2026-10-19. Correct the date in "
+                                        "Sale details.")
+
+    def test_the_till_fills_the_prescriptions_date_where_none_or_the_right_one_was_typed(self):
         p = rx("RX1", "AMOX", 21, written="2026-10-19")
         for rules in ([rule("POM")], [rule("DATED")]):
-            for typed in ("", "19/10/2026", "2026-10-19"):
+            for typed in ("", "2026-10-19"):
                 out = self.filled(rules, [p], {"Rx Date": typed})
                 self.assertEqual((out["verdict"], out["fill"]), ("allow", {f"{P} Rx Date": "2026-10-19"}), typed)
                 self.assertTrue(out["record"])            # it reserves as an allow does

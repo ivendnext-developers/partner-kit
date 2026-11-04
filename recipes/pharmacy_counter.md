@@ -105,7 +105,8 @@ answering presses keeps nothing.
    "2026-10-19"}}`), which writes it over whatever was typed; a fill reserves as an allow does. Fill only a document
    that sent the field: a subscription still on older settings does not list it to fill, and refuses the answer
    whole. At the till, the dispensary's filling address answers `{"verdict": "allow", "fill": {"<PREFIX> Rx Date":
-   "2026-10-19"}}` (the sale detail by its name, built from the prefix), over whatever the cashier typed. The till
+   "2026-10-19"}}` (the sale detail by its name, built from the prefix), where none or the right date was typed; a wrong typed date
+   is refused, since an order's or a layaway's placement writes no fill. The till
    writes it, prices the sale again and asks once more on the filled sale: answer the same value, and keep the
    reservation (step 5). Never fill on a return. 0.1.3's address keeps the typed date: a wrong one is refused, and
    an empty one where the schedule books it.
