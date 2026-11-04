@@ -12,7 +12,7 @@ ROOT = HERE.parents[2]
 sys.path[:0] = [str(HERE.parent), str(HERE), str(ROOT / "tools" / "contracts")]
 import check  # noqa: E402
 import rule  # noqa: E402
-from test_service import RULES, context  # noqa: E402
+from test_service import RULES, context, rules_from  # noqa: E402
 
 RUN = os.path.join(os.environ.get("BENCH_RUNS_SET5") or os.environ.get("BENCH_RUNS", "/nonexistent"), "set5_s18.json")  # a recorded bench run
 
@@ -23,7 +23,7 @@ class ContractTest(unittest.TestCase):
         self.assertEqual(check.errors("partner_check", "request", {"point": "check/1", "context": context()}), [])
 
     def test_every_answer_the_service_gives_holds(self):
-        rules = rule.rules_from(RULES)
+        rules = rules_from(RULES)
         cases = {"allow": context(), "refuse": context(lines=(("WINE-RESERVE", "Wines"),)), "ask": context(grand=600000),
                  "long item": context(lines=(("W" * 140, "Members Lounge"),))}
         for name, ctx in cases.items():

@@ -234,7 +234,6 @@ def main(argv=None):
     p.add_argument("--warehouse", default="state/bi.sqlite")
     p.add_argument("--out", default="state/csv")
     p.add_argument("--since")
-    p.add_argument("--crash-after", type=int, help="test only: exit after handling N events, before marking them done")
     p.add_argument("--watch", type=float)
     a = p.parse_args(argv)
     store = F.Store(a.warehouse)
@@ -262,7 +261,7 @@ def main(argv=None):
             sys.exit("--app is required")
         feed = F.EngineFeed(api, a.app)
         while True:
-            print(json.dumps(F.poll(feed, store, make_handler(api), crash_after=a.crash_after)), flush=True)
+            print(json.dumps(F.poll(feed, store, make_handler(api))), flush=True)
             if not a.watch:
                 break
             time.sleep(a.watch)

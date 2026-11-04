@@ -23,8 +23,7 @@ What a partner usually changes:
 - the dialog's fields, `Picker` and `Priority`, and the task's own record type, `PP PCK Pick Task`;
 - what is sent: `send_fields` includes `customer`; drop it if the service does not need it;
 - how the lines are ordered: `route.py` sorts by warehouse, then item; sort by bin instead if you have bin data (see [S2](../s2_bins/README.md));
-- `timeout_seconds` on the subscription (5 here, at most 10);
-- delete the `/test/mode` and `/test/received` routes from `service/app.py` in your copy.
+- `timeout_seconds` on the subscription (5 here, at most 10).
 
 More: the [recipe](../../recipes/desk_action.md).
 

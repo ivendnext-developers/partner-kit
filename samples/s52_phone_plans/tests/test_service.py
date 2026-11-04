@@ -72,10 +72,43 @@ def check_call(plan="PP-TEL-S", rate=2500, customer="CUST-1", phone="PP-TEL-PHON
             "totals": {"grand_minor": sum(ln["amount_minor"] for ln in lines)}}}
 
 
+class FaultyTelecom(standin.Telecom):
+    """The stand-in telecom company, with the faults these tests ask of it."""
+
+    def __init__(self, accounts: dict):
+        super().__init__(accounts)
+        self.faults = {"down": False, "slow": 0.0, "late_activation": 0.0, "refuse_activation": False, "price_change": 0}
+
+    def plans(self, acc: dict) -> list[dict]:
+        return [dict(p, price_minor=p["price_minor"] + self.faults["price_change"]) for p in super().plans(acc)]
+
+    def activate(self, name: str, acc: dict, body: dict, key: str) -> tuple[int, dict]:
+        if self.faults["refuse_activation"] and (name, key) not in self.activations:
+            return 422, {"error": "The SIM for this phone is not ready: activate it in our shop portal."}
+        out = super().activate(name, acc, body, key)
+        time.sleep(self.faults["late_activation"])      # made, but the answer comes late
+        return out
+
+
+def faulty_server(tel: FaultyTelecom):
+    srv = standin.make_server(tel)
+
+    class Faulty(srv.RequestHandlerClass):
+        def _route(self, method: str):
+            if self.path != "/health":
+                if tel.faults["down"]:
+                    tel.calls.append({"account": tel.account(self.headers)[0] or "-", "path": self.path})
+                    return self._send(503, {"error": "down for maintenance"})
+                time.sleep(tel.faults["slow"])
+            return super()._route(method)
+    srv.RequestHandlerClass = Faulty
+    return srv
+
+
 class Base(unittest.TestCase):
     def setUp(self):
-        self.tel = standin.Telecom(standin.load_accounts())
-        self.tel_srv = standin.make_server(self.tel)
+        self.tel = FaultyTelecom(standin.load_accounts())
+        self.tel_srv = faulty_server(self.tel)
         threading.Thread(target=self.tel_srv.serve_forever, daemon=True).start()
         self.tmp = tempfile.mkdtemp()
         self.shops = {f"https://{A}": retailer(f"https://{A}", "ACC-NORTH", ACCOUNTS["ACC-NORTH"]["key"]),

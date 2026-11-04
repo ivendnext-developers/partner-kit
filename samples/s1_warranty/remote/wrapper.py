@@ -11,12 +11,6 @@ The request, the headers and the signature are the remote app key's, as publishe
 ``docs/extending/README.md`` §"The remote kind" @ 8fa89980). ⚠ The real till calls HTTPS only, with the certificate
 checked: put this behind TLS for a shop; on our test bench it is plain http, called by the stand-in.
 
-Test-only fault routes, ON ONLY when the process is started with ``PP_WRAPPER_FAULTS=1`` in its environment (our test
-bench's run does; a plain start does not), let the kit's stand-in caller prove what the till does
-when a partner's service misbehaves: ``/fault/sleep``, ``/fault/500``, ``/fault/garbage``, ``/fault/huge``,
-``/fault/badshape``, ``/fault/partial``, ``/fault/wrongkind``, ``/fault/redirect``, ``/fault/dribble`` (headers a byte
-at a time), ``/fault/badstatus`` (not HTTP at all). A partner's copy deletes them.
-
     python3 remote/wrapper.py        (env: ../service/.env.local for the tenant, remote/.env.local for the rest)
 """
 
@@ -54,7 +48,6 @@ CONF = {**_env(os.path.join(SAMPLE, "service", ".env.local")), **_env(os.path.jo
 TENANT = Tenant(CONF["PP_BASE"], CONF["PP_KEY"], CONF["PP_SECRET"], timeout=2)
 TERMS = json.load(open(os.path.join(SAMPLE, "service", "terms.json")))
 SECRET = CONF["PP_POINT_SECRET"].encode()
-FAULTS = os.environ.get("PP_WRAPPER_FAULTS") == "1"     # environment only: never left on by a file
 
 
 def answer(context: dict) -> dict:
@@ -72,7 +65,6 @@ def verified(headers, raw: bytes) -> bool:
     return hmac.compare_digest(want, sig.encode())
 
 
-GOOD = {"message": {"title": "Warranty", "body": "PP-WRC-PHONE: 24 months", "level": "success"}}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -101,39 +93,7 @@ class Handler(BaseHTTPRequestHandler):
             if testcall.is_test(self.headers):      # the signature held above; the binding does not run
                 return self._send(*testcall.answer("warranty"))
             return self._send(200, answer(json.loads(raw)["context"]))
-        if FAULTS and self.path.startswith("/fault/"):
-            return self._fault(self.path[len("/fault/"):])
         return self._send(404, {"error": "no such point"})
-
-    def _fault(self, kind):
-        if kind == "sleep":
-            time.sleep(5)
-            return self._send(200, GOOD)
-        if kind == "500":
-            return self._send(500, {"error": "partner bug"})
-        if kind == "garbage":
-            return self._send(200, b"<html>oops</html>", "text/html")
-        if kind == "huge":
-            return self._send(200, {"message": {"title": "Warranty", "body": "x" * 200_000, "level": "info"}})
-        if kind == "badshape":
-            return self._send(200, {"message": {"title": "Warranty"}})
-        if kind == "partial":
-            return self._send(200, dict(GOOD, sale_attributes=[{"sale_attribute": "PP WRC None", "attribute_value": "1"}]))
-        if kind == "wrongkind":
-            return self._send(200, {"sale_attributes": [{"sale_attribute": "PP WRC None", "attribute_value": "1"}]})
-        if kind == "redirect":
-            return self._send(302, b"", "text/plain", {"Location": "http://example.invalid/steal"})
-        if kind == "dribble":       # a status line, then headers one byte a second, never finishing in time
-            self.wfile.write(b"HTTP/1.0 200 OK\r\n")
-            for ch in b"X-Slow: " + b"z" * 8:
-                self.wfile.write(bytes([ch]))
-                self.wfile.flush()
-                time.sleep(1)
-            return None
-        if kind == "badstatus":
-            self.wfile.write(b"NOT-HTTP garbage\r\n\r\n")
-            return None
-        return self._send(404, {"error": "no such fault"})
 
     def log_message(self, fmt, *args):
         sys.stderr.write("%s %s\n" % (self.log_date_time_string(), fmt % args))
@@ -141,5 +101,5 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(CONF.get("PP_POINT_PORT", "8122"))
-    print(f"remote binding on :{port} (faults {'ON' if FAULTS else 'off'})", flush=True)
+    print(f"remote binding on :{port}", flush=True)
     ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()

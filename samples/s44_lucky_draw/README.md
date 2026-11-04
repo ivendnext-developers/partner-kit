@@ -22,7 +22,7 @@ What a partner usually changes:
 - **The campaign's fields and the results:** `PP LDW Campaign` and `PP LDW Result` in `manifest.json`.
 - **The prize:** what a winner gets, written on the results by `service/app.py` (a gift card or loyalty points instead of a prize handed over).
 - **The prefix:** `LDW_PREFIX` for the service, and the prefix your copy is made under.
-- **Your address:** `allowed_urls` in `manifest.json`. Delete `/test/received` from `service/app.py`.
+- **Your address:** `allowed_urls` in `manifest.json`.
 - **The app's id:** `IVN_LIBRARY_APP` in `app.json`.
 
 More: the [recipe](../../recipes/lucky_draw.md).

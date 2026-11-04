@@ -17,12 +17,9 @@ answers. A press repeated (a retry, a second click, two copies of the function) 
 writes nothing; an update carries the row's ``modified`` as read, so it never writes over someone's edit. A press stops
 starting new lots after ``BUDGET_S`` seconds and says how many are left: the shop waits at most 10 seconds.
 
-Test-only routes, ON ONLY when the process starts with ``PP_TEST_MODES=1`` in its environment and the caller sends
-the ``X-PP-Admin`` token: ``GET /test/received`` returns the last presses as received. A partner's copy deletes them.
-
 ONE SHOP (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the integration user), PP_POINT_SECRET (handed back at install as pp_exm:sub:markdown),
-    PP_ADMIN_TOKEN, PP_PORT (8150)
+    PP_PORT (8150)
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_exm), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 EXM_PREFIX (default PP EXM; IVENDNEXT EXM for the library's app) · PORT (default 8080)
@@ -170,9 +167,6 @@ class Service:
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
             self.secret, self.tenant = oneshop.settings(conf, ["PP_POINT_SECRET"])["PP_POINT_SECRET"], tenant
-        self.admin = conf.get("PP_ADMIN_TOKEN") or ""
-        self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
-        self.received = []
         self._lock = threading.Lock()    # one shop: one press at a time
 
     def caller(self, headers) -> tuple[str, list[str], object | None]:
@@ -279,8 +273,6 @@ class Service:
             lots = markdown.lots_of(body)
         except ValueError as e:         # json's own errors are ValueErrors too
             return 400, {"error": str(e)}
-        if self.test_modes:
-            self.received = (self.received + [body["context"]])[-20:]
         if door is None:
             return 200, _warning(NOT_SET_UP)
         try:
@@ -339,8 +331,6 @@ def make_handler(svc: Service, log=sys.stderr):
                 _log(log, rid, self.path, code, t0)
 
         def do_GET(self):
-            if self.path == "/test/received" and svc.test_modes and self.headers.get("X-PP-Admin") == svc.admin:
-                return self._send(200, {"received": svc.received})
             self._send(*svc.handle("GET", self.path, self.headers, b""))
 
         def log_message(self, fmt, *args):     # the server's own access line carries the path; keep it off
@@ -381,7 +371,7 @@ def main():
                          "(many shops): the app does not start without a way to check a press")
     srv = ThreadingHTTPServer(("0.0.0.0", int(conf.get("PP_PORT") or conf.get("PORT") or 8150)), make_handler(svc))
     print(f"s38 mark down on :{srv.server_port} ({'many shops, ' + svc.app if svc.app else 'one shop'}, "
-          f"prefix {markdown.PREFIX}; test modes {'ON' if svc.test_modes else 'off'})", flush=True)
+          f"prefix {markdown.PREFIX})", flush=True)
     srv.serve_forever()
 
 

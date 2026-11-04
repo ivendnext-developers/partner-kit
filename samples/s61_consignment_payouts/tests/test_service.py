@@ -21,7 +21,7 @@ import app  # noqa: E402
 import consign  # noqa: E402
 from fakeshop import FakeShop  # noqa: E402
 
-CONF = {"PP_WORK_SECRET": "w-secret", "PP_PAY_SECRET": "p-secret", "PP_ADMIN_TOKEN": "t"}
+CONF = {"PP_WORK_SECRET": "w-secret", "PP_PAY_SECRET": "p-secret"}
 ITEM = "pp_csg_"
 
 

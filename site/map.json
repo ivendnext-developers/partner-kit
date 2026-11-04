@@ -288,7 +288,7 @@
   {
    "where": "In Desk",
    "screen": "Your own page",
-   "show": "Your page inside Desk's page frame, with a signed one-time context",
+   "show": "Your page inside Desk's page frame, with a signed context",
    "door": "partner page",
    "recipe": "../../recipes/partner_page.md",
    "shot": "../../samples/s17_partner_page/screenshots/05_board_as_desk_page.png",

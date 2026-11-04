@@ -23,12 +23,9 @@ check unless the store allows a second), THEN writes a fresh key and the exact c
 writes nothing twice. A first send the till refuses opened nothing, so its key is cleared; a refused retry keeps its key
 (the first send may have opened the check).
 
-Test-only routes, ON ONLY when the process starts with ``PP_TEST_MODES=1`` in its environment and the caller sends
-the ``X-PP-Admin`` token: ``GET /test/received`` returns the last presses as received. A partner's copy deletes them.
-
 ONE SHOP (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the app's user), PP_SECRET_BOOK, PP_SECRET_SEAT, PP_SECRET_NOSHOW, PP_SECRET_CANCEL,
-    PP_SECRET_CHANGE (handed back at install as pp_foh:sub:book …), PP_ADMIN_TOKEN, PP_PORT (8155)
+    PP_SECRET_CHANGE (handed back at install as pp_foh:sub:book …), PP_PORT (8155)
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_foh), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 FOH_PREFIX (default PP FOH; IVENDNEXT FOH for the library's app) · PORT (default 8080)
@@ -39,7 +36,6 @@ FOH_PREFIX (default PP FOH; IVENDNEXT FOH for the library's app) · PORT (defaul
 from __future__ import annotations
 
 import datetime
-import hmac
 import http.client
 import json
 import os
@@ -222,9 +218,6 @@ class Service:
             one = oneshop.settings(conf, [f"PP_SECRET_{k.upper()}" for k in SUBS.values()])
             self.secrets = {k: one[f"PP_SECRET_{k.upper()}"] for k in SUBS.values()}
             self.tenant = tenant
-        self.admin = conf.get("PP_ADMIN_TOKEN") or ""
-        self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
-        self.received = []
 
     def caller(self, headers, sub: str) -> tuple[str, list[str], object | None]:
         """(the shop's name, the secrets its press may be signed with, its door: None until it handed over a user's key)."""
@@ -438,8 +431,6 @@ class Service:
             doctype, name = foh.records_of(body, kinds)
         except ValueError as e:         # json's own errors are ValueErrors too
             return 400, {"error": str(e)}
-        if self.test_modes:
-            self.received = (self.received + [body["context"]])[-20:]
         if door is None:
             return 200, _warning(NOT_SET_UP)
         try:
@@ -509,9 +500,6 @@ def make_handler(svc: Service, log=sys.stderr):
                 _log(log, rid, self.path, code, t0)
 
         def do_GET(self):
-            admin = (self.headers.get("X-PP-Admin") or "").encode()
-            if self.path == "/test/received" and svc.test_modes and hmac.compare_digest(admin, svc.admin.encode()):
-                return self._send(200, {"received": svc.received})
             self._send(*svc.handle("GET", self.path, self.headers, b""))
 
         def log_message(self, fmt, *args):     # the server's own access line carries the path; keep it off
@@ -553,7 +541,7 @@ def main():
                          "does not start without a way to check a press")
     srv = ThreadingHTTPServer(("0.0.0.0", int(conf.get("PP_PORT") or conf.get("PORT") or 8155)), make_handler(svc))
     print(f"s55 front of house on :{srv.server_port} ({'many shops, ' + svc.app if svc.app else 'one shop'}, "
-          f"prefix {foh.PREFIX}; test modes {'ON' if svc.test_modes else 'off'})", flush=True)
+          f"prefix {foh.PREFIX})", flush=True)
     srv.serve_forever()
 
 

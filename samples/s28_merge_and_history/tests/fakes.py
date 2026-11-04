@@ -116,4 +116,5 @@ def context(customer=None, desk=None, nonce="n" * 32, exp_in=300, secret=PAGE):
     else:
         p.update(store="Store 1 - DR", pos_profile="Store 1 — R1",
                  sale={"sale_ref": "s1", "customer": customer, "operator": "cashier1@demo.example", "lines": []})
-    return history.sign_context(secret, p)
+    raw = json.dumps(p, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()     # the shop's own minting
+    return history.b64(raw) + "." + history.b64(hmac.new(secret.encode(), raw, hashlib.sha256).digest())

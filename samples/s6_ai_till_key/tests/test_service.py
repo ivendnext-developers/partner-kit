@@ -9,6 +9,7 @@ import sys
 import threading
 import time
 import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path[:0] = [os.path.join(HERE, ".."), os.path.join(HERE, "..", "..", "..", "tools", "standin_caller")]
@@ -109,13 +110,20 @@ class Service(unittest.TestCase):
         self.assertEqual(a["detail"], "AI tip did not answer in time. Nothing was added to the sale.")
         self.assertLess(took, 3.6)
 
-    def test_marker_stores_make_the_stub_slow_or_failing(self):
-        r = Running(chat_delay=0.0)
+    def test_a_failing_ai_service_gives_the_could_not_answer_sentence(self):
+        class Failing(BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.send_response(500)
+                self.end_headers()
+
+            def log_message(self, *a):
+                pass
+        ai = ThreadingHTTPServer(("127.0.0.1", 0), Failing)
+        threading.Thread(target=ai.serve_forever, daemon=True).start()
+        self.addCleanup(ai.shutdown)
+        r = Running(providers.chat(f"http://127.0.0.1:{ai.server_address[1]}/v1/chat/completions", AI_KEY, "stub-model", timeout=8))
         self.addCleanup(r.close)
-        slow = r.ask(dict(PAYLOAD, context=dict(CONTEXT, store="PP-SLOW-TEST")))
-        self.assertIn("did not answer in time", slow["detail"])
-        bad = r.ask(dict(PAYLOAD, context=dict(CONTEXT, store="PP-FAIL-TEST")))
-        self.assertEqual(bad["detail"], caller.COULD_NOT.format("AI tip"))
+        self.assertEqual(r.ask()["detail"], caller.COULD_NOT.format("AI tip"))
 
     def test_oversize_request_is_refused_before_it_is_read(self):
         r = Running()

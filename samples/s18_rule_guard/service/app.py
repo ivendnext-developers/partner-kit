@@ -23,8 +23,7 @@ It runs in one of two ways:
     "user:<email>"), and IVN_SHOPS_TABLE (on CitiXsys hosting) or IVN_SHOPS_FILE (elsewhere).
     On CitiXsys hosting it runs as a FUNCTION, paid per call (app.json "runs": "function"; ``lambda_handler`` below).
   Either way: RGD_PREFIX (PP RGD; IVENDNEXT RGD for the library's app), the prefix of the shop's Rule record type.
-  A laptop run with no shop to read: PP_MEMBERS_ONLY_ITEMS, PP_MEMBERS_ONLY_GROUPS, PP_MEMBER_GROUPS (comma lists),
-  PP_ASK_ABOVE (whole units, blank = off) instead.
+  A laptop run with no shop to read has no rule, so it allows every sale.
 """
 
 from __future__ import annotations
@@ -90,7 +89,7 @@ class ShopApi:
 
 class Service:
     def __init__(self, conf: dict, api=None, clock=time.monotonic):
-        self.rules = rule.rules_from(conf)          # a laptop run with no shop to read only
+        self.rules = {"items": set(), "groups": set(), "member_groups": set(), "ask_above": None}   # no shop to read: no rule
         self.prefix = (conf.get("RGD_PREFIX") or "PP RGD").strip()
         self.app = oneshop.value(conf, oneshop.MANY)
         self.store = shops.open_store(conf) if self.app else None

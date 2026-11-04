@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 0.2.1
+
+- A page that reloads opens again.
+
 ### 0.2.0
 
 - New app makes it into an app we host, for many sites (`Hosted` in `service/app.py`, `app.json`); the install makes the app's own user.

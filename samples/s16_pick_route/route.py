@@ -77,16 +77,11 @@ def summary(tasks: list[dict]) -> str:
     return f"{lines} line{'s' if lines != 1 else ''} across {places} warehouse{'s' if places != 1 else ''}"
 
 
-def answer(tasks: list[dict], names: list[str], mode: str = "open") -> dict:
-    """The reply. One order: the message, then its task opens. Several (the list's bulk press): the message only.
-    ``mode`` is for the sample's own tests (``refresh``: S2's answer; ``missing``: S3's, naming no record)."""
-    if mode == "missing":
-        return {"open_record": {"doctype": TASK, "name": "PT-404"}}
+def answer(tasks: list[dict], names: list[str]) -> dict:
+    """The reply. One order: the message, then its task opens. Several (the list's bulk press): the message only."""
     picker = tasks[0]["picker"]
     if len(tasks) > 1:
         return {"message": {"title": f"{len(tasks)} routes assigned",
                             "body": f"{summary(tasks)} for {picker}.", "level": "success"}}
     msg = {"title": "Route assigned", "body": f"{summary(tasks)} for {picker}.", "level": "success"}
-    if mode == "refresh":
-        return {"refresh": True, "message": msg}
     return {"message": msg, "open_record": {"doctype": TASK, "name": names[0]}}

@@ -229,15 +229,6 @@ class ServiceTest(unittest.TestCase):
         for raw in (b"not json", body({"v": 1, "event": "something"}), body({**scan_ctx(), "line": {}})):
             self.assertEqual(self.post(None, SCAN_SECRET, raw=raw)[0], 400)
 
-    def test_the_outbox_stand_in_writes_a_private_file(self):
-        import os
-        import tempfile
-        path = os.path.join(tempfile.mkdtemp(), "outbox.jsonl")
-        app.Outbox(path).send("+971501234567", "123456")
-        self.assertEqual(os.stat(path).st_mode & 0o777, 0o600)
-        with open(path) as f:
-            self.assertEqual(json.loads(f.read())["code"], "123456")
-
 
 class TestCall(unittest.TestCase):
     """The test call (``X-iVendNext-Test: 1``, tools/app_template/service/testcall.py) at each signed point route: checked

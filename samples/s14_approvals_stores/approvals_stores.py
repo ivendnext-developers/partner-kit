@@ -100,7 +100,7 @@ def authority(doc, vs, limit_pct, now_rate):
     return None
 
 
-def apply_one(api, name, limit_pct, crash_after_write=False):
+def apply_one(api, name, limit_pct):
     doc = api.call("GET", f"/api/resource/{_q(DT)}/{_q(name)}")["data"]
     if doc.get("workflow_state") not in APPLY_STATES:
         return {"request": name, "result": "skipped", "why": f"state is {doc.get('workflow_state')}"}
@@ -126,8 +126,6 @@ def apply_one(api, name, limit_pct, crash_after_write=False):
     if abs(float(price["price_list_rate"]) - float(doc["new_rate"])) > 0.0001:
         api.call("PUT", f"/api/resource/Item%20Price/{_q(price['name'])}", body={"price_list_rate": float(doc["new_rate"])})
         wrote = True
-    if crash_after_write:
-        os._exit(3)                                          # test only: after the price, before the action
     try:
         api.call("POST", "/api/method/ivendnext_mpos.api.v1.apply_workflow", body={"doc": json.dumps(doc), "action": ACTION_APPLY})
     except F.FeedError as e:      # the price may already be live: say so, the next run finishes the action without writing it again
@@ -150,12 +148,12 @@ def setting_limit():
     return v if v > 0 else LIMIT_PCT
 
 
-def apply_all(api, crash_after_write=False, limit_pct=None):
+def apply_all(api, limit_pct=None):
     report = {"applied": [], "not_applied": [], "skipped": []}
     limit_pct = setting_limit() if limit_pct is None else limit_pct
     for r in _list(api, DT, [["workflow_state", "in", list(APPLY_STATES)]], ["name"]):
         try:
-            res = apply_one(api, r["name"], limit_pct, crash_after_write)
+            res = apply_one(api, r["name"], limit_pct)
         except F.FeedError as e:                              # the shop refused: say so, go on with the next
             res = {"request": r["name"], "result": "not applied", "why": f"the shop said: {str(e)[:200]}"}
         report["applied" if res["result"] == "applied" else "not_applied" if res["result"] == "not applied" else "skipped"].append(res)
@@ -200,10 +198,9 @@ def main(argv=None):
     p.add_argument("--base", default=os.environ.get("BASE"))
     p.add_argument("--day")
     p.add_argument("--out", default="state/export")
-    p.add_argument("--crash-after-write", action="store_true", help="test only: die after the price, before the workflow action")
     a = p.parse_args(argv)
     api = F.Api(a.base, os.environ["AP_KEY"], os.environ["AP_SECRET"])
-    print(json.dumps(apply_all(api, a.crash_after_write) if a.command == "apply" else export_day(api, a.day, a.out)))
+    print(json.dumps(apply_all(api) if a.command == "apply" else export_day(api, a.day, a.out)))
 
 
 if __name__ == "__main__":

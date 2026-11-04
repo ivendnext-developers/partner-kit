@@ -213,13 +213,11 @@ class Service:
 def main(argv=None):
     p = argparse.ArgumentParser(description="S27 — stock alerts and a draft transfer request")
     p.add_argument("--base", required=True)
-    p.add_argument("--today", help="test only: the day of the run (YYYY-MM-DD)")
     a = p.parse_args(argv)
     key, secret = os.environ.get("STK_KEY"), os.environ.get("STK_SECRET")
     if not key or not secret:
         sys.exit("set STK_KEY and STK_SECRET in the environment")
-    today = _dt.date.fromisoformat(a.today) if a.today else None
-    print(json.dumps(Service(Shop(F.Api(a.base, key, secret))).run(today)), flush=True)
+    print(json.dumps(Service(Shop(F.Api(a.base, key, secret))).run()), flush=True)
 
 
 if __name__ == "__main__":
