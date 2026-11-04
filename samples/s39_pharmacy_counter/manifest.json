@@ -221,7 +221,7 @@
      "fieldname": "register_books_rx_date",
      "fieldtype": "Check",
      "label": "Its register books the prescription's date",
-     "description": "For a register that prints the date a prescription was written (Jordan's Form 9, Mexico's control book): at the till, a sale of this schedule is refused until the prescription's date is in Sale details. On the Desk it is filled at Submit."
+     "description": "For a register that prints the date a prescription was written (Jordan's Form 9, Mexico's control book): The dispensary's till fills the prescription's date at Pay, and the Desk at Submit. A sale naming prescriptions written on different days is refused. At an order's or a layaway plan's placement, type the date."
     },
     {
      "fieldname": "returns_section",
@@ -995,7 +995,7 @@
   },
   {
    "name": "PP RXC Erasure",
-   "description": "One act of erasure after the keeping period: the patients listed as due, and for each whether it was erased. Made by the Records Officer; written by the app's service; changed and deleted by nobody. The Desk keeps a copy of each erased record in Deleted Documents until a System Manager deletes it, and its change history until the site's Administrator deletes it.",
+   "description": "One act of erasure after the keeping period: the patients listed as due, and for each whether it was erased. Made by the Records Officer and written only by the app's service; no role your people hold changes or deletes it. The Desk keeps a copy of each erased record in Deleted Documents until a System Manager deletes it.",
    "autoname": "format:RXC-ERA-{#####}",
    "track_changes": 1,
    "sort_field": "creation",
@@ -1668,7 +1668,7 @@
      "reqd": 1
     }
    ],
-   "confirm_text": "Delete these patients' prescriptions, dispensings and patient records? Copies stay in Deleted Documents and the change history."
+   "confirm_text": "Delete these patients' prescriptions, dispensings and patient records? A copy of each stays in Deleted Documents."
   }
  ],
  "label_layouts": [

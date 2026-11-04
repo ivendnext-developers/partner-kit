@@ -179,8 +179,8 @@ period in `<PREFIX> Settings`; until it does, nobody is due.
    seconds: one that runs out says so, and the next goes on.
 
 What stays: a copy of each deleted record in the Desk's *Deleted Documents* (a delete through the API is never
-permanent), which a System Manager deletes, and each record's change history, which the site's Administrator
-deletes; the button's last answer says so. Also the
+permanent), which a System Manager deletes; the button's last answer says so. The framework deletes each record's
+change history after the delete. Also the
 till's sales and their sale details, and the register's own lines, which the register
 erases after its own retention.
 
