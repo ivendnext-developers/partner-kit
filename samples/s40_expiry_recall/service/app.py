@@ -19,13 +19,10 @@ none, and makes or updates one Store Progress record per store holding stock. A 
 and writes the same tables again. **Refresh** rewrites a worklist's two tables, keeping the action chosen on each lot.
 The three checks read items, lots and bundles and answer; they write nothing.
 
-Test-only route, ON ONLY when the process starts with ``PP_TEST_MODES=1`` and the caller sends the ``X-PP-Admin``
-token: ``GET /test/received`` returns the last calls as received. A partner's copy deletes it.
-
 ONE SHOP (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the integration user) and the five subscriptions' secrets handed back at install:
     PP_SECRET_BLOCK, PP_SECRET_WORKLIST, PP_SECRET_RECEIPT, PP_SECRET_DISPOSAL, PP_SECRET_COUNT (pp_rcl:sub:block, …);
-    PP_ADMIN_TOKEN, PP_PORT (8151)
+    PP_PORT (8151)
 MANY SHOPS: IVN_LIBRARY_APP (ivendnext_rcl), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 RCL_PREFIX (default PP RCL; IVENDNEXT RCL for the library's app) · PORT (default 8080)
 
@@ -35,7 +32,6 @@ RCL_PREFIX (default PP RCL; IVENDNEXT RCL for the library's app) · PORT (defaul
 from __future__ import annotations
 
 import datetime
-import hmac
 import http.client
 import json
 import os
@@ -169,9 +165,6 @@ class Service:
         else:
             self.secrets = {k: oneshop.value(conf, f"PP_SECRET_{k.upper()}") for k in ROUTES.values()}
             self.tenant = tenant
-        self.admin = conf.get("PP_ADMIN_TOKEN") or ""
-        self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)
-        self.received = []
         self._lock = threading.Lock()
 
     # ── who is calling ──
@@ -473,8 +466,6 @@ class Service:
                                              "count": "Stock Reconciliation"}[sub])
         except ValueError as e:
             return 400, {"error": str(e)}
-        if self.test_modes:
-            self.received = (self.received + [{"sub": sub, "context": body.get("context")}])[-20:]
         if door is None:
             if sub in ("block", "worklist"):
                 return 200, _warning(NOT_SET_UP)
@@ -544,9 +535,6 @@ def make_handler(svc: Service, log=sys.stderr):
                 _log(log, rid, self.path, code, t0)
 
         def do_GET(self):
-            if self.path == "/test/received" and svc.test_modes and hmac.compare_digest(
-                    (self.headers.get("X-PP-Admin") or "").encode(), svc.admin.encode()):
-                return self._send(200, {"received": svc.received})
             self._send(*svc.handle("GET", self.path, self.headers, b""))
 
         def log_message(self, fmt, *args):
@@ -585,7 +573,7 @@ def main():
                          "store (many shops)")
     srv = ThreadingHTTPServer(("0.0.0.0", int(conf.get("PP_PORT") or conf.get("PORT") or 8151)), make_handler(svc))
     print(f"s40 expiry and recall on :{srv.server_port} ({'many shops, ' + svc.app if svc.app else 'one shop'}, "
-          f"prefix {recall.PREFIX}; test modes {'ON' if svc.test_modes else 'off'})", flush=True)
+          f"prefix {recall.PREFIX})", flush=True)
     srv.serve_forever()
 
 

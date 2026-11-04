@@ -198,8 +198,8 @@ class Service:
             print(json.dumps({"event": ev["event"], "row": ev["doc_name"], **rep}), flush=True)
 
     # ---------- a new or changed rule: every source price again, in pages, resumable
-    def backfill(self, only: str | None = None, crash_after_pages: int | None = None) -> dict:
-        rep, pages = report(), 0
+    def backfill(self, only: str | None = None) -> dict:
+        rep = report()
         if only is None:      # a rule switched off or refused forgets its backfill, so it is worked out again when it is back
             self.db.execute(f"delete from backfill where rule not in ({','.join('?' * len(self.rules))})", tuple(self.rules))
         for rule in [r for r in self.rules.values() if only in (None, r.name)]:
@@ -217,9 +217,6 @@ class Service:
                 after = page[-1]["name"]
                 self.db.execute("insert into backfill values (?,?,?,0) on conflict(rule) do update set "
                                 "fingerprint=excluded.fingerprint, after=excluded.after, done=0", (rule.name, fp, after))
-                pages += 1
-                if crash_after_pages is not None and pages >= crash_after_pages:
-                    raise SystemExit(f"CRASH (injected) after {pages} page(s) of {rule.name}")
             self.db.execute("insert into backfill values (?,?,'',1) on conflict(rule) do update set "
                             "fingerprint=excluded.fingerprint, after='', done=1", (rule.name, fp))
         return rep
@@ -273,7 +270,6 @@ def main(argv=None):
     p.add_argument("--app", help="the feed registration's name (engine transport only)")
     p.add_argument("--rule", help="backfill: this rule only, from the start")
     p.add_argument("--watch", type=float, help="run: repeat every N seconds")
-    p.add_argument("--crash-after-pages", type=int, help="test only")
     a = p.parse_args(argv)
     key, secret = os.environ.get("DPL_KEY"), os.environ.get("DPL_SECRET")
     if not key or not secret:
@@ -292,7 +288,7 @@ def main(argv=None):
             return
         if a.command == "backfill" and a.rule:
             svc.db.execute("delete from backfill where rule=?", (a.rule,))
-        out = {"refused": svc.refused, "backfill": svc.backfill(a.rule, a.crash_after_pages)}
+        out = {"refused": svc.refused, "backfill": svc.backfill(a.rule)}
         if a.command == "run":
             out["feed"] = F.poll(feed, store, svc.handler)
         print(json.dumps(out), flush=True)

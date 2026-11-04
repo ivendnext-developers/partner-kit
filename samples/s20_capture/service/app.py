@@ -7,20 +7,18 @@ with before the body is read.
     POST /cap/qty       the shop's signed quantity calls (event qty_change; POS build 2.0.0.654 on)
     GET  /health        200 {"ok": 1}
 
-The message gateway here is a STAND-IN: it appends ``{"phone", "code", "at"}`` to the file ``PP_OUTBOX`` (chmod 600),
-where a partner calls its SMS or WhatsApp provider instead (``Outbox.send``). Nothing else is written, and a code is never
-logged.
+A code goes to your message gateway (CAP_MESSAGE_URL, posted {"phone", "code"}); with no gateway set, a customer is added
+with no code. Nothing else is written, and a code is never logged.
 
     python3 service/app.py service/.env.local
     env: PP_POINT_SECRET_SCAN, PP_POINT_SECRET_CUSTOMER, PP_POINT_SECRET_QTY (handed back at install as
          pp_cap:sub:on_scan, pp_cap:sub:on_customer and pp_cap:sub:on_qty), PP_LINE_ATTRIBUTE (the shop's active line
          attribute for the reference), PP_QTY_ASK_ABOVE (3) and PP_QTY_MOST (5) (handsets on a line),
-         PP_BARRED_PHONES (comma list), PP_OUTBOX (the stand-in gateway's file), PP_PORT (8142)
+         PP_BARRED_PHONES (comma list), CAP_MESSAGE_URL, PP_PORT (8142)
 
 On CitiXsys hosting it runs as a FUNCTION for many sites (app.json; ``lambda_handler`` below): each site connects itself
 (``shops.py``) and its calls name it. The codes are kept in the shops store, so any copy of the function checks a code another
-sent. A code goes to your message gateway (CAP_MESSAGE_URL, posted {"phone", "code"}); with no gateway set, a customer is added
-with no code.
+sent.
 """
 
 from __future__ import annotations
@@ -29,7 +27,6 @@ import hmac
 import json
 import os
 import sys
-import threading
 import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -42,21 +39,6 @@ import function  # noqa: E402
 import oneshop  # noqa: E402
 import shops  # noqa: E402
 import testcall  # noqa: E402
-
-
-class Outbox:
-    """The stand-in message gateway: one JSON line per code, in a file only this service's user can read."""
-
-    def __init__(self, path: str):
-        self.path, self._lock = path, threading.Lock()
-
-    def send(self, phone: str, code: str) -> None:
-        with self._lock:
-            fd = os.open(self.path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
-            try:
-                os.write(fd, (json.dumps({"phone": phone, "code": code, "at": int(time.time())}) + "\n").encode())
-            finally:
-                os.close(fd)
 
 
 class Service:
@@ -215,7 +197,8 @@ def env(path: str) -> dict:
 
 if __name__ == "__main__":
     conf = env(sys.argv[1])
-    svc = Service(conf, Outbox(conf["PP_OUTBOX"]).send)
+    url = conf.get("CAP_MESSAGE_URL")
+    svc = Service(conf, gateway(url) if url else None)
     srv = ThreadingHTTPServer(("0.0.0.0", int(conf.get("PP_PORT") or 8142)), make_handler(svc))
     print(f"s20 capture on :{srv.server_port}", flush=True)
     srv.serve_forever()

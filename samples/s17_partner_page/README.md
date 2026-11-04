@@ -1,6 +1,6 @@
 # S17 — an order board (`pp_pge`): a partner page
 
-Your own screen, shown inside iVendNext: on the till as a sheet over the sale, and in Desk as a page for a record. A cashier presses the **Deliveries** key on a sale, the partner's board opens in the till's own look, and after *Attach to sale* the delivery number is on the sale. iVendNext opens the page with a signed, one-time context, which the board checks on its own server.
+Your own screen, shown inside iVendNext: on the till as a sheet over the sale, and in Desk as a page for a record. A cashier presses the **Deliveries** key on a sale, the partner's board opens in the till's own look, and after *Attach to sale* the delivery number is on the sale. iVendNext opens the page with a signed context, which the board checks on its own server.
 
 ![A sale with one item; the Deliveries key sits with the till's other keys](screenshots/01_till_deliveries_key.png)
 
@@ -21,10 +21,8 @@ What a partner usually changes:
 - **The page's address:** `allowed_urls` in `manifest.json`. Write your own, on your own host; iVendNext refuses an address on its own site.
 - **The board:** `service/board.html`, and `service/app.py` for what it offers and answers with.
 - **What the till sends:** `page_send_sale` (the sale, with the cashier's login and the customer's id) and `page_send_user` in `manifest.json`. Set `page_send_sale` to 0 if the board does not need the sale.
-- **Who may open it in Desk:** `page_roles` in `manifest.json` (*Stock User* and *Stock Manager* here).
+- **Who may open it in Desk:** `page_roles` in `manifest.json` (*Desk User* here: every staff user; a customer narrows it on the record).
 - **The answer:** the sale detail *PP PGE Delivery Order*, which the board answers with; a partner's copy shows its own name.
-- **The test routes:** delete `/test/once` and `/test/opened` from `service/app.py`.
-- **The opened contexts:** `page.py` keeps them in memory, so a restart forgets them. Keep them in your own database.
 - **The app's id:** `IVN_LIBRARY_APP` in `app.json`.
 
 More: the [recipe](../../recipes/partner_page.md).
@@ -43,6 +41,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.2.1
+
+- A page that reloads opens again, and every staff user may open it in Desk. iVendNext takes one answer; the board no longer keeps its own count.
 
 ### 0.2.0
 

@@ -17,12 +17,9 @@ the campaign; *Draw winners* draws once, after the campaign's last day, and writ
 draw finds the campaign drawn (its status, or any part of a draw's record left on it) and writes nothing. A press reads for
 at most ``BUDGET_S`` seconds; past it, it writes nothing and the shop says the press did not answer in time.
 
-Test-only routes, ON ONLY when the process starts with ``PP_TEST_MODES=1`` in its environment and the caller sends
-the ``X-PP-Admin`` token: ``GET /test/received`` returns the last presses as received. A partner's copy deletes them.
-
 ONE SHOP (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the integration user), PP_COUNT_SECRET and PP_DRAW_SECRET (handed back at install as
-    pp_ldw:sub:count and pp_ldw:sub:draw), PP_ADMIN_TOKEN, PP_PORT (8150)
+    pp_ldw:sub:count and pp_ldw:sub:draw), PP_PORT (8150)
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_ldw), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 LDW_PREFIX (default PP LDW; IVENDNEXT LDW for the library's app) · PORT (default 8080)
@@ -173,9 +170,6 @@ class Service:
             one = oneshop.settings(conf, ["PP_COUNT_SECRET", "PP_DRAW_SECRET"])
             self.secrets = {"count": one["PP_COUNT_SECRET"], "draw": one["PP_DRAW_SECRET"]}
             self.tenant = tenant
-        self.admin = conf.get("PP_ADMIN_TOKEN") or ""
-        self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
-        self.received = []
         self._lock = threading.Lock()    # one shop: one press at a time
 
     def caller(self, headers, sub: str) -> tuple[str, list[str], object | None]:
@@ -271,8 +265,6 @@ class Service:
             name, user = draw.campaign_of(body)
         except ValueError as e:         # json's own errors are ValueErrors too
             return 400, {"error": str(e)}
-        if self.test_modes:
-            self.received = (self.received + [body["context"]])[-20:]
         if door is None:
             return 200, _warning(NOT_SET_UP)
         try:
@@ -331,8 +323,6 @@ def make_handler(svc: Service, log=sys.stderr):
                 _log(log, rid, self.path, code, t0)
 
         def do_GET(self):
-            if self.path == "/test/received" and svc.test_modes and self.headers.get("X-PP-Admin") == svc.admin:
-                return self._send(200, {"received": svc.received})
             self._send(*svc.handle("GET", self.path, self.headers, b""))
 
         def log_message(self, fmt, *args):     # the server's own access line carries the path; keep it off
@@ -373,7 +363,7 @@ def main():
                          "IVN_LIBRARY_APP with a store (many shops): the app does not start without a way to check a press")
     srv = ThreadingHTTPServer(("0.0.0.0", int(conf.get("PP_PORT") or conf.get("PORT") or 8150)), make_handler(svc))
     print(f"s44 lucky draw on :{srv.server_port} ({'many shops, ' + svc.app if svc.app else 'one shop'}, "
-          f"prefix {draw.PREFIX}; test modes {'ON' if svc.test_modes else 'off'})", flush=True)
+          f"prefix {draw.PREFIX})", flush=True)
     srv.serve_forever()
 
 

@@ -108,26 +108,6 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((code, len(self.tenant.tasks)), (200, 1))
         self.assertIn("for pick@shop.example.", out["message"]["body"])
 
-    def test_the_test_routes_need_the_environment_and_the_token(self):
-        os.environ["PP_TEST_MODES"] = "1"
-        try:
-            svc = app.Service({"PP_POINT_SECRET": SECRET, "PP_ADMIN_TOKEN": "t0ken"}, FakeTenant())
-        finally:
-            del os.environ["PP_TEST_MODES"]
-        srv = app.ThreadingHTTPServer(("127.0.0.1", 0), app.make_handler(svc))
-        threading.Thread(target=srv.serve_forever, daemon=True).start()
-        try:
-            url = f"http://127.0.0.1:{srv.server_port}/test/received"
-            for token, want in (("wrong", 404), ("", 404), ("t0ken", 200)):
-                try:
-                    code = urllib.request.urlopen(urllib.request.Request(url, headers={"X-PP-Admin": token}), timeout=5).status
-                except urllib.error.HTTPError as e:
-                    code = e.code
-                self.assertEqual(code, want, token)
-        finally:
-            srv.shutdown()
-            srv.server_close()
-
     def test_a_forged_press_is_refused_and_writes_nothing(self):
         raw = body()
         code, out = self.post(raw, signed(raw, secret="not-the-shops-secret"))
@@ -144,23 +124,6 @@ class ServiceTest(unittest.TestCase):
         code, out = self.post(raw, signed(raw, ts=time.time() - 3600))
         self.assertEqual((code, self.tenant.tasks), (401, {}))
         self.assertEqual(out["error"], "the signature does not match")    # one sentence for every refusal
-
-    def test_s2_refresh_and_s3_missing_answers(self):
-        self.svc.mode = "refresh"
-        raw = body(key="key-refresh-01")
-        code, out = self.post(raw, signed(raw))
-        self.assertEqual((code, out["refresh"], "open_record" in out), (200, True, False))
-        self.svc.mode = "missing"
-        raw = body(key="key-missing-01")
-        code, out = self.post(raw, signed(raw))
-        self.assertEqual(out, {"open_record": {"doctype": route.TASK, "name": "PT-404"}})
-        self.assertEqual(len(self.tenant.tasks), 1)   # the missing answer wrote nothing
-
-    def test_test_routes_are_off_without_the_environment(self):
-        req = urllib.request.Request(self.url.replace("/press/route", "/test/received"), headers={"X-PP-Admin": ""})
-        with self.assertRaises(urllib.error.HTTPError) as e:
-            urllib.request.urlopen(req, timeout=5)
-        self.assertEqual(e.exception.code, 404)
 
 
 class TestCall(unittest.TestCase):

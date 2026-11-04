@@ -23,7 +23,7 @@ import app  # noqa: E402
 import exr  # noqa: E402
 from fakeshop import FakeShop  # noqa: E402
 
-CONF = {"PP_WORK_SECRET": "w-secret", "PP_ADMIN_TOKEN": "t"}
+CONF = {"PP_WORK_SECRET": "w-secret"}
 ITEM = "pp_exr_"
 NAME = "EXR-R-00001"
 

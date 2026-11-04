@@ -130,7 +130,7 @@ def cursor_of(db) -> int:
     return r[0] if r else 0
 
 
-def push_out(erp: Erp, db, shop: Shop, crash_after: int | None = None) -> dict:
+def push_out(erp: Erp, db, shop: Shop) -> dict:
     """Everything the ERP changed since the cursor, oldest first, stopping at the first failure (order matters: an item
     before its price and its stock). The cursor moves after each change is fully written."""
     n = {"changes": 0, "items": 0, "prices": 0, "stock_entries": 0, "already_there": 0, "skipped_deleted": 0}
@@ -142,8 +142,6 @@ def push_out(erp: Erp, db, shop: Shop, crash_after: int | None = None) -> dict:
         elif ch["kind"] == "movement":
             _movement(erp, shop, int(ch["ref"]), n)
         n["changes"] += 1
-        if crash_after is not None and n["changes"] >= crash_after:       # the write is done, the cursor is not
-            raise SystemExit(f"CRASH (injected) after writing change {ch['seq']} to the shop, before saving the cursor")
         db.execute("insert into cursor values ('erp_changes', ?) on conflict(k) do update set seq=excluded.seq", (ch["seq"],))
     return n
 
@@ -297,8 +295,6 @@ def main(argv=None):
     p.add_argument("--warehouse", required=True)
     p.add_argument("--company", required=True)
     p.add_argument("--since", help="reconcile: only records created at or after this time")
-    p.add_argument("--crash-after-out", type=int, help="test only")
-    p.add_argument("--crash-after-in", type=int, help="test only")
     p.add_argument("--watch", type=float, help="run: repeat every N seconds")
     a = p.parse_args(argv)
     key, secret = os.environ.get("SYNC_KEY"), os.environ.get("SYNC_SECRET")
@@ -311,9 +307,9 @@ def main(argv=None):
         while True:
             res = {}
             if a.command in ("out", "run"):
-                res["out"] = push_out(erp, store.db, shop, a.crash_after_out)
+                res["out"] = push_out(erp, store.db, shop)
             if a.command in ("in", "run"):
-                res["in"] = F.poll(feed, store, make_handler(erp, shop), crash_after=a.crash_after_in)
+                res["in"] = F.poll(feed, store, make_handler(erp, shop))
             print(json.dumps(res), flush=True)
             if not (a.watch and a.command == "run"):
                 break

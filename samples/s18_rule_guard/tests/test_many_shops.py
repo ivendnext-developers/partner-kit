@@ -22,7 +22,7 @@ if not (KIT / "tools" / "app_template" / "tests" / "test_shops.py").is_file():
     raise unittest.SkipTest("the template's test helpers are not in an app folder: these run in the kit")
 import app  # noqa: E402
 import function  # noqa: E402
-from test_service import RULES, body, context, signed  # noqa: E402
+from test_service import body, context, signed, with_rules  # noqa: E402
 from test_shop_rules import RECORDS, Shops  # noqa: E402
 from test_shops import KEYS, make_key  # noqa: E402
 
@@ -104,7 +104,7 @@ class ManyShops(unittest.TestCase):
 
 class OneShopUnchanged(unittest.TestCase):
     def test_one_shop_mode_needs_no_store_and_checks_its_one_secret(self):
-        svc = app.Service({"PP_POINT_SECRET": "one", **RULES})
+        svc = with_rules("one")
         self.assertIsNone(svc.store)
         raw = body()
         self.assertEqual(svc.handle("POST", "/rgd/check", signed(raw, "one"), raw), (200, {"verdict": "allow"}))

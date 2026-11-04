@@ -17,7 +17,7 @@ A partner page is your own screen, served from your own server, that iVendNext s
    "sale_attributes": [{"name": "PP PGE Delivery Order"}],
    "extension_subscriptions": [{"key": "board", "point": "page", "label": "Deliveries",
      "endpoint_url": "https://your.server/board/", "page_placement": "Till key and Desk page",
-     "page_roles": ["Stock User", "Stock Manager"], "page_send_user": 0, "page_send_sale": 1,
+     "page_roles": ["Desk User"], "page_send_user": 0, "page_send_sale": 1,
      "page_returns_message": 1, "page_returns_sale_attributes": 1, "page_height": 45}]
    ```
 
@@ -27,7 +27,7 @@ A partner page is your own screen, served from your own server, that iVendNext s
 
    **Look like the till.** The context carries the till's own design tokens (`theme.vars`: background, card, ink, muted text, lines, accent, corner radius, text scale). Draw with them the way the till's own sheets do: the till's type, a bold title, muted detail rows, one full-width button in the accent, and a `page_height` that fits what you show (S17 asks for 45, a share of the screen's height on the counter; a tablet shows a page full height). S17's `board.html` is the pattern. Or load the design kit (`kit/design/`) and call `ivnKit.applyTheme(theme)`: it maps these names onto the kit's own tokens (card → surface, ink → text, muted → text-muted, line → border, accent → primary).
 
-   Your page must be on **your own host**. A page on the retailer's own address is refused at install, in the product's words — *"A partner page cannot be on this site's own address."* — and leaves nothing behind.
+   Your page must be on **your own host**: iVendNext refuses a page on its own site's address.
 
 2. **What the retailer does after install.** It reads what the page will receive (the consent text is built from the declaration) when it ticks the install's one consent. The page is on from the install, and its **Deliveries** key is on every store's till.
 
@@ -35,16 +35,15 @@ A partner page is your own screen, served from your own server, that iVendNext s
 
    *A sale on the till, with the **Deliveries** key beside the till's other keys.*
 
-3. **Read the context on your server, never trust it in the browser.** iVendNext opens your page with `#ctx=<payload>.<signature>` in the address. The **fragment** never reaches a server log or a `Referer`. Your page's script reads it once, takes it out of the address bar, and sends it to your own server. Your server checks three things:
+3. **Read the context on your server, never trust it in the browser.** iVendNext opens your page with `#ctx=<payload>.<signature>` in the address. The **fragment** never reaches a server log or a `Referer`. Your page's script reads it once, takes it out of the address bar, and sends it to your own server. Your server checks two things:
    - the **signature**: base64url HMAC-SHA256 of the payload's bytes, with the secret the installer handed back (`pp_pge:sub:board`) — checked before you parse it;
-   - the **expiry**: `exp`, five minutes after it was made;
-   - the **nonce, once**: a context already opened is refused, so a copied address cannot be opened again.
+   - the **expiry**: `exp`, five minutes after it was made.
 
-   The payload says where it was opened: on the till, the store, the POS Profile and the sale as the till holds it (no money); in Desk, the record type and name. Show what it says with `textContent`, never as markup. A forged context, an expired one, and one opened twice are all refused.
+   The payload says where it was opened: on the till, the store, the POS Profile and the sale as the till holds it (no money); in Desk, the record type and name. Show what it says with `textContent`, never as markup. A forged context and an expired one are refused.
 
-4. **Answer the till once, server to server.** Your **server** (never the browser, which never holds the secret) posts `{"ctx_nonce", "result"}` to `/api/method/ivendnext_mpos.api.page.submit`. It is signed like every extension point's call: `X-iVendNext-Timestamp` and `X-iVendNext-Signature` = base64 HMAC-SHA256 of `<timestamp>.<body>`. The result is the till's own vocabulary: a `message` and `sale_attributes` (no money). Then your page may `postMessage({type: "ivendnext:done"})` to the till. The till checks the message's origin and reads nothing else from it.
+4. **Answer the till, server to server.** Your **server** (never the browser, which never holds the secret) posts `{"ctx_nonce", "result"}` to `/api/method/ivendnext_mpos.api.page.submit`. It is signed like every extension point's call: `X-iVendNext-Timestamp` and `X-iVendNext-Signature` = base64 HMAC-SHA256 of `<timestamp>.<body>`. The result is the till's own vocabulary: a `message` and `sale_attributes` (no money). Then your page may `postMessage({type: "ivendnext:done"})` to the till. The till checks the message's origin and reads nothing else from it.
 
-   **Refuse a second answer yourself** — iVendNext refuses it too, with *"This page has already answered."* The till picks up your answer once, and only the first one.
+   iVendNext takes one answer. A second is refused, with *"This page has already answered."* The till picks up the first.
 
    ![the board framed over the sale](../samples/s17_partner_page/screenshots/02_board_on_till.png)
 
@@ -58,18 +57,18 @@ A partner page is your own screen, served from your own server, that iVendNext s
 
    *The delivery number is on the sale.*
 
-5. **In Desk, the server checks who may open it.** `/app/partner-page/<page>?doctype=Sales Order&name=…` asks iVendNext for a context. iVendNext gives one only to a user who holds one of your `page_roles` **and** may read that record. Anyone else is told *"You can't open this page for that record."*
+5. **In Desk, the server checks who may open it.** `/app/partner-page/<page>?doctype=Sales Order&name=…` asks iVendNext for a context. `page_roles` says who may open it: S17's *Desk User* is every staff user, and a customer narrows it on the record. iVendNext gives a context only to a user who holds one of those roles **and** may read that record. Anyone else is told *"You can't open this page for that record."*
 
    ![the board as a Desk page for a Sales Order](../samples/s17_partner_page/screenshots/05_board_as_desk_page.png)
 
    *The same board in Desk, as a page for a Sales Order.*
 
-6. **Test it.** Unit-test the context check and the answer with contexts minted the way iVendNext mints them (`samples/s17_partner_page/tests/`, 11 tests). Check your answers against `partner_page.v1.schema.json` in [`contracts/`](../contracts/README.md) (S17's contract test runs it).
+6. **Test it.** Unit-test the context check and the answer with contexts minted the way iVendNext mints them (`samples/s17_partner_page/tests/`). Check your answers against `partner_page.v1.schema.json` in [`contracts/`](../contracts/README.md) (S17's contract test runs it).
 
 ## When your page is down, and offline
 
 - If your page does not load within 10 seconds, the till says *"⟨label⟩ isn't answering."* and adds nothing.
-- If **iVendNext** cannot be reached when your server answers, say so on your page and let the cashier press again. S17 then gives the context's one answer back, so the retry works.
+- If **iVendNext** cannot be reached when your server answers, say so on your page and let the cashier press again. The context has not answered yet, so the retry works.
 - An answer after the context ran out is refused to you, in words.
 - The page key is dimmed when the till is offline: a page is online only.
 
@@ -79,9 +78,9 @@ A partner page is your own screen, served from your own server, that iVendNext s
 
 - Proven on our test bench on 2026-10-07.
 - Own host, **on the bench:** the same manifest with the retailer's own address was refused at install, in the product's words — *"A partner page cannot be on this site's own address."* — and left nothing.
-- The context, **on the bench:** the board saw the till, its store and this sale; the same context opened twice was refused; a forged context and an expired one (signed with the real secret, its time gone) were refused.
-- The answer, **on the bench:** the board answered once; the till picked up the delivery order number and the message, **once** (a second pick-up found nothing). A second answer for one context was refused by the board; with the board's own check switched off, **iVendNext refused it**: *"This page has already answered."* The till still got the first answer only.
-- Desk, **on the bench:** a Stock User got the context for an order of its own customer, and the board read the record from it; a user without the roles, and a Stock User without read on another customer's order, were both told *"You can't open this page for that record."*
+- The context, **on the bench:** the board saw the till, its store and this sale; a forged context and an expired one (signed with the real secret, its time gone) were refused.
+- The answer, **on the bench:** the till picked up the delivery order number and the message, **once** (a second pick-up found nothing). A second answer for one context was refused by **iVendNext**: *"This page has already answered."* The till still got the first answer only.
+- Desk, **on the bench:** a Stock User got the context for an order of its own customer, and the board read the record from it; a Stock User without read on another customer's order was told *"You can't open this page for that record."*
 - The 10-second timeout is the extension point's own rule; not driven on our bench.
 - Tests: the mutation canary removes the signature check and the tests go RED.
 
@@ -93,4 +92,4 @@ A partner page is your own screen, served from your own server, that iVendNext s
 
 ### Figures beside the run that measured them
 
-Our test bench, 2026-10-07: the till's press, the framed page over HTTPS, one answer, one pick-up, the double answer refused on both sides, the Desk context and its two refusals, the address change — **19 of 19**; the POS day the till opened was closed in the same test. Re-run after the restyle at `page_height` 45: 19 of 19.
+Our test bench, 2026-10-07: the till's press, the framed page over HTTPS, one answer, one pick-up, the double answer refused, the Desk context and its refusals, the address change — **19 of 19**; the POS day the till opened was closed in the same test. Re-run after the restyle at `page_height` 45: 19 of 19.

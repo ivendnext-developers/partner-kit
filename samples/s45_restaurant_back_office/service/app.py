@@ -23,12 +23,9 @@ second press while one runs is told so. A press starts no new set of store-days 
 **Work out food cost** fills a food cost record from the shop's own stock ledger, counts and the app's issues.
 **Check allergens** reads the ticked items' recipes and allergens and answers in words; it writes nothing.
 
-Test-only routes, ON ONLY when the process starts with ``PP_TEST_MODES=1`` in its environment and the caller sends
-the ``X-PP-Admin`` token: ``GET /test/received`` returns the last presses as received. A partner's copy deletes them.
-
 ONE SHOP (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the integration user), PP_SECRET_ISSUE, PP_SECRET_FOODCOST, PP_SECRET_ALLERGENS (handed
-    back at install as pp_rbo:sub:issue …), PP_ADMIN_TOKEN, PP_PORT (8145)
+    back at install as pp_rbo:sub:issue …), PP_PORT (8145)
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_rbo), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 RBO_PREFIX (default PP RBO; IVENDNEXT RBO for the library's app) · PORT (default 8080)
@@ -39,7 +36,6 @@ RBO_PREFIX (default PP RBO; IVENDNEXT RBO for the library's app) · PORT (defaul
 from __future__ import annotations
 
 import datetime
-import hmac
 import http.client
 import json
 import os
@@ -209,9 +205,6 @@ class Service:
             one = oneshop.settings(conf, [f"PP_SECRET_{k.upper()}" for k in SUBS.values()])
             self.secrets = {k: one[f"PP_SECRET_{k.upper()}"] for k in SUBS.values()}
             self.tenant = tenant
-        self.admin = conf.get("PP_ADMIN_TOKEN") or ""
-        self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
-        self.received = []
 
     def caller(self, headers, sub: str) -> tuple[str, list[str], object | None]:
         """(the shop's name, the secrets its press may be signed with, its door: None until it handed over a user's key)."""
@@ -396,9 +389,6 @@ class Service:
         sales = sorted((x for x in listed if x.get("name") and x["name"] not in claimed and bo.booked_from(x, start)),
                        key=lambda x: (str(x.get("posting_date")), str(x.get("posting_time")), x["name"]))
         left = len(sales) > MOST_SALES
-        if self.test_modes:             # test modes only: what this press read, for the bench's record
-            self.received = (self.received + [{"trace": {"start": start, "since": since, "listed": len(listed),
-                                                         "claimed": len(claimed), "new": len(sales)}}])[-20:]
         sales = sales[:MOST_SALES]
         if sales:
             names = [x["name"] for x in sales]
@@ -626,8 +616,6 @@ class Service:
                 names = bo.records_of(body, "Item")
         except ValueError as e:         # json's own errors are ValueErrors too
             return 400, {"error": str(e)}
-        if self.test_modes:
-            self.received = (self.received + [body["context"]])[-20:]
         if door is None:
             return 200, _warning(NOT_SET_UP)
         try:
@@ -691,9 +679,6 @@ def make_handler(svc: Service, log=sys.stderr):
                 _log(log, rid, self.path, code, t0)
 
         def do_GET(self):
-            admin = (self.headers.get("X-PP-Admin") or "").encode()
-            if self.path == "/test/received" and svc.test_modes and hmac.compare_digest(admin, svc.admin.encode()):
-                return self._send(200, {"received": svc.received})
             self._send(*svc.handle("GET", self.path, self.headers, b""))
 
         def log_message(self, fmt, *args):     # the server's own access line carries the path; keep it off
@@ -735,7 +720,7 @@ def main():
                          "does not start without a way to check a press")
     srv = ThreadingHTTPServer(("0.0.0.0", int(conf.get("PP_PORT") or conf.get("PORT") or 8145)), make_handler(svc))
     print(f"s45 restaurant back office on :{srv.server_port} ({'many shops, ' + svc.app if svc.app else 'one shop'}, "
-          f"prefix {bo.PREFIX}; test modes {'ON' if svc.test_modes else 'off'})", flush=True)
+          f"prefix {bo.PREFIX})", flush=True)
     srv.serve_forever()
 
 

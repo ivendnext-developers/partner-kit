@@ -2,23 +2,18 @@
 Standard library only.
 
     GET  /board/             the page itself (``board.html``); the shop opens it with ``#ctx=…`` in the address
-    POST /board/api/open     {ctx}                  → where it was opened, checked (signature · expiry · nonce once)
-    POST /board/api/answer   {ctx, delivery_order}  → the till's answer, sent ONCE to the shop, server to server
+    POST /board/api/open     {ctx}                  → where it was opened, checked (signature · expiry)
+    POST /board/api/answer   {ctx, delivery_order}  → the till's answer, sent to the shop, server to server
 
 The answer goes from THIS server to the shop's ``ivendnext_mpos.api.page.submit``, signed with the page's secret —
-never from the browser, which never holds the secret. The service refuses a second answer for one context itself,
-and the shop refuses it again (``This page has already answered.``): two locks, either is enough.
-
-Test-only routes, ON ONLY when the process starts with ``PP_TEST_MODES=1`` and the caller sends ``X-PP-Admin``:
-``POST /test/once`` switches the service's own one-answer check off or on (the bench proves the shop still refuses)
-and ``GET /test/opened`` lists the contexts opened. A partner's copy deletes them.
+never from the browser, which never holds the secret. The shop takes one answer for one context, and refuses another
+in its own words (``This page has already answered.``).
 
     python3 service/app.py service/.env.local
-    env: PP_BASE (the shop), PP_PAGE_SECRET (handed back at install as pp_pge:sub:board), PP_ADMIN_TOKEN, PP_PORT (8132)
+    env: PP_BASE (the shop), PP_PAGE_SECRET (handed back at install as pp_pge:sub:board), PP_PORT (8132)
 
 On CitiXsys hosting it runs as a FUNCTION for many sites (app.json; ``lambda_handler`` below): each site connects itself
-(``shops.py``), and the context's signature says which site opened the page. A copy of the function remembers the contexts
-it saw; the shop's own one-answer check holds across copies.
+(``shops.py``), and the context's signature says which site opened the page.
 """
 
 from __future__ import annotations
@@ -28,7 +23,6 @@ import http.client
 import json
 import os
 import sys
-import threading
 import time
 import urllib.error
 import urllib.request
@@ -64,12 +58,7 @@ def shop_words(raw: bytes) -> str:
 class Board:
     def __init__(self, conf: dict, post=None):
         self.base, self.secret = conf["PP_BASE"].rstrip("/"), conf["PP_PAGE_SECRET"]
-        self.admin = conf.get("PP_ADMIN_TOKEN") or ""
-        self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)
-        self.opened, self.answered = page.OnceSet(), page.OnceSet()
-        self.check_once, self.log = True, []
         self._post = post or self._http_post
-        self._lock = threading.Lock()
 
     def _http_post(self, url: str, body: bytes, headers: dict) -> tuple[int, bytes]:
         req = urllib.request.Request(url, data=body, headers=headers, method="POST")
@@ -79,16 +68,12 @@ class Board:
         except urllib.error.HTTPError as e:
             return e.code, e.read()
         except (urllib.error.URLError, OSError, http.client.HTTPException):     # unreachable, timed out (TimeoutError is an OSError) or cut short
-            return 0, b""                             # the caller releases the claim; the shop's own once-check still holds
+            return 0, b""
 
     def open(self, data: dict) -> tuple[int, dict]:
         payload, why = page.read_context(data.get("ctx"), self.secret)
         if not payload:
             return 403, {"error": why}
-        if not self.opened.claim(payload["nonce"], payload["exp"]):
-            return 403, {"error": "this page was already opened; open it again from the shop"}
-        if self.test_modes:
-            self.log = (self.log + [payload])[-20:]
         out = {"where": page.where(payload), "theme": payload.get("theme")}
         if out["where"]["on"] == "till":
             out["delivery_order"] = page.delivery_order(payload["nonce"])
@@ -98,23 +83,17 @@ class Board:
         payload, why = page.read_context(data.get("ctx"), self.secret)
         if not payload:
             return 403, {"error": why}
-        if page.where(payload)["on"] != "till":
-            return 400, {"error": "only the till takes an answer"}
         nonce, order = payload["nonce"], page.delivery_order(payload["nonce"])
-        with self._lock:
-            if self.check_once and not self.answered.claim(nonce, payload["exp"]):
-                return 409, {"error": "this page has already answered", "refused_by": "partner service"}
-            note = data.get("note")
-            body = page.submit_body(nonce, order, note if isinstance(note, str) else None)
-            ts = str(int(time.time()))
-            code, raw = self._post(self.base + SUBMIT, body, {"Content-Type": "application/json",
-                                                              "X-iVendNext-Timestamp": ts,
-                                                              "X-iVendNext-Signature": page.sign(self.secret, ts, body)})
-            if code != 200:
-                self.answered.release(nonce)     # the shop refused: it may be corrected and sent again while it lives
-                if code == 0:
-                    return 502, {"error": "the shop could not be reached; try again", "refused_by": "network"}
-                return 409 if code == 409 else 502, {"error": shop_words(raw), "refused_by": "shop", "status": code}
+        note = data.get("note")
+        body = page.submit_body(nonce, order, note if isinstance(note, str) else None)
+        ts = str(int(time.time()))
+        code, raw = self._post(self.base + SUBMIT, body, {"Content-Type": "application/json",
+                                                          "X-iVendNext-Timestamp": ts,
+                                                          "X-iVendNext-Signature": page.sign(self.secret, ts, body)})
+        if code == 0:
+            return 502, {"error": "the shop could not be reached; try again", "refused_by": "network"}
+        if code != 200:
+            return 409 if code == 409 else 502, {"error": shop_words(raw), "refused_by": "shop", "status": code}
         return 200, {"ok": 1, "delivery_order": order}
 
 
@@ -126,7 +105,6 @@ class Hosted:
     def __init__(self, conf: dict, store=None, post=None):
         self.app, self.post = oneshop.value(conf, oneshop.MANY), post
         self.store = store or shops.open_store(conf)
-        self.boards: dict = {}
         with open(os.path.join(HERE, "board.html"), "rb") as f:
             self.html = f.read()
 
@@ -137,7 +115,7 @@ class Hosted:
         record, secret = shops.site_signed(self.store, f"{self.app}:sub:{self.KEY}", holds)
         if not record:
             return None
-        return self.boards.setdefault((record["site"], secret), Board({"PP_BASE": record["url"], "PP_PAGE_SECRET": secret}, self.post))
+        return Board({"PP_BASE": record["url"], "PP_PAGE_SECRET": secret}, self.post)
 
     def tested(self, headers, raw: bytes) -> bool:
         site = shops.site_of(headers.get(shops.SITE_HEADER))
@@ -204,16 +182,11 @@ def make_handler(board: Board):
             self.end_headers()
             self.wfile.write(data)
 
-        def _admin(self) -> bool:
-            return board.test_modes and self.headers.get("X-PP-Admin") == board.admin
-
         def do_GET(self):
             if self.path in ("/board", "/board/"):
                 return self._send(200, html, "text/html; charset=utf-8")
             if self.path == "/health":
                 return self._send(200, {"ok": 1})
-            if self.path == "/test/opened" and self._admin():
-                return self._send(200, {"opened": board.log})
             self._send(404, {"error": "not found"})
 
         def do_POST(self):
@@ -230,9 +203,6 @@ def make_handler(board: Board):
                 return self._send(*board.open(data))
             if self.path == "/board/api/answer":
                 return self._send(*board.answer(data))
-            if self.path == "/test/once" and self._admin():
-                board.check_once = bool(data.get("on"))
-                return self._send(200, {"check_once": board.check_once})
             self._send(404, {"error": "not found"})
 
         def log_message(self, fmt, *args):
@@ -254,5 +224,5 @@ if __name__ == "__main__":
     conf = env(sys.argv[1])
     board = Board(conf)
     srv = ThreadingHTTPServer(("0.0.0.0", int(conf.get("PP_PORT") or 8132)), make_handler(board))
-    print(f"s17 order board on :{srv.server_port} (test modes {'ON' if board.test_modes else 'off'})", flush=True)
+    print(f"s17 order board on :{srv.server_port}", flush=True)
     srv.serve_forever()

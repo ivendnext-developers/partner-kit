@@ -1,12 +1,15 @@
 """S17's laptop tests: the real service on a local port and a stand-in for the shop's ``api/page.submit`` that checks
 the signature and takes one answer per nonce, as the shop does. Contexts are minted exactly as the shop mints them
-(``partner_page.sign_context``).
+(``sign_context`` below).
 
     python3 -m unittest discover -s samples/s17_partner_page/tests -p 'test_*.py'
 
 On our test bench the page was opened through the shop's own calls; these prove
 the service's own duties fast, and are what the mutation canary turns RED."""
 
+import base64
+import hashlib
+import hmac
 import http.client
 import json
 import os
@@ -27,13 +30,20 @@ import page  # noqa: E402
 SECRET = "s17-test-secret"
 
 
+def sign_context(secret, payload):
+    """The shop's own minting: canonical JSON (sorted keys, no spaces, ASCII), then the HMAC."""
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+    return ".".join(base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+                    for b in (raw, hmac.new(secret.encode(), raw, hashlib.sha256).digest()))
+
+
 def ctx(nonce="a" * 32, secret=SECRET, ttl=300, **where):
     now = int(time.time())
     payload = {"v": 1, "page": "board-1", "nonce": nonce, "iat": now, "exp": now + ttl, "lang": "en",
                "theme": {"mode": "light", "vars": {"--ivn-accent": "#2e75b6"}}, "user": "cashier@shop.example",
                **(where or {"store": "Main - S", "pos_profile": "Till 1",
                             "sale": {"sale_ref": "s-1", "lines": [{"item_code": "A", "qty": 1, "uom": "Nos"}]}})}
-    return page.sign_context(secret, payload)
+    return sign_context(secret, payload)
 
 
 class FakeShop:
@@ -101,7 +111,7 @@ class BoardTest(unittest.TestCase):
 
     def test_a_context_changed_after_signing_is_refused(self):
         body, sig = ctx().split(".")
-        other = page.b64(json.dumps({"v": 1, "nonce": "c" * 32, "exp": int(time.time()) + 300}).encode())
+        other = base64.urlsafe_b64encode(json.dumps({"v": 1, "nonce": "c" * 32, "exp": int(time.time()) + 300}).encode()).rstrip(b"=").decode()
         code, _ = self.call("/board/api/open", {"ctx": other + "." + sig})
         self.assertEqual(code, 403)
 
@@ -110,14 +120,12 @@ class BoardTest(unittest.TestCase):
         self.assertEqual(code, 403)
         self.assertIn("run out", out["error"])
 
-    def test_a_context_opens_once(self):
+    def test_a_page_that_reloads_opens_again(self):
         c = ctx()
         self.assertEqual(self.call("/board/api/open", {"ctx": c})[0], 200)
-        code, out = self.call("/board/api/open", {"ctx": c})
-        self.assertEqual(code, 403)
-        self.assertIn("already opened", out["error"])
+        self.assertEqual(self.call("/board/api/open", {"ctx": c})[0], 200)
 
-    def test_s1_the_answer_is_signed_and_sent_once(self):
+    def test_s1_the_answer_is_signed_and_the_shop_takes_one(self):
         c = ctx()
         code, out = self.call("/board/api/answer", {"ctx": c, "note": "Delivery booked."})
         self.assertEqual((code, out["ok"]), (200, 1))
@@ -126,13 +134,10 @@ class BoardTest(unittest.TestCase):
         self.assertEqual(sent["result"]["sale_attributes"],
                          [{"sale_attribute": page.ATTRIBUTE, "attribute_value": out["delivery_order"]}])
         code, out = self.call("/board/api/answer", {"ctx": c})
-        self.assertEqual((code, out["refused_by"]), (409, "partner service"))     # S3, refused by the service itself
-        self.board.check_once = False
-        code, out = self.call("/board/api/answer", {"ctx": c})
         self.assertEqual((code, out["refused_by"], out["error"]), (409, "shop", "This page has already answered."))
         self.assertEqual(len(self.shop.got), 1)
 
-    def test_an_unreachable_shop_releases_the_answer(self):
+    def test_an_unreachable_shop_says_so_and_the_same_context_may_answer(self):
         self.board._post = lambda url, body, headers: self.board._http_post("http://127.0.0.1:9/x", body, headers)
         c = ctx()
         code, out = self.call("/board/api/answer", {"ctx": c})
@@ -142,29 +147,6 @@ class BoardTest(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertNotIn("message", self.shop.got[0]["result"])   # a note that is not text is dropped, not sent
 
-    def test_the_test_routes_need_the_environment_and_the_token(self):
-        os.environ["PP_TEST_MODES"] = "1"
-        try:
-            board = app.Board({"PP_BASE": "http://shop.invalid", "PP_PAGE_SECRET": SECRET, "PP_ADMIN_TOKEN": "t0ken"})
-        finally:
-            del os.environ["PP_TEST_MODES"]
-        srv = ThreadingHTTPServer(("127.0.0.1", 0), app.make_handler(board))
-        threading.Thread(target=srv.serve_forever, daemon=True).start()
-        try:
-            url = f"http://127.0.0.1:{srv.server_port}/test/opened"
-            for token, want in (("wrong", 404), ("", 404), ("t0ken", 200)):
-                try:
-                    code = urllib.request.urlopen(urllib.request.Request(url, headers={"X-PP-Admin": token}), timeout=5).status
-                except urllib.error.HTTPError as e:
-                    code = e.code
-                self.assertEqual(code, want, token)
-        finally:
-            srv.shutdown()
-            srv.server_close()
-
-    def test_desk_takes_no_answer(self):
-        code, _ = self.call("/board/api/answer", {"ctx": ctx(doctype="Sales Order", name="SO-1")})
-        self.assertEqual((code, self.shop.got), (400, []))
 
 
 def cut_answer(*args, **kwargs):
@@ -187,7 +169,7 @@ def cut_answer(*args, **kwargs):
 class AnswerCutShort(unittest.TestCase):
     """An answer cut short (``http.client.IncompleteRead``) is handled on the path a refused connection already takes."""
 
-    def test_a_shop_answer_cut_short_releases_the_answer_like_an_unreachable_shop(self):
+    def test_a_shop_answer_cut_short_is_handled_like_an_unreachable_shop(self):
         board = app.Board({"PP_BASE": "http://shop.invalid", "PP_PAGE_SECRET": SECRET})
         with mock.patch.object(app.urllib.request, "urlopen", cut_answer):
             self.assertEqual(board._http_post("http://shop.invalid/x", b"{}", {}), (0, b""))

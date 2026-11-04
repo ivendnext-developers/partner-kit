@@ -26,7 +26,7 @@ The till's own customer card already shows, **read from the POS app's code at co
    ```
 
    iVendNext needs at least one thing a page may answer, so `page_returns_message` is 1 — and the page never answers.
-2. **Check the context on your server** ([the partner page recipe](partner_page.md), step 3): the signature over the payload's bytes, the expiry, the nonce once.
+2. **Check the context on your server** ([the partner page recipe](partner_page.md), step 3): the signature over the payload's bytes, the expiry.
 3. **Find the customer.** On the till, `sale.customer`; in Desk, the record's `name` when its type is *Customer*. No customer: say *No customer on this sale* and stop.
 4. **Read the customer's sales, newest first, at most x.** From *POS Invoice* and from *Sales Invoice* with `is_consolidated` 0, each filtered on the customer and `docstatus` 1, with `order_by` `posting_date desc, posting_time desc` and `limit_page_length` x. ⚠ Send `order_by` as plain text: sent as JSON (in quotes) iVendNext ignores it and answers oldest first. A consolidated *Sales Invoice* is the day's roll-up of the till's sales ([the event feed's page](../contracts/pages/event_feed.md)): reading it would show each sale twice. Merge the two lists, newest first by date and time (compare times as numbers: iVendNext sends `9:15:00` with no leading zero), and keep x.
 5. **Read each sale** (`/api/resource/⟨type⟩/⟨name⟩`, side by side: each is a round trip) and check its customer again. Then the full names of the users who made them (`/api/resource/User`, `full_name`).

@@ -411,8 +411,6 @@ class OverHttp(unittest.TestCase):
             self.assertEqual(json.loads(r.read())["message"]["title"], "Mark down")
         with urllib.request.urlopen(self.base + "/health") as r:
             self.assertEqual(json.loads(r.read()), {"ok": 1})
-        with self.assertRaises(urllib.error.HTTPError):
-            urllib.request.urlopen(self.base + "/test/received")
 
 
 class TestCall(unittest.TestCase):

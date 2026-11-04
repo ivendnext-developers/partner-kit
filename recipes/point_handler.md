@@ -53,7 +53,7 @@ A till key is a button on the till, an extension point the retailer switches on.
    - Answer a JSON object of at most 64 KB, well inside the time to answer.
    - Only **HTTPS** is called, with the certificate checked against your host name. An address that resolves to a private network is refused unless the retailer's site sets `mpos_remote_app_allow_private` (for test sites).
 
-7. **Test the remote binding with the same cases as the core.** Call your endpoint the way the till does (step 6), with the recorded contexts, and check the answers match the core's. Our stand-in caller (`tools/standin_caller/`) signs and judges a call the way the released key does. The sample wrapper has test-only fault routes, on only when a test starts it with `PP_WRAPPER_FAULTS=1`: your copy deletes them.
+7. **Test the remote binding with the same cases as the core.** Call your endpoint the way the till does (step 6), with the recorded contexts, and check the answers match the core's. Our stand-in caller (`tools/standin_caller/`) signs and judges a call the way the released key does.
 
 ## What is refused, and why
 
@@ -102,4 +102,4 @@ The till refuses in words, with **nothing added to the sale**, never a partial a
 ### Tests
 
 - `samples/s1_warranty/tests/test_core.py` — the core, without a retailer's iVendNext.
-- On our test bench, every failure case in the table above ended in the stated answer: **34 of 34 green**, including canaries that prove the checks can fail. The sample wrapper's test-only fault routes are on only when the test starts it with `PP_WRAPPER_FAULTS=1`; your copy deletes them.
+- On our test bench, every failure case in the table above ended in the stated answer: **34 of 34 green**, including canaries that prove the checks can fail.

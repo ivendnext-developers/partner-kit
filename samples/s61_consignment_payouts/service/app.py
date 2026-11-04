@@ -20,12 +20,9 @@ may do (the workflow's transition). Every write carries the payout's ``modified`
 someone's edit. A press reads for at most ``BUDGET_S`` seconds; past it, it writes nothing and the site says the press
 did not answer in time.
 
-Test-only routes, ON ONLY when the process starts with ``PP_TEST_MODES=1`` in its environment and the caller sends
-the ``X-PP-Admin`` token: ``GET /test/received`` returns the last presses as received. A partner's copy deletes them.
-
 ONE RETAILER (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the integration user), PP_WORK_SECRET and PP_PAY_SECRET (handed back at install as
-    pp_csg:sub:work and pp_csg:sub:pay), PP_ADMIN_TOKEN, PP_PORT (8161)
+    pp_csg:sub:work and pp_csg:sub:pay), PP_PORT (8161)
 MANY RETAILERS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_csg), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
 CSG_PREFIX (default PP CSG; IVENDNEXT CSG for the library's app) · PORT (default 8080)
@@ -36,7 +33,6 @@ CSG_PREFIX (default PP CSG; IVENDNEXT CSG for the library's app) · PORT (defaul
 from __future__ import annotations
 
 import datetime
-import hmac
 import http.client
 import json
 import os
@@ -184,9 +180,6 @@ class Service:
             one = oneshop.settings(conf, ["PP_WORK_SECRET", "PP_PAY_SECRET"])
             self.secrets = {"work": one["PP_WORK_SECRET"], "pay": one["PP_PAY_SECRET"]}
             self.tenant = tenant
-        self.admin = conf.get("PP_ADMIN_TOKEN") or ""
-        self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
-        self.received = []
         self._lock = threading.Lock()    # one retailer: one press at a time
 
     def caller(self, headers, sub: str) -> tuple[str, list[str], object | None]:
@@ -322,8 +315,6 @@ class Service:
             name, user = consign.payout_of(body)
         except ValueError as e:         # json's own errors are ValueErrors too
             return 400, {"error": str(e)}
-        if self.test_modes:
-            self.received = (self.received + [body["context"]])[-20:]
         if door is None:
             return 200, _warning(NOT_SET_UP)
         try:
@@ -382,9 +373,6 @@ def make_handler(svc: Service, log=sys.stderr):
                 _log(log, rid, self.path, code, t0)
 
         def do_GET(self):
-            if self.path == "/test/received" and svc.test_modes and hmac.compare_digest(
-                    (self.headers.get("X-PP-Admin") or "").encode(), svc.admin.encode()):
-                return self._send(200, {"received": svc.received})
             self._send(*svc.handle("GET", self.path, self.headers, b""))
 
         def log_message(self, fmt, *args):     # the server's own access line carries the path; keep it off
@@ -425,7 +413,7 @@ def main():
                          "IVN_LIBRARY_APP with a store (many retailers): the app does not start without a way to check a press")
     srv = ThreadingHTTPServer(("0.0.0.0", int(conf.get("PP_PORT") or conf.get("PORT") or 8161)), make_handler(svc))
     print(f"s61 consignment payouts on :{srv.server_port} ({'many retailers, ' + svc.app if svc.app else 'one retailer'}, "
-          f"prefix {consign.PREFIX}; test modes {'ON' if svc.test_modes else 'off'})", flush=True)
+          f"prefix {consign.PREFIX})", flush=True)
     srv.serve_forever()
 
 

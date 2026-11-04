@@ -1,17 +1,17 @@
 """S28 — *Customer history*: the pure core of the partner page (no framework, no network), shared by the service and
 its tests.
 
-The shop opens the page with a signed, one-time context in the address's fragment (``…/mhs/history/#ctx=…``): from a
+The shop opens the page with a signed context in the address's fragment (``…/mhs/history/#ctx=…``): from a
 till key, with the sale as the till holds it (its ``customer``); in Desk, for a Customer record (``doctype``/``name``).
 The page's own script sends it to the page's server, which checks it here (``read_context``: the signature over the
-payload's bytes, the expiry; ``OnceSet``: the nonce once), then reads that customer's sales over the record API and
+payload's bytes, the expiry), then reads that customer's sales over the record API and
 shapes them here (``pick``, ``visit``): the date, the store, who served, the sale's discount and each line's discount.
 
 The sales are read from *POS Invoice* and from *Sales Invoice* rows that are **not** consolidated: a day's roll-up
 invoice repeats the till's sales, so counting it would show each sale twice. ⛔ The page answers nothing to the sale.
 
-``read_context`` and ``OnceSet`` are S17's (``samples/s17_partner_page/page.py`` @ fac54dd): a defect here is a defect
-there — report it through the feedback forms (``feedback/README.md``). This copy adds a lock to ``OnceSet.claim``.
+``read_context`` is S17's (``samples/s17_partner_page/page.py``): a defect here is a defect there — report it through
+the feedback forms (``feedback/README.md``).
 """
 
 from __future__ import annotations
@@ -21,7 +21,6 @@ import binascii
 import hashlib
 import hmac
 import json
-import threading
 import time
 from decimal import Decimal
 
@@ -36,12 +35,6 @@ def _unb64(text: str) -> bytes:
 
 def b64(raw: bytes) -> str:
     return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
-
-
-def sign_context(secret: str, payload: dict) -> str:
-    """The shop's own minting, for tests: canonical JSON (sorted keys, no spaces, ASCII), then the HMAC."""
-    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
-    return b64(raw) + "." + b64(hmac.new(secret.encode(), raw, hashlib.sha256).digest())
 
 
 def read_context(ctx, secret: str, now: float | None = None) -> tuple[dict | None, str]:
@@ -66,24 +59,6 @@ def read_context(ctx, secret: str, now: float | None = None) -> tuple[dict | Non
     if not isinstance(payload.get("exp"), int) or now > payload["exp"] or payload.get("iat", 0) > now + CLOCK_SKEW_S:
         return None, "the context has run out; open the page again"
     return payload, ""
-
-
-class OnceSet:
-    """Nonces already used, each kept until its context runs out. ⚠ In memory: a restart forgets them, so a context
-    opened just before a restart could be opened once more within its five minutes. A partner keeps this in a database."""
-
-    def __init__(self):
-        self._seen: dict[str, int] = {}
-        self._lock = threading.Lock()     # the server answers each request on its own thread
-
-    def claim(self, nonce: str, exp: int, now: float | None = None) -> bool:
-        now = now or time.time()
-        with self._lock:
-            self._seen = {n: e for n, e in self._seen.items() if e >= now}
-            if nonce in self._seen:
-                return False
-            self._seen[nonce] = exp
-            return True
 
 
 def customer_of(payload: dict) -> str | None:

@@ -80,8 +80,6 @@ CANARIES = [
     ("the context signature is checked", H, "if not hmac.compare_digest(hmac.new(secret.encode(), raw, hashlib.sha256).digest(), got):",
      "if False:", "test_history.Context.test_a_bad_signature_is_refused"),
     ("an expired context is refused", H, 'now > payload["exp"]', "False", "test_history.Context.test_an_expired_context_is_refused"),
-    ("a nonce is used once", A, 'if not self.opened.claim(payload["nonce"], payload["exp"]):', "if False:",
-     "test_history.Context.test_a_reused_nonce_is_refused"),
     ("the roll-up invoice is skipped", H, 'for r in si_rows if not r.get("is_consolidated")]', "for r in si_rows]",
      "test_history.Visits.test_the_till_shows_the_sales_customers_visits_newest_first_without_the_roll_up"),
     ("the read asks for no roll-ups", A, '            filters.append(["is_consolidated", "=", 0])\n', "",

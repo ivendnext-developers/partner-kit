@@ -1,15 +1,14 @@
 """S17 — a partner page framed by the shop: the pure core (no framework, no network), shared by the service and its tests.
 
-When a cashier presses the page's till key, or a Desk user opens the page, the shop opens our page with a signed,
-one-time context in the address's FRAGMENT (``…/board/#ctx=<payload>.<signature>``), so it never reaches a server log
-or a ``Referer``. The page's own script reads it and sends it here; ``open_context`` checks it:
+When a cashier presses the page's till key, or a Desk user opens the page, the shop opens our page with a signed
+context in the address's FRAGMENT (``…/board/#ctx=<payload>.<signature>``), so it never reaches a server log or a
+``Referer``. The page's own script reads it and sends it here; ``read_context`` checks it:
 
 * the SIGNATURE — base64url HMAC-SHA256 of the payload's bytes with the subscription's secret (the installer handed it
   back once, as ``pp_pge:sub:board``);
-* the EXPIRY — ``exp``, five minutes after ``iat``;
-* the NONCE, ONCE — a context already opened is refused, so a copied address cannot be opened again.
+* the EXPIRY — ``exp``, five minutes after ``iat``.
 
-On the till the page answers ONCE, server to server: ``submit_body`` + ``sign`` make the signed POST to the shop's
+On the till the page answers server to server, and the shop takes one answer: ``submit_body`` + ``sign`` make the signed POST to the shop's
 ``ivendnext_mpos.api.page.submit`` (``X-iVendNext-Timestamp`` and ``X-iVendNext-Signature``: base64 HMAC-SHA256 of
 ``<timestamp>.<body>``). The till takes ``message`` and ``sale_attributes`` from a page — nothing that carries money.
 """
@@ -29,16 +28,6 @@ CLOCK_SKEW_S = 60
 
 def _unb64(text: str) -> bytes:
     return base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
-
-
-def b64(raw: bytes) -> str:
-    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
-
-
-def sign_context(secret: str, payload: dict) -> str:
-    """The shop's own minting, for tests: canonical JSON (sorted keys, no spaces, ASCII), then the HMAC."""
-    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
-    return b64(raw) + "." + b64(hmac.new(secret.encode(), raw, hashlib.sha256).digest())
 
 
 def read_context(ctx, secret: str, now: float | None = None) -> tuple[dict | None, str]:
@@ -63,26 +52,6 @@ def read_context(ctx, secret: str, now: float | None = None) -> tuple[dict | Non
     if not isinstance(payload.get("exp"), int) or now > payload["exp"] or payload.get("iat", 0) > now + CLOCK_SKEW_S:
         return None, "the context has run out; open the page again"
     return payload, ""
-
-
-class OnceSet:
-    """Nonces already used, each kept until its context runs out (then it could not be used anyway).
-    ⚠ In memory: a restart forgets them, so a context opened just before a restart could be opened once more
-    within its five minutes. A partner keeps this in its own database."""
-
-    def __init__(self):
-        self._seen: dict[str, int] = {}
-
-    def claim(self, nonce: str, exp: int, now: float | None = None) -> bool:
-        now = now or time.time()
-        self._seen = {n: e for n, e in self._seen.items() if e >= now}
-        if nonce in self._seen:
-            return False
-        self._seen[nonce] = exp
-        return True
-
-    def release(self, nonce: str) -> None:
-        self._seen.pop(nonce, None)
 
 
 def where(payload: dict) -> dict:

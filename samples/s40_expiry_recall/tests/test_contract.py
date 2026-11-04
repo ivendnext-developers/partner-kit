@@ -1,7 +1,6 @@
 """S40's answers against the published contracts (``desk_action.v1`` and ``doccheck.v1`` in ``contracts/``, read by
 ``tools/contracts/check.py``), and the calls the bench recorded, if a run is named."""
 
-import json
 import os
 import sys
 import unittest
@@ -13,8 +12,6 @@ import fakeshop  # noqa: E402,F401  (puts the sample on the path)
 import app  # noqa: E402
 import check  # noqa: E402
 import recall  # noqa: E402
-
-RUN = os.path.join(os.environ.get("BENCH_RUNS", "/nonexistent"), "ph_b2_scenario.json")
 
 
 @unittest.skipUnless(check.available(), "the contracts folder is missing from this copy of the kit")
@@ -39,15 +36,6 @@ class ContractTest(unittest.TestCase):
     def test_a_bad_answer_is_caught_by_the_contract(self):
         self.assertTrue(check.errors("doccheck", "answer", {"verdict": "flag"}))       # no flag in the vocabulary
         self.assertTrue(check.errors("desk_action", "answer", recall.message("t", "b") | {"open_page": "/x"}))
-
-    @unittest.skipUnless(os.path.exists(RUN), "no bench run recorded yet")
-    def test_the_calls_the_bench_sent_hold(self):
-        with open(RUN) as f:
-            got = json.load(f).get("received") or []
-        self.assertTrue(got)
-        for r in got:
-            point = "desk_action" if r["sub"] in ("block", "worklist") else "doccheck"
-            self.assertEqual(check.errors(point, "request", {"point": f"{point}/1", "context": r["context"]}), [], r["sub"])
 
 
 if __name__ == "__main__":

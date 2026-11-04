@@ -59,15 +59,6 @@ def context_of(body: dict) -> dict:
     return ctx
 
 
-def rules_from(env: dict) -> dict:
-    """The rule from the service's settings, for a run with no shop to read (comma lists; the ID limit in whole currency
-    units, blank = off). A connected shop's rule is its own records (``rules_of``)."""
-    def names(key):
-        return {x.strip() for x in (env.get(key) or "").split(",") if x.strip()}
-    limit = (env.get("PP_ASK_ABOVE") or "").strip()
-    return {"items": names("PP_MEMBERS_ONLY_ITEMS"), "groups": names("PP_MEMBERS_ONLY_GROUPS"),
-            "member_groups": names("PP_MEMBER_GROUPS"), "ask_above": float(limit) if limit else None}
-
 
 # A shop's own rule (many shops, the App library's app): one ``<prefix> Rule`` record per rule, read back by the service.
 KINDS = {"Members-only item": ("items", "item"), "Members-only item group": ("groups", "item_group"),

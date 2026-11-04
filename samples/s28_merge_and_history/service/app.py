@@ -3,7 +3,7 @@
     POST /mhs/merge                 the shop's signed press of *Merge counts* (``desk_action/1``) → the answer
     GET  /mhs/history/              the customer history page (``history.html``); the shop opens it with ``#ctx=…``
     GET  /mhs/history/ivn-kit.css   the design kit, served from the kit's ``kit/design/`` (a partner copies it beside)
-    POST /mhs/history/api/open      {ctx} → the context checked (signature · expiry · nonce once), then the visits
+    POST /mhs/history/api/open      {ctx} → the context checked (signature · expiry), then the visits
 
 Both doors work through the shop's record API with the service's own key (the app's integration user), and both read
 the one settings record ``PP MHS Settings`` named ``Default``: the merge rule and how many sales the page shows.
@@ -131,7 +131,6 @@ class Shop:
 class Service:
     def __init__(self, conf: dict, shop):
         self.action_secret, self.page_secret, self.shop = conf["PP_ACTION_SECRET"], conf["PP_PAGE_SECRET"], shop
-        self.opened = history.OnceSet()
         self._lock = threading.Lock()     # one merge at a time: a retry racing its first try finds its draft
 
     # ── the Desk button ──
@@ -184,8 +183,6 @@ class Service:
         payload, why = history.read_context(data.get("ctx"), self.page_secret)
         if not payload:
             return 403, {"error": why}
-        if not self.opened.claim(payload["nonce"], payload["exp"]):
-            return 403, {"error": "this page was already opened; open it again from the shop"}
         out = {"theme": payload.get("theme"), "lang": payload.get("lang"), "on": "till" if "sale" in payload or payload.get("pos_profile") else "desk"}
         customer = history.customer_of(payload)
         if not customer:
@@ -218,7 +215,6 @@ class Hosted:
     def __init__(self, conf: dict, store=None, shop_of=Shop):
         self.app, self.shop_of = oneshop.value(conf, oneshop.MANY), shop_of
         self.store = store or shops.open_store(conf)
-        self.opened = history.OnceSet()
         with open(os.path.join(HERE, "history.html"), "rb") as f:
             self.html = f.read()
 
@@ -227,9 +223,7 @@ class Hosted:
         key, _, secret = (record["secrets"][users[0]] if users else "").partition(":")
         if not (key and secret):
             return None
-        svc = Service({"PP_ACTION_SECRET": action_secret, "PP_PAGE_SECRET": page_secret}, self.shop_of(record["url"], key, secret))
-        svc.opened = self.opened
-        return svc
+        return Service({"PP_ACTION_SECRET": action_secret, "PP_PAGE_SECRET": page_secret}, self.shop_of(record["url"], key, secret))
 
     def press(self, headers, raw: bytes) -> tuple[int, dict]:
         site = shops.site_of(headers.get(shops.SITE_HEADER))

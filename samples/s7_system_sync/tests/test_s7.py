@@ -7,6 +7,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -142,8 +143,13 @@ class OutTests(Base):
     def test_crash_after_the_write_before_the_cursor_nothing_doubled(self):
         self.erp.move_stock("A", 5, unit_cost=40.0)
         self.erp.move_stock("A", 7, unit_cost=40.0)
-        with self.assertRaises(SystemExit):
-            self.out(crash_after=3)                          # item, price, first movement written; cursor behind by one
+        real = S._movement
+
+        def write_then_stop(*a):                             # the write is done, the cursor is not
+            real(*a)
+            raise SystemExit("stopped after the write, before the cursor")
+        with mock.patch.object(S, "_movement", write_then_stop), self.assertRaises(SystemExit):
+            self.out()                                       # item, price, first movement written; cursor behind by one
         self.out()                                           # restart
         me = self.erp.identity()
         self.assertEqual(sorted(self.shop.entries), [f"PP-SYNC {me} mv:1", f"PP-SYNC {me} mv:2", f"PP-SYNC {me} mv:3"])

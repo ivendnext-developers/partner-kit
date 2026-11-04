@@ -8,6 +8,7 @@ import os
 import sqlite3
 import sys
 import unittest
+from unittest import mock
 from decimal import Decimal
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -330,8 +331,16 @@ class Backfill(Base):
         S.PAGE = self._page
 
     def test_a_crash_resumes_at_the_saved_page_and_writes_nothing_twice(self):
-        with self.assertRaises(SystemExit):
-            self.svc.backfill(crash_after_pages=1)
+        real, pages = self.shop.rows, []
+
+        def stop_on_the_second_page(*a, **k):                  # the first page is written and its place saved
+            if k.get("limit"):
+                pages.append(a)
+                if len(pages) > 1:
+                    raise SystemExit("stopped after one page")
+            return real(*a, **k)
+        with mock.patch.object(self.shop, "rows", stop_on_the_second_page), self.assertRaises(SystemExit):
+            self.svc.backfill()
         self.assertEqual(len(self.shop.writes), 2)
         self.shop.pages.clear()
         self.svc.backfill()

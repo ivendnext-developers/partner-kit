@@ -186,9 +186,6 @@ class Service:
             self.site = _host(one["IVN_SHOP_URL"])
             self.secret = one["IVN_SEND_SECRET"]
             self.tenant = tenant or tenant_of(one["IVN_SHOP_URL"], one["IVN_SHOP_KEY"])
-        self.admin = conf.get("PP_ADMIN_TOKEN") or ""
-        self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
-        self.received = []
         self._lock = threading.Lock()    # one retailer: one press at a time
 
     def retailer(self, site) -> tuple[str, list[bytes], object | None]:
@@ -326,8 +323,6 @@ class Service:
             names, _user = fb.rules_of_press(body)
         except ValueError as e:         # json's own errors are ValueErrors too
             return 400, {"error": str(e)}
-        if self.test_modes:
-            self.received = (self.received + [body["context"]])[-20:]
         if door is None:
             return 200, fb.message(NOT_SET_UP, "warning")
         try:
@@ -469,8 +464,6 @@ def make_server(svc: Service, port: int):
             self.wfile.write(body)
 
         def do_GET(self):
-            if self.path == "/test/received" and svc.test_modes and self.headers.get("X-PP-Admin") == svc.admin:
-                return self._send(*_json(200, {"received": svc.received}))
             self._answer("GET")
 
         def do_POST(self):
@@ -513,8 +506,7 @@ def main():
     svc = Service(conf)
     srv = make_server(svc, int(conf.get("PORT") or 8080))
     signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=srv.shutdown, daemon=True).start())
-    print(json.dumps({"listening": srv.server_address[1], "prefix": fb.PREFIX,
-                      "test_modes": "on" if svc.test_modes else "off"}), flush=True)
+    print(json.dumps({"listening": srv.server_address[1], "prefix": fb.PREFIX}), flush=True)
     srv.serve_forever()
 
 

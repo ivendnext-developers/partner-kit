@@ -29,6 +29,21 @@ RULES = {"PP_MEMBERS_ONLY_ITEMS": "WINE-RESERVE", "PP_MEMBERS_ONLY_GROUPS": "Mem
          "PP_MEMBER_GROUPS": "Club Members, Gold", "PP_ASK_ABOVE": "5000"}
 
 
+def rules_from(env: dict) -> dict:
+    """The sample rule for these tests, with no shop to read."""
+    def names(key):
+        return {x.strip() for x in (env.get(key) or "").split(",") if x.strip()}
+    limit = (env.get("PP_ASK_ABOVE") or "").strip()
+    return {"items": names("PP_MEMBERS_ONLY_ITEMS"), "groups": names("PP_MEMBERS_ONLY_GROUPS"),
+            "member_groups": names("PP_MEMBER_GROUPS"), "ask_above": float(limit) if limit else None}
+
+
+def with_rules(secret: str = SECRET):
+    svc = app.Service({"PP_POINT_SECRET": secret})
+    svc.rules = rules_from(RULES)
+    return svc
+
+
 def context(lines=(("BREAD", "Bakery"),), group="Retail", grand=1250, stage="sale", exp=2, currency="AED"):
     return {"v": 1, "point": "check", "stage": stage, "currency_exponent": exp, "sale_ref": "s-1", "store": "Main - S",
             "pos_profile": "Mall", "company": "Shop", "currency": currency, "lang": "en", "operator": "c@shop.example",
@@ -52,7 +67,7 @@ def signed(raw, secret=SECRET, ts=None):
 
 
 class RuleTest(unittest.TestCase):
-    rules = rule.rules_from(RULES)
+    rules = rules_from(RULES)
 
     def test_an_ordinary_sale_is_allowed(self):
         self.assertEqual(rule.decide(context(), self.rules), {"verdict": "allow"})
@@ -84,7 +99,7 @@ class RuleTest(unittest.TestCase):
         self.assertEqual(out["verdict"], "refuse")
 
     def test_no_limit_set_never_asks(self):
-        rules = rule.rules_from({**RULES, "PP_ASK_ABOVE": ""})
+        rules = rules_from({**RULES, "PP_ASK_ABOVE": ""})
         self.assertEqual(rule.decide(context(grand=10 ** 9), rules), {"verdict": "allow"})
 
     def test_what_a_return_takes_back_is_never_guarded(self):
@@ -107,13 +122,13 @@ class RuleTest(unittest.TestCase):
     def test_every_sentence_is_plain_and_fits(self):
         long = "X" * 140 + "<b>"
         for out in (rule.decide(context(lines=((long, "Members Lounge"),)), self.rules),
-                    rule.decide(context(grand=10 ** 12), rule.rules_from({**RULES, "PP_ASK_ABOVE": "9999999999"}))):
+                    rule.decide(context(grand=10 ** 12), rules_from({**RULES, "PP_ASK_ABOVE": "9999999999"}))):
             text = out.get("reason") or out.get("question")
             self.assertTrue(1 <= len(text) <= rule.TEXT_MAX, text)
             self.assertFalse({"<", ">"} & set(text), text)
 
     def test_an_item_code_carrying_markup_is_shown_without_it(self):
-        rules = rule.rules_from({**RULES, "PP_MEMBERS_ONLY_ITEMS": "<b>WINE</b>"})
+        rules = rules_from({**RULES, "PP_MEMBERS_ONLY_ITEMS": "<b>WINE</b>"})
         out = rule.decide(context(lines=(("<b>WINE</b>", "Wines"),)), rules)
         self.assertEqual(out["reason"], "bWINE/b is for members only. Add the member's customer to the sale first.")
 
@@ -127,7 +142,7 @@ class RuleTest(unittest.TestCase):
 
 class ServiceTest(unittest.TestCase):
     def setUp(self):
-        self.svc = app.Service({"PP_POINT_SECRET": SECRET, **RULES})
+        self.svc = with_rules()
         self.srv = app.ThreadingHTTPServer(("127.0.0.1", 0), app.make_handler(self.svc))
         threading.Thread(target=self.srv.serve_forever, daemon=True).start()
         self.url = f"http://127.0.0.1:{self.srv.server_port}/rgd/check"
@@ -190,7 +205,7 @@ class TestCall(unittest.TestCase):
     BAD = b"not a call"          # a body the point's handler refuses: a real call with it is never answered 200
 
     def setUp(self):
-        self.svc = app.Service({"PP_POINT_SECRET": SECRET, **RULES})
+        self.svc = with_rules()
         # route -> (the point's key as the site knows it, its secret)
         self.routes = {app.ROUTE: (app.KEY, SECRET)}
 

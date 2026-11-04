@@ -41,11 +41,11 @@ class Context(unittest.TestCase):
         self.assertEqual((code, shop.reads), (403, []))
         self.assertIn("run out", out["error"])
 
-    def test_a_reused_nonce_is_refused(self):
+    def test_a_page_that_reloads_opens_again(self):
         svc, _ = service()
         ctx = context("Ann")
         self.assertEqual(svc.open({"ctx": ctx})[0], 200)
-        self.assertEqual(svc.open({"ctx": ctx})[0], 403)
+        self.assertEqual(svc.open({"ctx": ctx})[0], 200)
 
     def test_a_tampered_payload_is_refused(self):
         body, sig = context("Ann").split(".")

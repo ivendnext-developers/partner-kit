@@ -40,7 +40,7 @@ class Base(unittest.TestCase):
         self.addCleanup(self.dir.cleanup)
         self.store = shops.FileStore(os.path.join(self.dir.name, "shops.json"))
 
-import page  # noqa: E402
+from test_service import sign_context  # noqa: E402
 
 
 class Board(Base):
@@ -52,7 +52,7 @@ class Board(Base):
 
     @staticmethod
     def ctx(secret, nonce="n" * 32):
-        return page.sign_context(secret, {"v": 1, "nonce": nonce, "iat": int(time.time()), "exp": int(time.time()) + 300,
+        return sign_context(secret, {"v": 1, "nonce": nonce, "iat": int(time.time()), "exp": int(time.time()) + 300,
                                           "store": "Main", "pos_profile": "Counter 1", "sale": {"lines": []}})
 
     def post(self, svc, path, **data):
@@ -74,7 +74,7 @@ class Board(Base):
         self.assertEqual(self.post(self.service(), "/board/api/open", ctx=self.ctx("x" * 32))[0], 403)
 
     def test_a_context_run_out_says_so_in_the_boards_words(self):
-        old = page.sign_context("a" * 32, {"v": 1, "nonce": "o" * 32, "iat": int(time.time()) - 900, "exp": int(time.time()) - 600})
+        old = sign_context("a" * 32, {"v": 1, "nonce": "o" * 32, "iat": int(time.time()) - 900, "exp": int(time.time()) - 600})
         self.assertEqual(self.post(self.service(), "/board/api/open", ctx=old)[1]["error"], "the context has run out; open the page again")
 
     def test_a_test_call_needs_the_sites_own_secret(self):

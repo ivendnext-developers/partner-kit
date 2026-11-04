@@ -21,7 +21,7 @@ What a partner usually changes:
 - the handset count: `PP_QTY_ASK_ABOVE` (3) and `PP_QTY_MOST` (5);
 - the barred numbers: `PP_BARRED_PHONES`;
 - the line attribute that holds the warranty reference: `PP_LINE_ATTRIBUTE`;
-- your message gateway: `CAP_MESSAGE_URL` is posted the phone and the code; with none, a customer is added with no code. The sample's own gateway is a stand-in that writes to a private file: replace `Outbox.send` in `service/app.py` with your SMS or WhatsApp provider before production.
+- your message gateway: `CAP_MESSAGE_URL` is posted the phone and the code; with none, a customer is added with no code.
 
 A serial- or lot-tracked line is never asked about a quantity change, so name only groups the retailer sells without serial numbers.
 

@@ -1,7 +1,6 @@
 """S6 — a local stand-in for an AI service: speaks the chat-completions request, answers from providers.stub, needs no
 account and no network. For the sample and its tests only. Env: PP_STUB_PORT (default 8127), PP_STUB_DELAY (seconds
-to wait before answering). Test markers in the prompt, so a test can make one request slow or failing without
-restarting anything: a store named "PP-SLOW-TEST" makes the answer take 5 s; "PP-FAIL-TEST" makes it a server error."""
+to wait before answering)."""
 
 import json
 import os
@@ -18,11 +17,7 @@ def make_server(port=0, delay=0.0):
         def do_POST(self):
             req = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)))
             prompt = req["messages"][-1]["content"]
-            time.sleep(delay + (5 if "PP-SLOW-TEST" in prompt else 0))
-            if "PP-FAIL-TEST" in prompt:
-                self.send_response(500)
-                self.end_headers()
-                return
+            time.sleep(delay)
             text = providers.stub(prompt)
             data = json.dumps({"choices": [{"message": {"role": "assistant", "content": text}}]}).encode()
             self.send_response(200)

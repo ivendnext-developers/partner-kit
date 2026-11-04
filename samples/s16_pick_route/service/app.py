@@ -14,13 +14,9 @@ second one: the key is stored on the task, so this holds across a restart. While
 call with the same key is refused (409): one shop's press is held by an in-process lock, many shops' by a claim in the
 shops table that every copy of the function sees (``CLAIM_STALE``).
 
-Test-only routes, ON ONLY when the process starts with ``PP_TEST_MODES=1`` in its environment and the caller sends
-the ``X-PP-Admin`` token: ``POST /test/mode`` picks the answer (``open`` · ``refresh`` · ``missing``) and
-``GET /test/received`` returns the last presses as received. A partner's copy deletes them.
-
 ONE SHOP (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the integration user), PP_POINT_SECRET (handed back at install as pp_pck:sub:route),
-    PP_ADMIN_TOKEN, PP_PORT (8131)
+    PP_PORT (8131)
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
     IVN_LIBRARY_APP    the App library's id (ivendnext_pck), with IVN_SHOPS_TABLE (CitiXsys hosting) or IVN_SHOPS_FILE.
                        Each shop connects itself after its install and hands over the press's secret
@@ -139,9 +135,6 @@ class Service:
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
             self.secret, self.tenant = oneshop.settings(conf, ["PP_POINT_SECRET"])["PP_POINT_SECRET"], tenant
-        self.admin = conf.get("PP_ADMIN_TOKEN") or ""
-        self.test_modes = os.environ.get("PP_TEST_MODES") == "1" and bool(self.admin)   # environment only
-        self.mode, self.received = "open", []
         self._lock = threading.Lock()     # one shop: one press at a time, so a retry racing its first try finds its task
 
     def caller(self, headers) -> tuple[str, list[str], object | None]:
@@ -194,12 +187,8 @@ class Service:
             ctx = route.context_of(json.loads(raw))
         except ValueError as e:         # json's own errors are ValueErrors too
             return 400, {"error": str(e)}
-        if self.test_modes:
-            self.received = (self.received + [ctx])[-20:]
         inputs, key = ctx["inputs"], ctx["idempotency_key"]
         tasks = [route.plan(r, inputs, key) for r in ctx["records"]]
-        if self.mode == "missing":
-            return 200, route.answer(tasks, [], "missing")
         if door is None:
             return 200, _warning(NOT_SET_UP)
         if len(tasks) > ORDERS_MAX:
@@ -231,7 +220,7 @@ class Service:
             return 502, {"error": str(e)}
         except Exception:               # noqa: BLE001 — the shops table did not answer the claim: nothing was written
             return 503, {"error": "unavailable"}
-        return 200, route.answer(tasks, names, self.mode)
+        return 200, route.answer(tasks, names)
 
     def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, dict]:
         """One call: (status, answer). The web server below and the function entry both call this."""
@@ -264,9 +253,6 @@ def make_handler(svc: Service, log=sys.stderr):
             self.end_headers()
             self.wfile.write(data)
 
-        def _admin(self) -> bool:
-            return svc.test_modes and self.headers.get("X-PP-Admin") == svc.admin
-
         def do_POST(self):
             t0, rid, code = time.monotonic(), (self.headers.get("X-iVendNext-Request-Id") or "-")[:40], 500
             try:
@@ -275,19 +261,12 @@ def make_handler(svc: Service, log=sys.stderr):
                     code = 413
                     return self._send(413, {"error": "too large"})
                 raw = self.rfile.read(n)
-                if self.path == "/test/mode" and self._admin():
-                    mode = json.loads(raw or b"{}").get("mode")
-                    if mode in ("open", "refresh", "missing"):
-                        svc.mode, code = mode, 200
-                        return self._send(200, {"mode": mode})
                 code, out = svc.handle("POST", self.path, self.headers, raw)
                 return self._send(code, out)
             finally:
                 _log(log, rid, self.path, code, t0)
 
         def do_GET(self):
-            if self.path == "/test/received" and self._admin():
-                return self._send(200, {"received": svc.received})
             self._send(*svc.handle("GET", self.path, self.headers, b""))
 
         def log_message(self, fmt, *args):     # the framework's own access line carries the path; keep it off
@@ -328,7 +307,7 @@ def main():
                          "(many shops): the app does not start without a way to check a press")
     srv = ThreadingHTTPServer(("0.0.0.0", int(conf.get("PP_PORT") or conf.get("PORT") or 8131)), make_handler(svc))
     print(f"s16 pick route on :{srv.server_port} ({'many shops, ' + svc.app if svc.app else 'one shop'}, "
-          f"{route.TASK}; test modes {'ON' if svc.test_modes else 'off'})", flush=True)
+          f"{route.TASK})", flush=True)
     srv.serve_forever()
 
 
