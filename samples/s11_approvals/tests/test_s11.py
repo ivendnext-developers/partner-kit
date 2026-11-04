@@ -32,7 +32,7 @@ class S11(unittest.TestCase):
 
     def test_the_person_who_raised_an_order_may_submit_it_but_not_approve_it(self):
         self.assertEqual(moves("Draft")["Submit"]["allow_self_approval"], 1)
-        self.assertFalse(moves("Draft")["Approve"].get("allow_self_approval"))
+        self.assertEqual(moves("Draft")["Approve"]["allow_self_approval"], 0)
 
     def test_every_state_a_move_names_is_a_state(self):
         for t in FLOW["transitions"]:

@@ -20,7 +20,7 @@ In `manifest.json`, under `workflows`:
     {"state": "Cancelled", "doc_status": 2, "allow_edit": "Purchase Manager"}
   ],
   "transitions": [
-    {"state": "Draft", "action": "Approve", "next_state": "Approved", "allowed": "Purchase Manager", "condition": "doc.base_grand_total > 50000"},
+    {"state": "Draft", "action": "Approve", "next_state": "Approved", "allowed": "Purchase Manager", "allow_self_approval": 0, "condition": "doc.base_grand_total > 50000"},
     {"state": "Draft", "action": "Reject", "next_state": "Rejected", "allowed": "Purchase Manager", "condition": "doc.base_grand_total > 50000"},
     {"state": "Draft", "action": "Submit", "next_state": "Approved", "allowed": "Purchase User", "allow_self_approval": 1, "condition": "doc.base_grand_total <= 50000"},
     {"state": "Rejected", "action": "Review", "next_state": "Draft", "allowed": "Purchase User", "allow_self_approval": 1},
@@ -31,7 +31,7 @@ In `manifest.json`, under `workflows`:
 
 - **`doc_status`:** 0 keeps the document a draft, 1 submits it, 2 cancels it. Moving into a state with 1 submits the document, so the person who presses needs the right to submit it.
 - **`allowed`:** the role that may press the action. **`allow_edit`:** the role that may edit the document in that state.
-- **`allow_self_approval`:** 1 lets the person who raised the document take this step. Without it they cannot, so nobody approves their own order; a step the buyer takes needs it.
+- **`allow_self_approval`:** 0 stops the person who raised the document taking this step, so nobody approves their own order; 1 lets them, and a step the buyer takes needs it. A step that says nothing takes Desk's own setting, so name `0` on every step that must stay two-person.
 - **`condition`:** when the action is offered, written with the document's fields (`doc.base_grand_total`, the total in the company's currency, or `doc.company`). Keep every state reachable: above, *Submit* takes what *Approve* does not.
 - **`send_email_alert`:** 1 mails whoever may act next.
 

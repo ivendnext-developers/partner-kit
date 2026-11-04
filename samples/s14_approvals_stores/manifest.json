@@ -3,7 +3,7 @@
  "app": "pp_aps",
  "prefix": "PP APS",
  "title": "Price change approvals across stores",
- "version": "0.3.1",
+ "version": "0.3.2",
  "publisher": "Partner Programme sample",
  "description": "A request to change a selling price names its STORE and moves Requested -> Store Approved -> Head Office Approved -> Applied by a native workflow. A store manager sees and approves only their own store's requests (a User Permission on the store, one per person); head office sees all. An outside service applies an approved change through the record API: within the store's limit (a percentage it reads from its own setting), or whatever head office approved.",
  "doctypes": [
@@ -163,19 +163,22 @@
      "state": "PP APS Requested",
      "action": "PP APS Store Approve",
      "next_state": "PP APS Store Approved",
-     "allowed": "PP APS Store Manager"
+     "allowed": "PP APS Store Manager",
+     "allow_self_approval": 0
     },
     {
      "state": "PP APS Requested",
      "action": "PP APS Head Office Approve",
      "next_state": "PP APS Head Office Approved",
-     "allowed": "PP APS Head Office"
+     "allowed": "PP APS Head Office",
+     "allow_self_approval": 0
     },
     {
      "state": "PP APS Store Approved",
      "action": "PP APS Head Office Approve",
      "next_state": "PP APS Head Office Approved",
-     "allowed": "PP APS Head Office"
+     "allowed": "PP APS Head Office",
+     "allow_self_approval": 0
     },
     {
      "state": "PP APS Requested",

@@ -379,6 +379,12 @@ class T(unittest.TestCase):
         self.assertEqual((f["currency"]["fieldtype"], f["currency"]["options"], f["currency"].get("fetch_from"), f["currency"].get("read_only")),
                          ("Link", "Currency", "price_list.currency", 1))
 
+    def test_the_person_who_raised_a_change_may_not_approve_it_at_either_step(self):
+        m = json.loads((HERE.parent / "manifest.json").read_text())
+        steps = [t for w in m["workflows"] for t in w["transitions"] if t["action"].endswith(" Approve")]
+        self.assertEqual(len(steps), 3)
+        self.assertEqual({t["allow_self_approval"] for t in steps}, {0})
+
 
 if __name__ == "__main__":
     unittest.main()
