@@ -347,6 +347,164 @@ class Register(Base):
         self.assertEqual(out, {"verdict": "allow"})
 
 
+class TillFill(Base):
+    """0.1.4: the dispensary's check at its filling address answers with the prescription's date (``PB-27``)."""
+    def setUp(self):
+        super().setUp()
+        self.shop.prescription("RX1", "Ann", "AMOX", 21, fills=2, written="2026-10-19")
+
+    def test_the_filling_address_fills_the_date_and_the_second_call_is_answered_the_same(self):
+        first = self.sell(("AMOX", "Rx", 21), rx="RX1", route="/rxc/dispensary/fill")
+        self.assertEqual(first, (200, {"verdict": "allow", "fill": {f"{P} Rx Date": "2026-10-19"}}))
+        # the till writes it, prices the sale again and asks once more on the filled sale: the same value, one reservation
+        again = self.sell(("AMOX", "Rx", 21), rx="RX1", route="/rxc/dispensary/fill", details={"Rx Date": "2026-10-19"})
+        self.assertEqual(again, first)
+        (d,) = self.shop.dispensings()
+        self.assertEqual(d["status"], RX.RESERVED)
+
+    def test_the_old_address_never_fills_so_a_shop_still_on_0_1_3_is_answered_as_before(self):
+        self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1"), (200, {"verdict": "allow"}))
+        out = self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-2", details={"Rx Date": "2026-10-01"})[1]
+        self.assertIn("was written on 2026-10-19. Correct the date in Sale details.", out["reason"])
+
+    def test_a_return_is_never_filled_and_the_front_has_no_filling_address(self):
+        # a return without its sale may carry a line being sold (an exchange on the selling screen): never filled there
+        body = till_body([("AMOX", "Rx", 21)], rx="RX1", stage="return")
+        self.assertEqual(self.call("/rxc/dispensary/fill", body)[1], {"verdict": "allow"})
+        self.assertEqual(self.svc.handle("POST", "/rxc/front/fill", {}, b"{}")[0], 404)
+
+
+def press_body(name, user="officer@shop", reference=None, doctype=f"{P} Erasure"):
+    inputs = {"reference": reference} if reference is not None else {}
+    return {"point": "desk_action/1", "context": {"v": 1, "action": "a1", "idempotency_key": "k1", "label": "x",
+            "lang": "en", "inputs": inputs, "user": user,
+            "records": [{"doctype": doctype, "name": name, "fields": {"name": name}}]}}
+
+
+class Erasure(Base):
+    """0.1.4 (R-16): after the keeping period the Records Officer lists the patients due and erases them; never a timer."""
+    ERA = "RXC-ERA-00001"
+
+    def setUp(self):
+        super().setUp()
+        self.svc = app.Service(dict(CONF, IVN_SECRET_LIST_DUE="secret-list_due", IVN_SECRET_ERASE="secret-erase"),
+                               api=self.shop, now=lambda: NOW)
+        self.shop.rows(f"{P} Settings")[0]["keep_years"] = 2          # today 2026-10-22: due if nothing since 2024-10-22
+        self.shop.add(f"{P} Erasure", name=self.ERA, status="Draft")
+        for c in ("Old", "Mixed", "OnlyPatient", "Moved"):
+            self.shop.add("Customer", name=c)
+        for c, day, written in (("Old", "2023-05-01", "2023-04-30"), ("Mixed", "2023-01-01", "2025-06-01"),
+                                ("Moved", "2023-02-01", "2023-02-01")):
+            self.shop.add(f"{P} Prescription", name=f"RX-{c}", customer=c, date_written=written)
+            self.shop.add(f"{P} Dispensing", name=f"{c}~0001", key=f"{c}~0001", customer=c, day=day, seq=1,
+                          status="Dispensed", lines_json="{}")
+        self.shop.add(f"{P} Patient", name="p-old", customer="Old", creation="2023-04-01 10:00:00")
+        self.shop.add(f"{P} Patient", name="p-only", customer="OnlyPatient", creation="2022-01-05 09:00:00")
+        self.shop.rows("Customer")[-1]["pp_rxc_id_number"] = "ID-9"      # Moved still holds 0.1.1's ID on the customer
+        self.shop.prescription("RX1", "Ann", "AMOX", 21, written="2026-10-19")
+
+    def press(self, route, body, secret=None):
+        raw = json.dumps(body).encode()
+        return self.svc.handle("POST", route, sign(raw, secret or f"secret-{app.PRESSES[route]}"), raw)
+
+    def record(self):
+        return next(r for r in self.shop.rows(f"{P} Erasure") if r["name"] == self.ERA)
+
+    def listed(self):
+        return self.press("/rxc/erasure/list", press_body(self.ERA))
+
+    def test_nobody_is_listed_until_the_shop_sets_its_period(self):
+        del self.shop.rows(f"{P} Settings")[0]["keep_years"]
+        code, out = self.listed()
+        self.assertEqual((code, out["message"]["level"]), (200, "warning"))
+        self.assertIn("Keep a patient's records for (years)", out["message"]["body"])
+        self.assertEqual(self.record()["status"], "Draft")
+
+    def test_the_list_holds_each_patient_whose_newest_record_of_every_kind_is_older_than_the_period(self):
+        code, out = self.listed()
+        self.assertEqual(code, 200)
+        self.assertIn("3 patients with no record since 2024-10-22", out["message"]["body"])
+        rec = self.record()
+        self.assertEqual((rec["status"], rec["keep_years"], rec["cut_off"]), ("Listed", 2, "2024-10-22"))
+        # Mixed's prescription of 2025 keeps them; Ann buys today; Moved is listed (the act keeps them, below)
+        self.assertEqual([(r["customer"], r["last_record"], r["prescriptions"], r["dispensings"]) for r in rec["patients"]],
+                         [("OnlyPatient", "2022-01-05", 0, 0), ("Moved", "2023-02-01", 1, 1), ("Old", "2023-05-01", 1, 1)])
+
+    def test_erase_deletes_the_dispensings_then_the_prescriptions_then_the_patient_and_keeps_the_record(self):
+        self.listed()
+        code, out = self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes 12/2026"))
+        self.assertEqual(code, 200)
+        self.assertEqual(out["message"]["body"], "Erased 2 patients. 1 kept: each row says why. This erasure is done.")
+        gone = [x for x in self.shop.deleted]
+        self.assertEqual(gone, [(f"{P} Dispensing", "Old~0001"), (f"{P} Prescription", "RX-Old"), (f"{P} Patient", "p-old"),
+                                (f"{P} Patient", "p-only")] if gone[0][1] == "Old~0001" else
+                         [(f"{P} Patient", "p-only"), (f"{P} Dispensing", "Old~0001"), (f"{P} Prescription", "RX-Old"),
+                          (f"{P} Patient", "p-old")])
+        rec = self.record()
+        self.assertEqual((rec["status"], rec["erased_by"], rec["reference"], rec["erased_count"], rec["kept_count"]),
+                         ("Erased", "officer@shop", "Minutes 12/2026", 2, 1))
+        self.assertEqual({r["customer"]: r["outcome"] for r in rec["patients"]},
+                         {"OnlyPatient": "Erased", "Old": "Erased", "Moved": RX.KEPT_MOVED})
+        self.assertTrue(self.shop.rows(f"{P} Dispensing"))           # Ann's, Mixed's and Moved's are untouched
+        self.assertEqual(self.press("/rxc/erasure/erase", press_body(self.ERA, reference="x"))[1]["message"]["body"],
+                         "This erasure is done.")
+
+    def test_a_patient_who_came_back_since_the_list_is_kept(self):
+        self.listed()
+        self.shop.add(f"{P} Dispensing", name="Old~0002", key="Old~0002", customer="Old", day="2026-10-20", seq=2,
+                      status="Dispensed", lines_json="{}")
+        self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))
+        rows = {r["customer"]: r["outcome"] for r in self.record()["patients"]}
+        self.assertEqual(rows["Old"], "Kept: a record dated 2026-10-20 is inside the period")
+        self.assertTrue([r for r in self.shop.rows(f"{P} Patient") if r["customer"] == "Old"])
+
+    def test_a_period_lengthened_after_the_list_keeps_everyone_it_now_covers(self):
+        self.listed()
+        self.shop.rows(f"{P} Settings")[0]["keep_years"] = 5           # the shop read its law again: 5 years
+        self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))
+        self.assertFalse(getattr(self.shop, "deleted", []))
+        self.assertTrue(all(r["outcome"].startswith("Kept") for r in self.record()["patients"]))
+
+    def test_erase_needs_the_list_and_a_destruction_record(self):
+        out = self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))[1]
+        self.assertEqual(out["message"]["body"], "List the patients due first.")
+        self.listed()
+        out = self.press("/rxc/erasure/erase", press_body(self.ERA, reference="  "))[1]
+        self.assertIn("Type your destruction record", out["message"]["body"])
+        self.assertFalse(getattr(self.shop, "deleted", []))
+
+    def test_a_long_erasure_stops_in_time_and_the_next_press_goes_on(self):
+        self.listed()
+        t = iter([0.0] + [100.0] * 50)              # the press started at 0; the first row's check reads 100 s later
+        self.svc.clock = lambda: next(t)
+        out = self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))[1]
+        self.assertIn("3 still to do: press Erase these patients again.", out["message"]["body"])
+        self.assertEqual(self.record()["status"], "Listed")
+        self.svc.clock = lambda: 0.0
+        self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))
+        self.assertEqual(self.record()["status"], "Erased")
+
+    def test_a_shop_that_refuses_a_delete_stops_the_act_and_says_so(self):
+        self.listed()
+        def refuse(*a):
+            raise app.ShopUnreadable("the shop answered 417")
+        self.shop.delete = refuse
+        out = self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))[1]
+        self.assertEqual(out["message"]["level"], "warning")
+        self.assertIn("press Erase again", out["message"]["body"])
+        self.assertEqual(self.record()["status"], "Listed")
+
+    def test_each_button_takes_only_its_own_secret_and_one_shop_without_it_refuses(self):
+        body = press_body(self.ERA, reference="Minutes")
+        self.assertEqual(self.press("/rxc/erasure/erase", body, secret="secret-list_due")[0], 401)
+        self.assertEqual(self.press("/rxc/erasure/erase", body, secret="secret-dispensary")[0], 401)
+        plain = app.Service(CONF, api=self.shop, now=lambda: NOW)          # a 0.1.3 shop's settings: no button secrets
+        raw = json.dumps(body).encode()
+        self.assertEqual(plain.handle("POST", "/rxc/erasure/erase", sign(raw, "secret-erase"), raw)[0], 401)
+        self.assertEqual(self.press("/rxc/erasure/list", press_body(self.ERA, doctype="Customer"))[0], 400)
+        self.assertFalse(getattr(self.shop, "deleted", []))
+
+
 class Desk(Base):
     def item(self, code="AMOX", group="Rx", qty=21, **parents):
         return dict({"item_code": code, "item_group": group, "stock_qty": int(qty * 1000)}, **parents)

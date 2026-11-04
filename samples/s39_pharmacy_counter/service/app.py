@@ -2,11 +2,14 @@
 """S39 — *Pharmacy counter rules*: the service behind the till's check before payment (two subscriptions) and the Desk's
 document checks (three), standard library only.
 
-    POST /rxc/dispensary       the dispensary's check (``check/1``; declared down answer: refuse)
+    POST /rxc/dispensary/fill  the dispensary's check from 0.1.4 (``check/1``; refuse): it also fills the prescription's date
+    POST /rxc/dispensary       the dispensary's check before 0.1.4 (``check/1``; refuse): the cashier types the date
     POST /rxc/front            the front of the shop's check (``check/1``; allow and flag)
     POST /rxc/desk/order       the document check on Sales Order    (``doccheck/1``, submit)
     POST /rxc/desk/delivery    the document check on Delivery Note  (``doccheck/1``, submit)
     POST /rxc/desk/invoice     the document check on Sales Invoice  (``doccheck/1``, submit)
+    POST /rxc/erasure/list     *List patients due* on a <prefix> Erasure (``desk_action/1``, 0.1.4)
+    POST /rxc/erasure/erase    *Erase these patients* on it (``desk_action/1``, 0.1.4): the only call that deletes
     GET  /health               200 {"status": "ok"}
     POST /ivendnext/connect · /ivendnext/disconnect   many shops: the app template's handshake (shops.py)
 
@@ -32,7 +35,8 @@ answers 503 and the till applies the subscription's down answer.
 
 ONE SHOP (env or an env file):
     IVN_SECRET_<KEY>   each subscription's secret (handed back at install as pp_rxc:sub:<key>), for the keys
-                       DISPENSARY, FRONT, DESK_ORDER, DESK_DELIVERY, DESK_INVOICE
+                       DISPENSARY, FRONT, DESK_ORDER, DESK_DELIVERY, DESK_INVOICE; and, for 0.1.4's two buttons,
+                       LIST_DUE and ERASE (left out, those buttons are refused and the checks run as before)
     IVN_SHOP_URL       the shop's address, e.g. https://shop.example.com
     IVN_SHOP_KEY       the app's integration user's key, "<api key>:<api secret>"
 MANY SHOPS (the app template's handshake, tools/app_template/service/shops.py; guide chapter 1a):
@@ -80,11 +84,19 @@ RECHECK_DAYS = 400     # a dispensing is re-read from the shop this many days (a
                        # status set by hand
 ROWS_MAX = 2000        # a patient's dispensings read per decision (the newest first)
 #        route                   (secret key, point)
-ROUTES = {"/rxc/dispensary": ("dispensary", "check"),
+ROUTES = {"/rxc/dispensary/fill": ("dispensary", "check"),     # 0.1.4's address: its subscription lists the date to fill
+          "/rxc/dispensary": ("dispensary", "check"),          # 0.1.3's: a fill there would be refused whole (its list is empty)
           "/rxc/front": ("front", "check"),
           "/rxc/desk/order": ("desk_order", "doccheck"),
           "/rxc/desk/delivery": ("desk_delivery", "doccheck"),
           "/rxc/desk/invoice": ("desk_invoice", "doccheck")}
+FILLS = {"/rxc/dispensary/fill"}
+PRESSES = {"/rxc/erasure/list": "list_due", "/rxc/erasure/erase": "erase"}     # route → secret key (desk_action/1)
+PRESS_BY = 7.0         # seconds a press works before it answers what it did (its button waits 10)
+PRESS_READ = 5.0       # each read or delete in a press waits at most this
+CANDIDATES_MAX = 500   # customers read per record type, oldest first, when listing who is due
+BATCH = 50             # customers named in one filter (an address holds the filter)
+DELETES = 6            # deletes in parallel
 DESK_DOCTYPE = {"desk_order": "Sales Order", "desk_delivery": "Delivery Note", "desk_invoice": "Sales Invoice"}
 
 
@@ -109,14 +121,14 @@ class ShopApi:
     """The reads and the one write the service makes, with the shop's own key. Swapped for a stand-in in the tests."""
 
     def _call(self, url: str, key: str, method: str, path: str, query: dict | None = None, body: dict | None = None,
-              missing=False):
+              missing=False, timeout=READ_TIMEOUT):
         q = f"?{urllib.parse.urlencode(query)}" if query else ""
         data = json.dumps(body).encode() if body is not None else None
         req = urllib.request.Request(f"{url.rstrip('/')}{path}{q}", data=data, method=method,
                                      headers={"Authorization": f"token {key}", "Accept": "application/json",
                                               "Content-Type": "application/json"})
         try:
-            with urllib.request.build_opener(_NoRedirect).open(req, timeout=READ_TIMEOUT) as r:
+            with urllib.request.build_opener(_NoRedirect).open(req, timeout=timeout) as r:
                 return json.loads(r.read() or b"{}") or {}
         except urllib.error.HTTPError as e:
             code = e.code
@@ -136,7 +148,8 @@ class ShopApi:
             raise ShopUnreadable("the shop's answer is not records")
         return data
 
-    def get_list(self, url, key, doctype, fields, filters=None, parent=None, order_by=None, limit=0) -> list:
+    def get_list(self, url, key, doctype, fields, filters=None, parent=None, order_by=None, limit=0, group_by=None,
+                 timeout=READ_TIMEOUT) -> list:
         query = {"fields": json.dumps(fields), "limit_page_length": limit}
         if filters:
             query["filters"] = json.dumps(filters)
@@ -144,7 +157,9 @@ class ShopApi:
             query["parent"] = parent
         if order_by:
             query["order_by"] = order_by
-        return self._data(self._call(url, key, "GET", "/api/resource/" + _q(doctype), query), list)
+        if group_by:
+            query["group_by"] = group_by
+        return self._data(self._call(url, key, "GET", "/api/resource/" + _q(doctype), query, timeout=timeout), list)
 
     def get_one(self, url, key, doctype, name):
         out = self._call(url, key, "GET", "/api/resource/" + _q(doctype) + "/" + _q(name), missing=True)
@@ -155,6 +170,10 @@ class ShopApi:
 
     def update(self, url, key, doctype, name, values: dict) -> dict:
         return self._data(self._call(url, key, "PUT", "/api/resource/" + _q(doctype) + "/" + _q(name), body=values), dict)
+
+    def delete(self, url, key, doctype, name) -> None:
+        """Delete one record; one already gone (404) is no error."""
+        self._call(url, key, "DELETE", "/api/resource/" + _q(doctype) + "/" + _q(name), missing=True, timeout=PRESS_READ)
 
 
 class Service:
@@ -168,8 +187,8 @@ class Service:
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
             one = oneshop.settings(conf, [f"IVN_SECRET_{k.upper()}" for k, _ in ROUTES.values()]
-                                   + ["IVN_SHOP_URL", "IVN_SHOP_KEY"])
-            self.secrets = {k: one[f"IVN_SECRET_{k.upper()}"] for k, _ in ROUTES.values()}
+                                   + ["IVN_SHOP_URL", "IVN_SHOP_KEY"], [f"IVN_SECRET_{k.upper()}" for k in PRESSES.values()])
+            self.secrets = {k: one[f"IVN_SECRET_{k.upper()}"] for k in [k for k, _ in ROUTES.values()] + list(PRESSES.values())}
             self.shop = {"url": one["IVN_SHOP_URL"].rstrip("/"), "key": one["IVN_SHOP_KEY"]}
 
     def dt(self, suffix: str) -> str:
@@ -180,7 +199,7 @@ class Service:
     def caller(self, route_key: str, headers) -> tuple[str, list[str], dict | None]:
         """(the shop's name for the caches, the secrets this route's call may be signed with, the shop's address and key)."""
         if not self.app:
-            return "-", [self.secrets[route_key]], self.shop
+            return "-", [self.secrets[route_key]] if self.secrets.get(route_key) else [], self.shop
         site = shops.site_of(headers.get(shops.SITE_HEADER))
         record = self.store.get(site) if site else None
         secrets = [s.decode() for s in shops.secrets_for(record, f"{self.app}:sub:{route_key}")]
@@ -526,6 +545,157 @@ class Service:
                 except (ShopUnreadable, Taken):
                     pass
 
+    # ── after the keeping period: the Records Officer's two buttons (0.1.4) ─────
+
+    def _agg(self, shop, doctype, col, filters=None, order_by=None, limit=0) -> list:
+        """Each customer's newest ``col`` among ``doctype``'s records (and how many), one row per customer."""
+        return self._list(shop, self.dt(doctype), ["customer", f"max({col}) as last", "count(name) as n"], filters,
+                          order_by=order_by, limit=limit, group_by="customer", timeout=PRESS_READ)
+
+    KINDS = (("Dispensing", "day"), ("Prescription", "date_written"), ("Patient", "creation"))
+
+    def due_patients(self, shop, cut) -> tuple[list, bool]:
+        """([(customer, newest, prescriptions, dispensings)] whose newest record of every kind is before ``cut``, oldest
+        first, at most LIST_MAX; whether more may be due)."""
+        cands: list = []
+        for doctype, col in self.KINDS:          # oldest first: a kind's read stops being useful at the first newer one
+            for r in self._agg(shop, doctype, col, order_by="last asc", limit=CANDIDATES_MAX):
+                d = rxrules._date(r.get("last"))
+                if d and d < cut and r.get("customer") and r["customer"] not in cands:
+                    cands.append(r["customer"])
+        newest, counts = {}, {}
+        for i in range(0, len(cands), BATCH):
+            names = cands[i:i + BATCH]
+            reads = {k: self._agg(shop, k, col, [["customer", "in", names]]) for k, col in self.KINDS}
+            newest.update(rxrules.newest_of(*reads.values()))
+            for k in ("Prescription", "Dispensing"):
+                for r in reads[k]:
+                    counts[(k, r.get("customer"))] = r.get("n") or 0
+        due = sorted((c for c in cands if newest.get(c, datetime.date.max) < cut), key=lambda c: (newest[c], c))
+        return ([(c, newest[c], counts.get(("Prescription", c), 0), counts.get(("Dispensing", c), 0))
+                 for c in due[:rxrules.LIST_MAX]], len(due) > rxrules.LIST_MAX or len(cands) >= CANDIDATES_MAX)
+
+    def _erasure(self, shop, name):
+        rec = self.api.get_one(shop["url"], shop["key"], self.dt("Erasure"), name)
+        settings = self.api.get_one(shop["url"], shop["key"], self.dt("Settings"), "Default")
+        return rec, rxrules.keep_years_of(settings), rxrules.settings_of(settings)
+
+    def list_due(self, shop, name) -> dict:
+        rec, years, settings = self._erasure(shop, name)
+        if not rec:
+            return rxrules.message("This erasure cannot be read. Reload the page.", "warning")
+        if rec.get("status") == rxrules.ERASED:
+            return rxrules.message("This erasure is done. Make a new one for the patients due now.", "warning")
+        if not years:
+            return rxrules.message(f"Set Keep a patient's records for (years) in {self.dt('Settings')} first: the "
+                                   "longest period your pharmacy law sets.", "warning")
+        cut = rxrules.cut_off(rxrules.today_at(settings["hours"], self.now()), years)
+        due, more = self.due_patients(shop, cut)
+        rows = [{"customer": c, "last_record": d.isoformat(), "prescriptions": nrx, "dispensings": nd, "outcome": ""}
+                for c, d, nrx, nd in due]
+        self.api.update(shop["url"], shop["key"], self.dt("Erasure"), name,
+                        {"status": rxrules.LISTED if rows else rxrules.DRAFT, "keep_years": years,
+                         "cut_off": cut.isoformat(), "patients": rows})
+        if not rows:
+            return rxrules.message(f"No patient is due: everyone has a record dated on or after {cut.isoformat()}.",
+                                   "info", refresh=True)
+        words = f"{len(rows)} patient{'s' if len(rows) != 1 else ''} with no record since {cut.isoformat()}, listed here. "
+        words += ("Erase them, then make a new erasure for the rest. " if more else "")
+        return rxrules.message(words + "Check the list, then press Erase these patients.", refresh=True)
+
+    def erase(self, shop, name, user, inputs, started) -> dict:
+        rec, years_now, settings = self._erasure(shop, name)
+        if not rec:
+            return rxrules.message("This erasure cannot be read. Reload the page.", "warning")
+        if rec.get("status") != rxrules.LISTED:
+            return rxrules.message("List the patients due first." if rec.get("status") != rxrules.ERASED
+                                   else "This erasure is done.", "warning")
+        reference = rxrules.plain(inputs.get("reference") or "", 140)
+        if not reference:
+            return rxrules.message("Type your destruction record (the minutes, the inspector present).", "warning")
+        # the period now in force, never shorter than the one the list was made under
+        years = max(rxrules.keep_years_of(rec), years_now)
+        cut = rxrules.cut_off(rxrules.today_at(settings["hours"], self.now()), years)
+        rows = [dict(r) for r in rec.get("patients") or []]
+        done = stopped = 0
+        fp = self.p
+        try:
+            for row in rows:
+                if row.get("outcome"):
+                    continue
+                if self.clock() - started > PRESS_BY:
+                    stopped = 1
+                    break
+                c = row.get("customer") or ""
+                f = [["customer", "=", c]]
+                got = {k: self._list(shop, self.dt(k), ["name", f"{col} as last", "customer"], f, timeout=PRESS_READ)
+                       for k, col in self.KINDS}
+                moved = self._list(shop, "Customer", ["name"] + [f"{fp}_{m}" for m in rxrules.MOVED], [["name", "=", c]],
+                                   timeout=PRESS_READ)
+                if any(r.get("customer") != c for rs in got.values() for r in rs):
+                    raise ShopUnreadable("the shop answered for another customer")
+                newest = rxrules.newest_of(*got.values()).get(c)
+                if newest and newest >= cut:
+                    row["outcome"] = rxrules.KEPT_NEWER.format(day=newest.isoformat() if newest != datetime.date.max
+                                                               else "with no date")
+                    continue
+                if any(r.get(f"{fp}_{m}") for r in moved for m in rxrules.MOVED):
+                    row["outcome"] = rxrules.KEPT_MOVED
+                    continue
+                # a dispensing names its prescription, so the dispensings go first, then the prescriptions, then the patient
+                for k, _col in self.KINDS:
+                    names = [r["name"] for r in got[k]]
+                    with ThreadPoolExecutor(max_workers=DELETES) as pool:
+                        list(pool.map(lambda n, k=k: self.api.delete(shop["url"], shop["key"], self.dt(k), n), names))
+                row.update({"outcome": rxrules.ERASED_ROW, "prescriptions": len(got["Prescription"]),
+                            "dispensings": len(got["Dispensing"])})
+                done += 1
+        except ShopUnreadable:
+            stopped = 2
+        left = sum(1 for r in rows if not r.get("outcome"))
+        values = {"patients": rows, "reference": reference, "erased_by": user,
+                  "erased_at": datetime.datetime.fromtimestamp(self.now()).strftime("%Y-%m-%d %H:%M:%S"),
+                  "erased_count": sum(1 for r in rows if r.get("outcome") == rxrules.ERASED_ROW),
+                  "kept_count": sum(1 for r in rows if (r.get("outcome") or "").startswith("Kept"))}
+        if not left:
+            values["status"] = rxrules.ERASED
+        self.api.update(shop["url"], shop["key"], self.dt("Erasure"), name, values)
+        words = f"Erased {done} patient{'s' if done != 1 else ''}."
+        if values["kept_count"]:
+            words += f" {values['kept_count']} kept: each row says why."
+        if stopped == 2:
+            return rxrules.message(words + f" iVendNext refused a read or a delete, so {left} wait: press Erase again.",
+                                   "warning", refresh=True)
+        if left:
+            return rxrules.message(words + f" {left} still to do: press Erase these patients again.", "info", refresh=True)
+        return rxrules.message(words + " This erasure is done.", refresh=True)
+
+    def press(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
+        route_key, started = PRESSES[path], self.clock()
+        try:
+            _name, secrets, shop = self.caller(route_key, headers)
+        except Exception:               # noqa: BLE001 — the shops store did not answer: nothing was done
+            return 503, {"error": "unavailable"}
+        ts, sig = headers.get("X-iVendNext-Timestamp"), headers.get("X-iVendNext-Signature")
+        if not secrets or all(rxrules.verify(ts, sig, raw, s) for s in secrets):
+            return 401, {"error": "the signature does not match"}
+        if testcall.is_test(headers):
+            return testcall.answer(route_key)
+        try:
+            name, user, inputs = rxrules.press_context(json.loads(raw), self.dt("Erasure"))
+        except ValueError as e:
+            return 400, {"error": str(e)}
+        if not shop:
+            return 200, rxrules.message("The app has not been given its user's key yet: press Connect again on its "
+                                        "installed version.", "warning")
+        try:
+            if route_key == "list_due":
+                return 200, self.list_due(shop, name)
+            return 200, self.erase(shop, name, user, inputs, started)
+        except (ShopUnreadable, ValueError) as e:
+            print(json.dumps({"error": type(e).__name__}), file=sys.stderr, flush=True)
+            return 200, rxrules.message("iVendNext could not be read, so nothing was changed. Try again.", "warning")
+
     # ── the call ─────────────────────────────────────────────────────────────
 
     def answer(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
@@ -544,6 +714,8 @@ class Service:
         try:
             body = json.loads(raw)
             ctx = rxrules.sale_context(body) if point == "check" else rxrules.desk_context(body, self.prefix)
+            if point == "check":        # nothing is filled on a return, so it is never answered there
+                ctx["fillable"] = path in FILLS and ctx["stage"] == "sale"
             if point == "doccheck" and ctx["doctype"] != DESK_DOCTYPE[route_key]:
                 raise ValueError("this route checks another record type")
         except ValueError as e:         # json's own errors are ValueErrors too
@@ -563,6 +735,8 @@ class Service:
             return (200, {"status": "ok"}) if path == "/health" else (404, {"error": "not found"})
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw)
+        if path in PRESSES:
+            return self.press(path, headers, raw)
         return self.answer(path, headers, raw)
 
 
@@ -625,7 +799,7 @@ def env_file(path: str) -> dict:
 
 def main():
     conf = dict(os.environ, **(env_file(sys.argv[1]) if len(sys.argv) > 1 else {}))
-    one = [f"IVN_SECRET_{k.upper()}" for k, _ in ROUTES.values()] + ["IVN_SHOP_URL", "IVN_SHOP_KEY"]
+    one = sorted({f"IVN_SECRET_{k.upper()}" for k, _ in ROUTES.values()}) + ["IVN_SHOP_URL", "IVN_SHOP_KEY"]
     if not (oneshop.many(conf) or all(oneshop.value(conf, k) for k in one)):
         raise SystemExit("set " + ", ".join(one) + " (one shop), or IVN_LIBRARY_APP with a store (many shops): "
                          "the app does not start without a way to check a call")

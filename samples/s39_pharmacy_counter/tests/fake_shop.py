@@ -1,11 +1,13 @@
 """A stand-in shop for S39's service tests: the records the service reads and the one record type it writes, behind the
-same four calls as ``service/app.py``'s ``ShopApi`` (``get_list``, ``get_one``, ``insert``, ``update``). Filters are the
+same calls as ``service/app.py``'s ``ShopApi`` (``get_list``, ``get_one``, ``insert``, ``update``, ``delete``). A list
+may group by a field and read ``max(<field>) as last``, ``count(name) as n`` and ``<field> as last``, as the shop's own does. Filters are the
 shapes the service sends: ``[field, "=" | "in", value]``. An insert whose name exists raises ``Taken`` (the shop's 409).
 ``fail`` makes every call raise ``ShopUnreadable`` (a shop that is down); ``before_insert`` runs a hook before an insert
 (another till taking the number first)."""
 
 from __future__ import annotations
 
+import re
 import threading
 
 import app
@@ -40,16 +42,41 @@ class FakeShop:
                 return False
             if op == "<=" and not (have and str(have) <= v):
                 return False
+            if op == "<" and not (have and str(have) < v):
+                return False
         return True
 
-    def get_list(self, url, key, doctype, fields, filters=None, parent=None, order_by=None, limit=0):
+    @staticmethod
+    def _field(spec):
+        """(the column a field reads, the key it answers under, the aggregate): ``max(day) as last`` → (day, last, max)."""
+        m = re.fullmatch(r"(?:(max|count)\((\w+)\)|(\w+)) as (\w+)", spec)
+        return (m.group(2) or m.group(3), m.group(4), m.group(1)) if m else (spec, spec, None)
+
+    def get_list(self, url, key, doctype, fields, filters=None, parent=None, order_by=None, limit=0, group_by=None,
+                 timeout=None):
         self.calls.append(("list", doctype, filters, list(fields)))
         if self.fail:
             raise app.ShopUnreadable("down")
+        specs = [self._field(f) for f in fields]
         with self.lock:
-            out = [{f: r.get(f) for f in fields} for r in self.rows(doctype) if self._match(r, filters)]
+            rows = [r for r in self.rows(doctype) if self._match(r, filters)]
+        if group_by:
+            groups: dict = {}
+            for r in rows:
+                groups.setdefault(r.get(group_by), []).append(r)
+            out = []
+            for g, rs in groups.items():
+                o = {}
+                for col, as_, agg in specs:
+                    vals = [str(r[col]) for r in rs if r.get(col) is not None]
+                    o[as_] = (max(vals) if vals else None) if agg == "max" else len(rs) if agg == "count" else rs[0].get(col)
+                out.append(o)
+        else:
+            out = [{as_: r.get(col) for col, as_, _ in specs} for r in rows]
         if order_by == "seq desc":
             out.sort(key=lambda r: r.get("seq") or 0, reverse=True)
+        if order_by == "last asc":
+            out.sort(key=lambda r: r.get("last") or "")
         return out[:limit] if limit else out
 
     def get_one(self, url, key, doctype, name):
@@ -82,6 +109,15 @@ class FakeShop:
                     r.update(values)
                     return dict(r)
         raise app.ShopUnreadable("404")
+
+    def delete(self, url, key, doctype, name):
+        self.calls.append(("delete", doctype, name))
+        if self.fail:
+            raise app.ShopUnreadable("down")
+        with self.lock:
+            before = len(self.rows(doctype))
+            self.tables[doctype] = [r for r in self.rows(doctype) if r.get("name") != name]
+            self.deleted = getattr(self, "deleted", []) + ([(doctype, name)] if len(self.tables[doctype]) < before else [])
 
     # ── a pharmacy, ready to sell ────────────────────────────────────────────
 

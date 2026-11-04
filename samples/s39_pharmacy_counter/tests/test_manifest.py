@@ -29,11 +29,12 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(validate.validate(MANIFEST), [])
         self.assertEqual(validate.warnings(MANIFEST), [])
 
-    def test_five_services_switched_off_with_the_designs_down_answers(self):
-        self.assertEqual({k: (s["point"], s["down_answer"]) for k, s in SUBS.items()},
+    def test_seven_services_with_the_designs_down_answers(self):
+        self.assertEqual({k: (s["point"], s.get("down_answer")) for k, s in SUBS.items()},
                          {"dispensary": ("check", "refuse"), "front": ("check", "allow_and_flag"),
                           "desk_order": ("doccheck", "refuse"), "desk_delivery": ("doccheck", "refuse"),
-                          "desk_invoice": ("doccheck", "refuse")})
+                          "desk_invoice": ("doccheck", "refuse"),
+                          "list_due": ("desk_action", None), "erase": ("desk_action", None)})
         for s in SUBS.values():
             self.assertFalse(any(k in s for k in ("enabled", "consent_given", "scope", "secret", "may_approve")))
 
@@ -55,7 +56,7 @@ class ManifestTest(unittest.TestCase):
         import app
         for key, s in SUBS.items():
             path = "/" + s["endpoint_url"].split("/", 3)[3]
-            self.assertEqual(app.ROUTES[path][0], key)
+            self.assertEqual(app.PRESSES[path] if s["point"] == "desk_action" else app.ROUTES[path][0], key)
         self.assertEqual(sorted(MANIFEST["allowed_urls"]), sorted(s["endpoint_url"] for s in SUBS.values()))
         self.assertEqual(len({u.split("/")[2] for u in MANIFEST["allowed_urls"]}), 1)
 
@@ -95,8 +96,9 @@ class ManifestTest(unittest.TestCase):
         # row (PH-B1d run 1), and the framework refuses a row with no right (run 2): read alone is the least (the
         # administrator still reads a patient, run 3, but cannot change or delete one)
         self.assertEqual(readers["System Manager"], {"read"})
-        self.assertEqual(readers[f"{P} Integration"], {"read"})
-        self.assertEqual({r for r, k in readers.items() if "delete" in k}, {f"{P} Records Officer"})
+        # 0.1.4: the service deletes a patient record only on the Records Officer's press of Erase (``Service.erase``)
+        self.assertEqual(readers[f"{P} Integration"], {"read", "delete"})
+        self.assertEqual({r for r, k in readers.items() if "delete" in k}, {f"{P} Records Officer", f"{P} Integration"})
         self.assertFalse([r for r, k in readers.items() if k & {"export", "print", "email", "share"}])
         # no Connections link to it: a count there would tell any customer reader the person is a patient
         self.assertFalse([ln for ln in MANIFEST["links"] if ln["link_doctype"] == f"{P} Patient"])
@@ -153,10 +155,10 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(perm(f"{P} Pharmacist", "System Manager") & {"write", "create", "delete"}, set())
         self.assertIn("write", perm(f"{P} Pharmacist", f"{P} Pharmacist in Charge"))
         self.assertEqual(perm(f"{P} Pharmacist", f"{P} Pharmacist") & {"write", "create"}, set())
-        self.assertEqual(perm(f"{P} Prescription", f"{P} Integration"), {"read"})
+        self.assertEqual(perm(f"{P} Prescription", f"{P} Integration"), {"read", "delete"})     # 0.1.4: Erase only
         self.assertIn("create", perm(f"{P} Prescription", f"{P} Pharmacist"))
         self.assertEqual(perm(f"{P} Prescription", "System Manager") & {"write", "create"}, set())
-        self.assertEqual(perm(f"{P} Dispensing", f"{P} Integration"), {"read", "write", "create"})
+        self.assertEqual(perm(f"{P} Dispensing", f"{P} Integration"), {"read", "write", "create", "delete"})
         for role in ("System Manager", f"{P} Pharmacist"):
             self.assertEqual(perm(f"{P} Dispensing", role) & {"write", "create", "delete"}, set())
         # the pharmacist-in-charge may release a stuck reservation by hand, never make or delete one
@@ -169,13 +171,62 @@ class ManifestTest(unittest.TestCase):
         officer = f"{P} Records Officer"
         for dt in (f"{P} Prescription", f"{P} Dispensing"):
             deleters = {p["role"] for p in DT[dt]["permissions"] if p.get("delete")}
-            self.assertEqual(deleters, {officer}, dt)
+            self.assertEqual(deleters, {officer, f"{P} Integration"}, dt)     # 0.1.4: the service, on the officer's press
             self.assertEqual(perm(dt, officer), {"read", "report", "delete"}, dt)
         self.assertEqual(perm(f"{P} Patient", officer), {"read", "report", "delete"})
         for d in MANIFEST["doctypes"]:
-            if d["name"] not in (f"{P} Prescription", f"{P} Dispensing", f"{P} Patient"):
+            if d["name"] not in (f"{P} Prescription", f"{P} Dispensing", f"{P} Patient", f"{P} Erasure"):
                 self.assertFalse([p for p in d.get("permissions") or [] if p["role"] == officer], d["name"])
         self.assertEqual(perm(f"{P} Prescription", f"{P} Pharmacist in Charge") & {"delete"}, set())
+
+    def test_the_dispensarys_check_fills_the_date_at_its_own_address_and_the_front_is_unchanged(self):
+        # 0.1.4 (PB-27): a fill only its subscription lists, at an address only 0.1.4 calls (a 0.1.3 shop's list is empty)
+        import app
+        import rxrules
+        disp, front = SUBS["dispensary"], SUBS["front"]
+        self.assertEqual(disp["settings"], {"fill_attributes": [f"{P} {rxrules.RX_DATE}"]})
+        self.assertIn("/" + disp["endpoint_url"].split("/", 3)[3], app.FILLS)
+        self.assertIn(f"{P} {rxrules.RX_DATE}", {a["name"] for a in MANIFEST["sale_attributes"]})
+        # the front refuses every prescription line before the date rule, so a fill there could never fire
+        self.assertNotIn("settings", front)
+        self.assertNotIn("/" + front["endpoint_url"].split("/", 3)[3], app.FILLS)
+
+    def test_the_dispensing_label_prints_three_item_fields_and_the_dose_within_the_doors_limits(self):
+        (lay,) = MANIFEST["label_layouts"]
+        self.assertTrue(lay["label_name"].startswith(P))
+        t = lay["template"]
+        items = re.findall(r"\{item\.([a-z0-9_]+)\}", t)
+        details = re.findall(r"\{detail\.([^}]+)\}", t)
+        self.assertEqual(sorted(items), sorted({f"{PF}_strength", f"{PF}_route", f"{PF}_registration_no"}))
+        own = {c["fieldname"]: c for c in MANIFEST["custom_fields"] if c["dt"] == "Item"}
+        for f in items:          # the door prints Data, Select, Int or Check, open to every role
+            self.assertEqual((own[f]["fieldtype"], own[f].get("permlevel", 0)), ("Data", 0), f)
+        self.assertNotIn(f"{{item.{PF}_directions}}", t)          # Small Text: the door refuses it
+        self.assertEqual(details, ["Dose"])                     # the line detail the shop makes before installing
+        self.assertIn("{uom}", t)                               # the line's unit, from a basket line
+        self.assertNotIn("{barcode", t)                         # a part pack's unit has no barcode of its own
+        self.assertNotIn("<style", t)                           # braces in a style block read as placeholders
+
+    def test_the_erasure_is_the_records_officers_act_and_its_record_is_changed_by_nobody(self):
+        officer, integ = f"{P} Records Officer", f"{P} Integration"
+        self.assertEqual(perm(f"{P} Erasure", officer), {"read", "create", "report", "print"})
+        self.assertEqual(perm(f"{P} Erasure", integ), {"read", "write"})
+        self.assertEqual(perm(f"{P} Erasure", "System Manager"), {"read", "report", "print"})
+        self.assertFalse([p for p in DT[f"{P} Erasure"]["permissions"] if p.get("delete")])
+        acts = {a["service"]: a for a in MANIFEST["desk_actions"]}
+        self.assertEqual(set(acts), {"list_due", "erase"})
+        for a in acts.values():
+            self.assertEqual((a["record_type"], a["roles"]), (f"{P} Erasure", [officer]))
+        self.assertEqual(acts["erase"]["states"], ["Listed"])
+        self.assertTrue(acts["erase"]["confirm_text"])
+        self.assertEqual([(i["fieldname"], i.get("reqd")) for i in acts["erase"]["inputs"]], [("reference", 1)])
+        # the period is the shop's own number: a default would be wrong in every market but one
+        (keep,) = [f for f in DT[f"{P} Settings"]["fields"] if f["fieldname"] == "keep_years"]
+        self.assertEqual((keep["fieldtype"], keep.get("default")), ("Int", None))
+        # the integration user deletes only the patient's own three record types
+        self.assertEqual({d["name"] for d in MANIFEST["doctypes"] for p in d.get("permissions") or []
+                          if p["role"] == integ and p.get("delete")},
+                         {f"{P} Patient", f"{P} Prescription", f"{P} Dispensing"})
 
     def test_the_prescription_image_is_said_to_be_private_on_the_desk(self):
         img = next(f for f in DT[f"{P} Prescription"]["fields"] if f["fieldname"] == "image")
