@@ -15,8 +15,10 @@
   var CLOSE = 400;                            // every card's own words score over this; a line that merely shares a word scores under it
   var NONE = -1;
 
-  function lines(text) {                      // one need a line; no empties
-    return (text || "").split("\n").map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 1; });
+  function lines(text) {                      // one need a line, no empties; of a row copied from a sheet, its longest cell
+    return (text || "").split("\n").map(function (row) {
+      return row.split("\t").reduce(function (a, b) { return b.trim().length > a.length ? b.trim() : a; }, "");
+    }).filter(function (s) { return s.length > 1; });
   }
 
   function given(search) {                    // what the address carries: ?list=… first, then ?q=…
@@ -85,7 +87,7 @@
       if (pick === NONE) {
         a.appendChild(el("p", null, hits.length ? "No need in the catalogue fits this closely." : "No need in the catalogue matches these words."));
         if (hits.length) {
-          var near = el("p", "fit-alt", "The nearest: ");
+          var near = el("p", "fit-alt", "Is it one of these? ");
           hits.forEach(function (hit, j) { near.appendChild(choice(cards[hit.id].title, text, j, ms)); });
           a.appendChild(near);
         }

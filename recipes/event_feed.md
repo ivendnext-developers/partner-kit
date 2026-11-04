@@ -64,7 +64,7 @@ Write your handler against the labels and both ways run it unchanged. Prefer the
 | Stock Entry / Purchase Receipt / Stock Reconciliation submitted | `stock.moved` / `goods.received` / `stock.counted` |
 | anything else | `<record type>.<raw event>` (lower case, spaces as `_`); a record deleted since reads `<record type>.deleted` |
 
-⚠ With `--transport engine` the client decides the label by reading the record with your key: a POS Invoice your key **cannot read** (a user permission, say) reads as `pos_invoice.deleted`, where the P-FEED extension point — deciding on the server — says `sale.booked`. Give the key read on the whole record type you follow.
+⚠ With `--transport engine` the client decides the label by reading the record with your key: a POS Invoice your key **cannot read** (a user permission, say) reads as `pos_invoice.deleted`, where the event feed itself — deciding on the server — says `sale.booked`. Give the key read on the whole record type you follow.
 
 **Expect several events per sale.** A till sale followed as POS Invoice produces several rows (inserted, updated, submitted, and more changes). Act on the label you need (`sale.booked`) and mark the rest done.
 

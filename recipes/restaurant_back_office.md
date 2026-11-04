@@ -4,7 +4,7 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 
 **Reference implementation:** `samples/s45_restaurant_back_office/`.
 
-**When to use it.** The till already sells a dish as a plain item that is not stocked, and the retailer can already give an item a recipe: a Bill of Materials, the parts and how much of each makes one. What is missing is the step between them: nothing in iVendNext takes a recipe's parts off stock when a dish is sold. For the till's own screens (an open check, courses, the kitchen display) see the POS app's own capabilities; this recipe is the back office.
+**When to use it.** The till already sells a dish as a plain item that is not stocked, and the retailer can already give an item a recipe: a Bill of Materials, the parts and how much of each makes one. What is missing is the step between them: nothing in iVendNext takes a recipe's parts off stock when a dish is sold. For the till's own screens (an open check, courses, the kitchen screen) see the POS app's own capabilities; this recipe is the back office.
 
 **The four rules, here.** No code runs inside the retailer's iVendNext. One address is called, your service, and only when someone presses one of the buttons. The service books stock only through the retailer's own Material Issue, which iVendNext checks as it checks any issue (stock, units, periods, accounts). A sale is taken up once: the app's issue names it before any stock moves. The allergen check only reads.
 

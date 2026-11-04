@@ -1,6 +1,6 @@
 # The hosted sandbox site — what you receive, your first hour, and its limits — the recipe
 
-A sandbox site is your own iVendNext site, hosted by us and full of made-up demo data, where you build and test before you touch a customer's site. This recipe is for anyone who builds for an iVendNext customer and gets a sandbox site from us — an iVendNext Partner, a licensed customer's IT team, the CitiXsys Consulting Team. Every one of them receives the same site, made the same way.
+A sandbox site is your own iVendNext site, hosted by us and full of made-up demo data, where you build and test before you touch a customer's site. This recipe is for anyone who builds for an iVendNext customer and gets a sandbox site from us, partner or not. Every one of them receives the same site, made the same way.
 
 **When to use it.** From step 2 of the path: right after you register, before you quote or build anything. It is where you try every rung of the ladder and run your tests.
 
