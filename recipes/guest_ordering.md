@@ -35,7 +35,7 @@ Guests in quick service and full service expect to order from their phone at the
 ### An order at the table
 
 7. The guest scans the card: the page shows the register's menu, each dish with its price (*prices before any offer*), *Choose* for a dish's choice groups, a note for the kitchen on each line, and **Send order**.
-8. The service checks the order against the menu and the store's limits (a dish on the menu, a whole quantity up to the store's most, each choice the dish's own, each group's least and most picks), then, one order a table at a time (whichever of the table's cards it came from): **no check open** at the table, it opens one and adds the lines; **one open**, it adds the lines to it, unless a till is taking its payment (*please ask your server*: lines added then would keep the check open after the party leaves); **more than one**, it refuses (*please ask your server to take your order*).
+8. The service checks the order against the menu and the store's limits (a dish on the menu, a whole quantity up to the store's most, each choice the dish's own, each group's least and most picks), then, whichever of the table's cards it came from: **no check open** at the table, it opens one and adds the lines; **one open**, it adds the lines to it, unless a till is taking its payment (*please ask your server*: lines added then would keep the check open after the party leaves); **more than one**, it refuses (*please ask your server to take your order*).
 9. The lines wait unsent under the course word. When the server's own lines wait too, the till's **Send** asks which course to send; when only the guest's wait, **Send** sends them as usual, so the server reads the check first. The table pays at a till as any check.
 
 ### An order at the kiosk

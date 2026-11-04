@@ -236,7 +236,7 @@
      "default": "1",
      "reqd": 1,
      "read_only_depends_on": "eval:doc.status=='Drawn'",
-     "description": "1 to 50. A customer wins once."
+     "description": "At least 1. A customer wins once."
     },
     {
      "fieldname": "reserves",
@@ -244,7 +244,7 @@
      "label": "Reserves",
      "default": "0",
      "read_only_depends_on": "eval:doc.status=='Drawn'",
-     "description": "0 to 20, drawn after the winners, in order: call the first reserve when a winner cannot be reached."
+     "description": "0 or more, drawn after the winners, in order: call the first reserve when a winner cannot be reached."
     },
     {
      "fieldname": "prize",

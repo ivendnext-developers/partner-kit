@@ -36,7 +36,7 @@ This recipe is [Approvals by workflow](approvals.md) (S11) grown for a chain. A 
 
    What it looks like: the manager's action ![the manager approves](../samples/s14_approvals_stores/screenshots/03_store_manager_approves.png), a change within the limit applied ![applied](../samples/s14_approvals_stores/screenshots/04_applied_within_limit.png), a change above the limit waiting ![waiting for head office](../samples/s14_approvals_stores/screenshots/05_over_limit_waits_for_head_office.png), then head office's yes and the service's apply ![applied after head office](../samples/s14_approvals_stores/screenshots/06_applied_after_head_office.png), and the price row ![the price row](../samples/s14_approvals_stores/screenshots/07_the_price_row.png).
 
-7. **Schedule the export** (`approvals_stores.py export --day <date> --out <folder>`): the day's requests with the store and who approved at each step, who applied and who rejected, and a column *changed_after_raise* that says **yes** where the item, price list, price or store was edited after the request was raised (iVendNext lets a requester edit an *Applied* request; the history keeps the truth, and the file now says so). A cell that starts with `=`, `+`, `-` or `@` is written with a leading `'`, so a spreadsheet shows it as text.
+7. **Schedule the export** (`approvals_stores.py export --day <date> --out <folder>`): the day's requests with the store and who approved at each step, who applied and who rejected, and a column *changed_after_raise* that says **yes** where the item, price list, price or store was edited after the request was raised (iVendNext lets a requester edit an *Applied* request; the history keeps the truth, and the file now says so).
 
 ## Know these limits
 

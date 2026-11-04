@@ -192,7 +192,7 @@ def _now_utc(now) -> datetime.datetime:
 
 
 class Busy(Exception):
-    """Another press holds this company."""
+    """Another press holds this store."""
 
 
 class Refusal(Exception):

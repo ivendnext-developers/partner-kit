@@ -13,8 +13,7 @@ A retailer counts stock in parts — one count per aisle, per shift or per perso
    ```json
    "desk_actions": [{"record_type": "Stock Reconciliation", "label": "Merge counts", "placement": "list",
                      "service": "merge", "roles": ["PP MHS Counts"], "on_draft": 1, "on_submitted": 0,
-                     "send_fields": "name",
-                     "confirm_text": "Merge the ticked draft counts into one new draft? The ticked counts are not changed; each gets a comment."}]
+                     "send_fields": "name"}]
    ```
 
    iVendNext then refuses a submitted or cancelled record itself, in its words — *Merge counts does not run on ⟨name⟩ in this state.* — and never calls you.

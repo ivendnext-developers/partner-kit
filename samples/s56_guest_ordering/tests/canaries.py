@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """S56's canaries: each test that guards a retailer's secret, a code's signature and its number, which check an order
-joins, one order per table at a time, the door's keys, the menu's limits, a guest's choices, or the page's own rules
+joins, the door's keys, the menu's limits, a guest's choices, or the page's own rules
 must go RED when that check is removed. For each mutation this copies the sample (and the kit folders it uses) to a
 temporary folder, runs the one test named on the unmutated copy (it must pass, else BROKEN), applies ONE change (the
 anchor must match exactly once, and the mutant must compile), runs the test again, and reports RED (the test caught

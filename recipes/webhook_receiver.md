@@ -34,7 +34,7 @@ expected = base64.b64encode(hmac.new(secret.encode(), raw_body, hashlib.sha256).
 ok = hmac.compare_digest(expected, request.headers["X-Frappe-Webhook-Signature"].encode())
 ```
 
-Refuse anything else with `401`: a missing header, a wrong signature, a body changed after signing. Check the signature **before** parsing anything, and cap the body size (a thin body is a few hundred bytes).
+Refuse anything else with `401`: a missing header, a wrong signature, a body changed after signing. Check the signature **before** parsing anything.
 
 ⚠ **No `Content-Type` header is sent** unless the subscription adds one by hand. So read the raw body whatever the header says.
 

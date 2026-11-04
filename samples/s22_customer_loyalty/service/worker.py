@@ -163,13 +163,12 @@ def main(argv=None):
     p = argparse.ArgumentParser(description="S22's worker")
     p.add_argument("command", choices=("run", "daily"))
     p.add_argument("env")
-    p.add_argument("--today")
     p.add_argument("--watch", type=float)
     a = p.parse_args(argv)
     conf = env(a.env)
     t = Shop(conf["PP_BASE"], conf["PP_KEY"], conf["PP_SECRET"])
     if a.command == "daily":
-        today = a.today or datetime.date.today().isoformat()
+        today = datetime.date.today().isoformat()
         s = loyalty.Settings.load(t)
         print(json.dumps({"credited": loyalty.credit_due(t, s, today), "moved": loyalty.evaluate_tiers(t, s, today),
                           "balances": loyalty.daily_balances(t, s, today)}))
@@ -178,7 +177,7 @@ def main(argv=None):
     store = F.Store(os.path.join(state, "feed.sqlite"))
     feed = F.DoorFeed(F.Api(conf["PP_BASE"], conf["PP_KEY"], conf["PP_SECRET"]))
     while True:
-        print(json.dumps(F.poll(feed, store, handle(t, a.today))), flush=True)
+        print(json.dumps(F.poll(feed, store, handle(t))), flush=True)
         if not a.watch:
             break
         time.sleep(a.watch)

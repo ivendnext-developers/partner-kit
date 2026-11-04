@@ -527,7 +527,6 @@ def main(argv=None):
     p.add_argument("--door-prefix", default="ivendnext_mpos.api.feed")
     p.add_argument("--state", default="state/feed.sqlite")
     p.add_argument("--limit", type=int, default=100)
-    p.add_argument("--crash-after", type=int, help="test only: exit after handling N events, before marking done")
     p.add_argument("--since")
     p.add_argument("--doctype", default="POS Invoice")
     p.add_argument("--watch", type=float, help="poll again every N seconds (a service); default: one pass")
@@ -555,7 +554,7 @@ def main(argv=None):
                 began(api, store, a.doctype)     # before any event is handled in a fresh folder; a no-op after the first
             except FeedError:                    # a key that follows other record types may not read this one: no marker
                 pass
-            print(json.dumps(poll(_feed(a, api), store, sample_handler, a.limit, a.crash_after)), flush=True)
+            print(json.dumps(poll(_feed(a, api), store, sample_handler, a.limit)), flush=True)
             if not a.watch:
                 break
             time.sleep(a.watch)
