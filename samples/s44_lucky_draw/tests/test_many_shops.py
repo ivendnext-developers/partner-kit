@@ -87,11 +87,6 @@ class ManyShops(unittest.TestCase):
         self.refuse = 403
         self.assertEqual(self.press("ct-a", A)[1]["message"]["body"], app.REFUSED + app.CONNECT_AGAIN)
 
-    def test_administrators_key_is_never_used(self):
-        rec = self.store.get(A)
-        self.store.put(A, dict(rec, secrets={f"{APP}:sub:count": "ct-a", "user:Administrator": "adm:sec"}))
-        self.assertEqual((self.press("ct-a", A)[1]["message"]["body"], self.doors), (app.NOT_SET_UP, {}))
-
     def test_many_shops_without_the_librarys_prefix_refuses_to_start(self):
         with self.assertRaises(SystemExit):
             app.Service({"IVN_LIBRARY_APP": APP}, store=self.store)

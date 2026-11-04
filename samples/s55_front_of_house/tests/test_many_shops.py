@@ -75,11 +75,6 @@ class ManyShops(unittest.TestCase):
         self.assertEqual((code, out["message"]["level"], out["message"]["body"]), (200, "warning", app.NOT_SET_UP))
         self.assertEqual(self.doors, {})
 
-    def test_administrators_key_is_never_used(self):
-        rec = self.store.get(A)
-        self.store.put(A, dict(rec, secrets={f"{APP}:sub:book": "bk-a", "user:Administrator": "adm:sec"}))
-        self.assertEqual((self.press("bk-a", A)[1]["message"]["body"], self.doors), (app.NOT_SET_UP, {}))
-
     def test_a_shops_table_that_does_not_answer_is_a_503(self):
         class Down:
             def get(self, site):

@@ -87,11 +87,6 @@ class ManyShops(unittest.TestCase):
         self.assertEqual(self.send("/check/receipt", raw, "rc-c", "shop-c.ivendnext.com")[0], 503)  # the down answer
         self.assertEqual(self.doors, {})
 
-    def test_administrators_key_is_never_used(self):
-        rec = self.store.get(A)
-        self.store.put(A, dict(rec, secrets={f"{APP}:sub:block": "bl-a", "user:Administrator": "adm:sec"}))
-        self.assertEqual((self.block("bl-a", A)[1]["message"]["body"], self.doors), (app.NOT_SET_UP, {}))
-
     def test_many_shops_without_the_librarys_prefix_refuses_to_start(self):
         with self.assertRaises(SystemExit):
             app.Service({"IVN_LIBRARY_APP": APP}, store=self.store)

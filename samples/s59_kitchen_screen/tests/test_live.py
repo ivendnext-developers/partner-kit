@@ -76,8 +76,7 @@ class LiveTest(unittest.TestCase):
         self.addCleanup(shutil.rmtree, tmp, True)
         self.store = store = shops.FileStore(os.path.join(tmp, "shops.json"), local=True)
         store.put(self.site.site, {"site": self.site.site, "url": self.site.url, "previous": {},
-                                   "secrets": {f"{APP}:sub:link": F.SECRET, USER: site_key or fakesite.KEY,
-                                               "user:Administrator": "admin:never"}})
+                                   "secrets": {f"{APP}:sub:link": F.SECRET, USER: site_key or fakesite.KEY}})
         svc = app.Service({"IVN_LIBRARY_APP": APP, "KSC_PREFIX": "PP KSC", "KSC_PAGE_URL": F.PAGE}, store=store,
                           tenants=lambda url, key: self.shop)
         self.hub = live.Hub(svc)

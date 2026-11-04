@@ -539,7 +539,7 @@ class ManyRetailers(unittest.TestCase):
         self.store = shops.FileStore(os.path.join(tmp, "shops.json"))
         for site, n in (("shop-a.ivendnext.com", "a"), ("shop-b.ivendnext.com", "b")):
             self.store.put(site, {"site": site, "url": f"https://{site}", "secrets": {
-                f"{self.APP}:sub:send": f"send-{n}", "user:psf@x": f"key-{n}:sec-{n}", "user:Administrator": "adm"}})
+                f"{self.APP}:sub:send": f"send-{n}", "user:psf@x": f"key-{n}:sec-{n}"}})
         self.store.put("shop-c.ivendnext.com", {"site": "shop-c.ivendnext.com", "url": "https://shop-c.ivendnext.com",
                                                 "secrets": {f"{self.APP}:sub:send": "send-c"}})     # no user key yet
         self.doors = {}

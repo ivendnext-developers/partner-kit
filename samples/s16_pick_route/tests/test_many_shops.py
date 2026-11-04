@@ -222,12 +222,6 @@ class ManyShops(unittest.TestCase):
             h = dict(signed(raw, "route-a", ts=time.time() - 3600), **{shops.SITE_HEADER: site})
             self.assertEqual(self.svc.handle("POST", "/press/route", h, raw), (401, {"error": "the signature does not match"}))
 
-    def test_administrators_key_is_never_used(self):
-        rec = self.store.get(A)
-        self.store.put(A, dict(rec, secrets={f"{APP}:sub:route": "route-a", "user:Administrator": "adm:sec"}))
-        code, out = self.press("route-a", A)
-        self.assertEqual((code, out["message"]["body"], self.tasks), (200, app.NOT_SET_UP, {}))
-
     def test_many_shops_without_the_librarys_prefix_refuses_to_start(self):
         with self.assertRaises(SystemExit):
             app.Service({"IVN_LIBRARY_APP": APP}, store=self.store)

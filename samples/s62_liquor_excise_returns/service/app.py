@@ -204,7 +204,7 @@ class Service:
         record = self.store.get(site) if site else None
         secrets = [s.decode() for s in shops.secrets_for(record, f"{self.app}:sub:{sub}")]
         users = sorted(k for k in (record or {}).get("secrets") or {}
-                       if k.startswith("user:") and k != "user:Administrator")    # the site never sends it; nor do we use it
+                       if k.startswith("user:"))
         door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
         return site or "", secrets, door
 

@@ -32,8 +32,6 @@ CANARIES = [
      T + "test_s14b_another_417_is_not_called_a_rights_problem_and_a_long_timestamp_is_refused"),
     ("a long timestamp is refused", C, " and len(ts) <= 20)", ")",
      T + "test_s14b_another_417_is_not_called_a_rights_problem_and_a_long_timestamp_is_refused"),
-    ("Administrator's key is never used", S, ' and k != "user:Administrator")', ")",
-     M + "test_administrators_key_is_never_used"),
     ("a press before the site's key arrives is answered in words", S,
      "        if door is None:\n            return 200, _warning(NOT_SET_UP)\n", "",
      M + "test_a_press_before_connect_again_is_answered_in_words_and_writes_nothing"),

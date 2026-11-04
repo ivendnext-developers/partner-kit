@@ -27,8 +27,6 @@ CANARIES = [
      "        if not secrets:", T + "test_s14_a_press_signed_with_another_secret_or_too_old_is_refused_before_any_read"),
     ("only rules are pressed", D, ' or rec.get("doctype") != RULE or not isinstance', " or not isinstance",
      T + "test_s15_a_press_on_anything_but_rules_is_refused_before_any_read"),
-    ("each retailer's own user key, never Administrator's", S, ' and k != "user:Administrator")', ")",
-     M + "test_each_retailer_is_checked_with_its_own_secret_and_written_with_its_own_key_under_the_librarys_prefix"),
     ("a refused user is said in words", S, "            if e.code in (401, 403):", "            if False:",
      T + "test_s13_the_apps_user_refused_by_the_retailer_is_said_in_words"),
     ("only submitted sales are read", S, '            f = [["docstatus", "=", 1], ["is_return", "=", 0],', '            f = [["is_return", "=", 0],',

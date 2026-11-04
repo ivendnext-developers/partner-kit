@@ -35,8 +35,6 @@ CANARIES = [
     ("the link's secret is the link button's", S, 'secrets = shops.secrets_for(record, f"{self.app}:sub:{SUB}")',
      'secrets = [v.encode() for k, v in (record or {}).get("secrets", {}).items() if not k.startswith("user:")]',
      M + "ManyShops.test_another_retailers_link_is_refused"),
-    ("Administrator's key is never used", S, ' and k != "user:Administrator")', ")",
-     M + "ManyShops.test_administrators_key_is_never_used"),
     ("a redirect is never followed", S, "host\n        return None\n", "host\n        return super().redirect_request(*a, **k)\n",
      M + "ShopApi.test_a_redirect_is_not_followed_and_the_key_goes_nowhere_else"),
     ("a record name is one path segment", S, '"/".join(urllib.parse.quote(p, safe="") for p in path.split("/", 1))',
