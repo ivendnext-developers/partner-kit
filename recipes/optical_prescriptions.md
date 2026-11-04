@@ -60,7 +60,7 @@ A second record type, numbered (`format:OPT-LAB-{#####}`), linked to its prescri
 ```
 
 - *Sent to lab* unticks *Ready to collect*, so a remake (*Send back to lab*) is told again when it is back; *Cancel* closes an order at any step before *Collected*, one the customer never collects included.
-- `allow_self_approval: 1` lets whoever made the order move it. A step that says nothing takes Desk's own setting, so every step here names it.
+- `allow_self_approval: 1` lets whoever made the order move it. A step that says nothing is `0` on today's POS and takes Desk's own setting, `1`, from its next update, so every step here names it.
 - A report on `closed = 0` lists the open orders. ⚠ Never mark `closed` (or any field a report filters on) `in_standard_filter`: Desk moves a saved filter on a standard-filter field into that field, and an unticked tick filters nothing, so the report lists closed orders too (measured).
 - A print format of your own is the job sheet: print each value with `doc.get_formatted("<field>")`, so `-0.50` prints as the lab reads it.
 - A state's *who may edit* is a screen rule: over the record API anyone with write can change an order in any state.

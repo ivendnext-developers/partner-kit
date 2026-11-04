@@ -21,7 +21,7 @@ Some checks must **stop** a document until they pass: a goods receipt that must 
 
    ⚠ List **Overridden before Verified.** A submit through the API that steps around the workflow lands in the first state that books; listed first, it is recorded as *Overridden*, never as *Verified*.
 
-   ⚠ **Self-approval:** allow it on *Send for Verification* (the clerk sends their own document on) and refuse it on *Verify*, *Override* and cancelling. With every step refusing it, the clerk who made a document cannot even send it.
+   ⚠ **Self-approval:** write `"allow_self_approval": 1` on *Send for Verification* (the clerk sends their own document on) and `"allow_self_approval": 0` on *Verify*, *Override* and cancelling; a step that says nothing is `0` on today's POS and takes Desk's own setting, `1`, from its next update. With every step refusing it, the clerk who made a document cannot even send it.
 
 2. **Take the submit right from every other role** on that record type (the retailer's Role Permissions Manager, or `apply_config.py`). A workflow alone does not stop a submit through the API; without this step anyone with the submit right books the document unchecked. Keep it for your service's role (the *Verify* step books the document) and the manager's (the *Override* step). Record every row you change, and its reason.
 

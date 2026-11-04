@@ -140,19 +140,20 @@ A Purchase Order over 50,000 waits for a Purchase Manager, and approving it subm
   ],
   "transitions": [
     {"state": "Draft", "action": "Approve", "next_state": "Approved",
-     "allowed": "Purchase Manager", "condition": "doc.base_grand_total > 50000"},
+     "allowed": "Purchase Manager", "allow_self_approval": 0, "condition": "doc.base_grand_total > 50000"},
     {"state": "Draft", "action": "Reject", "next_state": "Rejected",
      "allowed": "Purchase Manager", "condition": "doc.base_grand_total > 50000"},
     {"state": "Draft", "action": "Submit", "next_state": "Approved",
-     "allowed": "Purchase User", "condition": "doc.base_grand_total <= 50000"},
-    {"state": "Rejected", "action": "Review", "next_state": "Draft", "allowed": "Purchase User"},
-    {"state": "Approved", "action": "Cancel", "next_state": "Cancelled", "allowed": "Purchase Manager"}
+     "allowed": "Purchase User", "allow_self_approval": 1, "condition": "doc.base_grand_total <= 50000"},
+    {"state": "Rejected", "action": "Review", "next_state": "Draft", "allowed": "Purchase User", "allow_self_approval": 1},
+    {"state": "Approved", "action": "Cancel", "next_state": "Cancelled", "allowed": "Purchase Manager", "allow_self_approval": 1}
   ]
 }]
 ```
 
 - `doc_status` is what a state does to the document: 0 keeps it a draft, 1 submits it, 2 cancels it.
 - `allowed` is the role that may press the action. S11 uses roles every site has; a role that is not on the site is made at install, empty, for the retailer to give to staff.
+- `allow_self_approval`: `0` stops the person who raised the document taking the step, `1` lets them. A step that says nothing is `0` on today's POS and takes Desk's own setting, `1`, from its next update, so name `0` on every step that must stay two-person.
 - `condition` decides when the action is offered; it reads the record and two read-only helpers.
 - `send_email_alert` mails whoever may act next.
 - A state's `update_field` writes only one of your app's own fields, because a workflow writes it and then submits. The till's own records take no workflow. The first workflow on a record type makes iVendFramework add its *Workflow State* field there; it stays at uninstall, as the retailer's.
