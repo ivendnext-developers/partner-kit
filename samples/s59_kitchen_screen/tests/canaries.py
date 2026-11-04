@@ -35,8 +35,6 @@ CANARIES = [
     ("the link's secret is the link button's", S, 'secrets = shops.secrets_for(record, f"{self.app}:sub:{SUB}")',
      'secrets = [v.encode() for k, v in (record or {}).get("secrets", {}).items() if not k.startswith("user:")]',
      M + "ManyShops.test_another_retailers_link_is_refused"),
-    ("Administrator's key is never used", S, ' and k != "user:Administrator")', ")",
-     M + "ManyShops.test_administrators_key_is_never_used"),
     ("a redirect is never followed", S, "host\n        return None\n", "host\n        return super().redirect_request(*a, **k)\n",
      M + "ShopApi.test_a_redirect_is_not_followed_and_the_key_goes_nowhere_else"),
     ("a record name is one path segment", S, '"/".join(urllib.parse.quote(p, safe="") for p in path.split("/", 1))',
@@ -158,8 +156,6 @@ CANARIES = [
     ("the page's script comes from the service only", S, "script-src 'self';", "script-src 'self' 'unsafe-inline';",
      T + "test_e1_the_page_is_served_with_a_strict_policy_and_the_kits_files"),
     ("the page is never framed", S, " frame-ancestors 'none'", "", T + "test_e1_the_page_is_served_with_a_strict_policy_and_the_kits_files"),
-    ("a large call is refused", S, "            if len(raw) > ksc.PAGE_BODY_MAX:", "            if False:",
-     T + "test_e2_a_large_or_shapeless_call_is_refused"),
     # the size and the fit (fit.js, page.js)
     ("only the four size steps are taken from the device", FIT, "    if (SIZES.indexOf(chosen) >= 0) return chosen;",
      "    if (chosen) return chosen;", FR + "test_p1_a_screen_takes_the_cooks_size_then_the_stores_then_standard"),

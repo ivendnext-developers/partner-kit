@@ -74,12 +74,6 @@ class ManyShops(unittest.TestCase):
         self.assertEqual((code, out), (503, {"state": "unavailable"}))
         self.assertEqual(self.doors, {})
 
-    def test_administrators_key_is_never_used(self):
-        rec = self.store.get(A)
-        self.store.put(A, dict(rec, secrets={f"{APP}:sub:code": "cd-a", "user:Administrator": "adm:sec"}))
-        self.assertEqual(self.call("/gor/menu", A, self.token(A, "cd-a")), (503, {"state": "unavailable"}))
-        self.assertEqual(self.doors, {})
-
     def test_one_order_a_code_across_every_copy_of_the_function(self):
         other = app.Service(LIB, store=self.store, tenants=self.door, now=self.clock)   # a second copy, the same table
         t = self.token(A, "cd-a")

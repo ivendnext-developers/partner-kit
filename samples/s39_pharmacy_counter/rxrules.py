@@ -39,7 +39,6 @@ import re
 import time
 
 SKEW_S = 300          # a request stamped further than this from our clock is refused (a replay window, not a clock)
-BODY_MAX = 256 * 1024
 TEXT_MAX = 140        # every sentence the till or the Desk shows: plain text, 1 to 140 characters
 SEQ_WIDTH = 4         # <customer>~0001: the patient's dispensings, in the order they were taken
 REFS_MAX = 5          # prescription numbers one sale may name

@@ -178,12 +178,10 @@ class Service:
         except telecom.TelecomRefused as e:
             return plans.refuse(f"The telecom company refused: {e}")
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
         """One call: (status, answer). The web server below and the function entry both call this."""
         if method == "GET":
             return (200, {"ok": 1}) if path == "/health" else (404, {"error": "not found"})
-        if raw is None or len(raw) > plans.BODY_MAX:
-            return 413, {"error": "too large"}
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw)
         if path in (PLANS, CHECKS):
@@ -229,7 +227,7 @@ def make_server(svc: Service, port: int):
 
         def do_POST(self):
             n = int(self.headers.get("Content-Length") or 0)
-            raw = self.rfile.read(n) if 0 <= n <= plans.BODY_MAX else None
+            raw = self.rfile.read(n)
             self._send(*handle(svc, "POST", self.path, self.headers, raw))
 
         def do_GET(self):

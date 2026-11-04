@@ -186,7 +186,6 @@ class Service:
             self.site = _host(one["IVN_SHOP_URL"])
             self.secret = one["IVN_SEND_SECRET"]
             self.tenant = tenant or tenant_of(one["IVN_SHOP_URL"], one["IVN_SHOP_KEY"])
-        self._lock = threading.Lock()    # one retailer: one press at a time
 
     def retailer(self, site) -> tuple[str, list[bytes], object | None]:
         """(the retailer's site, the secrets its press may be signed with, newest first, its door: None until it handed
@@ -197,7 +196,7 @@ class Service:
         record = self.store.get(site) if site else None
         secrets = shops.secrets_for(record, f"{self.app}:sub:{SUB}")
         users = sorted(k for k in (record or {}).get("secrets") or {}
-                       if k.startswith("user:") and k != "user:Administrator")    # the site never sends it; nor do we use it
+                       if k.startswith("user:"))
         door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
         return site or "", secrets, door
 
@@ -326,9 +325,6 @@ class Service:
         if door is None:
             return 200, fb.message(NOT_SET_UP, "warning")
         try:
-            if not self.app:
-                with self._lock:        # one retailer: one press at a time
-                    return 200, self.run(door, names, site, secrets[0])
             return 200, self.run(door, names, site, secrets[0])
         except TenantError as e:
             if e.code in (401, 403):    # the retailer refused the app's user: say so
@@ -399,7 +395,7 @@ class Service:
         return ("default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'none'; "
                 "base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, bytes, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, bytes, dict]:
         """Every call: (status, body, headers). The web server and the function entry both use it."""
         path = path.split("?", 1)[0]
         if method == "GET":
@@ -415,15 +411,11 @@ class Service:
             return _json(404, {"error": "not found"})
         if method != "POST":
             return _json(404, {"error": "not found"})
-        if raw is None or len(raw) > fb.BODY_MAX:
-            return _json(413, {"error": "too large"})
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return _json(*shops.handle(self.store, self.app, path, headers, raw))
         if path == "/psf/send":
             return _json(*self.press(headers, raw))
         if path in ("/psf/open", "/psf/answer"):
-            if len(raw) > fb.PAGE_BODY_MAX:
-                return _json(413, {"state": "unknown"})
             return _json(*self.page_call(path, raw))
         return _json(404, {"error": "not found"})
 
@@ -450,8 +442,6 @@ def make_server(svc: Service, port: int):
             raw = None
             if method == "POST":
                 n = int(self.headers.get("Content-Length") or 0)
-                if n < 0 or n > fb.BODY_MAX:
-                    return self._send(*_json(413, {"error": "too large"}))
                 raw = self.rfile.read(n)
             self._send(*handle(svc, method, self.path, self.headers, raw))
 

@@ -26,7 +26,6 @@ COUNT = "Stock Reconciliation"
 KEY_FIELD = "pp_mhs_press_key"     # the field this app's manifest adds to the count: the press key of the merge that made it
 SUM, LAST = "Sum", "Last"
 SKEW_S = 300
-BODY_MAX = 256 * 1024
 
 
 def verify(timestamp: str | None, signature: str | None, raw: bytes, secret: str, now: float | None = None) -> str:

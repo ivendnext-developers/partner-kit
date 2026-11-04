@@ -33,7 +33,6 @@ import math
 import time
 
 SKEW_S = 300          # a request stamped further than this from our clock is refused (a replay window, not a clock)
-BODY_MAX = 256 * 1024
 TEXT_MAX = 140        # every sentence the till shows: plain text, 1 to 140 characters (the extension points' rule)
 LINES_SEEN = 500      # the check is sent at most this many lines: a most-lines rule above LINES_SEEN - 1 could never refuse
 QUESTION = "Check this item before it goes on the sale. Add it?"

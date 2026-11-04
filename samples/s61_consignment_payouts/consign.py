@@ -42,7 +42,6 @@ LOCK_RULE = "PP CSG payout locked once paid"
 SALE_TYPES = ("POS Invoice", "Sales Invoice")
 SALE, RETURN, TAKEN_BACK, CORRECTION = "Sale", "Return", "Taken back", "Correction"
 SKEW_S = 300                             # a request stamped further than this from our clock is refused (a replay window)
-BODY_MAX = 256 * 1024
 MOST_LINES = 500                         # a payout's lines, oldest first; the rest wait for the next payout
 CENT = Decimal("0.01")
 LINE_FIELDS = ("sale_type", "sale", "sale_row", "sale_line", "kind", "posting_date", "item_code", "item_name", "qty",

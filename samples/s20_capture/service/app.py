@@ -140,8 +140,6 @@ class Hosted(Service):
     def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
         if method == "GET":
             return (200, {"status": "ok"}) if path == "/health" else (404, {"error": "not found"})
-        if len(raw) > capture.BODY_MAX:
-            return 413, {"error": "too large"}
         if path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw)
         return self.call(path, headers, raw) if path in self.PATHS else (404, {"error": "not found"})
@@ -168,8 +166,6 @@ def make_handler(svc: Service):
                 n = int(self.headers.get("Content-Length") or 0)
             except ValueError:
                 n = -1
-            if not 0 <= n <= capture.BODY_MAX:
-                return self._send(413, {"error": "no length, or too large"})
             raw = self.rfile.read(n)
             if self.path in svc.PATHS:
                 return self._send(*svc.call(self.path, self.headers, raw))

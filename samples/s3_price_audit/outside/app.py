@@ -36,7 +36,6 @@ import oneshop  # noqa: E402
 import shops  # noqa: E402
 import worker  # noqa: E402
 
-BODY_MAX = 64 * 1024
 HEALTH_GRACE_S = 180
 
 
@@ -67,8 +66,6 @@ class Service:
 def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
     """One request, for the web server and the function alike."""
     if method == "POST":
-        if len(raw) > BODY_MAX:
-            return 413, {"error": "too large"}
         if path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(svc.store, svc.app, path, headers, raw, svc.keys)
         return 404, {"error": "not found"}
@@ -106,8 +103,6 @@ def make_handler(svc: Service):
 
         def do_POST(self):
             n = int(self.headers.get("Content-Length") or 0)
-            if n < 0 or n > BODY_MAX:
-                return self._send(413, {"error": "too large"})
             self._send(*handle(svc, "POST", self.path, self.headers, self.rfile.read(n)))
 
         def do_GET(self):

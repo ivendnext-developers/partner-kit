@@ -39,7 +39,6 @@ FIELD = "pp_exr_"                       # the prefix of the three fields on Item
 DRAFT, FILED, DROPPED = "PP EXR Draft", "PP EXR Filed", "PP EXR Dropped"
 LOCK_RULE = "PP EXR return locked once filed"
 SKEW_S = 300                            # a request stamped further than this from our clock is refused (a replay window)
-BODY_MAX = 256 * 1024
 MOST_DAYS = 366                         # one return covers at most a year
 GALLON = Decimal("3.785411784")         # litres in a US gallon
 PLACES = Decimal("0.001")

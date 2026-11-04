@@ -4,7 +4,7 @@
 
 The binding itself is ``answer()``: load the partner's reference data (its own terms file, plus the item groups
 of the items on the sale, read over the API as its integration user) and call ``core.warranty_answer`` — the
-same file the outside service and the hosted app call. Everything else here is the door: a size cap and a
+same file the outside service and the hosted app call. Everything else here is the door: a
 signature check over ``<timestamp>.<body>``.
 
 The request, the headers and the signature are the remote app key's, as published at its merge (iVendNext_PWA
@@ -31,7 +31,7 @@ import core  # noqa: E402  (the sample's pure core, unchanged)
 import testcall  # noqa: E402  (the template's test call: checked as a real call, answered without the binding)
 from tenant import Tenant  # noqa: E402  (the sample's only door into iVendNext)
 
-BODY_MAX, SKEW_S = 64 * 1024, 300
+SKEW_S = 300
 
 
 def _env(path):
@@ -82,8 +82,6 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         n = int(self.headers.get("Content-Length") or 0)
-        if n < 0 or n > BODY_MAX:
-            return self._send(413, {"error": "too large"})
         raw = self.rfile.read(n)
         if testcall.is_test(self.headers) and self.path != "/point/warranty":   # a test is answered only where it matches
             return self._send(404, {"error": "no such point"})

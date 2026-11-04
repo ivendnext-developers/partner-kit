@@ -30,7 +30,6 @@ from store import Store  # noqa: E402
 from tenant import Tenant, TenantError  # noqa: E402
 
 DOCTYPES = register.DOCTYPES
-MAX_BODY = 64 * 1024   # a thin webhook body is a few hundred bytes
 
 
 def log(msg: str) -> None:
@@ -94,8 +93,6 @@ def make_handler(svc: Service):
                 size = int(self.headers.get("Content-Length") or 0)
             except ValueError:
                 return self._send(400, {"error": "bad Content-Length"})
-            if not 0 <= size <= MAX_BODY:
-                return self._send(413, {"error": f"body over {MAX_BODY} bytes"})
             body = self.rfile.read(size)
             if self.path == "/reconcile":
                 if self._admin():

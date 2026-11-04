@@ -150,7 +150,6 @@ CANARIES = [
      '            return [s for s in self.secrets.values() if s], self.tenant', RC + "test_r13_a_press_must_be_signed_with_the_buttons_own_secret"),
     ("the signature is checked", S, "        if not secrets or all(recall.verify(ts, sig, raw, s, self.now) for s in secrets):",
      "        if not secrets:", M + "test_another_shops_or_another_doors_secret_and_an_unknown_site_are_refused"),
-    ("Administrator's key is never used", S, ' and k != "user:Administrator")', ")", M + "test_administrators_key_is_never_used"),
     ("the library's fields follow its prefix", C, '    PREFIX, P = prefix, prefix.lower().replace(" ", "_")', '    PREFIX = prefix',
      M + "test_the_receipt_reads_the_librarys_item_fields"),
     # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler

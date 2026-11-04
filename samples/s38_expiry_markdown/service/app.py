@@ -177,7 +177,7 @@ class Service:
         record = self.store.get(site) if site else None
         secrets = [s.decode() for s in shops.secrets_for(record, f"{self.app}:sub:{SUB}")]
         users = sorted(k for k in (record or {}).get("secrets") or {}
-                       if k.startswith("user:") and k != "user:Administrator")    # the site never sends it; nor do we use it
+                       if k.startswith("user:"))
         door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
         return site or "", secrets, door
 
@@ -287,12 +287,10 @@ class Service:
             # some prices may have been written; a second press finds them right and writes nothing
             return 502, {"error": str(e)}
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
         """One call: (status, answer). The web server below and the function entry both call this."""
         if method == "GET":
             return (200, {"ok": 1}) if path == "/health" else (404, {"error": "not found"})
-        if raw is None or len(raw) > markdown.BODY_MAX:
-            return 413, {"error": "too large"}
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw)
         if path == "/press/markdown":
@@ -322,9 +320,6 @@ def make_handler(svc: Service, log=sys.stderr):
             t0, rid, code = time.monotonic(), (self.headers.get("X-iVendNext-Request-Id") or "-")[:40], 500
             try:
                 n = int(self.headers.get("Content-Length") or 0)
-                if not 0 <= n <= markdown.BODY_MAX:
-                    code = 413
-                    return self._send(413, {"error": "too large"})
                 code, out = svc.handle("POST", self.path, self.headers, self.rfile.read(n))
                 return self._send(code, out)
             finally:

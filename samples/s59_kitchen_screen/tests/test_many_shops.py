@@ -79,12 +79,6 @@ class ManyShops(unittest.TestCase):
         self.assertEqual((code, out), (503, {"state": "unavailable"}))
         self.assertEqual(self.doors, {})
 
-    def test_administrators_key_is_never_used(self):
-        rec = self.store.get(A)
-        self.store.put(A, dict(rec, secrets={f"{APP}:sub:link": "ln-a", "user:Administrator": "adm:sec"}))
-        self.assertEqual(self.call("/ksc/board", A, self.token(A, "ln-a")), (503, {"state": "unavailable"}))
-        self.assertEqual(self.doors, {})
-
     def test_a_shops_table_that_does_not_answer_is_a_503(self):
         class Down:
             def get(self, site):

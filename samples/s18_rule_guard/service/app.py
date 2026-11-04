@@ -160,12 +160,10 @@ class Service:
             return 200, {"verdict": "refuse", "reason": NOT_SET_UP}
         return 200, rule.decide(ctx, rules)
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
         """One call: (status, answer). The web server below and the function entry both call this."""
         if method == "GET":
             return (200, {"ok": 1}) if path == "/health" else (404, {"error": "not found"})
-        if raw is None or len(raw) > rule.BODY_MAX:
-            return 413, {"error": "too large"}
         if self.store is not None and path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw, self.keys)
         if path == ROUTE:
@@ -187,7 +185,7 @@ def make_handler(svc: Service):
 
         def do_POST(self):
             n = int(self.headers.get("Content-Length") or 0)
-            self._send(*svc.handle("POST", self.path, self.headers, self.rfile.read(n) if 0 <= n <= rule.BODY_MAX else None))
+            self._send(*svc.handle("POST", self.path, self.headers, self.rfile.read(n)))
 
         def do_GET(self):
             self._send(*svc.handle("GET", self.path, self.headers, b""))

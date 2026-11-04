@@ -194,7 +194,6 @@ class Service:
             self.site = _host(one["IVN_SHOP_URL"])
             self.secret = one["IVN_WORK_SECRET"]
             self.tenant = tenant or tenant_of(one["IVN_SHOP_URL"], one["IVN_SHOP_KEY"])
-        self._lock = threading.Lock()    # one retailer: one press at a time
 
     def retailer(self, site) -> tuple[str, list[bytes], object | None]:
         """(the retailer's site, the secrets its press may be signed with, newest first, its door: None until it handed
@@ -205,7 +204,7 @@ class Service:
         record = self.store.get(site) if site else None
         secrets = shops.secrets_for(record, f"{self.app}:sub:{SUB}")
         users = sorted(k for k in (record or {}).get("secrets") or {}
-                       if k.startswith("user:") and k != "user:Administrator")    # the site never sends it; nor do we use it
+                       if k.startswith("user:"))
         door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
         return site or "", secrets, door
 
@@ -291,9 +290,6 @@ class Service:
         if door is None:
             return 200, sst.message(NOT_SET_UP, "warning")
         try:
-            if not self.app:
-                with self._lock:        # one retailer: one press at a time
-                    return 200, self.run(door, name)
             return 200, self.run(door, name)
         except ReportRefused as e:      # before the 401/403 arm: a report names what to fix
             return 200, sst.message(REPORT_REFUSED.format(e.report), "warning")
@@ -309,15 +305,13 @@ class Service:
 
     # ---- every call ------------------------------------------------------------------------------------------------
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, bytes, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, bytes, dict]:
         """Every call: (status, body, headers). The web server and the function entry both use it."""
         path = path.split("?", 1)[0]
         if method == "GET":
             return _json(200, {"ok": 1}) if path == "/health" else _json(404, {"error": "not found"})
         if method != "POST":
             return _json(404, {"error": "not found"})
-        if raw is None or len(raw) > sst.BODY_MAX:
-            return _json(413, {"error": "too large"})
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return _json(*shops.handle(self.store, self.app, path, headers, raw))
         if path == "/sst/work":
@@ -347,8 +341,6 @@ def make_server(svc: Service, port: int):
             raw = None
             if method == "POST":
                 n = int(self.headers.get("Content-Length") or 0)
-                if n < 0 or n > sst.BODY_MAX:
-                    return self._send(*_json(413, {"error": "too large"}))
                 raw = self.rfile.read(n)
             self._send(*handle(svc, method, self.path, self.headers, raw))
 

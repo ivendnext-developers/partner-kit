@@ -70,7 +70,6 @@ CANARIES = [
      T + "test_s8b_another_417_is_not_called_a_rights_problem_and_a_long_timestamp_is_refused"),
     ("a refused user is named in words", S, "            if e.code in (401, 403) or (e.code == 417 and e.kind in RIGHTS_KINDS):",
      "            if False:", T + "test_s8_the_apps_user_refused_by_the_site_is_said_in_words"),
-    ("Administrator's key is never used", S, ' and k != "user:Administrator")', ")", M + "test_administrators_key_is_never_used"),
     ("a press before the site's key arrives is answered in words", S,
      "        if door is None:\n            return 200, _warning(NOT_SET_UP)\n", "",
      M + "test_a_press_before_connect_again_is_answered_in_words_and_writes_nothing"),

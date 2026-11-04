@@ -29,8 +29,6 @@ import urllib.parse
 PREFIX = "PP PSF"
 RULE, REQUEST = "PP PSF Rule", "PP PSF Request"
 SKEW_S = 300                 # a press stamped further than this from our clock is refused (a replay window)
-BODY_MAX = 256 * 1024
-PAGE_BODY_MAX = 4096
 MOST_RULES = 100             # the Desk action's own cap on ticked records
 ANSWERS = ("Satisfied", "Neutral", "Not satisfied")   # stored in English, whatever words the customer was shown
 COMMENT_MAX = 280

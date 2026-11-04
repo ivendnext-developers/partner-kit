@@ -32,7 +32,7 @@ from store import Store  # noqa: E402
 from tenant import Tenant, TenantError  # noqa: E402
 import testcall  # noqa: E402  (the template's test call)
 
-BODY_MAX, SKEW_S = 64 * 1024, 300
+SKEW_S = 300
 ROUTES = ("/webhook", "/point/where_is_it", "/putaway", "/pick", "/reconcile")     # every POST route below
 
 
@@ -110,8 +110,6 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         n = int(self.headers.get("Content-Length") or 0)
-        if n < 0 or n > BODY_MAX:
-            return self._send(413, {"error": "too large"})
         raw = self.rfile.read(n)
         if testcall.is_test(self.headers) and self.path not in ROUTES:   # a test is answered only where a route matches
             return self._send(404, {"error": "no such route"})

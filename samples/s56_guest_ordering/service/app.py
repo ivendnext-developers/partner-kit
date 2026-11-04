@@ -227,7 +227,7 @@ class Service:
         record = self.store.get(site) if site else None
         secrets = shops.secrets_for(record, f"{self.app}:sub:{SUB}")
         users = sorted(k for k in (record or {}).get("secrets") or {}
-                       if k.startswith("user:") and k != "user:Administrator")    # the site never sends it; nor do we use it
+                       if k.startswith("user:"))
         door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
         return site or "", secrets, door
 
@@ -524,7 +524,7 @@ class Service:
         return ("default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'none'; "
                 "base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 
-    def handle(self, method: str, path: str, headers, raw: bytes | None) -> tuple[int, bytes, dict]:
+    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, bytes, dict]:
         """Every call: (status, body, headers). The web server and the function entry both use it."""
         path = path.split("?", 1)[0]
         if method == "GET":
@@ -540,15 +540,11 @@ class Service:
             return _json(404, {"error": "not found"})
         if method != "POST":
             return _json(404, {"error": "not found"})
-        if raw is None or len(raw) > gor.BODY_MAX:
-            return _json(413, {"error": "too large"})
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return _json(*shops.handle(self.store, self.app, path, headers, raw))
         if path == "/gor/code":
             return _json(*self.press(headers, raw))
         if path in ("/gor/menu", "/gor/order"):
-            if len(raw) > gor.PAGE_BODY_MAX:
-                return _json(413, {"state": "unknown"})
             return _json(*self.page_call(path, raw))
         return _json(404, {"error": "not found"})
 
@@ -586,8 +582,6 @@ def make_server(svc: Service, port: int):
             raw = None
             if method == "POST":
                 n = int(self.headers.get("Content-Length") or 0)
-                if n < 0 or n > gor.BODY_MAX:
-                    return self._send(*_json(413, {"error": "too large"}))
                 raw = self.rfile.read(n)
             self._send(*handle(svc, method, self.path, self.headers, raw))
 

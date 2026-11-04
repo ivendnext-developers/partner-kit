@@ -3,7 +3,7 @@
     POST /point/ai_tip      body {"app", "key", "returns", "context"}  →  200 {"message": {...}}
 
 The request, headers and signature are the remote till key's, as in samples/s1_warranty/remote/wrapper.py (the
-signature check and size cap are copied from it; a defect there is a defect here — report it on the programme board).
+signature check is copied from it; a defect there is a defect here — report it on the programme board).
 The binding is core.answer(): build the prompt, ask the provider the SHOP configured, return the message. Failure is
 failure: a provider error or a slow provider gives NO answer, so the till says so in its own words (refused, nothing
 added to the sale) — this service never invents a tip.
@@ -30,7 +30,7 @@ import core  # noqa: E402
 import providers  # noqa: E402
 import testcall  # noqa: E402
 
-BODY_MAX, SKEW_S = 64 * 1024, 300
+SKEW_S = 300
 
 
 def load_env(path):
@@ -69,9 +69,6 @@ def make_server(conf: dict, provider, port: int = 0, log=sys.stderr):
             t0, rid, code = time.monotonic(), self.headers.get("X-iVendNext-Request-Id", "-")[:40], 500
             try:
                 n = int(self.headers.get("Content-Length") or 0)
-                if n < 0 or n > BODY_MAX:
-                    code = 413
-                    return self._send(code, {"error": "too large"})
                 raw = self.rfile.read(n)
                 if testcall.is_test(self.headers) and self.path != "/point/ai_tip":   # a test only where it matches
                     code = 404

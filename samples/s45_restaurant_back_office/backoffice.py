@@ -26,7 +26,6 @@ PREFIX = "PP RBO"
 FIELD = "pp_rbo"            # the fields the app adds to the shop's records: <FIELD>_allergens on Item, <FIELD>_issue on
                             # Stock Entry
 SKEW_S = 300                # a request stamped further than this from our clock is refused (a replay window, not a clock)
-BODY_MAX = 256 * 1024
 MOST_RECORDS = 100          # the Desk action's own limit for a list press
 DEPTH = 5                   # recipes inside recipes: deeper than this is refused as a loop
 PLACES = 6                  # quantities are kept to six decimals; the shop rounds to its own precision when it books

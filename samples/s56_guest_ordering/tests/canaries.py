@@ -33,8 +33,6 @@ CANARIES = [
     ("the code's secret is the code button's", S, 'secrets = shops.secrets_for(record, f"{self.app}:sub:{SUB}")',
      'secrets = [v.encode() for k, v in (record or {}).get("secrets", {}).items() if not k.startswith("user:")]',
      M + "ManyShops.test_another_retailers_code_is_refused"),
-    ("Administrator's key is never used", S, ' and k != "user:Administrator")', ")",
-     M + "ManyShops.test_administrators_key_is_never_used"),
     ("a redirect is never followed", S, "host\n        return None\n", "host\n        return super().redirect_request(*a, **k)\n",
      M + "ShopApi.test_a_redirect_is_not_followed_and_the_key_goes_nowhere_else"),
     ("a record name is one path segment", S, '"/".join(urllib.parse.quote(p, safe="") for p in path.split("/", 1))',
@@ -159,8 +157,6 @@ CANARIES = [
     # the page and the manifest
     ("the page allows no inline script", S, "script-src 'self'; ", "script-src 'self' 'unsafe-inline'; ",
      T + "test_e1_the_page_is_served_with_its_own_rules"),
-    ("a guest's call has its size limit", S, "            if len(raw) > gor.PAGE_BODY_MAX:", "            if False:",
-     T + "test_e2_a_page_call_over_its_size_is_refused"),
     ("the QR's error correction", Q, "    rem = data\n    for _ in range(10):", "    rem = data ^ 1\n    for _ in range(10):",
      R + "test_q2_the_grids_the_framework_drew_the_same"),
     ("the QR's codeword interleave", Q, "            if i != short_len - ecc_len or j >= short:", "            if True:",

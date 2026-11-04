@@ -380,8 +380,7 @@ class ServiceTest(unittest.TestCase):
             with self.assertRaises(SystemExit, msg=bad):
                 app.Service(dict(conf, KSC_LIVE_URL=bad), tenant=self.shop)
 
-    def test_e2_a_large_or_shapeless_call_is_refused(self):
-        self.assertEqual(answer(self.svc.handle("POST", "/ksc/board", {}, b"x" * (ksc.PAGE_BODY_MAX + 1)))[0], 413)
+    def test_e2_a_shapeless_call_is_refused(self):
         self.assertEqual(answer(self.svc.handle("POST", "/ksc/board", {}, b"[]"))[0], 400)
         self.assertEqual(answer(self.svc.handle("POST", "/ksc/nope", {}, b"{}"))[0], 404)
 

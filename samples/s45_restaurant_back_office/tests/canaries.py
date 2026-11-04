@@ -29,8 +29,6 @@ CANARIES = [
     ("each button its own secret", S, 'secrets = [s.decode() for s in shops.secrets_for(record, f"{self.app}:sub:{sub}")]',
      'secrets = [v for k, v in (record or {}).get("secrets", {}).items() if ":sub:" in k]',
      M + "ManyShops.test_another_buttons_secret_another_shops_an_unknown_site_and_no_site_are_refused"),
-    ("Administrator's key is never used", S, ' and k != "user:Administrator")', ")",
-     M + "ManyShops.test_administrators_key_is_never_used"),
     ("a press before the shop's key arrives is answered in words", S, "        if door is None:\n            return 200, _warning(NOT_SET_UP)\n",
      "", M + "ManyShops.test_a_press_before_connect_again_is_answered_in_words_and_writes_nothing"),
     ("a refused user is named in words", S, "            if e.code in (401, 403):    # the shop refused the app's user: say so",

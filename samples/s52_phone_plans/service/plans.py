@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-TEXT_MAX, BODY_MAX, PHONES_MAX = 140, 256 * 1024, 50
+TEXT_MAX, PHONES_MAX = 140, 50
 
 
 def plain(text: str, n: int = TEXT_MAX) -> str:

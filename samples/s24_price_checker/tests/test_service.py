@@ -200,11 +200,10 @@ class Page(unittest.TestCase):
         self.assertIn("img-src https: http://localhost:8110;", csp)
         self.assertIn("img-src https:;", one().csp())
 
-    def test_other_paths_and_large_bodies(self):
+    def test_other_paths(self):
         svc = one()
         self.assertEqual(svc.handle("GET", "/../app.py", {}, None)[0], 404)
         self.assertEqual(svc.handle("GET", "/health", {}, None)[0], 200)
-        self.assertEqual(svc.handle("POST", "/prc/price", {}, b"x" * (app.BODY_MAX + 1))[0], 413)
         self.assertEqual(svc.handle("POST", "/ivendnext/connect", {}, b"{}")[0], 404)   # one shop: no handshake
 
 

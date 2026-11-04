@@ -39,7 +39,6 @@ import shops  # noqa: E402
 import testcall  # noqa: E402
 
 SUBMIT = "/api/method/ivendnext_mpos.api.page.submit"
-BODY_MAX = 32 * 1024
 
 
 def shop_words(raw: bytes) -> str:
@@ -131,8 +130,6 @@ class Hosted:
             if path in ("/board", "/board/"):
                 return 200, self.html, "text/html; charset=utf-8"
             return _json(200, {"status": "ok"}) if path == "/health" else _json(404, {"error": "not found"})
-        if len(raw) > BODY_MAX:
-            return _json(413, {"error": "too large"})
         if path in (shops.CONNECT, shops.DISCONNECT):
             return _json(*shops.handle(self.store, self.app, path, headers, raw))
         if path in ("/board", "/board/") and testcall.is_test(headers):
@@ -191,8 +188,6 @@ def make_handler(board: Board):
 
         def do_POST(self):
             n = int(self.headers.get("Content-Length") or 0)
-            if n > BODY_MAX:
-                return self._send(413, {"error": "too large"})
             try:
                 data = json.loads(self.rfile.read(n) or b"{}")
             except ValueError:

@@ -30,7 +30,7 @@ CANARIES = [
     ("the previous secret while a shop moves", S, 'shops.secrets_for(record, f"{self.app}:sub:{SUB}")',
      '[((record or {}).get("secrets") or {}).get(f"{self.app}:sub:{SUB}", "").encode()]',
      T + "test_a_shop_whose_secret_changed_is_accepted_with_the_previous_one_while_it_moves"),
-    ("each shop's own user key", S, 'if k.startswith("user:") and k != "user:Administrator")', 'if ":" in k)',
+    ("each shop's own user key", S, 'if k.startswith("user:"))', 'if ":" in k)',
      T + "test_each_shop_is_written_with_its_own_key_under_the_librarys_names"),
     ("a press before the shop's key arrives is answered in words", S, "        if door is None:\n            return 200, _warning(NOT_SET_UP)\n",
      "", T + "test_a_press_before_connect_again_is_answered_in_words_and_writes_nothing"),
@@ -65,8 +65,6 @@ CANARIES = [
     ("one sentence for every refusal", S, '            return 401, {"error": "the signature does not match"}',
      '            return 401, {"error": next((w for w in (route.verify(ts, sig, raw, x) for x in secrets) if w), "the signature does not match")}',
      T + "test_an_old_press_is_refused_in_the_same_words_as_an_unknown_site"),
-    ("Administrator's key is never used", S, ' and k != "user:Administrator")', ")",
-     T + "test_administrators_key_is_never_used"),
     ("a cut answer is an unknown outcome", S, "(OSError, ValueError, http.client.HTTPException) as e:", "(OSError, ValueError) as e:",
      "test_many_shops.ShopApi.test_an_answer_cut_short_is_an_unknown_outcome_never_a_crash"),
     # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler

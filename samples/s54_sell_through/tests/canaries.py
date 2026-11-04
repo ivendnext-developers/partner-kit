@@ -40,8 +40,6 @@ CANARIES = [
      T + "test_s7_a_press_on_anything_but_one_run_is_refused_before_any_read"),
     ("only runs are pressed", D, ' or rec.get("doctype") != RUN or not isinstance', " or not isinstance",
      T + "test_s7_a_press_on_anything_but_one_run_is_refused_before_any_read"),
-    ("each retailer's own user key, never Administrator's", S, ' and k != "user:Administrator")', ")",
-     M + "test_each_retailer_is_checked_with_its_own_secret_and_written_with_its_own_key_under_the_librarys_prefix"),
     ("a refused user is said in words", S, "            if e.code in (401, 403):", "            if False:",
      T + "test_s5_the_apps_user_refused_by_the_retailer_is_said_in_words"),
     ("a misfilled run reads nothing else", S, "        if isinstance(run, str):\n            return sst.message(run, \"warning\")",

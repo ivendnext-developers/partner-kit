@@ -28,7 +28,6 @@ from decimal import ROUND_FLOOR, Decimal, InvalidOperation
 PREFIX = "PP LDW"
 CAMPAIGN = "PP LDW Campaign"
 SKEW_S = 300             # a request stamped further than this from our clock is refused (a replay window, not a clock)
-BODY_MAX = 256 * 1024
 MOST_WINNERS, MOST_RESERVES = 50, 20
 DRAWN = "Drawn"
 DRAW_RECORD = ("drawn_on", "draw_fingerprint", "drawn_numbers")
