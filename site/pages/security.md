@@ -35,7 +35,6 @@ def verified(secrets: list, headers, raw: bytes) -> bool:
 
 - **`secrets`** is the one retailer's secret, or, when your app serves many retailers, the secret of the retailer the call names in `X-iVendNext-Site`. A retailer your app does not know has no secret, so its call fails.
 - **`SKEW_S`** is 300 seconds. Keep your server's clock right.
-- **A body over 64 KB** is answered with `413` before it is read.
 - **The key check at connect** is `check_key` in `tools/app_template/service/shops.py`: the key's signature, its app and its site.
 
 Write your app on the template and keep this check. A retailer's site checks only that your app is at a public HTTPS address; then it checks the answer, its time and its shape.

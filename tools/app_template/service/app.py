@@ -52,7 +52,7 @@ import function  # noqa: E402
 import shops  # noqa: E402
 import testcall  # noqa: E402
 
-BODY_MAX, SKEW_S, ROUTE = 64 * 1024, 300, "/point/hello"
+SKEW_S, ROUTE = 300, "/point/hello"
 KEY = "hello"           # the till key's name in your manifest (remote_keys[].key); its secret is "<app>:<key>"
 POINT = calllog.plain("remote_key", KEY)       # the till key in the words Logs shows
 LOCAL_PORT = 8000
@@ -91,7 +91,7 @@ def call_secrets(conf: dict, headers) -> list:
     return shops.secrets_for(conf["store"].get(site), f"{conf['app']}:{KEY}") if site else []
 
 
-def handle(conf: dict, method: str, path: str, headers, raw: bytes | None, log=sys.stdout) -> tuple[int, dict]:
+def handle(conf: dict, method: str, path: str, headers, raw: bytes, log=sys.stdout) -> tuple[int, dict]:
     """One call: (status, answer). The web server below and the function entry (``function.py``) both call this."""
     t0, rid, code = time.monotonic(), (headers.get("X-iVendNext-Request-Id") or "-")[:40], 500
     test, record = testcall.is_test(headers), None
@@ -99,9 +99,6 @@ def handle(conf: dict, method: str, path: str, headers, raw: bytes | None, log=s
         if method == "GET":
             code, out = (200, {"status": "ok"}) if path == "/health" else (404, {"error": "not found"})
             return code, out
-        if raw is None or len(raw) > BODY_MAX:      # None: the web server saw a length it will not read
-            code = 413
-            return code, {"error": "too large"}
         if "store" in conf and path in (CONNECT, DISCONNECT):
             code, out = shops.handle(conf["store"], conf["app"], path, headers, raw, conf.get("keys"))
             return code, out
@@ -158,8 +155,6 @@ def make_server(conf: dict, port: int | None = None, log=sys.stdout):
 
         def do_POST(self):
             n = int(self.headers.get("Content-Length") or 0)
-            if n < 0 or n > BODY_MAX:
-                return self._send(*handle(conf, "POST", self.path, self.headers, None, log))
             self._send(*handle(conf, "POST", self.path, self.headers, self.rfile.read(n), log))
 
         def log_message(self, fmt, *args):  # the framework's own access line carries the path; keep it off

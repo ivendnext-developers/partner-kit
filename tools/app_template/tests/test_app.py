@@ -83,8 +83,7 @@ class Service(unittest.TestCase):
         self.assertEqual(self.post(secret=OLD)[0], 200)
         self.assertEqual(self.post(secret="a-third-secret")[0], 401)
 
-    def test_an_oversize_body_and_a_wrong_route_are_refused(self):
-        self.assertEqual(self.post(raw=b"x" * (app.BODY_MAX + 1))[0], 413)
+    def test_a_wrong_route_is_refused(self):
         self.assertEqual(self.post(path="/point/other")[0], 404)
 
     def test_a_signed_body_that_is_not_a_call_is_a_400_not_a_crash(self):

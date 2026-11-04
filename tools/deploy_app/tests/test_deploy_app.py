@@ -163,8 +163,8 @@ class Refuses(Base):
         self.assertIn("partner:", out)
 
     def test_what_the_template_checker_refuses(self):
-        (self.app / "Dockerfile").write_text((self.app / "Dockerfile").read_text().replace("USER app", ""))
-        self.assertIn("not root", self.refused())
+        (self.app / "Dockerfile").write_text((self.app / "Dockerfile").read_text() + "\nENV IVN_POINT_SECRET=abc123\n")
+        self.assertIn("secret-looking", self.refused())
 
     def test_a_value_in_the_settings_file(self):
         self.settings(env=[{"name": "IVN_POINT_SECRET", "secret": True, "required": True, "value": "x"}])

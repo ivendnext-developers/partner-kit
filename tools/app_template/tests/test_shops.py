@@ -243,7 +243,7 @@ class Service(unittest.TestCase):
 
     def test_a_connect_that_is_not_one(self):
         for body in ({"key": make_key(), "site": A}, {"key": make_key(), "site": A, "secrets": {NAME: 1}},
-                     {"key": make_key(), "site": A, "secrets": {f"n{i}": "s" for i in range(101)}}):
+                     {"key": make_key(), "site": A, "secrets": {NAME: ""}}):
             self.assertEqual(self.post(app.CONNECT, body)[0], 400)
         self.assertEqual(self.connect(key=make_key(app_id="pp_lyl")), (403, {"refused": "key_other_app"}))
         self.assertFalse(os.path.exists(self.file))

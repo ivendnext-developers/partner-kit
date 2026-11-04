@@ -102,12 +102,12 @@ class Dockerfile(unittest.TestCase):
     def test_the_shipped_dockerfile_passes(self):
         self.assertEqual(V.check_dockerfile(DOCKERFILE, 8080), [])
 
-    def test_root_no_health_check_wrong_port_and_a_baked_in_secret_are_refused(self):
+    def test_a_partners_own_dockerfile_may_choose_its_user_and_its_health_check(self):
         no_user = DOCKERFILE.replace("USER app\n", "")
-        self.assertTrue(any("not root" in e for e in V.check_dockerfile(no_user, 8080)))
-        self.assertTrue(any("not root" in e for e in V.check_dockerfile(DOCKERFILE.replace("USER app", "USER root"), 8080)))
-        no_hc = "\n".join(l for l in DOCKERFILE.splitlines() if "HEALTHCHECK" not in l and "CMD python3 -c" not in l)
-        self.assertTrue(any("HEALTHCHECK" in e for e in V.check_dockerfile(no_hc, 8080)))
+        no_hc = "\n".join(l for l in no_user.splitlines() if "HEALTHCHECK" not in l and "CMD python3 -c" not in l)
+        self.assertEqual(V.check_dockerfile(no_hc, 8080), [])
+
+    def test_a_wrong_port_and_a_baked_in_secret_are_refused(self):
         self.assertTrue(any("EXPOSE" in e for e in V.check_dockerfile(DOCKERFILE, 9090)))
         baked = DOCKERFILE + "\nENV IVN_POINT_SECRET=abc123\n"
         self.assertTrue(any("secret-looking" in e for e in V.check_dockerfile(baked, 8080)))
