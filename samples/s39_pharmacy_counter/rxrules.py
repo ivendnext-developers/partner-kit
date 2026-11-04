@@ -607,10 +607,11 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
             if r and r["own_sale"] and not any(it["item"] == lines[i]["item"] for x in found for it in x["items"]):
                 return _refuse(lines[i], "Sell this in a sale of its own: it is not on the prescription this sale names.")
 
-    # 7c · the prescription's date on the sale, for a register that books it (README, The prescription's date): the date
-    # the named prescriptions were written. The Desk's answer fills it; the till cannot be filled by a check, so
-    # its cashier types it, a date that is not the prescription's is refused, and an empty one where a schedule says
-    # its register books the date (the refusal shows the date to type)
+    # 7c · the prescription's date on the sale, for a register that books it: the date the named prescriptions were
+    # written. The Desk's answer fills its field. 0.1.4: the till's answer fills the sale detail, on the dispensary's
+    # filling address (``fillable``: its subscription lists the detail; never on a return), so nobody types it there.
+    # On a till asked at 0.1.3's address the cashier types it: a date that is not the prescription's is refused, and an
+    # empty one where a schedule says its register books the date (the refusal shows the date to type)
     # the patient's prescriptions that cover a line of the sale (a linked Desk line's too): a number named for nothing
     # here never adds a date
     fill, items_here = {}, {x["item"] for x in lines if x["qty"] > 0}
@@ -623,6 +624,13 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
                                            "different days. Sell each in a sale of its own.")
     if len(days) == 1 and on_desk and ctx.get("fillable"):   # a linked document's too, filled again from the prescription
         fill = {f"{field_prefix(prefix)}_{DESK_FIELDS[RX_DATE]}": days[0]}
+    elif len(days) == 1 and ctx.get("fillable") and typed in ("", days[0]):   # the till: the sale detail by its name
+        fill = {f"{prefix} {RX_DATE}": days[0]}
+    elif len(days) == 1 and ctx.get("fillable") and rx_lines:
+        # a date typed and wrong is refused, as before: at an order's or a layaway's placement a fill is not written, so
+        # a wrong typed date would book (on a sale nobody types it now: it is filled)
+        return _refuse(lines[rx_lines[0]], f"Prescription {covering[0]['name']} was written on {days[0]}. Correct the "
+                                           "date in Sale details.")
     elif len(days) == 1 and rx_lines and not on_desk and typed != days[0] and (typed or needed):
         return _refuse(lines[rx_lines[0]], f"needs the prescription's date in Sale details: {days[0]}." if not typed else
                        f"Prescription {covering[0]['name']} was written on {days[0]}. Correct the date in Sale details.")
@@ -697,8 +705,10 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
         record = {"lines": record_lines, "fingerprints": fps,
                   "prescriber": plain("; ".join(dict.fromkeys(x["prescriber"] for x in used if x["prescriber"])), 1000),
                   "directions": plain("; ".join(dict.fromkeys(dose)), 4000)}
-    if fill:
+    if fill and on_desk:
         return {"verdict": "fill", "fields": fill, "record": record}
+    if fill:          # check/1: an allow that fills; the till asks again on the filled sale, answered the same
+        return {"verdict": "allow", "fill": fill, "record": record}
     return {"verdict": "allow", "record": record}
 
 
@@ -727,3 +737,73 @@ def next_name(customer: str, dispensings: list) -> tuple[str, int]:
 def summary(lines: list) -> str:
     """The dispensing's lines as the Desk list shows them."""
     return plain("; ".join(f"{x['item']} {_fmt(x['qty'])}" + (f" ({x['rx']})" if x.get("rx") else "") for x in lines), 140)
+
+
+# ── after the keeping period (0.1.4) ─────────────────────────────────────────
+# The Records Officer's act, never a timer: on a <prefix> Erasure, *List patients due* puts on it each patient whose
+# newest prescription, dispensing or patient record is older than the keeping period (the shop's own number, in its
+# settings), and *Erase these patients* deletes each one's dispensings, prescriptions and patient record after checking
+# again that nothing newer came since. The record keeps who pressed, when, the period and each patient's outcome.
+
+DRAFT, LISTED, ERASED = "Draft", "Listed", "Erased"
+LIST_MAX = 100        # patients one press lists (a desk action's own limit on the records it sends)
+MOVED = ("id_number", "birth_date", "authority", "consent_date", "consent_by")   # 0.1.1's Customer fields, <prefix>_<field>
+KEPT_NEWER = "Kept: a record dated {day} is inside the period"
+KEPT_MOVED = "Kept: clear the five (moved) fields on the customer, then list them on a new erasure"
+ERASED_ROW = "Erased"
+# a delete through the API keeps a copy of each record in the Desk's Deleted Documents; the framework deletes its change
+# history after the delete (a job queued on commit)
+COPIES_KEPT = "A copy of each stays in Deleted Documents until your System Manager deletes it."
+
+
+def keep_years_of(record) -> int:
+    """The settings' keeping period in whole years, or 0 when it is not set (then nobody is due)."""
+    v = record.get("keep_years") if isinstance(record, dict) else None
+    return v if _number(v) and v == int(v) and 0 < v <= 100 else 0
+
+
+def cut_off(today: datetime.date, years: int) -> datetime.date:
+    """A patient is due when their newest record is dated before this day: today, ``years`` back (29 Feb → 28 Feb)."""
+    try:
+        return today.replace(year=today.year - years)
+    except ValueError:
+        return today.replace(year=today.year - years, day=28)
+
+
+def newest_of(*reads) -> dict:
+    """Each customer's newest record over several grouped reads (rows of ``customer`` and ``last``). A record with no
+    date is never old enough: it reads as the latest possible day."""
+    out: dict = {}
+    for rows in reads:
+        for r in rows:
+            c = r.get("customer") if isinstance(r, dict) else None
+            if isinstance(c, str) and c:
+                d = _date(r.get("last")) or datetime.date.max
+                out[c] = max(out.get(c, d), d)
+    return out
+
+
+def press_context(body: dict, record_type: str) -> tuple[str, str, dict]:
+    """A Desk button's press (``desk_action/1``) on one ``record_type`` record: (its name, the user who pressed, the
+    dialog's inputs), or ``ValueError``."""
+    if not isinstance(body, dict) or body.get("point") != "desk_action/1":
+        raise ValueError("not a desk_action/1 call")
+    ctx = body.get("context")
+    if not isinstance(ctx, dict) or ctx.get("v") != 1:
+        raise ValueError("no context")
+    recs = ctx.get("records")
+    if not (isinstance(recs, list) and len(recs) == 1 and isinstance(recs[0], dict)
+            and recs[0].get("doctype") == record_type and isinstance(recs[0].get("name"), str) and recs[0]["name"]):
+        raise ValueError(f"one {record_type} record")
+    user, inputs = ctx.get("user"), ctx.get("inputs") or {}
+    if not isinstance(user, str) or not user or not isinstance(inputs, dict):
+        raise ValueError("a user and inputs")
+    return recs[0]["name"], user, inputs
+
+
+def message(body: str, level: str = "success", refresh: bool = False) -> dict:
+    """A Desk button's answer: one message (title at most 60, body at most 280), the form reloaded when it changed."""
+    out = {"message": {"title": "Pharmacy counter rules", "body": plain(body, 280), "level": level}}
+    if refresh:
+        out["refresh"] = True
+    return out

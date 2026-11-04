@@ -47,8 +47,12 @@ answering presses keeps nothing.
    - **sale details** for the prescription number, prescriber, licence, directions and the prescription's date. ⛔ Never
      `required`: a required sale detail stops every sale on every till of the site;
    - **two `check` subscriptions** with different down answers:
-     - the dispensary's `refuse`: it sells only medicine, online only;
-     - the front's `allow_and_flag`.
+     - the dispensary's `refuse`: it sells only medicine, online only. Its settings list the prescription's date,
+       `{"fill_attributes": ["<PREFIX> Rx Date"]}`, so its answer may fill it, and it calls an address of its own
+       (`/rxc/dispensary/fill`): a till still on a version whose list is empty would refuse a fill whole, and its down
+       answer would then refuse every sale, so the service fills only at that address. Deploy the service before any
+     retailer updates: it still answers 0.1.3's address as before;
+     - the front's `allow_and_flag`, with no settings: it refuses every prescription line before the date matters.
 
      Inside one manifest the checker counts them as one POS Profile, so they total 10 s at most (5 s + 5 s);
    - **three `doccheck` subscriptions,** one per record type (Sales Order, Delivery Note, Sales Invoice). Each is
@@ -57,7 +61,13 @@ answering presses keeps nothing.
    - **a Report Builder report on `<PREFIX> Dispensing`** for the prescriptions register, for the pharmacist roles only
      (the readers of the dispensings are the readers of the patient record);
    - **two *Days Before* notifications** on the licences' *valid until*, to the pharmacist-in-charge's role;
-   - a feed registration (no user named: the install makes the app's own user and names it), and a help address on each record type.
+   - a feed registration (no user named: the install makes the app's own user and names it), and a help address on each record type;
+   - **a dispensing label** (`label_layouts`, below) and the three Item fields it prints, `<prefix>_strength`,
+     `<prefix>_route` and `<prefix>_storage` (Data);
+   - **the erasure** (below): a keeping period on `<PREFIX> Settings` (`keep_years`, an Int with no default), a record
+     type `<PREFIX> Erasure` with a table of patients, and two `desk_action` buttons on it for the Records Officer,
+     answered by two `desk_action` subscriptions. The integration role gets *delete* on the patient, the prescription and
+     the dispensing, which only the second button uses.
 
 2. **Check every call with its own route's secret** (`<app>:sub:<key>`), and refuse a timestamp more than five minutes
    from yours.
@@ -94,7 +104,12 @@ answering presses keeps nothing.
    prescriptions share one date answers `fill` with that date (`{"verdict": "fill", "fields": {"<prefix>_rx_date":
    "2026-10-19"}}`), which writes it over whatever was typed; a fill reserves as an allow does. Fill only a document
    that sent the field: a subscription still on older settings does not list it to fill, and refuses the answer
-   whole. A till check cannot write the sale, so there the cashier types it.
+   whole. At the till, the dispensary's filling address answers `{"verdict": "allow", "fill": {"<PREFIX> Rx Date":
+   "2026-10-19"}}` (the sale detail by its name, built from the prefix), where none or the right date was typed; a wrong typed date
+   is refused, since an order's or a layaway's placement writes no fill. The till
+   writes it, prices the sale again and asks once more on the filled sale: answer the same value, and keep the
+   reservation (step 5). Never fill on a return. 0.1.3's address keeps the typed date: a wrong one is refused, and
+   an empty one where the schedule books it.
 
 5. **Reserve with the record's name as the lock.**
    - On allow, insert `<PREFIX> Dispensing` named `<an opaque key for the customer>~<next number>`. Never the patient's
@@ -132,6 +147,43 @@ answering presses keeps nothing.
 8. **Answer 503 when iVendNext cannot be read,** so the till or the Desk applies the declared down answer. Each read
    waits about 2 s; the till cuts the whole check at its 5 s.
 
+9. **The dispensing label** (`label_layouts`, [label layout](../contracts/pages/label_layout.md)): one `html` layout
+   printed from the basket line, so `{uom}` is the line's unit (a strip sold from a box); the item's name, strength,
+   route and storage (`{item.<field>}`: at most three, each Data, Select, Int or Check); the lot and its expiry; the
+   store; and the dose, `{detail.Dose}`. No barcode: a part pack's unit has none, which refuses the label.
+   - `{detail.…}` must name an **active Transaction Item Attribute when the layout is saved**, and the install saves
+     it, so the install stops without it. No manifest kind makes one: the customer makes *Dose* before installing.
+   - The layout installs switched on. A label layout cannot change in a later update: ship a changed one under a new
+     name.
+   - The markets that name a dispensing label's contents: Abu Dhabi (from a bulk pack) and Dubai (a part pack) ask the
+     lot and expiry, and Saudi Arabia's part pack also the storage conditions. Egypt's registration number is the
+     manufacturer's outer pack, not this label. Elsewhere it is a general label.
+
+## After the keeping period
+
+The customer's act, never a timer. Laws keep a prescription for a period (25 years in the UAE, 10 in Egypt, 5 in
+Saudi Arabia and Jordan, 2 in Ghana, Kenya and Nigeria), then want the person's data destroyed. The customer sets the
+period in `<PREFIX> Settings`; until it does, nobody is due.
+
+1. The Records Officer makes a `<PREFIX> Erasure` and presses **List patients due**. The service reads each customer's
+   newest dispensing (`day`), prescription (`date_written`) and change to the patient record (`modified`), grouped by customer
+   (``max(`<field>`) as last``, the column in backticks, and `group_by`), and lists up to 100 whose newest record of every kind is older than today
+   less the period, with their counts.
+2. They press **Erase these patients**, typing the market's destruction record (a committee's minutes, the inspector
+   present). For each row the service reads the patient's records again: one dated since the cut-off keeps the patient
+   (*Kept*), and so does a value still on the customer's five fields of 0.1.1, asked set or not (cleared, the patient
+   goes on a new erasure). Patients run six at a time. Otherwise it
+   deletes the dispensings, then the prescriptions (a dispensing names its prescription), then the patient record.
+3. The record keeps the period, the cut-off, who pressed and when, the destruction record and each patient's outcome.
+   Nobody changes or deletes it, and once a patient is erased it is never listed again. A press works about 7
+   seconds: one that runs out says so, and the next goes on.
+
+What stays: a copy of each deleted record in the Desk's *Deleted Documents* (a delete through the API is never
+permanent), which a System Manager deletes; the button's last answer says so. The framework deletes each record's
+change history after the delete. Also the
+till's sales and their sale details, and the register's own lines, which the register
+erases after its own retention.
+
 ## Proof
 
 - **Laptop:** `python3 -m unittest discover -s samples/s39_pharmacy_counter/tests -p 'test_*.py'`.
@@ -149,8 +201,10 @@ answering presses keeps nothing.
 
 ## Limits to tell the customer
 
-- **The till cannot fill the prescription's date:** the cashier types it, and a wrong one is refused. On the Desk it
-  is filled at Submit.
+- **The prescription's date is filled at the dispensary's till and at Desk submit,** never at an order's or a layaway
+  plan's placement at the till, which fills nothing: type it there.
+- **The dispensing label has no patient name and no dispensing date:** the label door's list has neither. It needs a
+  connection, and prints the dose only from a basket line.
 - **The prescriptions register prints no age and no price:** a print or report may not read the patient's record yet,
   and the dispensing keeps no price (S39's README).
 - **The till cannot take or show the patient's identity:** enter it on the patient's record on the Desk. A clerk is

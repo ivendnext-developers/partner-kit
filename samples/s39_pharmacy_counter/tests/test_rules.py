@@ -367,6 +367,42 @@ class RxDate(unittest.TestCase):
         self.assertEqual(self.till([rule("POM"), rule("POM")], ps, lines=two)["verdict"], "allow")
         self.assertEqual(self.desk([rule("POM"), rule("POM")], ps, lines=two)["verdict"], "allow")    # no date to fill
 
+    def filled(self, rules, rxs, details=None, lines=None, prefix=P):
+        c = ctx(lines or [line("AMOX", 21)], details=dict({"Rx Number": ",".join(r["name"] for r in rxs)}, **(details or {})))
+        c["details"] = {k.replace(P, prefix, 1): v for k, v in c["details"].items()}
+        c["fillable"] = True                     # 0.1.4: the dispensary's filling address, at a sale
+        return R.decide(c, "dispensary", shop(c, rules, rxs), TODAY, prefix)
+
+    def test_a_wrong_typed_date_is_still_refused_at_the_filling_address(self):
+        # an order's or a layaway's placement writes no fill, so a wrong typed date would book: refused, as before
+        out = self.filled([rule("POM")], [rx("RX1", "AMOX", 21, written="2026-10-19")], {"Rx Date": "19/10/2026"})
+        self.assertEqual(out["reason"], "Line 1: AMOX: Prescription RX1 was written on 2026-10-19. Correct the date in "
+                                        "Sale details.")
+
+    def test_the_till_fills_the_prescriptions_date_where_none_or_the_right_one_was_typed(self):
+        p = rx("RX1", "AMOX", 21, written="2026-10-19")
+        for rules in ([rule("POM")], [rule("DATED")]):
+            for typed in ("", "2026-10-19"):
+                out = self.filled(rules, [p], {"Rx Date": typed})
+                self.assertEqual((out["verdict"], out["fill"]), ("allow", {f"{P} Rx Date": "2026-10-19"}), typed)
+                self.assertTrue(out["record"])            # it reserves as an allow does
+                self.assertNotIn("fields", out)
+
+    def test_the_till_fills_the_detail_by_its_own_prefix(self):
+        for prefix in ("IVENDNEXT RXC", "ACME RXC"):
+            out = self.filled([rule("POM")], [rx("RX1", "AMOX", 21, written="2026-10-19")], prefix=prefix)
+            self.assertEqual(out["fill"], {f"{prefix} Rx Date": "2026-10-19"}, prefix)
+
+    def test_the_till_still_refuses_prescriptions_of_two_days_and_fills_nothing_without_one_date(self):
+        ps = [rx("RX1", "AMOX", 21, written="2026-10-19"), rx("RX2", "TRAM", 10, written="2026-10-20")]
+        two = [line("AMOX", 21, 1), line("TRAM", 10, 2)]
+        self.assertIn("written on different days", self.filled([rule("DATED"), rule("POM")], ps, lines=two)["reason"])
+        out = self.filled([rule("POM"), rule("POM")], ps, lines=two)
+        self.assertEqual((out["verdict"], "fill" in out), ("allow", False))      # two dates, none booked: nothing filled
+        c = ctx([line("BREAD", 1)])
+        c["fillable"] = True
+        self.assertEqual(R.decide(c, "dispensary", shop(c, [None]), TODAY, P), {"verdict": "allow", "record": None})
+
     def test_a_number_named_for_no_line_here_never_adds_its_date(self):
         ps = [rx("RX1", "AMOX", 21, written="2026-10-19"), rx("RX2", "TRAM", 10, written="2026-10-20")]
         out = self.till([rule("DATED")], ps, {"Rx Date": "2026-10-19"})            # RX2 covers no line of this sale
