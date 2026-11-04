@@ -39,6 +39,10 @@ ivn try
 
 ## Versions
 
+### 1.1.1
+
+- The first pass looks back to the day the service starts, not a fixed date.
+
 ### 1.1.0
 
 - First version in the kit: the Where is it? till key, hosted as a function for many retailers.

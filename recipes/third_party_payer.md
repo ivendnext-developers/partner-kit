@@ -99,7 +99,7 @@ use the till's own *On Account* tender instead: there is nothing to split.
    shop's accounts role. It answers `{"journal": …}`; the same sale, claim, reason and amount answer the same journal,
    and a till sale is billed back only once it is posted (at the day's close, where the shop posts then). The customer then owes it, and the till's *Take a
    payment* lists that invoice for them.
-9. **File and follow:** the claims file (one row per claim line; never a cell a spreadsheet runs as a formula), the
+9. **File and follow:** the claims file (one row per claim line), the
    remittance matched line by line (paid, short paid, rejected, unmatched), and a claim's moves refused in words
    when its flow does not allow them.
 10. **Write a payer's own link** (a partner's work, per market): read the same claims, and send them in the payer's

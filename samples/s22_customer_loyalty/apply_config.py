@@ -162,7 +162,8 @@ def apply():
             "minimum_bill_amount": 0, "minimum_quantity": 1, "active": 1, "sequence_number": seq,
             "table_applicability": [{"day": d, "enabled": 1, "start_time": "00:00:00", "end_time": "23:59:59"} for d in DAYS],
             "table_applicable_source": [{"source_type": "Warehouse", "source": w} for w in wh]}), update=excl)
-    receipt_workflow()
+    if CONF.get("receipt_workflow"):        # the customer's choice: config.json ships without it
+        receipt_workflow()
 
 
 def receipt_workflow():

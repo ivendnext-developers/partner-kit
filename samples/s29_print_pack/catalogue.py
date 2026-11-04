@@ -215,18 +215,12 @@ def render_html(rows, distributor, list_name, today):
     return "".join(out)
 
 
-def _cell(v):
-    """A spreadsheet runs a cell that starts with = + - @ as a formula: put a quote in front, as the shop's own exports do."""
-    v = "" if v is None else str(v)
-    return "'" + v if v[:1] in ("=", "+", "-", "@", "\t", "\r") else v
-
-
 def render_csv(rows):
     buf = io.StringIO()
     w = csv.writer(buf, lineterminator="\r\n")
     w.writerow(["Group", "Item code", "Item name", "Unit", "Currency", "Rate", "Photo"])
     for r in rows:
-        w.writerow([_cell(r["group"]), _cell(r["code"]), _cell(r["name"]), _cell(r["uom"]), _cell(r["currency"]), r["plain"],
+        w.writerow([r["group"], r["code"], r["name"], r["uom"], r["currency"], r["plain"],
                     "yes" if r["picture"] else "no"])
     return buf.getvalue()
 

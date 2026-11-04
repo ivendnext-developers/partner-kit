@@ -3,7 +3,7 @@
  "app": "pp_pck",
  "prefix": "PP PCK",
  "title": "Assign pick route",
- "version": "0.2.0",
+ "version": "0.2.1",
  "publisher": "Partner Programme sample",
  "description": "A button on a submitted Sales Order, Assign pick route, that a stock user presses in Desk. The partner's service receives the order's lines, creates a pick task (this app's own record type, listed under the order) over the record API with its own key, and answers: the task opens. Nothing on the order changes. Every right a role has is written out (read, write, create, delete, report, export, share, print, email): a permission row that leaves one out gets it ON. The install makes the role PP PCK Integration (read and create on the pick task); the install gives it to the app's own user, which a service serving many shops is handed by the site after the install or an update (Connect again only if the site could not reach the app, or a key was lost or changed).  allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": ["https://host.docker.internal:8125/press/route"],
@@ -64,8 +64,7 @@
     {"fieldname": "picker", "label": "Picker", "fieldtype": "Link", "options": "User", "reqd": 1},
     {"fieldname": "priority", "label": "Priority", "fieldtype": "Select", "options": "Normal\nUrgent", "default": "Normal"}
    ],
-   "send_fields": "name, customer, set_warehouse, delivery_date, items(item_code, qty, warehouse)",
-   "confirm_text": "Send this order's lines to the pick route service?"
+   "send_fields": "name, customer, set_warehouse, delivery_date, items(item_code, qty, warehouse)"
   }
  ],
  "property_setters": [

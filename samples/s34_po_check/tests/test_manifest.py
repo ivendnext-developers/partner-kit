@@ -24,9 +24,10 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual([("Purchase Order", f) for f in sub["settings"]["fill_fields"]], sorted(added))
         self.assertEqual(sub["settings"]["record_type"], "Purchase Order")
 
-    def test_nothing_is_submitted_unchecked_and_the_address_is_listed(self):
+    def test_the_down_answer_is_the_shops_and_the_address_is_listed(self):
         sub = M["extension_subscriptions"][0]
-        self.assertEqual((sub["down_answer"], sub["settings"]["on_validate"]), ("refuse", False))
+        self.assertNotIn("down_answer", sub)
+        self.assertFalse(sub["settings"]["on_validate"])
         self.assertIn(sub["endpoint_url"], M["allowed_urls"])
 
 

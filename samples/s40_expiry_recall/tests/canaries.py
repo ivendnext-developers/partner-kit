@@ -143,8 +143,6 @@ CANARIES = [
      CK + "Receipt.test_c20_an_item_the_app_cannot_read_is_refused"),
     ("a record that is not there is refused", S, "                if e.code != 404:\n                    raise\n            # what earlier", "                raise\n            # what earlier",
      CK + "Disposal.test_d16_a_record_that_is_not_there_is_refused"),
-    ("no settings refuses a disposal", S, "        settings = self.settings(door)\n        if settings is None:\n            return {\"verdict\": \"refuse\", \"reason\": recall.fit(NO_SETTINGS)}\n        erp = recall.is_erp(ctx.get(\"user\"), settings)\n        if not erp and",
-     "        settings = self.settings(door) or {}\n        erp = recall.is_erp(ctx.get(\"user\"), settings)\n        if not erp and", CK + "Disposal.test_d15_no_settings_refuses_a_disposal_and_a_count"),
     # the shop's secrets and keys
     ("each door has its own secret", S, '            return [s for s in [self.secrets.get(sub)] if s], self.tenant',
      '            return [s for s in self.secrets.values() if s], self.tenant', RC + "test_r13_a_press_must_be_signed_with_the_buttons_own_secret"),

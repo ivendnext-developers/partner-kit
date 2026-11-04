@@ -30,7 +30,6 @@ On CitiXsys hosting it runs as a FUNCTION, paid per call (app.json "runs": "func
 
 from __future__ import annotations
 
-import collections
 import datetime
 import http.client
 import json
@@ -55,9 +54,6 @@ import oneshop  # noqa: E402
 import shops  # noqa: E402
 
 KIOSK_TTL, READ_TIMEOUT = 60, 3.0
-MISSES_PER_MINUTE = 20          # unknown kiosk codes read from one shop per minute, per copy of the service: a guesser
-                                # cannot make the service hammer the shop. A code the shop has made (seen once) is never held
-                                # back, so a guesser cannot lock a real kiosk out
 SCAN_BARCODE = "/api/method/ivendnext_mpos.api.v1.scan_barcode"
 PRICER = "/api/method/ivendnext_mpos.api.v1.get_item_details"
 STATIC = {"/": ("kiosk.html", "text/html; charset=utf-8"), "/kiosk.js": ("kiosk.js", "text/javascript; charset=utf-8"),
@@ -70,10 +66,6 @@ class ShopUnreadable(Exception):
 
 class NotPriced(Exception):
     """The shop refused to price the item (disabled, past its end of life, a template): its 4xx answer."""
-
-
-class Busy(Exception):
-    """Too many unknown kiosk codes from one shop this minute: the code is not looked up."""
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -142,8 +134,7 @@ class Service:
         self.app = oneshop.value(conf, oneshop.MANY)
         self.api, self.clock = api or ShopApi(), clock
         self.today = today or (lambda: datetime.datetime.now(datetime.timezone.utc).date())
-        self.cache, self.known, self.lock = {}, set(), threading.Lock()
-        self.misses = collections.defaultdict(collections.deque)
+        self.cache, self.lock = {}, threading.Lock()
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
             self.one = None
@@ -161,35 +152,20 @@ class Service:
         users = sorted(k for k in (record or {}).get("secrets") or {} if k.startswith("user:"))
         return site or "", ({"url": record["url"], "key": record["secrets"][users[0]]} if record and users else None)
 
-    def _missed(self, name: str) -> bool:
-        """True when this shop has had MISSES_PER_MINUTE unknown codes in the last minute (then the shop is not read)."""
-        now = self.clock()
-        with self.lock:
-            q = self.misses[name]
-            while q and now - q[0] > 60:
-                q.popleft()
-            return len(q) >= MISSES_PER_MINUTE
-
     def kiosk(self, name: str, shop: dict, code: str) -> dict | None:
         """The shop's Kiosk record, as the pricer needs it, kept KIOSK_TTL seconds (so switching it off stops it within a
-        minute). None: no such kiosk, or switched off. ``Busy`` when the shop has had too many unknown codes this minute and
-        this code is not one the shop has made: a guesser's codes are not looked up, a real kiosk's always are."""
+        minute). None: no such kiosk, or switched off."""
         now = self.clock()
         with self.lock:
-            hit, known = self.cache.get((name, code)), (name, code) in self.known
+            hit = self.cache.get((name, code))
         if hit and now - hit[0] < KIOSK_TTL:
             return hit[1]
-        if not known and self._missed(name):
-            raise Busy()
         record = self.api.kiosk(shop["url"], shop["key"], self.prefix, code)
         if record is None:
-            with self.lock:
-                self.misses[name].append(now)
             return None
         k = price.kiosk_of(record)
         with self.lock:
             self.cache[(name, code)] = (now, k)
-            self.known.add((name, code))
         return k
 
     def price(self, raw: bytes) -> tuple[int, dict]:
@@ -219,8 +195,6 @@ class Service:
                 return 200, price.refusal("not_found")
             args = price.pricer_args(kiosk, hit, price.kiosk_date(body.get("date"), self.today()))
             answer = price.answer_of(self.api.price(shop["url"], shop["key"], args), kiosk)
-        except Busy:
-            return 429, price.refusal("busy")
         except NotPriced:
             return 200, price.refusal("not_on_sale")
         except ShopUnreadable:

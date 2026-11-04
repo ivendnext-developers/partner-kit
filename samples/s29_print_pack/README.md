@@ -36,6 +36,10 @@ python3 -m unittest discover -s samples/s29_print_pack/tests -p 'test_*.py'
 
 ## Versions
 
+### 1.0.1
+
+- The catalogue file writes each value as it is.
+
 ### 1.0.0
 
 - First version in the kit: a layout of its own for each distributor's invoice, and a price list with photos.

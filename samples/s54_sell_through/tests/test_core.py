@@ -74,7 +74,6 @@ class RunOf(unittest.TestCase):
     def test_each_misfilled_run_says_what_to_fix(self):
         for k, words in ((dict(item_group=""), "fill the item group and the size attribute"),
                          (dict(sold_since=""), "fill Sold since"),
-                         (dict(sold_since="2026-10-31"), "after today"),
                          (dict(sold_since="2024-10-01"), "two years"),
                          (dict(colour_attribute="Size"), "must differ"),
                          (dict(stores=[]), "at least one store"),

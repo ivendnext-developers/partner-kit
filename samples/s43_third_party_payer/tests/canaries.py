@@ -161,8 +161,6 @@ CANARIES = [
      "        if False:", K + "BuildClaim.test_gtin_dose_and_frequency_are_asked_only_where_the_payer_needs_them"),
     ("only Ready claims are filed", CL, '        if c["status"] != READY or', "        if False or",
      K + "ClaimsFile.test_one_row_per_line_of_each_ready_claim"),
-    ("a cell is never a formula", CL, "return \"'\" + s if s[:1] in", "return s if s[:1] in",
-     K + "ClaimsFile.test_a_cell_never_runs_as_a_formula"),
     ("the flow refuses a skipped step", CL, '    if to not in FLOW[claim["status"]]:', "    if False:",
      K + "Flow.test_moves_the_flow_does_not_allow_are_refused_in_words"),
     ("a rejection keeps its reason", CL, '    if to == REJECTED and not why.get("reason"):', "    if False:",

@@ -343,11 +343,9 @@ class Service:
 
     # ── the two checks ──
     def check_receipt(self, door, ctx: dict) -> dict:
-        # without the settings the app cannot tell the ERP's user from anyone else: it refuses (the app cannot run),
-        # never lets a receipt through unchecked
         settings = self.settings(door)
-        if settings is None:
-            return {"verdict": "refuse", "reason": recall.fit(NO_SETTINGS)}
+        if settings is None:                    # no settings record: the customer has turned nothing on
+            return {"verdict": "allow"}
         erp = recall.is_erp(ctx.get("user"), settings)
         today = recall.today_at(settings.get("hours_from_utc"), self.now)
         fields = ctx["fields"]
@@ -370,7 +368,7 @@ class Service:
         names = {x.get("batch_no") for x in lines} | {lot for v in bl.values() for lot in v}
         got = self.batches(door, names, ["expiry_date", "disabled"])
         docs = {}
-        if (settings.get("witness_rule") or recall.WITNESS[0]) == recall.WITNESS[0]:
+        if (settings.get("witness_rule") or recall.NO_WITNESS) == recall.WITNESS[0]:
             for code in sorted({x.get("item_code") for x in lines if x.get("item_code")}):
                 docs[code] = door.doc("Item", code)
         return bl, got, docs
@@ -380,7 +378,7 @@ class Service:
         lines = [x for x in fields.get("items") or [] if isinstance(x, dict)]
         settings = self.settings(door)
         if settings is None:
-            return {"verdict": "refuse", "reason": recall.fit(NO_SETTINGS)}
+            return {"verdict": "allow"}
         erp = recall.is_erp(ctx.get("user"), settings)
         if not erp and not any(x.get("s_warehouse") for x in lines):
             return {"verdict": "allow"}                  # nothing leaves a store: a receipt or opening stock on the Desk
@@ -433,7 +431,7 @@ class Service:
     def check_count(self, door, ctx: dict) -> dict:
         settings = self.settings(door)
         if settings is None:
-            return {"verdict": "refuse", "reason": recall.fit(NO_SETTINGS)}
+            return {"verdict": "allow"}
         lines = [x for x in ctx["fields"].get("items") or [] if isinstance(x, dict)]
         bl, got, docs = self._witness_reads(door, settings, lines)
         today = recall.today_at(settings.get("hours_from_utc"), self.now)

@@ -18,6 +18,7 @@ What a partner usually changes:
 - **The company and the store:** `--company` and `--warehouse`; one of each per run.
 - **The feed's name:** `--app`, the name of the Registered Application that follows POS Invoice.
 - **The identity map and what goes out:** the out, in and reconcile steps in `sync.py`.
+- **What a movement costs:** send the cost. A movement with no cost takes the item's rate from the ledger, and a new item with no ledger rate books at 0, with nothing to say so.
 
 More: the [recipe](../../recipes/system_sync.md).
 
@@ -31,6 +32,10 @@ python3 -m unittest discover -s samples/s7_system_sync/tests -p 'test_*.py'
 ```
 
 ## Versions
+
+### 1.0.1
+
+- iVendNext values a movement with no cost from the ledger, instead of booking it at 1.
 
 ### 1.0.0
 

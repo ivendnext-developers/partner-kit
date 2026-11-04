@@ -1,6 +1,6 @@
 {
  "app": "po-check",
- "version": "0.1.0",
+ "version": "0.1.1",
  "port": 8080,
  "health": "/health",
  "size": "small",

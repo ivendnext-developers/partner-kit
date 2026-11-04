@@ -7,7 +7,7 @@ library only).
     GET  /              the guest's page (its address carries #s=<the retailer's site>&t=<code>.<number>.<signature>)
     GET  /page.js · /page.css
     POST /gor/menu      {"s", "t"}                                  →  200 {"state": "open", "where", "menu", …}
-    POST /gor/order     {"s", "t", "key", "lines"}                  →  200 {"state": "sent" | "refused" | "wait", …}
+    POST /gor/order     {"s", "t", "key", "lines"}                  →  200 {"state": "sent" | "refused", …}
     GET  /health        200 {"ok": 1}
     POST /ivendnext/connect · /ivendnext/disconnect   many retailers: the app template's handshake (shops.py)
 
@@ -18,9 +18,8 @@ On CitiXsys hosting it runs as a FUNCTION, paid per call (app.json "runs": "func
 then reads the code record (as the app's own user) and refuses a code whose number moved on (a code that leaked and was
 made again). The store, the table and the register come from the record and the store's row, never from the page.
 
-**An order** is one press of *Send order* with a fresh random key the page made. Under a claim on the code in the
-service's own table (one order per code every ``SPACING_S`` seconds, every copy of the function sees it), the service
-reads the store's floor: no check at the table → it opens one; one → it adds to it; more → it refuses. The door's two
+**An order** is one press of *Send order* with a fresh random key the page made. The service reads the store's floor: no
+check at the table → it opens one, if the table is still free; one → it adds to it; more → it refuses. The door's two
 keys are made from the page's key, so a retry opens nothing twice and adds nothing twice. A kiosk's order opens a tab
 named by a code made from the same key. Nothing is priced, sent to the kitchen or paid here.
 
@@ -91,7 +90,6 @@ ASK_STAFF = "This table cannot take orders from your phone right now. Please ask
 ASK_STAFF_KIOSK = "This kiosk cannot take orders right now. Please order at the counter."
 MANY_BILLS = "This table has more than one bill open. Please ask your server to take your order."
 SENT_TWICE = "This order was already sent once. Please ask a member of staff to check the bill."
-WAIT = "An order was sent from here a moment ago. Please send yours again in a few seconds."
 ITEM_REFUSED = "Something in your order cannot be ordered now. Please ask a member of staff."
 CHANGED = "The bill changed a moment ago. Please send your order again."
 PAYING = "This table's bill is being paid. Please ask your server."
@@ -191,12 +189,8 @@ def _host(url: str) -> str:
     return (urllib.parse.urlsplit(url).netloc or "").lower()
 
 
-class Busy(Exception):
-    """Another order for this code is being sent, or was sent a moment ago."""
-
-
 class Service:
-    def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, now=time.time, clock=time.monotonic):
+    def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, clock=time.monotonic):
         self.app = oneshop.value(conf, oneshop.MANY)
         prefix = (conf.get("GOR_PREFIX") or "").strip()
         if self.app and not prefix:      # the library's record types are not the sample's: every read would 404
@@ -205,7 +199,7 @@ class Service:
         self.page = (conf.get("GOR_PAGE_URL") or "").strip()
         if not self.page.startswith(("https://", "http://")):
             raise SystemExit("set GOR_PAGE_URL, where guests reach this service's page (each code's link points there)")
-        self.tenants, self.now, self.clock = tenants, now, clock
+        self.tenants, self.clock = tenants, clock
         if self.app:                                    # many retailers: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one retailer, from the settings
@@ -213,7 +207,6 @@ class Service:
             self.site = _host(one["IVN_SHOP_URL"])
             self.secret = one["IVN_CODE_SECRET"]
             self.tenant = tenant or tenant_of(one["IVN_SHOP_URL"], one["IVN_SHOP_KEY"])
-            self._spaced: dict[str, float] = {}
         self._menus: dict[tuple, tuple] = {}
         self._codes: dict[tuple, tuple] = {}
         self._lock = threading.Lock()
@@ -230,22 +223,6 @@ class Service:
                        if k.startswith("user:"))
         door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
         return site or "", secrets, door
-
-    def space(self, site: str, c: dict):
-        """One order per table (or kiosk) every ``SPACING_S`` seconds: a claim every copy of the function sees (the shops
-        table's conditional write), or this process's own clock for one retailer. ``Busy`` when it is taken. A table's
-        claim names its store and place, so two code records for one table share it."""
-        where = f"{c.get('store')}|{c.get('place')}" if c.get("kind") == gor.KIND_TABLE else c.get("name")
-        name = f"gor|{site}|{where}"
-        now = self.now()
-        if self.app:
-            if not self.store.claim(name, now, gor.SPACING_S):
-                raise Busy()
-            return
-        with self._lock:
-            if self._spaced.get(name, 0) > now - gor.SPACING_S:
-                raise Busy()
-            self._spaced[name] = now
 
     # ── the store's row and its register ──
     def row(self, door, store: str) -> dict | None:
@@ -471,22 +448,10 @@ class Service:
                                     (row.get("course") or "").strip()[:140] or gor.COURSE)
         except gor.Refused as r:
             return 200, {"state": "refused", "say": "order", "words": r.words}
-        try:
-            self.space(site, c)
-        except Busy:
-            return 200, _say("wait", "wait", WAIT)
         store, register, table = c["store"], row["register"], c["kind"] == gor.KIND_TABLE
         try:
             if table:
-                place = gor.place_of(door.call("floor_status", query={"store": store}) or {}, c.get("place"))
-                if place is None:
-                    return 200, closed
-                checks = [k for k in place.get("checks") or [] if isinstance(k, dict) and k.get("check")]
-                if len(checks) > 1:
-                    return 200, _say("refused", "many_bills", MANY_BILLS)
-                if checks and checks[0].get("status") == "paying":    # its new lines would sit outside the payment
-                    return 200, _say("refused", "paying", PAYING)
-                check = checks[0]["check"] if checks else self.open(door, store, register, key, c, place=c["place"])
+                check = self.table_check(door, store, register, key, c, closed)
             else:
                 code = gor.kiosk_code(key, secret)
                 check = self.open(door, store, register, key, c, label=f"Kiosk {code}")
@@ -510,10 +475,31 @@ class Service:
             return 200, _say("sent", "sent_table", SENT_TABLE)
         return 200, dict(_say("sent", "sent_kiosk", SENT_KIOSK.format(code=code)), code=code)
 
+    def table_check(self, door, store: str, register: str, key: str, c: dict, closed: dict) -> str:
+        """The table's one open check: the floor's, or a new one. ``only_if_free``: of two guests' first orders at a free
+        table, the second is refused the open (``PlaceTakenError``), and its order goes on the first's check."""
+        for _ in range(2):
+            place = gor.place_of(door.call("floor_status", query={"store": store}) or {}, c.get("place"))
+            if place is None:
+                raise _Answer(200, closed)
+            checks = [k for k in place.get("checks") or [] if isinstance(k, dict) and k.get("check")]
+            if len(checks) > 1:
+                raise _Answer(200, _say("refused", "many_bills", MANY_BILLS))
+            if checks and checks[0].get("status") == "paying":    # its new lines would sit outside the payment
+                raise _Answer(200, _say("refused", "paying", PAYING))
+            if checks:
+                return checks[0]["check"]
+            try:
+                return self.open(door, store, register, key, c, place=c["place"])
+            except TenantError as e:
+                if e.kind != "PlaceTakenError":
+                    raise
+        raise _Answer(200, _say("refused", "changed", CHANGED))    # taken, and gone again by the next read: send it again
+
     def open(self, door, store: str, register: str, key: str, c: dict, place: str = "", label: str = "") -> str:
         req = {"store": store, "pos_profile": register, "key": gor.door_key(key, "open"), "source": gor.SOURCE,
                "source_ref": c["name"]}
-        req.update({"place": place} if place else {"label": label, "covers": 1})
+        req.update({"place": place, "only_if_free": True} if place else {"label": label, "covers": 1})
         got = door.call("check_open", req)
         if not isinstance(got, dict) or not got.get("check"):
             raise TenantError("check_open -> an answer with no check")

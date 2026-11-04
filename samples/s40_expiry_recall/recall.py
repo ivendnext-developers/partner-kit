@@ -31,6 +31,7 @@ SALES = ("POS Invoice", "Sales Invoice", "Delivery Note")   # the documents that
 CLASSES = ("Class I", "Class II", "Class III")
 DEPTHS = ("Consumer", "Retail", "Wholesale")
 WITNESS = ("Items with a listed schedule", "Every disposal", "No disposal")
+NO_WITNESS = "No disposal"            # the rule until a chain chooses one
 DEFAULT_SCHEDULE_FIELD = "pp_rxc_schedules"    # Pharmacy counter rules' table of schedules on Item
 
 
@@ -322,7 +323,7 @@ def judge_receipt(fields: dict, items: dict, batches: dict, bundle_lots: dict, s
     if fields.get("is_return"):
         return out
     floor = whole(settings.get("min_shelf_days")) or 0
-    pack_needed = settings.get("pack_expiry_required", 1) not in (0, "0", False) and not erp   # an ERP sends none
+    pack_needed = settings.get("pack_expiry_required", 0) not in (0, "0", False) and not erp   # an ERP sends none
     later = []
     for i, line in enumerate(fields.get("items") if isinstance(fields.get("items"), list) else [], 1):
         if not isinstance(line, dict):
@@ -426,8 +427,8 @@ def schedules_of(item_doc: dict, field: str, on: datetime.date | None) -> list[s
 
 
 def witnessed(item_doc: dict, settings: dict, on: datetime.date | None) -> bool:
-    rule = settings.get("witness_rule") or WITNESS[0]
-    if rule == "No disposal":
+    rule = settings.get("witness_rule") or NO_WITNESS
+    if rule == NO_WITNESS:
         return False
     if rule == "Every disposal":
         return True

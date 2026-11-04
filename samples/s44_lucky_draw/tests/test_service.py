@@ -262,9 +262,8 @@ class ServiceTest(unittest.TestCase):
         for c, words in ((campaign(spend_per_entry=0), "Fill the spend for one entry"),
                          (campaign(to_date="2026-09-30"), "The campaign's last day is before its first"),
                          (campaign(from_date=None), "Fill the campaign's company"),
-                         (campaign(winners=0), "Winners is a whole number from 1 to 50"),
-                         (campaign(winners=51), "Winners is a whole number from 1 to 50"),
-                         (campaign(reserves=21), "Reserves is a whole number from 0 to 20"),
+                         (campaign(winners=0), "Winners is a whole number, at least 1"),
+                         (campaign(reserves=-1), "Reserves is a whole number, 0 or more"),
                          (campaign(most_entries_per_sale=-1), "Most entries per sale")):
             t = FakeTenant(c)
             out = self.press(self.service(t), "count")

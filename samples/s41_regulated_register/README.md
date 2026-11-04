@@ -43,6 +43,10 @@ ivn try
 
 ## Versions
 
+### 0.2.1
+
+- Kenya's data set sets no count deadline after a loss: it cited no source for one.
+
 ### 0.2.0
 
 - Installs its books on the POS app's register door (POS 2.1.0 build 667 or later; install S39 0.1.3 or later first).

@@ -23,7 +23,7 @@ import app  # noqa: E402
 import capture  # noqa: E402
 
 SCAN_SECRET, CUSTOMER_SECRET, QTY_SECRET = "s20-scan-secret", "s20-customer-secret", "s20-qty-secret"
-CONF = {"PP_POINT_SECRET_SCAN": SCAN_SECRET, "PP_POINT_SECRET_CUSTOMER": CUSTOMER_SECRET, "PP_POINT_SECRET_QTY": QTY_SECRET,
+CONF = {"PP_QTY_ASK_ABOVE": "3", "PP_QTY_MOST": "5", "PP_POINT_SECRET_SCAN": SCAN_SECRET, "PP_POINT_SECRET_CUSTOMER": CUSTOMER_SECRET, "PP_POINT_SECRET_QTY": QTY_SECRET,
         "PP_LINE_ATTRIBUTE": "Warranty ref", "PP_BARRED_PHONES": "+971 50 000 0000"}
 CID = "9f2c" * 8
 
@@ -138,21 +138,25 @@ class CoreTest(unittest.TestCase):
         self.assertEqual(self.add(cid="b" * 32)["verdict"], "challenge")
         self.assertEqual(len(self.sent), 2)
 
+    def test_with_no_limit_set_every_quantity_is_allowed(self):
+        conf = capture.settings_from(dict(CONF, PP_QTY_ASK_ABOVE="", PP_QTY_MOST=""))
+        self.assertEqual([capture.on_qty(qty_ctx(q), conf)["verdict"] for q in (1, 6, 500)], ["allow", "allow", "allow"])
+
     def test_a_quantity_up_to_three_is_allowed_four_or_five_asked_more_refused(self):
-        conf = capture.settings_from(CONF)
+        conf = capture.settings_from(dict(CONF, PP_QTY_ASK_ABOVE="3", PP_QTY_MOST="5"))
         self.assertEqual([capture.on_qty(qty_ctx(q), conf)["verdict"] for q in (2, 3, 4, 5, 6, 12)],
                          ["allow", "allow", "confirm", "confirm", "refuse", "refuse"])
         self.assertEqual(capture.on_qty(qty_ctx(6), conf)["reason"], "At most 5 of PHONE-X on one line.")
 
     def test_the_new_quantity_is_judged_never_the_last_allowed_one(self):
-        conf = capture.settings_from(CONF)
+        conf = capture.settings_from(dict(CONF, PP_QTY_ASK_ABOVE="3", PP_QTY_MOST="5"))
         self.assertEqual(capture.on_qty(qty_ctx(2, answered=9), conf), {"verdict": "allow"})    # a cut back is allowed
         self.assertEqual(capture.on_qty(qty_ctx(9, answered=2), conf)["verdict"], "refuse")
 
     def test_the_shop_sets_its_own_limits(self):
         conf = capture.settings_from(dict(CONF, PP_QTY_ASK_ABOVE="1", PP_QTY_MOST="2"))
         self.assertEqual([capture.on_qty(qty_ctx(q), conf)["verdict"] for q in (1, 2, 3)], ["allow", "confirm", "refuse"])
-        self.assertEqual(capture.settings_from(dict(CONF, PP_QTY_MOST="x"))["most"], 5)
+        self.assertIsNone(capture.settings_from(dict(CONF, PP_QTY_MOST="x"))["most"])
 
     def test_every_answer_is_plain_and_fits(self):
         for out in (self.add(phone=""), self.add(phone="+971500000000"), self.add(),

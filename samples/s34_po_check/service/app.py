@@ -9,7 +9,7 @@ On CitiXsys hosting it runs as a FUNCTION, paid per call (app.json "runs": "func
 
 The call is checked with the subscription's secret (``<app>:sub:po_check``), then the ERP is asked (``erp.StandIn`` here;
 yours in its place). An answer that cannot be given (a call this app cannot read, the shops store down) is a 4xx or 503,
-and the shop applies the subscription's down answer: ``refuse`` in this manifest, so no order is submitted unchecked.
+and the shop applies the subscription's down answer: none in this manifest, so the order goes on and is flagged.
 
 ONE SHOP (env or an env file):
     IVN_CHECK_SECRET   the check's secret (handed back at install as pp_poc:sub:po_check)

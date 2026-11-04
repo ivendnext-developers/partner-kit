@@ -35,7 +35,7 @@ class ManyShops(unittest.TestCase):
         self.store.put("shop-c.ivendnext.com", {"site": "shop-c.ivendnext.com", "url": "https://shop-c.ivendnext.com",
                                                 "secrets": {f"{APP}:sub:code": "cd-c"}})     # no user key yet
         self.doors, self.clock = {}, Clock()
-        self.svc = app.Service(LIB, store=self.store, tenants=self.door, now=self.clock)
+        self.svc = app.Service(LIB, store=self.store, tenants=self.door)
 
     def tearDown(self):
         gor.use_prefix("PP GOR")
@@ -74,16 +74,15 @@ class ManyShops(unittest.TestCase):
         self.assertEqual((code, out), (503, {"state": "unavailable"}))
         self.assertEqual(self.doors, {})
 
-    def test_one_order_a_code_across_every_copy_of_the_function(self):
-        other = app.Service(LIB, store=self.store, tenants=self.door, now=self.clock)   # a second copy, the same table
+    def test_two_copies_of_the_function_keep_a_table_on_one_check(self):
+        other = app.Service(LIB, store=self.store, tenants=self.door)     # a second copy, the same table
         t = self.token(A, "cd-a")
         self.assertEqual(self.call("/gor/order", A, t, key=ORDER, lines=[latte()])[1]["state"], "sent")
         k2 = "9f1c2b9e-0d4a-4c1e-9a3b-1f2e3d4c5b6a"
-        self.assertEqual(self.call("/gor/order", A, t, svc=other, key=k2, lines=[latte()])[1]["state"], "wait")
+        self.assertEqual(self.call("/gor/order", A, t, svc=other, key=k2, lines=[latte()])[1]["state"], "sent")
         self.assertEqual(self.call("/gor/order", B, self.token(B, "cd-b"), svc=other, key=k2, lines=[latte()])[1]["state"],
                          "sent")                                  # another retailer's table is its own
-        self.clock.t += gor.SPACING_S + 1
-        self.assertEqual(self.call("/gor/order", A, t, svc=other, key=k2, lines=[latte()])[1]["state"], "sent")
+        self.assertEqual([len(d.checks) for d in self.doors.values()], [1, 1])
 
     def test_a_shops_table_that_does_not_answer_is_a_503(self):
         class Down:

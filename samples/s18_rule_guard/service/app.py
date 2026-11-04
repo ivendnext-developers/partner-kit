@@ -9,7 +9,7 @@ The till sends the priced basket; the service answers by the shop's OWN rule (``
 records (``rule.rules_of``), read back with the shop's integration user's key once the call's signature holds, and kept
 one minute (``RULES_TTL``), so a changed rule applies within a minute. It writes nothing. A bad signature is a 401, a body
 it cannot read a 400, and a shop it cannot read a 503: the shop then applies the down answer the subscription declares
-(this manifest declares ``refuse``, so an outage never sells a members-only item). A shop that has not handed over its
+(this manifest declares none, so the sale goes on and is flagged; a shop may choose ``refuse``). A shop that has not handed over its
 user's key yet, or that refuses it, is answered *refuse*, in words that say so. A return is judged only for the items it
 sells (an exchange); one that sells nothing reads nothing.
 

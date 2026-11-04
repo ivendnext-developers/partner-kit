@@ -28,11 +28,11 @@ class ManifestTest(unittest.TestCase):
         subs = {s["key"]: s for s in self.m["extension_subscriptions"]}
         rec, dis = subs["receipt"], subs["disposal"]
         self.assertEqual((rec["settings"]["record_type"], rec["settings"]["on_validate"], rec["settings"]["fill_fields"],
-                          rec["down_answer"]), ("Purchase Receipt", False, ["pp_rcl_short_dated"], "refuse"))
+                          "down_answer" in rec), ("Purchase Receipt", False, ["pp_rcl_short_dated"], False))
         cnt = subs["count"]
-        self.assertEqual((cnt["settings"]["record_type"], cnt["down_answer"]), ("Stock Reconciliation", "refuse"))
+        self.assertEqual((cnt["settings"]["record_type"], "down_answer" in cnt), ("Stock Reconciliation", False))
         self.assertEqual((dis["settings"]["record_type"], dis["settings"]["on_validate"], dis["settings"]["fill_fields"],
-                          dis["down_answer"]), ("Stock Entry", False, ["pp_rcl_erp_check"], "refuse"))
+                          "down_answer" in dis), ("Stock Entry", False, ["pp_rcl_erp_check"], False))
         self.assertNotIn("customer", rec["settings"]["send_fields"] + dis["settings"]["send_fields"])
 
     def test_the_recall_button_is_the_recall_officers_alone(self):

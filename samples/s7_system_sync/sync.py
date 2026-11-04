@@ -94,7 +94,9 @@ class Shop:
     def book_stock(self, key, code, qty, rate):
         """A Stock Entry the engine books: a Material Receipt for goods in, a Material Issue for goods out."""
         kind = "Material Receipt" if qty > 0 else "Material Issue"
-        row = {"item_code": code, "qty": abs(qty), "basic_rate": rate}
+        row = {"item_code": code, "qty": abs(qty)}
+        if rate:                    # no cost: the engine values it from the ledger
+            row["basic_rate"] = rate
         row["t_warehouse" if qty > 0 else "s_warehouse"] = self.warehouse
         res = self.api.call("POST", self._q("Stock Entry"), body={
             "doctype": "Stock Entry", "stock_entry_type": kind, "purpose": kind, "company": self.company, "docstatus": 1,
@@ -197,7 +199,7 @@ def _movement(erp, shop, mid, n):
     code = PREFIX + mv["erp_id"]
     if shop.item(code) is None:
         raise RuntimeError(f"stock movement {mid} came before its item reached the shop")
-    shop.book_stock(key, code, mv["qty"], mv["unit_cost"] or 1.0)
+    shop.book_stock(key, code, mv["qty"], mv["unit_cost"])
     n["stock_entries"] += 1
 
 

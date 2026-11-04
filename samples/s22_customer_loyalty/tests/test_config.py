@@ -42,10 +42,19 @@ class Config(unittest.TestCase):
         self.shop.put("Warehouse", "Demo Retail — Store 1", company="Demo Retail", is_group=0)
         self.cfg.T, self.cfg.S, self.cfg.say = self.shop, self.cfg.State(), (lambda *a: None)
         self.before = self.shop.effective("Purchase Receipt")
+        self.shipped = self.cfg.CONF
+        self.cfg.CONF = dict(self.shipped, receipt_workflow={"keep_submit": ["Stock Manager", "PP LYL Integration"]})
 
     def run_all(self):
         self.cfg.prepare()
         self.cfg.apply()
+
+    def test_as_shipped_nobody_loses_submit_on_a_receipt(self):
+        self.cfg.CONF = self.shipped
+        self.run_all()
+        submits = lambda rows: {r["role"] for r in rows if r["submit"]}     # noqa: E731
+        self.assertLessEqual(submits(self.before), submits(self.shop.effective("Purchase Receipt")))
+        self.assertFalse(self.shop.db.get("Workflow"))
 
     def test_only_the_manager_and_the_service_may_submit_a_receipt(self):
         self.run_all()

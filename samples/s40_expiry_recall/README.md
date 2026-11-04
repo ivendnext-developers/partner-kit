@@ -14,8 +14,15 @@ ivn new acme_recall --from s40
 
 What a partner usually changes:
 
-- **The clocks and depth:** each recall class's start and completion time and how far it traces customers, in the settings record (the defaults are Kenya's PPB table).
-- **The witness:** who needs the regulator's visit (`witness_rule`, `witness_schedules`, `schedule_field` on `PP RCL Settings` in `manifest.json`).
+- **The clocks and depth:** each recall class's start and completion time and how far it traces customers, in the settings record. They ship blank, so a notice fills no deadline until the customer sets them, and a blank depth fills *Consumer*, so every class traces customers until the customer chooses. A Kenyan retailer fills the PPB table:
+
+  | Class | Start within | Complete within | Depth |
+  |---|---|---|---|
+  | Class I | 24 hours | 14 days | Consumer |
+  | Class II | 72 hours | 21 days | Retail |
+  | Class III | 120 hours | 28 days | Wholesale |
+
+- **The witness:** who needs the regulator's visit (`witness_rule`, `witness_schedules`, `schedule_field` on `PP RCL Settings` in `manifest.json`). It ships as *No disposal*; a chain with listed schedules chooses *Items with a listed schedule*.
 - **Goods-in:** the minimum shelf life (`min_shelf_days`), the near-expiry window (`near_expiry_days`) and the rules in `recall.py`.
 - **The records:** the five record types, the Desk buttons, the save rules and the prints in `manifest.json`; `RCL_PREFIX` names them for the service.
 - **Your service's address:** `allowed_urls` in `manifest.json` names the sample's test address; write your own.
@@ -38,6 +45,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.0.1
+
+- With no settings record every check allows; the witness rule ships as *No disposal*; the two receipt ticks ship off and Kenya's clocks ship blank; when the service is down the checks go on and are flagged, unless the customer chooses to refuse.
 
 ### 1.0.0
 

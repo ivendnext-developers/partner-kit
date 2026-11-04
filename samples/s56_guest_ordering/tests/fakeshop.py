@@ -65,6 +65,7 @@ class FakeTenant:
         self.register = {"name": REG, "company": CO, "currency": "EUR", "selling_price_list": "Menu", "customer": "Walk-in",
                          "warehouse": STORE, "item_groups": [{"item_group": g} for g in groups_on_register]}
         self.refuse, self.door_refuse, self.lose, self.stale_code = refuse, door_refuse, dict(lose or {}), stale_code
+        self.beaten_to_it = None
         self.keys = {}                   # the door's memory: (verb, key) → (arguments, answer)
         self.checks = {c["check"]: dict(c, lines=list(c.get("lines") or [])) for c in open_checks}
         self.n = itertools.count(1)
@@ -159,6 +160,10 @@ class FakeTenant:
             if first != args:
                 raise app.TenantError(f"{verb} -> HTTP 417", 417, "CheckRequestError")
         elif verb == "check_open":
+            if self.beaten_to_it:                       # another guest's open reached the door after this floor read
+                self.checks[self.beaten_to_it["check"]], self.beaten_to_it = self.beaten_to_it, None
+            if body.get("only_if_free") and any(c.get("place") == body.get("place") for c in self.checks.values()):
+                raise app.TenantError(f"{verb} -> HTTP 417", 417, "PlaceTakenError")
             name = f"CHK-{next(self.n):04d}"
             self.checks[name] = {"check": name, "place": body.get("place"), "label": body.get("label"),
                                  "covers": body.get("covers"), "source_ref": body.get("source_ref"), "lines": []}

@@ -19,11 +19,11 @@ What a partner usually changes:
 - **The rules:** one `PP RGD Rule` record per rule, written by the customer in Desk: a members-only item, a members-only item group, a member customer group, or *Ask for ID at or above* an amount. The service reads the switched-on records and keeps them a minute.
 - **The service's address:** every `host.docker.internal` in `allowed_urls` and the check's `endpoint_url` (`manifest.json`) is a test address; put your own service's address there.
 - **The answers:** `decide` in `rule.py`, and the sentences it returns.
-- **If the service is down:** the check in `manifest.json` refuses the sale, so an outage never sells a members-only item.
+- **If the service is down:** the sale goes on and is flagged on *Sales to review*. A customer who must never sell a members-only item in an outage sets *When the service is down* to refuse on the record.
 
 More: the [recipe](../../recipes/rule_guard.md).
 
-**The customer sets:** the rules, and who may move a customer into a member group. A cashier can change a customer's group in the till, so the retailer puts *Customer Group* at *Perm Level* 1 in *Customize Form* and gives level 1 *Write* on Customer only to its managers.
+**The customer sets:** the rules.
 
 ## Run it
 
@@ -39,6 +39,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.2
+
+- When the service is down the sale goes on and is flagged, unless the customer chooses to refuse it.
 
 ### 1.1.1
 

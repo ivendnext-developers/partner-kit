@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""S16's canaries: each test that guards a shop's secret, its key, its words or the claim on a press must go RED when that
+"""S16's canaries: each test that guards a shop's secret, its key, or its words must go RED when that
 check is removed. For each mutation this copies the sample (and the kit folders it uses) to a temporary folder, runs the
 one test named on the unmutated copy (it must pass, else BROKEN), applies ONE change (the anchor must match exactly once,
 and the mutant must compile), runs the test again, and reports RED (the test caught it) or GREEN (a dead test). The
@@ -18,7 +18,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-T, S, TPL = "test_many_shops.ManyShops.", "service/app.py", "../../tools/app_template/service/shops.py"
+T, S = "test_many_shops.ManyShops.", "service/app.py"
 
 CANARIES = [
     ("the signature is checked", S, "        if not secrets or all(route.verify(ts, sig, raw, s) for s in secrets):",
@@ -36,14 +36,6 @@ CANARIES = [
      "", T + "test_a_press_before_connect_again_is_answered_in_words_and_writes_nothing"),
     ("a refused user is named in words", S, "            if e.code in (401, 403):", "            if False:",
      T + "test_a_shop_that_refuses_the_apps_user_is_told_so_in_words"),
-    ("two copies never handle one press", S, "        if not self.store.claim(name, self.clock(), CLAIM_STALE):",
-     "        if False:", T + "test_two_copies_receiving_one_press_make_one_task"),
-    ("the claim is let go after the press", S, "                self.store.delete(name)", "                pass",
-     T + "test_two_copies_receiving_one_press_make_one_task"),
-    ("the claim is per shop", S, 'f"press{shops.CLAIM_MARK}{site}{shops.CLAIM_MARK}', 'f"press{shops.CLAIM_MARK}{shops.CLAIM_MARK}',
-     T + "test_the_same_key_from_another_shop_is_another_press"),
-    ("a stopped copy's claim is taken over once stale", TPL, '.get("at", 0) > now - stale_s:', '.get("at", 0) > 0:',
-     T + "test_a_claim_left_by_a_stopped_copy_is_taken_over_once_stale"),
     ("the prefix names the pick task", "route.py", '    TASK = f"{prefix} Pick Task"', "    TASK = TASK",
      "test_many_shops.Prefix.test_every_record_type_name_follows_the_prefix"),
     ("a redirect is not followed", S, "urllib.request.build_opener(_NoRedirect)", "urllib.request.build_opener()",
@@ -53,12 +45,8 @@ CANARIES = [
      "test_many_shops.AsAFunction.test_health_a_signed_press_either_body_form_and_a_refusal"),
     ("the integration role carries the prefix", "manifest.json", '{"role": "PP PCK Integration", "read": 1, "write": 0, "create": 1',
      '{"role": "PP Integration", "read": 1, "write": 0, "create": 1', "test_manifest.ManifestTest.test_the_feeds_user_holds_the_apps_own_role"),
-    ("a write with no answer keeps the claim", S, '                    held["keep"] = writing and e.code is None', '                    held["keep"] = False',
-     T + "test_a_task_saved_after_the_service_stopped_waiting_is_never_made_twice"),
-    ("a read with no answer frees the claim", S, '                    held["keep"] = writing and e.code is None',
-     '                    held["keep"] = e.code is None', T + "test_a_read_with_no_answer_frees_the_press_at_once"),
-    ("a retried list press finds each order's own task", S, '                        row = found.get(t["sales_order"])',
-     '                        row = next(iter(found.values()), None)',
+    ("a retried list press finds each order's own task", S, '                row = found.get(t["sales_order"])',
+     '                row = next(iter(found.values()), None)',
      T + "test_a_list_press_retried_after_a_stop_finds_what_was_made_and_makes_the_rest"),
     ("a press carries at most ORDERS_MAX orders", S, "        if len(tasks) > ORDERS_MAX:", "        if False:",
      T + "test_more_orders_than_one_press_may_carry_are_refused_in_words"),

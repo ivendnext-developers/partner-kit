@@ -19,8 +19,9 @@ GUEST = {"guest_name", "phone", "customer", "notes"}       # the fields only the
 
 
 def settings(**row):
-    return {"name": CO, "company": CO, "run_started": "", "modified": "2026-10-29 09:00:00.000001",
-            "stores": [dict({"parent": CO, "store": STORE, "register": REG, "minutes": 90, "second_check": 0,
+    return {"name": CO, "company": CO, "modified": "2026-10-29 09:00:00.000001",
+            "stores": [dict({"name": "ROW-1", "parent": CO, "store": STORE, "register": REG, "minutes": 90, "second_check": 0,
+                             "run_started": "", "modified": "2026-10-29 09:00:00.000001",
                              "no_show_deposit": "Keep it"}, **row)]}
 
 
@@ -68,6 +69,8 @@ class FakeTenant:
             return self.wait
         if doctype.endswith(" Settings"):
             return self.settings
+        if doctype.endswith(" Store"):
+            return {r["name"]: r for s in self.settings.values() for r in s["stores"]}
         raise app.TenantError("404", 404)
 
     @staticmethod
@@ -113,6 +116,9 @@ class FakeTenant:
                 raise app.TenantError("PUT -> HTTP 417", 417, app.STALE)
         rec.update({k: v for k, v in body.items() if k != "modified"})
         rec["modified"] = self._tick()
+        if doctype.endswith(" Store"):                          # a row's save saves its settings: every row is re-stamped
+            for r in self.settings[rec["parent"]]["stores"]:
+                r["modified"] = rec["modified"]
         return self._as_app(rec)
 
     # ── the till's open-check door ──

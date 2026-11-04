@@ -30,7 +30,6 @@ TEXT = {
     "no_price": "This item has no price here. Please ask a member of staff.",
     "not_on_sale": "This item is not on sale. Please ask a member of staff.",
     "unavailable": "Price checks are not available right now.",
-    "busy": "Please wait a moment and scan again.",
     "bad_request": "Please scan the item again.",
 }
 

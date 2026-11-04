@@ -20,7 +20,7 @@ A recall notice with a **Block these batches** button: your service switches the
 - A Desk delivery or invoice naming a blocked lot by hand still submits until the POS app refuses disabled lots on every stock document.
 - An offline till keeps a blocked lot until it syncs; press again after the sync to trace its sales.
 - A lot with no expiry date is never blocked by the app (saving it would write a guessed date): enter the pack's date first.
-- While the service is down, receipts, stock entries and stock counts wait: all three checks refuse (their declared answer).
+- While the service is down, receipts, stock entries and stock counts go on and are flagged; a customer may choose to have them refused.
 - A schedule set only on an item group is not read for the disposal rule.
 - Up to 100 lots a notice.
 

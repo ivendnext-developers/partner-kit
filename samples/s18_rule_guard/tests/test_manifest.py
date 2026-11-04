@@ -1,4 +1,4 @@
-"""S18's manifest passes the kit's checker: one check, on from the install, refusing when its service is down."""
+"""S18's manifest passes the kit's checker: one check, on from the install, with the product's own answer when its service is down."""
 import json
 import sys
 import unittest
@@ -16,9 +16,10 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(validate.validate(MANIFEST), [])
         self.assertEqual(validate.warnings(MANIFEST), [])
 
-    def test_one_check_switched_off_that_refuses_when_down(self):
+    def test_one_check_that_leaves_the_down_answer_to_the_shop(self):
         (sub,) = MANIFEST["extension_subscriptions"]
-        self.assertEqual((sub["point"], sub["down_answer"]), ("check", "refuse"))
+        self.assertEqual(sub["point"], "check")
+        self.assertNotIn("down_answer", sub)
         self.assertFalse(any(k in sub for k in ("enabled", "consent_given", "scope", "secret", "may_approve")))
 
 

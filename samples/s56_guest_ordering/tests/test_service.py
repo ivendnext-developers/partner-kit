@@ -29,7 +29,7 @@ class Clock:
 def service(shop, clock=None):
     conf = {"IVN_SHOP_URL": f"https://{F.SITE}", "IVN_SHOP_KEY": "k:s", "IVN_CODE_SECRET": F.SECRET, "GOR_PAGE_URL": F.PAGE}
     clock = clock or Clock()
-    return app.Service(conf, tenant=shop, now=clock, clock=clock)
+    return app.Service(conf, tenant=shop, clock=clock)
 
 
 def press(svc, names, secret=F.SECRET, ts=None, doctype="PP GOR Code"):
@@ -154,7 +154,7 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(latte_["groups"][1]["choices"][0]["price"], 0.4)  # the list price less the row's 50%
         bacon = [c for c in dishes["BURGER"]["groups"][0]["choices"] if c["code"] == "BACON"][0]
         self.assertEqual(bacon["price"], 1.0)                             # 1.50 less 0.50
-        self.assertEqual((out["most_lines"], out["most_qty"]), (10, 10))
+        self.assertEqual((out["most_lines"], out["most_qty"]), (50, 99))
 
     def test_m2_a_register_with_no_menu_groups_answers_ask_staff(self):
         self.shop.register["item_groups"] = []
@@ -203,32 +203,39 @@ class ServiceTest(unittest.TestCase):
         t = made(self.shop, self.svc)
         self.shop.lose = {"check_open": 1}
         self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()]), (503, {"state": "unavailable"}))
-        self.clock.t += gor.SPACING_S
         self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]["state"], "sent")
         self.shop.lose = {"check_add_lines": 1}
-        self.clock.t += gor.SPACING_S
         k2 = "1f1c2b9e-0d4a-4c1e-9a3b-1f2e3d4c5b6a"
         self.assertEqual(guest(self.svc, "/gor/order", t, key=k2, lines=[latte()])[0], 503)
-        self.clock.t += gor.SPACING_S
         self.assertEqual(guest(self.svc, "/gor/order", t, key=k2, lines=[latte()])[1]["state"], "sent")
         (chk,) = self.shop.checks.values()
         self.assertEqual(len(chk["lines"]), 2)
 
-    def test_o5_one_order_a_table_every_fifteen_seconds(self):
+    def test_o5_two_guests_at_a_free_table_land_on_one_check(self):
         t = made(self.shop, self.svc)
         self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]["state"], "sent")
         k2 = "2f1c2b9e-0d4a-4c1e-9a3b-1f2e3d4c5b6a"
-        out = guest(self.svc, "/gor/order", t, key=k2, lines=[latte()])[1]
-        self.assertEqual((out["state"], out["say"]), ("wait", "wait"))
-        self.clock.t += gor.SPACING_S + 0.1
         self.assertEqual(guest(self.svc, "/gor/order", t, key=k2, lines=[latte()])[1]["state"], "sent")
+        (chk,) = self.shop.checks.values()
+        self.assertEqual(len(chk["lines"]), 2)
+
+    def test_o5b_a_guest_beaten_to_a_free_table_adds_to_the_first_guests_check(self):
+        t = made(self.shop, self.svc)
+        self.shop.beaten_to_it = {"check": "CHK-FIRST", "place": F.T12, "lines": []}     # after this guest's floor read
+        self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]["state"], "sent")
+        self.assertEqual(list(self.shop.checks), ["CHK-FIRST"])
+        self.assertEqual(len(self.shop.checks["CHK-FIRST"]["lines"]), 1)
+
+    def test_o5c_a_table_opens_only_if_free_and_a_kiosk_tab_has_no_such_ask(self):
+        t = made(self.shop, self.svc)
+        guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])
+        self.assertTrue([s for s in self.shop.sent if isinstance(s, dict) and s.get("only_if_free") is True and s.get("place")])
 
     def test_o6_a_retry_of_lines_since_moved_says_it_was_sent_once(self):
         t = made(self.shop, self.svc)
         self.shop.checks["CHK-SRV"] = {"check": "CHK-SRV", "place": F.T12, "lines": []}
         guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])
         self.shop.checks.pop("CHK-SRV")                                 # paid at the till since
-        self.clock.t += gor.SPACING_S
         out = guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]
         self.assertEqual((out["state"], out["say"]), ("refused", "sent_twice"))
 
@@ -239,11 +246,10 @@ class ServiceTest(unittest.TestCase):
 
     def test_o8_the_order_is_checked_against_the_menu_and_the_stores_limits(self):
         t = made(self.shop, self.svc)
-        bad = [[], [{"item_code": "OAT"}], [{"item_code": "NOPE"}], [latte(qty=11)], [latte(qty=0)], [latte(qty="2")],
+        bad = [[], [{"item_code": "OAT"}], [{"item_code": "NOPE"}], [latte(qty=100)], [latte(qty=0)], [latte(qty="2")],
                [latte(qty=1.5)], [latte(options=[])], [latte(options=["OAT", "COW"])], [latte(options=["OAT", "OAT"])],
-               [latte(options=["OAT", "CHEESE"])], [latte(options=["OAT", "SHOT", "SHOT"])], [latte()] * 11, "x"]
+               [latte(options=["OAT", "CHEESE"])], [latte(options=["OAT", "SHOT", "SHOT"])], [latte()] * 51, "x"]
         for i, lines in enumerate(bad):
-            self.clock.t += gor.SPACING_S
             out = guest(self.svc, "/gor/order", t, key=f"{ORDER[:-2]}{i:02d}", lines=lines)[1]
             self.assertEqual(out["state"], "refused", lines)
         self.assertEqual(self.shop.checks, {})
@@ -261,19 +267,18 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((out["state"], out["say"]), ("refused", "paying"))
         self.assertEqual(self.shop.checks["CHK-PAY"]["lines"], [])
 
-    def test_o11_one_order_a_table_even_with_two_cards_on_it(self):
+    def test_o11_one_check_a_table_even_with_two_cards_on_it(self):
         self.shop.codes["GOR-CODE-00003"] = F.code("GOR-CODE-00003")      # a second card at the same table
         t1, t3 = made(self.shop, self.svc), made(self.shop, self.svc, "GOR-CODE-00003")
         self.assertEqual(guest(self.svc, "/gor/order", t1, key=ORDER, lines=[latte()])[1]["state"], "sent")
         k2 = "3f1c2b9e-0d4a-4c1e-9a3b-1f2e3d4c5b6a"
-        self.assertEqual(guest(self.svc, "/gor/order", t3, key=k2, lines=[latte()])[1]["state"], "wait")
+        self.assertEqual(guest(self.svc, "/gor/order", t3, key=k2, lines=[latte()])[1]["state"], "sent")
         self.assertEqual(len(self.shop.checks), 1)
 
     def test_o12_a_body_the_page_never_sends_is_refused_and_nothing_is_written(self):
         t = made(self.shop, self.svc)
         for i, lines in enumerate(([{"item_code": ["LATTE"]}], [latte(options=[{"a": 1}])], [latte(options=[["OAT"]])],
                                    [{"item_code": {"x": 1}}])):
-            self.clock.t += gor.SPACING_S
             code, out = guest(self.svc, "/gor/order", t, key=f"{ORDER[:-2]}{i:02d}", lines=lines)
             self.assertEqual((code, out["state"]), (200, "refused"), lines)
         self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()], s=["x"])[0], 400)
@@ -329,7 +334,7 @@ class ServiceTest(unittest.TestCase):
 
     def test_c7_a_link_too_long_for_a_qr_code_is_said_and_nothing_written(self):
         svc = app.Service({"IVN_SHOP_URL": f"https://{F.SITE}", "IVN_SHOP_KEY": "k:s", "IVN_CODE_SECRET": F.SECRET,
-                           "GOR_PAGE_URL": "https://" + "p" * 150 + ".example.app"}, tenant=self.shop, now=self.clock)
+                           "GOR_PAGE_URL": "https://" + "p" * 150 + ".example.app"}, tenant=self.shop)
         out = answer(press(svc, ["GOR-CODE-00001"]))[1]
         self.assertIn("too long for a QR code", out["message"]["body"])
         self.assertEqual(self.shop.codes["GOR-CODE-00001"]["number"], 0)
@@ -341,7 +346,6 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((out["state"], out["say"], out["code"]), ("sent", "sent_kiosk", gor.kiosk_code(ORDER, F.SECRET.encode())))
         (chk,) = self.shop.checks.values()
         self.assertEqual((chk["place"], chk["label"], chk["covers"]), (None, f"Kiosk {out['code']}", 1))
-        self.clock.t += gor.SPACING_S
         self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]["code"], out["code"])
         self.assertEqual(len(self.shop.checks), 1)
         self.assertEqual(len(chk["lines"]), 1)

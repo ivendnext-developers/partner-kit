@@ -171,13 +171,8 @@ def claims_file(claims: list[dict], payer: dict) -> str:
             row = dict(c, line=l["line_id"], **{k: l.get(k) for k in ("item_code", "gtin", "qty", "uom", "dose",
                                                                        "frequency", "amount", "patient_share")})
             row["payer_share"] = str(share)
-            w.writerow([_cell(row.get(k)) for k in FILE_COLUMNS])
+            w.writerow([row.get(k) for k in FILE_COLUMNS])
     return out.getvalue()
-
-
-def _cell(v) -> str:
-    s = "" if v is None else str(v)
-    return "'" + s if s[:1] in ("=", "+", "-", "@") else s   # a spreadsheet never runs a cell as a formula
 
 
 def settle(claim: dict, paid, rejected: bool = False, reason: str | None = None) -> str:

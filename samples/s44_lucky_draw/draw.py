@@ -28,7 +28,6 @@ from decimal import ROUND_FLOOR, Decimal, InvalidOperation
 PREFIX = "PP LDW"
 CAMPAIGN = "PP LDW Campaign"
 SKEW_S = 300             # a request stamped further than this from our clock is refused (a replay window, not a clock)
-MOST_WINNERS, MOST_RESERVES = 50, 20
 DRAWN = "Drawn"
 DRAW_RECORD = ("drawn_on", "draw_fingerprint", "drawn_numbers")
 
@@ -125,10 +124,10 @@ def rules_of(c: dict) -> Rules | str:
         _whole(c.get("reserves"))
     if most is None or most < 0:
         return "Most entries per sale is a whole number, or 0 for no limit."
-    if winners is None or not 1 <= winners <= MOST_WINNERS:
-        return f"Winners is a whole number from 1 to {MOST_WINNERS}."
-    if reserves is None or not 0 <= reserves <= MOST_RESERVES:
-        return f"Reserves is a whole number from 0 to {MOST_RESERVES}."
+    if winners is None or winners < 1:
+        return "Winners is a whole number, at least 1."
+    if reserves is None or reserves < 0:
+        return "Reserves is a whole number, 0 or more."
     hours = c.get("hours_from_utc")
     if hours not in (None, "") and (isinstance(hours, bool) or not isinstance(hours, (int, float))
                                     or not -12 <= hours <= 14):

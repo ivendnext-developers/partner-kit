@@ -18,7 +18,6 @@ A capture on *customer select* that answers with a code field. When the cashier 
 ## Limits
 - The code comes when the customer is picked, not when they pay from their loyalty balance: name the groups that need it.
 - The code goes to the number on the customer's record: a cashier who may change that number can send it elsewhere, unless iVendNext keeps the phone fields for its managers.
-- The retailer locks the customer's group (permission level 1, managers only), or a cashier could move a member to a group that is never asked.
 - iVendNext's own SMS settings and a Notification send the text: the kit brings no gateway.
 - Never asked for the store's walk-in customer; offline the declared down answer applies.
 - One app answers *customer select* on a POS Profile.

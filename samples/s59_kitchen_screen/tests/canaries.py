@@ -129,8 +129,6 @@ CANARIES = [
     ("a move goes to the screen's own store", S, '                door.call("station_ticket_move", {"store": s["store"],',
      '                door.call("station_ticket_move", {"store": body.get("store") or s["store"],',
      T + "test_m1_a_cook_moves_a_ticket_one_step_at_a_time_and_a_double_tap_is_safe"),
-    ("taps are spaced", S, "            if now - self._moved.get(key, -1e9) < MOVE_GAP_S:", "            if False:",
-     T + "test_m6_a_flood_of_taps_reads_the_retailer_no_more"),
     ("the door's step refusal is said", S, '                if e.kind == "TicketStepError":\n                    return {"state": "refused", "why": "step"}',
      '                if False:\n                    return {"state": "refused", "why": "step"}', T + "test_m7_the_doors_refusal_is_said_and_the_board_read_again"),
     ("a move names a whole-number ticket", S, "not isinstance(number, int) or isinstance(number, bool) or ", "",

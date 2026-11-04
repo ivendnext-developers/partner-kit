@@ -46,7 +46,6 @@ CANARIES = [
      "        if isinstance(run, str):\n            pass", T + "test_s4_a_misfilled_run_is_said_in_words_and_reads_nothing_else"),
     ("at least one store", D, "    if not stores:\n", "    if False:\n", C + "RunOf.test_each_misfilled_run_says_what_to_fix"),
     ("at most 20 stores", D, "    if len(stores) > STORES_MAX:", "    if False:", C + "RunOf.test_each_misfilled_run_says_what_to_fix"),
-    ("Sold since not after today", D, "    if since > today + datetime.timedelta(days=1):", "    if False:", C + "RunOf.test_each_misfilled_run_says_what_to_fix"),
     ("the sales report reads from Sold since", S, '"from_date": run.since.isoformat(), "to_date": (today + datetime.timedelta(days=1)).isoformat()}',
      '"from_date": "2000-01-01", "to_date": (today + datetime.timedelta(days=1)).isoformat()}', T + "test_s2_the_reads_name_the_group_the_dates_and_each_store"),
     ("the sales report reads to UTC's tomorrow", S, '"to_date": (today + datetime.timedelta(days=1)).isoformat()}', '"to_date": today.isoformat()}',

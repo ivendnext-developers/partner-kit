@@ -72,15 +72,16 @@ def _id(x) -> bool:
 def settings_from(env: dict) -> dict:
     return {"attribute": (env.get("PP_LINE_ATTRIBUTE") or "").strip(),
             "barred": {phone(x) for x in (env.get("PP_BARRED_PHONES") or "").split(",") if phone(x)},
-            "ask_above": _whole(env.get("PP_QTY_ASK_ABOVE"), 3), "most": _whole(env.get("PP_QTY_MOST"), 5)}
+            "ask_above": _whole(env.get("PP_QTY_ASK_ABOVE")), "most": _whole(env.get("PP_QTY_MOST"))}
 
 
-def _whole(raw, default: int) -> int:
+def _whole(raw) -> int | None:
+    """A limit the shop set, or None: blank means no limit."""
     try:
         n = int(str(raw).strip())
     except (TypeError, ValueError):
-        return default
-    return n if n > 0 else default
+        return None
+    return n if n > 0 else None
 
 
 def phone(raw) -> str:
@@ -104,12 +105,12 @@ def on_qty(ctx: dict, conf: dict) -> dict:
     """A quantity change of a line in the named group: the product already filtered by item group and sends the NEW quantity,
     ``qty_milli`` (thousandths), beside the last allowed one. Judge the new one only; never set a quantity."""
     qty, item = ctx["line"]["qty_milli"] / 1000, str(ctx["line"].get("item_code") or "")[:40]
-    if qty <= conf["ask_above"]:
-        return {"verdict": "allow"}
-    if qty <= conf["most"]:
+    if conf["most"] and qty > conf["most"]:
+        return {"verdict": "refuse", "reason": f"At most {conf['most']} of {item} on one line."}
+    if conf["ask_above"] and qty > conf["ask_above"]:
         return {"verdict": "confirm",
                 "question": f"{qty:g} of {item} on one line. Has a manager agreed to more than {conf['ask_above']}?"}
-    return {"verdict": "refuse", "reason": f"At most {conf['most']} of {item} on one line."}
+    return {"verdict": "allow"}
 
 
 def new_code() -> str:

@@ -33,6 +33,7 @@ from tenant import Tenant, TenantError  # noqa: E402
 import testcall  # noqa: E402  (the template's test call)
 
 SKEW_S = 300
+STARTED = time.strftime("%Y-%m-%d 00:00:00")      # the first pass looks back to the day the service started
 ROUTES = ("/webhook", "/point/where_is_it", "/putaway", "/pick", "/reconcile")     # every POST route below
 
 
@@ -64,7 +65,7 @@ def reconcile() -> dict:
     One that fails stops the pass for its type, so the watermark stays before it and the next pass retries."""
     done = {}
     for dt in SALE_TYPES:
-        mark = STORE.watermark(dt, CONF.get("PP_SINCE", "2026-10-03 00:00:00"))
+        mark = STORE.watermark(dt, CONF.get("PP_SINCE") or STARTED)
         rows = TENANT.list(dt, ["name", "modified"], [["docstatus", "=", 1], ["modified", ">=", mark]])
         done[dt] = []
         for r in rows:

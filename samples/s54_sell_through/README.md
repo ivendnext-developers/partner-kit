@@ -43,6 +43,10 @@ ivn try
 
 ## Versions
 
+### 1.0.1
+
+- The press asks no confirmation, and a *Sold since* after today runs and shows nothing.
+
 ### 1.0.0
 
 - First version in the kit: sell-through by size and colour, store by store, from two of the retailer's own reports.

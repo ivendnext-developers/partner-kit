@@ -15,8 +15,8 @@ answers presses.
 own user does not hold it, so the shop's answers carry none of them, and a press sends the record's name only.
 
 **Book** reads the store's other bookings for the table around that day (as the app's own user) and holds the table
-when none overlaps: one press at a time per company, by a stamp on the company's settings (the shop's own ``modified``
-check, as S45's). **Seat**, under the same stamp, checks the table (no booking due within the party's stay, no open
+when none overlaps: one press at a time per store, by a stamp on the store's row (the shop's own ``modified`` check,
+as S45's). **Seat**, under the same stamp, checks the table (no booking due within the party's stay, no open
 check unless the store allows a second), THEN writes a fresh key and the exact call on the record, then calls the door's
 ``check_open`` as the app's user, and only then lifts the stamp: a stored key always means the checks passed. A retry
 (a lost answer, a second press) finds the key and sends the same call again: the door returns its first check and
@@ -70,12 +70,12 @@ NOT_SET_UP = (f"{APP_NAME} is not set up yet: no key from your iVendNext has rea
 REFUSED = (f"{APP_NAME} may not read or write what it needs. Ask your manager to check the app's user, its role and its "
            "API key.")
 CONNECT_AGAIN = " Then press Connect again on the app."    # many shops: a new key reaches the service only that way
-BUSY = "Another press is booking or seating for this company now. Press again in a moment."
+BUSY = "Another press is booking or seating at this store now. Press again in a moment."
 RES_FIELDS = ["name", "status", "store", "booking_date", "booking_time", "minutes", "party", "place", "place_label",
               "deposit_sale", "deposit_amount", "check_name", "seat_key", "seat_request", "modified"]
 WAIT_FIELDS = ["name", "status", "store", "party", "place", "place_label", "check_name", "seat_key", "seat_request",
                "modified"]
-ROW_FIELDS = ["parent", "store", "register", "minutes", "second_check", "no_show_deposit"]
+ROW_FIELDS = ["name", "store", "register", "minutes", "second_check", "no_show_deposit"]
 UNASSIGNED = ("ProfileNotAssignedError", "AssignedProfileDisabledError", "DuplicateStoreAssignmentError",
               "StoreAssignmentIncompleteError")
 # the refusals the till raises BEFORE it looks the key up: a retry refused by one of these may follow a first send that
@@ -231,7 +231,7 @@ class Service:
         door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
         return site or "", secrets, door
 
-    # ── the store's row and the press stamp: one Book or Seat at a time per company ──
+    # ── the store's row and the press stamp: one Book or Seat at a time per store ──
     def _row(self, door, store: str) -> dict:
         rows = door.rows(foh.dt("Store"), ROW_FIELDS, [["store", "=", store]], parent=foh.dt("Settings"))
         if not rows:
@@ -239,9 +239,10 @@ class Service:
                           "(the register the app's user is given at that store), then press again.")
         return rows[0]
 
-    def _lock(self, door, settings: str) -> tuple[str, datetime.datetime | None]:
-        """The press stamp, and the site's own clock at that moment (the settings' new ``modified``)."""
-        s = door.doc(foh.dt("Settings"), settings)
+    def _lock(self, door, row: str) -> tuple[str, datetime.datetime | None]:
+        """The press stamp on the store's row, and the site's own clock at that moment (the row's new ``modified``). Saving a
+        row saves its settings and re-stamps every row, so a press at another store in that instant can also read as busy."""
+        s = door.doc(foh.dt("Store"), row)
         stamp = s.get("run_started") or ""
         try:
             age = (_now_utc(self.now) - datetime.datetime.fromisoformat(stamp)).total_seconds() if stamp else None
@@ -251,18 +252,18 @@ class Service:
             raise Busy()
         mine = _now_utc(self.now).isoformat(timespec="seconds")
         try:
-            w = door.update(foh.dt("Settings"), settings, {"run_started": mine, "modified": s.get("modified")})
+            w = door.update(foh.dt("Store"), row, {"run_started": mine, "modified": s.get("modified")})
         except TenantError as e:
             if e.kind == STALE:         # another press stamped it first (or someone saved the record a moment ago)
                 raise Busy() from None
             raise
         return mine, foh.stamp(w.get("modified"))
 
-    def _unlock(self, door, settings: str, mine: str):
+    def _unlock(self, door, row: str, mine: str):
         try:
-            s = door.doc(foh.dt("Settings"), settings)
+            s = door.doc(foh.dt("Store"), row)
             if s.get("run_started") == mine:
-                door.update(foh.dt("Settings"), settings, {"run_started": "", "modified": s.get("modified")})
+                door.update(foh.dt("Store"), row, {"run_started": "", "modified": s.get("modified")})
         except TenantError:
             pass                        # the stamp then lapses after LOCK_S
 
@@ -287,7 +288,7 @@ class Service:
             door.update(foh.dt("Reservation"), name, {"status": "Booked", "app_note": ""})
             return foh.message(APP_NAME, f"{name} is booked for {foh.num(r['party'])} at {start:%H:%M} on "
                                f"{start:%d %b}, with no table held yet. Choose a table and press Book again to hold one.")
-        mine, _ = self._lock(door, row["parent"])
+        mine, _ = self._lock(door, row["name"])
         try:
             clash = self._clash(door, r, row, start, exclude=name)
             if clash:
@@ -296,7 +297,7 @@ class Service:
                                 refresh=True)
             door.update(foh.dt("Reservation"), name, {"status": "Booked", "app_note": ""})
         finally:
-            self._unlock(door, row["parent"], mine)
+            self._unlock(door, row["name"], mine)
         end = foh.span(start, foh.minutes_of(r, row))[1]
         return foh.message(APP_NAME, f"{name} is booked: {r.get('place_label') or r['place']} is held for "
                            f"{foh.num(r['party'])} from {start:%H:%M} to {end:%H:%M} on {start:%d %b}. If you change "
@@ -320,7 +321,7 @@ class Service:
                 req = None
             if isinstance(req, dict):
                 return self._open(door, doctype, r, row, req, retry=True)
-        mine, now = self._lock(door, row["parent"])
+        mine, now = self._lock(door, row["name"])
         try:
             now = now or foh.moment(r.get("booking_date"), r.get("booking_time"))
             where = r.get("place_label") or r["place"]
@@ -343,7 +344,7 @@ class Service:
                 raise
             return self._open(door, doctype, r, row, req, retry=False)
         finally:
-            self._unlock(door, row["parent"], mine)
+            self._unlock(door, row["name"], mine)
 
     def _open(self, door, doctype: str, r: dict, row: dict, req: dict, retry: bool) -> dict:
         name = r["name"]

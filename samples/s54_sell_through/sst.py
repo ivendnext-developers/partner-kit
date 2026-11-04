@@ -90,8 +90,6 @@ def run_of(doc: dict, today: datetime.date) -> Run | str:
         since = datetime.date.fromisoformat(_text(doc.get("sold_since"))[:10])
     except ValueError:
         return f"{name}: fill Sold since, then press again."
-    if since > today + datetime.timedelta(days=1):     # a store east of UTC may already be on UTC's tomorrow
-        return f"{name}: Sold since is after today."
     if (today - since).days > DAYS_MAX:
         return f"{name}: Sold since may be at most two years back."
     colour = _text(doc.get("colour_attribute"))

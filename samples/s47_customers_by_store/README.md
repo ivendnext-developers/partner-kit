@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/customers_by_store.md).
 
-**The customer sets:** the rules, one per customer group, naming the stores or POS Profiles where that group may buy, and the words the cashier reads. In *Customize Form* for *Customer*, put **Customer Group** at permission level 1 and give level 1 *Write* only to the managers who may move customers, so a cashier cannot move a customer out of a locked group.
+**The customer sets:** the rules, one per customer group, naming the stores or POS Profiles where that group may buy, and the words the cashier reads.
 
 ## Run it
 
@@ -41,6 +41,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.0.1
+
+- The description and README stop telling the retailer to lock *Customer Group*: who may move a customer is the customer's choice.
 
 ### 1.0.0
 

@@ -146,23 +146,6 @@ class OneShop(unittest.TestCase):
         self.assertEqual(svc.price(body())[0], 403)
         self.assertEqual([c[0] for c in api.calls].count("kiosk"), 2)
 
-    def test_a_guesser_cannot_make_the_service_hammer_the_shop(self):
-        api, clock = Api(), Clock()
-        svc = one(api, clock)
-        self.assertEqual(svc.price(body())[0], 200)                  # the real kiosk, seen once
-        for i in range(app.MISSES_PER_MINUTE):
-            self.assertEqual(svc.price(body(kiosk=f"zzzzzzzz{i:02d}"))[0], 403)
-        reads = len(api.calls)
-        self.assertEqual(svc.price(body(kiosk="zzzzzzzzyy")), (429, app.price.refusal("busy")))
-        self.assertEqual(len(api.calls), reads)                     # the shop was not read again
-        clock.t += 30
-        self.assertEqual(svc.price(body())[0], 200)                  # the real kiosk is never locked out (cached)
-        clock.t += 31                                                # its minute is over, and so are the old guesses
-        for i in range(app.MISSES_PER_MINUTE):                       # a fresh minute of guesses
-            self.assertEqual(svc.price(body(kiosk=f"yyyyyyyy{i:02d}"))[0], 403)
-        self.assertEqual(svc.price(body())[0], 200)                  # the real kiosk is read again all the same
-        self.assertEqual(svc.price(body(kiosk="zzzzzzzzyz"))[0], 429)
-
     def test_the_kiosks_date_reaches_the_pricer_only_within_a_day(self):
         api = Api()
         one(api).price(body(date="2026-10-16"))

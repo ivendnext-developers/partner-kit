@@ -68,8 +68,9 @@ class Rules(unittest.TestCase):
         self.assertEqual(len(gor.clean_note("x" * 200)), gor.NOTE_MAX)
         self.assertEqual(gor.clean_note(7), "")
 
-    def test_r7_the_stores_limits_have_their_defaults_and_bounds(self):
-        self.assertEqual(gor.setting(None, gor.LINES), 10)
+    def test_r7_the_stores_limits_have_no_default_of_their_own_and_keep_their_bounds(self):
+        self.assertEqual(gor.setting(None, gor.LINES), 50)
+        self.assertEqual(gor.setting(None, gor.QTY), 99)
         self.assertEqual(gor.setting(200, gor.LINES), 50)
         self.assertEqual(gor.setting(-3, gor.QTY), 1)
 

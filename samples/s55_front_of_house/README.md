@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.0.1
+
+- Hosts at different stores no longer wait for each other; *Seat* and *Change booking* ask no confirmation.
+
 ### 1.0.0
 
 - First version in the kit: reservations, a waiting list and seating that opens the table's check.

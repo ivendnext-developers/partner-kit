@@ -4,7 +4,7 @@
 
 Some checks must **stop** a document until they pass: a goods receipt that must match what was ordered, or carry a code for every unit, before it is booked. Inside the retailer's iVendNext that would be code run at submit, which partners do not ship. This recipe gets the same result with **configuration and your own service**: the document's workflow books it only at a *Verified* step that only your service can take. It is for an iVendNext Partner, or the CitiXsys Consulting Team.
 
-**Reference implementation:** `samples/s22_customer_loyalty/` — `apply_config.py` (`receipt_workflow`) and `service/receipts.py`: a Purchase Receipt is verified only when no row receives more than its purchase order still waits for.
+**Reference implementation:** `samples/s22_customer_loyalty/` — `apply_config.py` (`receipt_workflow`) and `service/receipts.py`: a Purchase Receipt is verified only when no row receives more than its purchase order still waits for. It ships switched off. To switch it on, add the roles that keep submit to `config.json`: `"receipt_workflow": {"keep_submit": ["Stock Manager", "PP LYL Integration"]}`.
 
 **When to use it.** The check reads data your service holds or reads over the API, and the people submitting can wait a few seconds. For a check on the till's sale before payment, use a check before payment ([recipe](rule_guard.md)); for a format or a limit on one record's own fields, a save rule (chapter 7).
 

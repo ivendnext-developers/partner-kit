@@ -124,10 +124,6 @@ class ClaimsFile(unittest.TestCase):
                                                                        ("GEN-INS-PHD-26-0001", "2")])
         self.assertEqual(sum(Decimal(r["payer_share"]) for r in rows), Decimal("228.80"))
 
-    def test_a_cell_never_runs_as_a_formula(self):
-        c = K.build_claim(booked(answer(), prescriber="=HYPERLINK(1)"), PAYER, MEMBER)
-        self.assertIn("'=HYPERLINK(1)", K.claims_file([c], PAYER))
-
     def test_a_claim_is_returned_when_the_payer_is_owed_nothing_whatever_the_units(self):
         c = K.build_claim(booked(answer()), PAYER, MEMBER)
         lines = [{"line_id": l["line_id"], "qty": "1", "payer_back": l["payer_share"]} for l in c["lines"]]

@@ -36,6 +36,10 @@ ivn try
 
 ## Versions
 
+### 1.0.1
+
+- A second press with the same key finds the first's task instead of being refused, and the press asks no confirmation.
+
 ### 1.0.0
 
 - First version in the kit: a Desk action that assigns a pick route, serving many retailers as a function.
