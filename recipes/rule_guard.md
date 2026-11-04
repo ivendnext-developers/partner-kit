@@ -88,7 +88,7 @@ S18's rule does not read coupons. **Sample S32** (*Coupon rules*, [recipe](coupo
 
 Proven on our test bench on 2026-10-08 (iVendNext POS app at `577a8d41`), checks: install, the payment door and the failure cases, uninstall.
 
-- Install, step 1. **On the bench:** the manifest installed with *May ask for a manager's approval* off, down answer `refuse`, 3 seconds, and the secret was handed back once, as `pp_rgd:sub:guard`. Limited to one POS Profile, the product selected it for that profile and no other.
+- Install, step 1. **On the bench,** with the sample's earlier build: the manifest installed with *May ask for a manager's approval* off, down answer `refuse`, 3 seconds, and the secret was handed back once, as `pp_rgd:sub:guard`. Limited to one POS Profile, the product selected it for that profile and no other.
 - The till's own payment door, step 5. **On the bench**, as the cashier, over HTTPS (the till's own calls: `check_before_tender`, `confirm_check`, the card push, `submit_tender`):
 
   | Case | Result |

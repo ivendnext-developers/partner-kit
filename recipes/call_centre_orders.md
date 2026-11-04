@@ -11,9 +11,7 @@ A retailer with a call centre takes orders by phone and ships each one from the 
 ## What the agent and the store see
 
 1. The agent enters the order as today. Its **Territory** comes from the customer and can be changed for this order (a gift, a second address). The agent saves it.
-2. The agent presses **Send to store** and confirms: *"Send this order to the store that serves its territory? Its warehouse changes on every line."*
-
-   ![Send to store on a draft sales order on a demo site, and its question](../samples/s35_call_centre_orders/screenshots/05_send_to_store.png)
+2. The agent presses **Send to store**.
 3. *Sent to store — This order and its 2 lines now ship from Maadi Store, the store for Maadi.* The form reloads with the store in *Set Source Warehouse* and on every line. A district with no store of its own says which territory's store it took: *"…the store for Cairo, which Heliopolis is part of."*
 
    ![Sent to store on a demo site: This order and its 2 lines now ship from Store 2, the store for Sandton](../samples/s35_call_centre_orders/screenshots/06_sent_to_store.png)
@@ -40,8 +38,7 @@ Pressed again, the button says *Already with its store* and changes nothing.
       "endpoint_url": "https://your-service.example/press/route", "timeout_seconds": 10}],
    "desk_actions": [
      {"record_type": "Sales Order", "label": "Send to store", "placement": "form", "service": "route",
-      "roles": ["Sales User", "Sales Manager"], "on_draft": 1, "on_submitted": 0, "send_fields": "name, territory",
-      "confirm_text": "Send this order to the store that serves its territory? Its warehouse changes on every line."}]
+      "roles": ["Sales User", "Sales Manager"], "on_draft": 1, "on_submitted": 0, "send_fields": "name, territory"}]
    ```
 
 3. **Add a feed registration** for the app's user (it follows Sales Order). Name no user: from POS version 2.1.0.667 the install makes the app's own user and names it. A hosted service that serves many retailers is handed that user's key by the retailer's site after the install or an update (*Connect again* only if the site could not reach the app, or a key was lost or changed):
