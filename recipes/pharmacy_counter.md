@@ -153,6 +153,9 @@ answering presses keeps nothing.
      it, so the install stops without it. No manifest kind makes one: the customer makes *Dose* before installing.
    - The layout installs switched on. A label layout cannot change in a later update: ship a changed one under a new
      name.
+   - The markets that name a label's contents: Abu Dhabi (from a bulk pack) and Dubai (a part pack) ask the lot and
+     expiry, Egypt the registration number; Saudi Arabia's part pack also asks the storage conditions, which this label
+     cannot add (it already prints three item fields). Elsewhere it is a general label.
 
 ## After the keeping period
 

@@ -28,7 +28,7 @@ More: the [recipe](../../recipes/pharmacy_counter.md).
 
 **The customer sets:** its drug schedules (one per class, each with its rules); who gets **PP RXC Pharmacist**, and the pharmacist in charge, who gets **PP RXC Pharmacist in Charge**, adds each pharmacist with their licence number and *valid until*, and enters the premises licence; and each patient's identity and consent on their *PP RXC Patient* record, entered on the Desk (the till cannot take them). Give the app's own user a plain read on Item, Item Group, Customer, POS Profile, POS Invoice, POS Opening Entry, Sales Order, Delivery Note and Sales Invoice.
 
-For the label: before installing, the line detail **Dose** (a Transaction Item Attribute, active), or the install stops; *Print* on Retail Label Layout for the dispensary's roles; each medicine's *Strength* and *Route*. For the erasure: *Keep a patient's records for (years)* in *PP RXC Settings*, the longest period its pharmacy law sets, and who gets **PP RXC Records Officer**.
+The label carries what Abu Dhabi, Dubai and Egypt ask; Saudi Arabia's storage conditions do not fit (three item fields at most). For the label: before installing, the line detail **Dose** (a Transaction Item Attribute, active), or the install stops; *Print* on Retail Label Layout for the dispensary's roles; each medicine's *Strength* and *Route*. For the erasure: *Keep a patient's records for (years)* in *PP RXC Settings*, the longest period its pharmacy law sets, and who gets **PP RXC Records Officer**.
 
 ## Run it
 
