@@ -327,6 +327,9 @@ CANARIES = [
     ("0.1.1's Customer fields are asked set or not", SV, 'moved = [self._list(shop, "Customer", ["name"], [["name", "=", c],',
      'moved = [self._list(shop, "Customer", ["name", f"{fp}_{m}"], [["name", "=", c],',
      S + "Erasure.test_erase_deletes_the_dispensings_then_the_prescriptions_then_the_patient_and_keeps_the_record"),
+    ("an erase that reads another customer's records stops", SV,
+     'if any(r.get("customer") != c for rs in got.values() for r in rs):', "if False:",
+     S + "Erasure.test_a_shop_that_answers_for_another_customer_erases_nothing"),
 ]
 
 

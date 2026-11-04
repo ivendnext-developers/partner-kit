@@ -995,7 +995,7 @@
   },
   {
    "name": "PP RXC Erasure",
-   "description": "One act of erasure after the keeping period: the patients listed as due, and for each whether it was erased. Made by the Records Officer; written by the app's service; changed and deleted by nobody.",
+   "description": "One act of erasure after the keeping period: the patients listed as due, and for each whether it was erased. Made by the Records Officer; written by the app's service; changed and deleted by nobody. The Desk keeps a copy of each erased record, and its change history, in Deleted Documents until a System Manager deletes it.",
    "autoname": "format:RXC-ERA-{#####}",
    "track_changes": 1,
    "sort_field": "creation",
@@ -1668,7 +1668,7 @@
      "reqd": 1
     }
    ],
-   "confirm_text": "Delete these patients' prescriptions, dispensings and patient records? It cannot be undone."
+   "confirm_text": "Delete these patients' prescriptions, dispensings and patient records? Only Deleted Documents keeps a copy, until your System Manager deletes it."
   }
  ],
  "label_layouts": [

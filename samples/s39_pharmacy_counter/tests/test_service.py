@@ -436,7 +436,8 @@ class Erasure(Base):
         self.listed()
         code, out = self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes 12/2026"))
         self.assertEqual(code, 200)
-        self.assertEqual(out["message"]["body"], "Erased 2 patients. 1 kept: each row says why. This erasure is done.")
+        self.assertEqual(out["message"]["body"], "Erased 2 patients. 1 kept: each row says why. This erasure is done. "
+                                                 + RX.COPIES_KEPT)
         old = [x for x in self.shop.deleted if x[1] in ("Old~0001", "RX-Old", "p-old")]     # rows run side by side
         self.assertEqual(old, [(f"{P} Dispensing", "Old~0001"), (f"{P} Prescription", "RX-Old"), (f"{P} Patient", "p-old")])
         self.assertIn((f"{P} Patient", "p-only"), self.shop.deleted)
@@ -483,6 +484,25 @@ class Erasure(Base):
         self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))
         self.assertFalse(getattr(self.shop, "deleted", []))
         self.assertTrue(all(r["outcome"].startswith("Kept") for r in self.record()["patients"]))
+
+    def test_a_shop_that_answers_for_another_customer_erases_nothing(self):
+        self.listed()
+        real = self.shop.get_list
+
+        def dropped(url, key, doctype, fields, filters=None, *a, **k):   # the customer filter dropped on the patient's reads
+            if doctype == f"{P} Dispensing" and filters == [["customer", "=", "Old"]]:
+                filters = None
+            return real(url, key, doctype, fields, filters, *a, **k)
+        self.shop.get_list = dropped
+        out = self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))[1]
+        self.assertFalse([x for x in getattr(self.shop, "deleted", []) if x[0] == f"{P} Dispensing"])
+        self.assertEqual(out["message"]["level"], "warning")
+
+    def test_a_done_erasure_is_never_listed_again(self):
+        self.listed()
+        self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))
+        self.assertEqual(self.record()["status"], "Erased")
+        self.assertIn("This erasure is done", self.listed()[1]["message"]["body"])
 
     def test_erase_needs_the_list_and_a_destruction_record(self):
         out = self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))[1]

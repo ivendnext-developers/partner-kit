@@ -168,8 +168,9 @@ class ShopApi:
     def insert(self, url, key, doctype, doc: dict) -> dict:
         return self._data(self._call(url, key, "POST", "/api/resource/" + _q(doctype), body=doc), dict)
 
-    def update(self, url, key, doctype, name, values: dict) -> dict:
-        return self._data(self._call(url, key, "PUT", "/api/resource/" + _q(doctype) + "/" + _q(name), body=values), dict)
+    def update(self, url, key, doctype, name, values: dict, timeout=READ_TIMEOUT) -> dict:
+        return self._data(self._call(url, key, "PUT", "/api/resource/" + _q(doctype) + "/" + _q(name), body=values,
+                                     timeout=timeout), dict)
 
     def delete(self, url, key, doctype, name) -> None:
         """Delete one record; one already gone (404) is no error."""
@@ -647,7 +648,11 @@ class Service:
                   "kept_count": sum(1 for r in rows if (r.get("outcome") or "").startswith("Kept"))}
         if not left:
             values["status"] = rxrules.ERASED
-        self.api.update(shop["url"], shop["key"], self.dt("Erasure"), name, values)
+        try:
+            self.api.update(shop["url"], shop["key"], self.dt("Erasure"), name, values, timeout=PRESS_READ)
+        except ShopUnreadable:      # deletes made, the record not saved: the next press records them (each row re-read)
+            return rxrules.message(f"Erased {done} patient{'s' if done != 1 else ''}, but the erasure record could not be "
+                                   "saved: press Erase these patients again.", "warning", refresh=True)
         words = f"Erased {done} patient{'s' if done != 1 else ''}."
         if values["kept_count"]:
             words += f" {values['kept_count']} kept: each row says why."
@@ -656,7 +661,7 @@ class Service:
                                    "warning", refresh=True)
         if left:
             return rxrules.message(words + f" {left} still to do: press Erase these patients again.", "info", refresh=True)
-        return rxrules.message(words + " This erasure is done.", refresh=True)
+        return rxrules.message(words + " This erasure is done. " + rxrules.COPIES_KEPT, refresh=True)
 
     def _erase_one(self, shop, row, cut, started):
         """One patient of an erasure: read again, keep (the reason on the row) or delete in order. ``None`` when the press
@@ -683,8 +688,10 @@ class Service:
         for k, _col in self.KINDS:     # a dispensing names its prescription: dispensings, then prescriptions, then the patient
             for n in [r["name"] for r in got[k]]:
                 self.api.delete(shop["url"], shop["key"], self.dt(k), n)
-        row.update({"outcome": rxrules.ERASED_ROW, "prescriptions": len(got["Prescription"]),
-                    "dispensings": len(got["Dispensing"])})
+        # an earlier press that stopped part-way already deleted some: keep the larger count, as listed
+        row.update({"outcome": rxrules.ERASED_ROW,
+                    "prescriptions": max(row.get("prescriptions") or 0, len(got["Prescription"])),
+                    "dispensings": max(row.get("dispensings") or 0, len(got["Dispensing"]))})
         return row
 
     def press(self, path: str, headers, raw: bytes) -> tuple[int, dict]:

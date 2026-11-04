@@ -99,7 +99,7 @@ class FakeShop:
             self.rows(doctype).append(rec)
         return rec
 
-    def update(self, url, key, doctype, name, values):
+    def update(self, url, key, doctype, name, values, timeout=None):
         self.calls.append(("update", doctype, name, dict(values)))
         if self.fail:
             raise app.ShopUnreadable("down")
