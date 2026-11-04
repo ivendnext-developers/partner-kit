@@ -56,6 +56,7 @@ check("each line offers up to two more matches", finder.fits(search, ms, Object.
 // what a list looks like
 check("a list splits by line, blanks and single letters set aside, a semicolon kept",
   JSON.stringify(finder.lines(" a list \r\n\n bb;c d\nx ")) === JSON.stringify(["a list", "bb;c d"]), JSON.stringify(finder.lines(" a list \r\n\n bb;c d\nx ")));
+check("of a row copied from a sheet, its longest cell", JSON.stringify(finder.lines("1\tGift cards\tHigh\n12\tItem price list with photos\tMust have")) === JSON.stringify(["Gift cards", "Item price list with photos"]));
 check("a long list is read whole", finder.lines(Array.from({ length: 200 }, (_, i) => "need " + i).join("\n")).length === 200);
 check("?list= fills the box, with its line breaks", finder.given("?list=" + encodeURIComponent("one\r\ntwo")) === "one\r\ntwo");
 check("?q= fills it too, and ?list= wins", finder.given("?q=abc") === "abc" && finder.given("?q=abc&list=def") === "def" && finder.given("") === "");

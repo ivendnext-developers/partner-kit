@@ -1067,7 +1067,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         sandbox = (self.out / "sandbox.html").read_text("utf-8")
         self.assertEqual(sandbox.count(f'href="{SANDBOX_FORM}"'), 2)           # its next step and the line under How to ask
         self.assertNotIn(PARTNER_FORM, sandbox.split("</main>")[0])            # the loop through the partner application is gone
-        self.assertNotIn("You do not need a GitHub account", sandbox)          # the form asks for the GitHub login a sandbox is given to
+        self.assertNotIn("You do not need a GitHub account", sandbox)          # a sandbox is given to a GitHub login
         self.assertIn(f'var SANDBOX_FORM = "{SANDBOX_FORM}"', (build.SITE / "assets-src" / "analytics.js").read_text("utf-8"))
         for f in self.out.rglob("*.html"):
             self.assertNotIn("sandbox_request", f.read_text("utf-8"), f.name)
@@ -1664,6 +1664,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertEqual(dom.count('<li class="fit">'), 3, dom[:400])
         self.assertIn("plan.html?needs=branch-sees-own-stock,price-list-with-photos", dom)
         self.assertIn("No need in the catalogue fits this closely.", dom)
+        self.assertIn("Is it one of these?", dom)
         self.assertIn("None of these", dom)
         self.assertIn("2 needs from 3 lines", dom)
 

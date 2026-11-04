@@ -82,7 +82,7 @@ A partner page is your own screen, served from your own server, that iVendNext s
 - The context, **on the bench:** the board saw the till, its store and this sale; the same context opened twice was refused; a forged context and an expired one (signed with the real secret, its time gone) were refused.
 - The answer, **on the bench:** the board answered once; the till picked up the delivery order number and the message, **once** (a second pick-up found nothing). A second answer for one context was refused by the board; with the board's own check switched off, **iVendNext refused it**: *"This page has already answered."* The till still got the first answer only.
 - Desk, **on the bench:** a Stock User got the context for an order of its own customer, and the board read the record from it; a user without the roles, and a Stock User without read on another customer's order, were both told *"You can't open this page for that record."*
-- The 10-second timeout is the extension point's own rule, P-PAGE §5; not driven on our bench.
+- The 10-second timeout is the extension point's own rule; not driven on our bench.
 - Tests: the mutation canary removes the signature check and the tests go RED.
 
 ### Screenshots

@@ -109,8 +109,8 @@ Limits:
 
 ## Limits to know before you build
 
-- **The server does not refuse a wrong line detail, or a sale composed without a reason.** The till asks; the server does not check. If a wrong value must be refused on save, that is the save-rules extension point (P-RULES, chapter 9), not configuration.
-- **Configuration cannot make a field required or hidden at the till.** That is the field-rules extension point (P-FIELDS, chapter 9).
+- **The server does not refuse a wrong line detail, or a sale composed without a reason.** The till asks; the server does not check. If a wrong value must be refused on save, that is the save-rules extension point (chapter 9), not configuration.
+- **Configuration cannot make a field required or hidden at the till.** That is the field-rules extension point (chapter 9).
 - **A customer group created later gets the member discount until the script is run again** (it recomputes the exclusion list each run), or until the group is added to the promotion's exclusions in Desk.
 - **One unit per line** for a serial-tracked item, by the till's design.
 - **Offline** was not tested for any part.
@@ -137,9 +137,9 @@ Proven on our test bench.
 
 ### Limits, stated
 
-- **The line detail's pattern is checked on the till screen only.** The server saves a value that breaks the pattern (measured: `not-a-card` was saved). If a wrong value must be refused, that is an extension point (P-RULES), not configuration.
+- **The line detail's pattern is checked on the till screen only.** The server saves a value that breaks the pattern (measured: `not-a-card` was saved). If a wrong value must be refused, that is the save-rules extension point, not configuration.
 - **A reason is asked for and kept; a sale composed without one is not refused by the server** — measured: with the switches on, a recorded basket with a 7% sale discount and no reason code booked and matched its answer. The till's own code comment says a *return* has always demanded a reason; that was **not exercised here**, and neither was capturing an **item return** or **sale return** reason on a sale (only *Sale Discount* and *Item Discount* reach an invoice in the tests): the switches and the reason codes for those types are proven present and offered by the till's own list, nothing more. **The till screen asking was walked** (2026-10-07): the markdown asked for a reason and, for *price match*, a comment; the IMEI was captured; the **void** asked for its reason (*Void: scanned in error*) and the sale was voided with its record kept. Not proven: the return reasons on the till screen, and the voided record's stored reason read back from the database.
-- **What the recipe cannot do:** make a field required or hidden at the till (the field-rules extension point, P-FIELDS, chapter 9), or refuse a wrong value on save (the save-rules extension point, P-RULES, chapter 9).
+- **What the recipe cannot do:** make a field required or hidden at the till (the field-rules extension point, chapter 9), or refuse a wrong value on save (the save-rules extension point, chapter 9).
 
 ### Tests
 

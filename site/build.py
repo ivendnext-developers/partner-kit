@@ -1220,7 +1220,7 @@ def next_steps(page, pages: list, sample_of: dict, index_by_folder: dict) -> lis
 
 
 # ── a long page split along its own headings ─────────────────────────────────────────────────────────────────────────
-WORD_LIMIT = 3000                                         # no page of prose over this (test_site.py holds it)
+WORD_LIMIT = 3000                                         # a page of prose over this is named by a warning of the build
 # {a kit file: [(the part's address after the page's own, its title, the id of the heading it starts at)]}. A part runs up to the
 # next part's heading; what comes before the first part stays on the overview. A heading that is gone fails the build.
 SPLIT = {
