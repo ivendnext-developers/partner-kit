@@ -466,7 +466,7 @@ class Service:
                 raise
             if e.kind == "CheckRequestError":       # a retry whose first send landed on a check since moved or paid
                 return 200, _say("refused", "sent_twice", SENT_TWICE)
-            if e.kind == "ItemRefusedError":
+            if e.kind in ("ItemRefusedError", "ItemNotSoldHereError", "ItemUnavailableError"):
                 return 200, _say("refused", "item_refused", ITEM_REFUSED)
             if e.kind in ("CheckNotOpenError", "CheckChangedError"):
                 return 200, _say("refused", "changed", CHANGED)

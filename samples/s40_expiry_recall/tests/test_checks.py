@@ -88,12 +88,11 @@ class Receipt(unittest.TestCase):
         for lot in ("AMOX-E", "AMOX-F"):
             self.assertIn("Pack expiry", self.check(receipt([{"item_code": "AMOX", "batch_no": lot}]))["reason"])
 
-    def test_c9c_a_shop_receiving_on_handheld_unticks_it_and_only_the_arithmetic_is_asked(self):
+    def test_c9c_with_the_tick_off_no_pack_date_is_asked_for(self):
         self.shop.settings["pack_expiry_required"] = 0
-        self.add_lot("AMOX-E", "AMOX", day(730), day(-10))
-        self.assertEqual(self.check(receipt([{"item_code": "AMOX", "batch_no": "AMOX-E"}])), {"verdict": "allow"})
-        self.add_lot("AMOX-G", "AMOX", day(730), day(0))
-        self.assertIn("Pack expiry", self.check(receipt([{"item_code": "AMOX", "batch_no": "AMOX-G"}]))["reason"])
+        for lot, made in (("AMOX-E", day(-10)), ("AMOX-G", day(0)), ("AMOX-H", None)):      # edited, worked out, no made date
+            self.add_lot(lot, "AMOX", day(730), made)
+            self.assertEqual(self.check(receipt([{"item_code": "AMOX", "batch_no": lot}])), {"verdict": "allow"}, lot)
 
     def test_c9d_a_backdated_receipt_counts_from_today(self):
         out = self.check(receipt([{"item_code": "TRAM", "batch_no": "TRAM-X"}], posting_date=day(-400)))

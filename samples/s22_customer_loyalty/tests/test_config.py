@@ -32,6 +32,9 @@ class Manifest(unittest.TestCase):
         self.assertFalse({"enabled", "consent_given", "secret"} & set(key))
 
 
+RECEIPT_CHECK = {"keep_submit": ["Stock Manager", "PP LYL Integration"], "integration_rights": [{"doctype": "Purchase Receipt", "rights": ["read", "write", "submit"], "why": "take the Verify step, which submits the receipt"}, {"doctype": "Serial and Batch Bundle", "rights": ["read", "create", "write", "submit"], "why": "the Verify step submits the receipt; for a batch-tracked item that makes and submits its batch bundle as the integration user"}]}
+
+
 class Config(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
@@ -43,7 +46,7 @@ class Config(unittest.TestCase):
         self.cfg.T, self.cfg.S, self.cfg.say = self.shop, self.cfg.State(), (lambda *a: None)
         self.before = self.shop.effective("Purchase Receipt")
         self.shipped = self.cfg.CONF
-        self.cfg.CONF = dict(self.shipped, receipt_workflow={"keep_submit": ["Stock Manager", "PP LYL Integration"]})
+        self.cfg.CONF = dict(self.shipped, receipt_workflow=RECEIPT_CHECK)
 
     def run_all(self):
         self.cfg.prepare()
@@ -53,7 +56,7 @@ class Config(unittest.TestCase):
         self.cfg.CONF = self.shipped
         self.run_all()
         submits = lambda rows: {r["role"] for r in rows if r["submit"]}     # noqa: E731
-        self.assertLessEqual(submits(self.before), submits(self.shop.effective("Purchase Receipt")))
+        self.assertEqual(submits(self.shop.effective("Purchase Receipt")), submits(self.before))
         self.assertFalse(self.shop.db.get("Workflow"))
 
     def test_only_the_manager_and_the_service_may_submit_a_receipt(self):

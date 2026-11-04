@@ -63,7 +63,6 @@ NOT_SET_UP = (f"{APP_NAME} is not set up yet: no key from this shop has reached 
               "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press Connect again on the app.")
 REFUSED = f"{APP_NAME} may not read or change what it needs. Ask your manager to check the app's user and its role."
 CONNECT_AGAIN = " Then press Connect again on the app."
-NO_SETTINGS = f"{APP_NAME} has no settings yet. Ask your manager to fill the settings record Default."
 CHECK_REFUSED = f"{APP_NAME} could not read the lots and items. Ask your manager to check the app's user."
 
 
@@ -208,9 +207,7 @@ class Service:
 
     # ── Block these batches ──
     def block(self, door, fields: dict, notice_name: str) -> dict:
-        settings = self.settings(door)
-        if settings is None:
-            return _warning(NO_SETTINGS)
+        settings = self.settings(door) or {}    # a recall works before anyone has made the settings record
         lots = recall.lots_of(fields)
         hours = settings.get("hours_from_utc")
         stamp = recall.stamp(recall.now_at(hours, self.now))
@@ -299,9 +296,7 @@ class Service:
 
     # ── Refresh (the worklist) ──
     def refresh(self, door, fields: dict, name: str) -> dict:
-        settings = self.settings(door)
-        if settings is None:
-            return _warning(NO_SETTINGS)
+        settings = self.settings(door) or {}
         window = recall.whole(fields.get("window_days")) or recall.whole(settings.get("near_expiry_days")) or 90
         store = fields.get("store") if isinstance(fields.get("store"), str) and fields["store"] else None
         today = recall.today_at(settings.get("hours_from_utc"), self.now)

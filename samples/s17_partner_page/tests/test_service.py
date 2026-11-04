@@ -120,7 +120,7 @@ class BoardTest(unittest.TestCase):
         self.assertEqual(code, 403)
         self.assertIn("run out", out["error"])
 
-    def test_a_page_that_reloads_opens_again(self):
+    def test_a_context_opens_again_until_it_runs_out(self):
         c = ctx()
         self.assertEqual(self.call("/board/api/open", {"ctx": c})[0], 200)
         self.assertEqual(self.call("/board/api/open", {"ctx": c})[0], 200)

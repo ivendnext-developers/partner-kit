@@ -226,10 +226,15 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(list(self.shop.checks), ["CHK-FIRST"])
         self.assertEqual(len(self.shop.checks["CHK-FIRST"]["lines"]), 1)
 
-    def test_o5c_a_table_opens_only_if_free_and_a_kiosk_tab_has_no_such_ask(self):
+    def test_o5c_a_tables_first_order_asks_for_a_free_table(self):
         t = made(self.shop, self.svc)
         guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])
         self.assertTrue([s for s in self.shop.sent if isinstance(s, dict) and s.get("only_if_free") is True and s.get("place")])
+
+    def test_o5d_a_dish_sold_out_since_the_menu_says_so(self):
+        t = made(self.shop, self.svc)
+        self.shop.door_refuse = ("check_add_lines", "ItemUnavailableError", 417)
+        self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]["say"], "item_refused")
 
     def test_o6_a_retry_of_lines_since_moved_says_it_was_sent_once(self):
         t = made(self.shop, self.svc)

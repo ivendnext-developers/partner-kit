@@ -10,6 +10,15 @@ MANIFEST = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__
 
 
 class ManifestTest(unittest.TestCase):
+    def test_what_a_chain_gets_before_it_chooses(self):
+        (st,) = [d for d in self.m["doctypes"] if d["name"] == "PP RCL Settings"]
+        field = {f["fieldname"]: f for f in st["fields"]}
+        self.assertEqual(field["witness_rule"]["default"], "No disposal")
+        self.assertEqual((field["supplier_note_required"]["default"], field["pack_expiry_required"]["default"]), ("0", "0"))
+        for n in (1, 2, 3):
+            for k in ("start_hours", "days", "depth"):
+                self.assertNotIn("default", field[f"class_{n}_{k}"])
+
     def setUp(self):
         with open(MANIFEST) as f:
             self.m = json.load(f)

@@ -141,11 +141,12 @@ class Recall(unittest.TestCase):
         self.assertEqual(self.notice()["lots"][0]["outcome"], recall.OUTCOME_WORDS["changed"])
         self.assertEqual(out["message"]["level"], "warning")
 
-    def test_r11_no_settings_is_said_and_nothing_is_written(self):
+    def test_r11_a_recall_works_before_the_settings_record_exists(self):
         self.shop.settings = None
-        code, out = self.press(["AMOX-A"])
-        self.assertEqual(out["message"]["body"], app.NO_SETTINGS)
-        self.assertEqual(self.shop.writes, [])
+        self.press(["AMOX-A"])
+        n = self.notice()
+        self.assertEqual(n["status"], "Blocked")
+        self.assertFalse(n.get("start_by") or n.get("complete_by"))
 
     def test_r12_the_apps_user_refused_is_said_in_words(self):
         self.shop.refuse = 403

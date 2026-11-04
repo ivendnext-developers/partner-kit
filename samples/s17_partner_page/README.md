@@ -21,7 +21,7 @@ What a partner usually changes:
 - **The page's address:** `allowed_urls` in `manifest.json`. Write your own, on your own host; iVendNext refuses an address on its own site.
 - **The board:** `service/board.html`, and `service/app.py` for what it offers and answers with.
 - **What the till sends:** `page_send_sale` (the sale, with the cashier's login and the customer's id) and `page_send_user` in `manifest.json`. Set `page_send_sale` to 0 if the board does not need the sale.
-- **Who may open it in Desk:** `page_roles` in `manifest.json` (*Desk User* here: every staff user; a customer narrows it on the record).
+- **Who may open it in Desk:** `page_roles` in `manifest.json` (*Desk User* here: every staff user; the retailer can narrow it in *Who may open the Desk page* on the record).
 - **The answer:** the sale detail *PP PGE Delivery Order*, which the board answers with; a partner's copy shows its own name.
 - **The app's id:** `IVN_LIBRARY_APP` in `app.json`.
 
@@ -36,15 +36,16 @@ ivn try
 
 ## Try it at the till
 
+- Switch the Deliveries key on in POS Studio, under Apps.
 - Press Deliveries on a sale; the delivery board opens over the sale.
-- Press Attach to sale; the delivery number is on the sale.
+- Press Attach to sale, then Apply on the till's confirm sheet; the delivery number is on the sale.
 - Close the till day when you are done.
 
 ## Versions
 
 ### 0.2.1
 
-- A page that reloads opens again, and every staff user may open it in Desk. iVendNext takes one answer; the board no longer keeps its own count.
+- The board no longer refuses a context it has seen: it may open again until it runs out. Every staff user may open it in Desk. iVendNext takes one answer; the board no longer keeps its own count.
 
 ### 0.2.0
 

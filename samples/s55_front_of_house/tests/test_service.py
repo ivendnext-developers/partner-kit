@@ -153,6 +153,18 @@ class ServiceTest(unittest.TestCase):
         self.press(self.svc(shop), "/press/book", RES, "R1")
         self.assertEqual(shop.res["R1"]["status"], "Booked")
 
+    def test_b7c_a_save_at_another_store_is_read_again_not_busy(self):
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00", status="Requested")])
+        shop.other_store_saves = ("any",)
+        self.press(self.svc(shop), "/press/book", RES, "R1")
+        self.assertEqual(shop.res["R1"]["status"], "Booked")
+
+    def test_b7d_the_stamp_clears_when_another_store_saves_meanwhile(self):
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00", status="Requested")])
+        shop.other_store_saves = ("clear",)
+        self.press(self.svc(shop), "/press/book", RES, "R1")
+        self.assertEqual(shop.settings[fs.CO]["stores"][0]["run_started"], "")
+
     def test_b7_one_press_at_a_time_per_store(self):
         st = fs.settings()
         st["stores"][0]["run_started"] = datetime.datetime.fromtimestamp(NOW - 5, datetime.timezone.utc).isoformat(timespec="seconds")
