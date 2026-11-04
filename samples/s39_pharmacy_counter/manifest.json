@@ -1668,7 +1668,7 @@
      "reqd": 1
     }
    ],
-   "confirm_text": "Delete these patients' prescriptions, dispensings and patient records? Only Deleted Documents keeps a copy, until your System Manager deletes it."
+   "confirm_text": "Delete these patients' prescriptions, dispensings and patient records? A copy stays in Deleted Documents."
   }
  ],
  "label_layouts": [

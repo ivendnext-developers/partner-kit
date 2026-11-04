@@ -219,6 +219,8 @@ class ManifestTest(unittest.TestCase):
             self.assertEqual((a["record_type"], a["roles"]), (f"{P} Erasure", [officer]))
         self.assertEqual(acts["erase"]["states"], ["Listed"])
         self.assertTrue(acts["erase"]["confirm_text"])
+        for a in acts.values():         # the door refuses a confirm sentence over 140 characters at install (bench run 5)
+            self.assertLessEqual(len(a.get("confirm_text") or ""), 140, a["label"])
         self.assertEqual([(i["fieldname"], i.get("reqd")) for i in acts["erase"]["inputs"]], [("reference", 1)])
         # the period is the shop's own number: a default would be wrong in every market but one
         (keep,) = [f for f in DT[f"{P} Settings"]["fields"] if f["fieldname"] == "keep_years"]
