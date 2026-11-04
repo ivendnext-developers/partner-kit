@@ -1183,19 +1183,15 @@ class KeepGoing(Base):
         self.stub.keep("acme_member_till", "1.0.1", self.stub.objects["folders/acme_member_till/1.0.0.zip"], "x", "page", "edit")
         self.stub.apps["acme_member_till"]["versions"][1]["sites"] = [SITE]
 
-    def test_rollback_prints_the_lines_asks_the_name_and_republishes_higher(self):  # ⭐ UX-121 (J12-03), Done when
-        rc, out = self.run_ivn("rollback", "1.0.0", stdin="acme_member_till\n")
+    def test_rollback_prints_the_lines_and_republishes_higher_with_no_typed_name(self):  # UX-121 (J12-03); GUARDSWEEP
+        rc, out = self.run_ivn("rollback", "1.0.0")
         self.assertEqual(rc, 0, out)
         self.assertIn("This publishes 1.0.0's content as 9.9.9 to every site the app is on now", out)
-        self.assertIn("Type the app's name to confirm.", out)
+        self.assertNotIn("Type the app's name", out)
         self.assertIn("Please press Update on ACME MEMBER TILL in App library: 9.9.9 goes back to 1.0.0.", out)
         self.assertEqual(self.stub.apps["acme_member_till"]["latest"], "9.9.9")
 
-    def test_rollback_with_the_wrong_name_changes_nothing_and_m30_is_the_doors(self):  # UX-121
-        rc, out = self.run_ivn("rollback", "1.0.0", stdin="nope\n")
-        self.assertEqual(rc, 1)
-        self.assertIn("Nothing was changed.", out)
-        self.assertEqual(self.stub.apps["acme_member_till"]["latest"], "1.0.1")
+    def test_m30_is_the_doors(self):  # UX-121
         self.assertIn("There is no earlier version to go back to.", self.run_ivn("rollback", "1.0.1")[1])
 
     def test_remove_site_asks_the_name(self):  # ⭐ UX-148 (J13-05), Done when

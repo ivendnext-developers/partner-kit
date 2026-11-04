@@ -101,7 +101,7 @@ WORDS = {
                     "deploy tool.",  # J10-03
     "handover": "They accept on their My apps. The app keeps its name; its versions, sites, secrets and hosting move to them, "
                 "and their card pays from the next month.",  # J5-14, J5-18
-    "type_name": "Type the app's name to confirm.",  # J5-18, J12-03, J13-04, J13-05
+    "type_name": "Type the app's name to confirm.",  # J5-18, J13-04, J13-05
     # this tool's own words (no row writes them), in plain words
     "sign_in": "Sign in first: ivn login (a build server: a token from My apps > Tokens, in IVN_TOKEN).",
     "bad_token": "This token is not one My apps made. Run ivn login again, or make a new token on My apps > Tokens.",
@@ -446,7 +446,7 @@ def ask_secret(prompt: str) -> str:
 
 
 def confirm(app: str) -> None:
-    """J5-18, J12-03, J13-04, J13-05: the app's name, typed, before a change that reaches its sites."""
+    """J5-18, J13-04, J13-05: the app's name, typed, before a change that cannot be undone (a hand-over, a cancel, a site removed)."""
     print(WORDS["type_name"])
     if ask(">") not in (app, app.replace("_", "-"), app.replace("_", " ").upper()):
         raise Stop(WORDS["not_same"])
@@ -1329,8 +1329,7 @@ def cmd_rollback(a) -> int:
     folder = app_folder(a)
     app = app_id(folder)
     first = online(door, "/v1/rollback", {"app": app, "to": a.version})
-    print(first["words"])
-    confirm(app)
+    print(first["words"])  # no typed name: every version stays, and each site's administrator presses Update (GUARDSWEEP)
     out = online(door, "/v1/rollback", {"app": app, "to": a.version, "go": True})
     follow("/v1/publish/status", app)
     for x in out.get("messages") or []:
