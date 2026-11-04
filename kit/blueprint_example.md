@@ -2,9 +2,9 @@
 
 *Corvane Mobile is an invented company: no real retailer, its needs and figures made up to show a blueprint filled in.*
 
-Print it beside the blank form: [this example as a PDF](https://developer.ivendnext.com/downloads/blueprint_example.pdf) · [the blank form (PDF)](https://developer.ivendnext.com/downloads/blueprint_form.pdf) · [the template](blueprint_template.md) to copy · [the project blueprint](blueprint.md), which says how to fill each section.
-
 A chain of nine phone and electronics stores in one country, with a web store, on our Acumatica and WooCommerce connectors. Every handset is tracked by its IMEI. Each row of (b) names its card in the [needs catalogue](../needs/README.md), and the site's build checks each row's verdict and door against that card, so a card whose verdict or door changes fails the build until the row is updated. The limits and figures are as they stood on 2026-10-16.
+
+Print it beside the blank form: [this example as a PDF](https://developer.ivendnext.com/downloads/blueprint_example.pdf) · [the blank form (PDF)](https://developer.ivendnext.com/downloads/blueprint_form.pdf) · [the template](blueprint_template.md) to copy · [the project blueprint](blueprint.md), which says how to fill each section.
 
 | Field | Your answer |
 |---|---|

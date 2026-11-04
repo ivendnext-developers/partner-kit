@@ -97,6 +97,11 @@ NOT_MADE = {"config_pack": "Set in Desk first: no app needed", "by_hand": "Copy 
 MORE = ("more-ways-in", "More ways in")                    # the samples no needs card with an area cites
 
 
+def way_in(e: dict) -> str:
+    """The way in a card shows: the index's door, except that a sample which makes an app from its manifest is not settings alone."""
+    return "Manifest" if e["door"] == "Configure" and not (e["config_pack"] or e["by_hand"]) else e["door"] or ""
+
+
 def card(e: dict, here: str) -> str:
     """One sample's card on the samples page, from its entry in the samples index: its picture, Sn and short name, when to use it,
     its door and up to three industries, and the command that starts from it (a config pack or a by-hand sample says why not)."""
@@ -104,14 +109,16 @@ def card(e: dict, here: str) -> str:
     page, sn = rel(f"samples/{e['name']}/index.html"), e["name"].split("_")[0]
     esc = lambda s: html.escape(s, quote=True)
     inds = e["industries"]
-    words = " ".join([e["title"], e["short"], e["when_to_use"] or "", e["door"] or "", " ".join(inds)]).lower()
+    way = way_in(e)
+    words = " ".join([e["title"], e["short"], e["when_to_use"] or "", way, " ".join(inds)]).lower()
+    own_picture = (e["picture"] or "").startswith(f"samples/{e['name']}/")     # a door's borrowed picture would show another sample
     thumb = (f'<a class="thumb" href="{page}" tabindex="-1" aria-hidden="true"><img src="{rel(e["picture"])}" alt="" loading="lazy"></a>'
-             if e["picture"] else "")
-    chips = (f'<span class="chip door">{esc(e["door"])}</span>' if e["door"] else "") + "".join(f'<span class="chip">{esc(i)}</span>' for i in inds[:3])
+             if own_picture else "")
+    chips = (f'<span class="chip door">{esc(way)}</span>' if way else "") + "".join(f'<span class="chip">{esc(i)}</span>' for i in inds[:3])
     chips += f'<span class="chip more">+{len(inds) - 3}</span>' if len(inds) > 3 else ""
     made = next((words_ for key, words_ in NOT_MADE.items() if e[key]), "")
-    last = f'<p class="note">{esc(made)}</p>' if made else f'<pre class="run" tabindex="0"><code>ivn new my_app --from {sn}</code></pre>'
-    return (f'<li class="card sample" data-text="{esc(words)}" data-door="{esc(e["door"] or "")}" data-ind="{esc("|".join(inds))}">{thumb}'
+    last = f'<p class="note">{esc(made)}</p>' if made else f'<pre class="run" tabindex="0"><code>ivn new acme_app --from {sn}</code></pre>'
+    return (f'<li class="card sample" data-text="{esc(words)}" data-door="{esc(way)}" data-ind="{esc("|".join(inds))}">{thumb}'
             f'<h3><a href="{page}">{esc(sn.upper())} · {esc(e["short"])}</a></h3><p class="when">{esc(e["when_to_use"] or "")}</p>'
             f'<p class="chips">{chips}</p>{last}</li>')
 
@@ -135,7 +142,7 @@ def grouped(entries: list[dict], here: str, areas: dict, area_of: dict, script: 
     esc = lambda s: html.escape(s, quote=True)
     present = {i for e in entries for i in e["industries"]}
     inds = [i for i in sample_info.INDUSTRIES if i in present]
-    ways = sorted({e["door"] for e in entries if e["door"]})
+    ways = sorted({way_in(e) for e in entries if way_in(e)})
     opt = lambda vals: "".join(f'<option value="{esc(v)}">{esc(v)}</option>' for v in vals)
     form = ('<form id="sample-filters" class="filters" role="search" aria-label="Filter the samples" hidden>'
             '<label class="vh" for="sf-q">Words</label><input id="sf-q" type="search" placeholder="Filter by words" autocomplete="off">'

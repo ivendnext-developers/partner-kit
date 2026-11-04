@@ -11,7 +11,7 @@ ivn login
 ivn new acme_po_approval --from s11
 ```
 
-**Who it is for:** iVendNext Partners, licensed customers' IT teams and the CitiXsys Consulting Team. Anyone may read the kit. To get a sandbox or build for an iVendNext customer, [become an iVendNext Partner](https://www.ivendnext.com/partners/apply/).
+**Who it is for:** iVendNext Partners, licensed customers' IT teams and the CitiXsys Consulting Team. Anyone may read the kit. To get a sandbox, [request one](https://developer.ivendnext.com/sandbox.html); to build for an iVendNext customer, [become an iVendNext Partner](https://www.ivendnext.com/partners/apply/).
 
 **Building with an AI assistant?** Point it at [AGENTS.md](AGENTS.md) first.
 

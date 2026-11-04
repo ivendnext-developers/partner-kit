@@ -6,7 +6,7 @@ How the data flows when your app links the till to an outside system (an integra
 
 **For:** a developer building a link between the till and someone else's system, who asks: *when the cashier sells, which endpoint is called, by whom, with what data; how does the answer get back onto the sale; where is each customer's account for that outside system kept; what happens when two chains use my app at the same second?*
 
-**The one idea, again.** Calls go three ways ([chapter 1a, section 5](01a_how_it_all_works.md)): **(1)** your service calls the iVendNext API at the chain's own address, with your app's key; **(2)** the chain's iVendNext calls your service at your one address, signed with that chain's own secret; **(3)** your service calls the outside system with that chain's own account for it. Every hop below is one of the three. The till itself never calls an outside system, and no answer of yours ever puts money on a sale: money enters the sale visibly, before payment, through the till's own pricing ([chapter 3](03_ladder_and_never_list.md), rule 1).
+**The one idea, again.** Calls go three ways ([chapter 1a, section 5](01a_how_it_all_works.md)): **(1)** your service calls the iVendNext API at the chain's own address, with your app's key; **(2)** the chain's iVendNext calls your service at your one address, signed with that chain's own secret; **(3)** your service calls the outside system with that chain's own account for it. Every hop in the two examples is one of the three. The till itself never calls an outside system, and no answer of yours ever puts money on a sale: money enters the sale visibly, before payment, through the till's own pricing ([chapter 3](03_ladder_and_never_list.md), rule 1).
 
 ## Example 1: a chain's own loyalty system
 

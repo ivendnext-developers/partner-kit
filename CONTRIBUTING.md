@@ -4,7 +4,7 @@ Thank you for helping. Proposed changes are welcome on the guide, the recipes, t
 
 ## Who can propose what
 
-Anyone may read this kit, clone it and fork it. To get a sandbox or build for an iVendNext customer, [become an iVendNext Partner](https://www.ivendnext.com/partners/apply/).
+Anyone may read this kit, clone it and fork it. To get a sandbox, [request one](https://developer.ivendnext.com/sandbox.html); to build for an iVendNext customer, [become an iVendNext Partner](https://www.ivendnext.com/partners/apply/).
 
 - **Anyone** may propose a fix to a text or a link: a typo, a broken link, a sentence that is wrong. Sign it off (below); the code owners review it.
 - **Members** (an iVendNext Partner, a licensed customer's IT team, the CitiXsys Consulting Team, once onboarded) may also propose code and samples, after agreeing the shape in a feedback issue in the private `partner-feedback` repository ([how](feedback/README.md)).

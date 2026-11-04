@@ -1,6 +1,6 @@
 # Samples
 
-Start here when you want working code to begin from. A sample shows one way into iVendNext, once, with its tests: pick the nearest one to your project, run it against your sandbox, and change it. A reference app is a whole product built through those ways in.
+Start here when you want working code to begin from. A sample shows one way into iVendNext, once, with its tests: pick the nearest one to your project, run it against your sandbox, and change it. A reference app is a whole product built through those ways in. Each card's command makes an app: put your company's own first word in place of `acme`.
 
 {{samples: cards}}
 

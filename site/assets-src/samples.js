@@ -2,7 +2,7 @@
  *
  * A card shows when it matches all three; a sample for every industry shows under each industry. A group with no card left
  * hides, and a group's count follows the filter. The cards carry what is matched in data- attributes (site/gallery.py). Nothing
- * is sent or stored. Without script the form stays hidden and every sample shows. site/test_finder.mjs runs matches() in node.
+ * is sent or stored. Without script the form stays hidden and every sample shows. site/test_finder.mjs runs this file in node.
  */
 (function (root) {
   "use strict";
@@ -42,10 +42,12 @@
     form.addEventListener("input", run);
     form.addEventListener("change", run);
     form.addEventListener("submit", function (e) { e.preventDefault(); });
+    if (root.addEventListener) root.addEventListener("pageshow", run);     // what the browser put back on Back
+    return run;
   }
 
   if (typeof module === "object" && module.exports) {
-    module.exports = { matches: matches };
+    module.exports = { matches: matches, wire: wire };
   } else if (root.document) {
     wire(root.document);
   }

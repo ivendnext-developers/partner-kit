@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/save_rules.md
 sample: samples/s18_rule_guard
 request: -
-verified: run by the product 2026-10-18 (the POS train: the eleventh approval refused at the manager's Approve, walked on three frames); not run by a kit sample on a sandbox
+verified: run by the product 2026-10-18 (the eleventh approval refused at the manager's Approve, walked on three frames); not run by a kit sample on a sandbox
 ---
 ## What you build
 One save rule of kind `count_per_day` on the approval request: the store's managers may give so many discount approvals a day, and the next is refused when the manager presses **Approve**, in the retailer's words (`contracts/pages/save_rules.md` §8, the worked example; `recipes/save_rules.md`). Sample S18's README carries it.

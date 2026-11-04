@@ -43,7 +43,7 @@ Every sandbox site is its own database, so no builder sees or touches another's.
 | **You, the administrator** | `admin@demo-retail.example` | System Manager, Item Manager, Sales Master Manager, Stock User, Retail Manager | set up iVendNext as a customer's administrator does: items, prices and price lists, promotions, pricing rules, coupons, till profiles, POS Studio, receipts, workflows, reports, roles, users and keys; read the sales made at the till |
 | **Store manager** | `manager@demo-retail.example` · `manager` | Retail Manager | a manager's work at the till: approvals, returns, closing the day |
 | **Cashier 1 and Cashier 2** | `cashier1@demo-retail.example` · `cashier1`, `cashier2@demo-retail.example` · `cashier2` | Retail Cashier | selling at the till, in any of the three stores |
-| **Integration user** | `integration@demo-retail.example` | Demo Integration — starts with one right: read items | your first connected app. It has no password and **no key yet**: you make its key (below) |
+| **Integration user** | `integration@demo-retail.example` | Demo Integration — starts with one right: read items | your first connected app. It has no password and **no key yet**: you make its key (*Your first hour*, in the hosted sandbox recipe) |
 
 The e-mail addresses are made up. The site also gives every user its standard roles, and gives the administrator the right to edit the shared Desk workspaces. Each role in the table is there because the administrator needs it for at least one of the jobs listed, and together they cover all of them; our own check before hand-over proves both.
 

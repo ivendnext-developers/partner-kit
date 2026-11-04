@@ -36,7 +36,7 @@ The next retailer with the same need can buy the same version from you. When it 
 
 ## The path
 
-1. **Become an iVendNext Partner.** Fill in the [partner form](https://www.ivendnext.com/partners/apply/). We talk to you first, then give you a sandbox site of your own.
+1. **Become an iVendNext Partner.** Fill in the [partner form](https://www.ivendnext.com/partners/apply/), and we talk to you first. For a sandbox site of your own, [request a sandbox](sandbox.md).
 2. **Register your company once.** Sign in on [My apps](https://developer.ivendnext.com/apps) with GitHub and press **Set up my company**. It suggests your company's first word.
 3. **Start from an app.** An app that starts as kit code has a page in the App library that links the sample it was built from: `ivn new acme_bins --from s2`.
 4. **Make it your customer's.** `ivn new` makes it yours, under your company's name. Then change what your customer needs. Your AI assistant can do much of this: point it at the kit's [`AGENTS.md`](../../AGENTS.md).

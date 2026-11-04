@@ -207,7 +207,6 @@ class Ctx:
         self.src = self.out = ""
         self.cards: list = []                    # the needs cards, for a {{needs: …}} line
         self.samples: list = []                  # the sample cards, for {{samples: cards}}
-        self.door_pages: set = set()             # the doors that have a needs page
         self.sample_index: list = []             # the samples index's entries, for {{samples: cards}}
         self.moved: dict = {}                    # (a split page's file, an anchor) → the page that anchor now lands on
 
@@ -1040,8 +1039,8 @@ def finder_tool(here: str) -> str:
     up = "../" * (here.count("/") + 1) if here else ""
     return (f'<section id="finder" class="finder" data-root="{up}" aria-labelledby="find-what-fits" hidden>'
             '<h2 id="find-what-fits">Find what fits your customer\'s needs</h2>'
-            "<p>Type one need, or paste the customer's list, one need a line. Each line gets the need that matches it, whether you can "
-            "build it today, and how.</p>"
+            "<p>Type one need, or paste the customer's list, one need a line. Each line gets the nearest need in the catalogue, whether you "
+            "can build it today, and how: check it is the one your customer means.</p>"
             '<label class="vh" for="finder-list">The customer\'s needs, one a line</label>'
             f'<textarea id="finder-list" rows="4" spellcheck="false" placeholder="{html.escape(chr(10).join(FINDER_EXAMPLE), quote=True)}"></textarea>'
             '<ol id="finder-out" class="finder-out" aria-live="polite"></ol>'
@@ -1163,7 +1162,7 @@ def lead_first(main: str, nexts: str, after: str = "") -> str:
     head, body = main[:m.end()], main[m.end():]
     blocks = top_blocks(body)
     for i, b in enumerate(blocks):
-        if re.match(r"\s*<h[2-6]\b", b):
+        if re.match(r"\s*<(?:h[2-6]|ul|ol|pre|div|table)\b", b):        # a paragraph after these follows from them: it stays there
             break
         if is_lead(b):
             lead, _, files = b.strip().partition("<strong>Reference implementation:</strong>")   # one long paragraph: its purpose first, its files after
@@ -1181,7 +1180,10 @@ ROOT_NEXT = {"learn.html": [("Next: Build your first app", "first_app.html"), ("
              "business.html": [("Next: Publish your app", "publish.html")],
              "samples/index.html": [("Next: Build your first app", "first_app.html"), ("Find the sample for a need", "needs/index.html")],
              "plan.html": [("Next: Build your first app", "first_app.html"), ("The project blueprint", "kit/blueprint.html")],
-             "map.html": [("Next: Needs catalogue", "needs/index.html")],
+             "map.html": [("Next: Build your first app", "first_app.html"), ("Needs catalogue", "needs/index.html")],
+             "guide/01_welcome.html": [("Next: Build your first app", "first_app.html"), ("3. The ladder and the four rules", "guide/03_ladder_and_never_list.html")],
+             "guide/01a_how_it_all_works.html": [("Next: Build your first app", "first_app.html")],
+             "guide/01c_how_the_data_travels.html": [("Next: What you can use", "map.html")],
              "api.html": [("Next: Security and the handshake", "security.html")],
              "security.html": [("Next: Build your first app", "first_app.html")],
              "starters.html": [("Next: Samples", "samples/index.html")],
@@ -1205,16 +1207,16 @@ def next_steps(page, pages: list, sample_of: dict, index_by_folder: dict) -> lis
         return [(f"Next: {seq[i + 1].short}", seq[i + 1].out)] if i + 1 < len(seq) else [("All chapters", "guide/index.html")]
     if page.group == "recipes":
         s = sample_of.get(page.out)
-        return ([(f"Next: the sample, {s[0]}", s[1])] if s else []) + [("All recipes", "recipes/index.html")]
+        return [(f"Next: the sample, {s[0]}", s[1]) if s else ("Next: Build your first app", "first_app.html"), ("All recipes", "recipes/index.html")]
     if page.group == "samples":
         e = index_by_folder.get(page.src.removesuffix("/README.md"))
-        steps = [(f"The recipe: {e['recipe_title']}", e["recipe"])] if e and e.get("recipe") and e.get("recipe_title") else []
+        steps = [(f"The recipe: {e['recipe_title'].split(' — ')[0]}", e["recipe"])] if e and e.get("recipe") and e.get("recipe_title") else []
         if e and (e["config_pack"] or e["by_hand"]):
             steps.append(("The sample's README", f"{REPO_URL}/blob/main/{page.src}"))
         return steps
     if page.group == "feedback":
-        return [("All the forms", "feedback.html")]
-    return []
+        return [("Open a form", "feedback.html#open-a-form")]
+    return [("Next: Learn the kit", "learn.html")]                  # a new top-level page, until it names its own
 
 
 # ── a long page split along its own headings ─────────────────────────────────────────────────────────────────────────
@@ -1229,7 +1231,7 @@ SPLIT = {
                             ("notes", "Technical notes", "when-your-service-is-down-and-when-the-till-is-offline")],
     "recipes/event_feed.md": [("setup", "Register, pull and read the queue", "1-register-your-application-the-install-does-this"),
                               ("labels", "The labels, the reconciliation and the reference client", "4-the-published-labels"),
-                              ("patterns", "Two patterns built on the feed", "7-two-patterns-built-on-the-feed"),
+                              ("patterns", "Two patterns built on the feed, and the nudge", "7-two-patterns-built-on-the-feed"),
                               ("notes", "Technical notes", "technical-notes")],
     "guide/07_manifests.md": [("steps", "Steps", "steps"), ("kinds", "The extension points' kinds", "the-extension-points-kinds"),
                               ("reports", "Reports, reminders, settings records and multi-select fields", "reports-reminders-settings-records-and-multi-select-fields"),
@@ -1245,15 +1247,34 @@ SPLIT = {
     "guide/01c_how_the_data_travels.md": [("loyalty", "Example 1: a chain's own loyalty system", "example-1-a-chains-own-loyalty-system"),
                                           ("phone", "Example 2: a phone retailer's mobile plans from a telecom company", "example-2-a-phone-retailers-mobile-plans-from-a-telecom-company"),
                                           ("notes", "What both outside systems share", "what-both-outside-systems-share")],
-    "guide/16_possible_not_possible.md": [("possible", "Possible today: configuration, connectors and outside apps", "possible-today"),
-                                          ("possible-more", "Possible today: an extension point or a manifest", "with-an-extension-point-or-a-manifest"),
+    "guide/16_possible_not_possible.md": [("possible", "Possible today", "possible-today"),
+                                          ("possible-more", "Possible today with an extension point or a manifest", "with-an-extension-point-or-a-manifest"),
                                           ("rules", "The four rules, and when the product has no door", "the-four-rules"),
-                                          ("quote", "How it behaves, before you quote", "how-it-behaves-before-you-quote")],
+                                          ("quote", "How it behaves before you quote, and technical notes", "how-it-behaves-before-you-quote")],
     "site/pages/map.md": [("calls", "(a) iVendNext endpoints your app calls", "a-ivendnext-endpoints-your-app-calls"),
                           ("service", "(b) Endpoints iVendNext calls on your service", "b-endpoints-ivendnext-calls-on-your-service"),
                           ("manifest", "(c) What a manifest can add", "c-what-a-manifest-can-add"),
-                          ("screens", "(d) Screens you can add", "d-screens-you-can-add")],
+                          ("screens", "(d) Screens you can add, and record types", "d-screens-you-can-add")],
 }
+
+
+NOT_PROSE = re.compile(r"(needs|records)/|samples/index\.html$|recipes/index\.html$|404\.html$|search\.html$")   # lists and tables, read by finding a row
+
+
+def main_words(text: str) -> int:
+    """The words a reader meets in a page's <main>."""
+    m = re.search(r'<main id="main"[^>]*>(.*)</main>', text, re.S)
+    return len(html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)\b.*?</\1>", " ", m.group(1), flags=re.S))).split()) if m else 0
+
+
+def long_pages(root: pathlib.Path) -> dict[str, int]:
+    """The pages of prose over the limit in a built site. The build says so as a warning, like a long title's."""
+    found = {}
+    for f in root.rglob("*.html"):
+        out = f.relative_to(root).as_posix()
+        if not NOT_PROSE.match(out) and (words := main_words(f.read_text("utf-8"))) > WORD_LIMIT:
+            found[out] = words
+    return found
 
 
 class Part:
@@ -1264,7 +1285,6 @@ class Part:
         self.src, self.group = page.src, page.group
         self.label = title.split(":")[0]
         self.html = ""
-        self.toc: list[tuple[str, str]] = []
         self.words: tuple | None = None
 
     @property
@@ -1295,7 +1315,7 @@ def part_body(part: Part, n: int, nav: str) -> str:
     m = re.match(r'<h[23] id="([^"]+)">(.*?)</h[23]>\s*', body, re.S)
     if m and html.unescape(re.sub(r"<[^>]+>", "", m.group(2))).strip() == part.title:
         hid, body = f' id="{m.group(1)}"', body[m.end():]
-    of = f'<p class="part-of">Part {n} of {len(whole.parts)} of <a href="{posixpath.basename(whole.out)}">{html.escape(whole.short)}</a></p>'
+    of = f'<p class="part-of">Part {n} of {len(whole.parts)} · <a href="{posixpath.basename(whole.out)}">{html.escape(whole.short)}</a></p>'
     return lead_first(f"<h1{hid}>{html.escape(part.title)}</h1>{of}{body}", nav) + nav
 
 
@@ -1305,7 +1325,7 @@ def part_name(whole: Page, part: Part) -> str:
     return name if len(name) <= seo.FAIL_TITLE_OVER else part.title
 
 
-def part_toc_all(whole: Page, part: Part) -> list[tuple[str, str]]:
+def part_toc(part: Part) -> list[tuple[str, str]]:
     """A part's own On this page: the level-two headings it holds, its first one if the title has not taken its place."""
     label = lambda h: html.unescape(re.sub(r"<[^>]+>", "", h)).strip()
     return [(i, label(h)) for i, h in re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', part.html, re.S) if label(h) != part.title]
@@ -1525,6 +1545,27 @@ def search_page() -> str:
             '<div id="search-results" aria-live="polite"></div>')
 
 
+def recipe_samples(pages: list, entries: list) -> dict[str, tuple[str, str]]:
+    """{a recipe's page: (its sample's name, its page)}: the sample its Reference implementation line names first, else a sample
+    whose own recipe it is. A recipe with neither has none: a card that merely cites both is no reason to send a reader there."""
+    by_id = {e["name"].split("_")[0]: e for e in entries}
+    own: dict[str, dict] = {}
+    for e in entries:
+        if e["recipe"]:
+            own.setdefault(e["recipe"], e)
+    out = {}
+    for p in pages:
+        if p.group != "recipes":
+            continue
+        line = re.search(r"\*\*Reference implementation:?\*\*:?(.{0,400})", p.text, re.S)
+        named = re.search(r"samples/(s\d+)_|\b(S\d+)\b", line.group(1)) if line else None
+        e = by_id.get((named.group(1) or named.group(2)).lower()) if named else None
+        e = e or own.get(p.out)
+        if e:
+            out[p.out] = (f"{e['name'].split('_')[0].upper()} · {e['short']}", f"samples/{e['name']}/index.html")
+    return out
+
+
 def recipes_page(rec: list, cards: list, metas: dict, sample_of: dict) -> tuple[str, list]:
     """The recipes page: each recipe under the area of the cards that use it most (the first such area on a tie), the recipes no
     card names first, as the building blocks. A card's words are the recipe's own description."""
@@ -1617,14 +1658,10 @@ def build(out_dir: pathlib.Path) -> int:
     ctx.samples = gallery.collect(pages, served, catalogue.DOORS, first_use, slug, ROOT, errors)
     errors += gallery.readme_errors(ROOT)                           # Industries, Try it at the till, Versions
     errors += gallery.door_picture_errors(ctx.samples, catalogue.DOORS, ROOT)    # a sample with no screenshot: its door's
-    ctx.door_pages = {c.door for c in need_cards}
     sample_index = gallery.index(ctx.samples, pages, served, catalogue.DOORS, ROOT)
     ctx.sample_index = sample_index["samples"]
     by_folder = {f"samples/{e['name']}": e for e in ctx.sample_index}
-    sample_of: dict[str, tuple[str, str]] = {}                      # a recipe's page → the first sample that uses it: (its name, its page)
-    for e in ctx.sample_index:
-        for r in e["recipes"]:
-            sample_of.setdefault(r["path"], (f"{e['name'].split('_')[0].upper()} · {e['short']}", f"samples/{e['name']}/index.html"))
+    sample_of = recipe_samples(pages, ctx.sample_index)
     errors += [f"site/build.py SPLIT: {src} is not a page of the site" for src in SPLIT if src not in registry]
     for p in pages:                                                 # a long page's parts, so that every page's links can find what moved
         if p.src in SPLIT:
@@ -1738,8 +1775,8 @@ def build(out_dir: pathlib.Path) -> int:
                 part.words = part_words(part.html)
                 make_meta(part.out, part_name(p, part), p.group, part_prose(part.html), page_sources(p),
                           trail=whole_trail + [(part.title, part.out)])
-            cards = "".join(f'<li class="card"><h3><span class="n">{n}</span><a href="{posixpath.basename(part.out)}">{html.escape(part.title)}</a></h3>'
-                            f"<p>{html.escape(metas[part.out].desc)}</p></li>" for n, part in enumerate(p.parts, 1))
+            cards = "".join(f'<li class="card"><h3><span class="n">{n}</span><a href="{posixpath.basename(part.out)}">{html.escape(part.title)}</a></h3></li>'
+                            for n, part in enumerate(p.parts, 1))
             count = len(p.parts)
             parts_block = f'<h2 id="the-parts">In {NUMBER[count]} parts</h2><ol class="cards parts">{cards}</ol>'
             body = lead_first(intro, next_buttons([(f"Next: Part 1, {p.parts[0].label}", p.parts[0].out)] + nexts, up), parts_block)
@@ -1750,7 +1787,7 @@ def build(out_dir: pathlib.Path) -> int:
             for i, part in enumerate(p.parts):
                 pmeta = metas[part.out]
                 pbody = part_body(part, i + 1, part_nav(p, i, up, nexts))
-                write(part.out, shell(part.title, pbody, part.out, side=sidebar(part, pages, lists, up), toc=part_toc_all(p, part), foot=src_link,
+                write(part.out, shell(part.title, pbody, part.out, side=sidebar(part, pages, lists, up), toc=part_toc(part), foot=src_link,
                                       sha=sha, meta=pmeta, crumbs=seo.crumbs_html(pmeta.trail, up), verify=seo_data))
         elif p.out not in NO_OPENING:
             body = lead_first(p.html, next_buttons(nexts, up, primary=START_BUTTON not in p.html))
@@ -1782,8 +1819,8 @@ def build(out_dir: pathlib.Path) -> int:
         toc = []
         g.html = render(g.text, ctx, {}, toc)
         up = up_of(g.out)
-        g.html = lead_first(g.html, next_buttons([("Next: API reference", "api.html")] if g.out == "records/index.html"
-                                                 else [("All record types", "records/index.html")], up))
+        g.html = after_first_block(g.html, next_buttons([("Next: API reference", "api.html")] if g.out == "records/index.html"
+                                                        else [("All record types", "records/index.html")], up))
         data = g.src.removesuffix(".md") + ".json"
         srcs = [data, "tools/records/records.py"] if (ROOT / data).exists() else ["api/records/", "tools/records/records.py"]
         src_link = f'<p class="src"><a href="{REPO_URL}/blob/main/{data}">This record type in the kit</a></p>' if (ROOT / data).exists() else ""
@@ -1851,7 +1888,7 @@ def build(out_dir: pathlib.Path) -> int:
 
     def rows(pred) -> list[tuple[str, str, str]]:
         picked = [(o, m) for o, m in metas.items() if pred(o, m)]
-        picked.sort(key=lambda om: START.index(om[0]) if om[0] in START else 0)        # the top-level pages in reading order
+        picked.sort(key=lambda om: START.index(om[0]) if om[0] in START else len(START))   # the top-level pages in reading order, the rest after
         return [(seo.SITE_NAME if m.home else seo.clean_name(m.name), canonical(o), m.desc) for o, m in picked]
     write("llms.txt", seo.llms_txt([
         ("Start here", rows(lambda o, m: "/" not in o)),
@@ -1872,6 +1909,8 @@ def build(out_dir: pathlib.Path) -> int:
     for rel in sorted(assets):
         (out_dir / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(ROOT / rel, out_dir / rel)
+    for out, words in sorted(long_pages(out_dir).items()):
+        print(f"  warning: {out} is {words} words, over {WORD_LIMIT}: add it to SPLIT in site/build.py")
     if errors:
         print("SITE BUILD FAILED:\n  " + "\n  ".join(sorted(set(errors))))
         return 1

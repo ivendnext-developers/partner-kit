@@ -24,14 +24,6 @@ issue_forms = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(issue_forms)
 PARTNER_FORM = "https://www.ivendnext.com/partners/apply/"
 SANDBOX_FORM = "https://www.ivendnext.com/developers/sandbox/"
-# The pages that are lists or reference tables, read by finding a row: the limit on a page of prose does not bind them.
-NOT_PROSE = re.compile(r"(needs|records)/|samples/index\.html$|recipes/index\.html$|404\.html$|search\.html$")
-
-
-def main_words(text: str) -> int:
-    """The words a reader meets in a page's <main>."""
-    m = re.search(r'<main id="main"[^>]*>(.*)</main>', text, re.S)
-    return len(html_unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)\b.*?</\1>", " ", m.group(1), flags=re.S))).split()) if m else 0
 # Calls with no iVendNext name yet: the sign-in addresses (the standard discovery document lists them anyway) and
 # server-side code that runs inside the shop. Every other call has one in ivendnext_mpos.api.v1.
 UPSTREAM_KEPT = ("frappe.integrations.oauth2.", "frappe.get_doc(")
@@ -932,7 +924,8 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertIn("S23 · ", card)
         self.assertIn('<p class="when">', card)
         self.assertIn('<span class="chip door">Check before payment</span>', card)
-        self.assertIn("ivn new my_app --from s23", card)
+        self.assertIn("ivn new acme_app --from s23", card)                           # the name's first word is the company's: the page says so
+        self.assertIn("in place of <code>acme</code>", (self.out / "samples" / "index.html").read_text("utf-8"))
         self.assertNotIn("Set in Desk", card)
         wide = self.card_of("s2_bins")                                               # five industries: three named, then how many more
         self.assertEqual(len(re.findall(r'<span class="chip">', wide)), 3)
@@ -1529,9 +1522,21 @@ The till cannot do this yet; it can stop the sale at Pay.
         out = build.lead_first(long, "N")
         self.assertIn("N<p><strong>Reference implementation:</strong> a file.</p>", out)
         self.assertEqual(words(out), words(long + "N"))
+        stops = "<h1>T</h1><ul><li>A list.</li></ul><p>" + "word " * 12 + "</p>"
+        self.assertEqual(build.lead_first(stops, "N"), "<h1>T</h1>N<ul><li>A list.</li></ul><p>" + "word " * 12 + "</p>")   # a paragraph after a list follows from it
         for out in ("first_app.html", "sandbox.html", "publish.html", "guide/04_configure_first.html", "recipes/till_guard.html", "learn.html", "samples/index.html"):
             main = self.html_of(out).split('<main id="main">')[1]
             self.assertRegex(main[main.index("</h1>"):], r'^</h1><p class="lead">.*?</p><p class="next"><a class="site-btn"', out)
+        capture = self.html_of("recipes/capture.html").split('<main id="main">')[1]                  # its real opening, not the paragraph after its list
+        self.assertNotIn("From POS build", capture[capture.index("</h1>"):capture.index('<p class="next"')])
+
+    def test_every_page_opens_with_a_next_step_within_its_first_blocks(self):
+        for out, text in page_texts(self.out).items():
+            if out in build.NO_OPENING or out == "needs/index.html":                                  # the home page's hero, My apps' tool, the finder's own Plan these needs
+                continue
+            main = text.split('<main id="main"')[1]
+            head = main[main.index("</h1>"):main.index("</h1>") + 9000]
+            self.assertTrue('class="next' in head or 'class="start-app"' in head, out)
 
     def test_each_kind_of_page_has_the_next_step_its_order_gives(self):
         chapter = self.html_of("guide/03_ladder_and_never_list.html")
@@ -1545,16 +1550,27 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertIn(f'<a class="site-btn" href="{SANDBOX_FORM}">Open the sandbox request form</a>', self.html_of("sandbox.html"))
         self.assertIn('href="../plan.html">Next: Plan a project', self.html_of("needs/not-possible.html"))
         self.assertIn('All record types</a>', self.html_of("records/item.html"))
+        self.assertIn('href="../feedback.html#open-a-form">Open a form</a>', self.html_of("feedback/claim_a_need.html"))
+        self.assertRegex(self.html_of("recipes/connected_app.html"), r'<p class="next"><a class="site-btn" href="\.\./samples/s2_bins/index\.html">Next: the sample, S2')   # the sample its own line names
+        self.assertNotIn("Next: the sample", self.html_of("recipes/save_rules.html"))               # a card citing both is no reason to send a reader there
+        self.assertIn('Next: Build your first app</a>', self.html_of("recipes/save_rules.html"))
+        self.assertIn('<a class="site-btn" href="first_app.html">Next: Build your first app</a>', self.html_of("map.html") + self.html_of("map-screens.html").replace("../", ""))
         started = self.html_of("samples/s2_bins/index.html")                        # a sample with its Start button: the recipe is the second step
         self.assertIn('class="site-btn site-btn-ghost" href="../../recipes/manifest.html">The recipe: ', started)
         pack = self.html_of("samples/s5_config_pack/index.html")
-        self.assertIn("The sample's README</a>", pack)
+        self.assertIn("The sample&#x27;s README</a>", pack)
         self.assertNotIn("Start an app from this sample", pack)
 
-    def test_no_page_of_prose_is_over_the_limit(self):
-        over = {out: n for out, text in page_texts(self.out).items() if not NOT_PROSE.match(out) and (n := main_words(text)) > build.WORD_LIMIT}
-        self.assertEqual(over, {})
-        self.assertGreater(main_words(self.html_of("needs/all.html")), build.WORD_LIMIT)    # the one-page list stays whole: the check can see a long page
+    def test_a_page_of_prose_over_the_limit_is_named_and_a_list_is_not(self):
+        copy = self.tmp / "long_page"
+        copy.mkdir()
+        long = '<main id="main">' + "word " * (build.WORD_LIMIT + 1) + "</main>"
+        (copy / "guide").mkdir()
+        (copy / "guide" / "long.html").write_text(long, "utf-8")
+        (copy / "guide" / "short.html").write_text('<main id="main">Short.</main>', "utf-8")
+        (copy / "needs").mkdir()
+        (copy / "needs" / "all.html").write_text(long, "utf-8")
+        self.assertEqual(build.long_pages(copy), {"guide/long.html": build.WORD_LIMIT + 1})
 
     def test_a_long_page_is_an_overview_and_its_parts_and_every_heading_lands_somewhere(self):
         for src, parts in build.SPLIT.items():
@@ -1575,12 +1591,16 @@ The till cannot do this yet; it can stop the sale at Pay.
 
     def test_a_part_walks_back_and_next_and_the_last_goes_on_to_the_pages_own_next_step(self):
         first = self.html_of("recipes/manifest-steps.html")
-        self.assertIn('Part 1 of 5 of <a href="manifest.html">', first)
+        self.assertIn('Part 1 of 5 · <a href="manifest.html">', first)
         self.assertIn('href="../recipes/manifest.html">Back: the overview</a><a class="site-btn" href="../recipes/manifest-more.html">Next: More you can add</a>', first)
         last = self.html_of("recipes/manifest-notes.html")
         self.assertIn('href="../recipes/manifest-refused.html">Back: What is refused, and why</a>', last)
         self.assertRegex(last, r'<a class="site-btn" href="\.\./samples/s[0-9]+_[a-z0-9_]+/index\.html">Next: the sample, ')
+        side = self.html_of("guide/16_possible_not_possible-possible.html").split('<nav class="side"')[1].split("</nav>")[0]
+        labels = re.findall(r'<li class="sub"><a [^>]*>\d+\. ([^<]+)</a>', side)
+        self.assertEqual(len(labels), len(set(labels)), labels)                                     # no two parts of one page share a label
         self.assertEqual(self.html_of("recipes/manifest-steps.html").count('<h1 id="steps"'), 0)    # its title differs from the heading it starts at: both stay
+        self.assertIn('<h2 id="steps">', self.html_of("recipes/manifest-steps.html"))
         self.assertIn('<h1 id="technical-notes"', self.html_of("guide/09_points_and_requests-notes.html"))    # the same words: the title takes its place
         self.assertEqual(self.html_of("guide/09_points_and_requests-notes.html").count('id="technical-notes"'), 1)
 
@@ -1627,6 +1647,25 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertIn("recipes/manifest-steps.html", docs)
         self.assertNotIn("build.html", docs)
         self.assertNotIn("reference_apps.html", docs)
+
+    def test_the_finder_runs_on_the_page_itself(self):
+        """Headless Chrome, served as the site is: a list in the address fills the box and draws its rows, and a line the catalogue
+        does not hold stays out of the plan."""
+        import functools, http.server, subprocess, threading, urllib.parse
+        handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(self.out))
+        handler.log_message = lambda *a: None
+        server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.shutdown)
+        wanted = "Branch sees only own + HQ stock\r\nItem price list with photos\r\nPayroll for store staff"
+        url = f"http://127.0.0.1:{server.server_address[1]}/needs/index.html?list={urllib.parse.quote(wanted)}"
+        dom = subprocess.run([build_pdfs.chrome(), "--headless=new", "--disable-gpu", "--no-sandbox", "--virtual-time-budget=8000", "--dump-dom", url],
+                             capture_output=True, text=True, timeout=120).stdout
+        self.assertEqual(dom.count('<li class="fit">'), 3, dom[:400])
+        self.assertIn("plan.html?needs=branch-sees-own-stock,price-list-with-photos", dom)
+        self.assertIn("No need in the catalogue fits this closely.", dom)
+        self.assertIn("None of these", dom)
+        self.assertIn("2 needs from 3 lines", dom)
 
     # ── the samples index (samples/index.json) and the READMEs it is read from ──
     INDEX_FIELDS = {"name", "title", "short", "version", "versions", "when_to_use", "picture", "door", "needs", "recipe",

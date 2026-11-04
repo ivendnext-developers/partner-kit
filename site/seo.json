@@ -35,6 +35,10 @@
     "recipes/rule_guard.html": "Check a sale before payment: your service allows it, refuses it in your own words, or asks the cashier a yes or no question when Pay is pressed.",
     "recipes/capture.html": "Capture a value at the scan, or send a one-time code before a new customer is added: your HTTPS service answers at a moment the cashier did not choose.",
     "apps.html": "My apps: sign in with GitHub, set up your company once, add your colleagues and make the tokens a build server publishes with.",
-    "first_app.html": "From one of the kit's samples to your customer's App library in six steps: sign in, make the app, change it, check it, try it on your sandbox and publish it."
+    "first_app.html": "From one of the kit's samples to your customer's App library in six steps: sign in, make the app, change it, check it, try it on your sandbox and publish it.",
+    "guide/07_manifests-notes.html": "What the installer refuses in a manifest and why, what happens when your service is down or the till is offline, and what the kit has proven.",
+    "guide/16_possible_not_possible-quote.html": "How a need behaves in practice, to know before you quote: what is refused, what happens when your service is down, the tests and the technical notes.",
+    "guide/09_points_and_requests-down.html": "What each extension point does when your service is down or the till is offline, and what the cashier sees: read it before you promise a customer anything.",
+    "recipes/event_feed-labels.html": "The labels the event feed publishes, the nightly reconciliation that catches what a run missed, and how to run the reference client against your sandbox."
   }
 }
