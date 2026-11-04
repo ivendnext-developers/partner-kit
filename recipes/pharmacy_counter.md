@@ -177,8 +177,9 @@ period in `<PREFIX> Settings`; until it does, nobody is due.
    Nobody changes or deletes it, and once a patient is erased it is never listed again. A press works about 7
    seconds: one that runs out says so, and the next goes on.
 
-What stays: a copy of each deleted record and of its change history in the Desk's *Deleted Documents* (a delete
-through the API is never permanent), which a System Manager deletes; the button's last answer says so. Also the
+What stays: a copy of each deleted record in the Desk's *Deleted Documents* (a delete through the API is never
+permanent), which a System Manager deletes, and each record's change history, which the site's Administrator
+deletes; the button's last answer says so. Also the
 till's sales and their sale details, and the register's own lines, which the register
 erases after its own retention.
 

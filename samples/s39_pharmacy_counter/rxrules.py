@@ -746,8 +746,10 @@ MOVED = ("id_number", "birth_date", "authority", "consent_date", "consent_by")  
 KEPT_NEWER = "Kept: a record dated {day} is inside the period"
 KEPT_MOVED = "Kept: clear the five (moved) fields on the customer, then list them on a new erasure"
 ERASED_ROW = "Erased"
-# a delete through the API keeps a copy of each record (and its change history) in the Desk's Deleted Documents
-COPIES_KEPT = "Copies stay in Deleted Documents until your System Manager deletes them."
+# a delete through the API keeps a copy of each record in the Desk's Deleted Documents, and leaves its change history
+# (measured on :8114 at 2.1.0.682: the Version rows stay, none copied)
+COPIES_KEPT = ("A copy stays in Deleted Documents until your System Manager deletes it, and each record's change history "
+               "until your site's Administrator deletes it.")
 
 
 def keep_years_of(record) -> int:
