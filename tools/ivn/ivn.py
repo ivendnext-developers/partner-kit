@@ -597,6 +597,26 @@ def cmd_check(a) -> int:
 # ── push, pull, add, take ────────────────────────────────────────────────────
 
 
+def bring_in_newer(folder: pathlib.Path, app: str) -> None:
+    """J8-09, J11-03: a version on the server newer than the one the folder started from (a colleague's sample, an upload
+    on the page) is brought in first, as `ivn pull` does, so the push carries both; only a real conflict stops (M29)."""
+    base = read_json(folder / "app.json").get("base")
+    if not base:
+        return
+    try:
+        latest = latest_of(door("/v1/app", {"app": app}))
+    except Refused as e:
+        if e.code == "no_app":
+            return
+        raise
+    if latest and latest != base:
+        conflicts = merge_latest(folder, app, latest)
+        if conflicts:
+            n = len(conflicts)
+            raise Stop(WORDS["m29"].format(version=latest, n=n, s="" if n == 1 else "s", files=", ".join(conflicts)))
+        print(WORDS["pulled"].format(version=latest))
+
+
 def upload(folder: pathlib.Path, app: str) -> str:
     """The folder as the next draft (J3-07): the kit's check first, then the same two doors as the page. A folder made away
     from My apps (an app older than My apps) becomes an app of the company's at its first upload."""
@@ -607,6 +627,7 @@ def upload(folder: pathlib.Path, app: str) -> str:
     ok, verdict = check_folder(folder)  # J3-04: green is the kit's check and the app's own tests
     if not ok:
         raise Stop(WORDS["m06"].format(verdict=verdict.removeprefix("CHECK RED: ").rstrip(".")))
+    bring_in_newer(folder, app)  # after the check, so a folder it refuses never reaches the server (the server checks again)
     data = zip_folder(folder)
     try:
         u = door("/v1/draft/url", {"app": app, "size": len(data)})
@@ -620,6 +641,8 @@ def upload(folder: pathlib.Path, app: str) -> str:
     if status not in (200, 201, 204):
         raise Stop(f"The upload was not accepted (it answered {status}). Nothing changed on the server: try again.")
     kept = door("/v1/draft/keep", {"app": app, "key": u["key"]})
+    if kept.get("note"):  # a version made between the check above and this upload (J8-09): said, never a refusal
+        print(kept["note"])
     set_version(folder, kept["version"])
     remember(folder)
     return kept["version"]

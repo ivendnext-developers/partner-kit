@@ -32,8 +32,8 @@ TOKEN = "ivn_tok_" + "a" * 43
 ONE_APP = "ivn_tok_" + "b" * 43
 REVOKED = "ivn_tok_" + "c" * 43
 SITE = "retailer.ivendnext.com"
-M09 = ("Not kept: this app changed on the server since you downloaded it ({v}: {what} by {who}, 3 Nov 2026 10:00 UTC). "
-       "Download it again, or run ivn pull to bring that change into your folder and keep yours.")
+M09 = ("Note: {v} ({what} by {who}, 3 Nov 2026 10:00 UTC) came in after the version this folder started from, so its "
+       "change is not in this one: run ivn pull to bring it in.")
 M28 = "This token was revoked or has expired. Run ivn login again, or make a new token on My apps > Tokens."
 
 
@@ -148,14 +148,14 @@ class Stub:
             folder = ivn.unzip_into(data, pathlib.Path(tmp))
             a = ivn.read_json(folder / "app.json")
             latest = r.get("latest")
-            if latest is not None and a.get("base") != latest:
-                last = r["versions"][-1]
-                raise Refuse("M09", M09.format(v=last["version"], what=last["what"], who=last["by"]))
+            vt = lambda v: [int(x) for x in str(v).split(".")]  # noqa: E731
+            other = [v for v in r["versions"] if a.get("base") and vt(v["version"]) > vt(a["base"]) and v["by"] != "acme-dev"]
+            note = M09.format(v=other[-1]["version"], what=other[-1]["what"], who=other[-1]["by"]) if other else ""
             last = [int(x) for x in (latest or "0.0.0").split(".")]
             have = [int(x) for x in a.get("version", "0.0.0").split(".")]
             version = a["version"] if have > last else f"{last[0]}.{last[1]}.{last[2] + 1}"
             self.keep(app, version, self.with_version(folder, version), "acme-dev", "ivn", "upload")
-        return {"app": app, "version": version, "words": f"Kept as {version}"}
+        return {"app": app, "version": version, "words": f"Kept as {version}", **({"note": note} if note else {})}
 
     def add(self, b):
         r, app = self.row(b["app"]), b["app"]
@@ -554,15 +554,27 @@ class CheckAndPush(Base):
         self.assertEqual(self.stub.apps["acme_own"]["versions"][0]["what"], "upload")
         self.assertIn("/v1/new", self.stub.calls)
 
-    def test_a_folder_behind_the_server_is_refused_with_m09(self):  # ⭐ UX-117's first half, J8-09
+    def test_a_folder_behind_a_colleagues_version_is_kept_with_m09s_note(self):  # J8-09 as a note (KK 2026-11-04)
         folder, _ = self.made()
         self.in_app(folder)
         self.stub.add({"app": "acme_member_till", "sample": "s11"})  # Priya adds a sample on the page
+        self.stub.row("acme_member_till")["versions"][-1]["by"] = "priya"
+        self.edit(folder / "service" / "app.py")
+        rc, out = self.run_ivn("push")  # Priya's 1.1.0 comes in first, then both go up together
+        self.assertEqual(rc, 0, out)
+        self.assertIn("Brought in 1.1.0 from the server. Your changes are kept.", out)
+        self.assertNotIn("Note:", out)
+        self.assertEqual(self.stub.row("acme_member_till")["latest"], "1.1.1")
+        self.assertIn("s11", json.dumps(ivn.read_json(folder / "app.json").get("samples")))
+
+    def test_a_folder_behind_your_own_version_is_kept_with_no_note(self):  # KK 2026-11-04 (Healthkart2)
+        folder, _ = self.made()
+        self.in_app(folder)
+        self.stub.add({"app": "acme_member_till", "sample": "s11"})  # the same developer's own 1.1.0
         self.edit(folder / "service" / "app.py")
         rc, out = self.run_ivn("push")
-        self.assertEqual(rc, 1)
-        self.assertIn("Not kept: this app changed on the server since you downloaded it (1.1.0: s11 added by acme-dev", out)
-        self.assertIn("Download it again, or run ivn pull to bring that change into your folder and keep yours.", out)
+        self.assertEqual(rc, 0, out)
+        self.assertNotIn("Note:", out)
 
 
 class Pull(Base):
@@ -1097,9 +1109,10 @@ class Publish(Base):
         self.assertEqual(rc, 0, out)
         self.assertIn("1.1.0 published to", out)
         self.assertIn("Your folder is behind: the server is now at 1.1.0. Run ivn pull", out)
-        self.assertEqual(ivn.read_json(self.folder / "app.json")["base"], "1.0.0")  # the next push is refused with M09, not lost
+        self.assertEqual(ivn.read_json(self.folder / "app.json")["base"], "1.0.0")  # the next push says so (M09), not lost
+        self.stub.row("acme_member_till")["versions"][-1]["by"] = "priya"
         self.edit(self.folder / "service" / "app.py")
-        self.assertIn("this app changed on the server", self.run_ivn("push")[1])
+        self.assertIn("Brought in 1.1.0 from the server.", self.run_ivn("push")[1])
 
     def test_a_build_server_never_chooses_a_charge_by_its_silence(self):  # review: closed stdin
         self.stub.money = {**self.stub.money, "suggested": "starter"}
