@@ -10,7 +10,7 @@ blocked-by: -
 recipe: none
 sample: none
 request: -
-related: extended-warranty-as-item, own-screen-in-shop-frame
+related: extended-warranty-as-item, add-on-by-unit-or-customer, own-screen-in-shop-frame
 verified: read from the product's notes 2026-10-27 · POS 2.1.0; nothing run for this card: the nearest is the card extended-warranty-as-item, whose set-up (one group of non-stock service items) was run on a sandbox
 ---
 ## What you build
@@ -22,7 +22,7 @@ Each add-on line is priced by iVendNext (the price list, or an amount the retail
 
 ## Limits
 - An add-on item cannot be serial- or batch-tracked.
-- With item options, a hold, a park to another till or a layaway park is refused when two option lines would merge on recall (offline, any park with an option line is refused); a required choice cannot go on an order for later or be an exchange's replacement; some of the sheet's sentences still say *dish*.
+- With item options, a held sale comes back as it was rung, but several held sales whose option lines would merge are recalled one at a time; a required choice cannot go on an order for later; an exchange's replacement is asked its choices, but gets no cross-sell offer; some of the sheet's sentences still say *dish*.
 - With the cross-sell suggestion the cashier may skip the offer; a weighed or batch-tracked main item does not carry it.
 - Do not rely on a promotion on an add-on item: the till keeps the add-on's own price on that line today (not run).
 - A screen of your own for the choice is not needed, and not offered: the till draws these sheets itself (the card *own-screen-in-shop-frame*).
