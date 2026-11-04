@@ -49,7 +49,7 @@ class FakeShop:
     @staticmethod
     def _field(spec):
         """(the column a field reads, the key it answers under, the aggregate): ``max(day) as last`` → (day, last, max)."""
-        m = re.fullmatch(r"(?:(max|count)\((\w+)\)|(\w+)) as (\w+)", spec)
+        m = re.fullmatch(r"(?:(max|count)\(`?(\w+)`?\)|(\w+)) as (\w+)", spec)     # max(`day`): the column in backticks
         return (m.group(2) or m.group(3), m.group(4), m.group(1)) if m else (spec, spec, None)
 
     def get_list(self, url, key, doctype, fields, filters=None, parent=None, order_by=None, limit=0, group_by=None,

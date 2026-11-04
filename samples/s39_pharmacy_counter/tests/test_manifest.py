@@ -197,7 +197,7 @@ class ManifestTest(unittest.TestCase):
         t = lay["template"]
         items = re.findall(r"\{item\.([a-z0-9_]+)\}", t)
         details = re.findall(r"\{detail\.([^}]+)\}", t)
-        self.assertEqual(sorted(items), sorted({f"{PF}_strength", f"{PF}_route", f"{PF}_registration_no"}))
+        self.assertEqual(sorted(items), sorted({f"{PF}_strength", f"{PF}_route", f"{PF}_storage"}))
         own = {c["fieldname"]: c for c in MANIFEST["custom_fields"] if c["dt"] == "Item"}
         for f in items:          # the door prints Data, Select, Int or Check, open to every role
             self.assertEqual((own[f]["fieldtype"], own[f].get("permlevel", 0)), ("Data", 0), f)

@@ -28,9 +28,11 @@ More: the [recipe](../../recipes/pharmacy_counter.md).
 
 **The customer sets:** its drug schedules (one per class, each with its rules); who gets **PP RXC Pharmacist**, and the pharmacist in charge, who gets **PP RXC Pharmacist in Charge**, adds each pharmacist with their licence number and *valid until*, and enters the premises licence; and each patient's identity and consent on their *PP RXC Patient* record, entered on the Desk (the till cannot take them). Give the app's own user a plain read on Item, Item Group, Customer, POS Profile, POS Invoice, POS Opening Entry, Sales Order, Delivery Note and Sales Invoice.
 
-The label carries what Abu Dhabi, Dubai and Egypt ask; Saudi Arabia's storage conditions do not fit (three item fields at most). For the label: before installing, the line detail **Dose** (a Transaction Item Attribute, active), or the install stops; *Print* on Retail Label Layout for the dispensary's roles; each medicine's *Strength* and *Route*. For the erasure: *Keep a patient's records for (years)* in *PP RXC Settings*, the longest period its pharmacy law sets, and who gets **PP RXC Records Officer**.
+The label carries what Abu Dhabi, Dubai and Saudi Arabia ask of a part pack (the lot, expiry and storage). For the label: before installing, the line detail **Dose** (a Transaction Item Attribute, active), or the install stops; *Print* on Retail Label Layout for the dispensary's roles; each medicine's *Strength*, *Route* and *Storage*. For the erasure: *Keep a patient's records for (years)* in *PP RXC Settings*, the longest period its pharmacy law sets, and who gets **PP RXC Records Officer**.
 
 ## Run it
+
+Make the line detail **Dose** first, or the install stops.
 
 ```bash
 ivn check
@@ -49,7 +51,7 @@ ivn try
 ### 1.1.0
 
 - Its manifest is now 0.1.4: the dispensary's check fills the prescription's date, the dispensing label, and the erasure after the keeping period.
-- **Updating to 0.1.4:** move the service first (it still answers 0.1.3's tills as before). Make the line detail *Dose*, then update. The update names the dispensary check's new address and the two new buttons, and asks one consent; every check you had switched on stays on. A check you had switched off stays off, and one whose consent you had withdrawn waits for a System Manager's consent (the dispensary's refuses every sale until then).
+- **Updating to 0.1.4:** move the service first (it still answers 0.1.3's tills as before). Make the line detail *Dose*, then update. The update names the dispensary check's new address, the two new buttons and the app's user's new right to delete a patient's prescriptions, dispensings and record, and asks one consent; every check you had switched on stays on. A check you had switched off stays off, and one whose consent you had withdrawn waits for a System Manager's consent (the dispensary's refuses every sale until then).
 
 ### 1.0.0
 

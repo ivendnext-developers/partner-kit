@@ -549,24 +549,30 @@ class Service:
 
     def _agg(self, shop, doctype, col, filters=None, order_by=None, limit=0) -> list:
         """Each customer's newest ``col`` among ``doctype``'s records (and how many), one row per customer."""
-        return self._list(shop, self.dt(doctype), ["customer", f"max({col}) as last", "count(name) as n"], filters,
+        # the column in backticks: the shop's field reader fails on a bare max(day) (measured on :8114, 2.1.0.682)
+        return self._list(shop, self.dt(doctype), ["customer", f"max(`{col}`) as last", "count(name) as n"], filters,
                           order_by=order_by, limit=limit, group_by="customer", timeout=PRESS_READ)
 
-    KINDS = (("Dispensing", "day"), ("Prescription", "date_written"), ("Patient", "creation"))
+    # a patient record counts from its last change (a consent re-recorded, an ID corrected), not its making
+    KINDS = (("Dispensing", "day"), ("Prescription", "date_written"), ("Patient", "modified"))
 
     def due_patients(self, shop, cut) -> tuple[list, bool]:
         """([(customer, newest, prescriptions, dispensings)] whose newest record of every kind is before ``cut``, oldest
         first, at most LIST_MAX; whether more may be due)."""
         cands: list = []
-        for doctype, col in self.KINDS:          # oldest first: a kind's read stops being useful at the first newer one
-            for r in self._agg(shop, doctype, col, order_by="last asc", limit=CANDIDATES_MAX):
-                d = rxrules._date(r.get("last"))
-                if d and d < cut and r.get("customer") and r["customer"] not in cands:
-                    cands.append(r["customer"])
+        with ThreadPoolExecutor(max_workers=3) as pool:     # oldest first: a kind's rows past the cut-off are not wanted
+            firsts = [pool.submit(self._agg, shop, k, col, order_by="last asc", limit=CANDIDATES_MAX) for k, col in self.KINDS]
+            for job in firsts:
+                for r in job.result():
+                    d = rxrules._date(r.get("last"))
+                    if d and d < cut and r.get("customer") and r["customer"] not in cands:
+                        cands.append(r["customer"])
         newest, counts = {}, {}
         for i in range(0, len(cands), BATCH):
             names = cands[i:i + BATCH]
-            reads = {k: self._agg(shop, k, col, [["customer", "in", names]]) for k, col in self.KINDS}
+            with ThreadPoolExecutor(max_workers=3) as pool:
+                jobs = {k: pool.submit(self._agg, shop, k, col, [["customer", "in", names]]) for k, col in self.KINDS}
+                reads = {k: j.result() for k, j in jobs.items()}
             newest.update(rxrules.newest_of(*reads.values()))
             for k in ("Prescription", "Dispensing"):
                 for r in reads[k]:
@@ -586,6 +592,9 @@ class Service:
             return rxrules.message("This erasure cannot be read. Reload the page.", "warning")
         if rec.get("status") == rxrules.ERASED:
             return rxrules.message("This erasure is done. Make a new one for the patients due now.", "warning")
+        if any(r.get("outcome") for r in rec.get("patients") or []):   # its rows are the record of what was erased
+            return rxrules.message("This erasure has begun: press Erase these patients to finish it, or make a new one.",
+                                   "warning")
         if not years:
             return rxrules.message(f"Set Keep a patient's records for (years) in {self.dt('Settings')} first: the "
                                    "longest period your pharmacy law sets.", "warning")
@@ -596,6 +605,9 @@ class Service:
         self.api.update(shop["url"], shop["key"], self.dt("Erasure"), name,
                         {"status": rxrules.LISTED if rows else rxrules.DRAFT, "keep_years": years,
                          "cut_off": cut.isoformat(), "patients": rows})
+        if not rows and more:
+            return rxrules.message(f"None of the {CANDIDATES_MAX} oldest patients is due: each has a record dated on or "
+                                   f"after {cut.isoformat()}.", "info", refresh=True)
         if not rows:
             return rxrules.message(f"No patient is due: everyone has a record dated on or after {cut.isoformat()}.",
                                    "info", refresh=True)
@@ -617,41 +629,17 @@ class Service:
         years = max(rxrules.keep_years_of(rec), years_now)
         cut = rxrules.cut_off(rxrules.today_at(settings["hours"], self.now()), years)
         rows = [dict(r) for r in rec.get("patients") or []]
-        done = stopped = 0
-        fp = self.p
-        try:
-            for row in rows:
-                if row.get("outcome"):
-                    continue
-                if self.clock() - started > PRESS_BY:
-                    stopped = 1
-                    break
-                c = row.get("customer") or ""
-                f = [["customer", "=", c]]
-                got = {k: self._list(shop, self.dt(k), ["name", f"{col} as last", "customer"], f, timeout=PRESS_READ)
-                       for k, col in self.KINDS}
-                moved = self._list(shop, "Customer", ["name"] + [f"{fp}_{m}" for m in rxrules.MOVED], [["name", "=", c]],
-                                   timeout=PRESS_READ)
-                if any(r.get("customer") != c for rs in got.values() for r in rs):
-                    raise ShopUnreadable("the shop answered for another customer")
-                newest = rxrules.newest_of(*got.values()).get(c)
-                if newest and newest >= cut:
-                    row["outcome"] = rxrules.KEPT_NEWER.format(day=newest.isoformat() if newest != datetime.date.max
-                                                               else "with no date")
-                    continue
-                if any(r.get(f"{fp}_{m}") for r in moved for m in rxrules.MOVED):
-                    row["outcome"] = rxrules.KEPT_MOVED
-                    continue
-                # a dispensing names its prescription, so the dispensings go first, then the prescriptions, then the patient
-                for k, _col in self.KINDS:
-                    names = [r["name"] for r in got[k]]
-                    with ThreadPoolExecutor(max_workers=DELETES) as pool:
-                        list(pool.map(lambda n, k=k: self.api.delete(shop["url"], shop["key"], self.dt(k), n), names))
-                row.update({"outcome": rxrules.ERASED_ROW, "prescriptions": len(got["Prescription"]),
-                            "dispensings": len(got["Dispensing"])})
-                done += 1
-        except ShopUnreadable:
-            stopped = 2
+        todo = [r for r in rows if not r.get("outcome")]
+        stopped = 0
+        with ThreadPoolExecutor(max_workers=DELETES) as pool:
+            jobs = [pool.submit(self._erase_one, shop, row, cut, started) for row in todo]
+            for job in jobs:
+                try:
+                    if job.result() is None:
+                        stopped = stopped or 1
+                except ShopUnreadable:
+                    stopped = 2
+        done = sum(1 for r in todo if r.get("outcome") == rxrules.ERASED_ROW)
         left = sum(1 for r in rows if not r.get("outcome"))
         values = {"patients": rows, "reference": reference, "erased_by": user,
                   "erased_at": datetime.datetime.fromtimestamp(self.now()).strftime("%Y-%m-%d %H:%M:%S"),
@@ -669,6 +657,35 @@ class Service:
         if left:
             return rxrules.message(words + f" {left} still to do: press Erase these patients again.", "info", refresh=True)
         return rxrules.message(words + " This erasure is done.", refresh=True)
+
+    def _erase_one(self, shop, row, cut, started):
+        """One patient of an erasure: read again, keep (the reason on the row) or delete in order. ``None`` when the press
+        ran out of time before it began; a refused read or delete raises ShopUnreadable and leaves the row open."""
+        if self.clock() - started > PRESS_BY:
+            return None
+        c, fp = row.get("customer") or "", self.p
+        f = [["customer", "=", c]]
+        got = {k: self._list(shop, self.dt(k), ["name", f"{col} as last", "customer"], f, timeout=PRESS_READ)
+               for k, col in self.KINDS}
+        if any(r.get("customer") != c for rs in got.values() for r in rs):
+            raise ShopUnreadable("the shop answered for another customer")
+        # 0.1.1's five Customer fields: asked set or not, as the checks ask, so a value never leaves the shop
+        moved = [self._list(shop, "Customer", ["name"], [["name", "=", c], [f"{fp}_{m}", "is", "set"]], timeout=PRESS_READ)
+                 for m in rxrules.MOVED]
+        newest = rxrules.newest_of(*got.values()).get(c)
+        if newest and newest >= cut:
+            row["outcome"] = rxrules.KEPT_NEWER.format(day=newest.isoformat() if newest != datetime.date.max
+                                                       else "with no date")
+            return row
+        if any(rs for rs in moved):
+            row["outcome"] = rxrules.KEPT_MOVED
+            return row
+        for k, _col in self.KINDS:     # a dispensing names its prescription: dispensings, then prescriptions, then the patient
+            for n in [r["name"] for r in got[k]]:
+                self.api.delete(shop["url"], shop["key"], self.dt(k), n)
+        row.update({"outcome": rxrules.ERASED_ROW, "prescriptions": len(got["Prescription"]),
+                    "dispensings": len(got["Dispensing"])})
+        return row
 
     def press(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
         route_key, started = PRESSES[path], self.clock()
@@ -693,7 +710,8 @@ class Service:
                 return 200, self.list_due(shop, name)
             return 200, self.erase(shop, name, user, inputs, started)
         except (ShopUnreadable, ValueError) as e:
-            print(json.dumps({"error": type(e).__name__}), file=sys.stderr, flush=True)
+            print(json.dumps({"error": type(e).__name__, "why": str(e)[:60] if isinstance(e, ShopUnreadable) else ""}),
+                  file=sys.stderr, flush=True)
             return 200, rxrules.message("iVendNext could not be read, so nothing was changed. Try again.", "warning")
 
     # ── the call ─────────────────────────────────────────────────────────────
@@ -726,7 +744,9 @@ class Service:
         try:
             return 200, self.decide(name, shop, ctx, route)
         except (ShopUnreadable, ValueError) as e:       # the shop did not answer, or not with records: nothing was judged
-            print(json.dumps({"error": type(e).__name__}), file=sys.stderr, flush=True)   # the class only: no shop data
+            # the class, and a refusal's own fixed words ("the shop answered 417"): never shop data
+            print(json.dumps({"error": type(e).__name__, "why": str(e)[:60] if isinstance(e, ShopUnreadable) else ""}),
+                  file=sys.stderr, flush=True)
             return 503, {"error": "the shop cannot be read"}
 
     def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:

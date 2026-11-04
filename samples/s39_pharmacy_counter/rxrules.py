@@ -744,7 +744,7 @@ DRAFT, LISTED, ERASED = "Draft", "Listed", "Erased"
 LIST_MAX = 100        # patients one press lists (a desk action's own limit on the records it sends)
 MOVED = ("id_number", "birth_date", "authority", "consent_date", "consent_by")   # 0.1.1's Customer fields, <prefix>_<field>
 KEPT_NEWER = "Kept: a record dated {day} is inside the period"
-KEPT_MOVED = "Kept: clear the five (moved) fields on the customer, then press Erase again"
+KEPT_MOVED = "Kept: clear the five (moved) fields on the customer, then list them on a new erasure"
 ERASED_ROW = "Erased"
 
 

@@ -398,8 +398,10 @@ class Erasure(Base):
             self.shop.add(f"{P} Prescription", name=f"RX-{c}", customer=c, date_written=written)
             self.shop.add(f"{P} Dispensing", name=f"{c}~0001", key=f"{c}~0001", customer=c, day=day, seq=1,
                           status="Dispensed", lines_json="{}")
-        self.shop.add(f"{P} Patient", name="p-old", customer="Old", creation="2023-04-01 10:00:00")
-        self.shop.add(f"{P} Patient", name="p-only", customer="OnlyPatient", creation="2022-01-05 09:00:00")
+        self.shop.add(f"{P} Patient", name="p-old", customer="Old", creation="2023-04-01 10:00:00",
+                      modified="2023-04-01 10:00:00")
+        self.shop.add(f"{P} Patient", name="p-only", customer="OnlyPatient", creation="2022-01-05 09:00:00",
+                      modified="2022-01-05 09:00:00")
         self.shop.rows("Customer")[-1]["pp_rxc_id_number"] = "ID-9"      # Moved still holds 0.1.1's ID on the customer
         self.shop.prescription("RX1", "Ann", "AMOX", 21, written="2026-10-19")
 
@@ -435,11 +437,12 @@ class Erasure(Base):
         code, out = self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes 12/2026"))
         self.assertEqual(code, 200)
         self.assertEqual(out["message"]["body"], "Erased 2 patients. 1 kept: each row says why. This erasure is done.")
-        gone = [x for x in self.shop.deleted]
-        self.assertEqual(gone, [(f"{P} Dispensing", "Old~0001"), (f"{P} Prescription", "RX-Old"), (f"{P} Patient", "p-old"),
-                                (f"{P} Patient", "p-only")] if gone[0][1] == "Old~0001" else
-                         [(f"{P} Patient", "p-only"), (f"{P} Dispensing", "Old~0001"), (f"{P} Prescription", "RX-Old"),
-                          (f"{P} Patient", "p-old")])
+        old = [x for x in self.shop.deleted if x[1] in ("Old~0001", "RX-Old", "p-old")]     # rows run side by side
+        self.assertEqual(old, [(f"{P} Dispensing", "Old~0001"), (f"{P} Prescription", "RX-Old"), (f"{P} Patient", "p-old")])
+        self.assertIn((f"{P} Patient", "p-only"), self.shop.deleted)
+        # 0.1.1's Customer fields are asked set or not: their values never leave the shop
+        reads = [c for c in self.shop.calls if c[0] == "list" and c[1] == "Customer"]
+        self.assertTrue(reads and all(c[3] == ["name"] for c in reads))
         rec = self.record()
         self.assertEqual((rec["status"], rec["erased_by"], rec["reference"], rec["erased_count"], rec["kept_count"]),
                          ("Erased", "officer@shop", "Minutes 12/2026", 2, 1))
@@ -448,6 +451,22 @@ class Erasure(Base):
         self.assertTrue(self.shop.rows(f"{P} Dispensing"))           # Ann's, Mixed's and Moved's are untouched
         self.assertEqual(self.press("/rxc/erasure/erase", press_body(self.ERA, reference="x"))[1]["message"]["body"],
                          "This erasure is done.")
+
+    def test_a_begun_erasure_is_never_listed_again_its_rows_are_the_record(self):
+        self.listed()
+        t = iter([0.0, 0.0] + [100.0] * 50)        # the press starts; the first patient begins; the rest run out of time
+        self.svc.clock = lambda: next(t)
+        self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))
+        self.assertTrue(any(r["outcome"] for r in self.record()["patients"]))
+        before = [dict(r) for r in self.record()["patients"]]
+        out = self.listed()[1]
+        self.assertIn("This erasure has begun", out["message"]["body"])
+        self.assertEqual(self.record()["patients"], before)
+
+    def test_a_patient_record_changed_since_the_cut_off_keeps_the_patient(self):
+        next(r for r in self.shop.rows(f"{P} Patient") if r["name"] == "p-only")["modified"] = "2026-10-01 09:00:00"
+        self.listed()
+        self.assertNotIn("OnlyPatient", [r["customer"] for r in self.record()["patients"]])
 
     def test_a_patient_who_came_back_since_the_list_is_kept(self):
         self.listed()
@@ -475,7 +494,7 @@ class Erasure(Base):
 
     def test_a_long_erasure_stops_in_time_and_the_next_press_goes_on(self):
         self.listed()
-        t = iter([0.0] + [100.0] * 50)              # the press started at 0; the first row's check reads 100 s later
+        t = iter([0.0] + [100.0] * 50)              # the press started at 0; every row's check reads 100 s later
         self.svc.clock = lambda: next(t)
         out = self.press("/rxc/erasure/erase", press_body(self.ERA, reference="Minutes"))[1]
         self.assertIn("3 still to do: press Erase these patients again.", out["message"]["body"])

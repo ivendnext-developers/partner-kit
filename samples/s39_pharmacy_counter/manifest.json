@@ -5,7 +5,7 @@
  "title": "Pharmacy counter rules",
  "version": "0.1.4",
  "publisher": "Partner Programme sample",
- "description": "A pharmacy counter's rules, checked at Pay on the till and when a sales order, delivery or sales invoice is submitted on the Desk. A line whose drug schedule needs a prescription is paid only against a prescription the pharmacist entered on the Desk, for this customer, in date for its class, with quantity and a fill left; the fill is reserved when the check answers, so two tills cannot both take the last one, and it comes back if the sale is never booked and its POS day closes, or its sale or document is cancelled. A pharmacist-only line is paid only by a user on the app's Pharmacist list whose licence is in date; a schedule can need the customer's ID, date of birth or authority to possess, a doctor's name and directions, a quantity cap per sale and per patient over days; dispensed medicine of a non-returnable schedule is refused at a till return and on a Desk return. The prescription's date goes on the sale for a register that books it: filled from the prescription at the till's Pay by the dispensary's service and at Submit on the Desk. Each dispensing keeps the prescriber, the directions and the pharmacist's name, listed day by day in the report PP RXC Prescriptions Register. A dispensing label prints from the till's basket line in the line's unit: the item, its strength, route and registration number, the lot, its expiry and the dose typed on the line (the line detail Dose, which the shop makes before installing). After the keeping period set in PP RXC Settings, the Records Officer lists the patients due on a PP RXC Erasure and erases them there: their prescriptions, dispensings and patient record are deleted, and the record keeps who did it, when and under which period. Two till services: the dispensary's refuses the sale when the service is down; the front's lets it through, flagged, and refuses medicine that must be sold at the dispensary. Prescriptions, pharmacists, schedules, patients (their identity and consent, on a record only the pharmacist roles read) and dispensings are records in the shop; the service reads them with the app's integration user, writes only its Dispensing and Erasure records, and deletes a patient's records only when the Records Officer presses Erase. The install makes the roles PP RXC Integration, PP RXC Pharmacist, PP RXC Pharmacist in Charge and PP RXC Records Officer (nobody holds it: the shop gives it for destroying records whose keeping period has ended); every service is on from the install. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "A pharmacy counter's rules, checked at Pay on the till and when a sales order, delivery or sales invoice is submitted on the Desk. A line whose drug schedule needs a prescription is paid only against a prescription the pharmacist entered on the Desk, for this customer, in date for its class, with quantity and a fill left; the fill is reserved when the check answers, so two tills cannot both take the last one, and it comes back if the sale is never booked and its POS day closes, or its sale or document is cancelled. A pharmacist-only line is paid only by a user on the app's Pharmacist list whose licence is in date; a schedule can need the customer's ID, date of birth or authority to possess, a doctor's name and directions, a quantity cap per sale and per patient over days; dispensed medicine of a non-returnable schedule is refused at a till return and on a Desk return. The prescription's date goes on the sale for a register that books it: filled from the prescription at the till's Pay by the dispensary's service and at Submit on the Desk. Each dispensing keeps the prescriber, the directions and the pharmacist's name, listed day by day in the report PP RXC Prescriptions Register. A dispensing label prints from the till's basket line in the line's unit: the item, its strength, route and storage, the lot, its expiry and the dose typed on the line (the line detail Dose, which the shop makes before installing). After the keeping period set in PP RXC Settings, the Records Officer lists the patients due on a PP RXC Erasure and erases them there: their prescriptions, dispensings and patient record are deleted, and the record keeps who did it, when and under which period. Two till services: the dispensary's refuses the sale when the service is down; the front's lets it through, flagged, and refuses medicine that must be sold at the dispensary. Prescriptions, pharmacists, schedules, patients (their identity and consent, on a record only the pharmacist roles read) and dispensings are records in the shop; the service reads them with the app's integration user, writes only its Dispensing and Erasure records, and deletes a patient's records only when the Records Officer presses Erase. The install makes the roles PP RXC Integration, PP RXC Pharmacist, PP RXC Pharmacist in Charge and PP RXC Records Officer (nobody holds it: the shop gives it for destroying records whose keeping period has ended); every service is on from the install. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
   "https://host.docker.internal:8125/rxc/dispensary/fill",
   "https://host.docker.internal:8125/rxc/front",
@@ -51,7 +51,7 @@
      "fieldname": "keep_years",
      "fieldtype": "Int",
      "label": "Keep a patient's records for (years)",
-     "description": "Counted from the patient's newest prescription, dispensing or patient record. The longest period your pharmacy law sets for a prescription or its register: UAE 25, Egypt 10, Saudi Arabia 5, Jordan 5, Ghana 2, Kenya 2, Nigeria 2. Until it is set, nobody is listed for erasure."
+     "description": "Counted from the patient's newest prescription, dispensing or change to their patient record. The period your pharmacy law sets for a prescription or its register: the app's guide lists each market's, under How long to keep prescriptions. Until it is set, nobody is listed for erasure."
     }
    ],
    "permissions": [
@@ -1193,6 +1193,14 @@
    "description": "Printed on the dispensing label, e.g. Oral."
   },
   {
+   "dt": "Item",
+   "fieldname": "pp_rxc_storage",
+   "fieldtype": "Data",
+   "label": "Storage",
+   "insert_after": "pp_rxc_route",
+   "description": "Printed on the dispensing label, e.g. Store below 25 \u00b0C, away from light."
+  },
+  {
    "dt": "Item Group",
    "fieldname": "pp_rxc_schedule",
    "fieldtype": "Link",
@@ -1670,7 +1678,7 @@
    "width_mm": 76,
    "height_mm": 50,
    "per_row": 1,
-   "template": "<div style=\"font-family:Arial,sans-serif;font-size:9pt;line-height:1.3\"><div style=\"font-weight:bold;font-size:10pt\">{item_name}</div><div>{item.pp_rxc_strength} \u00b7 {item.pp_rxc_route} \u00b7 {uom}</div><div style=\"font-weight:bold;margin:2mm 0\">{detail.Dose}</div><div>Lot {batch_no} \u00b7 Expires {expiry_date}</div><div>Reg. no. {item.pp_rxc_registration_no}</div><div>{store}</div></div>"
+   "template": "<div style=\"font-family:Arial,sans-serif;font-size:9pt;line-height:1.3\"><div style=\"font-weight:bold;font-size:10pt\">{item_name}</div><div>{item.pp_rxc_strength} \u00b7 {item.pp_rxc_route} \u00b7 {uom}</div><div style=\"font-weight:bold;margin:2mm 0\">{detail.Dose}</div><div>Lot {batch_no} \u00b7 Expires {expiry_date}</div><div>{item.pp_rxc_storage}</div><div>{store}</div></div>"
   }
  ]
 }

@@ -50,7 +50,8 @@ answering presses keeps nothing.
      - the dispensary's `refuse`: it sells only medicine, online only. Its settings list the prescription's date,
        `{"fill_attributes": ["<PREFIX> Rx Date"]}`, so its answer may fill it, and it calls an address of its own
        (`/rxc/dispensary/fill`): a till still on a version whose list is empty would refuse a fill whole, and its down
-       answer would then refuse every sale, so the service fills only at that address;
+       answer would then refuse every sale, so the service fills only at that address. Deploy the service before any
+     retailer updates: it still answers 0.1.3's address as before;
      - the front's `allow_and_flag`, with no settings: it refuses every prescription line before the date matters.
 
      Inside one manifest the checker counts them as one POS Profile, so they total 10 s at most (5 s + 5 s);
@@ -61,8 +62,8 @@ answering presses keeps nothing.
      (the readers of the dispensings are the readers of the patient record);
    - **two *Days Before* notifications** on the licences' *valid until*, to the pharmacist-in-charge's role;
    - a feed registration (no user named: the install makes the app's own user and names it), and a help address on each record type;
-   - **a dispensing label** (`label_layouts`, below) and the two Item fields it prints, `<prefix>_strength` and
-     `<prefix>_route` (Data);
+   - **a dispensing label** (`label_layouts`, below) and the three Item fields it prints, `<prefix>_strength`,
+     `<prefix>_route` and `<prefix>_storage` (Data);
    - **the erasure** (below): a keeping period on `<PREFIX> Settings` (`keep_years`, an Int with no default), a record
      type `<PREFIX> Erasure` with a table of patients, and two `desk_action` buttons on it for the Records Officer,
      answered by two `desk_action` subscriptions. The integration role gets *delete* on the patient, the prescription and
@@ -147,15 +148,15 @@ answering presses keeps nothing.
 
 9. **The dispensing label** (`label_layouts`, [label layout](../contracts/pages/label_layout.md)): one `html` layout
    printed from the basket line, so `{uom}` is the line's unit (a strip sold from a box); the item's name, strength,
-   route and registration number (`{item.<field>}`: at most three, each Data, Select, Int or Check); the lot and its
-   expiry; the store; and the dose, `{detail.Dose}`. No barcode: a part pack's unit has none, which refuses the label.
+   route and storage (`{item.<field>}`: at most three, each Data, Select, Int or Check); the lot and its expiry; the
+   store; and the dose, `{detail.Dose}`. No barcode: a part pack's unit has none, which refuses the label.
    - `{detail.…}` must name an **active Transaction Item Attribute when the layout is saved**, and the install saves
      it, so the install stops without it. No manifest kind makes one: the customer makes *Dose* before installing.
    - The layout installs switched on. A label layout cannot change in a later update: ship a changed one under a new
      name.
-   - The markets that name a label's contents: Abu Dhabi (from a bulk pack) and Dubai (a part pack) ask the lot and
-     expiry, Egypt the registration number; Saudi Arabia's part pack also asks the storage conditions, which this label
-     cannot add (it already prints three item fields). Elsewhere it is a general label.
+   - The markets that name a dispensing label's contents: Abu Dhabi (from a bulk pack) and Dubai (a part pack) ask the
+     lot and expiry, and Saudi Arabia's part pack also the storage conditions. Egypt's registration number is the
+     manufacturer's outer pack, not this label. Elsewhere it is a general label.
 
 ## After the keeping period
 
@@ -164,19 +165,21 @@ Saudi Arabia and Jordan, 2 in Ghana, Kenya and Nigeria), then want the person's 
 period in `<PREFIX> Settings`; until it does, nobody is due.
 
 1. The Records Officer makes a `<PREFIX> Erasure` and presses **List patients due**. The service reads each customer's
-   newest dispensing (`day`), prescription (`date_written`) and patient record (`creation`), grouped by customer
-   (`max(<field>) as last`, `group_by`), and lists up to 100 whose newest record of every kind is older than today
+   newest dispensing (`day`), prescription (`date_written`) and change to the patient record (`modified`), grouped by customer
+   (``max(`<field>`) as last``, the column in backticks, and `group_by`), and lists up to 100 whose newest record of every kind is older than today
    less the period, with their counts.
 2. They press **Erase these patients**, typing the market's destruction record (a committee's minutes, the inspector
    present). For each row the service reads the patient's records again: one dated since the cut-off keeps the patient
-   (*Kept*), and so do values still on the customer's five fields of 0.1.1 (the officer clears them first). Otherwise it
+   (*Kept*), and so does a value still on the customer's five fields of 0.1.1, asked set or not (cleared, the patient
+   goes on a new erasure). Patients run six at a time. Otherwise it
    deletes the dispensings, then the prescriptions (a dispensing names its prescription), then the patient record.
 3. The record keeps the period, the cut-off, who pressed and when, the destruction record and each patient's outcome.
-   Nobody changes or deletes it. A press works about 7 seconds: one that runs out says so, and the next goes on.
+   Nobody changes or deletes it, and once a patient is erased it is never listed again. A press works about 7
+   seconds: one that runs out says so, and the next goes on.
 
 What stays: the Desk's *Deleted Documents* (a System Manager deletes them) and each record's change history (the
 site's Administrator), the till's sales and their sale details, and the register's own lines, which the register
-erases after its own retention. Set the period at least as long as the register's.
+erases after its own retention.
 
 ## Proof
 
