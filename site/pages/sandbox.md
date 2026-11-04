@@ -6,7 +6,7 @@ Your site's address looks like `yourcompany.sandbox.ivend.co`. We tell you the a
 
 ## How to ask
 
-Fill in the sandbox request form on ivendnext.com. Have your GitHub login ready: your sandbox is given to the account you will sign in with on My apps. No account? Make a free one in two minutes with any e-mail. A licensed customer's IT team may use the same form, or ask its account manager; either way its account owner talks to it. Our team talks to every builder first.
+Fill in the sandbox request form on ivendnext.com. Our first reply asks for your GitHub login: your sandbox is given to the account you will sign in with on My apps. No account? Make a free one in two minutes with any e-mail. A licensed customer's IT team may use the same form, or ask its account manager; either way its account owner talks to it. Our team talks to every builder first.
 
 [Open the sandbox request form](https://www.ivendnext.com/developers/sandbox/)
 
