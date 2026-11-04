@@ -35,7 +35,6 @@ import json
 import os
 import secrets as rng
 import sys
-import threading
 import time
 import urllib.error
 import urllib.parse
@@ -170,7 +169,6 @@ class Service:
             one = oneshop.settings(conf, ["PP_COUNT_SECRET", "PP_DRAW_SECRET"])
             self.secrets = {"count": one["PP_COUNT_SECRET"], "draw": one["PP_DRAW_SECRET"]}
             self.tenant = tenant
-        self._lock = threading.Lock()    # one shop: one press at a time
 
     def caller(self, headers, sub: str) -> tuple[str, list[str], object | None]:
         """(the shop's name, the secrets its press may be signed with, its door: None until it handed over a user's key)."""
@@ -268,9 +266,6 @@ class Service:
         if door is None:
             return 200, _warning(NOT_SET_UP)
         try:
-            if not self.app:
-                with self._lock:        # one shop: one press at a time
-                    return 200, self.run(door, sub, name, user)
             return 200, self.run(door, sub, name, user)
         except TenantError as e:
             if e.code in (401, 403):    # the shop refused the app's user: say so

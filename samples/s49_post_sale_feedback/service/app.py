@@ -186,7 +186,6 @@ class Service:
             self.site = _host(one["IVN_SHOP_URL"])
             self.secret = one["IVN_SEND_SECRET"]
             self.tenant = tenant or tenant_of(one["IVN_SHOP_URL"], one["IVN_SHOP_KEY"])
-        self._lock = threading.Lock()    # one retailer: one press at a time
 
     def retailer(self, site) -> tuple[str, list[bytes], object | None]:
         """(the retailer's site, the secrets its press may be signed with, newest first, its door: None until it handed
@@ -326,9 +325,6 @@ class Service:
         if door is None:
             return 200, fb.message(NOT_SET_UP, "warning")
         try:
-            if not self.app:
-                with self._lock:        # one retailer: one press at a time
-                    return 200, self.run(door, names, site, secrets[0])
             return 200, self.run(door, names, site, secrets[0])
         except TenantError as e:
             if e.code in (401, 403):    # the retailer refused the app's user: say so

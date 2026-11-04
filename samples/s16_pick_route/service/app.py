@@ -11,8 +11,7 @@ For each Sales Order in the press it creates ONE pick task over the record API, 
 key (that user's rights, never the pressing user's), then answers. A retry of the same press (the same
 ``idempotency_key``, which the shop keeps for a retry from the same dialog) finds the task it already made and makes no
 second one: the key is stored on the task, so this holds across a restart. While one call handles a press, a second
-call with the same key is refused (409): one shop's press is held by an in-process lock, many shops' by a claim in the
-shops table that every copy of the function sees (``CLAIM_STALE``).
+call with the same key is refused (409): a claim in the shops table that every copy of the function sees (``CLAIM_STALE``).
 
 ONE SHOP (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the integration user), PP_POINT_SECRET (handed back at install as pp_pck:sub:route),
@@ -34,7 +33,6 @@ import http.client
 import json
 import os
 import sys
-import threading
 import time
 import urllib.error
 import urllib.parse
@@ -135,7 +133,6 @@ class Service:
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
             self.secret, self.tenant = oneshop.settings(conf, ["PP_POINT_SECRET"])["PP_POINT_SECRET"], tenant
-        self._lock = threading.Lock()     # one shop: one press at a time, so a retry racing its first try finds its task
 
     def caller(self, headers) -> tuple[str, list[str], object | None]:
         """(the shop's name, the secrets its press may be signed with, its door: None until it handed over a user's key)."""
@@ -156,8 +153,7 @@ class Service:
         then left to go stale, so a retry within CLAIM_STALE is refused instead of making a second task."""
         state = {"mine": True, "keep": False}
         if not self.app:
-            with self._lock:
-                yield state
+            yield state
             return
         name = f"press{shops.CLAIM_MARK}{site}{shops.CLAIM_MARK}{hashlib.sha256(key.encode()).hexdigest()[:32]}"
         if not self.store.claim(name, self.clock(), CLAIM_STALE):
