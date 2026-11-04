@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/rule_guard.md
 sample: samples/s18_rule_guard
 request: -
-verified: run by the product 2026-10-16 · POS train T11's walk sent the day and the terminal with each check (pos_opening, pos_terminal); not run with a kit sample
+verified: run by the product 2026-10-16 · the POS train's walk sent the day and the terminal with each check (pos_opening, pos_terminal); not run with a kit sample
 ---
 ## What you build
 A check before payment that reads the sale's POS day and its terminal (`pos_terminal`), sent with every check, and answers by terminal: one rule per counter without one POS profile per counter.

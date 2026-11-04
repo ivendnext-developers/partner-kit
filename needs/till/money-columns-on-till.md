@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/field_rules.md
 sample: samples/s21_field_rules
 request: -
-verified: run by the product 2026-10-18 (POS train T12's walk, counter, phone and tablet frames: a List price column and sub-line, the total read Total incl. VAT, the receipt kept its own words); not run by a kit sample on a sandbox
+verified: run by the product 2026-10-18 (the POS train's walk, counter, phone and tablet frames: a List price column and sub-line, the total read Total incl. VAT, the receipt kept its own words); not run by a kit sample on a sandbox
 related: till-fields-shown-renamed-hidden
 ---
 ## What you build

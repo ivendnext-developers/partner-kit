@@ -1,6 +1,6 @@
 {
  "area": "Sales and returns",
- "description": "A sale's payer details (PB-8): who pays part of it, the claim, the shares line by line and the payer journal. One per payer sale, payer return and Desk payer invoice, linked from that sale; written only by the payer door, never by hand.",
+ "description": "A sale's payer details: who pays part of it, the claim, the shares line by line and the payer journal. One per payer sale, payer return and Desk payer invoice, linked from that sale; written only by the payer door, never by hand.",
  "fields": [
   {
    "added": 0,

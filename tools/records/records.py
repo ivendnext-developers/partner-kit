@@ -567,7 +567,7 @@ def product_only(rows: list, modules: dict) -> list:
 def clean(text: str, where: str, log: list) -> str:
     """Text the product wrote, without an upstream product's name: the name used as a word becomes iVendNext's; text that
     still holds one (code, a path) is dropped, with a line in the log."""
-    text = " ".join(str(text or "").split())
+    text = re.sub(r" \(PB-\d+\)", "", " ".join(str(text or "").split()))       # a work item's number the product's own text still carries
     for pat, word in AS_A_WORD:
         text = pat.sub(word, text)
     if UPSTREAM.search(text):

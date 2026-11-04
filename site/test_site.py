@@ -23,6 +23,15 @@ _spec = importlib.util.spec_from_file_location("issue_forms", build.ROOT / ".git
 issue_forms = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(issue_forms)
 PARTNER_FORM = "https://www.ivendnext.com/partners/apply/"
+SANDBOX_FORM = "https://www.ivendnext.com/developers/sandbox/"
+# The pages that are lists or reference tables, read by finding a row: the limit on a page of prose does not bind them.
+NOT_PROSE = re.compile(r"(needs|records)/|samples/index\.html$|recipes/index\.html$|404\.html$|search\.html$")
+
+
+def main_words(text: str) -> int:
+    """The words a reader meets in a page's <main>."""
+    m = re.search(r'<main id="main"[^>]*>(.*)</main>', text, re.S)
+    return len(html_unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)\b.*?</\1>", " ", m.group(1), flags=re.S))).split()) if m else 0
 # Calls with no iVendNext name yet: the sign-in addresses (the standard discovery document lists them anyway) and
 # server-side code that runs inside the shop. Every other call has one in ivendnext_mpos.api.v1.
 UPSTREAM_KEPT = ("frappe.integrations.oauth2.", "frappe.get_doc(")
@@ -595,7 +604,15 @@ class SiteTests(unittest.TestCase):
         text = (self.out / "index.html").read_text("utf-8")
         self.assertIn('<section class="hero">', text)
         self.assertEqual(text.count("<h1"), 1)
-        self.assertIn('class="site-btn" href="needs/index.html"', text)        # the first door: a customer's list of needs
+        hero = text[text.index('<section class="hero">'):text.index("</section>")]
+        self.assertEqual(re.findall(r'class="site-btn[^"]*" href="([^"]+)"', hero), ["first_app.html", "sandbox.html"])
+        order = [text.index(s) for s in ('<section class="hero">', '<form class="finder-strip"', 'id="learn-the-kit"', 'id="publish-your-app"', 'id="three-ways-in"')]
+        self.assertEqual(order, sorted(order))                                 # the hero, the needs box, the two sections, the page's own words
+        self.assertIn('action="needs/index.html" method="get"', text)
+        self.assertIn('name="list"', text)
+        for href in ("map.html", "needs/index.html", "plan.html", "samples/index.html", "recipes/index.html", "first_app.html", "apps.html",
+                     "publish.html#the-steps", "business.html", "publish.html#more-you-can-do"):
+            self.assertIn(f'<a href="{href}">', text, href)                    # each job names where it is done
 
     def test_a_missing_optional_include_fails_a_deploy_build(self):
         import os
@@ -727,7 +744,7 @@ class SiteTests(unittest.TestCase):
 
     def test_every_private_link_says_so_where_it_is_rendered(self):
         # the reference apps (gallery.py); the requests open the public feedback page
-        apps = html_unescape((self.out / "reference_apps.html").read_text("utf-8"))
+        apps = html_unescape((self.out / "samples/index.html").read_text("utf-8"))
         cards = re.findall(r'<li class="card"><h3>.*?</li>', apps)
         self.assertGreaterEqual(len(cards), 2)
         self.assertTrue(all(f'<p class="note">N{build.NOT_OPEN_YET[1:]}.</p>' in c for c in cards), cards)
@@ -797,9 +814,8 @@ class SiteTests(unittest.TestCase):
         self.assertTrue((self.out / "assets/plan.js").exists())
 
     def test_chapter_16_carries_the_tables_built_from_the_cards(self):
-        text = (self.out / "guide/16_possible_not_possible.html").read_text("utf-8")
-        self.assertIn('href="../needs/till/line-quantity-cap.html"', text)          # Possible today
-        self.assertIn('href="../needs/prices/fee-or-surcharge.html"', text)          # When the product has no door
+        self.assertIn('href="../needs/till/line-quantity-cap.html"', (self.out / "guide/16_possible_not_possible-possible-more.html").read_text("utf-8"))   # Possible today
+        self.assertIn('href="../needs/prices/fee-or-surcharge.html"', (self.out / "guide/16_possible_not_possible-rules.html").read_text("utf-8"))          # When the product has no door
 
     def test_recipes_and_samples_show_the_needs_they_serve_and_a_reference_recipe_shows_none(self):
         self.assertIn('id="needs-this-serves"', (self.out / "recipes/till_guard.html").read_text("utf-8"))
@@ -896,45 +912,60 @@ The till cannot do this yet; it can stop the sale at Pay.
         f.write_text(edit(f.read_text("utf-8")), "utf-8")
 
     def test_every_sample_and_every_reference_app_has_one_card_on_the_page(self):
-        page = (self.out / "reference_apps.html").read_text("utf-8")
+        page = (self.out / "samples" / "index.html").read_text("utf-8")
         folders = sorted(p.parent.name for p in (build.ROOT / "samples").glob("*/README.md"))
-        linked = re.findall(r'<li class="card">(?:<a class="thumb"[^>]*>.*?</a>)?<h4><a href="samples/([^/"]+)/index.html"', page)
+        linked = re.findall(r'<li class="card sample"[^>]*>(?:<a class="thumb"[^>]*>.*?</a>)?<h3><a href="([^/"]+)/index.html"', page)
         self.assertEqual(sorted(linked), folders)
-        spec = (build.ROOT / "site" / "pages" / "reference_apps.md").read_text("utf-8")
+        spec = (build.ROOT / "site" / "pages" / "samples.md").read_text("utf-8")
         apps = len(re.findall(r"^\{\{reference-app: ", spec, re.M))
         self.assertGreaterEqual(apps, 2)
         self.assertEqual(len(re.findall(r'<li class="card"><h3>', page)), apps)
-        flat = (self.out / "samples" / "index.html").read_text("utf-8")
-        self.assertEqual(sorted(re.findall(r'<h2><a href="([^/"]+)/index.html"', flat)), folders)
+        self.assertLess(page.rindex('class="card sample"'), page.index('id="reference-apps"'))   # the reference apps follow the samples
 
-    def test_a_card_shows_its_door_its_run_step_and_its_links(self):
-        page = (self.out / "reference_apps.html").read_text("utf-8")
-        card = page.split('<h4><a href="samples/s23_till_guard/index.html"', 1)[1].split("</li>")[0]   # a card with a picture has a thumbnail link first
-        self.assertIn("Check before payment", card)
-        self.assertIn("ivn check", card)
-        self.assertIn("index.html#run-it", card)
-        self.assertIn(f"{build.REPO_URL}/tree/main/samples/s23_till_guard", card)
+    def card_of(self, sample: str) -> str:
+        page = (self.out / "samples" / "index.html").read_text("utf-8")
+        return "<li" + next(c for c in page.split("<li ") if f'href="{sample}/index.html"' in c).split("</li>")[0]
 
-    def test_a_card_whose_github_folder_names_no_samples_folder_is_red(self):
-        def bad_folders(text: str) -> list[str]:         # check_links.py does not follow other hosts, so the kit tree is read here
-            return [f for f in re.findall(re.escape(build.REPO_URL) + r'/tree/main/(samples/[^"#]+)', text) if not (build.ROOT / f).is_dir()]
-        page = (self.out / "reference_apps.html").read_text("utf-8")
-        self.assertEqual(bad_folders(page), [])
-        self.assertEqual(len(re.findall(re.escape(build.REPO_URL) + r'/tree/main/samples/', page)), len(list((build.ROOT / "samples").glob("*/README.md"))))
-        self.assertEqual(bad_folders((self.out / "samples" / "index.html").read_text("utf-8")), [])
-        self.assertEqual(bad_folders(page.replace("tree/main/samples/s23_till_guard", "tree/main/samples/s99_nothing")), ["samples/s99_nothing"])
+    def test_a_card_shows_its_picture_its_name_when_to_use_it_its_door_its_industries_and_its_command(self):
+        card = self.card_of("s23_till_guard")
+        self.assertIn('<a class="thumb"', card)
+        self.assertIn("S23 · ", card)
+        self.assertIn('<p class="when">', card)
+        self.assertIn('<span class="chip door">Check before payment</span>', card)
+        self.assertIn("ivn new my_app --from s23", card)
+        self.assertNotIn("Set in Desk", card)
+        wide = self.card_of("s2_bins")                                               # five industries: three named, then how many more
+        self.assertEqual(len(re.findall(r'<span class="chip">', wide)), 3)
+        self.assertIn('<span class="chip more">+2</span>', wide)
+
+    def test_a_config_pack_and_a_by_hand_sample_say_so_in_my_apps_own_words_and_offer_no_command(self):
+        apps = (build.SITE / "assets-src" / "apps.js").read_text("utf-8")
+        self.assertIn(f'desk: "{build.gallery.NOT_MADE["config_pack"]}"', apps)
+        self.assertIn(f'hand: "{build.gallery.NOT_MADE["by_hand"]}"', apps)
+        pack = self.card_of("s5_config_pack")
+        self.assertIn(build.gallery.NOT_MADE["config_pack"], pack)
+        self.assertNotIn("ivn new", pack)
+        by_hand = next(f.name for f in self.sample_folders() if build.gallery.sample_info.by_hand(f))
+        self.assertIn(build.gallery.NOT_MADE["by_hand"], self.card_of(by_hand))
+        self.assertNotIn("ivn new", self.card_of(by_hand))
+
+    def test_a_card_whose_page_names_no_samples_folder_is_red(self):
+        copy = self.tmp / "card_page"
+        shutil.copytree(self.out, copy)
+        f = copy / "samples" / "index.html"
+        f.write_text(f.read_text("utf-8").replace('href="s23_till_guard/index.html"', 'href="s99_nothing/index.html"'), "utf-8")
+        self.assertTrue(any("s99_nothing" in b for b in check_links.check(copy)))
 
     def test_a_card_screenshot_that_does_not_resolve_is_red(self):
         copy = self.tmp / "shot"
         shutil.copytree(self.out, copy)
         still = "screenshots/01_till_sale_with_offers.png"                               # the first still: a GIF only when there is none
-        self.assertIn(f'src="samples/s3_price_audit/{still}"', (copy / "reference_apps.html").read_text("utf-8"))          # the card shows it ...
-        self.assertIn(f'src="s3_price_audit/{still}"', (copy / "samples/index.html").read_text("utf-8"))
+        self.assertIn(f'src="s3_price_audit/{still}"', (copy / "samples/index.html").read_text("utf-8"))     # the card shows it ...
         (copy / "samples/s3_price_audit" / still).unlink()
-        bad = check_links.check(copy)                                                    # ... and a missing file is red on each page
-        self.assertTrue(any(b.startswith("reference_apps.html") and "01_till_sale" in b for b in bad), bad)
+        bad = check_links.check(copy)                                                    # ... and a missing file is red
         self.assertTrue(any(b.startswith("samples/index.html") and "01_till_sale" in b for b in bad), bad)
-        self.assertNotIn(".gif", re.sub(r"<a href=[^>]*>", "", "".join(re.findall(r'<img src="[^"]*"', (copy / "reference_apps.html").read_text("utf-8")))))
+        cards = (copy / "samples/index.html").read_text("utf-8").split('id="reference-apps"')[0]
+        self.assertEqual(re.findall(r'<img src="[^"]+\.gif"', cards), [])
 
     def test_a_sample_with_no_run_section_fails_the_site_build(self):
         kit = self.planted_kit("norun")
@@ -964,12 +995,21 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.edit_readme(kit, "s23_till_guard", lambda t: t.replace("## Run it", "**Door:** Check before payment\n\n## Run it", 1))
         self.assertEqual(self.build_in(kit), 1)
 
-    def test_the_page_groups_the_cards_by_door_under_a_list_of_anchors(self):
-        page = (self.out / "reference_apps.html").read_text("utf-8")
-        self.assertIn('<nav aria-label="Samples by door">', page)
-        self.assertIn('<a href="#check-before-payment">Check before payment</a>', page)
-        group = page.split('<h3 id="check-before-payment">', 1)[1].split("<h3 ", 1)[0]
-        self.assertIn('href="samples/s23_till_guard/index.html"', group)
+    def test_the_page_groups_the_cards_by_the_area_of_each_samples_first_need(self):
+        page = (self.out / "samples" / "index.html").read_text("utf-8")
+        cards = {c.id: c.area for c in catalogue_cards()}
+        index = json.loads((self.out / "samples" / "index.json").read_text("utf-8"))["samples"]
+        groups = dict(re.findall(r'<section class="sgroup" data-group="([^"]+)">(.*?)</section>', page, re.S))
+        self.assertEqual(list(groups), [k for k in [*build.catalogue.AREAS, "more-ways-in"] if k in groups])       # the areas' own order, More ways in last
+        self.assertIn("more-ways-in", groups)
+        for e in index:
+            want = next((cards[n] for n in e["needs"] if n in cards), "more-ways-in")
+            self.assertIn(f'href="{e["name"]}/index.html"', groups[want], e["name"])
+        for key, body in groups.items():
+            self.assertEqual(int(re.search(r'class="gcount">(\d+)<', body).group(1)), body.count('class="card sample"'), key)
+        self.assertIn('<a href="#more-ways-in">More ways in</a>', page)              # On this page lists each group
+        self.assertRegex(page, r'<form id="sample-filters"[^>]* hidden>')            # samples.js shows the filters; without script, every sample
+        self.assertIn('<script src="../assets/samples.js" defer></script>', page)
 
     def test_a_sample_only_not_yet_cards_cite_needs_its_own_door_line(self):
         kit = self.planted_kit("requestdoor")
@@ -1002,8 +1042,6 @@ The till cannot do this yet; it can stop the sale at Pay.
         with (kit / "needs" / "reference.txt").open("a", encoding="utf-8") as f:
             f.write("samples/s99_planted — a planted sample\n")
         self.assertEqual(self.build_in(kit), 0)
-        page = (self.tmp / "extra_out" / "reference_apps.html").read_text("utf-8")
-        self.assertIn('href="samples/s99_planted/index.html"', page)
         self.assertIn('href="s99_planted/index.html"', (self.tmp / "extra_out" / "samples" / "index.html").read_text("utf-8"))
 
     def test_a_first_screenshot_that_is_not_in_the_folder_fails_the_site_build(self):
@@ -1032,8 +1070,12 @@ The till cannot do this yet; it can stop the sale at Pay.
                          ["erpnext.stock.utils.scan_barcode"])
 
     # ── the forms and the sandbox request (row SITEFORMS) ─────────────────────────────────────────────────────────
-    def test_the_sandbox_page_links_the_partner_form_and_no_page_links_the_retired_form(self):
-        self.assertIn(f'href="{PARTNER_FORM}"', (self.out / "sandbox.html").read_text("utf-8"))
+    def test_the_sandbox_page_opens_the_short_form_and_no_page_links_the_retired_form(self):
+        sandbox = (self.out / "sandbox.html").read_text("utf-8")
+        self.assertEqual(sandbox.count(f'href="{SANDBOX_FORM}"'), 2)           # its next step and the line under How to ask
+        self.assertNotIn(PARTNER_FORM, sandbox.split("</main>")[0])            # the loop through the partner application is gone
+        self.assertNotIn("You do not need a GitHub account", sandbox)          # the form asks for the GitHub login a sandbox is given to
+        self.assertIn(f'var SANDBOX_FORM = "{SANDBOX_FORM}"', (build.SITE / "assets-src" / "analytics.js").read_text("utf-8"))
         for f in self.out.rglob("*.html"):
             self.assertNotIn("sandbox_request", f.read_text("utf-8"), f.name)
         self.assertFalse((build.ROOT / ".github" / "ISSUE_TEMPLATE" / "sandbox_request.yml").exists())
@@ -1142,8 +1184,8 @@ The till cannot do this yet; it can stop the sale at Pay.
         self.assertEqual(seo.desc_problems(descs), [])
         hand = seo.load(build.SEO_JSON)[0]["descriptions"]
         self.assertGreaterEqual(len(hand), 20)
-        spec = {"index.html", "first_app.html", "needs/index.html", "build.html", "plan.html", "sandbox.html", "publish.html",
-                "reference_apps.html", "samples/index.html", "recipes/index.html", "guide/03_ladder_and_never_list.html",
+        spec = {"index.html", "first_app.html", "needs/index.html", "learn.html", "plan.html", "sandbox.html", "publish.html",
+                "samples/index.html", "recipes/index.html", "guide/03_ladder_and_never_list.html",
                 "guide/04_configure_first.html", "guide/09_points_and_requests.html", "guide/16_possible_not_possible.html",
                 "recipes/connected_app.html", "recipes/configure_no_code.html", "recipes/till_guard.html", "recipes/manifest.html",
                 "recipes/rule_guard.html"}                                                  # the 20 pages of the lane's decision 2 (the recipes: most cited by cards)
@@ -1373,7 +1415,7 @@ The till cannot do this yet; it can stop the sale at Pay.
 
     def test_a_redirect_to_a_page_that_is_not_built_or_over_a_page_is_red(self):
         self.assertEqual(self.redirect_build("redirect_gone", "guide/old.html guide/no_such_page.html\n")[0], 1)
-        self.assertEqual(self.redirect_build("redirect_over", "first_app.html build.html\n")[0], 1)
+        self.assertEqual(self.redirect_build("redirect_over", "first_app.html learn.html\n")[0], 1)
         self.assertEqual(self.redirect_build("redirect_bare", "guide/old.html\n")[0], 1)
 
     # the 404 page
@@ -1381,7 +1423,7 @@ The till cannot do this yet; it can stop the sale at Pay.
         text = self.html_of("404.html")
         self.assertFalse(indexable(text))
         self.assertIn('<form class="search-page" action="/search.html" method="get" role="search">', text)
-        for href in ("/needs/index.html", "/build.html", "/first_app.html"):
+        for href in ("/needs/index.html", "/learn.html", "/first_app.html"):
             self.assertIn(f'<a href="{href}">', text)
         cards = len(catalogue_cards())
         self.assertEqual(len(re.findall(r'<li><a href="/needs/[a-z]+/[a-z0-9-]+\.html">', text)), cards)
@@ -1418,6 +1460,173 @@ The till cannot do this yet; it can stop the sale at Pay.
                 self.assertRegex(tag, r'width="\d+"')
                 self.assertRegex(tag, r'height="\d+"')
         self.assertIsNotNone(seo.image_size(build.ROOT / "samples/s5_config_pack/screenshots/s5_flow.gif"))
+
+    # ── the frame: the header, the sections, how a page opens, long pages split ──
+    def test_every_page_has_the_five_links_my_apps_and_the_menu(self):
+        want = ["Learn the kit", "Samples", "Needs", "Publish your app", "Roadmap"]
+        self.assertEqual([label for _, label, _ in build.NAV], want)
+        for f in self.out.rglob("*.html"):
+            out = f.relative_to(self.out).as_posix()
+            if out in STUBS:
+                continue
+            text = f.read_text("utf-8")
+            up = "/" if f.name == "404.html" else "../" * out.count("/")
+            bar = text[text.index('<div class="bar">'):text.index("</header>")]
+            wide = bar[bar.index('class="nav-wide"'):bar.index("</nav>")]
+            self.assertEqual(re.findall(r">([^<]+)</a></li>", wide), want, out)
+            self.assertRegex(bar, rf'<a class="site-btn cta" href="{re.escape(up)}apps\.html"(?: aria-current="page")?>My apps</a>', out)
+            menu = bar[bar.index('<details class="menu">'):]
+            self.assertEqual(re.findall(r">([^<]+)</a></li>", menu), ["Learn the kit", "Samples", "Needs", "Publish your app", "Roadmap", "Request a sandbox", "Feedback"], out)
+            self.assertNotIn("Request a sandbox</a>", bar[:bar.index('<details class="menu">')], out)     # the bar has one pill
+
+    def test_the_footer_is_grouped_by_the_two_sections_and_ivendnext(self):
+        foot = self.html_of("first_app.html").split('<footer class="bottom">')[1]
+        self.assertEqual(re.findall(r"<h2>([^<]+)</h2>", foot), ["Learn the kit", "Publish your app", "iVendNext"])
+
+    def test_each_page_lights_its_section_and_its_breadcrumb_has_the_sections_step(self):
+        crumbs = lambda out: re.findall(r"<li[^>]*>(?:<a [^>]*>)?([^<]+)", self.html_of(out).split('<nav class="crumbs"')[1].split("</nav>")[0])
+        lit = lambda out: re.findall(r'<a href="[^"]*"( aria-current="page")?>([^<]+)</a></li>', self.html_of(out).split('class="nav-wide"')[1].split("</nav>")[0])
+        on = lambda out: [label for cur, label in lit(out) if cur]
+        self.assertEqual(crumbs("recipes/till_guard.html")[:3], ["Home", "Learn the kit", "Recipes"])
+        self.assertEqual(on("recipes/till_guard.html"), ["Learn the kit"])
+        self.assertEqual(crumbs("guide/03_ladder_and_never_list.html")[:3], ["Home", "Learn the kit", "Guide"])
+        self.assertEqual(crumbs("map.html")[:2], ["Home", "Learn the kit"])
+        self.assertEqual(crumbs("plan.html"), ["Home", "Needs", "Plan a project"])
+        self.assertEqual(on("plan.html"), ["Needs"])
+        self.assertEqual(crumbs("first_app.html"), ["Home", "Publish your app", "Build your first app"])
+        self.assertEqual(on("publish.html"), ["Publish your app"])
+        self.assertEqual(crumbs("feedback.html")[:2], ["Home", "Roadmap"])
+        self.assertEqual(on("samples/s2_bins/index.html"), ["Samples"])
+        self.assertEqual(crumbs("samples/s2_bins/index.html")[:2], ["Home", "Samples"])
+        self.assertEqual(on("index.html"), [])
+        self.assertIn('href="apps.html" aria-current="page">My apps', self.html_of("apps.html"))
+
+    def test_only_build_and_reference_apps_moved_and_each_old_address_is_a_stub(self):
+        moved = dict(seo.read_redirects(build.REDIRECTS))
+        self.assertEqual((moved["build.html"], moved["reference_apps.html"]), ("learn.html", "samples/index.html"))
+        self.assertFalse((build.SITE / "pages" / "build.md").exists() or (build.SITE / "pages" / "reference_apps.md").exists())
+        hand = seo.load(build.SEO_JSON)[0]["descriptions"]
+        self.assertNotIn("build.html", hand)
+        self.assertNotIn("reference_apps.html", hand)
+        for out in ("roadmap.html", "sandbox.html", "publish.html", "apps.html", "feedback.html", "first_app.html", "guide/01a_how_it_all_works.html"):
+            self.assertTrue(indexable(self.html_of(out)), out)
+
+    def test_my_apps_addresses_and_the_ask_for_it_anchor_are_kept(self):
+        self.assertIn('id="open-a-form"', self.html_of("feedback.html"))
+        self.assertTrue((self.out / "apps.html").is_file())
+        self.assertEqual(build.PUBLISH_PAGE, "https://developer.ivendnext.com/apps")
+        self.assertIn('href="../../apps.html?sample=s2_bins"', self.html_of("samples/s2_bins/index.html"))
+        self.assertIn("apps.html?needs=", (build.SITE / "assets-src" / "plan.js").read_text("utf-8"))
+
+    def test_a_page_opens_with_what_it_is_for_then_its_next_step(self):
+        words = lambda s: sorted(html_unescape(re.sub(r"<[^>]+>", " ", s)).split())
+        page = '<h1>T</h1><p><img src="a.png" alt=""></p><p><em>A caption of a picture in italics here, long enough to count as words.</em></p><p>Go first:</p><p>' + "word " * 12 + '</p><h2 id="x">X</h2><p>Later.</p>'
+        out = build.lead_first(page, '<p class="next">N</p>')
+        self.assertTrue(out.startswith('<h1>T</h1><p class="lead">' + "word " * 12 + '</p><p class="next">N</p><p><img'), out)
+        self.assertEqual(words(out), words(page + "N"))                             # nothing added but the button, nothing dropped
+        self.assertEqual(build.lead_first("<h1>T</h1><h2>X</h2>", "N"), "<h1>T</h1>N<h2>X</h2>")   # no paragraph before the first heading
+        long = "<h1>T</h1><p>" + "word " * 12 + "<strong>Reference implementation:</strong> a file.</p>"
+        out = build.lead_first(long, "N")
+        self.assertIn("N<p><strong>Reference implementation:</strong> a file.</p>", out)
+        self.assertEqual(words(out), words(long + "N"))
+        for out in ("first_app.html", "sandbox.html", "publish.html", "guide/04_configure_first.html", "recipes/till_guard.html", "learn.html", "samples/index.html"):
+            main = self.html_of(out).split('<main id="main">')[1]
+            self.assertRegex(main[main.index("</h1>"):], r'^</h1><p class="lead">.*?</p><p class="next"><a class="site-btn"', out)
+
+    def test_each_kind_of_page_has_the_next_step_its_order_gives(self):
+        chapter = self.html_of("guide/03_ladder_and_never_list.html")
+        self.assertIn('href="../guide/04_configure_first.html">Next: 4. Configure first', chapter)
+        recipe = self.html_of("recipes/till_guard.html")
+        self.assertRegex(recipe, r'<p class="next"><a class="site-btn" href="\.\./samples/s23_till_guard/index\.html">Next: the sample, S23')
+        self.assertIn('href="../recipes/index.html">All recipes</a>', recipe)
+        road = self.html_of("roadmap.html")
+        self.assertRegex(road, r'<p class="next"><a class="site-btn" href="#what-we-build">What we build</a><a class="site-btn site-btn-ghost" href="#what-you-build">What you build</a><a class="site-btn site-btn-ghost" href="#claim-a-need">Claim a need</a></p>')
+        self.assertIn('href="#what-next">What next</a>', self.html_of("needs/till/line-quantity-cap.html"))
+        self.assertIn(f'<a class="site-btn" href="{SANDBOX_FORM}">Open the sandbox request form</a>', self.html_of("sandbox.html"))
+        self.assertIn('href="../plan.html">Next: Plan a project', self.html_of("needs/not-possible.html"))
+        self.assertIn('All record types</a>', self.html_of("records/item.html"))
+        started = self.html_of("samples/s2_bins/index.html")                        # a sample with its Start button: the recipe is the second step
+        self.assertIn('class="site-btn site-btn-ghost" href="../../recipes/manifest.html">The recipe: ', started)
+        pack = self.html_of("samples/s5_config_pack/index.html")
+        self.assertIn("The sample's README</a>", pack)
+        self.assertNotIn("Start an app from this sample", pack)
+
+    def test_no_page_of_prose_is_over_the_limit(self):
+        over = {out: n for out, text in page_texts(self.out).items() if not NOT_PROSE.match(out) and (n := main_words(text)) > build.WORD_LIMIT}
+        self.assertEqual(over, {})
+        self.assertGreater(main_words(self.html_of("needs/all.html")), build.WORD_LIMIT)    # the one-page list stays whole: the check can see a long page
+
+    def test_a_long_page_is_an_overview_and_its_parts_and_every_heading_lands_somewhere(self):
+        for src, parts in build.SPLIT.items():
+            whole = next(p for p in build.collect() if p.src == src)
+            stem = whole.out.removesuffix(".html")
+            main = self.html_of(whole.out).split('<main id="main">')[1]
+            for key, title, _ in parts:
+                self.assertIn(f'href="{posixpath.basename(stem)}-{key}.html"', main, (src, key))        # the overview lists each part
+                self.assertTrue((self.out / f"{stem}-{key}.html").is_file(), key)
+            self.assertLess(main.index('class="next"'), main.index('id="the-parts"'), src)              # what it is for, its next step, its parts
+            ctx = build.Ctx({}, self.tmp, [], set())
+            ctx.src, ctx.out = src, whole.out
+            ctx.cards = catalogue_cards()
+            with mock.patch.object(ctx, "url", side_effect=lambda u: u):                                # the page as one, for its headings
+                ids = re.findall(r'<h[1-6] id="([^"]+)"', build.render(whole.text, ctx, {}, None))
+            built = "".join(self.html_of(f"{stem}-{key}.html") for key, _, _ in parts) + self.html_of(whole.out)
+            self.assertEqual([i for i in ids if f'id="{i}"' not in built], [], src)
+
+    def test_a_part_walks_back_and_next_and_the_last_goes_on_to_the_pages_own_next_step(self):
+        first = self.html_of("recipes/manifest-steps.html")
+        self.assertIn('Part 1 of 5 of <a href="manifest.html">', first)
+        self.assertIn('href="../recipes/manifest.html">Back: the overview</a><a class="site-btn" href="../recipes/manifest-more.html">Next: More you can add</a>', first)
+        last = self.html_of("recipes/manifest-notes.html")
+        self.assertIn('href="../recipes/manifest-refused.html">Back: What is refused, and why</a>', last)
+        self.assertRegex(last, r'<a class="site-btn" href="\.\./samples/s[0-9]+_[a-z0-9_]+/index\.html">Next: the sample, ')
+        self.assertEqual(self.html_of("recipes/manifest-steps.html").count('<h1 id="steps"'), 0)    # its title differs from the heading it starts at: both stay
+        self.assertIn('<h1 id="technical-notes"', self.html_of("guide/09_points_and_requests-notes.html"))    # the same words: the title takes its place
+        self.assertEqual(self.html_of("guide/09_points_and_requests-notes.html").count('id="technical-notes"'), 1)
+
+    def test_a_link_to_an_anchor_that_moved_lands_on_its_part(self):
+        card = self.html_of("needs/integrations/outside-fiscal-result.html") + self.html_of("feedback/point_request.html")
+        self.assertNotIn("09_points_and_requests.html#asking", card)
+        planted = self.plant_not_yet(self.planted_kit("moved_anchor"))
+        self.assertEqual(self.build_in(planted), 0)
+        ask = (self.tmp / "moved_anchor_out" / "needs/till/a-planted-need.html").read_text("utf-8")
+        self.assertIn('href="../../guide/09_points_and_requests-asking.html#asking-for-a-new-extension-point-or-for-more-from-one"', ask)
+        ctx = build.Ctx({"a.md": build.ListPage("a.html", "")}, self.tmp, [], set())
+        ctx.src, ctx.out = "a.md", "a-one.html"
+        ctx.moved = {("a.md", "x"): "a-two.html", ("a.md", "y"): "a.html"}
+        self.assertEqual(ctx.url("#x"), "a-two.html#x")
+        self.assertEqual(ctx.url("#y"), "a.html#y")
+        self.assertEqual(ctx.url("#z"), "#z")                                       # a page that is not split, or an anchor it does not move
+
+    def test_a_part_whose_heading_is_gone_fails_the_site_build(self):
+        kit = self.planted_kit("split_gone")
+        recipe = kit / "recipes" / "event_feed.md"
+        recipe.write_text(recipe.read_text("utf-8").replace("## 4. The published labels", "## 4. The labels we publish"), "utf-8")
+        self.assertEqual(self.build_in(kit), 1)
+
+    def test_the_recipes_page_starts_with_the_building_blocks_then_the_areas(self):
+        page = self.html_of("recipes/index.html")
+        heads = re.findall(r'<h2 id="([^"]+)">', page)
+        self.assertEqual(heads[0], "blocks")
+        self.assertIn(">The building blocks <", page)
+        self.assertEqual(heads[1:], [a for a in build.catalogue.AREAS if a in heads])
+        used = {p for c in catalogue_cards() for p in c.paths("recipe")}
+        blocks = page[page.index('id="blocks"'):page.index(f'id="{heads[1]}"')]
+        for recipe in re.findall(r'<h3><a href="([^"]+)\.html">', blocks):
+            self.assertNotIn(f"recipes/{recipe}.md", used, recipe)
+        total = sum(1 for p in build.collect() if p.group == "recipes" and p.out != "recipes/index.html")
+        self.assertEqual(sum(int(n) for n in re.findall(r'class="gcount">(\d+)<', page)), total)
+        self.assertIn('Sample: <a href="../samples/s23_till_guard/index.html">', page)
+
+    def test_the_search_carries_each_new_page_and_part_by_its_own_title(self):
+        docs = {d["u"]: d for d in json.loads(self.html_of("search-index.json"))}
+        self.assertEqual(docs["learn.html"]["t"], "Learn the kit")
+        self.assertEqual(docs["samples/index.html"]["t"], "Samples")
+        self.assertEqual(docs["recipes/manifest-more.html"]["t"].split(" · ")[0], "More you can add")
+        self.assertEqual(docs["guide/07_manifests-print.html"]["t"], "Print formats that read other records")
+        self.assertIn("recipes/manifest-steps.html", docs)
+        self.assertNotIn("build.html", docs)
+        self.assertNotIn("reference_apps.html", docs)
 
     # ── the samples index (samples/index.json) and the READMEs it is read from ──
     INDEX_FIELDS = {"name", "title", "short", "version", "versions", "when_to_use", "picture", "door", "needs", "recipe",
@@ -1725,11 +1934,12 @@ class MapTests(unittest.TestCase):
         (root / "api" / "records" / "item.json").unlink()
         self.assertIn("api/records/item.json is missing", self.faults(root))
 
-    def test_the_map_is_in_the_menu_and_the_record_pages_are_built(self):
-        self.assertIn(("What you can use", "map.html"), build.NAV)
+    def test_the_map_is_on_learn_the_kit_and_the_record_pages_are_built(self):
         out = pathlib.Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, out)
         self.assertEqual(build.build(out), 0)
+        self.assertIn('<a href="map.html">What you can use</a>', (out / "learn.html").read_text("utf-8"))
+        self.assertIn('<a href="map.html">What you can use</a>', (out / "index.html").read_text("utf-8"))
         recs = self.devmap.record_index()["records"]
         index = (out / "records" / "index.html").read_text("utf-8")
         self.assertIn(f"<strong>{len(recs)} record types.</strong>", index)       # the count on the index is the census's

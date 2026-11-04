@@ -10,7 +10,7 @@ blocked-by: -
 recipe: contracts/pages/partner_fulfil.md
 sample: none
 request: -
-verified: run by the product 2026-10-18 (POS train T12's walk, phone, counter and tablet frames: the receipt waits then prints the code, down then Try again then print without it, a refusal, a refund refused until the code is cancelled, a cancelled sale's codes voided, offline refused); not run by a kit sample
+verified: run by the product 2026-10-18 (the POS train's walk, phone, counter and tablet frames: the receipt waits then prints the code, down then Try again then print without it, a refusal, a refund refused until the code is cancelled, a cancelled sale's codes voided, offline refused); not run by a kit sample
 ---
 ## What you build
 A service for the *fulfil at sale* extension point: after the sale is paid and booked, the retailer's server asks it once per sold line of the items you name (by item group or an item field), and your answer's code prints under the item on the receipt, its reprints and the gift receipt. Before that line is refunded, iVendNext asks your service to cancel the code. The kit's stand-in voucher service (`contracts/extension_contracts/standins/voucher_service.py`) keeps both promises: the same key always returns the same code, and a cancel wins over any later issue. Check your own service with the kit's conformance test (`tools/contracts/tests/test_fulfil_conformance.py`, `FULFIL_URL`).

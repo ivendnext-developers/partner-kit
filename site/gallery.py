@@ -1,6 +1,6 @@
-"""site/gallery.py — the cards on "Reference apps and samples" and on the samples list, built from the sample READMEs.
+"""site/gallery.py — the samples page's cards, and the samples index they are read from, built from the sample READMEs.
 
-A sample's card is read at site build; nothing generated is committed, so a new sample shows up by itself. What a card shows:
+A sample is read at site build; nothing generated is committed, so a new sample shows up by itself. What is read:
 
   name, one line   the README's title, and its "When to use it" line (or else its first paragraph)
   door             the doors of the needs cards that cite the sample (the cards win); with no card, the README's own
@@ -9,7 +9,6 @@ A sample's card is read at site build; nothing generated is committed, so a new 
   screenshot       the first still image the README links from its screenshots/ folder (an animated GIF only if there is
                    no still, so nothing plays on load); none, no placeholder
   run it           the first code block under "## Run it" (or "## How to run it"), at most four lines
-  links            the sample's page, its folder on GitHub, and the needs it serves
 
 A sample that lacks a run section or a door fails the build. Reference-app cards are written by hand in the page, one
 `{{reference-app: …}}` line each, until their repositories are public. A card holds no script; the site's script rules are in build.py's header.
@@ -94,34 +93,59 @@ def collect(pages: list, backlinks: dict, doors: dict, first_use, slug, root, er
     return out
 
 
-def card(s: dict, here: str, repo: str, doors: dict, door_pages: set, heading: str = "h3") -> str:
-    """One sample's card, with links written from the page in the folder `here`. A door links its needs page when it has one."""
+NOT_MADE = {"config_pack": "Set in Desk first: no app needed", "by_hand": "Copy by hand: not an app made here"}   # My apps' own words
+MORE = ("more-ways-in", "More ways in")                    # the samples no needs card with an area cites
+
+
+def card(e: dict, here: str) -> str:
+    """One sample's card on the samples page, from its entry in the samples index: its picture, Sn and short name, when to use it,
+    its door and up to three industries, and the command that starts from it (a config pack or a by-hand sample says why not)."""
     rel = lambda target: posixpath.relpath(target, here or ".")
-    door = ", ".join(f'<a href="{rel(f"needs/door/{d}.html")}">{html.escape(doors[d])}</a>' if d in door_pages
-                     else html.escape(doors[d]) for d in s["doors"])
-    links = [f'<a href="{rel(s["out"])}#{s["run_id"]}">Run it</a>', f'<a href="{repo}/tree/main/{s["folder"]}">Folder on GitHub</a>']
-    if s["needs"]:
-        links.append(f'<a href="{rel(s["out"])}#needs-this-serves">Serves {s["needs"]} need{"s" if s["needs"] > 1 else ""}</a>')
-    thumb = (f'<a class="thumb" href="{rel(s["out"])}" tabindex="-1" aria-hidden="true"><img src="{rel(s["shot"])}" alt="" '
-             f'loading="lazy"></a>' if s["shot"] else "")
-    run = "\n".join(html.escape(ln) for ln in s["run"])
-    return (f'<li class="card">{thumb}<{heading}><a href="{rel(s["out"])}">{html.escape(s["title"])}</a></{heading}>'
-            f'<p>{html.escape(s["line"])}</p><p class="door">Door: {door}</p><pre class="run" tabindex="0"><code>{run}</code></pre>'
-            f'<p class="links">{" · ".join(links)}</p></li>')
+    page, sn = rel(f"samples/{e['name']}/index.html"), e["name"].split("_")[0]
+    esc = lambda s: html.escape(s, quote=True)
+    inds = e["industries"]
+    words = " ".join([e["title"], e["short"], e["when_to_use"] or "", e["door"] or "", " ".join(inds)]).lower()
+    thumb = (f'<a class="thumb" href="{page}" tabindex="-1" aria-hidden="true"><img src="{rel(e["picture"])}" alt="" loading="lazy"></a>'
+             if e["picture"] else "")
+    chips = (f'<span class="chip door">{esc(e["door"])}</span>' if e["door"] else "") + "".join(f'<span class="chip">{esc(i)}</span>' for i in inds[:3])
+    chips += f'<span class="chip more">+{len(inds) - 3}</span>' if len(inds) > 3 else ""
+    made = next((words_ for key, words_ in NOT_MADE.items() if e[key]), "")
+    last = f'<p class="note">{esc(made)}</p>' if made else f'<pre class="run" tabindex="0"><code>ivn new my_app --from {sn}</code></pre>'
+    return (f'<li class="card sample" data-text="{esc(words)}" data-door="{esc(e["door"] or "")}" data-ind="{esc("|".join(inds))}">{thumb}'
+            f'<h3><a href="{page}">{esc(sn.upper())} · {esc(e["short"])}</a></h3><p class="when">{esc(e["when_to_use"] or "")}</p>'
+            f'<p class="chips">{chips}</p>{last}</li>')
 
 
-def flat(samples: list[dict], here: str, repo: str, doors: dict, door_pages: set) -> str:
-    return '<ul class="cards">' + "".join(card(s, here, repo, doors, door_pages, "h2") for s in samples) + "</ul>"
+def by_area(entries: list[dict], areas: dict, area_of: dict) -> list[tuple[str, str, list[dict]]]:
+    """[(its anchor, its heading, its samples)]: each sample under the area of its first need that has one, in the areas' order; the
+    rest under More ways in."""
+    groups: dict[str, list] = {}
+    for e in entries:
+        groups.setdefault(next((area_of[n] for n in e["needs"] if n in area_of), MORE[0]), []).append(e)
+    return [(k, name, groups[k]) for k, name in [*areas.items(), MORE] if k in groups]
 
 
-def grouped(samples: list[dict], here: str, repo: str, doors: dict, door_pages: set, slug) -> str:
-    """The samples under their first door, in the order of needs.py's list, with a list of anchors above. One card each."""
-    groups = [(d, [s for s in samples if s["doors"] and s["doors"][0] == d]) for d in doors]
-    groups = [(d, mine) for d, mine in groups if mine]
-    nav = "".join(f'<li><a href="#{slug(doors[d])}">{html.escape(doors[d])}</a> ({len(mine)})</li>' for d, mine in groups)
-    body = "".join(f'<h3 id="{slug(doors[d])}">{html.escape(doors[d])}</h3><ul class="cards">'
-                   + "".join(card(s, here, repo, doors, door_pages, "h4") for s in mine) + "</ul>" for d, mine in groups)
-    return f'<nav aria-label="Samples by door"><ul class="plain anchors">{nav}</ul></nav>{body}'
+def group_toc(entries: list[dict], areas: dict, area_of: dict) -> list[tuple[str, str]]:
+    return [(k, name) for k, name, _ in by_area(entries, areas, area_of)]
+
+
+def grouped(entries: list[dict], here: str, areas: dict, area_of: dict, script: str) -> str:
+    """The samples page's body: the filters (samples.js shows them and runs them; without script every sample shows), then the
+    samples by area, each group's heading with its count."""
+    esc = lambda s: html.escape(s, quote=True)
+    present = {i for e in entries for i in e["industries"]}
+    inds = [i for i in sample_info.INDUSTRIES if i in present]
+    ways = sorted({e["door"] for e in entries if e["door"]})
+    opt = lambda vals: "".join(f'<option value="{esc(v)}">{esc(v)}</option>' for v in vals)
+    form = ('<form id="sample-filters" class="filters" role="search" aria-label="Filter the samples" hidden>'
+            '<label class="vh" for="sf-q">Words</label><input id="sf-q" type="search" placeholder="Filter by words" autocomplete="off">'
+            f'<label class="vh" for="sf-ind">Industry</label><select id="sf-ind"><option value="">Any industry</option>{opt(inds)}</select>'
+            f'<label class="vh" for="sf-door">Way in</label><select id="sf-door"><option value="">Any way in</option>{opt(ways)}</select>'
+            f'<output id="sf-count" for="sf-q sf-ind sf-door">{len(entries)} samples</output></form>')
+    body = "".join(f'<section class="sgroup" data-group="{k}"><h2 id="{k}">{esc(name)} <span class="gcount">{len(mine)}</span></h2>'
+                   f'<ul class="cards samples">{"".join(card(e, here) for e in mine)}</ul></section>' for k, name, mine in by_area(entries, areas, area_of))
+    none = '<p id="sf-none" class="sf-none" hidden>No sample matches. Try fewer words, or find it by the customer\'s need on the Needs page.</p>'
+    return form + body + none + script
 
 
 def reference_app(spec: str, org_url: str, doors: dict, errors: list, src: str, note: str) -> str:
