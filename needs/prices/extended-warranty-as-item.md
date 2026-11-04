@@ -19,12 +19,12 @@ Nothing of your own: the warranty is an item, and the till offers it when the pr
 
 **Pricing, one of two.** Each warranty's price on the price list (one price for every laptop; price type *System Generated*), or a fixed amount on each choice (price type *Amount*) when the price depends on the laptop, with one group per laptop price band.
 
-**What a partner adds, from doors that exist:** registering the warranty with its provider after the sale (an outside app on the event feed, `recipes/event_feed.md`); a warranty look-up during the sale (the card *warranty-check-at-till*); a certificate number printed under the warranty line (*Fulfil at sale*); prices kept in step from a provider (an outside app writing the items' prices over the API).
+**What a partner adds, from doors that exist:** registering the warranty with its provider after the sale (an outside app on the event feed, `recipes/event_feed.md`); a warranty look-up during the sale (the card *warranty-check-at-till*); a warranty offered only for some units or customers (the card *add-on-by-unit-or-customer*); a certificate number printed under the warranty line (*Fulfil at sale*); prices kept in step from a provider (an outside app writing the items' prices over the API).
 
 ## Limits
 - The warranty items cannot be serial- or batch-tracked.
-- With item options, a hold, a park to another till or a layaway park is refused when two option lines would merge on recall, such as the same warranty at the same price on two laptops (offline, any park with an option line is refused); the cashier pays the sale now.
-- With item options, a required choice cannot go on an order for later or be an exchange's replacement. Some of the sheet's sentences still say *dish*.
+- With item options, a held sale comes back as it was rung, but several held sales whose option lines would merge, such as the same warranty at the same price on two laptops, are recalled one at a time.
+- With item options, a required choice cannot go on an order for later; an exchange's replacement is asked its choices, but gets no cross-sell offer. Some of the sheet's sentences still say *dish*.
 - With the cross-sell suggestion the cashier may skip the offer, or pick more than one warranty; a weighed or batch-tracked laptop does not carry it (a serial-tracked one does).
 - A warranty with a certificate number (*Fulfil at sale*) cannot be sold offline, and its refund waits until the code is cancelled with the provider.
 - Do not rely on a promotion on a warranty item: the till keeps the warranty's own price on that line today (not run).
