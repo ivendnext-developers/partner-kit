@@ -41,7 +41,7 @@ A till puts any customer on a sale, and with them their loyalty points, store cr
 
 7. **On a code** (`event: "verify"`, the `challenge_id` and the code): read the record the id names. Not there (404), not *Sent*, empty, or older than ten minutes: refuse in words (the till usually speaks first: its own check ends at ten minutes and shows *"This code check has ended."*) The wrong code: refuse in words (the retailer's server counts the tries; three end the check). The right code, compared in constant time: write the record *Used* with the code cleared and `verified_at`, then answer `{"verdict":"ok"}`; if that write fails, answer 503.
 
-8. **Tell iVendNext to lock the customer's group, and to decide about the phone.** Your rule trusts the group the customer record holds and texts the number it holds, and the till's edit sheet lets a cashier change both (the retailer's cashier role saves customers): a member moved into a group that is never asked goes on with no code, and a number changed to the cashier's own sends the code there. The retailer closes the group by putting *Customer Group* at permission level 1 in *Customize Form* and giving level-1 write only to its managers ([Customers by store](customers_by_store.md), rule 7). The phone field the till edits (*Phone Number*, else *Mobile No*) takes the same lock, at a cost to say plainly: a customer the cashier creates at the till is then saved with no phone, and with the default customer group in Selling Settings or none, until a manager sets them (measured on the programme's bench). Put both in the setup, the phone as the retailer's choice.
+8. **Who may change the phone is the customer's choice.** You text the number the customer record holds, and the till's edit sheet lets a cashier change it: a number changed to the cashier's own sends the code there.
 
 9. **Check the tills it asks at.** The capture asks only at the POS Profiles its subscription answers: with none chosen, every one.
 
@@ -60,7 +60,7 @@ The code reaches the customer through iVendNext, never through your service:
 - The code comes at the pick, not at the payment: a customer of a group that asks is asked whether or not they spend from their account.
 - *Cancel* on the code field takes the customer off the sale; a pick whose own call fails leaves the customer on the screen, and payment says *"This customer has not been checked. Pick them again, or sell without a customer."*
 - The till asks on every route a customer reaches a sale by: picked, scanned, matched by phone, a resumed sale, a quote turned into a sale or an order, an exchange. Not asked: a customer this cashier added in the last ten minutes while a customer-add app is on.
-- The number on the record is the number that gets the code: unless the retailer locks the phone field (rule 8), a cashier who may change it can send the code elsewhere.
+- The number on the record is the number that gets the code: a cashier who may change it can send the code elsewhere.
 - The till's own doors: a sales order or invoice made in iVendNext Desk is not asked.
 - What the customer already holds is not a new pick and is not held: a layaway plan's later payment, an order's balance, a payment on their account.
 - One cashier sends at most 60 select rounds in ten minutes; a customer already let on stays on.

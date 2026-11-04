@@ -1,6 +1,5 @@
 """S16 for many shops (the app template's handshake): each press checked with its own shop's secret and written with
-that shop's own integration key, a press before the shop's key arrives answered in words, and one press handled by one call
-even when two copies of the function receive it (a claim in the shops table).
+that shop's own integration key, and a press before the shop's key arrives answered in words.
 
     python3 -m unittest discover -s samples/s16_pick_route/tests -p 'test_*.py'
 """
@@ -31,8 +30,8 @@ NUMBERS = itertools.count(1)
 class Door:
     """A stand-in for one shop's record API, reached with the key that shop handed over."""
 
-    def __init__(self, url, key, tasks, gate=None, refuse=None, lost=False):
-        self.url, self.key, self.tasks, self.gate, self.refuse, self.lost = url, key, tasks, gate, refuse, lost
+    def __init__(self, url, key, tasks, refuse=None):
+        self.url, self.key, self.tasks, self.refuse = url, key, tasks, refuse
 
     def find_tasks(self, sos, key):
         if self.refuse:
@@ -42,23 +41,9 @@ class Door:
                 and t["press_key"] == key}
 
     def create_task(self, doc):
-        if self.gate:
-            self.gate.wait(5)                   # a slow shop: holds the press while another copy receives it
-        if self.lost:                           # the shop saves the task but its answer never arrives
-            self.lost = False
-            self.tasks[f"IVN-PCK-{next(NUMBERS):05d}"] = dict(doc, made_with=(self.url, self.key))
-            raise app.TenantError("POST -> TimeoutError")
         name = f"IVN-PCK-{next(NUMBERS):05d}"      # the shop's own series: two shops racing never share a number
         self.tasks[name] = dict(doc, made_with=(self.url, self.key))
         return name
-
-
-class Clock:
-    def __init__(self):
-        self.t = 1000.0
-
-    def __call__(self):
-        return self.t
 
 
 class ManyShops(unittest.TestCase):
@@ -70,7 +55,7 @@ class ManyShops(unittest.TestCase):
                 f"{APP}:sub:route": f"route-{n}", "user:pck@x": f"key-{n}:sec-{n}"}})
         self.store.put("shop-c.ivendnext.com", {"site": "shop-c.ivendnext.com", "url": "https://shop-c.ivendnext.com",
                                                 "secrets": {f"{APP}:sub:route": "route-c"}})     # no user key yet
-        self.tasks, self.gate, self.refuse, self.lost, self.clock = {}, None, None, False, Clock()
+        self.tasks, self.refuse = {}, None
         self.svc = self.copy()
 
     def tearDown(self):
@@ -78,8 +63,8 @@ class ManyShops(unittest.TestCase):
 
     def copy(self):
         """One copy of the function: its own memory, the shared shops table."""
-        return app.Service(LIB, store=self.store, clock=self.clock,
-                           tenants=lambda url, key: Door(url, key, self.tasks, self.gate, self.refuse, self.lost))
+        return app.Service(LIB, store=self.store,
+                           tenants=lambda url, key: Door(url, key, self.tasks, self.refuse))
 
     def press(self, secret, site, svc=None, **kw):
         raw = body(**kw)
@@ -126,58 +111,10 @@ class ManyShops(unittest.TestCase):
         self.svc = self.copy()
         self.assertEqual(self.press("route-a", A)[0], 502)
 
-    def test_two_copies_receiving_one_press_make_one_task(self):
-        self.gate = threading.Event()
-        first, second = self.copy(), self.copy()
-        got = {}
-        t = threading.Thread(target=lambda: got.update(first=self.press("route-a", A, svc=first)))
-        t.start()
-        for _ in range(100):                   # wait until the first copy holds the press
-            if any(shops.CLAIM_MARK in k for k in self.store._read()):
-                break
-            time.sleep(0.02)
-        code, out = self.press("route-a", A, svc=second)
-        self.assertEqual(code, 409)
-        self.gate.set()
-        t.join(5)
-        self.assertEqual(got["first"][0], 200)
-        self.assertEqual(len(self.tasks), 1)
-        self.assertEqual(self.press("route-a", A, svc=second), got["first"])   # the retry finds the task
-        self.assertEqual(len(self.tasks), 1)
-        self.assertEqual([k for k in self.store._read() if shops.CLAIM_MARK in k], [])   # no claim is left behind
-
     def test_the_same_key_from_another_shop_is_another_press(self):
-        self.gate = threading.Event()
-        holder = self.copy()
-        t = threading.Thread(target=lambda: self.press("route-a", A, svc=holder))
-        t.start()
-        for _ in range(100):
-            if any(shops.CLAIM_MARK in k for k in self.store._read()):
-                break
-            time.sleep(0.02)
-        self.gate.set()        # B's own door is not held: only A's claim exists
-        self.assertEqual(self.press("route-b", B)[0], 200)
-        t.join(5)
-        self.assertEqual(len(self.tasks), 2)
-
-    def test_a_claim_left_by_a_stopped_copy_is_taken_over_once_stale(self):
-        name = (f"press{shops.CLAIM_MARK}{A}{shops.CLAIM_MARK}"
-                + __import__("hashlib").sha256(b"key-0001-abcdef").hexdigest()[:32])
-        self.assertTrue(self.store.claim(name, self.clock(), app.CLAIM_STALE))     # a copy stopped while holding it
-        self.assertEqual(self.press("route-a", A)[0], 409)
-        self.clock.t += app.CLAIM_STALE + 1
         self.assertEqual(self.press("route-a", A)[0], 200)
-        self.assertEqual(len(self.tasks), 1)
-
-    def test_a_task_saved_after_the_service_stopped_waiting_is_never_made_twice(self):
-        self.lost = True
-        self.svc = self.copy()
-        self.assertEqual(self.press("route-a", A)[0], 502)        # the shop saved it; the answer never came
-        self.assertEqual(self.press("route-a", A)[0], 409)        # the claim stands: "check the record"
-        self.clock.t += app.CLAIM_STALE + 1
-        code, out = self.press("route-a", A)
-        self.assertEqual((code, len(self.tasks)), (200, 1))        # the retry finds the task the shop saved
-        self.assertEqual(out["open_record"]["name"], next(iter(self.tasks)))
+        self.assertEqual(self.press("route-b", B)[0], 200)
+        self.assertEqual(len(self.tasks), 2)
 
     def test_a_list_press_retried_after_a_stop_finds_what_was_made_and_makes_the_rest(self):
         names = ("SO-1", "SO-2", "SO-3")
@@ -192,22 +129,12 @@ class ManyShops(unittest.TestCase):
         self.assertEqual(by_order["SO-2"], made)               # found, not made again
         self.assertEqual(len(self.tasks), 3)
 
-    def test_a_claim_the_table_cannot_take_is_a_503_and_writes_nothing(self):
-        class NoClaim(shops.FileStore):
-            def claim(self, *a):
-                raise OSError("down")
-
-        store = NoClaim(os.path.join(self.tmp, "shops.json"))
-        svc = app.Service(LIB, store=store, tenants=lambda url, key: Door(url, key, self.tasks))
-        self.assertEqual(self.press("route-a", A, svc=svc), (503, {"error": "unavailable"}))
-        self.assertEqual(self.tasks, {})
-
-    def test_a_read_with_no_answer_frees_the_press_at_once(self):
+    def test_a_read_with_no_answer_may_be_pressed_again_at_once(self):
         door = Door(f"https://{A}", "key-a:sec-a", self.tasks)
         door.find_tasks = lambda sos, key: (_ for _ in ()).throw(app.TenantError("GET -> TimeoutError"))
-        svc = app.Service(LIB, store=self.store, clock=self.clock, tenants=lambda url, key: door)
+        svc = app.Service(LIB, store=self.store, tenants=lambda url, key: door)
         self.assertEqual(self.press("route-a", A, svc=svc)[0], 502)
-        self.assertEqual(self.press("route-a", A)[0], 200)        # nothing was written: the retry is not held back
+        self.assertEqual(self.press("route-a", A)[0], 200)
 
     def test_more_orders_than_one_press_may_carry_are_refused_in_words(self):
         names = tuple(f"SO-{i}" for i in range(app.ORDERS_MAX + 1))

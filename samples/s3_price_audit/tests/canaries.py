@@ -82,8 +82,8 @@ CANARIES = [
      "return out is not None", T + "ManyShops.test_a_shops_store_that_does_not_answer_is_not_a_healthy_pass"),
     ("/health says when the worker stalls", A, "return not (time.monotonic() - self.started > HEALTH_GRACE_S and stale)",
      "return True", T + "Service.test_health_is_503_once_the_worker_stalls_and_nothing_else_is_answered"),
-    ("the handshake answers only the library's app", A, '        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip()',
-     '        self.app = (conf.get("IVN_LIBRARY_APP") or "").strip() and "ivendnext_gcs"',
+    ("the handshake answers only the library's app", A, '        self.app = oneshop.value(conf, oneshop.MANY)',
+     '        self.app = oneshop.value(conf, oneshop.MANY) and "ivendnext_gcs"',
      T + "Service.test_a_shop_connects_with_its_own_key_and_the_goodbye_forgets_it"),
     # the manifest
     ("the service's role writes no deviation", M, '"PP PDO Integration", "read": 1, "write": 0, "create": 1,',

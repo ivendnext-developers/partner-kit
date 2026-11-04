@@ -256,7 +256,6 @@
       "balance": 1,
       "correction": "signed_strike_through",
       "retention_years": 5,
-      "loss_count_hours": 48,
       "medium": "system_of_record",
       "medium_note": "Records may be kept electronically, manually or both (Guidelines s. 8.1).",
       "in_colour": "#b00020",

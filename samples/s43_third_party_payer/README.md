@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 0.3.1
+
+- The claims file writes each value as it is.
+
 ### 0.3.0
 
 - Reads a payer sale's details from its payer record (POS 2.1.0 build 672 or later): the sale, then the Retail Payer Record it names, each record line matched to its sale line by position. Asks for a read on seven record types.

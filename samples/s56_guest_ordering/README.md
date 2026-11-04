@@ -17,8 +17,8 @@ ivn new acme_guest --from s56
 What a partner usually changes:
 
 - **The page:** the look and the languages, in `service/page.css` and the `WORDS` table in `service/page.js`.
-- **The menu:** pictures and allergens from the retailer's own records, in the service's menu read.
-- **The limits:** the course word, and the most lines an order and the most of one dish (10 and 10 unless set), on each row of `PP GOR Store` in `manifest.json`.
+- **The menu:** pictures and allergens from the retailer's own records, in the service's menu read. Dishes sold as variants do not reach the guest menu: add them to the service's menu read if you sell them.
+- **The limits:** the course word, and the most lines an order and the most of one dish (no limit of their own unless set), on each row of `PP GOR Store` in `manifest.json`.
 - **A new channel:** payment at the kiosk through the retailer's gateway, or a delivery or collection channel.
 - **The record types' names:** `GOR_PREFIX` for the service.
 
@@ -42,6 +42,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.0.1
+
+- Two guests at a free table land on one check with no wait; the limits on an order are blank unless the store sets them.
 
 ### 1.0.0
 

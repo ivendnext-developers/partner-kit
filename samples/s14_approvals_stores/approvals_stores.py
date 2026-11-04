@@ -160,11 +160,6 @@ def apply_all(api, limit_pct=None):
     return report
 
 
-def _cell(v):
-    """A spreadsheet runs a cell that starts with = + - @ (a requester writes the reason freely): the file shows it as text."""
-    return "'" + v if isinstance(v, str) and v[:1] in ("=", "+", "-", "@", "\t", "\r") else v
-
-
 def export_day(api, day, out_dir):
     """One CSV for the day, sorted by name — identical bytes for identical data. *changed_after_raise* is "yes" where the item, price list, price or
     store was changed after the request was raised (the columns show the request as it is now; the history holds the rest). The approvers are
@@ -188,7 +183,7 @@ def export_day(api, day, out_dir):
                 for c in changed:
                     if c[0] == "workflow_state" and c[2] in who:
                         who[c[2]] = owner
-            w.writerow([_cell(r.get(k, "")) for k in fields] + [_cell(who[STORE_OK]), _cell(who[HO_OK]), _cell(who[APPLIED]), _cell(who[REJECTED]), "yes" if tracked_changes(vs) else ""])
+            w.writerow([r.get(k, "") for k in fields] + [who[STORE_OK], who[HO_OK], who[APPLIED], who[REJECTED], "yes" if tracked_changes(vs) else ""])
     return {"path": path, "requests": len(seen)}
 
 

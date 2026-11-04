@@ -104,6 +104,13 @@ class Recall(unittest.TestCase):
         self.assertIn("customers not traced at retail depth", out["message"]["body"])
         self.assertFalse([r for r in self.shop.reads if r[0] == "rows" and r[1] in recall.SALES])
 
+    def test_r7b_clocks_left_blank_fill_no_deadline(self):
+        for k in ("class_1_start_hours", "class_1_days"):
+            self.shop.settings.pop(k)
+        self.press(["AMOX-A"])
+        n = self.notice()
+        self.assertFalse(n.get("start_by") or n.get("complete_by"))
+
     def test_r8_the_clock_fills_what_the_notice_left_blank_and_never_overwrites(self):
         self.press(["AMOX-A"])
         n = self.notice()

@@ -5,16 +5,15 @@
 When a sale is booked, iVendNext calls ``POST /webhook``. The service verifies the call, reads the sale's
 lines and serial numbers over the record API as the integration user, registers the warranties in its OWN
 store (SQLite), and writes ONE Comment on the sale — the result a shopkeeper sees in Desk. A reconciliation
-pull (``POST /reconcile``, and on a timer) finds every sale no webhook delivered.
+pull, on a timer, finds every sale no webhook delivered and logs the store's status.
 
-Env file (KEY=VALUE; ⛔ never commit it): PP_BASE, PP_KEY, PP_SECRET, PP_WEBHOOK_SECRET, PP_ADMIN_TOKEN,
+Env file (KEY=VALUE; ⛔ never commit it): PP_BASE, PP_KEY, PP_SECRET, PP_WEBHOOK_SECRET,
 PP_PORT (8121), PP_DB (warranty.sqlite3), PP_TERMS (terms.json), PP_SINCE (first watermark),
 PP_RECONCILE_SECONDS (3600; 0 = off).
 """
 
 from __future__ import annotations
 
-import hmac
 import json
 import os
 import sys
@@ -71,22 +70,13 @@ def make_handler(svc: Service):
             self.end_headers()
             self.wfile.write(raw)
 
-        def _admin(self) -> bool:
-            ok = hmac.compare_digest(self.headers.get("X-PP-Admin", ""), svc.env["PP_ADMIN_TOKEN"])
-            if not ok:
-                self._send(403, {"error": "admin token required"})
-            return ok
-
         def log_message(self, fmt, *args):   # one line per request, no headers (no secrets in the log)
             log(f"{self.address_string()} {fmt % args}")
 
         def do_GET(self):
             if self.path == "/health":
                 return self._send(200, {"ok": True})
-            if self.path == "/status" and self._admin():
-                return self._send(200, svc.store.status())
-            if self.path not in ("/status",):
-                self._send(404, {"error": "not found"})
+            self._send(404, {"error": "not found"})
 
         def do_POST(self):
             try:
@@ -94,13 +84,6 @@ def make_handler(svc: Service):
             except ValueError:
                 return self._send(400, {"error": "bad Content-Length"})
             body = self.rfile.read(size)
-            if self.path == "/reconcile":
-                if self._admin():
-                    try:
-                        self._send(200, svc.reconcile())
-                    except TenantError as e:
-                        self._send(502, {"error": str(e)})
-                return
             if self.path != "/webhook":
                 return self._send(404, {"error": "not found"})
             data, how = verify(body, self.headers.get(HEADER), svc.env["PP_WEBHOOK_SECRET"])
@@ -137,7 +120,7 @@ def main() -> None:
             while True:
                 time.sleep(every)
                 try:
-                    log(f"timer reconcile {svc.reconcile()}")
+                    log(f"timer reconcile {svc.reconcile()}; status {svc.store.status()}")
                 except Exception as e:   # the timer must survive a bench restart
                     log(f"timer reconcile failed: {e}")
         threading.Thread(target=loop, daemon=True).start()

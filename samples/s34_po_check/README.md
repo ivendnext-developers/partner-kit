@@ -17,7 +17,7 @@ What a partner usually changes:
 - **Your ERP:** `StandIn` in `erp.py` (and `erp_standin.json`) with a client of your ERP that has the same three methods: `supplier_hold`, `budget_left` and `order_number`.
 - **Your service's address:** every `host.docker.internal` address in `manifest.json` (`allowed_urls` and the check's address) is the sample's test address; write your own.
 - **The rules and words:** `on_check` in `po_check.py`.
-- **When your service is down:** `down_answer` in `manifest.json` is `refuse`; `allow_and_flag` lets the order go and flags it.
+- **When your service is down:** the order goes on and is flagged. A customer who wants nothing submitted unchecked sets *When the service is down* to refuse on the record.
 - **The field:** `pp_poc_erp_number` in `manifest.json`; the service takes its prefix from `POC_PREFIX`.
 
 More: the [recipe](../../recipes/document_check.md).
@@ -32,6 +32,10 @@ ivn try
 ```
 
 ## Versions
+
+### 0.1.1
+
+- When the service is down an order goes on and is flagged, unless the customer chooses to refuse it.
 
 ### 0.1.0
 

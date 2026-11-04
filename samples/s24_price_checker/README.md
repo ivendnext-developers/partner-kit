@@ -33,6 +33,10 @@ ivn try
 
 ## Versions
 
+### 1.0.1
+
+- A kiosk's scan is never told to wait.
+
 ### 1.0.0
 
 - First version in the kit: a price checker page on the shop floor, priced by iVendNext.

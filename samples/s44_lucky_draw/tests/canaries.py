@@ -94,7 +94,7 @@ CANARIES = [
     ("a bad rule reads no sales", S, "        if isinstance(rules, str):\n            return _warning(rules)\n",
      "        if isinstance(rules, str):\n            rules = draw.Rules('PP Co', draw.date_of('2026-10-01'), draw.date_of('2026-10-31'), 1, 0, 1, 0, [], [])\n",
      T + "test_s13_a_rule_that_cannot_be_read_is_said_in_words_and_reads_no_sales"),
-    ("winners at most 50", D, "    if winners is None or not 1 <= winners <= MOST_WINNERS:", "    if winners is None or not 1 <= winners:",
+    ("winners at least one", D, "    if winners is None or winners < 1:", "    if winners is None:",
      T + "test_s13_a_rule_that_cannot_be_read_is_said_in_words_and_reads_no_sales"),
     ("one campaign a press", D, '    if len(ctx["records"]) != 1:', '    if not ctx["records"]:',
      T + "test_s17_a_press_on_anything_but_one_campaign_is_refused_before_any_read"),

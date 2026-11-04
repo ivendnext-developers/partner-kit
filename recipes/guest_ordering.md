@@ -48,9 +48,8 @@ Day to day the guests order and the servers work the checks at the till as befor
 
 ## Limits
 
-- One order per table (or kiosk) every 15 seconds: a family's second phone waits a moment.
-- A kiosk link copied from the tablet lets anyone open unpaid tabs, one every 15 seconds, until *Make code* is pressed again.
-- A check the app opened can be left empty (a dish refused at the add at a free table, or a retry after the bill was paid); the server closes it. A till opening a check at the same moment as a guest's first order can leave two checks at the table.
+- A kiosk link copied from the tablet lets anyone open unpaid tabs until *Make code* is pressed again.
+- A check the app opened can be left empty (a dish refused at the add at a free table, or a retry after the bill was paid); the server closes it. A till moving a check to the table at the same moment as a guest's first order can leave two checks there.
 - A guest's note for the kitchen is kept on the check line like any note.
 - A dish sold by weight arrives with no reading: the till weighs it before it is paid, the weighing replacing the guest's quantity.
 - A guest at a place one party already holds (a bar counter, a shared table) joins that party's bill: one place per party, or phone orders off for shared places.
@@ -68,7 +67,7 @@ Day to day the guests order and the servers work the checks at the till as befor
 
 - **The code is an authorisation.** A code's link carries the site, the code record, its number and an HMAC-SHA256 signature of the three with the *Make code* subscription's secret (`#s=…&t=<record>.<number>.<signature>`, after `#`, so it never reaches a server log or another site's referrer). The service checks the signature before it reads anything, then reads the record and refuses a code whose number moved on or whose kind, store, table or kiosk name no longer matches what it was made for. The store, the table and the register come from the record and the store's row, never from the page. *Connect again* resends the same secret, so printed codes survive it.
 - **What makes a code work is the app's.** The number, the link, the picture and what the code was made for carry `write_roles` of the app's role and System Manager: a manager cannot lower a number to bring a leaked code back.
-- **One order a table at a time.** Before it reads the floor the service takes a claim on the table (its store and place; a kiosk's record) in its own table (`shops.claim`, a conditional write every copy of the function sees), held 15 seconds: two guests at a free table never open two checks, from one card or two, and a flood of orders is spaced. A check whose lines a till is paying (`status` *paying* on the floor) takes no guest order.
+- **One check a table.** The first order at a free table opens the check with `only_if_free`. When another guest got there first, iVendNext answers `PlaceTakenError`, and the service reads the floor and adds the order to that check, so two guests at a free table never open two checks, from one card or two. A check whose lines a till is paying (`status` *paying* on the floor) takes no guest order.
 - **One read a code.** A copy of the function keeps a verified code and its store's row for 15 seconds and a store's menu for two minutes (ten seconds when a price came back late), so calls on one code read the retailer once per copy in that time.
 - **One order, never two.** The page makes one random key per *Send order* and sends it again on a retry; the service makes the door's two keys from it (`door_key`: a hash of the page's key and the step, `open` or `add`), so a retry returns the door's first answers and writes nothing twice. A retry whose first send landed on a check since paid or moved is refused by the door (`CheckRequestError`), and the guest is told the order was already sent once.
 - **No price leaves the service.** A line carries the dish, the quantity, its choices (`{item_code, option_group}`), the guest's note (one line, 80 characters) and the course; never a price or a discount. The menu's prices are read from the retailer's own line pricer (`get_item_details`, never a rate) and shown only to the guest.

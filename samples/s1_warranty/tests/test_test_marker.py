@@ -23,7 +23,7 @@ SECRET = "the-webhook-secret"
 
 
 class NoWork:
-    env = {"PP_WEBHOOK_SECRET": SECRET, "PP_ADMIN_TOKEN": "admin"}
+    env = {"PP_WEBHOOK_SECRET": SECRET}
 
     def __init__(self):
         self.store = self

@@ -46,6 +46,10 @@ ivn try
 
 ## Versions
 
+### 0.3.1
+
+- Status goes to the log, and the two admin routes and their token are gone; every warranty term is read, past the first thousand.
+
 ### 0.3.0
 
 - As an app we host, it registers warranties too: a scheduled pass over each site's booked sales (`service/hosted.py`, `service/register.py`).

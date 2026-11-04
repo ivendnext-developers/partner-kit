@@ -36,8 +36,6 @@ A Sale Attribute's *Required* switch holds for every customer on every till. Ret
 
 7. **Refuse while a needed detail is empty.** `sale_attributes` holds the sale's details as the cashier filled them, `[{"name", "value"}]`, by the Sale Attribute's name. A detail the rule needs that is absent, empty or only spaces is missing. Answer `{"verdict":"refuse","reason":"…"}` with the rule's own words or a sentence naming the missing details and what to do, plain text of 1 to 140 characters: cut the list, never the instruction. Nothing missing: `{"verdict":"allow"}`.
 
-8. **Tell iVendNext to lock the customer's group.** Your rule trusts the group the customer record holds, and the till's edit sheet lets a cashier change it: a customer moved into a group that needs nothing gives nothing. The retailer puts *Customer Group* at permission level 1 in *Customize Form* and gives level-1 write only to its managers ([Customers by store](customers_by_store.md), rule 7). Put that in the setup, with what follows from it: a cashier can no longer give a new customer a group, and the till still says *Customer saved.* after a group change it dropped.
-
 ## Bounds
 
 - A sale only: refunds and an exchange's returned items are not judged; its new items are, as a sale, except an exchange rung without its sale when nothing is owed.

@@ -10,8 +10,7 @@ answers presses.
 For each Sales Order in the press it creates ONE pick task over the record API, with the app's own integration user's
 key (that user's rights, never the pressing user's), then answers. A retry of the same press (the same
 ``idempotency_key``, which the shop keeps for a retry from the same dialog) finds the task it already made and makes no
-second one: the key is stored on the task, so this holds across a restart. While one call handles a press, a second
-call with the same key is refused (409): a claim in the shops table that every copy of the function sees (``CLAIM_STALE``).
+second one: the key is stored on the task, so this holds across a restart.
 
 ONE SHOP (an env file):
     PP_BASE, PP_KEY, PP_SECRET (the integration user), PP_POINT_SECRET (handed back at install as pp_pck:sub:route),
@@ -28,7 +27,6 @@ PCK_PREFIX (default PP PCK; IVENDNEXT PCK for the library's app) · PORT (defaul
 
 from __future__ import annotations
 
-import hashlib
 import http.client
 import json
 import os
@@ -37,7 +35,6 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -52,7 +49,6 @@ import shops  # noqa: E402
 import testcall  # noqa: E402
 
 SUB = "route"           # the manifest's extension_subscriptions[].key; its secret is "<app>:sub:route"
-CLAIM_STALE = 60        # a press's claim older than this is taken over: a function copy lives at most 10 s
 ORDERS_MAX = 20         # orders one press may carry here: one find and a create each fit the function's 10 s
 TOO_MANY = f"Pick route takes at most {ORDERS_MAX} orders at a time. Select fewer orders and press again."
 NOT_SET_UP = ("Pick route is not set up yet: no key from this shop has reached it. Ask your manager to check that the "
@@ -122,13 +118,13 @@ def _warning(body: str) -> dict:
 
 
 class Service:
-    def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of, clock=time.time):
+    def __init__(self, conf: dict, tenant=None, store=None, tenants=tenant_of):
         self.app = oneshop.value(conf, oneshop.MANY)
         prefix = (conf.get("PCK_PREFIX") or "").strip()
         if self.app and not prefix:      # the library's names are not the sample's: every write would fail
             raise SystemExit("IVN_LIBRARY_APP is set but PCK_PREFIX is not (IVENDNEXT PCK for the App library's app)")
         route.use_prefix(prefix or "PP PCK")
-        self.tenants, self.clock = tenants, clock
+        self.tenants = tenants
         if self.app:                                    # many shops: each connects itself
             self.store = store or shops.open_store(conf)
         else:                                           # one shop, from the settings
@@ -145,29 +141,6 @@ class Service:
                        if k.startswith("user:"))
         door = self.tenants(record["url"], record["secrets"][users[0]]) if record and users else None
         return site or "", secrets, door
-
-    @contextmanager
-    def held(self, site: str, key: str):
-        """``{"mine": True}`` while this call alone handles the press ``key`` of ``site``; ``mine`` False when another call
-        holds it. The caller sets ``keep`` when a write's outcome is unknown (the shop may still save a task): the claim is
-        then left to go stale, so a retry within CLAIM_STALE is refused instead of making a second task."""
-        state = {"mine": True, "keep": False}
-        if not self.app:
-            yield state
-            return
-        name = f"press{shops.CLAIM_MARK}{site}{shops.CLAIM_MARK}{hashlib.sha256(key.encode()).hexdigest()[:32]}"
-        if not self.store.claim(name, self.clock(), CLAIM_STALE):
-            state["mine"] = False
-            yield state
-            return
-        try:
-            yield state
-        finally:
-            if not state["keep"]:
-                try:
-                    self.store.delete(name)
-                except Exception:   # noqa: BLE001 — the press is answered; a claim left behind goes stale in CLAIM_STALE
-                    pass
 
     def press(self, headers, raw: bytes) -> tuple[int, dict]:
         try:
@@ -191,31 +164,18 @@ class Service:
             return 200, _warning(TOO_MANY)
         names = []
         try:
-            with self.held(site, key) as held:
-                if not held["mine"]:
-                    return 409, {"error": "this press is being handled; check the record before you try again"}
-                writing = False
-                try:
-                    found = door.find_tasks([t["sales_order"] for t in tasks], key)
-                    for t in tasks:
-                        row = found.get(t["sales_order"])
-                        if row:    # a retry: answer about the task that exists, even if the dialog's inputs changed
-                            t.update(picker=row["picker"], priority=row["priority"])
-                        else:
-                            writing = True
-                        names.append(row["name"] if row else door.create_task(t))
-                except TenantError as e:
-                    # a write with no answer: the shop may still save the task, so the claim stays (a read frees it)
-                    held["keep"] = writing and e.code is None
-                    raise
+            found = door.find_tasks([t["sales_order"] for t in tasks], key)
+            for t in tasks:
+                row = found.get(t["sales_order"])
+                if row:    # a retry: answer about the task that exists, even if the dialog's inputs changed
+                    t.update(picker=row["picker"], priority=row["priority"])
+                names.append(row["name"] if row else door.create_task(t))
         except TenantError as e:
             if e.code in (401, 403):    # the shop refused the app's user: say so; a task the call made stays found
                 return 200, _warning(REFUSED + (CONNECT_AGAIN if self.app else ""))
             # the shop tells the user "did not answer in time. Check the record before you try again": true, because
-            # a task may already exist; the same key's retry finds it (or, while the claim stands, is refused)
+            # a task may already exist; the same key's retry finds it
             return 502, {"error": str(e)}
-        except Exception:               # noqa: BLE001 — the shops table did not answer the claim: nothing was written
-            return 503, {"error": "unavailable"}
         return 200, route.answer(tasks, names)
 
     def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:

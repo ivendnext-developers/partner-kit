@@ -39,7 +39,7 @@ class ManifestTest(unittest.TestCase):
         for s in subs.values():
             self.assertEqual(app.ROUTES[s["endpoint_url"].split("8142", 1)[1]][0], s["key"])
             self.assertIn(s["endpoint_url"], MANIFEST["allowed_urls"])
-        self.assertEqual(MANIFEST["version"], "0.3.0")
+        self.assertEqual(MANIFEST["version"], "0.3.1")
 
     def test_the_payer_service_carries_only_settings_the_door_takes_and_never_a_clearing_mode(self):
         payer = next(s for s in MANIFEST["extension_subscriptions"] if s["point"] == "payer")

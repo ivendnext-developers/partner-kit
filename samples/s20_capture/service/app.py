@@ -13,7 +13,7 @@ with no code. Nothing else is written, and a code is never logged.
     python3 service/app.py service/.env.local
     env: PP_POINT_SECRET_SCAN, PP_POINT_SECRET_CUSTOMER, PP_POINT_SECRET_QTY (handed back at install as
          pp_cap:sub:on_scan, pp_cap:sub:on_customer and pp_cap:sub:on_qty), PP_LINE_ATTRIBUTE (the shop's active line
-         attribute for the reference), PP_QTY_ASK_ABOVE (3) and PP_QTY_MOST (5) (handsets on a line),
+         attribute for the reference), PP_QTY_ASK_ABOVE and PP_QTY_MOST (handsets on a line; blank: no limit),
          PP_BARRED_PHONES (comma list), CAP_MESSAGE_URL, PP_PORT (8142)
 
 On CitiXsys hosting it runs as a FUNCTION for many sites (app.json; ``lambda_handler`` below): each site connects itself

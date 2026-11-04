@@ -158,9 +158,16 @@ class Receipt(unittest.TestCase):
         for user in ("receiver@shop", "sap@shop"):
             self.assertEqual(self.check(receipt([{"batch_no": "PARA-B"}]), user=user)["verdict"], "refuse")
 
-    def test_c18_no_settings_refuses(self):
+    def test_c18_no_settings_allows(self):
         self.shop.settings = None
-        self.assertEqual(self.check(receipt([{"batch_no": "PARA-B"}]))["verdict"], "refuse")
+        self.assertEqual(self.check(receipt([{"batch_no": "PARA-A"}])), {"verdict": "allow"})
+
+    def test_c18b_ticks_left_off_ask_for_no_supplier_number_and_no_pack_date(self):
+        self.shop.settings.pop("supplier_note_required")
+        self.shop.settings.pop("pack_expiry_required")
+        self.add_lot("AMOX-E", "AMOX", day(730), day(-10))
+        self.assertEqual(self.check(receipt([{"item_code": "AMOX", "batch_no": "AMOX-E"}], supplier_delivery_note="")),
+                         {"verdict": "allow"})
 
     def test_c20_an_item_the_app_cannot_read_is_refused(self):
         self.assertIn("could not read item NOPE", self.check(receipt([{"item_code": "NOPE", "batch_no": "PARA-B"}]))["reason"])
@@ -361,11 +368,16 @@ class Disposal(unittest.TestCase):
         code, out = call(self.svc, "/check/disposal", check_body("Stock Entry", rec))
         self.assertEqual(out, {"verdict": "allow"})                                  # a Desk receipt into stock
 
-    def test_d15_no_settings_refuses_a_disposal_and_a_count(self):
+    def test_d15_no_settings_allows_a_disposal_and_a_count(self):
         self.shop.settings = None
-        self.assertIn("has no settings yet", self.check(entry([{}]))["reason"])
+        self.assertEqual(self.check(entry([{}])), {"verdict": "allow"})
         code, out = call(self.svc, "/check/count", check_body("Stock Reconciliation", count([{}])))
-        self.assertIn("has no settings yet", out["reason"])
+        self.assertEqual(out, {"verdict": "allow"})
+
+    def test_d15b_with_no_rule_chosen_no_disposal_needs_the_visit(self):
+        self.shop.settings.pop("witness_rule")
+        del self.shop.items["TRAM"]["pp_rxc_schedules"]           # a chain with no Pharmacy counter: never read
+        self.assertEqual(self.check(entry([{}])), {"verdict": "allow"})
 
     def test_d16_a_record_that_is_not_there_is_refused(self):
         self.assertIn("no regulator's visit", self.check(entry([{}], pp_rcl_disposal_record="DSP-404"))["reason"])

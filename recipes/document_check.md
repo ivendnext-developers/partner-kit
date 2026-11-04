@@ -17,7 +17,7 @@ Some back-office documents must not become final until an outside system agrees:
      {"dt": "Purchase Order", "fieldname": "acme_erp_number", "fieldtype": "Data", "label": "ERP order number", "insert_after": "supplier"}],
    "extension_subscriptions": [
      {"key": "po_check", "point": "doccheck", "label": "ERP purchase order check", "endpoint_url": "https://your.server/poc/check",
-      "timeout_seconds": 3, "down_answer": "refuse",
+      "timeout_seconds": 3,
       "settings": {"record_type": "Purchase Order", "send_fields": "name, supplier, grand_total, items(item_code, qty)",
                    "on_validate": false, "fill_fields": ["acme_erp_number"]}}]
    ```

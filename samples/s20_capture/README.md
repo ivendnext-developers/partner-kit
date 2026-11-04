@@ -1,6 +1,6 @@
 # S20 — Warranty capture and a member code (capture)
 
-Three capture services, each at its own address. **On scan** of an item in the named item groups, the service answers with a warranty reference for the line, and the cashier confirms it. **On customer add**, it refuses a customer without a mobile number or with a barred one, and otherwise sends a one-time code: the customer is created only after the right code, and a wrong code is counted. **On a quantity change** of a line in the iPad group, up to three are allowed, four or five are asked about, and more are refused. No answer writes a customer field or moves money.
+Three capture services, each at its own address. **On scan** of an item in the named item groups, the service answers with a warranty reference for the line, and the cashier confirms it. **On customer add**, it refuses a customer without a mobile number or with a barred one, and otherwise sends a one-time code: the customer is created only after the right code, and a wrong code is counted. **On a quantity change** of a line in the iPad group, it asks above the limit you set and refuses above the most you set; with none set, it allows. No answer writes a customer field or moves money.
 
 ![A warranty reference captured when a handset is scanned](screenshots/01_warranty_capture_sheet.png)
 
@@ -16,9 +16,9 @@ ivn new acme_capture --from s20
 
 What a partner usually changes:
 
+- **first,** the item groups each service asks about: `item_groups` in each service's `settings`. The sample names *iPhone* and *iPad*, and a site without those groups refuses the install, so write the customer's own;
 - the service addresses: `allowed_urls` and each service's `endpoint_url` in `manifest.json` name the sample's test address; write your own;
-- the item groups each service asks about: `item_groups` in each service's `settings` (the sample names *iPhone* and *iPad*);
-- the handset count: `PP_QTY_ASK_ABOVE` (3) and `PP_QTY_MOST` (5);
+- the handset count: `PP_QTY_ASK_ABOVE` and `PP_QTY_MOST`; blank means no limit;
 - the barred numbers: `PP_BARRED_PHONES`;
 - the line attribute that holds the warranty reference: `PP_LINE_ATTRIBUTE`;
 - your message gateway: `CAP_MESSAGE_URL` is posted the phone and the code; with none, a customer is added with no code.
@@ -44,6 +44,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.4.1
+
+- When the service is down a new customer goes on and is flagged, unless the customer chooses to refuse it; blank quantity limits mean no limit.
 
 ### 0.4.0
 

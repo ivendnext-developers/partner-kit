@@ -124,6 +124,21 @@ class Base(unittest.TestCase):
         return F.poll(self.feed, self.store, S.make_handler(self.erp, self.shop), **k)
 
 
+class BookStock(unittest.TestCase):
+    def test_a_movement_with_no_cost_lets_the_engine_value_it(self):
+        sent = []
+
+        class Api:
+            def call(self, method, path, body=None, **k):
+                sent.append(body["items"][0])
+                return {"data": {"name": "STE-1"}}
+        shop = S.Shop(Api(), "Main", "Co")
+        shop.book_stock("k1", "A", 5, None)
+        shop.book_stock("k2", "A", 5, 40.0)
+        self.assertNotIn("basic_rate", sent[0])
+        self.assertEqual(sent[1]["basic_rate"], 40.0)
+
+
 class OutTests(Base):
     def test_full_cycle_writes_item_price_stock_once(self):
         n = self.out()

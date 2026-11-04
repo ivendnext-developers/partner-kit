@@ -36,8 +36,7 @@
           not_set_up: "This screen cannot read the kitchen's tickets. Ask your manager to check the app's user and its key.",
           unavailable: "The kitchen's tickets cannot be read right now. This screen tries again by itself.",
           step: "This ticket moved on another screen. The board is read again.", gone: "This ticket is no longer on the board.",
-          not_yours: "This ticket is another station's.", wait: "One moment, then tap again.",
-          not_listed: "That dish is not on this screen's list.", off: "Sold out is switched off for this store." },
+          not_yours: "This ticket is another station's.",           not_listed: "That dish is not on this screen's list.", off: "Sold out is switched off for this store." },
     ar: { tapFailed: "لم يُنفَّذ هذا الضغط. تحقق من التذكرة واضغط مرة أخرى.", tapRight: "لا يمكن لهذه الشاشة فعل ذلك. اطلب من المدير التحقق من صلاحيات التطبيق.",
           moreChoice: "+خيار واحد آخر", moreChoices: "+{n} خيارات أخرى", moreDish2: "+طبقان آخران",
           moreDishes11: "+{n} طبقًا آخر", moreTicket2: "+تذكرتان أخريان", moreTickets11: "+{n} تذكرةً أخرى",
@@ -58,8 +57,7 @@
           not_set_up: "لا تستطيع هذه الشاشة قراءة تذاكر المطبخ. اطلب من المدير التحقق من مستخدم التطبيق ومفتاحه.",
           unavailable: "لا يمكن قراءة تذاكر المطبخ الآن. ستحاول الشاشة مرة أخرى بنفسها.",
           step: "تغيّرت هذه التذكرة على شاشة أخرى. تُقرأ اللوحة مرة أخرى.", gone: "لم تعد هذه التذكرة على اللوحة.",
-          not_yours: "هذه التذكرة لمحطة أخرى.", wait: "لحظة، ثم اضغط مرة أخرى.",
-          not_listed: "هذا الطبق ليس في قائمة هذه الشاشة.", off: "خاصية النفاد متوقفة في هذا المتجر." },
+          not_yours: "هذه التذكرة لمحطة أخرى.",           not_listed: "هذا الطبق ليس في قائمة هذه الشاشة.", off: "خاصية النفاد متوقفة في هذا المتجر." },
     es: { tapFailed: "Esa pulsación no se aplicó. Revise el ticket y pulse otra vez.", tapRight: "Esta pantalla no puede hacer eso. Pida a su encargado que revise los permisos de la app.",
           moreChoice: "+1 opción más", moreChoices: "+{n} opciones más",
           moreDish: "+1 plato más", moreDishes: "+{n} platos más", moreTicket: "+1 ticket más",
@@ -78,8 +76,7 @@
           not_set_up: "Esta pantalla no puede leer los tickets. Pida a su encargado que revise el usuario de la app y su clave.",
           unavailable: "Ahora no se pueden leer los tickets. La pantalla lo intentará de nuevo sola.",
           step: "Este ticket cambió en otra pantalla. Se lee el tablero otra vez.", gone: "Este ticket ya no está en el tablero.",
-          not_yours: "Este ticket es de otra estación.", wait: "Un momento y pulse otra vez.",
-          not_listed: "Ese plato no está en la lista de esta pantalla.", off: "Agotado está desactivado en esta tienda." },
+          not_yours: "Este ticket es de otra estación.",           not_listed: "Ese plato no está en la lista de esta pantalla.", off: "Agotado está desactivado en esta tienda." },
     fr: { tapFailed: "Cet appui n'a pas abouti. Vérifiez le ticket et appuyez de nouveau.", tapRight: "Cet écran ne peut pas faire cela. Demandez à votre responsable de vérifier les droits de l'app.",
           moreChoice: "+1 option de plus", moreChoices: "+{n} options de plus",
           moreDish: "+1 plat de plus", moreDishes: "+{n} plats de plus", moreTicket: "+1 ticket de plus",
@@ -99,8 +96,7 @@
           not_set_up: "Cet écran ne peut pas lire les tickets. Demandez à votre responsable de vérifier l'utilisateur de l'app et sa clé.",
           unavailable: "Les tickets ne peuvent pas être lus pour le moment. L'écran réessaie tout seul.",
           step: "Ce ticket a changé sur un autre écran. Le tableau est relu.", gone: "Ce ticket n'est plus au tableau.",
-          not_yours: "Ce ticket est celui d'un autre poste.", wait: "Un instant, puis appuyez de nouveau.",
-          not_listed: "Ce plat n'est pas dans la liste de cet écran.", off: "Épuisé est désactivé dans ce magasin." },
+          not_yours: "Ce ticket est celui d'un autre poste.",           not_listed: "Ce plat n'est pas dans la liste de cet écran.", off: "Épuisé est désactivé dans ce magasin." },
     de: { tapFailed: "Dieses Tippen kam nicht an. Bon prüfen und noch einmal tippen.", tapRight: "Dieser Bildschirm darf das nicht. Ihre Leitung soll die Rechte der App prüfen.",
           moreChoice: "+1 weitere Option", moreChoices: "+{n} weitere Optionen",
           moreDish: "+1 weiteres Gericht", moreDishes: "+{n} weitere Gerichte", moreTicket: "+1 weiterer Bon",
@@ -120,7 +116,7 @@
           unavailable: "Die Bons können gerade nicht gelesen werden. Der Bildschirm versucht es selbst erneut.",
           step: "Dieser Bon wurde an einem anderen Bildschirm geändert. Die Tafel wird neu gelesen.",
           gone: "Dieser Bon ist nicht mehr auf der Tafel.", not_yours: "Dieser Bon gehört zu einer anderen Station.",
-          wait: "Einen Moment, dann noch einmal tippen.", not_listed: "Dieses Gericht steht nicht auf der Liste dieses Bildschirms.",
+          not_listed: "Dieses Gericht steht nicht auf der Liste dieses Bildschirms.",
           off: "Ausverkauft ist für diese Filiale ausgeschaltet." },
     pt: { tapFailed: "Esse toque não foi aplicado. Confira o pedido e toque de novo.", tapRight: "Esta tela não pode fazer isso. Peça ao seu gerente para verificar as permissões do app.",
           moreChoice: "+1 opção a mais", moreChoices: "+{n} opções a mais",
@@ -141,8 +137,7 @@
           not_set_up: "Esta tela não consegue ler os pedidos. Peça ao seu gerente para verificar o usuário do app e a chave.",
           unavailable: "Os pedidos não podem ser lidos agora. A tela tenta de novo sozinha.",
           step: "Este pedido mudou em outra tela. O quadro é lido de novo.", gone: "Este pedido não está mais no quadro.",
-          not_yours: "Este pedido é de outra estação.", wait: "Um momento e toque de novo.",
-          not_listed: "Esse prato não está na lista desta tela.", off: "Esgotado está desligado nesta loja." }
+          not_yours: "Este pedido é de outra estação.",           not_listed: "Esse prato não está na lista desta tela.", off: "Esgotado está desligado nesta loja." }
   };
   var lang = "en";
   function count(one, many, n) {     // "+1 more dish", "+N more dishes"; Arabic's dual and 11-and-over forms

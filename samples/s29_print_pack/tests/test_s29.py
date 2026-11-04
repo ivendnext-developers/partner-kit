@@ -293,12 +293,11 @@ class Catalogue(unittest.TestCase):
         self.assertNotIn("<i>D", out)
         self.assertIn("&lt;b&gt;x&lt;/b&gt; &amp; &quot;y&quot;", out)
 
-    def test_the_csv_has_every_item_and_does_not_run_as_a_formula(self):
-        shop = self.shop(items=[item("PH-1", name="=HYPERLINK(1)", image="/files/ph1.png"), item("PH-2"), item("CB-1", "Cables")])
+    def test_the_csv_has_every_item(self):
+        shop = self.shop(items=[item("PH-1", image="/files/ph1.png"), item("PH-2"), item("CB-1", "Cables")])
         rows = list(csv.reader(io.StringIO(C.render_csv(self.cat(shop)["rows"]))))
         self.assertEqual(len(rows), 4)
         self.assertEqual(rows[0][:3], ["Group", "Item code", "Item name"])
-        self.assertIn("'=HYPERLINK(1)", [r[2] for r in rows])
         self.assertEqual(sorted(r[6] for r in rows[1:]), ["no", "no", "yes"])
         self.assertEqual({r[1]: r[5] for r in rows[1:]}, {"PH-1": "100.00", "PH-2": "250.50", "CB-1": "9.00"})  # numbers, no thousands comma
         big = self.cat(self.shop(prices=[price("PH-1", 1234567.5)]))["rows"]

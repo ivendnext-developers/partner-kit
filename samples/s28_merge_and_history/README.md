@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 0.2.2
+
+- The merge press asks no confirmation.
+
 ### 0.2.1
 
 - A page that reloads opens again.

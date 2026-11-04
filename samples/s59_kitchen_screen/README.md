@@ -41,6 +41,10 @@ ivn try
 
 ## Versions
 
+### 1.1.1
+
+- A cook's quick second tap goes through.
+
 ### 1.1.0
 
 - Kitchen screens update within a second, through a small always-on service beside this one (live/).

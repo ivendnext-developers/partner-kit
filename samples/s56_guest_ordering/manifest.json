@@ -3,7 +3,7 @@
  "app": "pp_gor",
  "prefix": "PP GOR",
  "title": "Guest ordering",
- "version": "0.1.0",
+ "version": "0.1.1",
  "publisher": "Partner Programme sample",
  "description": "Guests order for themselves: a QR code at each table, and a self-order kiosk for counter service. The guest reads the register's own menu on their phone (its item groups, the dishes' choices and the price list's prices, before any offer) and sends an order; it lands as lines on the table's check through the till's open-check door, unsent, under the store's course word (Guest order), so a server reads it and presses Send at the till; the table pays at a till as usual. A kiosk order opens a tab named by a five-character code the guest is shown, paid at the counter. The app never sends to the kitchen and the guest never pays in the app. Make code, on a PP GOR Code record, writes the table's or kiosk's signed link and its QR picture, printed by the print format PP GOR Table card; pressing it again replaces a code that leaked (the old card stops working). No guest data: the page asks no name, phone or e-mail. The install makes the roles PP GOR Manager and PP GOR Integration and the app's own user; the retailer gives that user its store, register and the Open Checks rights open a check, add to a check and see the checks, and leaves the feed PP GOR Guest ordering feed off. allowed_urls is the programme bench's address; a partner writes their own service's address.",
  "allowed_urls": [
@@ -59,15 +59,13 @@
      "fieldname": "most_lines",
      "fieldtype": "Int",
      "label": "Lines in one order",
-     "default": "10",
-     "description": "The most lines one order may hold (blank: 10, at most 50)."
+     "description": "The most lines one order may hold (blank: no limit of its own; the till's door takes 50)."
     },
     {
      "fieldname": "most_qty",
      "fieldtype": "Int",
      "label": "Quantity of one dish",
-     "default": "10",
-     "description": "The most of one dish in one order (blank: 10, at most 99)."
+     "description": "The most of one dish in one order (blank: no limit of its own, up to 99)."
     }
    ]
   },

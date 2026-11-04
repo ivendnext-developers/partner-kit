@@ -99,7 +99,7 @@ class ServiceTest(unittest.TestCase):
         out = self.press(self.svc(shop), "/press/book", RES, "R1")
         self.assertEqual(shop.res["R1"]["status"], "Booked")
         self.assertIn("Table 12 is held for 4 from 19:00 to 20:30", self.said(out))
-        self.assertEqual(shop.settings[fs.CO]["run_started"], "")                # the stamp is cleared after
+        self.assertEqual(shop.settings[fs.CO]["stores"][0]["run_started"], "")   # the stamp is cleared after
 
     def test_b2_an_overlapping_booking_is_refused_and_named(self):
         shop = fs.FakeTenant([fs.booking("R0", "19:30:00", party=2), fs.booking("R1", "19:00:00", status="Requested")])
@@ -144,14 +144,23 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(shop.res["R1"]["status"], "Booked")
         self.assertIn("no table held", self.said(out))
 
-    def test_b7_one_press_at_a_time_per_company(self):
+    def test_b7b_a_press_at_another_store_does_not_wait(self):
         st = fs.settings()
-        st["run_started"] = datetime.datetime.fromtimestamp(NOW - 5, datetime.timezone.utc).isoformat(timespec="seconds")
+        other = dict(st["stores"][0], name="ROW-2", store="Another Store")
+        other["run_started"] = datetime.datetime.fromtimestamp(NOW - 5, datetime.timezone.utc).isoformat(timespec="seconds")
+        st["stores"].append(other)
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00", status="Requested")], settings_=st)
+        self.press(self.svc(shop), "/press/book", RES, "R1")
+        self.assertEqual(shop.res["R1"]["status"], "Booked")
+
+    def test_b7_one_press_at_a_time_per_store(self):
+        st = fs.settings()
+        st["stores"][0]["run_started"] = datetime.datetime.fromtimestamp(NOW - 5, datetime.timezone.utc).isoformat(timespec="seconds")
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00", status="Requested")], settings_=st)
         out = self.press(self.svc(shop), "/press/book", RES, "R1")
         self.assertIn("Another press", self.said(out))
         self.assertEqual(shop.res["R1"]["status"], "Requested")
-        st["run_started"] = datetime.datetime.fromtimestamp(NOW - 120, datetime.timezone.utc).isoformat(timespec="seconds")
+        st["stores"][0]["run_started"] = datetime.datetime.fromtimestamp(NOW - 120, datetime.timezone.utc).isoformat(timespec="seconds")
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00", status="Requested")], settings_=st)
         self.press(self.svc(shop), "/press/book", RES, "R1")
         self.assertEqual(shop.res["R1"]["status"], "Booked")                     # a lapsed stamp holds nothing
@@ -189,7 +198,7 @@ class ServiceTest(unittest.TestCase):
         self.assertLess(c.index(f"LIST {RES}"), key_put)                         # the clash check first
         self.assertLess(c.index("CALL floor_status"), key_put)                   # the floor read first
         self.assertLess(key_put, c.index("CALL check_open"))                     # the key before the door
-        stamps = [i for i, x in enumerate(c) if x == "PUT PP FOH Settings"]
+        stamps = [i for i, x in enumerate(c) if x == "PUT PP FOH Store"]
         self.assertEqual(len(stamps), 2)
         self.assertLess(stamps[0], c.index(f"LIST {RES}"))
         self.assertGreater(stamps[1], c.index("CALL check_open"))                # the stamp spans the door's call
@@ -217,7 +226,7 @@ class ServiceTest(unittest.TestCase):
 
     def test_s5_a_second_press_while_one_seats_is_told_to_wait_and_writes_no_key(self):
         st = fs.settings()
-        st["run_started"] = datetime.datetime.fromtimestamp(NOW - 5, datetime.timezone.utc).isoformat(timespec="seconds")
+        st["stores"][0]["run_started"] = datetime.datetime.fromtimestamp(NOW - 5, datetime.timezone.utc).isoformat(timespec="seconds")
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00")], settings_=st)
         out = self.press(self.svc(shop), "/press/seat", RES, "R1")
         self.assertIn("Another press", self.said(out))

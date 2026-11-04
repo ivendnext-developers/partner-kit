@@ -257,7 +257,7 @@ class Manifest(unittest.TestCase):
     def test_the_manifest_is_the_build_of_the_data_sets(self):
         m = json.loads((SAMPLE / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(m, build.build_manifest())
-        self.assertEqual(m["version"], "0.2.0")
+        self.assertEqual(m["version"], "0.2.1")
         self.assertFalse((SAMPLE / "door_declaration.json").exists())  # 0.2.0 installs the books: one file
         # the catalogue: every data set's books, switched off (the shop switches its own market's on)
         self.assertEqual({b["data_set"] for b in m["register_books"]}, {ds["id"] for ds in build.datasets()})
@@ -315,7 +315,7 @@ class Manifest(unittest.TestCase):
 
     def test_the_book_prints_pass_the_checker_with_no_warning(self):
         d = build.build_manifest()
-        m = {"manifest_version": 2, "app": "pp_rsr", "prefix": "PP RSR", "title": "x", "version": "0.2.0",
+        m = {"manifest_version": 2, "app": "pp_rsr", "prefix": "PP RSR", "title": "x", "version": "0.2.1",
              "publisher": "x", "description": "x", "print_formats": d["print_formats"]}
         self.assertEqual((validate.validate(m), validate.warnings(m)), ([], []))
         names = [p["name"] for p in d["print_formats"]]
@@ -334,7 +334,7 @@ class Manifest(unittest.TestCase):
 
     def test_every_reminder_passes_the_shops_checker_and_none_shares_a_name(self):
         d = build.build_manifest()
-        m = {"manifest_version": 2, "app": "pp_rsr", "prefix": "PP RSR", "title": "x", "version": "0.2.0",
+        m = {"manifest_version": 2, "app": "pp_rsr", "prefix": "PP RSR", "title": "x", "version": "0.2.1",
              "publisher": "x", "description": "x", "notifications": d["notifications"]}
         self.assertEqual(validate.validate(m), [])
         names = [n["name"] for n in d["notifications"]]

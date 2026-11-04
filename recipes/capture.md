@@ -28,7 +28,7 @@ This recipe is for an iVendNext Partner, or the CitiXsys Consulting Team, buildi
      {"key": "on_scan", "point": "capture", "label": "Warranty capture", "endpoint_url": "https://your.server/cap/scan",
       "timeout_seconds": 1.5, "down_answer": "allow_and_flag", "settings": {"event": "scan", "item_groups": ["iPhone", "iPad"]}},
      {"key": "on_customer", "point": "capture", "label": "Member code", "endpoint_url": "https://your.server/cap/customer",
-      "timeout_seconds": 3, "down_answer": "refuse", "settings": {"event": "customer_add"}}]
+      "timeout_seconds": 3, "settings": {"event": "customer_add"}}]
    ```
 
    - On scan: `item_groups` (at most 50; a group names every group below it) and/or `item_field` (an Item field that is set); 1.5 seconds unless raised, 3 at most.

@@ -1,6 +1,6 @@
 {
  "app": "third-party-payer",
- "version": "0.3.0",
+ "version": "0.3.1",
  "port": 8080,
  "health": "/health",
  "size": "small",

@@ -247,11 +247,6 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual([t["state"] for t in self.shop.tickets[:2]], ["bumped", "bumped"])
         self.assertEqual(self.shop.tickets[-1]["state"], "new")           # the void is the fryer's to strike and bump
 
-    def test_m6_a_flood_of_taps_reads_the_retailer_no_more(self):
-        t = made(self.shop, self.svc)
-        self.assertEqual(self.move(t, "ko1", 1, "started")["state"], "moved")
-        self.assertEqual(self.move(t, "ko1", 1, "ready"), {"state": "refused", "why": "wait"})
-
     def test_m7_the_doors_refusal_is_said_and_the_board_read_again(self):
         t = made(self.shop, self.svc)
         self.shop.door_refuse = ("station_ticket_move", 417, "TicketStepError")

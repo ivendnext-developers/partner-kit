@@ -1,6 +1,6 @@
 {
  "app": "capture-code",
- "version": "0.4.0",
+ "version": "0.4.1",
  "port": 8080,
  "health": "/health",
  "size": "small",

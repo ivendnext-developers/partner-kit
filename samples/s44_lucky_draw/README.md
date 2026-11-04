@@ -45,6 +45,10 @@ ivn try
 
 ## Versions
 
+### 1.0.1
+
+- Winners and reserves have no upper limit.
+
 ### 1.0.0
 
 - First version in the kit: entries by spend from the retailer's till sales, and a fair draw of the winners and reserves, once.

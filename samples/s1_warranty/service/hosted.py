@@ -48,7 +48,7 @@ from tenant import Tenant, TenantError  # noqa: E402  (the sample's only door in
 
 ROUTE, KEY = "/point/warranty", "warranty"     # the manifest's remote_keys[].key; its secret is "<app>:<key>"
 TERM = "PP WRC Warranty Term"
-SKEW_S, READ_S, TERMS_MAX = 300, 1.2, 1000     # two reads, inside the till's 3 seconds
+SKEW_S, READ_S = 300, 1.2     # two reads, inside the till's 3 seconds
 PASS_READ_S, MARGIN_S = 8, 30       # a pass reads with more patience, and stops in time for the function's limit
 OVERLAP_S, HANDLED_MAX = 600, 50000  # tills commit out of order; what this copy has handled, so the overlap costs little
 EARLIEST = "2000-01-01 00:00:00"
@@ -148,7 +148,7 @@ class Service:
         if not door:
             return {"site": site, "skipped": "no user's key yet"}
         try:
-            rows = door.list(TERM, ["applies_to", "item", "item_group", "months"], [], "modified asc", TERMS_MAX)
+            rows = door.list(TERM, ["applies_to", "item", "item_group", "months"], [], "modified asc", 0)      # 0: every row
             kept = SiteStore(self.store, site, terms_of(rows), self.handled)
             for dt in register.DOCTYPES:
                 if not kept.mark(dt):
@@ -179,7 +179,7 @@ class Service:
         if not door:
             return 200, _warning(NOT_SET_UP)
         try:
-            rows = door.list(TERM, ["applies_to", "item", "item_group", "months"], [], "modified asc", TERMS_MAX)
+            rows = door.list(TERM, ["applies_to", "item", "item_group", "months"], [], "modified asc", 0)      # 0: every row
             terms = terms_of(rows)
             rest = [c for c in codes if c not in terms["items"]]    # an item's own term needs no group, and no right on Item
             terms["item_group"] = door.item_groups(rest) if rest else {}

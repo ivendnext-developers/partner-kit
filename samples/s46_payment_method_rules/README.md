@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/payment_method_rules.md).
 
-**The customer sets:** the rules in *PP PMR Rule*, one per customer group that needs one, with its own *Mode of Payment* records; a read on Customer Group for the role **PP PMR Integration**; and who may move a customer into another group (set **Customer Group**'s *Perm Level* to 1 on Customer, and give level 1 *Write* only to managers). Loyalty Points must be one of the till's payment methods for a minimum sale to apply to it.
+**The customer sets:** the rules in *PP PMR Rule*, one per customer group that needs one, with its own *Mode of Payment* records; and a read on Customer Group for the role **PP PMR Integration**. Loyalty Points must be one of the till's payment methods for a minimum sale to apply to it.
 
 ## Run it
 

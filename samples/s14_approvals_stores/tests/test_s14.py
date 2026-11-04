@@ -331,16 +331,14 @@ class T(unittest.TestCase):
             A.export_day(self.shop, DAY, d)
             self.assertEqual(first, open(out["path"], "rb").read())
 
-    def test_the_export_says_when_an_applied_request_was_edited_afterwards_and_shows_text_cells_as_text(self):
+    def test_the_export_says_when_an_applied_request_was_edited_afterwards(self):
         r = self.shop.request(rate=105.0)
         self.shop.store_ok(r)
         self.run_apply()
         self.shop.change(r, "req@x", new_rate=1.0)                # the shop lets a requester edit an Applied request: the file must say so
-        self.shop.reqs[r]["reason"] = '=HYPERLINK("http://x","click")'
         with tempfile.TemporaryDirectory() as d:
             row = list(csv.DictReader(open(A.export_day(self.shop, DAY, d)["path"])))[0]
         self.assertEqual(row["changed_after_raise"], "yes")
-        self.assertEqual(row["reason"], "'=HYPERLINK(\"http://x\",\"click\")")
 
     def test_the_export_includes_the_last_instant_of_the_day_and_not_the_next_midnight(self):
         late = self.shop.request()

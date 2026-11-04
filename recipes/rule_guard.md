@@ -16,12 +16,11 @@ A check before payment is the last word on a sale before money is taken. When th
 
    ```json
    "extension_subscriptions": [{"key": "guard", "point": "check", "label": "Member rule guard",
-                                "endpoint_url": "https://your.server/rgd/check", "timeout_seconds": 3,
-                                "down_answer": "refuse"}]
+                                "endpoint_url": "https://your.server/rgd/check", "timeout_seconds": 3}]
    ```
 
    - `label` is what the cashier reads when your service is down (*"Member rule guard did not answer. …"*).
-   - `down_answer`: what the till does when your service is down, slow or answers what it cannot use — `allow_and_flag` (the default: the sale goes on and is flagged on the *Sales to review* report), `refuse` (no sale until you answer), or `ask` (the cashier decides). A rule that must hold even in an outage declares `refuse`.
+   - `down_answer`: what the till does when your service is down, slow or answers what it cannot use — `allow_and_flag` (the default: the sale goes on and is flagged on the *Sales to review* report), `refuse` (no sale until you answer), or `ask` (the cashier decides). A customer whose rule must hold even in an outage chooses `refuse` on the record.
    - `timeout_seconds`: 3 unless you raise it, 10 at most. At most three checks answer one POS Profile, ten seconds together.
    - The service is on from the moment of install, for every POS Profile. A manager's approval (`may_approve`) is the retailer's choice, never the manifest's. The signing secret is handed back **once**, at install.
 
@@ -78,8 +77,6 @@ S18's rule does not read coupons. **Sample S32** (*Coupon rules*, [recipe](coupo
 | a signature check on every call | — (yours to do) |
 | an answer within your timeout | your declared down answer applies otherwise, and one log row is written (no body, no secret) |
 | plain sentences of 1 to 140 characters | the whole answer is judged; one bad value refuses all of it |
-
-**A member group is only as safe as the customer's group.** The till's edit sheet lets a cashier change it (the retailer's cashier role saves customers): a customer moved into a member group buys a members-only item. The retailer closes it by putting *Customer Group* at permission level 1 in *Customize Form* and giving level-1 write only to its managers: the cashier's change then leaves the group as it was ([Customers by store](customers_by_store.md), rule 7). Put that in the setup, with what follows from it: a cashier can no longer give a new customer a group (one created at the till takes the default customer group in Selling Settings, or none), the till still says *Saved* after a group change it dropped, and no cashier's role may keep level-1 write (Sales Master Manager has it by default).
 
 ## Technical notes
 

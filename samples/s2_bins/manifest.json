@@ -3,7 +3,7 @@
  "app": "pp_bln",
  "prefix": "PP BLN",
  "title": "Bin locations",
- "version": "0.1.1",
+ "version": "0.1.2",
  "publisher": "Partner Programme sample",
  "description": "Where stock sits inside a store: locations (back room, shop floor), aisles, bins and what is in each bin. The shop's own stock and valuation stay in iVendNext; these records only say where.",
  "allowed_urls": [

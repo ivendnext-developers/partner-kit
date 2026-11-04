@@ -102,7 +102,7 @@ CANARIES = [
      'except (urllib.error.URLError, OSError) as e:',
      "test_shop.AnswerCutShort.test_a_shop_answer_cut_short_is_a_shop_error_never_a_crash"),
     # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
-    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
+    ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):     # checked as a real press; the merge itself does not run", "if False:",
      "test_merge.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
     ("a test call is answered only where its route matches", "service/app.py",
      '            if self.path == "/mhs/merge":\n',

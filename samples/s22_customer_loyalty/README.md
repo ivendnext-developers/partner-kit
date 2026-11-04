@@ -27,7 +27,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/customer_owned_loyalty.md).
 
-**The customer sets:** the tiers and thresholds, and who may move a customer between tiers. A tier is a customer group and a cashier can change it at the till, so the retailer puts *Customer Group* at *Perm Level* 1 and gives level 1 *Read* and *Write* only to its managers and the app's role.
+**The customer sets:** the tiers and thresholds. A check on goods receipts (`receipt_workflow`, [the recipe](../../recipes/check_by_workflow.md)) is left out of `config.json`, so a receiving clerk's submit is untouched until the customer adds it.
 
 ## Run it
 
@@ -43,6 +43,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.1
+
+- `receipt_workflow` leaves `config.json`, so a receiving clerk's submit is untouched until the customer adds it.
 
 ### 1.2.0
 

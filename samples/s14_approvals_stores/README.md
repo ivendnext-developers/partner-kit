@@ -42,6 +42,10 @@ BASE=https://shop.example AP_KEY=… AP_SECRET=… LIMIT_PCT=10 python3 approval
 
 ## Versions
 
+### 0.3.1
+
+- The export writes each value as it is.
+
 ### 0.3.0
 
 - The approval rule table went: a User Permission per store and one limit, LIMIT_PCT, do its job.

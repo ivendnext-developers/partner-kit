@@ -74,7 +74,6 @@ BOARD_KEEP_S = 1.5                   # a store's board, shared by the screens on
 SOLD_KEEP_S = 30                     # a store's sold-out list
 SCREEN_KEEP_S = 15                   # a verified screen and its store's row (a link made again stops within this time)
 CACHE_MAX = 2000                     # screens (and stores) one copy keeps
-MOVE_GAP_S = 0.25                    # one move (or sold-out tap) a screen this often, per copy
 STATIC = {"/": ("page.html", "text/html; charset=utf-8"), "/page.js": ("page.js", "text/javascript; charset=utf-8"),
           "/page.css": ("page.css", "text/css; charset=utf-8"), "/fit.js": ("fit.js", "text/javascript; charset=utf-8"),
           "/ivn-kit.css": ("ivn-kit.css", "text/css; charset=utf-8"),    # the kit's own files, copied beside the page and
@@ -222,7 +221,6 @@ class Service:
         self._screens: dict[tuple, tuple] = {}
         self._boards: dict[tuple, tuple] = {}
         self._sold: dict[tuple, tuple] = {}
-        self._moved: dict[tuple, float] = {}
         self._lock = threading.Lock()
 
     def retailer(self, site) -> tuple[str, list[bytes], object | None]:
@@ -404,17 +402,6 @@ class Service:
         """The tickets a screen's sold-out list is made from: a station screen's own stations', the expo's every one."""
         return [t for t in tickets if t["station"] in ksc.stations_of(s)] if s["kind"] == ksc.KIND_STATION else tickets
 
-    def spaced(self, site: str, s: dict) -> bool:
-        """One move (or sold-out tap) a screen every ``MOVE_GAP_S`` per copy: a flood of taps reads the retailer no more."""
-        key, now = (site, s["name"]), self.clock()
-        with self._lock:
-            if now - self._moved.get(key, -1e9) < MOVE_GAP_S:
-                return False
-            if len(self._moved) >= CACHE_MAX:
-                self._moved.clear()
-            self._moved[key] = now
-        return True
-
     def move(self, door, site: str, s: dict, body: dict) -> dict:
         order = body.get("kitchen_order")
         whole = body.get("order") is True
@@ -423,8 +410,6 @@ class Service:
             return {"state": "refused", "why": "gone"}
         if whole and s["kind"] != ksc.KIND_EXPO:
             return {"state": "refused", "why": "not_yours"}
-        if not self.spaced(site, s):
-            return {"state": "refused", "why": "wait"}
         tickets, _ = self.board(door, site, s["store"], fresh=True)      # a move is judged on the board as it is now
         if whole:
             cards = ksc.expo_view([t for t in tickets if t["kitchen_order"] == order])["orders"]
@@ -463,8 +448,6 @@ class Service:
             return {"state": "refused", "why": "off"}
         if not isinstance(code, str) or not code or len(code) > 140 or not isinstance(out, bool):
             return {"state": "refused", "why": "gone"}
-        if not self.spaced(site, s):
-            return {"state": "refused", "why": "wait"}
         tickets, _ = self.board(door, site, s["store"])
         listed = {d["item_code"] for d in ksc.dishes(self.own(s, tickets))} | {d["item_code"] for d in self.sold(door, site, s["store"])}
         if code not in listed:          # never an item the kitchen has not seen, never another store's

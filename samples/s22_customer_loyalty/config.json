@@ -94,11 +94,5 @@
    ],
    "why": "the Verify step submits the receipt; for a batch-tracked item that makes and submits its batch bundle as the integration user"
   }
- ],
- "receipt_workflow": {
-  "keep_submit": [
-   "Stock Manager",
-   "PP LYL Integration"
-  ]
- }
+ ]
 }

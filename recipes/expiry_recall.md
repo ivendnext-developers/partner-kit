@@ -22,7 +22,6 @@ A regulator recalls a batch; a delivery arrives with six weeks of shelf life; ex
 
    ```json
    {"key": "receipt", "point": "doccheck", "endpoint_url": "https://your.server/check/receipt", "timeout_seconds": 6,
-    "down_answer": "refuse",
     "settings": {"record_type": "Purchase Receipt",
                  "send_fields": "name, supplier, posting_date, is_return, supplier_delivery_note, items(item_code, qty, batch_no, serial_and_batch_bundle, acme_rcl_pack_expiry, acme_rcl_lou, acme_rcl_lou_days)",
                  "on_validate": false, "fill_fields": ["acme_rcl_short_dated"]}}
@@ -40,7 +39,7 @@ A regulator recalls a batch; a delivery arrives with six weeks of shelf life; ex
 
    Leave a POS sale's own bundle out of the stock (it books nothing until the day's sales are merged). For the customers, keep both: when a POS day closes iVendNext moves the sale's bundle onto the day's merged invoice, so a till sale is listed under its POS sale before the close and under the merged invoice after it, never twice (a walk-in sale's merged invoice names the walk-in customer).
 4. **Judge a receipt by the pack, not the lot, and from today.** With a shelf life set, iVendNext can work a lot's expiry out from its manufacturing date, and a later edit of either date leaves no trace: ask for the date printed on the pack on the line (`acme_rcl_pack_expiry`) and refuse a lot that does not match it. Count days left from the later of today and the posting date, so a backdated receipt lets nothing older in. An expired lot is refused before any exemption or letter, and a line rejected whole is not judged.
-5. **Flag the ERP, refuse the Desk.** The check is not told who called it through which door; the settings name the ERP connector's own users (never a person's login; compared without case), and for them the answer is `fill` (the problems in one field, at most 140 characters) instead of `refuse`. When the app cannot read its settings it cannot tell them apart, and refuses.
+5. **Flag the ERP, refuse the Desk.** The check is not told who called it through which door; the settings name the ERP connector's own users (never a person's login; compared without case), and for them the answer is `fill` (the problems in one field, at most 140 characters) instead of `refuse`. When there is no settings record the app allows, because the customer has turned nothing on; when it cannot read one it cannot tell them apart, and refuses.
 6. **A disposal needs the visit, once.** Treat as a disposal any material issue of a witnessed item, and any stock leaving a quarantine store, or a blocked or expired lot, for anywhere but a quarantine store, whatever the purpose. Refuse it unless it names a record for the line's store whose workflow state is *Visit recorded*, with the officer, authority, date (not after the posting date) and signed form, and whose lines still cover the lot and quantity, in the stock unit, after what earlier submitted issues naming the same record drew on it. If the item has no field for its schedules, refuse loudly. Subscribe a third check on Stock Reconciliation: a count may not lower such stock.
 7. **Lock the record, and check the lock.** A workflow's *allow edit* does not stop a save; the `locked_in_state` save rule does, and it is on from the install. The disposal check reads that rule and refuses every disposal if someone switches it off.
 8. **Test it** on your laptop (S40's tests and canaries), then on a sandbox: install, the app's user and its rights, the consent, then the scenario below.
@@ -51,7 +50,7 @@ A regulator recalls a batch; a delivery arrives with six weeks of shelf life; ex
 - **An offline till keeps a blocked lot until it syncs.** Press again after the tills sync: a sale they made offline is then traced.
 - **A schedule set only on an item group is not read.** Give each controlled item its own schedule, or choose *Every disposal*.
 - **A refused draft submitted again unchanged within 5 minutes gets the same answer** (the document check's *asked once*): after the visit is recorded, the clerk submits the issue again after 5 minutes.
-- **An ERP connector that posts stock entries** (SAP does, every few minutes, as its own user) has them flagged, never refused; while your service is down its sync stops, because the stock-entry check refuses (or choose *allow and flag* and accept an unwitnessed Desk disposal during an outage).
+- **An ERP connector that posts stock entries** (SAP does, every few minutes, as its own user) has them flagged, never refused. While your service is down its stock entries go on and are flagged, like every other check here; a customer who sets *When the service is down* to refuse stops the sync as well.
 - **A disposal by a return to the supplier is not checked**, nor a Desk *Material Receipt*.
 - **A disconnected app** has every check answered by its down answer.
 - **A recall reaching thousands of sales** may not finish within 10 seconds: press again.

@@ -37,6 +37,10 @@ ivn try
 
 ## Versions
 
+### 1.0.1
+
+- The press asks no confirmation.
+
 ### 1.0.0
 
 - First version in the kit: a Desk button that routes a phone order to its district's store.

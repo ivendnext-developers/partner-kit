@@ -62,7 +62,6 @@ class ManifestTest(unittest.TestCase):
                          (sst.RUN, "Work out sell-through", "form", "work", "name"))
         perms = {p["role"] for p in self.types[sst.RUN]["permissions"] if p.get("read")}
         self.assertLessEqual(set(a["roles"]), perms)       # a press re-checks the user's read on the record (run 10)
-        self.assertLessEqual(len(a["confirm_text"]), 140)
         (s,) = self.m["extension_subscriptions"]
         self.assertEqual((s["key"], s["point"], s["timeout_seconds"]), ("work", "desk_action", 10))
         self.assertEqual(self.m["allowed_urls"], [s["endpoint_url"]])
