@@ -11,8 +11,8 @@ function paid per call (`runs`; a function also names its `handler` and the `pac
 background work, a `schedule` of named runs and a `timeout` of up to 900 seconds). Refused, with the reason:
 an unknown key, a bad name or port, a size or region not on the list, an environment variable with a value in the file, a variable
 whose name looks like a secret but is not marked secret, a setting with no `purpose` (the line the Settings screen shows) or a
-`together` that is not a list of the other settings' names; and a Dockerfile that runs as root, has no health check, exposes a
-different port from the file, or sets a secret-looking variable with ENV. A function needs no Dockerfile (one present is
+`together` that is not a list of the other settings' names; and a Dockerfile that exposes a different port from the
+file or sets a secret-looking variable with ENV. A function needs no Dockerfile (one present is
 still checked), serves many shops and keeps no secret of its own: each shop hands over its own at connect.
 """
 from __future__ import annotations
@@ -184,11 +184,6 @@ def check_form(m: dict) -> list[str]:
 
 def check_dockerfile(text: str, port) -> list[str]:
     bad, lines = [], [l.strip() for l in text.splitlines() if l.strip() and not l.strip().startswith("#")]
-    users = [l.split(None, 1)[1].strip() for l in lines if l.upper().startswith("USER ") and len(l.split(None, 1)) == 2]
-    if not users or users[-1].split(":")[0] in ("root", "0"):
-        bad.append("Dockerfile: the app must run as a user that is not root (add a USER line)")
-    if not any(l.upper().startswith("HEALTHCHECK ") for l in lines):
-        bad.append("Dockerfile: no HEALTHCHECK, so a platform cannot tell a stuck app from a healthy one")
     exposed = {int(p) for l in lines if l.upper().startswith("EXPOSE ") for p in re.findall(r"\d+", l)}
     if exposed and port not in exposed:
         bad.append(f"Dockerfile: EXPOSE {sorted(exposed)} but app.json says port {port}")

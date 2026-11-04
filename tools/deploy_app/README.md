@@ -45,7 +45,7 @@ What each plan includes, and what is not offered yet, is in [`plans.json`](plans
 - **A size your plan does not allow,** and a region we do not serve yet (other countries' regions on request).
 - **A reserved name** (such as `admin`, `api` or `www`), and a name ending in `-staging`, `-sandbox` or `-prod`, which would take another app's address.
 - **A function given an image, or no `--zip`,** and a `package` path that is not in the folder it starts from.
-- **Everything the template's checker refuses:** a container that runs as root, no health check, a secret in the image, a value in `app.json`.
+- **Everything the template's checker refuses:** a secret in the image, a value in `app.json`.
 
 ## Technical notes
 

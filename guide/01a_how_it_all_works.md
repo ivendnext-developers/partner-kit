@@ -143,7 +143,7 @@ Each claim above, with the page or code that proves it:
 - **What the shops table holds:** `tools/app_template/service/shops.py`, `connect()`: for each site, its call-back address, its secrets and the previous set, the library key's id and kind, and when it connected. On App Hosting the table is the app's own, encrypted at rest.
 - **What a function keeps between runs:** nothing but a copy's `/tmp` while that copy lives, a cache only.
 - **The handshake and per-chain secrets:** [the app template](../tools/app_template/README.md) and [the install page](../contracts/pages/package_install.md), §10 (`POST /ivendnext/connect`, `/disconnect`, the `X-iVendNext-Site` header, 401 for an unknown site or another site's secret).
-- **The signature:** `base64(HMAC-SHA256(secret, "<timestamp>.<raw body>"))`, five minutes of clock skew, 64 KB ([the signature](../contracts/pages/remote_till_key.md)).
+- **The signature:** `base64(HMAC-SHA256(secret, "<timestamp>.<raw body>"))`, five minutes of clock skew ([the signature](../contracts/pages/remote_till_key.md)).
 - **The app's own user:** made at install for a manifest with an event feed ([the event feed recipe](../recipes/event_feed.md); [chapter 7](07_manifests.md)).
 - **Consent and declared addresses:** `allowed_urls` and the install's one consent ([chapter 7](07_manifests.md)).
 - **What the cashier reads:** [till keys](../contracts/pages/remote_till_key.md); a check's `down_answer` ([chapter 7](07_manifests.md); sample [S18](../samples/s18_rule_guard/README.md), *Where it shows*).

@@ -46,7 +46,6 @@ LIBRARY_KEYS = {
     "F1": ("rFzo2hELUjQePkGpIMBIV938vkgwRrAkT3fH9SQd38o=", frozenset({"free"})),
 }
 CONNECT, DISCONNECT, SITE_HEADER = "/ivendnext/connect", "/ivendnext/disconnect", "X-iVendNext-Site"
-PAYLOAD_MAX, SECRETS_MAX, NAME_MAX, VALUE_MAX = 1024, 100, 200, 2048
 CLAIM_MARK = "|"       # in a claim's name (``claim``), never in a site's: a claim is never taken for a shop
 SITE = re.compile(r"[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+")
 LOCAL_SITE = re.compile(r"((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*localhost|127\.0\.0\.1|\[::1\])(:[0-9]{1,5})?")
@@ -113,7 +112,7 @@ def check_key(line, app: str, site: str, keys: dict | None = None) -> dict:
     parts = text[5:].split(".") if text.startswith("IVN1-") else []
     pb, sig = (_b64u(parts[0]), _b64u(parts[1])) if len(parts) == 2 else (None, None)
     try:
-        payload = json.loads(pb) if pb and len(pb) <= PAYLOAD_MAX else None
+        payload = json.loads(pb) if pb else None
     except ValueError:
         payload = None
     if not isinstance(payload, dict) or payload.get("typ") != "applib-key" or payload.get("v") != 1 \
@@ -133,9 +132,8 @@ def check_key(line, app: str, site: str, keys: dict | None = None) -> dict:
 
 
 def _secrets(value) -> dict:
-    if not isinstance(value, dict) or len(value) > SECRETS_MAX or not all(
-            isinstance(k, str) and isinstance(v, str) and 0 < len(k) <= NAME_MAX and 0 < len(v) <= VALUE_MAX
-            for k, v in value.items()):
+    if not isinstance(value, dict) or not all(
+            isinstance(k, str) and isinstance(v, str) and k and v for k, v in value.items()):
         raise Refused("bad_request", 400)
     return dict(value)
 

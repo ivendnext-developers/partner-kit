@@ -1,6 +1,6 @@
 # The app template — a service you can deploy
 
-A small service that does what every deployable app does ([Publish your app](../../site/pages/publish.md)): it checks each call's signature and time, answers inside the deadline, logs one line per call without retailer data, has a health address, runs as a user that is not root, stops cleanly, and refuses to start without its signing secret. It answers one remote till key (`POST /point/hello`) so you can see the whole path. Standard library only.
+A small service that does what every deployable app does ([Publish your app](../../site/pages/publish.md)): it checks each call's signature and time, answers inside the deadline, logs one line per call without retailer data, has a health address, stops cleanly, and refuses to start without its signing secret. It answers one remote till key (`POST /point/hello`) so you can see the whole path. Standard library only.
 
 **It is for** a builder who has an outside app (chapters 5 and 6) and wants it running on a server iVendNext can reach. Copy this folder, replace `service/core.py` with your own logic, and keep the rest.
 
@@ -9,7 +9,7 @@ A small service that does what every deployable app does ([Publish your app](../
 | File | What it is |
 |---|---|
 | `service/core.py` | **your logic**: a pure function, `answer(context)`, no web code, no iVendNext |
-| `service/app.py` | the web part: signature check, size cap, health address, one log line per call, clean stop, secret rotation |
+| `service/app.py` | the web part: signature check, health address, one log line per call, clean stop, secret rotation |
 | `service/shops.py` | many retailers: the handshake (`/ivendnext/connect`, `/ivendnext/disconnect`), the library key check, and the retailers kept in a file |
 | `service/function.py` | on CitiXsys hosting, an app that only answers presses runs as a function, run only when called: this turns the load balancer's call into `handle` and back ([chapter 1a](../../guide/01a_how_it_all_works.md)) |
 | `service/dynamo.py` | on CitiXsys hosting: the retailers kept in the app's own encrypted table, with the standard library only |
