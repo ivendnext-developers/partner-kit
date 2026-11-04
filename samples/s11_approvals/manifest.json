@@ -3,7 +3,7 @@
  "app": "pp_apr",
  "prefix": "PP APR",
  "title": "Purchase Order approval",
- "version": "1.0.0",
+ "version": "1.0.1",
  "publisher": "Partner Programme sample",
  "description": "A Purchase Order over the agreed amount waits for a Purchase Manager: approving it submits it. A smaller one the buyer submits. Mail goes to whoever acts next. A workflow on the customer's own record type, with no service and no record type of its own.",
  "workflows": [
@@ -39,7 +39,8 @@
      "action": "Approve",
      "next_state": "Approved",
      "allowed": "Purchase Manager",
-     "condition": "doc.base_grand_total > 50000"
+     "condition": "doc.base_grand_total > 50000",
+     "allow_self_approval": 0
     },
     {
      "state": "Draft",

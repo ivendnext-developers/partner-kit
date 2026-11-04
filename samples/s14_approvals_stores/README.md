@@ -42,6 +42,10 @@ BASE=https://shop.example AP_KEY=… AP_SECRET=… LIMIT_PCT=10 python3 approval
 
 ## Versions
 
+### 0.3.2
+
+- The three approve steps say `"allow_self_approval": 0`, so the person who raised a price change still cannot approve it once a silent step takes Desk's own setting.
+
 ### 0.3.1
 
 - The export writes each value as it is.
