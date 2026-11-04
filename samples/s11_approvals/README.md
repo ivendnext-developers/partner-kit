@@ -2,6 +2,8 @@
 
 A Purchase Order over 50,000 waits for a Purchase Manager, and approving it submits it. A smaller order the buyer submits. Mail goes to whoever acts next. It is one workflow on the customer's own record type, with no service, no key and no record type of its own: the first app to build from [Build your first app](../../site/pages/first_app.md).
 
+![The approver opens an order over the amount and, under Actions, presses Approve](screenshots/01_approver_approve.png)
+
 **What is in it:** an approval workflow on Purchase Order.
 
 **Industries:** every industry

@@ -34,7 +34,7 @@ ivn check
 ivn try
 ```
 
-To apply approved requests, run this from the sample's own folder:
+To apply approved requests, run this from `service/aps/` in the app you made:
 
 ```bash
 BASE=https://shop.example AP_KEY=… AP_SECRET=… LIMIT_PCT=10 python3 approvals_stores.py apply

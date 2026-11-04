@@ -5,7 +5,7 @@
  "title": "Purchase Order approval",
  "version": "1.0.0",
  "publisher": "Partner Programme sample",
- "description": "A Purchase Order over 50,000 waits for a Purchase Manager: approving it submits it. A smaller one the buyer submits. Mail goes to whoever acts next. A workflow on the customer's own record type, with no service and no record type of its own.",
+ "description": "A Purchase Order over the agreed amount waits for a Purchase Manager: approving it submits it. A smaller one the buyer submits. Mail goes to whoever acts next. A workflow on the customer's own record type, with no service and no record type of its own.",
  "workflows": [
   {
    "name": "PP APR Purchase Order Approval",

@@ -130,7 +130,9 @@ That is the whole install, one consent and one press. Everything the app adds is
 
 Then they give their staff the roles, on each person's **User** record. In S11 those are the roles a purchasing team holds already, so there may be nothing to do.
 
-If you list your app free for every retailer, there is no shelf and no key: they press **Install** on its card in the App library. Your next version reaches them when you publish it, and they take it the same way.
+Once you publish your next version, it shows on the same card within ten minutes, with **Update**, and asks for no key: they read what changes, tick **I agree** and press **Update**. To go back a version, see [Publish your app](publish.md).
+
+If you list your app free for every retailer, there is no shelf and no key: they press **Install** on its card in the App library. Your next version reaches them the same way.
 
 ## What a listed app costs
 

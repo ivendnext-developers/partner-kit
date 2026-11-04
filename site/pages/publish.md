@@ -50,7 +50,7 @@ The retailer's administrator presses **Install**, reads what it will change, tic
 
 - **Copy and sell one of our apps.** Most apps iVendNext lists in the App library start as working code in this kit, and each such app's page links that code: copy it, change it, put your company's name on it, and sell it. [Build your business on iVendNext's apps](business.md).
 - **Publish from a build server.** `ivn token new <name>` makes a token, shown once; on the server it goes in `IVN_TOKEN`. A token you lose is revoked on My apps > Tokens, in one press.
-- **Go back to an earlier version.** `ivn rollback <version>` publishes an earlier version's content as a new, higher version.
+- **Go back to an earlier version.** `ivn rollback <version>` publishes an earlier version's content as a new, higher version. It asks for the app's name first, and each customer's administrator presses **Update**.
 - **Keep your copy up to date.** `ivn pull` brings in the server's latest draft and keeps your changes. `ivn take <sample>` takes a sample's newer version.
 - **Hand the app to another company.** `ivn handover <word>` asks for the app's name first; the other company accepts on their My apps, and their card pays from the next month.
 - **Everything else `ivn` does** is in [its README](../../tools/ivn/README.md).
