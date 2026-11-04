@@ -29,13 +29,20 @@ needs. Plan a project (site/pages/plan.md, `{{plan: shortlist}}`) is a shortlist
 catalogue.json, which carries each card's build step (BUILD_ORDER) and blueprint row, and keeps the shortlist in the address;
 site/test_plan.mjs tests it in node. Without script the page is its seven steps.
 
-Every sample gets a card (site/gallery.py) built from its README: `{{samples: cards}}` puts them all on a page, grouped by door,
-and the samples list uses the same cards; a sample README without a run section or a door fails the build. A reference app's
-card is a hand-written `{{reference-app: name | one line | doors | status | repository}}` line. The same READMEs give
+Every sample gets a card (site/gallery.py) built from its README: `{{samples: cards}}` puts them on the samples page, grouped by
+the area of each sample's first need, with filters by words, industry and way in (site/assets-src/samples.js); a sample README
+without a run section or a door fails the build. A reference app's card is a hand-written
+`{{reference-app: name | one line | doors | status | repository}}` line. The same READMEs give
 samples/index.json, the published samples index (gallery.index); a README without an Industries line or with one that
 differs from site/industries.json, a sample with a till part and no Try it at the till section, or a README without its
 Versions section fails the build (gallery.readme_errors), and so does a door picture in site/door_pictures.json that is not a
 screenshot of a sample with that door (gallery.door_picture_errors).
+
+Two sections run through the site, *Learn the kit* and *Publish your app* (NAV, SECTIONS): each page's header highlight and
+breadcrumb step. Every page opens with what it is for and its next step (lead_first, next_steps: the first real paragraph moves under
+the title; no word is added or dropped). A page in SPLIT becomes an overview at its old address and one page per part, cut along its
+own headings at a flat address beside it (`recipes/manifest-steps.html`), so its relative links and pictures stay as written; every
+link to an anchor that moved is written to its part (Ctx.url). The Needs page's finder is site/assets-src/finder.js.
 
 A relative link in a kit file becomes a link to the page it points at, an image is copied beside its page, and anything
 else in the repository (code, a folder) becomes a link to the file on GitHub. A link to a path that does not exist fails
@@ -91,19 +98,26 @@ SEO_JSON = SITE / "seo.json"                        # the hand-written descripti
 REDIRECTS = SITE / "redirects.txt"                  # one "old new" pair a line; the build writes a stub at each old address
 IMAGE_EXT = {".png", ".gif", ".jpg", ".jpeg", ".svg", ".webp"}
 
-NAV = [("How it works", "guide/01a_how_it_all_works.html"), ("What you can use", "map.html"), ("Needs", "needs/index.html"),
-       ("Get started", "first_app.html"), ("Guide", "guide/index.html"), ("Recipes", "recipes/index.html"), ("Samples", "samples/index.html"),
-       ("Reference apps", "reference_apps.html"), ("Publish", "publish.html"), ("Roadmap", "roadmap.html"),
-       ("Feedback", "feedback.html")]
+NAV = [("learn", "Learn the kit", "learn.html"), ("samples", "Samples", "samples/index.html"), ("needs", "Needs", "needs/index.html"),
+       ("publish", "Publish your app", "publish.html"), ("roadmap", "Roadmap", "roadmap.html")]
 CORP = "https://www.ivendnext.com"
-FOOT_CORP = [("ivendnext.com", CORP + "/"), ("Documentation", "https://docs.ivendnext.com/"), ("Application suite", CORP + "/application-suite/"), ("Partners", CORP + "/partners/"),
-             ("Release 2.0", CORP + "/release/2.0/"), ("Blog", CORP + "/blog/"), ("Events", CORP + "/events/"),
-             ("About us", CORP + "/about-us/"), ("Contact", CORP + "/contact/")]
+FOOT_CORP = [("ivendnext.com", CORP + "/"), ("Documentation", "https://docs.ivendnext.com/"), ("Partners", CORP + "/partners/"),
+             ("Contact", CORP + "/contact/")]
 FOOT_LEGAL = [("Legal", "https://legal.ivend.com/"), ("Privacy policy", "https://ivend.com/privacy-policy/")]
 FOOT_COUNT = ('This site counts visits without cookies or personal data, and counts nothing if your browser says Do Not Track. '
               f'See the <a href="{FOOT_LEGAL[1][1]}">privacy policy</a>.')
 GROUPS = {"guide": "Guide", "recipes": "Recipes", "samples": "Samples", "feedback": "Feedback", "needs": "Needs",
           "records": "Record types"}
+# Which section a page is in: its header highlight and its breadcrumb step. A page's own address first, then its first folder;
+# everything else is Learn the kit. My apps lights its own pill and has no step above it.
+SECTIONS = {"needs": "needs", "plan.html": "needs", "samples": "samples", "publish.html": "publish", "first_app.html": "publish",
+            "business.html": "publish", "apps.html": "apps", "roadmap.html": "roadmap", "feedback.html": "roadmap", "feedback": "roadmap",
+            "index.html": "", "search.html": "", "404.html": ""}
+SANDBOX_FORM = CORP + "/developers/sandbox/"               # the short form; sandbox.html is the one page that opens it
+
+
+def section_of(out: str) -> str:
+    return SECTIONS.get(out, SECTIONS.get(out.split("/")[0], "learn"))
 
 
 # ── the page registry ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -115,6 +129,8 @@ class Page:
         self.title = re.sub(r"[`*]", "", m.group(1)).strip() if m else out
         self.html = ""
         self.toc: list[tuple[str, str]] = []
+        self.parts: list = []                    # a long page's parts (SPLIT), in their order
+        self.words: tuple | None = None          # the headings and first words the search reads, where page_words would read too much
 
     @property
     def short(self) -> str:                      # the nav label: a chapter's number and name; a sample keeps its whole title
@@ -124,9 +140,11 @@ class Page:
 EXAMPLE = "kit/blueprint_example.md"                # the blueprint filled in for an invented retailer
 
 
+TOP_PAGES = {"index": "index.html", "samples": "samples/index.html"}      # a page of site/pages/ that is not <its name>.html
+
+
 def collect() -> list[Page]:
-    pages = [Page("site/pages/" + p.name, "index.html" if p.stem == "index" else p.stem + ".html")
-             for p in sorted((SITE / "pages").glob("*.md"))]
+    pages = [Page("site/pages/" + p.name, TOP_PAGES.get(p.stem, p.stem + ".html")) for p in sorted((SITE / "pages").glob("*.md"))]
     for folder in ("guide", "recipes", "feedback"):
         for p in sorted((ROOT / folder).glob("*.md")):
             index = folder != "recipes" and p.name == "README.md"
@@ -189,12 +207,15 @@ class Ctx:
         self.src = self.out = ""
         self.cards: list = []                    # the needs cards, for a {{needs: …}} line
         self.samples: list = []                  # the sample cards, for {{samples: cards}}
-        self.door_pages: set = set()             # the doors that have a needs page
+        self.sample_index: list = []             # the samples index's entries, for {{samples: cards}}
+        self.moved: dict = {}                    # (a split page's file, an anchor) → the page that anchor now lands on
 
     def url(self, url: str) -> str:
         if url.startswith("site:"):              # a page the build makes (the catalogue's lists), by its place in the site
             return posixpath.relpath(url[5:].partition("#")[0], posixpath.dirname(self.out) or ".") + (
                 "#" + url.partition("#")[2] if "#" in url else "")
+        if url.startswith("#") and (self.src, url[1:]) in self.moved:      # an anchor of a split page may be on another of its parts
+            return posixpath.relpath(self.moved[self.src, url[1:]], posixpath.dirname(self.out) or ".") + url
         if re.match(r"^[a-z][a-z0-9+.-]*:", url, re.I) or url.startswith("#") or not url:
             return url
         path, _, frag = url.partition("#")
@@ -205,7 +226,7 @@ class Ctx:
             return url
         here = posixpath.dirname(self.out) or "."
         if rel in self.registry:
-            target = posixpath.relpath(self.registry[rel].out, here)
+            target = posixpath.relpath(self.moved.get((rel, frag)) or self.registry[rel].out, here)
         elif pathlib.PurePosixPath(rel).suffix.lower() in IMAGE_EXT:
             self.assets.add(rel)
             target = posixpath.relpath(rel, here)
@@ -278,8 +299,11 @@ def render(text: str, ctx: Ctx, seen: dict, toc: list | None, depth: int = 0) ->
     text = re.sub(r"^\{\{apps: my apps\}\}\s*$", lambda m: raw(apps_tool(here)), text, flags=re.M)
     text = re.sub(r"^\{\{publish: button\}\}\s*$", lambda m: raw(  # the App library's Publish page (PUBLISHWEB)
         f'<p class="hero-cta"><a class="site-btn" href="{PUBLISH_PAGE}">Publish</a></p>'), text, flags=re.M)
+    text = re.sub(r"^\{\{finder: needs\}\}\s*$", lambda m: raw(finder_tool(here)), text, flags=re.M)
     text = re.sub(r"^\{\{samples: cards\}\}\s*$", lambda m: raw(gallery.grouped(
-        ctx.samples, here, REPO_URL, catalogue.DOORS, ctx.door_pages, slug)), text, flags=re.M)
+        ctx.sample_index, here, catalogue.AREAS, {c.id: c.area for c in ctx.cards}, sample_script(here))), text, flags=re.M)
+    text = re.sub(r"(?:^\{\{card: .+\}\}\s*$\n?)+", lambda m: raw('<ul class="cards">' + "".join(
+        link_card(spec, ctx) for spec in re.findall(r"\{\{card: (.+)\}\}", m.group())) + "</ul>"), text, flags=re.M)
     text = re.sub(r"(?:^\{\{reference-app: .+\}\}\s*$\n?)+", lambda m: raw('<ul class="cards">' + "".join(
         gallery.reference_app(spec, ORG_URL, catalogue.DOORS, ctx.errors, ctx.src, NOT_OPEN_YET) for spec in re.findall(r"\{\{reference-app: (.+)\}\}", m.group()))
         + "</ul>"), text, flags=re.M)
@@ -311,6 +335,17 @@ def render(text: str, ctx: Ctx, seen: dict, toc: list | None, depth: int = 0) ->
     for key, val in includes.items():
         out = out.replace(f"<p>{key}</p>", val)
     return out
+
+
+def link_card(spec: str, ctx: Ctx) -> str:
+    """A card written by hand on a section page: `label | kit path | its words`."""
+    parts = [x.strip() for x in spec.split("|")]
+    if len(parts) != 3:
+        ctx.errors.append(f"{ctx.src}: a card needs `label | kit path | its words`: {spec}")
+        return ""
+    label, path, words = parts
+    return (f'<li class="card"><h3><a href="{html.escape(ctx.url(path), quote=True)}">{html.escape(label)}</a></h3>'
+            f"<p>{html.escape(words)}</p></li>")
 
 
 def first_use(page: Page) -> str:                # a sample's card text: its "When to use it" line, else its first paragraph
@@ -389,16 +424,21 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
           meta: "seo.PageMeta | None" = None, crumbs: str = "", verify: dict | None = None) -> str:
     up = "/" if absolute else up_of(out)
     own = out in OWN_POLICY
-    nav = "".join(f'<li><a href="{up}{href}"{" aria-current=\"page\"" if href == out else ""}>{html.escape(label)}</a></li>'
-                  for label, href in NAV)
+    section = section_of(out)
+    here = lambda key: ' aria-current="page"' if key == section else ""
+    nav = "".join(f'<li><a href="{up}{href}"{here(key)}>{html.escape(label)}</a></li>' for key, label, href in NAV)
+    links = {key: (label, href) for key, label, href in NAV}
+    item = lambda key, cls="": f'<li{cls}><a href="{up}{links[key][1]}"{here(key)}>{html.escape(links[key][0])}</a></li>'
+    menu = (item("learn", ' class="sec"') + item("samples", ' class="child"') + item("needs", ' class="child"')
+            + item("publish", ' class="sec"') + item("roadmap", ' class="child"')
+            + f'<li class="split"><a href="{up}sandbox.html">Request a sandbox</a></li><li><a href="{up}feedback.html">Feedback</a></li>')
     li = lambda items: "".join(f'<li><a href="{h}">{html.escape(t)}</a></li>' for t, h in items)
-    foot_site = li([("Needs catalogue", up + "needs/index.html"), ("Plan a project", up + "plan.html"),
-                    ("Get started", up + "first_app.html"), ("Guide", up + "guide/index.html"), ("Recipes", up + "recipes/index.html"),
-                    ("Samples", up + "samples/index.html"), ("Reference apps", up + "reference_apps.html"),
-                    ("Request a sandbox", up + "sandbox.html"), ("My apps", up + "apps.html"), ("Publish your app", up + "publish.html"),
-                    ("App library", seo.LIBRARY), ("App library: for partners", seo.LIBRARY + "/build")])
-    foot_kit = li([("The kit on GitHub", REPO_URL), ("Possible, not possible", up + "guide/16_possible_not_possible.html"),
-                   ("Tell us what is missing", up + "feedback.html")])
+    foot_learn = li([("Learn the kit", up + "learn.html"), ("Needs catalogue", up + "needs/index.html"), ("Plan a project", up + "plan.html"),
+                     ("Samples", up + "samples/index.html"), ("Recipes", up + "recipes/index.html"), ("The guide", up + "guide/index.html"),
+                     ("Request a sandbox", up + "sandbox.html"), ("The kit on GitHub", REPO_URL)])
+    foot_publish = li([("Build your first app", up + "first_app.html"), ("Publish your app", up + "publish.html"), ("My apps", up + "apps.html"),
+                       ("App library", seo.LIBRARY), ("App library: for partners", seo.LIBRARY + "/build"), ("Roadmap", up + "roadmap.html"),
+                       ("Tell us what is missing", up + "feedback.html")])
     desc = desc or "The iVendNext Developers site: the guide, recipes and samples for anyone who builds for an iVendNext customer."
     full_title = seo.title_of(meta.name, meta.home) if meta else seo.title_of(page_title)
     if not noindex and not meta:
@@ -432,10 +472,10 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
 <div class="band"><div class="band-in"><a href="{CORP}/">ivendnext.com</a><a href="{CORP}/partners/">Partners</a></div></div>
 <div class="bar">
 <a class="brand" href="{up}index.html"{" aria-current=\"page\"" if out == "index.html" else ""}><img src="{up}assets/logo.svg" alt="iVendNext" width="132" height="24"><span class="brand-sub">Developers</span></a>
-{search_box(up)}
 <nav class="nav-wide" aria-label="Main"><ul>{nav}</ul></nav>
-<a class="site-btn cta" href="{up}sandbox.html">Request a sandbox</a>
-<details class="menu"><summary>Menu</summary><nav aria-label="Main"><ul>{nav}<li><a href="{up}apps.html">My apps</a></li><li><a href="{up}sandbox.html">Request a sandbox</a></li></ul></nav></details>
+{search_box(up)}
+<a class="site-btn cta" href="{up}apps.html"{here("apps")}>My apps</a>
+<details class="menu"><summary>Menu</summary><nav aria-label="Main"><ul>{menu}</ul></nav></details>
 </div>
 </header>
 {(f'<main id="main" class="home">{hero}<div class="wrap"><div class="content">{body}{foot}</div>{on_page}</div></main>') if hero else
@@ -444,8 +484,8 @@ def shell(page_title: str, body: str, out: str, *, side: str = "", toc: list | N
 <div class="foot-in">
 <div class="foot-brand"><img src="{up}assets/logo-on-dark.svg" alt="iVendNext" width="132" height="24">
 <p>This site is built from the iVendNext partner kit's own guide{(" · build " + sha) if sha else ""}.</p></div>
-<nav aria-label="This site"><h2>Build</h2><ul>{foot_site}</ul></nav>
-<nav aria-label="The kit"><h2>The kit</h2><ul>{foot_kit}</ul></nav>
+<nav aria-label="Learn the kit"><h2>Learn the kit</h2><ul>{foot_learn}</ul></nav>
+<nav aria-label="Publish your app"><h2>Publish your app</h2><ul>{foot_publish}</ul></nav>
 <nav aria-label="iVendNext"><h2>iVendNext</h2><ul>{li(FOOT_CORP)}</ul></nav>
 </div>
 <div class="foot-base"><ul>{li(FOOT_LEGAL)}</ul>
@@ -462,6 +502,13 @@ class ListPage:                                   # a generated list page (recip
 
 
 def sidebar(page, pages: list[Page], lists: list[ListPage], up: str) -> str:
+    whole = page.page if isinstance(page, Part) else page
+    if getattr(whole, "parts", None):            # a split page and its parts: the page and its parts, not its whole group
+        cur = lambda out: ' aria-current="page"' if out == page.out else ""
+        li = ([f'<li><a href="{up}{whole.group}/index.html"><strong>{GROUPS[whole.group]}: all</strong></a></li>'] if whole.group else [])
+        li += [f'<li><a href="{up}{whole.out}"{cur(whole.out)}>{html.escape(whole.short)}</a></li>']
+        li += [f'<li class="sub"><a href="{up}{p.out}"{cur(p.out)}>{n}. {html.escape(p.label)}</a></li>' for n, p in enumerate(whole.parts, 1)]
+        return f'<nav class="side" aria-label="This page"><ul>{"".join(li)}</ul></nav>'
     if not page.group:
         return ""
     if page.group == "needs":                    # the catalogue's sidebar: its areas, not its 80-odd cards
@@ -851,6 +898,7 @@ def catalogue_pages(cards: list, titles: dict) -> list[GenPage]:
            "What retailers ask for, in their own words, and the answer for each: can you build it today, by which door, "
            "from which recipe and sample, and what to tell the customer. Start here when a customer sends you a list of needs. "
            f"[Plan a project](../site/pages/plan.md) shows the whole path from that list to a release.", "",
+           "{{finder: needs}}", "",
            "Type the need in the search box at the top of the page, find it in the **A to Z** list below (the customer's own words), "
            "or browse by area (each grouped by topic), by verdict or by door. "
            "Each card's verdict is one of four words: **Ready** · **Ready, with limits** (tell the customer each limit) · "
@@ -958,7 +1006,7 @@ def catalogue_json(cards: list, titles: dict | None = None, pages: dict | None =
                         "topic": c.topic, "door": c.door, "blocked_by": c.blocked_by, "recipe": c.recipe, "sample": c.sample,
                         "request": c.requests, "verified": c.verified, "limits": c.limits,
                         "tell": c.sections.get("Tell the customer", ""), "page": f"needs/{c.area}/{c.id}.html",
-                        "door_name": door_name(c.door), "topic_name": topic_name(c),
+                        "door_name": door_name(c.door), "topic_name": topic_name(c), "area_name": catalogue.AREAS[c.area],
                         "build_step": build_step(c.door), "build_why": build_why(c.door),
                         "recipes": proofs(c, "recipe"), "samples": proofs(c, "sample"),
                         "request_forms": [{"handle": h, "url": request_url(h, c)} for h in c.requests],
@@ -983,6 +1031,343 @@ def plan_tool(here: str) -> str:
             '<ul id="plan-found" class="plan-list" aria-live="polite"></ul>'
             '<div id="plan-out" aria-live="polite"></div></section>'
             f'<script src="{up}assets/plan.js" defer></script>')
+
+
+def finder_tool(here: str) -> str:
+    """The Needs page's finder (site/assets-src/finder.js fills it): each line of a customer's list, matched to its need by the
+    site's own search. It stays hidden until the script shows it, so without script the page is the catalogue below it."""
+    up = "../" * (here.count("/") + 1) if here else ""
+    return (f'<section id="finder" class="finder" data-root="{up}" aria-labelledby="find-what-fits" hidden>'
+            '<h2 id="find-what-fits">Find what fits your customer\'s needs</h2>'
+            "<p>Type one need, or paste the customer's list, one need a line. Each line gets the nearest need in the catalogue, whether you "
+            "can build it today, and how: check it is the one your customer means.</p>"
+            '<label class="vh" for="finder-list">The customer\'s needs, one a line</label>'
+            f'<textarea id="finder-list" rows="4" spellcheck="false" placeholder="{html.escape(chr(10).join(FINDER_EXAMPLE), quote=True)}"></textarea>'
+            '<ol id="finder-out" class="finder-out" aria-live="polite"></ol>'
+            '<p id="finder-plan" class="next" hidden><a id="finder-plan-link" class="site-btn" href="' + up + 'plan.html">Plan these needs</a>'
+            '<span id="finder-count" class="finder-count"></span></p></section>'
+            f'<script src="{up}assets/finder.js" defer></script>')
+
+
+FINDER_EXAMPLE = ("Branch sees only own + HQ stock", "Cap manager discount overrides per branch per day", "Item price list with photos")
+
+
+def sample_script(here: str) -> str:
+    up = "../" * (here.count("/") + 1) if here else ""
+    return f'<script src="{up}assets/samples.js" defer></script>'
+
+
+# ── the home page: the needs box and the two section cards, between the hero and the page's own words ─────────────────
+# (the customer's question, where it is done, the page), a card's two buttons after them.
+HOME_SECTIONS = (
+    ("learn-the-kit", "What you can build, and how", "Learn the kit",
+     (("What can I build?", "What you can use", "map.html"), ("A customer sent me a list of needs", "Needs", "needs/index.html"),
+      ("Plan the project and the quote", "Plan a project", "plan.html"), ("Give me working code to start from", "Samples", "samples/index.html"),
+      ("Which way in, and the rules", "The ladder", "guide/03_ladder_and_never_list.html"), ("Look up the detail", "Recipes", "recipes/index.html")),
+     (("Learn the kit", "learn.html"),)),
+    ("publish-your-app", "Make it, try it, send it to your customer", "Publish your app",
+     (("Make my first app from a sample", "Build your first app", "first_app.html"), ("Try it on my sandbox", "My apps", "apps.html"),
+      ("Send it to my customer", "Publish to a customer", "publish.html#the-steps"), ("List it for every retailer", "List it in the App library", "publish.html#the-steps"),
+      ("Sell a copy of one of iVendNext's apps", "Build your business", "business.html"), ("Publish from a build server", "Tokens", "publish.html#more-you-can-do")),
+     (("Publish your app", "publish.html"), ("My apps", "apps.html"))),
+)
+
+
+def home_front() -> str:
+    """The needs box (a plain form to the finder) and the section cards. No script: each works as a link."""
+    e = lambda s: html.escape(s, quote=True)
+    box = ('<form class="finder-strip" action="needs/index.html" method="get"><label for="home-list"><strong>A customer sent you a list of '
+           "needs?</strong> Type it or paste it, one need a line, and see what you can build today.</label>"
+           f'<div class="finder-row"><textarea id="home-list" name="list" rows="2" spellcheck="false" placeholder="{e(FINDER_EXAMPLE[0])}"></textarea>'
+           '<button class="site-btn" type="submit">Find what fits</button></div></form>')
+    cards = ""
+    for sid, eyebrow, title, jobs, buttons in HOME_SECTIONS:
+        rows = "".join(f'<li><span class="q">{e(q)}</span><a href="{h}">{e(t)}</a></li>' for q, t, h in jobs)
+        btns = "".join(f'<a class="site-btn{" site-btn-ghost" if i else ""}" href="{h}">{e(t)}</a>' for i, (t, h) in enumerate(buttons))
+        cards += (f'<section class="section-card" aria-labelledby="{sid}"><p class="eyebrow">{e(eyebrow)}</p><h2 id="{sid}">{e(title)}</h2>'
+                  f'<ul class="jobs">{rows}</ul><p class="next">{btns}</p></section>')
+    return f'<div class="wrap wrap-front">{box}<div class="sections">{cards}</div></div>'
+
+
+# ── every page opens with what it is for, then its next step ─────────────────────────────────────────────────────────
+VOID = {"img", "br", "hr", "input", "meta", "link", "source", "wbr", "col", "area"}
+
+
+def top_blocks(text: str) -> list[str]:
+    """Split HTML into its top-level elements (and stray text), keeping every byte."""
+    out, depth, start = [], 0, 0
+    for m in re.finditer(r"<(/?)([a-zA-Z][a-zA-Z0-9]*)\b[^>]*?(/?)>", text):
+        closing, tag, selfclose = m.group(1), m.group(2).lower(), m.group(3)
+        if tag in VOID or selfclose:
+            if depth == 0:
+                if text[start:m.start()].strip():
+                    out.append(text[start:m.start()])
+                out.append(m.group(0))
+                start = m.end()
+            continue
+        if not closing:
+            if depth == 0:
+                if text[start:m.start()].strip():
+                    out.append(text[start:m.start()])
+                start = m.start()
+            depth += 1
+        else:
+            depth -= 1
+            if depth == 0:
+                out.append(text[start:m.end()])
+                start = m.end()
+    if text[start:].strip():
+        out.append(text[start:])
+    return out
+
+
+def is_lead(block: str) -> bool:
+    """A paragraph of real words: not a picture, a line in italics, a short start line, or a line that introduces what follows it."""
+    s = block.strip()
+    if not s.startswith("<p>") or "<img" in s:
+        return False
+    inner = s[3:-4].strip() if s.endswith("</p>") else s
+    plain_words = html.unescape(re.sub(r"<[^>]+>", " ", s)).strip()
+    return (len(plain_words.split()) >= 12 and not plain_words.endswith(":") and
+            not (inner.startswith("<em>") and inner.endswith("</em>")))
+
+
+def after_first_block(main: str, nexts: str) -> str:
+    """A page the build writes from the cards: its next step straight after the first thing under its title, which says what it is."""
+    m = re.search(r"</h1>", main)
+    if not m or not nexts:
+        return main
+    blocks = top_blocks(main[m.end():])
+    return main[:m.end()] + "".join(blocks[:1]) + nexts + "".join(blocks[1:])
+
+
+def next_buttons(nexts: list, up: str, primary: bool = True) -> str:
+    """The page's next step: a row of buttons, the first one primary unless the page already has one. A target is a page of the site,
+    an anchor or an outside address."""
+    if not nexts:
+        return ""
+    def button(i: int, label: str, target: str) -> str:
+        href = target if target.startswith(("http", "#")) else up + target
+        return f'<a class="site-btn{" site-btn-ghost" if i or not primary else ""}" href="{html.escape(href, quote=True)}">{html.escape(label)}</a>'
+    return '<p class="next">' + "".join(button(i, t, h) for i, (t, h) in enumerate(nexts)) + "</p>"
+
+
+def lead_first(main: str, nexts: str, after: str = "") -> str:
+    """The page says what it is for first: its first paragraph of real words moves under the title, its next step after it; a
+    picture, its caption or a start line that opened the page follows them. No word is added or dropped. A button that sits right
+    under the title (a sample's Start an app) stays there. `after` goes straight after the next step."""
+    m = re.search(r'</h1>(?:<p class="(?:start-app|part-of)">.*?</p>)?', main, re.S)
+    if not m:
+        return main
+    head, body = main[:m.end()], main[m.end():]
+    blocks = top_blocks(body)
+    for i, b in enumerate(blocks):
+        if re.match(r"\s*<(?:h[2-6]|ul|ol|pre|div|table)\b", b):        # a paragraph after these follows from them: it stays there
+            break
+        if is_lead(b):
+            lead, _, files = b.strip().partition("<strong>Reference implementation:</strong>")   # one long paragraph: its purpose first, its files after
+            rest = [f"<p><strong>Reference implementation:</strong>{files}"] if files and len(lead.split()) >= 12 else []
+            lead = lead.rstrip() + "</p>" if rest else b.strip()
+            lead = re.sub(r"^\s*<p\b", '<p class="lead"', lead, count=1)
+            return head + lead + nexts + after + "".join(blocks[:i] + rest + blocks[i + 1:])
+    return head + nexts + after + body
+
+
+# Each page's next step, by address; the guide's chapters, the recipes and the samples follow their own order (next_steps).
+ROOT_NEXT = {"learn.html": [("Next: Build your first app", "first_app.html"), ("Request a sandbox", "sandbox.html")],
+             "first_app.html": [("Next: sign in on My apps", "apps.html"), ("Request a sandbox", "sandbox.html")],
+             "publish.html": [("My apps", "apps.html"), ("Build your first app", "first_app.html"), ("Request a sandbox", "sandbox.html")],
+             "business.html": [("Next: Publish your app", "publish.html")],
+             "samples/index.html": [("Next: Build your first app", "first_app.html"), ("Find the sample for a need", "needs/index.html")],
+             "plan.html": [("Next: Build your first app", "first_app.html"), ("The project blueprint", "kit/blueprint.html")],
+             "map.html": [("Next: Build your first app", "first_app.html"), ("Needs catalogue", "needs/index.html")],
+             "guide/01_welcome.html": [("Next: Build your first app", "first_app.html"), ("3. The ladder and the four rules", "guide/03_ladder_and_never_list.html")],
+             "guide/01a_how_it_all_works.html": [("Next: Build your first app", "first_app.html")],
+             "guide/01c_how_the_data_travels.html": [("Next: What you can use", "map.html")],
+             "api.html": [("Next: Security and the handshake", "security.html")],
+             "security.html": [("Next: Build your first app", "first_app.html")],
+             "starters.html": [("Next: Samples", "samples/index.html")],
+             "roadmap.html": [("What we build", "#what-we-build"), ("What you build", "#what-you-build"), ("Claim a need", "#claim-a-need")],
+             "feedback.html": [("Next: Roadmap", "roadmap.html")],
+             "sandbox.html": [("Open the sandbox request form", SANDBOX_FORM), ("Next: Build your first app", "first_app.html")],
+             "kit/blueprint.html": [("Next: Plan a project", "plan.html"), ("Blueprint template", "kit/blueprint_template.html")],
+             "kit/blueprint_example.html": [("Next: Blueprint template", "kit/blueprint_template.html")],
+             "kit/blueprint_template.html": [("Next: Plan a project", "plan.html")],
+             "guide/index.html": [("Next: How it all works", "guide/01a_how_it_all_works.html")]}
+NO_OPENING = {"index.html", "apps.html"}                  # the home page has its hero; My apps is its own tool
+
+
+def next_steps(page, pages: list, sample_of: dict, index_by_folder: dict) -> list:
+    """Where a page sends its reader next: [(words, target)], the first one the main step."""
+    if page.out in ROOT_NEXT:
+        return ROOT_NEXT[page.out]
+    if page.out.startswith("guide/"):
+        seq = [p for p in pages if p.out.startswith("guide/") and not p.out.endswith("index.html")]
+        i = seq.index(page)
+        return [(f"Next: {seq[i + 1].short}", seq[i + 1].out)] if i + 1 < len(seq) else [("All chapters", "guide/index.html")]
+    if page.group == "recipes":
+        s = sample_of.get(page.out)
+        return [(f"Next: the sample, {s[0]}", s[1]) if s else ("Next: Build your first app", "first_app.html"), ("All recipes", "recipes/index.html")]
+    if page.group == "samples":
+        e = index_by_folder.get(page.src.removesuffix("/README.md"))
+        steps = [(f"The recipe: {e['recipe_title'].split(' — ')[0]}", e["recipe"])] if e and e.get("recipe") and e.get("recipe_title") else []
+        if e and (e["config_pack"] or e["by_hand"]):
+            steps.append(("The sample's README", f"{REPO_URL}/blob/main/{page.src}"))
+        return steps
+    if page.group == "feedback":
+        return [("Open a form", "feedback.html#open-a-form")]
+    return [("Next: Learn the kit", "learn.html")]                  # a new top-level page, until it names its own
+
+
+# ── a long page split along its own headings ─────────────────────────────────────────────────────────────────────────
+WORD_LIMIT = 3000                                         # no page of prose over this (test_site.py holds it)
+# {a kit file: [(the part's address after the page's own, its title, the id of the heading it starts at)]}. A part runs up to the
+# next part's heading; what comes before the first part stays on the overview. A heading that is gone fails the build.
+SPLIT = {
+    "recipes/manifest.md": [("steps", "Steps: write, check and install a manifest", "steps"),
+                            ("more", "More you can add", "adding-details-to-a-sale"),
+                            ("card", "What a retailer reads: the card and the guide", "what-a-retailer-reads-the-card-and-the-guide"),
+                            ("refused", "What is refused, and why", "what-is-refused-and-why"),
+                            ("notes", "Technical notes", "when-your-service-is-down-and-when-the-till-is-offline")],
+    "recipes/event_feed.md": [("setup", "Register, pull and read the queue", "1-register-your-application-the-install-does-this"),
+                              ("labels", "The labels, the reconciliation and the reference client", "4-the-published-labels"),
+                              ("patterns", "Two patterns built on the feed, and the nudge", "7-two-patterns-built-on-the-feed"),
+                              ("notes", "Technical notes", "technical-notes")],
+    "guide/07_manifests.md": [("steps", "Steps", "steps"), ("kinds", "The extension points' kinds", "the-extension-points-kinds"),
+                              ("reports", "Reports, reminders, settings records and multi-select fields", "reports-reminders-settings-records-and-multi-select-fields"),
+                              ("books", "Register books, limited fields and your Desk page", "register-books-limited-fields-and-your-desk-page"),
+                              ("print", "Print formats that read other records", "print-formats-that-read-other-records-ivn_rows-and-ivn_value"),
+                              ("example", "Worked example: an approval", "worked-example-an-approval"),
+                              ("notes", "What is refused, and technical notes", "what-is-refused-and-why")],
+    "guide/09_points_and_requests.md": [("points", "The extension points", "the-extension-points"),
+                                        ("more", "More extension points", "more-extension-points"),
+                                        ("asking", "Asking for a new extension point, or for more from one", "asking-for-a-new-extension-point-or-for-more-from-one"),
+                                        ("down", "When your service is down, and when the till is offline", "when-your-service-is-down-and-when-the-till-is-offline"),
+                                        ("notes", "Technical notes", "technical-notes")],
+    "guide/01c_how_the_data_travels.md": [("loyalty", "Example 1: a chain's own loyalty system", "example-1-a-chains-own-loyalty-system"),
+                                          ("phone", "Example 2: a phone retailer's mobile plans from a telecom company", "example-2-a-phone-retailers-mobile-plans-from-a-telecom-company"),
+                                          ("notes", "What both outside systems share", "what-both-outside-systems-share")],
+    "guide/16_possible_not_possible.md": [("possible", "Possible today", "possible-today"),
+                                          ("possible-more", "Possible today with an extension point or a manifest", "with-an-extension-point-or-a-manifest"),
+                                          ("rules", "The four rules, and when the product has no door", "the-four-rules"),
+                                          ("quote", "How it behaves before you quote, and technical notes", "how-it-behaves-before-you-quote")],
+    "site/pages/map.md": [("calls", "(a) iVendNext endpoints your app calls", "a-ivendnext-endpoints-your-app-calls"),
+                          ("service", "(b) Endpoints iVendNext calls on your service", "b-endpoints-ivendnext-calls-on-your-service"),
+                          ("manifest", "(c) What a manifest can add", "c-what-a-manifest-can-add"),
+                          ("screens", "(d) Screens you can add, and record types", "d-screens-you-can-add")],
+}
+
+
+NOT_PROSE = re.compile(r"(needs|records)/|samples/index\.html$|recipes/index\.html$|404\.html$|search\.html$")   # lists and tables, read by finding a row
+
+
+def main_words(text: str) -> int:
+    """The words a reader meets in a page's <main>."""
+    m = re.search(r'<main id="main"[^>]*>(.*)</main>', text, re.S)
+    return len(html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)\b.*?</\1>", " ", m.group(1), flags=re.S))).split()) if m else 0
+
+
+def long_pages(root: pathlib.Path) -> dict[str, int]:
+    """The pages of prose over the limit in a built site. The build says so as a warning, like a long title's."""
+    found = {}
+    for f in root.rglob("*.html"):
+        out = f.relative_to(root).as_posix()
+        if not NOT_PROSE.match(out) and (words := main_words(f.read_text("utf-8"))) > WORD_LIMIT:
+            found[out] = words
+    return found
+
+
+class Part:
+    """One page of a split page: its own address and title, cut from the whole page's HTML, so an anchor keeps its id."""
+    def __init__(self, page: Page, key: str, title: str, first: str):
+        self.page, self.title, self.first = page, title, first
+        self.out = f"{page.out.removesuffix('.html')}-{key}.html"
+        self.src, self.group = page.src, page.group
+        self.label = title.split(":")[0]
+        self.html = ""
+        self.words: tuple | None = None
+
+    @property
+    def short(self) -> str:
+        return self.title
+
+
+def cut_parts(page: Page, text: str, errors: list) -> str:
+    """Cut the whole page's HTML at each part's first heading: each part takes its piece; the piece before the first part is returned."""
+    spots = []
+    for part in page.parts:
+        m = re.search(rf'<h[23] id="{re.escape(part.first)}">', text)
+        if not m:
+            errors.append(f"site/build.py SPLIT: {page.src} has no heading with the id {part.first}: name the heading the part now starts at")
+            return text
+        spots.append(m.start())
+    if spots != sorted(spots):
+        errors.append(f"site/build.py SPLIT: {page.src}: the parts are not in the page's own order")
+        return text
+    for part, start, end in zip(page.parts, spots, spots[1:] + [len(text)]):
+        part.html = text[start:end]
+    return text[:spots[0]]
+
+
+def part_body(part: Part, n: int, nav: str) -> str:
+    """A part's page. Where its first heading says the same as its title, the title takes that heading's place and its id."""
+    whole, body, hid = part.page, part.html, ""
+    m = re.match(r'<h[23] id="([^"]+)">(.*?)</h[23]>\s*', body, re.S)
+    if m and html.unescape(re.sub(r"<[^>]+>", "", m.group(2))).strip() == part.title:
+        hid, body = f' id="{m.group(1)}"', body[m.end():]
+    of = f'<p class="part-of">Part {n} of {len(whole.parts)} · <a href="{posixpath.basename(whole.out)}">{html.escape(whole.short)}</a></p>'
+    return lead_first(f"<h1{hid}>{html.escape(part.title)}</h1>{of}{body}", nav) + nav
+
+
+def part_name(whole: Page, part: Part) -> str:
+    """A part's name in the search and its title: its own, then its page's where the two fit a title."""
+    name = f"{part.title} · {seo.clean_name(whole.short).split(':')[0]}"
+    return name if len(name) <= seo.FAIL_TITLE_OVER else part.title
+
+
+def part_toc(part: Part) -> list[tuple[str, str]]:
+    """A part's own On this page: the level-two headings it holds, its first one if the title has not taken its place."""
+    label = lambda h: html.unescape(re.sub(r"<[^>]+>", "", h)).strip()
+    return [(i, label(h)) for i, h in re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', part.html, re.S) if label(h) != part.title]
+
+
+def part_nav(whole: Page, i: int, up: str, nexts: list) -> str:
+    """Back and Next along a split page; from the last part, the whole page's own next step."""
+    back = whole.parts[i - 1] if i else None
+    btn = lambda ghost, label, target: (f'<a class="site-btn{" site-btn-ghost" if ghost else ""}" '
+                                        f'href="{html.escape(target if target.startswith("http") else up + target, quote=True)}">{html.escape(label)}</a>')
+    out = btn(True, f"Back: {back.label}" if back else "Back: the overview", back.out if back else whole.out)
+    if i + 1 < len(whole.parts):
+        out += btn(False, f"Next: {whole.parts[i + 1].label}", whole.parts[i + 1].out)
+    elif nexts:
+        out += btn(False, *nexts[0])
+    return f'<p class="next part-nav">{out}</p>'
+
+
+NUMBER = ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
+
+
+def ids_of(text: str) -> list[str]:
+    return re.findall(r'\bid="([^"]+)"', text)
+
+
+def part_prose(text: str) -> str:
+    """A piece of HTML's own sentences, for its description and the card that names it: paragraphs and list items, no code or
+    tables, and no sentence that only introduces what follows it."""
+    text = re.sub(r"<(pre|table)\b.*?</\1>", " ", text, flags=re.S)
+    out = []
+    for _, para in re.findall(r"<(p|li)\b[^>]*>(.*?)</\1>", text, re.S):
+        p = html.unescape(re.sub(r"<[^>]+>", "", para)).strip()
+        p = re.sub(r"[^.!?]*:$", "", p).strip()
+        if p:
+            out.append(p)
+    return " ".join(out)
+
+
+def part_words(text: str) -> tuple[list[str], str]:
+    """What the search reads of a piece of HTML: its headings and its first words, as page_words reads a kit page."""
+    heads = [html.unescape(re.sub(r"<[^>]+>", "", h)).strip() for h in re.findall(r"<h[23][^>]*>(.*?)</h[23]>", text, re.S)]
+    return heads, part_prose(text)[:600]
 
 
 HOSTING_API = "https://hosting.ivendnext.app"            # the hosting's web door: apps.js calls this
@@ -1123,11 +1508,17 @@ def search_docs(pages: list, cards: list, groups: list[list[str]], records: list
     for p in pages:
         if p.out == "index.html":
             continue
-        heads, first = page_words(p.text)
+        heads, first = p.words or page_words(p.text)
         asks = ASKS_ADDED.get(p.out, "")
         docs.append({"id": p.out, "k": SEARCH_GROUPS.get(p.group, "guide"), "t": p.title, "a": asks,
                      "s": expand(p.title + " " + " ".join(heads), groups), "tp": "", "l": "", "c": "",
                      "b": " · ".join(heads) + " " + first, "u": p.out, "v": "", "ar": "", "d": "", "st": ""})
+        for part in p.parts:                       # a part of a long page: found by its own title and headings
+            heads, first = part.words
+            title = part.title if len(part.title.split()) > 4 else part_name(p, part)    # a short title is named with its page, so it reads alone
+            docs.append({"id": part.out, "k": SEARCH_GROUPS.get(p.group, "guide"), "t": title, "a": "",
+                         "s": expand(title + " " + " ".join(heads), groups), "tp": "", "l": "", "c": "",
+                         "b": " · ".join(heads) + " " + first, "u": part.out, "v": "", "ar": "", "d": "", "st": ""})
     for g in records:                              # a record type: its name and first paragraph, no synonyms, so a guide or recipe
         first = g.desc                             # that answers a word ("loyalty") still leads; the index takes the developer's words
         words = expand("record type fields doctype", groups) if g.out == "records/index.html" else ""
@@ -1152,6 +1543,55 @@ def search_page() -> str:
             '<a href="needs/all.html">every need on one page</a> and use your browser\'s find, or read the '
             '<a href="needs/index.html#a-to-z">A to Z list</a>.</p></noscript>'
             '<div id="search-results" aria-live="polite"></div>')
+
+
+def recipe_samples(pages: list, entries: list) -> dict[str, tuple[str, str]]:
+    """{a recipe's page: (its sample's name, its page)}: the sample its Reference implementation line names first, else a sample
+    whose own recipe it is. A recipe with neither has none: a card that merely cites both is no reason to send a reader there."""
+    by_id = {e["name"].split("_")[0]: e for e in entries}
+    own: dict[str, dict] = {}
+    for e in entries:
+        if e["recipe"]:
+            own.setdefault(e["recipe"], e)
+    out = {}
+    for p in pages:
+        if p.group != "recipes":
+            continue
+        line = re.search(r"\*\*Reference implementation:?\*\*:?(.{0,400})", p.text, re.S)
+        named = re.search(r"samples/(s\d+)_|\b(S\d+)\b", line.group(1)) if line else None
+        e = by_id.get((named.group(1) or named.group(2)).lower()) if named else None
+        e = e or own.get(p.out)
+        if e:
+            out[p.out] = (f"{e['name'].split('_')[0].upper()} · {e['short']}", f"samples/{e['name']}/index.html")
+    return out
+
+
+def recipes_page(rec: list, cards: list, metas: dict, sample_of: dict) -> tuple[str, list]:
+    """The recipes page: each recipe under the area of the cards that use it most (the first such area on a tie), the recipes no
+    card names first, as the building blocks. A card's words are the recipe's own description."""
+    areas = list(catalogue.AREAS)
+    used: dict[str, list] = {}
+    for c in cards:
+        for path in c.paths("recipe"):
+            used.setdefault(path, []).append(c.area)
+    groups: dict[str, list] = {}
+    for p in rec:
+        mine = used.get(p.src, [])
+        groups.setdefault(min(set(mine), key=lambda a: (-mine.count(a), areas.index(a))) if mine else "blocks", []).append(p)
+    label = lambda k: "The building blocks" if k == "blocks" else catalogue.AREAS[k]
+    order = [k for k in ["blocks"] + areas if k in groups]
+
+    def rcard(p) -> str:
+        s = sample_of.get(p.out)
+        note = f'<p class="note">Sample: <a href="../{s[1]}">{html.escape(s[0])}</a></p>' if s else ""
+        return (f'<li class="card"><h3><a href="{posixpath.basename(p.out)}">{html.escape(p.short)}</a></h3>'
+                f"<p>{html.escape(metas[p.out].desc)}</p>{note}</li>")
+    body = "".join(f'<h2 id="{k}">{html.escape(label(k))} <span class="gcount">{len(groups[k])}</span></h2>'
+                   f'<ul class="cards">{"".join(rcard(p) for p in sorted(groups[k], key=lambda p: p.short.lower()))}</ul>' for k in order)
+    top = ('<h1>Recipes</h1><p class="lead">One recipe for each job. Each says what it does and who it is for, gives the steps with '
+           "their commands, and says what is refused.</p>"
+           + next_buttons([("Samples", "samples/index.html"), ("Find the recipe for a need", "needs/index.html")], "../"))
+    return top + body, [(k, label(k)) for k in order]
 
 
 def needs_served(page, served: dict, up: str) -> str:
@@ -1185,7 +1625,7 @@ def not_found_body(cards: list) -> str:
             '<label for="q-404">Search for</label><input id="q-404" name="q" type="search" autocomplete="off" spellcheck="false">'
             '<button class="site-btn" type="submit">Search</button></p></form>'
             '<ul class="plain"><li><a href="/needs/index.html">A customer sent me a list of needs</a></li>'
-            '<li><a href="/build.html">I know what I\'m building</a></li><li><a href="/first_app.html">I\'m new</a></li></ul>'
+            '<li><a href="/learn.html">I know what I\'m building</a></li><li><a href="/first_app.html">I\'m new</a></li></ul>'
             f'<h2>Every need, A to Z</h2>{az}')
 
 
@@ -1218,7 +1658,19 @@ def build(out_dir: pathlib.Path) -> int:
     ctx.samples = gallery.collect(pages, served, catalogue.DOORS, first_use, slug, ROOT, errors)
     errors += gallery.readme_errors(ROOT)                           # Industries, Try it at the till, Versions
     errors += gallery.door_picture_errors(ctx.samples, catalogue.DOORS, ROOT)    # a sample with no screenshot: its door's
-    ctx.door_pages = {c.door for c in need_cards}
+    sample_index = gallery.index(ctx.samples, pages, served, catalogue.DOORS, ROOT)
+    ctx.sample_index = sample_index["samples"]
+    by_folder = {f"samples/{e['name']}": e for e in ctx.sample_index}
+    sample_of = recipe_samples(pages, ctx.sample_index)
+    errors += [f"site/build.py SPLIT: {src} is not a page of the site" for src in SPLIT if src not in registry]
+    for p in pages:                                                 # a long page's parts, so that every page's links can find what moved
+        if p.src in SPLIT:
+            p.parts = [Part(p, *spec) for spec in SPLIT[p.src]]
+            ctx.src, ctx.out = p.src, p.out
+            intro = cut_parts(p, render(p.text, ctx, {}, []), errors)
+            ctx.moved.update({(p.src, i): p.out for i in ids_of(intro)})
+            for part in p.parts:
+                ctx.moved.update({(p.src, i): part.out for i in ids_of(part.html)})
     assets.update(s["shot"] for s in ctx.samples if s["shot"])
     try:                                                            # each sample's picture in the samples index
         pictures = gallery.door_pictures(ROOT)
@@ -1255,6 +1707,8 @@ def build(out_dir: pathlib.Path) -> int:
     def kinds(out: str, group: str) -> tuple[str, str]:                 # (description kind, preview image)
         if out in card_outs:
             return "card", "card"
+        if out == "samples/index.html":
+            return "page", "samples"
         if group == "guide" and out == "guide/index.html":
             return "page", "guide"
         return {"needs": ("needs", "needs"), "guide": ("guide", "guide"), "recipes": ("recipe", "recipes"),
@@ -1277,10 +1731,14 @@ def build(out_dir: pathlib.Path) -> int:
             return [(GROUPS[group], idx)] if out == idx else [(GROUPS[group], idx), (name, out)]
         return [(name, out)]
 
-    def make_meta(out: str, name: str, group: str, text: str, srcs: list[str]) -> seo.PageMeta:
+    def with_section(out: str, trail: list) -> list:                    # the section's step, unless the trail starts there
+        step = next(((label, href) for key, label, href in NAV if key == section_of(out)), None)
+        return [step] + trail if step and out != step[1] and (not trail or trail[0][1] != step[1]) else trail
+
+    def make_meta(out: str, name: str, group: str, text: str, srcs: list[str], trail: list | None = None) -> seo.PageMeta:
         kind, image = kinds(out, group)
         m = seo.PageMeta(name=seo_data.get("titles", {}).get(out, name), desc=hand.get(out) or seo.fit(text, kind), kind=kind, image=image,
-                         trail=trail_for(out, name, group), modified=seo.newest(dates, srcs), home=(out == "index.html"))
+                         trail=with_section(out, trail if trail is not None else trail_for(out, name, group)), modified=seo.newest(dates, srcs), home=(out == "index.html"))
         metas[out], sources[out] = m, srcs
         originals[out] = name
         return m
@@ -1305,8 +1763,36 @@ def build(out_dir: pathlib.Path) -> int:
         src_link = ("" if p.src.startswith("site/pages/")
                     else f'<p class="src"><a href="{REPO_URL}/blob/main/{p.src}">This page in the kit</a></p>')
         hero, body = hero_of(p.html) if p.out == "index.html" else ("", p.html)
+        if hero:
+            hero += home_front()
         served_html = needs_served(p, served, up) if p.group in ("recipes", "samples") else ""
         meta = make_meta(p.out, p.title, p.group, seo.lead(p.text), page_sources(p))
+        nexts = next_steps(p, pages, sample_of, by_folder)
+        if p.parts:
+            intro = cut_parts(p, p.html, errors)
+            whole_trail = trail_for(p.out, p.title, p.group)
+            for part in p.parts:
+                part.words = part_words(part.html)
+                make_meta(part.out, part_name(p, part), p.group, part_prose(part.html), page_sources(p),
+                          trail=whole_trail + [(part.title, part.out)])
+            cards = "".join(f'<li class="card"><h3><span class="n">{n}</span><a href="{posixpath.basename(part.out)}">{html.escape(part.title)}</a></h3></li>'
+                            for n, part in enumerate(p.parts, 1))
+            count = len(p.parts)
+            parts_block = f'<h2 id="the-parts">In {NUMBER[count]} parts</h2><ol class="cards parts">{cards}</ol>'
+            body = lead_first(intro, next_buttons([(f"Next: Part 1, {p.parts[0].label}", p.parts[0].out)] + nexts, up), parts_block)
+            heads, first = part_words(intro)
+            p.words = (heads + [part.title for part in p.parts], first)
+            own = set(ids_of(intro))
+            toc = [("the-parts", f"In {NUMBER[count]} parts")] + [t for t in toc if t[0] in own]
+            for i, part in enumerate(p.parts):
+                pmeta = metas[part.out]
+                pbody = part_body(part, i + 1, part_nav(p, i, up, nexts))
+                write(part.out, shell(part.title, pbody, part.out, side=sidebar(part, pages, lists, up), toc=part_toc(part), foot=src_link,
+                                      sha=sha, meta=pmeta, crumbs=seo.crumbs_html(pmeta.trail, up), verify=seo_data))
+        elif p.out not in NO_OPENING:
+            body = lead_first(p.html, next_buttons(nexts, up, primary=START_BUTTON not in p.html))
+        if p.out == "samples/index.html":
+            toc = gallery.group_toc(ctx.sample_index, catalogue.AREAS, {c.id: c.area for c in need_cards}) + toc
         write(p.out, shell(p.title, body, p.out, side=sidebar(p, pages, lists, up), toc=toc, hero=hero,
                            foot=served_html + prev_next(p, pages, up) + src_link, sha=sha, meta=meta,
                            crumbs=seo.crumbs_html(meta.trail, up), verify=seo_data))
@@ -1316,6 +1802,10 @@ def build(out_dir: pathlib.Path) -> int:
         toc = []
         g.html = render(g.text, ctx, {}, toc)
         up = up_of(g.out)
+        if g.out in card_outs:
+            g.html = after_first_block(g.html, next_buttons([("What next", "#what-next")], up))
+        elif g.out != "needs/index.html":                           # the catalogue's own page has the finder, and its Plan these needs
+            g.html = after_first_block(g.html, next_buttons([("Next: Plan a project", "plan.html")], up))
         src_link = (f'<p class="src"><a href="{REPO_URL}/blob/main/{g.src}">This card in the kit</a></p>'
                     if g.src.count("/") == 2 and (ROOT / g.src).exists() else "")
         area = re.fullmatch(r"needs/([a-z]+)/index\.html", g.out)
@@ -1329,6 +1819,8 @@ def build(out_dir: pathlib.Path) -> int:
         toc = []
         g.html = render(g.text, ctx, {}, toc)
         up = up_of(g.out)
+        g.html = after_first_block(g.html, next_buttons([("Next: API reference", "api.html")] if g.out == "records/index.html"
+                                                        else [("All record types", "records/index.html")], up))
         data = g.src.removesuffix(".md") + ".json"
         srcs = [data, "tools/records/records.py"] if (ROOT / data).exists() else ["api/records/", "tools/records/records.py"]
         src_link = f'<p class="src"><a href="{REPO_URL}/blob/main/{data}">This record type in the kit</a></p>' if (ROOT / data).exists() else ""
@@ -1338,27 +1830,16 @@ def build(out_dir: pathlib.Path) -> int:
     proof_pages = {k: v.out for k, v in registry.items() if isinstance(v, (Page, ListPage)) and k != "recipes" and k != "samples"}
     write("catalogue.json", catalogue_json(need_cards, titles, proof_pages, related))
     import json
-    write("samples/index.json", json.dumps(gallery.index(ctx.samples, pages, served, catalogue.DOORS, ROOT), ensure_ascii=False, indent=1) + "\n")
+    write("samples/index.json", json.dumps(sample_index, ensure_ascii=False, indent=1) + "\n")
     write("search-index.json", json.dumps(search_docs(pages, need_cards, groups, rec_pages), ensure_ascii=False, separators=(",", ":")) + "\n")
     write("search.html", shell("Search", search_page(), "search.html", sha=sha, noindex=True,
                                desc="Search the iVendNext Developers site: the needs catalogue first, then the recipes, samples and guide."))
 
     rec = [p for p in pages if p.group == "recipes" and p.out != "recipes/index.html"]
-    body = ("<h1>Recipes</h1><p>One recipe for each job. Each says what it does and who it is for, gives the steps with "
-            "their commands, and says what is refused.</p><ul class=\"plain\">"
-            + "".join(f'<li><a href="{posixpath.basename(p.out)}">{html.escape(p.short)}</a></li>' for p in rec) + "</ul>")
+    body, toc = recipes_page(rec, need_cards, metas, sample_of)
     meta = make_meta("recipes/index.html", "Recipes", "recipes", "One recipe for each job on iVendNext: what it does, who it is for, "
                      "the steps with their commands, and what is refused.", ["recipes/"])
-    write("recipes/index.html", shell("Recipes", body, "recipes/index.html", side=sidebar(lists[0], pages, lists, "../"), sha=sha, meta=meta,
-                                      crumbs=seo.crumbs_html(meta.trail, "../"), verify=seo_data))
-    body = ("<h1>Samples</h1><p>Each sample is a small working example of one way in, with its tests. Pick the nearest one to "
-            "your project, run it against your sandbox, and change it. Each card gives the door the sample uses and its first "
-            "commands, and opens the sample's own page: what it does, how to run it and what its tests prove. "
-            "The same cards are on the <a href=\"../reference_apps.html\">reference apps page</a>, grouped by door.</p>"
-            + gallery.flat(ctx.samples, "samples", REPO_URL, catalogue.DOORS, ctx.door_pages))
-    meta = make_meta("samples/index.html", "Samples", "samples", "Small working examples of each way into iVendNext, with their "
-                     "tests: pick the nearest to your project and run it against your sandbox.", [("samples/", "README.md")])
-    write("samples/index.html", shell("Samples", body, "samples/index.html", side=sidebar(lists[1], pages, lists, "../"), sha=sha, meta=meta,
+    write("recipes/index.html", shell("Recipes", body, "recipes/index.html", toc=toc, sha=sha, meta=meta,
                                       crumbs=seo.crumbs_html(meta.trail, "../"), verify=seo_data))
 
     for name in ("site.css", "favicon.svg"):
@@ -1402,13 +1883,12 @@ def build(out_dir: pathlib.Path) -> int:
     write("sitemap.xml", seo.sitemap({canonical(o): m.modified for o, m in metas.items()}))
     write("robots.txt", f"User-agent: *\nAllow: /\n\nSitemap: https://{DOMAIN}/sitemap.xml\n")
 
-    START = ["index.html", "first_app.html", "build.html", "plan.html", "sandbox.html", "security.html", "map.html", "api.html",
-             "apps.html", "publish.html",
-             "reference_apps.html", "feedback.html"]
+    START = ["index.html", "learn.html", "first_app.html", "plan.html", "sandbox.html", "security.html", "map.html", "api.html",
+             "apps.html", "publish.html", "feedback.html"]
 
     def rows(pred) -> list[tuple[str, str, str]]:
         picked = [(o, m) for o, m in metas.items() if pred(o, m)]
-        picked.sort(key=lambda om: START.index(om[0]) if om[0] in START else 0)        # the top-level pages in reading order
+        picked.sort(key=lambda om: START.index(om[0]) if om[0] in START else len(START))   # the top-level pages in reading order, the rest after
         return [(seo.SITE_NAME if m.home else seo.clean_name(m.name), canonical(o), m.desc) for o, m in picked]
     write("llms.txt", seo.llms_txt([
         ("Start here", rows(lambda o, m: "/" not in o)),
@@ -1429,6 +1909,8 @@ def build(out_dir: pathlib.Path) -> int:
     for rel in sorted(assets):
         (out_dir / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(ROOT / rel, out_dir / rel)
+    for out, words in sorted(long_pages(out_dir).items()):
+        print(f"  warning: {out} is {words} words, over {WORD_LIMIT}: add it to SPLIT in site/build.py")
     if errors:
         print("SITE BUILD FAILED:\n  " + "\n  ".join(sorted(set(errors))))
         return 1

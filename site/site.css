@@ -58,36 +58,36 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--site-focus); o
 .band-in { max-inline-size: 76rem; margin-inline: auto; padding: .35rem var(--ivn-s4); display: flex; justify-content: space-between; gap: var(--ivn-s4); font-size: .8rem; line-height: 1.4; }
 .band a { color: #fff; text-decoration: none; }
 .band a:hover { text-decoration: underline; }
-.bar { position: relative; max-inline-size: 76rem; margin-inline: auto; padding: var(--ivn-s3) var(--ivn-s4); display: flex; align-items: center; gap: var(--ivn-s3) var(--ivn-s4); }
+.bar { position: relative; max-inline-size: 76rem; margin-inline: auto; padding: var(--ivn-s3) var(--ivn-s4); display: flex; align-items: center; gap: var(--ivn-s3) var(--ivn-s4); }   /* the App library's shape: logo, five links, a slim search box, one pill */
 .brand { display: inline-flex; align-items: center; gap: var(--ivn-s3); text-decoration: none; color: var(--site-ink); flex: none; }
 .brand img { display: block; inline-size: 132px; block-size: auto; }
 .brand-sub { font-weight: 700; font-size: .95rem; padding-inline-start: var(--ivn-s3); border-inline-start: 1px solid var(--site-line); line-height: 1.5; }
 .top nav ul { list-style: none; margin: 0; padding: 0; }
-.nav-wide { flex: 1 1 auto; }
-.nav-wide ul { display: flex; justify-content: center; }
-.top nav a { display: block; white-space: nowrap; padding: .45rem .55rem; border-radius: var(--site-radius-pill); color: var(--site-ink); text-decoration: none; font-size: .92rem; letter-spacing: .015em; }
+.nav-wide { flex: 0 1 auto; margin-inline-start: auto; }
+.nav-wide ul { display: flex; justify-content: center; gap: .15rem; }
+.top nav a { display: block; white-space: nowrap; padding: .45rem .55rem; border-radius: var(--site-radius-pill); color: var(--site-ink); text-decoration: none; font-size: .92rem; font-weight: 600; letter-spacing: .015em; }
 .top nav a:hover { background: var(--ivn-surface-2); }
-.top nav a[aria-current="page"] { background: var(--site-tint); font-weight: 600; }
-.cta { margin-inline-start: auto; }
+.top nav a[aria-current="page"] { background: var(--site-tint); }
 .menu { display: none; }
 .menu summary { list-style: none; cursor: pointer; padding: .5rem .9rem; border: 1px solid var(--site-line); border-radius: var(--site-radius-pill);
-  font-weight: 600; font-size: .9rem; color: var(--site-ink); }
+  font-weight: 600; font-size: .9rem; color: var(--site-ink); white-space: nowrap; }
 .menu summary::-webkit-details-marker { display: none; }
 .menu summary::after { content: " ▾"; }
 .menu[open] summary::after { content: " ▴"; }
 .menu nav { position: absolute; inset-inline: 0; inset-block-start: 100%; padding: var(--ivn-s2) var(--ivn-s4) var(--ivn-s4);
   background: var(--ivn-surface); border-block-end: 1px solid var(--site-line); box-shadow: var(--ivn-shadow-lg); }
 .menu nav a { border-radius: var(--ivn-radius); padding: .6rem .8rem; }
-.bar { max-inline-size: 90rem; }             /* logo, search box, eight links and the button: about 1430px on one line */
-@media (max-width: 1499px) {                 /* the eight links and the button no longer fit beside the search box: they fold into Menu */
+.menu nav li.sec a { font-weight: 700; }
+.menu nav li.child a { padding-inline-start: 1.8rem; font-weight: 400; }
+.menu nav li.split { border-block-start: 1px solid var(--site-line); margin-block-start: var(--ivn-s2); padding-block-start: var(--ivn-s2); }
+@media (max-width: 1099px) {                 /* the five links fold into Menu; My apps stays beside it */
   .nav-wide { display: none; }
   .menu { display: block; }
 }
-@media (max-width: 599px) {                  /* a phone: logo and Menu on one line; the button is in the menu and the hero */
-  .cta { display: none; }
-  .menu { margin-inline-start: auto; }
+@media (max-width: 699px) {                  /* a phone: logo, My apps and Menu on one line; search on its own line */
+  .cta { margin-inline-start: auto; min-block-size: 2.4rem; padding: 0 1rem; }
   .brand img { inline-size: 112px; }
-  .brand-sub { font-size: .88rem; padding-inline-start: var(--ivn-s2); }
+  .brand-sub { display: none; }
   .brand { gap: var(--ivn-s2); }
 }
 
@@ -172,7 +172,6 @@ tr:last-child td { border-block-end: 0; }
 .card .note { font-size: .85rem; color: var(--ivn-text-muted); }
 .card .run { margin-inline: 0; padding: var(--ivn-s2) var(--ivn-s3); font-size: .8rem; overflow-x: auto; }
 .card .links { font-size: .85rem; }
-.anchors { display: flex; flex-wrap: wrap; gap: var(--ivn-s2) var(--ivn-s4); }
 .card p { margin: 0; color: var(--ivn-text-muted); font-size: .93rem; }
 .pn { display: flex; justify-content: space-between; gap: var(--ivn-s4); margin-block: var(--ivn-s6) var(--ivn-s3); padding-block-start: var(--ivn-s4); border-block-start: 1px solid var(--ivn-border); font-family: var(--site-display); font-weight: 600; }
 .src { color: var(--ivn-text-muted); font-size: .88rem; }
@@ -198,7 +197,7 @@ tr:last-child td { border-block-end: 0; }
 
 /* ── search (site/assets-src/search.js): the header box, its list, and search.html ───────────────────────────────── */
 .vh { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.site-search { position: relative; flex: 0 1 16rem; min-inline-size: 9rem; margin: 0; }
+.site-search { position: relative; flex: 0 1 12rem; min-inline-size: 8rem; margin: 0; }
 .site-search input, .search-page input, .search-page select { inline-size: 100%; min-block-size: 2.5rem; padding: .4rem .9rem;
   font: 400 .92rem/1.3 var(--site-display); color: var(--ivn-text); background: var(--ivn-surface);
   border: 1px solid var(--ivn-text-muted); border-radius: var(--site-radius-pill); }     /* the outline: 4.9:1 light, 6:1 dark */
@@ -215,10 +214,10 @@ tr:last-child td { border-block-end: 0; }
 .pop-main { display: block; font-weight: 600; font-size: .92rem; line-height: 1.35; }
 .pop-sub { display: block; font-size: .8rem; color: var(--ivn-text-muted); }
 .search-pop .is-active .pop-sub, .search-pop a:hover .pop-sub { color: var(--site-ink); }
-@media (max-width: 1499px) { .site-search { flex: 1 1 auto; max-inline-size: 26rem; } }
-@media (max-width: 599px) {                  /* a phone: the box takes its own full-width line under the logo and Menu */
+@media (max-width: 1099px) { .site-search { flex: 1 1 auto; max-inline-size: 22rem; margin-inline-start: auto; } }
+@media (max-width: 699px) {                  /* a phone: the box takes its own full-width line under the logo, My apps and Menu */
   .bar { flex-wrap: wrap; }
-  .site-search { order: 3; flex: 1 1 100%; max-inline-size: none; }
+  .site-search { order: 3; flex: 1 1 100%; max-inline-size: none; margin-inline-start: 0; }
   .search-pop { inline-size: 100%; }
 }
 .search-page { margin-block: 0 var(--ivn-s5); }
@@ -291,7 +290,7 @@ pre.log-lines { white-space: pre-wrap; overflow-wrap: anywhere; }
 .hosting-before { margin-block-end: var(--ivn-s4); }
 .hosting-build { max-block-size: 20rem; overflow: auto; padding: 0.5rem; border: 1px solid var(--site-line); border-radius: var(--ivn-radius); font-size: 0.8125rem; white-space: pre-wrap; overflow-wrap: anywhere; }   /* a failed build's last 50 lines */
 .hosting-before summary { font-weight: 600; cursor: pointer; }
-/* My apps (EASY3a): the gallery's cards, the bar at its foot, the page's fields; the shortlist's Cannot be built today */
+/* My apps: the gallery's cards, the bar at its foot, the page's fields; the shortlist's Cannot be built today */
 .hosting-tool .hint { font-size: 0.875rem; color: var(--ivn-text-muted); }
 .hosting-tool input[type=text], .hosting-tool input[type=search], .hosting-tool input[type=url],
 .hosting-tool input[type=password] { font: inherit; inline-size: 100%; max-inline-size: 40rem; padding: 0.5rem;
@@ -310,7 +309,7 @@ pre.log-lines { white-space: pre-wrap; overflow-wrap: anywhere; }
 .hosting-tool button:focus-visible, .hosting-tool input:focus-visible, .hosting-tool select:focus-visible,
 .hosting-tool textarea:focus-visible { outline: 2px solid var(--site-focus); outline-offset: 2px; }
 
-/* My apps, part 4 (EASY3a): J4-01's picture; the message to send, wrapped as written */
+/* My apps: its picture; the message to send, wrapped as written */
 .apps-pic { max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; }
 .apps-msg { white-space: pre-wrap; overflow-wrap: anywhere; }
 /* My apps' tables stack at a phone's width: three columns squeeze to one word a line */
@@ -320,3 +319,85 @@ pre.log-lines { white-space: pre-wrap; overflow-wrap: anywhere; }
   .hosting-tool tr { border-block-end: 1px solid var(--site-line); padding-block: 0.375rem; }
   .hosting-tool td { border: 0; padding: 0.125rem 0; }
 }
+
+/* ── every page opens with what it is for, then its next step ───────────────────────────────────────────────────────── */
+[hidden] { display: none !important; }
+.lead { font-size: 1.12rem; line-height: 1.55; color: var(--ivn-text); margin: 0 0 var(--ivn-s4); max-inline-size: 46rem; }
+.next { display: flex; flex-wrap: wrap; gap: var(--ivn-s3); margin: 0 0 var(--ivn-s6); }
+.next .site-btn { white-space: normal; text-align: center; max-inline-size: 100%; }
+.part-of { font-size: .9rem; color: var(--ivn-text-muted); margin: calc(var(--ivn-s2) * -1) 0 var(--ivn-s3); }
+.part-nav { margin-block: var(--ivn-s4); }
+.parts .card h3 .n { color: var(--site-accent-ink); margin-inline-end: .35rem; }
+.side .sub a { padding-inline-start: 1.6rem; font-size: .88rem; }
+
+/* ── the home page: the needs box and the two section cards ──────────────────────────────────────────────────────────── */
+.wrap-front { padding-block-end: 0; }
+.sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--ivn-s5); margin: 0; }
+.section-card { display: flex; flex-direction: column; gap: var(--ivn-s3); padding: var(--ivn-s5); background: var(--ivn-surface);
+  border: 1px solid var(--site-line); border-radius: var(--site-radius-card); min-inline-size: 0; }
+.section-card .eyebrow { margin: 0; }
+.section-card h2 { margin: 0; padding: 0; border: 0; font: 700 1.45rem/1.3 var(--site-display); color: var(--site-ink); }
+.jobs { list-style: none; margin: 0; padding: 0; }
+.jobs li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .1rem var(--ivn-s4); padding-block: .6rem; border-block-start: 1px solid var(--site-line); }
+.jobs .q { color: var(--ivn-text); }
+.jobs a { font-weight: 600; white-space: nowrap; color: var(--ivn-link); }
+.section-card .next { margin: var(--ivn-s2) 0 0; }
+main.home .section-card a.site-btn { color: #fff; }
+main.home .section-card a.site-btn-ghost { color: var(--site-ink); }
+
+/* ── verdict pills and chips ─────────────────────────────────────────────────────────────────────────────────────────── */
+.pill { display: inline-block; font: 700 .76rem/1.4 var(--site-display); padding: .12rem .6rem; border-radius: var(--site-radius-pill); vertical-align: middle; white-space: nowrap; }
+.st-ready { background: var(--ivn-pill-green-bg); color: var(--ivn-pill-green-ink); }
+.st-limits { background: var(--ivn-pill-blue-bg); color: var(--ivn-pill-blue-ink); }
+.st-notyet { background: var(--ivn-pill-orange-bg); color: var(--ivn-pill-orange-ink); }
+.st-never { background: var(--ivn-pill-red-bg); color: var(--ivn-pill-red-ink); }
+.card p.chips { display: flex; flex-wrap: wrap; gap: .35rem; margin: var(--ivn-s2) 0 var(--ivn-s3); }
+.chip { font: 600 .76rem/1.5 var(--site-display); padding: .08rem .55rem; border-radius: var(--site-radius-pill); background: var(--ivn-surface-2); color: var(--ivn-text); }
+.chip.door { background: var(--site-tint); color: var(--site-accent-ink); }
+.gcount { font: 600 .8rem/1 var(--site-display); color: var(--ivn-text-muted); background: var(--ivn-surface-2); padding: .25rem .55rem; border-radius: var(--site-radius-pill); vertical-align: middle; }
+
+/* ── the needs finder (site/assets-src/finder.js), and its box on the home page ──────────────────────────────────────── */
+.finder { margin: 0 0 var(--ivn-s6); padding: var(--ivn-s5); background: var(--ivn-surface); border: 1px solid var(--site-line); border-radius: var(--site-radius-card); }
+.finder > h2 { margin-block-start: 0; padding-block-start: 0; border: 0; }
+.finder textarea, .finder-strip textarea { box-sizing: border-box; inline-size: 100%; min-block-size: 6.5rem; padding: .7rem .9rem; font: 1rem/1.55 var(--ivn-font);
+  color: var(--ivn-text); background: var(--ivn-bg); border: 1px solid var(--ivn-border-strong); border-radius: 14px; resize: vertical; }
+.finder textarea::placeholder, .finder-strip textarea::placeholder { color: var(--ivn-text-muted); opacity: 1; }
+.finder textarea:focus-visible, .finder-strip textarea:focus-visible, .finder-strip button:focus-visible { outline: 2px solid var(--site-focus); outline-offset: 2px; }
+.finder-out { list-style: none; margin: var(--ivn-s4) 0 0; padding: 0; display: grid; gap: var(--ivn-s3); }
+.finder-out:empty { display: none; }
+.finder .next { margin: var(--ivn-s4) 0 0; }
+.fit { display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr); gap: var(--ivn-s2) var(--ivn-s5); padding: var(--ivn-s4);
+  border: 1px solid var(--site-line); border-radius: var(--ivn-radius-lg); background: var(--ivn-bg); }
+.fit-q { margin: 0; color: var(--ivn-text-muted); overflow-wrap: anywhere; }
+.fit-q::before { content: "The customer wrote"; display: block; font: 700 .72rem/1.4 var(--site-display); letter-spacing: .06em; text-transform: uppercase; margin-block-end: .2rem; }
+.fit-a { min-inline-size: 0; }
+.fit-a h3 { margin: 0 0 var(--ivn-s2); font-size: 1.05rem; }
+.fit-a p { margin: 0 0 var(--ivn-s2); }
+.fit-a p:last-child { margin-block-end: 0; }
+.fit-meta { color: var(--ivn-text-muted); font-size: .9rem; }
+.fit-alt { font-size: .9rem; }
+.fit-alt button { display: block; text-align: start; margin: .2rem 0 0; padding: 0; font: inherit; color: var(--ivn-link); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+.finder-count { color: var(--ivn-text-muted); align-self: center; }
+@media (max-width: 700px) { .fit { grid-template-columns: minmax(0, 1fr); } }
+.finder-strip { display: grid; gap: var(--ivn-s3); padding: var(--ivn-s5); margin: 0 0 var(--ivn-s5); background: var(--site-tint); border-radius: var(--site-radius-card); }
+.finder-row { display: flex; flex-wrap: wrap; gap: var(--ivn-s3); align-items: flex-end; }
+.finder-row textarea { flex: 1 1 20rem; inline-size: auto; min-inline-size: 0; min-block-size: 3.3rem; }
+
+/* ── the samples page: filters, groups and cards ─────────────────────────────────────────────────────────────────────── */
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ivn-s2) var(--ivn-s3); padding: var(--ivn-s3) var(--ivn-s4); margin: 0 0 var(--ivn-s5);
+  background: var(--ivn-surface); border: 1px solid var(--site-line); border-radius: var(--ivn-radius-lg); position: sticky; inset-block-start: 0; z-index: 6; }
+.filters input, .filters select { min-block-size: 2.4rem; padding: .3rem .8rem; border: 1px solid var(--ivn-border-strong); border-radius: var(--site-radius-pill);
+  background: var(--ivn-bg); color: var(--ivn-text); font: inherit; min-inline-size: 0; max-inline-size: 100%; }
+.filters input { flex: 1 1 10rem; }
+.filters select { flex: 0 1 13rem; }
+.filters input:focus-visible, .filters select:focus-visible { outline: 2px solid var(--site-focus); outline-offset: 2px; }
+.filters output { margin-inline-start: auto; color: var(--ivn-text-muted); font-size: .9rem; }
+@media (max-width: 700px) { .filters { position: static; } .filters select { flex: 1 1 9rem; } .filters output { inline-size: 100%; margin: 0; } }
+.cards.samples { align-items: start; }
+.cards.samples .card { display: flex; flex-direction: column; }
+.cards.samples .card .run { font-size: .72rem; padding: .4rem .55rem; overflow-x: auto; }
+.cards.samples .card .run code { white-space: nowrap; font-size: inherit; }
+.cards.samples .card .note { font-size: .85rem; }
+.card p.when { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.sgroup > h2 { scroll-margin-block-start: 5rem; }
+.sf-none { padding: var(--ivn-s4); background: var(--ivn-surface); border: 1px dashed var(--ivn-border-strong); border-radius: var(--ivn-radius-lg); }

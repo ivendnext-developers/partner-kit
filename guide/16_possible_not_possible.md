@@ -2,7 +2,7 @@
 
 This chapter gives a straight answer to "can we do this for the customer?". The answer is one of three: yes; not through an extension point, with what to do instead; or never. Each answer comes with the limit that goes with it. It is for a builder, or a salesperson, before a quote.
 
-Each answer is a card in the [needs catalogue](../needs/README.md): one card per need, in the customer's words, with its verdict, its door, the recipe and sample to start from, and its limits. On the partner site the two lists below are built from those cards; this chapter keeps the limits that apply to every project.
+Each answer is a card in the [needs catalogue](../needs/README.md): one card per need, in the customer's words, with its verdict, its door, the recipe and sample to start from, and its limits. On the partner site the two lists, *Possible today* and *When the product has no door for it*, are built from those cards; this chapter keeps the limits that apply to every project.
 
 ## When to use it
 
@@ -48,7 +48,7 @@ The catalogue's cards whose verdict is *Not yet* (a new extension point, or prod
 | Offline: pricing rules are not applied; loyalty, gift cards and store credit wait for a connection | plan offline behaviour per need |
 | One company is one country and one currency | several countries, several sites |
 | Our WooCommerce connector does not reserve stock, and takes percentage vouchers only | state it to the customer |
-| Labels from the back office and from Handheld print through a desktop utility | use the desktop utility; labels printed from the till use a label layout (above) |
+| Labels from the back office and from Handheld print through a desktop utility | use the desktop utility; labels printed from the till use a label layout (*Possible today*) |
 | A warehouse permission does not fence every stock report: on a sandbox, *Item Balance (Simple)*, *Warehouse wise Item Balance Age and Value* and *Stock Ageing* in its default layout showed every store to a user with one store, while the other reports and layouts that were run were fenced | test each stock report a branch may open before you promise it, and take away the ones that leak (the card branch-sees-own-stock) |
 | The standard automatic reorder submits its request, never a draft | a draft request needs an outside app (the card stock-and-expiry-alerts) |
 
@@ -66,7 +66,7 @@ Every need in your blueprint has a card in the catalogue (or a request for one),
 
 ## Technical notes
 
-The exact wording behind some limits above, with the evidence for them. The lists of what is possible and what has no door are built from the cards in `needs/` when the site is built, so they are not written in this file; each card says when it was last checked.
+The exact wording behind some limits in this chapter, with the evidence for them. The lists of what is possible and what has no door are built from the cards in `needs/` when the site is built, so they are not written in this file; each card says when it was last checked.
 
 - **Feed limit.** The kit's samples read the engine feed, whose key is not scoped to one application (a scoped feed is an extension point: chapter 9); webhooks try three times, then stop.
 - **Rust on the till.** A sandboxed function that runs on a till is compiled from Rust. JavaScript compiled to WebAssembly started too slowly on a slowed-down till stand-in; a function that only runs on the server may be JavaScript ([the Wasm kit](../tools/wasm_kit/README.md)).

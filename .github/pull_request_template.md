@@ -1,4 +1,4 @@
-<!-- Who may propose what. Once this kit is public, anyone may read it; to get a sandbox or build for an iVendNext customer, become an iVendNext Partner: https://www.ivendnext.com/partners/apply/ -->
+<!-- Who may propose what. Once this kit is public, anyone may read it; to get a sandbox, request one at https://developer.ivendnext.com/sandbox.html; to build for an iVendNext customer, become an iVendNext Partner: https://www.ivendnext.com/partners/apply/ -->
 
 **What this changes, in a sentence:**
 

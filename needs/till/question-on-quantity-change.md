@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/capture.md
 sample: samples/s20_capture
 request: -
-verified: run by the product 2026-10-18 (POS train T12's walk, counter, phone and tablet frames: a repeat scan, ＋ in the line sheet and the variant card's Add each asked once; allowed, confirmed and refused back to the last allowed quantity); not run by a kit sample on a sandbox
+verified: run by the product 2026-10-18 (the POS train's walk, counter, phone and tablet frames: a repeat scan, ＋ in the line sheet and the variant card's Add each asked once; allowed, confirmed and refused back to the last allowed quantity); not run by a kit sample on a sandbox
 ---
 ## What you build
 A capture service on the quantity-change event (`qty_change`): when a line your filter names changes quantity, the till sends its last allowed quantity and the new one, and your service answers allow, confirm, refuse or a notice (`recipes/capture.md`, step 5c). Sample S20 adds a count on one line: up to three allowed, four or five asked about, more refused.

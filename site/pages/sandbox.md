@@ -1,14 +1,14 @@
 # Request a sandbox
 
-A sandbox site is your own iVendNext site, hosted by us and full of made-up demo data. It is where you build and test before you touch a customer's site. It is for anyone who builds for an iVendNext customer: an iVendNext Partner, or a licensed customer's IT team.
+A sandbox site is your own iVendNext site, hosted by us and full of made-up demo data. It is where you build and test before you touch a customer's site. Any developer who builds for an iVendNext customer can ask, partner or not.
 
 Your site's address looks like `yourcompany.sandbox.ivend.co`. We tell you the address when the site is ready.
 
 ## How to ask
 
-Fill in the iVendNext Partner form on ivendnext.com. You do not need a GitHub account to ask. A licensed customer's IT team may use the same form, or ask its account manager; either way its account owner talks to it. Our team talks to every builder first.
+Fill in the sandbox request form on ivendnext.com. Have your GitHub login ready: your sandbox is given to the account you will sign in with on My apps. No account? Make a free one in two minutes with any e-mail. A licensed customer's IT team may use the same form, or ask its account manager; either way its account owner talks to it. Our team talks to every builder first.
 
-[Open the iVendNext Partner form](https://www.ivendnext.com/partners/apply/)
+[Open the sandbox request form](https://www.ivendnext.com/developers/sandbox/)
 
 ## When access comes
 

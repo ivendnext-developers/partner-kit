@@ -33,7 +33,7 @@ In the App library now, 56 apps, free or with a key:
 ## Next
 
 - Pharmacy, the standard version (an app with a link is listed or being built): [Pharmacy counter rules](https://library.ivendnext.app/apps/ivendnext_rxc) · [Expiry and recall](https://library.ivendnext.app/apps/ivendnext_rcl) · [Regulated stock register](https://library.ivendnext.app/apps/ivendnext_rsr) · [Third-party payer](https://library.ivendnext.app/apps/ivendnext_icp)
-- Hospitality, the standard version (an app with a link is listed or being built): Kitchen display · [Front of house](https://library.ivendnext.app/apps/ivendnext_foh) · [Guest ordering](https://library.ivendnext.app/apps/ivendnext_gor) · [Restaurant back office](https://library.ivendnext.app/apps/ivendnext_rbo) · Room charge
+- Hospitality, the standard version (an app with a link is listed or being built): Kitchen screen · [Front of house](https://library.ivendnext.app/apps/ivendnext_foh) · [Guest ordering](https://library.ivendnext.app/apps/ivendnext_gor) · [Restaurant back office](https://library.ivendnext.app/apps/ivendnext_rbo) · Room charge
 
 ## Starters
 

@@ -10,7 +10,7 @@ blocked-by: -
 recipe: recipes/units_as_serials.md
 sample: samples/s30_units_as_serials
 request: -
-verified: run on a sandbox 2026-10-16 · POS 2.0.0.650 · received by paste and CSV, transferred, sold, refused sold again, returned, counted with one missing, refused in Defective, the report, the migration's dry run; a unit from either lot sold at the till run by the product 2026-10-18 (POS train T12's walk: each unit booked with its own batch, a set's unit too); not run: the migration's apply, the current undo, an issue, a resale after a return, offline, a Purchase Receipt
+verified: run on a sandbox 2026-10-16 · POS 2.0.0.650 · received by paste and CSV, transferred, sold, refused sold again, returned, counted with one missing, refused in Defective, the report, the migration's dry run; a unit from either lot sold at the till run by the product 2026-10-18 (the POS train's walk: each unit booked with its own batch, a set's unit too); not run: the migration's apply, the current undo, an issue, a resale after a return, offline, a Purchase Receipt
 related: unit-code-at-scan, imei-per-phone-sold
 ---
 ## What you build

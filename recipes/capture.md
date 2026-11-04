@@ -6,7 +6,7 @@ A capture asks your HTTPS service at a moment the cashier did not choose, at one
 
 - **On scan** of an item your filter names (its item group, or an item field that is set), **before** its line goes on the sale: you can let it on, put a value on the line (a warranty reference, a registration number), ask a yes/no question, or refuse it.
 - **On customer add**, **before** a new customer is created: you can allow it, refuse it, or **challenge** — you send the customer a one-time code and the till shows a code field. The customer is created only after you say the code is right.
-- **On customer select** (POS app from train T11, 2026-10-16), when the cashier puts an **existing** customer on the sale: allow, refuse (the customer is taken off the sale), or challenge with a one-time code, as on customer add (step 5b).
+- **On customer select** (POS app from the train of 2026-10-16), when the cashier puts an **existing** customer on the sale: allow, refuse (the customer is taken off the sale), or challenge with a one-time code, as on customer add (step 5b).
 - **On a quantity change** (POS build 2.0.0.654 on), when the quantity of a line your filter names changes: allow, confirm, refuse (the last allowed quantity goes back), or put a value on the line (step 5c).
 
 From POS build 2.0.0.654 any of them may also answer with a **notice**: the sale goes on with no tap, and your sentence shows (step 6b).
@@ -116,4 +116,4 @@ Proven on our test bench on 2026-10-08 (iVendNext POS app at `577a8d41`), **16 o
 
 The captured reference on a **booked** sale: the booked line carries the service's reference; every other sale as the baseline. With S20 left off, the line carries none.
 
-Not run here: a quantity change or a notice on a till (both walked by the product at POS train T12, counter, phone and tablet frames; S20's quantity service and S23's notice run in their laptop tests); a customer added offline (created at sync, flagged) and the receipt's contact after payment; a *confirm* or *refuse* on scan; the camera's pause.
+Not run here: a quantity change or a notice on a till (both walked by the product on a POS train, counter, phone and tablet frames; S20's quantity service and S23's notice run in their laptop tests); a customer added offline (created at sync, flagged) and the receipt's contact after payment; a *confirm* or *refuse* on scan; the camera's pause.

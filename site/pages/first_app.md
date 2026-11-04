@@ -1,6 +1,6 @@
 # Build your first app
 
-From one of the kit's samples to your customer's App library in six steps. This page is all you need to read: it builds the commonest first app there is, an approval on a Purchase Order, and every other sample goes the same way.
+From one of the kit's samples to your customer's App library in six steps. This page is all you need to read: it builds the commonest first app there is, an approval on a Purchase Order, and every sample that makes an app goes the same way.
 
 **What an app is.** A file, `manifest.json`, that says what to add to your customer's iVendNext: workflows, fields, roles, notifications, print formats, Desk screens. An app may do anything your customer's administrator can do in iVendNext Desk, on the customer's own record types too. You need a service of your own only when the app has to run code. This one does not.
 

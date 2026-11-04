@@ -2,7 +2,7 @@
 
 Some systems a retailer uses are local to a country or a region: its accounting system, its payment gateway or wallet, its loyalty provider, its messaging gateway, its delivery company. Connecting them is a partner's business, not ours: you know the market, and the customer stays yours. This page gives you a starting point for each, where the kit has one: the sample and the recipe to copy, the need it answers in the [needs catalogue](../../needs/README.md), the door it uses, and what usually changes from one market to the next.
 
-**Starting from one of our samples?** [Build your first app](first_app.md) does it in six steps: `ivn new acme_erp --from s7`, for example, makes it yours, under your own name, and checks the result.
+**Starting from one of our samples?** [Build your first app](first_app.md) does it in six steps: `ivn new acme_bins --from s2`, for example, makes it yours, under your own name, and checks the result. S7, the system sync, has no manifest, so you copy it by hand, as its README says.
 
 Why this is yours to build, and what stays yours: [Build your business on iVendNext's apps](business.md).
 
