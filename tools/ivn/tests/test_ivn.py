@@ -910,7 +910,7 @@ class Try(Base):
 
     def test_sites_then_a_site_then_no_flag_names_the_same_site_first(self):  # SITEPICK: the walk's terminal step
         rc, out = self.run_ivn("sites")
-        self.assertEqual((rc, out.splitlines()), (0, ["acme.sandbox.ivend.co  one press · your last",
+        self.assertEqual((rc, out.splitlines()), (0, ["acme.sandbox.ivend.co  one press · ivn try uses it",
                                                       "shop.acme.example  its administrator installs it from the shelf key ivn try prints"]))
         rc, out = self.run_ivn("try", "--site", "shop.acme.example")
         self.assertEqual((rc, out.splitlines()[0]), (0, "Trying it on shop.acme.example."))
