@@ -24,7 +24,7 @@ A customer's own behaviour, without changing iVendNext itself: the customer's ru
 2. **Make the app** from the sample nearest your customer's need.
 3. **Change it.** One file, `manifest.json`, for most apps.
 4. **Check it.** The same checker your customer's install runs.
-5. **Try it on your sandbox.** It asks for no key, no plan and no card.
+5. **Try it on a site.** Pick a site, or add one. It asks for no key, no plan and no card.
 6. **Publish it to your customer.** They install it in one press.
 
 Each step is on [Build your first app](first_app.md), with its commands.

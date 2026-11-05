@@ -24,7 +24,7 @@ Your work keeps working when we upgrade iVendNext, because it uses only publishe
 3. Learn the ladder: the six ways in, in order, and what is never allowed (chapter 3).
 4. Blueprint the project. For each need, write down its rung on the ladder. Add a scale profile (stores × tills × products × sales a day) and a map of the systems it connects.
 5. Build with the recipes and samples: `ivn new <app> --from <sample>` makes the app, and `ivn check` runs the checks on your machine.
-6. Try it on your own sandbox: `ivn try` installs it there. It is free, and it asks you nothing.
+6. Try it on your sandbox: `ivn try` installs it there in one press. `--site` picks another site; on one we did not hand you, its administrator installs it from the shelf key Try shows, in **App library**. It is free, and it asks you nothing.
 7. Publish it with `ivn publish --to <site>`, or for every retailer with `ivn publish --public` ([Publish your app](../site/pages/publish.md)). The customer's own administrator installs it from the App library, with one consent to a summary written by our code (chapter 7).
 8. Before every upgrade, the customer's own gate runs against the new release ([the release gate](../recipes/release_gate.md)).
 9. Tell us what is missing: an extension point, a recipe, a sample, a defect ([feedback](../site/pages/feedback.md)).

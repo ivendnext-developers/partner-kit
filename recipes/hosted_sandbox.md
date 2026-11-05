@@ -74,7 +74,7 @@ The e-mail addresses are made up. The site also gives every user its standard ro
 
 - **Developer mode is off,** as on a customer's site. Anything you make in Desk stays on your own site.
 - **There is no server access** — no shell, no connection to the database (Desk's read-only reports aside), no container, no app source. You work in your own editor and language and call your site over HTTPS.
-- **You install your own apps** with `ivn try`: it installs on your own sandbox with no key, no plan, no card and no questions.
+- **You install your own apps** with `ivn try` (or Try on My apps): on your sandbox in one press, with no key, no plan, no card and no questions. Pick a site, or add one.
 - **The data is test data.** Never put a real shopper's data, a real payment account, a real fiscal service or a real mail server on your site. None is connected. Your sandbox is hosted in the US. We may reset or remove a site that holds real personal data.
 - **Mail is off.** The site never sends a message to anyone. A notification that would send mail (a purchase order's, for example) fails into the site's *Error Log*; the document itself still saves.
 - **Server scripts are off.** They do not run on any of our sites.

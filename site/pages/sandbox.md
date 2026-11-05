@@ -6,13 +6,13 @@ Your site's address looks like `yourcompany.sandbox.ivend.co`. We tell you the a
 
 ## How to ask
 
-Fill in the sandbox request form on ivendnext.com. Our first reply asks for your GitHub login: your sandbox is given to the account you will sign in with on My apps. No account? Make a free one in two minutes with any e-mail. A licensed customer's IT team may use the same form, or ask its account manager; either way its account owner talks to it. Our team talks to every builder first.
+Fill in the sandbox request form on ivendnext.com. Our first reply asks for your GitHub login, so Try installs on your sandbox in one press when you sign in with it on My apps. No account? Make a free one in two minutes with any e-mail. A licensed customer's IT team may use the same form, or ask its account manager; either way its account owner talks to it. Our team talks to every builder first.
 
 [Open the sandbox request form](https://www.ivendnext.com/developers/sandbox/)
 
 ## When access comes
 
-Access means a sandbox site, and the kit's GitHub organisation for the feedback forms. It comes with onboarding, once our team has talked to you. Your sandbox is ready for `ivn try` when it arrives: there is no key to paste.
+Access means a sandbox site, and the kit's GitHub organisation for the feedback forms. It comes with onboarding, once our team has talked to you. When it arrives, Try on My apps names it, and `ivn sites` lists it: there is no key to paste. Try works on any iVendNext site too: pick a site, or add one by its address. There, its administrator installs it from the shelf key Try shows, in **App library**.
 
 ## What you receive
 

@@ -40,7 +40,7 @@ The next retailer with the same need can buy the same version from you. When it 
 2. **Register your company once.** Sign in on [My apps](https://developer.ivendnext.com/apps) with GitHub and press **Set up my company**. It suggests your company's first word.
 3. **Start from an app.** An app that starts as kit code has a page in the App library that links the sample it was built from: `ivn new acme_bins --from s2`.
 4. **Make it your customer's.** `ivn new` makes it yours, under your company's name. Then change what your customer needs. Your AI assistant can do much of this: point it at the kit's [`AGENTS.md`](../../AGENTS.md).
-5. **Check it and try it.** `ivn check` runs the same checks your customer's site will run, before anyone sees your app. `ivn try` installs it on your sandbox.
+5. **Check it and try it.** `ivn check` runs the same checks your customer's site will run, before anyone sees your app. `ivn try` installs it on your sandbox in one press; on another site you add, its administrator installs it from the shelf key Try shows, in **App library**.
 6. **Deliver it.** For one customer, publish it to that customer's own *Made for you* shelf, with no approval needed from us. Their administrator installs it from their App library and agrees to what it does.
 7. **Host its service, if it has one.** On your own cloud, or on iVendNext App Hosting at `<your app>.ivendnext.app` ([Host with CitiXsys or run your own](apps.md)).
 8. **Sell it again.** To your next customer, or to every iVendNext retailer through the App library, after one review by us.

@@ -8,8 +8,9 @@
     ivn push                                  check the folder and upload it as the next draft
     ivn pull                                  bring the server's latest draft in and keep your changes
     ivn add s11 · ivn take s22                add a sample · take a sample's newer version
-    ivn secret NAME · ivn secrets             set one of the app's settings · print each point's secret on your sandbox
-    ivn try [--show-wording]                  install the latest draft on your sandbox, free, and test each connection point
+    ivn secret NAME · ivn secrets [--site S]  set one of the app's settings · print each point's secret on a site
+    ivn sites                                 your company's sites, any one of which Try installs on
+    ivn try [--site SITE] [--show-wording]    install the latest draft on a site, free, and test each connection point
     ivn test [--local]                        test each connection point again (--local: on this laptop)
     ivn publish [--to SITE ...] [--public]    send it to a customer's sites, or list it for every retailer
     ivn status · ivn logs                     where it stands · what its service logged
@@ -80,7 +81,8 @@ WORDS = {
     "pushed": "Checked: CHECK GREEN. Uploaded as {version} (draft: on our server, on no site yet).",  # J3-07
     "uploaded": "Uploaded as {version}. ",  # J2-15
     "changes_head": "What installing it changes",  # J4-02, J4-06
-    "m31": "You have no sandbox yet. Request one: https://developer.ivendnext.com/sandbox.html",  # J8-29
+    "m31": "Add a site: any iVendNext site's address, with ivn try --site <address>. No site yet? Request one: "
+           "https://developer.ivendnext.com/sandbox.html",  # J8-29, SITEPICK
     "tested_local": "Tested on http://localhost:8000 with the test secret in .env.local.",  # J3-10
     "type_plan": "Type 1, 2 or 3:",  # J5-17
     "pay_by": "Pay by 1 your company's card · 2 invoice to {email}",  # J5-17
@@ -96,13 +98,17 @@ WORDS = {
     "offline_add": "Changed your folder; it reaches the server with your next ivn push.",  # J6-07
     "m29": "Brought in {version} from the server. {n} file{s} changed on both sides: they are marked in {files}, as git marks "
            "a conflict. Fix them, run ivn check, then ivn push.",  # J8-27
-    "secrets_head": "Until Copy secret is in iVendNext Desk: on your own sandbox, ivn secrets prints each point's secret with "
-                    "your sandbox's administrator key. On a customer's site, its administrator does the same with the kit's "
-                    "deploy tool.",  # J10-03
+    "secrets_head": "Each connection point's secret on {site}. On any other site, Copy secret on the point gives it.",  # J10-03
     "handover": "They accept on their My apps. The app keeps its name; its versions, sites, secrets and hosting move to them, "
                 "and their card pays from the next month.",  # J5-14, J5-18
     "type_name": "Type the app's name to confirm.",  # J5-18, J13-04, J13-05
     # this tool's own words (no row writes them), in plain words
+    "trying_on": "Trying it on {site}.",  # SITEPICK: the site, named before anything else
+    "on_site": "On {site}.",
+    "site_row": "{site}  {how}",
+    "one_press": "one press",
+    "its_admin": "its administrator installs it from the shelf key ivn try prints",
+    "your_last": " · your last",
     "sign_in": "Sign in first: ivn login (a build server: a token from My apps > Tokens, in IVN_TOKEN).",
     "bad_token": "This token is not one My apps made. Run ivn login again, or make a new token on My apps > Tokens.",
     "no_reach": "Could not reach iVendNext: no connection. Nothing was changed. Try again.",
@@ -869,12 +875,12 @@ def cmd_secret(a) -> int:
 def cmd_secrets(a) -> int:
     folder = app_folder(a)
     try:
-        out = online(door, "/v1/secrets", {"app": app_id(folder)})
+        out = online(door, "/v1/secrets", {"app": app_id(folder), **({"site": a.site} if a.site else {})})
     except Refused as e:
         if e.code == "no_sandbox":
             raise Stop(WORDS["m31"]) from None
         raise
-    print(WORDS["secrets_head"])
+    print(WORDS["secrets_head"].format(site=out.get("site")))
     if not out.get("points"):
         print(WORDS["no_points"])
     for x in out.get("points") or []:
@@ -967,15 +973,17 @@ def cmd_try(a) -> int:
     folder = app_folder(a)
     app = app_id(folder)
     version = push_first(folder, app)
-    if version:
-        print(WORDS["pushed"].format(version=version))
     try:
-        start = online(door, "/v1/try", {"app": app})
+        start = online(door, "/v1/try", {"app": app, **({"site": a.site} if a.site else {})})
     except Refused as e:
         if e.code == "no_sandbox":
             raise Stop(WORDS["m31"]) from None
         raise
-    print(WORDS["changes_head"])
+    print(WORDS["trying_on"].format(site=start.get("site")))  # the site first: the one asked for, else the person's last
+    if version:
+        print(WORDS["pushed"].format(version=version))
+    if start.get("sections"):  # on a site its administrator installs, its own install shows them
+        print(WORDS["changes_head"])
     for sec in start.get("sections") or []:
         print(f"  {sec['title']}")
         for line in sec.get("lines") or []:
@@ -984,12 +992,20 @@ def cmd_try(a) -> int:
         print(start.get("wording") or "")
     if (start.get("money") or {}).get("line"):  # trying is free: nothing is asked
         print(start["money"]["line"])
-    online(door, "/v1/try/install", {"app": app, "sha": start.get("sha")})
+    online(door, "/v1/try/install", {"app": app, "sha": start.get("sha"), "site": start.get("site")})
     done = follow("/v1/try/status", app)
+    if done.get("installed_on"):  # where it went: the site's own Desk and till, and the app's own address
+        print(done["installed_on"])
+    if done.get("shelf_key"):
+        print(done["shelf_key"])
+    for x in ("desk", "till_url", "address"):
+        if done.get(x):
+            print(done[x])
     for line in done.get("head") or []:
-        print(line)
+        if line != done.get("installed_on"):
+            print(line)
     rows = result_rows(done.get("results") or [])
-    if not rows:
+    if not rows and done.get("press"):  # on a site its administrator installs, the site's own Test connection tests it
         print(WORDS["no_points"])
     for line in rows:
         print(line)
@@ -1095,11 +1111,13 @@ def cmd_test(a) -> int:
         for line in result_rows(lines):
             print(line)
         return 0 if all("Passed" in x for x in lines) else 1
-    out = online(door, "/v1/test", {"app": app_id(folder)})
+    out = online(door, "/v1/test", {"app": app_id(folder)})  # the finished try's own site
+    if out.get("site"):
+        print(WORDS["on_site"].format(site=out["site"]))
     for line in out.get("head") or []:
         print(line)
     rows = result_rows(out.get("results") or [])
-    if not rows:
+    if not rows and out.get("press"):
         print(WORDS["no_points"])
     for line in rows:
         print(line)
@@ -1296,7 +1314,7 @@ def cmd_status(a) -> int:
             pass
     for s in sites:  # §14: a draft a try installed is on the sandbox, not on no site
         if s.get("sandbox") and s.get("version"):
-            line = line.replace(f"{s['version']} a draft, on no site yet", f"{s['version']} a draft, on your sandbox only")
+            line = line.replace(f"{s['version']} a draft, on no site yet", f"{s['version']} a draft, tried, not yet published")
     print(f"{app} {line}." + (f" {tail}" if tail else ""))
     for s in sites:  # J5-16: has it been installed?
         if s.get("customer") and s.get("state"):
@@ -1334,6 +1352,17 @@ def cmd_rollback(a) -> int:
     follow("/v1/publish/status", app)
     for x in out.get("messages") or []:
         print(f"{x['site']}: {x['message']}")
+    return 0
+
+
+def cmd_sites(a) -> int:
+    """The company's sites, from the same door as the page's list: each one, and how Try installs there."""
+    out = online(door, "/v1/sites", {})
+    if not out.get("company"):
+        print(out.get("words") or WORDS["m31"])
+    for x in out.get("company") or []:
+        print(WORDS["site_row"].format(site=x["site"], how=WORDS["one_press" if x.get("press") else "its_admin"])
+              + (WORDS["your_last"] if x["site"] == out.get("default") else ""))
     return 0
 
 
@@ -1414,9 +1443,12 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("sample")
     p = cmd("secret", cmd_secret, "set one of the app's own settings")
     p.add_argument("name")
-    cmd("secrets", cmd_secrets, "print each connection point's secret on your own sandbox")
-    p = cmd("try", cmd_try, "install the latest draft on your sandbox and test it")
+    p = cmd("secrets", cmd_secrets, "print each connection point's secret on a site")
+    p.add_argument("--site", help="the site's address (default: the site you last tried on)")
+    p = cmd("try", cmd_try, "install the latest draft on a site and test it")
+    p.add_argument("--site", help="any iVendNext site's address (default: the site you last tried on)")
     p.add_argument("--show-wording", action="store_true", help="print the exact wording the install shows")
+    cmd("sites", cmd_sites, "your company's sites, any one of which Try installs on", in_app=False)
     p = cmd("test", cmd_test, "test each connection point again")
     p.add_argument("--local", action="store_true", help="on this laptop, with the test secret in .env.local")
     p = cmd("publish", cmd_publish, "send it to a customer's sites, or list it for every retailer")

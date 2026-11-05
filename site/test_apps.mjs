@@ -146,7 +146,8 @@ check("J2-09: the settings' words", G.settingsLede === "Your app's own values, t
   a.settingNote({ required: true, together: ["X"] }) === "Required: publishing waits until it is set. Set both, or neither" &&
   a.settingNote({ required: false, together: [] }) === "Optional: the feature behind it stays off until you set it" &&
   a.isAddress({ name: "HKD_WALLET_URL" }) && !a.isAddress({ name: "HKD_WALLET_SECRET", purpose: "the key your wallet provider gave you" }));
-check("J2-10: the app's four buttons and Not yet on any site", G.tryIt === "Try on my sandbox" && G.publish === "Publish" &&
+check("J2-10: the app's four buttons and Not yet on any site", a.tryLabel("demo-1.sandbox.ivend.co") === "Try on demo-1.sandbox.ivend.co" &&
+  a.tryLabel(null) === "Add a site" && G.publish === "Publish" &&
   G.download === "Download the app folder" && G.addSample === "Add a sample" && G.notOnSite === "Not yet on any site");
 check("J3-06: Upload's words", G.upload === "Upload a new version" && G.uploadHint === "Choose the app folder's zip. We check it before we keep it.");
 check("J11-02: a version names what, who and how", a.versionLine({ version: "1.1.0", what: "S11 added", by: "Priya", how: "page", sites: [] }) ===
@@ -179,14 +180,27 @@ check("EASY1NOTES: purposes, the folded command code, a way back", W.peopleWhy &
 
 // the walk's folds (2026-11-01)
 check("a plain button carries the site's plain style", src.includes('"site-btn site-btn-ghost"') && !src.includes('"site-btn ghost"'));
-// EASY3a part 3: Try on my sandbox (J4-01, J4-02, J4-05, §3b); the doors' own words are the hosting's tests
+// EASY3a part 3: Try (J4-01, J4-02, J4-05, §3b; SITEPICK); the doors' own words are the hosting's tests
 const T = a.T;
-check("J4-01: no key is pasted: the panel has no key, secret or Check, and nothing calls the connect door",
-  T.yourSandbox === "Your sandbox" && T.keyHint === undefined && T.key === undefined && T.check === undefined &&
-  !src.includes("/sandbox/connect"));
-const parts = a.noSandboxParts("No sandbox yet? Request one. Everything else here works without it.");
-check("J4-01: with no sandbox, Request one is the link", parts.join("") === "No sandbox yet? Request one. Everything else here works without it." &&
+check("J4-01: no key is pasted: nothing has a key, secret or Check box, and nothing calls a connect door",
+  T.keyHint === undefined && T.key === undefined && T.check === undefined && !src.includes("/sandbox/connect"));
+const parts = a.noSandboxParts("Add a site: any iVendNext site's address. No site yet? Request one.");
+check("J4-01: with no site, Request one is the link", parts.join("") === "Add a site: any iVendNext site's address. No site yet? Request one." &&
   parts[1] === "Request one");
+check("SITEPICK: the button names the site before the press, and Change opens one list: where it is, the company's other sites, another",
+  T.change === "Change" && T.here === "Where this app is now" && T.others === "Your company's other sites" &&
+  T.another === "Another site…" && T.removeList === "Remove from my list" && src.includes("function vPick(app)") &&
+  src.includes('call("POST", "/sites", {})') && src.includes('call("POST", "/sites/remove", { site: x.site, mine: true })'));
+check("SITEPICK: the list is shown in one place: the home page's sandbox panel is gone", !src.includes("vSandbox") &&
+  !src.includes('"/sandbox"') && T.yourSandbox === undefined);
+check("SITEPICK: the finished screen says where it went, with Open Desk and Open the till, the app's address, and a shelf key to copy",
+  T.openDesk === "Open Desk" && T.openTill === "Open the till" && T.appAddress === "Your app's address: " &&
+  src.includes("card(s.installed_on") && src.includes("copyRow(s.shelf_key)") && src.includes("if (s.press) box.appendChild(res);"));
+check("SITEPICK: Publish sends to the sites typed, and + Add another site stays: a company's own site gets each version by Try",
+  a.U.ownSites === undefined && !src.includes("form.ticks") && a.U.addSite === "+ Add another site" &&
+  a.U.onSandboxOnly === "Tried, not yet published");
+check("SITEPICK: a typed site the doors refused goes back to the list, never Try again with the same address",
+  src.includes("data.trySite && !listed ? button(T.change") && src.includes('call("POST", "/sites/remove", { site: x.site, mine: true }).then(function (r) { data.sites = r;'));
 check("J4-02: the sections as the hosting drew them, in order, each with its lines", a.SECTIONS.join("|") ===
   "New in Desk|Who can use it|Changes to what you already have|Print layouts|Connects outside your site" &&
   a.consentSections({ sections: [{ title: "Who can use it", lines: [] }, { title: "New in Desk", lines: ["x"] }, { title: "Other", lines: ["y"] }] })
@@ -194,14 +208,15 @@ check("J4-02: the sections as the hosting drew them, in order, each with its lin
   T.changes === "What installing it changes" && T.wording === "Show the exact wording");
 check("J4-02: Try is one press: the install starts with the site's own fingerprint, no tick, no plan, no checkout",
   T.installTry === undefined && !src.includes("tick_first") && !src.includes('name: "try-plan"') &&
-  /call\("POST", "\/try\/install", \{ app: app, sha: c\.sha \}\)/.test(src));
+  /call\("POST", "\/try\/install", \{ app: app, sha: c\.sha, site: c\.site \}\)/.test(src));
 check("J4-05: Test again; a try is asked again until done or stopped", T.testAgain === "Test again" &&
   a.tryRunning({ step: "build" }) && !a.tryRunning({ step: "done" }) && !a.tryRunning({ step: "stopped" }) && !a.tryRunning({}));
 check("J4-05 after a fix: a newer draft than the one tried is offered again; a finished try of the latest is not",
   a.offerAgain({ step: "done", version: "1.0.0", latest: "1.0.1" }) && !a.offerAgain({ step: "done", version: "1.0.1", latest: "1.0.1" }) &&
-  a.offerAgain({ step: "stopped" }) && a.offerAgain(null) && !a.offerAgain({ step: "build" }));
+  a.offerAgain({ step: "stopped" }) && a.offerAgain(null) && !a.offerAgain({ step: "build" }) &&
+  a.offerAgain({ step: "done", version: "1", latest: "1", site: "a" }, "b") && !a.offerAgain({ step: "done", version: "1", latest: "1", site: "a" }, "a"));
 check("J5-15: the plan's lines as the row writes them, nothing added", !src.includes("perMonth") && T.plan === "Per month");
-check("J2-10: the four buttons are on: Try on my sandbox and Publish open their screens", src.includes('button(G.tryIt, function () { openTry(a.app); }') &&
+check("J2-10: the four buttons are on: Try on ⟨site⟩ and Publish open their screens", src.includes("var tryB = button(tryLabel(def), function () { if (def) openTry(a.app, def);") &&
   src.includes("button(G.publish, function () { openPublish(a.app); }") && !src.includes("pubB.disabled = true"));
 
 check("M14: a refused new try leaves no last try's lines under the refusal (walk 2026-11-02)", src.includes("function (e) { data.tryS = null; throw e; }"));
@@ -258,8 +273,7 @@ check("J6-06: each log line wraps, never cut", src.includes('"class": "log-lines
 check("J5-16: where it runs is read afresh each time the app's page opens", /function openApp\(app\) \{\s*data\.where = null; data\.whereAsked = null;/.test(src));
 check("J5-15 (K173): Where it runs offers the plans and changes the plan from the next month",
   src.includes('call("POST", "/plan", { app: app, plan: pick })') && src.includes("w.plan_line"));
-check("J4-01: everyone sees their sandbox's words, never folded away, and no key box under them",
-  /box\.open = true;/.test(src) && src.includes("tail.appendChild(vSandbox());") && !src.includes("check.disabled"));
+check("J4-01: no key box anywhere", !src.includes("check.disabled"));
 check("J8-13: a try that stops offers Try again under its words, one press", src.includes(
   "button(T.tryAgain, function (ev) { ev.target.disabled = true; data.tryS = null; startTry(data.appId); })"));
 // ── EASYLOOK: what two people who had not read the spec stalled on ──
@@ -308,8 +322,8 @@ check("EASYLOOK: a refusal keeps the company form's tick and the suggested word 
 check("EASYLOOK: pressing clears the last refusal and says it started (12)", src.includes("data.tryPress = true") && src.includes("data.pubPress = true"));
 check("EASYLOOK: a publish that stops keeps the form and its addresses (20, 085)", src.includes("if (r.stop) { openPublish(data.appId); return; }"));
 check("an app made with nothing to fill goes straight to Try: no Next press between Made and Try (walk 11-03)",
-  /none \? button\(G\.tryIt, function \(\) \{ data\.made = null; openTry\(data\.appId\); \}\)/.test(src));
-check("EASYLOOK: a finished try leads on to Publish (14)", /if \(s\.done\) \{[\s\S]{0,1400}button\(G\.publish, function \(\) \{ openPublish\(data\.appId\); \}\)/.test(src));
+  src.includes("box.appendChild(none ? button(tryLabel(def), function () { data.made = null; if (def) openTry(data.appId, def);"));
+check("EASYLOOK: a finished try leads on to Publish (14)", /if \(s\.done\) \{[\s\S]{0,2800}button\(G\.publish, function \(\) \{ openPublish\(data\.appId\); \}\)/.test(src));
 check("EASYLOOK: home puts the apps before the sandbox and the command (134)", src.includes("var out = el(\"div\", {}, box, list, tail)"));
 check("EASYLOOK: Settings is offered only when the app has some (07)", src.includes("(a.settings || []).length ? button(\"Settings\""));
 check("EASYLOOK: a failed press never leaves Starting on the page", /data\.tryPress = false; fail\(e\)/.test(src) && /data\.pubPress = false; fail\(e\)/.test(src));

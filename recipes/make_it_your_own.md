@@ -74,7 +74,7 @@ The chain keeps stock in zones: a cold room, a cage, the shop floor. It wants ea
 
    The sample's test `test_the_shop_is_read_with_the_apps_key_and_only_read` (`tests/bln/test_where.py`) pins the records the key reads: add the third read, `ACME BINS Bin`'s, to its list. Add a test of your own for the zone. Then set your own `title` (*ACME Bins*) and `description` in the manifest.
 
-5. **Check it, then try it on your sandbox.** On My apps, **Try on my sandbox**. In a terminal:
+5. **Check it, then try it on a site.** On My apps, **Try on** *your site* (**Change** picks another, or adds one). In a terminal:
 
    ```bash
    ivn check
