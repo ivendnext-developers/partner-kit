@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.0.2
+
+- When iVendNext refuses a press, your service's log line says what it answered: the call, its status and its own words (for example *Could not find Company*). The host still reads *did not answer in time*; the cause is in the log.
+
 ### 1.0.1
 
 - Hosts at different stores no longer wait for each other; *Seat* and *Change booking* ask no confirmation.

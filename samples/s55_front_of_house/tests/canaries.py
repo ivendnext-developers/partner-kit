@@ -136,15 +136,18 @@ CANARIES = [
     ("a closed booking stays closed", S, '        if r.get("status") not in foh.OPEN_STATES:\n            raise Refusal(f"{name} is {r.get(\'status\')}: only a requested or booked reservation can be marked',
      '        if False:\n            raise Refusal(f"{name} is {r.get(\'status\')}: only a requested or booked reservation can be marked',
      T + "test_n2_cancel_frees_the_table_and_a_closed_booking_stays_closed"),
-    ("the function checks the signature too", S, "    code, out = svc.handle(method, path, headers, raw)\n",
-     "    code, out = (200, {'ok': 1}) if path != '/health' else svc.handle(method, path, headers, raw)\n",
+    ("the function checks the signature too", S, "    code, out = svc.handle(method, path, headers, raw, note)\n",
+     "    code, out = (200, {'ok': 1}) if path != '/health' else svc.handle(method, path, headers, raw, note)\n",
      M + "AsAFunction.test_health_a_signed_press_either_body_form_and_a_refusal"),
     # the test call (X-iVendNext-Test: 1, tools/app_template/service/testcall.py): checked as a real call, never the handler
+    ("a 502 logs what the shop answered", "service/app.py",
+     "            note.update({k: v for k, v in", "            dict().update({k: v for k, v in",
+     "test_service.ServiceTest.test_p5_a_502_logs_what_the_shop_answered_and_nothing_of_the_press"),
     ("a test call never reaches the handler", "service/app.py", "if testcall.is_test(headers):", "if False:",
      "test_service.TestCall.test_a_signed_test_call_is_answered_ok_without_the_handler"),
     ("a test call is answered only where its route matches", "service/app.py",
-     '        if path in SUBS:\n            return self.press(path, headers, raw)\n',
-     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path in SUBS:\n            return self.press(path, headers, raw)\n',
+     '        if path in SUBS:\n            return self.press(path, headers, raw, {} if note is None else note)\n',
+     '        if testcall.is_test(headers):\n            return testcall.answer("x")\n        if path in SUBS:\n            return self.press(path, headers, raw, {} if note is None else note)\n',
      "test_service.TestCall.test_a_signed_test_call_to_a_route_the_service_does_not_have_is_404"),
 ]
 
