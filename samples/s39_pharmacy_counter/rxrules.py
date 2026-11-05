@@ -408,6 +408,7 @@ def dispensings_of(records) -> list:
                     "source": _text(r.get("source")), "sale_ref": _text(r.get("sale_ref")),
                     "document_type": _text(r.get("document_type")), "document": _text(r.get("document")),
                     "pos_opening": _text(r.get("pos_opening")), "pos_invoice": _text(r.get("pos_invoice")),
+                    "park": _text(r.get("park")),
                     "day": _date(r.get("day")) or datetime.date.min,
                     "lines": [x for x in lines or [] if isinstance(x, dict) and _number(x.get("qty"))],
                     "fingerprints": body.get("fingerprints") if isinstance(body.get("fingerprints"), dict) else {}})
@@ -431,6 +432,7 @@ def resolve(d: dict, shop: dict) -> str:
 
     - ``newest``: ``{sale_ref: dispensing name}`` — the newest dispensing of each sale or document; an older one was
       replaced on a later press of Pay or submit and is released, whatever its sale did.
+    - ``parks_gone``: the parks (sales sent to a till) a dispensing names that are gone (0.1.5): a sent sale voided.
 
     The status is worked out from the shop every time, so one set by hand (the pharmacist-in-charge may release a stuck
     reservation) never outlives what the shop shows: a released dispensing whose sale is booked reads *Dispensed* again.
@@ -460,12 +462,40 @@ def resolve(d: dict, shop: dict) -> str:
         return RETURNED if give_back else DISPENSED
     if booked and booked[1] == 2:
         return RELEASED
+    if d.get("park") and d["park"] in shop.get("parks_gone", ()):
+        return RELEASED                                         # 0.1.5: its sent sale was voided at the till, never booked
     if d["pos_opening"] and d["pos_opening"] in shop["closed_days"]:
         return RELEASED                                         # never booked, and its day is closed
     return d["status"]
 
 
 # ── the rules ────────────────────────────────────────────────────────────────
+
+
+def licensed(ph: dict | None, today: datetime.date) -> bool:
+    """Whether a Pharmacist record may sell a pharmacist-only line today: active, not a delegate, its licence in date."""
+    return bool(ph and ph["active"] and not ph.get("delegate") and ph["valid_until"] and ph["valid_until"] >= today)
+
+
+def sale_key(ref: str) -> str:
+    """A sale reference as the till stamps it on a sale (stripped, lower case)."""
+    return (ref or "").strip().lower()
+
+
+def pick_sent(sent: list, lines: list, rules: list, qty: list) -> tuple[dict | None, bool]:
+    """0.1.5: of the sales sent to this till that this cashier rang up for this customer (``sent``, newest first: each
+    ``{"name", "sale_ref", "pharmacist", "items": {item: stock qty}}``), the one this sale is, and whether it holds at
+    least this sale's quantity of each pharmacist-only item. Only a park sharing an item with the sale is one: the newest
+    that covers it, else the newest that shares one."""
+    sold = {x["item"] for x in lines if x["qty"] > 0}
+    need: dict = {}
+    for i, x in enumerate(lines):
+        if rules[i] and rules[i]["pharmacist"] and x["qty"] > 0 and qty[i] is not None:
+            need[x["item"]] = need.get(x["item"], 0.0) + qty[i]
+    mine = [c for c in sent if sold & set(c["items"])]
+    covers = lambda c: all(c["items"].get(k, 0.0) + 1e-9 >= v for k, v in need.items())   # noqa: E731
+    best = next((c for c in mine if covers(c)), mine[0] if mine else None)
+    return best, bool(best) and covers(best)
 
 
 def _refuse(line: dict | None, text: str) -> dict:
@@ -508,16 +538,33 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
             if r and (r["rx"] or r["pharmacist"] or r["dispensary"]):
                 return _refuse(lines[i], "Sell this at the dispensary.")
 
-    # 3 · pharmacist only (VR-06), from the app's own Pharmacist record, its licence in date (F12)
+    # 3 · pharmacist only (VR-06), from the app's own Pharmacist record, its licence in date (F12). 0.1.5: a sale a
+    # pharmacist rang and sent to this till, which this cashier rang up (``sent``: the park), is the pharmacist's sale:
+    # judged on the pharmacist who sent it, for no more of each pharmacist-only item than they sent
+    sent, covered = pick_sent(shop.get("sent") or [], lines, rules, qty) if not on_desk and ctx["stage"] == "sale" \
+        else (None, False)
+    by_sender = False
     for i in sold:
         if rules[i] and rules[i]["pharmacist"]:
             ph = shop["pharmacist"]
-            if not ph or not ph["active"] or ph.get("delegate"):
-                return _refuse(lines[i], "Only a pharmacist may sell this.")
-            if not ph["valid_until"] or ph["valid_until"] < today:
+            if licensed(ph, today):
+                break
+            if sent and covered and licensed(sent["pharmacist"], today):
+                by_sender = True
+                break
+            if ph and ph["active"] and not ph.get("delegate"):
                 until = ph["valid_until"].isoformat() if ph["valid_until"] else "a date not set"
                 return _refuse(lines[i], f"Only a pharmacist may sell this: your licence ran out on {until}.")
-            break
+            if sent and not licensed(sent["pharmacist"], today):
+                return _refuse(lines[i], "Only a pharmacist may sell this: the one who sent it can't today. Void it; ask "
+                                         "a pharmacist to ring it up.")
+            if sent:
+                return _refuse(lines[i], "Only a pharmacist may sell this: it is more than the pharmacist sent. Take the "
+                                         "extra off, or ask a pharmacist.")
+            if on_desk:
+                return _refuse(lines[i], "Only a pharmacist may sell this. Ask a pharmacist to submit it.")
+            return _refuse(lines[i], "Only a pharmacist may sell this. Ask a pharmacist to ring it up; they can send it "
+                                     "to this till.")
 
     # 4 · a named customer for a prescription or a frequency cap (VR-34); 5 · the patient's identity (VR-08)
     for i in sold:
@@ -539,7 +586,10 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
             return _refuse(lines[i], f"No more than {_fmt(r['qty_cap'])} may be sold at once.")
 
     # 7 · prescriptions (VR-01 to VR-05, VR-33, and the freeze after the first dispense)
-    counted = [d for d in shop["dispensings"] if counts(d) and d["sale_ref"] != ctx["sale_ref"]]
+    # the sent sale's own reservation is this sale's (0.1.5): it is taken over, never counted against it
+    taken = sale_key(sent["sale_ref"]) if sent else ""
+    counted = [d for d in shop["dispensings"] if counts(d) and d["sale_ref"] != ctx["sale_ref"]
+               and not (taken and sale_key(d["sale_ref"]) == taken)]
     record_lines, fps, recorded = [], {}, set()
     rx_lines = [i for i in sold if rules[i] and rules[i]["rx"]]
     named = refs_of(detail(RX))
@@ -582,8 +632,11 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
         if rx["retained"]:
             fills = 1
         mine = [d for d in counted if any(x.get("rx") == rx["name"] and x["qty"] > 0 for x in d["lines"])]
+        # 0.1.5: what an unpaid sale holds comes back when its day closes; a voided one, sooner, by hand
+        held = f"Prescription {rx['name']} is held by an unpaid sale. If voided, the pharmacist in charge frees it " \
+               "on the Desk." if any(d["status"] == RESERVED and d["source"] != "desk" for d in mine) else ""
         if (rx["retained"] and mine) or (r["max_occasions"] and len(mine) >= r["max_occasions"]):
-            return _refuse(line, f"Prescription {rx['name']} has nothing left to dispense.")
+            return _refuse(line, held or f"Prescription {rx['name']} has nothing left to dispense.")
         if r["one_drug"] and len({it["item"] for it in rx["items"]}) > 1:
             return _refuse(line, f"Prescription {rx['name']} names more than one drug; this class allows one per prescription.")
         per_fill = sum(it["qty"] for it in rx["items"] if it["item"] == line["item"])
@@ -591,7 +644,7 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
                         if x.get("rx") == rx["name"] and x.get("item") == line["item"])
         left = per_fill * fills - dispensed
         if left <= 1e-9:
-            return _refuse(line, f"Prescription {rx['name']} has nothing left to dispense.")
+            return _refuse(line, held or f"Prescription {rx['name']} has nothing left to dispense.")
         want = sum(qty[j] for j in rx_lines if lines[j]["item"] == line["item"])
         if want > min(left, per_fill) + 1e-9:
             return _refuse(line, f"Prescription {rx['name']} has only {_fmt(min(left, per_fill))} of this left.")
@@ -668,6 +721,14 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
             record_lines.append({"item": lines[i]["item"], "qty": qty[i], "rx": "", "schedules": r["schedules"]})
             recorded.add(i)
 
+    # 9b · 0.1.5: a sale paid on the check of the pharmacist who sent it records its pharmacist-only lines too, so the
+    # dispensing names both people and its park: one sent sale is paid once (a park another sale already took is not sent)
+    if by_sender:
+        for i in sold:
+            if rules[i] and rules[i]["pharmacist"] and i not in recorded:
+                record_lines.append({"item": lines[i]["item"], "qty": qty[i], "rx": "", "schedules": rules[i]["schedules"]})
+                recorded.add(i)
+
     # 10 · a return gives back what its dispensing took, where its schedule says so (FR-K1-08): only a return that moves
     # stock back (a money-only credit note returns no medicine), and never twice for one dispensed quantity
     given: dict = {}
@@ -705,6 +766,8 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
         record = {"lines": record_lines, "fingerprints": fps,
                   "prescriber": plain("; ".join(dict.fromkeys(x["prescriber"] for x in used if x["prescriber"])), 1000),
                   "directions": plain("; ".join(dict.fromkeys(dose)), 4000)}
+        if sent:          # 0.1.5: the sale a pharmacist sent here, whose reservation this one takes over
+            record.update(sent=sent, by_sender=by_sender)
     if fill and on_desk:
         return {"verdict": "fill", "fields": fill, "record": record}
     if fill:          # check/1: an allow that fills; the till asks again on the filled sale, answered the same

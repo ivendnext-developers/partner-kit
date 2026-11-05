@@ -161,5 +161,23 @@ class FakeShop:
         self.add("POS Invoice", name=name or f"INV-{len(self.rows('POS Invoice')) + 1}", docstatus=docstatus,
                  custom_mpos_sale_ref=sale_ref.strip().lower(), custom_mpos_idempotency_key=key, is_return=is_return)
 
+    def sent(self, park="PARK-1", sale_ref="sale-ph", owner="ph@shop", items=(("AMOX", 21),), rung_by="cash@shop",
+             customer="Ann", rung=True):
+        """0.1.5: a sale the pharmacist ``owner`` sent to a till (a park: a draft naming the till it is paid at), rung up
+        there by ``rung_by`` (the park disabled onto the draft rung up in its place, which is theirs)."""
+        draft = f"{park}-DRAFT"
+        self.add("POS Invoice", name=park, docstatus=0, customer=customer, owner=owner, custom_settle_at_register="CASH-1",
+                 custom_disabled=1 if rung else 0, custom_pos_recall_reference=draft if rung else None,
+                 custom_mpos_sale_ref=sale_ref.strip().lower(), is_return=0)
+        if rung:
+            self.add("POS Invoice", name=draft, docstatus=0, customer=customer, owner=rung_by, custom_mpos_sale_ref="",
+                     is_return=0)
+        for code, qty in items:
+            self.add("POS Invoice Item", parent=park, item_code=code, stock_qty=qty)
+
+    def gone(self, *names):
+        """Records deleted from the shop (a void deletes the park and its draft)."""
+        self.tables["POS Invoice"] = [r for r in self.rows("POS Invoice") if r.get("name") not in names]
+
     def dispensings(self):
         return sorted(self.rows(f"{P} Dispensing"), key=lambda r: r["seq"])
