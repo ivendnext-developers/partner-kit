@@ -304,6 +304,20 @@ class ServiceTest(unittest.TestCase):
             self.assertIn(words, self.said(out), kind)
             self.assertEqual((shop.res["R1"]["seat_key"], shop.res["R1"]["status"]), ("", "Booked"), kind)
 
+    def test_s8b_the_floor_refusing_the_apps_user_is_said_and_nothing_is_written(self):
+        # cd-09, 11-05: the till's floor read refuses a user with no register at the store before the door is asked
+        cases = {("ProfileNotAssignedError", 417): "not assigned to register Bistro R1",
+                 ("PermissionError", 403): "open a check and see the checks"}
+        for (kind, code), words in cases.items():
+            shop = fs.FakeTenant([fs.booking("R1", "19:00:00")],
+                                 floor_refuse=(kind, code, "You are not assigned to this register at this store."))
+            out = self.press(self.svc(shop), "/press/seat", RES, "R1")
+            self.assertEqual(out[0], 200, kind)
+            self.assertIn(words, self.said(out), kind)
+            self.assertEqual((shop.res["R1"]["seat_key"], shop.res["R1"]["status"], shop.keys), ("", "Booked", {}), kind)
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00")], floor_refuse=("", None, ""))     # no answer: the host checks
+        self.assertEqual(self.press(self.svc(shop), "/press/seat", RES, "R1")[0], 502)
+
     def test_s9_a_party_needs_its_table_and_a_closed_booking_is_not_seated(self):
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00", place=None), fs.booking("R2", "19:00:00", status="No-show")])
         s = self.svc(shop)

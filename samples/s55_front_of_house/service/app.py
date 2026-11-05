@@ -333,10 +333,16 @@ class Service:
             clash = self._clash(door, r, row, now, exclude=name)
             if clash:
                 raise Refusal(f"Not seated: {clash} Seat the party at another table.")
-            if not foh.num(row.get("second_check")) and \
-                    foh.place_busy(door.call("floor_status", query={"store": r["store"]}), r["place"]):
-                raise Refusal(f"Not seated: {where} has an open check. Clear it at a till, or seat the party at another "
-                              "table.")
+            if not foh.num(row.get("second_check")):
+                try:
+                    floor = door.call("floor_status", query={"store": r["store"]})
+                except TenantError as e:     # the floor refused the app's user (no register here, say): nothing written yet
+                    if not e.refused or e.code == 401:
+                        raise
+                    raise Refusal(self._door_words(e, r, row)) from None
+                if foh.place_busy(floor, r["place"]):
+                    raise Refusal(f"Not seated: {where} has an open check. Clear it at a till, or seat the party at another "
+                                  "table.")
             key = self.new_key()
             req = foh.seat_request(r["store"], row["register"], key, r["place"], name, foh.num(r["party"]),
                                    r.get("deposit_amount") if r.get("deposit_sale") else None)
