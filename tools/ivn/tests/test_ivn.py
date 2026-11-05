@@ -174,8 +174,10 @@ class Stub:
 
     def try_start(self, b):
         if not self.sandbox:
-            raise Refuse("no_sandbox", "You have no sandbox yet. Request one: https://developer.ivendnext.com/sandbox.html")
-        return {"sections": [{"title": "New in Desk", "lines": ["Till guard rules: a new list"]},
+            raise Refuse("no_sandbox", "Add a site: any iVendNext site's address. No site yet? Request one: "
+                                       "https://developer.ivendnext.com/sandbox.html")
+        self.last_site = b.get("site") or getattr(self, "last_site", None) or "acme.sandbox.ivend.co"  # the person's last
+        return {"site": self.last_site, "press": True, "sections": [{"title": "New in Desk", "lines": ["Till guard rules: a new list"]},
                              {"title": "Who can use it", "lines": ["Stock Manager"]},
                              {"title": "Changes to what you already have", "lines": ["Nothing"]},
                              {"title": "Print layouts", "lines": []},
@@ -195,16 +197,18 @@ class Stub:
         if self.polls["try"] < 2:
             return {"step": "build", "version": self.row(b["app"])["latest"], "lines": ["Starting the sandbox copy of your app…"]}
         return {"step": "done", "done": True, "lines": ["Starting the sandbox copy of your app…", "Connecting…"],
+                "installed_on": f"Installed on {self.last_site}", "desk": f"https://{self.last_site}/app",
+                "till_url": f"https://{self.last_site}/pos", "address": "https://acme-points-sandbox.ivendnext.app",
                 "head": ["Tested from our server, as your sandbox would call it.", "Passed: your sandbox reached your app and it answered."],
                 "results": self.test_results, "till": ["Try it at the till of acme.sandbox.ivend.co (sign in as cashier1)", "Close the till day when you are done."]}
 
     def test(self, b):
-        return {"head": ["Tested from our server, as your sandbox would call it."], "results": self.test_results}
+        return {"site": getattr(self, "last_site", None), "head": ["Tested from our server, as your sandbox would call it."], "results": self.test_results}
 
     def secrets(self, b):
         if not self.sandbox:
-            raise Refuse("no_sandbox", "Connect your sandbox first: My apps > Your sandbox.")
-        return {"site": "acme.sandbox.ivend.co", "points": [{"key": "tgr_guard", "plain": "a check at Pay", "secret": "the-secret"}]}
+            raise Refuse("no_sandbox", "Add a site first.")
+        return {"site": b.get("site") or "acme.sandbox.ivend.co", "points": [{"key": "tgr_guard", "plain": "a check at Pay", "secret": "the-secret"}]}
 
     def publish_start(self, b):
         r = self.row(b["app"])
@@ -252,7 +256,10 @@ class Stub:
         return {"sha256": "a" * 64, "type": b["type"], "w": b["w"], "h": b["h"]}
 
     def sites(self, b):
-        return {"sites": [{"site": SITE, "remove_words": f"{SITE} gets no new versions. The app stays on the site until its administrator uninstalls it."}]}
+        company = [{"site": "acme.sandbox.ivend.co", "key_address": "sandbox-acme.staging.ivendnext.com", "press": True},
+                   {"site": "shop.acme.example", "key_address": "acme.ivendnext.com", "press": False}]
+        return {"company": company, "default": getattr(self, "last_site", None) or company[0]["site"],
+                "sites": [{"site": SITE, "remove_words": f"{SITE} gets no new versions. The app stays on the site until its administrator uninstalls it."}]}
 
     def sites_remove(self, b):
         self.removed = b["site"]
@@ -858,9 +865,10 @@ class Sandbox(Base):
         self.in_app(folder)
         rc, out = self.run_ivn("secrets")
         self.assertEqual(rc, 0)
-        self.assertIn("Until Copy secret is in iVendNext Desk: on your own sandbox, ivn secrets prints each point's secret with "
-                      "your sandbox's administrator key. On a customer's site, its administrator does the same with the kit's deploy tool.", out)
+        self.assertEqual(out.splitlines()[0], "Each connection point's secret on acme.sandbox.ivend.co. On any other site, "
+                                              "Copy secret on the point gives it.")
         self.assertIn("tgr_guard  a check at Pay: the-secret", out)
+        self.assertIn("on shop.acme.example.", self.run_ivn("secrets", "--site", "shop.acme.example")[1])
 
 
 class Try(Base):
@@ -880,11 +888,24 @@ class Try(Base):
                       "Print layouts", "Connects outside your site"):
             self.assertIn(title, out)
         self.assertIn("Trying it on your sandbox is free.", out)
-        self.assertEqual(self.stub.installed, {"app": self.stub.installed["app"], "sha": "f" * 64})
+        self.assertEqual(self.stub.installed, {"app": self.stub.installed["app"], "sha": "f" * 64, "site": "acme.sandbox.ivend.co"})
+        self.assertEqual(out.splitlines()[0], "Trying it on acme.sandbox.ivend.co.")  # the site, named before anything else
+        for line in ("Installed on acme.sandbox.ivend.co", "https://acme.sandbox.ivend.co/app", "https://acme.sandbox.ivend.co/pos",
+                     "https://acme-points-sandbox.ivendnext.app"):
+            self.assertIn(line, out)
         self.assertIn("Tested from our server, as your sandbox would call it.", out)
         self.assertRegex(out, r"tgr_guard\s+a check at Pay\s+Passed  0\.31 s")
         self.assertRegex(out, r"lyl_member\s+a till key\s+Passed  0\.42 s")
         self.assertIn("Try it at the till of acme.sandbox.ivend.co", out)
+
+    def test_sites_then_a_site_then_no_flag_names_the_same_site_first(self):  # SITEPICK: the walk's terminal step
+        rc, out = self.run_ivn("sites")
+        self.assertEqual((rc, out.splitlines()), (0, ["acme.sandbox.ivend.co  one press · your last",
+                                                      "shop.acme.example  its administrator installs it from the shelf key ivn try prints"]))
+        self.assertEqual(self.run_ivn("try", "--site", "shop.acme.example")[1].splitlines()[0], "Trying it on shop.acme.example.")
+        self.assertEqual(self.stub.installed["site"], "shop.acme.example")
+        self.assertEqual(self.run_ivn("try")[1].splitlines()[0], "Trying it on shop.acme.example.")  # the person's last
+        self.assertEqual(self.run_ivn("test")[1].splitlines()[0], "On shop.acme.example.")  # the finished try's own site
 
     def test_show_wording_prints_it(self):  # J4-06
         self.assertIn("THE EXACT WORDING", self.run_ivn("try", "--show-wording")[1])
@@ -892,7 +913,8 @@ class Try(Base):
     def test_no_sandbox_is_m31(self):  # ⭐ UX-138 (J8-29)
         self.stub.sandbox = None
         rc, out = self.run_ivn("try")
-        self.assertEqual((rc, out.strip()), (1, "You have no sandbox yet. Request one: https://developer.ivendnext.com/sandbox.html"))
+        self.assertEqual((rc, out.strip()), (1, "Add a site: any iVendNext site's address, with ivn try --site <address>. "
+                                                "No site yet? Request one: https://developer.ivendnext.com/sandbox.html"))
 
     def test_a_changed_folder_uploads_first_and_says_so(self):  # ⭐ UX-32 (J3-07)
         self.edit(self.folder / "service" / "app.py")

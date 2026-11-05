@@ -1,6 +1,6 @@
 # Publish your app
 
-Make your app, try it on your sandbox, send it to your customer and list it for every retailer, on [My apps](https://developer.ivendnext.com/apps) or with the `ivn` command. New to it? [Build your first app](first_app.md) takes you from a sample to your customer in six steps.
+Make your app, try it on a site you pick, send it to your customer and list it for every retailer, on [My apps](https://developer.ivendnext.com/apps) or with the `ivn` command. New to it? [Build your first app](first_app.md) takes you from a sample to your customer in six steps.
 
 ## The steps
 
@@ -12,7 +12,7 @@ ivn new acme_bins --from s2
 
 It makes one app from one sample or several.
 
-**Try it on your sandbox.** On My apps, **Try on my sandbox**, or `ivn try`. It shows what installing it changes, installs it on your sandbox and tests each connection. Trying is free, and it asks for no key, no plan and no card. No sandbox yet? [Request one](sandbox.md).
+**Try it on a site.** On My apps, the button names the site: **Try on** *your site*. **Change** picks another of your company's sites, or adds any iVendNext site by its address. In a terminal, `ivn try`, or `ivn try --site <address>`; `ivn sites` lists them. It shows what installing it changes, installs it and tests each connection, and the finished screen says where it went, with **Open Desk** and **Open the till**. On a site we handed to you or your company it installs in one press; on any other site, Try gives you a shelf key and that site's administrator installs it from **App library**. Trying is free, and it asks for no key, no plan and no card. No site yet? [Request one](sandbox.md).
 
 **Publish it to a customer.** On My apps, **Publish**, then **To a customer**, or:
 

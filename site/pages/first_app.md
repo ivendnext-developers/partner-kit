@@ -94,15 +94,15 @@ ivn check
 
 It runs the checker your customer's install runs on your manifest, then the app's own tests, and gives one line: `CHECK GREEN` and how many tests passed. If something is refused, it says which entry and why.
 
-### 5. Try it on your sandbox
+### 5. Try it on a site
 
-On My apps, **Try on my sandbox**. In a terminal:
+On My apps, **Try on** *your site*: the button names it. **Change** picks another site, or adds one by its address. In a terminal:
 
 ```bash
 ivn try
 ```
 
-It uploads your folder, shows what installing it changes, installs it on your sandbox and tests any connection it has. Trying is free. It asks you nothing: no key, no plan, no card.
+It names the site first, uploads your folder, shows what installing it changes, installs it there and tests any connection it has. The finished screen says **Installed on** the site, with **Open Desk** and **Open the till**. Trying is free. It asks you nothing: no key, no plan, no card.
 
 Now use it. Your sandbox came with an administrator's login, a manager's and two cashiers'. As the administrator, make a **Supplier** if there is none, and on each person's **User** record give *Purchase User* to the one who will be your buyer and *Purchase Manager* to your approver. Sign in as the buyer and raise a Purchase Order over the amount; then sign in as the approver, open it, and under **Actions** press **Approve**. It reads *Approved* and it is submitted. A sandbox sends no mail, so you will not see the mail.
 

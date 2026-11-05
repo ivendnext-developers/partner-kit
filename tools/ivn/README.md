@@ -23,8 +23,9 @@ ivn publish --public
 | `ivn pull` | Brings the server's latest draft in and keeps your changes, marking a conflict as git marks one (needs git). |
 | `ivn add <sample>` · `ivn take <sample>` | Adds a sample · takes a sample's newer version, keeping what you changed. |
 | `ivn secret <NAME>` | Sets one of the app's own settings. |
-| `ivn secrets` | Prints each connection point's secret on your own sandbox. |
-| `ivn try` | Uploads a changed folder, shows what installing it changes, installs it on your sandbox and tests each connection point. It asks nothing, and it is free. |
+| `ivn secrets` | Prints each connection point's secret on the site you last tried on, or `--site <address>`. |
+| `ivn sites` | Lists your company's sites: pick any with `ivn try --site`, or add one by its address. |
+| `ivn try` | Names the site first (`--site <address>`, else the one you last tried on), uploads a changed folder, shows what installing it changes, installs it there and tests each connection point. It asks nothing, and it is free. |
 | `ivn test` · `ivn test --local` | Tests each connection point again · on this laptop, with the test secret in `.env.local`. |
 | `ivn publish --to <site>` | Sends it to a customer's sites, and prints the message for their administrator. With no `--to`, to every site it is on. `--own`: the sites are your own company's. |
 | `ivn publish --public` | Lists it for every retailer. The card's fields go in `app.json`'s `card`: you are asked once. |

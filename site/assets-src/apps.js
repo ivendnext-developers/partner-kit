@@ -157,19 +157,24 @@
     required: "Required: publishing waits until it is set", optional: "Optional: the feature behind it stays off until you set it",
     together: "Set both, or neither", notOnSite: "Not yet on any site",
     upload: "Upload a new version", uploadHint: "Choose the app folder's zip. We check it before we keep it.", toBuild: "From its recipe, not a sample: ", extra: "Also in this app: ",
-    download: "Download the app folder", addSample: "Add a sample", tryIt: "Try on my sandbox", publish: "Publish",
+    download: "Download the app folder", addSample: "Add a sample", tryIt: "Try", tryOn: "Try on {site}", addSite: "Add a site", publish: "Publish",
     take: "Take it", notNow: "Not now", covers: "What it covers", versions: "Versions"
   };
 
-  // EASY3a part 3: Try on my sandbox (spec J4-01 to J4-05, J4-11, J5-15, J9-02, §3b). The words a door answers (Connected,
-  // M11 to M14, M18 to M21, the results, the till lines, who pays) are the hosting's and are shown as given (§0b rule 8).
+  // EASY3a part 3: Try (spec J4-01 to J4-05, J4-11, J5-15, J9-02, §3b; SITEPICK: the developer sees the site and picks
+  // any). The words a door answers (Connected, M11 to M14, M17 to M21, Installed on, the shelf key's line, the results,
+  // the till lines, who pays) are the hosting's and are shown as given (§0b rule 8).
   var T = {
-    yourSandbox: "Your sandbox", request: "Request one",
+    request: "Request one", change: "Change", here: "Where this app is now", others: "Your company's other sites",
+    another: "Another site\u2026", tryThere: "Try there", removeList: "Remove from my list",
     changes: "What installing it changes", wording: "Show the exact wording",
     testAgain: "Test again", tryAgain: "Try again", pay: "Pay with your card", plan: "Per month",
     updates: "What the update changes", choosePlan: "Choose a plan first.", noCharge: "Confirm in Stripe: no charge",
-    starting: "Installing it on your sandbox\u2026", wait: "Keep this page open: this takes up to about 4 minutes.", openTill: "Open the till"
+    starting: "Installing it on {site}\u2026", wait: "Keep this page open: this takes up to about 4 minutes.",
+    openDesk: "Open Desk", openTill: "Open the till", appAddress: "Your app's address: "
   };
+  // the Try button names its site before the press; with none on the list, it opens the list to add one
+  function tryLabel(site) { return site ? G.tryOn.replace("{site}", site) : G.addSite; }
   // EASY3a part 4: Publish and keep it going (spec J5-01, J5-04, J5-16, J5-19, J6-06, J7-01, J7-07, J10-01, J12-01, J13-03,
   // §3b). The words a door answers (who pays, M15 to M17, M23, M30, M33, the message to send, a site's state, the go-back
   // and cancel lines, a key) are the hosting's and are shown as given (§0b rule 8).
@@ -186,7 +191,7 @@
     pictures: "Pictures", picturesHint: "Up to four: PNG, JPEG or WebP. A big one is made smaller for the card.",
     pictureBad: "Not added: {name} is not a PNG, JPEG or WebP picture we could make small enough. Choose another.",
     picturesBusy: "Adding pictures\u2026", picturesOnly: "Only the first {n} were added: a card has up to four.",
-    onSandboxOnly: "On your sandbox only"
+    onSandboxOnly: "On your sandbox only", ownSites: "Your company's own sites"
   };
   // an industry the App library's card takes (its ids, as the hosting gives them), in the words the gallery shows
   function industryWords(id) {
@@ -226,9 +231,12 @@
   }
   // a try still moving: the page asks again until it is done or stopped
   function tryRunning(s) { return !!(s && s.step && s.step !== "done" && s.step !== "stopped"); }
-  // a newer draft than the one tried, or a try that stopped: Try installs it again (J4-05 after a fix)
-  function offerAgain(s) { return !s || !s.step || s.step === "stopped" || (s.step === "done" && s.latest && s.latest !== s.version); }
-  // J4-01's line with no sandbox, its "Request one" a link to the sandbox page
+  // a newer draft than the one tried, a try that stopped, or another site picked: Try installs it again (J4-05 after a fix)
+  function offerAgain(s, site) {
+    return !s || !s.step || s.step === "stopped" || (s.step === "done" && ((s.latest && s.latest !== s.version) ||
+      (!!site && !!s.site && s.site !== site)));
+  }
+  // J4-01's line with no site, its "Request one" a link to the sandbox page
   function noSandboxParts(words) {
     var i = String(words || "").indexOf(T.request);
     return i < 0 ? [String(words || "")] : [words.slice(0, i), T.request, words.slice(i + T.request.length)];
@@ -430,7 +438,7 @@
               making: making, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
               covers: covers, coversText: coversText, ASK_PAGE: ASK_PAGE, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
-              noSandboxParts: noSandboxParts, U: U, industryWords: industryWords,
+              noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
               canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
@@ -508,15 +516,17 @@
     if (screen === "home") {
       call("GET", "/handovers").then(function (r) { data.handovers = r; render(); }, function () {});
       call("GET", "/apps").then(function (r) { data.apps = r; render(); }, fail);
-      call("GET", "/sandbox").then(function (r) { data.sandbox = r; render(); }, function () {});
     }
     if ((screen === "app" || screen === "settings") && data.appId) openApp(data.appId);
   }
 
   function openApp(app) {
     data.where = null; data.whereAsked = null;   // where it runs is read afresh each time: a try or a publish changes it
+    loadSites();
     return call("POST", "/app", { app: app }).then(function (r) { data.app = r; render(); return r; }, fail);
   }
+  // the company's sites, any number, and the person's default (their last, else the first): Try's button and its list
+  function loadSites() { return call("POST", "/sites", {}).then(function (r) { data.sites = r; render(); }, function () {}); }
 
   // the site's samples index and needs catalogue (same origin): read once, for the gallery and What it covers
   function siteData() {
@@ -612,7 +622,6 @@
     });
     list.appendChild(button(G.newApp, function () { startGallery("new"); }));
     var out = el("div", {}, box, list, tail);
-    tail.appendChild(vSandbox());   // the person's own sandbox, handed over: nothing to type, so everyone sees it
     (data.deviceCode ? box : tail).appendChild(vDevice());   // a code brought by the address: at the top, open
     return out;
   }
@@ -902,7 +911,8 @@
     if (w[0]) box.appendChild(el("p", { "class": "hosting-ok", text: w[0] }));
     w.slice(1).forEach(function (x) { box.appendChild(p(x)); });
     var none = data.app && data.app.app === data.appId && !(data.app.settings || []).length;   // nothing to fill: straight to Try
-    box.appendChild(none ? button(G.tryIt, function () { data.made = null; openTry(data.appId); })
+    var def = (data.sites || {}).default;
+    box.appendChild(none ? button(tryLabel(def), function () { data.made = null; if (def) openTry(data.appId, def); else { data.pick = data.appId; go("app"); } })
       : button(G.nextSettings, function () { data.made = null; go("settings"); }));
     return box;
   }
@@ -958,15 +968,19 @@
       sent.length ? null : " · " + vs[vs.length - 1].version + " (draft)"));
     var acts = el("p", {});
     // one next step in blue: Try until it is tried, then Publish
-    var tryB = button(G.tryIt, function () { openTry(a.app); }, tried || sent.length > 0), pubB = button(G.publish, function () { openPublish(a.app); }, !(tried || sent.length > 0));
+    var def = (data.sites || {}).default;
+    var tryB = button(tryLabel(def), function () { if (def) openTry(a.app, def); else { data.pick = data.pick === a.app ? null : a.app; render(); } }, tried || sent.length > 0),
+      pubB = button(G.publish, function () { openPublish(a.app); }, !(tried || sent.length > 0));
+    var changeB = def ? button(T.change, function () { data.pick = data.pick === a.app ? null : a.app; render(); }, true) : null;
     // J3-06: Upload a new version, one button; the file box stays out of sight
     var file = el("input", { type: "file", accept: ".zip,application/zip", hidden: "", "aria-label": G.upload });
     file.addEventListener("change", function () { if (file.files[0]) upload(file.files[0]); });
-    [tryB, pubB, button(G.download, download, true), uploadButton(file),
+    [tryB, changeB, pubB, button(G.download, download, true), uploadButton(file),
      button(G.addSample, function () { startGallery("add"); }, true), button(U.logs, function () { data.logs = null; go("logs"); loadLogs(); }, true),
      (a.settings || []).length ? button("Settings", function () { go("settings"); }, true) : null]
       .forEach(function (b) { if (b) { acts.appendChild(b); acts.appendChild(root.document.createTextNode(" ")); } });
     box.appendChild(acts);
+    if (data.pick === a.app) box.appendChild(vPick(a.app));   // one list: where it is, the company's other sites, another
     box.appendChild(file);
     // J6-08: the newer-version notice
     (a.newer || []).forEach(function (n) {
@@ -1112,39 +1126,61 @@
     return row;
   }
 
-  // J4-01: your sandbox. Nobody pastes a key: we connect our sandbox sites when we hand one over, so the
-  // panel says which one is yours, or where to ask for one
-  function vSandbox() {
-    var sb = data.sandbox || {}, box = el("details", {}, el("summary", { text: T.yourSandbox }));
-    box.open = true;   // its words and Install on it now are never folded away (J4-01)
-    if (sb.sandbox) {
-      box.appendChild(el("p", { "class": "hosting-ok", text: sb.words }));
-      if (sb.waiting) box.appendChild(el("p", {}, button(sb.install_now, function () { openTry(sb.waiting); })));
-    } else if (sb.words) {
-      var parts = noSandboxParts(sb.words);
+  // Change, one list (any site, any number, read from records). Where this app is now, each with its
+  // version; the company's other sites; Another site…, any iVendNext site's address, which joins the list
+  function vPick(app) {
+    var box = el("div", { "class": "hosting-step" }), sites = data.sites || {}, w = data.where && data.where.app === app ? data.where : null;
+    var tryOn = function (site) { return function () { data.pick = null; openTry(app, site); }; };
+    var here = ((w && w.sites) || []).filter(function (x) { return x.sandbox; }), named = here.map(function (x) { return x.site; });
+    if (here.length) {
+      box.appendChild(el("h3", { text: T.here }));
+      here.forEach(function (x) { box.appendChild(el("p", {}, button(tryLabel(x.site), tryOn(x.site), true), " " + (x.state || x.version || ""))); });
+    }
+    var others = (sites.company || []).filter(function (x) { return named.indexOf(x.site) < 0; });
+    if (others.length) {
+      box.appendChild(el("h3", { text: T.others }));
+      others.forEach(function (x) {
+        var row = el("p", {}, button(tryLabel(x.site), tryOn(x.site), true));
+        if (!x.press) row.appendChild(button(T.removeList, function (ev) {   // a site the company added: off its list
+          ev.target.disabled = true;
+          call("POST", "/sites/remove", { site: x.site, mine: true }).then(function (r) { data.sites.company = r.company; render(); },
+                                                                          function (e) { ev.target.disabled = false; fail(e); });
+        }, true));
+        box.appendChild(row);
+      });
+    }
+    if (!(sites.company || []).length && sites.words) {
+      var parts = noSandboxParts(sites.words);
       box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
     }
+    box.appendChild(el("h3", { text: T.another }));
+    var inp = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "shop.ivendnext.com", "aria-label": T.another });
+    box.appendChild(el("p", {}, inp, " ", button(T.tryThere, function () {
+      var v = inp.value.trim();
+      if (v) { data.pick = null; openTry(app, v); }
+    })));
     return box;
   }
 
-  // J4-02 to J4-05, J4-11: Try on my sandbox, one press (free, nothing to tick or choose). The site's own check
-  // first, shown as the install goes on, then the steps, one per ask
-  function openTry(app) {
-    data.appId = app; data.tryC = null; data.tryS = null; data.tryPress = false; screen = "try"; say(""); render();
-    if (!data.sandbox) call("GET", "/sandbox").then(function (r) { data.sandbox = r; render(); }, function () {});
+  // J4-02 to J4-05, J4-11: Try on ⟨site⟩, one press (free, nothing to tick or choose). The site's own check first, shown
+  // as the install goes on, then the steps, one per ask
+  function openTry(app, site) {
+    data.appId = app; data.tryC = null; data.tryS = null; data.tryPress = false; data.trySite = site || null;
+    screen = "try"; say(""); render();
+    if (!data.sites) loadSites();
     call("POST", "/try/status", { app: app }).then(function (s) {
       if (s.step) data.tryS = s;
-      if (tryRunning(s)) { render(); pollTry(); return; }
-      if (!offerAgain(s)) { render(); return; }
+      if (tryRunning(s)) { data.trySite = s.site || data.trySite; render(); pollTry(); return; }
+      if (!offerAgain(s, data.trySite)) { render(); return; }
       return startTry(app);
     }).then(null, fail);
   }
 
   // the site's check, then the install at once with the words it showed
   function startTry(app) {
-    return call("POST", "/try", { app: app }).then(function (c) {
-      data.tryC = c; data.tryPress = true; render();
-      return call("POST", "/try/install", { app: app, sha: c.sha }).then(function (r) {
+    return call("POST", "/try", { app: app, site: data.trySite || undefined }).then(function (c) {
+      data.tryC = c; data.trySite = c.site; data.tryPress = true; render();
+      return call("POST", "/try/install", { app: app, sha: c.sha, site: c.site }).then(function (r) {
         data.tryPress = false; data.tryS = r; say(""); render(); pollTry();
       });
     }, function (e) { data.tryS = null; throw e; }).then(null, function (e) { data.tryPress = false; fail(e); });   // refused (M14): the last try's lines are not this one's
@@ -1163,13 +1199,14 @@
   }
 
   function vTry() {
-    var box = card(G.tryIt), s = data.tryS, c = data.tryC;
+    var s = data.tryS, c = data.tryC, site = (s && s.site) || data.trySite;
+    var box = card(site ? tryLabel(site) : G.tryIt);
     var crumbs = el("p", { "class": "hint" }), back = el("a", { href: "#", text: shownTitle() });
     back.addEventListener("click", function (ev) { ev.preventDefault(); screen = "app"; say(""); openApp(data.appId); });
     crumbs.appendChild(back);
     box.insertBefore(crumbs, box.firstChild);
     if (data.tryPress) {   // from the press on: no old refusal, and the words say it started
-      box.appendChild(p(T.starting));
+      box.appendChild(p(T.starting.replace("{site}", site || "")));
       box.appendChild(el("p", { "class": "hint", text: T.wait }));
       return box;
     }
@@ -1182,13 +1219,28 @@
         box.appendChild(button(T.tryAgain, function (ev) { ev.target.disabled = true; data.tryS = null; startTry(data.appId); }));
       }
       if (s.done) {
+        // where it went, for every app: Installed on ⟨site⟩ (or, on a site its administrator installs, the shelf key and
+        // what to do with it, as Publish shows its message), the site's own Desk and till, and the app's own address
+        var fin = card(s.installed_on || "");
+        if (s.shelf_key) {
+          fin.appendChild(el("pre", { text: s.shelf_key, "class": "apps-msg" }));
+          fin.appendChild(copyRow(s.shelf_key));
+        }
+        var links = el("p", {});
+        if (s.desk) links.appendChild(el("a", { href: s.desk, target: "_blank", rel: "noopener", "class": "site-btn", text: T.openDesk }));
+        links.appendChild(root.document.createTextNode(" "));
+        if (s.till_url) links.appendChild(el("a", { href: s.till_url, target: "_blank", rel: "noopener", "class": "site-btn site-btn-ghost", text: T.openTill }));
+        fin.appendChild(links);
+        if (s.address) fin.appendChild(el("p", { "class": "hint", text: T.appAddress + s.address }));
+        box.appendChild(fin);
         var res = card("Connection points");
-        (s.head || []).forEach(function (l, i) { res.appendChild(el("p", { "class": i ? "" : "hint", text: l })); });
+        (s.head || []).filter(function (l) { return l !== s.installed_on; })
+          .forEach(function (l, i) { res.appendChild(el("p", { "class": i ? "" : "hint", text: l })); });
         var ul = el("ul", {});
         (s.results || []).forEach(function (l) { ul.appendChild(el("li", { "class": /: Passed/.test(l) ? "hosting-ok" : "hosting-bad", text: l })); });
         res.appendChild(ul);
         var pointsOk = (s.results || []).every(function (l) { return /: Passed/.test(l); });
-        res.appendChild(button(T.testAgain, function (ev) {
+        if (s.press) res.appendChild(button(T.testAgain, function (ev) {   // its administrator's site tests itself
           ev.target.disabled = true;
           call("POST", "/test", { app: data.appId }).then(function (r) { data.tryS = r; render(); },
                                                         function (e) { ev.target.disabled = false; fail(e); });
@@ -1196,8 +1248,6 @@
         box.appendChild(res);
         if ((s.till || []).length) {
           var till = card(s.till[0]);
-          var at = /till of (\S+)/.exec(s.till[0]);
-          if (at) till.appendChild(el("p", {}, el("a", { href: "https://" + at[1] + "/pos", target: "_blank", rel: "noopener", text: T.openTill })));
           s.till.slice(1).forEach(function (l) { till.appendChild(p(l)); });
           box.appendChild(till);
         }
@@ -1205,14 +1255,18 @@
       }
     } else if (!c || (flash && flash.bad)) {
       if (flash && flash.bad) {   // refused: the way on, never a page with nothing to press
-        box.appendChild(data.sandbox && !data.sandbox.sandbox ? el("p", {}, el("a", { href: "/sandbox.html", "class": "site-btn", text: T.request }))
+        box.appendChild(data.sites && !(data.sites.company || []).length ? el("p", {}, el("a", { href: "/sandbox.html", "class": "site-btn", text: T.request }))
           : button(T.tryAgain, function (ev) { ev.target.disabled = true; say(""); startTry(data.appId); }));
         return box;
       }
-      box.appendChild(p("Reading what installing it changes on your sandbox…"));
+      box.appendChild(p("Reading what installing it changes on " + (site || "the site") + "…"));
       return box;
     }
     if (!c) return box;
+    if (!c.press) {   // its administrator's own install shows what it changes there
+      if ((c.money || {}).line) box.appendChild(p(c.money.line));
+      return box;
+    }
     // what the install changes, as the site's own check drew it, read while it goes on (nothing to tick)
     var what = el("details", {}, el("summary", { text: (c.version ? c.version + ": " : "") + T.changes }));
     what.open = !(s && s.done);
@@ -1323,10 +1377,24 @@
       tabs.appendChild(b); tabs.appendChild(root.document.createTextNode(" "));
     });
     box.appendChild(tabs);
-    var form = data.pubForm || (data.pubForm = { app: data.appId, sites: [""], own: false, plan: null, card: { title: shownTitle(), what: ["", "", ""], industries: [] } });
+    var form = data.pubForm || (data.pubForm = { app: data.appId, sites: [""], ticks: [], own: false, plan: null, card: { title: shownTitle(), what: ["", "", ""], industries: [] } });
     var recheck = function () {};   // set once the button exists: a typed site is something new to publish (walk 11-02)
     if (data.pubTo === "customer") {
       if ((c.sites || []).length && c.goes_to && !c.nothing_new) box.appendChild(p(c.goes_to));
+      if ((c.company || []).length) {   // the same list as Try's: ticking one is one of the company's own sites
+        var mine = el("fieldset", {}, el("legend", { text: U.ownSites }));
+        c.company.forEach(function (x) {
+          var cb = el("input", { type: "checkbox" });
+          cb.checked = form.ticks.indexOf(x.site) >= 0;
+          cb.addEventListener("change", function () {
+            form.ticks = form.ticks.filter(function (v) { return v !== x.site; }).concat(cb.checked ? [x.site] : []);
+            if (cb.checked) form.own = true;
+            render();
+          });
+          mine.appendChild(el("p", {}, el("label", {}, cb, " " + x.site)));
+        });
+        box.appendChild(mine);
+      }
       box.appendChild(el("p", {}, el("strong", { text: (c.sites || []).length ? U.anotherSite : U.sitesLabel })));
       form.sites.forEach(function (v, i) {
         var inp = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "retailer.ivendnext.com" });
@@ -1419,7 +1487,7 @@
       box.appendChild(fsp);
     }
     var stopNow = function () {
-      return data.pubTo === "customer" && c.nothing_new && !form.sites.some(function (x) { return x.trim(); }) ? c.nothing_new : c.m16;
+      return data.pubTo === "customer" && c.nothing_new && !form.ticks.length && !form.sites.some(function (x) { return x.trim(); }) ? c.nothing_new : c.m16;
     };
     var stop = stopNow();
     var go = button(data.pubTo === "customer" || c.listed ? c.button : U.send, function (ev) {
@@ -1427,7 +1495,7 @@
       if (askPlan && !form.plan) { say(T.choosePlan, true); render(); return; }
       data.pubPress = true; say(""); render();
       var body = { app: data.appId, to: data.pubTo, plan: pubPlan(askPlan, form, money) };
-      if (data.pubTo === "customer") { body.sites = form.sites.filter(function (x) { return x.trim(); }); body.own = form.own; }
+      if (data.pubTo === "customer") { body.sites = form.ticks.concat(form.sites.filter(function (x) { return x.trim(); })); body.own = form.own; }
       else if (!c.listed) body.card = cardBody(form.card);   // a listed app keeps its card (J7-05)
       call("POST", "/publish", body).then(function (r) {
         data.pubPress = false;
