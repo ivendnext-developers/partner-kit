@@ -254,8 +254,15 @@ class Prescriptions(unittest.TestCase):
         two = disp("Ann~0002", [{"item": "AMOX", "qty": 21, "rx": "RX1"}], R.RESERVED, seq=2, sale_ref="other")
         out = decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21, fills=2)], [one, two]))
         # 0.1.5: a fill an unpaid till sale holds says who frees it if that sale was voided
-        self.assertEqual(out["reason"], "Line 1: AMOX: Prescription RX1 is held by an unpaid sale. If it was voided, the "
-                                        "pharmacist in charge releases it on the Desk.")
+        self.assertEqual(out["reason"], "Line 1: AMOX: Prescription RX1 is held by an unpaid sale. If voided, the "
+                                        "pharmacist in charge frees it on the Desk.")
+        # a 24-character item and a prescription named RX-00473: the next step is never cut off at 140
+        long = ctx([line("A" * 30, 21)], details={"Rx Number": "RX-00473"})
+        r30 = decide(long, shop(long, [rule("POM")], [rx("RX-00473", "A" * 30, 21, fills=2)], [
+            disp("Ann~0001", [{"item": "A" * 30, "qty": 21, "rx": "RX-00473"}], R.DISPENSED),
+            disp("Ann~0002", [{"item": "A" * 30, "qty": 21, "rx": "RX-00473"}], R.RESERVED, seq=2, sale_ref="other")]))
+        self.assertTrue(r30["reason"].endswith("frees it on the Desk."), r30["reason"])
+        self.assertLessEqual(len(r30["reason"]), 140)
         both = disp("Ann~0002", [{"item": "AMOX", "qty": 21, "rx": "RX1"}], R.DISPENSED, seq=2, sale_ref="other")
         out = decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21, fills=2)], [one, both]))
         self.assertIn("nothing left to dispense", out["reason"])

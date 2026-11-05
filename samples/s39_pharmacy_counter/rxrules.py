@@ -482,16 +482,20 @@ def sale_key(ref: str) -> str:
     return (ref or "").strip().lower()
 
 
-def pick_sent(sent: list, lines: list, rules: list, qty: list) -> dict | None:
+def pick_sent(sent: list, lines: list, rules: list, qty: list) -> tuple[dict | None, bool]:
     """0.1.5: of the sales sent to this till that this cashier rang up for this customer (``sent``, newest first: each
-    ``{"name", "sale_ref", "pharmacist", "items": {item: stock qty}}``), the one this sale is: the newest that holds at
-    least this sale's quantity of each pharmacist-only item, else the newest."""
+    ``{"name", "sale_ref", "pharmacist", "items": {item: stock qty}}``), the one this sale is, and whether it holds at
+    least this sale's quantity of each pharmacist-only item. Only a park sharing an item with the sale is one: the newest
+    that covers it, else the newest that shares one."""
+    sold = {x["item"] for x in lines if x["qty"] > 0}
     need: dict = {}
     for i, x in enumerate(lines):
         if rules[i] and rules[i]["pharmacist"] and x["qty"] > 0 and qty[i] is not None:
             need[x["item"]] = need.get(x["item"], 0.0) + qty[i]
+    mine = [c for c in sent if sold & set(c["items"])]
     covers = lambda c: all(c["items"].get(k, 0.0) + 1e-9 >= v for k, v in need.items())   # noqa: E731
-    return next((c for c in sent if covers(c)), sent[0] if sent else None)
+    best = next((c for c in mine if covers(c)), mine[0] if mine else None)
+    return best, bool(best) and covers(best)
 
 
 def _refuse(line: dict | None, text: str) -> dict:
@@ -537,28 +541,26 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
     # 3 · pharmacist only (VR-06), from the app's own Pharmacist record, its licence in date (F12). 0.1.5: a sale a
     # pharmacist rang and sent to this till, which this cashier rang up (``sent``: the park), is the pharmacist's sale:
     # judged on the pharmacist who sent it, for no more of each pharmacist-only item than they sent
-    sent = pick_sent(shop.get("sent") or [], lines, rules, qty) if not on_desk and ctx["stage"] == "sale" else None
+    sent, covered = pick_sent(shop.get("sent") or [], lines, rules, qty) if not on_desk and ctx["stage"] == "sale" \
+        else (None, False)
     by_sender = False
     for i in sold:
         if rules[i] and rules[i]["pharmacist"]:
             ph = shop["pharmacist"]
             if licensed(ph, today):
                 break
-            if sent and licensed(sent["pharmacist"], today) and pick_sent([sent], lines, rules, qty) is sent \
-                    and all(sent["items"].get(lines[j]["item"], 0.0) + 1e-9 >= sum(
-                        qty[k] for k in sold if rules[k] and rules[k]["pharmacist"] and lines[k]["item"] == lines[j]["item"])
-                        for j in sold if rules[j] and rules[j]["pharmacist"]):
+            if sent and covered and licensed(sent["pharmacist"], today):
                 by_sender = True
                 break
             if ph and ph["active"] and not ph.get("delegate"):
                 until = ph["valid_until"].isoformat() if ph["valid_until"] else "a date not set"
                 return _refuse(lines[i], f"Only a pharmacist may sell this: your licence ran out on {until}.")
             if sent and not licensed(sent["pharmacist"], today):
-                return _refuse(lines[i], "Only a pharmacist may sell this: the one who sent it can't today. Ask a "
-                                         "pharmacist to take payment.")
+                return _refuse(lines[i], "Only a pharmacist may sell this: the one who sent it can't today. Void it; ask "
+                                         "a pharmacist to ring it up.")
             if sent:
-                return _refuse(lines[i], "Only a pharmacist may sell this: it is more than the pharmacist sent. Send it "
-                                         "back to their till.")
+                return _refuse(lines[i], "Only a pharmacist may sell this: it is more than the pharmacist sent. Take the "
+                                         "extra off, or ask a pharmacist.")
             if on_desk:
                 return _refuse(lines[i], "Only a pharmacist may sell this. Ask a pharmacist to submit it.")
             return _refuse(lines[i], "Only a pharmacist may sell this. Ask a pharmacist to ring it up; they can send it "
@@ -631,8 +633,8 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
             fills = 1
         mine = [d for d in counted if any(x.get("rx") == rx["name"] and x["qty"] > 0 for x in d["lines"])]
         # 0.1.5: what an unpaid sale holds comes back when its day closes; a voided one, sooner, by hand
-        held = f"Prescription {rx['name']} is held by an unpaid sale. If it was voided, the pharmacist in charge " \
-               "releases it on the Desk." if any(d["status"] == RESERVED and d["source"] != "desk" for d in mine) else ""
+        held = f"Prescription {rx['name']} is held by an unpaid sale. If voided, the pharmacist in charge frees it " \
+               "on the Desk." if any(d["status"] == RESERVED and d["source"] != "desk" for d in mine) else ""
         if (rx["retained"] and mine) or (r["max_occasions"] and len(mine) >= r["max_occasions"]):
             return _refuse(line, held or f"Prescription {rx['name']} has nothing left to dispense.")
         if r["one_drug"] and len({it["item"] for it in rx["items"]}) > 1:

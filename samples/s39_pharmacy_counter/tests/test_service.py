@@ -226,7 +226,7 @@ class SentSale(Base):
         self.shop.sent()
         out = self.sell(("AMOX", "Rx", 42), rx="RX2", sale_ref="sale-cash", operator="cash@shop")[1]
         self.assertEqual(out["reason"], "Line 1: AMOX: Only a pharmacist may sell this: it is more than the pharmacist "
-                                        "sent. Send it back to their till.")
+                                        "sent. Take the extra off, or ask a pharmacist.")
         self.assertEqual([d["status"] for d in self.shop.dispensings()], ["Reserved"])   # refused: nothing taken over
 
     def test_a_park_another_cashier_rang_up_is_not_this_sale(self):
@@ -241,10 +241,15 @@ class SentSale(Base):
 
     def test_a_park_sent_by_someone_who_is_not_a_pharmacist_today_is_refused(self):
         self.shop.sent(owner="old@shop")                            # their licence ran out yesterday
-        self.assertIn("the one who sent it can't today. Ask a pharmacist to take payment.", self.pay()["reason"])
+        self.assertIn("the one who sent it can't today. Void it; ask a pharmacist to ring it up.", self.pay()["reason"])
         self.shop.gone("PARK-1", "PARK-1-DRAFT")
         self.shop.sent(owner="nobody@shop")                         # not on the Pharmacist list at all
         self.assertIn("the one who sent it can't today", self.pay()["reason"])
+
+    def test_a_park_that_shares_no_item_is_not_this_sale(self):
+        self.shop.sent(items=(("PARA", 1),))                         # the sent sale held something else
+        self.assertIn("Ask a pharmacist to ring it up", self.pay()["reason"])
+        self.assertEqual([d["status"] for d in self.shop.dispensings()], ["Reserved"])   # its reservation untouched
 
     def test_a_park_for_another_customer_is_not_this_sale(self):
         self.shop.sent(customer="Bob")

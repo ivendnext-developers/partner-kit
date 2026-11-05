@@ -4,7 +4,7 @@ A pharmacy sells medicine under a licence. A prescription line is paid only agai
 
 The app checks these at **Pay** on the till, at a return's confirm, and when a sales order, delivery or sales invoice is submitted on the Desk. Each rule is a record the retailer fills: its drug schedules, its pharmacists, the prescriptions its pharmacist enters and its patients' records. Nothing is written in per country.
 
-Where the pharmacist rings the prescription and a counter assistant takes the money at the dispensary's cash till, the pharmacist presses Pay (the check reserves the fill) and sends the sale to that till. Whoever rings it up there pays it in one press: the app judges the sale on the pharmacist who sent it, for no more than they sent, and the dispensing names both. A sent sale voided at the cash till gives its fill back.
+Where the pharmacist rings the prescription and a counter assistant takes the money at the dispensary's cash till, the pharmacist presses Pay (the check reserves the fill) and sends the sale to that till. Whoever rings it up there pays it in one press: the app judges the sale on the pharmacist who sent it, for no more than they sent, and the dispensing names both. A sent sale the cashier voids at the cash till after pressing Pay gives its fill back at once; one voided before, or from Held sales, keeps it until the pharmacist's POS day closes or the pharmacist in charge releases it.
 
 The dispensary's till fills the prescription's date at Pay, a dispensing label prints from the basket line, and after the keeping period the Records Officer lists the patients due and erases them on a *PP RXC Erasure*, which keeps who did it, when and under which period.
 
@@ -55,8 +55,8 @@ ivn try
 
 ### 1.1.1
 
-- Its manifest is now 0.1.5. A sale the pharmacist sent to a cash till is paid there by whoever rings it up: the check judges it on the pharmacist who sent it, for no more than they sent, takes over its reserved fill, and the dispensing names both (*Sold by* the cashier, *Pharmacist* the one who sent it). Voided there, its fill comes back at once.
-- A cashier refused a pharmacist-only line reads what to do (*Ask a pharmacist to ring it up; they can send it to this till.*), and a fill an unpaid sale holds says who frees it if that sale was voided.
+- Its manifest is now 0.1.5. A sale the pharmacist sent to a cash till is paid there by whoever rings it up: the check judges it on the pharmacist who sent it, for no more than they sent, takes over its reserved fill, and the dispensing names both (*Sold by* the cashier, *Pharmacist* the one who sent it). Voided there after Pay, its fill comes back at once.
+- A cashier refused a pharmacist-only line reads what to do (*Ask a pharmacist to ring it up; they can send it to this till.*), and a fill an unpaid sale holds says who frees it if that sale was voided. A walk-in sale paid this way is recorded under the walk-in customer, with no patient data.
 - **Updating to 0.1.5:** move the service first (it answers a 0.1.4 shop as before). The update adds one field to the dispensing and asks nothing new.
 
 ### 1.1.0

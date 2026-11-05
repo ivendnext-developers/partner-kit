@@ -136,7 +136,7 @@ answering presses keeps nothing.
      stripped and lower-cased);
    - **it becomes *Released*** when its booked sale is cancelled, or when it was never booked and its POS day (`POS
      Opening Entry`) is *Closed*, or when the park it names is gone and its sale was never booked (a sent sale voided
-     at the cash till). Read the park before the sale: paying deletes the park and books the sale in one step;
+     at the cash till after Pay). Read the park before the sale: paying deletes the park and books the sale in one step;
    - **a Desk reservation follows its document's `docstatus`:** cancelled or deleted releases it;
    - **a give-back counts only once its return is booked** (the till's return stores the refund's key in
      `custom_mpos_idempotency_key`).

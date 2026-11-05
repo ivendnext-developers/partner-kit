@@ -396,16 +396,16 @@ class Service:
     DISPENSING_FIELDS = ["name", "seq", "status", "source", "sale_ref", "document_type", "document", "pos_opening",
                          "pos_invoice", "day", "lines_json", "customer"]
 
-    def _dispensings(self, shop, filters) -> list:
+    def _dispensings(self, shop, filters, limit=ROWS_MAX) -> list:
         """The dispensings, with 0.1.5's park; a shop still on 0.1.4 refuses a list naming it, and is asked without it."""
         try:
             return self._list(shop, self.dt("Dispensing"), self.DISPENSING_FIELDS + ["park"], filters, order_by="seq desc",
-                              limit=ROWS_MAX)
+                              limit=limit)
         except ShopUnreadable as e:
             if not str(e).startswith("the shop answered") or "401" in str(e) or "403" in str(e):
                 raise
             return self._list(shop, self.dt("Dispensing"), self.DISPENSING_FIELDS, filters, order_by="seq desc",
-                              limit=ROWS_MAX)
+                              limit=limit)
 
     def shop_states(self, shop: dict, dispensings: list, return_of: str, today) -> tuple[dict, list]:
         """What the shop says about the patient's open dispensings (``rxrules.resolve``'s ``shop``), and the dispensings a
@@ -526,8 +526,9 @@ class Service:
                         if ctx["source"] == "till" and ctx["stage"] == "sale" else None
                     pat["pharmacist"] = ph.result()
                     pat["sent"] = sent.result() if sent else []
-                if pat["sent"]:                  # a sent sale records a dispensing: the customer's next number
-                    pat["dispensings"] = self._dispensings(shop, [["customer", "=", ctx["customer"]]])
+                if pat["sent"]:      # a sent sale records a dispensing: only the newest, for the next number (a walk-in
+                    # has no fill to count, and whether its park was taken is read by park)
+                    pat["dispensings"] = self._dispensings(shop, [["customer", "=", ctx["customer"]]], limit=1)
             else:
                 pat = self.patient(shop, ctx, refs, ids, today)
             dispensings = rxrules.dispensings_of(pat["dispensings"])
