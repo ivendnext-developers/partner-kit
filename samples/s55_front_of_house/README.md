@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.0.3
+
+- *Seat* says what to fix when the till's floor refuses the app's user, for example a user with no register at that store: *"Not seated: the app's user is not assigned to register …"*. Before, the host read *did not answer in time*.
+
 ### 1.0.2
 
 - When iVendNext refuses one of your service's calls, or does not answer it, the press's line in your service's log says which call, and iVendNext's status and own words when it gave them (for example *Could not find Company*). The host still reads *did not answer in time*; the cause is in the log (on CitiXsys hosting, your function's log).

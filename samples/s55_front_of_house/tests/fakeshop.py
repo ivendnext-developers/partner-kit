@@ -42,13 +42,14 @@ def waiting(name, place=T14, party=2, status="Waiting", **kw):
 
 class FakeTenant:
     def __init__(self, reservations=(), waitlist=(), settings_=None, clock="2026-10-29 19:00:00", refuse=None,
-                 door_refuse=None, lose_open=0, stale_seat=0, open_checks=()):
+                 door_refuse=None, lose_open=0, stale_seat=0, open_checks=(), floor_refuse=None):
         self.settings = {CO: settings_ or settings()}
         self.other_store_saves = None
         self.res = {r["name"]: copy.deepcopy(r) for r in reservations}
         self.wait = {w["name"]: copy.deepcopy(w) for w in waitlist}
         self.clock = datetime.datetime.fromisoformat(clock)
         self.refuse, self.door_refuse, self.lose_open, self.stale_seat = refuse, door_refuse, lose_open, stale_seat
+        self.floor_refuse = floor_refuse     # the floor read's own refusal (the till asks it first: is the caller assigned?)
         self.keys = {}                   # the door's memory: key → (arguments, check)
         self.checks = [dict(c) for c in open_checks]     # {"check", "place"} already open on the floor
         self.n = itertools.count(1)
@@ -131,6 +132,9 @@ class FakeTenant:
         self._gate(f"CALL {verb}")
         self.sent.append(copy.deepcopy(body or query))
         if verb == "floor_status":
+            if self.floor_refuse:
+                kind, code, said = self.floor_refuse
+                raise app.TenantError(f"{verb} -> HTTP {code}", code, kind, said)
             places = []
             for p in LABELS:
                 cs = [c for c in self.checks if c["place"] == p]
