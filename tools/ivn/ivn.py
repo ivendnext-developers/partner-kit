@@ -8,8 +8,9 @@
     ivn push                                  check the folder and upload it as the next draft
     ivn pull                                  bring the server's latest draft in and keep your changes
     ivn add s11 · ivn take s22                add a sample · take a sample's newer version
-    ivn secret NAME · ivn secrets             set one of the app's settings · print each point's secret on your sandbox
-    ivn try [--show-wording]                  install the latest draft on your sandbox, free, and test each connection point
+    ivn secret NAME · ivn secrets [--site S]  set one of the app's settings · print each point's secret on a site
+    ivn sites                                 your company's sites, any one of which Try installs on
+    ivn try [--site SITE] [--show-wording]    install the latest draft on a site, free, and test each connection point
     ivn test [--local]                        test each connection point again (--local: on this laptop)
     ivn publish [--to SITE ...] [--public]    send it to a customer's sites, or list it for every retailer
     ivn status · ivn logs                     where it stands · what its service logged
@@ -1004,7 +1005,7 @@ def cmd_try(a) -> int:
         if line != done.get("installed_on"):
             print(line)
     rows = result_rows(done.get("results") or [])
-    if not rows:
+    if not rows and done.get("press"):  # on a site its administrator installs, the site's own Test connection tests it
         print(WORDS["no_points"])
     for line in rows:
         print(line)
@@ -1116,7 +1117,7 @@ def cmd_test(a) -> int:
     for line in out.get("head") or []:
         print(line)
     rows = result_rows(out.get("results") or [])
-    if not rows:
+    if not rows and out.get("press"):
         print(WORDS["no_points"])
     for line in rows:
         print(line)
@@ -1313,7 +1314,7 @@ def cmd_status(a) -> int:
             pass
     for s in sites:  # §14: a draft a try installed is on the sandbox, not on no site
         if s.get("sandbox") and s.get("version"):
-            line = line.replace(f"{s['version']} a draft, on no site yet", f"{s['version']} a draft, on your sandbox only")
+            line = line.replace(f"{s['version']} a draft, on no site yet", f"{s['version']} a draft, tried, not yet published")
     print(f"{app} {line}." + (f" {tail}" if tail else ""))
     for s in sites:  # J5-16: has it been installed?
         if s.get("customer") and s.get("state"):

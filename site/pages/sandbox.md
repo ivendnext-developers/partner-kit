@@ -12,7 +12,7 @@ Fill in the sandbox request form on ivendnext.com. Our first reply asks for your
 
 ## When access comes
 
-Access means a sandbox site, and the kit's GitHub organisation for the feedback forms. It comes with onboarding, once our team has talked to you. When it arrives, Try on My apps names it, and `ivn sites` lists it: there is no key to paste. Try works on any iVendNext site too: pick a site, or add one by its address.
+Access means a sandbox site, and the kit's GitHub organisation for the feedback forms. It comes with onboarding, once our team has talked to you. When it arrives, Try on My apps names it, and `ivn sites` lists it: there is no key to paste. Try works on any iVendNext site too: pick a site, or add one by its address. There, its administrator installs it from the shelf key Try shows, in **App library**.
 
 ## What you receive
 

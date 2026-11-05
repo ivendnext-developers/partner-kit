@@ -195,10 +195,12 @@ check("SITEPICK: the list is shown in one place: the home page's sandbox panel i
   !src.includes('"/sandbox"') && T.yourSandbox === undefined);
 check("SITEPICK: the finished screen says where it went, with Open Desk and Open the till, the app's address, and a shelf key to copy",
   T.openDesk === "Open Desk" && T.openTill === "Open the till" && T.appAddress === "Your app's address: " &&
-  src.includes("card(s.installed_on") && src.includes("copyRow(s.shelf_key)") && src.includes("if (s.press) res.appendChild(button(T.testAgain"));
-check("SITEPICK: Publish's site box offers the company's own sites, a tick sets own, and + Add another site stays",
-  a.U.ownSites === "Your company's own sites" && src.includes("if (cb.checked) form.own = true;") &&
-  src.includes("body.sites = form.ticks.concat("));
+  src.includes("card(s.installed_on") && src.includes("copyRow(s.shelf_key)") && src.includes("if (s.press) box.appendChild(res);"));
+check("SITEPICK: Publish sends to the sites typed, and + Add another site stays: a company's own site gets each version by Try",
+  a.U.ownSites === undefined && !src.includes("form.ticks") && a.U.addSite === "+ Add another site" &&
+  a.U.onSandboxOnly === "Tried, not yet published");
+check("SITEPICK: a typed site the doors refused goes back to the list, never Try again with the same address",
+  src.includes("data.trySite && !listed ? button(T.change") && src.includes('call("POST", "/sites/remove", { site: x.site, mine: true }).then(function (r) { data.sites = r;'));
 check("J4-02: the sections as the hosting drew them, in order, each with its lines", a.SECTIONS.join("|") ===
   "New in Desk|Who can use it|Changes to what you already have|Print layouts|Connects outside your site" &&
   a.consentSections({ sections: [{ title: "Who can use it", lines: [] }, { title: "New in Desk", lines: ["x"] }, { title: "Other", lines: ["y"] }] })

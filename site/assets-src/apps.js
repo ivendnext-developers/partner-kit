@@ -170,7 +170,7 @@
     changes: "What installing it changes", wording: "Show the exact wording",
     testAgain: "Test again", tryAgain: "Try again", pay: "Pay with your card", plan: "Per month",
     updates: "What the update changes", choosePlan: "Choose a plan first.", noCharge: "Confirm in Stripe: no charge",
-    starting: "Installing it on {site}\u2026", wait: "Keep this page open: this takes up to about 4 minutes.",
+    starting: "Starting on {site}\u2026", wait: "Keep this page open: this takes up to about 4 minutes.",
     openDesk: "Open Desk", openTill: "Open the till", appAddress: "Your app's address: "
   };
   // the Try button names its site before the press; with none on the list, it opens the list to add one
@@ -191,7 +191,7 @@
     pictures: "Pictures", picturesHint: "Up to four: PNG, JPEG or WebP. A big one is made smaller for the card.",
     pictureBad: "Not added: {name} is not a PNG, JPEG or WebP picture we could make small enough. Choose another.",
     picturesBusy: "Adding pictures\u2026", picturesOnly: "Only the first {n} were added: a card has up to four.",
-    onSandboxOnly: "On your sandbox only", ownSites: "Your company's own sites"
+    onSandboxOnly: "Tried, not yet published"
   };
   // an industry the App library's card takes (its ids, as the hosting gives them), in the words the gallery shows
   function industryWords(id) {
@@ -1143,7 +1143,7 @@
         var row = el("p", {}, button(tryLabel(x.site), tryOn(x.site), true));
         if (!x.press) row.appendChild(button(T.removeList, function (ev) {   // a site the company added: off its list
           ev.target.disabled = true;
-          call("POST", "/sites/remove", { site: x.site, mine: true }).then(function (r) { data.sites.company = r.company; render(); },
+          call("POST", "/sites/remove", { site: x.site, mine: true }).then(function (r) { data.sites = r; render(); },
                                                                           function (e) { ev.target.disabled = false; fail(e); });
         }, true));
         box.appendChild(row);
@@ -1233,6 +1233,7 @@
         fin.appendChild(links);
         if (s.address) fin.appendChild(el("p", { "class": "hint", text: T.appAddress + s.address }));
         box.appendChild(fin);
+        if (!s.press) (s.head || []).filter(function (l) { return l !== s.installed_on; }).forEach(function (l) { fin.appendChild(p(l)); });
         var res = card("Connection points");
         (s.head || []).filter(function (l) { return l !== s.installed_on; })
           .forEach(function (l, i) { res.appendChild(el("p", { "class": i ? "" : "hint", text: l })); });
@@ -1240,12 +1241,12 @@
         (s.results || []).forEach(function (l) { ul.appendChild(el("li", { "class": /: Passed/.test(l) ? "hosting-ok" : "hosting-bad", text: l })); });
         res.appendChild(ul);
         var pointsOk = (s.results || []).every(function (l) { return /: Passed/.test(l); });
-        if (s.press) res.appendChild(button(T.testAgain, function (ev) {   // its administrator's site tests itself
+        res.appendChild(button(T.testAgain, function (ev) {
           ev.target.disabled = true;
           call("POST", "/test", { app: data.appId }).then(function (r) { data.tryS = r; render(); },
                                                         function (e) { ev.target.disabled = false; fail(e); });
         }, pointsOk));
-        box.appendChild(res);
+        if (s.press) box.appendChild(res);   // a site its administrator installs tests itself (said above)
         if ((s.till || []).length) {
           var till = card(s.till[0]);
           s.till.slice(1).forEach(function (l) { till.appendChild(p(l)); });
@@ -1255,7 +1256,9 @@
       }
     } else if (!c || (flash && flash.bad)) {
       if (flash && flash.bad) {   // refused: the way on, never a page with nothing to press
-        box.appendChild(data.sites && !(data.sites.company || []).length ? el("p", {}, el("a", { href: "/sandbox.html", "class": "site-btn", text: T.request }))
+        var listed = ((data.sites || {}).company || []).some(function (x) { return x.site === data.trySite; });
+        box.appendChild(data.sites && !(data.sites.company || []).length && !data.trySite ? el("p", {}, el("a", { href: "/sandbox.html", "class": "site-btn", text: T.request }))
+          : data.trySite && !listed ? button(T.change, function () { data.pick = data.appId; screen = "app"; say(""); openApp(data.appId); })
           : button(T.tryAgain, function (ev) { ev.target.disabled = true; say(""); startTry(data.appId); }));
         return box;
       }
@@ -1377,24 +1380,10 @@
       tabs.appendChild(b); tabs.appendChild(root.document.createTextNode(" "));
     });
     box.appendChild(tabs);
-    var form = data.pubForm || (data.pubForm = { app: data.appId, sites: [""], ticks: [], own: false, plan: null, card: { title: shownTitle(), what: ["", "", ""], industries: [] } });
+    var form = data.pubForm || (data.pubForm = { app: data.appId, sites: [""], own: false, plan: null, card: { title: shownTitle(), what: ["", "", ""], industries: [] } });
     var recheck = function () {};   // set once the button exists: a typed site is something new to publish (walk 11-02)
     if (data.pubTo === "customer") {
       if ((c.sites || []).length && c.goes_to && !c.nothing_new) box.appendChild(p(c.goes_to));
-      if ((c.company || []).length) {   // the same list as Try's: ticking one is one of the company's own sites
-        var mine = el("fieldset", {}, el("legend", { text: U.ownSites }));
-        c.company.forEach(function (x) {
-          var cb = el("input", { type: "checkbox" });
-          cb.checked = form.ticks.indexOf(x.site) >= 0;
-          cb.addEventListener("change", function () {
-            form.ticks = form.ticks.filter(function (v) { return v !== x.site; }).concat(cb.checked ? [x.site] : []);
-            if (cb.checked) form.own = true;
-            render();
-          });
-          mine.appendChild(el("p", {}, el("label", {}, cb, " " + x.site)));
-        });
-        box.appendChild(mine);
-      }
       box.appendChild(el("p", {}, el("strong", { text: (c.sites || []).length ? U.anotherSite : U.sitesLabel })));
       form.sites.forEach(function (v, i) {
         var inp = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "retailer.ivendnext.com" });
@@ -1487,7 +1476,7 @@
       box.appendChild(fsp);
     }
     var stopNow = function () {
-      return data.pubTo === "customer" && c.nothing_new && !form.ticks.length && !form.sites.some(function (x) { return x.trim(); }) ? c.nothing_new : c.m16;
+      return data.pubTo === "customer" && c.nothing_new && !form.sites.some(function (x) { return x.trim(); }) ? c.nothing_new : c.m16;
     };
     var stop = stopNow();
     var go = button(data.pubTo === "customer" || c.listed ? c.button : U.send, function (ev) {
@@ -1495,7 +1484,7 @@
       if (askPlan && !form.plan) { say(T.choosePlan, true); render(); return; }
       data.pubPress = true; say(""); render();
       var body = { app: data.appId, to: data.pubTo, plan: pubPlan(askPlan, form, money) };
-      if (data.pubTo === "customer") { body.sites = form.ticks.concat(form.sites.filter(function (x) { return x.trim(); })); body.own = form.own; }
+      if (data.pubTo === "customer") { body.sites = form.sites.filter(function (x) { return x.trim(); }); body.own = form.own; }
       else if (!c.listed) body.card = cardBody(form.card);   // a listed app keeps its card (J7-05)
       call("POST", "/publish", body).then(function (r) {
         data.pubPress = false;
