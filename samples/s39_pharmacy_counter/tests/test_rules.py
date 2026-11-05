@@ -149,6 +149,15 @@ class WhoMaySell(unittest.TestCase):
         today = {"active": True, "valid_until": TODAY}
         self.assertEqual(decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21)], pharmacist=today))["verdict"], "allow")
 
+    def test_the_refusal_says_what_to_do_at_the_till_and_on_the_desk(self):
+        c = ctx([line("AMOX", 21)], details={"Rx Number": "RX1"})
+        out = decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21)], pharmacist=None))
+        self.assertEqual(out["reason"], "Line 1: AMOX: Only a pharmacist may sell this. Ask a pharmacist to ring it up; "
+                                        "they can send it to this till.")
+        d = dict(c, source="desk")
+        self.assertEqual(decide(d, shop(d, [rule("POM")], [rx("RX1", "AMOX", 21)], pharmacist=None))["reason"],
+                         "Line 1: AMOX: Only a pharmacist may sell this. Ask a pharmacist to submit it.")
+
     def test_a_delegate_is_not_a_pharmacist_until_the_rule_is_ruled(self):
         c = ctx([line("AMOX", 21)], details={"Rx Number": "RX1"})
         out = decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21)], pharmacist=dict(PHARMACIST, delegate=True)))
@@ -244,6 +253,11 @@ class Prescriptions(unittest.TestCase):
         self.assertEqual(decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21, fills=2)], [one]))["verdict"], "allow")
         two = disp("Ann~0002", [{"item": "AMOX", "qty": 21, "rx": "RX1"}], R.RESERVED, seq=2, sale_ref="other")
         out = decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21, fills=2)], [one, two]))
+        # 0.1.5: a fill an unpaid till sale holds says who frees it if that sale was voided
+        self.assertEqual(out["reason"], "Line 1: AMOX: Prescription RX1 is held by an unpaid sale. If it was voided, the "
+                                        "pharmacist in charge releases it on the Desk.")
+        both = disp("Ann~0002", [{"item": "AMOX", "qty": 21, "rx": "RX1"}], R.DISPENSED, seq=2, sale_ref="other")
+        out = decide(c, shop(c, [rule("POM")], [rx("RX1", "AMOX", 21, fills=2)], [one, both]))
         self.assertIn("nothing left to dispense", out["reason"])
 
     def test_a_released_dispensing_gives_its_fill_back(self):

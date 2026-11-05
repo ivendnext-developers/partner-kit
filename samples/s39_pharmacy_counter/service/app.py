@@ -310,6 +310,7 @@ class Service:
                        for k, c in a.items()} for f, a in asks.items()}
             rx = pool.submit(self._rx_headers, shop, refs, cust) if refs else None
             disp = pool.submit(self._dispensings, shop, [["customer", "=", cust]])
+            sent = pool.submit(self.sent_sales, shop, ctx) if ctx["source"] == "till" and ctx["stage"] == "sale" else None
             if not known.result():
                 raise ShopUnreadable("the customer could not be read")
 
@@ -327,7 +328,53 @@ class Service:
                     raise ShopUnreadable("the shop answered for a patient record it does not list")
                 filled[f] = got["set"] and got.get("due", True)
             return {"pharmacist": self._pharmacist(ph.result()), "customer_fields": filled,
-                    "rx_headers": rx.result() if rx else [], "dispensings": disp.result()}
+                    "rx_headers": rx.result() if rx else [], "dispensings": disp.result(),
+                    "sent": sent.result() if sent else []}
+
+    def sent_sales(self, shop, ctx) -> list:
+        """0.1.5: the sales a pharmacist sent to a till for this customer that THIS cashier has rung up (newest first):
+        a sent sale is a park (a draft POS Invoice naming the till it is paid at); ringing it up disables it and names
+        the draft rung up in its place, which is the cashier's own. Each ``{"name", "sale_ref", "pharmacist", "items"}``:
+        the pharmacist who sent it (the park's owner) and the stock quantity of each item it holds. A park another sale
+        already took (a dispensing names it, reserved or dispensed) is left out: one sent sale is paid once, even when the
+        cashier cleared the basket it was rung up into and rings the lines again. A shop still on 0.1.4 cannot say which
+        park a dispensing took, so it gets none until it updates."""
+        parks = self._list(shop, "POS Invoice", ["name", "owner", "custom_mpos_sale_ref", "custom_pos_recall_reference"],
+                           [["docstatus", "=", 0], ["customer", "=", ctx["customer"] or "-"],
+                            ["custom_settle_at_register", "is", "set"], ["custom_disabled", "=", 1],
+                            ["custom_pos_recall_reference", "is", "set"]], order_by="modified desc", limit=ROWS_MAX)
+        if not parks or not ctx["operator"]:
+            return []
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            took = pool.submit(self._list, shop, self.dt("Dispensing"), ["park", "sale_ref", "status"],
+                               [["park", "in", [p["name"] for p in parks]]])
+            mine = pool.submit(self._list, shop, "POS Invoice", ["name"], [
+                ["name", "in", [p["custom_pos_recall_reference"] for p in parks]], ["owner", "=", ctx["operator"]],
+                ["docstatus", "=", 0]])
+            items = pool.submit(self._list, shop, "POS Invoice Item", ["parent", "item_code", "stock_qty"],
+                                [["parent", "in", [p["name"] for p in parks]]], parent="POS Invoice")
+            phs = pool.submit(self._list, shop, self.dt("Pharmacist"), ["name", "user", "full_name", "active",
+                                                                        "valid_until", "delegate"],
+                              [["user", "in", sorted({p.get("owner") or "-" for p in parks})]])
+            rung = {r["name"] for r in mine.result()}
+            held: dict = {}
+            for r in items.result():
+                if rxrules._number(r.get("stock_qty")):
+                    one = held.setdefault(r.get("parent"), {})
+                    one[r.get("item_code")] = one.get(r.get("item_code"), 0.0) + r["stock_qty"]
+            by_user: dict = {}
+            for r in phs.result():
+                by_user.setdefault(r.get("user"), []).append(r)
+            try:
+                spent = {r.get("park") for r in took.result() if r.get("sale_ref") != ctx["sale_ref"]
+                         and r.get("status") in (rxrules.RESERVED, rxrules.DISPENSED)}
+            except ShopUnreadable as e:
+                if not str(e).startswith("the shop answered") or "401" in str(e) or "403" in str(e):
+                    raise
+                return []                                 # a 0.1.4 shop: no park field to say which was taken
+        return [{"name": p["name"], "sale_ref": rxrules._text(p.get("custom_mpos_sale_ref")),
+                 "pharmacist": self._pharmacist(by_user.get(p.get("owner"), [])), "items": held.get(p["name"], {})}
+                for p in parks if p.get("custom_pos_recall_reference") in rung and p["name"] not in spent]
 
     def _pharmacist_rows(self, shop, operator):
         return self._list(shop, self.dt("Pharmacist"), ["name", "user", "full_name", "active", "valid_until", "delegate"],
@@ -346,10 +393,19 @@ class Service:
         seen = {r["name"] for r in by_name}
         return by_name + [r for r in by_ref if r["name"] not in seen]
 
+    DISPENSING_FIELDS = ["name", "seq", "status", "source", "sale_ref", "document_type", "document", "pos_opening",
+                         "pos_invoice", "day", "lines_json", "customer"]
+
     def _dispensings(self, shop, filters) -> list:
-        return self._list(shop, self.dt("Dispensing"), [
-            "name", "seq", "status", "source", "sale_ref", "document_type", "document", "pos_opening", "pos_invoice",
-            "day", "lines_json", "customer"], filters, order_by="seq desc", limit=ROWS_MAX)
+        """The dispensings, with 0.1.5's park; a shop still on 0.1.4 refuses a list naming it, and is asked without it."""
+        try:
+            return self._list(shop, self.dt("Dispensing"), self.DISPENSING_FIELDS + ["park"], filters, order_by="seq desc",
+                              limit=ROWS_MAX)
+        except ShopUnreadable as e:
+            if not str(e).startswith("the shop answered") or "401" in str(e) or "403" in str(e):
+                raise
+            return self._list(shop, self.dt("Dispensing"), self.DISPENSING_FIELDS, filters, order_by="seq desc",
+                              limit=ROWS_MAX)
 
     def shop_states(self, shop: dict, dispensings: list, return_of: str, today) -> tuple[dict, list]:
         """What the shop says about the patient's open dispensings (``rxrules.resolve``'s ``shop``), and the dispensings a
@@ -371,7 +427,19 @@ class Service:
             if d["sale_ref"] and d["seq"] >= newest.get(d["sale_ref"], (0, ""))[0]:
                 newest[d["sale_ref"]] = (d["seq"], d["name"])
         out = {"sales": {}, "returns": {}, "closed_days": set(), "documents": {},
-               "newest": {k: v[1] for k, v in newest.items()}}
+               "newest": {k: v[1] for k, v in newest.items()}, "parks_gone": set()}
+        # 0.1.5: a sent sale's park, read BEFORE its sale: paying it deletes the park and books the sale in one step, so
+        # a park read gone and its sale then read unbooked was voided
+        parks = sorted({d["park"] for d in till if d.get("park") and d["status"] == rxrules.RESERVED})
+        if parks:
+            here = {r["name"] for r in self._list(shop, "POS Invoice", ["name"], [["name", "in", parks]])}
+            for n in parks:
+                if n not in here:
+                    try:
+                        if self.api.get_one(shop["url"], shop["key"], "POS Invoice", n) is None:
+                            out["parks_gone"].add(n)
+                    except ShopUnreadable:
+                        pass                                  # not shown to the app: never read as gone
         jobs = []
         with ThreadPoolExecutor(max_workers=6) as pool:
             if sale_refs:
@@ -451,8 +519,15 @@ class Service:
         qty = [rxrules.to_stock(x, items, units) for x in ctx["lines"]]
         for attempt in range(TRIES):
             if walk:
-                pat = {"pharmacist": None, "customer_fields": {}, "rx_headers": [], "dispensings": []}
-                pat["pharmacist"] = self.patient_pharmacist(shop, ctx["operator"])
+                pat = {"pharmacist": None, "customer_fields": {}, "rx_headers": [], "dispensings": [], "sent": []}
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    ph = pool.submit(self.patient_pharmacist, shop, ctx["operator"])
+                    sent = pool.submit(self.sent_sales, shop, ctx) \
+                        if ctx["source"] == "till" and ctx["stage"] == "sale" else None
+                    pat["pharmacist"] = ph.result()
+                    pat["sent"] = sent.result() if sent else []
+                if pat["sent"]:                  # a sent sale records a dispensing: the customer's next number
+                    pat["dispensings"] = self._dispensings(shop, [["customer", "=", ctx["customer"]]])
             else:
                 pat = self.patient(shop, ctx, refs, ids, today)
             dispensings = rxrules.dispensings_of(pat["dispensings"])
@@ -479,12 +554,15 @@ class Service:
             data = {"rules": rules, "qty": qty, "items": items, "group_directions": directions, "walk_in": walk,
                     "pharmacist": pat["pharmacist"], "customer_fields": pat["customer_fields"],
                     "rxs": rxrules.prescriptions_of(pat["rx_headers"], rx_items), "dispensings": dispensings,
-                    "returned_from": returned_from}
+                    "returned_from": returned_from, "sent": pat.get("sent") or []}
             answer = rxrules.decide(ctx, route, data, today, self.prefix)
             ph = pat["pharmacist"] or {}
-            if answer.get("record"):     # the register's pharmacist (0.1.3): a licensed pharmacist's own name, else none
-                answer["record"]["pharmacist_name"] = rxrules.plain(ph.get("full_name") or "") if ph.get("active") \
-                    and not ph.get("delegate") and ph.get("valid_until") and ph["valid_until"] >= today else ""
+            if answer.get("record"):     # the register's pharmacist (0.1.3): a licensed pharmacist's own name, else none;
+                rec = answer["record"]   # 0.1.5: on a sent sale a cashier pays, the pharmacist who sent it
+                if rec.get("by_sender"):
+                    ph = rec["sent"]["pharmacist"] or {}
+                rec["pharmacist_name"] = rxrules.plain(ph.get("full_name") or "") if rxrules.licensed(ph or None, today) \
+                    else ""
             keep = None
             if answer["verdict"] in ("allow", "fill") and answer.get("record"):
                 mine = [d for d in dispensings if d["sale_ref"] == ctx["sale_ref"] and d["status"] == rxrules.RESERVED]
@@ -497,6 +575,13 @@ class Service:
                     except Taken:
                         continue                         # another till took the number: read again, decide again
             self.release_earlier(shop, ctx, keep=keep)
+            sent = (answer.get("record") or {}).get("sent")
+            if keep and sent:            # 0.1.5: the sent sale's reservation, taken over by this one
+                for d in dispensings:
+                    if d["status"] == rxrules.RESERVED and d["name"] != keep and d["source"] != "desk" \
+                            and rxrules.sale_key(d["sale_ref"]) == rxrules.sale_key(sent["sale_ref"]):
+                        changed.pop(d["name"], None)
+                        self.write_back(shop, {d["name"]: rxrules.RELEASED})     # first, never behind the cap
             self.write_back(shop, dict(list(changed.items())[:WRITE_BACK_MAX]))
             answer.pop("record", None)
             return answer
@@ -517,6 +602,8 @@ class Service:
                "lines_json": json.dumps({"lines": record["lines"], "fingerprints": record["fingerprints"]}),
                "summary": rxrules.summary(record["lines"]), "prescriber": record.get("prescriber") or "",
                "directions": record.get("directions") or "", "pharmacist_name": record.get("pharmacist_name") or ""}
+        if record.get("sent"):           # 0.1.5: the park it was sent as, so a void of it frees the fill
+            doc["park"] = record["sent"]["name"]
         self.api.insert(shop["url"], shop["key"], self.dt("Dispensing"), doc)
         return name
 

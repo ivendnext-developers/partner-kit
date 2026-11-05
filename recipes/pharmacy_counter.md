@@ -85,7 +85,12 @@ answering presses keeps nothing.
 4. **Decide, in this order** (`rxrules.decide`):
    - a returned line of a non-returnable schedule (P5);
    - on the front profile, medicine that needs a prescription, a pharmacist or the dispensary;
-   - pharmacist only: the operator's `<PREFIX> Pharmacist` row, active, not a delegate, licence in date;
+   - pharmacist only: the operator's `<PREFIX> Pharmacist` row, active, not a delegate, licence in date. Or the sale
+     is one a pharmacist sent to this till and this operator rang up there (0.1.5): a draft POS Invoice of this
+     customer with `custom_settle_at_register` set, `custom_disabled` 1, and `custom_pos_recall_reference` naming a
+     draft this operator owns. Then judge the pharmacist who owns that park, for no more of each pharmacist-only item
+     than its lines hold. A cashier still refused reads what to do (*Ask a pharmacist to ring it up; they can send it
+     to this till.*);
    - a named customer, never the walk-in (the settings' list and each POS Profile's own `customer`);
    - the identity fields the schedule needs, on the customer's `<PREFIX> Patient` record. Ask iVendNext *whether* each
      is set, both ways (`filters [["customer", "=", customer], ["<field>", "is", "set"]]` and `"is", "not set"`,
@@ -119,6 +124,9 @@ answering presses keeps nothing.
    - If the insert fails because the name exists (409), another till took that number: read again and decide again.
    - Every dispensing of one patient is thereby decided in turn.
    - Pay pressed again for the same basket keeps its reservation. A changed basket releases it.
+   - A sent sale paid at the cash till takes over the reservation the pharmacist's Pay made (the park keeps that
+     sale's `sale_ref`; the till gives the rung-up basket its own): it is not counted against the sale, the new
+     reservation names the park, and the old one is released.
    - Write on it what the prescriptions register prints: the prescriber, the prescriber's directions (the dose: never
      a default standing in) and a licensed pharmacist's name from their record; the patient's name is fetched from the
      customer.
@@ -127,7 +135,8 @@ answering presses keeps nothing.
    - **a reservation becomes *Dispensed*** when a booked POS Invoice carries its `sale_ref` (`custom_mpos_sale_ref`,
      stripped and lower-cased);
    - **it becomes *Released*** when its booked sale is cancelled, or when it was never booked and its POS day (`POS
-     Opening Entry`) is *Closed*;
+     Opening Entry`) is *Closed*, or when the park it names is gone and its sale was never booked (a sent sale voided
+     at the cash till). Read the park before the sale: paying deletes the park and books the sale in one step;
    - **a Desk reservation follows its document's `docstatus`:** cancelled or deleted releases it;
    - **a give-back counts only once its return is booked** (the till's return stores the refund's key in
      `custom_mpos_idempotency_key`).

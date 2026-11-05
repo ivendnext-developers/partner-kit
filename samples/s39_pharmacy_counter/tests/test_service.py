@@ -131,7 +131,7 @@ class Dispensing(Base):
         self.shop.prescription("RX1", "Ann", "AMOX", 21)
         self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-x")
         code, out = self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-y")
-        self.assertIn("nothing left to dispense", out["reason"])
+        self.assertIn("is held by an unpaid sale", out["reason"])
 
     def test_a_booked_sale_reads_dispensed_and_its_status_is_written_back(self):
         self.shop.prescription("RX1", "Ann", "AMOX", 21, fills=2)
@@ -144,7 +144,7 @@ class Dispensing(Base):
         self.shop.prescription("RX1", "Ann", "AMOX", 21)
         self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-x", opening="DAY-1")
         self.shop.add("POS Opening Entry", name="DAY-1", status="Open")
-        self.assertIn("nothing left", self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-y", opening="DAY-2")[1]["reason"])
+        self.assertIn("held by an unpaid sale", self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-y", opening="DAY-2")[1]["reason"])
         self.shop.rows("POS Opening Entry")[0]["status"] = "Closed"
         self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-z", opening="DAY-2")[1], {"verdict": "allow"})
         self.assertEqual(self.shop.dispensings()[0]["status"], "Released")
@@ -157,7 +157,7 @@ class Dispensing(Base):
                                                            lines_json=doc["lines_json"]))
         self.shop.before_insert = other_till
         code, out = self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-mine")
-        self.assertIn("nothing left to dispense", out["reason"])
+        self.assertIn("is held by an unpaid sale", out["reason"])
         self.assertEqual(len(self.shop.dispensings()), 1)
 
     def test_two_tills_at_once_on_real_threads(self):
@@ -188,6 +188,148 @@ class Dispensing(Base):
     def test_a_dispensed_return_is_refused_at_the_till(self):
         code, out = self.sell(("AMOX", "Rx", -21), stage="return", sale_ref="ret-key", return_of="INV-0")
         self.assertEqual(out["reason"], "Line 1: AMOX: Dispensed medicine cannot be taken back.")
+
+
+class SentSale(Base):
+    """0.1.5 (BUG-PH-001): the pharmacist rings a prescription, presses Pay (the check reserves the fill) and sends the sale
+    to the dispensary's cash till; a counter assistant who is not a pharmacist rings it up there and takes the money."""
+
+    def setUp(self):
+        super().setUp()
+        self.shop.prescription("RX1", "Ann", "AMOX", 21)            # one fill
+        self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="Sale-PH")[1], {"verdict": "allow"})
+
+    def pay(self, qty=21, operator="cash@shop", sale_ref="sale-cash"):
+        return self.sell(("AMOX", "Rx", qty), rx="RX1", sale_ref=sale_ref, operator=operator, opening="DAY-CASH")[1]
+
+    def test_the_cashier_pays_it_in_one_press_and_the_dispensing_names_both(self):
+        self.shop.sent()
+        self.assertEqual(self.pay(), {"verdict": "allow"})
+        old, new = self.shop.dispensings()
+        self.assertEqual(old["status"], "Released")                 # the pharmacist's reservation, taken over
+        self.assertEqual((new["status"], new["sale_ref"], new["operator"], new["pharmacist_name"], new["park"],
+                          new["pos_opening"]),
+                         ("Reserved", "sale-cash", "cash@shop", "P. Pharmacist", "PARK-1", "DAY-CASH"))
+        self.shop.booked("sale-cash")                               # paid: the till deletes the park as it books
+        self.shop.gone("PARK-1", "PARK-1-DRAFT")
+        self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-next")
+        self.assertEqual([d["status"] for d in self.shop.dispensings()], ["Released", "Dispensed"])
+
+    def test_pay_pressed_again_keeps_the_taken_over_reservation(self):
+        self.shop.sent()
+        self.pay()
+        self.assertEqual(self.pay(), {"verdict": "allow"})
+        self.assertEqual([d["status"] for d in self.shop.dispensings()], ["Released", "Reserved"])
+
+    def test_more_than_the_pharmacist_sent_is_refused_with_the_way_back(self):
+        self.shop.prescription("RX2", "Ann", "AMOX", 42)
+        self.shop.sent()
+        out = self.sell(("AMOX", "Rx", 42), rx="RX2", sale_ref="sale-cash", operator="cash@shop")[1]
+        self.assertEqual(out["reason"], "Line 1: AMOX: Only a pharmacist may sell this: it is more than the pharmacist "
+                                        "sent. Send it back to their till.")
+        self.assertEqual([d["status"] for d in self.shop.dispensings()], ["Reserved"])   # refused: nothing taken over
+
+    def test_a_park_another_cashier_rang_up_is_not_this_sale(self):
+        self.shop.sent(rung_by="other@shop")
+        out = self.pay()
+        self.assertEqual(out["reason"], "Line 1: AMOX: Only a pharmacist may sell this. Ask a pharmacist to ring it up; "
+                                        "they can send it to this till.")
+
+    def test_a_park_nobody_rang_up_yet_is_not_this_sale(self):
+        self.shop.sent(rung=False)
+        self.assertIn("Ask a pharmacist to ring it up", self.pay()["reason"])
+
+    def test_a_park_sent_by_someone_who_is_not_a_pharmacist_today_is_refused(self):
+        self.shop.sent(owner="old@shop")                            # their licence ran out yesterday
+        self.assertIn("the one who sent it can't today. Ask a pharmacist to take payment.", self.pay()["reason"])
+        self.shop.gone("PARK-1", "PARK-1-DRAFT")
+        self.shop.sent(owner="nobody@shop")                         # not on the Pharmacist list at all
+        self.assertIn("the one who sent it can't today", self.pay()["reason"])
+
+    def test_a_park_for_another_customer_is_not_this_sale(self):
+        self.shop.sent(customer="Bob")
+        self.assertIn("Ask a pharmacist to ring it up", self.pay()["reason"])
+
+    def test_voided_at_the_cash_till_its_fill_comes_back(self):
+        self.shop.sent()
+        self.pay()
+        self.shop.gone("PARK-1", "PARK-1-DRAFT")                    # the cashier voids it: the park and its draft go
+        self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-again")[1], {"verdict": "allow"})
+        self.assertEqual([d["status"] for d in self.shop.dispensings()], ["Released", "Released", "Reserved"])
+
+    def test_still_parked_its_fill_stays_held(self):
+        self.shop.sent()
+        self.pay()
+        out = self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-again")[1]
+        self.assertIn("is held by an unpaid sale", out["reason"])
+
+    def test_a_park_the_shop_will_not_show_is_never_read_as_gone(self):
+        self.shop.sent()
+        self.pay()
+        self.shop.gone("PARK-1", "PARK-1-DRAFT")
+        real = self.shop.get_one
+
+        def hidden(url, key, doctype, name):
+            if doctype == "POS Invoice":
+                raise app.ShopUnreadable("the shop answered 403")
+            return real(url, key, doctype, name)
+        self.shop.get_one = hidden
+        self.assertIn("is held by an unpaid sale", self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-again")[1]["reason"])
+
+    def test_the_park_is_read_before_the_sale(self):
+        self.shop.sent()
+        self.pay()
+        self.shop.calls.clear()
+        self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-again")
+        reads = [c for c in self.shop.calls if c[0] == "list" and c[1] == "POS Invoice"]
+        park = next(i for i, c in enumerate(reads) if c[2] == [["name", "in", ["PARK-1"]]])
+        sale = next(i for i, c in enumerate(reads) if "custom_mpos_sale_ref" in c[3] and "docstatus" in c[3]
+                    and any(f[0] == "custom_mpos_sale_ref" for f in c[2]))
+        self.assertLess(park, sale)
+
+    def test_a_sent_sale_is_paid_once_a_fresh_basket_is_not_the_sent_sale(self):
+        self.shop.sent()
+        self.assertEqual(self.pay(), {"verdict": "allow"})          # rung up from the park and paid (not booked yet)
+        # the cashier clears that basket and rings the line again: the park is taken, so this is the cashier's own sale
+        self.assertIn("Ask a pharmacist to ring it up", self.pay(sale_ref="sale-cash-2")["reason"])
+
+    def test_a_shop_on_0_1_4_offers_no_sent_sale(self):
+        real = self.shop.get_list
+
+        def old_shop(url, key, doctype, fields, filters=None, *a, **k):
+            if doctype == f"{P} Dispensing" and ("park" in fields or any(f[0] == "park" for f in filters or [])):
+                raise app.ShopUnreadable("the shop answered 417")
+            return real(url, key, doctype, fields, filters, *a, **k)
+        self.shop.get_list = old_shop
+        self.shop.sent()
+        self.assertIn("Ask a pharmacist to ring it up", self.pay()["reason"])
+
+    def test_a_shop_still_on_0_1_4_is_read_without_the_park(self):
+        real = self.shop.get_list
+
+        def old_shop(url, key, doctype, fields, *a, **k):
+            if doctype == f"{P} Dispensing" and "park" in fields:
+                raise app.ShopUnreadable("the shop answered 417")
+            return real(url, key, doctype, fields, *a, **k)
+        self.shop.get_list = old_shop
+        self.shop.prescription("RX2", "Ann", "AMOX", 21, fills=2)
+        self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX2", sale_ref="sale-2")[1], {"verdict": "allow"})
+
+
+class SentWalkIn(Base):
+    def test_a_walk_in_sale_with_a_pharmacist_only_line_sent_to_the_cash_till(self):
+        self.shop.add(f"{P} Drug Schedule", name="P1", axis="Pharmacy", pharmacist_only=1, returnable=1)
+        self.shop.add(f"{P} Item Schedule", parent="PARA", schedule="P1", effective_from=None)
+        self.shop.sent(park="PARK-W", sale_ref="walk-ph", customer="Cash Sale", items=(("PARA", 1),))
+        out = self.sell(("PARA", "OTC", 1), customer="Cash Sale", sale_ref="walk-cash", operator="cash@shop")[1]
+        self.assertEqual(out, {"verdict": "allow"})
+        (d,) = self.shop.dispensings()                             # recorded, so the park is paid once
+        self.assertEqual((d["customer"], d["park"], d["operator"], d["pharmacist_name"]),
+                         ("Cash Sale", "PARK-W", "cash@shop", "P. Pharmacist"))
+        self.assertIn("Ask a pharmacist", self.sell(("PARA", "OTC", 1), customer="Cash Sale", sale_ref="w2",
+                                                     operator="other@shop")[1]["reason"])
+        self.assertIn("Ask a pharmacist", self.sell(("PARA", "OTC", 1), customer="Cash Sale", sale_ref="w3",
+                                                     operator="cash@shop")[1]["reason"])   # a fresh basket: not sent
 
 
 class People(Base):
