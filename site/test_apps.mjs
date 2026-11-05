@@ -200,7 +200,7 @@ check("SITEPICK: Publish sends to the sites typed, and + Add another site stays:
   a.U.ownSites === undefined && !src.includes("form.ticks") && a.U.addSite === "+ Add another site" &&
   a.U.onSandboxOnly === "Tried, not yet published");
 check("SITEPICK: a typed site the doors refused goes back to the list, never Try again with the same address",
-  src.includes("data.trySite && !listed ? button(T.change") && src.includes('call("POST", "/sites/remove", { site: site, mine: true }).then(function (r) { data.sites = r;'));
+  src.includes("data.trySite && !listed ? button(T.change") && src.includes('call("POST", "/sites/remove", { site: site, mine: true }).then(function (r) { data.sites = r; data.where = null;'));
 check("J4-02: the sections as the hosting drew them, in order, each with its lines", a.SECTIONS.join("|") ===
   "New in Desk|Who can use it|Changes to what you already have|Print layouts|Connects outside your site" &&
   a.consentSections({ sections: [{ title: "Who can use it", lines: [] }, { title: "New in Desk", lines: ["x"] }, { title: "Other", lines: ["y"] }] })

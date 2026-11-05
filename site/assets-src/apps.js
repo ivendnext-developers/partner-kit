@@ -1137,7 +1137,7 @@
       var x = (sites.company || []).filter(function (y) { return y.site === site; })[0];
       return x && !x.press ? button(T.removeList, function (ev) {
         ev.target.disabled = true;
-        call("POST", "/sites/remove", { site: site, mine: true }).then(function (r) { data.sites = r; render(); },
+        call("POST", "/sites/remove", { site: site, mine: true }).then(function (r) { data.sites = r; data.where = null; data.whereAsked = null; render(); },
                                                                      function (e) { ev.target.disabled = false; fail(e); });
       }, true) : null;
     };
