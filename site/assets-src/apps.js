@@ -165,7 +165,7 @@
   // any). The words a door answers (Connected, M11 to M14, M17 to M21, Installed on, the shelf key's line, the results,
   // the till lines, who pays) are the hosting's and are shown as given (§0b rule 8).
   var T = {
-    request: "Request one", change: "Change", here: "Where this app is now", others: "Your company's other sites",
+    request: "Request one", change: "Change", here: "Where this app is now", others: "Your company's other sites", ours: "Your company's sites",
     another: "Another site\u2026", tryThere: "Try there", removeList: "Remove from my list",
     changes: "What installing it changes", wording: "Show the exact wording",
     testAgain: "Test again", tryAgain: "Try again", pay: "Pay with your card", plan: "Per month",
@@ -912,7 +912,7 @@
     w.slice(1).forEach(function (x) { box.appendChild(p(x)); });
     var none = data.app && data.app.app === data.appId && !(data.app.settings || []).length;   // nothing to fill: straight to Try
     var def = (data.sites || {}).default;
-    box.appendChild(none ? button(tryLabel(def), function () { data.made = null; if (def) openTry(data.appId, def); else { data.pick = data.appId; go("app"); } })
+    box.appendChild(none ? button(data.sites ? tryLabel(def) : G.tryIt, function () { data.made = null; if (def) openTry(data.appId, def); else { data.pick = data.appId; go("app"); } })
       : button(G.nextSettings, function () { data.made = null; go("settings"); }));
     return box;
   }
@@ -964,14 +964,15 @@
     var vs = a.versions || [], sent = vs.filter(function (v) { return (v.sites || []).length; });
     var w0 = data.where && data.where.app === a.app ? data.where : null;
     var tried = !!w0 && (w0.sites || []).some(function (x) { return !x.customer && x.state; });
-    box.appendChild(el("p", {}, el("strong", { text: sent.length ? a.line : tried ? U.onSandboxOnly : G.notOnSite }),
+    box.appendChild(el("p", {}, el("strong", { text: sent.length ? a.line : !w0 ? "" : tried ? U.onSandboxOnly : G.notOnSite }),
       sent.length ? null : " · " + vs[vs.length - 1].version + " (draft)"));
     var acts = el("p", {});
     // one next step in blue: Try until it is tried, then Publish
     var def = (data.sites || {}).default;
-    var tryB = button(tryLabel(def), function () { if (def) openTry(a.app, def); else { data.pick = data.pick === a.app ? null : a.app; render(); } }, tried || sent.length > 0),
+    var tryB = button(data.sites ? tryLabel(def) : G.tryIt, function () { if (def) openTry(a.app, def); else { data.pick = data.pick === a.app ? null : a.app; render(); } }, tried || sent.length > 0),
       pubB = button(G.publish, function () { openPublish(a.app); }, !(tried || sent.length > 0));
     var changeB = def ? button(T.change, function () { data.pick = data.pick === a.app ? null : a.app; render(); }, true) : null;
+    tryB.disabled = !data.sites;   // the site's name comes with the list: a second at most
     // J3-06: Upload a new version, one button; the file box stays out of sight
     var file = el("input", { type: "file", accept: ".zip,application/zip", hidden: "", "aria-label": G.upload });
     file.addEventListener("change", function () { if (file.files[0]) upload(file.files[0]); });
@@ -1132,22 +1133,22 @@
     var box = el("div", { "class": "hosting-step" }), sites = data.sites || {}, w = data.where && data.where.app === app ? data.where : null;
     var tryOn = function (site) { return function () { data.pick = null; openTry(app, site); }; };
     var here = ((w && w.sites) || []).filter(function (x) { return x.sandbox; }), named = here.map(function (x) { return x.site; });
+    var added = function (site) {   // a site the company added (not one of ours handed to it): Remove from my list
+      var x = (sites.company || []).filter(function (y) { return y.site === site; })[0];
+      return x && !x.press ? button(T.removeList, function (ev) {
+        ev.target.disabled = true;
+        call("POST", "/sites/remove", { site: site, mine: true }).then(function (r) { data.sites = r; render(); },
+                                                                     function (e) { ev.target.disabled = false; fail(e); });
+      }, true) : null;
+    };
     if (here.length) {
       box.appendChild(el("h3", { text: T.here }));
-      here.forEach(function (x) { box.appendChild(el("p", {}, button(tryLabel(x.site), tryOn(x.site), true), " " + (x.state || x.version || ""))); });
+      here.forEach(function (x) { box.appendChild(el("p", {}, button(tryLabel(x.site), tryOn(x.site), true), " " + (x.state || x.version || "") + " ", added(x.site))); });
     }
     var others = (sites.company || []).filter(function (x) { return named.indexOf(x.site) < 0; });
     if (others.length) {
-      box.appendChild(el("h3", { text: T.others }));
-      others.forEach(function (x) {
-        var row = el("p", {}, button(tryLabel(x.site), tryOn(x.site), true));
-        if (!x.press) row.appendChild(button(T.removeList, function (ev) {   // a site the company added: off its list
-          ev.target.disabled = true;
-          call("POST", "/sites/remove", { site: x.site, mine: true }).then(function (r) { data.sites = r; render(); },
-                                                                          function (e) { ev.target.disabled = false; fail(e); });
-        }, true));
-        box.appendChild(row);
-      });
+      box.appendChild(el("h3", { text: here.length ? T.others : T.ours }));
+      others.forEach(function (x) { box.appendChild(el("p", {}, button(tryLabel(x.site), tryOn(x.site), true), " ", added(x.site))); });
     }
     if (!(sites.company || []).length && sites.words) {
       var parts = noSandboxParts(sites.words);
@@ -1155,6 +1156,8 @@
     }
     box.appendChild(el("h3", { text: T.another }));
     var inp = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "shop.ivendnext.com", "aria-label": T.another });
+    inp.value = data.typed || "";
+    inp.addEventListener("input", function () { data.typed = inp.value; });
     box.appendChild(el("p", {}, inp, " ", button(T.tryThere, function () {
       var v = inp.value.trim();
       if (v) { data.pick = null; openTry(app, v); }
@@ -1179,7 +1182,7 @@
   // the site's check, then the install at once with the words it showed
   function startTry(app) {
     return call("POST", "/try", { app: app, site: data.trySite || undefined }).then(function (c) {
-      data.tryC = c; data.trySite = c.site; data.tryPress = true; render();
+      data.tryC = c; data.trySite = c.site; data.tryPress = true; data.typed = ""; render();
       return call("POST", "/try/install", { app: app, sha: c.sha, site: c.site }).then(function (r) {
         data.tryPress = false; data.tryS = r; say(""); render(); pollTry();
       });
@@ -1266,7 +1269,7 @@
       return box;
     }
     if (!c) return box;
-    if (!c.press) {   // its administrator's own install shows what it changes there
+    if (!c.press || !consentSections(c).length) {   // its administrator's own install shows it, or the site has it already
       if ((c.money || {}).line) box.appendChild(p(c.money.line));
       return box;
     }

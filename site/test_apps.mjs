@@ -190,7 +190,7 @@ check("J4-01: with no site, Request one is the link", parts.join("") === "Add a 
 check("SITEPICK: the button names the site before the press, and Change opens one list: where it is, the company's other sites, another",
   T.change === "Change" && T.here === "Where this app is now" && T.others === "Your company's other sites" &&
   T.another === "Another site…" && T.removeList === "Remove from my list" && src.includes("function vPick(app)") &&
-  src.includes('call("POST", "/sites", {})') && src.includes('call("POST", "/sites/remove", { site: x.site, mine: true })'));
+  src.includes('call("POST", "/sites", {})') && src.includes('call("POST", "/sites/remove", { site: site, mine: true })'));
 check("SITEPICK: the list is shown in one place: the home page's sandbox panel is gone", !src.includes("vSandbox") &&
   !src.includes('"/sandbox"') && T.yourSandbox === undefined);
 check("SITEPICK: the finished screen says where it went, with Open Desk and Open the till, the app's address, and a shelf key to copy",
@@ -200,7 +200,7 @@ check("SITEPICK: Publish sends to the sites typed, and + Add another site stays:
   a.U.ownSites === undefined && !src.includes("form.ticks") && a.U.addSite === "+ Add another site" &&
   a.U.onSandboxOnly === "Tried, not yet published");
 check("SITEPICK: a typed site the doors refused goes back to the list, never Try again with the same address",
-  src.includes("data.trySite && !listed ? button(T.change") && src.includes('call("POST", "/sites/remove", { site: x.site, mine: true }).then(function (r) { data.sites = r;'));
+  src.includes("data.trySite && !listed ? button(T.change") && src.includes('call("POST", "/sites/remove", { site: site, mine: true }).then(function (r) { data.sites = r;'));
 check("J4-02: the sections as the hosting drew them, in order, each with its lines", a.SECTIONS.join("|") ===
   "New in Desk|Who can use it|Changes to what you already have|Print layouts|Connects outside your site" &&
   a.consentSections({ sections: [{ title: "Who can use it", lines: [] }, { title: "New in Desk", lines: ["x"] }, { title: "Other", lines: ["y"] }] })
@@ -216,7 +216,8 @@ check("J4-05 after a fix: a newer draft than the one tried is offered again; a f
   a.offerAgain({ step: "stopped" }) && a.offerAgain(null) && !a.offerAgain({ step: "build" }) &&
   a.offerAgain({ step: "done", version: "1", latest: "1", site: "a" }, "b") && !a.offerAgain({ step: "done", version: "1", latest: "1", site: "a" }, "a"));
 check("J5-15: the plan's lines as the row writes them, nothing added", !src.includes("perMonth") && T.plan === "Per month");
-check("J2-10: the four buttons are on: Try on ⟨site⟩ and Publish open their screens", src.includes("var tryB = button(tryLabel(def), function () { if (def) openTry(a.app, def);") &&
+check("J2-10: the four buttons are on: Try on ⟨site⟩ and Publish open their screens", src.includes("var tryB = button(data.sites ? tryLabel(def) : G.tryIt, function () { if (def) openTry(a.app, def);") &&
+  src.includes("tryB.disabled = !data.sites;") &&
   src.includes("button(G.publish, function () { openPublish(a.app); }") && !src.includes("pubB.disabled = true"));
 
 check("M14: a refused new try leaves no last try's lines under the refusal (walk 2026-11-02)", src.includes("function (e) { data.tryS = null; throw e; }"));
@@ -322,7 +323,10 @@ check("EASYLOOK: a refusal keeps the company form's tick and the suggested word 
 check("EASYLOOK: pressing clears the last refusal and says it started (12)", src.includes("data.tryPress = true") && src.includes("data.pubPress = true"));
 check("EASYLOOK: a publish that stops keeps the form and its addresses (20, 085)", src.includes("if (r.stop) { openPublish(data.appId); return; }"));
 check("an app made with nothing to fill goes straight to Try: no Next press between Made and Try (walk 11-03)",
-  src.includes("box.appendChild(none ? button(tryLabel(def), function () { data.made = null; if (def) openTry(data.appId, def);"));
+  src.includes("box.appendChild(none ? button(data.sites ? tryLabel(def) : G.tryIt, function () { data.made = null; if (def) openTry(data.appId, def);"));
+check("SITEPICK walk: the list says Your company's sites when the app is on none yet, a typed address survives a redraw, and a site the company added can come off the list from either group",
+  a.T.ours === "Your company's sites" && src.includes("here.length ? T.others : T.ours") && src.includes("inp.value = data.typed || \"\";") &&
+  src.includes("data.typed = inp.value;") && src.includes('" " + (x.state || x.version || "") + " ", added(x.site)'));
 check("EASYLOOK: a finished try leads on to Publish (14)", /if \(s\.done\) \{[\s\S]{0,2800}button\(G\.publish, function \(\) \{ openPublish\(data\.appId\); \}\)/.test(src));
 check("EASYLOOK: home puts the apps before the sandbox and the command (134)", src.includes("var out = el(\"div\", {}, box, list, tail)"));
 check("EASYLOOK: Settings is offered only when the app has some (07)", src.includes("(a.settings || []).length ? button(\"Settings\""));
