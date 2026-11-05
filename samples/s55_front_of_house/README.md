@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.0.2
+
+- When iVendNext refuses one of your service's calls, or does not answer it, the press's line in your service's log says which call, and iVendNext's status and own words when it gave them (for example *Could not find Company*). The host still reads *did not answer in time*; the cause is in the log (on CitiXsys hosting, your function's log).
+
 ### 1.0.1
 
 - Hosts at different stores no longer wait for each other; *Seat* and *Change booking* ask no confirmation.

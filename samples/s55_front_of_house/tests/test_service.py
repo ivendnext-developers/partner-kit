@@ -7,9 +7,11 @@ On our test bench the real Desk buttons were pressed and the checks opened on a 
 service's own duties fast, and are what the mutation canaries turn RED."""
 
 import base64
+import contextlib
 import datetime
 import hashlib
 import hmac
+import io
 import json
 import os
 import sys
@@ -92,6 +94,26 @@ class ServiceTest(unittest.TestCase):
     def test_p4_a_lost_answer_from_the_shop_is_a_502_never_a_word_of_success(self):
         shop = fs.FakeTenant([fs.booking("R1", "19:00:00", status="Requested")], refuse=("GET", None))
         self.assertEqual(self.press(self.svc(shop), "/press/book", RES, "R1")[0], 502)
+
+    def test_p5_a_502_logs_what_the_shop_answered_and_nothing_of_the_press(self):
+        # cd-09, 11-05: the shop refused the press stamp's save in its own words, and the log said only 502
+        said = "Could not find Company: Old Name"
+        shop = fs.FakeTenant(waitlist=[fs.waiting("W1")], refuse=("PUT", 417, "LinkValidationError", said))
+        h, raw = signed(body(WAIT, ["W1"]), SECRETS["seat"])
+        h["X-iVendNext-Request-Id"] = "r-1"
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(app.handle(self.svc(shop), "POST", "/press/seat", h, raw)[0], 502)
+        line = json.loads(out.getvalue())
+        self.assertEqual({k: line[k] for k in ("request", "status", "call", "kind", "said")},
+                         {"request": "r-1", "status": 502, "call": "PUT PP FOH Store -> HTTP 417", "kind": "LinkValidationError",
+                          "said": said})
+        for word in (SECRETS["seat"], h["X-iVendNext-Signature"], "Ben", "Ode", "7700"):
+            self.assertNotIn(word, out.getvalue())
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):                       # an answered press logs its line alone
+            app.handle(self.svc(fs.FakeTenant(waitlist=[fs.waiting("W1")])), "POST", "/press/seat", *signed(body(WAIT, ["W1"]), SECRETS["seat"]))
+        self.assertEqual(set(json.loads(out.getvalue())), {"request", "route", "status", "ms"})
 
     # ── Book: the double-booking guard ──
     def test_b1_a_free_table_is_held(self):

@@ -420,7 +420,7 @@ class Service:
                            "length or the table, save, then press Book.")
 
     # ── the call ──
-    def press(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
+    def press(self, path: str, headers, raw: bytes, note: dict) -> tuple[int, dict]:
         sub = SUBS[path]
         try:
             site, secrets, door = self.caller(headers, sub)
@@ -455,23 +455,28 @@ class Service:
             if e.code in (401, 403):    # the shop refused the app's user: say so
                 return 200, _warning(REFUSED + (CONNECT_AGAIN if self.app else ""))
             # the shop tells the user "did not answer in time. Check the record before you try again": true, because a
-            # check may have opened; the next Seat sends the same key and the door returns that check
+            # check may have opened; the next Seat sends the same key and the door returns that check. The log line says
+            # what the shop answered (the call, its status and its own words), so the cause can be read there
+            note.update({k: v for k, v in (("call", str(e)), ("kind", e.kind), ("said", e.said)) if v})
             return 502, {"error": str(e)}
 
-    def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
-        """One call: (status, answer). The web server below and the function entry both call this."""
+    def handle(self, method: str, path: str, headers, raw: bytes, note: dict | None = None) -> tuple[int, dict]:
+        """One call: (status, answer). The web server below and the function entry both call this. ``note`` gets what the
+        shop answered when a press ends in a 502 (a status and the shop's words, never a key or a guest's field), for the
+        log line."""
         if method == "GET":
             return (200, {"ok": 1}) if path == "/health" else (404, {"error": "not found"})
         if self.app and path in (shops.CONNECT, shops.DISCONNECT):
             return shops.handle(self.store, self.app, path, headers, raw)
         if path in SUBS:
-            return self.press(path, headers, raw)
+            return self.press(path, headers, raw, {} if note is None else note)
         return 404, {"error": "not found"}
 
 
-def _log(log, rid: str, path: str, code: int, t0: float):
-    """One line per call: never the body, the context, a secret or a signature."""
-    log.write(json.dumps({"request": rid, "route": path[:40], "status": code, "ms": int((time.monotonic() - t0) * 1000)}) + "\n")
+def _log(log, rid: str, path: str, code: int, t0: float, note: dict | None = None):
+    """One line per call: never the body, the context, a secret or a signature. On a 502, what the shop answered."""
+    line = {"request": rid, "route": path[:40], "status": code, "ms": int((time.monotonic() - t0) * 1000)}
+    log.write(json.dumps({**line, **(note or {})}) + "\n")
     log.flush()
 
 
@@ -490,15 +495,15 @@ def make_handler(svc: Service, log=sys.stderr):
             self.wfile.write(data)
 
         def do_POST(self):
-            t0, rid, code = time.monotonic(), (self.headers.get("X-iVendNext-Request-Id") or "-")[:40], 500
+            t0, rid, code, note = time.monotonic(), (self.headers.get("X-iVendNext-Request-Id") or "-")[:40], 500, {}
             try:
                 n = int(self.headers.get("Content-Length") or 0)
                 raw = self.rfile.read(n)
                 with lock:
-                    code, out = svc.handle("POST", self.path, self.headers, raw)
+                    code, out = svc.handle("POST", self.path, self.headers, raw, note)
                 return self._send(code, out)
             finally:
-                _log(log, rid, self.path, code, t0)
+                _log(log, rid, self.path, code, t0, note)
 
         def do_GET(self):
             self._send(*svc.handle("GET", self.path, self.headers, b""))
@@ -511,9 +516,9 @@ def make_handler(svc: Service, log=sys.stderr):
 
 def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:
     """The function's call: the answer, and one log line."""
-    t0 = time.monotonic()
-    code, out = svc.handle(method, path, headers, raw)
-    _log(sys.stdout, (headers.get("X-iVendNext-Request-Id") or "-")[:40], path, code, t0)
+    t0, note = time.monotonic(), {}
+    code, out = svc.handle(method, path, headers, raw, note)
+    _log(sys.stdout, (headers.get("X-iVendNext-Request-Id") or "-")[:40], path, code, t0, note)
     return code, out
 
 
