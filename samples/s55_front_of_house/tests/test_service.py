@@ -105,8 +105,8 @@ class ServiceTest(unittest.TestCase):
         with contextlib.redirect_stdout(out):
             self.assertEqual(app.handle(self.svc(shop), "POST", "/press/seat", h, raw)[0], 502)
         line = json.loads(out.getvalue())
-        self.assertEqual({k: line[k] for k in ("request", "status", "site", "kind", "said")},
-                         {"request": "r-1", "status": 502, "site": "PUT PP FOH Store -> HTTP 417", "kind": "LinkValidationError",
+        self.assertEqual({k: line[k] for k in ("request", "status", "call", "kind", "said")},
+                         {"request": "r-1", "status": 502, "call": "PUT PP FOH Store -> HTTP 417", "kind": "LinkValidationError",
                           "said": said})
         for word in (SECRETS["seat"], h["X-iVendNext-Signature"], "Ben", "Ode", "7700"):
             self.assertNotIn(word, out.getvalue())

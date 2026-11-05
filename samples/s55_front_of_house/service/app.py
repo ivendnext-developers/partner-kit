@@ -457,7 +457,7 @@ class Service:
             # the shop tells the user "did not answer in time. Check the record before you try again": true, because a
             # check may have opened; the next Seat sends the same key and the door returns that check. The log line says
             # what the shop answered (the call, its status and its own words), so the cause can be read there
-            note.update({k: v for k, v in (("site", str(e)), ("kind", e.kind), ("said", e.said)) if v})
+            note.update({k: v for k, v in (("call", str(e)), ("kind", e.kind), ("said", e.said)) if v})
             return 502, {"error": str(e)}
 
     def handle(self, method: str, path: str, headers, raw: bytes, note: dict | None = None) -> tuple[int, dict]:
