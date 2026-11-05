@@ -67,7 +67,7 @@ Limits to know before you rely on these settings:
    python3 tools/manifest/validate.py samples/s4_receipt_pack/manifest.json     # VALID, exit 0
    ```
 
-4. **Install the manifest**: on your sandbox with `ivn try`; on any other site, a customer's included, by its administrator from the App library, with the shelf key Try shows or once you have published it (chapter 7).
+4. **Install the manifest**: on your sandbox with `ivn try`; on a customer's site, by its administrator from the App library once you have published it (chapter 7). The shelf key Try shows for any other site is for trying: it runs on your app's free sandbox copy.
 5. **Choose it on the till profile: Desk → POS Profile → the profile → Print Format → Save.** This step is configuration; a manifest has no kind for it. The till reads the format at each print, so it is live on the next receipt. The save is refused, with the reason, if the format is not one for a POS sale or cannot print the register's latest booked sale.
 6. **Book a sale and open the Print sheet** to see it.
 

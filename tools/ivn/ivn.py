@@ -108,7 +108,7 @@ WORDS = {
     "site_row": "{site}  {how}",
     "one_press": "one press",
     "its_admin": "its administrator installs it from the shelf key ivn try prints",
-    "your_last": " · your last",
+    "your_last": " · ivn try uses it",  # the person's last site, else the first: true for a first-timer too
     "sign_in": "Sign in first: ivn login (a build server: a token from My apps > Tokens, in IVN_TOKEN).",
     "bad_token": "This token is not one My apps made. Run ivn login again, or make a new token on My apps > Tokens.",
     "no_reach": "Could not reach iVendNext: no connection. Nothing was changed. Try again.",
