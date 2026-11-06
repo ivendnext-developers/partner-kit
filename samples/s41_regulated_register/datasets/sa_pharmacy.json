@@ -31,6 +31,11 @@
     "medical_file_no": {
       "label": "الملف الطبي",
       "type": "Data"
+    },
+    "remarks": {
+      "label": "ملاحظة",
+      "type": "Data",
+      "desk_field": "remarks"
     }
   },
   "authority": {

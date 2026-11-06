@@ -24,6 +24,11 @@
         "match": "customer_link",
         "field": "id_number"
       }
+    },
+    "remarks": {
+      "label": "Note",
+      "type": "Data",
+      "desk_field": "remarks"
     }
   },
   "authority": {

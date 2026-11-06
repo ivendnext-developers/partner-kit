@@ -245,6 +245,18 @@ class Disposal(unittest.TestCase):
                          {"verdict": "allow"})
         self.assertEqual([r[1] for r in self.shop.reads[n:]], ["PP RCL Settings"])   # a Desk receipt: the settings only
 
+    def test_d7b_a_recalled_lot_moved_to_a_selling_store_is_left_to_the_tills_own_refusal(self):
+        # PH-K5 (D3): the till refuses a recalled lot's move anywhere but a quarantine store, in words that say so; the
+        # app adds no second sentence about a disposal. An issue of it is still a disposal (d7), an expired lot still is
+        self.shop.lots["TRAM-A"]["disabled"] = 1
+        for src in (DISP, QUAR):
+            self.assertEqual(self.check(entry([{"s_warehouse": src, "t_warehouse": "Front - ICG", "batch_no": "TRAM-A"}],
+                                              purpose="Material Transfer")), {"verdict": "allow"}, src)
+        self.assertEqual(self.check(entry([{"s_warehouse": DISP, "t_warehouse": QUAR, "batch_no": "TRAM-A"}],
+                                          purpose="Material Transfer")), {"verdict": "allow"})
+        self.assertEqual(self.check(entry([{"s_warehouse": DISP, "batch_no": "TRAM-A"}]))["verdict"], "refuse")
+        self.assertEqual(self.check(entry([{"t_warehouse": DISP}], purpose="Material Transfer"))["verdict"], "refuse")
+
     def test_d8b_any_issue_of_a_witnessed_item_is_a_disposal_damaged_good_stock_too(self):
         self.assertEqual(self.check(entry([{"s_warehouse": DISP, "batch_no": "TRAM-A"}]))["verdict"], "refuse")
 

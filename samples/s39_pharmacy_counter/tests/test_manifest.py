@@ -184,8 +184,12 @@ class ManifestTest(unittest.TestCase):
         import app
         import rxrules
         disp, front = SUBS["dispensary"], SUBS["front"]
-        self.assertEqual(disp["settings"], {"fill_attributes": [f"{P} {rxrules.RX_DATE}"]})
-        self.assertIn("/" + disp["endpoint_url"].split("/", 3)[3], app.FILLS)
+        # 0.1.6 (PH-K5): the prescriber and the licence too, at 0.1.6's own address; its list is the address's exactly
+        listed = [f"{P} {x}" for x in (rxrules.RX_DATE, rxrules.PRESCRIBER, rxrules.LICENCE)]
+        self.assertEqual(disp["settings"], {"fill_attributes": listed})
+        path = "/" + disp["endpoint_url"].split("/", 3)[3]
+        self.assertEqual([f"{P} {x}" for x in app.FILLS[path]], listed)
+        self.assertTrue(set(listed) <= {a["name"] for a in MANIFEST["sale_attributes"]})
         self.assertIn(f"{P} {rxrules.RX_DATE}", {a["name"] for a in MANIFEST["sale_attributes"]})
         # the front refuses every prescription line before the date rule, so a fill there could never fire
         self.assertNotIn("settings", front)

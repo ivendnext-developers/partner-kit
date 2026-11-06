@@ -78,6 +78,11 @@ CANARIES = [
     ("the supplier's number when the settings ask", C, '    if settings.get("supplier_note_required") and not', "    if False and not",
      CK + "Receipt.test_c14_the_suppliers_number_is_required_when_the_settings_say_so"),
     # disposal
+    ("a recalled lot moved to a store is left to the till's refusal", C,
+     '        if line.get("t_warehouse") and any((batches.get(lot) or {}).get("disabled") for lot in lots):',
+     '        if False:', CK + "Disposal.test_d7b_a_recalled_lot_moved_to_a_selling_store_is_left_to_the_tills_own_refusal"),
+    ("an issue of a recalled lot is still a disposal", C, '        if line.get("t_warehouse") and any((batches.get(lot)',
+     '        if any((batches.get(lot)', CK + "Disposal.test_d7b_a_recalled_lot_moved_to_a_selling_store_is_left_to_the_tills_own_refusal"),
     ("a disposal needs a record", C, "        if not rec_name:", "        if False:",
      CK + "Disposal.test_d1_a_controlled_disposal_with_no_record_is_refused"),
     ("the visit's signed form is needed", C, '("officer_name", "authority", "visit_date", "signed_form")', '("officer_name", "authority", "visit_date")',

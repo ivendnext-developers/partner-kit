@@ -509,6 +509,8 @@ def judge_disposal(fields: dict, item_docs: dict, batches: dict, bundle_lots: di
         written_off = not line.get("t_warehouse") and not made
         if not written_off and not (leaves and line.get("t_warehouse") not in q_stores):
             continue
+        if line.get("t_warehouse") and any((batches.get(lot) or {}).get("disabled") for lot in lots):
+            continue       # a recalled lot moved to a store: the till refuses it in its own words (only to quarantine)
         try:
             if not witnessed(item_docs.get(code) or {}, settings, on):
                 continue

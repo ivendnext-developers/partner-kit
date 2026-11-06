@@ -5,6 +5,7 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import sys
 import threading
 import time
@@ -139,6 +140,41 @@ class Dispensing(Base):
         self.shop.booked("Sale-X")
         self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-y")
         self.assertEqual([d["status"] for d in self.shop.dispensings()], ["Dispensed", "Reserved"])
+
+    def test_the_sweep_reads_a_booked_sale_dispensed_whoever_its_patient(self):
+        # PH-K5 (D6, 0.1.6): the day's prescriptions register reads the medicine sold to Ann as dispensed at the next sweep
+        # (each minute, on its own schedule), not only at Ann's next visit; a reservation older than the sweep's days waits
+        # for its patient; an abandoned sale's fill, its day closed, is released
+        k = RX.patient_key("Ann")
+        self.shop.prescription("RX1", "Ann", "AMOX", 21, fills=2)
+        self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="Sale-X")
+        self.shop.add(f"{P} Dispensing", name="Old~0001", key="Old~0001", seq=1, customer="Old", status="Reserved",
+                      source="till", sale_ref="sale-old", pos_opening="DAY-0", day="2026-10-01", lines_json="{}")
+        self.shop.add(f"{P} Dispensing", name="Gone~0001", key="Gone~0001", seq=1, customer="Gone", status="Reserved",
+                      source="till", sale_ref="sale-gone", pos_opening="DAY-9", day="2026-10-22", lines_json="{}")
+        self.shop.add("POS Opening Entry", name="DAY-9", status="Closed")
+        self.shop.booked("Sale-X")
+        self.shop.booked("sale-old")
+        self.assertEqual(self.svc.sweep_all(), {"-": 2})
+        status = {d["name"]: d["status"] for d in self.shop.dispensings()}
+        self.assertEqual((status[f"{k}~0001"], status["Old~0001"], status["Gone~0001"]),
+                         ("Dispensed", "Reserved", "Released"))
+
+    def test_a_check_never_sweeps_and_a_sweep_writes_at_most_its_cap(self):
+        # the till's 5 s are the decision's alone; a sweep that finds more than its cap writes the cap, the next the rest
+        for n in range(app.SWEEP_WRITES + 3):
+            self.shop.add(f"{P} Dispensing", name=f"P{n}~0001", key=f"P{n}~0001", seq=1, customer=f"P{n}", status="Reserved",
+                          source="till", sale_ref=f"sold-{n}", pos_opening="DAY-1", day="2026-10-22", lines_json="{}")
+            self.shop.booked(f"sold-{n}")
+        self.shop.prescription("RX1", "Ann", "AMOX", 21)
+        self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-a")
+        self.assertFalse([c for c in self.shop.calls if c[0] == "list" and any(f[0] == "day" for f in c[2] or [])])
+        self.assertEqual(self.svc.sweep_all(), {"-": app.SWEEP_WRITES})
+        self.assertEqual(self.svc.sweep_all(), {"-": 3})
+
+    def test_a_sweep_that_cannot_read_the_shop_writes_nothing_and_says_so(self):
+        self.shop.fail = True
+        self.assertEqual(self.svc.sweep_all(), {"-": 0})
 
     def test_an_unbooked_sale_releases_its_fill_only_when_its_day_closes(self):
         self.shop.prescription("RX1", "Ann", "AMOX", 21)
@@ -509,6 +545,25 @@ class TillFill(Base):
         (d,) = self.shop.dispensings()
         self.assertEqual(d["status"], RX.RESERVED)
 
+    def test_the_0_1_6_address_fills_the_prescriber_and_the_licence_as_the_date(self):
+        # PH-K5 (D5): the HMO's claims file copies them from the sale (via the payer record): filled from the prescription
+        # at Pay, as the date is, never over what the pharmacist typed; 0.1.4's address, whose list names the date only,
+        # is answered with the date only (a fill outside a subscription's list is refused whole)
+        want = {f"{P} Rx Date": "2026-10-19", f"{P} Prescriber": "Dr Who", f"{P} Prescriber Licence": "MDCN/12345"}
+        first = self.sell(("AMOX", "Rx", 21), rx="RX1", route="/rxc/dispensary/fills")
+        self.assertEqual(first, (200, {"verdict": "allow", "fill": want}))
+        # a prescriber typed (a locum's) stops both: a claim never pairs one doctor with another's licence
+        typed = self.sell(("AMOX", "Rx", 21), rx="RX1", route="/rxc/dispensary/fills", details={"Prescriber": "Dr Ade"})
+        self.assertEqual(typed[1]["fill"], {f"{P} Rx Date": "2026-10-19"})
+        self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1", route="/rxc/dispensary/fill")[1]["fill"],
+                         {f"{P} Rx Date": "2026-10-19"})
+
+    def test_two_prescribers_on_one_sale_fill_neither(self):
+        self.shop.prescription("RX2", "Ann", "AMOX", 7, written="2026-10-19", directions="one a day")
+        self.shop.rows(f"{P} Prescription")[-1]["prescriber"] = "Dr Ade"
+        out = self.sell(("AMOX", "Rx", 21), ("PARA", "OTC", 1), rx="RX1, RX2", route="/rxc/dispensary/fills")[1]
+        self.assertEqual(out.get("fill"), {f"{P} Rx Date": "2026-10-19"})
+
     def test_the_old_address_never_fills_so_a_shop_still_on_0_1_3_is_answered_as_before(self):
         self.assertEqual(self.sell(("AMOX", "Rx", 21), rx="RX1"), (200, {"verdict": "allow"}))
         out = self.sell(("AMOX", "Rx", 21), rx="RX1", sale_ref="sale-2", details={"Rx Date": "2026-10-01"})[1]
@@ -828,3 +883,24 @@ class TestCall(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Function(unittest.TestCase):
+    """0.1.6 (PH-K5, D6): on CitiXsys hosting the sweep is the schedule's own call (app.json), one claim a shop."""
+    def test_the_schedule_sweeps_every_shop_it_claims(self):
+        import tempfile
+        import shops
+        d = tempfile.mkdtemp()
+        store = shops.FileStore(d + "/shops.json")
+        for site in ("a.example.com", "b.example.com"):
+            store.put(site, {"url": f"https://{site}", "secrets": {"user:svc": "k:s"}})
+        store.claim("sweep|b.example.com", time.time() + 600, 0)       # another copy is sweeping b
+        shop = FakeShop().pharmacy()
+        shop.add(f"{P} Dispensing", name="Ann~0001", key="Ann~0001", seq=1, customer="Ann", status="Reserved",
+                 source="till", sale_ref="sold", pos_opening="DAY-1", day="2026-10-22", lines_json="{}")
+        shop.booked("sold")
+        svc = app.Service({"IVN_LIBRARY_APP": "ivendnext_rxc"}, store=store, api=shop, now=lambda: NOW)
+        self.assertEqual(app.scheduled(svc, "sweep", 60), {"a.example.com": 1})
+        self.assertEqual(shop.dispensings()[0]["status"], "Dispensed")
+        self.assertIsNone((store._read().get("sweep|a.example.com")))          # its claim freed when its shop ended
+        self.assertEqual(json.load(open(os.path.join(HERE.parent, "app.json")))["schedule"], {"sweep": "rate(1 minute)"})

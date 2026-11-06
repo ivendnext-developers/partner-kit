@@ -83,14 +83,21 @@ TRIES = 3              # decide again after another till took the patient's next
 RECHECK_DAYS = 400     # a dispensing is re-read from the shop this many days (a prescription's life): a cancellation, a
                        # status set by hand
 ROWS_MAX = 2000        # a patient's dispensings read per decision (the newest first)
+SWEEP_EVERY = 60       # 0.1.6: seconds between two sweeps of each shop's open reservations (app.json "schedule")
+SWEEP_DAYS = 3         # the reservations of these last days are swept; an older one waits for its patient's next check
+SWEEP_MAX = 50         # reservations read per shop and sweep, the newest first
+SWEEP_WRITES = 25      # statuses written per shop and sweep; the next sweep writes the rest
 #        route                   (secret key, point)
-ROUTES = {"/rxc/dispensary/fill": ("dispensary", "check"),     # 0.1.4's address: its subscription lists the date to fill
+ROUTES = {"/rxc/dispensary/fills": ("dispensary", "check"),    # 0.1.6's: the date, the prescriber and the licence
+          "/rxc/dispensary/fill": ("dispensary", "check"),     # 0.1.4's address: its subscription lists the date to fill
           "/rxc/dispensary": ("dispensary", "check"),          # 0.1.3's: a fill there would be refused whole (its list is empty)
           "/rxc/front": ("front", "check"),
           "/rxc/desk/order": ("desk_order", "doccheck"),
           "/rxc/desk/delivery": ("desk_delivery", "doccheck"),
           "/rxc/desk/invoice": ("desk_invoice", "doccheck")}
-FILLS = {"/rxc/dispensary/fill"}
+# the sale details each address's subscription lists to fill (a fill naming any other is refused whole by the till)
+FILLS = {"/rxc/dispensary/fill": (rxrules.RX_DATE,),
+         "/rxc/dispensary/fills": (rxrules.RX_DATE, rxrules.PRESCRIBER, rxrules.LICENCE)}
 PRESSES = {"/rxc/erasure/list": "list_due", "/rxc/erasure/erase": "erase"}     # route → secret key (desk_action/1)
 PRESS_BY = 7.0         # seconds a press works before it answers what it did (its button waits 10)
 PRESS_READ = 5.0       # each read or delete in a press waits at most this
@@ -387,7 +394,8 @@ class Service:
                 "delegate": rxrules._flag(row.get("delegate")), "full_name": rxrules._text(row.get("full_name"))} if row else None
 
     def _rx_headers(self, shop, refs, customer):
-        fields = ["name", "reference", "customer", "date_written", "fills_authorised", "retained", "status", "prescriber"]
+        fields = ["name", "reference", "customer", "date_written", "fills_authorised", "retained", "status", "prescriber",
+                  "prescriber_licence"]
         by_name = self._list(shop, self.dt("Prescription"), fields, [["name", "in", refs]])
         by_ref = self._list(shop, self.dt("Prescription"), fields, [["reference", "in", refs], ["customer", "=", customer]])
         seen = {r["name"] for r in by_name}
@@ -495,6 +503,59 @@ class Service:
         return {k: v for k, v in rows.items() if v is not None}
 
     # ── the decision ─────────────────────────────────────────────────────────
+
+    # ── 0.1.6 (D6): the sweep, on its own schedule, never inside a till's check ──────────────────────────────────────
+
+    def sweep_all(self, seconds: float = SWEEP_EVERY) -> dict:
+        """Every shop's open reservations of the last SWEEP_DAYS days, read and resolved as a patient's own are at each
+        check, so a sale booked since reads Dispensed on the prescriptions register (and one abandoned, its day closed,
+        Released) without waiting for its patient's next visit. Run each minute by the schedule (app.json), or by the
+        one-shop server's own loop; never by a till's check, whose 5 s are the decision's alone. Many shops: each shop
+        claimed (``function.Claimed``), so two copies never sweep one shop at once. {shop: statuses written}."""
+        out = {}
+        if not self.app:
+            out["-"] = self.sweep("-", self.shop)
+            return out
+        store = function.Claimed(self.store, seconds, kind="sweep")
+
+        def one(site):
+            try:
+                record = store.get(site)
+                users = sorted(k for k in (record or {}).get("secrets") or {} if k.startswith("user:"))
+                if record and users:
+                    out[site] = self.sweep(site, {"url": record["url"], "key": record["secrets"][users[0]]})
+            finally:
+                store.release(site)            # a slow shop never holds the others
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            list(pool.map(one, store.sites()))
+        return out
+
+    def sweep(self, name: str, shop: dict) -> int:
+        try:
+            settings, _, _ = self.basics(name, shop)
+            today = rxrules.today_at(settings["hours"], self.now())
+            since = (today - datetime.timedelta(days=SWEEP_DAYS)).isoformat()
+            reserved = self._list(shop, self.dt("Dispensing"), ["sale_ref"],
+                                  [["status", "=", rxrules.RESERVED], ["day", ">=", since]], order_by="creation desc",
+                                  limit=SWEEP_MAX)
+            refs = sorted({r["sale_ref"] for r in reserved if r.get("sale_ref")})
+            if not refs:
+                return 0
+            # every dispensing of those sales: the newest of each is the one its booking matches, an older one is released
+            every = rxrules.dispensings_of(self._dispensings(shop, [["sale_ref", "in", refs]]))
+            states, _ = self.shop_states(shop, every, "", today)
+            changed = {}
+            for d in every:
+                if d["status"] == rxrules.RESERVED:
+                    new = rxrules.resolve(d, states)
+                    if new != d["status"]:
+                        changed[d["name"]] = new
+            some = dict(list(changed.items())[:SWEEP_WRITES])    # a sweep's cap: the next writes the rest
+            self.write_back(shop, some)
+            return len(some)
+        except Exception as e:          # noqa: BLE001 — best effort: the patient's next check resolves it anyway
+            print(json.dumps({"sweep": type(e).__name__}), file=sys.stderr, flush=True)
+            return 0
 
     def decide(self, name: str, shop: dict | None, ctx: dict, route: str) -> dict:
         if not shop:
@@ -829,6 +890,7 @@ class Service:
             ctx = rxrules.sale_context(body) if point == "check" else rxrules.desk_context(body, self.prefix)
             if point == "check":        # nothing is filled on a return, so it is never answered there
                 ctx["fillable"] = path in FILLS and ctx["stage"] == "sale"
+                ctx["fill_names"] = FILLS.get(path, ()) if ctx["fillable"] else ()
             if point == "doccheck" and ctx["doctype"] != DESK_DOCTYPE[route_key]:
                 raise ValueError("this route checks another record type")
         except ValueError as e:         # json's own errors are ValueErrors too
@@ -899,8 +961,23 @@ def handle(svc: Service, method: str, path: str, headers, raw: bytes) -> tuple[i
     return code, out
 
 
+def scheduled(svc: Service, name: str, seconds: float = SWEEP_EVERY) -> dict:
+    """0.1.6: the schedule's one pass (app.json ``"schedule": {"sweep": …}``): every shop's open reservations swept."""
+    return svc.sweep_all(seconds)
+
+
 # As a function on CitiXsys hosting (app.json "runs": "function"; guide chapter 1a): settings from the environment.
-lambda_handler = function.entry(lambda: Service(dict(os.environ)), handle)
+lambda_handler = function.entry(lambda: Service(dict(os.environ)), handle, scheduled)
+
+
+def _sweeping(svc: Service) -> None:
+    """0.1.6: on a server of your own the schedule is this loop, each minute."""
+    while True:
+        time.sleep(SWEEP_EVERY)
+        try:
+            svc.sweep_all(SWEEP_EVERY)
+        except Exception as e:      # noqa: BLE001 — the next minute tries again
+            print(json.dumps({"sweep": type(e).__name__}), file=sys.stderr, flush=True)
 
 
 def env_file(path: str) -> dict:
@@ -918,7 +995,9 @@ def main():
     if not (oneshop.many(conf) or all(oneshop.value(conf, k) for k in one)):
         raise SystemExit("set " + ", ".join(one) + " (one shop), or IVN_LIBRARY_APP with a store (many shops): "
                          "the app does not start without a way to check a call")
-    srv = make_server(Service(conf), int(conf.get("PORT") or 8080))
+    svc = Service(conf)
+    threading.Thread(target=_sweeping, args=(svc,), daemon=True).start()
+    srv = make_server(svc, int(conf.get("PORT") or 8080))
     signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=srv.shutdown, daemon=True).start())
     print(json.dumps({"listening": srv.server_address[1]}), flush=True)
     srv.serve_forever()

@@ -1,12 +1,14 @@
 {
  "app": "pharmacy-counter-rules",
- "version": "1.1.1",
+ "version": "1.1.2",
  "port": 8080,
  "health": "/health",
  "size": "small",
  "region": "us",
  "shops": true,
  "runs": "function",
+ "schedule": {"sweep": "rate(1 minute)"},
+ "timeout": 60,
  "handler": "samples/s39_pharmacy_counter/service/app.lambda_handler",
  "package": ["tools/app_template/service", "samples/s39_pharmacy_counter/rxrules.py", "samples/s39_pharmacy_counter/service"],
  "env": [

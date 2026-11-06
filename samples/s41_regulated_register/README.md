@@ -43,6 +43,10 @@ ivn try
 
 ## Versions
 
+### 0.2.2
+
+- Every data set but Kenya's (its six slots are taken) declares a *Note* slot (*Nota*, *ملاحظة* in the Spanish and Arabic books) read from the document's own Remarks: a loss written off by a stock entry prints its reason in the plain print's *Particulars*. A till sale has none; a Desk invoice left without a remark prints the engine's *No Remarks*. No market layout changes.
+
 ### 0.2.1
 
 - Kenya's data set sets no count deadline after a loss: it cited no source for one.

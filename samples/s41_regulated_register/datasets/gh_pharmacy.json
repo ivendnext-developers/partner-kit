@@ -9,6 +9,13 @@
   "sources": [
     "Pharmacy Act, 1994 (Act 489): ss. 31, 32(b), 34, 35, 37 (moh.gov.gh copy)"
   ],
+  "details": {
+    "remarks": {
+      "label": "Note",
+      "type": "Data",
+      "desk_field": "remarks"
+    }
+  },
   "authority": {
     "pos_sale_details": {
       "authority_no": "PP RXC Rx Number",

@@ -29,7 +29,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/expiry_recall.md).
 
-**The customer sets:** the settings record **Default** (the quarantine stores, the ERP connector's own users, the minimum shelf life and the clocks) and the role *PP RCL Recall Officer* for whoever runs recalls. The customers supplied are health data, so give the role with care.
+**The customer sets:** the settings record **Default** (the quarantine stores, each ticked *Is Rejected Warehouse* on its Warehouse, the ERP connector's own users, the minimum shelf life and the clocks) and the role *PP RCL Recall Officer* for whoever runs recalls. The customers supplied are health data, so give the role with care.
 
 ## Run it
 
@@ -45,6 +45,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.0.2
+
+- Its manifest is now 0.1.2. A recalled lot moved to a store that is not a quarantine store is left to the till's own refusal, which says where it may go (*It can leave only by a Material Issue, a move into a quarantine store … or a return to the supplier*): the app adds no second sentence about the regulator's visit. An issue of a recalled lot, and an expired lot leaving quarantine, are still disposals.
 
 ### 1.0.1
 
