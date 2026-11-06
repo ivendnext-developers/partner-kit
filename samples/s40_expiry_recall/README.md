@@ -46,6 +46,10 @@ ivn try
 
 ## Versions
 
+### 1.0.3
+
+- Its manifest is now 0.1.3. The *Recall feed* registered application's description is back to its 1.0.1 words (*… as this feed's user; leave the feed switched off*), so a site on 1.0.1 updates in place: an update may not change a registered application's description. Nothing else changes from 1.0.2.
+
 ### 1.0.2
 
 - Its manifest is now 0.1.2. A recalled lot moved to a store that is not a quarantine store is left to the till's own refusal, which says where it may go (*It can leave only by a Material Issue, a move into a quarantine store … or a return to the supplier*): the app adds no second sentence about the regulator's visit. An issue of a recalled lot, and an expired lot leaving quarantine, are still disposals.
