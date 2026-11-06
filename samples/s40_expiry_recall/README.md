@@ -48,7 +48,7 @@ ivn try
 
 ### 1.0.3
 
-- Its manifest is now 0.1.3. The *Recall feed* registered application's description is back to its 1.0.1 words (*… as this feed's user; leave the feed switched off*), so a site on 1.0.1 updates in place: an update may not change a registered application's description. Nothing else changes from 1.0.2.
+- Its manifest is now 0.1.3. The *Recall feed* registered application's description is back to its 1.0.1 words, so a site on 1.0.1 updates in place: an update may not change a registered application's description. ⚠ Those words end *leave the feed switched off*, which is out of date: the install's one consent switches the feed on, so leave it on. Nothing else changes from 1.0.2, so a site updating from 1.0.1 meets 1.0.2's changes: the receipt, disposal and stock-count checks now go on and are flagged when the service does not answer (1.0.1 refused), under the update's one consent; set a check to refuse on its record if you want that.
 
 ### 1.0.2
 
