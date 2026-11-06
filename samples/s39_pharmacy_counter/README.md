@@ -46,12 +46,18 @@ ivn try
 ## Try it at the till
 
 - Sell a prescription medicine with no prescription number; the till stops it at Pay.
-- Add the prescription number in Sale details and press Pay again: the prescription's date fills itself.
+- Add the prescription number in Sale details and press Pay again: the prescription's date, the prescriber and the prescriber's licence fill themselves.
 - Type the dose on the line and press Print label on it: the dispensing label prints in the line's unit.
 - As the pharmacist, press Pay and send the sale to the cash till; sign in there as a cashier who is not a pharmacist, ring it up from Held sales and pay it.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.2
+
+- Its manifest is now 0.1.6. The dispensary's check also fills the prescriber and the prescriber's licence from the prescription at Pay, as it fills the date, so an insurer's claims file names them. It fills neither when the pharmacist typed either one, or when the sale's prescriptions name two prescribers.
+- Each minute the service sweeps the reservations of the last three days: a sale booked since reads *Dispensed* on the prescriptions register, and one abandoned at Pay whose day has closed reads *Released*, without waiting for the patient's next visit. On CitiXsys hosting the sweep is the function's schedule (app.json `schedule`); on a server of your own, the server's own loop. A till's check never sweeps.
+- **Updating to 0.1.6:** move the service first (it answers 0.1.5's tills as before). The update names the dispensary check's new address and the two details it fills, and asks one consent; every check you had switched on stays on.
 
 ### 1.1.1
 

@@ -3,7 +3,7 @@
  "app": "pp_rsr",
  "prefix": "PP RSR",
  "title": "Regulated stock register",
- "version": "0.2.1",
+ "version": "0.2.2",
  "publisher": "Partner Programme sample",
  "description": "A legal register for regulated stock (controlled medicine, liquor, tobacco, duty-free), its books declared per market as data and kept by the POS app's register door: one line for each sale or receipt of a regulated item, written in the same save, numbered without a gap, never edited, with a running balance where the law keeps one. It installs each market's books, their prints, a reminder before each return, the register's lists and open-tasks cards, the register's own columns on the Desk sale and delivery and the till's sale details, and the approver role. It reads the pharmacy counter app's drug schedules, prescriptions and patients: install that app first.",
  "custom_fields": [
@@ -257,6 +257,10 @@
       "match": "customer_link",
       "field": "id_number"
      }
+    },
+    "detail_3": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -424,6 +428,10 @@
       "match": "customer_link",
       "field": "id_number"
      }
+    },
+    "detail_3": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -578,6 +586,10 @@
     },
     "detail_3": {
      "label": "رقم القيد فى دفتر التذاكر الطبية"
+    },
+    "detail_4": {
+     "label": "ملاحظة",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -685,7 +697,12 @@
      ]
     }
    ],
-   "details": {},
+   "details": {
+    "detail_1": {
+     "label": "Note",
+     "desk_field": "remarks"
+    }
+   },
    "authority": {
     "pos_sale_details": {
      "authority_no": "PP RXC Rx Number",
@@ -826,7 +843,12 @@
      ]
     }
    ],
-   "details": {},
+   "details": {
+    "detail_1": {
+     "label": "ملاحظة",
+     "desk_field": "remarks"
+    }
+   },
    "authority": {
     "pos_sale_details": {
      "authority_no": "PP RXC Rx Number",
@@ -947,7 +969,12 @@
      ]
     }
    ],
-   "details": {},
+   "details": {
+    "detail_1": {
+     "label": "ملاحظة",
+     "desk_field": "remarks"
+    }
+   },
    "authority": {
     "pos_sale_details": {
      "authority_no": "PP RXC Rx Number",
@@ -1549,6 +1576,10 @@
      "label": "Domicilio del médico",
      "pos_sale_detail": "PP RSR Prescriber Address",
      "desk_field": "pp_rsr_prescriber_address"
+    },
+    "detail_3": {
+     "label": "Nota",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -1692,6 +1723,10 @@
      "label": "Domicilio del médico",
      "pos_sale_detail": "PP RSR Prescriber Address",
      "desk_field": "pp_rsr_prescriber_address"
+    },
+    "detail_3": {
+     "label": "Nota",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -1835,6 +1870,10 @@
      "label": "Domicilio del médico",
      "pos_sale_detail": "PP RSR Prescriber Address",
      "desk_field": "pp_rsr_prescriber_address"
+    },
+    "detail_3": {
+     "label": "Nota",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -1943,6 +1982,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -2062,6 +2105,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -2168,6 +2215,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -2287,6 +2338,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -2393,6 +2448,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -2512,6 +2571,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -2618,6 +2681,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -2737,6 +2804,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -2843,6 +2914,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -2962,6 +3037,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -3068,6 +3147,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -3187,6 +3270,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -3293,6 +3380,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -3412,6 +3503,10 @@
     "detail_1": {
      "label": "Ingredients of the prescription",
      "desk_field": "pp_rsr_rx_ingredients"
+    },
+    "detail_2": {
+     "label": "Note",
+     "desk_field": "remarks"
     }
    },
    "authority": {
@@ -3617,6 +3712,10 @@
     },
     "detail_3": {
      "label": "الملف الطبي"
+    },
+    "detail_4": {
+     "label": "ملاحظة",
+     "desk_field": "remarks"
     }
    },
    "authority": {

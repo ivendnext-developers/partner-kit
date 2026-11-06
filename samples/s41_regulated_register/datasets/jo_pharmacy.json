@@ -11,6 +11,13 @@
     "Drug and Pharmacy Law No. 12/2013, Art. 74 (narcotic records kept at least 5 years from the last entry)",
     "Narcotic Drugs and Psychotropic Substances Law No. 23/2016, Art. 2 (Schedules 1-12) and Art. 25(a)(2) (preparations registers at least 2 years)"
   ],
+  "details": {
+    "remarks": {
+      "label": "ملاحظة",
+      "type": "Data",
+      "desk_field": "remarks"
+    }
+  },
   "authority": {
     "pos_sale_details": {
       "authority_no": "PP RXC Rx Number",

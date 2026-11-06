@@ -22,6 +22,11 @@
     "rx_book_entry": {
       "label": "رقم القيد فى دفتر التذاكر الطبية",
       "type": "Data"
+    },
+    "remarks": {
+      "label": "ملاحظة",
+      "type": "Data",
+      "desk_field": "remarks"
     }
   },
   "authority": {

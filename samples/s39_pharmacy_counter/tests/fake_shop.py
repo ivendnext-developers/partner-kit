@@ -44,6 +44,8 @@ class FakeShop:
                 return False
             if op == "<" and not (have and str(have) < v):
                 return False
+            if op == ">=" and not (have and str(have) >= v):
+                return False
         return True
 
     @staticmethod
@@ -154,7 +156,8 @@ class FakeShop:
     def prescription(self, name, customer, item, qty, fills=1, written="2026-10-20", reference="", retained=0,
                      status="Active", directions=""):
         self.add(f"{P} Prescription", name=name, customer=customer, reference=reference or f"PAPER-{name}",
-                 date_written=written, fills_authorised=fills, retained=retained, status=status, prescriber="Dr Who")
+                 date_written=written, fills_authorised=fills, retained=retained, status=status, prescriber="Dr Who",
+                 prescriber_licence="MDCN/12345")
         self.add(f"{P} Prescription Item", parent=name, item_code=item, qty=qty, directions=directions)
 
     def booked(self, sale_ref, docstatus=1, name=None, is_return=0, key=""):

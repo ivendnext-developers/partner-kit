@@ -21,6 +21,11 @@
       "label": "Domicilio del médico",
       "type": "Data",
       "own": 1
+    },
+    "remarks": {
+      "label": "Nota",
+      "type": "Data",
+      "desk_field": "remarks"
     }
   },
   "authority": {

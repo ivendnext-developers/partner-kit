@@ -17,6 +17,11 @@
       "type": "Data",
       "own": 1,
       "till": 0
+    },
+    "remarks": {
+      "label": "Note",
+      "type": "Data",
+      "desk_field": "remarks"
     }
   },
   "authority": {

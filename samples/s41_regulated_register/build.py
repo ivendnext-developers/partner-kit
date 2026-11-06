@@ -25,7 +25,7 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP, PREFIX, FPREFIX, VERSION = "pp_rsr", "PP RSR", "pp_rsr_", "0.2.1"
+APP, PREFIX, FPREFIX, VERSION = "pp_rsr", "PP RSR", "pp_rsr_", "0.2.2"
 ROLE = "PP RSR Register Approver"
 LINE, STATE, PERIOD = "Retail Register Line", "Retail Register State", "Retail Register Period"  # the door's record types
 # The line's own columns (the door's REGISTER_LINE_COLUMNS). Routing and layouts may name only these, or a declared detail.

@@ -373,7 +373,7 @@ def prescriptions_of(records, item_rows) -> dict:
             "name": r["name"], "reference": _text(r.get("reference")), "customer": _text(r.get("customer")),
             "date_written": _text(r.get("date_written"))[:10], "fills": _whole(r.get("fills_authorised")) or 1,
             "retained": _flag(r.get("retained")), "active": _text(r.get("status")) in ("", "Active"),
-            "prescriber": _text(r.get("prescriber")),
+            "prescriber": _text(r.get("prescriber")), "licence": _text(r.get("prescriber_licence")),
             "items": [{"item": _text(i.get("item_code")), "qty": _amount(i.get("qty")),
                        "directions": _text(i.get("directions"))} for i in item_rows if i["parent"] == r["name"]]}
     return out
@@ -679,6 +679,15 @@ def decide(ctx: dict, route: str, shop: dict, today: datetime.date, prefix: str)
         fill = {f"{field_prefix(prefix)}_{DESK_FIELDS[RX_DATE]}": days[0]}
     elif len(days) == 1 and ctx.get("fillable") and typed in ("", days[0]):   # the till: the sale detail by its name
         fill = {f"{prefix} {RX_DATE}": days[0]}
+        # 0.1.6: the prescriber and the licence too, where the address lists them (an insurer's claim names both), from
+        # the one prescriber the covering prescriptions name, never over what the pharmacist typed
+        who = {(x["prescriber"], x.get("licence") or "") for x in covering}
+        # (the two as a pair: one the pharmacist typed stops both, so a claim never names one doctor with another's licence)
+        if PRESCRIBER in (ctx.get("fill_names") or ()) and len(who) == 1 and not (detail(PRESCRIBER) or detail(LICENCE)):
+            (doctor, licence), = who
+            for key, value in ((PRESCRIBER, doctor), (LICENCE, licence)):
+                if value:
+                    fill[f"{prefix} {key}"] = value
     elif len(days) == 1 and ctx.get("fillable") and rx_lines:
         # a date typed and wrong is refused, as before: at an order's or a layaway's placement a fill is not written, so
         # a wrong typed date would book (on a sale nobody types it now: it is filled)
