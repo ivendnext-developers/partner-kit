@@ -129,6 +129,12 @@ settings_sync.sync(shop, shop.get("PP LYL Settings", "Default"), LINKS)   # writ
 
 The records it writes are exactly the ones its links name. Give the service's role write on those records and nothing else. A replayed event writes nothing. A notification's rows that name a role or a field of the document are kept. **The limit:** for the seconds between the settings save and the copy, the rule holds the old value.
 
+## When events wait
+
+**Events wait and nothing happens.** Read your service's log (`ivn logs` for a hosted app). A refused read shows as `1 failed: 403 PermissionError on Sales Invoice`: the record type your role cannot read. Give the role the right it names (usually Read) in Role Permissions Manager, and the next pass catches up, with no reconnect. An app made by the combine tool also counts a shop it could not read as `unread`, with the same text. A reader from before this line existed prints only the class name `FeedError`: build the app again, or copy the new `feed_client.py`.
+
+**A hosted app keeps no shop address, key or secret of its own.** The site hands its key over at connect. Press **Connect again** if it changed.
+
 ## Appendix A — the nudge (was the webhook recipe)
 A webhook is a **doorbell, not a parcel**: optional, for when you want to pull *now* instead of on your next poll. The retailer may create a Webhook on **Integration Sync Log, after insert**, conditioned on your application's name, sending **no content** — `{"app": "<your application>"}` — signed with a secret (`recipes/webhook_receiver.md` §2 for the signature check). On a valid nudge, run one poll. Never treat the nudge as the event: it can be lost, delayed or repeated, and the queue is the record. We have not tested the nudge yet; it is configuration only.
 

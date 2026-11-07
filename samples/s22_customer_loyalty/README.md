@@ -29,6 +29,8 @@ More: the [recipe](../../recipes/customer_owned_loyalty.md).
 
 **The customer sets:** the tiers and thresholds. A check on goods receipts (`receipt_workflow`, [the recipe](../../recipes/check_by_workflow.md)) is left out of `config.json`, so a receiving clerk's submit is untouched until the customer adds it.
 
+**The app's role needs:** the install makes the role *PP LYL Integration* and the app's one user, `pp_lyl@integration.invalid`; it gives the role no read on the retailer's own record types. Those are read and write on Customer, and read on POS Invoice, Purchase Receipt, Purchase Order and Supplier (the receipt check reads the supplier a receipt names). `python3 apply_config.py prepare`, run after the install, grants them from `config.json`; it makes no user. A read the role lacks does not stop the install: the events wait, and the service's log says which record type was refused (`ivn logs`), then the next pass catches up once the read is given ([What goes where](../../guide/07_manifests.md#what-goes-where)).
+
 ## Run it
 
 ```bash

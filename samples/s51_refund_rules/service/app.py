@@ -93,7 +93,7 @@ class ShopApi:
             raise (KeyRefused if e.code in (401, 403) else Missing if e.code == 404 else ShopUnreadable)(
                 f"the retailer answered {e.code}") from None
         except (OSError, http.client.HTTPException, ValueError) as e:   # OSError: URLError, timeouts, TLS, a cut
-            raise ShopUnreadable(type(e).__name__) from None             # connection; HTTPException: a cut answer
+            raise ShopUnreadable(f"{type(e).__name__}: {e}"[:200]) from None             # connection; HTTPException: a cut answer
 
     def _list(self, url: str, key: str, doctype: str, fields, filters: list):
         out = self._get(url, key, "/api/resource/" + urllib.parse.quote(doctype),
@@ -173,7 +173,7 @@ class Service:
         try:
             return 200, refunds.on_check(ctx, self.settings(name, shop))
         except (ShopUnreadable, ValueError) as e:       # the retailer did not answer, or not with records: nothing was judged
-            print(json.dumps({"error": type(e).__name__}), file=sys.stderr, flush=True)   # the class only: no retailer data
+            print(json.dumps({"error": str(e) if isinstance(e, ShopUnreadable) else type(e).__name__}), file=sys.stderr, flush=True)   # why the retailer was not read; any other error: the class only
             return 503, {"error": "the retailer cannot be read"}
 
     def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:

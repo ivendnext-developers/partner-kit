@@ -27,6 +27,8 @@ More: the [recipe](../../recipes/point_handler.md).
 
 **The customer sets:** its own telecom account and key in the `Default` record of *PP TEL Settings*, the item group the plans are in (one item for each plan, the telecom company's plan code as its item code), and the price list the plans are sold from.
 
+**The app's role needs:** the install makes the role *PP TEL Integration* and the app's own user. On the retailer's own record types the retailer's administrator gives it read on POS Invoice, Item and Price List, and read, create and write on Item Price. A read the role lacks does not stop the install: the events wait, and the service's log says which record type was refused (`ivn logs`), then the next pass catches up once the read is given ([What goes where](../../guide/07_manifests.md#what-goes-where)).
+
 ## Run it
 
 ```bash

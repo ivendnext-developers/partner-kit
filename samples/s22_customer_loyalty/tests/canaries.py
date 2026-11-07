@@ -48,10 +48,9 @@ CANARIES = [
      "        _settle_pending(t, r[\"against_sale\"])      # a return whose own settle was lost is netted before the credit\n", "",
      "test_service.TakingBack.test_the_credit_settles_an_unsettled_return_first"),
     ("switch-on ticks the feed's record types", "apply_config.py", "ticked = [dict(r, enable=on) for r",
-     "ticked = [dict(r) for r", "test_config.Config.test_switch_on_names_the_user_and_ticks_every_followed_record_type"),
-    ("remove switches off a role it cannot remove", "apply_config.py",
-     '                T.update(dt, name, {"disabled": 1})\n', '                pass\n',
-     "test_config.Config.test_remove_switches_off_the_user_and_role_a_completed_workflow_step_still_names"),
+     "ticked = [dict(r) for r", "test_config.Config.test_switch_on_ticks_every_followed_record_type_and_leaves_the_installs_user"),
+    ("prepare asks for the install first", "apply_config.py", '    if T.get("Role", role) is None:', "    if False:",
+     "test_config.Config.test_prepare_makes_no_user_and_asks_for_the_install_first"),
     # Member cash (the wallet): adapted from the reference implementation's wallet canaries @ 74c99d5
     ("a wallet payment's row is named by its reference (one charge)", "service/wallet.py",
      'return loyalty.key("wallet", site, *parts)', 'return loyalty.key("wallet", site, *parts, __import__("uuid").uuid4().hex)',

@@ -3,11 +3,7 @@
  "company": "Demo Retail",
  "currency": "USD",
  "currency_precision": 2,
- "integration_user": {
-  "email": "pp-lyl-service@demo-retail.example",
-  "first_name": "PP LYL Loyalty Service",
-  "role": "PP LYL Integration"
- },
+ "integration_role": "PP LYL Integration",
  "plans": [
   {
    "plan_name": "Bronze",

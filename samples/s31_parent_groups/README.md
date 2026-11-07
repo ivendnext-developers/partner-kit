@@ -21,6 +21,8 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/parent_groups.md).
 
+**The app's role needs:** the install makes the role *PP PGX Integration* and the app's own user. On the retailer's own record types the retailer's administrator gives it read on Item Group, and read and write on Coupon and on Promotion Bonus Buys Master, the three record types the feed follows. A read the role lacks does not stop the install: the events wait, and the service's log says which record type was refused (`ivn logs`), then the next pass catches up once the read is given ([What goes where](../../guide/07_manifests.md#what-goes-where)).
+
 ## Run it
 
 ```bash

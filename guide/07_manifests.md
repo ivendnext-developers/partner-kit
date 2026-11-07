@@ -30,6 +30,9 @@ Rung 4 of the ladder (chapter 3): configuration cannot hold your data and your a
    **Everything is on from the moment of install, under the one consent, for every store.** The exceptions are named where they apply: a save rule limited to a role stays off until the customer names the role, a manifest's `"enabled": 0` keeps a save rule off, a payer stays off until the customer names its clearing mode, and a fiscal reader stays off until the customer has set it up. What the customer does after the install is only what is theirs to decide: give staff the roles, fill a setting only they know.
 
    **Label layouts** may be carried too: the label the till prints for an item or a basket line, as HTML or as Zebra printer commands, with placeholders from a closed list ([the label layout page](../contracts/pages/label_layout.md)). A layout may also name up to three of the item's own fields, `{item.<fieldname>}` (the field name in lower case; each a Data, Select, Int or Check field open to every role), and one line detail, `{detail.<attribute>}`. A retailer's own receipt lines are not a manifest kind: they are two text fields the retailer fills in on its register (*Receipt Header* and *Receipt Footer*; [the receipt page](../contracts/pages/receipt.md)).
+
+   **Not sure where something goes?** [What goes where](#what-goes-where), below, says what belongs in the manifest, what the retailer's administrator does, what a setup script does and what to ask CitiXsys for.
+
 3. **Say who may do what.** A permission row names a role and its rights (`read, write, create, delete, report, export, share, print, email`); a right the row leaves out is off. Every record type your app makes also gives System Manager every right, unless your manifest gives System Manager its own row at level 0, so the retailer's administrator can use the app at once. A role the site lacks is made at install, as named, with no one in it, and the retailer gives it to people. A role named with your prefix is your app's own and goes when no installed app uses it; any other name (*PO Approver*) is the retailer's from then on and stays at uninstall. `Guest` and `All` are refused: they open your records to people outside the retailer's staff.
 4. **Check it yourself, before anyone installs it:**
 
@@ -45,6 +48,25 @@ Rung 4 of the ladder (chapter 3): configuration cannot hold your data and your a
 7. **Uninstall exports first, always.** *Export and uninstall* writes every record of your types (child rows and your added field values included) to a private file on the package before it removes anything. **Uninstall leaves nothing behind:** it drops your tables and the columns your fields added (the retailer's own delete keeps them), and removes what iVendNext did to your types after install. A sale detail that booked sales already use is kept, switched off, because a booked sale keeps its detail; a reinstall switches it on again. If any element cannot be removed, the uninstall says so, and **Finish** on the package completes it. **The export holds the records with their comments and version history.** The uninstall removes those from the site along with the records, so the export is where they are kept. Attachments stay, as files no longer linked to a record.
 8. **A reinstall is clean:** exactly the first install's schema, and none of the old data.
 9. **Before you list it, write what a retailer reads.** A retailer decides from your app's **card**, which is `app.json`'s `card` (`title`, `summary`, `what`, `pictures`, `industries`, `price`, `guide`): `ivn publish --public` asks you once. The guide link may be any https page; your repository's README is enough. Say what leaves the retailer's iVendNext from your manifest, and never tell a retailer to create a role the install makes. [The recipe](../recipes/manifest.md) has the shape.
+
+## What goes where
+
+The first question a new developer meets: this thing my app needs, where does it go? Four places.
+
+| Where | What goes there |
+|---|---|
+| **The manifest** | Roles (by naming them in workflows, rights, reports and buttons), workflows, numbering rules, property setters, print formats, notifications, number cards, sale attributes, the feed |
+| **The retailer's administrator, until the install grants them** | The app role's reads and rights on the retailer's own record types, in Desk → Role Permissions Manager (or by a setup script, as sample S22's `prepare` does). Your app's README names them |
+| **A setup script** | Rows the manifest cannot hold yet: customer groups, pricing rules, coupons, settings values ([sample S5](../samples/s5_config_pack/README.md) is the shape) |
+| **Ask CitiXsys** | A server app on a customer's own site, such as the payments Remote Connector. Every CitiXsys sandbox already carries it, so you ask only for a customer's site |
+
+Three things follow:
+
+- **Name a role where you use it.** A role your manifest names anywhere (a workflow's transitions, a permission row, a report, a button) is made at install, empty. You never ask the administrator to make it, and you never make it by hand. A role with your prefix goes at uninstall; any other name stays the retailer's.
+- **An app with a feed has its own user, and the install makes it:** `<app>@integration.invalid`, holding the one role `<PREFIX> Integration`. A setup script never makes a user for it.
+- **Reads on the retailer's record types.** A feed that follows a retailer's record type (a sale, a customer, a coupon), or a handler that reads one, uses the app's role, so the role needs read on that type and on the records it links to (a sale's lines may need Item or Batch). Until the install grants them, the administrator does, and your README lists each one. A read the role lacks does not stop the install: the events wait.
+
+**When a read is refused, the log says why.** A pass that could not read a shop, or whose handler was refused, prints the HTTP status, the server's error type and the record type, for example `1 failed: 403 PermissionError on Sales Invoice` (the record type comes from the request, so a refusal that names none still gets one). Read it with `ivn logs` for a hosted app. Give the role the right the log names, usually Read, and the next pass catches up with no reconnect ([the event feed recipe](../recipes/event_feed.md), *When events wait*). In your own worker, print `feed_client.said(result)` for the feed's part of the line, as the samples do, so a pass that handled nothing is not logged as `done`. An app made by the combine tool also counts a shop it could not read as `unread`, with the same text. **A hosted app built from the kit's samples or the combine tool gets this at its next build,** because the feed reader (`tools/feed_client`) is bundled into it; if you copied the reader into your own app, copy the new `feed_client.py`.
 
 ## The extension points' kinds
 

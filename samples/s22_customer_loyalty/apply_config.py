@@ -4,13 +4,13 @@ sample S5's (``samples/s5_config_pack/apply_config.py``): one data file, idempot
 
     PP_BASE=https://shop.example PP_KEY=<admin api key> PP_SECRET=<admin api secret> python3 apply_config.py <command>
 
-    prepare     BEFORE the manifest: the role PP LYL Integration, the ONE integration user (that role only, never Workspace
-                Manager), and its rights on the shop's records, each with its reason (config.json).
+    prepare     AFTER the install: the role PP LYL Integration's rights on the shop's own record types, each with its
+                reason (config.json). The install itself makes the role and the app's one user,
+                pp_lyl@integration.invalid (API only, that role only), and names it on the feed.
     apply       AFTER the manifest: a customer group per tier, the plans and settings, one promotion per tier that
                 excludes every other group (rebuilt on every run), the receipt's check-by-workflow, and the submit right
                 taken from every role but the manager's and the service's.
-    switch-on   the shop's own switches: the feed registration's user and its record types ticked on, the till key's
-                consent.
+    switch-on   the shop's own switches: the feed registration's record types ticked on, the till key's consent.
     switch-off  the same switches off, nothing removed (if a run fails half-way, nothing is left on).
     remove      everything above, in reverse: switches off, permission rows put back FIRST, then every record this
                 script made (one a booked document points at is retired or kept, and the line says which).
@@ -112,20 +112,13 @@ def take_submit(dt, keep):
 
 
 def prepare():
-    u = CONF["integration_user"]
-    ensure("Role", u["role"], {"role_name": u["role"], "desk_access": 1}, update={"disabled": 0})   # back on after a remove
-    ensure("User", u["email"], {"email": u["email"], "first_name": u["first_name"], "user_type": "System User",
-                                # the screen's "Is Desk User" tick (recipes/integration_user.md step 2): the shop refuses
-                                # a user that is neither a desk user nor a POS user
-                                "custom_is_desk_user": 1, "send_welcome_email": 0, "roles": [{"role": u["role"]}]},
-           update={"enabled": 1})
-    roles = [r["role"] for r in (T.get("User", u["email"]) or {}).get("roles") or []]
-    if roles != [u["role"]]:
-        T.update("User", u["email"], {"roles": [{"role": u["role"]}]})
-        say(f"took     {sorted(set(roles) - {u['role']})} off the integration user")
+    role = CONF["integration_role"]
+    if T.get("Role", role) is None:      # the manifest names the role, so the install makes it (guide/07_manifests.md)
+        sys.exit(f"install the app first: its install makes the role {role} and the app's own user")
+    # what the manifest cannot hold yet: the role's reads on the SHOP's record types (the feed follows them)
     for g in CONF["integration_rights"] + (CONF.get("receipt_workflow") or {}).get("integration_rights", []):
-        grant(g["doctype"], u["role"], g["rights"], g["why"])
-    say("now make its API key (User → Generate Keys) and give it to your service only")
+        grant(g["doctype"], role, g["rights"], g["why"])
+    say("the app's user holds this role; the site hands its key to your service when it connects the app")
 
 
 def apply():
@@ -169,7 +162,7 @@ def apply():
 def receipt_workflow():
     """⚠ ORDER MATTERS: a submit through the API that steps around the workflow lands in the FIRST submitted state, so
     *Overridden* is listed before *Verified* — a manager's direct submit is never recorded as verified."""
-    mgr, svc, dt = "Stock Manager", CONF["integration_user"]["role"], "Purchase Receipt"
+    mgr, svc, dt = "Stock Manager", CONF["integration_role"], "Purchase Receipt"
     states = [{"state": "PP LYL Draft", "doc_status": "0", "allow_edit": "Stock User"},
               {"state": "PP LYL Pending Verification", "doc_status": "0", "allow_edit": mgr},
               {"state": "PP LYL Overridden", "doc_status": "1", "allow_edit": mgr},
@@ -205,20 +198,18 @@ def switches(on: int):
         m = json.load(fh)
     todo = []
     for ra in m["registered_applications"]:
-        # the user your service reads as, AND each followed record type ticked on: the shop writes a feed row only for a
-        # ticked record type (recipes/event_feed.md), and the installer leaves every one unticked
+        # each followed record type ticked on: the shop writes a feed row only for a ticked record type
+        # (recipes/event_feed.md), and the installer leaves every one unticked. The app's user is the install's: left alone.
         reg = T.get("Registered Application", ra["name"]) or {}
         ticked = [dict(r, enable=on) for r in reg.get("registered_application_events") or []]
-        todo.append(("Registered Application", ra["name"], {
-            "application_user": CONF["integration_user"]["email"] if on else None,
-            "registered_application_events": ticked}))
+        todo.append(("Registered Application", ra["name"], {"registered_application_events": ticked}))
     todo += [("Retail Remote App Key", f"{m['app']}:{k['key']}", {"consent_given": on, "enabled": on}) for k in m["remote_keys"]]
     for dt, name, fields in todo:
         try:
             T.update(dt, name, fields)
         except ShopError as e:
             say(f"not switched {dt}: {name} ({e.status})")
-    say("switched", "on" if on else "off", "the feed registration and the member key")
+    say("switched", "on" if on else "off", "the feed's record types and the member key")
 
 
 def remove():
@@ -236,12 +227,7 @@ def remove():
             T.delete(dt, name)
             say(f"removed  {dt}: {name}")
         except ShopError as e:
-            if dt == "User":      # a disabled user's key still signs in (recipes/integration_user.md): new keys, kept by no one
-                T.method("ivendnext_mpos.api.v1.generate_keys", {"user": name})
-                T.update(dt, name, {"enabled": 0})
-            elif dt == "Role":    # a completed workflow step still names it, and only the site's Administrator sees those
-                T.update(dt, name, {"disabled": 1})
-            elif dt == "Promotion Bonus Buys Master":
+            if dt == "Promotion Bonus Buys Master":
                 T.update(dt, name, {"active": 0})
             say(f"kept     {dt}: {name} ({e.message[:100]})")
     os.replace(BEFORE, BEFORE + ".removed")

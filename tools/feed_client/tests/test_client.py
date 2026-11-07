@@ -14,6 +14,7 @@ import os
 import sys
 import tempfile
 import unittest
+import urllib.error
 import urllib.parse
 from unittest import mock
 
@@ -506,6 +507,130 @@ class AnswerCutShort(unittest.TestCase):
         self.assertIn("unreachable", str(e.exception))
 
 
+def refused(status, body):
+    def opener(*args, **kwargs):
+        raise urllib.error.HTTPError("https://shop.example/x", status, "x", {}, io.BytesIO(json.dumps(body).encode()))
+    return opener
+
+
+class FeedErrorSaysWhy(unittest.TestCase):
+    """A refused read says the status and the server's error type, and for 401/403/404 the record type it names."""
+
+    def text(self, status, body, path="/api/resource/POS%20Invoice"):
+        api = F.Api("https://shop.example", "k", "s")
+        api._opener = mock.Mock(open=refused(status, body))
+        with self.assertRaises(F.FeedError) as e:
+            api.call("GET", path, {"filters": "[]"})
+        return str(e.exception)
+
+    def test_a_list_read_refused_names_the_record_type_from_the_request(self):
+        # the server's refusal of a list read carries its error type and a module path, and no sentence
+        t = self.text(403, {"exc_type": "PermissionError", "exception": "shop.exceptions.PermissionError"})
+        self.assertEqual(t, "403 PermissionError on POS Invoice")
+
+    def test_a_403_keeps_the_servers_sentence_but_not_the_module_path_or_the_records_name(self):
+        t = self.text(403, {"exc_type": "PermissionError",
+                            "exception": "shop.exceptions.PermissionError: No permission for POS Invoice"},
+                      "/api/resource/POS%20Invoice/SINV-0001")
+        self.assertEqual(t, "403 PermissionError on POS Invoice: No permission for POS Invoice")
+
+    def test_a_404_on_a_record_asked_for_by_name_keeps_no_sentence(self):
+        body = {"exc_type": "DoesNotExistError",
+                "_server_messages": json.dumps([json.dumps({"message": "Customer Asha Rao not found"})])}
+        self.assertEqual(self.text(404, body, "/api/resource/Customer/Asha%20Rao"), "404 DoesNotExistError on Customer")
+        self.assertIn("not found", self.text(404, body, "/api/resource/Customer"))        # a list names no record
+
+    def test_any_other_status_keeps_the_type_and_never_the_message(self):
+        t = self.text(417, {"exc_type": "ValidationError",
+                            "_server_messages": json.dumps([json.dumps({"message": "Customer Asha Rao is blocked"})])},
+                      "/api/resource/Customer/CUST-1")
+        self.assertEqual(t, "417 ValidationError on Customer")
+        self.assertEqual(self.text(500, {"exception": "x.Error: boom"}, "/api/method/app.api.v1.events"), "500 on app.api.v1.events")
+
+
+class UnreadShop(unittest.TestCase):
+    """A shop whose read raised is counted ``unread`` by ``finish`` with that read's text, and counts nothing else."""
+
+    def test_finish_counts_a_shop_that_could_not_be_read_with_its_text(self):
+        tmp = tempfile.mkdtemp()
+        folder = os.path.join(tmp, "service", "a")
+        os.makedirs(folder)
+        path = os.path.join(folder, "worker.py")
+        with open(path, "w") as f:
+            f.write("def handler(ev, db):\n    pass\n")
+        spec = __import__("importlib.util").util.spec_from_file_location("part_unread", path)
+        module = __import__("importlib.util").util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        class Refused:
+            api, app = None, "A"
+
+            def events(self, limit, page):
+                raise F.FeedError("403 PermissionError on POS Invoice")
+
+        hub = F.Handoff({"a": ["POS Invoice"]}, {"a": folder})
+        hub.begin()
+        with self.assertRaises(F.FeedError):
+            hub.poll(Refused(), F.Store(os.path.join(tmp, "feed.sqlite")), module.handler)
+        self.assertEqual(hub.finish(), {"done": 0, "waiting": 0, "errors": 0, "unread": 1,
+                                        "why": ["403 PermissionError on POS Invoice"]})
+
+
+    def test_a_shop_one_part_could_not_read_and_a_later_part_read_is_not_unread(self):
+        tmp = tempfile.mkdtemp()
+        folder = os.path.join(tmp, "service", "a")
+        os.makedirs(folder)
+        path = os.path.join(folder, "worker.py")
+        with open(path, "w") as f:
+            f.write("def handler(ev, db):\n    pass\n")
+        spec = __import__("importlib.util").util.spec_from_file_location("part_again", path)
+        module = __import__("importlib.util").util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        calls = []
+
+        class Flaky:
+            api, app = None, "A"
+
+            def events(self, limit, page):
+                calls.append(1)
+                if len(calls) == 1:
+                    raise F.FeedError("503 on Integration Sync Log")
+                return [], None, 0
+
+            def done(self, ids):
+                return len(ids)
+
+        hub, store, feed = F.Handoff({"a": ["POS Invoice"]}, {"a": folder}), F.Store(os.path.join(tmp, "f.sqlite")), Flaky()
+        hub.begin()
+        with self.assertRaises(F.FeedError):
+            hub.poll(feed, store, module.handler)
+        hub.poll(feed, store, module.handler)                  # the next part's read of the same shop works
+        self.assertEqual(hub.finish()["unread"], 0)
+
+
+class FailedHandlerSaysWhy(unittest.TestCase):
+    """A handler that failed leaves the event waiting; the pass says how many and why, never a customer's value."""
+
+    def run_pass(self, error):
+        log = Log()
+        log.add("A", "Customer", "C1", "on_update")
+        feed = F.EngineFeed(FakeApi(log), "A")
+
+        def handler(ev, db):
+            raise error
+        tmp = tempfile.mkdtemp()
+        return F.poll(feed, F.Store(os.path.join(tmp, "s.sqlite")), handler)
+
+    def test_a_refused_read_in_the_handler_is_named_and_a_value_is_not(self):
+        out = self.run_pass(F.FeedError("403 PermissionError on Customer"))
+        self.assertEqual((out["failed"], out["why"]), (1, "403 PermissionError on Customer"))
+        self.assertEqual(F.said(out), "1 failed: 403 PermissionError on Customer")
+        status = type("ShopError", (Exception,), {"status": 403})("403 on Item: no access")
+        self.assertEqual(self.run_pass(status)["why"], "403 on Item: no access")       # a sample's own error with a status
+        self.assertEqual(self.run_pass(ValueError("Asha Rao is blocked"))["why"], "ValueError")
+        self.assertEqual(F.said({"handled": 3, "failed": 0}), "done")
+
+
 PART = """
 CALLS = []
 FAIL = set()
@@ -564,7 +689,7 @@ class TestHandoff(unittest.TestCase):
                                                  and r["doc_type"] == "POS Invoice"])        # every page, in order, once
         self.assertEqual(self.parts["b"].CALLS, mine)
         self.assertEqual(len(self.log.undone("A")), 29)                 # nothing is done while the parts are handed
-        self.assertEqual(hub.finish(), {"done": 29, "waiting": 0, "errors": 0})
+        self.assertEqual(hub.finish(), {"done": 29, "waiting": 0, "errors": 0, "unread": 0})
         self.assertFalse(self.log.undone("A"))
         self.assertEqual(len(self.log.undone("B")), 7)
 
@@ -603,7 +728,7 @@ class TestHandoff(unittest.TestCase):
         hub.begin()
         with self.assertRaises(F.FeedError):
             hub.poll(F.EngineFeed(FakeApi(self.log), "A"), self.store, F.sample_handler)
-        self.assertEqual(hub.finish(), {"done": 0, "waiting": 0, "errors": 0})
+        self.assertEqual(hub.finish(), {"done": 0, "waiting": 0, "errors": 0, "unread": 0})
         self.assertEqual(len(self.log.undone("A")), 29)
 
     def test_an_event_waiting_for_a_part_never_holds_back_a_newer_one(self):

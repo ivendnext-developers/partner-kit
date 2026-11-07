@@ -115,9 +115,11 @@ def pass_all(store, state: str, last_daily: dict, now=None, log=sys.stdout, open
                 result.update(credited=loyalty.credit_due(t, s, today), moved=loyalty.evaluate_tiers(t, s, today),
                               balances=loyalty.daily_balances(t, s, today))
             out[site] = result
+        except F.FeedError as e:           # the feed could not be read: its text says why (status, error type, record type)
+            out[site] = {"error": str(e)}
         except Exception as e:                   # noqa: BLE001 — one shop's failure never stops the others
             out[site] = {"error": type(e).__name__}
-        said = {k: (v if k == "error" else "done") for k, v in out.get(site, {}).items()}
+        said = {k: (v if k == "error" else F.said(v) if k == "feed" else "done") for k, v in out.get(site, {}).items()}
         refused = [r["refused"] for r in out.get(site, {}).get("moved") or [] if "refused" in r]
         if refused:      # a count and the shop's status codes, never a customer's name (403 on all: no write on Customer)
             said["moved"] = f"{len(refused)} customer(s) refused ({', '.join(str(x) for x in sorted(set(refused)))})"

@@ -36,6 +36,7 @@ import argparse
 import http.client
 import json
 import os
+import re
 import sqlite3
 import sys
 import threading
@@ -69,7 +70,14 @@ def label(doc_type: str, raw_event: str, is_return: bool | None, exists: bool = 
 
 
 class FeedError(Exception):
-    """The server refused (its message is kept) or could not be reached."""
+    """The server refused or could not be reached. ``str(e)`` is safe for a log: the HTTP status, the server's error type
+    and the record type asked for, and for a 401, 403 or 404 the server's own sentence when it gave one (not for a 404 on
+    a record asked for by name: that sentence names the record), e.g. ``403 PermissionError on POS Invoice``. ``e.detail`` is the
+    server's whole reason, for the caller's own logic or for a note kept in the retailer's own system."""
+
+    def __init__(self, text: str, detail: str | None = None):
+        super().__init__(text)
+        self.detail = detail or text
 
 
 USER_AGENT = "ivendnext-feed-client/1"      # names the caller: an edge may refuse a library's default signature
@@ -93,7 +101,8 @@ class Api:
             with self._opener.open(req, timeout=self.timeout) as r:
                 return json.loads(r.read() or b"{}")
         except urllib.error.HTTPError as e:
-            raise FeedError(f"{e.code} {_server_message(e.read())}") from None
+            raw = e.read()
+            raise FeedError(_why(e.code, raw, path), f"{e.code} {_server_message(raw)}") from None
         except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
             raise FeedError(f"unreachable: {e}") from None
 
@@ -103,13 +112,50 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
+_NAMES_A_MESSAGE = (401, 403, 404)      # the statuses whose server sentence a log keeps: it names a record type
+
+
+def _target(path: str) -> str:
+    """What the call was about, from the request itself: the record type of ``/api/resource/<type>[/<name>]`` (never
+    the record's name), or the method of ``/api/method/<name>``."""
+    parts = urllib.parse.unquote(path.split("?", 1)[0]).strip("/").split("/")
+    if len(parts) >= 3 and parts[:2] == ["api", "resource"]:
+        return parts[2]
+    if len(parts) >= 3 and parts[:2] == ["api", "method"]:
+        return parts[2]
+    return "/".join(parts[:3])
+
+
+def _by_name(path: str) -> bool:
+    """A call for one record by its name (``/api/resource/<type>/<name>``): a refusal's sentence may then name the record."""
+    return len(urllib.parse.unquote(path.split("?", 1)[0]).strip("/").split("/")) > 3
+
+
+def _why(status: int, raw: bytes, path: str = "") -> str:
+    """``<status> <the server's error type> on <the record type asked for>``, always; then the server's own sentence for
+    a 401, 403 or 404, except a 404 on a record asked for by name. Any other status keeps no sentence: a 4xx or 5xx on a write
+    or a save may quote a customer's value.
+    The record type comes from the request, because the server's refusal of a list read names none."""
+    try:
+        d = json.loads(raw or b"{}")
+    except ValueError:
+        d = None
+    kind = str(d.get("exc_type") or "") if isinstance(d, dict) else ""      # never ``exception``: it carries a module path
+    text = f"{status} {kind}".strip() + (f" on {_target(path)}" if path else "")
+    if status in _NAMES_A_MESSAGE and not (status == 404 and _by_name(path)):    # a missing record's sentence names it
+        msg = _server_message(raw)
+        if msg:
+            text += f": {msg}"
+    return text
+
+
 def _server_message(raw: bytes) -> str:
     """The server's own sentence, never its traceback."""
     try:
         d = json.loads(raw or b"{}")
     except ValueError:
         return raw[:200].decode(errors="replace")
-    for k in ("_server_messages", "message", "exception", "exc_type"):
+    for k in ("_server_messages", "message", "exception"):
         if d.get(k):
             v = d[k]
             if k == "_server_messages":
@@ -117,8 +163,29 @@ def _server_message(raw: bytes) -> str:
                     v = "; ".join(json.loads(m).get("message", m) for m in json.loads(v))
                 except ValueError:
                     pass
-            return str(v)[:300]
+            elif k == "exception":      # the sentence after the type's module path; a bare module path is no sentence
+                v = re.sub(r"^[\w.]+:\s*", "", str(v)) if ":" in str(v) else ""
+                if not v:
+                    continue
+            return re.sub(r"<[^>]+>", "", re.sub(r"<br\s*/?>", " ", str(v)))[:300]       # the site marks names up in bold
     return ""
+
+
+def explain(e: Exception) -> str:
+    """What a log may say about a failure: the text of a ``FeedError``, or of any error that carries a ``status`` of 401,
+    403 or 404 (the sentence names a record type, not a record); any other error is named by its class alone, because
+    its text may quote a customer's value."""
+    if isinstance(e, FeedError) or type(e).__name__ == "FeedError" or getattr(e, "status", None) in _NAMES_A_MESSAGE:
+        # (by name too: an app's parts may each hold their own copy of this module)
+        return str(e)
+    return type(e).__name__
+
+
+def said(feed: dict) -> str:
+    """A pass's line in a log: ``done``, or how many events failed and why, so a feed that handles nothing is not read as
+    healthy. ``feed`` is what ``poll`` returned."""
+    failed = int((feed or {}).get("failed") or 0)
+    return "done" if not failed else f"{failed} failed" + (f": {feed['why']}" if feed.get("why") else "")
 
 
 # ── the two transports: events(limit, page) → (events, next_page, backlog) · done(ids) · failed(id, note) ─────
@@ -273,8 +340,9 @@ def poll(feed, store: Store, handler, limit: int = 100, crash_after: int | None 
             try:
                 store.handled(ev, lambda db, ev=ev: handler(ev, db))
             except Exception as e:      # the handler's own failure: leave the event undone, with a note
-                feed.failed(ev["id"], f"{type(e).__name__}: {e}")
+                feed.failed(ev["id"], f"{type(e).__name__}: {getattr(e, 'detail', e)}")
                 n["failed"] += 1
+                n.setdefault("why", explain(e))
                 continue
             n["handled"] += 1
             ok_ids.append(ev["id"])
@@ -358,7 +426,11 @@ class Handoff:
             if not shop["read"]:
                 events, ids, page = [], set(), None
                 while True:
-                    got, nxt, backlog = feed.events(limit, page)
+                    try:
+                        got, nxt, backlog = feed.events(limit, page)
+                    except Exception as e:      # the shop could not be read: say why in finish(), and let the part see it
+                        shop["unread"] = explain(e)
+                        raise
                     new = [e for e in got if e["id"] not in ids]
                     events += new
                     ids |= {e["id"] for e in new}
@@ -370,6 +442,7 @@ class Handoff:
                 shop["handed"] = {i: set(parts) for i, parts in kept.items() if i in ids}
                 shop["kept"] = kept
                 shop["events"], shop["read"] = events, True
+                shop.pop("unread", None)
         return shop
 
     def record(self, feed) -> str:
@@ -397,8 +470,9 @@ class Handoff:
             try:
                 store.handled(mine, lambda db, ev=ev: handler(dict(ev), db))
             except Exception as e:      # the part's own failure: the event stays undone, with the part's note
-                feed.failed(ev["id"], f"{part}: {type(e).__name__}: {e}")
+                feed.failed(ev["id"], f"{part}: {type(e).__name__}: {getattr(e, 'detail', e)}")
                 n["failed"] += 1
+                n.setdefault("why", explain(e))
                 continue
             n["handled"] += 1
         n["backlog"] = shop["backlog"]
@@ -423,9 +497,12 @@ class Handoff:
 
     def finish(self) -> dict:
         """Mark done each event of this run that every part wanting it has handled; the others stay for the next run."""
-        out = {"done": 0, "waiting": 0, "errors": 0}
+        out = {"done": 0, "waiting": 0, "errors": 0, "unread": 0}
         with self._lock:
             shops = [s for s in self.shops.values() if s["read"]]
+            unread = [s["unread"] for s in self.shops.values() if s.get("unread")]
+        if unread:  # a shop that could not be read counts as unread, with the text of the read that failed
+            out["unread"], out["why"] = len(unread), sorted(set(unread))
         for shop in shops:
             try:
                 seen = self._seen(shop)

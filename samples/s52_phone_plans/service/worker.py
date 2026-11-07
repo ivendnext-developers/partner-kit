@@ -152,10 +152,12 @@ def pass_all(svc, store=None, log=sys.stdout, deadline: float = PASS_DEADLINE_S,
             else:
                 who = svc.one
             out[site] = one_pass(svc, who)
+        except F.FeedError as e:           # the feed could not be read: its text says why (status, error type, record type)
+            out[site] = {"error": str(e)}
         except Exception as e:           # noqa: BLE001 — one retailer's failure never stops the others
             out[site] = {"error": type(e).__name__}
         finally:
-            log.write(json.dumps({"site": site, **{k: (v if k == "error" else "done") for k, v in out.get(site, {}).items()}}) + "\n")
+            log.write(json.dumps({"site": site, **{k: (v if k == "error" else F.said(v) if k == "feed" else "done") for k, v in out.get(site, {}).items()}}) + "\n")
             log.flush()
             if finished is not None:
                 finished(site)

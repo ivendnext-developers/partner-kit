@@ -95,7 +95,7 @@ class ShopApi:
                 return None
             raise ShopUnreadable(f"the shop answered {e.code}") from None
         except (OSError, http.client.HTTPException, ValueError) as e:   # OSError: URLError, timeouts, TLS, a cut
-            raise ShopUnreadable(type(e).__name__) from None             # connection; HTTPException: a cut answer
+            raise ShopUnreadable(f"{type(e).__name__}: {e}"[:200]) from None             # connection; HTTPException: a cut answer
 
     @staticmethod
     def _data(out, kind):
@@ -217,7 +217,7 @@ class Service:
         try:
             return 200, (self.scan if route_key == "scan" else self.check)(name, shop, ctx)
         except (ShopUnreadable, ValueError) as e:       # the shop did not answer, or not with records: nothing was judged
-            print(json.dumps({"error": type(e).__name__}), file=sys.stderr, flush=True)   # the class only: no shop data
+            print(json.dumps({"error": str(e) if isinstance(e, ShopUnreadable) else type(e).__name__}), file=sys.stderr, flush=True)   # why the shop was not read; any other error: the class only
             return 503, {"error": "the shop cannot be read"}
 
     def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, dict]:

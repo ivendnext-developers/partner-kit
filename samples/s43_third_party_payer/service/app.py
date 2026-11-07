@@ -145,7 +145,7 @@ class ShopApi:
                 return {"refused": _refusal(e)}
             raise ShopUnreadable(f"the shop answered {code}") from None
         except (OSError, http.client.HTTPException, ValueError) as e:
-            raise ShopUnreadable(type(e).__name__) from None
+            raise ShopUnreadable(f"{type(e).__name__}: {e}"[:200]) from None
 
     def get_list(self, url, key, doctype, fields, filters=None, limit=0) -> list:
         query = {"fields": json.dumps(fields), "limit_page_length": limit}
@@ -601,7 +601,7 @@ class Service:
         except ValueError as e:
             return 400, {"error": str(e)}
         except ShopUnreadable as e:
-            print(json.dumps({"error": type(e).__name__}), file=sys.stderr, flush=True)   # the class only: no shop data
+            print(json.dumps({"error": str(e)}), file=sys.stderr, flush=True)   # why the shop was not read: a status or a network reason, never a record
             return 503, {"error": "the shop cannot be read"}
 
     def handle(self, method, path, headers, raw) -> tuple[int, dict]:
