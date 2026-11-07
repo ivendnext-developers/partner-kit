@@ -21,7 +21,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/parent_groups.md).
 
-**The app's role needs:** the install makes the role *PP PGX Integration* and the app's own user. On the retailer's own record types the retailer's administrator gives it read on Item Group, and read and write on Coupon and on Promotion Bonus Buys Master, the three record types the feed follows. A read the role lacks does not stop the install: the events wait, and the service's log says which record type was refused (`ivn logs`), then the next pass catches up once the read is given ([What goes where](../../guide/07_manifests.md#what-goes-where)).
+**The app's role needs:** nothing from the retailer's administrator. The install makes the role *PP PGX Integration* and the app's own user, and gives the role **read on Item Group, Coupon and Promotion Bonus Buys Master**, the three record types the feed follows. The manifest's `role_rights` add write on Coupon and on Promotion Bonus Buys Master. **Needs POS build `2.1.0.691` or later:** on an earlier site the install warns `role_rights` as unknown and skips it, and gives the feed's user no read, so the events wait; the service's log says which record type was refused (`ivn logs`) ([What goes where](../../guide/07_manifests.md#what-goes-where)).
 
 ## Run it
 
@@ -33,6 +33,10 @@ ivn try
 Once, for what exists: `PGX_KEY=… PGX_SECRET=… python3 expander.py reconcile --base https://shop.example`.
 
 ## Versions
+
+### 0.2.0
+
+- Write on Coupon and on Promotion Bonus Buys Master moves into the manifest (`role_rights`), and the install gives the feed's user its reads, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
 
 ### 0.1.0
 

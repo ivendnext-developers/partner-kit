@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/event_feed.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/event_feed.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Event feed
 
 **Contract:** [`event_feed.v1.schema.json`](../extension_contracts/event_feed.v1.schema.json)
@@ -26,12 +26,18 @@ record, switched on, and **your app's own user**, `<app>@integration.invalid`, n
 whose API key you call with (`application_user`). That user holds one role, `<PREFIX> Integration` (made
 empty if your manifest does not declare it), works through the API only (it can never sign in to Desk,
 even with a password) and takes no seat. A hosted app receives its key at connect (`user:<email>`); for
-an app you host yourself, the shop makes the key on that user (User, Generate Keys). The uninstall
+an app you host yourself, the shop makes the key on that user (User, Generate Keys), or the install hands
+it over when your manifest declares `app_user_rights`. The uninstall
 removes the feed, then the user and its key (a user an open check or another point-of-sale record still
 names is kept switched off, its role, key and till ticks removed, and taken up again by a reinstall, which
-needs the shop's ticks again). Each record type arrives ticked on, under the install's one consent, and the shop can untick one. Nobody can give
-that user a password or another role; the shop gives the `<PREFIX> Integration` role the reads the
-app needs. ⚠ Disabling the user does not stop its key (a key request does not check it): to cut the
+gives back only the ticks the manifest declares). Each record type arrives ticked on, under the install's one consent, and the shop can untick one. Nobody can give
+that user a password or another role. **The install gives that role read on every record type the feed
+follows** (on a site whose registration shows **Last Read**; an older site gives no read, and warns an unknown kind): one permission row per record type, read only, named on the consent as *Reads: …*, and
+removed at uninstall; a row the shop already gave the role is left exactly as it is. An app installed before that
+gets its reads at its next update, or, for an app CitiXsys hosts, when *Connect again* is pressed on its package. Anything else the
+app reads or changes (a Customer it enrols, a Batch it looks up) is a right your manifest declares for one of
+your own roles under `role_rights` ([installing a manifest](package_install.md#rights-for-your-own-roles)), or
+the shop's to grant. ⚠ Disabling the user does not stop its key (a key request does not check it): to cut the
 app off, uninstall it, or make a new key on its user: that stops the app for good, except an app hosted by
 CitiXsys, which receives the new key at its next update or when *Connect again* is pressed. One user, one
 registration: a key registered to two applications is answered *"not registered"*.
@@ -39,7 +45,16 @@ registration: a key registered to two applications is answered *"not registered"
 Any record type can be followed, the till's own included: a registration that follows **Retail Override
 Request** receives each manager approval as `retail_override_request.on_update` (requested, approved,
 denied, used by a sale), with no code — for a partner that reports on approvals. The application's user
-needs read access on Retail Override Request, which the shop grants (to the `<PREFIX> Integration` role).
+reads Retail Override Request because the feed follows it: the install gives its role that read.
+
+**Is it reading?** The registration carries **Last Read**: when your app last called `events`, to within five minutes (the stamp
+moves at most once in five minutes, so a worker polling every few seconds costs nothing). Empty means it has never read. The
+package's **Test connection points** door (`ivendnext_mpos.api.extension_package.test_connection`, the one the
+hosting dashboard reads) answers one line per feed: *Events waiting: N · Last read: ⟨time⟩*, or *… never*, and
+when events are waiting and nothing has read them, *The app has not read its events. Ask its maker to check the
+app's log.* A feed that is being read answers *Passed*; never read with events waiting, *Failed*, and so does one the app
+reads but leaves events waiting from before its last read (*The app reads its events but has not marked N done…*);
+never read with nothing waiting yet, *Inconclusive*.
 
 ## 2. Version
 

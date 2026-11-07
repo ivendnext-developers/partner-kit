@@ -44,7 +44,6 @@ A till puts any customer on any store's sale. Retailers ask for less: **account 
 - The till's own doors: a sales order or invoice made in iVendNext Desk is not asked. A document check (`recipes/document_check.md`) can hold those.
 - What the customer already holds is not a new pick and is not held: a layaway plan's later payment and its settlement, an order's balance, a payment on their account.
 - While any customer-add app is switched on for a POS Profile, a customer the cashier added in the last ten minutes goes on the sale without your service being asked, whatever group the cashier gave them.
-- One cashier sends at most 60 select rounds in ten minutes.
 - One app answers each capture event on a POS Profile: this one takes *customer select* there.
 - Offline, the till does not call your service: the down answer applies, and a sale paid offline books when it syncs and is flagged.
 - One rule per customer group; a customer's own rule is a group of their own.

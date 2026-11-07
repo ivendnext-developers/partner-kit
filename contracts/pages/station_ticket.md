@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/station_ticket.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/station_ticket.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Station ticket — the kitchen's tickets on a kitchen screen (`station_ticket/1`)
 
 **Who this is for:** a partner building a kitchen display (a screen per station, an expo screen, a
@@ -20,9 +20,10 @@ station's printer prints it. This door lets your kitchen screen read the same ti
 anything new by your screen in this version.
 
 The kitchens and which item goes to which one are set up in iVendNext Desk (**Kitchen Stations**, on the
-item, its item group or the register). A ticket is written only when the station has a printer on the
-sending till (for a Sales Order, on the register that prints it, §3b): a station your screen serves still
-needs a printer that takes the ticket (§6).
+item, its item group or the register). A ticket is written only when the sending till's register lists the
+station in its **Kitchen Printers** (for a Sales Order, the register that prints it, §3b). A station listed
+with no printer has a kitchen screen only: its tickets come to your screen and nothing prints. A station
+listed with a printer needs a printer that takes the ticket (§6).
 
 ## 2. Version
 
@@ -108,7 +109,7 @@ the order's store has a kitchen (a register there with Kitchen Printers) and the
   a user with no store row — head office, or a call-centre agent working in iVendNext Desk — sends for any
   store, from the store's one running register with Kitchen Printers (a store with several asks for a store
   row: the button does not show there for such a user). Each item goes to its kitchen as at a till. A station whose printer is cabled to a till never prints it
-  (there is no till): give it a network printer.
+  (there is no till): give it a network printer, or no printer for a kitchen screen only.
 - **Never twice.** A second call sends only what is new: lines added since (amend the order — an amended order keeps
   its kitchen order), and a station whose printer failed. Nothing new is refused. An order a till took in Order mode
   and sent to the kitchen is refused: its lines went from the till (one the till never sent may be sent here). A till
@@ -153,8 +154,8 @@ row at all is the shop's head office and marks every store, so give your app's u
 gives it), plus a read of that order. A user with store rows sends only for those stores; one with none sends for
 every store (§3b).
 
-Your user is fenced to its stores and is set up exactly as for the open check: see
-[Open check §4](open_check.md#4-who-may-do-what) for the ticks, the store row and *Generate Keys*.
+Your user is fenced to its stores and is set up exactly as for the open check: declare
+`custom_mpos_station_ticket` in `app_user_rights`, and see [Open check §4](open_check.md#4-who-may-do-what).
 One integration user per kit app.
 
 ## 6. Live and offline
@@ -171,10 +172,10 @@ the board on every notice and every few seconds:
   a new ticket, state `new`, on the next Send of that sale or check (a sale paid with no second Send never
   brings them back). A `void` reported unprinted stays: the void stands;
 - a send whose kitchen's network printer refuses or does not answer writes no ticket: a kitchen your screen
-  serves needs a printer that takes the job, not only a printer row;
-- a void whose kitchen has no printer (on the voiding till's register for a sale; on the register of the check's
-  last send for a check), or whose printer is cabled to another till, is not on the board: the manager is told
-  at the till, and the kitchen hears it in person.
+  serves needs a printer that takes the job, or no printer at all (a kitchen screen only);
+- a void whose kitchen is not listed in Kitchen Printers (on the voiding till's register for a sale; on the
+  register of the check's last send for a check), or whose printer is cabled to another till, is not on the
+  board: the manager is told at the till, and the kitchen hears it in person.
 
 There is no cursor to lose: every read is the whole board, so a screen that dropped its connection reads
 it again and has caught up. Poll the board every few seconds whenever the live connection is down.
@@ -188,7 +189,8 @@ cookie, and a `sid` would sign in as that session instead of your key). Then lis
 
 A kitchen screen needs the internet: while the store is offline, tills print their tickets on their own
 and your screen shows the board as it last read it. ⚠ Those offline tickets never reach the board,
-even after the till reconnects: what the kitchen made in the outage is on paper only.
+even after the till reconnects: what the kitchen made in the outage is on paper only. That holds for a
+kitchen with a screen only too: offline, its tickets print on the till's own printer.
 
 ## 7. Money and limits
 

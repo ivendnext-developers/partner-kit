@@ -48,7 +48,7 @@ Some back-office documents must not become final until an outside system agrees:
 
 ## When your service is down, and when the till is offline
 
-- **Down or slow:** the answer you declared applies (`refuse` reads *"… did not answer, so this document can't be submitted yet. Try again."*). The document waits for you, its record locked: at most your time to answer, and at most 10 seconds for all of one submit's checks (3 services per record type at most).
+- **Down or slow:** the answer you declared applies (`refuse` reads *"… did not answer, so this document can't be submitted yet. Try again."*). The document waits for you, its record locked: at most your time to answer, and at most 10 seconds for all of one submit's checks.
 - **Offline:** none. Back-office documents are submitted on the server; a sale the till made offline never reaches you.
 
 ## Technical notes

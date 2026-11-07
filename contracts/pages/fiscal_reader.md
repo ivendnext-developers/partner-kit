@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/fiscal_reader.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/fiscal_reader.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Fiscal reader
 
 **Contract:** [`fiscal_reader.v1.schema.json`](../extension_contracts/fiscal_reader.v1.schema.json)
@@ -74,8 +74,10 @@ unaffected either way. The QR and seal
 fields hold text (Data, Small Text, Text, Long Text or Code): a reader naming an image or attachment field
 is refused, since the receipt would draw the file's path as the QR.
 
-**What the receipt prints.** Under the totals of a CLEARED or REPORTED sale, the seeded `mPOS Receipt`
-and the till's receipt screen print the authority's QR, drawn from the stored payload (encoded UTF-8,
+**What the receipt prints.** Under the totals of a CLEARED or REPORTED sale, the paper (the seeded
+`mPOS Receipt`, and the engine's `Print Format Receipt 3"`) prints one line with the regime's *Regime
+Label* and the tax receipt number, as the till's receipt screen shows them. Below that line, the paper and the till's
+receipt screen print the authority's QR, drawn from the stored payload (encoded UTF-8,
 with the framework's own QR library), and the seal as plain text. A payload over 2,000 characters, or
 one too large for a QR, is not drawn; the receipt says *"The tax QR is too long to print. Open the sale
 in the back office."* instead. A gift copy prints neither: a tax QR can encode the sale's total. A store
@@ -84,6 +86,7 @@ the place that receipt leaves for an installed app's lines. A store whose profil
 own shows the marks on the till's receipt screen but prints none on paper unless that format calls
 `receipt_lines(doc, "totals")` (as a copy of the engine's 3" does) or the Jinja method
 `receipt_fiscal_marks(doc)`, which returns
+`fiscal_line` (the regime and the tax receipt number, as one line), `regime_label`, `document_ref`,
 `qr_svg` (the drawn code), `qr_too_long_text` and `signature`.
 
 **What the till does with it:** CLEARED and REPORTED release the receipt. PENDING shows *"Waiting for

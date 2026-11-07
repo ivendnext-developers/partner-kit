@@ -25,7 +25,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/third_party_payer.md).
 
-**The customer sets:** the clearing mode (its own mode of payment of type Custom, named in the payer service's settings as `clearing_mode`, and on each payer till's POS Profile), *May Sell on a Payer* on the cashiers' Retail Permission, the payers and members, and a plain read for the role **PP ICP Integration** on POS Invoice, Sales Invoice, Retail Payer Record, Item, Item Price, Price List and Customer. Members and claims are health data for a pharmacy: run the service where the retailer's country's law lets that data go.
+**The customer sets:** the clearing mode (its own mode of payment of type Custom, named in the payer service's settings as `clearing_mode`, and on each payer till's POS Profile), *May Sell on a Payer* on the cashiers' Retail Permission, and the payers and members. The role **PP ICP Integration** needs no read from the retailer's administrator: the install gives it read on POS Invoice and Sales Invoice, the two record types the feed follows, and the manifest's `role_rights` give read on Retail Payer Record, Item, Item Price, Price List and Customer. **Needs POS build `2.1.0.691` or later:** on an earlier site the install warns `role_rights` as unknown and skips it, and gives the feed's user no read, so the events wait; the service's log says which record type was refused (`ivn logs`). Members and claims are health data for a pharmacy: run the service where the retailer's country's law lets that data go.
 
 ## Run it
 
@@ -41,6 +41,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.4.0
+
+- The role's reads beyond the feed's (Retail Payer Record, Item, Item Price, Price List, Customer) move into the manifest (`role_rights`), and the install gives the feed's user its two reads, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
 
 ### 0.3.1
 

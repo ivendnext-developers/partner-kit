@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/open_check.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/open_check.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Open check — a table's running order, paid once (`open_check/1`)
 
 **Who this is for:** a partner building a front-of-house app (reservations, a waiting list) or a guest
@@ -86,8 +86,10 @@ Each line says where it came from, `source`: `till`, your app's own word (the `s
 open or the add), or `kit` when you sent none. A till marks an app's line *From an app*, so a server
 pressing *Send* sees which lines a guest's phone added.
 A line's `options` come back with each choice's `item_name` and its `per` (how many of it go with one of its
-dish) beside `item_code` and `option_group`, so a screen can draw the choice lines; send only `item_code` and
-`option_group`.
+dish) beside `item_code` and `option_group`, and `option_label`, the group's display name to show beside
+the choice; send only `item_code` and `option_group`.
+An open, unsent line also carries `no_kitchen`: true when no kitchen makes it (no station on the item, its
+group or the register), so *Send* leaves it out and it is never counted as new.
 
 **`floor_status(store)`** answers the store's sections, its active places (each with its status, derived from
 its open checks: *free*, *seated*, *ordered*, *paying*) and its tabs. Each check's summary carries
@@ -251,13 +253,16 @@ those are a person's decisions, and an app granted them has made a person's deci
 **One integration user per kit app:** the door tells a check your user opened from any other user's, never one
 app from another behind the same user, so two apps sharing a user see each other's suggested customers.
 **Your user is fenced to its stores:** it must have the store, and `pos_profile` must be its register there.
-The shop gives it the store in iVendNext Desk, on the user: keep *Is Desk User* ticked, tick *Is POS User*, choose a
+Declare the rights in your manifest (`app_user_rights`, [package install](package_install.md#the-apps-own-user-at-the-till))
+and the install gives the app's own user (`…@integration.invalid`) all of this: its Retail Permission, *Is POS User*, a
+Shift Profile and a row for every store, on that store's Table Service register if it has one. It takes no password and
+no other role. An uninstall clears them (the user is kept, switched off, while a check names it), and a reinstall gives
+them back. `pos_profile` must be the register on the user's row for that store.
+For a user the shop makes by hand: on the user in iVendNext Desk, keep *Is Desk User* ticked, tick *Is POS User*, choose a
 *Shift Profile*, link the Retail Permission, add a row under the store access table with the store and that register,
 then Save; *Generate Keys* after that. The store table shows only with *Is POS User* ticked, and a user without it
 loses its store rows at its next save (*Generate Keys* is a save), so its key works but every call is refused
-*"You are not assigned to this outlet."* An app's own user (`…@integration.invalid`) takes the same ticks; it still
-takes no password and no other role. An uninstall clears them (the user is kept, switched off, while a check names it),
-so after a reinstall the shop ticks them again.
+*"You are not assigned to this outlet."*
 **Which guest may see which check is your app's job:** the door scopes by store, and cannot tell one guest
 from another behind one integration user.
 

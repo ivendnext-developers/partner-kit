@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/doccheck.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/doccheck.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Document check
 
 **Contract:** [`doccheck.v1.schema.json`](../extension_contracts/doccheck.v1.schema.json)
@@ -99,8 +99,7 @@ own record* · *`<type>` is written by the back office for each sale or stock mo
 Batch Bundle, Repost Item Valuation, Stock Reservation Entry) · *`<type>` is never submitted* · the Desk action's *Fields sent: …* sentences · *on_validate
 must be true or false* · *The till also writes `<type>`, so only its submit can be checked, not its draft.* · *fill_fields must list at most 10 different field names* · *`<type>` has no field `<field>`* · *A service can fill text, a number, a date, a choice or a link, not `<field>`* · *`<field>` is not a field a user fills in* · *A service cannot fill
 `<field>`* (not a field the shop added, or money) · *A document check answers every store. Clear the POS Profiles.* · *May approve is for
-the check before payment.* · *At most 3 services may check one record type.* · *The checks of one record
-type may take at most 10 seconds together.*
+the check before payment.*
 
 ## 5. Consent, and when your service is down
 
@@ -125,8 +124,9 @@ None: back-office documents are submitted on the server. A sale the till made of
 
 ⛔ Your answer never writes money: only the named `fill_fields`, checked when the subscription is saved and
 again when you answer. The database transaction — the record's own lock included — is **held while you
-answer**: at most your time to answer, and at most **10 seconds for all of one submit's checks together**
-(3 services per record type at most). A 100-record import against a service that never answers within 3
+answer**: at most your time to answer, and at most **10 seconds for all of one submit's checks together**:
+each call gets what is left, and past the ten seconds a service is asked nothing and takes its down answer.
+A 100-record import against a service that never answers within 3
 seconds takes 300 seconds longer, never more than 10 a record at each moment (a draft check and a submit check each have their own).
 
 Bounds, stated: each submitted record has its own 10 seconds — a record another record's submit submits

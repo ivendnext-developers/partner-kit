@@ -164,6 +164,12 @@
      "type": "number",
      "minimum": 0,
      "description": "In an answer: how many of the choice go with one of its dish (the master's)."
+    },
+    "option_label": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140,
+     "description": "In an answer: the choice group's Display Name (its record name when it has none), for drawing the choice."
     }
    }
   },
@@ -379,6 +385,10 @@
     "sent": {
      "type": "boolean"
     },
+    "no_kitchen": {
+     "type": "boolean",
+     "description": "In an answer: an open, unsent dish that no kitchen makes (no station on the Item, its group or the register). Send leaves it out; it is never the kitchen's new."
+    },
     "state": {
      "enum": [
       "open",
@@ -489,6 +499,10 @@
        }
       }
      ]
+    },
+    "no_stock": {
+     "type": "boolean",
+     "description": "In a till's answer: an open line the store has none of (the scan's own add-blocking read). Pay refuses it."
     }
    }
   },

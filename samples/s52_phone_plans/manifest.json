@@ -3,7 +3,7 @@
  "app": "pp_tel",
  "prefix": "PP TEL",
  "title": "Phone plans from a telecom company",
- "version": "0.1.0",
+ "version": "0.2.0",
  "publisher": "Partner Programme sample",
  "description": "A phone retailer sells mobile plans from a telecom company at its tills. The cashier scans a phone and presses Plans: the partner's service asks the telecom company, with this retailer's own telecom account, for the plans and prices that fit the phone and the customer, and the till shows them. The cashier adds the chosen plan as an item, priced from the retailer's price list, which the service keeps in step with the telecom company. At Pay the check confirms each plan, its phone and its price with the telecom company for this customer, and refuses the sale if they no longer hold. After payment the service reads the event feed, activates the plan and writes the activation number to a PP TEL Activation row listed under the sale. The retailer keeps its telecom account in PP TEL Settings, which only the System Manager and the app's own role read. The check, the feed and the Plans key are on from the install. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
@@ -250,5 +250,10 @@
    "value": "https://developer.ivendnext.com/samples/s52_phone_plans/index.html"},
   {"doc_type": "PP TEL Activation", "property": "documentation", "property_type": "Data",
    "value": "https://developer.ivendnext.com/samples/s52_phone_plans/index.html"}
+ ],
+ "role_rights": [
+  {"doctype": "Item", "role": "PP TEL Integration", "rights": ["read"]},
+  {"doctype": "Price List", "role": "PP TEL Integration", "rights": ["read"]},
+  {"doctype": "Item Price", "role": "PP TEL Integration", "rights": ["read", "create", "write"]}
  ]
 }

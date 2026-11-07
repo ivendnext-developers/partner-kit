@@ -20,7 +20,7 @@ Drug schedules, pharmacists and prescriptions as the retailer's own records, and
 - The till cannot ask for the patient's identity when it adds a customer: it is entered on the Desk.
 - A POS Invoice made on the Desk POS screen, or through the API, is not checked.
 - A POS day left open holds its reserved fills until it closes.
-- At most three checks per POS Profile, 10 seconds together; this app takes one per profile.
+- 10 seconds at most for one pass of a POS Profile's checks; this app takes one per profile.
 
 ## Tell the customer
 A sale with a prescription item cannot be paid until a pharmacist sells it against a valid prescription for that customer, and the same holds for sales orders, deliveries and invoices on the Desk.

@@ -248,6 +248,10 @@ def identity(section: str, item) -> str:
         return f"{item.get('doc_type')}.{item.get('field_name') or ''}.{item.get('property')}"
     if section == "links":
         return f"{item.get('doctype')}.{item.get('link_doctype')}.{item.get('link_fieldname')}"
+    if section == "role_rights":                 # one row per record type and role: two samples' rights on it are one entry
+        return f"{item.get('doctype')}.{item.get('role')}"
+    if section == "records":                     # a default row is its record type and name (no name: its plain values)
+        return f"{item.get('doctype')}.{item['name']}" if isinstance(item.get("name"), str) else f"{item.get('doctype')}.{sha(item)[:16]}"
     where = item.get("doctype") or item.get("ref_doctype") or item.get("dt") or item.get("doc_type")
     for k in ("key", "name", "role"):
         if isinstance(item.get(k), str):
@@ -413,6 +417,11 @@ def build_manifest(parts: list[Part], prefix: str, app: str, base: dict | None =
             for i, x in zip(ids(section, items), items):
                 if i in have:
                     if have[i] == x:
+                        continue
+                    if section == "role_rights" and isinstance(have[i].get("rights"), list) and isinstance(x.get("rights"), list):
+                        # two samples of one app give the same role rights on the same record type: the app gets both
+                        have[i]["rights"] = have[i]["rights"] + [r for r in x["rights"] if r not in have[i]["rights"]]
+                        owners.setdefault(f"manifest:{section}:{i}", []).append(p.sample)
                         continue
                     if section == "allowed_urls":
                         continue

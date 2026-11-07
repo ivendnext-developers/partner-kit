@@ -4,12 +4,14 @@ sample S5's (``samples/s5_config_pack/apply_config.py``): one data file, idempot
 
     PP_BASE=https://shop.example PP_KEY=<admin api key> PP_SECRET=<admin api secret> python3 apply_config.py <command>
 
-    prepare     AFTER the install: the role PP LYL Integration's rights on the shop's own record types, each with its
-                reason (config.json). The install itself makes the role and the app's one user,
-                pp_lyl@integration.invalid (API only, that role only), and names it on the feed.
-    apply       AFTER the manifest: a customer group per tier, the plans and settings, one promotion per tier that
-                excludes every other group (rebuilt on every run), the receipt's check-by-workflow, and the submit right
-                taken from every role but the manager's and the service's.
+    prepare     AFTER the install: checks the install made the role (it makes the role and the app's one user,
+                pp_lyl@integration.invalid, API only, that role only, and gives the role read on what the feed follows;
+                manifest.json's role_rights give the rest). It grants only the rights the receipt check needs, and
+                only when config.json carries that check.
+    apply       AFTER the install: the retailer's own settings values (currency, walk-in customers, Member cash), one promotion per tier, from the shop's live plans, that excludes every other group
+                (rebuilt on every run: a manifest record is never written over), the receipt's check-by-workflow, and the submit right taken from every
+                role but the manager's and the service's. The tiers, their plans and the default settings are the
+                manifest's records.
     switch-on   the shop's own switches: the feed registration's record types ticked on, the till key's consent.
     switch-off  the same switches off, nothing removed (if a run fails half-way, nothing is left on).
     remove      everything above, in reverse: switches off, permission rows put back FIRST, then every record this
@@ -115,23 +117,24 @@ def prepare():
     role = CONF["integration_role"]
     if T.get("Role", role) is None:      # the manifest names the role, so the install makes it (guide/07_manifests.md)
         sys.exit(f"install the app first: its install makes the role {role} and the app's own user")
-    # what the manifest cannot hold yet: the role's reads on the SHOP's record types (the feed follows them)
-    for g in CONF["integration_rights"] + (CONF.get("receipt_workflow") or {}).get("integration_rights", []):
+    # the feed's reads and manifest.json's role_rights are the install's; only the receipt check, a customer's choice, is left
+    for g in (CONF.get("receipt_workflow") or {}).get("integration_rights", []):
         grant(g["doctype"], role, g["rights"], g["why"])
     say("the app's user holds this role; the site hands its key to your service when it connects the app")
 
 
+def plans():
+    """The shop's live tiers, the way the service reads them (the install made the first ones; the retailer may have
+    changed a discount or switched a tier off since)."""
+    rows = T.list("PP LYL Plan", [["active", "=", 1]], ["customer_group", "discount_percent", "rank"])
+    return sorted(rows, key=lambda p: p.get("rank") or 0)
+
+
 def apply():
-    for p in CONF["plans"]:
-        ensure("Customer Group", p["customer_group"], {"customer_group_name": p["customer_group"],
-                                                       "parent_customer_group": "All Customer Groups", "is_group": 0})
-    for p in CONF["plans"]:
-        ensure("PP LYL Plan", p["plan_name"], dict(p, active=1), update=dict(p, active=1))
     st = CONF["settings"]
-    settings = dict(title="Default", default_plan=st["default_plan"], return_days=st["return_days"],
-                    tier_window_days=st["tier_window_days"], currency=CONF["currency"],
-                    currency_precision=CONF["currency_precision"], walk_in_customers="\n".join(st["walk_in_customers"]),
-                    max_redemption_percent=st.get("max_redemption_percent", 0), earn_on_redemption=st.get("earn_on_redemption", 0))
+    # the retailer's own values; the install made the record with the defaults every retailer gets alike
+    settings = dict(title="Default", currency=CONF["currency"], currency_precision=CONF["currency_precision"],
+                    walk_in_customers="\n".join(st["walk_in_customers"]))
     # Member cash's payment method is made by the payments app when the wallet goes live: name it once it exists
     if st.get("wallet_mode_of_payment") and T.list("Mode of Payment", [["name", "=", st["wallet_mode_of_payment"]]], ["name"]):
         settings["wallet_mode_of_payment"] = st["wallet_mode_of_payment"]
@@ -143,7 +146,7 @@ def apply():
     wh = [w["name"] for w in T.list("Warehouse", [["company", "=", CONF["company"]], ["is_group", "=", 0]], ["name"])]
     groups = [g["name"] for g in T.list("Customer Group", [["is_group", "=", 0]], ["name"])]
     seq = max((m.get("sequence_number") or 0 for m in T.list("Promotion Bonus Buys Master", [], ["sequence_number"])), default=0)
-    for p in CONF["plans"]:
+    for p in plans():
         if p["discount_percent"] <= 0:
             continue
         pid, seq = f"{p['customer_group']} {p['discount_percent']:g}%", seq + 1

@@ -107,7 +107,7 @@ A settings record type whose record *Default* holds the retailer's **hours from 
 ## Limits
 
 - **Answered at Pay**, not when the line is entered; a sale made in Desk, on the Desk POS screen or through the API is not checked.
-- **One check of three on a POS Profile**, 10 seconds together.
+- **One check on a POS Profile**, 10 seconds together with the profile's others.
 - **When the service is down,** the sale is paid and flagged for review (`allow_and_flag`); offline, the same.
 - **A lab order's copied values** are its prescription's at the order's last save.
 - **A newer eye test** does not stop the older prescription's reminder: untick the older one's **E-mail reminders**.

@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/fields.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/fields.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Field rules
 
 **Contract:** [`fields.v1.schema.json`](../extension_contracts/fields.v1.schema.json)
@@ -59,7 +59,11 @@ counts once).
 
 - *"⟨screen⟩ is not a till screen field rules apply to."* · *"⟨action⟩ is not a field action."* · *"Name the
   field each rule applies to."*
-- *"⟨field⟩ on ⟨screen⟩ can't take this rule."* — the field is not on that screen's list for that action
+- *"⟨screen⟩ has no field ⟨field⟩. It takes: ⟨the screen's fields⟩."* — the field is not on that screen's list
+- *"⟨field⟩ on ⟨screen⟩ takes only: ⟨actions⟩."* — the field is on the list, but not for that action
+- In these words a screen is named as the Studio's *Screen* list shows it (*New customer sheet*, *Customer
+  card*, *Basket line*, *Item search result*, *Sale details*, *Receipt*, *Basket totals*); the stored value
+  stays the key (`customer_create`, `cart_line`…).
 - *"⟨field⟩ can't be hidden: the sale needs it."* — the customer's name, or a required Sale Attribute
 - *"Nothing more can be shown on ⟨screen⟩."* · *"⟨DocType⟩ has no field ⟨field⟩."* · *"⟨field⟩ is a ⟨type⟩
   field. Only Data, Select, Int and Check fields can be shown."*
@@ -118,8 +122,8 @@ names it as withheld, and a device holding a copy from before clears its custome
 shown **Item** field above level 0 never reaches a till, its catalogue or a receipt, for anyone (one everyone
 reads but only some change included), and a till stops drawing it at its next start. A register book writes what
 it names whoever sells: a field only some roles read may go only in a detail slot or the counterparty, which only
-the book's readers of a person's details read, and an Item field is refused as a book's class
-([`register_books.md`](register_books.md) §8). ⚠ The customer fields the till always carries (name, phone, email, tax id, group) are read as
+the book's readers of a person's details read, and a book's class takes no limited Item field: take the items by
+`item_groups` instead ([`register_books.md`](register_books.md) §8). ⚠ The customer fields the till always carries (name, phone, email, tax id, group) are read as
 they are: put one of them at a level and the till still shows and searches it.
 
 ⛔ **Require through the offline drain is a flag, never a refusal:** a customer added offline without a

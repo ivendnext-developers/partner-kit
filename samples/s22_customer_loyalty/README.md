@@ -18,7 +18,7 @@ ivn new acme_loyalty --from s22
 
 What a partner usually changes:
 
-- **The tiers and rules:** `plans` and `settings` in `config.json` (each tier's rank, spend, discount and cash back; the return window, the days of spend counted, the currency). The sample has Bronze, Silver from 1,000 and Gold from 2,500.
+- **The tiers and rules:** the `records` in `manifest.json`: a customer group and a plan per tier (rank, spend, discount, cash back) and the programme's default settings (the return window, the days of spend counted). The sample has Bronze, Silver from 1,000 and Gold from 2,500. The currency, the walk-in customers and Member cash's payment method differ per retailer, so they stay in `config.json`.
 - **What earns:** `earn_base` and `goods_value` in `service/money.py`.
 - **The member key's answer:** `service/app.py`.
 - **Member cash:** `service/wallet.py` and `wallet_mode_of_payment` in `config.json`, which must be the payment method's own name.
@@ -29,7 +29,7 @@ More: the [recipe](../../recipes/customer_owned_loyalty.md).
 
 **The customer sets:** the tiers and thresholds. A check on goods receipts (`receipt_workflow`, [the recipe](../../recipes/check_by_workflow.md)) is left out of `config.json`, so a receiving clerk's submit is untouched until the customer adds it.
 
-**The app's role needs:** the install makes the role *PP LYL Integration* and the app's one user, `pp_lyl@integration.invalid`; it gives the role no read on the retailer's own record types. Those are read and write on Customer, and read on POS Invoice, Purchase Receipt, Purchase Order and Supplier (the receipt check reads the supplier a receipt names). `python3 apply_config.py prepare`, run after the install, grants them from `config.json`; it makes no user. A read the role lacks does not stop the install: the events wait, and the service's log says which record type was refused (`ivn logs`), then the next pass catches up once the read is given ([What goes where](../../guide/07_manifests.md#what-goes-where)).
+**The app's role needs:** nothing from the retailer's administrator. The install makes the role *PP LYL Integration* and the app's one user, `pp_lyl@integration.invalid`; it gives the role **read on every record type the feed follows** (Customer, POS Invoice, Purchase Receipt), and the manifest's `role_rights` give the rest: write on Customer, and read on Purchase Order and Supplier (the receipt check reads the supplier a receipt names). **The app needs POS build `2.1.0.691` or later.** On an earlier site the install warns `role_rights` and `records` as unknown and skips them, the feed's user has no read, and the events wait: the service's log says which record type was refused (`ivn logs`). `python3 apply_config.py prepare`, run after the install, only checks the role exists and, when `config.json` carries a receipt check, grants the rights that check needs; it makes no user ([What goes where](../../guide/07_manifests.md#what-goes-where)).
 
 ## Run it
 
@@ -45,6 +45,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.3.0
+
+- The tiers' customer groups and plans, the programme's default settings and the role's rights beyond the feed's reads move into the manifest (`records`, `role_rights`), so the install makes them; `apply_config.py` keeps only what differs per retailer, each tier's promotion, the receipt check and the switches. The install gives the feed's user its reads, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
 
 ### 1.2.1
 

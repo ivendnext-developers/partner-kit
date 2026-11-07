@@ -1,0 +1,21 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A default Stock Entry: a document that posts to the books is the retailer's to make.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_hkd",
+    "prefix": "PP HKD",
+    "version": "1.0.0",
+    "records": [
+      {
+        "doctype": "Stock Entry",
+        "values": {
+          "purpose": "Material Receipt"
+        }
+      }
+    ]
+  },
+  "expect_refusal": "A document that posts is the retailer's to make.",
+  "beyond_schema": true
+}

@@ -45,7 +45,7 @@ A Sale Attribute's *Required* switch holds for every customer on every till. Ret
 - Present, not right: the value's shape is the Sale Attribute's own *Regex Pattern*.
 - One rule per customer group; a customer's own rule is a group of their own.
 - Offline, the till does not call your service: the sale is flagged when it syncs, never refused. The check does not run on a park, a layaway deposit, an account collection or the Desk's own POS screen.
-- At most three checks answer one POS Profile, ten seconds together.
+- Ten seconds is the most one pass of a POS Profile's checks makes a cashier wait.
 
 ## See also
 

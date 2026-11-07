@@ -20,6 +20,8 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/units_as_serials.md).
 
+In a package these rows go under `records` ([the manifest recipe](../../recipes/manifest.md)); the engine's settings (Retail Setting, Stock Settings), a Stock Entry and a Customer stay here.
+
 **The customer sets:** a default Company (Setup > Global Defaults), the Defective store, the items and their prices, and, for a migration, which old item becomes which new one.
 
 ## Run it

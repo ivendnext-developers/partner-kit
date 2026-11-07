@@ -1,6 +1,7 @@
-"""S22's configuration script and manifest: the manifest passes the kit's checker; the receipt's submit right is left
-only to the manager and the service; the install's user is left alone; each tier's promotion excludes every other
-group; the receipt workflow lists *Overridden* before *Verified*; and remove puts every permission table back."""
+"""S22's configuration script and manifest: the manifest passes the kit's checker and holds the tiers, the default
+settings and the app role's rights beyond the feed's reads; the receipt's submit right is left only to the manager and
+the service; the install's user is left alone; each tier's promotion excludes every other group; the receipt workflow
+lists *Overridden* before *Verified*; and remove puts every permission table back."""
 
 import importlib
 import json
@@ -25,6 +26,26 @@ class Manifest(unittest.TestCase):
         self.assertEqual(validate.validate(MANIFEST), [])
         self.assertEqual(validate.warnings(MANIFEST), [])
 
+    def test_the_tiers_the_settings_and_the_roles_rights_are_the_manifests(self):
+        by_type = {}
+        for r in MANIFEST["records"]:
+            by_type.setdefault(r["doctype"], []).append(r["name"])
+        self.assertEqual(by_type, {"Customer Group": ["PP LYL Bronze", "PP LYL Silver", "PP LYL Gold"],
+                                   "PP LYL Plan": ["Bronze", "Silver", "Gold"], "PP LYL Settings": ["Default"]})
+        # a plan's group and the settings' default plan come before their link: the install makes rows in this order
+        order = [(r["doctype"], r["name"]) for r in MANIFEST["records"]]
+        self.assertLess(order.index(("Customer Group", "PP LYL Gold")), order.index(("PP LYL Plan", "Gold")))
+        self.assertLess(order.index(("PP LYL Plan", "Bronze")), order.index(("PP LYL Settings", "Default")))
+        rights = {r["doctype"]: (r["role"], tuple(r["rights"])) for r in MANIFEST["role_rights"]}
+        # the feed's reads (Customer, POS Invoice, Purchase Receipt) are the install's: only Customer's write and two
+        # reads the feed does not follow are the manifest's
+        self.assertEqual(rights, {"Customer": ("PP LYL Integration", ("read", "write")),
+                                  "Purchase Order": ("PP LYL Integration", ("read",)),
+                                  "Supplier": ("PP LYL Integration", ("read",))})
+        # what is per retailer stays out of the manifest
+        values = [v for r in MANIFEST["records"] if r["doctype"] == "PP LYL Settings" for v in r["values"]]
+        self.assertFalse({"currency", "currency_precision", "walk_in_customers", "wallet_mode_of_payment"} & set(values))
+
     def test_the_feed_and_the_key_install_switched_off(self):
         (ra,) = MANIFEST["registered_applications"]
         (key,) = MANIFEST["remote_keys"]
@@ -43,6 +64,8 @@ class Config(unittest.TestCase):
         self.shop = FakeShop()
         self.shop.put("Customer Group", "Individual", is_group=0)
         self.shop.put("Role", "PP LYL Integration", disabled=0)       # the install makes the app's role and its one user
+        for r in MANIFEST["records"]:                                  # ... and the manifest's default records
+            self.shop.put(r["doctype"], r["name"], **r["values"])
         self.shop.put("Warehouse", "Demo Retail — Store 1", company="Demo Retail", is_group=0)
         self.cfg.T, self.cfg.S, self.cfg.say = self.shop, self.cfg.State(), (lambda *a: None)
         self.before = self.shop.effective("Purchase Receipt")
@@ -75,7 +98,7 @@ class Config(unittest.TestCase):
     def test_the_settings_name_member_cash_only_once_its_payment_method_exists(self):
         self.run_all()
         st = self.shop.db["PP LYL Settings"]["Default"]
-        self.assertEqual((st.get("wallet_mode_of_payment"), st["max_redemption_percent"]), (None, 50))
+        self.assertEqual((st.get("wallet_mode_of_payment"), st["max_redemption_percent"], st["currency"]), (None, 50, "USD"))
         self.shop.put("Mode of Payment", "Member cash", type="Wallet")          # made when the wallet goes live
         self.cfg.apply()
         self.assertEqual(self.shop.db["PP LYL Settings"]["Default"]["wallet_mode_of_payment"], "Member cash")
@@ -88,6 +111,11 @@ class Config(unittest.TestCase):
             self.cfg.prepare()
         self.assertIn("install the app first", str(e.exception))
 
+    def test_prepare_grants_nothing_until_a_receipt_check_is_added(self):
+        self.cfg.CONF = self.shipped
+        self.cfg.prepare()                                              # the feed's reads and role_rights are the install's
+        self.assertEqual([r for r in self.shop.effective("Customer") if r["role"] == "PP LYL Integration"], [])
+
     def test_each_tier_excludes_every_other_group_and_overridden_comes_first(self):
         self.run_all()
         promos = self.shop.db["Promotion Bonus Buys Master"]
@@ -96,6 +124,12 @@ class Config(unittest.TestCase):
         self.assertEqual(gold, {"Individual", "PP LYL Bronze", "PP LYL Silver"})
         wf = self.shop.db["Workflow"]["PP LYL Receipt Verification"]
         self.assertEqual([s["state"] for s in wf["states"] if s["doc_status"] == "1"][0], "PP LYL Overridden")
+
+    def test_a_tiers_promotion_follows_the_shops_live_plan_not_the_manifest(self):
+        self.shop.db["PP LYL Plan"]["Gold"]["discount_percent"] = 7          # the retailer changed it in Desk
+        self.shop.db["PP LYL Plan"]["Silver"]["active"] = 0                  # and switched a tier off
+        self.run_all()
+        self.assertEqual(sorted(self.shop.db["Promotion Bonus Buys Master"]), ["PP LYL Gold 7%"])
 
     def test_switch_on_ticks_every_followed_record_type_and_leaves_the_installs_user(self):
         # the installer names the app's user and leaves every record type unticked; the shop writes a feed row only for
@@ -125,7 +159,7 @@ class Config(unittest.TestCase):
         self.cfg.remove()
         self.assertEqual(self.shop.effective("Purchase Receipt"), self.before)
         self.assertEqual(self.shop.db.get("Workflow"), {})
-        self.assertNotIn("PP LYL Gold", self.shop.db["Customer Group"])
+        self.assertIn("PP LYL Gold", self.shop.db["Customer Group"])   # the install's default record: this script never made it
 
 
 if __name__ == "__main__":

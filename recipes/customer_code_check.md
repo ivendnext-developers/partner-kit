@@ -63,7 +63,7 @@ The code reaches the customer through iVendNext, never through your service:
 - The number on the record is the number that gets the code: a cashier who may change it can send the code elsewhere.
 - The till's own doors: a sales order or invoice made in iVendNext Desk is not asked.
 - What the customer already holds is not a new pick and is not held: a layaway plan's later payment, an order's balance, a payment on their account.
-- One cashier sends at most 60 select rounds in ten minutes; a customer already let on stays on.
+- A customer already let on stays on.
 - While your service does not answer, a code typed at the code field counts as checked under `allow_and_flag`, flagged.
 - The framework's gateway call has no time limit of its own: give your write a wait inside the capture's time to answer (the sample: at most 2.5 s, its own waits ending by 3 s from the call's start (a connection's set-up is outside it), of a 5 s time to answer), and answer the code field when a write sent whole has no answer in time (saved, the code works; not saved, the check ends), never a 503.
 - One app answers each capture event on a POS Profile: this one takes *customer select* there.

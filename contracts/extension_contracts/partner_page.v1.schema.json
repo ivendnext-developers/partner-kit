@@ -94,7 +94,7 @@
           ]
         },
         "page_roles": {
-          "description": "Who may open the Desk page; needed when it is placed on Desk.",
+          "description": "Who may open the Desk page. Empty or left out: every Desk user.",
           "type": "array",
           "items": {
             "type": "object",
@@ -135,10 +135,8 @@
           ]
         },
         "page_height": {
-          "description": "Its height on the counter, in percent; 100 when left out.",
-          "type": "integer",
-          "minimum": 40,
-          "maximum": 100
+          "description": "Its height on the counter, in percent, from 40 to 100; a figure outside that is held to the nearest. 100 when left out.",
+          "type": "integer"
         },
         "consent_given": {
           "enum": [
@@ -146,41 +144,10 @@
             1
           ]
         }
-      },
-      "allOf": [
-        {
-          "description": "A page placed on Desk names who may open it.",
-          "anyOf": [
-            {
-              "not": {
-                "required": [
-                  "page_placement"
-                ]
-              }
-            },
-            {
-              "properties": {
-                "page_placement": {
-                  "const": "Till key"
-                }
-              }
-            },
-            {
-              "required": [
-                "page_roles"
-              ],
-              "properties": {
-                "page_roles": {
-                  "minItems": 1
-                }
-              }
-            }
-          ]
-        }
-      ]
+      }
     },
     "context": {
-      "description": "The payload of the #ctx=<payload>.<signature> fragment, both parts base64url without padding; the signature is HMAC-SHA256 of the payload bytes with the secret. Usable once, for 5 minutes.",
+      "description": "The payload of the #ctx=<payload>.<signature> fragment, both parts base64url without padding; the signature is HMAC-SHA256 of the payload bytes with the secret. It lives 15 minutes.",
       "type": "object",
       "required": [
         "v",
@@ -209,7 +176,7 @@
           "type": "integer"
         },
         "exp": {
-          "description": "iat plus 300.",
+          "description": "iat plus 900.",
           "type": "integer"
         },
         "lang": {

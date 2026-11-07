@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/what_an_app_may_not_do.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/what_an_app_may_not_do.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # What an app may not do
 
 An app may do anything the shop's administrator can do in Desk: a workflow that approves and
@@ -34,8 +34,9 @@ refusal added anywhere else fails the build.
 | manifest_check | `_V.list_of` | 1 | S | A kind is a list of entries the installer reads one by one. A partner's typo. |
 | manifest_check | `_V.no_script` | 1 | C | Markup carrying script in any text Desk shows as written runs in the browser of everyone who opens it, the administrator included. |
 | manifest_check | `_keyed` | 1 | S | Each entry names what the installer reads it by (its name, record type, address). A partner's typo. |
-| manifest_check | `_fields` | 5 | A C S T | A field the app adds to the shop's record type carries the app's prefix, so it is never read as one of the engine's flags (A); a required, unique or limited field on the till's own records stops the sale or the new customer (T); a default or precision on a ledger or a record type that posts changes a posted figure (A); an HTML field and a display condition in JavaScript run script in Desk (C); a field is an object (S). |
-| manifest_check | `_limits` | 1 | A | A fiscal reader's result field keeps the writer level the reader gives it, so only the fiscal writer writes the authority's answer. |
+| manifest_check | `_fields` | 5 | A C S T | A field the app adds to the shop's record type carries the app's prefix, so it is never read as one of the engine's flags (A); a required, unique or defaulted field, or one with a length or sign limit, on the till's own records stops the sale or the new customer (T); a default or precision on a ledger or a record type that posts changes a posted figure (A); an HTML field and a display condition in JavaScript run script in Desk (C); a field is an object (S). |
+| manifest_check | `_doctypes` | 1 | S | A field written inside the app's own record type is limited by a `permlevel` and a permissions row at that level, as Desk does it; `read_roles` or `write_roles` there would be dropped at install and leave the field open to every reader of the record type. |
+| manifest_check | `_limits` | 2 | A S | A fiscal reader's result field keeps the writer level the reader gives it, so only the fiscal writer writes the authority's answer. A field limited to roles names at least one role in `write_roles`: the installer gives the field its own level only through its writers, so `read_roles` alone would leave it readable by everyone who reads the record type |
 | manifest_check | `_property_setters` | 2 | A C T | The same field rules as `_fields` for a change to the shop's own field, and the sale's own numbering (A, T); a display condition in JavaScript (C). |
 | manifest_check | `_print_formats` | 5 | B C | A script print format (C); a print that loads from outside, runs raw database queries, builds an address from the record, or reads records past the viewer's rights, because a printed or shared receipt can carry the shop's data out (B). |
 | manifest_check | `_notifications` | 8 | A B C T | Mail and the in-app bell only, to the shop's own people by role or by a field of the record, which the consent names, never an address the manifest names, a field the app gives a default address, or a file a field names (B); on the till's own records only a reminder Days Before or After a date, because any other event runs inside the till's save (T); a condition is a plain comparison of the record's fields, and the subject and message call nothing, because all three are evaluated with a Server Script's globals inside the save (C); a field set after the alert is the app's own, because the record is saved after it (A). |
@@ -49,10 +50,13 @@ refusal added anywhere else fails the build.
 | manifest_check | `_endpoint` | 1 | B | A till key or a service calls an https address the consent shows. |
 | manifest_check | `_extension_subscriptions` | 1 | A | The most a module may take off a line is the shop's to set. |
 | manifest_check | `_payer_settings` | 1 | A | A payer's clearing account is on the shop's books, so the shop picks it. |
+| manifest_check | `_app_user_rights` | 1 | S | The rights the app's own user needs are a list of names the installer reads one by one. A partner's typo. |
+| manifest_check | `_role_rights` | 4 | S B | A right goes to one of the app's own roles, named with its prefix: the retailer's roles are the retailer's to grant, in Role Permissions Manager (B); the record type and the rights are names the installer reads one by one (S). |
+| manifest_check | `_records` | 9 | A S T | A default record is never a document that posts (the retailer's to make, A) nor one of the till's own records, which the till writes as it sells (T); its type, name and values are what the installer makes it from, a record with no name needs a plain value to be found by, a value names a field the app's own type has, and a text value carries no script (S); an item's opening stock books a stock entry at its insert (A). |
 | manifest_check | `_desk_actions` | 1 | S | A Desk action names one of the app's own Desk action services, which the installer makes first. |
 | manifest_check | `_fiscal_readers` | 4 | A | The fiscal result fields sit at their own permission level, on the sale, in text the receipt prints the authority's QR and seal from. |
 | manifest_install | `_site_refusals` | 6 | S | A record type, field, print format or language the site does not have, or a name already on the site that another app made. Met when installing on a site that lacks something. |
-| manifest_install | `_site_refusals_v2` | 8 | C S | The same for the newer kinds, and a site whose till app predates an extension point (S); another app's fiscal writer role, which reaches the sale through the shop's grants (C). |
+| manifest_install | `_site_refusals_v2` | 15 | A C S | The same for the newer kinds, a site whose till app predates an extension point, and a till right this site's Retail Permission does not have (S); another app's fiscal writer role, which reaches the sale through the shop's grants (C); a `role_rights` role the site already holds under another spelling or with standard permission rows, the retailer's own (the database finds a role without regard to case) (C); a default record on a type the site holds as submittable (it posts, A), as a table inside another record, as one of the engine's own settings, or as one of the framework's own records (a user, a permission row, a field, a share), which are their own kinds or the retailer's, and a value naming a field the type does not have (S). |
 | manifest_install | `_role_refusals` | 1 | S | The app's own fiscal writer role is made by its fiscal reader, after everything else that could name it. |
 | manifest_install | `_module_refusals` | 1 | C S | A package never replaces a module another app added (C); a module's version is used once (S). |
 | manifest_install | `_width_refusals` | 1 | S | The record type has no room left in the database for the fields the app adds. |
@@ -64,7 +68,7 @@ refusal added anywhere else fails the build.
 | manifest_install | `_make_user` | 1 | S | The site's licence has no room for the app's own user. |
 | manifest_install | `_one_role` | 1 | C | The app's integration user would reach more than its one role, through rights this site gave it. |
 | extension_package | `check` | 2 | B S | A manifest that cannot be read (S); a consent never carries over to other content under the same version (B). |
-| extension_package | `install` | 7 | B S | The package's state, and the consent to exactly what the screen showed (B, S). |
+| extension_package | `install` | 6 | B S | The package's state, and a consent to exactly this file and to what the update now changes (B, S). |
 | extension_package | `run_job` | 2 | B S | The package left the shelf, or the site changed since its check (B, S). |
 | extension_package | `uninstall` | 1 | S | Only the installed version is uninstalled. |
 | extension_package | `finish` | 2 | S | Finish runs only for a package stopped part-way. |
@@ -72,7 +76,7 @@ refusal added anywhere else fails the build.
 | extension_package | `_app_busy` | 1 | S | Another version of the app is still running or its update was not undone. |
 | extension_package | `_evaluate` | 3 | S | An earlier run did not finish; a version not higher than the installed one; an app installed outside the install screen. |
 | extension_package | `_field_refusals` | 5 | S | An update cannot carry a field's stored values across a change of type, options, target, required or unique, or its roles: ship a new field. |
-| extension_package | `upgrade_plan` | 12 | S | What an update cannot change in place (the prefix, a module's partner or version, a service's transport, a record type's shape): ship it under a new name. |
+| extension_package | `upgrade_plan` | 13 | S | What an update cannot change in place (the prefix, a module's partner or version, a service's transport, a record type's shape): ship it under a new name. A register book may gain a detail slot and an event feed a new description; anything else of either is refused with what to do. |
 | extension_package | `_module_rights` | 1 | C | Adding a partner module needs the right to create one, a System Manager's by default. |
 | extension_package | `_withdraw_rights` | 1 | C | Withdrawing one needs the right to write one. |
 | extension_package | `_outside_the_card` | 1 | K | CitiXsys hosts the app only for the companies its card names. |
@@ -87,7 +91,8 @@ refusal added anywhere else fails the build.
 | app_library | `check_key` | 8 | K | A paid app's key: its form, app, site, end date and whether it was withdrawn. |
 | app_library | `manifest_for` | 5 | C | The manifest is the one the library's card signs. |
 | app_library | `take` | 3 | K | An app is in the library and installs from here, and a paid app's key comes first. |
-| app_library | `free_key` | 6 | K S | A free app's key request, and the library's answer. |
+| app_library | `free_key` | 1 | K | The app is in the library. |
+| app_library | `_ask_free_key` | 5 | K S | A free app's key request, and the library's answer. |
 | app_library | `check_shelf_key` | 4 | K | The private shelf's key. |
 | app_library | `shelf_list` | 9 | C K | The private shelf's signed list. |
 | app_library | `_raise_shelf_serial` | 2 | C | An older shelf list never replaces a newer one. |

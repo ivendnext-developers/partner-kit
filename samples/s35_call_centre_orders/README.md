@@ -28,7 +28,7 @@ More: the [recipe](../../recipes/call_centre_orders.md).
 
 **The customer sets:** a **Serving store** (a warehouse of the orders' company, never a group) on each district of its Territory tree; a district left empty takes the store above it.
 
-**The app's role needs:** the install makes the role *PP CCO Integration* and the app's own user. On the retailer's own record types the retailer's administrator gives it read and write on Sales Order, and read on Territory, Customer (a sales order names its customer) and Warehouse. Give the role to no one else: it reaches every sales order. A read the role lacks does not stop the install: **Send to store** says the app may not read or change the order. Give the read and press it again ([What goes where](../../guide/07_manifests.md#what-goes-where)).
+**The app's role needs:** nothing from the retailer's administrator. The install makes the role *PP CCO Integration* and the app's own user, and gives the role **read on Sales Order**, the record type the feed follows. The manifest's `role_rights` give the rest: write on Sales Order, and read on Territory, Customer (a sales order names its customer) and Warehouse. Give the role to no one else: it reaches every sales order. **Needs POS build `2.1.0.691` or later:** on an earlier site the install warns `role_rights` as unknown and skips it, so **Send to store** says the app may not read or change the order; install the build, then press it again ([What goes where](../../guide/07_manifests.md#what-goes-where)).
 
 ## Run it
 
@@ -38,6 +38,10 @@ ivn try
 ```
 
 ## Versions
+
+### 1.1.0
+
+- The role's rights move into the manifest (`role_rights`), and the install gives the feed's user its read on Sales Order, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
 
 ### 1.0.1
 

@@ -1,0 +1,22 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A right no permissions row takes (fly): the schema lists the sixteen a row takes.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_hkd",
+    "prefix": "PP HKD",
+    "version": "1.0.0",
+    "role_rights": [
+      {
+        "doctype": "Customer",
+        "role": "PP HKD Pharmacist",
+        "rights": [
+          "read",
+          "fly"
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "rights lists each right the role gets"
+}
