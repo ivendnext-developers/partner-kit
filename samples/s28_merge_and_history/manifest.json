@@ -3,9 +3,9 @@
  "app": "pp_mhs",
  "prefix": "PP MHS",
  "title": "Merge counts, and a customer's history",
- "version": "0.2.2",
+ "version": "0.3.0",
  "publisher": "Partner Programme sample",
- "description": "One app, two doors. (1) A Desk button, Merge counts, on the Stock Reconciliation list: the ticked draft counts are merged into one new draft (quantities added, or the last count's kept, as the settings say); each source gets a comment and is never changed. (2) A partner page, Customer history, on a till key and in Desk for a Customer: the customer's last sales with the store, who served and each discount. The app's service, outside the shop, reads and writes through the record API with its own key. After install: give PP MHS Integration read, create and write on Stock Reconciliation, read and create on Comment, read on POS Invoice, Sales Invoice and User; the install makes the app's own user with that role; fill PP MHS Settings Default; give PP MHS Counts to the people who merge and PP MHS History to the people who open the page. allowed_urls is a placeholder; a partner writes its own.",
+ "description": "One app, two doors. (1) A Desk button, Merge counts, on the Stock Reconciliation list: the ticked draft counts are merged into one new draft (quantities added, or the last count's kept, as the settings say); each source gets a comment and is never changed. (2) A partner page, Customer history, on a till key and in Desk for a Customer: the customer's last sales with the store, who served and each discount. The app's service, outside the shop, reads and writes through the record API with its own key. The install makes the app's own user with the role PP MHS Integration and, from role_rights, gives the role read and create on Stock Reconciliation and on Comment, and read on POS Invoice, Sales Invoice and User. After install: fill PP MHS Settings Default; give PP MHS Counts to the people who merge and PP MHS History to the people who open the page. allowed_urls is a placeholder; a partner writes its own.",
  "allowed_urls": ["https://s28.partner.example/mhs/merge", "https://s28.partner.example/mhs/history/"],
  "doctypes": [
   {
@@ -53,5 +53,12 @@
   {"doc_type": "PP MHS Settings", "property": "documentation", "property_type": "Data",
    "value": "https://developer.ivendnext.com/samples/s28_merge_and_history/index.html"}
  ],
- "registered_applications": [{"name": "PP MHS Merge feed", "description": "the service works through the record API as this user", "events": ["PP MHS Settings"]}]
+ "registered_applications": [{"name": "PP MHS Merge feed", "description": "the service works through the record API as this user", "events": ["PP MHS Settings"]}],
+ "role_rights": [
+  {"doctype": "Stock Reconciliation", "role": "PP MHS Integration", "rights": ["read", "create"]},
+  {"doctype": "Comment", "role": "PP MHS Integration", "rights": ["read", "create"]},
+  {"doctype": "POS Invoice", "role": "PP MHS Integration", "rights": ["read"]},
+  {"doctype": "Sales Invoice", "role": "PP MHS Integration", "rights": ["read"]},
+  {"doctype": "User", "role": "PP MHS Integration", "rights": ["read"]}
+ ]
 }

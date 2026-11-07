@@ -43,6 +43,10 @@ ivn try
 
 ## Versions
 
+### 1.1.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
+
 ### 1.0.1
 
 - Two guests at a free table land on one check with no wait; the limits on an order are blank unless the store sets them; a dish sold out since the menu says so.

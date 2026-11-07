@@ -308,6 +308,8 @@ SKIP = {
     "Fulfillment Charges": "a row of a sale's delivery charges, named once by the kit's print check",
     "Item Attribute": "the sizes or colours a style's variants are made in, read by one sample for the order of their values; "
                       "not yet fetched into this reference",
+    "Retail Option Group": "the option groups a dish or item offers at the till (a sample's role reads them to answer a menu); "
+                           "not yet fetched into this reference",
     "Role Permission for Page and Report": "a Desk tool that gives a role a report; a setup step, not a business record",
 }
 

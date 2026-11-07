@@ -138,7 +138,7 @@ def _get(url: str, key: str, path: str, timeout: float):
 
 def read_batches(url: str, key: str, item: str, store: str, timeout: float) -> list[tuple[str, float]]:
     """The store's batches of the item with stock, as the shop computes them: ``[(batch, quantity)]``. The integration
-    user needs read on Batch (the shop gives it in Role Permissions: a manifest grants rights on its own record types only)."""
+    user needs read on Batch (the manifest's ``role_rights`` give it, with Item Price)."""
     q = urllib.parse.urlencode({"item_code": item, "warehouse": store})
     rows = _get(url, key, "/api/method/ivendnext_mpos.api.v1.get_batch_qty?" + q, timeout).get("message") or []
     return [(str(r.get("batch_no")), float(r.get("qty") or 0)) for r in rows if isinstance(r, dict) and r.get("batch_no")]

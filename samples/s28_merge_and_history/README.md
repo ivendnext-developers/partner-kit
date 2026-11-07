@@ -22,7 +22,7 @@ What a partner usually changes:
 
 More: the [recipe for merging](../../recipes/merge_documents.md) and the [recipe for the history page](../../recipes/customer_history_page.md).
 
-**The customer sets:** the settings record named `Default` (*Sum* or *Last*, and the number of sales); who gets **PP MHS Counts** (those who merge) and **PP MHS History** (those who open the page); and the **PP MHS Integration** role's rights: read, create and write on Stock Reconciliation, read and create on Comment, and read on POS Invoice, Sales Invoice and User.
+**The customer sets:** the settings record named `Default` (*Sum* or *Last*, and the number of sales); who gets **PP MHS Counts** (those who merge) and **PP MHS History** (those who open the page). The **PP MHS Integration** role's rights are in the manifest (`role_rights`); the administrator gives none.
 
 ## Run it
 
@@ -39,6 +39,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.3.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later. Write on Stock Reconciliation is dropped: the service only creates drafts.
 
 ### 0.2.2
 

@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.1.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later. Warehouse read and write on Stock Entry are dropped: the service reads no warehouse record and never updates a stock entry.
+
 ### 1.0.0
 
 - First version in the kit: recipes off stock, allergens on the till and receipt, food cost, and sales by item, till user and day part.

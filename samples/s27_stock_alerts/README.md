@@ -34,6 +34,10 @@ ivn try
 
 ## Versions
 
+### 0.2.0
+
+- The role's rights move into the manifest (`role_rights`): the install makes the role and gives it its reads and its Material Request rights; the retailer makes the integration user and its key, which this app (it has no event feed) does not get from the install. Needs POS build `2.1.0.691` or later. (An earlier note here said the install makes the app's user: it makes none for an app with no feed.)
+
 ### 0.1.0
 
 - First version in the kit: stock alerts and a draft transfer request.

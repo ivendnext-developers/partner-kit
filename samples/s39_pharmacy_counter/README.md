@@ -28,7 +28,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/pharmacy_counter.md).
 
-**The customer sets:** its drug schedules (one per class, each with its rules); who gets **PP RXC Pharmacist**, and the pharmacist in charge, who gets **PP RXC Pharmacist in Charge**, adds each pharmacist with their licence number and *valid until*, and enters the premises licence; and each patient's identity and consent on their *PP RXC Patient* record, entered on the Desk (the till cannot take them). Give the app's own user a plain read on Item, Item Group, Customer, POS Profile, POS Invoice, POS Opening Entry, Sales Order, Delivery Note and Sales Invoice.
+**The customer sets:** its drug schedules (one per class, each with its rules); who gets **PP RXC Pharmacist**, and the pharmacist in charge, who gets **PP RXC Pharmacist in Charge**, adds each pharmacist with their licence number and *valid until*, and enters the premises licence; and each patient's identity and consent on their *PP RXC Patient* record, entered on the Desk (the till cannot take them). The app's role has its reads from the manifest (`role_rights`); the administrator gives none.
 
 **Sale details in the shop's words:** the till shows a sale detail by its name (*PP RXC Rx Number*). On the dispensary's till theme, in POS Studio's **Fields** tab, relabel the five on the *Sale details* screen: *Prescription number*, *Prescriber*, *Prescriber's licence*, *Directions*, *Prescription date*. Hide *Prescriber*, *Prescriber's licence* and *Directions* where the pharmacists never type over what the prescription says: the check reads them from the prescription. Keep *Prescription date* shown: the check fills it.
 
@@ -52,6 +52,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
 
 ### 1.1.2
 

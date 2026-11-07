@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 1.2.0
+
+- The set-up words say the install switches the feed on and gives the role its reads (POS build `2.1.0.691` or later). The app does what it did.
+
 ### 1.1.2
 
 - When the service is down the sale goes on and is flagged, unless the customer chooses to refuse it.

@@ -65,7 +65,7 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 ## What the retailer does
 
 - Makes each dish a plain item that is not stocked, with a Bill of Materials, submitted and default (the Desk form's item picker lists stock items only: type the dish's code).
-- Gives the app's user the rights the sample's README lists, and the role allowed to book back-dated stock if Stock Settings limits it.
+- Gives the role allowed to book back-dated stock if Stock Settings limits it. The app's rights are in the sample's manifest (`role_rights`).
 - Sets the ingredients' expense account (their Item Defaults or their Item Group) to its cost of goods sold, if that is where it wants the ingredients booked; the app sends no account.
 - Presses *Issue ingredients* each day after the close, and counts its stock before working out a period's food cost.
 

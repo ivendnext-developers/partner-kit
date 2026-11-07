@@ -3,9 +3,9 @@
  "app": "pp_stk",
  "prefix": "PP STK",
  "title": "Stock alerts and a draft transfer request",
- "version": "0.1.0",
+ "version": "0.2.0",
  "publisher": "Partner Programme sample",
- "description": "Alerts when a store's stock falls below its reorder level or a batch is near its expiry date, and one draft transfer request per store and day made from them, for a person to edit and submit. The app's service, outside the shop, runs on a schedule: it reads the stock, the items' reorder rows and the batches, writes a PP STK Alert for each alert (the shop's bell tells the role PP STK Alerts and the user named in the settings) and makes the draft request. It never submits anything, and never changes a request it did not make. After install: give the role PP STK Integration read on Warehouse, Item, Bin, Batch and Serial and Batch Bundle, and read, create and write on Material Request; make the integration user with that role and its API key; fill PP STK Settings Default (the source warehouse, the days before expiry) and tick Enabled; give PP STK Alerts to the people who act on the alerts. What leaves the shop: the service reads the stock, the reorder rows and the batches, and writes alerts and draft transfer requests; with these rights its key can change any draft transfer request in the shop.",
+ "description": "Alerts when a store's stock falls below its reorder level or a batch is near its expiry date, and one draft transfer request per store and day made from them, for a person to edit and submit. The app's service, outside the shop, runs on a schedule: it reads the stock, the items' reorder rows and the batches, writes a PP STK Alert for each alert (the shop's bell tells the role PP STK Alerts and the user named in the settings) and makes the draft request. It never submits anything, and never changes a request it did not make. The install makes the role PP STK Integration and, from role_rights, gives it read on Warehouse, Item, Bin, Batch and Serial and Batch Bundle, and read, create and write on Material Request. After install: make the integration user with that role and its API key (the app has no feed, so the install makes no user); fill PP STK Settings Default (the source warehouse, the days before expiry) and tick Enabled; give PP STK Alerts to the people who act on the alerts. What leaves the shop: the service reads the stock, the reorder rows and the batches, and writes alerts and draft transfer requests; with these rights its key can change any draft transfer request in the shop.",
  "allowed_urls": [],
  "doctypes": [
   {
@@ -257,5 +257,13 @@
     }
    ]
   }
+ ],
+ "role_rights": [
+  {"doctype": "Warehouse", "role": "PP STK Integration", "rights": ["read"]},
+  {"doctype": "Item", "role": "PP STK Integration", "rights": ["read"]},
+  {"doctype": "Bin", "role": "PP STK Integration", "rights": ["read"]},
+  {"doctype": "Batch", "role": "PP STK Integration", "rights": ["read"]},
+  {"doctype": "Serial and Batch Bundle", "role": "PP STK Integration", "rights": ["read"]},
+  {"doctype": "Material Request", "role": "PP STK Integration", "rights": ["read", "create", "write"]}
  ]
 }

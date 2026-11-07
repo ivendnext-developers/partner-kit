@@ -22,7 +22,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/price_checker.md).
 
-**The customer sets:** one **PP PRC Kiosk** record per screen, with the store's till profile, and read on **PP PRC Kiosk** and on items and prices for the role **PP PRC Integration**. On the tablet, open the app's address with `#shop=` and the retailer's site, then `&kiosk=` and the record's name, in full screen. A barcode scanner connected as a keyboard scans into the page.
+**The customer sets:** one **PP PRC Kiosk** record per screen, with the store's till profile. On the tablet, open the app's address with `#shop=` and the retailer's site, then `&kiosk=` and the record's name, in full screen. A barcode scanner connected as a keyboard scans into the page.
 
 ## Run it
 
@@ -32,6 +32,10 @@ ivn try
 ```
 
 ## Versions
+
+### 1.1.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
 
 ### 1.0.1
 

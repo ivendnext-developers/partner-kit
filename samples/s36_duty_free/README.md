@@ -24,7 +24,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/duty_free_allowance.md).
 
-**The customer sets:** its airports and whether it sells to departing or arriving passengers, the allowances on its item groups, the airport stores' POS Profiles the check serves, and the app's integration role: a plain read on Item Group, Item and POS Invoice, with no User Permissions on its user.
+**The customer sets:** its airports and whether it sells to departing or arriving passengers, the allowances on its item groups, the airport stores' POS Profiles the check serves, and no User Permissions on the app's own user (its role's plain read on Item Group, Item and POS Invoice is in the manifest's `role_rights`).
 
 ## Run it
 
@@ -40,6 +40,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
 
 ### 1.0.0
 

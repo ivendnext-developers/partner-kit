@@ -1,6 +1,6 @@
 # Expiry markdown: mark down stock as its expiry date nears — the recipe
 
-A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it sells before it is thrown away. The retailer wants its own rule (25% off from 5 days before expiry, 50% off from 2 days) applied the same way in every store, and the cashier should not have to remember a percent. This recipe does it with the retailer's own lot prices and one button. the retailer gives its perishable item groups their **markdown steps**. A manager ticks the lots in the **Batch** list and presses **Mark down**. Your service writes each lot's own **Item Price**, valid until the lot's expiry date, and the till rings the lot at that price. It is for an iVendNext Partner, or the CitiXsys Consulting Team, who wants markdowns by expiry without code inside the retailer's iVendNext.
+A grocery, bakery or pharmacy marks down stock whose expiry date is near, so it sells before it is thrown away. The retailer wants its own rule (25% off from 5 days before expiry, 50% off from 2 days) applied the same way in every store, and the cashier should not have to remember a percent. This recipe does it with the retailer's own lot prices and one button. The retailer gives its perishable item groups their **markdown steps**. A manager ticks the lots in the **Batch** list and presses **Mark down**. Your service writes each lot's own **Item Price**, valid until the lot's expiry date, and the till rings the lot at that price. It is for an iVendNext Partner, or the CitiXsys Consulting Team, who wants markdowns by expiry without code inside the retailer's iVendNext.
 
 **Reference implementation:** `samples/s38_expiry_markdown/`.
 
@@ -65,7 +65,7 @@ Pressed again, the button writes nothing: *2 lots already marked down.* Pressed 
 ## What the retailer does
 
 1. **Install the app.** The install adds the four step fields, the settings record type, the app's role and the app's own user, `pp_exm@integration.invalid`, which holds that role alone and works through the API only (from POS version 2.1.0.667; no one makes a user or a key).
-2. **Give the role its reads.** In **Role Permissions**, give the app's role these rights:
+2. **The role's rights are in the manifest.** The manifest's `role_rights` give the app's role these rights, so the retailer's administrator gives none (POS version `2.1.0.691` or later; on an earlier site the install skips them and the service's log names the record type it was refused):
 
    | Record type | Right | Why |
    |---|---|---|

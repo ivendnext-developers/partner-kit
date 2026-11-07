@@ -45,6 +45,10 @@ ivn try
 
 ## Versions
 
+### 1.1.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later. The manager's lookups are the same rights, now in the manifest (read, not select, on Company: the form fetches the currency from it).
+
 ### 1.0.1
 
 - Winners and reserves have no upper limit.

@@ -58,7 +58,7 @@ The record type `PP EXR Return`, numbered `format:EXR-R-{#####}`, tracked: `comp
 
 1. **Install the app.** It adds the duty class, the return, the three Item fields, the workflow, the lock, the worksheet and the button, and makes the role `PP EXR Integration` and the app's own user with that role alone.
 2. **The lock is on from the install** (Desk › *Retail Save Rule* › *PP EXR return locked once filed*). The press refuses if someone switches it off (it reads the rule's `enabled` and `mode`).
-3. **Give the app's role Read** on Stock Ledger Entry, Stock Entry, Item and Retail Save Rule (Role Permissions Manager).
+3. **The app's role's reads are in the manifest** (`role_rights`): Stock Ledger Entry, Stock Entry, Item and Retail Save Rule. The administrator gives none (POS build `2.1.0.691` or later).
 4. **Read what the service sends** (Retail Extension Subscription); the service and the button are on from the install.
 5. **Make the duty classes and fill the three fields** on each liquor item. Write on Item decides what a return counts: give it to whom you trust with the return.
 

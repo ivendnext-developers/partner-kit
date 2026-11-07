@@ -43,6 +43,10 @@ ivn try
 
 ## Versions
 
+### 1.4.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
+
 ### 1.3.0
 
 - Two new rules: the most lines on one sale, and a lowest price per item and unit.
