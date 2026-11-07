@@ -1,5 +1,5 @@
 """S22's configuration script and manifest: the manifest passes the kit's checker; the receipt's submit right is left
-only to the manager and the service; the integration user holds one role; each tier's promotion excludes every other
+only to the manager and the service; the install's user is left alone; each tier's promotion excludes every other
 group; the receipt workflow lists *Overridden* before *Verified*; and remove puts every permission table back."""
 
 import importlib
@@ -42,6 +42,7 @@ class Config(unittest.TestCase):
         self.cfg = importlib.reload(importlib.import_module("apply_config"))
         self.shop = FakeShop()
         self.shop.put("Customer Group", "Individual", is_group=0)
+        self.shop.put("Role", "PP LYL Integration", disabled=0)       # the install makes the app's role and its one user
         self.shop.put("Warehouse", "Demo Retail — Store 1", company="Demo Retail", is_group=0)
         self.cfg.T, self.cfg.S, self.cfg.say = self.shop, self.cfg.State(), (lambda *a: None)
         self.before = self.shop.effective("Purchase Receipt")
@@ -79,10 +80,13 @@ class Config(unittest.TestCase):
         self.cfg.apply()
         self.assertEqual(self.shop.db["PP LYL Settings"]["Default"]["wallet_mode_of_payment"], "Member cash")
 
-    def test_the_integration_user_holds_one_role(self):
-        self.shop.put("User", "pp-lyl-service@demo-retail.example", roles=[{"role": "PP LYL Integration"}, {"role": "Workspace Manager"}])
+    def test_prepare_makes_no_user_and_asks_for_the_install_first(self):
         self.cfg.prepare()
-        self.assertEqual(self.shop.db["User"]["pp-lyl-service@demo-retail.example"]["roles"], [{"role": "PP LYL Integration"}])
+        self.assertFalse(self.shop.db.get("User"))                     # the install's user is the app's: never a hand-made one
+        del self.shop.db["Role"]["PP LYL Integration"]
+        with self.assertRaises(SystemExit) as e:
+            self.cfg.prepare()
+        self.assertIn("install the app first", str(e.exception))
 
     def test_each_tier_excludes_every_other_group_and_overridden_comes_first(self):
         self.run_all()
@@ -93,20 +97,22 @@ class Config(unittest.TestCase):
         wf = self.shop.db["Workflow"]["PP LYL Receipt Verification"]
         self.assertEqual([s["state"] for s in wf["states"] if s["doc_status"] == "1"][0], "PP LYL Overridden")
 
-    def test_switch_on_names_the_user_and_ticks_every_followed_record_type(self):
-        # the installer leaves the registration with no user and every record type unticked; the shop writes a feed
-        # row only for a ticked one, so a user alone would read an empty feed
+    def test_switch_on_ticks_every_followed_record_type_and_leaves_the_installs_user(self):
+        # the installer names the app's user and leaves every record type unticked; the shop writes a feed row only for
+        # a ticked one, so a user alone would read an empty feed
         events = [{"name": f"e{i}", "doc_type": d, "enable": 0} for i, d in enumerate(("Customer", "POS Invoice"))]
         (ra,) = MANIFEST["registered_applications"]
-        self.shop.put("Registered Application", ra["name"], application_user=None, registered_application_events=events)
+        self.shop.put("Registered Application", ra["name"], application_user="pp_lyl@integration.invalid",
+                      registered_application_events=events)
         self.cfg.switches(1)
         reg = self.shop.db["Registered Application"][ra["name"]]
-        self.assertEqual(reg["application_user"], "pp-lyl-service@demo-retail.example")
+        self.assertEqual(reg["application_user"], "pp_lyl@integration.invalid")
         self.assertEqual([(e["doc_type"], e["enable"]) for e in reg["registered_application_events"]],
                          [("Customer", 1), ("POS Invoice", 1)])
         self.cfg.switches(0)
         reg = self.shop.db["Registered Application"][ra["name"]]
-        self.assertEqual((reg["application_user"], {e["enable"] for e in reg["registered_application_events"]}), (None, {0}))
+        self.assertEqual((reg["application_user"], {e["enable"] for e in reg["registered_application_events"]}),
+                         ("pp_lyl@integration.invalid", {0}))
 
     def test_only_the_makers_send_allows_self_approval(self):
         self.run_all()
@@ -120,17 +126,6 @@ class Config(unittest.TestCase):
         self.assertEqual(self.shop.effective("Purchase Receipt"), self.before)
         self.assertEqual(self.shop.db.get("Workflow"), {})
         self.assertNotIn("PP LYL Gold", self.shop.db["Customer Group"])
-
-    def test_remove_switches_off_the_user_and_role_a_completed_workflow_step_still_names(self):
-        self.run_all()
-        self.shop.linked = {"pp-lyl-service@demo-retail.example", "PP LYL Integration"}
-        self.cfg.remove()
-        self.assertEqual(self.shop.db["User"]["pp-lyl-service@demo-retail.example"]["enabled"], 0)
-        self.assertEqual(self.shop.db["Role"]["PP LYL Integration"]["disabled"], 1)
-        self.cfg.S = self.cfg.State()
-        self.cfg.prepare()                                  # a later prepare switches both back on
-        self.assertEqual((self.shop.db["User"]["pp-lyl-service@demo-retail.example"]["enabled"],
-                          self.shop.db["Role"]["PP LYL Integration"]["disabled"]), (1, 0))
 
 
 if __name__ == "__main__":

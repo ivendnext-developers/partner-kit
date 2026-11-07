@@ -52,8 +52,16 @@ def _server_message(raw: bytes) -> str:
                     v = "; ".join(json.loads(m).get("message", m) for m in json.loads(v))
                 except (ValueError, AttributeError):
                     pass
-            return str(v)[:300]
+            elif k == "exception" and ":" not in str(v):
+                continue                    # a bare module path is no sentence
+            return str(v).replace("<br>", " ").replace("<strong>", "").replace("</strong>", "")[:300]
     return ""
+
+
+def _target(path: str) -> str:
+    """The record type (or method) a call was about, from the request itself: never a record's name."""
+    parts = urllib.parse.unquote(path.split("?", 1)[0]).strip("/").split("/")
+    return parts[2] if len(parts) >= 3 and parts[:1] == ["api"] else path
 
 
 class Shop:
@@ -73,6 +81,8 @@ class Shop:
                 return json.loads(r.read() or b"{}")
         except urllib.error.HTTPError as e:
             msg = _server_message(e.read())
+            if e.code in (401, 403, 404):    # the log names what was refused, e.g. "403 on Customer: …"
+                msg = f"on {_target(path)}" + (f": {msg}" if msg else "")
             raise (Duplicate if e.code == 409 else ShopError)(e.code, msg) from None
         except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
             raise ShopError(0, f"unreachable: {e}") from None

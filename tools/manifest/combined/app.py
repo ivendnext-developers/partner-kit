@@ -206,7 +206,7 @@ def feed_pass(context=None) -> dict:
         try:
             out[tag] = _call(tag, {"ivn_schedule": p.get("pass") or "pass"}, _Share(context, len(READERS) - n))
         except Exception as e:      # noqa: BLE001 — one part's failure: its events stay undone, the others go on
-            out[tag] = {"error": type(e).__name__}
+            out[tag] = {"error": str(e) if type(e).__name__ == "FeedError" else type(e).__name__}   # a feed read says why
     out["feed"] = HUB.finish()
     return out
 

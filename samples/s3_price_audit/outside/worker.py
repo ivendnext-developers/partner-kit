@@ -100,14 +100,16 @@ def pass_all(store, state: str, log=sys.stdout, opener=open_shop, busy: dict | N
                 seen.db.close()                  # one note per shop per pass: never left open
         except NoUser:
             out[site] = {"error": "no_user"}
-        except F.FeedError as e:                 # its status code says which: 401 key, 403 rights, unreachable
-            out[site] = {"error": f"FeedError {str(e).split(' ', 1)[0]}"}
+        except F.FeedError as e:                 # its text says why: 401 key, 403 rights and the record type, unreachable
+            out[site] = {"error": str(e)}
         except Exception as e:                   # noqa: BLE001 — one shop's failure never stops the others
             out[site] = {"error": type(e).__name__}
         finally:
             line = out.get(site, {})
-            log.write(json.dumps({"site": site, **({"error": line["error"]} if "error" in line else
-                                                   {k: line.get(k, 0) for k in ("handled", "failed", "backlog")})}) + "\n")
+            row = {"error": line["error"]} if "error" in line else {k: line.get(k, 0) for k in ("handled", "failed", "backlog")}
+            if line.get("why"):
+                row["why"] = line["why"]
+            log.write(json.dumps({"site": site, **row}) + "\n")
             log.flush()
 
     def run(site):

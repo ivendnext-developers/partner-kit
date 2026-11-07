@@ -155,7 +155,7 @@ def apply_all(api, limit_pct=None):
         try:
             res = apply_one(api, r["name"], limit_pct)
         except F.FeedError as e:                              # the shop refused: say so, go on with the next
-            res = {"request": r["name"], "result": "not applied", "why": f"the shop said: {str(e)[:200]}"}
+            res = {"request": r["name"], "result": "not applied", "why": f"the shop said: {getattr(e, 'detail', str(e))[:200]}"}
         report["applied" if res["result"] == "applied" else "not_applied" if res["result"] == "not applied" else "skipped"].append(res)
     return report
 

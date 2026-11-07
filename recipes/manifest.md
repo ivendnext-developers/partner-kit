@@ -68,6 +68,8 @@ A manifest is one file that adds **your own record types and fields, and whateve
 
    Templates that read other retailer data (a receipt reading the company's tax number) are allowed where the output stays with the retailer's staff.
 
+   **Where does each thing go?** The manifest, the retailer's administrator, a setup script or CitiXsys: [What goes where](../guide/07_manifests.md#what-goes-where).
+
 3. **Check it yourself, before anyone installs it:**
 
    ```bash

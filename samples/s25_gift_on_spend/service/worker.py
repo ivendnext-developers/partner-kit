@@ -116,9 +116,11 @@ def pass_all(store, state: str, log=sys.stdout, opener=open_shop, busy: dict | N
                 out[site] = one_pass(t, feed, seen, clock, site)
             finally:
                 seen.db.close()                  # one note per shop per pass: never left open
+        except F.FeedError as e:           # the feed could not be read: its text says why (status, error type, record type)
+            out[site] = {"error": str(e)}
         except Exception as e:                   # noqa: BLE001 — one shop's failure never stops the others
             out[site] = {"error": type(e).__name__}
-        log.write(json.dumps({"site": site, **{k: (v if k == "error" else "done") for k, v in out.get(site, {}).items()}}) + "\n")
+        log.write(json.dumps({"site": site, **{k: (v if k == "error" else F.said(v) if k == "feed" else "done") for k, v in out.get(site, {}).items()}}) + "\n")
         log.flush()
 
     def run(site):

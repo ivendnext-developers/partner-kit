@@ -310,7 +310,7 @@ class ManyShops(unittest.TestCase):
         self.assertEqual(out["b.example"]["handled"], 1)
         self.assertEqual(out["c.example"], {"error": "no_user"})
         self.assertEqual(out["d.example"], {"error": "RuntimeError"})
-        self.assertEqual(out["e.example"], {"error": "FeedError 403"})
+        self.assertEqual(out["e.example"], {"error": "403 Not permitted"})
         self.assertEqual((recorded(shop_a), recorded(shop_b)), (["S1-0"], []))   # B's charger is 3 % below: not recorded
         self.assertEqual(sorted(seen_urls), [("https://a.example", "ka"), ("https://b.example", "kb"), ("https://d.example", "kd"), ("https://e.example", "ke")])
         lines = [json.loads(x) for x in log.getvalue().splitlines()]

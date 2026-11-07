@@ -23,6 +23,8 @@ More: the [recipe](../../recipes/gift_card_on_spend.md).
 
 **The customer sets:** the threshold, each card's value, the gift card item (not rechargeable, not paid out as cash, not store credit), the hold in hours, and the customer groups that never earn.
 
+**The app's role needs:** the install makes the role *PP GCS Integration* and the app's own user. On the retailer's own record types the retailer's administrator gives it read on POS Invoice, Customer and Item, read and create on Gift Card, and read, create and submit on Gift Card Balance. A read the role lacks does not stop the install: the events wait, and the service's log says which record type was refused (`ivn logs`), then the next pass catches up once the read is given ([What goes where](../../guide/07_manifests.md#what-goes-where)).
+
 ## Run it
 
 ```bash

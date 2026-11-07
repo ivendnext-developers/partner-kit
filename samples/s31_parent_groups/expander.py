@@ -109,7 +109,7 @@ def everything(shop, db, out=print):
             except F.FeedError as e:
                 db.execute("rollback to one_record")
                 db.execute("release one_record")
-                out(f"  NOT WRITTEN {dt} {name}: {e}")
+                out(f"  NOT WRITTEN {dt} {name}: {getattr(e, 'detail', e)}")
                 n["failed"] += 1
                 continue
             db.execute("release one_record")

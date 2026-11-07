@@ -789,8 +789,10 @@ class OneReader(Base):
     def test_each_part_opens_the_shop_with_its_own_code(self):
         log = self.drive("unreachable")["log"]
         errors = [line["error"].split()[0] for line in log if "site" in line]
-        self.assertEqual(errors, ["FeedError", "FeedError"])              # each part reached the feed: none failed to open
-        self.assertEqual(log[-1]["feed"], {"done": 0, "waiting": 0, "errors": 0})
+        self.assertEqual(errors, ["unreachable:", "unreachable:"])        # each part reached the feed: none failed to open
+        feed = log[-1]["feed"]                                            # and the shop is counted unread, with why
+        self.assertEqual((feed["done"], feed["unread"], len(feed["why"])), (0, 1, 1))
+        self.assertTrue(feed["why"][0].startswith("unreachable:"), feed)
 
 
 class AddToAnAppMadeBefore(Base):
@@ -866,7 +868,7 @@ class ReadersUnderTheirNames(Base):
         self.assertFalse((folder / "service" / "pdo" / "outside" / "manifest.json").exists())
         self.check(folder)
         log = OneReader.drive(self, "unreachable", folder)["log"]       # each part opens the shop and reaches its feed
-        self.assertEqual(sorted(line["error"].split()[0] for line in log if "site" in line), ["FeedError", "FeedError"])
+        self.assertEqual(sorted(line["error"].split()[0] for line in log if "site" in line), ["unreachable:", "unreachable:"])
 
 
 class ThreeSamples(Base):

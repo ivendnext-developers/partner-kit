@@ -44,7 +44,7 @@ def key(host, app_id=APP) -> str:
 
 def connect(svc, site, secret, app_id=APP):
     body = {"key": key(site, app_id), "site": site,
-            "secrets": {MEMBER: secret, "user:pp-lyl-service@x.example": f"k-{site}:s-{site}"}}
+            "secrets": {MEMBER: secret, "user:pp_lyl@integration.invalid": f"k-{site}:s-{site}"}}
     return shops.handle(svc.store, svc.app, shops.CONNECT, {shops.SITE_HEADER: site}, json.dumps(body).encode(), KEYS)
 
 

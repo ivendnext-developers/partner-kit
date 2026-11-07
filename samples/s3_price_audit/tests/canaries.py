@@ -72,7 +72,7 @@ CANARIES = [
      T + "Service.test_without_the_librarys_id_or_a_writable_notes_folder_it_refuses_to_start"),
     ("a deleted sale never blocks the feed", S, '            if str(e).startswith("404") and ev["doc_name"] in str(e):',
      "            if False:", T + "Writes.test_a_sale_deleted_before_it_is_read_never_blocks_the_feed"),
-    ("the log names a refusal's status", W, '            out[site] = {"error": f"FeedError {str(e).split(\' \', 1)[0]}"}',
+    ("the log says why a feed read was refused", W, '            out[site] = {"error": str(e)}',
      '            out[site] = {"error": type(e).__name__}', T + "ManyShops.test_each_shop_is_served_with_its_own_key_and_one_without_a_user_stops_none"),
     ("a busy shop is never run twice", W, "        if th is not None and th.is_alive():", "        if False:",
      T + "ManyShops.test_a_shop_busy_past_the_limit_is_stuck_and_never_run_twice"),

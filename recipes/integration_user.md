@@ -10,7 +10,7 @@ A connected app signs in to a retailer's iVendNext **from outside**, with an API
 
 The retailer's administrator does these in iVendNext Desk. An app with an event feed does not make its user by hand (step 2): the install makes its user and role (below), and the retailer only gives the role its rights (step 1) and, for a service the retailer hosts or the maker hosts, presses **Generate Keys** (step 3).
 
-1. **Give a role for this app alone the rights it needs** (Desk → Role Permissions Manager; Desk → Role → New only if no role of that name exists). If your manifest names the role in its permission rows and the role starts with your prefix, the install makes it (any other missing role is refused, so the retailer makes it first). Give it only what the app reads and writes. The bin-location sample's role, for example:
+1. **Give a role for this app alone the rights it needs** (Desk → Role Permissions Manager; Desk → Role → New only if no role of that name exists). A role your manifest names anywhere (a permission row, a workflow, a report or a button) is made at install, empty, so nobody makes it first; a role with your prefix goes at uninstall, and any other name stays the retailer's. Give it only what the app reads and writes. The bin-location sample's role, for example:
 
    | Record type | Rights |
    |---|---|
@@ -89,7 +89,7 @@ The user does not change either. If the key is revoked or rotated without your s
 
 ### Making the user from a script
 
-Over the record API (`POST /api/resource/User`), step 2's *Is Desk User* tick is the field `custom_is_desk_user`: set it to `1` on the new user. Without it iVendNext refuses the user: *"Select at least one option: 'Is Desk User' or 'Is POS User'."* (Sample S22's `apply_config.py` does this.)
+Over the record API (`POST /api/resource/User`), step 2's *Is Desk User* tick is the field `custom_is_desk_user`: set it to `1` on the new user. Without it iVendNext refuses the user: *"Select at least one option: 'Is Desk User' or 'Is POS User'."* (Sample S8's `rollout.py` does this.)
 
 ### What was proven where
 

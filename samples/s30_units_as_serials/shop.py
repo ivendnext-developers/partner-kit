@@ -100,7 +100,7 @@ class Shop:
         try:
             draft = self.insert("Stock Reconciliation", doc)
         except F.FeedError as e:
-            if "None of the items have any change" in str(e):
+            if "None of the items have any change" in getattr(e, "detail", str(e)):
                 return {}
             raise
         figures = {(r["item_code"], r["warehouse"], r["batch_no"]): (float(r.get("current_qty") or 0),

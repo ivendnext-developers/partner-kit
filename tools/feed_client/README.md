@@ -16,9 +16,13 @@ python3 -m unittest discover -s tools/feed_client/tests -p 'test_*.py'
 | File | What |
 |---|---|
 | `feed_client.py` | the client: two transports (the engine's feed; the event feed's door), the seen-set, `failed` notes, the nightly `reconcile` (it lists a sale handled before a lost working folder as `unknown`, not `missing`); a CLI (`run`, `backlog`, `reconcile`, `dump`) |
-| `tests/test_client.py` | laptop tests (32): every event once over small pages, a crash before `done`, a failed event, the labels, reconciliation, a lost working folder (handled sales read `unknown`, a skipped one `missing`), the two label tables agree, no redirect followed, the door asked with POST (its stand-in refuses a GET), and one reader for the parts of an app (`Handoff`: read once, handed by record type, done after every part, a waiting event never holding back a newer one, the lasting record) |
+| `tests/test_client.py` | laptop tests (38): a refused read's text, a shop that could not be read, a failed handler's reason, every event once over small pages, a crash before `done`, a failed event, the labels, reconciliation, a lost working folder (handled sales read `unknown`, a skipped one `missing`), the two label tables agree, no redirect followed, the door asked with POST (its stand-in refuses a GET), and one reader for the parts of an app (`Handoff`: read once, handed by record type, done after every part, a waiting event never holding back a newer one, the lasting record) |
 
 Both transports work on a retailer's iVendNext today. The `door` transport reads the event feed's door, which is live: it is scoped to your own application, and each of its three calls is a POST. The same POST call was read on a test site on 2026-10-09. The `engine` transport reads the older feed and is not scoped; use it only where you are the retailer's one consumer.
+
+## When a read fails, the log says why
+
+A refused or failed call raises `FeedError`. Its text is safe for a log: the HTTP status, the server's error type and the record type asked for (`403 PermissionError on Sales Invoice`), and, for a 401, 403 or 404, the server's own sentence when it gave one. `e.detail` is the server's whole reason, for your own logic. `poll` returns `why` beside `failed` when a handler was refused; print `said(result)` instead of `done`, and `explain(e)` for any error you catch yourself. Any other error is named by its class alone, because its text may quote a customer's value. A hosted app gets this at its next build; if you copied `feed_client.py` into your own app, copy the new one.
 
 ## Technical notes
 
