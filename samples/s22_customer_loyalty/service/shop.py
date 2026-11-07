@@ -80,7 +80,8 @@ class Shop:
         except urllib.error.HTTPError as e:
             msg = _server_message(e.read())
             if e.code in (401, 403, 404):    # the log names what was refused, e.g. "403 on Customer: …"
-                msg = f"on {_target(path)}" + (f": {msg}" if msg else "")
+                named = e.code == 404 and len(path.split("?", 1)[0].strip("/").split("/")) > 3    # it names the record
+                msg = f"on {_target(path)}" + (f": {msg}" if msg and not named else "")
             raise (Duplicate if e.code == 409 else ShopError)(e.code, msg) from None
         except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
             raise ShopError(0, f"unreachable: {e}") from None

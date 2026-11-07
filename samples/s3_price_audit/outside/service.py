@@ -46,7 +46,7 @@ def threshold_of(api, fallback=DEFAULT_THRESHOLD) -> float:
     try:
         doc = api.call("GET", f"/api/resource/{urllib.parse.quote(SETTINGS)}/Default")
     except F.FeedError as e:
-        if str(e).startswith("404") and "Default" in str(e):
+        if str(e).startswith("404") and "Default" in getattr(e, "detail", str(e)):
             return float(fallback)
         raise
     value = (doc.get("data") or {}).get("threshold_percent")
@@ -73,7 +73,7 @@ def handler_for(api, threshold, trace=None):
         try:
             doc = api.call("GET", f"/api/resource/{urllib.parse.quote(ev['doc_type'])}/{urllib.parse.quote(ev['doc_name'])}")
         except F.FeedError as e:
-            if str(e).startswith("404") and ev["doc_name"] in str(e):
+            if str(e).startswith("404") and ev["doc_name"] in getattr(e, "detail", str(e)):
                 note(ev, "gone: the sale was deleted before it was read")
                 return                                      # nothing left to judge; never block the feed on it
             raise

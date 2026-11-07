@@ -534,6 +534,12 @@ class FeedErrorSaysWhy(unittest.TestCase):
                       "/api/resource/POS%20Invoice/SINV-0001")
         self.assertEqual(t, "403 PermissionError on POS Invoice: No permission for POS Invoice")
 
+    def test_a_404_on_a_record_asked_for_by_name_keeps_no_sentence(self):
+        body = {"exc_type": "DoesNotExistError",
+                "_server_messages": json.dumps([json.dumps({"message": "Customer Asha Rao not found"})])}
+        self.assertEqual(self.text(404, body, "/api/resource/Customer/Asha%20Rao"), "404 DoesNotExistError on Customer")
+        self.assertIn("not found", self.text(404, body, "/api/resource/Customer"))        # a list names no record
+
     def test_any_other_status_keeps_the_type_and_never_the_message(self):
         t = self.text(417, {"exc_type": "ValidationError",
                             "_server_messages": json.dumps([json.dumps({"message": "Customer Asha Rao is blocked"})])},

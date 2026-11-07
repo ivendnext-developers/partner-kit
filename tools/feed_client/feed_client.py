@@ -71,8 +71,8 @@ def label(doc_type: str, raw_event: str, is_return: bool | None, exists: bool = 
 
 class FeedError(Exception):
     """The server refused or could not be reached. ``str(e)`` is safe for a log: the HTTP status, the server's error type
-    and the record type asked for, and for a 401, 403 or 404 the server's own sentence when it gave one (on a by-name
-    call that sentence may name the record too), e.g. ``403 PermissionError on POS Invoice``. ``e.detail`` is the
+    and the record type asked for, and for a 401, 403 or 404 the server's own sentence when it gave one (not for a 404 on
+    a record asked for by name: that sentence names the record), e.g. ``403 PermissionError on POS Invoice``. ``e.detail`` is the
     server's whole reason, for the caller's own logic or for a note kept in the retailer's own system."""
 
     def __init__(self, text: str, detail: str | None = None):
@@ -126,9 +126,15 @@ def _target(path: str) -> str:
     return "/".join(parts[:3])
 
 
+def _by_name(path: str) -> bool:
+    """A call for one record by its name (``/api/resource/<type>/<name>``): a refusal's sentence may then name the record."""
+    return len(urllib.parse.unquote(path.split("?", 1)[0]).strip("/").split("/")) > 3
+
+
 def _why(status: int, raw: bytes, path: str = "") -> str:
     """``<status> <the server's error type> on <the record type asked for>``, always; then the server's own sentence for
-    a 401, 403 or 404. Any other status keeps no sentence: a 4xx or 5xx on a write or a save may quote a customer's value.
+    a 401, 403 or 404, except a 404 on a record asked for by name. Any other status keeps no sentence: a 4xx or 5xx on a write
+    or a save may quote a customer's value.
     The record type comes from the request, because the server's refusal of a list read names none."""
     try:
         d = json.loads(raw or b"{}")
@@ -136,7 +142,7 @@ def _why(status: int, raw: bytes, path: str = "") -> str:
         d = None
     kind = str(d.get("exc_type") or "") if isinstance(d, dict) else ""      # never ``exception``: it carries a module path
     text = f"{status} {kind}".strip() + (f" on {_target(path)}" if path else "")
-    if status in _NAMES_A_MESSAGE:
+    if status in _NAMES_A_MESSAGE and not (status == 404 and _by_name(path)):    # a missing record's sentence names it
         msg = _server_message(raw)
         if msg:
             text += f": {msg}"
