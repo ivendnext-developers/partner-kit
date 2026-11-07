@@ -8,7 +8,7 @@ A retailer's coupons already carry dates, stores, week days and a cap per store.
 
 ![On a demo site: a rule with Sale needed for each use set to 50.00](../samples/s32_coupon_rules/screenshots/coupon-rules-sale-needed-rule.png)
 
-![On a demo site: the coupon refused at Pay on a sale of USD 33.05](../samples/s32_coupon_rules/screenshots/coupon-rules-sale-needed-refused.png)
+![On a demo site: the coupon refused at Pay on a sale of USD 42.77](../samples/s32_coupon_rules/screenshots/coupon-rules-sale-needed-refused.png)
 
 ## Steps
 

@@ -2,7 +2,7 @@
 
 A resale or consignment store sells pieces it does not own. Each piece belongs to a consignor, who is owed an agreed share of what it sold for. The app keeps the consignors, names the consignor on each item, and works each payout out from the retailer's own till sales and Desk invoices: what sold, less what came back, at the share. **Each sold line is paid once:** a line on a payout is never put on another, and a payout is marked paid only after the app's service has checked every line again. A paid payout is locked, and prints as the consignor's statement.
 
-![A payout worked out: two pieces sold at the tills, each at its share](screenshots/04_payout.png)
+![A payout worked out: three pieces sold at the tills, each at its share](screenshots/04_payout.png)
 
 **Industries:** Thrift and resale
 
