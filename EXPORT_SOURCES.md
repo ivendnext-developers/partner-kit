@@ -30,9 +30,9 @@ defect in one is a defect in its source: report it through the feedback forms ([
 
 ## The contracts: copies of the product's published files
 
-The folder [`contracts/`](contracts/README.md) holds 387 files copied from the iVendNext POS app's repository
+The folder [`contracts/`](contracts/README.md) holds 394 files copied from the iVendNext POS app's repository
 (`ivendnext/iVendNext_PWA`) at one commit, so a check runs with this repository alone. POS app commit
-`cff85a09aa4d9391bd0de4af68964d2181a753a5` (the commit after the merge of the POS app's train T31 into `development`, 2026-11-03, build 2.1.0.681, which corrects four pages). The checker copy `tools/manifest/validate.py` is taken at the same commit, and so are its two copied tests, `tools/manifest/tests/test_manifest_check.py` and `test_allowbydefault.py`, with their fixtures.
+`01a282e1286c1aaff66c629fda839c4a304a2a1a` (the merge of the POS app's train T37 into `development`, 2026-11-07, build 2.1.0.691: the install gives an app's own user read on every record type its event feed follows, and a manifest may carry `role_rights` and `records`). The checker copy `tools/manifest/validate.py` is taken at the same commit, and so are its two copied tests, `tools/manifest/tests/test_manifest_check.py` and `test_allowbydefault.py`, with their fixtures.
 Our kit check
 compares every file below with its source at that commit on each change; the only edits are the links inside the
 pages, which point at the files here, and, in the samples, the framework's name in two refused print formats (by train T21 the product's pages word the framework's calls, its customers, bugs and decisions themselves, so the copies no longer reword them). Both print formats read through the framework's own value reader: the Company in one, a package's own patient record in the other. The shop refuses each only when it is called by the framework's name: without the name, this copy of each sample is warned, not refused, so read its `expect_refusal` as the shop's answer. A defect in one is a defect there: report it through the feedback forms ([feedback/README.md](feedback/README.md)).
@@ -42,7 +42,7 @@ pages, which point at the files here, and, in the samples, the framework's name 
 | `contracts/pages/<point>.md` | `docs/extending/<point>.md` | 24 | yes (first line) |
 | `contracts/extension_contract_check.py` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contract_check.py` | 1 | yes (first line) |
 | `contracts/extension_contracts/<point>.v1.schema.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/<point>.v1.schema.json` | 21 | no header (JSON) |
-| `contracts/extension_contracts/samples/<point>/**/*.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/samples/<point>/**/*.json` | 338 | no header (JSON) |
+| `contracts/extension_contracts/samples/<point>/**/*.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/samples/<point>/**/*.json` | 345 | no header (JSON) |
 | `contracts/extension_contracts/standins/*.py` | `apps/ivendnext_mpos/ivendnext_mpos/tests/extension_contracts/standins/*.py` | 2 | yes (first line) |
 | `contracts/gs1_codes.json` | `apps/ivendnext_mpos/ivendnext_mpos/tests/gs1_codes.json` | 1 | no header (JSON) |
 

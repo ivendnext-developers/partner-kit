@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_manifest_check.py,
-# at development cff85a09aa4d9391bd0de4af68964d2181a753a5; changed: the import, the fixture folder and one id in a comment. A defect here is a defect there:
+# at development 01a282e1286c1aaff66c629fda839c4a304a2a1a; changed: the import, the fixture folder and the ids in comments. A defect here is a defect there:
 # report it with the Kit defect form (feedback/README.md).
 """Validator tests: stdlib only, no bench. Every fixture passes; each kept gate, planted into a good
 manifest, is refused with its own reason and nothing else; what Desk allows the shop's administrator
@@ -65,6 +65,37 @@ KEPT = [
         KINDS,
         lambda m: m["desk_actions"][0].update(service="nope"),
         "extension_subscriptions",
+    ),
+    # a field with no writer would install at level 0, open to every reader of its record type
+    (
+        "a field limited by read_roles alone",
+        FULL,
+        _field("Customer", read_roles=["PP TST Clerk"]),
+        "write_roles",
+    ),
+    (
+        "a field limited with no one in write_roles",
+        FULL,
+        _field("Customer", read_roles=["PP TST Clerk"], write_roles=[]),
+        "write_roles",
+    ),
+    (
+        "a field whose write_roles is not a list",
+        FULL,
+        _field("Customer", write_roles="PP TST Clerk"),
+        "write_roles",
+    ),
+    (
+        "a field whose read_roles is not a list",
+        FULL,
+        _field("Customer", read_roles="PP TST Clerk", write_roles=["PP TST Clerk"]),
+        "read_roles, if named, is a list",
+    ),
+    (
+        "a limit on a field of the app's own record type",
+        FULL,
+        lambda m: m["doctypes"][0]["fields"][0].update(write_roles=["PP TST Clerk"]),
+        "give the field a permlevel",
     ),
     # A: the books
     (

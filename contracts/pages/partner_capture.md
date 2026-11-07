@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_capture.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_capture.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner capture
 
 **Contract:** [`partner_capture.v1.schema.json`](../extension_contracts/partner_capture.v1.schema.json)
@@ -71,9 +71,7 @@ opened to edit it, an answer lost, a sale paid twelve hours later) is refused at
 customer has not been checked. Pick them again, or sell without a customer."* — picking them again asks
 you. A payment on something the customer already holds — a layaway plan's later payment, an order's
 balance, their account — is not a new pick and is not held. A payment pressed before your answer arrives
-is refused with those same words, and picking the customer again asks you again. One cashier sends you at most 60 select rounds in ten
-minutes, counted from the first; past that the till shows *"Too many attempts. Try again in a few
-minutes."* without asking you, and a customer you already let on stays on.
+is refused with those same words, and picking the customer again asks you again.
 
 ## 2. Version
 
@@ -101,7 +99,7 @@ does when you are down (`allow_and_flag`, the default, or `refuse`), the POS Pro
 and `settings`, a JSON object:
 
 - on scan: `{"event": "scan", "item_groups": ["Restricted"], "item_field": "is_age_restricted"}` — item
-  groups (at most 50; a group names every group below it too), an item field that holds a value (`Check`,
+  groups (a group names every group below it too), an item field that holds a value (`Check`,
   `Data`, `Select`, `Link`, `Int` or `Small Text`, at permission level 0), or both; at least one;
 - on customer add: `{"event": "customer_add"}`;
 - on customer select: `{"event": "customer_select"}`;
@@ -112,7 +110,8 @@ and `settings`, a JSON object:
 - on a quantity change: `{"event": "qty_change", "item_groups": ["Sold in sixes"]}` — the scan's filter,
   with the scan's rules.
 
-One service answers each event for a POS Profile. The form shows the time to answer for the event the
+One service answers each of customer add, customer select and a quantity change for a POS Profile; a scan
+may have several (*Several services on one scan*, below). The form shows the time to answer for the event the
 settings name (section 5's table) and stops a longer one before the save. Then the System Manager ticks the
 consent (section 5).
 
@@ -229,13 +228,20 @@ a challenge, or a down answer.
   message stays on screen. If it has gone by the time pricing settles (the cashier closed it, or a later
   notice took its place), or the sale has changed, nothing opens; the key is still there. The till never opens your page by itself, and your
   page cannot tell the button from the key.
-- **One service per event.** On one POS Profile one service answers scans, so a delivery service with a
-  page and, say, a shelf-life notice service cannot both answer scans at the same store: point one service
-  at the page, or split the stores' POS Profiles.
+- **Several services on one scan.** Between two that allow an item, the first notice in `sequence` speaks,
+  with its page; the other's notice is not shown.
 - **Not on customer add or a quantity change.** A `page` there is refused when the subscription is saved.
 - **Updates and a stale page.** A package update keeps the `page` the shop set while the new version's event
   still honours one and it still names a page placed on the till; otherwise the update drops it. A service
   switched off saves with a stale `page`; switching it on checks the page again.
+
+**Several services on one scan.** Two or more scan services may serve one POS Profile, each asked about the
+items its own filter names, in `sequence`. The first that does not allow an item answers, and the rest are not
+asked. An earlier `allow`'s values ride on, the first in `sequence` holding a name. On a later `confirm` the
+till asks with the earlier notice and values ahead of that question, so the cashier's *Yes* covers what lands;
+on a later `refuse` nothing lands. One scan waits 6 seconds at most for all of them: each call gets what is
+left, and past that a service is asked nothing and takes its down answer. So a scan whose item two services
+both name can take 6 seconds where one service takes 3. No other event merges or queues answers.
 
 **No answer sets a quantity or a price.** A `set_qty`, a `qty`, a price, `sale_attributes` on a quantity
 change, or any other key refuses the whole answer, and your declared down answer applies.
@@ -295,13 +301,13 @@ answers ok, or refuse with a reason"* · *"the answer is empty or over 64 KB"* �
 
 **When the subscription is saved:** *"Name the event in the settings: scan, customer_add, customer_select or
 qty_change."* · *"The settings of a ⟨event⟩ capture may only carry: ⟨keys⟩."* · *"item_groups must be a list of
-item group names."* · *"A ⟨event⟩ capture names at most 50 item groups."* · *"No item group named ⟨group⟩."* ·
+item group names."* · *"No item group named ⟨group⟩."* ·
 *"item_field must be the name of one field on Item."* · *"Item has no field ⟨field⟩ that holds a value."* ·
 *"⟨field⟩ is set on ⟨n⟩ items; a ⟨event⟩ capture's field may name at most 2000. Name item groups instead."* ·
 *"Say which items a ⟨event⟩ capture asks about: item groups, an item field, or both."* · *"⟨page⟩ is not a
 partner page placed on the till."* · *"A page opens only from a scan or a customer picked at the till.
 Remove page from this service's settings."* · *"⟨subscription⟩ already answers ⟨event⟩
-for these POS Profiles. One service answers each."* · *"The time to answer must be more than 0 and at most
+for these POS Profiles. One service answers each."* (customer add, customer select and a quantity change) · *"The time to answer must be more than 0 and at most
 ⟨3 or 10⟩ seconds."* · *"When the service is down, this extension point can only: allow_and_flag,
 refuse."* · and the address and label rules every extension point's subscription carries.
 
@@ -348,7 +354,7 @@ Changing the address, or the event, clears the consent until someone ticks it ag
 
 | | `allow_and_flag` (default) | `refuse` |
 |---|---|---|
-| On scan (1.5 seconds unless raised, 3 at most) | the line goes on; the log row is flagged | the item is not added (section 4) |
+| On scan (1.5 seconds unless raised, 3 at most; 6 for all the services of one scan) | the line goes on; the log row is flagged | the item is not added (section 4) |
 | On customer add (3 seconds unless raised, 10 at most) | the customer may be created; the log row is flagged | the customer is not created (section 4) |
 | On customer select (3 seconds unless raised, 10 at most) | the customer stays on and the sale may be paid; the log row is flagged | the customer is taken off the sale (section 4) |
 | On a quantity change (1.5 seconds unless raised, 3 at most) | the new quantity stands and becomes the allowed one; the log row is flagged (a request whose answer never came back to the till is marked on the line and flagged as *"quantity changed offline, not asked"* when the sale is paid online or synced; if the server did answer, late, that change carries two rows) | the last allowed quantity is put back (section 4) |
@@ -371,6 +377,9 @@ takes them off. A sale paid offline with a customer you were not asked about boo
 once (*"customer on the sale offline, not asked"*); paid after the connection returns, it is refused until
 the customer is picked again. If the till could not read its declared answers, every scanned item goes on
 and is flagged (the scan's answer is advisory), and a new customer waits for a connection.
+**Several scan services offline:** the till holds one answer for a scan. If any of them declares `refuse`, the
+items their filters name are refused; otherwise every filter's items go on and are flagged. ⚠ Bound: beside a
+service that refuses, an item only an `allow_and_flag` service names goes on offline unflagged.
 **At sync a customer is never refused:** the sale was paid hours ago, so a customer created through the
 sync without your recorded answer is created and flagged. The receipt's *add a contact* after a walk-in sale
 posted today or yesterday is created and flagged too — one customer per paid sale (the same name and phone
@@ -407,10 +416,9 @@ quantity, neither asked nor flagged.
 on a line is annotation: it moves no money.
 
 Limits: texts 1 to 140 · `length` 4 to 8 · 1 to 10 line rows · line value 140 · 1 to 20 sale rows · 3000
-quantity changes per 10 minutes from one address · item
-groups 50 · an item field set on at most 2000 items · three tries per code, counted before you are called ·
+quantity changes per 10 minutes from one address · an item field set on at most 2000 items · three tries per code, counted before you are called ·
 60 customer adds and 3000 customer selects per 10 minutes from one address (a till asks on every pick while
-online), and 60 select rounds per cashier · a challenge, and the token it earns,
+online) · a challenge, and the token it earns,
 live ten minutes (the token is spent by the create) · a select's recorded answer lives twelve hours and is
 spent by the sale it pays · answer 64 KB ·
 on scan or a quantity change 1.5 seconds unless raised, 3 at most · on customer add or select 3 seconds unless raised, 10 at

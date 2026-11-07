@@ -44,7 +44,7 @@ A payment method's *Allowed in Returns* holds for every refund alike. Retailers 
 - A layaway plan's refund is payable at any store of the company, whatever *Use inter-store transactions* says.
 - The till asks every check at each Pay too: answer a sale at once, but it is still a call, and it carries the sale's details.
 - Not checked: a return sent to a register (refunded in Desk) and a refund made in Desk.
-- At most three checks answer one POS Profile, ten seconds together.
+- Ten seconds is the most one pass of a POS Profile's checks makes a cashier wait.
 
 ## See also
 

@@ -1,0 +1,68 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A loyalty app that follows sales and batches: its own user reads them from the install (the Reads line on the consent); its own Pharmacist role may read and change Customer and Batch; a default customer group and its own settings value are made at install if missing.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_hkd",
+    "prefix": "PP HKD",
+    "version": "1.0.0",
+    "doctypes": [
+      {
+        "name": "PP HKD Settings",
+        "issingle": 1,
+        "fields": [
+          {
+            "fieldname": "plan_days",
+            "fieldtype": "Int",
+            "label": "Plan length (days)"
+          }
+        ]
+      }
+    ],
+    "registered_applications": [
+      {
+        "name": "PP HKD Feed",
+        "description": "Enrolment and points",
+        "events": [
+          "POS Invoice",
+          "Batch",
+          "Customer"
+        ]
+      }
+    ],
+    "role_rights": [
+      {
+        "doctype": "Customer",
+        "role": "PP HKD Pharmacist",
+        "rights": [
+          "read",
+          "write"
+        ]
+      },
+      {
+        "doctype": "Batch",
+        "role": "PP HKD Pharmacist",
+        "rights": [
+          "read"
+        ]
+      }
+    ],
+    "records": [
+      {
+        "doctype": "Customer Group",
+        "name": "PP HKD Basic",
+        "values": {
+          "customer_group_name": "PP HKD Basic",
+          "parent_customer_group": "All Customer Groups"
+        }
+      },
+      {
+        "doctype": "PP HKD Settings",
+        "values": {
+          "plan_days": 30
+        }
+      }
+    ]
+  }
+}

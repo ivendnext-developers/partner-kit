@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+  "app": "pp_ird",
+  "prefix": "PP IRD",
+  "version": "1.0.0",
+  "publisher": "PP IRD",
+  "doctypes": [
+    {
+      "name": "PP IRD Settings",
+      "issingle": 1,
+      "fields": [
+        {"fieldname": "shelf_life_days", "fieldtype": "Int", "label": "Shelf life (days)"}
+      ]
+    }
+  ],
+  "role_rights": [
+    {"doctype": "Customer", "role": "PP IRD Clerk", "rights": ["read", "write"]}
+  ],
+  "records": [
+    {
+      "doctype": "Customer Group",
+      "name": "PP IRD Basic",
+      "values": {"customer_group_name": "PP IRD Basic", "parent_customer_group": "All Customer Groups"}
+    },
+    {"doctype": "PP IRD Settings", "values": {"shelf_life_days": 30}}
+  ]
+}

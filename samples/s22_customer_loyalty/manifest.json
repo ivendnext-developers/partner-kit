@@ -3,9 +3,9 @@
  "app": "pp_lyl",
  "prefix": "PP LYL",
  "title": "Customer-owned loyalty",
- "version": "0.4.1",
+ "version": "0.5.0",
  "publisher": "Partner Programme sample",
- "description": "A customer's own loyalty programme, run by the partner's service OUTSIDE the shop, with its records kept INSIDE the shop: plans, settings, members and a cash-back ledger whose every row is named by its unique key, so the shop itself refuses a duplicate. Tiers are customer groups (each priced by a promotion, set by configuration). The service reads the event feed with one integration user (role PP LYL Integration, which the install makes), answers the member till key and, once the shop registers it as a remote wallet, lets a member spend the cash back at the till (Member cash). The feed and the till key are on from the install. Every right a role has is written out (read, write, create, delete, report, export, share, print, email). allowed_urls is an example address; a partner writes its own.",
+ "description": "A customer's own loyalty programme, run by the partner's service OUTSIDE the shop, with its records kept INSIDE the shop: plans, settings, members and a cash-back ledger whose every row is named by its unique key, so the shop itself refuses a duplicate. Tiers are customer groups, made with their plans and the programme's settings by the install (each tier's promotion is set by configuration). The service reads the event feed with one integration user (role PP LYL Integration, which the install makes), answers the member till key and, once the shop registers it as a remote wallet, lets a member spend the cash back at the till (Member cash). The role's read on what the feed follows is the install's; its write on Customer and its reads of Purchase Order and Supplier are in role_rights. The feed and the till key are on from the install. Every right a role has is written out (read, write, create, delete, report, export, share, print, email). allowed_urls is an example address; a partner writes its own.",
  "allowed_urls": [
   "https://loyalty.partner.example/lyl/member"
  ],
@@ -524,6 +524,20 @@
    "returns_sale_attributes": 0,
    "timeout_seconds": 3
   }
+ ],
+ "role_rights": [
+  {"doctype": "Customer", "role": "PP LYL Integration", "rights": ["read", "write"]},
+  {"doctype": "Purchase Order", "role": "PP LYL Integration", "rights": ["read"]},
+  {"doctype": "Supplier", "role": "PP LYL Integration", "rights": ["read"]}
+ ],
+ "records": [
+  {"doctype": "Customer Group", "name": "PP LYL Bronze", "values": {"customer_group_name": "PP LYL Bronze", "parent_customer_group": "All Customer Groups", "is_group": 0}},
+  {"doctype": "Customer Group", "name": "PP LYL Silver", "values": {"customer_group_name": "PP LYL Silver", "parent_customer_group": "All Customer Groups", "is_group": 0}},
+  {"doctype": "Customer Group", "name": "PP LYL Gold", "values": {"customer_group_name": "PP LYL Gold", "parent_customer_group": "All Customer Groups", "is_group": 0}},
+  {"doctype": "PP LYL Plan", "name": "Bronze", "values": {"plan_name": "Bronze", "rank": 1, "customer_group": "PP LYL Bronze", "spend_threshold": 0, "discount_percent": 0, "cash_back_percent": 2, "active": 1}},
+  {"doctype": "PP LYL Plan", "name": "Silver", "values": {"plan_name": "Silver", "rank": 2, "customer_group": "PP LYL Silver", "spend_threshold": 1000, "discount_percent": 3, "cash_back_percent": 2, "active": 1}},
+  {"doctype": "PP LYL Plan", "name": "Gold", "values": {"plan_name": "Gold", "rank": 3, "customer_group": "PP LYL Gold", "spend_threshold": 2500, "discount_percent": 5, "cash_back_percent": 2, "active": 1}},
+  {"doctype": "PP LYL Settings", "name": "Default", "values": {"title": "Default", "default_plan": "Bronze", "return_days": 14, "tier_window_days": 365, "max_redemption_percent": 50, "earn_on_redemption": 0}}
  ],
  "property_setters": [
   {"doc_type": "PP LYL Settings", "property": "documentation", "property_type": "Data",

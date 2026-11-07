@@ -48,6 +48,15 @@
         "description": {
           "type": "string"
         },
+        "app_user_rights": {
+          "description": "What the app's own user may do at the till, by Retail Permission field name: the install gives it these rights and every other right off, a row for every store, and a Shift Profile, all named in the one consent.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
         "allowed_urls": {
           "type": "array",
           "items": {
@@ -367,6 +376,78 @@
                   "type": "string",
                   "minLength": 1
                 }
+              }
+            }
+          }
+        },
+        "role_rights": {
+          "description": "Rights for one of the app's OWN roles (named with its prefix) on any record type, the retailer's included (since 2.1.0, X109): the install writes one level-0 permission row per entry, with exactly these rights on, and never touches a row the retailer already gave that role; an update rewrites the row unless the retailer changed it; the uninstall removes it. A right for a role that is not the app's own is refused: the retailer gives their own roles rights in Role Permissions Manager. Page: docs/extending/package_install.md.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "doctype",
+              "role",
+              "rights"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "doctype": {
+                "type": "string",
+                "minLength": 1
+              },
+              "role": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rights": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "read",
+                    "write",
+                    "create",
+                    "delete",
+                    "submit",
+                    "cancel",
+                    "amend",
+                    "report",
+                    "export",
+                    "import",
+                    "share",
+                    "print",
+                    "email",
+                    "select"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "records": {
+          "description": "Default records made at install if missing, as the administrator would in Desk (since 2.1.0, X109): by name, else by the plain values given; never written over, never a document that posts (the retailer's to make) nor one of the till's own records (the till writes them as it sells); on the app's own settings record, values are set where the field is empty. An update rewrites the values unless the retailer changed them; the uninstall removes a row that is unchanged and unlinked, and names what it kept. Page: docs/extending/package_install.md.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "doctype",
+              "values"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "doctype": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "values": {
+                "type": "object",
+                "minProperties": 1
               }
             }
           }

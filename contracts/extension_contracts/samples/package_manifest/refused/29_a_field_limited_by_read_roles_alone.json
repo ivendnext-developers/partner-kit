@@ -1,0 +1,25 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A licence number on the shop's Customer that only the pharmacists should read, with no one named to change it: the field takes its own level through its writers, so it would stay open to every role that reads Customer.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_rxl",
+    "prefix": "PP RXL",
+    "version": "1.0.0",
+    "custom_fields": [
+      {
+        "dt": "Customer",
+        "fieldname": "pp_rxl_licence",
+        "fieldtype": "Data",
+        "label": "Licence number",
+        "insert_after": "customer_name",
+        "read_roles": [
+          "PP RXL Pharmacist"
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "name the roles that change this field in write_roles",
+  "beyond_schema": true
+}

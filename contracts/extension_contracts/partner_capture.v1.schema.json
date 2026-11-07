@@ -5,7 +5,7 @@
   "description": "Extension point capture: what iVendNext POS sends a partner's HTTPS service when an item the service's filter names is scanned (scan_request), when a new customer is added (customer_request), when a cashier puts an existing customer on a sale (select_request), when the quantity of a line the filter names changes (qty_request) and to check a code the customer gives (verify_request), and what the service answers. Answers are judged by business_logic/partner_capture.py validate_answer and validate_verify: one bad key or value refuses the whole answer, and the declared down answer applies. Page: docs/extending/partner_capture.md.",
   "$defs": {
     "settings": {
-      "description": "The subscription's settings field (a JSON object, stored as text on the Retail Extension Subscription of extension point capture): the event, and for a scan or a quantity change its filter; for a scan or a customer put on a sale, optionally the partner page its notice points at. One service answers each event for a POS Profile.",
+      "description": "The subscription's settings field (a JSON object, stored as text on the Retail Extension Subscription of extension point capture): the event, and for a scan or a quantity change its filter; for a scan or a customer put on a sale, optionally the partner page its notice points at. One service answers each event for a POS Profile, except a scan: several may, asked in sequence.",
       "oneOf": [
         {
           "type": "object",
@@ -19,7 +19,6 @@
             },
             "item_groups": {
               "type": "array",
-              "maxItems": 50,
               "items": {
                 "type": "string",
                 "minLength": 1,
@@ -99,7 +98,6 @@
             },
             "item_groups": {
               "type": "array",
-              "maxItems": 50,
               "items": {
                 "type": "string",
                 "minLength": 1,

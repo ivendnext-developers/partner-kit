@@ -1,0 +1,22 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "A default coupon code: the till writes coupons as it sells, so the retailer makes these.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_hkd",
+    "prefix": "PP HKD",
+    "version": "1.0.0",
+    "records": [
+      {
+        "doctype": "Coupon Code",
+        "values": {
+          "coupon_name": "PP HKD 10",
+          "coupon_type": "Promotional"
+        }
+      }
+    ]
+  },
+  "expect_refusal": "Coupon Code is one of the till's own records",
+  "beyond_schema": true
+}

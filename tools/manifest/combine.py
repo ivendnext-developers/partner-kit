@@ -71,7 +71,6 @@ KEYED = ("extension_subscriptions", "remote_keys", "webhooks", "extension_module
 EVENT_WORDS = {"scan": ("at the scan", "scan"), "qty_change": ("when a quantity changes", "quantity"),
                "customer_add": ("when a customer is added", "customer"),
                "customer_select": ("when a customer is chosen", "customer")}
-CHECKS_MAX, CHECK_SECONDS_MAX = 3, 10
 PREFIX_WORDS = "A name is one to three words of letters and digits, each starting with a letter: ACME BINS."
 POINT_WORDS = {"page": "a page", "desk_action": "a button in Desk", "doccheck": "a check when a record is saved",
                "payer": "a payer at Pay"}
@@ -248,6 +247,10 @@ def identity(section: str, item) -> str:
         return f"{item.get('doc_type')}.{item.get('field_name') or ''}.{item.get('property')}"
     if section == "links":
         return f"{item.get('doctype')}.{item.get('link_doctype')}.{item.get('link_fieldname')}"
+    if section == "role_rights":                 # one row per record type and role: two samples' rights on it are one entry
+        return f"{item.get('doctype')}.{item.get('role')}"
+    if section == "records":                     # a default row is its record type and name (no name: its plain values)
+        return f"{item.get('doctype')}.{item['name']}" if isinstance(item.get("name"), str) else f"{item.get('doctype')}.{sha(item)[:16]}"
     where = item.get("doctype") or item.get("ref_doctype") or item.get("dt") or item.get("doc_type")
     for k in ("key", "name", "role"):
         if isinstance(item.get(k), str):
@@ -310,13 +313,6 @@ def limits(parts: list[Part]) -> None:
             raise Refused(f"These samples both capture {where}: {names}. A till event takes one capture. Untick one of "
                           f"them, or take {number(b.sample)}'s {noun} rule into {number(a.sample)}'s code by hand after the "
                           "app is made.", code="M01")
-    checks = [(p, s) for p in parts for s in p.manifest.get("extension_subscriptions") or [] if s.get("point") == "check"]
-    seconds = sum(float(s.get("timeout_seconds") or 0) for _, s in checks)
-    if len(checks) > CHECKS_MAX or seconds > CHECK_SECONDS_MAX:
-        listed = ", ".join(f"{s.get('label') or s.get('key')} ({number(p.sample)}, {float(s.get('timeout_seconds') or 0):g} s)"
-                           for p, s in checks)
-        raise Refused(f"This app would run {len(checks)} checks at Pay: {listed}. A sale runs at most 3 checks, 10 seconds "
-                      "together. Untick one.", code="M02")
     for p in parts:
         if own_server(p) and not handler_of(p):
             raise Refused(f"{p.label} answers the till from its own server, with no hosting order (app.json) the app's "
@@ -413,6 +409,11 @@ def build_manifest(parts: list[Part], prefix: str, app: str, base: dict | None =
             for i, x in zip(ids(section, items), items):
                 if i in have:
                     if have[i] == x:
+                        continue
+                    if section == "role_rights" and isinstance(have[i].get("rights"), list) and isinstance(x.get("rights"), list):
+                        # two samples of one app give the same role rights on the same record type: the app gets both
+                        have[i]["rights"] = have[i]["rights"] + [r for r in x["rights"] if r not in have[i]["rights"]]
+                        owners.setdefault(f"manifest:{section}:{i}", []).append(p.sample)
                         continue
                     if section == "allowed_urls":
                         continue

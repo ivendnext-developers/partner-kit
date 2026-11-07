@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner check
 
 **Contract:** [`partner_check.v1.schema.json`](../extension_contracts/partner_check.v1.schema.json)
@@ -47,9 +47,9 @@ iVendNext Desk: your HTTPS address, a signing secret, the label the cashier sees
 seconds unless raised, 10 at most; the form shows both and stops a longer one before the save), what the
 till does when you are down (`allow_and_flag`, the default · `refuse` · `ask`), the POS Profiles it serves
 (none = all), its order (`sequence`), **May ask for a manager's approval** (off by default) and **Send each
-line's lot and serial number** (off by default; an address check only, below). At most three
-checks answer one POS Profile, ten seconds together (the form shows one check's limit; the save adds up the
-checks of each POS Profile). Then they tick the consent (section 5).
+line's lot and serial number** (off by default; an address check only, below). Any number of checks may
+answer one POS Profile; ten seconds is the most one pass of them makes a cashier wait (section 5). Then they
+tick the consent (section 5).
 
 **The call** — one signed `POST`, signed like every extension point's call: `X-iVendNext-Timestamp` and
 `X-iVendNext-Signature` = base64 HMAC-SHA256 of `<timestamp>.<raw body>` (method and verifier:
@@ -212,6 +212,7 @@ returned (a dispensed medicine), and keep your detail rules for lines being sold
 | The basket changed after your answer, no answer is stored for it, or your answer was for another cashier | *"The sale changed after the check. Press Pay again."* |
 | A cashier tried to approve their own sale | *"A cashier never approves their own sale."* |
 | Nobody can approve | *"Nobody can approve this sale. A manager needs May Approve a Partner's Check on their Retail Permission and write access to Retail Override Request."* |
+| The manager who signed in lacks the right | *"This manager can't approve a partner's check. They need May Approve a Partner's Check on their Retail Permission."* |
 | The approvers could not be read | *"The manager approval could not be checked. Press Pay again."* |
 | Down, declared `refuse` | *"⟨label⟩ did not answer. This sale can't be paid until it does. Try again, or get a manager."* |
 | Down, declared `ask` | *"⟨label⟩ did not answer. Continue anyway?"* |
@@ -229,8 +230,7 @@ reason"* · *"allow carries a reason only with exclude_tenders"* · *"this servi
 *"fill must name 1 to 10 sale details"* · *"fill names a sale detail the subscription does not let it fill"* ·
 *"each value filled must be plain text of 1 to 140 characters"*.
 
-**When the subscription is saved:** *"At most 3 checks may answer one POS Profile."* · *"The checks of one POS
-Profile may take at most 10 seconds together."* · *"Nobody can approve a partner's check yet. A manager needs
+**When the subscription is saved:** *"Nobody can approve a partner's check yet. A manager needs
 May Approve a Partner's Check on their Retail Permission and write access to Retail Override Request."* ·
 *"⟨profile⟩ has one user, and a cashier never approves their own sale. Let this check ask the cashier
 instead."* · *"When the service is down, this extension point can only: allow_and_flag, refuse, ask."* ·
@@ -270,7 +270,10 @@ Adding `pos_opening` and `pos_terminal` changed this list, so a consent ticked b
 asks nobody until a System Manager ticks it again.
 
 **Down, slow, or an answer refused whole:** the declared down answer — `allow_and_flag` (the sale goes on;
-the round is flagged), `refuse` or `ask` — and one log row (no body, no secret).
+the round is flagged), `refuse` or `ask` — and one log row (no body, no secret). **Ten seconds is the most
+one pass of a POS Profile's checks makes a cashier wait:** each call gets what is left, however long your
+time to answer, and past the ten seconds each remaining check at an address is asked nothing and takes its
+down answer, flagged. A module still runs: the clock never decides its answer.
 
 ## 6. Offline, and a check that runs on the till
 
@@ -335,7 +338,7 @@ that would change the sale's money is not filled. A third-party payer asked afte
 details, as its prescription.
 
 Limits: texts 1 to 140 · `exclude_tenders` 1 to 20 · `fill` 1 to 10 sale details · 500 lines sent · answer 64 KB · 3 seconds unless
-raised, at most 10 · at most 3 checks per POS Profile, 10 seconds together (a round that fills asks each check
+raised, at most 10 · 10 seconds for one pass of a POS Profile's checks (a round that fills asks each check
 twice, so allow up to twice that).
 
 **A sale with a third-party payer is checked again on the plan's prices.** Your check is asked at Pay on the

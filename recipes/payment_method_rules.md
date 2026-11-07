@@ -46,7 +46,7 @@ A till offers every payment method its POS Profile lists to every customer. Reta
 - A minimum sale is judged at Pay on the sale's whole total (rounded, after discounts, tax included, before a payment method's own discount), in its own currency. Once a card on the bank's own machine, a wallet or a split's earlier leg has taken money, a redemption below the amount books and is flagged, never refused.
 - One rule per customer group; a customer's own rule is a group of their own.
 - Offline, the till does not call your service: the down answer applies and the sale is flagged when it syncs. The check does not run on a park, a layaway deposit, an account collection or the Desk's own POS screen.
-- At most three checks answer one POS Profile, ten seconds together.
+- Ten seconds is the most one pass of a POS Profile's checks makes a cashier wait.
 
 ## See also
 

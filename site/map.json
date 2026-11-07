@@ -153,6 +153,18 @@
    "The event feed",
    "Your app's event feed, one per app: the record types it follows. The install makes your app's own user with it."
   ],
+  "role_rights": [
+   "Rights for your own roles",
+   "A right for one of your app's own roles on any record type, the retailer's own included. The feed's own reads are the install's."
+  ],
+  "records": [
+   "Default rows",
+   "Rows the install makes if they are missing, as the administrator would in Desk: a customer group, a plan, a value on your settings."
+  ],
+  "app_user_rights": [
+   "The app's own user at the till",
+   "The Retail Permission rights your app's own user needs to work the till through a door, such as an open check or a kitchen screen."
+  ],
   "remote_keys": [
    "Till keys",
    "A key on the till that calls your service and shows its answer."
@@ -409,7 +421,7 @@
    "when": "It fires when the cashier presses Pay, before the payment sheet opens (`stage: \"sale\"`); before the refund choices open on every refund the till pays (`stage: \"return\"`)",
    "sends": "The numbers are the **server's**, never the till's echo. Money is a whole number of minor units with the currency's own digits (`currency_exponent`: 2 for AED, 3 for KWD, 0 for JPY); quantity is in thousandths.",
    "answer": "allow it, allow it without some tenders, refuse it, ask the cashier a question, or call a manager.",
-   "limit": "3 seconds unless raised, at most 10 · at most 3 checks per POS Profile, 10 seconds together",
+   "limit": "3 seconds unless raised, at most 10 · 10 seconds for one pass of a POS Profile's checks",
    "sees": "*\"⟨label⟩ did not answer. This sale can't be paid until it does. Try again, or get a manager.\"*"
   },
   {
@@ -425,7 +437,7 @@
    "page": "partner_page",
    "table": "calls",
    "when": "It fires when the cashier presses the page's key on the till, or when a Desk user opens the page",
-   "sends": "Your page learns who is looking at what from a **signed, one-time, five-minute context** in its address",
+   "sends": "Your page learns who is looking at what from a **signed context** in its address, good for 15 minutes",
    "answer": "on the till your server may **answer once** — a message, Sale Attribute rows, or both — which the cashier confirms like any till key",
    "limit": "a page that has not loaded in 10 seconds",
    "sees": "A page that does not load in 10 seconds shows *\"⟨label⟩ isn't answering.\"* with Close; nothing is added to the sale."

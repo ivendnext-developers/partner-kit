@@ -1,0 +1,23 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "Rights for Sales User, a role the retailer owns: a manifest gives rights only to the app's own prefixed roles; the retailer gives their own roles rights in Role Permissions Manager.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_hkd",
+    "prefix": "PP HKD",
+    "version": "1.0.0",
+    "role_rights": [
+      {
+        "doctype": "Customer",
+        "role": "Sales User",
+        "rights": [
+          "read",
+          "write"
+        ]
+      }
+    ]
+  },
+  "expect_refusal": "Name a role of your own (it starts with PP HKD)",
+  "beyond_schema": true
+}

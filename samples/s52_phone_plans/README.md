@@ -27,7 +27,7 @@ More: the [recipe](../../recipes/point_handler.md).
 
 **The customer sets:** its own telecom account and key in the `Default` record of *PP TEL Settings*, the item group the plans are in (one item for each plan, the telecom company's plan code as its item code), and the price list the plans are sold from.
 
-**The app's role needs:** the install makes the role *PP TEL Integration* and the app's own user. On the retailer's own record types the retailer's administrator gives it read on POS Invoice, Item and Price List, and read, create and write on Item Price. A read the role lacks does not stop the install: the events wait, and the service's log says which record type was refused (`ivn logs`), then the next pass catches up once the read is given ([What goes where](../../guide/07_manifests.md#what-goes-where)).
+**The app's role needs:** nothing from the retailer's administrator. The install makes the role *PP TEL Integration* and the app's own user, and gives the role **read on POS Invoice**, the record type the feed follows. The manifest's `role_rights` give the rest: read on Item and Price List, and read, create and write on Item Price. **Needs POS build `2.1.0.691` or later:** on an earlier site the install warns `role_rights` as unknown and skips it, and gives the feed's user no read, so the events wait; the service's log says which record type was refused (`ivn logs`) ([What goes where](../../guide/07_manifests.md#what-goes-where)).
 
 ## Run it
 
@@ -49,6 +49,10 @@ python3 standin/telecom_api.py
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.2.0
+
+- The role's rights beyond the feed's read move into the manifest (`role_rights`), so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
 
 ### 0.1.0
 

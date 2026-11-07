@@ -8,7 +8,7 @@ A connected app signs in to a retailer's iVendNext **from outside**, with an API
 
 ## Steps (an app with no event feed)
 
-The retailer's administrator does these in iVendNext Desk. An app with an event feed does not make its user by hand (step 2): the install makes its user and role (below), and the retailer only gives the role its rights (step 1) and, for a service the retailer hosts or the maker hosts, presses **Generate Keys** (step 3).
+The retailer's administrator does these in iVendNext Desk. An app with an event feed does not make its user by hand (step 2): the install makes its user and role (below), and the install gives the role read on every record type the feed follows, your manifest's `role_rights` hold any further right, and the retailer, for a service the retailer hosts or the maker hosts, presses **Generate Keys** (step 3).
 
 1. **Give a role for this app alone the rights it needs** (Desk → Role Permissions Manager; Desk → Role → New only if no role of that name exists). A role your manifest names anywhere (a permission row, a workflow, a report or a button) is made at install, empty, so nobody makes it first; a role with your prefix goes at uninstall, and any other name stays the retailer's. Give it only what the app reads and writes. The bin-location sample's role, for example:
 
@@ -57,11 +57,12 @@ The retailer's administrator does these in iVendNext Desk. An app with an event 
 
 From POS version 2.1.0.667 the install of an app whose manifest lists an event feed makes the feed's record, on, and **the app's own user**, `<app>@integration.invalid`, named on it as the user the service reads as. Nobody chooses that user and nobody asks iVendNext support to set it.
 
-- **One role.** The user holds the role `<PREFIX> Integration` alone (made empty if the manifest does not declare it). The retailer's administrator gives that role the reads the app needs (Role Permissions); the feed's record types are on from the install. Nobody can give the user a password or another role.
+- **One role.** The user holds the role `<PREFIX> Integration` alone (made empty if the manifest does not declare it). The install gives that role **read on every record type the feed follows** (the consent says *Reads: …*), from POS build `2.1.0.691`; any further right is a `role_rights` entry in the manifest ([the manifest recipe](manifest.md)), never a request to the retailer's administrator. The feed's record types are on from the install. Nobody can give the user a password or another role.
 - **API only.** The user can never sign in to Desk, even with a password. The product marks it as an app's user, never a person's, by its address.
 - **Its key.** An app hosted by CitiXsys is handed the key by the retailer's site itself, after the install or an update; *Connect again* is only for when the site could not reach the app, or a key was lost or changed. For an app you host yourself, the retailer presses **Generate Keys** on the user (User, API Access) and hands you the key.
 - **The uninstall** removes the feed, then the user and its key. While an open check or another record of the till still names the user, it stays, switched off, with no role, password, key or till grant; a reinstall takes it up again, and a fresh key comes at connect or by *Generate Keys*. Disabling the user does not stop its key: to cut an app off, the retailer uninstalls it.
 - **The retailer's user limit.** Whether a site's own user licence counts this user is the hosting's, not yet confirmed. Until it is, a site at its user limit refuses the install with *"This site's licence has no room for another user, so the app's own user ⟨email⟩ could not be made. Ask iVendNext support to raise the site's user count, then install again."* and removes what it made.
+- **An app installed before 2.1.0.691** gets its reads at its next update, or, for an app CitiXsys hosts, when *Connect again* is pressed on its package.
 - **An app installed before 2.1.0.667** gets its own user at its next version, only if its feed names no user (a user the retailer already named on the feed is kept, with its key), or when it is installed again.
 
 A developer on their own sandbox who wires a registration by script (not from a manifest install) can name the user with one request, signed in as the site's administrator:

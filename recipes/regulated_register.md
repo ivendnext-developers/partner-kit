@@ -18,7 +18,7 @@ Pharmacies, liquor stores and duty-free stores must keep a legal register of reg
 ## Steps
 
 1. **Declare the book in your manifest** (`register_books`). Each book names its items (`classes` read from an item field or a dated table on Item, or `item_groups`), up to three routing conditions on the line's columns, its numbering (`book_store` or `book_store_item`), whether it keeps a `balance`, its `correction` mode, `retention_years` (it cannot be shortened once the book has lines), its `count_role`, and the columns it prints with the source of each. Also:
-   - `medium`: what the book is kept on. `printed_book` (the default: its signed printed pages are the book), `system_of_record`, `official_book` (the authority's own numbered book: each line prints at its page and line) or `regulator_system` (the authority's electronic record is the record of law; the retailer's lines are its working register). Set it in the first version you ship: an update cannot change a book.
+   - `medium`: what the book is kept on. `printed_book` (the default: its signed printed pages are the book), `system_of_record`, `official_book` (the authority's own numbered book: each line prints at its page and line) or `regulator_system` (the authority's electronic record is the record of law; the retailer's lines are its working register). Set it in the first version you ship: an update may add a detail slot to a book and changes nothing else of it.
    - `details`: up to six columns read from a sale detail, a Desk field or a record. A record lookup matched `customer_link` reads the one record whose `customer` field names the sale's Customer (a patient record), so that field must be unique; a slot of `type` `Age` prints whole years at the movement's date from a date of birth.
    - a column may carry a `group` (the band printed over it, such as a received or an issued half) and may print `balance_before`, the balance before the line.
    - your print format on *Retail Register Period* for the market's layout, with `default_print_language` set to the language it prints in (`ar` prints right to left). It may call `ivn_register_print(doc)` for the door's own pages: the official book's sheets, the balance before a line, the medium line and the period's close.
@@ -32,7 +32,7 @@ Pharmacies, liquor stores and duty-free stores must keep a legal register of reg
 
 ## Limits to tell the customer
 
-- **A book cannot change in an update,** not even a column label: a corrected book ships under a new id, which numbers from 1, while the old one stays switched off with its lines.
+- **A book changes little in an update:** a new version may add a detail slot and nothing else, not even a column label (the retailer changes those on the book in Desk). A book under a new id is a new book, numbered from 1, and the old id reads as dropped: keep the id.
 - **A book with lines is never deleted,** not even at uninstall: it is switched off and kept, with its print formats and count role.
 - **The till is never refused at its save:** a line it cannot complete is written flagged (incomplete, below zero), an open task for the count role. A Desk submit, an import of a stock-take of more than 100 rows, or a document posted through the REST API is refused instead.
 - **A Stock Reconciliation follows the register:** for an item a book with a balance takes, once that store's opening is counted, it passes only to the quantity an approved count of that book found.

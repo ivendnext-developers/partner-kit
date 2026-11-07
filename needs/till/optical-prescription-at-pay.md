@@ -19,7 +19,7 @@ Eye prescriptions as the retailer's own records (spectacles or contact lenses, t
 - Answered when the cashier presses Pay, not when the line is entered.
 - A sale made in Desk, on the Desk POS screen or through the API is not checked.
 - When the service is down, or the till is offline, the sale is paid and flagged for review.
-- At most three checks per POS Profile, 10 seconds together; this app takes one per profile.
+- 10 seconds at most for one pass of a POS Profile's checks; this app takes one per profile.
 - An insurer's or vision plan's share of the payment is not part of it.
 
 ## Tell the customer

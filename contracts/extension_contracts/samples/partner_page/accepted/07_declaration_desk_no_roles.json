@@ -1,7 +1,7 @@
 {
   "extension_point": "partner_page",
   "contract": "declaration",
-  "about": "A height of 30 on the counter; 40 to 100.",
+  "about": "A Desk page that names no roles: every Desk user may open it.",
   "payload": {
     "doctype": "Retail Extension Subscription",
     "point": "page",
@@ -9,9 +9,7 @@
     "transport": "remote",
     "label": "Deliveries",
     "endpoint_url": "https://partner.example/board",
-    "page_placement": "Till key",
-    "page_returns_message": 1,
-    "page_height": 30
-  },
-  "expect_refusal": "The height on the till must be from 40 to 100."
+    "secret": "a-long-shared-secret",
+    "page_placement": "Desk page"
+  }
 }

@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/business_logic/manifest_check.py,
-# at development cff85a09aa4d9391bd0de4af68964d2181a753a5. The shop's own checker (the install screen runs it) is the source;
+# at development 01a282e1286c1aaff66c629fda839c4a304a2a1a. The shop's own checker (the install screen runs it) is the source;
 # this copy lets you check a manifest before you send it, and refuses the same manifests in the same words. Everything
 # below this header equals the source. A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """The companion manifest — the VALIDATOR. Pure Python: no framework import, no network.
@@ -31,6 +31,7 @@ Shape (every key optional except ``manifest_version``, ``app``, ``prefix`` and `
      # v2: "label_layouts", "list_marks"
      # v2: "extension_modules" (a module our certify service signed, and the "wasm" service that runs it)
      # v2: "register_books" (the books of a regulated-stock register, installed as Retail Register Book)
+     # v2: "app_user_rights" (X100: what the app's own user may do at the till, by Retail Permission field)
     }
 
 The rules, in plain words, are in ``recipes/manifest.md``.
@@ -103,11 +104,15 @@ KINDS_V2 = (
     "register_books",
     # the package's own words, one entry per language (the framework's Translation records)
     "translations",
+    # X109 (2026-11-07): rights for the app's own prefixed roles on any
+    # record type, and default records made at install if missing
+    "role_rights",
+    "records",
 )
 KINDS = KINDS_V1 + KINDS_V2
 # the manifest's own keys beside its kinds
 TOP_KEYS = {"manifest_version", "app", "prefix", "title", "version", "publisher", "description"}
-TOP_KEYS |= {"allowed_urls"}
+TOP_KEYS |= {"allowed_urls", "app_user_rights"}
 STD_FIELDS = {"name", "owner", "creation", "modified", "modified_by", "docstatus", "idx"}
 
 # ── the till's own records: ONE list (save_rules and partner_doccheck read it from here) ──
@@ -266,6 +271,8 @@ KEYED = {
     "list_marks": ("record_type", "label"),
     "register_books": ("book",),
     "translations": ("language",),
+    "role_rights": ("doctype", "role", "rights"),
+    "records": ("doctype", "values"),
 }
 NUMBERING = {"autoname", "naming_rule"}  # a record type's own numbering, set by a property setter
 RECIPIENT_KEYS = {
@@ -293,6 +300,24 @@ REFUSED_FIELD_TYPES = {
 # The nine rights the framework's permission record switches ON by default (its permission record's definition file; every other
 # right defaults 0). Re-read that file on a framework update: a new default-ON right must join this list.
 RIGHTS = ("read", "write", "create", "delete", "report", "export", "share", "print", "email")
+# Every right a permission row takes (the installer writes a row with each of these spelled out, so a
+# right left out is OFF whatever the framework's default); the names a ``role_rights`` entry may list.
+DOCPERM_RIGHTS = (
+    "read",
+    "write",
+    "create",
+    "delete",
+    "submit",
+    "cancel",
+    "amend",
+    "report",
+    "export",
+    "import",
+    "share",
+    "print",
+    "email",
+    "select",
+)
 # Roles the framework gives users by itself (its permission module's automatic roles; `Guest` is refused on its own, below): `All` goes to every
 # signed-in user, website customers included, `Desk User` to every staff user, `Administrator` is the superuser. A manifest names none of them.
 AUTOMATIC_ROLES = ("All", "Desk User", "Administrator")
@@ -502,7 +527,7 @@ PRINT_SERVED_TYPES = frozenset(
             "Question List|Quotation|Quotation Lost Reason|Reason Code Master",
             "Registered Application|Repost Accounting Ledger|Repost Payment Ledger",
             "Reprint Transaction Log|Request for Quotation|Retail Badge Credential|Retail Coupon Draw",
-            "Retail Desk Action|Retail Device Trust|Retail Extension Install",
+            "Retail Desk Action|Retail Device Trust|Retail Drawer Spot Count|Retail Extension Install",
             "Retail Extension Module|Retail Fiscal Reader|Retail Fiscal Regime Config",
             "Retail Floor Place|Retail Floor Section",
             "Retail Item Availability|Retail Kitchen Order|Retail Kitchen Station",
@@ -667,6 +692,17 @@ def _doctypes(v: _V):
         v.no_script(f"{w}.description", name, d.get("description"))  # the empty list shows it raw
         if isinstance(d.get("fields"), list):
             _fields(v, f"{w}.fields", name, d["fields"], engine=False)
+            for j, f in enumerate(d["fields"]):
+                # X106: the installer writes these fields as the record type has them, so a limit
+                # key here would be dropped and the field left open to every reader
+                if isinstance(f, dict) and any(k in f for k in LIMIT_KEYS):
+                    v.refuse(
+                        f"{w}.fields[{j}]",
+                        f.get("fieldname"),
+                        "read_roles and write_roles go on a custom_fields entry; in a record "
+                        "type's own fields, give the field a permlevel and that level a permissions "
+                        "row for each role that reads or changes it",
+                    )
         for j, p in enumerate(
             d.get("permissions") if isinstance(d.get("permissions"), list) else []
         ):
@@ -692,6 +728,20 @@ def _limits(v: _V, w: str, dt: str, c: dict):
             fn,
             "a fiscal reader's result field sits at the reader's writer_level; its writer role is the "
             "reader's",
+        )
+    elif any(k in c for k in LIMIT_KEYS) and not (
+        isinstance(c.get("write_roles"), list)
+        and c["write_roles"]
+        and isinstance(c.get("read_roles", []), list)
+    ):
+        # X106: the installer gives a field a level of its own only through its writers
+        # (manifest_install, the custom_fields loop); without one it stays open to every reader
+        v.refuse(
+            w,
+            fn,
+            "name the roles that change this field in write_roles, as a list of one role or more "
+            "(read_roles, if named, is a list too); to leave it open to everyone who reads the "
+            "record, leave out read_roles and write_roles",
         )
 
 
@@ -1151,6 +1201,134 @@ def _payer_settings(v: _V, w, key, settings) -> None:
     _roles(v, w, key, [settings.get("bill_back_role")])
 
 
+def _app_user_rights(v: _V):
+    """S: the rights the install gives the app's own user at the till, by Retail Permission field."""
+    rights = v.m.get("app_user_rights")
+    if rights is not None and (
+        not isinstance(rights, list)
+        or not rights
+        or any(not isinstance(r, str) or not r for r in rights)
+    ):
+        v.refuse(
+            "app_user_rights",
+            None,
+            "app_user_rights is a list of the Retail Permission fields the app's own user needs",
+        )
+
+
+def _role_rights(v: _V):
+    """X109 (b): rights for the app's OWN roles (named with its prefix) on any record type, the
+    retailer's included — an app may do what an administrator does in Desk (2026-11-03). A
+    retailer's role is the retailer's to grant."""
+    seen = set()
+    for i, r in enumerate(v.list_of("role_rights")):
+        w, role, dt = f"role_rights[{i}]", r.get("role"), r.get("doctype")
+        if (dt, role) in seen:
+            v.refuse(
+                w,
+                role if isinstance(role, str) else None,
+                "one entry per record type and role: put every right of the pair in it",
+            )
+        seen.add((dt, role))
+        if not isinstance(dt, str) or not dt:
+            v.refuse(w, None, "doctype names the record type the role gets rights on")
+        if not isinstance(role, str) or not role.startswith(f"{v.prefix} ") or _odd(role):
+            v.refuse(
+                w,
+                role if isinstance(role, str) else None,
+                f"Name a role of your own (it starts with {v.prefix}); the retailer gives their "
+                "own roles rights in Role Permissions Manager.",
+            )
+        rights = r.get("rights")
+        if (
+            not isinstance(rights, list)
+            or not rights
+            or any(x not in DOCPERM_RIGHTS for x in rights)
+            or len(set(rights)) != len(rights)
+        ):
+            v.refuse(
+                w,
+                role if isinstance(role, str) else None,
+                "rights lists each right the role gets, once, by the name a permissions row takes: "
+                + ", ".join(DOCPERM_RIGHTS),
+            )
+
+
+def _plain_value(x) -> bool:
+    return isinstance(x, (str, int, float))
+
+
+def _records(v: _V):
+    """X109 (c): default records made at install if missing, as the administrator would in Desk. Never
+    a document that posts (the retailer's to make) and never one of the till's own records (the till
+    writes them as it sells); a master (Customer Group) is allowed. No allow-list of types
+    (2026-11-05): the site refuses a submittable type by its own meta (``_site_refusals_v2``)."""
+    submittable = {
+        d.get("name")
+        for d in v.m.get("doctypes") or []
+        if isinstance(d, dict) and d.get("is_submittable")
+    }
+    for i, r in enumerate(v.list_of("records")):
+        w, dt, name, values = f"records[{i}]", r.get("doctype"), r.get("name"), r.get("values")
+        if not isinstance(dt, str) or not dt:
+            v.refuse(w, None, "doctype names the record type of the default record")
+            continue
+        if _within(dt, TILL_RECORDS):
+            v.refuse(
+                w,
+                name if isinstance(name, str) else None,
+                f"{dt} is one of the till's own records, which the till writes as it sells; the "
+                "retailer makes these.",
+            )
+        elif dt in POSTING or dt in submittable:
+            v.refuse(
+                w,
+                name if isinstance(name, str) else None,
+                "A document that posts is the retailer's to make.",
+            )
+        if name is not None and (not isinstance(name, str) or not name):
+            v.refuse(w, None, "name, when given, is the record's name (its id in Desk)")
+        if not isinstance(values, dict) or not values:
+            v.refuse(
+                w,
+                name if isinstance(name, str) else None,
+                "values is an object of the fields the record is made with",
+            )
+            continue
+        if "opening_stock" in values:  # an Item's opening stock posts a stock entry at its insert
+            v.refuse(
+                w,
+                name if isinstance(name, str) else None,
+                "A document that posts is the retailer's to make: opening_stock books stock",
+            )
+        own_fields = next(
+            (
+                {f.get("fieldname") for f in d.get("fields") or [] if isinstance(f, dict)}
+                for d in v.m.get("doctypes") or []
+                if isinstance(d, dict) and d.get("name") == dt
+            ),
+            None,
+        )
+        if own_fields is not None:
+            for k in sorted(set(values) - own_fields - STD_FIELDS - {"doctype", "name"}):
+                v.refuse(w, name if isinstance(name, str) else None, f"{dt} has no field {k}")
+        if any(k in ("doctype", "name") for k in values):
+            v.refuse(
+                w,
+                name if isinstance(name, str) else None,
+                "values carries the record's fields; its name goes in name, and doctype beside it",
+            )
+        if name is None and not any(_plain_value(x) for x in values.values()):
+            v.refuse(
+                w,
+                None,
+                "a record with no name needs at least one plain value (text or a number) to be found by",
+            )
+        for k, x in values.items():
+            if isinstance(x, str):
+                v.no_script(w, name if isinstance(name, str) else k, x)
+
+
 def _desk_actions(v: _V):
     services = {
         s.get("key")
@@ -1489,6 +1667,9 @@ def validate(m) -> list[dict]:
         _save_rules,
         _fiscal_readers,
         _translations,
+        _app_user_rights,
+        _role_rights,
+        _records,
     ):
         check(v)
     return v.out

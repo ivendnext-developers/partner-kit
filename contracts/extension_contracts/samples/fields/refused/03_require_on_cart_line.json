@@ -15,5 +15,5 @@
       }
     ]
   },
-  "expect_refusal": "can't take this rule."
+  "expect_refusal": "takes only: relabel."
 }

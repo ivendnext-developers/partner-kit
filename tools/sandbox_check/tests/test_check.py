@@ -236,11 +236,11 @@ class SandboxCheck(unittest.TestCase):
 
     def test_point_types_match_the_installer(self):
         # The installer lives in the POS app since row DEPLOY (business_logic/manifest_install.py, POINT_DT), which a
-        # laptop does not have, so its list is pinned here as read at iVendNext_PWA development cff85a09a — re-read it at
+        # laptop does not have, so its list is pinned here as read at iVendNext_PWA development 01a282e12 (re-read at the T37 head: the same four) — re-read it at
         # each re-pin of the kit's checker copy (tools/manifest/validate.py names the same commit).
         point_dt = {"extension_subscriptions": "Retail Extension Subscription", "desk_actions": "Retail Desk Action",
                     "save_rules": "Retail Save Rule", "fiscal_readers": "Retail Fiscal Reader"}
-        self.assertIn("cff85a09aa4d9391bd0de4af68964d2181a753a5",
+        self.assertIn("01a282e1286c1aaff66c629fda839c4a304a2a1a",
                       open(os.path.join(HERE, "..", "..", "manifest", "validate.py")).read(1000))
         self.assertEqual(sorted(C.POINT_TYPES), sorted([*point_dt.values(), "Retail Extension Log"]))
 

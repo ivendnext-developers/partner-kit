@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/desk_action.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/desk_action.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Desk action
 
 **Contract:** [`desk_action.v1.schema.json`](../extension_contracts/desk_action.v1.schema.json)
@@ -31,8 +31,8 @@ cancelled; the workflow state, or the status where there is no workflow; up to 3
 an optional confirm sentence · the fields that leave the shop (`name, customer, items(item_code, qty)`) ·
 the partner service that answers: a **Retail Extension Subscription** of extension point `desk_action`,
 holding your address, the secret and the time to answer. A button that arrives in a manifest is checked
-before the shop consents: the manifest checker refuses any input type outside the eight above, naming them
-(the product would otherwise refuse it at install, after the consent).
+before the shop consents for its service and its roles; an input type outside the eight above is refused when the app
+installs, after the consent.
 
 **The request** — one signed `POST` per press (sorted keys, no spaces, ASCII), with the same headers as
 every extension point (`X-iVendNext-Timestamp`, `X-iVendNext-Signature`, `X-iVendNext-Request-Id`) plus

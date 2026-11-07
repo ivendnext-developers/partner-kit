@@ -21,7 +21,7 @@ A check before payment is the last word on a sale before money is taken. When th
 
    - `label` is what the cashier reads when your service is down (*"Member rule guard did not answer. …"*).
    - `down_answer`: what the till does when your service is down, slow or answers what it cannot use — `allow_and_flag` (the default: the sale goes on and is flagged on the *Sales to review* report), `refuse` (no sale until you answer), or `ask` (the cashier decides). A customer whose rule must hold even in an outage chooses `refuse` on the record.
-   - `timeout_seconds`: 3 unless you raise it, 10 at most. At most three checks answer one POS Profile, ten seconds together.
+   - `timeout_seconds`: 3 unless you raise it, 10 at most. Ten seconds is the most one pass of a POS Profile's checks makes a cashier wait.
    - The service is on from the moment of install, for every POS Profile. A manager's approval (`may_approve`) is the retailer's choice, never the manifest's. The signing secret is handed back **once**, at install.
 
 2. **What the retailer does after install.** Nothing is needed: the consent the administrator gave at install lists every field that is sent. A retailer who wants the check on some tills only opens your service (*Retail Extension Subscription*) and chooses the POS Profiles it answers.

@@ -25,6 +25,8 @@ The sample's names start with `PP CFG` only so its own test can find them again;
 
 More: the [recipe](../../recipes/configure_no_code.md).
 
+In a package these rows go under `records` ([the manifest recipe](../../recipes/manifest.md)); the engine's settings (Retail Setting, Stock Settings), a Stock Entry and a Customer stay here.
+
 **The customer sets:** a default Company in iVendNext, which a sale of a serial-tracked item takes its company from, and an API key from a user who may edit these records (System Manager, Retail Manager, Item Manager, Stock Manager and Sales Master Manager together are enough).
 
 ## Run it

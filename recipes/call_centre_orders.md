@@ -63,7 +63,7 @@ Pressed again, the button says *Already with its store* and changes nothing.
 ## What the retailer does
 
 1. **Install the app.** The install adds the Serving store field and the app's own user, `pp_cco@integration.invalid` (from POS version 2.1.0.667), which holds the role *PP CCO Integration*, made empty, and works through the API only.
-2. **Give that role its reads.** In **Role Permissions**, give *PP CCO Integration* these rights:
+2. **The role's rights come with the install.** The install gives *PP CCO Integration* read on Sales Order, the record type the feed follows, and the manifest's `role_rights` give the rest, so the retailer's administrator grants none. **This needs POS build `2.1.0.691` or later.** The rights, each for its reason:
 
    | Record type | Right | Why |
    |---|---|---|

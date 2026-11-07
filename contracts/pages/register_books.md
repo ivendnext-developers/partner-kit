@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/register_books.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/register_books.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Register books
 
 **Contract:** [`register_book.v1.schema.json`](../extension_contracts/register_book.v1.schema.json)
@@ -86,14 +86,22 @@ it back on checks every name again.
   declares; the app's `count_role` is made if the site lacks it and it carries the app's prefix.
   The install's to-do names any connector field a book reads that the site lacks (that column
   prints empty until the connector is installed).
-- **Update:** a new book is added; a changed book is refused (ship it under a new id, which starts
-  its numbering again at 1 while the old book stays switched off with its lines); a dropped book
-  is switched off and kept until the app is uninstalled. An update never switches a book it keeps.
+- **Update:** a new book is added; a kept book may gain a detail slot (`detail_1` … `detail_6`),
+  written in place through the book's own save, so its check runs again: a line already written
+  reads the new slot empty, and the shop's switch and any slot the shop set on the book in Desk
+  stay (a slot number the shop already uses for its own fails the update, with the way on).
+  Anything else changed on a kept book is refused with what to do: a slot dropped or changed
+  (lines already carry it: keep it and add a new slot), or any other key (ship it as installed;
+  the shop changes it on the book in Desk). A new `enabled` default is no change. A book under
+  a new `book` id is a new book, numbered from 1, and the old id reads as dropped: keep the id. A
+  dropped book is switched off and kept until the app is uninstalled. An update never switches a
+  book it keeps.
 - **Uninstall:** every book of the app is switched off first. A book with no lines, counts or
   periods goes with the app. A book **with any of them is kept, switched off, never deleted**,
   and the app's register prints (print formats on Retail Register Period) and that book's count
-  role stay with it. A later install adopts the kept book with its stored declaration and switches
-  it as that install declares (the consent names the switch).
+  role stay with it. A later install adopts the kept book with its stored declaration, plus any
+  detail slot the new version adds, and switches it as that install declares (the consent names
+  the switch).
 - **An app a book reads** (its class field, a sale detail, a record type) cannot be uninstalled
   while an enabled book of another app reads it: *"⟨book⟩ reads ⟨field⟩: switch the book off first."*
   The request is refused at once and the package stays installed; a book switched on between the
@@ -269,10 +277,10 @@ kit's prints to them.
 - A record lookup matches the customer, the record linked to the customer, or the user; matching
   the prescription's own patient (`match: "prescription"`) is refused: a carer buying for a patient
   fills the line from the carer's own record, or none.
-- A kept book is adopted at a reinstall with its stored declaration, not the new version's.
-- A book cannot change in an update, not even its title, cite or a column label: a corrected
-  book ships under a new id, which numbers from 1. Changing the printed words in place is a later
-  version's.
+- A kept book is adopted at a reinstall with its stored declaration, not the new version's,
+  except a detail slot the new version adds.
+- An update may add a detail slot to a book and change nothing else of it, not even its title,
+  cite or a column label: the shop changes those on the book in Desk, whose save checks them.
 - A class a book takes is named on the install's to-do when it is not yet a record of its
   dated table's linked class field; a class read from an Item field (`item_field`) and an axis
   value (`KE Controlled`) are not checked: a misnamed one matches no item and the book takes no
@@ -429,9 +437,10 @@ kit's prints to them.
 - **A field only some roles read, named by a book.** The book writes it whoever submits (the law
   wants the line whole), so its readers are then the line's: a detail slot or the counterparty is
   read only by a role given level 1 here, whatever roles the field itself names. Name such a field
-  only there: the checker refuses it in `authority.desk_fields`, `authority.dispenser_licence` or a
-  `columns_from` → `reference_no`, which every reader of the line reads, and as the item's class
-  (`class_source`), which the book also routes on (take the items by `item_groups` instead). ⚠ A
+  only there: the checker passes it in `authority.desk_fields`, `authority.dispenser_licence`, a
+  `columns_from` → `reference_no` and as the item's class (`class_source`), but there every reader of
+  the line reads it, so the field's roles hide nothing (take the items by `item_groups` rather than by a
+  limited class, which the book also routes on). ⚠ A
   detail slot hides its value, not what the book does with it: a condition on the slot decides
   whether a line is written, and a `required` slot left empty marks the line `incomplete` and names
   the slot in its remark (or refuses a person's submit, naming it), both read by every reader of the line.

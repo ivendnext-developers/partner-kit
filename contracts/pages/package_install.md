@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/package_install.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/package_install.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Installing a manifest (self-service install)
 
 **Contract:** [`package_manifest.v1.schema.json`](../extension_contracts/package_manifest.v1.schema.json)
@@ -68,7 +68,13 @@ Version 1 of the package. The manifest itself names `manifest_version` 1 or 2 an
    layout). Lists that say the same thing share one sentence (*Location, Aisle, Bin: new lists*); each heading's ids,
    fields and rights as written fold under *Show details*. Every fact a line pins (each role and right, each outside
    address, *switched off*, *every Desk user*, *never added to the menu*, when it starts) is in its plain sentence, never only in the
-   details. The plain words are **not** what is consented to: the summary is, and it is fingerprinted. The record keeps
+   details; a user the install makes is the one exception: its address (`…@integration.invalid`) is no one's mailbox, so the sentence says
+   it is its own user, not a person, and keeps its role, and the address folds under *Show details*. What a check does when it cannot
+   answer is said for the store, from its down answer: `allow_and_flag` reads *the sale goes on and shows in Sales to review*,
+   `refuse` *the sale can't be paid until it answers*, `ask` *the cashier is asked whether to go on*; a record check reads *the ⟨record⟩ goes
+   through and shows in Sales to review*, *the ⟨record⟩ can't go through until it answers*, *whoever is saving the ⟨record⟩ is asked whether
+   to go on*; the update's line in *What changes* says the same. The value itself and the address stay in the exact wording. The plain
+   words are **not** what is consented to: the summary is, and it is fingerprinted. The record keeps
    the plain words as Check wrote them, in the language of whoever pressed Check, and never rewrites them once
    consented to; the exact wording is always the server's English. A record checked
    before 2.0.0.645 has no plain words and is drawn line by line, word for word, under the same headings (a line no heading
@@ -84,8 +90,10 @@ Version 1 of the package. The manifest itself names `manifest_version` 1 or 2 an
    consented before 2.0.0.660 installs again at its version. No old line covered less of what the install grants (the label
    a field line now adds is a name, already bound by the manifest's SHA-256); a till key's line, which did, still needs
    a higher version (since 2.0.0.646). The old words are frozen in the code and hold only a consent already
-   given to them: every new consent is to today's words (a record checked before 2.0.0.660 and never consented
-   refuses the old fingerprint with *"check again"*; its **Check** shows today's words). A label is the
+   given to them: every new consent is to today's words. A store whose consent was to older words reads *"This version
+   was agreed under older words. Ask the partner for a newer version; it appears on the app's card."*: publish a
+   higher version. An app the store removed offers **Install** again on its record (never *Update*: nothing of it is
+   on the site), and a version whose words have not changed installs at the first press. A label is the
    partner's words: the plain sentence shows it, whole and in quotes, only because the exact line holds it. The install runs as a background job; the status moves Queued → Installing → Installed.
 5. **Secrets** (a webhook's or a service's) are shown once, to the user who installed, when the job ends. Each can be
    read again on its own record, with *Copy secret* (§12). Hand them to the partner as you would an integration user's
@@ -93,9 +101,8 @@ Version 1 of the package. The manifest itself names `manifest_version` 1 or 2 an
 6. **One consent switches everything on.** The install's consent is each part's: every service (a Desk button's
    service, a page, a check before payment, a capture), every Desk button, label layout, list mark, scan source and the
    event feed's record types arrive **switched on**, for every store, consented by the user who consented to the
-   package and when. A **till key** arrives consented and on, placed on every store's till (in each theme's POS
-   Studio > Apps), just before the till's last key; a store moves or hides it in the Designer. It stands on the counter
-   and the tablet (the phone places no app keys) and on a POS Profile with a till theme. A record's **Enabled**
+   package and when. A **till key** arrives consented and on, placed on the tills and tablets of every store with a till theme (in each theme's POS
+   Studio > Apps), just before the last key, and not on phones, which place no app keys; a store moves or hides it in the Designer. A record's **Enabled**
    box stays the administrator's off switch. **Before each part works** lists only what the shop still decides: a
    fiscal reader (its writer rule and the service's keys), a role rule (switched on it would stop everyone until
    someone holds its role), a payer service (its clearing mode is the shop's account), a pricing module's limit (0
@@ -132,10 +139,16 @@ and only the claims clerks change.
  "read_roles": ["PP RXL Pharmacist"], "write_roles": ["PP RXL Pharmacist"]}
 ```
 
-- `write_roles` (required once a field is limited): the roles that change it; they read it too.
+- `write_roles` (required once a field is limited): the roles that change it, a list of one role or more; they
+  read it too. A field with `read_roles` and no `write_roles` is refused at the check: the field gets its level
+  through its writers, so without them it would stay open to every reader. If nobody in particular changes it
+  (the app's own code fills it), name the same roles in both.
 - `read_roles` (optional): the roles that read it. Left out, every role that reads the record type when the app
   installs reads it. A role given that record type later reads the field once the shop also gives it the field's
   level in *Role Permissions Manager*.
+- These two keys go on a `custom_fields` entry. A field written inside one of the app's own record types
+  (`doctypes`, its `fields`) takes a `permlevel` and a permissions row at that level for each role that reads or
+  changes it, as in Desk; `read_roles` or `write_roles` there are refused.
 - The installer puts the field at a **permission level of its own** on that record type (the lowest of 1 to 9 that
   no field and no permission row there uses, one per set of roles), with one permission row per role. Two apps, or
   two sets of roles, never share a level. The summary says who reads and who changes each such field. The uninstall
@@ -147,16 +160,17 @@ and only the claims clerks change.
   device, and a teammate who takes the till offline reads the same book. A device holding a copy from before
   clears its book and fills it again. An **Item** field limited to roles is never shown on a till or a receipt,
   for anyone, even one everyone reads but only some change: the offline catalogue belongs to the device too.
-- Refused: a limited field that is mandatory (`reqd`, `mandatory_depends_on`), a layout or table field, a fiscal
-  reader's result field, and a print format or notification of the same manifest that names a field only some roles
-  read (it would print or send it to whoever prints or receives it). A field everyone reads but only some change may
-  be printed. The check reads every print format, notification, report, number card and chart the manifest ships,
-  on any record type. A **register book** writes what it names whoever submits the document, so it may name such a
-  field only for a person's column — a detail slot (`details`) or the counterparty (`columns_from`) — which only a
-  role given that level of the line reads ([`register_books.md`](register_books.md) §8); it is refused for the
-  authority (`authority.desk_fields`), the dispenser's licence, the reference number (`columns_from` →
-  `reference_no`) and the item's class (`class_source`: take the items by `item_groups` instead), which every reader
-  of the book's lines reads (`refused/29_a_register_book_naming_a_field_only_some_roles_read.json`).
+- Refused: `read_roles` or `write_roles` on a fiscal reader's result field (only the reader's writer role writes the
+  authority's answer), a limited field with no role in `write_roles` (above), and on the till's own records and the ledgers a field that is `reqd`, `unique`, has a `default`
+  or `precision`, `set_only_once`, or a length or sign limit (limited or not: it can stop the till saving a sale or a new customer, or
+  change the books; the ledgers refuse `reqd`, `default` and `precision`). The checker does not refuse a limited field
+  that is mandatory, a layout or table field, or a print format, notification or register book that names a limited
+  field. A print or a mail shows that field to whoever prints or receives it, and a register book shows it to every
+  reader of its line outside a detail slot or the counterparty ([`register_books.md`](register_books.md) §8).
+  Anyone outside `write_roles` cannot fill a mandatory limited field, so give it a default: a new record they save with
+  none is refused, naming the field. Someone who cannot read it meets *Missing Fields* at the form on every save,
+  because the form never receives its value. `mandatory_depends_on` is checked when someone fills the form, not on an
+  import or an API save.
 - An update may add a limited field. It may not change the roles of a field already installed: ship a new field, or
   the shop changes the rows in *Role Permissions Manager*. Each install or update takes a new level for each set of
   roles it brings, even a set an earlier version already uses, and a record type has nine: group a kit's limited
@@ -176,6 +190,102 @@ and only the claims clerks change.
 The intro line names the roles that may install here. The permission is the package record's own (System Manager by
 default). A role given it in Role Permissions Manager gets System-Manager powers through the installer, which makes
 roles, users and permission rows; grant it as you would grant System Manager.
+
+### The app's own user at the till
+
+An app that works the till through a door (the [open check](open_check.md), a
+[kitchen screen](station_ticket.md)) lists the rights its user needs:
+
+```json
+"app_user_rights": ["custom_mpos_check_open", "custom_mpos_check_read"]
+```
+
+Each name is a tick on **Retail Permission**, by its field name. The install then sets up the app's own user,
+`<app>@integration.invalid`, under the one consent, with no hand set-up:
+
+- its own **Retail Permission**, `<PREFIX> Integration`, with those rights on and every other right off;
+- **Is POS User**, beside *Is Desk User*;
+- a row in the store access table for every store (a warehouse with an enabled POS Profile), on the store's Table
+  Service register if it has one, else its first by name. A store opened later takes its row when its POS Profile is
+  made;
+- any enabled **Shift Profile**, because this user never opens a shift.
+
+A manifest cannot name a shop's stores, so it declares no scope. A chain that wants the app in fewer stores removes
+rows on the user, and an update, or another register at that store, leaves them as they are. Unticking *Is POS User*
+takes the app off the till until the shop ticks it again. A till set-up the shop already gave this user by hand stays
+as it is. A row follows its store: when Table Service goes on at another register, or the row's register is switched
+off, the row moves to the store's Table Service register, else its first by name. A row the shop pointed at a working
+register stays. An update writes the Retail Permission again only when the manifest's list changes, and a version that drops
+the list takes the grants away. The uninstall takes every grant and the Retail Permission with it.
+
+**The key.** A hosted app's is made and sent when it connects (§10). An app you host gets it with the other secrets,
+shown once to the user who installed (`user:<email>` → `<api key>:<api secret>`). If that screen was missed, make a new
+one with **Generate Keys** on the user.
+
+On a site with no POS Profile or no Shift Profile at the install, **Before each part works** names the user, and the
+next POS Profile made, once a Shift Profile exists, finishes the set-up.
+
+### What the feed's user reads
+
+An app with an event feed (`registered_applications`) gets, from the install, **read on every record type the feed
+follows**, for its own user's role `<PREFIX> Integration` (on a site whose registration shows **Last Read**): one permission row per record type, read
+only, nothing else on. The consent names them on one line, *Reads: Batch, POS Invoice, …* (sorted). A row the shop already
+gave that role is left exactly as it is and never removed. The rows go at uninstall. An app installed before that
+gets its reads at its next update, or, for an app CitiXsys hosts, when *Connect again* is pressed on its package. What else the app needs is
+declared under `role_rights`, below.
+
+### Rights for your own roles
+
+```json
+"role_rights": [
+  {"doctype": "Customer", "role": "PP HKD Pharmacist", "rights": ["read", "write"]},
+  {"doctype": "Batch", "role": "PP HKD Integration", "rights": ["read", "write"]}
+]
+```
+
+Each entry gives **one of your own roles** (a role named with your prefix: the install makes it if the site lacks
+it, and your app's own user's role `<PREFIX> Integration` counts) a level-0 permission row on **any record type**,
+the shop's own included: an app may do what an administrator does in Desk. `rights` lists the rights the row has
+on, by the names a permissions row takes (`read`, `write`, `create`, `delete`, `submit`, `cancel`, `amend`, `report`,
+`export`, `import`, `share`, `print`, `email`, `select`); every other right is
+off. The consent names each row: *Rights for its role … on …: read, write*. A row the shop already gave that role is
+left exactly as it is and never recorded, so it is never removed; one entry per record type and role (an entry for
+your own user's role on a record type its feed follows adds to the read the feed gives it). **A right for a role that
+is not your own is refused** (a prefix is not enough: a role the site already holds under another spelling, or with
+the engine's own permission rows, is the retailer's): *Name a role of your own (it starts with ⟨PREFIX⟩); the retailer gives their own roles rights in Role
+Permissions Manager.* An update rewrites a row with the new version's rights, unless the shop changed the row since
+(then it is the shop's and stays); a version that drops an entry switches every right on its row off at once, and
+the row goes at uninstall with the role.
+
+### Default records
+
+```json
+"records": [
+  {"doctype": "Customer Group", "name": "PP HKD Basic",
+   "values": {"customer_group_name": "PP HKD Basic", "parent_customer_group": "All Customer Groups"}},
+  {"doctype": "PP HKD Settings", "values": {"plan_days": 30}}
+]
+```
+
+Each entry is a record the install **makes if it is missing**, as the administrator would in Desk (the record's own
+checks run, so a value Desk refuses stops the install in Desk's words), **after** the roles, workflows and numbering
+rules the manifest brings, so a record may name them. Missing means: no record of that `name`; or, for an entry with
+no `name`, none whose fields hold the plain values given (text and numbers; give a `name` to anything you may change
+in a later version). On your own settings record (`issingle`) the values are set only where the field is empty. The
+consent names each one: *Default record on Customer Group named PP HKD Basic: …* / *Default values on … Settings: …*.
+Allowed on any record type an administrator creates in Desk. **Refused, with what to do:** a document that posts
+(Sales Invoice, Stock Entry, any submittable type: *A document that posts is the retailer's to make.*); one of the
+till's own records (*⟨type⟩ is one of the till's own records, which the till writes as it sells; the retailer makes
+these.*; a master such as Customer Group is fine); the engine's own settings records, which stay the shop's; and the framework's own records (a user, a permission
+row, a field, a display change, a share), which are their own kinds or the retailer's. A value names a field the record
+type has (a key it lacks is refused, named), and an Item's `opening_stock` is refused: it books a stock entry at the
+insert. Rows inside a record (a table field) are written at install and named on the consent, and never compared
+afterwards. A
+record is never written over: one the shop edited is left alone by a second install and by an update (an update
+rewrites the plain values only while the row still holds the values the install wrote and nobody has saved it since). At uninstall a record goes
+when it is unchanged and nothing points at it; one the shop changed, or one the engine will not delete (a customer
+group with customers in it), is kept and named in the uninstall's result, and never fails the uninstall. A default
+record never posts anything; a pricing rule is configuration the shop reads on the consent and can switch off.
 
 ### Help addresses
 
@@ -326,6 +436,8 @@ field is saved). A field the manifest adds names one listed before it in the man
 condition (it reads the record and two read-only helpers), and the mail goes as `send_email_alert` says. The first
 workflow on a record type makes iVendFramework add its *Workflow State* field there; it stays at uninstall, as the
 shop's, as it does when a workflow made in Desk is deleted.
+A transition takes Desk's default for `allow_self_approval`: a person may take a step on their own document. A step that
+must stay two-person says `"allow_self_approval": 0`.
 
 **A list's settings** (`list_settings`): any record type may set how its Desk list looks, the shop's (Purchase Order)
 as well as the app's own: `disable_count`, `disable_sidebar_stats`, `disable_comment_count`, `disable_auto_refresh`,
@@ -446,6 +558,9 @@ to its words. Nothing for the shop to set up; Desk shows them to every user whos
   site's word: give your record types, tabs and options words of your own where you can.
 - **The shop's corrections stay.** A word the shop corrects on its *Translation* screen is the shop's from then on:
   an update and the uninstall leave it.
+- **Your sale details at the till.** The *Sale details* sheet shows a sale detail your app installs by your word
+  for its whole name (*ACME RX Policy number*) in the cashier's language; with no word for it, by its name without
+  your prefix (*Policy number*), as the consent names it.
 - **Your Desk buttons too.** A Desk button's label, its group, its dialog and its confirm sentence read through the same
   words.
 - **The consent** names each language and how many words it brings, one line per language. A language is the code
@@ -469,8 +584,11 @@ elements, and every new outside address), consent, update. An update:
   the manifest adds to the shop's record types; display changes; print formats; reports; workflows; notifications;
   workspaces; webhooks; and services. Each element's current form is saved on the package first; a change writes what
   the new version states, and a property it leaves out keeps the value it had — except a service, which is written
-  whole: a property it leaves out (its settings, time to answer, sequence, page roles) is cleared or takes the
-  product's default, and *may approve* is cleared (the shop grants it again with the consent). On a payer service the
+  whole: a property it leaves out (its settings) is cleared, and *may approve* is cleared (the shop grants it again
+  with the consent). *When the service is down*, *Who may open the Desk page*, its order (`sequence`) and its time to
+  answer stay the shop's when they differ from what the old version said; if the shop never changed them, the new
+  version's apply, or the product's default where it names none, and a new version that moves a down answer still
+  asks. On a payer service the
   clearing mode stays the shop's (a manifest cannot carry one), and so does any setting the shop changed that the new
   version does not name. On a capture service the `page` the shop set stays while the new version's event still
   honours one (scan, customer select) and it still names a page placed on the till; otherwise it is dropped.
@@ -481,23 +599,28 @@ elements, and every new outside address), consent, update. An update:
   neither version names stays as the shop set it;
 - keeps the shop's own switch on a changed notification, webhook, workflow or save rule: one the shop switched off stays off,
   one left on stays on (a save rule the update adds follows the install's rule);
-- switches off every changed service and clears its consent (the shop consents again) — except a check, at the till
-  or on the Desk, that the new version declares to refuse or ask when its service is down (a check that moves onto a
-  new version of its module included). It keeps the shop's switch, its consent cleared, and while it is on without a
-  valid consent it is asked nothing and gives that answer: the till refuses (or asks) *"… is waiting for a manager to
+- keeps the shop's switch on a check, at the till or on the Desk, that will refuse or ask when its service is down,
+  whether the new version declares that or the shop chose it. While it is on without a valid consent (the shop withdrew it) it is asked nothing and gives
+  that answer: the till refuses (or asks) *"… is waiting for a manager to
   consent to it in iVendNext Desk"*, and the Desk refuses (or asks) the save or submit it checks with *"… is waiting
   for a System Manager to consent to it"*, until a System Manager ticks its consent again; the update screen says so
   on the service's line. A till that is offline goes by the checks it last loaded until it reconnects. One the shop
   had switched off stays off. ⚠ The same holds for any such check switched on without a valid consent — never given,
-  or lost. Kept on, the check is saved under its own limits, so an update that would take one POS Profile past three
-  till checks or ten seconds together, or one record type past three Desk checks or ten seconds, stops and is undone:
-  switch one off and update again — it stays off until that POS Profile's or record type's checks fit the limits;
+  or lost;
+- asks nothing when nothing new is on the closed list below: the update's button says **Update**, no dialog opens, and
+  the record carries the earlier consent's who and when, with **What changes** still naming everything it does;
 - keeps on what the shop had on: a changed service, Desk button or till key it had switched on and consented takes
   the update's own consent (*"consented with this update and kept on"*), at its old address or a new one, which the
   update's difference names before the shop consents; one the shop switched off or withdrew its consent from stays
-  so; a till key the update adds arrives consented and on every store's till;
+  so; a till key the update adds arrives consented, and on the tills and tablets of every store with a till theme;
 - creates any role the new version names that the site does not have (a role it no longer names stays until
   uninstall);
+- adds a detail slot to a register book it keeps, through the book's own save, and writes an event feed's new
+  description; the book's switch, the feed's user and each of its events' switches stay the shop's;
+- gives the feed's user read on what the feed follows, if the installed version did not (an app installed before the
+  registration showed **Last Read**); rewrites a role's rights row with the new version's rights unless the shop changed the row since, and
+  switches every right off on a row the new version drops; rewrites a default record's plain values unless the shop
+  changed them since, and leaves a default record the new version drops as it is;
 - replaces a language's words (a changed word reads new, a word left out is gone) and removes a dropped language's
   words at once ([Words in a language](#words-in-a-language));
 - removes nothing else, but switches off a dropped webhook, notification, workflow, sale detail or service at once; it
@@ -508,13 +631,27 @@ elements, and every new outside address), consent, update. An update:
 Refused, with the reason: a lower or equal version, a dropped or renamed record type or field, a field changing
 type, a removed option, a link, table or multi-select field pointing somewhere else, a record type becoming (or no
 longer being) a settings record, and a change to a kind that cannot change in place (a number card, chart, dashboard, list
-settings, naming rule, Connections link, event feed, fiscal reader, sale detail): ship the changed one under a new
-name. To go back, ship the old content as a new, higher version.
+settings, naming rule, Connections link, fiscal reader, sale detail): ship the changed one under a new
+name. A register book refuses any change but an added detail slot, and an event feed any change to the events it
+follows; each refusal says what to do instead. To go back, ship the old content as a new, higher version.
 
 A failed update undoes only its own changes and shows **Upgrade Failed**; the installed version still runs. The undo removes what the update added, the record type or field whose table change the database refused included (§6), so rows typed into a field the update added are lost with it
 (§5, `child_rows`). If the
 undo itself could not finish, **Finish** completes it. The earlier version's record keeps who consented, when and to
 which summary, with status **Superseded**.
+
+**The closed list: what an update asks about.** A new outside address · a new place a service or till key sends to, a
+service at a new extension point, or a new field a service or Desk button sends · a new sealed check, or what any check or
+capture answers when it cannot run · a new webhook, or one on a new record
+or event · a new record type on the event feed · a new notification recipient · a wider grant to the app's own user or
+a fiscal writer (a till right, a right of its role, a limited field its role reads or writes) · a new right for one of
+the app's own roles (`role_rights`) · a new default record (`records`). Anything on this list asks
+for a consent to the whole new version. Nothing else asks: an added workflow, save rule, or a record type that gives the
+app's own role no right passes. So does a module's new version, which sends nothing out (a pricing service keeps the
+limit the shop set), and a new pricing service, whose limit starts at 0. **What changes** records it.
+
+A workflow is written whole, too: a step on a site keeps its setting until a version changes that workflow; then a step
+that does not say takes Desk's default, and the update does not ask. A step that must stay two-person says `0`.
 
 ## 5. Uninstall
 
@@ -537,7 +674,9 @@ switched off, adopted again on reinstall; if it listed your record type, it now 
 check it opened, a line it added, a kitchen ticket it moved): kept switched off, with no role, password, key or till grant (the POS user tick, its Retail Permission, shift and stores), so the
 record stays workable at the till, and adopted again on reinstall, its key made again when the shop connects an app CitiXsys hosts, or by the shop (User, Generate Keys) for an app you host. A role the install
 created goes too, with every permission row and user assignment naming it; one another installed app also names
-stays, and goes when the last of them is uninstalled. A till key's ticks in POS Studio > Apps go with it (and a newly installed key
+stays, and goes when the last of them is uninstalled. Every permission row the install wrote goes (the feed user's
+reads, the rows under `role_rights`); a row the shop made is never touched. A default record (`records`) goes when
+it is unchanged and nothing points at it; otherwise it is kept and named in the result. A till key's ticks in POS Studio > Apps go with it (and a newly installed key
 never inherits a tick an earlier uninstall left), so an app installed again needs a store to tick its keys again. An app hosted by CitiXsys is told it was removed (§10).
 
 **A version consented before 2.0.0.646** (when a till key's line said *"installed switched off; it needs its own consent"*)
@@ -582,14 +721,17 @@ The same methods, the same checks, all `POST`:
 
 | Method | Arguments | Answer |
 |---|---|---|
-| `ivendnext_mpos.api.extension_package.check` | `manifest` (the JSON) | `{ok, name, refusals, summary, summary_sha256, summary_parts, changes, mode, warnings, holders}` |
-| `ivendnext_mpos.api.extension_package.install` | `name`, `summary_sha256` (echo the check's) | `{ok, name, status: "Queued", action}`, or `{ok: 0, refusals}` |
+| `ivendnext_mpos.api.extension_package.check` | `manifest` (the JSON) | `{ok, name, refusals, summary, summary_sha256, summary_parts, changes, mode, carries_consent, warnings, holders}` |
+| `ivendnext_mpos.api.extension_package.install` | `name` | `{ok, name, status: "Queued", action}`, or `{ok: 0, refusals}` |
 | `ivendnext_mpos.api.extension_package.uninstall` | `name` | `{ok, status: "Queued", action: "uninstall"}` |
 | `ivendnext_mpos.api.extension_package.finish` | `name` | `{ok, action: "finish"}` |
 | `ivendnext_mpos.api.extension_package.connect_again` | `name` (the installed version of a hosted app) | `{ok, name, connection}`: the outcome in words, never a secret |
 
-A consent call without the summary's SHA-256, or with one that does not match, is refused: the consent binds the
-summary of this exact manifest. A consent is also refused when what the update would change on the site is no longer
+The call is the consent: it binds this exact manifest and the summary this call's own check writes (a `summary_sha256`
+sent by an older tool is accepted and ignored). `carries_consent: 1` says the update asks nothing new (§4), so no person
+needs to read anything first. The checker runs once per install, in this call; a site that changes before the job then
+stops the job in words: *The install stopped: … What it had made was removed.*, or *The update stopped: … Its own changes
+were undone*. A consent is refused when what the update would change on the site is no longer
 what the package showed (another version was installed or removed since): check it again. One version of an app acts
 at a time: while one is running, or an update's undo is unfinished, the others wait for **Finish**. Read the result from the package record (`status`, `error`, `refusals`, `todo`).
 Secrets reach the calling user's open Desk screen, and an app hosted by CitiXsys through its own connect (§10); over
@@ -612,10 +754,13 @@ library** on the Extension Packages list and on a new package. Code: `business_l
 user, one Desk licence each; the outside addresses it names, or *No outside address named*; who uses it). A card never
 says an app sends nothing outside: any print layout can reach an outside address (§3). (The longer explanation is
 the library's own text; the library owns its words.) A card's longer explanation
-opens under *What it does and what you set up first*. The cards come in groups, an empty group left out: **Made for
-you** (the shelf, below), **Ready to add** (library apps this site can install), **Installed** (updates, installs under
-way and failures first) and **Part of iVendNext** (apps that run inside the site and are not installed here). The page
-names **This site's key address** with a copy button; a partner asks the shop for that line.
+opens under *What it does and what you set up first*. The page reads in the order a customer does, an empty group left out: **Waiting for your OK** (a maker's app waiting
+to be allowed, below, and a package whose file is checked and not yet consented, with **Review and install**), **Your
+apps** (every app the library lists that the site has, and every package on the site, an app installed from its file
+included; updates, installs under way and failures first) and **Add apps**: the shelf's apps not yet installed (**Made for you**, below), then category and industry
+buttons and a search box. A button or the search lists **Ready to add** (library apps this site can install) and **Part
+of iVendNext** (apps that run inside the site and are not installed here). *Choose from the library* on Extension
+Packages opens on *Add apps* with every card drawn. The page names **This site's key address** with a copy button; a partner asks the shop for that line.
 
 **The buttons** (`business_logic/app_library.py` `_card`). An app that runs inside
 the site (every door but the library's) reads *Installed · version x* when the site has it — the card's
@@ -626,7 +771,9 @@ last change to this app did not finish.* with **Details** (the package record, w
 after *Failed*, *Upgrade Failed* or a refusal by the job's own re-check — a failed update keeps **Open**, since the
 installed version still runs — and *Installed · version x* with **Open** (the first Desk page, `workspaces[0]`, of the
 installed manifest; none when it adds no page) and **Details**; otherwise its key state, below. A first install that
-failed is back under *Ready to add*.
+failed stays in *Your apps*, where its line can be seen. An app installed from its file reads the same lines; a checked
+new version of it reads *Version y is ready* with **Review and install**, which opens the package record, where its own
+consent button does the rest.
 
 **The key.** A free app has **Install** and needs no key: the site asks the library for its free key afterwards, as a note it never waits on. Any other app has **Enter your key**: a key iVendNext or a partner issued
 for this site's key address. The site checks the key itself, in this order: its form, a signing key this release
@@ -635,8 +782,7 @@ not ended, and the card admitting the kind. It then fetches the app's file, refu
 the signed list names and does what its card says, and hands it to the same consent screen as the package form
 (one drawing, `ivn_app_library.format` and `.consent`): *Install ⟨app⟩*, the card's lead and *What it does* first,
 an update's changes, then the summary in plain words under the five headings of §3, the checker's warnings, who can
-install here, *Show the exact wording* (an update's changes and the summary, as stored), and the tick. **Install** stays disabled until it is ticked, and sends the summary's
-fingerprint exactly as the check returned it. Nothing installs without that tick. The key is kept on the package (`library_key`), so an update or a
+install here, *Show the exact wording* (an update's changes and the summary, as stored), and the tick. **Install** stays disabled until it is ticked. Nothing installs without that tick. The key is kept on the package (`library_key`), so an update or a
 reinstall needs no new key while it is valid. A key that ended, was replaced or was withdrawn offers **Enter a new key** (a free app never asks for one). **Enter your key for ⟨app⟩** says a key is a short code iVendNext or a
 partner gives for this site, beside the key address and its copy button.
 
@@ -674,7 +820,7 @@ nothing else changes: the page keeps its **Help** and **Docs**. Write each card'
 first; they are what *Next steps* lists.
 
 **The shelf.** A customer with apps built only for it gets a private shelf, **Made for you**, opened once with a shelf
-key (the link *Have a shelf key? Open your shelf* at the foot of the page). Its apps install the same way; a package from the shelf keeps `shelf:<id>`, never the key.
+key (**Open your shelf**, in the page's top row; paste the key, or the partner's whole message, and the site finds the key in it). Its apps install the same way; a package from the shelf keeps `shelf:<id>`, never the key.
 **Allow.** When the App library has a shelf waiting for this site (a maker published for it, and the site has not been
 handed that shelf's key), the page says *A new app is waiting from {from}: {title} {version}.* (the maker's company name, the app's title) with **Allow** and
 **Not now**. *Allow* asks the App library (`POST /v1/allow` with the site's key address and the maker), which never
@@ -725,7 +871,7 @@ the page in *Role Permission for Page and Report* to show it the link.
 
 | Method (all gated) | Arguments | Answer |
 |---|---|---|
-| `ivendnext_mpos.api.app_library.library` | none | the key address, each card and its state, the shelves (one section per shelf) |
+| `ivendnext_mpos.api.app_library.library` | none | the key address, each card and its state, the shelves (one section per shelf), the packages no card names |
 | `ivendnext_mpos.api.app_library.take` | `app`, `key` (or none: the stored key), `shelf` (a shelf's id, for an app on that shelf) | `check`'s answer, or `{ok: 0, refused, words, detail}` |
 | `ivendnext_mpos.api.app_library.free_key` | `app` | the same |
 | `ivendnext_mpos.api.app_library.open_shelf` | `key` | `{ok}` or a refusal |
@@ -746,7 +892,7 @@ hosting and serves many shops. It learns each shop from the shop's own site:
   from its own record at that moment, by the names the partner kit uses: a till key `<app>:<key>`, a Desk action's
   service `<app>:sub:<key>`, a webhook by its name. A hosted app has one address: a manifest naming more than one
   address on `ivendnext.app` is not connected (the key and the secrets would reach every one of them).
-- **The app's own user's key** (the user the install made for its event feed, `<app>@integration.invalid`) is
+- **The app's own user's key** (the user the install made for its event feed or its till rights, `<app>@integration.invalid`) is
   made at the first connect, once, and sent as `user:<email>` → `<api key>:<api secret>`; a key the shop makes on
   it later (User → Generate Keys) is the one sent after that. **Any other user's key** (a fiscal reader's writer,
   or a user the shop named on a feed before the install made one) is sent once the shop has made that key; the
@@ -764,6 +910,10 @@ or undo an install, an update or an uninstall. When the app could not be reached
 **Connect again** (installed version, hosted app) makes the same call with every secret read afresh — after the app
 is back, after a secret was rotated, or after an integration user's key was made. The app keeps the previous set
 for one connect while the shop moves over, so to stop a leaked secret working, press **Connect again** twice (not while this site's key is withdrawn: no call is made).
+
+**A free app's key can arrive late.** It is asked for in the background when the app is taken, and never waited on. A
+key that arrives during the install is used by its connect, and one that arrives after it connects then. If the
+library was down, **Connect again** asks for the key once more.
 
 No call is made, and **Hosted app** says why, when this site holds no App library key for the app (a manifest pasted
 by hand for an app never taken from the library; a pasted update of a library app uses the newest key this site
@@ -819,7 +969,7 @@ A package can carry a partner module our certify service signed, for an extensio
   module, with the key it holds, and refuses a module our certify service did not sign in the module's own words, or
   one iVendNext has recalled (*"recalled (our certify service withdrew this module's certificate)"*).
 - **What the consent says.** One line for the module (its version, its partner, its SHA-256, a sealed program that
-  runs inside the shop and only through a service you switch on, withdrawn by an uninstall) and one for its service:
+  runs inside the shop and through the service this app installs, withdrawn by an uninstall) and one for its service:
   where it runs, what it may do, that nothing is sent outside the shop, and for pricing that the most it may take off
   stays 0 until you raise it.
 - **What the install makes.** The module and its service are the last things a fresh install makes. The module is the same record
@@ -839,8 +989,8 @@ A package can carry a partner module our certify service signed, for an extensio
   module record's write permission too. Installing the app again needs a higher version of the
   module.
 - **Update.** A higher version with a new build is added beside the old one, which it replaces: every service that
-  ran the old version now runs the new one, switched off with its consent cleared, so the shop reads it again (a
-  pricing service keeps the limit the shop set). The same version, a lower one, the same bytes, another extension
+  ran the old version now runs the new one. One the shop had on stays on under the update's consent, one it stopped
+  stays stopped, and a pricing service keeps the limit the shop set. The same version, a lower one, the same bytes, another extension
   point or another partner name is refused. A failed update puts the old version and its services back; the new
   version it added is spent (withdrawn, listed), and the package's error says so.
 - **A failed install** removes what it made. A module refused at the install leaves nothing. With two modules, one

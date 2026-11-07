@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_page.md @ cff85a09aa4d, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_page.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner page
 
 **Contract:** [`partner_page.v1.schema.json`](../extension_contracts/partner_page.v1.schema.json)
@@ -11,7 +11,7 @@
 
 Your own page, inside our frame: a delivery partner's order board in a sheet over the sale on the till
 (counter and tablet), or a console in Desk at `/app/partner-page/<page>`. Your page learns who is looking
-at what from a **signed, one-time, five-minute context** in its address, and on the till your server may
+at what from a **signed context** in its address, good for 15 minutes, and on the till your server may
 **answer once** — a message, Sale Attribute rows, or both — which the cashier confirms like any till key.
 
 It fires when the cashier presses the page's key on the till, or when a Desk user opens the page (a link
@@ -35,10 +35,11 @@ Version 1: the context carries `"v": 1`.
 
 **The declaration** — a **Retail Extension Subscription** of extension point `page`: your page's address
 (HTTPS; its host is the only one we frame, never the shop's own), a secret, where it opens (*Till key*,
-*Desk page*, or *Till key and Desk page*), who may open the Desk page (roles), whether the signed-in
+*Desk page*, or *Till key and Desk page*), who may open the Desk page (roles; none named means every
+Desk user, and the read check on a named record always holds), whether the signed-in
 user's id and the sale are sent, what the page may answer on the till (`message`, `sale_attributes`, or
 nothing: a board of your own, whose key then opens on an empty basket too), its
-height on the counter (40 to 100 percent), and optionally the POS Profiles whose tills may open it — ⚠ a
+height on the counter (40 to 100 percent: a figure outside that is held to the nearest), and optionally the POS Profiles whose tills may open it — ⚠ a
 page limited to POS Profiles never opens in Desk, nor from a Desk action's `open_page`. On the
 till the page is a key like any app key: switch it on in **POS Studio → Apps** (the phone places no app
 keys).
@@ -48,7 +49,7 @@ keys).
 
 ```json
 {"v": 1, "page": "8a1f0c2d3e", "nonce": "0123456789abcdef0123456789abcdef",
- "iat": 1759845600, "exp": 1759845900, "lang": "en",
+ "iat": 1759845600, "exp": 1759846500, "lang": "en",
  "theme": {"mode": "light", "vars": {"--ivn-accent": "#0b6bcb", "--ivn-radius": "8px"}},
  "store": "Main Store - AC", "pos_profile": "Counter 1",
  "sale": {"sale_ref": "…", "store": "…", "pos_profile": "…", "company": "…", "currency": "AED",
@@ -59,8 +60,8 @@ keys).
 - On the till: `store`, `pos_profile`, and `sale` (the [remote till key's](remote_till_key.md) moneyless
   picture) when declared. In Desk: `doctype` and `name` when opened for a record. `user` when declared.
 - **Your duties:** send the fragment to your own server; there, recompute HMAC-SHA256 of the decoded
-  payload bytes with the secret and compare in constant time, refuse an `exp` in the past, and **refuse a
-  `nonce` you have already seen**.
+  payload bytes with the secret and compare in constant time, and refuse an `exp` in the past. A page
+  reloaded inside its time opens again; iVendNext takes one answer.
 - **The frame:** `sandbox="allow-scripts allow-forms allow-same-origin"`, `referrerpolicy="no-referrer"`,
   `allow=""`. Your page keeps its own origin, so it cannot read ours; it cannot navigate the top window or
   open pop-ups. `/pos` sends `frame-src 'self' <your origin>` while your page is placed on a till. Let the
@@ -104,9 +105,16 @@ the context, so ⚠ post `done` only after `submit` returned `{"ok": 1}`) · *"�
 Nothing was added to the sale."* (the pick-up itself failed) · a page that has not loaded in 10 seconds:
 *"⟨label⟩ isn't answering."* with Close.
 
-**In Desk:** *"You can't open this page for that record."* (no role, no read right on the record, a
-page not placed on Desk, or one limited to POS Profiles) · *"This address is not the partner page's own."* · *"This page cannot be opened
-right now."*
+**In Desk:** *"Your role can't open this page. Ask your administrator to add you under Who may open the
+Desk page."* (the user holds none of the page's roles) · *"This page is switched off, waiting for consent on its
+subscription, or gone."* (switched off, deleted, not placed on Desk, limited to POS Profiles, or its consent or
+address no longer holds) · *"You can't
+open this page for that record."* (no read right on the record named) · *"This address is not the partner
+page's own."* · *"This page cannot be opened right now."*
+
+**Finding the page in Desk:** the page's *Retail Extension Subscription* record has an *Open the page* button
+when the page is placed on Desk, and `/app/partner-page` with no page lists, by label, every Desk page the
+user may open now (switched on, for every store, a role they hold).
 
 **When the declaration is saved:**
 
@@ -118,7 +126,6 @@ right now."*
   characters."* · *"Write its host in plain letters (a name in another script in its xn-- form)."* · *"Its
   path must not contain . or .. parts, a backslash, ; or an encoded / or %."* · *"A partner page cannot be
   on this site's own address."*
-- *"Choose who may open the Desk page."* · *"The height on the till must be from 40 to 100."*
 - *"The time to answer must be more than 0 and at most 10 seconds."* · *"When the service is down, this
   extension point can only: refuse."* · *"The extension point's settings must be a JSON object."*
 
@@ -129,9 +136,8 @@ record."* · *"The customer's consent is not recorded, or its address is not one
 
 The consent text is built from the declaration, word for word, from these parts:
 
-> What the page receives in its address each time it opens, signed with the secret, usable once and for
-> 5 minutes: the page's id, a one-time number, when it was made and when it runs out, the screen's
-> language and its colours.
+> What the page receives in its address each time it opens, signed with the secret: the page's id, a
+> one-time number, when it was made and when it runs out, the screen's language and its colours.
 
 then *"On the till: the store and the POS Profile."* (with the sale, the sale's fields in words) when it
 opens on the till, *"In Desk: the record type and name the page is opened for."* when it opens in Desk,
@@ -150,7 +156,7 @@ Online only: the key is dimmed while the till is offline.
 
 **No money touch.** The context carries no price, and no answer kind carries money.
 
-Limits: label 40 · height 40 to 100 percent · context usable once, for 5 minutes · one answer per nonce ·
+Limits: label 40 · height 40 to 100 percent · a context lives 15 minutes · one answer per nonce ·
 your answer's timestamp within 300 seconds · the answer's message and Sale Attribute caps are the
 [remote till key's](remote_till_key.md#7-money-and-limits).
 
@@ -194,6 +200,5 @@ through your own API calls.
 > `partner_page.v1.schema.json`: `$defs/context` is the payload of the `#ctx=<payload>.<signature>`
 > fragment (base64url, HMAC-SHA256 over the payload bytes with the shared secret), `$defs/submit` is the
 > signed body your server posts to `/api/method/ivendnext_mpos.api.page.submit`, `$defs/declaration` the
-> Retail Extension Subscription. Verify the context on your server, refuse an expired one or a nonce you
-> have seen, never read the context in the browser's storage or query; if the page answers, answer once,
+> Retail Extension Subscription. Verify the context on your server, refuse an expired one, never read the context in the browser's storage or query; if the page answers, answer once,
 > then post `{"type": "ivendnext:done"}` to the parent window.
