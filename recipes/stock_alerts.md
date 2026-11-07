@@ -29,7 +29,7 @@ One record of your alert type per alert, named by its key: the kind (*Low stock*
 
 ## What iVendNext needs from you
 
-- **The role's rights on the retailer's own record types**: read on Warehouse, Item, Bin, Batch and Serial and Batch Bundle; read, create and write on Material Request ([the integration user recipe](integration_user.md)). Say what they reach: the key can change **any** draft transfer request in the retailer's iVendNext.
+- **The role's rights** are in the manifest (`role_rights`): read on Warehouse, Item, Bin, Batch and Serial and Batch Bundle; read, create and write on Material Request. The administrator gives none; the retailer makes the integration user and its key (the app has no event feed, so the install makes no user) ([the integration user recipe](integration_user.md)). Say what they reach: the key can change **any** draft transfer request in the retailer's iVendNext.
 - **The settings filled in and enabled**, and the alerts role given to named people.
 - **Reorder rows on the items**, and the retailer's automatic reorder left **off**, or both ask for the same stock.
 

@@ -3,9 +3,9 @@
  "app": "pp_dfa",
  "prefix": "PP DFA",
  "title": "Duty-free allowance and boarding pass",
- "version": "0.1.0",
+ "version": "0.2.0",
  "publisher": "Partner Programme sample",
- "description": "A check before payment for an airport shop. The cashier scans the customer's boarding pass into the sale detail PP DFA Boarding Pass (the basket's Sale details row). When the cashier presses Pay, the shop's server sends its priced basket and the service refuses a sale with no boarding pass, a pass it cannot read, a pass with no flight leaving from one of the shop's airports (an arrivals shop: landing at one), or one whose flight is on another day (by the airport's own day: departures today or tomorrow, arrivals today or the two days before). It also refuses a sale that takes an item group past its duty-free allowance per passenger, counting this sale and the passenger's earlier sales on the same pass. Each line counts its quantity times the item's Counts toward the duty-free allowance as (blank: 1), so an allowance can be in litres or cigarettes. A refund is never judged. The settings are the shop's own, in the record Default of PP DFA Settings, and the allowances are on its Item Groups; the service reads them, the basket's items and the earlier sales with the app's integration user, and writes nothing. The install makes the role PP DFA Integration; the shop gives it to the app's integration user, with a plain read on Item Group, Item and POS Invoice (not Only If Creator) and no User Permissions. The check is on from the install. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "A check before payment for an airport shop. The cashier scans the customer's boarding pass into the sale detail PP DFA Boarding Pass (the basket's Sale details row). When the cashier presses Pay, the shop's server sends its priced basket and the service refuses a sale with no boarding pass, a pass it cannot read, a pass with no flight leaving from one of the shop's airports (an arrivals shop: landing at one), or one whose flight is on another day (by the airport's own day: departures today or tomorrow, arrivals today or the two days before). It also refuses a sale that takes an item group past its duty-free allowance per passenger, counting this sale and the passenger's earlier sales on the same pass. Each line counts its quantity times the item's Counts toward the duty-free allowance as (blank: 1), so an allowance can be in litres or cigarettes. A refund is never judged. The settings are the shop's own, in the record Default of PP DFA Settings, and the allowances are on its Item Groups; the service reads them, the basket's items and the earlier sales with the app's integration user, and writes nothing. The install makes the role PP DFA Integration; the install gives it to the app's own user and, from role_rights, a plain read on Item Group, Item and POS Invoice (give the user no User Permissions). The check is on from the install. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": ["https://host.docker.internal:8125/dfa/check"],
  "doctypes": [
   {
@@ -53,5 +53,10 @@
  "extension_subscriptions": [
   {"key": "allowance", "point": "check", "label": "Duty-free allowance", "endpoint_url": "https://host.docker.internal:8125/dfa/check",
    "timeout_seconds": 5, "down_answer": "allow_and_flag"}
+ ],
+ "role_rights": [
+  {"doctype": "Item Group", "role": "PP DFA Integration", "rights": ["read"]},
+  {"doctype": "Item", "role": "PP DFA Integration", "rights": ["read"]},
+  {"doctype": "POS Invoice", "role": "PP DFA Integration", "rights": ["read"]}
  ]
 }

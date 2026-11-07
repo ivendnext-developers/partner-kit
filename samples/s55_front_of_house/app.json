@@ -1,6 +1,6 @@
 {
  "app": "front-of-house",
- "version": "1.0.3",
+ "version": "1.1.0",
  "port": 8080,
  "health": "/health",
  "size": "small",

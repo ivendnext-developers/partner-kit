@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.1.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
+
 ### 1.0.1
 
 - The description and README stop telling the retailer to lock *Customer Group*: who may move a customer is the customer's choice.

@@ -3,9 +3,9 @@
  "app": "pp_tgr",
  "prefix": "PP TGR",
  "title": "Till guard rules",
- "version": "0.4.0",
+ "version": "0.5.0",
  "publisher": "Partner Programme sample",
- "description": "The common checks before payment, in one app. A check before payment: when the cashier presses Pay, the shop's server sends its priced basket and the service refuses a line priced at or below the shop's placeholder price (a free line is never refused) or a line holding more of one item than the shop allows, or a sale selling more lines than the retailer allows, and asks the cashier (or calls a manager) for a line priced below its item's lowest price, in the retailer's own price list of lowest prices (each item, each unit), or a sale at or above the shop's approval amount. A return is judged only for the items it sells (an exchange), by the line rules; the approval amount reads the total the customer pays. A capture on scan: an item whose 'Confirm at the till when scanned' is ticked beeps and asks a yes/no question before its line goes on the sale. If the shop ticks 'Warn of a shorter-dated batch instead of asking', a ticked item is answered with a notice instead, when the store holds a batch of it that expires sooner: the item goes on with no tap and the till shows which batch to sell first. The rules are the shop's own, in the record 'Default' of PP TGR Settings, each off until set; the service reads that record, and the lowest prices' Item Price rows when that list is set, with the app's integration user and writes nothing. The install makes the role PP TGR Integration; the shop gives it to the app's integration user. Both services are on from the install. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
+ "description": "The common checks before payment, in one app. A check before payment: when the cashier presses Pay, the shop's server sends its priced basket and the service refuses a line priced at or below the shop's placeholder price (a free line is never refused) or a line holding more of one item than the shop allows, or a sale selling more lines than the retailer allows, and asks the cashier (or calls a manager) for a line priced below its item's lowest price, in the retailer's own price list of lowest prices (each item, each unit), or a sale at or above the shop's approval amount. A return is judged only for the items it sells (an exchange), by the line rules; the approval amount reads the total the customer pays. A capture on scan: an item whose 'Confirm at the till when scanned' is ticked beeps and asks a yes/no question before its line goes on the sale. If the shop ticks 'Warn of a shorter-dated batch instead of asking', a ticked item is answered with a notice instead, when the store holds a batch of it that expires sooner: the item goes on with no tap and the till shows which batch to sell first. The rules are the shop's own, in the record 'Default' of PP TGR Settings, each off until set; the service reads that record, and the lowest prices' Item Price rows when that list is set, with the app's integration user and writes nothing. The install makes the role PP TGR Integration and the app's own user that holds it, gives the role read on PP TGR Settings (the record its feed follows) and, from role_rights, read on Item Price and Batch. Both services are on from the install. When the service is down the sale goes on and is flagged for review. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": ["https://host.docker.internal:8125/tgr/check", "https://host.docker.internal:8125/tgr/scan"],
  "doctypes": [
   {
@@ -51,5 +51,9 @@
    "timeout_seconds": 3, "down_answer": "allow_and_flag"},
   {"key": "on_scan", "point": "capture", "label": "Till guard", "endpoint_url": "https://host.docker.internal:8125/tgr/scan",
    "timeout_seconds": 1.5, "down_answer": "allow_and_flag", "settings": {"event": "scan", "item_field": "pp_tgr_confirm_at_scan"}}
+ ],
+ "role_rights": [
+  {"doctype": "Item Price", "role": "PP TGR Integration", "rights": ["read"]},
+  {"doctype": "Batch", "role": "PP TGR Integration", "rights": ["read"]}
  ]
 }

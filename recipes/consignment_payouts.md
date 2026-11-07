@@ -58,7 +58,7 @@ The record type `PP CSG Payout`, numbered `format:CSG-P-{#####}`, tracked: `cons
 ## What the retailer does
 
 1. **Install the app.** It adds the consignor, the payout, the two Item fields, the workflow, the lock, the statement and the buttons, and makes the role `PP CSG Integration` and the app's own user with that role alone.
-2. **Give the app's role Read** on POS Invoice, Sales Invoice, Item and Retail Save Rule (Role Permissions Manager).
+2. **The app's role's reads are in the manifest** (`role_rights`): POS Invoice, Sales Invoice, Item and Retail Save Rule. The administrator gives none (POS build `2.1.0.691` or later).
 3. **Read what the services send** (Retail Extension Subscription); the services and buttons, and the lock, are on from the install.
 4. **Decide who does what:** intake (Sales User, Item Manager), payouts and how each was paid (Accounts User), the press that pays and a cancel (Accounts Manager). Write on Item and on consignors is a money right here: an item's consignor and share, and a consignor's share and *Consigned since*, decide what a payout pays. A payout's consignor and company are set once.
 

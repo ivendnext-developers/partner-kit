@@ -40,7 +40,7 @@ An airport store sells only to passengers, and only up to what customs lets each
 
    Each line counts its stock quantity times the item's measure (blank: 1). Judge only the groups this sale's own lines fall under, so an earlier sale alone never refuses this one: `{"verdict": "refuse", "reason": "Spirits: 4.5 litres on this boarding pass; the allowance is 4. Take some off the sale."}`. Else allow.
 
-   iVendNext gives your role a plain **read on Item Group, Item and POS Invoice** (not *Only If Creator*) and your user no User Permissions, or the earlier sales are only partly seen and a passenger can buy past the allowance.
+   Your manifest's `role_rights` give your role a plain **read on Item Group, Item and POS Invoice**, and your user must hold no User Permissions, or the earlier sales are only partly seen and a passenger can buy past the allowance.
 
 8. **When iVendNext cannot be read, say so the right way.** No answer, an error answer other than 401 or 403, an answer cut short, not records, or an item on the sale iVendNext does not return: answer 503, so the till applies your down answer. iVendNext refuses your key (401 or 403): refuse in words that say so (*"Duty-free allowance cannot read your shop: it refused the app's user. Ask your administrator to check the app's setup."*). Never follow a redirect with the key.
 

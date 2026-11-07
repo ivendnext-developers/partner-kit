@@ -42,6 +42,10 @@ ivn try
 
 ## Versions
 
+### 1.1.0
+
+- The set-up words say the install switches the feed on and gives the role its reads (POS build `2.1.0.691` or later). The app does what it did.
+
 ### 1.0.3
 
 - *Seat* says what to fix when the till's floor refuses the app's user, for example a user with no register at that store: *"Not seated: the app's user is not assigned to register …"*. Before, the host read *did not answer in time*.

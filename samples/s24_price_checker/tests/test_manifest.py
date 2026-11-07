@@ -39,6 +39,10 @@ class Manifest(unittest.TestCase):
         k = price.kiosk_of({f: "x" for f in read} | {"enabled": 1})
         self.assertEqual(set(k) - {"pos_profile"}, read)       # what kiosk_of reads is what the record holds
 
+    def test_the_apps_role_carries_its_reads_in_the_manifest(self):
+        rights = {(r["doctype"], r["role"]): r["rights"] for r in M["role_rights"]}
+        self.assertEqual(rights, {("Item", "PP PRC Integration"): ["read"], ("Item Price", "PP PRC Integration"): ["read"]})
+
     def test_the_apps_user_may_only_read_the_kiosks(self):
         perms = {p["role"]: p for p in KIOSK["permissions"]}
         self.assertEqual({k for k, v in perms["PP Integration"].items() if v == 1}, {"read"})
@@ -57,7 +61,7 @@ class Manifest(unittest.TestCase):
         self.assertEqual(M["registered_applications"][0]["events"], ["PP PRC Kiosk"])
 
     def test_the_setup_is_in_the_description(self):
-        for words in ("PP Integration before this is installed", "PP PRC Kiosk feed", "writes nothing"):
+        for words in ("PP Integration before this is installed", "PP PRC Kiosk feed", "read on Item and Item Price", "writes nothing"):
             self.assertIn(words, M["description"])
         self.assertNotIn("<", json.dumps(M))
 

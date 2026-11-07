@@ -46,6 +46,10 @@ ivn try
 
 ## Versions
 
+### 1.1.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
+
 ### 1.0.2
 
 - Its manifest is now 0.1.2. A recalled lot moved to a store that is not a quarantine store is left to the till's own refusal, which says where it may go (*It can leave only by a Material Issue, a move into a quarantine store … or a return to the supplier*): the app adds no second sentence about the regulator's visit. An issue of a recalled lot, and an expired lot leaving quarantine, are still disposals.

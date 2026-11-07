@@ -26,7 +26,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/payment_method_rules.md).
 
-**The customer sets:** the rules in *PP PMR Rule*, one per customer group that needs one, with its own *Mode of Payment* records; and a read on Customer Group for the role **PP PMR Integration**. Loyalty Points must be one of the till's payment methods for a minimum sale to apply to it.
+**The customer sets:** the rules in *PP PMR Rule*, one per customer group that needs one, with its own *Mode of Payment* records. The role **PP PMR Integration** has its read on Customer Group from the manifest (`role_rights`). Loyalty Points must be one of the till's payment methods for a minimum sale to apply to it.
 
 ## Run it
 
@@ -41,6 +41,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.0
+
+- The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
 
 ### 1.1.0
 
