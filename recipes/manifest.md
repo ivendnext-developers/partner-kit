@@ -59,7 +59,7 @@ A manifest is one file that adds **your own record types and fields, and whateve
 
    A retailer's own receipt lines are not a kind: they are the register's *Receipt Header* and *Receipt Footer*, two text fields the retailer fills in on its register; a tax authority's QR and seal reach the receipt through fiscal readers ([the receipt page](../contracts/pages/receipt.md)).
 
-   **Rights for your own roles and default rows.** An app with a feed needs no `role_rights` for its reads: the install gives its user's role read on every record type the feed follows, and the consent says so on one line (*Reads: Batch, POS Invoice, …*). Use `role_rights` for what goes **beyond** a read (your service writes a customer, a pharmacist role of yours changes a batch), and `records` for rows every retailer gets alike, made as the administrator would in Desk:
+   **Rights for your own roles and default rows.** An app with a feed needs no `role_rights` for its reads: the install gives its user's role read on every record type the feed follows, and the consent says so on one line (*Reads: Batch, POS Invoice, …*). Use `role_rights` for what goes **beyond the feed's reads** (your service writes a customer or reads another record type its handler needs, such as the Item a sale line names; a pharmacist role of yours changes a batch), and `records` for rows every retailer gets alike, made as the administrator would in Desk:
 
    ```json
    "role_rights": [

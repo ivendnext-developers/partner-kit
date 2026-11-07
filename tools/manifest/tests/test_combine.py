@@ -433,13 +433,11 @@ class Refusals(Base):
                          "own: it cannot be made into an app. Copy it by hand as its README says.")
         self.assertFalse((self.into / "apps").exists())
 
-    def test_m02_four_checks_at_pay(self):
-        with self.assertRaises(combine.Refused) as e:
-            self.make(["s23_till_guard", "s32_coupon_rules", "s42_optical_prescriptions", "s46_payment_method_rules"])
-        self.assertRegex(e.exception.text, r"^This app would run 4 checks at Pay: .+\. A sale runs at most 3 checks, 10 "
-                                           r"seconds together\. Untick one\.$")
-        for n in ("S23", "S32", "S42", "S46"):
-            self.assertIn(n, e.exception.text)
+    def test_four_checks_at_pay_make_one_app(self):
+        # the product counts no checks and adds no seconds at install (its ten seconds is what one pass makes a cashier wait)
+        folder, _ = self.make(["s23_till_guard", "s32_coupon_rules", "s42_optical_prescriptions", "s46_payment_method_rules"])
+        checks = [x for x in self.manifest(folder)["extension_subscriptions"] if x.get("point") == "check"]
+        self.assertGreaterEqual(len(checks), 4)
 
     def test_m03_two_modules_at_one_extension_point(self):
         samples = self.into / "samples"
@@ -641,11 +639,9 @@ class ReviewFolds(Base):
             combine.add("s20_capture", folder)
         self.assertEqual(e.exception.code, "M01")
         self.assertTrue(e.exception.text.startswith("These samples both capture at the scan: S20 "))
+        # the product no longer counts checks or adds their seconds when an app installs: more than three checks combine
         folder2, _ = self.make(["s32_coupon_rules", "s42_optical_prescriptions", "s46_payment_method_rules"], prefix="ACME CK")
-        with self.assertRaises(combine.Refused) as e:
-            combine.add("s23_till_guard", folder2)
-        self.assertEqual(e.exception.code, "M02")
-        self.assertTrue(e.exception.text.startswith("This app would run 4 checks at Pay: "))
+        combine.add("s23_till_guard", folder2)
         self.assertEqual(tree(folder), before)
 
     def test_a_sample_whose_titles_repeat_is_one_app(self):

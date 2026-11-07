@@ -71,7 +71,6 @@ KEYED = ("extension_subscriptions", "remote_keys", "webhooks", "extension_module
 EVENT_WORDS = {"scan": ("at the scan", "scan"), "qty_change": ("when a quantity changes", "quantity"),
                "customer_add": ("when a customer is added", "customer"),
                "customer_select": ("when a customer is chosen", "customer")}
-CHECKS_MAX, CHECK_SECONDS_MAX = 3, 10
 PREFIX_WORDS = "A name is one to three words of letters and digits, each starting with a letter: ACME BINS."
 POINT_WORDS = {"page": "a page", "desk_action": "a button in Desk", "doccheck": "a check when a record is saved",
                "payer": "a payer at Pay"}
@@ -314,13 +313,6 @@ def limits(parts: list[Part]) -> None:
             raise Refused(f"These samples both capture {where}: {names}. A till event takes one capture. Untick one of "
                           f"them, or take {number(b.sample)}'s {noun} rule into {number(a.sample)}'s code by hand after the "
                           "app is made.", code="M01")
-    checks = [(p, s) for p in parts for s in p.manifest.get("extension_subscriptions") or [] if s.get("point") == "check"]
-    seconds = sum(float(s.get("timeout_seconds") or 0) for _, s in checks)
-    if len(checks) > CHECKS_MAX or seconds > CHECK_SECONDS_MAX:
-        listed = ", ".join(f"{s.get('label') or s.get('key')} ({number(p.sample)}, {float(s.get('timeout_seconds') or 0):g} s)"
-                           for p, s in checks)
-        raise Refused(f"This app would run {len(checks)} checks at Pay: {listed}. A sale runs at most 3 checks, 10 seconds "
-                      "together. Untick one.", code="M02")
     for p in parts:
         if own_server(p) and not handler_of(p):
             raise Refused(f"{p.label} answers the till from its own server, with no hosting order (app.json) the app's "
