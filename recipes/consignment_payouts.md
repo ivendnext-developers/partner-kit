@@ -18,7 +18,7 @@ A resale or consignment store sells pieces it does not own and pays each consign
 
 ![A consignor on a demo site](../samples/s61_consignment_payouts/screenshots/02_consignor.png)
 
-![A payout worked out on a demo site: two pieces, each at its share](../samples/s61_consignment_payouts/screenshots/04_payout.png)
+![A payout worked out on a demo site: three pieces, each at its share](../samples/s61_consignment_payouts/screenshots/04_payout.png)
 
 ![The payout statement](../samples/s61_consignment_payouts/screenshots/05_statement.png)
 
