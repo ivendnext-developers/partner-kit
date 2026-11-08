@@ -50,6 +50,10 @@ HOTEL_SIM_URL=http://127.0.0.1:8161 python3 service/app.py
 
 ## Versions
 
+### 0.1.1
+
+- A charge reads the day it reached the folio (*Posted on*), so a charge that waited overnight reaches the next clearing entry. A cancel and a return of a refused sale say what the clearing account needs.
+
 ### 0.1.0
 
 - First version in the kit: the check at Pay, the post to the folio, the auditor's workspace, the Mews adapter and a stand-in hotel system.

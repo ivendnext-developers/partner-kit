@@ -11,6 +11,7 @@ second delivery of the event fails on the name and calls nobody. All state is th
 
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import sys
@@ -30,6 +31,7 @@ POST_TIMEOUT_S = 10
 WANTED = ("sale.booked", "return.booked", "sale.cancelled")
 LOST = "Sent, and the hotel system never answered. Check the folio: post it by hand if it isn't there."
 STOPPED = "We stopped while sending this. Check the folio: post it by hand if it isn't there."
+CANCELLED = "Cancelled in Desk. The cancel took it off the clearing account: no entry, unless this sale is in a day's clearing entry; then reverse that part."
 DOWN = "The hotel system isn't answering. We keep trying."
 
 
@@ -68,7 +70,7 @@ class Pass:
         except H.HotelRefused as e:
             return self.write(name, "Refused", message=rooms.plain(str(e), 280))
         self.write(name, "Posted", folio=folio, charge_reference=refs[0], tip_reference=refs[1] if len(refs) > 1 else "",
-                   message="")
+                   posted_on=datetime.date.today().isoformat(), message="")
 
     def folio_for(self, row: dict, hotel) -> str:
         """A blank Folio (the cashier's Yes while the hotel system was down, or the service was down): the return's sale's
@@ -97,7 +99,7 @@ class Pass:
 
     def cancelled(self, name: str) -> None:
         row = self.t.get(self.table, name)
-        said = "Cancelled in Desk."
+        said = CANCELLED
         if row:
             if row["status"] == "Posted":
                 refs = ", ".join(r for r in (row.get("charge_reference"), row.get("tip_reference")) if r)

@@ -57,7 +57,8 @@ Read your hotel system's own "do not post" flag: some do not enforce it on the A
 - **The tip** is a fourth detail, posted to the folio on the hotel's tip code. The till takes a tip only on a cash or card leg, so iVendNext books nothing for it and its tips report does not see it.
 - **The tile is online only,** as the till's Custom tiles are. Offline, the server takes cash or a card, or writes the room on a paper slip for the front desk.
 - **The hotel call** is capped at 1.5 seconds, inside the check's 3.
-- **A charge that waited overnight** keeps the day of its sale on the report: add it to the clearing entry when it posts.
+- **One room per sale.** A sale carries one Room and one Guest, and all its Room Charge rows go to that folio. When a table splits across rooms, ring each room as its own sale.
+- **The clearing entry** takes the report by *Posted on*, so a charge that waited overnight is in the next one.
 - **The guest's surname stays on the sale** as a sale detail, so the auditor can settle a dispute.
 - **The Folio detail** carries the room and guest it was found for, such as `R-1001 (412 Smith)`. A room corrected after the check is looked up again, and never posted to the first guest.
 - A store the settings do not name is left alone.

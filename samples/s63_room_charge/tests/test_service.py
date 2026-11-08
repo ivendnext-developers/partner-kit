@@ -178,6 +178,7 @@ class ThePost(Base):
         self.run_pass(("sale.booked", "S1"))
         row = self.row("S1")
         self.assertEqual((row["status"], row["folio"], row["amount"]), ("Posted", "R-1001", 120.0))
+        self.assertEqual(row["posted_on"], worker.datetime.date.today().isoformat())
         self.assertTrue(row["charge_reference"].startswith("L-"))
         self.assertEqual([(p["folio"], p["amount"], p["code"], p["receipt"]) for p in self.hotel.posted], [("R-1001", 120.0, "FNB", "S1")])
 
@@ -411,7 +412,9 @@ class ReturnsAndCancels(Base):
     def test_a_cancelled_sale_lands_on_refused_with_no_call(self):
         sale(self.t, "S1")
         self.run_pass(("sale.cancelled", "S1"))
-        self.assertEqual((self.row("S1")["status"], self.row("S1")["message"], self.hotel.posted), ("Refused", "Cancelled in Desk.", []))
+        self.assertEqual((self.row("S1")["status"], self.hotel.posted), ("Refused", []))
+        self.assertIn("Cancelled in Desk", self.row("S1")["message"])
+        self.assertIn("no entry", self.row("S1")["message"])
 
     def test_a_waiting_sale_cancelled_is_not_sent(self):
         self.hotel.mode = "down"

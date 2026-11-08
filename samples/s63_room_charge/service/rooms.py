@@ -154,5 +154,5 @@ def return_gate(original: dict | None) -> tuple[str, str]:
     if status in ("Waiting", "Sending"):
         return "Waiting", "Waiting for its sale to reach the folio first."
     if status == "Refused":
-        return "Refused", "Its sale is on the auditor's list. If it is on the folio, take this amount off there."
+        return "Refused", "Its sale is on the auditor's list. If it is on the folio, take this amount off there. On the clearing account the sale and its return cancel out: no entry."
     return "go", ""
