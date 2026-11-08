@@ -65,7 +65,7 @@ class ManifestTest(unittest.TestCase):
     def test_m7_sold_out_is_off_unless_the_store_ticks_it(self):
         (f,) = [f for f in self.dt[STORE]["fields"] if f["fieldname"] == "sold_out_on"]
         self.assertNotIn("default", f)
-        self.assertIn("does not limit to its stores", f["description"])
+        self.assertIn("only the screen's own store", f["description"])
 
 
 if __name__ == "__main__":

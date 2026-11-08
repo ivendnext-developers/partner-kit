@@ -393,10 +393,19 @@ class PageLive(unittest.TestCase):
         got = page("sold", answers={"/ksc/board": [b], "/ksc/soldout": [still]}, tap="Soup")
         self.assertEqual(got["why"], ["Still sold out: head office has marked it sold out for every store. Ask your manager."])
         hours = {"state": "still_sold_out", "item_code": "SOUP", "reason": "hours", "from": "11:00:00", "to": "15:00:00"}
-        got = page("sold", answers={"/ksc/board": [b], "/ksc/soldout": [hours]}, tap="Soup")
+        cleared = station(ticket("k1", 1, 1))                                   # the next read lists it out no more
+        cleared["sold_out"] = {"dishes": [], "out": []}
+        got = page("sold", answers={"/ksc/board": [b, cleared], "/ksc/soldout": [hours]}, tap="Soup")
+        self.assertEqual(got["rows"], ["Soup"])                                 # the row stays, with why
         self.assertEqual(got["why"], ["Available again, but not sold at this hour: this store sells it from 11:00 to 15:00."])
         got = page("sold", answers={"/ksc/board": [b], "/ksc/soldout": [{"state": "set"}]}, tap="Soup")
         self.assertEqual(got["why"], [])
+        for answer, why in (({"from": "07:00:00", "to": None}, "this store sells it from 07:00."),
+                            ({"from": None, "to": "15:00:00"}, "this store sells it until 15:00."),
+                            ({"reason": "sold_out", "until": "2026-11-09 14:00:00"}, "for every store until 14:00.")):
+            a = dict({"state": "still_sold_out", "item_code": "SOUP", "reason": "hours"}, **answer)
+            got = page("sold", answers={"/ksc/board": [b], "/ksc/soldout": [a]}, tap="Soup")
+            self.assertTrue(got["why"][0].endswith(why), got["why"])
 
     def test_l9_a_ticket_shows_its_service_mode_as_the_till_names_it(self):
         to_go = ticket("k1", 1, 1)

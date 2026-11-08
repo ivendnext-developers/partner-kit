@@ -22,7 +22,7 @@ Every restaurant past the first one runs its kitchen from screens. The till alre
 
 1. Install the manifest. It adds the settings (one per company, with a row per store), the screen record and its stations table, the roles **PP KSC Manager** and **PP KSC Integration**, the button *Make link* and its service, and the feed registration that makes the app's own user (`pp_ksc@integration.invalid`).
 2. Give the app's user its stores and its key, in this order, on its User record: keep *Is Desk User*, tick **Is POS User**, choose a **Shift Profile**, link a **Retail Permission** with **May Work a Kitchen Screen** and nothing else (a new Retail Permission may come with *layaway* ticked: untick it); add one row for each store to the store access table (each store once, with a register there); **Save**. A hosted service is handed the key by the site itself; for a service you run yourself, then **Generate Keys**.
-3. **Sold out, only if the kitchen should mark it:** in **Role Permissions Manager**, give **PP KSC Integration** **Read**, **Write** and **Create** on *Retail Item Availability*, and **Read** on *Item* so a cook can find any dish by name. ⚠ The till does not limit that right to the user's stores; the app marks only the screen's own store.
+3. **Sold out, only if the kitchen should mark it:** in **Role Permissions Manager**, give **PP KSC Integration** **Read**, **Write** and **Create** on *Retail Item Availability*, and **Read** on *Item* so a cook can find any dish by name. The app marks only the screen's own store.
 4. On **PP KSC Settings**, one row per store: *Sold out from the screens*, *Warn after* and *Late after* (8 and 15 minutes to start), the screens' look (*Dark*), an accent colour, the screens' language, *Ticket size* (*Standard*) and *Board shows tables* (off: the board shows counter sales' numbers only).
 
 ### Screens
@@ -49,7 +49,7 @@ Day to day the tills send as before; the kitchen taps tickets on its screens; th
 - A ticket the till's print agent later reports unprinted leaves the board without a bump; its dishes come back on the next *Send*.
 - A screen reads every 3 seconds: a new ticket shows within about 4 seconds. Its corner shows *Last read* in amber when its last good read is older than 15 seconds.
 - A recalled ticket is shown again, never moved back to ready (the door has no step back).
-- Sold out needs the item-availability right (read, write and create), which the till does not limit to a user's stores. A store with its own hours for a dish stays sold out while head office has it sold out for every store: *Available again* at that store leaves it sold out, and the screen says so. To sell it there anyway, a manager clears the store's hours in Desk.
+- Sold out needs the item-availability right (read, write and create). A store with its own hours for a dish stays sold out while head office has it sold out for every store: *Available again* at that store leaves it sold out, and the screen says so. To sell it there anyway, a manager clears the store's hours in Desk, and types them in again once head office lifts the mark: until then the dish sells all day there.
 - A dish already sold out that no ticket on the board names is listed by its name (from the till's sold-out record), or by its item code when the record has none.
 - A line of a sold-out dish that reaches an open check by another way (an app adding to a check) is refused when the check is paid, not when it is added.
 - Allergens show only where the store's receipt theme shows them on the item.

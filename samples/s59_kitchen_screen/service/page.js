@@ -37,11 +37,14 @@
           unavailable: "The kitchen's tickets cannot be read right now. This screen tries again by itself.",
           step: "This ticket moved on another screen. The board is read again.", gone: "This ticket is no longer on the board.",
           not_yours: "This ticket is another station's.",           no_dish: "That dish was not found. Search for it again.",
-          no_find: "This screen may not look up dishes. Ask your manager to give the app's user Read on Item.",
+          no_find: "This screen may not look up dishes. Ask your manager to give the app's role Read on Item.",
           findDish: "Find a dish",
           findNone: "No dish found",
           stillSold: "Still sold out: head office has marked it sold out for every store. Ask your manager.",
-          stillHours: "Available again, but not sold at this hour: this store sells it from {from} to {to}.", off: "Sold out is switched off for this store." },
+          stillHours: "Available again, but not sold at this hour: this store sells it from {from} to {to}.",
+          stillTo: "Available again, but not sold at this hour: this store sells it until {to}.",
+          stillFrom: "Available again, but not sold at this hour: this store sells it from {from}.",
+          stillUntil: "Still sold out: head office has marked it sold out for every store until {until}.", off: "Sold out is switched off for this store." },
     ar: { tapFailed: "لم يُنفَّذ هذا الضغط. تحقق من التذكرة واضغط مرة أخرى.", tapRight: "لا يمكن لهذه الشاشة فعل ذلك. اطلب من المدير التحقق من صلاحيات التطبيق.",
           moreChoice: "+خيار واحد آخر", moreChoices: "+{n} خيارات أخرى", moreDish2: "+طبقان آخران",
           moreDishes11: "+{n} طبقًا آخر", moreTicket2: "+تذكرتان أخريان", moreTickets11: "+{n} تذكرةً أخرى",
@@ -63,11 +66,14 @@
           unavailable: "لا يمكن قراءة تذاكر المطبخ الآن. ستحاول الشاشة مرة أخرى بنفسها.",
           step: "تغيّرت هذه التذكرة على شاشة أخرى. تُقرأ اللوحة مرة أخرى.", gone: "لم تعد هذه التذكرة على اللوحة.",
           not_yours: "هذه التذكرة لمحطة أخرى.",           no_dish: "لم يُعثر على هذا الطبق. ابحث عنه مرة أخرى.",
-          no_find: "لا يمكن لهذه الشاشة البحث عن الأطباق. اطلب من المدير منح مستخدم التطبيق صلاحية القراءة على الأصناف.",
+          no_find: "لا يمكن لهذه الشاشة البحث عن الأطباق. اطلب من المدير منح دور التطبيق صلاحية القراءة على الأصناف.",
           findDish: "ابحث عن طبق",
           findNone: "لم يُعثر على طبق",
           stillSold: "لا يزال نافدًا: علّمه المكتب الرئيسي نافدًا في كل المتاجر. اسأل المدير.",
-          stillHours: "متوفر مرة أخرى، لكنه لا يُباع في هذه الساعة: يبيعه هذا المتجر من {from} إلى {to}.", off: "خاصية النفاد متوقفة في هذا المتجر." },
+          stillHours: "متوفر مرة أخرى، لكنه لا يُباع في هذه الساعة: يبيعه هذا المتجر من {from} إلى {to}.",
+          stillTo: "متوفر مرة أخرى، لكنه لا يُباع في هذه الساعة: يبيعه هذا المتجر حتى {to}.",
+          stillFrom: "متوفر مرة أخرى، لكنه لا يُباع في هذه الساعة: يبيعه هذا المتجر من {from}.",
+          stillUntil: "لا يزال نافدًا: علّمه المكتب الرئيسي نافدًا في كل المتاجر حتى {until}.", off: "خاصية النفاد متوقفة في هذا المتجر." },
     es: { tapFailed: "Esa pulsación no se aplicó. Revise el ticket y pulse otra vez.", tapRight: "Esta pantalla no puede hacer eso. Pida a su encargado que revise los permisos de la app.",
           moreChoice: "+1 opción más", moreChoices: "+{n} opciones más",
           moreDish: "+1 plato más", moreDishes: "+{n} platos más", moreTicket: "+1 ticket más",
@@ -86,12 +92,15 @@
           not_set_up: "Esta pantalla no puede leer los tickets. Pida a su encargado que revise el usuario de la app y su clave.",
           unavailable: "Ahora no se pueden leer los tickets. La pantalla lo intentará de nuevo sola.",
           step: "Este ticket cambió en otra pantalla. Se lee el tablero otra vez.", gone: "Este ticket ya no está en el tablero.",
-          not_yours: "Este ticket es de otra estación.",           no_dish: "No se encontró ese plato. Búscalo otra vez.",
-          no_find: "Esta pantalla no puede buscar platos. Pide a tu gerente que dé al usuario de la aplicación lectura de Artículo.",
+          not_yours: "Este ticket es de otra estación.",           no_dish: "No se encontró ese plato. Búsquelo otra vez.",
+          no_find: "Esta pantalla no puede buscar platos. Pida a su encargado que dé al rol de la aplicación permiso de lectura sobre Artículo.",
           findDish: "Buscar un plato",
           findNone: "No se encontró ningún plato",
-          stillSold: "Sigue agotado: la oficina central lo marcó agotado en todas las tiendas. Pregunta a tu gerente.",
-          stillHours: "Disponible otra vez, pero no se vende a esta hora: esta tienda lo vende de {from} a {to}.", off: "Agotado está desactivado en esta tienda." },
+          stillSold: "Sigue agotado: la oficina central lo marcó agotado en todas las tiendas. Pregunte a su encargado.",
+          stillHours: "Disponible otra vez, pero no se vende a esta hora: esta tienda lo vende de {from} a {to}.",
+          stillTo: "Disponible otra vez, pero no se vende a esta hora: esta tienda lo vende hasta las {to}.",
+          stillFrom: "Disponible otra vez, pero no se vende a esta hora: esta tienda lo vende desde las {from}.",
+          stillUntil: "Sigue agotado: la oficina central lo marcó agotado en todas las tiendas hasta las {until}.", off: "Agotado está desactivado en esta tienda." },
     fr: { tapFailed: "Cet appui n'a pas abouti. Vérifiez le ticket et appuyez de nouveau.", tapRight: "Cet écran ne peut pas faire cela. Demandez à votre responsable de vérifier les droits de l'app.",
           moreChoice: "+1 option de plus", moreChoices: "+{n} options de plus",
           moreDish: "+1 plat de plus", moreDishes: "+{n} plats de plus", moreTicket: "+1 ticket de plus",
@@ -112,11 +121,14 @@
           unavailable: "Les tickets ne peuvent pas être lus pour le moment. L'écran réessaie tout seul.",
           step: "Ce ticket a changé sur un autre écran. Le tableau est relu.", gone: "Ce ticket n'est plus au tableau.",
           not_yours: "Ce ticket est celui d'un autre poste.",           no_dish: "Ce plat est introuvable. Cherchez-le à nouveau.",
-          no_find: "Cet écran ne peut pas chercher de plats. Demandez à votre responsable de donner à l'utilisateur de l'application la lecture sur Article.",
+          no_find: "Cet écran ne peut pas chercher de plats. Demandez à votre responsable de donner au rôle de l'application le droit de lecture sur Article.",
           findDish: "Chercher un plat",
           findNone: "Aucun plat trouvé",
           stillSold: "Toujours épuisé : le siège l'a marqué épuisé dans tous les magasins. Demandez à votre responsable.",
-          stillHours: "De nouveau disponible, mais pas vendu à cette heure : ce magasin le vend de {from} à {to}.", off: "Épuisé est désactivé dans ce magasin." },
+          stillHours: "De nouveau disponible, mais pas vendu à cette heure : ce magasin le vend de {from} à {to}.",
+          stillTo: "De nouveau disponible, mais pas vendu à cette heure : ce magasin le vend jusqu'à {to}.",
+          stillFrom: "De nouveau disponible, mais pas vendu à cette heure : ce magasin le vend à partir de {from}.",
+          stillUntil: "Toujours épuisé : le siège l'a marqué épuisé dans tous les magasins jusqu'à {until}.", off: "Épuisé est désactivé dans ce magasin." },
     de: { tapFailed: "Dieses Tippen kam nicht an. Bon prüfen und noch einmal tippen.", tapRight: "Dieser Bildschirm darf das nicht. Ihre Leitung soll die Rechte der App prüfen.",
           moreChoice: "+1 weitere Option", moreChoices: "+{n} weitere Optionen",
           moreDish: "+1 weiteres Gericht", moreDishes: "+{n} weitere Gerichte", moreTicket: "+1 weiterer Bon",
@@ -137,11 +149,14 @@
           step: "Dieser Bon wurde an einem anderen Bildschirm geändert. Die Tafel wird neu gelesen.",
           gone: "Dieser Bon ist nicht mehr auf der Tafel.", not_yours: "Dieser Bon gehört zu einer anderen Station.",
           no_dish: "Dieses Gericht wurde nicht gefunden. Suchen Sie es erneut.",
-          no_find: "Dieser Bildschirm darf keine Gerichte suchen. Bitten Sie Ihre Leitung, dem Benutzer der App Lesen auf Artikel zu geben.",
+          no_find: "Dieser Bildschirm darf keine Gerichte suchen. Bitten Sie Ihre Leitung, der Rolle der App das Leserecht für Artikel zu geben.",
           findDish: "Gericht suchen",
           findNone: "Kein Gericht gefunden",
           stillSold: "Weiterhin ausverkauft: Die Zentrale hat es für alle Filialen als ausverkauft markiert. Fragen Sie Ihre Leitung.",
-          stillHours: "Wieder verfügbar, aber zu dieser Stunde nicht verkauft: Diese Filiale verkauft es von {from} bis {to}.",
+          stillHours: "Wieder verfügbar, aber zu dieser Uhrzeit nicht im Verkauf: Diese Filiale verkauft es von {from} bis {to}.",
+          stillTo: "Wieder verfügbar, aber zu dieser Uhrzeit nicht im Verkauf: Diese Filiale verkauft es bis {to}.",
+          stillFrom: "Wieder verfügbar, aber zu dieser Uhrzeit nicht im Verkauf: Diese Filiale verkauft es ab {from}.",
+          stillUntil: "Weiterhin ausverkauft: Die Zentrale hat es für alle Filialen bis {until} als ausverkauft markiert.",
           off: "Ausverkauft ist für diese Filiale ausgeschaltet." },
     pt: { tapFailed: "Esse toque não foi aplicado. Confira o pedido e toque de novo.", tapRight: "Esta tela não pode fazer isso. Peça ao seu gerente para verificar as permissões do app.",
           moreChoice: "+1 opção a mais", moreChoices: "+{n} opções a mais",
@@ -162,12 +177,15 @@
           not_set_up: "Esta tela não consegue ler os pedidos. Peça ao seu gerente para verificar o usuário do app e a chave.",
           unavailable: "Os pedidos não podem ser lidos agora. A tela tenta de novo sozinha.",
           step: "Este pedido mudou em outra tela. O quadro é lido de novo.", gone: "Este pedido não está mais no quadro.",
-          not_yours: "Este pedido é de outra estação.",           no_dish: "Esse prato não foi encontrado. Procure-o de novo.",
-          no_find: "Esta tela não pode procurar pratos. Peça ao seu gerente para dar ao usuário do aplicativo leitura em Item.",
+          not_yours: "Este pedido é de outra estação.",           no_dish: "Esse prato não foi encontrado. Procure de novo.",
+          no_find: "Esta tela não pode procurar pratos. Peça ao seu gerente para dar à função do aplicativo permissão de leitura em Item.",
           findDish: "Procurar um prato",
           findNone: "Nenhum prato encontrado",
-          stillSold: "Continua esgotado: a matriz marcou-o como esgotado em todas as lojas. Pergunte ao seu gerente.",
-          stillHours: "Disponível de novo, mas não é vendido a esta hora: esta loja vende-o das {from} às {to}.", off: "Esgotado está desligado nesta loja." }
+          stillSold: "Continua esgotado: a matriz o marcou como esgotado em todas as lojas. Pergunte ao seu gerente.",
+          stillHours: "Disponível de novo, mas não é vendido neste horário: esta loja o vende das {from} às {to}.",
+          stillTo: "Disponível de novo, mas não é vendido neste horário: esta loja o vende até as {to}.",
+          stillFrom: "Disponível de novo, mas não é vendido neste horário: esta loja o vende a partir das {from}.",
+          stillUntil: "Continua esgotado: a matriz o marcou como esgotado em todas as lojas até as {until}.", off: "Esgotado está desligado nesta loja." }
   };
   var lang = "en";
   function count(one, many, n) {     // "+1 more dish", "+N more dishes"; Arabic's dual and 11-and-over forms
@@ -528,7 +546,7 @@
       b.disabled = true;
       delete still[d.item_code];
       call("/ksc/soldout", { item_code: d.item_code, sold_out: !isOut }).then(function (a) {
-        if (a.state === "still_sold_out") still[d.item_code] = a;
+        if (a.state === "still_sold_out") still[d.item_code] = Object.assign({ item_name: d.item_name || d.item_code }, a);
         answered(a, "sold." + d.item_code);
         return read();
       }).then(drawSold);
@@ -536,8 +554,11 @@
     li.appendChild(b);
     var why = still[d.item_code];
     if (why) {
+      var hm = function (t) { return /\d\d:\d\d/.exec(t || "") ? /\d\d:\d\d/.exec(t)[0] : ""; };   // the till's HH:MM:SS
+      var from = hm(why.from), to = hm(why.to), until = hm(why.until);
       li.appendChild(el("p", "ksc-sold-why", why.reason === "hours"
-        ? w("stillHours", { from: (why.from || "").slice(0, 5), to: (why.to || "").slice(0, 5) }) : w("stillSold")));
+        ? w(from && to ? "stillHours" : from ? "stillFrom" : "stillTo", { from: from, to: to })
+        : w(until ? "stillUntil" : "stillSold", { until: until })));
     }
     return li;
   }
@@ -551,6 +572,9 @@
     var rows = found ? found.slice() : so.dishes.slice();
     if (found && !found.length) list.appendChild(el("li", "ivn-list-row ksc-empty", w("findNone")));
     if (!found) so.out.forEach(function (d) { if (!rows.some(function (r) { return r.item_code === d.item_code; })) rows.push({ item_code: d.item_code, item_name: d.item_name || d.item_code }); });
+    Object.keys(still).forEach(function (c) {   // a dish the till kept unsold stays on the list with its note, listed or not
+      if (!rows.some(function (r) { return r.item_code === c; })) rows.push({ item_code: c, item_name: still[c].item_name });
+    });
     rows.forEach(function (d) { list.appendChild(soldRow(d, !!out[d.item_code])); });
   }
   function find() {                    // a cook's words: any dish the shop sells, not only one on a ticket now

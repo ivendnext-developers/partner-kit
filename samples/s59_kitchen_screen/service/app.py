@@ -26,8 +26,7 @@ then reads the screen record (as the app's own user) and refuses a link whose nu
 was made again) or whose screen's kind, store or stations changed. The store and the stations come from the record,
 never from the page. A station screen moves only its own stations' tickets, one step; the expo only bumps; the board
 moves nothing. Sold out is marked only at the screen's own store, for any dish the shop sells (a cook finds one by name
-before anyone orders it), and only when the store's row allows it (the till's sold-out calls are not fenced to a user's
-stores).
+before anyone orders it), and only when the store's row allows it.
 
 ONE RETAILER (env or an env file):
     IVN_SHOP_URL, IVN_SHOP_KEY ("<api key>:<api secret>" of the app's user), IVN_LINK_SECRET (handed back at install as
@@ -69,6 +68,7 @@ import testcall  # noqa: E402
 SUB = "link"                         # the manifest's extension_subscriptions[].key
 DOOR = "/api/method/ivendnext_mpos.api.v1."     # the till's partner API (its station-ticket door and item availability)
 AVAIL = "Retail Item Availability"   # the till's sold-out record: its item_name names a dish no ticket on the board holds
+NO_ITEM = ("LinkValidationError", "DoesNotExistError")   # the till's refusal of an item code it does not have
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
 BUDGET_S = 7.0                       # a press: the shop waits 10 seconds for it
 READ_S = 4.0                         # one read
@@ -457,7 +457,7 @@ class Service:
             answer = door.call("set_item_availability", {"item_code": code, "warehouse": s["store"],
                                                          "sold_out": 1 if out else 0, "sold_out_until": ""})
         except TenantError as e:
-            if e.refused and e.code not in (401, 403, 404) and e.kind not in SET_UP:
+            if e.kind in NO_ITEM:
                 return {"state": "refused", "why": "no_dish"}   # the till refused the code: no such dish
             raise
         finally:

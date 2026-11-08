@@ -68,6 +68,8 @@ class FakeTenant:
         self.names = {"SOUP": "Soup of the day"}        # an item's name on its sold-out record (none for the others)
         self.menu = {"BURGER": "Burger", "CHEESE": "Cheese", "STEAK": "Steak", "BEER": "Beer", "FRIES": "Fries",
                      "SOUP": "Soup of the day", "RINGS": "Onion rings", "ONION": "Onion soup", "CAVIAR": "Caviar"}
+        self.item_flags = {"ONIONT": {"has_variants": 1}, "ONIONX": {"disabled": 1}}   # a product family, a disabled dish
+        self.menu.update(ONIONT="Onion bhaji family", ONIONX="Onion tart")
         self.held = {}                                  # head office's mark (or a store's hours): the clear leaves it unsold
         self.calls, self.sent = [], []
 
@@ -97,9 +99,12 @@ class FakeTenant:
         if doctype == "Retail Item Availability":       # the till's sold-out records, each with its item's name
             codes = filters[0][2]
             return [{"item_code": c, "item_name": self.names.get(c, "")} for c, _ in sorted(self.sold) if c in codes]
-        if doctype == "Item":                           # the menu, by a name holding the cook's words
-            words = filters[0][2].strip("%").lower()
-            return [{"name": c, "item_name": n} for c, n in sorted(self.menu.items()) if words in n.lower()][:limit]
+        if doctype == "Item":                           # the menu, by a name holding the cook's words, as the filters ask
+            want = {f: v for f, _, v in filters}
+            words = want.pop("item_name").strip("%").lower()
+            return [{"name": c, "item_name": n} for c, n in sorted(self.menu.items()) if words in n.lower()
+                    and all(self.item_flags.get(c, {}).get(f, d) == v for f, v in want.items()
+                            for d in [{"disabled": 0, "is_sales_item": 1, "has_variants": 0}.get(f)])][:limit]
         return []
 
     def update(self, doctype, name, body):
