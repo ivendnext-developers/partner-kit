@@ -24,7 +24,7 @@ A kitchen screen (a screen per station, an expo screen, a *Now serving* board) o
 - One integration user for each kit app: a user that ever enrolled a till device is refused (`DeviceRequiredError`). A user who holds the right only through write on Kitchen Stations may read and move tickets but is never told of a change.
 - Your screen moves tickets only: it never voids, comps or changes a line, and a ticket carries no price.
 - A `void` ticket names a dish a manager voided, with no link to the ticket it cancels: show it for the cook to strike, and leave it out of a *Now serving* count.
-- ⚠ The sold-out calls are not fenced to your user's stores: they answer to read, write and create on *Retail Item Availability* for every store. Ask for them only where your app may mark every store's items.
+- A sold-out mark needs read, write and create on *Retail Item Availability*, and is fenced to your user's stores (a user with no store row is head office, and marks every store); the read answers any store's items.
 
 ## Tell the customer
 Each station sees on its screen what the tills sent, as the printed ticket shows it; the cooks tap a dish through and the board shows the guests whose order is ready. The printers keep printing, so a kitchen still works when the screen or the network is down.
