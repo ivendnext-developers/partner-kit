@@ -1,0 +1,515 @@
+{
+ "manifest_version": 2,
+ "app": "pp_rmc",
+ "prefix": "PP RMC",
+ "title": "Room charge",
+ "version": "0.1.0",
+ "publisher": "Partner Programme sample",
+ "description": "A hotel's restaurant or bar charges a meal to a guest's room. The server types the room and surname on the check's Sale details; at Pay the check asks the hotel system, fills the reservation as Folio, and dims the Room Charge tile with its reason for a room it cannot confirm. Within about a minute of the sale booking the service reads the event feed and posts the charge to the guest's folio, one post per sale, keeping the hotel's reference. A night auditor reads the Room charges workspace: posted, waiting and refused. The till books first and the folio follows. allowed_urls is the programme bench's address; a partner writes its own.",
+ "allowed_urls": [
+  "https://host.docker.internal:8159/rmc/check"
+ ],
+ "doctypes": [
+  {
+   "name": "PP RMC Store",
+   "istable": 1,
+   "fields": [
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Store",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "A store whose restaurant or bar charges to rooms."
+    },
+    {
+     "fieldname": "hotel_system",
+     "fieldtype": "Select",
+     "options": "Mews\nSimulator",
+     "label": "Hotel system",
+     "reqd": 1,
+     "in_list_view": 1,
+     "description": "The hotel's property system. Simulator is for trying the app with no hotel system."
+    },
+    {
+     "fieldname": "connection",
+     "fieldtype": "Small Text",
+     "label": "Connection",
+     "description": "Your hotel system's details, one per line as name=value. Mews: client_token, access_token, service_id, and environment=demo while you try it."
+    },
+    {
+     "fieldname": "charge_code",
+     "fieldtype": "Data",
+     "label": "Charge code",
+     "in_list_view": 1,
+     "description": "The hotel system's code for a restaurant charge. Pick one that does not count as revenue there, unless your finance team wants the hotel system to own the revenue."
+    },
+    {
+     "fieldname": "tip_code",
+     "fieldtype": "Data",
+     "label": "Tip code",
+     "in_list_view": 1,
+     "description": "The hotel system's code for a tip. Blank: a tip typed on the sale is not posted."
+    },
+    {
+     "fieldname": "mode_of_payment",
+     "fieldtype": "Link",
+     "options": "Mode of Payment",
+     "label": "Mode of payment",
+     "default": "Room Charge",
+     "in_list_view": 1,
+     "description": "The tile your servers press. Leave it as Room Charge unless you named yours differently."
+    }
+   ]
+  },
+  {
+   "name": "PP RMC Settings",
+   "issingle": 1,
+   "track_changes": 1,
+   "description": "Each store's hotel system. Open it from the Room charges workspace.",
+   "fields": [
+    {
+     "fieldname": "stores",
+     "fieldtype": "Table",
+     "options": "PP RMC Store",
+     "label": "Stores",
+     "description": "One row per store that charges to rooms."
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    },
+    {
+     "role": "PP RMC Integration",
+     "read": 1,
+     "write": 0,
+     "create": 0,
+     "delete": 0,
+     "report": 0,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  },
+  {
+   "name": "PP RMC Post",
+   "autoname": "field:sale",
+   "track_changes": 1,
+   "description": "One row per Room Charge sale or return: what was sent to the hotel system, and what it said.",
+   "fields": [
+    {
+     "fieldname": "sale",
+     "fieldtype": "Link",
+     "options": "POS Invoice",
+     "label": "Sale",
+     "reqd": 1,
+     "unique": 1,
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "status",
+     "fieldtype": "Select",
+     "options": "Sending\nWaiting\nPosted\nRefused",
+     "label": "Status",
+     "default": "Sending",
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "message",
+     "fieldtype": "Small Text",
+     "label": "What the hotel system said",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
+     "fieldname": "done",
+     "fieldtype": "Check",
+     "label": "Done",
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "description": "Tick a refused charge once you have settled it another way."
+    },
+    {
+     "fieldname": "note",
+     "fieldtype": "Small Text",
+     "label": "Note",
+     "description": "How you settled it."
+    },
+    {
+     "fieldname": "column_break_a",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "day",
+     "fieldtype": "Date",
+     "label": "Day",
+     "in_list_view": 1,
+     "in_standard_filter": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "store",
+     "fieldtype": "Link",
+     "options": "Warehouse",
+     "label": "Store",
+     "in_standard_filter": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "room",
+     "fieldtype": "Data",
+     "label": "Room",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "guest",
+     "fieldtype": "Data",
+     "label": "Guest",
+     "read_only": 1
+    },
+    {
+     "fieldname": "folio",
+     "fieldtype": "Data",
+     "label": "Folio",
+     "read_only": 1
+    },
+    {
+     "fieldname": "section_break_b",
+     "fieldtype": "Section Break"
+    },
+    {
+     "fieldname": "currency",
+     "fieldtype": "Link",
+     "options": "Currency",
+     "label": "Currency",
+     "read_only": 1
+    },
+    {
+     "fieldname": "amount",
+     "fieldtype": "Currency",
+     "options": "currency",
+     "label": "Charge",
+     "in_list_view": 1,
+     "read_only": 1
+    },
+    {
+     "fieldname": "tip",
+     "fieldtype": "Currency",
+     "options": "currency",
+     "label": "Tip",
+     "read_only": 1
+    },
+    {
+     "fieldname": "charge_reference",
+     "fieldtype": "Data",
+     "label": "Hotel's reference for the charge",
+     "read_only": 1
+    },
+    {
+     "fieldname": "tip_reference",
+     "fieldtype": "Data",
+     "label": "Hotel's reference for the tip",
+     "read_only": 1
+    },
+    {
+     "fieldname": "return_of",
+     "fieldtype": "Link",
+     "options": "POS Invoice",
+     "label": "Return of",
+     "read_only": 1
+    }
+   ],
+   "permissions": [
+    {
+     "role": "System Manager",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RMC Auditor",
+     "read": 1,
+     "write": 1,
+     "create": 0,
+     "delete": 0,
+     "report": 1,
+     "export": 1,
+     "share": 0,
+     "print": 1,
+     "email": 0
+    },
+    {
+     "role": "PP RMC Integration",
+     "read": 1,
+     "write": 1,
+     "create": 1,
+     "delete": 0,
+     "report": 1,
+     "export": 0,
+     "share": 0,
+     "print": 0,
+     "email": 0
+    }
+   ]
+  }
+ ],
+ "links": [
+  {
+   "doctype": "POS Invoice",
+   "link_doctype": "PP RMC Post",
+   "link_fieldname": "sale",
+   "group": "Room charge"
+  }
+ ],
+ "sale_attributes": [
+  {
+   "name": "Room"
+  },
+  {
+   "name": "Guest"
+  },
+  {
+   "name": "Folio"
+  },
+  {
+   "name": "Tip"
+  }
+ ],
+ "registered_applications": [
+  {
+   "name": "PP RMC Sales",
+   "description": "the room charge service posts each Room Charge sale to the guest's folio",
+   "events": [
+    "POS Invoice"
+   ]
+  }
+ ],
+ "extension_subscriptions": [
+  {
+   "key": "room",
+   "point": "check",
+   "label": "Room check",
+   "endpoint_url": "https://host.docker.internal:8159/rmc/check",
+   "timeout_seconds": 3,
+   "down_answer": "allow_and_flag",
+   "settings": {
+    "fill_attributes": [
+     "Folio"
+    ]
+   }
+  }
+ ],
+ "number_cards": [
+  {
+   "name": "PP RMC Posted",
+   "document_type": "PP RMC Post",
+   "function": "Count",
+   "filters": [
+    [
+     "status",
+     "=",
+     "Posted"
+    ]
+   ],
+   "color": "#2e7d32"
+  },
+  {
+   "name": "PP RMC Waiting",
+   "document_type": "PP RMC Post",
+   "function": "Count",
+   "filters": [
+    [
+     "status",
+     "=",
+     "Waiting"
+    ]
+   ],
+   "color": "#b26b00"
+  },
+  {
+   "name": "PP RMC Refused",
+   "document_type": "PP RMC Post",
+   "function": "Count",
+   "filters": [
+    [
+     "status",
+     "=",
+     "Refused"
+    ],
+    [
+     "done",
+     "=",
+     0
+    ]
+   ],
+   "color": "#c62828"
+  }
+ ],
+ "reports": [
+  {
+   "name": "PP RMC Room charges",
+   "ref_doctype": "PP RMC Post",
+   "report_type": "Report Builder",
+   "columns": [
+    "day",
+    "sale",
+    "store",
+    "room",
+    "guest",
+    "folio",
+    "amount",
+    "tip",
+    "status",
+    "charge_reference",
+    "done",
+    "message"
+   ],
+   "order_by": "creation desc",
+   "add_total_row": 1,
+   "roles": [
+    "PP RMC Auditor",
+    "System Manager"
+   ]
+  }
+ ],
+ "workspaces": [
+  {
+   "name": "PP RMC Room charges",
+   "blocks": [
+    {
+     "type": "header",
+     "data": {
+      "text": "<span class=\"h4\">Room charges</span>",
+      "col": 12
+     }
+    },
+    {
+     "type": "paragraph",
+     "data": {
+      "text": "Posted, waiting and refused opens the counts: everything posted, and what is waiting or refused now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Day and Status Posted.",
+      "col": 12
+     }
+    },
+    {
+     "type": "shortcut",
+     "data": {
+      "shortcut_name": "Posted, waiting and refused",
+      "col": 3
+     }
+    },
+    {
+     "type": "shortcut",
+     "data": {
+      "shortcut_name": "Room charges report",
+      "col": 3
+     }
+    },
+    {
+     "type": "shortcut",
+     "data": {
+      "shortcut_name": "Each charge",
+      "col": 3
+     }
+    },
+    {
+     "type": "shortcut",
+     "data": {
+      "shortcut_name": "Hotel system settings",
+      "col": 3
+     }
+    }
+   ],
+   "shortcuts": [
+    {
+     "type": "Dashboard",
+     "link_to": "PP RMC Room charges",
+     "label": "Posted, waiting and refused"
+    },
+    {
+     "type": "Report",
+     "link_to": "PP RMC Room charges",
+     "label": "Room charges report"
+    },
+    {
+     "type": "DocType",
+     "link_to": "PP RMC Post",
+     "label": "Each charge"
+    },
+    {
+     "type": "DocType",
+     "link_to": "PP RMC Settings",
+     "label": "Hotel system settings"
+    }
+   ]
+  }
+ ],
+ "property_setters": [
+  {
+   "doc_type": "PP RMC Settings",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s63_room_charge/index.html"
+  },
+  {
+   "doc_type": "PP RMC Post",
+   "property": "documentation",
+   "property_type": "Data",
+   "value": "https://developer.ivendnext.com/samples/s63_room_charge/index.html"
+  }
+ ],
+ "dashboard_charts": [
+  {
+   "name": "PP RMC Charges a day",
+   "document_type": "PP RMC Post",
+   "chart_type": "Sum",
+   "based_on": "day",
+   "value_based_on": "amount",
+   "timespan": "Last Month",
+   "time_interval": "Daily",
+   "type": "Bar",
+   "filters": [
+    [
+     "status",
+     "=",
+     "Posted"
+    ]
+   ]
+  }
+ ],
+ "dashboards": [
+  {
+   "name": "PP RMC Room charges",
+   "charts": [
+    "PP RMC Charges a day"
+   ],
+   "cards": [
+    "PP RMC Posted",
+    "PP RMC Waiting",
+    "PP RMC Refused"
+   ]
+  }
+ ]
+}
