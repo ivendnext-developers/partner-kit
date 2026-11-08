@@ -25,7 +25,7 @@ More: the [recipe](../../recipes/room_charge.md).
 
 **The app's role needs:** nothing from the retailer's administrator. The install makes *PP RMC Integration* and the app's own user, and gives the role read on POS Invoice, which the feed follows. Give the night auditor the role *PP RMC Auditor*. Only the System Manager changes the hotel system's settings, unless the retailer gives that right to someone else.
 
-**Who carries the hosting plan's charge:** the app is free to install. Its one-minute schedule needs a hosting plan, and whoever hosts the app carries that plan's charge.
+**Who carries the hosting plan's charge:** the app is free to install. Its one-minute schedule needs a hosting plan. CitiXsys carries that plan's charge for the listed app; you carry it for your own copy.
 
 ## Run it
 
@@ -43,7 +43,7 @@ HOTEL_SIM_URL=http://127.0.0.1:8161 python3 service/app.py
 
 ## Try it at the till
 
-- Open *Sale details*, type **412** and **Smith**, and press Pay: the Folio is filled.
+- Open *Sale details*, type **412** and **Smith**, and press Checkout: the Folio is filled.
 - Type **412** and **Brown** instead: the Room Charge tile is dimmed, with the reason.
 - Take it on Room Charge; within a minute it reads *Posted* on the *Room charges* report (search for *Room charges*).
 - Close the till day when you are done.
