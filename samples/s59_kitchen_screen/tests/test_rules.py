@@ -131,6 +131,19 @@ class Rules(unittest.TestCase):
         self.assertEqual(ksc.clean_ticket(dict(raw[0], service_mode="x" * 99))["service_mode"], "x" * 40)
         self.assertEqual({o["service_mode"] for o in ksc.expo_view([c for c in cleaned if c])["orders"]}, {"To go"})
 
+    def test_r12_the_usual_mode_of_a_store_shows_no_pill(self):
+        rows = [{"parent": "R1", "service_mode": "Dine in", "is_default": 1, "idx": 2},
+                {"parent": "R1", "service_mode": "To go", "is_default": 0, "idx": 1},
+                {"parent": "R2", "service_mode": "Delivery", "is_default": 0, "idx": 2},   # no row ticked: its first
+                {"parent": "R2", "service_mode": "Dine in", "is_default": 0, "idx": 1}, "junk", {"parent": 1}]
+        self.assertEqual(ksc.usual_modes(rows), frozenset({"Dine in"}))
+        split = [{"parent": "R1", "service_mode": "Dine in", "is_default": 1, "idx": 1},
+                 {"parent": "R2", "service_mode": "To go", "is_default": 1, "idx": 1}]
+        self.assertEqual(ksc.usual_modes(split), frozenset())           # registers that differ: every pill stays
+        self.assertEqual(ksc.usual_modes(None), frozenset())
+        t = [{"service_mode": "Dine in"}, {"service_mode": "To go"}]
+        self.assertEqual([x["service_mode"] for x in ksc.without_usual(t, frozenset({"Dine in"}))], ["", "To go"])
+
     def test_r11_a_search_answer_and_the_tills_still_sold_out(self):
         self.assertEqual(ksc.found_of([{"name": "B", "item_name": "beer"}, {"name": "A", "item_name": ""}, {"name": "B"}, 7]),
                          [{"item_code": "A", "item_name": "A"}, {"item_code": "B", "item_name": "beer"}])

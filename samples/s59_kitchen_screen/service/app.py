@@ -74,6 +74,7 @@ BUDGET_S = 7.0                       # a press: the shop waits 10 seconds for it
 READ_S = 4.0                         # one read
 BOARD_KEEP_S = 1.5                   # a store's board, shared by the screens one copy serves
 SOLD_KEEP_S = 30                     # a store's sold-out list
+MODES_KEEP_S = 300                   # a store's usual service modes (they change at set-up, not in a service)
 SCREEN_KEEP_S = 15                   # a verified screen and its store's row (a link made again stops within this time)
 CACHE_MAX = 2000                     # screens (and stores) one copy keeps
 STATIC = {"/": ("page.html", "text/html; charset=utf-8"), "/page.js": ("page.js", "text/javascript; charset=utf-8"),
@@ -223,6 +224,7 @@ class Service:
         self._screens: dict[tuple, tuple] = {}
         self._boards: dict[tuple, tuple] = {}
         self._sold: dict[tuple, tuple] = {}
+        self._modes: dict[tuple, tuple] = {}
         self._lock = threading.Lock()
 
     def retailer(self, site) -> tuple[str, list[bytes], object | None]:
@@ -380,8 +382,30 @@ class Service:
         self._keep(self._sold, key, value)
         return value
 
+    def usual_modes(self, door, site: str, store: str) -> frozenset:
+        """The service modes the store's registers sell under by default. Read once in five minutes; without Read on POS
+        Profile the store's tickets keep showing every mode."""
+        key = (site, store)
+        kept = self._modes.get(key)
+        if kept and self.clock() - kept[0] < MODES_KEEP_S:
+            return kept[1]
+        try:
+            regs = door.rows("POS Profile", ["name"], [["warehouse", "=", store], ["disabled", "=", 0]])
+            names = [r["name"] for r in regs if isinstance(r.get("name"), str)]
+            rows = door.rows("Retail Service Mode", ["parent", "service_mode", "is_default", "idx"],
+                             [["parent", "in", names]], parent="POS Profile") if names else []
+            value = ksc.usual_modes(rows)
+        except TenantError as e:        # the right not given: every ticket keeps its pill, as before (kept five minutes)
+            value = frozenset()
+            if e.code not in (401, 403):
+                return value                    # a slow or failed read is tried again at the next read
+        self._keep(self._modes, key, value)
+        return value
+
     def view(self, door, site: str, s: dict, row: dict) -> dict:
         tickets, as_of = self.board(door, site, s["store"])
+        if s["kind"] != ksc.KIND_BOARD:
+            tickets = ksc.without_usual(tickets, self.usual_modes(door, site, s["store"]))
         kind = s["kind"]
         if kind == ksc.KIND_STATION:
             view = ksc.station_view(tickets, ksc.stations_of(s))

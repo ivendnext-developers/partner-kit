@@ -146,6 +146,8 @@ CANARIES = [
      "        still = None", T + "test_s10_available_again_that_leaves_a_dish_sold_out_says_why"),
     ("still sold out says the hours", C, '    for k in (("until",) if reason == "sold_out" else ("from", "to")):',
      "    for k in ():", T + "test_s10_available_again_that_leaves_a_dish_sold_out_says_why"),
+    ("the store's usual mode shows no pill", S, '            tickets = ksc.without_usual(tickets, self.usual_modes(door, site, s["store"]))',
+     "            pass", T + "test_s12_only_a_mode_out_of_the_ordinary_shows"),
     ("a search the shop refuses is said", S, '                return {"state": "refused", "why": "no_find"}',
      "                raise", T + "test_s11_a_cook_finds_a_dish_by_name"),
     ("a ticket keeps its service mode", C, '            "service_mode": _text(t.get("service_mode"), 40).strip(),', "",

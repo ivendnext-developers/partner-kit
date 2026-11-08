@@ -304,6 +304,27 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(self.sold(t, "SOUP", False)["state"], "set")
         self.assertEqual(self.sold(t, "SOUP", True)["state"], "set")                 # marking out is never "still"
 
+    def test_s12_only_a_mode_out_of_the_ordinary_shows(self):
+        t = made(self.shop, self.svc)
+        self.shop.tickets = [dict(x, service_mode="Dine In") if i else dict(x, service_mode="Take Away")
+                             for i, x in enumerate(self.shop.tickets)]
+        got = call(self.svc, "/ksc/board", t)[1]["view"]["tickets"]
+        self.assertEqual([x["service_mode"] for x in got], ["Take Away", ""])
+        self.shop.calls.clear()
+        call(self.svc, "/ksc/board", t)
+        self.assertNotIn("rows Retail Service Mode", self.shop.calls)    # kept five minutes
+        self.shop.refuse = ("rows POS Profile", 403, "PermissionError")
+        self.later(400)
+        self.assertEqual([x["service_mode"] for x in call(self.svc, "/ksc/board", t)[1]["view"]["tickets"]],
+                         ["Take Away", "Dine In"])                        # no right: every ticket keeps its pill
+        self.shop.refuse = ("rows POS Profile", 500)
+        self.later(400)
+        call(self.svc, "/ksc/board", t)
+        self.shop.calls.clear()
+        self.later(2)                                                     # a slow or failed read is tried again
+        call(self.svc, "/ksc/board", t)
+        self.assertIn("rows POS Profile", self.shop.calls)
+
     def test_s11_a_cook_finds_a_dish_by_name(self):
         t = made(self.shop, self.svc)
         self.assertEqual(call(self.svc, "/ksc/find", t, q="onion")[1],
