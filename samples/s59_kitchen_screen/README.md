@@ -24,7 +24,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/kitchen_screen.md).
 
-**The customer sets:** the stations as the till's own *Kitchen Stations*, a printer row for each station on the register that sends, one `PP KSC Settings` record for the company with a row per store, the role **PP KSC Manager** for whoever makes the screens, and one `PP KSC Screen` for each screen, with **Make link** pressed and the link opened full screen on its browser. For sold out, give **PP KSC Integration** *Read*, *Write* and *Create* on *Retail Item Availability*, and *Read* on *Item* to find any dish by name. The app's user needs a Retail Permission with only **May Work a Kitchen Screen**.
+**The customer sets:** the stations as the till's own *Kitchen Stations*, a printer row for each station on the register that sends, one `PP KSC Settings` record for the company with a row per store, the role **PP KSC Manager** for whoever makes the screens, and one `PP KSC Screen` for each screen, with **Make link** pressed and the link opened full screen on its browser. Give **PP KSC Integration** *Read* on *POS Profile*, so a ticket in the store's usual service mode shows no pill. For sold out, give it *Read*, *Write* and *Create* on *Retail Item Availability*, and *Read* on *Item* to find any dish by name. The app's user needs a Retail Permission with only **May Work a Kitchen Screen**.
 
 ## Run it
 
@@ -40,6 +40,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.3.1
+
+- A ticket in the mode every register of the store defaults to shows no pill (the till stamps a mode on every sale), so *To go* stands out. Registers that default to different modes keep every pill. The app's role needs *Read* on *POS Profile*; without it every ticket keeps its pill.
 
 ### 1.3.0
 

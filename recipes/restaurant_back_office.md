@@ -72,6 +72,7 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 - **A hold is a settings row:** each choice that leaves something out (*No Onion*) gets a row under *Holds* naming the ingredient.
 - Gives the role allowed to book back-dated stock if Stock Settings limits it. The app's rights are in the sample's manifest (`role_rights`).
 - Sets the ingredients' expense account (their Item Defaults or their Item Group) to its cost of goods sold, if that is where it wants the ingredients booked; the app sends no account.
+- For a service it runs itself (not hosted), **Generate Keys** on the app's own user (`pp_rbo@integration.invalid`) and gives the service that key: a hosted service is handed its key by the site.
 - Presses *Issue ingredients* each day after the close, and counts its stock before working out a period's food cost.
 
 ## Limits

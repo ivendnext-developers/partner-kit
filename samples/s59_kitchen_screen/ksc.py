@@ -320,6 +320,26 @@ def found_of(rows) -> list[dict]:
     return [{"item_code": c, "item_name": n} for c, n in sorted(seen.items(), key=lambda kv: kv[1].lower())][:FOUND_MAX]
 
 
+def usual_modes(rows) -> frozenset:
+    """The service mode every register of the store sells under by default, from its ``Retail Service Mode`` rows (the
+    row ticked default, else the register's first, as the till resolves it). A ticket in it shows no pill. Registers
+    that default differently (a counter on *To go*, a floor on *Dine in*) keep every pill: neither is the store's usual."""
+    by: dict = {}
+    for r in rows if isinstance(rows, list) else []:
+        if isinstance(r, dict) and isinstance(r.get("parent"), str) and isinstance(r.get("service_mode"), str) and r["service_mode"]:
+            by.setdefault(r["parent"], []).append(r)
+    usual = set()
+    for regs in by.values():
+        regs.sort(key=lambda x: num(x.get("idx")))
+        usual.add(next((x for x in regs if x.get("is_default")), regs[0])["service_mode"])
+    return frozenset(usual) if len(usual) == 1 else frozenset()
+
+
+def without_usual(tickets: list[dict], usual: frozenset) -> list[dict]:
+    """The tickets, a store's usual mode blanked: every sale carries one, so only an exception (To go) stands out."""
+    return [dict(t, service_mode="") if t.get("service_mode") in usual else t for t in tickets]
+
+
 def still_out(answer) -> dict | None:
     """When the till's answer to *Available again* leaves the dish unsold (``available: false``), why: ``sold_out``
     (head office has it sold out at every store, ``until`` when that ends) or ``hours`` (outside this store's hours for

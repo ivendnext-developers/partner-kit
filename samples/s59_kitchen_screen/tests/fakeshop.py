@@ -71,6 +71,7 @@ class FakeTenant:
         self.item_flags = {"ONIONT": {"has_variants": 1}, "ONIONX": {"disabled": 1}}   # a product family, a disabled dish
         self.menu.update(ONIONT="Onion bhaji family", ONIONX="Onion tart")
         self.held = {}                                  # head office's mark (or a store's hours): the clear leaves it unsold
+        self.modes = {"Till 2": [("Dine In", 1), ("Take Away", 0)]}   # each register's service modes, its default ticked
         self.calls, self.sent = [], []
 
     def _gate(self, what):
@@ -99,6 +100,11 @@ class FakeTenant:
         if doctype == "Retail Item Availability":       # the till's sold-out records, each with its item's name
             codes = filters[0][2]
             return [{"item_code": c, "item_name": self.names.get(c, "")} for c, _ in sorted(self.sold) if c in codes]
+        if doctype == "POS Profile":
+            return [{"name": p} for p in sorted(self.modes)] if filters[0][2] == STORE else []
+        if doctype == "Retail Service Mode":
+            return [{"parent": p, "service_mode": m, "is_default": d, "idx": i + 1}
+                    for p in filters[0][2] for i, (m, d) in enumerate(self.modes[p])]
         if doctype == "Item":                           # the menu, by a name holding the cook's words, as the filters ask
             want = {f: v for f, _, v in filters}
             words = want.pop("item_name").strip("%").lower()
