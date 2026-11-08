@@ -3,7 +3,7 @@
  "app": "pp_rmc",
  "prefix": "PP RMC",
  "title": "Room charge",
- "version": "0.1.0",
+ "version": "0.1.1",
  "publisher": "Partner Programme sample",
  "description": "A hotel's restaurant or bar charges a meal to a guest's room. The server types the room and surname on the check's Sale details; at Pay the check asks the hotel system, fills the reservation as Folio, and dims the Room Charge tile with its reason for a room it cannot confirm. Within about a minute of the sale booking the service reads the event feed and posts the charge to the guest's folio, one post per sale, keeping the hotel's reference. A night auditor reads the Room charges workspace: posted, waiting and refused. The till books first and the folio follows. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
@@ -162,6 +162,14 @@
      "in_list_view": 1,
      "in_standard_filter": 1,
      "read_only": 1
+    },
+    {
+     "fieldname": "posted_on",
+     "fieldtype": "Date",
+     "label": "Posted on",
+     "read_only": 1,
+     "in_list_view": 1,
+     "in_standard_filter": 1
     },
     {
      "fieldname": "store",
@@ -375,6 +383,7 @@
    "report_type": "Report Builder",
    "columns": [
     "day",
+    "posted_on",
     "sale",
     "store",
     "room",
@@ -409,7 +418,7 @@
     {
      "type": "paragraph",
      "data": {
-      "text": "Posted, waiting and refused opens the counts: everything posted, and what is waiting or refused now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Day and Status Posted.",
+      "text": "Posted, waiting and refused opens the counts: everything posted, and what is waiting or refused now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Posted on and Status Posted.",
       "col": 12
      }
     },
