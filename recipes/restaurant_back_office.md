@@ -83,7 +83,7 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 - The kitchen ticket does not print the allergens; the till shows at most three extra item fields per theme, and the field holds 140 characters.
 - A sale older than the look-back is never taken up; a till sale cancelled after its issue keeps its issue, and one cancelled and amended in Desk, its date left as it was, is not issued again.
 - A dish rung before its recipe was made issues nothing; its issue names it.
-- A combo leaves out of its recipe the side or drink the customer chooses as an option line, or that part comes off twice. A milk choice's recipe is one pour, whatever the cup's size. A hold with no row under *Holds* takes nothing off the dish.
+- A combo leaves out of its recipe the side or drink the customer chooses as an option line, or that part comes off twice. A milk choice's recipe is one pour, whatever the cup's size. A check's covers and its table turn count on its first sale a press takes up: a table paid in two parts across two presses counts twice, so press once after the close. A hold with no row under *Holds* takes nothing off the dish. A hold on a line a promotion split into two rows (two burgers, the second at half price) leaves the ingredient out of the first row's dish only: the second's still comes off.
 - Reinstalling removes the app's issues: set *Issue sales booked from* again, or the same sales are taken up twice.
 
 ## Technical notes

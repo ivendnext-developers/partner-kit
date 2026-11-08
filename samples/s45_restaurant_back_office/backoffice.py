@@ -123,7 +123,8 @@ class RecipeError(Exception):
     """A recipe the app cannot read: a loop, or recipes nested deeper than ``DEPTH``."""
 
 
-def parts_of(item: str, qty: float, items: dict, boms: dict, depth: int = 0, seen: tuple = ()) -> tuple[dict, list]:
+def parts_of(item: str, qty: float, items: dict, boms: dict, depth: int = 0, seen: tuple = (),
+             skip: frozenset = frozenset()) -> tuple[dict, list]:
     """``({stock item: quantity in its stock unit}, [notes])`` for ``qty`` of ``item`` in its stock unit.
 
     ``items[code]``: ``{"is_stock_item", "default_bom"}``; ``boms[name]``: ``{"quantity", "items": [{"item_code",
@@ -131,14 +132,17 @@ def parts_of(item: str, qty: float, items: dict, boms: dict, depth: int = 0, see
     A part that is a stock item is issued as it is (a sauce the kitchen makes and stocks is issued as the sauce). A part
     that is not stocked is opened through its own recipe (the row's ``bom_no``, else the part's default recipe); one with
     no recipe is skipped and named in the notes (water, say). A dish that is itself a stock item is never opened: the
-    shop already moves its stock when it books the sale."""
+    shop already moves its stock when it books the sale. ``skip``: items left out wherever they appear (a hold), a
+    stocked one or a sub-recipe with all it reaches."""
     meta = items.get(item) or {}
+    if item in skip:
+        return {}, []
     if meta.get("is_stock_item"):
         return {item: qty}, []
-    return _open(item, meta.get("default_bom"), qty, items, boms, depth, seen)
+    return _open(item, meta.get("default_bom"), qty, items, boms, depth, seen, skip)
 
 
-def _open(item, bom_name, qty, items, boms, depth, seen):
+def _open(item, bom_name, qty, items, boms, depth, seen, skip=frozenset()):
     if not bom_name:
         return {}, [f"{item}: no recipe"]
     if bom_name in seen or depth >= DEPTH:
@@ -149,14 +153,14 @@ def _open(item, bom_name, qty, items, boms, depth, seen):
     out, notes = {}, []
     for row in bom.get("items") or []:
         part, per = row.get("item_code"), num(row.get("stock_qty")) / num(bom["quantity"])
-        if not part or per <= 0:
+        if not part or per <= 0 or part in skip:
             continue
         need = qty * per
         if (items.get(part) or {}).get("is_stock_item"):
             got, why = {part: need}, []
         else:
             got, why = _open(part, row.get("bom_no") or (items.get(part) or {}).get("default_bom"), need, items, boms,
-                             depth + 1, seen + (bom_name,))
+                             depth + 1, seen + (bom_name,), skip)
         for k, v in got.items():
             out[k] = out.get(k, 0.0) + v
         notes += why
@@ -230,6 +234,7 @@ def group_lines(sales: list[dict], lines: list[dict], items: dict, profile_store
     checks = checks or {}
     out: dict = {}
     counted: set = set()
+    rowed: set = set()                  # a sale's check row once, on its first store-day (its tip is the sale's, not a line's)
     for ln in lines:
         sale = by_sale.get(ln.get("parent"))
         if not sale:
@@ -242,11 +247,13 @@ def group_lines(sales: list[dict], lines: list[dict], items: dict, profile_store
         server = chk.get("server") or sale.get("owner") or ""
         if sale["name"] not in g["sales"]:
             g["sales"].append(sale["name"])
+        if sale["name"] not in rowed:
+            rowed.add(sale["name"])
             first = bool(chk) and sale["custom_mpos_check"] not in counted
             if first:
                 counted.add(sale["custom_mpos_check"])
             g["checks"].append({"sale": sale["name"], "check": sale.get("custom_mpos_check") if chk else None,
-                                "place": chk.get("place") or chk.get("label") or "", "server": server,
+                                "place": chk.get("place_label") or chk.get("label") or "", "server": server,
                                 "covers": int(num(chk.get("covers"))) if first else 0,
                                 "turn": int(first and bool(chk.get("place"))), "opened_at": chk.get("opened_at"),
                                 "service_mode": (sale.get("custom_mpos_service_mode") or chk.get("service_mode") or "")[:140],
@@ -281,30 +288,52 @@ def sharing_sales(groups: dict) -> list[list]:
 
 def need_of(group: dict, items: dict, boms: dict, holds: dict | None = None) -> tuple[dict, list]:
     """What a group's dishes took from stock: ``({part: quantity}, notes)``. Returned lines (a negative quantity) take
-    nothing back: the food was made. A hold (``holds``: a choice → the ingredients it leaves out, from the settings)
-    rung under a dish takes that ingredient out of that dish line's parts, all of it, at any depth of its recipe; the
-    hold itself issues nothing unless it has a recipe of its own."""
+    nothing back: the food was made. A hold (``holds``: a choice → the ingredients it leaves out, from the settings) is
+    rung under a dish's row, as many as the dishes it is on: that many of the dish, and of each choice rung under the
+    same dish (a burger chosen inside a meal), are worked out without the ingredient (a stocked one, or a sub-recipe
+    with all it reaches), and the difference is not issued. It comes off the dish's own row first, then the sale's
+    other rows of that dish (a promotion splits a line in two), never below nothing. The hold itself issues nothing
+    unless it has a recipe of its own."""
     holds = holds or {}
-    held: dict = {}
-    for ln in group["lines"]:
-        if ln.get("under") and ln.get("item_code") in holds:
-            held.setdefault(ln["under"], set()).update(holds[ln["item_code"]])
+    lines = [ln for ln in group["lines"] if ln["qty"] > 0]
+    got: dict = {}
     need, notes, dishes = {}, [], []
-    for ln in group["lines"]:
-        if ln["qty"] <= 0:
-            continue
+    for ln in lines:
         if not ln["has_recipe"]:        # a dish rung before its recipe was made: its sale is taken, so say so
             note = f"{ln['item_code']}: sold with no recipe"
             if ln["item_code"] not in holds and not (items.get(ln["item_code"]) or {}).get("is_stock_item") \
                     and note not in dishes:
                 dishes.append(note)
             continue
-        got, why = parts_of(ln["item_code"], ln["qty"], items, boms)
-        for part in held.get(ln.get("row") or None, ()):
-            got.pop(part, None)
-        for k, v in got.items():
-            need[k] = need.get(k, 0.0) + v
+        got[id(ln)], why = parts_of(ln["item_code"], ln["qty"], items, boms)
         notes += [w for w in why if w not in notes]
+    by_row = {ln["row"]: ln for ln in lines if ln.get("row")}
+    on: dict = {}                       # a dish row → (the most dishes a hold on it covers, every ingredient left out)
+    for h in lines:
+        if h.get("under") in by_row and h.get("item_code") in holds:
+            n, skip = on.get(h["under"], (0.0, frozenset()))
+            on[h["under"]] = (max(n, h["qty"]), skip | frozenset(holds[h["item_code"]]))
+    for row, (n, skip) in on.items():
+        dish = by_row[row]
+        for t in [dish] + [x for x in lines if x.get("under") == row and id(x) in got]:
+            if id(t) not in got:
+                continue
+            many = n * t["qty"] / dish["qty"]
+            full, _ = parts_of(t["item_code"], many, items, boms)
+            less, _ = parts_of(t["item_code"], many, items, boms, skip=skip)
+            rows = [t] + [y for y in lines if y is not t and id(y) in got and not y.get("under")
+                          and y.get("sale") == t.get("sale") and y["item_code"] == t["item_code"]]
+            for part, q in full.items():
+                saved = q - less.get(part, 0.0)
+                for x in rows:
+                    if saved <= 1e-9:
+                        break
+                    take = min(saved, got[id(x)].get(part, 0.0))
+                    got[id(x)][part] = got[id(x)].get(part, 0.0) - take
+                    saved -= take
+    for parts in got.values():
+        for k, v in parts.items():
+            need[k] = need.get(k, 0.0) + v
     return {k: round(v, PLACES) for k, v in sorted(need.items()) if round(v, PLACES) > 0}, notes + dishes
 
 

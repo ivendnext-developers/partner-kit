@@ -151,6 +151,40 @@ class Groups(unittest.TestCase):
         self.assertNotIn("MAYO", need)
         self.assertEqual(round(need["MUSTARD"], 6), 0.005)
 
+    def test_h4_a_hold_on_a_meal_reaches_the_burger_chosen_inside_it(self):
+        items = dict(ITEMS, **{"MEAL": {"is_stock_item": 0, "default_bom": "BOM-MEAL"}, "NO-PATTY": {"is_stock_item": 0}})
+        boms = dict(BOMS, **{"BOM-MEAL": {"quantity": 1, "items": [{"item_code": "FRIES", "stock_qty": 0.15}]}})
+        g = {"lines": [{"item_code": "MEAL", "qty": 1, "has_recipe": 1, "row": "m", "under": ""},
+                       {"item_code": "BURGER", "qty": 1, "has_recipe": 1, "row": "b", "under": "m"},   # the burger is a choice
+                       {"item_code": "NO-PATTY", "qty": 1, "has_recipe": 0, "row": "h", "under": "m"},
+                       {"item_code": "BURGER", "qty": 1, "has_recipe": 1, "row": "b2", "under": ""}]}   # another, plain
+        need, _ = bo.need_of(g, items, boms, {"NO-PATTY": {"PATTY"}})
+        self.assertEqual((need["PATTY"], need["BUN"], need["FRIES"]), (1, 2, 0.15))
+
+    def test_h5_a_hold_on_a_line_a_promotion_split_reaches_both_rows_in_its_own_sale_only(self):
+        items = dict(ITEMS, **{"NO-PATTY": {"is_stock_item": 0}})
+        g = {"lines": [{"sale": "S1", "item_code": "BURGER", "qty": 1, "has_recipe": 1, "row": "a", "under": ""},
+                       {"sale": "S1", "item_code": "NO-PATTY", "qty": 2, "has_recipe": 0, "row": "h", "under": "a"},
+                       {"sale": "S1", "item_code": "BURGER", "qty": 1, "has_recipe": 1, "row": "a2", "under": ""},  # half price
+                       {"sale": "S2", "item_code": "BURGER", "qty": 1, "has_recipe": 1, "row": "z", "under": ""}]}  # another sale
+        need, _ = bo.need_of(g, items, BOMS, {"NO-PATTY": {"PATTY"}})
+        self.assertEqual((need["PATTY"], need["BUN"]), (1, 3))                         # the other sale keeps its patty
+
+    def test_h6_a_hold_may_name_a_sub_recipe(self):
+        g = {"lines": [{"item_code": "BURGER", "qty": 1, "has_recipe": 1, "row": "a", "under": ""},
+                       {"item_code": "NO-SAUCE", "qty": 1, "has_recipe": 0, "row": "h", "under": "a"}]}
+        need, _ = bo.need_of(g, dict(ITEMS, **{"NO-SAUCE": {"is_stock_item": 0}}), BOMS, {"NO-SAUCE": {"SAUCE"}})
+        self.assertEqual(need, {"BUN": 1, "PATTY": 1})                                # its mayo and mustard stay
+
+    def test_h7_two_holds_of_one_ingredient_leave_it_out_once(self):
+        items = dict(ITEMS, **{"NO-PATTY": {"is_stock_item": 0}, "VEGGIE": {"is_stock_item": 0}})
+        g = {"lines": [{"sale": "S1", "item_code": "BURGER", "qty": 1, "has_recipe": 1, "row": "a", "under": ""},
+                       {"sale": "S1", "item_code": "NO-PATTY", "qty": 1, "has_recipe": 0, "row": "h", "under": "a"},
+                       {"sale": "S1", "item_code": "VEGGIE", "qty": 1, "has_recipe": 0, "row": "v", "under": "a"},
+                       {"sale": "S1", "item_code": "BURGER", "qty": 1, "has_recipe": 1, "row": "b", "under": ""}]}
+        need, _ = bo.need_of(g, items, BOMS, {"NO-PATTY": {"PATTY"}, "VEGGIE": {"PATTY"}})
+        self.assertEqual(need["PATTY"], 1)                                             # the plain burger's patty stays
+
     def test_h3_a_swap_is_the_menu_the_dish_has_no_milk_and_each_milk_its_recipe(self):
         items = dict(ITEMS, **{"LATTE": {"is_stock_item": 0, "default_bom": "BOM-LATTE"},
                               "OAT": {"is_stock_item": 0, "default_bom": "BOM-OAT"}, "OATMILK": {"is_stock_item": 1}})
@@ -164,8 +198,9 @@ class Groups(unittest.TestCase):
         sales = [dict(SALES[0], custom_mpos_check="CHK1", custom_mpos_tip_amount=4.5),
                  dict(SALES[2], custom_mpos_check="CHK1", custom_mpos_tip_amount=None),
                  dict(SALES[1], custom_mpos_service_mode="To go")]
-        checks = {"CHK1": {"place": "Table 3", "covers": 4, "server": "sam@x", "opened_at": "2026-10-23 08:00:00",
-                           "service_mode": "Eat in"}}
+        checks = {"CHK1": {"place": "FP-0003", "place_label": "Table 3", "label": "", "covers": 4, "server": "sam@x",
+                           "opened_at": "2026-10-23 08:00:00", "service_mode": "Eat in"},
+                  "TAB1": {"place": None, "label": "Dana's tab", "covers": 2, "server": "kim@x"}}
         g = bo.group_lines(sales, LINES, ITEMS, {"B": "Store B"}, PARTS, checks=checks)
         rows = {r["sale"]: r for v in g.values() for r in v["checks"]}
         self.assertEqual(rows["S1"], {"sale": "S1", "check": "CHK1", "place": "Table 3", "server": "sam@x", "covers": 4,
@@ -174,7 +209,15 @@ class Groups(unittest.TestCase):
         self.assertEqual((rows["S2"]["check"], rows["S2"]["server"], rows["S2"]["service_mode"], rows["S2"]["turn"]),
                          (None, SALES[1]["owner"], "To go", 0))                         # a counter sale: who rang it
         servers = {(r["sale"], r["item_code"]): r["server"] for v in g.values() for r in v["lines"]}
-        self.assertEqual(servers[("S1", "BURGER")], "sam@x")                            # the check's server, not the till's
+        self.assertEqual(servers[("S1", "BURGER")], "sam@x")
+        g = bo.group_lines([dict(SALES[1], custom_mpos_check="TAB1")], LINES, ITEMS, {"B": "Store B"}, PARTS, checks=checks)
+        (row,) = [r for v in g.values() for r in v["checks"]]
+        self.assertEqual((row["place"], row["covers"], row["turn"], row["server"]), ("Dana's tab", 2, 0, "kim@x"))   # a tab
+        two = [dict(SALES[0], custom_mpos_tip_amount=3.0)]
+        lines = [dict(LINES[0]), dict(LINES[1], warehouse="Store B")]               # one sale's lines left two stores
+        g = bo.group_lines(two, lines, ITEMS, {}, PARTS)
+        self.assertEqual(len(g), 2)
+        self.assertEqual([r["tip"] for v in g.values() for r in v["checks"]], [3.0])  # its tip once, not per store-day                            # the check's server, not the till's
 
     def test_g7c_store_days_that_share_a_sale_are_written_together(self):
         g = {("A", "1"): {"sales": ["S1", "S7"]}, ("B", "1"): {"sales": ["S7"]}, ("A", "2"): {"sales": ["S3"]},

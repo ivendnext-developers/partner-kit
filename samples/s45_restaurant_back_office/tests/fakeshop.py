@@ -51,7 +51,7 @@ class FakeTenant:
         self.items, self.boms = copy.deepcopy(ITEMS), copy.deepcopy(BOMS)
         self.stock = dict(stock if stock is not None else {"BUN": 20, "PATTY": 20, "MILK": 5, "BEANS": 1})
         self.issues, self.entries, self.foodcosts, self.checks = {}, {}, {}, {}
-        self.open_checks = {}                   # the till's checks of tables and tabs (Retail Open Check)
+        self.open_checks, self.places = {}, {}                   # the till's checks of tables and tabs (Retail Open Check)
         self.ledger, self.recos = [], {}
         self.refuse, self.stale_lock, self.lose_answer, self.refuse_entry = refuse, stale_lock, lose_answer, refuse_entry
         self.n = itertools.count(1)
@@ -89,7 +89,11 @@ class FakeTenant:
         if doctype == "POS Invoice Item":
             assert parent == "POS Invoice", "a table is read through its record type"
             names = next(v for f, op, v in filters if f == "parent")
-            return [dict(ln, parent=s["name"]) for s in self.sales if s["name"] in names for ln in s["items"]]
+            return [{k: dict(ln, parent=s["name"]).get(k) for k in fields}           # only the fields asked for
+                    for s in self.sales if s["name"] in names for ln in s["items"]]
+        if doctype == "Retail Floor Place":
+            names = next(v for f, op, v in filters if f == "name")
+            return [{"name": n, "label": label} for n, label in self.places.items() if n in names]
         if doctype == "Retail Open Check":
             names = next(v for f, op, v in filters if f == "name")
             return [dict({k: c.get(k) for k in fields}, name=n) for n, c in self.open_checks.items() if n in names]

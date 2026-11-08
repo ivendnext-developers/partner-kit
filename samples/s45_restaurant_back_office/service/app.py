@@ -61,6 +61,7 @@ import testcall  # noqa: E402
 SUBS = {"/press/issue": "issue", "/press/foodcost": "foodcost", "/press/allergens": "allergens"}
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
 SHORT = "NegativeStockError"         # the shop's refusal of an issue it has not the stock for
+PLACE = "Retail Floor Place"    # a table on the till's floor: its label
 CHECK = "Retail Open Check"    # the till's check of a table or a tab: its place, covers, server and opening time
 BUDGET_S = 5.5          # no new set of store-days is started after this: the shop waits 10 seconds at most, and a hosted
                         # function's cold start (about 2.5 s, APPF run 9) comes before this clock starts
@@ -399,6 +400,10 @@ class Service:
             paid = sorted({x["custom_mpos_check"] for x in sales if x.get("custom_mpos_check")})
             checks = {r["name"]: r for r in door.rows_in(CHECK, ["name", "place", "label", "covers", "server", "opened_at",
                                                                  "service_mode"], "name", paid)} if paid else {}
+            places = sorted({c["place"] for c in checks.values() if c.get("place")})
+            tables = {r["name"]: r.get("label") for r in door.rows_in(PLACE, ["name", "label"], "name", places)} if places else {}
+            for c in checks.values():           # the table's own name (Table 12), as the till shows it
+                c["place_label"] = tables.get(c.get("place")) or ""
             profiles = sorted({x["pos_profile"] for x in sales if x.get("pos_profile")})
             stores = {r["name"]: r.get("warehouse") for r in door.rows("POS Profile", ["name", "warehouse"],
                                                                        [["name", "in", profiles]])} if profiles else {}

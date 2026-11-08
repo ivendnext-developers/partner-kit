@@ -121,7 +121,8 @@ class ServiceTest(unittest.TestCase):
         shop = fs.FakeTenant()
         shop.sales[0].update(custom_mpos_check="CHK1", custom_mpos_tip_amount=12.5, custom_mpos_service_mode="Eat in")
         shop.sales[1].update(custom_mpos_tip_amount=1.0, custom_mpos_service_mode="To go")
-        shop.open_checks = {"CHK1": {"place": "Table 3", "label": "Table 3", "covers": 4, "server": "sam@x",
+        shop.places = {"a1b2c3": "Table 3"}                                # the till names a table by a hash
+        shop.open_checks = {"CHK1": {"place": "a1b2c3", "label": "", "covers": 4, "server": "sam@x",
                                      "opened_at": "2026-10-22 11:40:00", "service_mode": "Eat in"}}
         self.assertEqual(self.issue(shop)[0], 200)
         (iss,) = shop.issues.values()

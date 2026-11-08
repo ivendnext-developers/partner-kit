@@ -47,7 +47,7 @@ ivn try
 - A hold (*No Onion*) leaves its ingredient out of the dish it is rung under, from a row under *Holds* on the settings. A swap (oat milk for whole) is the menu: the README and recipe say how.
 - Each issue lists its sales with the check's table, server, covers, table turn and the tip taken at Pay, and a new report, *Covers, turns and tips*, adds them up. *Sales by item* names each check's server.
 - Desk shows plain names (*Ingredient issue*, *Restaurant back office settings*) through the manifest's `translations` block.
-- The role reads the till's checks and may write the stock entry's batch bundles (*Serial and Batch Bundle*), so *Issue ingredients* books an ingredient kept in batches. An update over 1.1.0 waits for the till's next build (a manifest with its own record types and `role_rights` is refused on update until then); a fresh install works now.
+- The role reads the till's checks and may write the stock entry's batch bundles (*Serial and Batch Bundle*): on a fresh install iVendNext asked for that right before it booked an issue. An update over 1.1.0 waits for the till's next build (a manifest with its own record types and `role_rights` is refused on update until then); a fresh install works now.
 
 ### 1.1.0
 
