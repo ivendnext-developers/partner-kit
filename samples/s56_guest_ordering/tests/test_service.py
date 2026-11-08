@@ -236,6 +236,18 @@ class ServiceTest(unittest.TestCase):
         self.shop.door_refuse = ("check_add_lines", "ItemUnavailableError", 417)
         self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]["say"], "item_refused")
 
+    def test_o5e_a_dish_the_till_refuses_by_name_is_said_in_the_tills_words(self):
+        t = made(self.shop, self.svc)
+        said = "Not available now: Latte (sold out). Take it off to carry on."
+        self.shop.door_refuse = ("check_add_lines", "ItemUnavailableError", 417, said)
+        out = guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]
+        self.assertEqual((out["state"], out["words"]), ("refused", said))             # the page shows the words as they are
+        with open(os.path.join(os.path.dirname(HERE), "service", "page.js")) as f:
+            self.assertNotIn(out["say"], f.read())                                   # the page has no sentence of its own for it
+        self.assertEqual(app._said({"_server_messages": json.dumps([json.dumps({"message": "Not <b>now</b>: Latte &amp; Tea\n(sold out)"})])}),
+                         "Not now : Latte & Tea (sold out)")
+        self.assertEqual(app._said({"_server_messages": "not json"}), "")
+
     def test_o6_a_retry_of_lines_since_moved_says_it_was_sent_once(self):
         t = made(self.shop, self.svc)
         self.shop.checks["CHK-SRV"] = {"check": "CHK-SRV", "place": F.T12, "lines": []}
@@ -314,10 +326,54 @@ class ServiceTest(unittest.TestCase):
             app.PRICERS = real
         self.assertEqual((second["BURGER"]["price"], second["SALAD"]["price"]), (11.0, 7.5))
         again = len([c for c in self.shop.calls if c == "CALL get_item_details"]) - asked
-        self.assertEqual(again, 4)                                    # SALAD, LATTE, COW, SHOT: never BURGER again
+        self.assertEqual(again, 6)                                    # SALAD, LATTE, COW, SHOT and the two sizes: never BURGER again
         self.clock.t += app.MENU_SHORT_S
         guest(self.svc, "/gor/menu", t)
-        self.assertEqual(len([c for c in self.shop.calls if c == "CALL get_item_details"]) - asked, 4)   # full: 2 minutes
+        self.assertEqual(len([c for c in self.shop.calls if c == "CALL get_item_details"]) - asked, 6)   # full: 2 minutes
+
+    def test_s1_a_dish_sold_in_sizes_is_one_family_with_its_picture(self):
+        t = made(self.shop, self.svc)
+        dishes = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
+        self.assertNotIn("COLD", dishes)                                  # the template is never a dish
+        self.assertEqual([(dishes[c]["family"], dishes[c]["base"], dishes[c]["size"]) for c in ("COLD-L", "COLD-R")],
+                         [("COLD", "Cold brew", "Large"), ("COLD", "Cold brew", "Regular")])
+        self.assertEqual(dishes["COLD-R"]["image"], f"https://{F.SITE}/files/cold.jpg")   # the template's picture
+        self.assertEqual(dishes["LATTE"]["image"], f"https://{F.SITE}/files/latte%20one.jpg")
+        self.assertEqual(dishes["BURGER"]["image"], "")
+        self.assertNotIn("family", dishes["LATTE"])
+        self.assertEqual((dishes["COLD-R"]["price"], dishes["COLD-L"]["price"]), (4.0, 4.5))
+
+    def test_s2_a_retailer_that_does_not_let_the_app_read_sizes_gets_them_as_separate_dishes(self):
+        self.shop.refuse = ("LIST Item Variant", 403)
+        t = made(self.shop, self.svc)
+        code, out = guest(self.svc, "/gor/menu", t)
+        dishes = gor.dishes_of(out["menu"])
+        self.assertEqual(code, 200)
+        self.assertEqual((dishes["COLD-R"]["name"], "family" in dishes["COLD-R"]), ("Cold brew / Regular", False))
+
+    def test_s3_a_busy_shop_leaves_a_price_to_the_next_read(self):
+        t = made(self.shop, self.svc)
+        self.shop.refuse = ("CALL get_item_details", 429)
+        first = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
+        self.assertIsNone(first["LATTE"]["price"])
+        self.shop.refuse = None
+        self.clock.t += app.MENU_SHORT_S
+        self.assertEqual(gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])["LATTE"]["price"], 3.2)
+
+    def test_s4_the_pages_second_read_three_seconds_later_prices_what_the_first_ran_out_of_time_for(self):
+        t = made(self.shop, self.svc)
+        self.shop.slow, self.shop.tick = {"BURGER"}, self.clock
+        real, app.PRICERS = app.PRICERS, 1
+        try:
+            first = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
+            self.shop.slow = set()
+            self.clock.t += 3                                              # the page's own wait before it asks again (page.js)
+            second = gor.dishes_of(guest(self.svc, "/gor/menu", t)[1]["menu"])
+        finally:
+            app.PRICERS = real
+        self.assertIsNone(first["SALAD"]["price"])
+        self.assertEqual(second["SALAD"]["price"], 7.5)                    # the late menu was kept less than those 3 seconds
+        self.assertLess(app.MENU_SHORT_S, 3)
 
     def test_m7_a_flood_on_a_replaced_card_reads_the_retailer_once_a_copy(self):
         old = made(self.shop, self.svc)
@@ -375,7 +431,7 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(self.svc.handle("GET", "/../app.py", {}, b"")[0], 404)
 
     def test_e5_the_kiosks_guards_are_in_the_pages_text(self):
-        """A text pin, not a run (the kit has no browser harness for one sample): the kiosk keeps no key in the browser,
+        """A text pin, not a run (the page's run is in test_page.py): the kiosk keeps no key in the browser,
         its idle clock restarts on every touch, it waits one idle period after a lost answer and no longer."""
         js = open(os.path.join(os.path.dirname(HERE), "service", "page.js")).read()
         self.assertIn("function keptKey(sig) {\n    if (kiosk()) { return null; }", js)

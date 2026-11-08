@@ -1,11 +1,12 @@
 // S56 — the guest's ordering page. Its address carries #s=<the retailer's site>&t=<code>.<number>.<signature>; the part
 // after # is never sent to a server in the address, only in the body of the two calls below. Every word the retailer
-// wrote (a table, a dish, a choice) is put on the page as text, never as markup, with dir="auto".
+// wrote (a table, a dish, a choice) is put on the page as text, never as markup, inside a <bdi> in a block of the page's
+// own direction, so a line has one reading edge whatever the words' script (the attribute that guesses a direction is never used).
 (function () {
   "use strict";
   var WORDS = {
     en: { hint: "Prices before any offer: your bill is priced when you pay.", add: "Add", choose: "Choose",
-          addOrder: "Add to order", pick: "choose {n}", upTo: "up to {n}", optional: "optional", basket: "Your order",
+          addOrder: "Add to order", pick: "choose {n}", upTo: "up to {n}", optional: "optional", basket: "Your order", total: "Total",
           send: "Send order", sending: "Sending...", note: "Note for the kitchen (optional)", loading: "Loading the menu...",
           kiosk: "Order here", lost: "We could not tell if your order was sent. Press Send order again: it will not be sent twice.",
           unknown: "This code does not work. Please ask a member of staff.",
@@ -22,7 +23,7 @@
           order: "Something in your order has changed on the menu. Please open the menu again and check your order.",
           paying: "This table's bill is being paid. Please ask your server." },
     ar: { hint: "الأسعار قبل أي عرض: تُحسب فاتورتك عند الدفع.", add: "أضف", choose: "اختر", addOrder: "أضف إلى الطلب",
-          pick: "اختر {n}", upTo: "حتى {n}", optional: "اختياري", basket: "طلبك", send: "أرسل الطلب", sending: "جارٍ الإرسال...",
+          pick: "اختر {n}", upTo: "حتى {n}", optional: "اختياري", basket: "طلبك", total: "المجموع", send: "أرسل الطلب", sending: "جارٍ الإرسال...",
           note: "ملاحظة للمطبخ (اختياري)", loading: "جارٍ تحميل القائمة...", kiosk: "اطلب هنا",
           lost: "لم نتمكن من التأكد من إرسال طلبك. اضغط أرسل الطلب مرة أخرى: لن يُرسل مرتين.",
           unknown: "هذا الرمز لا يعمل. يرجى سؤال أحد الموظفين.",
@@ -39,7 +40,7 @@
           order: "تغيّر شيء في طلبك على القائمة. يرجى فتح القائمة مرة أخرى ومراجعة طلبك.",
           paying: "تُدفع فاتورة هذه الطاولة الآن. يرجى سؤال النادل." },
     es: { hint: "Precios antes de ofertas: su cuenta se calcula al pagar.", add: "Añadir", choose: "Elegir",
-          addOrder: "Añadir al pedido", pick: "elija {n}", upTo: "hasta {n}", optional: "opcional", basket: "Su pedido",
+          addOrder: "Añadir al pedido", pick: "elija {n}", upTo: "hasta {n}", optional: "opcional", basket: "Su pedido", total: "Total",
           send: "Enviar pedido", sending: "Enviando...", note: "Nota para la cocina (opcional)", loading: "Cargando la carta...",
           kiosk: "Pida aquí", lost: "No sabemos si su pedido se envió. Pulse Enviar pedido otra vez: no se enviará dos veces.",
           unknown: "Este código no funciona. Pregunte a un miembro del personal.",
@@ -57,7 +58,7 @@
           paying: "Se está pagando la cuenta de esta mesa. Pregunte a su camarero." },
     fr: { hint: "Prix avant toute offre : votre addition est calculée au paiement.", add: "Ajouter", choose: "Choisir",
           addOrder: "Ajouter à la commande", pick: "choisissez {n}", upTo: "jusqu'à {n}", optional: "facultatif",
-          basket: "Votre commande", send: "Envoyer la commande", sending: "Envoi...", note: "Note pour la cuisine (facultatif)",
+          basket: "Votre commande", total: "Total", send: "Envoyer la commande", sending: "Envoi...", note: "Note pour la cuisine (facultatif)",
           loading: "Chargement de la carte...", kiosk: "Commandez ici",
           lost: "Nous ne savons pas si votre commande est partie. Appuyez à nouveau sur Envoyer la commande : elle ne partira pas deux fois.",
           unknown: "Ce code ne fonctionne pas. Demandez à un membre du personnel.",
@@ -74,7 +75,7 @@
           order: "Un élément de votre commande a changé sur la carte. Rouvrez la carte et vérifiez votre commande.",
           paying: "L'addition de cette table est en cours de paiement. Demandez à votre serveur." },
     de: { hint: "Preise vor Angeboten: Ihre Rechnung wird beim Bezahlen berechnet.", add: "Hinzufügen", choose: "Auswählen",
-          addOrder: "Zur Bestellung", pick: "{n} wählen", upTo: "bis zu {n}", optional: "optional", basket: "Ihre Bestellung",
+          addOrder: "Zur Bestellung", pick: "{n} wählen", upTo: "bis zu {n}", optional: "optional", basket: "Ihre Bestellung", total: "Gesamt",
           send: "Bestellung senden", sending: "Wird gesendet...", note: "Hinweis für die Küche (optional)",
           loading: "Die Karte wird geladen...", kiosk: "Hier bestellen",
           lost: "Wir wissen nicht, ob Ihre Bestellung gesendet wurde. Tippen Sie erneut auf Bestellung senden: Sie wird nicht doppelt gesendet.",
@@ -92,7 +93,7 @@
           order: "Etwas in Ihrer Bestellung hat sich auf der Karte geändert. Bitte öffnen Sie die Karte erneut und prüfen Sie Ihre Bestellung.",
           paying: "Die Rechnung dieses Tisches wird gerade bezahlt. Bitte fragen Sie den Service." },
     pt: { hint: "Preços antes de promoções: a conta é calculada no pagamento.", add: "Adicionar", choose: "Escolher",
-          addOrder: "Adicionar ao pedido", pick: "escolha {n}", upTo: "até {n}", optional: "opcional", basket: "O seu pedido",
+          addOrder: "Adicionar ao pedido", pick: "escolha {n}", upTo: "até {n}", optional: "opcional", basket: "O seu pedido", total: "Total",
           send: "Enviar pedido", sending: "A enviar...", note: "Nota para a cozinha (opcional)", loading: "A carregar o menu...",
           kiosk: "Peça aqui", lost: "Não sabemos se o seu pedido foi enviado. Toque em Enviar pedido outra vez: não será enviado duas vezes.",
           unknown: "Este código não funciona. Pergunte a um membro da equipa.",
@@ -117,7 +118,7 @@
   var hash = new URLSearchParams(location.hash.slice(1));
   var who = { s: hash.get("s") || "", t: hash.get("t") || "" };
   var $ = function (id) { return document.getElementById(id); };
-  var menu = null, basket = [], key = null, busy = false, money = null;
+  var menu = null, basket = [], key = null, busy = false, money = null, picked = false;   // picked: a size was tapped
   var KEPT_MS = 10 * 60 * 1000;      // an order's key kept this long in the browser, for a reload or a second scan
   var KIOSK_IDLE_MS = 2 * 60 * 1000;  // a kiosk left this long clears itself for the next guest
   var idle = null, lost = false, lostAt = 0;
@@ -148,7 +149,8 @@
     if (text !== undefined && text !== null) { e.textContent = text; }
     return e;
   }
-  function own(tag, cls, text) { var e = el(tag, cls, text); e.dir = "auto"; return e; }   // the retailer's words
+  function bdi(text) { var b = document.createElement("bdi"); b.textContent = String(text); return b; }
+  function own(tag, cls, text) { var e = el(tag, cls); e.appendChild(bdi(text)); return e; }   // the retailer's words
   function newKey() {
     if (window.crypto && crypto.randomUUID) { return crypto.randomUUID(); }
     var b = new Uint8Array(16); crypto.getRandomValues(b);
@@ -158,11 +160,26 @@
     if (v === null || v === undefined) { return ""; }
     try { return money ? money.format(v) : String(v); } catch (e) { return String(v); }
   }
+  function currency(code) {      // the store's currency, in its plain sign ($5.75), never the country-tagged one (US$5.75)
+    if (!code) { return null; }
+    var lang = navigator.language || "en";
+    try { return new Intl.NumberFormat(lang, { style: "currency", currency: code, currencyDisplay: "narrowSymbol" }); }
+    catch (e) {
+      try { return new Intl.NumberFormat(lang, { style: "currency", currency: code }); } catch (e2) { return null; }
+    }
+  }
   function say(answer) {
     var w = answer.say && W[answer.say];
     return w ? fmt(w, { code: answer.code || "" }) : (answer.words || W.unavailable);
   }
-  function note(text, done) { var n = $("note"); n.textContent = text || ""; n.className = done ? "note done" : "note"; }
+  function note(text, done, label) {      // label: a retailer's word shown in <bdi> before the text
+    var n = $("note");
+    n.textContent = "";
+    if (label) { n.appendChild(bdi(label)); }
+    n.appendChild(document.createTextNode(text || ""));
+    n.className = done ? "note done" : "note";
+    if ((label || text) && n.scrollIntoView) { n.scrollIntoView({ block: "nearest" }); }   // the order panel sticks to the screen: an answer must not sit below it
+  }
 
   function call(path, extra) {
     var body = Object.assign({ s: who.s, t: who.t }, extra || {});
@@ -204,7 +221,7 @@
       var picked = inputs.filter(function (x) { return x.input.checked; });
       for (var i = 0; i < dish.groups.length; i++) {
         var g = dish.groups[i], n = picked.filter(function (x) { return x.group === g; }).length;
-        if (n < g.min || (g.max && n > g.max)) { note(g.label + ": " + rule(g)); return; }
+        if (n < g.min || (g.max && n > g.max)) { note(": " + rule(g), false, g.label); return; }
       }
       addLine(dish, picked.map(function (x) { return x.choice; }));
       panel.remove();
@@ -222,27 +239,105 @@
     drawBasket();
   }
 
+  function tile(name) {
+    var t = el("div", "tile"), ch = Array.from(String(name || "").trim())[0];
+    t.setAttribute("aria-hidden", "true");
+    if (ch) { t.appendChild(bdi(ch.toUpperCase())); }
+    return t;
+  }
+  function photo(d) {              // the dish's picture where it has one; a plain tile where it has none or it does not load
+    var box = el("div", "photo");
+    if (!d.image) { box.appendChild(tile(d.base || d.name)); return box; }
+    var img = el("img");
+    img.alt = ""; img.loading = "lazy"; img.decoding = "async"; img.src = d.image;
+    img.addEventListener("error", function () { box.textContent = ""; box.appendChild(tile(d.base || d.name)); });
+    box.appendChild(img);
+    return box;
+  }
+
+  // One card a dish: its picture, its name, its sizes together (a size is an item of its own, so the line on the check
+  // is the size's), and Add or Choose for the size picked. A dish sold in one size is one price beside its name.
+  function card(sizes, root) {
+    sizes = sizes.slice().sort(function (a, b) {      // the cheapest size first (and picked), a size with no price last
+      var pa = a.price === null || a.price === undefined, pb = b.price === null || b.price === undefined;
+      return pa || pb ? (pa ? 1 : 0) - (pb ? 1 : 0) : a.price - b.price;
+    });
+    var one = sizes.length === 1, cur = sizes[0], tabs = [];
+    var box = el("div", "dish"), row = el("div", "dish-row"), body = el("div", "dish-body"), head = el("div", "dish-head");
+    var pr = el("span", "price"), b = el("button", "add");
+    b.type = "button";
+    row.appendChild(photo(cur));
+    head.appendChild(own("span", "dish-name", one ? cur.name : cur.base));
+    if (one) { head.appendChild(pr); }
+    body.appendChild(head);
+    if (!one) {
+      var bar = el("div", "sizes");
+      bar.setAttribute("role", "group");
+      sizes.forEach(function (sz) {
+        var t = el("button", "size");
+        t.type = "button";
+        t.appendChild(bdi(sz.size));
+        if (sz.price !== null && sz.price !== undefined) { t.appendChild(el("span", "price", price(sz.price))); }
+        t.addEventListener("click", function () {
+          cur = sz;
+          picked = true;
+          var open = box.querySelector(".choose");
+          if (open) { open.remove(); }
+          mark();
+        });
+        bar.appendChild(t);
+        tabs.push(t);
+      });
+      body.appendChild(bar);
+    }
+    function mark() {
+      pr.textContent = price(cur.price);
+      tabs.forEach(function (t, i) {
+        var on = sizes[i] === cur;
+        t.className = on ? "size on" : "size";
+        t.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      b.textContent = cur.groups.length ? W.choose : W.add;
+    }
+    b.addEventListener("click", function () {
+      if (!cur.groups.length) { addLine(cur, []); return; }
+      var open = box.querySelector(".choose");
+      if (open) { open.remove(); } else { chooser(cur, box); }
+    });
+    body.appendChild(b);
+    row.appendChild(body);
+    box.appendChild(row);
+    mark();
+    root.appendChild(box);
+  }
+
   function drawMenu() {
     var root = $("menu");
+    picked = false;
     root.textContent = "";
     menu.menu.forEach(function (sec) {
       if (sec.group) { root.appendChild(own("h2", null, sec.group)); }
+      var done = {};
       sec.dishes.forEach(function (d) {
-        var box = el("div", "dish"), head = el("div", "dish-head");
-        head.appendChild(own("span", "dish-name", d.name));
-        head.appendChild(el("span", "price", price(d.price)));
-        box.appendChild(head);
-        var b = el("button", "add", d.groups.length ? W.choose : W.add);
-        b.type = "button";
-        b.addEventListener("click", function () {
-          if (!d.groups.length) { addLine(d, []); return; }
-          var open = box.querySelector(".choose");
-          if (open) { open.remove(); } else { chooser(d, box); }
-        });
-        box.appendChild(b);
-        root.appendChild(box);
+        if (!d.family) { card([d], root); return; }
+        if (done[d.family]) { return; }
+        done[d.family] = true;
+        card(sec.dishes.filter(function (x) { return x.family === d.family; }), root);
       });
     });
+  }
+
+  function drawTotal() {           // the dishes' and choices' prices before any offer; blank while any price is unknown
+    var sum = 0, known = basket.length > 0;
+    basket.forEach(function (ln) {
+      var each = ln.dish.price;
+      if (each === null || each === undefined) { known = false; return; }
+      ln.choices.forEach(function (c) {
+        if (c.price === null || c.price === undefined) { known = false; } else { each += c.price; }
+      });
+      sum += each * ln.qty;
+    });
+    $("total").textContent = known ? W.total + " " + price(Math.round(sum * 1e6) / 1e6) : "";
   }
 
   function drawBasket() {
@@ -251,7 +346,7 @@
     $("basket").hidden = basket.length === 0;
     basket.forEach(function (ln, i) {
       var li = el("li", "line"), head = el("div", "line-head");
-      head.appendChild(own("span", "line-name", ln.dish.name));
+      head.appendChild(own("span", "line-name", ln.dish.family ? ln.dish.base + " · " + ln.dish.size : ln.dish.name));
       var q = el("span", "qty"), minus = el("button", null, "-"), plus = el("button", null, "+");
       minus.type = plus.type = "button";
       minus.setAttribute("aria-label", ln.qty > 1 ? W.less : W.remove);
@@ -265,11 +360,12 @@
         li.appendChild(own("div", "line-choices", ln.choices.map(function (c) { return c.name; }).join(", ")));
       }
       var inp = el("input");
-      inp.maxLength = 80; inp.placeholder = W.note; inp.value = ln.note; inp.dir = "auto";
+      inp.maxLength = 80; inp.placeholder = W.note; inp.value = ln.note;
       inp.addEventListener("input", function () { ln.note = inp.value; key = null; });
       li.appendChild(inp);
       list.appendChild(li);
     });
+    drawTotal();
   }
 
   // The order's key, kept in the browser beside the order it was made for: the page reloaded or the card scanned again
@@ -313,6 +409,44 @@
     });
   }
 
+  function unpriced(a) {
+    return a.menu.some(function (sec) { return sec.dishes.some(function (d) { return d.price === null; }); });
+  }
+  // The service prices what its time allowed and the rest at the next read (it keeps a late menu 2 seconds): ask again, a few
+  // times, quietly. The prices come into the menu the guest holds, so the total is right; the cards are drawn again only
+  // while the guest has taken nothing, has no choices open and has not tapped a size.
+  function applyPrices(a) {
+    var old = {}, changed = false;
+    menu.menu.forEach(function (sec) { sec.dishes.forEach(function (d) { old[d.code] = d; }); });
+    a.menu.forEach(function (sec) {
+      sec.dishes.forEach(function (d) {
+        var o = old[d.code];
+        if (!o) { return; }
+        if (o.price !== d.price) { o.price = d.price; changed = true; }
+        o.groups.forEach(function (g, gi) {
+          g.choices.forEach(function (c, ci) {
+            var nc = d.groups[gi] && d.groups[gi].choices[ci];
+            if (nc && c.price !== nc.price) { c.price = nc.price; changed = true; }
+          });
+        });
+      });
+    });
+    return changed;
+  }
+  function priceAgain(n) {
+    if (n > 3) { return; }
+    setTimeout(function () {
+      call("/gor/menu").then(function (a) {
+        if (a.state !== "open") { return; }
+        if (applyPrices(a)) {
+          drawTotal();
+          if (!basket.length && !picked && !document.querySelector(".choose")) { drawMenu(); }
+        }
+        if (unpriced(a)) { priceAgain(n + 1); }
+      }).catch(function () { /* the next read, or a reload */ });
+    }, 3000);
+  }
+
   $("basket-title").textContent = W.basket;
   $("send").textContent = W.send;
   $("send").addEventListener("click", send);
@@ -321,11 +455,13 @@
   call("/gor/menu").then(function (a) {
     if (a.state !== "open") { note(a.state === "unknown" ? W.unknown : say(a)); return; }
     menu = a;
-    try { money = a.currency ? new Intl.NumberFormat(navigator.language || "en", { style: "currency", currency: a.currency }) : null; }
-    catch (e) { money = null; }
-    $("where").textContent = a.where || (a.kind === "Kiosk" ? W.kiosk : "");
+    money = currency(a.currency);
+    var where = $("where");
+    where.textContent = "";
+    if (a.where) { where.appendChild(bdi(a.where)); } else { where.textContent = a.kind === "Kiosk" ? W.kiosk : ""; }
     $("hint").textContent = W.hint;
     note("");
     drawMenu();
+    if (unpriced(a)) { priceAgain(1); }
   }).catch(function () { note(W.unavailable); });
 })();

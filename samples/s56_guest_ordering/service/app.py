@@ -36,9 +36,11 @@ GOR_PREFIX (default PP GOR; IVENDNEXT GOR for the library's app)
 from __future__ import annotations
 
 import concurrent.futures
+import html
 import http.client
 import json
 import os
+import re
 import signal
 import sys
 import threading
@@ -65,10 +67,11 @@ DOOR = "/api/method/ivendnext_mpos.api.v1."     # the till's partner API (its op
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
 BUDGET_S = 7.0                       # a press, or a guest's call: the shop waits 10 seconds for a press
 READ_S = 4.0                         # one read, within the budget
-PRICERS = 8                          # prices asked at once
+PRICERS = 16                         # prices asked at once
 MENU_KEEP_S = 120                    # a store's menu is read again after this
 MENU_CACHE_MAX = 200                 # stores whose menu one copy keeps
-MENU_SHORT_S = 10                    # a menu some of whose prices the pricer did not give in time is kept only this long
+MENU_SHORT_S = 2                     # a menu some of whose prices the pricer did not give in time is kept only this long
+                                     # (the page asks again after 3 seconds, so it must be shorter than that)
 LATE = object()                      # a price the time budget skipped: asked again at the next read, alone
 CODE_KEEP_S = 15                     # a verified code and its store's row, kept so a flood of calls on one code reads
                                      # the retailer once per copy this often (a code made again stops within this time)
@@ -98,10 +101,11 @@ SENT_KIOSK = "Your order is {code}. Please pay at the counter and keep your rece
 
 
 class TenantError(Exception):
-    def __init__(self, msg: str, code: int | None = None, kind: str = ""):
+    def __init__(self, msg: str, code: int | None = None, kind: str = "", words: str = ""):
         super().__init__(msg)
         self.code = code            # the retailer's HTTP status, when it answered one
-        self.kind = kind            # the retailer's error type (exc_type), never its message
+        self.kind = kind            # the retailer's error type (exc_type)
+        self.words = words          # its own words for a refused dish (kept for that one refusal only), as plain text
 
     @property
     def refused(self) -> bool:
@@ -114,12 +118,24 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def _kind(e: urllib.error.HTTPError) -> str:
+def _said(body: dict) -> str:
+    """The retailer's own words for a refusal: its first server message, as one line of plain text."""
     try:
-        kind = json.loads(e.read(64 * 1024) or b"{}").get("exc_type")
-    except (OSError, ValueError, http.client.HTTPException, AttributeError):
+        text = json.loads(json.loads(body.get("_server_messages") or "[]")[0]).get("message")
+    except (ValueError, TypeError, IndexError, AttributeError):
         return ""
-    return kind if isinstance(kind, str) and kind.isidentifier() else ""
+    return " ".join(html.unescape(re.sub(r"<[^>]*>", " ", text if isinstance(text, str) else "")).split())[:300]
+
+
+def _kind(e: urllib.error.HTTPError) -> tuple[str, str]:
+    """(the retailer's error type, its words for the refusal of a dish: only that kind keeps them)."""
+    try:
+        body = json.loads(e.read(64 * 1024) or b"{}")
+        kind = body.get("exc_type")
+    except (OSError, ValueError, http.client.HTTPException, AttributeError):
+        return "", ""
+    kind = kind if isinstance(kind, str) and kind.isidentifier() else ""
+    return kind, (_said(body) if kind == "ItemUnavailableError" else "")
 
 
 class Tenant:
@@ -137,9 +153,9 @@ class Tenant:
             with urllib.request.build_opener(_NoRedirect).open(req, timeout=self.timeout) as r:
                 return json.loads(r.read() or b"{}")
         except urllib.error.HTTPError as e:
-            kind = _kind(e)
+            kind, words = _kind(e)
             e.close()
-            raise TenantError(f"{method} {what} -> HTTP {e.code}", e.code, kind) from None
+            raise TenantError(f"{method} {what} -> HTTP {e.code}", e.code, kind, words) from None
         except (OSError, ValueError, http.client.HTTPException) as e:     # OSError holds URLError, timeouts, TLS
             raise TenantError(f"{method} {what} -> {type(e).__name__}") from None   # the outcome is unknown
 
@@ -253,11 +269,12 @@ class Service:
         groups = [g.get("item_group") for g in reg.get("item_groups") or [] if isinstance(g, dict) and g.get("item_group")]
         if not groups:
             raise gor.Refused("")                         # no menu groups on the register: the guest asks staff
-        items = door.rows("Item", ["name", "item_name", "item_group"],
+        items = door.rows("Item", ["name", "item_name", "item_group", "image", "variant_of"],
                           [["item_group", "in", groups], ["is_sales_item", "=", 1], ["disabled", "=", 0],
                            ["has_variants", "=", 0], ["custom_is_gift_card", "=", 0], ["custom_mpos_option_only", "=", 0]],
                           limit=gor.MENU_MAX, order_by="item_name asc")
         dishes = [i["name"] for i in items if isinstance(i.get("name"), str)]
+        templates, sizes = self.sizes(door, items)
         rows = door.rows("Cross Selling Product Detail",
                          ["parent", "idx", "item_code", "item_name", "price_type", "price", "discount_type", "discount",
                           "custom_mpos_option_group"],
@@ -274,13 +291,31 @@ class Service:
         prices = {**{c: known[c] for c in need if c in known},
                   **self.prices(door, reg, [c for c in need if c not in known], t0)}
         late = any(v is LATE for v in prices.values())    # kept briefly: what the budget skipped is priced next read
-        menu = gor.menu_of(items, rows, meta, {c: (None if p is LATE else p) for c, p in prices.items()}, groups)
+        menu = gor.menu_of(items, rows, meta, {c: (None if p is LATE else p) for c, p in prices.items()}, groups,
+                           door.base, templates, sizes)
         with self._lock:
             if len(self._menus) >= MENU_CACHE_MAX:
                 self._menus.pop(next(iter(self._menus)))
             kept_at = self.clock() - (MENU_KEEP_S - MENU_SHORT_S if late else 0)
             self._menus[key] = (kept_at, menu, reg.get("currency") or "", prices)
         return menu, reg.get("currency") or ""
+
+    def sizes(self, door, items: list[dict]) -> tuple[dict, dict]:
+        """The dishes' templates (their name and picture) and each size's label, for a dish sold in sizes. A retailer that
+        does not let the app read them gets its sizes as separate dishes, as before."""
+        made = sorted({i["name"] for i in items if i.get("variant_of") and isinstance(i.get("name"), str)})
+        if not made:
+            return {}, {}
+        try:
+            templates = door.rows("Item", ["name", "item_name", "image"],
+                                  [["name", "in", sorted({i["variant_of"] for i in items if i.get("variant_of")})]])
+            labels = door.rows("Item Variant Attribute", ["parent", "idx", "attribute", "attribute_value"],
+                               [["parent", "in", made]], parent="Item", limit=2000)
+        except TenantError as e:
+            if e.code not in (403, 404):        # a retailer that does not let the app read them gets separate dishes
+                raise
+            return {}, {}
+        return {t["name"]: t for t in templates if isinstance(t.get("name"), str)}, gor.size_labels(labels)
 
     def prices(self, door, reg: dict, codes: list[str], t0: float) -> dict:
         """One unit's list price of each item at the register (its price list, company, currency and walk-in customer,
@@ -296,8 +331,8 @@ class Service:
                     "customer": reg.get("customer"), "warehouse": reg.get("warehouse")}
             try:
                 got = door.call("get_item_details", {"args": {k: v for k, v in args.items() if v not in (None, "")}})
-            except TenantError:
-                return code, None
+            except TenantError as e:                  # a busy or slow shop (429, a timeout, a fault of its own) is asked
+                return (code, None) if e.refused and e.code != 429 else (code, LATE)    # again at the next read; a refusal is blank
             return code, (got or {}).get("price_list_rate") if isinstance(got, dict) else None
         if not codes:
             return {}
@@ -466,6 +501,8 @@ class Service:
                 raise
             if e.kind == "CheckRequestError":       # a retry whose first send landed on a check since moved or paid
                 return 200, _say("refused", "sent_twice", SENT_TWICE)
+            if e.kind == "ItemUnavailableError" and e.words:      # the till's own words name the dish (sold out, or not sold now)
+                return 200, {"state": "refused", "say": "dish_unavailable", "words": e.words}
             if e.kind in ("ItemRefusedError", "ItemNotSoldHereError", "ItemUnavailableError"):
                 return 200, _say("refused", "item_refused", ITEM_REFUSED)
             if e.kind in ("CheckNotOpenError", "CheckChangedError"):
@@ -507,7 +544,7 @@ class Service:
 
     # ── every call ──
     def csp(self) -> str:
-        return ("default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'none'; "
+        return ("default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src https: http:; "
                 "base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 
     def handle(self, method: str, path: str, headers, raw: bytes) -> tuple[int, bytes, dict]:

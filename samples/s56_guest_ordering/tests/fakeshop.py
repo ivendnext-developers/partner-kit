@@ -20,12 +20,21 @@ SECRET = "s3cret-code"
 PAGE = "https://guest-ordering.example.app"
 
 ITEMS = [
-    {"name": "LATTE", "item_name": "Latte", "item_group": "Drinks", "custom_mpos_option_only": 0},
+    {"name": "LATTE", "item_name": "Latte", "item_group": "Drinks", "custom_mpos_option_only": 0, "image": "/files/latte one.jpg"},
     {"name": "BURGER", "item_name": "Burger", "item_group": "Mains", "custom_mpos_option_only": 0},
     {"name": "SALAD", "item_name": "Green salad", "item_group": "Mains", "custom_mpos_option_only": 0},
     {"name": "OAT", "item_name": "Oat milk", "item_group": "Drinks", "custom_mpos_option_only": 1},
     {"name": "GIFT", "item_name": "Gift card", "item_group": "Mains", "custom_mpos_option_only": 0, "custom_is_gift_card": 1},
+    # a dish sold in sizes: the template (never on the menu) and one Item a size, named "<dish> / <size>"
+    {"name": "COLD", "item_name": "Cold brew", "item_group": "Drinks", "custom_mpos_option_only": 0, "has_variants": 1,
+     "image": "/files/cold.jpg"},
+    {"name": "COLD-R", "item_name": "Cold brew / Regular", "item_group": "Drinks", "custom_mpos_option_only": 0,
+     "variant_of": "COLD"},
+    {"name": "COLD-L", "item_name": "Cold brew / Large", "item_group": "Drinks", "custom_mpos_option_only": 0,
+     "variant_of": "COLD"},
 ]
+ATTRS = [{"parent": "COLD-R", "idx": 1, "attribute": "Size", "attribute_value": "Regular"},
+         {"parent": "COLD-L", "idx": 1, "attribute": "Size", "attribute_value": "Large"}]
 ROWS = [   # the dishes' Cross Selling Product Detail rows
     {"parent": "LATTE", "idx": 1, "item_code": "OAT", "item_name": "Oat milk", "price_type": "Amount", "price": 0.6,
      "discount_type": "", "discount": 0, "custom_mpos_option_group": "Milk"},
@@ -41,7 +50,7 @@ ROWS = [   # the dishes' Cross Selling Product Detail rows
 GROUPS = {"Milk": {"name": "Milk", "display_name": "Milk", "min_picks": 1, "max_picks": 1, "enabled": 1},
           "Extras": {"name": "Extras", "display_name": "Extras", "min_picks": 0, "max_picks": 2, "enabled": 1},
           "Toppings": {"name": "Toppings", "display_name": "Toppings", "min_picks": 0, "max_picks": 2, "enabled": 1}}
-PRICES = {"LATTE": 3.2, "BURGER": 11.0, "SALAD": 7.5, "COW": 0.0, "SHOT": 0.8}
+PRICES = {"LATTE": 3.2, "BURGER": 11.0, "SALAD": 7.5, "COW": 0.0, "SHOT": 0.8, "COLD-R": 4.0, "COLD-L": 4.5}
 
 
 def settings(**row):
@@ -58,6 +67,8 @@ def code(name, kind="Table", place=T12, number=0, kiosk_name="", **kw):
 
 
 class FakeTenant:
+    base = f"https://{SITE}"
+
     def __init__(self, codes=(), settings_=None, refuse=None, door_refuse=None, lose=None, open_checks=(),
                  groups_on_register=("Drinks", "Mains"), stale_code=0):
         self.settings = {CO: settings_ or settings()}
@@ -94,10 +105,13 @@ class FakeTenant:
         if doctype.endswith(" Store"):
             src = [dict(r) for s in self.settings.values() for r in s["stores"]]
         elif doctype == "Item":
-            src = [dict({"custom_is_gift_card": 0}, **dict(i, is_sales_item=1, disabled=0, has_variants=0)) for i in ITEMS]
+            src = [dict({"custom_is_gift_card": 0}, **dict({"has_variants": 0}, **i, is_sales_item=1, disabled=0)) for i in ITEMS]
             if order_by:
                 assert order_by == "item_name asc", order_by
                 src.sort(key=lambda r: r["item_name"])
+        elif doctype == "Item Variant Attribute":
+            assert parent == "Item"
+            src = [dict(r) for r in ATTRS]
         elif doctype == "Cross Selling Product Detail":
             assert parent == "Item"
             src = [dict(r) for r in ROWS]
@@ -149,8 +163,8 @@ class FakeTenant:
             tabs = [{"check": c["check"], "label": c.get("label")} for c in self.checks.values() if not c.get("place")]
             return {"store": query["store"], "sections": [], "places": places, "tabs": tabs}
         if self.door_refuse and verb == self.door_refuse[0]:
-            kind, code = self.door_refuse[1:]
-            raise app.TenantError(f"{verb} -> HTTP {code}", code, kind)
+            kind, code, *words = self.door_refuse[1:]
+            raise app.TenantError(f"{verb} -> HTTP {code}", code, kind, words[0] if words else "")
         if verb not in ("check_open", "check_add_lines"):
             raise app.TenantError("404", 404)
         key = body["key"]
