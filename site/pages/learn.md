@@ -27,6 +27,7 @@ What you can build on iVendNext, and how: the ways in, the needs customers ask f
 
 {{card: Recipes | ../../recipes/ | One recipe for each job, with its steps and commands.}}
 {{card: The guide | ../../guide/README.md | The chapters behind the recipes and the samples.}}
+{{card: Videos | videos.md | Short films on building, publishing and hosting an app, from the first sample to your customer's install.}}
 {{card: Record types | site:records/index.html | The record types an app most often reads or writes, with their fields.}}
 {{card: API reference | api.md | Every record call the samples make: address, method, parameters and answers.}}
 {{card: Security and the handshake | security.md | How a retailer and your app trust each other.}}
