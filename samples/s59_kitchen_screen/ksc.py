@@ -38,6 +38,8 @@ TICKETS_MAX = 300            # tickets one screen's answer carries to a page (af
 BOARD_MAX = 2000             # tickets of one store's board a copy keeps (the newest, when a board is larger)
 LINES_MAX = 60               # lines one ticket carries
 DISHES_MAX = 100             # dishes the sold-out list offers
+FOUND_MAX = 20               # dishes one search offers
+FIND_MIN = 2                 # letters a search needs
 _ORDER = re.compile(r"[A-Za-z0-9_-]{1,140}")   # the door names an order by its record name (a hash)
 _COLOUR = re.compile(r"#[0-9A-Fa-f]{6}")
 
@@ -185,6 +187,7 @@ def clean_ticket(t) -> dict | None:
                       "allergens": _text(ln.get("allergens"), 240)})
     return {"kitchen_order": order, "ticket": n, "station": _text(t.get("station"), 140), "kind": t["kind"],
             "source": "check" if t.get("source") == "check" else "sale", "call_number": _text(t.get("call_number"), 60),
+            "service_mode": _text(t.get("service_mode"), 40).strip(),
             "till": _text(t.get("till"), 140), "sent_at": _text(t.get("sent_at"), 32), "state": t["state"],
             "state_at": _text(t.get("state_at"), 32), "lines": lines}
 
@@ -250,6 +253,7 @@ def expo_view(tickets: list[dict]) -> dict:
             continue
         ts = sorted(ts, key=lambda t: t["ticket"])
         cards.append({"kitchen_order": order, "call_number": ts[-1]["call_number"], "source": ts[0]["source"],
+                      "service_mode": ts[-1].get("service_mode") or "",
                       "sent_at": min(t["sent_at"] for t in live), "bump": _ready(ts), "tickets": ts})
     cards.sort(key=lambda c: c["sent_at"])
     return {"orders": cards[:TICKETS_MAX], "waiting": waiting(tickets)}
@@ -303,6 +307,31 @@ def dishes(tickets: list[dict]) -> list[dict]:
             if ln["item_code"] and ln["item_code"] not in seen:
                 seen[ln["item_code"]] = ln["item_name"] or ln["item_code"]
     return [{"item_code": c, "item_name": n} for c, n in sorted(seen.items(), key=lambda kv: kv[1])][:DISHES_MAX]
+
+
+def found_of(rows) -> list[dict]:
+    """The dishes a cook's search found (``Item`` rows: name and item name), each once, by name: what the sold-out list
+    offers beyond the board, so a dish is marked before anyone orders it."""
+    seen: dict[str, str] = {}
+    for r in rows if isinstance(rows, list) else []:
+        if isinstance(r, dict) and isinstance(r.get("name"), str) and r["name"] and r["name"] not in seen:
+            seen[r["name"][:140]] = (r.get("item_name") if isinstance(r.get("item_name"), str) and r["item_name"].strip()
+                                     else r["name"])[:140]
+    return [{"item_code": c, "item_name": n} for c, n in sorted(seen.items(), key=lambda kv: kv[1].lower())][:FOUND_MAX]
+
+
+def still_out(answer) -> dict | None:
+    """When the till's answer to *Available again* leaves the dish unsold (``available: false``), why: ``sold_out``
+    (head office has it sold out at every store, ``until`` when that ends) or ``hours`` (outside this store's hours for
+    it, ``from`` and ``to``). None when the dish sells again."""
+    if not isinstance(answer, dict) or answer.get("available") is not False:
+        return None
+    reason = answer.get("reason") if answer.get("reason") in ("sold_out", "hours") else "sold_out"
+    out = {"reason": reason}
+    for k in (("until",) if reason == "sold_out" else ("from", "to")):
+        if isinstance(answer.get(k), str) and answer[k]:
+            out[k] = answer[k][:32]
+    return out
 
 
 def sold_out_of(rows) -> list[dict]:

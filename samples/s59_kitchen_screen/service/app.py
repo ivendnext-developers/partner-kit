@@ -9,7 +9,8 @@ library only).
     POST /ksc/board     {"s", "t"}                                     →  200 {"state": "open", "kind", "view", …}
     POST /ksc/move      {"s", "t", "kitchen_order", "ticket", "state"} →  200 {"state": "moved" | "refused", …}
                         {"s", "t", "kitchen_order", "order": true}     (the expo: bump every ready ticket of the order)
-    POST /ksc/soldout   {"s", "t", "item_code", "sold_out": bool}      →  200 {"state": "set" | "refused", …}
+    POST /ksc/soldout   {"s", "t", "item_code", "sold_out": bool}      →  200 {"state": "set" | "still_sold_out" | "refused", …}
+    POST /ksc/find      {"s", "t", "q"}                                →  200 {"state": "found", "dishes": [...]} | refused
     GET  /health        200 {"ok": 1}
     POST /ivendnext/connect · /ivendnext/disconnect   many retailers: the app template's handshake (shops.py)
 
@@ -24,8 +25,9 @@ one address, and nothing else.
 then reads the screen record (as the app's own user) and refuses a link whose number moved on (a link that leaked and
 was made again) or whose screen's kind, store or stations changed. The store and the stations come from the record,
 never from the page. A station screen moves only its own stations' tickets, one step; the expo only bumps; the board
-moves nothing. Sold out is marked only at the screen's own store, only for a dish on the board or already sold out
-there, and only when the store's row allows it (the till's sold-out calls are not fenced to a user's stores).
+moves nothing. Sold out is marked only at the screen's own store, for any dish the shop sells (a cook finds one by name
+before anyone orders it), and only when the store's row allows it (the till's sold-out calls are not fenced to a user's
+stores).
 
 ONE RETAILER (env or an env file):
     IVN_SHOP_URL, IVN_SHOP_KEY ("<api key>:<api secret>" of the app's user), IVN_LINK_SECRET (handed back at install as
@@ -443,20 +445,46 @@ class Service:
         return {"state": "moved", "moved": moved}
 
     def sold_out(self, door, site: str, s: dict, row: dict, body: dict) -> dict:
+        """Marks any dish sold out at the screen's own store, or clears it (a cook runs out before anyone orders it). The
+        till's answer says whether the dish sells again: a store with its own hours during a head-office recall keeps it
+        sold out, and the screen says why."""
         code, out = body.get("item_code"), body.get("sold_out")
         if s["kind"] == ksc.KIND_BOARD or not ksc.num(row.get("sold_out_on")):
             return {"state": "refused", "why": "off"}
         if not isinstance(code, str) or not code or len(code) > 140 or not isinstance(out, bool):
-            return {"state": "refused", "why": "gone"}
-        tickets, _ = self.board(door, site, s["store"])
-        listed = {d["item_code"] for d in ksc.dishes(self.own(s, tickets))} | {d["item_code"] for d in self.sold(door, site, s["store"])}
-        if code not in listed:          # never an item the kitchen has not seen, never another store's
-            return {"state": "refused", "why": "not_listed"}
-        door.call("set_item_availability", {"item_code": code, "warehouse": s["store"], "sold_out": 1 if out else 0,
-                                            "sold_out_until": ""})
-        with self._lock:
-            self._sold.pop((site, s["store"]), None)
+            return {"state": "refused", "why": "no_dish"}
+        try:
+            answer = door.call("set_item_availability", {"item_code": code, "warehouse": s["store"],
+                                                         "sold_out": 1 if out else 0, "sold_out_until": ""})
+        except TenantError as e:
+            if e.refused and e.code not in (401, 403, 404) and e.kind not in SET_UP:
+                return {"state": "refused", "why": "no_dish"}   # the till refused the code: no such dish
+            raise
+        finally:
+            with self._lock:
+                self._sold.pop((site, s["store"]), None)
+        still = None if out else ksc.still_out(answer)
+        if still:
+            return {"state": "still_sold_out", "item_code": code, **still}
         return {"state": "set", "item_code": code, "sold_out": out}
+
+    def find(self, door, s: dict, row: dict, body: dict) -> dict:
+        """The dishes whose name holds the cook's words: any item the shop sells, not only one on a ticket now. Needs
+        Read on Item for the app's user; without it the screen says so and the list keeps the board's dishes."""
+        if not ksc.num(row.get("sold_out_on")) or s["kind"] == ksc.KIND_BOARD:
+            return {"state": "refused", "why": "off"}
+        words = body.get("q")
+        if not isinstance(words, str) or len(words.strip()) < ksc.FIND_MIN or len(words) > 60:
+            return {"state": "found", "dishes": []}
+        try:
+            got = door.rows("Item", ["name", "item_name"], [["item_name", "like", f"%{words.strip()}%"],
+                                                            ["disabled", "=", 0], ["is_sales_item", "=", 1],
+                                                            ["has_variants", "=", 0]], limit=ksc.FOUND_MAX)
+        except TenantError as e:
+            if e.code in (401, 403) or e.kind in SET_UP:
+                return {"state": "refused", "why": "no_find"}
+            raise
+        return {"state": "found", "dishes": ksc.found_of(got)}
 
     def screen_call(self, path: str, raw: bytes) -> tuple[int, dict]:
         try:
@@ -471,6 +499,8 @@ class Service:
                 return 200, self.view(door, site, s, row)
             if path == "/ksc/move":
                 return 200, self.move(door, site, s, body)
+            if path == "/ksc/find":
+                return 200, self.find(door, s, row, body)
             return 200, self.sold_out(door, site, s, row, body)
         except _Answer as a:
             return a.code, a.body
@@ -507,7 +537,7 @@ class Service:
             return _json(*shops.handle(self.store, self.app, path, headers, raw))
         if path == "/ksc/link":
             return _json(*self.press(headers, raw))
-        if path in ("/ksc/board", "/ksc/move", "/ksc/soldout"):
+        if path in ("/ksc/board", "/ksc/move", "/ksc/soldout", "/ksc/find"):
             return _json(*self.screen_call(path, raw))
         return _json(404, {"error": "not found"})
 

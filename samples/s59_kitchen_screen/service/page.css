@@ -104,5 +104,8 @@ html[dir="rtl"] .ksc-dir .ksc-icon { transform: scaleX(-1); }   /* earlier and l
 .ksc-dialog .ksc-lines { padding-inline: 0; }
 .ksc-dialog .is-void .ksc-line { text-decoration: line-through; }
 .ksc-dialog .ivn-dialog-foot .ivn-btn { min-block-size: max(44px, calc(2.4 * var(--u))); font-size: calc(1 * var(--u)); }
-.ksc-sold-list .ivn-list-row { display: flex; justify-content: space-between; align-items: center; gap: calc(0.5 * var(--u)); }
+.ksc-sold-list .ivn-list-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: calc(0.5 * var(--u)); }
+.ksc-sold-why { flex-basis: 100%; margin: 0; font-size: calc(0.9 * var(--u)); color: var(--ivn-warning-text, var(--ivn-text-muted)); }
+.ksc-find { inline-size: 100%; margin-block-end: calc(0.5 * var(--u)); min-block-size: max(44px, calc(2.4 * var(--u))); font-size: calc(1 * var(--u)); }
+.ksc-mode { font-size: calc(0.9 * var(--u)); font-weight: 800; }   /* the sale's service mode (To go), as the till names it */
 .ksc-sold-list .ivn-btn { min-block-size: max(44px, calc(2.4 * var(--u))); font-size: calc(1 * var(--u)); }

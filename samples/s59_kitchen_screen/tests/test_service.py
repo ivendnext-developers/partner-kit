@@ -279,24 +279,56 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(self.sold(t, "BURGER", False)["sold_out"], False)
         self.assertEqual(self.shop.sold, set())
 
-    def test_s2_an_item_the_kitchen_has_not_seen_is_refused(self):
+    def test_s2_any_dish_the_shop_sells_is_marked_though_no_ticket_names_it(self):
         t = made(self.shop, self.svc)
-        self.assertEqual(self.sold(t, "CAVIAR"), {"state": "refused", "why": "not_listed"})
-        self.assertFalse([v for v, _ in self.shop.sent if v == "set_item_availability"])
+        self.assertEqual(self.sold(t, "RINGS"), {"state": "set", "item_code": "RINGS", "sold_out": True})
+        self.assertEqual(self.shop.sold, {("RINGS", F.STORE)})                       # the screen's own store, never another
+        self.assertEqual(self.sold(t, "NOPE"), {"state": "refused", "why": "no_dish"})   # the till refuses a code it lacks
+        self.assertEqual(self.sold(t, ""), {"state": "refused", "why": "no_dish"})
 
     def test_s3_an_item_already_sold_out_can_be_cleared_though_no_ticket_names_it(self):
         self.shop.sold = {("SOUP", F.STORE)}
         t = made(self.shop, self.svc)
         self.assertEqual(self.sold(t, "SOUP", False)["state"], "set")
 
+    def test_s10_available_again_that_leaves_a_dish_sold_out_says_why(self):
+        self.shop.sold = {("SOUP", F.STORE)}
+        self.shop.held = {"SOUP": {"until": None, "from": "11:00:00", "to": "15:00:00"}}   # a store with its own hours
+        t = made(self.shop, self.svc)
+        self.assertEqual(self.sold(t, "SOUP", False), {"state": "still_sold_out", "item_code": "SOUP", "reason": "sold_out"})
+        self.shop.held = {"SOUP": {"reason": "hours", "from": "11:00:00", "to": "15:00:00"}}
+        self.later(1)
+        self.assertEqual(self.sold(t, "SOUP", False), {"state": "still_sold_out", "item_code": "SOUP", "reason": "hours",
+                                                       "from": "11:00:00", "to": "15:00:00"})
+        self.shop.held = {}
+        self.assertEqual(self.sold(t, "SOUP", False)["state"], "set")
+        self.assertEqual(self.sold(t, "SOUP", True)["state"], "set")                 # marking out is never "still"
+
+    def test_s11_a_cook_finds_a_dish_by_name(self):
+        t = made(self.shop, self.svc)
+        self.assertEqual(call(self.svc, "/ksc/find", t, q="onion")[1],
+                         {"state": "found", "dishes": [{"item_code": "RINGS", "item_name": "Onion rings"},
+                                                       {"item_code": "ONION", "item_name": "Onion soup"}]})
+        self.shop.calls.clear()
+        self.assertEqual(call(self.svc, "/ksc/find", t, q="o")[1], {"state": "found", "dishes": []})
+        self.assertNotIn("rows Item", self.shop.calls)                               # one letter reads nothing
+        self.shop.refuse = ("rows Item", 403, "PermissionError")
+        self.assertEqual(call(self.svc, "/ksc/find", t, q="onion")[1], {"state": "refused", "why": "no_find"})
+        board = made(self.shop, self.svc, "KSC-SCREEN-00003")
+        self.assertEqual(call(self.svc, "/ksc/find", board, q="onion")[1], {"state": "refused", "why": "off"})
+        self.shop.settings[F.CO]["stores"][0]["sold_out_on"] = 0
+        self.shop.refuse = None
+        self.later(20)                                                   # the store's row is read again
+        self.assertEqual(call(self.svc, "/ksc/find", t, q="onion")[1], {"state": "refused", "why": "off"})
+
     def test_s5_a_station_screen_offers_only_its_own_stations_dishes(self):
         t = made(self.shop, self.svc)
         self.assertEqual([d["item_code"] for d in call(self.svc, "/ksc/board", t)[1]["sold_out"]["dishes"]],
                          ["BURGER", "CHEESE", "STEAK"])                  # the grill's: no beer, no fries
-        self.assertEqual(self.sold(t, "BEER"), {"state": "refused", "why": "not_listed"})
         expo = made(self.shop, self.svc, "KSC-SCREEN-00002")
         self.later(1)
-        self.assertEqual(self.sold(expo, "BEER")["state"], "set")        # the pass sees every station
+        self.assertEqual([d["item_code"] for d in call(self.svc, "/ksc/board", expo)[1]["sold_out"]["dishes"]],
+                         ["BEER", "BURGER", "CHEESE", "FRIES", "STEAK"])   # the pass sees every station
 
     def test_s6_a_sold_out_read_the_shop_refuses_leaves_the_tickets_showing(self):
         t = made(self.shop, self.svc)
@@ -308,8 +340,8 @@ class ServiceTest(unittest.TestCase):
         for i in range(11):                                            # 33 s of reads: kept refused 30 s, so asked once
             self.later(3)
             self.assertNotIn("sold_out", call(self.svc, "/ksc/board", t)[1], i)
-            if i == 2:                                                 # a tap while it is kept is told the same refusal
-                self.assertEqual(self.sold(t, "FRIES"), {"state": "not_set_up"})
+            if i == 2:                                                 # a tap asks the till itself, never the kept read
+                self.assertEqual(self.sold(t, "FRIES")["state"], "set")
         self.assertEqual(self.shop.calls.count("item_availability"), 1)
 
     def test_s7_a_sold_out_read_that_timed_out_is_kept_as_a_timeout_not_a_refusal(self):
@@ -317,6 +349,7 @@ class ServiceTest(unittest.TestCase):
         self.shop.door_refuse = ("item_availability", None)
         self.assertNotIn("sold_out", call(self.svc, "/ksc/board", t)[1])
         self.later(3)
+        self.shop.door_refuse = ("set_item_availability", None)          # the mark's own answer lost: said, never "set"
         self.assertEqual(call(self.svc, "/ksc/soldout", t, item_code="FRIES", sold_out=True), (503, {"state": "unavailable"}))
         self.assertEqual(self.shop.calls.count("item_availability"), 1)
 

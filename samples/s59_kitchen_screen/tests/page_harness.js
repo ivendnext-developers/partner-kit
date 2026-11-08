@@ -213,11 +213,28 @@ const SCENARIOS = {
     return out;
   },
   // the Sold out dialog's rows, by the words each row shows
+  // opts.find: words typed in its search (the 300 ms wait passed); opts.tap: the dish whose button is tapped
   async sold(opts) {
     const p = run(opts);
     await settled();
     p.byId.sold.click();
-    return { rows: p.byId["sold-list"].querySelectorAll("ivn-list-title").map((e) => e.textContent) };
+    const list = p.byId["sold-list"], titles = () => list.querySelectorAll("ivn-list-title").map((e) => e.textContent);
+    const out = { open: titles(), modes: p.byId.board.querySelectorAll("ksc-mode").map((e) => e.textContent) };
+    if (opts.find !== undefined) {
+      p.byId["sold-find"].value = opts.find;
+      (p.byId["sold-find"].listeners.input || []).forEach((fn) => fn({}));
+      p.fire(300); await settled();
+    }
+    if (opts.tap) {
+      const row = list.children.find((r) => r.querySelector(".ivn-list-title") && r.querySelector(".ivn-list-title").textContent === opts.tap);
+      row.querySelector(".ivn-btn").click(); await settled();
+    }
+    out.rows = titles();
+    out.why = list.querySelectorAll("ksc-sold-why").map((e) => e.textContent);
+    out.empty = list.querySelectorAll("ksc-empty").map((e) => e.textContent);
+    out.note = p.byId.note.hidden ? "" : p.byId.note.textContent;
+    out.sent = p.calls.filter((c) => c.path === "/ksc/find" || c.path === "/ksc/soldout").map((c) => [c.path, c.q || c.item_code]);
+    return out;
   },
   // the live line: what the page asked of the live service and the board, and the waits it set, in order
   async live(opts) {
