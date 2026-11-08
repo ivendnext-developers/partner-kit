@@ -163,8 +163,8 @@ class FakeTenant:
             tabs = [{"check": c["check"], "label": c.get("label")} for c in self.checks.values() if not c.get("place")]
             return {"store": query["store"], "sections": [], "places": places, "tabs": tabs}
         if self.door_refuse and verb == self.door_refuse[0]:
-            kind, code = self.door_refuse[1:]
-            raise app.TenantError(f"{verb} -> HTTP {code}", code, kind)
+            kind, code, *words = self.door_refuse[1:]
+            raise app.TenantError(f"{verb} -> HTTP {code}", code, kind, words[0] if words else "")
         if verb not in ("check_open", "check_add_lines"):
             raise app.TenantError("404", 404)
         key = body["key"]

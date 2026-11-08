@@ -36,9 +36,11 @@ GOR_PREFIX (default PP GOR; IVENDNEXT GOR for the library's app)
 from __future__ import annotations
 
 import concurrent.futures
+import html
 import http.client
 import json
 import os
+import re
 import signal
 import sys
 import threading
@@ -99,10 +101,11 @@ SENT_KIOSK = "Your order is {code}. Please pay at the counter and keep your rece
 
 
 class TenantError(Exception):
-    def __init__(self, msg: str, code: int | None = None, kind: str = ""):
+    def __init__(self, msg: str, code: int | None = None, kind: str = "", words: str = ""):
         super().__init__(msg)
         self.code = code            # the retailer's HTTP status, when it answered one
-        self.kind = kind            # the retailer's error type (exc_type), never its message
+        self.kind = kind            # the retailer's error type (exc_type)
+        self.words = words          # its own words for a refused dish (kept for that one refusal only), as plain text
 
     @property
     def refused(self) -> bool:
@@ -115,12 +118,24 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def _kind(e: urllib.error.HTTPError) -> str:
+def _said(body: dict) -> str:
+    """The retailer's own words for a refusal: its first server message, as one line of plain text."""
     try:
-        kind = json.loads(e.read(64 * 1024) or b"{}").get("exc_type")
-    except (OSError, ValueError, http.client.HTTPException, AttributeError):
+        text = json.loads(json.loads(body.get("_server_messages") or "[]")[0]).get("message")
+    except (ValueError, TypeError, IndexError, AttributeError):
         return ""
-    return kind if isinstance(kind, str) and kind.isidentifier() else ""
+    return " ".join(html.unescape(re.sub(r"<[^>]*>", " ", text if isinstance(text, str) else "")).split())[:300]
+
+
+def _kind(e: urllib.error.HTTPError) -> tuple[str, str]:
+    """(the retailer's error type, its words for the refusal of a dish: only that kind keeps them)."""
+    try:
+        body = json.loads(e.read(64 * 1024) or b"{}")
+        kind = body.get("exc_type")
+    except (OSError, ValueError, http.client.HTTPException, AttributeError):
+        return "", ""
+    kind = kind if isinstance(kind, str) and kind.isidentifier() else ""
+    return kind, (_said(body) if kind == "ItemUnavailableError" else "")
 
 
 class Tenant:
@@ -138,9 +153,9 @@ class Tenant:
             with urllib.request.build_opener(_NoRedirect).open(req, timeout=self.timeout) as r:
                 return json.loads(r.read() or b"{}")
         except urllib.error.HTTPError as e:
-            kind = _kind(e)
+            kind, words = _kind(e)
             e.close()
-            raise TenantError(f"{method} {what} -> HTTP {e.code}", e.code, kind) from None
+            raise TenantError(f"{method} {what} -> HTTP {e.code}", e.code, kind, words) from None
         except (OSError, ValueError, http.client.HTTPException) as e:     # OSError holds URLError, timeouts, TLS
             raise TenantError(f"{method} {what} -> {type(e).__name__}") from None   # the outcome is unknown
 
@@ -486,6 +501,8 @@ class Service:
                 raise
             if e.kind == "CheckRequestError":       # a retry whose first send landed on a check since moved or paid
                 return 200, _say("refused", "sent_twice", SENT_TWICE)
+            if e.kind == "ItemUnavailableError" and e.words:      # the till's own words name the dish (sold out, or not sold now)
+                return 200, {"state": "refused", "say": "dish_unavailable", "words": e.words}
             if e.kind in ("ItemRefusedError", "ItemNotSoldHereError", "ItemUnavailableError"):
                 return 200, _say("refused", "item_refused", ITEM_REFUSED)
             if e.kind in ("CheckNotOpenError", "CheckChangedError"):

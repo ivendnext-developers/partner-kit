@@ -47,6 +47,7 @@ ivn try
 
 - The guest page reads like a menu: each dish has its picture (a plain tile where it has none), a dish sold in sizes shows once with its sizes together, prices carry the store's plain currency sign, and a running total sits beside *Send order* while the order stays in view.
 - A menu priced more slowly than the read allows no longer stays blank: the service reads 16 prices at once (was 8) and keeps a late menu only 2 seconds, and the page asks again after 3 seconds, up to three times, taking the prices into the menu the guest holds. A shop that answers *busy* or slowly gets those prices asked at the next read.
+- A dish the till refuses at the add (sold out, or not sold now) is said to the guest in the till's own words, naming the dish (*Not available now: Latte (sold out). Take it off to carry on.*).
 - Sizes show cheapest first and the cheapest is picked; a size's line on the order reads *Dish · Size*; an answer to *Send order* is scrolled into view above the sticky panel.
 - The retailer's words sit in `<bdi>` inside a block of the page's own direction, never a guessed one (as S59).
 - A link whose number is written in non-ASCII digits no longer works.

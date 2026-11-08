@@ -236,6 +236,18 @@ class ServiceTest(unittest.TestCase):
         self.shop.door_refuse = ("check_add_lines", "ItemUnavailableError", 417)
         self.assertEqual(guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]["say"], "item_refused")
 
+    def test_o5e_a_dish_the_till_refuses_by_name_is_said_in_the_tills_words(self):
+        t = made(self.shop, self.svc)
+        said = "Not available now: Latte (sold out). Take it off to carry on."
+        self.shop.door_refuse = ("check_add_lines", "ItemUnavailableError", 417, said)
+        out = guest(self.svc, "/gor/order", t, key=ORDER, lines=[latte()])[1]
+        self.assertEqual((out["state"], out["words"]), ("refused", said))             # the page shows the words as they are
+        with open(os.path.join(os.path.dirname(HERE), "service", "page.js")) as f:
+            self.assertNotIn(out["say"], f.read())                                   # the page has no sentence of its own for it
+        self.assertEqual(app._said({"_server_messages": json.dumps([json.dumps({"message": "Not <b>now</b>: Latte &amp; Tea\n(sold out)"})])}),
+                         "Not now : Latte & Tea (sold out)")
+        self.assertEqual(app._said({"_server_messages": "not json"}), "")
+
     def test_o6_a_retry_of_lines_since_moved_says_it_was_sent_once(self):
         t = made(self.shop, self.svc)
         self.shop.checks["CHK-SRV"] = {"check": "CHK-SRV", "place": F.T12, "lines": []}
