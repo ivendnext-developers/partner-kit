@@ -47,7 +47,8 @@
       "s45_restaurant_back_office",
       "s55_front_of_house",
       "s56_guest_ordering",
-      "s59_kitchen_screen"
+      "s59_kitchen_screen",
+      "s63_room_charge"
     ],
     "Liquor and wine": [
       "s22_customer_loyalty",
