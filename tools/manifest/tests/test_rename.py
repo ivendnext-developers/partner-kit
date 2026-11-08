@@ -147,6 +147,13 @@ class HyphenedNames(unittest.TestCase):
         self.assertEqual(new["description"], "Give the role ACME BINS Integration first; PP Integrations is not it.")
         self.assertEqual(left, [])
 
+    def test_a_translations_words_take_the_prefix_too(self):
+        m = {"app": "pp_rbo", "prefix": "PP RBO", "doctypes": [{"name": "PP RBO Issue"}],
+             "translations": [{"language": "en", "words": {"PP RBO Issue": "Ingredient issue"}}]}
+        new, left = rename.rename(m, "ACME KITCHEN")
+        self.assertEqual(new["translations"][0]["words"], {"ACME KITCHEN Issue": "Ingredient issue"})
+        self.assertEqual(left, [])
+
     def test_a_line_naming_the_prefix_as_a_web_address_is_listed(self):
         with tempfile.TemporaryDirectory() as d:
             root = pathlib.Path(d)

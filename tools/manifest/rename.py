@@ -47,8 +47,8 @@ TEXT_NAMES = {"Dockerfile", "Procfile"}      # text files with no extension: a s
 
 
 def _walk(o, f):
-    if isinstance(o, dict):
-        return {k: _walk(v, f) for k, v in o.items()}
+    if isinstance(o, dict):        # a key may carry a name too: a translation's words map a record type's name to its words
+        return {(f(k) if isinstance(k, str) else k): _walk(v, f) for k, v in o.items()}
     if isinstance(o, list):
         return [_walk(v, f) for v in o]
     return f(o) if isinstance(o, str) else o
@@ -56,7 +56,8 @@ def _walk(o, f):
 
 def _strings(o):
     if isinstance(o, dict):
-        for v in o.values():
+        for k, v in o.items():
+            yield from _strings(k)
             yield from _strings(v)
     elif isinstance(o, list):
         for v in o:
