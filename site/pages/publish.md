@@ -2,6 +2,8 @@
 
 Make your app, try it on a site you pick, send it to your customer and list it for every retailer, on [My apps](https://developer.ivendnext.com/apps) or with the `ivn` command. New to it? [Build your first app](first_app.md) takes you from a sample to your customer in six steps.
 
+**Watch:** [Publish your app](https://youtu.be/OyY6u_dBsuc), to one customer and to every chain, then the next version and going back.
+
 ## The steps
 
 **Make it.** On My apps, **New app**, or from a terminal:
