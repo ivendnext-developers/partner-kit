@@ -61,8 +61,8 @@ class Pass:
             hotel = H.adapter(self.svc.conf, s, POST_TIMEOUT_S)
             folio = row.get("folio") or self.folio_for(row, hotel)
             refs = hotel.post(folio, rooms.lines_of(row, s), name, row["currency"])
-        except H.HotelDown:
-            return self.write(name, "Waiting", message=DOWN)
+        except H.HotelDown as e:
+            return self.write(name, "Waiting", message=f"{DOWN} ({e})")
         except H.HotelLost:
             return self.write(name, "Refused", message=LOST)
         except H.HotelRefused as e:
@@ -100,7 +100,10 @@ class Pass:
         said = "Cancelled in Desk."
         if row:
             if row["status"] == "Posted":
-                said += f" The charge is on the folio ({row.get('charge_reference')}): take it off there."
+                refs = ", ".join(r for r in (row.get("charge_reference"), row.get("tip_reference")) if r)
+                said += f" It is on the folio ({refs}): take it off there."
+            elif row["status"] == "Refused" and row.get("message"):
+                said += f" {row['message']}"
             return self.write(name, "Refused", message=said)
         inv = self.t.get("POS Invoice", name)
         s = self.stores.get((inv or {}).get("set_warehouse") or "")

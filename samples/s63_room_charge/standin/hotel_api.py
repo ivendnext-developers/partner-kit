@@ -3,7 +3,8 @@
 
     POST /v1/find  {"room", "guest"}                            ->  {"folio"}, or 404 {"error"} with the sentence the server reads
     POST /v1/post  {"folio", "lines", "receipt", "currency"}    ->  201 {"references": [one per line]}, or 409 {"error"}
-    POST /standin/mode {"mode": "up" | "down" | "lost"}         down: every call answers 503 · lost: a post books, then no answer
+    POST /standin/mode {"mode": "up" | "down" | "lost" | "gateway"}   down: every call answers 503 · lost: a post books, then no
+                                                                answer · gateway: a post books, then a gateway's 502
     GET  /standin/posted                                        what is on the folios
     GET  /health
 
@@ -76,7 +77,7 @@ def make_server(hotel: Hotel, port: int, host: str = "127.0.0.1"):
                     self.close_connection = True
                     self.connection.close()
                     return None
-                return self._send(*out)
+                return self._send(502, {"error": "bad gateway"}) if hotel.mode == "gateway" else self._send(*out)
             return self._send(404, {"error": "not found"})
 
         def log_message(self, fmt, *args):

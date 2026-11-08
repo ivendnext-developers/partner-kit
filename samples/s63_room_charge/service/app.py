@@ -137,7 +137,7 @@ class Service:
             return answer
         try:
             return rooms.found(H.adapter(self.conf, s, HOTEL_TIMEOUT).find(room, guest), room, guest)
-        except H.HotelDown:
+        except (H.HotelDown, H.HotelLost):
             return rooms.hotel_down(room)
         except H.HotelRefused as e:
             return rooms.not_confirmed(mode, str(e))

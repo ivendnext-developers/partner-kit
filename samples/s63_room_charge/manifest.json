@@ -131,6 +131,13 @@
      "read_only": 1
     },
     {
+     "fieldname": "message",
+     "fieldtype": "Small Text",
+     "label": "What the hotel system said",
+     "read_only": 1,
+     "in_list_view": 1
+    },
+    {
      "fieldname": "done",
      "fieldtype": "Check",
      "label": "Done",
@@ -219,12 +226,6 @@
      "fieldname": "tip_reference",
      "fieldtype": "Data",
      "label": "Hotel's reference for the tip",
-     "read_only": 1
-    },
-    {
-     "fieldname": "message",
-     "fieldtype": "Small Text",
-     "label": "What the hotel system said",
      "read_only": 1
     },
     {
@@ -408,7 +409,7 @@
     {
      "type": "paragraph",
      "data": {
-      "text": "Open Posted, waiting and refused for the day's counts. Refused: settle each one another way, then tick Done on its record with a note.",
+      "text": "Posted, waiting and refused opens the counts: everything posted, and what is waiting or refused now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Day and Status Posted.",
       "col": 12
      }
     },

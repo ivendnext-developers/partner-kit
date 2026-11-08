@@ -6,23 +6,27 @@
 ``lines`` are ``{"kind", "code", "amount", "label"}``; an amount is negative on a return. Three outcomes of a call that
 failed, which the worker treats differently:
 
-    HotelDown      nothing reached the hotel system: the charge waits and is sent again
-    HotelLost      it was sent and no answer came: it may be on the folio, so it goes to the auditor, never sent twice
+    HotelDown      nothing reached the hotel system (no connection, a 408, a 429, a 503): the charge waits and is sent again
+    HotelLost      it was sent and no clear answer came (no reply, any other 5xx): it may be on the folio, so it goes to the
+                   auditor, never sent twice
     HotelRefused   the hotel system answered no: it goes to the auditor, with the sentence
 
-The adapter is picked by the store's *Hotel system* row (``ADAPTERS``). Copy ``hotel_mews.py`` for another hotel system.
+``find`` only asks, so it never raises ``HotelLost``. To add a hotel system: copy ``hotel_mews.py``, add one line to
+``ADAPTERS`` below, and add its name to the *Hotel system* list in ``manifest.json``.
 Standard library only.
 """
 
 from __future__ import annotations
 
 import http.client
+import importlib
 import json
 import time
 import urllib.error
 import urllib.request
 
 USER_AGENT = "s63-room-charge/1"
+ADAPTERS = {"Simulator": "hotel:Simulator", "Mews": "hotel_mews:Mews"}     # the *Hotel system* name: "<module>:<class>"
 
 
 class HotelDown(Exception):
@@ -70,8 +74,8 @@ class Deadline:
 
 
 def call_json(url: str, body: dict | None, timeout: float, headers: dict | None = None) -> tuple[int, dict]:
-    """(status, answer) for a 2xx or a 4xx. A 5xx, a 429, or no connection is ``HotelDown``; a connection that was made and
-    then gave no answer is ``HotelLost``, since the hotel system may have acted on it."""
+    """(status, answer) for a 2xx or a 4xx. No connection, a 408, a 429 or a 503 is ``HotelDown``. Any other 5xx, or a
+    connection that gave no answer, is ``HotelLost``: a gateway's 502 or 504 can come after the hotel system took the charge."""
     data = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(url, data=data, method="POST" if data is not None else "GET", headers={
         "Accept": "application/json", "Content-Type": "application/json", "User-Agent": USER_AGENT, **(headers or {})})
@@ -81,8 +85,10 @@ def call_json(url: str, body: dict | None, timeout: float, headers: dict | None 
     except urllib.error.HTTPError as e:
         raw = e.read()
         e.close()
-        if e.code >= 500 or e.code in (408, 429):
+        if e.code in (408, 429, 503):
             raise HotelDown(f"answered {e.code}") from None
+        if e.code >= 500:
+            raise HotelLost(f"answered {e.code}") from None
         try:
             return e.code, json.loads(raw or b"{}") or {}
         except ValueError:
@@ -121,9 +127,7 @@ class Simulator:
 
 def adapter(conf: dict, s: dict, timeout: float):
     """The adapter for one store's row."""
-    import hotel_mews
-
-    known = {"Simulator": Simulator, "Mews": hotel_mews.Mews}
-    if s["system"] not in known:
+    if s["system"] not in ADAPTERS:
         raise HotelRefused("This store's hotel system isn't set up yet.")
-    return known[s["system"]](conf, s, timeout)
+    module, name = ADAPTERS[s["system"]].split(":")
+    return getattr(importlib.import_module(module), name)(conf, s, timeout)

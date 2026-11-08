@@ -24,8 +24,8 @@ Each sale or return gets one **PP RMC Post** row, *named by the invoice* and wri
 | What happened | The row | Why |
 |---|---|---|
 | The hotel system took it | *Posted*, with a reference per line | |
-| The hotel system was down (no connection, a 5xx, a 429) | *Waiting*, sent again each pass | nothing reached it |
-| It was sent and no answer came | *Refused*, for the auditor | it may be on the folio: never sent twice |
+| The hotel system was down (no connection, a 408, a 429, a 503) | *Waiting*, sent again each pass | nothing reached it |
+| It was sent and no clear answer came (no reply, any other 5xx) | *Refused*, for the auditor | it may be on the folio: never sent twice |
 | The worker stopped mid-call | *Refused*, for the auditor | the same |
 | The hotel system said no (a guest who left, a blocked folio) | *Refused*, with its sentence | |
 | The sale was cancelled in Desk | *Refused*, reading *Cancelled in Desk* | a posted one also names the folio line to take off |
@@ -43,7 +43,7 @@ An **exchange** of a Room Charge sale is refused at the till: the check dims eve
 
 ## Add your hotel system
 
-Copy `service/hotel_mews.py` beside it, keep its two calls and add it to `ADAPTERS` in `service/hotel.py`.
+Copy `service/hotel_mews.py` beside it and keep its two calls. Add one line to `ADAPTERS` in `service/hotel.py`, and its name to the *Hotel system* list in `manifest.json`.
 
 | Call | Answers | Raises |
 |---|---|---|

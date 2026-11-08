@@ -11,7 +11,7 @@ MODE = "Room Charge"             # the tile's name when a store's row names none
 ROOM, GUEST, FOLIO, TIP = "Room", "Guest", "Folio", "Tip"          # the sale details the manifest declares
 DETAILS_TABLE = "custom_pos_invoice_sale_attribute"                # a sale's details, as POS Invoice holds them
 _NOT_PLAIN = re.compile(r"[<>\x00-\x1f\x7f  ‪-‮⁦-⁩-]")
-_BOUND = re.compile(r"^(.*) \((.*)\)$", re.S)
+_BOUND = re.compile(r"^(\S+) \((.*)\)$", re.S)
 
 
 def plain(text, limit: int = 140) -> str:
@@ -39,15 +39,18 @@ def details_of_sale(inv: dict) -> dict:
     return {str(r.get("sale_attribute")): str(r.get("attribute_value") or "").strip() for r in inv.get(DETAILS_TABLE) or []}
 
 
-def tip_of(text: str) -> Decimal | None:
-    """The tip typed on the sale: 0 when none, None when it is not an amount."""
+def tip_of(text: str, decimals: int = 2) -> Decimal | None:
+    """The tip typed on the sale: 0 when none, None when it is not an amount. A separator may only start the currency's own
+    decimals, so "50,000" is never read as fifty where a currency has two."""
     if not text:
         return Decimal(0)
+    whole, sep, frac = text.replace(",", ".").partition(".")
+    if not whole.isascii() or not whole.isdigit() or (sep and not (frac.isascii() and frac.isdigit() and len(frac) <= decimals)):
+        return None
     try:
-        tip = Decimal(text.replace(",", ".") if text.count(",") == 1 and "." not in text else text)
+        return Decimal(f"{whole}.{frac or 0}")
     except InvalidOperation:
         return None
-    return tip if tip.is_finite() and tip >= 0 else None
 
 
 # ---- the Folio on the sale ------------------------------------------------------------------------------------------
@@ -96,7 +99,7 @@ def check_sale(ctx: dict, mode: str) -> tuple[dict | None, str, str]:
         return _dim(mode, "Type the room and the guest's surname on Sale details."), "", ""
     if not guest:
         return _dim(mode, f"Type the guest's surname for room {room} on Sale details."), "", ""
-    if tip_of(d.get(TIP, "")) is None:
+    if tip_of(d.get(TIP, ""), int(ctx.get("currency_exponent") or 0)) is None:
         return _dim(mode, "The tip on Sale details is not an amount."), "", ""
     if folio_fits(d.get(FOLIO, ""), room, guest):       # asked again on the filled sale: the same answer, no second call
         return {"verdict": "allow", "fill": {FOLIO: d[FOLIO]}}, "", ""
@@ -130,7 +133,7 @@ def work_of(inv: dict, s: dict) -> dict | None:
         return None
     d, is_return = details_of_sale(inv), bool(inv.get("is_return"))
     room, guest = d.get(ROOM, ""), d.get(GUEST, "")
-    tip = 0.0 if is_return else float(tip_of(d.get(TIP, "")) or 0)
+    tip = 0.0 if is_return else float(tip_of(d.get(TIP, ""), 3) or 0)
     fits = folio_fits(d.get(FOLIO, ""), room, guest)
     return {"sale": inv["name"], "status": "Sending", "day": inv.get("posting_date"), "store": s["store"], "room": room,
             "guest": guest, "folio": folio_id(d[FOLIO]) if fits else "", "currency": inv.get("currency"), "amount": amount,
@@ -151,5 +154,5 @@ def return_gate(original: dict | None) -> tuple[str, str]:
     if status in ("Waiting", "Sending"):
         return "Waiting", "Waiting for its sale to reach the folio first."
     if status == "Refused":
-        return "Refused", "Its sale never reached the folio, so there is nothing to take off."
+        return "Refused", "Its sale is on the auditor's list. If it is on the folio, take this amount off there."
     return "go", ""

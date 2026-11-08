@@ -4,8 +4,8 @@ The store's *Connection* box holds ``client_token``, ``access_token``, ``service
 while you try it, ``environment=demo``. *Charge code* and *Tip code* are Mews accounting category ids.
 
 Three things Mews leaves to the caller:
-  * The *No Post* classification (``Cashlist``) does not block an order, so this adapter reads it, at the check and again at the
-    post.
+  * The *No Post* classification (``Cashlist``) does not block an order, so this adapter reads it at the check, on the guest who
+    signs, and again at the post, on the reservation's owner, whose refusal goes to the auditor.
   * A posted item cannot be cancelled: a return is a negative line.
   * An order has no idempotency key, so a call whose answer was lost goes to the auditor (``HotelLost``), never again to Mews.
 """
@@ -30,8 +30,8 @@ class Mews:
 
     def _call(self, op: str, body: dict, timeout: float) -> dict:
         code, out = call_json(f"{self.base}/api/connector/v1/{op}", {**self.auth, **body}, timeout)
-        if code in (401, 403):                  # a token the hotel can fix: the charge waits
-            raise HotelDown(f"answered {code}")
+        if code == 401:                         # a token the hotel can fix: the charge waits. A 403 is Mews' own refusal
+            raise HotelDown("Mews refused our key (401): check the store's connection")
         if code >= 400:
             raise HotelRefused(str(out.get("Message") or f"Mews refused it ({code})."))
         return out
@@ -45,7 +45,7 @@ class Mews:
     def find(self, room: str, guest: str) -> str:
         deadline, surname = Deadline(self.timeout), guest.casefold()
         rooms = self._ask("resources/getAll", {"Names": [room], "Extent": {"Resources": True}, "Limitation": {"Count": 10}}, deadline)
-        known = [r["Id"] for r in rooms.get("Resources") or [] if r.get("Name") == room]
+        known = [r["Id"] for r in rooms.get("Resources") or [] if (r.get("Name") or "").casefold() == room.casefold()]
         if not known:
             raise NoGuest(f"There is no room {room} at this hotel.")
         for resource in known:

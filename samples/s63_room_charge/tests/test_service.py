@@ -187,6 +187,7 @@ class ThePost(Base):
         self.run_pass(("sale.booked", "S1"), ("sale.booked", "S1"))
         self.assertEqual(len(self.hotel.posted), 1)
         self.assertEqual(self.row("S1")["status"], "Posted")
+        self.assertEqual((self.feed.waiting, self.feed.notes), ([], {}))
 
     def test_the_row_says_sending_before_the_hotel_is_called(self):
         sale(self.t, "S1")
@@ -224,6 +225,55 @@ class ThePost(Base):
         self.hotel.mode = "up"
         self.run_pass()
         self.assertEqual((self.row("S1")["status"], len(self.hotel.posted)), ("Refused", 1))
+
+    def test_a_gateways_502_goes_to_the_auditor_and_is_not_sent_twice(self):
+        sale(self.t, "S1")
+        self.hotel.mode = "gateway"
+        self.run_pass(("sale.booked", "S1"))
+        self.hotel.mode = "up"
+        self.run_pass()
+        self.assertEqual((self.row("S1")["status"], len(self.hotel.posted)), ("Refused", 1))
+
+    def test_a_crash_during_a_resend_goes_to_the_auditor(self):
+        sale(self.t, "S1")
+        self.hotel.mode = "down"
+        self.run_pass(("sale.booked", "S1"))
+        self.hotel.mode = "up"
+        with mock.patch.object(H.Simulator, "post", side_effect=SystemError("the worker died")), self.assertRaises(SystemError):
+            self.run_pass()
+        self.assertEqual(self.row("S1")["status"], "Sending")
+        self.run_pass()
+        self.assertEqual((self.row("S1")["status"], self.hotel.posted), ("Refused", []))
+
+    def test_a_429_waits(self):
+        sale(self.t, "S1")
+        with mock.patch.object(H.Simulator, "post", side_effect=H.HotelDown("answered 429")):
+            self.run_pass(("sale.booked", "S1"))
+        self.assertEqual(self.row("S1")["status"], "Waiting")
+        self.assertIn("429", self.row("S1")["message"])
+
+    def test_a_store_that_named_its_tile_differently_posts_and_checks(self):
+        self.t.db[SET][SET]["stores"][0]["mode_of_payment"] = "Hotel Room"
+        sale(self.t, "S1", paid=(("Hotel Room", 80.0),))
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual([p["amount"] for p in self.hotel.posted], [80.0])
+        self.assertEqual(self.ask(ctx(guest="Brown", offered=("Cash", "Hotel Room")))["exclude_tenders"], ["Hotel Room"])
+
+    def test_a_sale_already_cancelled_when_read_is_not_posted(self):
+        sale(self.t, "S1")["docstatus"] = 2
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual(self.hotel.posted, [])
+
+    def test_a_tip_that_only_looks_like_decimals_dims_the_tile(self):
+        self.assertIn("not an amount", self.ask(ctx(tip="50,000"))["reason"])
+        self.assertIn("fill", self.ask(ctx(tip="12,50")))
+
+    def test_the_guests_name_with_brackets_keeps_its_folio(self):
+        first = self.ask(ctx(room="6A", guest="Khan"))["fill"]["Folio"]
+        text = rooms.folio_text("R-1", "412", "Smith (Jr)")
+        self.assertTrue(rooms.folio_fits(text, "412", "Smith (Jr)"))
+        self.assertEqual(rooms.folio_id(text), "R-1")
+        self.assertEqual(first, "R-1003 (6A Khan)")
 
     def test_the_hotel_refusing_goes_to_the_auditor(self):
         sale(self.t, "S1", folio="R-9999 (412 Smith)")
@@ -303,6 +353,36 @@ class ReturnsAndCancels(Base):
         sale(self.t, "R1", paid=((MODE, -70.0), ("Credit Card", -50.0)), is_return=1, against="S1", tip="5")
         self.run_pass(("return.booked", "R1"))
         self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 70.0), ("tip", 5.0), ("charge", -70.0)])
+
+    def test_two_partial_returns_are_two_rows_and_two_lines(self):
+        self.posted_sale()
+        sale(self.t, "R1", paid=((MODE, -20.0),), is_return=1, against="S1")
+        sale(self.t, "R2", paid=((MODE, -30.0),), is_return=1, against="S1")
+        self.run_pass(("return.booked", "R1"), ("return.booked", "R2"))
+        self.assertEqual([p["amount"] for p in self.hotel.posted], [120.0, -20.0, -30.0])
+
+    def test_a_guest_who_moved_room_is_charged_back_on_the_first_folio(self):
+        self.posted_sale()
+        sale(self.t, "R1", room="", guest="", folio="", paid=((MODE, -120.0),), is_return=1, against="S1")
+        self.run_pass(("return.booked", "R1"))
+        self.assertEqual(self.hotel.posted[-1]["folio"], "R-1001")
+
+    def test_the_return_of_a_lost_sale_does_not_say_nothing_to_take_off(self):
+        self.hotel.mode = "lost"
+        self.posted_sale()
+        self.hotel.mode = "up"
+        sale(self.t, "R1", paid=((MODE, -120.0),), is_return=1, against="S1")
+        self.run_pass(("return.booked", "R1"))
+        self.assertEqual(self.row("R1")["status"], "Refused")
+        self.assertIn("take this amount off", self.row("R1")["message"])
+
+    def test_a_cancel_keeps_the_check_the_folio_warning(self):
+        self.hotel.mode = "lost"
+        self.posted_sale()
+        self.hotel.mode = "up"
+        self.run_pass(("sale.cancelled", "S1"))
+        self.assertIn("Cancelled in Desk", self.row("S1")["message"])
+        self.assertIn("Check the folio", self.row("S1")["message"])
 
     def test_a_return_with_no_room_charge_row_posts_nothing(self):
         self.posted_sale()
@@ -425,14 +505,44 @@ class MewsAdapter(unittest.TestCase):
         with p, self.assertRaises(H.HotelDown):
             hotel_mews.Mews({}, self.S, 1.5).find("412", "Smith")
 
+    def test_a_403_is_mews_own_refusal_and_goes_to_the_auditor(self):
+        answers = self.post_answers()
+        answers["orders/add"] = (403, {"Message": "The bill is closed."})
+        _, p = self.api(answers)
+        with p, self.assertRaisesRegex(H.HotelRefused, "The bill is closed"):
+            hotel_mews.Mews({}, self.S, 10).post("res1", self.LINES, "S1", "USD")
+
+    def test_a_room_typed_in_another_case_is_found(self):
+        answers = self.rooms()
+        answers["resources/getAll"] = {"Resources": [{"Id": "r1", "Name": "6A"}]}
+        _, p = self.api(answers)
+        with p:
+            self.assertEqual(hotel_mews.Mews({}, self.S, 1.5).find("6a", "Smith"), "res1")
+
+    def test_the_demo_environment_uses_the_demo_address(self):
+        calls = []
+        with mock.patch.object(hotel_mews, "call_json", lambda url, *a, **k: calls.append(url) or (200, {"Resources": []})):
+            with self.assertRaises(H.NoGuest):
+                hotel_mews.Mews({}, self.S, 1.5).find("412", "Smith")
+        self.assertTrue(calls[0].startswith("https://api.mews-demo.com/"))
+
     def test_a_missing_connection_says_what_it_needs(self):
         with self.assertRaises(H.HotelRefused):
             hotel_mews.Mews({}, {"connection": "client_token=c"}, 1.5)
 
 
+class PassesNeverOverlap(Base):
+    def test_a_shop_still_in_its_pass_is_not_started_again(self):
+        busy = {"-": mock.Mock(is_alive=lambda: True)}
+        with mock.patch.object(worker, "one_pass", side_effect=AssertionError("ran twice")):
+            out = worker.pass_all(self.svc, busy=busy)
+        self.assertEqual(out, {"-": {"busy": True}})
+
+
 class TheManifest(unittest.TestCase):
     def setUp(self):
-        self.m = json.load(open(os.path.join(SAMPLE, "manifest.json")))
+        with open(os.path.join(SAMPLE, "manifest.json")) as f:
+            self.m = json.load(f)
 
     def test_the_details_are_plain_shared_words_and_none_is_required(self):
         self.assertEqual([a["name"] for a in self.m["sale_attributes"]], ["Room", "Guest", "Folio", "Tip"])
