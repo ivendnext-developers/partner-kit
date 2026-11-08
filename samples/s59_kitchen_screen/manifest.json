@@ -3,9 +3,9 @@
  "app": "pp_ksc",
  "prefix": "PP KSC",
  "title": "Kitchen screen",
- "version": "0.2.0",
+ "version": "0.3.0",
  "publisher": "Partner Programme sample",
- "description": "A kitchen screen for each station, an expo screen at the pass and a Now serving board, on the till's own station tickets (the station-ticket door): each screen reads its store's board every few seconds through the app's service. A cook taps a ticket started, ready and bumped; a void ticket shows its dishes struck through; the expo shows every station's tickets of one order together, what is still waiting, and bumps an order when every station's part is ready; the board shows the call numbers preparing and ready. When the store's row allows it, a cook marks a dish on the board sold out at the screen's own store, and the tills stop selling it (an app's line on an open check is refused when the check is paid). Make link, on a PP KSC Screen record, writes the screen's signed link; pressing it again replaces a link that leaked (the old one stops). The app never voids, comps, changes a line or touches money, and keeps no guest data. The install makes the roles PP KSC Manager and PP KSC Integration and the app's own user; the retailer gives that user its stores and the right May Work a Kitchen Screen; the feed PP KSC Kitchen screen feed is on from the install. allowed_urls is the programme bench's address; a partner writes their own service's address.",
+ "description": "A kitchen screen for each station, an expo screen at the pass and a Now serving board, on the till's own station tickets (the station-ticket door): each screen reads its store's board every few seconds through the app's service. A cook taps a ticket started, ready and bumped; a void ticket shows its dishes struck through; the expo shows every station's tickets of one order together, what is still waiting, and bumps an order when every station's part is ready; the board shows the call numbers preparing and ready. A ticket shows the sale's service mode (To go). When the store's row allows it, a cook marks any dish sold out at the screen's own store, found by name before anyone orders it, and the tills stop selling it; when the till keeps a cleared dish sold out, the screen says why (an app's line on an open check is refused when the check is paid). Make link, on a PP KSC Screen record, writes the screen's signed link; pressing it again replaces a link that leaked (the old one stops). The app never voids, comps, changes a line or touches money, and keeps no guest data. The install makes the roles PP KSC Manager and PP KSC Integration and the app's own user; the retailer gives that user its stores and the right May Work a Kitchen Screen; the feed PP KSC Kitchen screen feed is on from the install. allowed_urls is the programme bench's address; a partner writes their own service's address.",
  "allowed_urls": [
   "https://host.docker.internal:8159/ksc/link"
  ],
@@ -29,7 +29,7 @@
      "fieldtype": "Check",
      "label": "Sold out from the screens",
      "in_list_view": 1,
-     "description": "Ticked: a station or expo screen of this store may mark a dish on its board sold out here (and clear it). The app's user then needs Read, Write and Create on Retail Item Availability, which the till does not limit to its stores; the app marks only the screen's own store."
+     "description": "Ticked: a station or expo screen of this store may mark any dish sold out here (and clear it). The app's role then needs Read, Write and Create on Retail Item Availability, and Read on Item to find a dish by name; the app marks only the screen's own store."
     },
     {
      "fieldname": "warn_min",

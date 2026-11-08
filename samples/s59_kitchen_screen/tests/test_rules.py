@@ -123,6 +123,24 @@ class Rules(unittest.TestCase):
                 {"item_code": "PIE", "sold_out": 0, "available": False, "reason": "hours"}]
         self.assertEqual(ksc.sold_out_of(rows), [{"item_code": "SOUP"}])                  # not an item out of its hours
 
+    def test_r10_a_ticket_keeps_its_service_mode_and_the_expo_card_shows_it(self):
+        raw = [dict(t, service_mode="To go") for t in F.lunch()]
+        cleaned = [ksc.clean_ticket(t) for t in raw]
+        self.assertEqual({c["service_mode"] for c in cleaned if c}, {"To go"})
+        self.assertEqual(ksc.clean_ticket(dict(raw[0], service_mode=None))["service_mode"], "")
+        self.assertEqual(ksc.clean_ticket(dict(raw[0], service_mode="x" * 99))["service_mode"], "x" * 40)
+        self.assertEqual({o["service_mode"] for o in ksc.expo_view([c for c in cleaned if c])["orders"]}, {"To go"})
+
+    def test_r11_a_search_answer_and_the_tills_still_sold_out(self):
+        self.assertEqual(ksc.found_of([{"name": "B", "item_name": "beer"}, {"name": "A", "item_name": ""}, {"name": "B"}, 7]),
+                         [{"item_code": "A", "item_name": "A"}, {"item_code": "B", "item_name": "beer"}])
+        self.assertIsNone(ksc.still_out({"available": True}))
+        self.assertIsNone(ksc.still_out(None))
+        self.assertEqual(ksc.still_out({"available": False, "reason": "sold_out", "until": "2026-11-09 06:00:00"}),
+                         {"reason": "sold_out", "until": "2026-11-09 06:00:00"})
+        self.assertEqual(ksc.still_out({"available": False, "reason": "hours", "from": "11:00:00", "to": None}),
+                         {"reason": "hours", "from": "11:00:00"})
+
 
 if __name__ == "__main__":
     unittest.main()

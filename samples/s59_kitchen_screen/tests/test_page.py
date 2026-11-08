@@ -370,5 +370,50 @@ class PageLive(unittest.TestCase):
         got = page("sold", answers={"/ksc/board": [b]})
         self.assertEqual(got["rows"], ["Soup of the day", "FISH"])
 
+    def test_l7_a_cook_finds_any_dish_by_name_and_marks_it(self):
+        b = station(ticket("k1", 1, 1))
+        b["sold_out"] = {"dishes": [{"item_code": "DISH K1 0", "item_name": "dish k1 0"}], "out": []}
+        found = {"state": "found", "dishes": [{"item_code": "RINGS", "item_name": "Onion rings"}]}
+        got = page("sold", answers={"/ksc/board": [b], "/ksc/find": [found], "/ksc/soldout": [{"state": "set"}]},
+                   find="onion", tap="Onion rings")
+        self.assertEqual(got["open"], ["dish k1 0"])                            # the board's dishes until a search
+        self.assertEqual(got["sent"], [["/ksc/find", "onion"], ["/ksc/soldout", "RINGS"]])
+        got = page("sold", answers={"/ksc/board": [b], "/ksc/find": [{"state": "found", "dishes": []}]}, find="caviar")
+        self.assertEqual((got["rows"], got["empty"]), ([], ["No dish found"]))
+        got = page("sold", answers={"/ksc/board": [b], "/ksc/find": [{"state": "refused", "why": "no_find"}]}, find="onion")
+        self.assertEqual(got["rows"], ["dish k1 0"])                            # refused: the board's list stays, and why
+        self.assertIn("Read on Item", got["note"])
+        got = page("sold", answers={"/ksc/board": [b]}, find="o")
+        self.assertEqual(got["sent"], [])                                       # one letter asks nothing
+
+    def test_l8_available_again_that_leaves_a_dish_sold_out_says_why(self):
+        b = station(ticket("k1", 1, 1))
+        b["sold_out"] = {"dishes": [], "out": [{"item_code": "SOUP", "item_name": "Soup"}]}
+        still = {"state": "still_sold_out", "item_code": "SOUP", "reason": "sold_out"}
+        got = page("sold", answers={"/ksc/board": [b], "/ksc/soldout": [still]}, tap="Soup")
+        self.assertEqual(got["why"], ["Still sold out: head office has marked it sold out for every store. Ask your manager."])
+        hours = {"state": "still_sold_out", "item_code": "SOUP", "reason": "hours", "from": "11:00:00", "to": "15:00:00"}
+        cleared = station(ticket("k1", 1, 1))                                   # the next read lists it out no more
+        cleared["sold_out"] = {"dishes": [], "out": []}
+        got = page("sold", answers={"/ksc/board": [b, cleared], "/ksc/soldout": [hours]}, tap="Soup")
+        self.assertEqual(got["rows"], ["Soup"])                                 # the row stays, with why
+        self.assertEqual(got["why"], ["Available again, but not sold at this hour: this store sells it from 11:00 to 15:00."])
+        got = page("sold", answers={"/ksc/board": [b], "/ksc/soldout": [{"state": "set"}]}, tap="Soup")
+        self.assertEqual(got["why"], [])
+        for answer, why in (({"from": "07:00:00", "to": None}, "this store sells it from 07:00."),
+                            ({"from": None, "to": "15:00:00"}, "this store sells it until 15:00."),
+                            ({"reason": "sold_out", "until": "2026-11-09 14:00:00"}, "for every store until 14:00.")):
+            a = dict({"state": "still_sold_out", "item_code": "SOUP", "reason": "hours"}, **answer)
+            got = page("sold", answers={"/ksc/board": [b], "/ksc/soldout": [a]}, tap="Soup")
+            self.assertTrue(got["why"][0].endswith(why), got["why"])
+
+    def test_l9_a_ticket_shows_its_service_mode_as_the_till_names_it(self):
+        to_go = ticket("k1", 1, 1)
+        to_go["service_mode"] = "To go"
+        got = page("sold", answers={"/ksc/board": [station(to_go, ticket("k2", 1, 1))]})
+        self.assertEqual(got["modes"], ["To go"])                               # a ticket with no mode shows none
+        b = expo([dict(order("k1", [to_go]), service_mode="To go")])
+        self.assertEqual(page("sold", answers={"/ksc/board": [b]})["modes"], ["To go"])
+
 if __name__ == "__main__":
     unittest.main()

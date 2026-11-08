@@ -1,6 +1,6 @@
 # S59 — Kitchen screen (station screens, an expo and a Now serving board)
 
-The kitchen runs from screens instead of paper. When a till presses *Send*, each station's ticket shows on that station's screen, oldest first, with how long it has waited. A cook taps it **Start**, then **Ready**, then **Bump**. At the pass, an expo screen shows every station's tickets of one order together and adds up what is still to make. A *Now serving* board shows the call numbers that are ready. A cook can mark a dish **sold out** and the tills stop selling it at once. The app never voids, comps, changes a line or touches money.
+The kitchen runs from screens instead of paper. When a till presses *Send*, each station's ticket shows on that station's screen, oldest first, with how long it has waited. A cook taps it **Start**, then **Ready**, then **Bump**. At the pass, an expo screen shows every station's tickets of one order together and adds up what is still to make. A *Now serving* board shows the call numbers that are ready. A cook can mark any dish **sold out**, found by name before anyone orders it, and the tills stop selling it at once. A ticket shows the sale's service mode (*To go*). The app never voids, comps, changes a line or touches money.
 
 ![A station screen on a tablet: the grill's tickets, oldest first, each with its timer](screenshots/01_station.png)
 
@@ -24,7 +24,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/kitchen_screen.md).
 
-**The customer sets:** the stations as the till's own *Kitchen Stations*, a printer row for each station on the register that sends, one `PP KSC Settings` record for the company with a row per store, the role **PP KSC Manager** for whoever makes the screens, and one `PP KSC Screen` for each screen, with **Make link** pressed and the link opened full screen on its browser. For sold out, give **PP KSC Integration** *Read*, *Write* and *Create* on *Retail Item Availability*. The app's user needs a Retail Permission with only **May Work a Kitchen Screen**.
+**The customer sets:** the stations as the till's own *Kitchen Stations*, a printer row for each station on the register that sends, one `PP KSC Settings` record for the company with a row per store, the role **PP KSC Manager** for whoever makes the screens, and one `PP KSC Screen` for each screen, with **Make link** pressed and the link opened full screen on its browser. For sold out, give **PP KSC Integration** *Read*, *Write* and *Create* on *Retail Item Availability*, and *Read* on *Item* to find any dish by name. The app's user needs a Retail Permission with only **May Work a Kitchen Screen**.
 
 ## Run it
 
@@ -40,6 +40,12 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.3.0
+
+- A cook finds any dish by name in *Sold out* and marks it before anyone orders it (the app's role needs *Read* on *Item*; without it the list keeps the board's dishes and says why).
+- A ticket and an expo card show the sale's service mode, as the till names it (*To go*).
+- When *Available again* leaves a dish sold out (head office has it sold out for every store, or it is outside the store's own hours), the row says so, and why.
 
 ### 1.2.0
 

@@ -66,6 +66,11 @@ class FakeTenant:
         self.refuse, self.door_refuse, self.stale = refuse, door_refuse, stale
         self.sold = {(c, STORE) for c in sold}
         self.names = {"SOUP": "Soup of the day"}        # an item's name on its sold-out record (none for the others)
+        self.menu = {"BURGER": "Burger", "CHEESE": "Cheese", "STEAK": "Steak", "BEER": "Beer", "FRIES": "Fries",
+                     "SOUP": "Soup of the day", "RINGS": "Onion rings", "ONION": "Onion soup", "CAVIAR": "Caviar"}
+        self.item_flags = {"ONIONT": {"has_variants": 1}, "ONIONX": {"disabled": 1}}   # a product family, a disabled dish
+        self.menu.update(ONIONT="Onion bhaji family", ONIONX="Onion tart")
+        self.held = {}                                  # head office's mark (or a store's hours): the clear leaves it unsold
         self.calls, self.sent = [], []
 
     def _gate(self, what):
@@ -94,6 +99,12 @@ class FakeTenant:
         if doctype == "Retail Item Availability":       # the till's sold-out records, each with its item's name
             codes = filters[0][2]
             return [{"item_code": c, "item_name": self.names.get(c, "")} for c, _ in sorted(self.sold) if c in codes]
+        if doctype == "Item":                           # the menu, by a name holding the cook's words, as the filters ask
+            want = {f: v for f, _, v in filters}
+            words = want.pop("item_name").strip("%").lower()
+            return [{"name": c, "item_name": n} for c, n in sorted(self.menu.items()) if words in n.lower()
+                    and all(self.item_flags.get(c, {}).get(f, d) == v for f, v in want.items()
+                            for d in [{"disabled": 0, "is_sales_item": 1, "has_variants": 0}.get(f)])][:limit]
         return []
 
     def update(self, doctype, name, body):
@@ -133,6 +144,10 @@ class FakeTenant:
         if verb == "set_item_availability":
             self.sent.append((verb, dict(body)))
             key = (body["item_code"], body["warehouse"])
+            if key[0] not in self.menu:                 # the record's link to the item: no such item
+                raise app.TenantError("no item", 417, "LinkValidationError")
             (self.sold.add if body["sold_out"] else self.sold.discard)(key)
-            return {"item_code": key[0], "warehouse": key[1], "available": not body["sold_out"]}
+            held = self.held.get(key[0])
+            return dict({"item_code": key[0], "warehouse": key[1], "available": not body["sold_out"] and not held,
+                         "reason": None if not body["sold_out"] and not held else "sold_out"}, **(held or {}))
         raise AssertionError(f"S59 never calls {verb}")
