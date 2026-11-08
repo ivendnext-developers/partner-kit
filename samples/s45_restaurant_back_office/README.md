@@ -16,7 +16,7 @@ ivn new acme_back_office --from s45
 
 What a partner usually changes:
 
-- **The allergen list and the day parts:** the settings record `PP RBO Settings` (`allergens`, `day_parts`), per company.
+- **The allergen list, the day parts and the holds:** the settings record `PP RBO Settings` (`allergens`, `day_parts`, `holds`), per company.
 - **The ingredients' rule:** `backoffice.py`: how a recipe opens into parts, the day part of a sale, the grouping per store and day.
 - **The buttons:** *Issue ingredients*, *Work out food cost* and *Check allergens* in `desk_actions` in `manifest.json`.
 - **The allergens field:** `pp_rbo_allergens` on Item in `custom_fields`.
@@ -25,7 +25,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/restaurant_back_office.md).
 
-**The customer sets:** *Issue sales booked from* (now), the kitchen store where one kitchen cooks for several stores, the day parts and the allergen list in `PP RBO Settings`; a submitted default recipe on each dish; and the *Allergens* field shown on each till theme in POS Studio.
+**The customer sets:** *Issue sales booked from* (now), the kitchen store where one kitchen cooks for several stores, the day parts, the holds and the allergen list in `PP RBO Settings`; a submitted default recipe on each dish; and the *Allergens* field shown on each till theme in POS Studio.
 
 ## Run it
 
@@ -41,6 +41,13 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.0
+
+- A hold (*No Onion*) leaves its ingredient out of the dish it is rung under, from a row under *Holds* on the settings. A swap (oat milk for whole) is the menu: the README and recipe say how.
+- Each issue lists its sales with the check's table, server, covers, table turn and the tip taken at Pay, and a new report, *Covers, turns and tips*, adds them up. *Sales by item* names each check's server.
+- Desk shows plain names (*Ingredient issue*, *Restaurant back office settings*) through the manifest's `translations` block.
+- The role reads the till's checks and may write the stock entry's batch bundles (*Serial and Batch Bundle*), so *Issue ingredients* books an ingredient kept in batches. An update over 1.1.0 waits for the till's next build (a manifest with its own record types and `role_rights` is refused on update until then); a fresh install works now.
 
 ### 1.1.0
 

@@ -15,7 +15,8 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 3. *Restaurant back office — Issued the ingredients of 1 store-day. 3 sales taken up.* The **PP RBO Issue** list shows the store-day *Issued*, with its Material Issue, the ingredients it took and every line of its sales. Pressed again: *Nothing new to issue.*
 4. When the store is short of a part: *1 store-day is short of stock: open the issues marked Short.* The issue names it: *Not issued: Café is short of HK4-BEANS (needs 1.908, has 1.866). Receive or count them, then press Issue ingredients again.* After the delivery, the next press books it.
 5. At the month's end, after the stock count, the manager makes a **PP RBO Food Cost** record for the kitchen's store and the month and presses **Work out food cost**: *Food cost at Café: 31.4% by recipe and sales, 33.9% actual, on sales of 48,210.00.* The record lists each ingredient: used by recipe, sold as it is, other issues, missing at the count, and the difference in cost.
-6. The menu's owner ticks the dishes in the Item list and presses **Check allergens**: *2 dishes miss an allergen of their recipe. Open the check for every finding.* Desk opens the **PP RBO Allergen Check** record: HK4-BURGER misses *Sesame, Mustard (from HK4-BUN, HK4-MUSTARD)*, HK4-COMBO misses its burger's, HK4-COFFEE has *Diary*, not on the list.
+6. The manager opens the **PP RBO Covers, turns and tips** report: one row per sale with its table, its server, the check's covers and table turn (counted on the check's first sale) and the tip taken at Pay, with a totals row. The *Sales by item* report names each check's server, not the till that took the payment.
+7. The menu's owner ticks the dishes in the Item list and presses **Check allergens**: *2 dishes miss an allergen of their recipe. Open the check for every finding.* Desk opens the **PP RBO Allergen Check** record: HK4-BURGER misses *Sesame, Mustard (from HK4-BUN, HK4-MUSTARD)*, HK4-COMBO misses its burger's, HK4-COFFEE has *Diary*, not on the list.
 
 ![A dish rung at the till on a demo site, its allergens under the line](../samples/s45_restaurant_back_office/screenshots/01_till_line.png)
 
@@ -28,10 +29,10 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 ## Steps
 
 <a id="settings"></a>
-1. **A settings record type, one record per company** (see the sample's `manifest.json`): *Issue sales booked from* (a moment, required: sales before it are never issued), *Look back (days)* (7), an optional *Kitchen store* (one kitchen cooking for several stores or brands), a table of *Day parts* (a name, from, to; an end before the start runs past midnight), the retailer's allergen list, and a read-only press stamp your service writes.
+1. **A settings record type, one record per company** (see the sample's `manifest.json`): *Issue sales booked from* (a moment, required: sales before it are never issued), *Look back (days)* (7), an optional *Kitchen store* (one kitchen cooking for several stores or brands), a table of *Day parts* (a name, from, to; an end before the start runs past midnight), a table of *Holds* (a choice the till rings to leave something out, like *No Onion*, and the ingredient it leaves out), the retailer's allergen list, and a read-only press stamp your service writes.
 
 <a id="issues"></a>
-2. **An issue record type, written only by your service's role,** one per store and day: the store, the store issued from, the day and its last sale's time, a status (*Pending*, *Issued*, *Short*, *Refused*, *Nothing to issue*), the Material Issue, why it is not issued, the sales it names, a table of the ingredients and a table of every line sold. And a read-only link field on Stock Entry to it:
+2. **An issue record type, written only by your service's role,** one per store and day: the store, the store issued from, the day and its last sale's time, a status (*Pending*, *Issued*, *Short*, *Refused*, *Nothing to issue*), the Material Issue, why it is not issued, the sales it names, a table of the ingredients, a table of every line sold (each with its till row and the dish row a choice is rung under), and a table of its sales with each check's place, covers, table turn, server, opening time, service mode and tip. And a read-only link field on Stock Entry to it:
 
    ```json
    "custom_fields": [
@@ -44,8 +45,8 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 4. **The service's press**, in this order:
    - stamp the settings record with the retailer's `modified` check (a second press at the same moment is refused by iVendNext: say *another press is issuing*); a stamp older than a minute is a press that died;
    - finish any issue left *Pending* (look for its Material Issue by the link first);
-   - read the company's booked till sales (`POS Invoice`, `docstatus` 1) since the start moment and within the look-back, less those an issue already names, and their lines (`POS Invoice Item`, read with `parent=POS Invoice`);
-   - read the dishes' items and recipes (`BOM` and `BOM Item` with `parent=BOM`, two lists a level, never one read per recipe), group the lines by store and day, and open each dish into its stock parts;
+   - read the company's booked till sales (`POS Invoice`, `docstatus` 1, with the check each paid, `custom_mpos_check`, its tip, `custom_mpos_tip_amount`, and its service mode) since the start moment and within the look-back, less those an issue already names, their lines (`POS Invoice Item`, read with `parent=POS Invoice`, with each row's `name` and the till's link from a choice's row to its dish's row, `custom_cross_sell_parent_line_item_name`), and the checks they paid (`Retail Open Check`: place, covers, server, opened at);
+   - read the dishes' items and recipes (`BOM` and `BOM Item` with `parent=BOM`, two lists a level, never one read per recipe), group the lines by store and day, and open each dish into its stock parts; a hold rung under a dish takes its ingredient out of that dish's parts, all of it, at any depth of the recipe;
    - **write the issue first** (it claims the sales), then the retailer's Material Issue in one call (`docstatus` 1), dated at the day's last sale (`set_posting_time` 1), carrying the issue's link;
    - if iVendNext refuses it for want of stock, try once more without a date (iVendNext dates it now: the stock came in after the sales); if that is refused too, read `Bin` for the store and write *Short* naming every short part; any other refusal is *Refused* with iVendNext's own words;
    - a store-day whose recipe goes round, or whose sales name no store, is written *Refused* with why, and nothing is booked;
@@ -60,11 +61,15 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 
 7. **The field rules** on each till theme the retailer's tills wear (POS Studio, *Fields*), `cart_line` and `receipt_preview`, `show` `pp_rbo_allergens` labelled *Allergens* ([field rules recipe](field_rules.md)). They name the retailer's own theme, so the retailer adds them; your manifest can carry them only when you know the theme. The till shows the field of the item sold: a variant needs its own (typed, or copied by **Item Variant Settings** where every variant shares the template's allergens; a template's save then writes over each variant's). The shipped receipt prints it; a receipt layout of the retailer's own prints it only if it calls the till's item-fields reader.
 
-8. **Two reports** in your manifest: the issues' lines (date, store, sale, item, quantity, amount, who rang it, day part) and the food cost lines, each with a totals row.
+8. **Three reports** in your manifest: the issues' lines (date, store, sale, item, quantity, amount, who rang it: the check's server, else whoever booked the sale, day part), the issues' sales (table, server, covers, table turns, tip) and the food cost lines, each with a totals row.
+
+9. **Plain names in Desk:** the manifest's `translations` block, language `en`, gives each record type and report a plain name (*Ingredient issue*, *Restaurant back office settings*), so Desk never shows the app's code. Your prefix stays the record types' real names.
 
 ## What the retailer does
 
 - Makes each dish a plain item that is not stocked, with a Bill of Materials, submitted and default (the Desk form's item picker lists stock items only: type the dish's code).
+- **A swap is the menu:** a dish whose milk the guest chooses has no milk in its recipe, and each milk choice of its pick-one *Milk* group is an item with its own recipe (its pour of that milk) and its own *Allergens*. The ingredients then come off as rung, and the till prints the oat milk's allergens under its own line.
+- **A hold is a settings row:** each choice that leaves something out (*No Onion*) gets a row under *Holds* naming the ingredient.
 - Gives the role allowed to book back-dated stock if Stock Settings limits it. The app's rights are in the sample's manifest (`role_rights`).
 - Sets the ingredients' expense account (their Item Defaults or their Item Group) to its cost of goods sold, if that is where it wants the ingredients booked; the app sends no account.
 - Presses *Issue ingredients* each day after the close, and counts its stock before working out a period's food cost.
@@ -78,7 +83,7 @@ A café, a restaurant, a bakery or a cloud kitchen sells dishes, not the bun, th
 - The kitchen ticket does not print the allergens; the till shows at most three extra item fields per theme, and the field holds 140 characters.
 - A sale older than the look-back is never taken up; a till sale cancelled after its issue keeps its issue, and one cancelled and amended in Desk, its date left as it was, is not issued again.
 - A dish rung before its recipe was made issues nothing; its issue names it.
-- A combo leaves out of its recipe the side or drink the customer chooses as an option line, or that part comes off twice; a *No onions* option takes nothing off the dish.
+- A combo leaves out of its recipe the side or drink the customer chooses as an option line, or that part comes off twice. A milk choice's recipe is one pour, whatever the cup's size. A hold with no row under *Holds* takes nothing off the dish.
 - Reinstalling removes the app's issues: set *Issue sales booked from* again, or the same sales are taken up twice.
 
 ## Technical notes

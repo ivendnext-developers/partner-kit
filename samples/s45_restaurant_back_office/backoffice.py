@@ -23,6 +23,7 @@ import hmac
 import time
 
 PREFIX = "PP RBO"
+UNDER = "custom_cross_sell_parent_line_item_name"   # the till's own link from a choice's sale row to its dish's row
 FIELD = "pp_rbo"            # the fields the app adds to the shop's records: <FIELD>_allergens on Item, <FIELD>_issue on
                             # Stock Entry
 SKEW_S = 300                # a request stamped further than this from our clock is refused (a replay window, not a clock)
@@ -197,19 +198,38 @@ def day_part_of(sold_at, parts: list[dict]) -> str:
     return ""
 
 
+def holds_of(rows) -> dict:
+    """``{hold choice: {ingredients it leaves out}}`` from the settings' hold rows (*No Onion* → *Onion Slice*)."""
+    out: dict = {}
+    for r in rows or []:
+        if isinstance(r, dict) and r.get("hold") and r.get("ingredient"):
+            out.setdefault(r["hold"], set()).add(r["ingredient"])
+    return out
+
+
+def check_of(sale: dict, checks: dict) -> dict:
+    """The table's or tab's check a sale paid (the till's ``custom_mpos_check``), or ``{}`` for a counter sale."""
+    return checks.get(sale.get("custom_mpos_check")) or {} if sale.get("custom_mpos_check") else {}
+
+
 def store_of(sale: dict, line: dict, profile_stores: dict) -> str:
     """The store a line was sold from: the line's own, else the sale's, else its till's profile's."""
     return line.get("warehouse") or sale.get("set_warehouse") or profile_stores.get(sale.get("pos_profile")) or ""
 
 
 def group_lines(sales: list[dict], lines: list[dict], items: dict, profile_stores: dict, day_parts: list[dict],
-                kitchen: str = "") -> dict:
-    """``{(store, posting date): {"store", "issue_from", "posting_date", "posting_time", "sales", "lines"}}`` — every
-    line of every sale, so a sale is claimed once whatever it sold. ``lines`` rows carry what the sales report reads:
-    the sale, the item, its quantity in the stock unit, the amount net of tax, who rang it, when, its day part, and
-    whether the dish has a recipe."""
+                kitchen: str = "", checks: dict | None = None) -> dict:
+    """``{(store, posting date): {"store", "issue_from", "posting_date", "posting_time", "sales", "lines", "checks"}}``
+    — every line of every sale, so a sale is claimed once whatever it sold. ``lines`` rows carry what the sales report
+    reads: the sale, the item, its quantity in the stock unit, the amount net of tax, who rang it (the check's server
+    for a table's or tab's check, else whoever booked the sale), when, its day part, whether the dish has a recipe, and
+    the till's row and the dish row a choice is rung under (a hold leaves its ingredient out of that dish). ``checks``
+    rows are one per sale: its check's place, covers and server, when the check opened, the service mode and the tip;
+    a check's covers and its one table turn count on its first sale only."""
     by_sale = {s["name"]: s for s in sales}
+    checks = checks or {}
     out: dict = {}
+    counted: set = set()
     for ln in lines:
         sale = by_sale.get(ln.get("parent"))
         if not sale:
@@ -217,18 +237,30 @@ def group_lines(sales: list[dict], lines: list[dict], items: dict, profile_store
         store = store_of(sale, ln, profile_stores)
         key = (store, str(sale.get("posting_date"))[:10])
         g = out.setdefault(key, {"store": store, "issue_from": kitchen or store, "posting_date": key[1],
-                                 "posting_time": "00:00:00", "sales": [], "lines": []})
+                                 "posting_time": "00:00:00", "sales": [], "lines": [], "checks": []})
+        chk = check_of(sale, checks)
+        server = chk.get("server") or sale.get("owner") or ""
         if sale["name"] not in g["sales"]:
             g["sales"].append(sale["name"])
+            first = bool(chk) and sale["custom_mpos_check"] not in counted
+            if first:
+                counted.add(sale["custom_mpos_check"])
+            g["checks"].append({"sale": sale["name"], "check": sale.get("custom_mpos_check") if chk else None,
+                                "place": chk.get("place") or chk.get("label") or "", "server": server,
+                                "covers": int(num(chk.get("covers"))) if first else 0,
+                                "turn": int(first and bool(chk.get("place"))), "opened_at": chk.get("opened_at"),
+                                "service_mode": (sale.get("custom_mpos_service_mode") or chk.get("service_mode") or "")[:140],
+                                "tip": round(num(sale.get("custom_mpos_tip_amount")), 2)})
         t = clock_of(sale.get("posting_time")) or "00:00:00"
         if (seconds_of(t) or 0) > (seconds_of(g["posting_time"]) or 0):
             g["posting_time"] = t
         meta = items.get(ln.get("item_code")) or {}
         qty = num(ln.get("stock_qty")) or num(ln.get("qty"))
         g["lines"].append({"sale": sale["name"], "item_code": ln.get("item_code"), "qty": qty,
-                           "amount": round(num(ln.get("net_amount")), 2), "server": sale.get("owner") or "",
+                           "amount": round(num(ln.get("net_amount")), 2), "server": server,
                            "sold_at": t, "day_part": day_part_of(t, day_parts),
-                           "has_recipe": int(not meta.get("is_stock_item") and bool(meta.get("default_bom")))})
+                           "has_recipe": int(not meta.get("is_stock_item") and bool(meta.get("default_bom"))),
+                           "row": ln.get("name") or "", "under": ln.get(UNDER) or ""})
     return out
 
 
@@ -247,19 +279,29 @@ def sharing_sales(groups: dict) -> list[list]:
     return sorted((sorted(x, key=order.index) for x in sets), key=lambda x: order.index(x[0]))
 
 
-def need_of(group: dict, items: dict, boms: dict) -> tuple[dict, list]:
+def need_of(group: dict, items: dict, boms: dict, holds: dict | None = None) -> tuple[dict, list]:
     """What a group's dishes took from stock: ``({part: quantity}, notes)``. Returned lines (a negative quantity) take
-    nothing back: the food was made."""
+    nothing back: the food was made. A hold (``holds``: a choice → the ingredients it leaves out, from the settings)
+    rung under a dish takes that ingredient out of that dish line's parts, all of it, at any depth of its recipe; the
+    hold itself issues nothing unless it has a recipe of its own."""
+    holds = holds or {}
+    held: dict = {}
+    for ln in group["lines"]:
+        if ln.get("under") and ln.get("item_code") in holds:
+            held.setdefault(ln["under"], set()).update(holds[ln["item_code"]])
     need, notes, dishes = {}, [], []
     for ln in group["lines"]:
         if ln["qty"] <= 0:
             continue
         if not ln["has_recipe"]:        # a dish rung before its recipe was made: its sale is taken, so say so
             note = f"{ln['item_code']}: sold with no recipe"
-            if not (items.get(ln["item_code"]) or {}).get("is_stock_item") and note not in dishes:
+            if ln["item_code"] not in holds and not (items.get(ln["item_code"]) or {}).get("is_stock_item") \
+                    and note not in dishes:
                 dishes.append(note)
             continue
         got, why = parts_of(ln["item_code"], ln["qty"], items, boms)
+        for part in held.get(ln.get("row") or None, ()):
+            got.pop(part, None)
         for k, v in got.items():
             need[k] = need.get(k, 0.0) + v
         notes += [w for w in why if w not in notes]
@@ -287,7 +329,7 @@ def issue_doc(company: str, group: dict, need: dict, items: dict, notes: list) -
             "status": "Pending" if need else "Nothing to issue", "sales": "\n".join(group["sales"]),
             "sale_count": len(group["sales"]), "food_sales": round(sum(ln["amount"] for ln in group["lines"]), 2),
             "note": "; ".join(notes)[:500],
-            "lines": group["lines"],
+            "lines": group["lines"], "checks": group.get("checks") or [],
             "parts": [{"item_code": k, "qty": v, "uom": (items.get(k) or {}).get("stock_uom")} for k, v in need.items()]}
 
 

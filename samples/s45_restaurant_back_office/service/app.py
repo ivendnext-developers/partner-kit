@@ -61,6 +61,7 @@ import testcall  # noqa: E402
 SUBS = {"/press/issue": "issue", "/press/foodcost": "foodcost", "/press/allergens": "allergens"}
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
 SHORT = "NegativeStockError"         # the shop's refusal of an issue it has not the stock for
+CHECK = "Retail Open Check"    # the till's check of a table or a tab: its place, covers, server and opening time
 BUDGET_S = 5.5          # no new set of store-days is started after this: the shop waits 10 seconds at most, and a hosted
                         # function's cold start (about 2.5 s, APPF run 9) comes before this clock starts
 LOCK_S = 180            # a press stamp older than this has lapsed: a press clears its own at once, and one whose
@@ -317,7 +318,7 @@ class Service:
             meta = items.get(ln.get("item_code")) or {}
             ln["has_recipe"] = int(not meta.get("is_stock_item") and bool(meta.get("default_bom")))
         try:
-            need, _ = bo.need_of({"lines": lines}, items, boms)
+            need, _ = bo.need_of({"lines": lines}, items, boms, bo.holds_of(s.get("holds")))
         except bo.RecipeError as e:
             door.update(bo.dt("Issue"), name, {"status": "Refused",
                                                "problem": f"Not issued: {e}. Fix the recipe, then press again."[:500]})
@@ -374,7 +375,8 @@ class Service:
         days = int(bo.num(s.get("days_back")) or 7)
         since = max(bo.date_of(start), today - datetime.timedelta(days=days)).isoformat()
         listed = door.rows("POS Invoice", ["name", "posting_date", "posting_time", "owner", "set_warehouse", "pos_profile",
-                                           "amended_from"],
+                                           "amended_from", "custom_mpos_check", "custom_mpos_tip_amount",
+                                           "custom_mpos_service_mode"],
                            [["company", "=", company], ["docstatus", "=", 1], ["posting_date", ">=", since]])
         claimed = set()
         for r in door.rows(bo.dt("Issue"), ["sales"], [["company", "=", company], ["posting_date", ">=", since]]):
@@ -392,13 +394,17 @@ class Service:
         sales = sales[:MOST_SALES]
         if sales:
             names = [x["name"] for x in sales]
-            lines = door.rows_in("POS Invoice Item", ["parent", "item_code", "qty", "stock_qty", "net_amount", "warehouse"],
-                                 "parent", names, parent="POS Invoice")
+            lines = door.rows_in("POS Invoice Item", ["parent", "name", "item_code", "qty", "stock_qty", "net_amount",
+                                                      "warehouse", bo.UNDER], "parent", names, parent="POS Invoice")
+            paid = sorted({x["custom_mpos_check"] for x in sales if x.get("custom_mpos_check")})
+            checks = {r["name"]: r for r in door.rows_in(CHECK, ["name", "place", "label", "covers", "server", "opened_at",
+                                                                 "service_mode"], "name", paid)} if paid else {}
             profiles = sorted({x["pos_profile"] for x in sales if x.get("pos_profile")})
             stores = {r["name"]: r.get("warehouse") for r in door.rows("POS Profile", ["name", "warehouse"],
                                                                        [["name", "in", profiles]])} if profiles else {}
             self._recipes(door, {ln.get("item_code") for ln in lines if ln.get("item_code")}, items, boms)
-            groups = bo.group_lines(sales, lines, items, stores, s.get("day_parts") or [], s.get("kitchen_store") or "")
+            groups = bo.group_lines(sales, lines, items, stores, s.get("day_parts") or [], s.get("kitchen_store") or "",
+                                    checks)
             to_book = []
             # every store-day's issue first, the store-days that share a sale together (a sale whose lines left two
             # stores is claimed by each of them at once); no new set is started after the budget
@@ -409,7 +415,7 @@ class Service:
                 for key in keys:
                     g = groups[key]
                     try:
-                        need, notes = bo.need_of(g, items, boms)
+                        need, notes = bo.need_of(g, items, boms, bo.holds_of(s.get("holds")))
                         problem = "" if g["issue_from"] else NO_STORE
                     except bo.RecipeError as e:
                         need, notes, problem = {}, [], f"Not issued: {e}. Fix the recipe, then press again."[:500]

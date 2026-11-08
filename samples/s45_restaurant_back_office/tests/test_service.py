@@ -63,6 +63,72 @@ class ServiceTest(unittest.TestCase):
         return self.press(self.svc(shop, **kw), "/press/issue", "PP RBO Settings", [fs.CO])
 
     # ── Issue ingredients ──
+    def test_i19_a_hold_a_swap_and_a_plain_dish_move_the_right_stock(self):
+        shop = fs.FakeTenant(settings_=fs.settings(holds=[{"hold": "NO-PATTY", "ingredient": "PATTY"}]),
+                             stock={"BUN": 20, "PATTY": 20, "MILK": 5, "BEANS": 1, "OATMILK": 5})
+        shop.items.update({"NO-PATTY": {"is_stock_item": 0, "stock_uom": "Nos"},
+                           "LATTE": {"is_stock_item": 0, "default_bom": "BOM-LATTE", "stock_uom": "Nos"},
+                           "OAT": {"is_stock_item": 0, "default_bom": "BOM-OAT", "stock_uom": "Nos"},
+                           "WHOLE": {"is_stock_item": 0, "default_bom": "BOM-WHOLE", "stock_uom": "Nos"},
+                           "OATMILK": {"is_stock_item": 1, "stock_uom": "Litre"}})
+        shop.boms.update({"BOM-LATTE": {"docstatus": 1, "is_active": 1, "quantity": 1,
+                                        "items": [{"item_code": "BEANS", "stock_qty": 0.018}]},       # no milk in the dish
+                          "BOM-OAT": {"docstatus": 1, "is_active": 1, "quantity": 1,
+                                      "items": [{"item_code": "OATMILK", "stock_qty": 0.3}]},
+                          "BOM-WHOLE": {"docstatus": 1, "is_active": 1, "quantity": 1,
+                                        "items": [{"item_code": "MILK", "stock_qty": 0.3}]}})
+        shop.sales = [{"name": "S1", "posting_date": "2026-10-22", "posting_time": "12:00:00", "owner": "ana@x",
+                       "set_warehouse": fs.STORE, "pos_profile": "Café", "company": fs.CO, "docstatus": 1,
+                       "items": [{"name": "r1", "item_code": "BURGER", "qty": 1, "stock_qty": 1, "net_amount": 80},
+                                 {"name": "r2", "item_code": "NO-PATTY", "qty": 1, "stock_qty": 1, "net_amount": 0,
+                                  bo.UNDER: "r1"},                                             # a hold under it
+                                 {"name": "r3", "item_code": "BURGER", "qty": 1, "stock_qty": 1, "net_amount": 80},
+                                 {"name": "r4", "item_code": "LATTE", "qty": 1, "stock_qty": 1, "net_amount": 4},
+                                 {"name": "r5", "item_code": "OAT", "qty": 1, "stock_qty": 1, "net_amount": 0.75,
+                                  bo.UNDER: "r4"},                                             # a swap: oat for whole
+                                 {"name": "r6", "item_code": "LATTE", "qty": 1, "stock_qty": 1, "net_amount": 4},
+                                 {"name": "r7", "item_code": "WHOLE", "qty": 1, "stock_qty": 1, "net_amount": 0,
+                                  bo.UNDER: "r6"}]}]                                           # a plain latte
+        self.assertEqual(self.issue(shop)[0], 200)
+        (se,) = shop.entries.values()
+        self.assertEqual({r["item_code"]: round(r["qty"], 6) for r in se["items"]},
+                         {"BUN": 2, "PATTY": 1, "BEANS": 0.036, "OATMILK": 0.3, "MILK": 0.3})
+        self.assertEqual((shop.stock["PATTY"], round(shop.stock["MILK"], 6), round(shop.stock["OATMILK"], 6)), (19, 4.7, 4.7))
+        (iss,) = shop.issues.values()
+        self.assertEqual(iss["note"], "")                                   # the hold is not named as a dish with no recipe
+        self.assertEqual([(ln["row"], ln["under"]) for ln in iss["lines"]][:2], [("r1", ""), ("r2", "r1")])
+
+    def test_i19b_a_short_issue_tried_again_keeps_the_hold(self):
+        shop = fs.FakeTenant(settings_=fs.settings(holds=[{"hold": "NO-PATTY", "ingredient": "PATTY"}]),
+                             stock={"BUN": 20, "PATTY": 0, "MILK": 5, "BEANS": 1})
+        shop.items["NO-PATTY"] = {"is_stock_item": 0, "stock_uom": "Nos"}
+        shop.sales = [{"name": "S1", "posting_date": "2026-10-22", "posting_time": "12:00:00", "owner": "ana@x",
+                       "set_warehouse": fs.STORE, "pos_profile": "Café", "company": fs.CO, "docstatus": 1,
+                       "items": [{"name": "r1", "item_code": "BURGER", "qty": 1, "stock_qty": 1, "net_amount": 80},
+                                 {"name": "r2", "item_code": "NO-PATTY", "qty": 1, "stock_qty": 1, "net_amount": 0,
+                                  bo.UNDER: "r1"},
+                                 {"name": "r3", "item_code": "BURGER", "qty": 1, "stock_qty": 1, "net_amount": 80}]}]
+        self.issue(shop)
+        (iss,) = shop.issues.values()
+        self.assertEqual(iss["status"], "Short")
+        shop.stock["PATTY"] = 5                                           # the delivery is in
+        iss["parts"] = []                                                 # the retry works it out again from its lines
+        self.issue(shop)
+        (se,) = shop.entries.values()
+        self.assertEqual({r["item_code"]: r["qty"] for r in se["items"]}, {"BUN": 2, "PATTY": 1})
+
+    def test_i20_each_sale_carries_its_checks_covers_turn_server_and_tip(self):
+        shop = fs.FakeTenant()
+        shop.sales[0].update(custom_mpos_check="CHK1", custom_mpos_tip_amount=12.5, custom_mpos_service_mode="Eat in")
+        shop.sales[1].update(custom_mpos_tip_amount=1.0, custom_mpos_service_mode="To go")
+        shop.open_checks = {"CHK1": {"place": "Table 3", "label": "Table 3", "covers": 4, "server": "sam@x",
+                                     "opened_at": "2026-10-22 11:40:00", "service_mode": "Eat in"}}
+        self.assertEqual(self.issue(shop)[0], 200)
+        (iss,) = shop.issues.values()
+        self.assertEqual([(r["sale"], r["place"], r["server"], r["covers"], r["turn"], r["tip"]) for r in iss["checks"]],
+                         [("S1", "Table 3", "sam@x", 4, 1, 12.5), ("S2", "", "ben@x", 0, 0, 1.0)])
+        self.assertEqual({ln["sale"]: ln["server"] for ln in iss["lines"]}, {"S1": "sam@x", "S2": "ben@x"})
+
     def test_i1_one_issue_per_store_and_day_and_its_material_issue(self):
         shop = fs.FakeTenant()
         code, out = self.issue(shop)
