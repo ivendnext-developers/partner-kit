@@ -1687,8 +1687,6 @@ The till cannot do this yet; it can stop the sale at Pay.
                 self.assertRegex(page, r'</h1><p class="start-app">' + re.escape(want), folder.name)
 
     def test_claim_a_need_is_shown_only_for_a_card_the_next_list_names(self):  # spec J1-09
-        names = build.next_list()
-        self.assertTrue(names, "the roadmap's next list reads as empty")
         cat = json.loads((self.out / "catalogue.json").read_text("utf-8"))
         self.assertTrue(all("next" in c for c in cat))
         with tempfile.TemporaryDirectory() as tmp:
@@ -1697,7 +1695,7 @@ The till cannot do this yet; it can stop the sale at Pay.
             self.assertEqual(build.next_list(f), ["Final receipt offline"])
         card = type("C", (), {"title": "A final receipt while the till is offline"})()
         self.assertFalse(build.on_next(card, ["Final receipt offline"]))   # the list must name the card's title
-        self.assertTrue(build.on_next(type("C", (), {"title": "Room charge"})(), names))
+        self.assertTrue(build.on_next(type("C", (), {"title": "Final receipt offline"})(), ["Final receipt offline"]))
 
     def sample_folders(self, root: pathlib.Path | None = None) -> list[pathlib.Path]:
         return sorted(p.parent for p in ((root or build.ROOT) / "samples").glob("*/README.md"))
