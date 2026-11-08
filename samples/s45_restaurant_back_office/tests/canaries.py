@@ -124,7 +124,7 @@ CANARIES = [
      R + "Recipes.test_r4_a_stock_item_sold_is_never_opened"),
     ("a loop is refused", B, "    if bom_name in seen or depth >= DEPTH:\n        raise RecipeError(f\"{item}'s recipe {bom_name} goes round in a loop or deeper than {DEPTH} recipes\")\n    bom = boms.get(bom_name)",
      "    bom = boms.get(bom_name)", R + "Recipes.test_r5_a_recipe_that_goes_round_is_refused"),
-    ("a return takes nothing back", B, '        if ln["qty"] <= 0:\n            continue\n', '',
+    ("a return takes nothing back", B, '    lines = [ln for ln in group["lines"] if ln["qty"] > 0]', '    lines = list(group["lines"])',
      R + "Groups.test_g6_a_return_takes_nothing_back_and_a_stock_item_is_not_issued"),
     ("one issue per store and day", B, '        key = (store, str(sale.get("posting_date"))[:10])', '        key = (store, "")',
      R + "Groups.test_g1_one_issue_per_store_and_day"),
