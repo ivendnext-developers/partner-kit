@@ -360,7 +360,8 @@ CANARIES = [
     # KSCSOLDNAME
     ("a sold-out dish is named by its record", S, "            value = ksc.with_names(value, named)", "            value = value",
      T + "test_s8_a_dish_sold_out_that_no_ticket_names_is_shown_by_its_name"),
-    ("the page shows a sold-out dish's name", PAGE, "item_name: d.item_name || d.item_code }", "item_name: d.item_code }",
+    ("the page shows a sold-out dish's name", PAGE, "rows.push({ item_code: d.item_code, item_name: d.item_name || d.item_code }",
+     "rows.push({ item_code: d.item_code, item_name: d.item_code }",
      PL + "test_l6_a_sold_out_dish_no_ticket_names_shows_its_name"),
     ("a names read refused leaves the codes", S, "            except TenantError:         # the names are a nicety",
      "            except KeyError:            # the names are a nicety",
