@@ -119,7 +119,7 @@ def code_of(site: str, token, secrets: list[bytes]) -> tuple[str, int] | None:
     if not isinstance(token, str) or len(token) > 200:
         return None
     parts = token.rsplit(".", 2)
-    if len(parts) != 3 or not parts[0] or not parts[1].isdigit() or len(parts[2]) != SIG_LEN:
+    if len(parts) != 3 or not parts[0] or not (parts[1].isascii() and parts[1].isdigit()) or len(parts[2]) != SIG_LEN:
         return None
     try:
         record, number, sig = parts[0], int(parts[1]), parts[2]
@@ -153,13 +153,35 @@ def choice_price(row: dict, list_rate) -> float | None:
     return base
 
 
-def menu_of(items: list[dict], rows: list[dict], groups: dict, prices: dict, order: list[str] | None = None) -> list[dict]:
-    """The page's menu, by item group: each dish with its price and its choice groups, each choice with its price.
+def image_of(site_url: str, path) -> str:
+    """A dish's picture address: its public file on the retailer's site, else none (the page draws a plain tile)."""
+    if not isinstance(path, str) or not path.startswith("/files/") or ".." in path or len(path) > 300:
+        return ""
+    return site_url.rstrip("/") + urllib.parse.quote(path, safe="/%")
+
+
+def size_labels(rows: list[dict]) -> dict[str, str]:
+    """Each size item's label from its *Item Variant Attribute* rows (``parent`` the item): the values in order."""
+    by: dict[str, list] = {}
+    for r in sorted(rows, key=lambda r: num(r.get("idx"))):
+        if isinstance(r.get("parent"), str) and r.get("attribute_value") not in (None, ""):
+            by.setdefault(r["parent"], []).append(str(r["attribute_value"]))
+    return {k: " · ".join(v) for k, v in by.items()}
+
+
+def menu_of(items: list[dict], rows: list[dict], groups: dict, prices: dict, order: list[str] | None = None,
+            site_url: str = "", templates: dict | None = None, sizes: dict | None = None) -> list[dict]:
+    """The page's menu, by item group: each dish with its price, its picture and its choice groups, each choice with
+    its price.
 
     ``items`` are the dishes' Item rows (read without the items sold only as a choice); ``rows`` their *Cross Selling Product Detail* rows (``parent`` the dish); a
     row is a choice when it names a *Retail Option Group* (``custom_mpos_option_group``) found, switched on, in
     ``groups`` (``display_name``, ``min_picks``, ``max_picks``, ``enabled``); any other row is an ordinary offer and is
-    not shown. ``prices`` holds an item's list price by code."""
+    not shown. ``prices`` holds an item's list price by code. A size is an Item of its own (``variant_of`` its dish's
+    template, in ``templates`` by code; ``sizes`` its label by code): it stays a dish of its own (its price, its
+    choices, its line on the check) and carries ``family``, ``base`` (the dish's name) and ``size``, so the page can
+    show a dish's sizes together."""
+    templates, sizes = templates or {}, sizes or {}
     dishes: dict[str, dict] = {}
     for r in items:
         code = r.get("name")
@@ -167,8 +189,15 @@ def menu_of(items: list[dict], rows: list[dict], groups: dict, prices: dict, ord
             continue
         if len(dishes) >= MENU_MAX:
             break
-        dishes[code] = {"code": code, "name": r.get("item_name") or code, "group": r.get("item_group") or "",
-                        "price": money(prices.get(code)), "groups": {}}
+        name = r.get("item_name") or code
+        tpl = templates.get(r.get("variant_of")) if r.get("variant_of") else None
+        dishes[code] = {"code": code, "name": name, "group": r.get("item_group") or "",
+                        "price": money(prices.get(code)), "groups": {},
+                        "image": image_of(site_url, r.get("image") or (tpl or {}).get("image"))}
+        if tpl:
+            base = tpl.get("item_name") or r["variant_of"]
+            rest = name[len(base):].lstrip(" /-–·:") if name.startswith(base) else ""
+            dishes[code].update(family=r["variant_of"], base=base, size=sizes.get(code) or rest or name)
     for r in sorted(rows, key=lambda r: num(r.get("idx"))):
         d, g, choice = dishes.get(r.get("parent")), r.get("custom_mpos_option_group"), r.get("item_code")
         meta = groups.get(g) if g else None

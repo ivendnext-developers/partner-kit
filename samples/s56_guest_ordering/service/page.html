@@ -10,16 +10,19 @@
 </head>
 <body>
 <header class="top">
-  <p id="where" class="where" dir="auto"></p>
+  <p id="where" class="where"></p>
   <p id="hint" class="hint"></p>
 </header>
 <main id="menu" class="menu" aria-live="polite"></main>
 <section id="basket" class="basket" hidden>
   <h2 id="basket-title"></h2>
   <ul id="lines" class="lines"></ul>
-  <button id="send" type="button" class="send"></button>
+  <div class="foot">
+    <p id="total" class="total"></p>
+    <button id="send" type="button" class="send"></button>
+  </div>
 </section>
-<p id="note" class="note" role="status" aria-live="polite" dir="auto"></p>
+<p id="note" class="note" role="status" aria-live="polite"></p>
 <script src="page.js"></script>
 </body>
 </html>

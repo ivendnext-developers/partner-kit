@@ -33,7 +33,8 @@ class Rules(unittest.TestCase):
         self.assertEqual(gor.code_of("other.example.com", t, S), None)
         rec, n, sig = t.rsplit(".", 2)
         for bad in (f"GOR-CODE-00002.{n}.{sig}", f"{rec}.4.{sig}", f"{rec}.0.{gor.sign(b'new', 'shop.example.com', rec, 0)}",
-                    f"{rec}.{n}", f"{rec}.x.{sig}", None, 7, "a" * 201, f"{rec}.\u00b2.{sig}", f"\ud800.1.{sig}"):
+                    f"{rec}.{n}", f"{rec}.x.{sig}", None, 7, "a" * 201, f"{rec}.\u00b2.{sig}", f"\ud800.1.{sig}",
+                    f"{rec}.\u0663.{sig}"):          # \u0663 is Arabic-Indic 3: int() reads it, the signed link says 3
             self.assertIsNone(gor.code_of("shop.example.com", bad, S), bad)
 
     def test_r2_the_link_carries_its_token_after_the_hash(self):
