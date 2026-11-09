@@ -3,7 +3,7 @@
  "app": "pp_rmc",
  "prefix": "PP RMC",
  "title": "Room charge",
- "version": "0.1.1",
+ "version": "0.1.2",
  "publisher": "Partner Programme sample",
  "description": "A hotel's restaurant or bar charges a meal to a guest's room. The server types the room and surname on the check's Sale details; at Pay the check asks the hotel system, fills the reservation as Folio, and dims the Room Charge tile with its reason for a room it cannot confirm. Within about a minute of the sale booking the service reads the event feed and posts the charge to the guest's folio, one post per sale, keeping the hotel's reference. A night auditor reads the Room charges workspace: posted, waiting and refused. The till books first and the folio follows. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
@@ -416,47 +416,56 @@
      }
     },
     {
+     "type": "number_card",
+     "data": {
+      "number_card_name": "PP RMC Posted",
+      "col": 4
+     }
+    },
+    {
+     "type": "number_card",
+     "data": {
+      "number_card_name": "PP RMC Waiting",
+      "col": 4
+     }
+    },
+    {
+     "type": "number_card",
+     "data": {
+      "number_card_name": "PP RMC Refused",
+      "col": 4
+     }
+    },
+    {
      "type": "paragraph",
      "data": {
-      "text": "Posted, waiting and refused opens the counts: everything posted, and what is waiting or refused now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Posted on and Status Posted.",
+      "text": "Posted counts everything posted; Waiting and Refused count what is open now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Posted on and Status Posted.",
       "col": 12
      }
     },
     {
      "type": "shortcut",
      "data": {
-      "shortcut_name": "Posted, waiting and refused",
-      "col": 3
-     }
-    },
-    {
-     "type": "shortcut",
-     "data": {
       "shortcut_name": "Room charges report",
-      "col": 3
+      "col": 4
      }
     },
     {
      "type": "shortcut",
      "data": {
       "shortcut_name": "Each charge",
-      "col": 3
+      "col": 4
      }
     },
     {
      "type": "shortcut",
      "data": {
       "shortcut_name": "Hotel system settings",
-      "col": 3
+      "col": 4
      }
     }
    ],
    "shortcuts": [
-    {
-     "type": "Dashboard",
-     "link_to": "PP RMC Room charges",
-     "label": "Posted, waiting and refused"
-    },
     {
      "type": "Report",
      "link_to": "PP RMC Room charges",
@@ -471,6 +480,17 @@
      "type": "DocType",
      "link_to": "PP RMC Settings",
      "label": "Hotel system settings"
+    }
+   ],
+   "number_cards": [
+    {
+     "number_card_name": "PP RMC Posted"
+    },
+    {
+     "number_card_name": "PP RMC Waiting"
+    },
+    {
+     "number_card_name": "PP RMC Refused"
     }
    ]
   }
@@ -487,38 +507,6 @@
    "property": "documentation",
    "property_type": "Data",
    "value": "https://developer.ivendnext.com/samples/s63_room_charge/index.html"
-  }
- ],
- "dashboard_charts": [
-  {
-   "name": "PP RMC Charges a day",
-   "document_type": "PP RMC Post",
-   "chart_type": "Sum",
-   "based_on": "day",
-   "value_based_on": "amount",
-   "timespan": "Last Month",
-   "time_interval": "Daily",
-   "type": "Bar",
-   "filters": [
-    [
-     "status",
-     "=",
-     "Posted"
-    ]
-   ]
-  }
- ],
- "dashboards": [
-  {
-   "name": "PP RMC Room charges",
-   "charts": [
-    "PP RMC Charges a day"
-   ],
-   "cards": [
-    "PP RMC Posted",
-    "PP RMC Waiting",
-    "PP RMC Refused"
-   ]
   }
  ]
 }
