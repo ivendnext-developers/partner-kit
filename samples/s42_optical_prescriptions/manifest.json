@@ -455,7 +455,7 @@
      "fieldtype": "Check",
      "label": "Ready to collect",
      "read_only": 1,
-     "description": "Ticked by Back from lab, unticked by Send to lab (a remake). To tell the customer the glasses are ready, add your own Notification on a change of this field that sends only while it is ticked."
+     "description": "Ticked by Back from lab, unticked by Send to lab (a remake). To tell the customer the glasses are ready, add your own Notification on a change of this field that sends only while it is ticked (a remake unticks it, which is also a change; the recipe gives the exact condition)."
     },
     {
      "fieldname": "closed",
