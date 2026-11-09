@@ -167,7 +167,7 @@ class PdfTests(unittest.TestCase):
         body = build_pdfs.example_body(errors := [])
         self.assertEqual(errors, [])
         self.assertEqual(build_pdfs.missing_statuses(body, catalogue.STATUSES), [])
-        kit = self.planted(build_pdfs.EXAMPLE, lambda t: t.replace("| Ready, with limits | Configure |", "| Ready, mostly | Configure |", 1))
+        kit = self.planted(build_pdfs.EXAMPLE, lambda t: t.replace("| Ready | Configure |", "| Ready, mostly | Configure |", 1))
         real = build_pdfs.build.ROOT
         build_pdfs.build.ROOT = kit
         try:
