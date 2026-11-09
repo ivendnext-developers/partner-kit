@@ -23,7 +23,7 @@ Alcohol, tobacco, vapes, knives and some medicines may be sold only to customers
 
 4. **Work out each item's age.** Read the item groups once a minute (`GET /api/resource/Item Group`, `fields` `name`, `lft`, `rgt` and your field, `limit_page_length` 0) and the items' own ages with `variant_of` (`GET /api/resource/Item`, `filters` `[["name", "in", [...]]]`). An item's age is its own when above 0; else its template's (⚠ a variant does not inherit a field its template gained later: iVendNext copies only the fields its *Item Variant Settings* list, so read the template in a second step); else the nearest group above it (itself first) with one: the group whose `lft`/`rgt` contains the item's group, with the largest `lft`. iVendNext gives your role a plain **read on Item Group and Item**.
 
-5. **Answer the scan** (`capture/1`, event `scan`), within the scan's 1.5 seconds:
+5. **Answer the scan** (`capture/1`, event `scan`), within the scan's 3 seconds:
 
    ```json
    {"verdict": "notice",
@@ -65,7 +65,7 @@ The retailer's record `Default` of `<PREFIX> Settings`: *Hours from UTC at your 
 | an **HTTPS** address its server trusts | the address is consented; a private address is refused on a customer's site |
 | a settings record type, two fields and a sale detail, by manifest | the installer makes them and removes them at uninstall (the sale detail is kept, switched off, once booked sales name it) |
 | a signature check on every call | — (yours to do) |
-| an answer within each subscription's time (the sample: the scan 1.5 s, the check 3 s) | your declared down answer applies otherwise |
+| an answer within each subscription's time (the sample: the scan 3 s, the check 4 s) | your declared down answer applies otherwise |
 
 ## Technical notes
 

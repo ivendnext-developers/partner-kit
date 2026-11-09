@@ -41,6 +41,10 @@ ivn try
 
 ## Versions
 
+### 0.2.2 (manifest)
+
+- The scan waits 3 seconds and the check at Pay 4, as the App library copy does (a hosted function can be slow on its first call after a quiet spell). The service is unchanged.
+
 ### 1.1.1
 
 - The settings field reads *Hours from UTC at your store*, and the manifest says store where it said shop. Manifest 0.2.1. The recipe says more than one app may answer the scan on a POS Profile, in turn.
