@@ -913,6 +913,15 @@ class Newer(unittest.TestCase):
         self.assertEqual(len(combine.newer(self.app, str(p))), 1)
         self.assertEqual((self.app / "app.json").read_bytes(), before)
 
+class RoleRightsIdentity(unittest.TestCase):
+    def test_two_reports_for_one_role_are_two_entries_and_one_report_is_one(self):
+        rows = [{"report": "POS Sale Report", "role": "PP X Integration"},
+                {"report": "Stock Projected Quantity", "role": "PP X Integration"},
+                {"doctype": "Item", "role": "PP X Integration", "rights": ["read"]},
+                {"page": "stock-balance", "role": "PP X Integration"}]
+        self.assertEqual(len(set(combine.ids("role_rights", rows))), 4)
+        self.assertEqual(combine.ids("role_rights", rows[:1]), combine.ids("role_rights", [dict(rows[0])]))
+
 
 if __name__ == "__main__":
     unittest.main()
