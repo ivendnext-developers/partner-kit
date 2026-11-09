@@ -46,6 +46,10 @@ ivn try
 
 ## Versions
 
+### 0.3.2
+
+- The description says *your store's iVendNext* where it said *the shop*. No logic changed.
+
 ### 0.3.1
 
 - Status goes to the log, and the two admin routes and their token are gone; every warranty term is read, past the first thousand.

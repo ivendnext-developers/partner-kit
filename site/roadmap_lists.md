@@ -20,6 +20,7 @@ In the App library now, 57 apps, free or with a key:
 - Optical, the standard version, every app listed: [Optical prescriptions and lab orders](https://library.ivendnext.app/apps/ivendnext_opt) · [Third-party payer](https://library.ivendnext.app/apps/ivendnext_icp)
 - Grocery, the standard version, every app listed: [Expiry and recall](https://library.ivendnext.app/apps/ivendnext_rcl) · [Expiry markdown](https://library.ivendnext.app/apps/ivendnext_exm) · [Age-restricted sale check](https://library.ivendnext.app/apps/ivendnext_age) · [Price-checker kiosk](https://library.ivendnext.app/apps/ivendnext_prc) · [Bin locations](https://library.ivendnext.app/apps/ivendnext_bln) · [Click and collect](https://library.ivendnext.app/apps/ivendnext_ccb)
 - Travel retail, the standard version, every app listed: [Duty-free allowance and boarding pass](https://library.ivendnext.app/apps/ivendnext_dfa) · [Age-restricted sale check](https://library.ivendnext.app/apps/ivendnext_age)
+- Liquor and wine, the standard version, every app listed: [Age-restricted sale check](https://library.ivendnext.app/apps/ivendnext_age) · [Liquor excise returns](https://library.ivendnext.app/apps/ivendnext_exr) · [Expiry markdown](https://library.ivendnext.app/apps/ivendnext_exm) · [Click and collect](https://library.ivendnext.app/apps/ivendnext_ccb)
 
 ## Being built
 
