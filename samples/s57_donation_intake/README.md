@@ -28,7 +28,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/donation_intake.md).
 
-**The customer sets:** the charity's name, registration number and address on the **Letter Head** the store prints with (choose it in the print window: as the default a Letter Head would sit on every document), who gets **Sales User** at the donation door, and a **Stock Entry Type** named *Material Receipt* if its site has none.
+**The customer sets:** the charity's name, registration number and address on the **Letter Head** the store prints with (chosen in the print window), who gets **Sales User** at the donation door, and a **Stock Entry Type** named *Material Receipt* if its site has none.
 
 ## Run it
 
