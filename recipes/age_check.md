@@ -73,7 +73,7 @@ The retailer's record `Default` of `<PREFIX> Settings`: *Hours from UTC at your 
 - **A notice** reaches POS build 2.0.0.654 and later. An older build refuses it as an unknown answer and applies the scan's down answer: the item goes on, flagged, and the check at Pay still holds.
 - **A group under a restricted group cannot be exempted** (0 means *the group above applies*); move it out of the group.
 - **Two ages on one sale:** the till keeps one value per sale detail, merged by name, so a later, lower ask replaces a higher one. That happens when the higher item was the sale's first (no reference to remember) or another running copy of your service answered the second scan. Pay then names the higher age to enter.
-- **More than one app may answer the scan on one POS Profile:** each whose items include this one is asked in turn, and the first that does not allow the item answers (6 seconds at most for all). A POS Profile's checks before payment take 10 seconds together at most (this one takes 3 s; 4 s on CitiXsys hosting).
+- **More than one app may answer the scan on one POS Profile:** each whose items include this one is asked in turn, and the first that does not allow the item answers (6 seconds at most for all). A POS Profile's checks before payment take 10 seconds together at most (this one takes 4 s).
 - **One time zone and one age per group for the whole site;** a per-store value is a partner's version (the calls carry the store).
 - **After an update of the app,** iVendNext checks that the scan service's settings still name its groups.
 - **Offline,** the till does not call you: each down answer applies. The scan's filter travels with the till's start of day.
