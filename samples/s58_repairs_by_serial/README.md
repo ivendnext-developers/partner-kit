@@ -38,6 +38,10 @@ ivn try
 
 ## Versions
 
+### 0.1.2
+
+- The repair slip says *Taken in at* with the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix. A slip saved before the update prints the old name until it is saved again.
+
 ### 0.1.1
 
 - A repair for a customer made in Desk shows that customer's Mobile No in a new *Customer's mobile* field (Desk hides *Customer's phone* while it is empty).

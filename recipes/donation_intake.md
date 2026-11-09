@@ -33,6 +33,7 @@ The record type `PP DON Donation`, numbered `format:DON-{#####}`, tracked (its h
 | `donor_name`, `donor_phone`, `donor_email` | typed, for a donor who is not a customer; none required |
 | `donor_address` | text, printed on the receipt |
 | `store` | **Received at**, a Warehouse; required |
+| `store_name` | **Store name**, read only: the store's own name, filled when the donation is saved; the receipt prints it |
 | `received_on` | **Received on**, today by default; required |
 | `goods` | child table `PP DON Goods`: `category`, `description`, `quantity` (a whole number, 1 by default), `unit` (Items, Bags, Boxes), `condition` (blank, Good, Fair, For recycling) |
 | `notes` | text, never printed |

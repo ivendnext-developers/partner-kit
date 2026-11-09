@@ -40,6 +40,10 @@ ivn try
 
 ## Versions
 
+### 0.1.2
+
+- The slip says *Collect at* with the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix. A slip saved before the update prints the old name until it is saved again.
+
 ### 0.1.1
 
 - The *Ready to collect* field's help text reads as a sentence, not a code condition.

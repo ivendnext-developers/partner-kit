@@ -88,9 +88,12 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(set(LOCK["states"]), {f"{P} Receipt given", f"{P} Cancelled"})
         # the customer's own name is fetched again at each save: locking it would refuse every later save after the
         # customer is renamed, so the customer link is locked and the name follows the customer (README, bounds)
-        printed = set(re.findall(r"\bdoc\.(\w+)", PF["html"])) - {"get_formatted", "name", "workflow_state", "customer_name"}
+        printed = set(re.findall(r"\bdoc\.(\w+)", PF["html"])) - {"get_formatted", "name", "workflow_state", "customer_name", "store_name"}
         self.assertLessEqual(printed | {"goods", "customer"}, set(LOCK["locked_fields"]))
         self.assertNotIn("customer_name", LOCK["locked_fields"])
+        self.assertEqual(fields(DONATION)["store_name"]["fetch_from"], "store.warehouse_name")
+        self.assertIn("doc.store_name or doc.store", PF["html"])
+        self.assertNotIn("store_name", LOCK["locked_fields"])   # follows the store, as the customer's name follows the customer
         self.assertLessEqual(set(LOCK["locked_fields"]), set(fields(DONATION)))
         self.assertLessEqual(len(LOCK["message"]), 140)
         self.assertNotIn("enabled", LOCK)   # a manifest installs every rule switched off: the README's set-up switches it on

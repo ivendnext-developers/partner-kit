@@ -36,6 +36,10 @@ ivn try
 
 ## Versions
 
+### 0.1.1
+
+- The project sheet shows the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix. A sheet saved before the update prints the old name until it is saved again.
+
 ### 0.1.0
 
 - First version in the kit: a builder's project across its quotes, orders and deliveries in stages, from a manifest only.

@@ -89,6 +89,8 @@ class ManifestTest(unittest.TestCase):
                          ("Link", "Customer", 1))
         self.assertEqual((f["customer_name"].get("fetch_from"), f["customer_name"].get("read_only")),
                          ("customer.customer_name", 1))
+        self.assertEqual((f["store_name"].get("fetch_from"), f["store_name"].get("read_only")), ("store.warehouse_name", 1))
+        self.assertIn("doc.store_name or doc.store", PF["html"])
         self.assertEqual(f["status"]["options"].split("\n"), ["Open", "Completed", "Cancelled"])
         self.assertEqual(f["status"].get("default"), "Open")
         self.assertEqual(DT[PROJECT]["title_field"], "project_name")
