@@ -111,6 +111,13 @@ class ManifestTest(unittest.TestCase):
                 self.assertIn(f'doc.get_formatted("{side}_{f}")', pf["html"])
                 self.assertNotIn(f"{{{{ doc.{side}_{f} }}}}", pf["html"])
 
+    def test_the_job_sheet_prints_the_stores_own_name_and_names_the_eyes(self):
+        (pf,) = MANIFEST["print_formats"]
+        self.assertEqual(fields(f"{P} Lab Order")["store_name"]["fetch_from"], "store.warehouse_name")
+        self.assertIn('{{ doc.store_name or doc.store or "" }}', pf["html"])
+        for bare in ('_("Right")', '_("Left")'):      # the shared language files read a bare Right or Left as a right, to leave
+            self.assertNotIn(bare, pf["html"])
+
     def test_no_notification_or_address_reaches_a_customer_from_the_manifest(self):
         self.assertNotIn("notifications", MANIFEST)        # the shop's own Notifications do (the guide)
 
