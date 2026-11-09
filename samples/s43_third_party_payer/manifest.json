@@ -391,9 +391,9 @@
     {
      "fieldname": "promotions_apply",
      "fieldtype": "Check",
-     "label": "The store's own promotions apply on this plan",
+     "label": "The shop's own promotions apply on this plan",
      "default": "1",
-     "description": "Off: a sale on this plan takes the plan's price list without the store's promotions; a coupon or a staff discount the cashier chose still applies, and so can an old-style pricing rule."
+     "description": "Off: a sale on this plan takes the plan's price list without the shop's promotions; a coupon or a staff discount the cashier chose still applies, and so can an old-style pricing rule."
     }
    ],
    "permissions": [
@@ -1011,7 +1011,7 @@
   {
    "name": "PP ICP Remittance",
    "autoname": "format:REM-{YYYY}-{#####}",
-   "description": "A payer's remittance advice, line by line; Match compares each line with its claim. The money itself is the store's own payment from the payer's customer record.",
+   "description": "A payer's remittance advice, line by line; Match compares each line with its claim. The money itself is the shop's own payment from the payer's customer record.",
    "fields": [
     {
      "fieldname": "payer",
