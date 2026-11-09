@@ -4,7 +4,7 @@ A retailer runs a *shop and win* campaign: every 200 spent at its tills during t
 
 ![What the install will change, read before you consent](screenshots/01_install.png)
 
-**Industries:** Fashion, Thrift and resale
+**Industries:** Fashion and footwear, Thrift and resale
 
 **When to use it:** a rule the retailer keeps decides something from many of its own records (here, a campaign's sales), a person decides when, and the answer belongs on one record the retailer can keep and show.
 

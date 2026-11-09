@@ -132,6 +132,17 @@ class Reports(unittest.TestCase):
         self.assertIn("POS Sale Report answered no rows", str(e.exception))
         self.assertEqual(sst.sold_of({"message": {"columns": [], "result": []}}, self.items), {})
 
+    def test_the_deliveries_of_orders_come_off_the_stores_they_left(self):
+        lines = [{"parent": "D1", "item_code": "DRESS-A-RED-M", "qty": 1, "warehouse": "High Street - DR"},
+                 {"parent": "D2", "item_code": "DRESS-A-RED-M", "qty": "2", "warehouse": "High Street - DR"},
+                 {"parent": "D2", "item_code": "SCARF", "qty": 5, "warehouse": "Mall - DR"},       # not the run's item
+                 {"parent": "D3", "item_code": "DRESS-A-RED-M", "qty": 1, "warehouse": None}]
+        delivered = sst.delivered_of(lines, self.items)
+        self.assertEqual(delivered, {"High Street - DR": {"DRESS-A-RED-M": 3.0}})
+        sold = {"Mall - DR": {"DRESS-A-RED-M": 2.0}, "High Street - DR": {"DRESS-A-RED-M": 3.0}}
+        self.assertEqual(sst.less_deliveries(sold, delivered),
+                         {"Mall - DR": {"DRESS-A-RED-M": 2.0}, "High Street - DR": {"DRESS-A-RED-M": 0.0}})
+
     def test_stock_less_the_tills_open_days(self):
         cols = [{"fieldname": f} for f in ("item_code", "item_name", "warehouse", "actual_qty", "reserved_qty_for_pos",
                                             "projected_qty")]

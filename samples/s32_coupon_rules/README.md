@@ -4,7 +4,7 @@ Rules a retailer adds to its own coupons, checked when the cashier presses **Pay
 
 ![A rule with Sale needed for each use set to 50.00](screenshots/coupon-rules-sale-needed-rule.png)
 
-**Industries:** Electronics and phones, Pharmacy
+**Industries:** Electronics and phones, Fashion and footwear, Pharmacy
 
 ## Start from it
 

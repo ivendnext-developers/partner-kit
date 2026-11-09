@@ -60,7 +60,9 @@ def _match(row, filters):
         x = row.get(f)
         if op == "=" and x != v or op == "is" and (v == "set") != bool(x):
             return False
-        if op not in ("=", "is"):
+        if op == ">=" and not x >= v or op == "<=" and not x <= v or op == "in" and x not in v:
+            return False
+        if op not in ("=", "is", ">=", "<=", "in"):
             raise AssertionError(f"the stand-in does not know the operator {op}")
     return True
 
@@ -73,6 +75,7 @@ class FakeTenant:
         self.items = [dict(r, item_group="Dresses", disabled=0) for r in item_rows()]
         self.attributes = {"Size": SIZE, "Colour": COLOUR}
         self.sold, self.stock = copy.deepcopy(SOLD), copy.deepcopy(STOCK)
+        self.deliveries = []        # deliveries made against an order: {"name", "posting_date", "lines": [(item, qty, store)]}
         self.calls, self.writes, self.refuse = [], [], None
 
     def _check(self, kind):
@@ -87,8 +90,18 @@ class FakeTenant:
             raise app.TenantError("not found", 404)
         return copy.deepcopy(src[name])
 
-    def rows(self, doctype, fields, filters, timeout=None, limit=0):
+    def rows(self, doctype, fields, filters, timeout=None, limit=0, parent=""):
         self._check(("rows", doctype, json.dumps(filters), limit))
+        if doctype == "POS Invoice":
+            assert fields == ["name"]
+            flat = {f: v for f, op, v in filters if op == "="}
+            assert flat == {"transaction_mode": "Delivery", "docstatus": 1, "is_return": 0}, filters
+            return [{"name": d["name"]} for d in self.deliveries
+                    if _match({"posting_date": d["posting_date"], "custom_deliver_against": "SO-1"}, [f for f in filters if f[1] != "="])]
+        if doctype == "POS Invoice Item":
+            assert fields == app.DELIVERY_FIELDS and parent == "POS Invoice" and filters[0][:2] == ["parent", "in"]
+            return [{"parent": d["name"], "item_code": i, "qty": q, "warehouse": w}
+                    for d in self.deliveries if d["name"] in filters[0][2] for i, q, w in d["lines"]]
         assert doctype == "Item" and fields == app.ITEM_FIELDS
         return [{k: r.get(k) for k in ("name", "variant_of", "attribute", "attribute_value")}
                 for r in self.items if _match(r, filters)][: limit or None]
@@ -167,7 +180,7 @@ class ServiceTest(unittest.TestCase):
             [(sst.POS_SALE_REPORT, json.dumps(dict(pos, warehouse=s), sort_keys=True)) for s in ("Mall - DR", "High Street - DR")]
             + [(sst.STOCK_REPORT, json.dumps({"warehouse": s, "item_group": "Dresses"}, sort_keys=True))
                for s in ("Mall - DR", "High Street - DR")]))
-        (items,) = [c for c in self.shop.calls if c[0] == "rows"]
+        (items,) = [c for c in self.shop.calls if c[:2] == ("rows", "Item")]
         self.assertEqual(json.loads(items[2]), [["item_group", "=", "Dresses"], ["variant_of", "is", "set"],
                                                 ["disabled", "=", 0]])
         self.assertEqual(items[3], sst.ITEMS_MAX)
@@ -176,7 +189,7 @@ class ServiceTest(unittest.TestCase):
     def test_s3_a_named_style_reads_that_style_only(self):
         self.shop.runs["SST-00001"]["style"] = "DRESS-B"
         self.press()
-        (items,) = [c for c in self.shop.calls if c[0] == "rows"]
+        (items,) = [c for c in self.shop.calls if c[:2] == ("rows", "Item")]
         self.assertIn(["variant_of", "=", "DRESS-B"], json.loads(items[2]))
         self.assertEqual({r["style"] for r in self.shop.writes[0][2]["rows"]}, {"DRESS-B"})
 
@@ -300,7 +313,7 @@ class ServiceTest(unittest.TestCase):
 
     def test_s14_a_group_larger_than_one_run_reads_is_said(self):
         real = self.shop.rows
-        self.shop.rows = lambda *a, **k: (real(*a, **k) * 1000)[: sst.ITEMS_MAX]
+        self.shop.rows = lambda dt, *a, **k: (real(dt, *a, **k) * 1000)[: sst.ITEMS_MAX] if dt == "Item" else real(dt, *a, **k)
         code, out = self.press()
         self.assertIn("more items than one run reads", out["message"]["body"])
         self.assertEqual(self.shop.writes, [])
@@ -315,6 +328,26 @@ class ServiceTest(unittest.TestCase):
         self.shop.report = report
         code, out = self.press()
         self.assertEqual((code, out["message"]["level"]), (200, "success"))
+
+    def test_s15b_an_order_and_its_delivery_are_one_sale(self):
+        # one unit of DRESS-A-RED-L ordered at the Mall and sent from High Street: the report counts the order at the Mall
+        # and the delivery at High Street; the sale is the order, so High Street's count loses the delivery's unit
+        self.shop.sold["High Street - DR"].append(["High Street - DR", "P", "DRESS-A-RED-L", "x", 0, 0, 0, 0, 1, 0, 0])
+        self.shop.deliveries = [{"name": "POS-D1", "posting_date": "2026-10-20", "lines": [("DRESS-A-RED-L", 1.0, "High Street - DR"),
+                                                                                          ("SCARF", 2.0, "High Street - DR")]},
+                                {"name": "POS-D0", "posting_date": "2026-09-01", "lines": [("DRESS-A-RED-S", 1.0, "Mall - DR")]}]
+        code, out = self.press()
+        self.assertEqual((code, out["message"]["level"]), (200, "success"))
+        rows = {(r["size"], r["store"]): (r["sold"], r["in_stock"]) for r in self.shop.writes[0][2]["rows"] if r["colour"] == "Red"}
+        self.assertEqual(rows[("L", "Mall - DR")], (1, 4))
+        self.assertNotIn(("L", "High Street - DR"), rows)           # nothing left to show: 1 sold less 1 delivered
+        self.assertEqual(rows[("S", "Mall - DR")], (3, 0))            # a delivery before Sold since is not read
+        lines = [c for c in self.shop.calls if c[:2] == ("rows", "POS Invoice Item")]
+        self.assertEqual(json.loads(lines[0][2]), [["parent", "in", ["POS-D1"]]])
+
+    def test_s15c_no_delivery_reads_no_lines(self):
+        self.press()
+        self.assertEqual([c for c in self.shop.calls if c[:2] == ("rows", "POS Invoice Item")], [])
 
     def test_s16_nothing_sold_and_nothing_held_writes_an_empty_run_and_says_so(self):
         self.shop.sold, self.shop.stock = {}, {}

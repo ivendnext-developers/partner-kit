@@ -113,7 +113,7 @@ Both were walked on our test bench on 2026-10-10, iVendNext POS app at `87812e14
 - **A reprint keeping its old VAT rate** (step 2 of the receipt) was not tested.
 - **Member pricing offline, at its edges:** a member the till's offline customer list does not hold (in the walk the list held this store's recent customers), a member moved to another group or a promotion changed while the till was offline, and a card payment offline were not tried. From the code, the till never guesses an offline member discount: when it cannot work one out exactly, it does not apply it.
 - **Offline was not tested for the reasons, the IMEI, the line detail or the receipt.**
-- Blind counts, permissions per till action, gift receipts and notifications with the print attached have no recipe in the kit yet (for the last, the card *approval-email-with-print* gives the setup).
+- Blind counts, permissions per till action and notifications with the print attached have no recipe in the kit yet (for the last, the card *approval-email-with-print* gives the setup). The gift receipt needs none: the till builds it (card *gift-receipt*).
 
 ## See also
 

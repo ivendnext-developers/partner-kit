@@ -243,7 +243,7 @@
   }
 
   // the industries (spec J1-05: the App library's twelve)
-  var INDUSTRIES = ["Beauty and cosmetics", "Electronics and phones", "Fashion", "Grocery", "Hardware and DIY", "Hospitality",
+  var INDUSTRIES = ["Beauty and cosmetics", "Electronics and phones", "Fashion and footwear", "Grocery", "Hardware and DIY", "Hospitality",
                     "Liquor and wine", "Optical", "Pharmacy", "Thrift and resale", "Travel retail", "Distribution and warehousing"];
 
   // the doors in plain words (spec J1-06; no inside word on the page). A door with no line here shows its own name.

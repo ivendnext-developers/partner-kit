@@ -19,9 +19,11 @@
       "s52_phone_plans",
       "s58_repairs_by_serial"
     ],
-    "Fashion": [
+    "Fashion and footwear": [
       "s2_bins",
       "s3_price_audit",
+      "s25_gift_on_spend",
+      "s32_coupon_rules",
       "s44_lucky_draw",
       "s53_alteration_tickets",
       "s54_sell_through"

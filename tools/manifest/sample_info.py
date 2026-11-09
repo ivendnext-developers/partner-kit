@@ -18,7 +18,7 @@ import pathlib
 import re
 
 # The App library's twelve industries, in the words the gallery shows (the library's catalogue holds the same)
-INDUSTRIES = ("Beauty and cosmetics", "Electronics and phones", "Fashion", "Grocery", "Hardware and DIY", "Hospitality",
+INDUSTRIES = ("Beauty and cosmetics", "Electronics and phones", "Fashion and footwear", "Grocery", "Hardware and DIY", "Hospitality",
               "Liquor and wine", "Optical", "Pharmacy", "Thrift and resale", "Travel retail", "Distribution and warehousing")
 EVERY = "every industry"
 # Samples that are configuration packs: what they do is set in Desk, so the gallery lists them under *Set in Desk first*
