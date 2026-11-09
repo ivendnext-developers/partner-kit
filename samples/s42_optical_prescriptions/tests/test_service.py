@@ -75,6 +75,7 @@ class Api:
         return [i for i in self.items_by.get(url, []) if i["name"] in codes]
 
     def item_name(self, url, key, code):
+        self.calls.append(("item_name", url, key, code))
         return {"SV-LENS": "Single vision lens"}.get(code)
 
     def prescriptions(self, url, key, prefix, customer):
@@ -108,7 +109,15 @@ class OneShop(unittest.TestCase):
         code, out = self.check(context([line("ACUVUE-30", "Contact lenses", n=3)], customer="Walk In"))
         self.assertEqual((code, out["verdict"]), (200, "refuse"))
         self.assertTrue(out["reason"].startswith("Line 3: ACUVUE-30 needs a contact lens prescription for this customer."))
-        self.assertEqual(self.api.calls[-1], ("prescriptions", URL, "k:s", "PP OPT", "Walk In"))
+        self.assertIn(("prescriptions", URL, "k:s", "PP OPT", "Walk In"), self.api.calls)
+
+    def test_a_refused_line_shows_the_items_name_read_once_at_the_refusal(self):
+        out = self.check(context([line("SV-LENS", "Spectacle lenses")], customer="Walk In"))[1]
+        self.assertTrue(out["reason"].startswith("Line 1: Single vision lens needs a spectacle prescription"), out)
+        self.assertEqual([c for c in self.api.calls if c[0] == "item_name"], [("item_name", URL, "k:s", "SV-LENS")])
+        self.api.calls.clear()
+        self.assertEqual(self.check(context())[1]["verdict"], "allow")      # Ana Lopez holds one: no name is read
+        self.assertNotIn("item_name", [c[0] for c in self.api.calls])
 
     def test_an_expired_prescription_names_the_day(self):
         out = self.check(context([line("ACUVUE-30", "Contact lenses")], customer="Ben Old"))[1]
@@ -335,6 +344,11 @@ class ShopApi(unittest.TestCase):
         a = self.args()
         self.assertEqual((json.loads(a["fields"]), json.loads(a["filters"]), a["limit_page_length"]),
                          (["name", "pp_opt_needs", "variant_of"], [["name", "in", ["SV-LENS"]]], "0"))
+
+    def test_reads_one_items_name_and_none_when_it_has_none(self):
+        self.assertIsNone(self.api.item_name(self.url, "k:s", "SV-LENS"))      # the stand-in item carries no name
+        a = self.args()
+        self.assertEqual((json.loads(a["fields"]), json.loads(a["filters"])), (["item_name"], [["name", "=", "SV-LENS"]]))
 
     def test_reads_only_two_fields_of_the_customers_prescriptions(self):
         self.assertEqual(self.api.prescriptions(self.url, "k:s", "PP OPT", "Ana Lopez"), [RX_SPECS])
