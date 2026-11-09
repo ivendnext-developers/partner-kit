@@ -45,6 +45,10 @@ class ManifestTest(unittest.TestCase):
         f = next(f for f in MANIFEST["custom_fields"] if f["fieldname"] == "pp_ccb_handed_over")
         self.assertEqual((f.get("in_list_view"), f.get("in_standard_filter")), (1, 1))
 
+    def test_the_waiting_list_leaves_out_an_order_the_till_handed_over(self):
+        ws = json.dumps(MANIFEST["workspaces"]) + MANIFEST["description"]
+        self.assertEqual(ws.count("POS Pickup Handed At not set"), 2)   # the till writes that field, not Handed over
+
     def test_web_orders_to_pick_are_submitted_sales_orders_still_to_deliver_with_a_web_order_number(self):
         r = report(PICK)
         self.assertEqual((r["ref_doctype"], r["report_type"]), ("Sales Order", "Report Builder"))

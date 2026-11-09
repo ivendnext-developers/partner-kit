@@ -24,7 +24,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/click_and_collect.md).
 
-**The customer sets:** each store's warehouse in the pick list's filter, and the waiting list's filter (Status, Handed over No, Set Source Warehouse, and Date on or after the day of install), saved once.
+**The customer sets:** each store's warehouse in the pick list's filter, and the waiting list's filter (Status, Handed over No, POS Pickup Handed At not set, Set Source Warehouse, and Date on or after the day of install), saved once.
 
 ## Run it
 
@@ -34,6 +34,10 @@ ivn try
 ```
 
 ## Versions
+
+### 0.1.1
+
+- The waiting list's filter also says *POS Pickup Handed At* is not set, so an order handed over at the till leaves it (the till writes that field, not *Handed over*); *shop* is *site* in the description.
 
 ### 0.1.0
 

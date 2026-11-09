@@ -44,9 +44,9 @@ A store that sells on the web and lets its customers collect in store needs two 
 
 ## What the store does
 
-1. Picks a web order the usual way: from its sales order, it makes and submits the delivery note. A WooCommerce web store then tells the customer *Ready to collect* (the connector does that, not this app). The order leaves **Web orders to pick**, and its note shows in the Delivery Note list filtered on **Status** To Bill or Completed, **Is Return** No, **% Returned** less than 100, **Handed over** No, **Customer's Purchase Order No** is set, **Set Source Warehouse** your store's warehouse, and **Date** on or after the install day (each person who hands orders over saves that filter once as *Waiting for collection*: a saved list filter is the user's own).
+1. Picks a web order the usual way: from its sales order, it makes and submits the delivery note. A WooCommerce web store then tells the customer *Ready to collect* (the connector does that, not this app). The order leaves **Web orders to pick**, and its note shows in the Delivery Note list filtered on **Status** To Bill or Completed, **Is Return** No, **% Returned** less than 100, **Handed over** No, **POS Pickup Handed At** is not set (the till's own hand-over writes that field, not *Handed over*), **Customer's Purchase Order No** is set, **Set Source Warehouse** your store's warehouse, and **Date** on or after the install day (each person who hands orders over saves that filter once as *Waiting for collection*: a saved list filter is the user's own).
 
-   ![The Delivery Note list's Filter panel with the waiting list's seven conditions, each added under + Add a Filter](../samples/s33_click_and_collect/screenshots/03_waiting_filter.png)
+   ![The Delivery Note list's Filter panel with the waiting list's conditions, each added under + Add a Filter](../samples/s33_click_and_collect/screenshots/03_waiting_filter.png)
 
 2. When the customer comes, it opens the note, and on its **More Info** tab under **Customer PO Details** ticks **Handed over**, writes **Collected by** and saves. The note leaves the list, and its history (*Activity*) records who ticked it and when.
 
