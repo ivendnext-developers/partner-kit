@@ -19,6 +19,7 @@ In the App library now, 57 apps, free or with a key:
 - Hospitality, the standard version, every app listed: [Kitchen screen](https://library.ivendnext.app/apps/ivendnext_ksc) · [Front of house](https://library.ivendnext.app/apps/ivendnext_foh) · [Guest ordering](https://library.ivendnext.app/apps/ivendnext_gor) · [Restaurant back office](https://library.ivendnext.app/apps/ivendnext_rbo) · [Room charge](https://library.ivendnext.app/apps/ivendnext_rmc)
 - Optical, the standard version, every app listed: [Optical prescriptions and lab orders](https://library.ivendnext.app/apps/ivendnext_opt) · [Third-party payer](https://library.ivendnext.app/apps/ivendnext_icp)
 - Grocery, the standard version, every app listed: [Expiry and recall](https://library.ivendnext.app/apps/ivendnext_rcl) · [Expiry markdown](https://library.ivendnext.app/apps/ivendnext_exm) · [Age-restricted sale check](https://library.ivendnext.app/apps/ivendnext_age) · [Price-checker kiosk](https://library.ivendnext.app/apps/ivendnext_prc) · [Bin locations](https://library.ivendnext.app/apps/ivendnext_bln) · [Click and collect](https://library.ivendnext.app/apps/ivendnext_ccb)
+- Travel retail, the standard version, every app listed: [Duty-free allowance and boarding pass](https://library.ivendnext.app/apps/ivendnext_dfa) · [Age-restricted sale check](https://library.ivendnext.app/apps/ivendnext_age)
 
 ## Being built
 
