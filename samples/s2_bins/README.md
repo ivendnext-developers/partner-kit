@@ -4,6 +4,8 @@ S2 records only **where** items sit inside a store (locations such as the back r
 
 ![The bin locations workspace, the bins and what is in each](screenshots/01_workspace.png)
 
+**Names:** a location, aisle or bin name is one name across all stores of a retailer (the records are named by it). A chain begins each store's with its own prefix, such as `AU-A1`; a second store that uses the same name is refused, and the Location, Aisle and Bin fields say so.
+
 **Industries:** Electronics and phones, Fashion and footwear, Grocery, Hardware and DIY, Distribution and warehousing
 
 **When to use it:** your product keeps its own data beside the retailer's (here, bins) and staff should see it in Desk and at the till.
