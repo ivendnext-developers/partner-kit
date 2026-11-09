@@ -61,7 +61,7 @@ A Desk action is a button on a record in iVendNext Desk. When a user presses it,
 
    Give your integration role **only** what the work needs. S16's role **reads and creates** its own pick tasks (no write: it never edits one), and does **not** read Sales Orders: everything it needs arrives in the press. On a retry, answer about the task that exists (its picker), not about what the dialog sends this time.
 
-   The pick task the service made holds the order, the picker, the priority and the lines in walking order:
+   The pick task the service made holds the order, the picker, the priority and the lines ordered by warehouse, then item:
 
    ![the pick task, opened](../samples/s16_pick_route/screenshots/04_pick_task.png)
 

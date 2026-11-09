@@ -58,7 +58,7 @@ def context_of(body: dict) -> dict:
 
 
 def plan(record: dict, inputs: dict, key: str) -> dict:
-    """The pick task for one Sales Order: its lines in walking order (warehouse, then item). Quantities arrive in
+    """The pick task for one Sales Order: its lines ordered by warehouse, then item. Quantities arrive in
     THOUSANDTHS (an integer, the extension points' one rule), so 2.5 units arrive as 2500."""
     f = record["fields"]
     rows = sorted(f.get("items") or [], key=lambda r: (r.get("warehouse") or f.get("set_warehouse") or "",
