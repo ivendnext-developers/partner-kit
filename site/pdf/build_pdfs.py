@@ -19,7 +19,7 @@ The PDFs (DOCS below):
   ladder_and_four_rules.pdf   guide chapter 3's "The ladder" and "The four rules" sections, one sheet front and back: exactly
                               2 pages, so a section that outgrows its page fails the build.
   needs_at_a_glance.pdf       every card of the needs catalogue, by area and A to Z in the customer's words: the verdict and
-                              the door; at most 6 pages. Each row carries its card's id, and the ids must be the cards', once each.
+                              the door; at most 8 pages. Each row carries its card's id, and the ids must be the cards', once each.
 
 How: each PDF is an HTML page built in a temporary folder with print.css, the brand's Inter (fonts/) and the site's logo;
 it is never published. Its links are written absolute (https://developer.ivendnext.com/… for a site page, the GitHub address
@@ -397,7 +397,7 @@ DOCS = [Doc("blueprint_form.pdf", "Project blueprint", 4, False, form_body, land
         Doc("blueprint_how_to_fill.pdf", "How to fill the project blueprint", 1, True, guide_body, cls="guide"),
         Doc("blueprint_example.pdf", "Blueprint example", 5, False, example_body, landscape=1, home="kit/blueprint_example.html"),
         Doc("ladder_and_four_rules.pdf", "The ladder and the four rules", 2, True, ladder_body, home="guide/03_ladder_and_never_list.html"),
-        Doc("needs_at_a_glance.pdf", "Needs at a glance", 7, False, glance_body, home="needs/index.html"),
+        Doc("needs_at_a_glance.pdf", "Needs at a glance", 8, False, glance_body, home="needs/index.html"),
         Doc("how_ivendnext_apps_work.pdf", "How iVendNext apps work", 10, False, howitworks_body, home="guide/01a_how_it_all_works.html"),
         Doc("how_the_data_travels.pdf", "How the data travels", 13, False, data_travels_body,
             home="guide/01c_how_the_data_travels.html")]
