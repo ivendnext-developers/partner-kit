@@ -9,7 +9,7 @@ Start here when you want working code to begin from. A sample shows one way into
 Two have a repository so far, built by the CitiXsys Consulting Team through this same kit and a sandbox made the way yours is. Both have a brief and nothing to download yet. Whatever the team finds missing goes into the kit through the same [feedback forms](feedback.md) members use.
 
 {{reference-app: Quick-commerce hub | A store's iVendNext site and a quick-commerce marketplace kept in step: orders arrive as sales orders, stock goes out, staff pick and pack from an order board. | Outside app, Till key, Manifest, Desk action, Partner page | Brief ready | quick-commerce-hub}}
-{{reference-app: Third-party logistics and shipping | The warehouse side of an order: a pick route from a sales order. A shipment with a carrier's tracking number and label is not built yet, and the brief is not open yet. | Outside app, Till key, Manifest, Desk action, Partner page | Brief ready | 3pl-shipping}}
+{{reference-app: Third-party logistics and shipping | The warehouse side of an order: a pick route from a sales order. | Outside app, Till key, Manifest, Desk action, Partner page | Brief ready | 3pl-shipping}}
 
 ## Where a sample ends and a reference app begins
 
