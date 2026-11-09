@@ -4,7 +4,7 @@ A retailer that sells alcohol, tobacco, vapes, knives or some medicines must see
 
 ![What the install will change, read before consent](screenshots/01_install.png)
 
-**Industries:** Grocery, Hospitality, Liquor and wine, Pharmacy
+**Industries:** Grocery, Hospitality, Liquor and wine, Pharmacy, Travel retail
 
 ## Start from it
 

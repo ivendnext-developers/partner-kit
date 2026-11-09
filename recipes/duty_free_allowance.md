@@ -20,7 +20,7 @@ An airport store sells only to passengers, and only up to what customs lets each
 
 3. **Check every call with the check's secret** (`<app>:sub:<key>`; the sample's key is `allowance`), and refuse a timestamp more than five minutes from yours.
 
-4. **Answer the cheap cases first, reading nothing.** A sale with no line of a positive quantity is a refund: allow. A sale with no `<PREFIX> Boarding Pass` in `sale_attributes`: refuse, *"Scan the customer's boarding pass into Sale details, then press Pay again."*
+4. **Answer the cheap cases first, reading nothing.** A sale with no line of a positive quantity is a refund: allow. A sale with no `<PREFIX> Boarding Pass` in `sale_attributes`: refuse, *"Scan the customer's boarding pass into Sale details, then try again."*
 
 5. **Read the pass.** IATA's bar-coded boarding pass starts `M` and the number of legs (1 to 4), then the passenger's name (20 characters) and one character; each leg is then 37 fixed characters: the booking reference (7), from (3), to (3), the airline (3), the flight (5), the day of the year (3), the cabin (1), the seat (4), the check-in number (5), the status (1), and the size of the leg's variable part in two hex digits, which you step over to reach the next leg. ⚠ **The till keeps 140 characters of a sale detail**, so a phone's pass with its security part is cut: read every leg that fits whole. The first leg always fits.
 
@@ -29,7 +29,7 @@ An airport store sells only to passengers, and only up to what customs lets each
    | The pass | Answer |
    |---|---|
    | not readable as above | `{"verdict": "refuse", "reason": "The boarding pass could not be read. Scan it again into Sale details."}` |
-   | no leg leaves from one of the retailer's airports (an arrivals store: arrives at one) | `{"verdict": "refuse", "reason": "This boarding pass is for a flight from LHR. This shop sells to passengers departing DXB."}` |
+   | no leg leaves from one of the retailer's airports (an arrivals store: arrives at one) | `{"verdict": "refuse", "reason": "This boarding pass is for a flight from LHR. This store sells to passengers departing DXB."}` |
    | no such leg is dated the airport's today or tomorrow (an arrivals store: today or the two days before, since a pass carries the day its flight leaves and a long flight arrives up to two days later) | `{"verdict": "refuse", "reason": "This boarding pass is for a flight on another day. Ask for the pass for today's flight."}` (an arrivals store: *"…Ask for the pass of the flight the customer just arrived on."*) |
 
    The airport's day is UTC plus the retailer's hours from UTC; compare days of the year, so a flight on 1 January is tomorrow on 31 December.
@@ -48,11 +48,11 @@ An airport store sells only to passengers, and only up to what customs lets each
 
 ### Settings
 
-The retailer's record `Default` of `<PREFIX> Settings`: *This shop's airports* (three-letter codes, separated by spaces or commas; blank: any airport; a word that is not a code is kept, so every pass is refused naming it and the typo shows at once), *The shop sells to passengers* (*departing*: a flight dated today or tomorrow; *arriving*: today or the two days before), *Hours from UTC at the airport* (4 for Dubai, 3 for Riyadh; a value past ±14 reads 0), and *Count the passenger's earlier sales on the same boarding pass* (on). On each Item Group, *Duty-free allowance per passenger* (0: no limit) and *Allowance counted in*; on each Item, *Counts toward the duty-free allowance as*. A change reaches the service within a minute.
+The retailer's record `Default` of `<PREFIX> Settings`: *This store's airports* (three-letter codes, separated by spaces or commas; blank: any airport; a word that is not a code is kept, so every pass is refused naming it and the typo shows at once), *This store sells to passengers* (*departing*: a flight dated today or tomorrow; *arriving*: today or the two days before), *Hours from UTC at the airport* (4 for Dubai, 3 for Riyadh; a value past ±14 reads 0), and *Count the passenger's earlier sales on the same boarding pass* (on). On each Item Group, *Duty-free allowance per passenger* (0: no limit) and *Allowance counted in*; on each Item, *Counts toward the duty-free allowance as*. A change reaches the service within a minute.
 
 ![The boarding pass in Sale details on a demo site's till](../samples/s36_duty_free/screenshots/07_till_sale_details.png)
 
-**What the cashier does.** The cashier taps **🗒 Sale details** on the basket and scans the boarding pass into its field (a keyboard scanner types it in), then presses Pay. The field shows on every till of the site; only the tills whose POS Profiles the check serves need it. A refusal shows *"This sale can't be paid"* and the app's sentence, then goes back to the basket: the cashier scans the right pass, or takes some items off, and presses Pay again.
+**What the cashier does.** The cashier taps **🗒 Sale details** on the basket and scans the boarding pass into its field (a keyboard scanner types it in), then presses Pay. The field shows on every till of the site; only the tills whose POS Profiles the check serves need it. A refusal shows *"This sale can't be paid"* and the app's sentence, then goes back to the basket: the cashier scans the right pass, or takes some items off, and tries again.
 
 ![A sale over the allowance refused on a demo site: Spirits: 4.5 litres on this boarding pass; the allowance is 4](../samples/s36_duty_free/screenshots/09_till_over_allowance.png)
 
