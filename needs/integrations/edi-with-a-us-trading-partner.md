@@ -17,8 +17,8 @@ Your outside app, on the API and the event feed, between the trading partner's E
 
 ## Limits
 - iVendNext holds no EDI message, mailbox or partner profile: they live in your app or in the EDI service.
-- Each trading partner has its own message rules and tests before it goes live; the partner's technical team sets them.
+- Each trading partner has its own message rules and tests before it goes live; the trading partner's technical team sets them.
 - The feed reports a saved delivery or invoice, so the notice goes after the fact, not before the goods leave.
 
 ## Tell the customer
-Purchase orders arrive as sales orders in iVendNext, and the shipping notice and invoice go back through the EDI connection; the partner certifies the connection before it goes live.
+Purchase orders arrive as sales orders in iVendNext, and the shipping notice and invoice go back through the EDI connection; the trading partner certifies the connection before it goes live.
