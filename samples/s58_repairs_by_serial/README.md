@@ -21,7 +21,7 @@ What a partner usually changes:
 - the repair's fields, tests and parts: the `PP RPR Repair` record type and its tables `PP RPR Test` and `PP RPR Part` in `manifest.json`;
 - the steps and who moves them: the workflow's states and `allowed` roles in `manifest.json`;
 - what a collected repair locks: `locked_fields` of the save rule;
-- the slip and the unit tag: the print format *PP RPR Repair slip*;
+- the slip and the unit tag: the print format *PP RPR Repair slip*, the repair's default;
 - the queue: the report *PP RPR Open repairs*;
 - the repair's number: the naming series `RPR-`, in the repair's `autoname`.
 
@@ -37,6 +37,11 @@ ivn try
 ```
 
 ## Versions
+
+### 0.1.1
+
+- A repair for a customer made in Desk shows that customer's Mobile No in a new *Customer's mobile* field (Desk hides *Customer's phone* while it is empty).
+- *Print* opens the repair slip, not the plain layout (the repair's default print format).
 
 ### 0.1.0
 

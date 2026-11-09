@@ -4,7 +4,7 @@ A store's board for the web orders it must pick and hand over, in Desk, with no 
 
 ![The workspace: the line saying where the two lists are, and the two lists](screenshots/01_workspace.png)
 
-**Industries:** Electronics and phones, Fashion, Grocery, Thrift and resale
+**Industries:** every industry
 
 **When to use it:** a retailer sells on the web and its customers collect in store, and you want every store to see the same lists without building a screen.
 

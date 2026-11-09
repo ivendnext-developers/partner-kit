@@ -36,6 +36,7 @@ FETCHED = {
     "warranty_until": "serial_no.warranty_expiry_date",
     "customer_name": "customer.customer_name",
     "customer_phone": "customer.custom_phone_no",
+    "customer_mobile": "customer.mobile_no",   # a customer made in Desk holds only this one
 }
 
 
@@ -163,9 +164,15 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(rights("Stock User"), {"read"})   # to name a repair on a Material Issue
 
     def test_the_repair_opens_its_help(self):
-        (ps,) = MANIFEST["property_setters"]
-        self.assertEqual((ps["doc_type"], ps["property"]), (REPAIR, "documentation"))
-        self.assertTrue(ps["value"].endswith("repairs_by_serial.html#repairs"))
+        ps = {x["property"]: x for x in MANIFEST["property_setters"]}
+        self.assertEqual(set(ps), {"documentation", "default_print_format"})
+        self.assertTrue(all(x["doc_type"] == REPAIR for x in ps.values()))
+        self.assertTrue(ps["documentation"]["value"].endswith("repairs_by_serial.html#repairs"))
+
+    def test_print_opens_the_slip_by_default(self):
+        ps = next(x for x in MANIFEST["property_setters"] if x["property"] == "default_print_format")
+        self.assertEqual(ps["value"], PF["name"])
+        self.assertEqual(PF["doc_type"], REPAIR)
 
 
 if __name__ == "__main__":

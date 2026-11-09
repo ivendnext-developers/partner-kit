@@ -16,14 +16,12 @@
       "s23_till_guard",
       "s30_units_as_serials",
       "s32_coupon_rules",
-      "s33_click_and_collect",
       "s52_phone_plans",
       "s58_repairs_by_serial"
     ],
     "Fashion": [
       "s2_bins",
       "s3_price_audit",
-      "s33_click_and_collect",
       "s44_lucky_draw",
       "s53_alteration_tickets",
       "s54_sell_through"
@@ -32,7 +30,6 @@
       "s2_bins",
       "s24_price_checker",
       "s27_stock_alerts",
-      "s33_click_and_collect",
       "s37_age_check",
       "s38_expiry_markdown",
       "s40_expiry_recall"
@@ -77,7 +74,6 @@
     "Thrift and resale": [
       "s3_price_audit",
       "s14_approvals_stores",
-      "s33_click_and_collect",
       "s44_lucky_draw",
       "s57_donation_intake",
       "s61_consignment_payouts"
@@ -107,6 +103,7 @@
     "s21_field_rules",
     "s26_derived_prices",
     "s28_merge_and_history",
+    "s33_click_and_collect",
     "s34_po_check",
     "s46_payment_method_rules",
     "s47_customers_by_store",
