@@ -17,6 +17,7 @@ In the App library now, 57 apps, free or with a key:
 - **Stock:** [Unit codes at the scan](https://library.ivendnext.app/apps/ivendnext_unc) · [Bin locations](https://library.ivendnext.app/apps/ivendnext_bln) · [iVendNext Handheld](https://library.ivendnext.app/apps/ivendnext_handheld) · [Pick route](https://library.ivendnext.app/apps/ivendnext_pck) · [Restaurant back office](https://library.ivendnext.app/apps/ivendnext_rbo)
 - Pharmacy, the standard version, every app listed: [Pharmacy counter rules](https://library.ivendnext.app/apps/ivendnext_rxc) · [Expiry and recall](https://library.ivendnext.app/apps/ivendnext_rcl) · [Regulated stock register](https://library.ivendnext.app/apps/ivendnext_rsr) · [Third-party payer](https://library.ivendnext.app/apps/ivendnext_icp)
 - Hospitality, the standard version, every app listed: [Kitchen screen](https://library.ivendnext.app/apps/ivendnext_ksc) · [Front of house](https://library.ivendnext.app/apps/ivendnext_foh) · [Guest ordering](https://library.ivendnext.app/apps/ivendnext_gor) · [Restaurant back office](https://library.ivendnext.app/apps/ivendnext_rbo) · [Room charge](https://library.ivendnext.app/apps/ivendnext_rmc)
+- Optical, the standard version, every app listed: [Optical prescriptions and lab orders](https://library.ivendnext.app/apps/ivendnext_opt) · [Third-party payer](https://library.ivendnext.app/apps/ivendnext_icp)
 
 ## Being built
 

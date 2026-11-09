@@ -74,6 +74,9 @@ class Api:
         self._gate()
         return [i for i in self.items_by.get(url, []) if i["name"] in codes]
 
+    def item_name(self, url, key, code):
+        return {"SV-LENS": "Single vision lens"}.get(code)
+
     def prescriptions(self, url, key, prefix, customer):
         self.calls.append(("prescriptions", url, key, prefix, customer))
         self._gate()

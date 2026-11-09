@@ -117,6 +117,17 @@ class ShopApi:
             "fields": json.dumps(["name", optical.field_of(prefix), "variant_of"]),
             "filters": json.dumps([["name", "in", codes]]), "limit_page_length": 0}), list)
 
+    def item_name(self, url: str, key: str, code: str) -> str | None:
+        """The refused item's name, read once at a refusal; any failure leaves the code to show."""
+        try:
+            out = self._get(url, key, "/api/resource/Item", {"fields": json.dumps(["item_name"]),
+                                                              "filters": json.dumps([["name", "=", code]])})
+            rows = self._data(out, list)
+            name = rows[0].get("item_name") if rows and isinstance(rows[0], dict) else None
+            return name if isinstance(name, str) and name.strip() else None
+        except Exception:
+            return None
+
     def prescriptions(self, url: str, key: str, prefix: str, customer: str) -> list:
         """The customer's prescriptions: their kind and *Valid until* only."""
         return self._data(self._get(url, key, "/api/resource/" + urllib.parse.quote(f"{prefix} Prescription"), {
@@ -191,7 +202,8 @@ class Service:
         if not any(needs):
             return {"verdict": "allow"}                 # nothing on the sale needs a prescription: none is read
         rxs = optical.prescriptions_of(self.api.prescriptions(shop["url"], shop["key"], self.prefix, ctx["customer"]))
-        return optical.on_check(ctx, needs, rxs, optical.today_at(settings["hours"], self.now()))
+        return optical.on_check(ctx, needs, rxs, optical.today_at(settings["hours"], self.now()),
+                                lambda code: self.api.item_name(shop["url"], shop["key"], code))
 
     def answer(self, path: str, headers, raw: bytes) -> tuple[int, dict]:
         if path not in ROUTES:

@@ -124,7 +124,7 @@ class Check(unittest.TestCase):
         out = optical.on_check(context([line("FRAME-1", "Frames", n=1), line("SV-LENS", "Spectacle lenses", n=2)]),
                                ["", "Spectacles"], [], TODAY)
         self.assertEqual(out, {"verdict": "refuse", "reason": "Line 2: SV-LENS needs a spectacle prescription for this "
-                               "customer. Add the customer, or enter it in Desk, then Pay again."})
+                               "customer. Attach the customer or enter it in Desk, then try again."})
 
     def test_a_prescription_of_the_kind_in_date_allows(self):
         ctx = context([line("SV-LENS", "Spectacle lenses"), line("ACUVUE-30", "Contact lenses", n=2)])
@@ -140,7 +140,7 @@ class Check(unittest.TestCase):
         ctx = context([line("ACUVUE-30", "Contact lenses")])
         out = optical.on_check(ctx, needs(ctx), rxs(RX_CL_OLD), TODAY)
         self.assertEqual(out["reason"], "Line 1: ACUVUE-30: the customer's contact lens prescription ran out on 10 Jan "
-                         "2026. Enter the new one in Desk, then Pay again.")
+                         "2026. Enter the new one in Desk, then try again.")
 
     def test_the_latest_ended_one_is_named(self):
         older = dict(RX_CL_OLD, valid_until="2025-06-01")
@@ -162,6 +162,14 @@ class Check(unittest.TestCase):
         ctx = context([line("FRAME-1", "Frames", -1), line("SV-LENS", "Spectacle lenses", n=2)], stage="return")
         self.assertEqual(optical.on_check(ctx, needs(ctx), [], TODAY)["verdict"], "refuse")
 
+    def test_the_refused_line_shows_the_items_name_not_its_code(self):
+        ctx = context([line("SV-LENS", "Spectacle lenses")])
+        names = {"SV-LENS": "Single vision lens"}
+        out = optical.on_check(ctx, needs(ctx), [], TODAY, names.get)
+        self.assertTrue(out["reason"].startswith("Line 1: Single vision lens needs a spectacle prescription"), out)
+        out = optical.on_check(ctx, needs(ctx), [], TODAY, lambda code: None)       # no name read: the code stands
+        self.assertTrue(out["reason"].startswith("Line 1: SV-LENS needs"), out)
+
     def test_the_first_line_short_is_named(self):
         ctx = context([line("FRAME-1", "Frames", n=1), line("ACUVUE-30", "Contact lenses", n=2),
                        line("SV-LENS", "Spectacle lenses", n=3)])
@@ -174,7 +182,7 @@ class Check(unittest.TestCase):
                 out = optical.on_check(context([line(long, "Contact lenses", n=n)]), ["Contact lenses"], rx, TODAY)
                 self.assertLessEqual(len(out["reason"]), 140)
                 self.assertNotIn("<", out["reason"])
-                self.assertTrue(out["reason"].endswith("Pay again."), out["reason"])     # the whole sentence fits
+                self.assertTrue(out["reason"].endswith("try again."), out["reason"])     # the whole sentence fits
 
 
 class Context(unittest.TestCase):
