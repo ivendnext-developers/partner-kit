@@ -35,6 +35,7 @@ FETCHED = {
     "item_name": "serial_no.item_name",
     "warranty_until": "serial_no.warranty_expiry_date",
     "customer_name": "customer.customer_name",
+    "store_name": "store.warehouse_name",
     "customer_phone": "customer.custom_phone_no",
     "customer_mobile": "customer.mobile_no",   # a customer made in Desk holds only this one
 }

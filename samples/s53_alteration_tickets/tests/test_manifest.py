@@ -104,6 +104,8 @@ class ManifestTest(unittest.TestCase):
             used = set(re.findall(rf"\b{var}\.(\w+)", html)) - {"get_formatted"}
             self.assertLessEqual(used, set(fields(dt)) | {"name"}, var)
         self.assertIn("Garment tag", html)
+        self.assertIn("doc.store_name or doc.store", html)   # the store's own name, not the record name with the company suffix
+        self.assertEqual(fields(TICKET)["store_name"]["fetch_from"], "store.warehouse_name")
         self.assertIn("{% for m in doc.measurements if m.measure %}", html)   # a blank row keeps its unit's default: never printed
         self.assertEqual(html.count("{{ doc.name }}"), 2)   # on the slip and on the tag
 

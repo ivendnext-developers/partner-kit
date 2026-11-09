@@ -39,6 +39,10 @@ ivn try
 
 ## Versions
 
+### 0.1.2
+
+- The donor receipt says *Received at* with the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix.
+
 ### 0.1.1
 
 - *Print* opens the donor receipt, not the plain layout (the donation's default print format).
