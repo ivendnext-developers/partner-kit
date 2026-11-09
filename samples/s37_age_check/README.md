@@ -41,6 +41,10 @@ ivn try
 
 ## Versions
 
+### 1.1.1
+
+- The settings field reads *Hours from UTC at your store*, and the manifest says store where it said shop. Manifest 0.2.1. The recipe says more than one app may answer the scan on a POS Profile, in turn.
+
 ### 1.1.0
 
 - The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.

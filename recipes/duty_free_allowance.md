@@ -42,7 +42,7 @@ An airport store sells only to passengers, and only up to what customs lets each
 
    Your manifest's `role_rights` give your role a plain **read on Item Group, Item and POS Invoice**, and your user must hold no User Permissions, or the earlier sales are only partly seen and a passenger can buy past the allowance.
 
-8. **When iVendNext cannot be read, say so the right way.** No answer, an error answer other than 401 or 403, an answer cut short, not records, or an item on the sale iVendNext does not return: answer 503, so the till applies your down answer. iVendNext refuses your key (401 or 403): refuse in words that say so (*"Duty-free allowance cannot read your shop: it refused the app's user. Ask your administrator to check the app's setup."*). Never follow a redirect with the key.
+8. **When iVendNext cannot be read, say so the right way.** No answer, an error answer other than 401 or 403, an answer cut short, not records, or an item on the sale iVendNext does not return: answer 503, so the till applies your down answer. iVendNext refuses your key (401 or 403): refuse in words that say so (*"Duty-free allowance cannot read your store: it refused the app's user. Ask your administrator to check the app's setup."*). Never follow a redirect with the key.
 
 9. **Test it.** The sample's tests: the pass (one leg, several, cut short, not a pass), the airport and the day (the airport's own day, the new year), the tree and each allowance, the earlier sales and returns, the check's secret, one retailer and many, every answer against the contract; `canaries.py` breaks each guarded rule and expects its test to fail. Then scan a pass into *Sale details* on a sandbox and press Pay.
 

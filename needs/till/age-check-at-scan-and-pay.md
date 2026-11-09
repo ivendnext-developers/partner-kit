@@ -20,7 +20,7 @@ An age on each restricted item group (or item), and a service that answers two e
 - A sale whose first item is restricted is asked twice (the first scan has no sale reference to remember).
 - A later, lower ask can replace a higher one on the sale (one value per sale detail); Pay then names the higher age to enter.
 - Offline, or with the service down, the item goes on and the sale is paid, flagged; a retailer can make the scan refuse a scanned restricted item, but an item picked from a list still goes on, flagged.
-- One scan service per POS Profile: where Till guard rules or Warranty capture answers the scan, only the check at Pay can be switched on. 10 seconds at most for one pass of a POS Profile's checks.
+- More than one app may answer the scan on one POS Profile: each whose items include this one is asked in turn, and the first that does not allow the item answers (6 seconds at most for all). 10 seconds at most for one pass of a POS Profile's checks.
 - One time zone and one age per item group for the whole site.
 - No manager's override, no restricted selling hours, no ID scanner.
 - A group under a restricted group cannot be made free of age; an age set on a template reaches its variants at Pay, but the scan asks about a variant by its own age or its group.

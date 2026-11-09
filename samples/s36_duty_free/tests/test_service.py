@@ -248,6 +248,7 @@ class OneShop(unittest.TestCase):
         self.api.refuse = True
         self.assertEqual(self.check(context()), (200, {"verdict": "refuse", "reason": app.KEY_REFUSED}))
         self.assertTrue(len(app.KEY_REFUSED) <= 140)
+        self.assertIn("your store", app.KEY_REFUSED)
 
     def test_the_sales_read_alone_refused_refuses_a_limited_sale_only(self):
         self.api.refuse_sales = True

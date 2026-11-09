@@ -1,6 +1,6 @@
 {
  "app": "age-restricted-sale-check",
- "version": "1.1.0",
+ "version": "1.1.1",
  "port": 8080,
  "health": "/health",
  "size": "small",
