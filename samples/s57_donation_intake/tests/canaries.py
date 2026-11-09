@@ -22,6 +22,10 @@ M = "manifest.json"
 T = "test_manifest.ManifestTest."
 
 CANARIES = [
+    ("Print opens the donor receipt, not the plain layout", M,
+     '"property": "default_print_format",\n   "property_type": "Data",\n   "value": "PP DON Donor receipt"',
+     '"property": "default_print_format",\n   "property_type": "Data",\n   "value": "Standard"',
+     T + "test_print_opens_the_donor_receipt_by_default"),
     ("the retailer's install refuses nothing (a report on a missing field)", M,
      '"donor_name",\n    "customer_name"\n   ],', '"donor_name",\n    "customer_name",\n    "pp_don_nowhere"\n   ],',
      T + "test_the_manifest_passes_the_kits_checker_with_no_warning"),

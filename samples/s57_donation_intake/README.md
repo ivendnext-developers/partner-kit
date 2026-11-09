@@ -21,14 +21,14 @@ What a partner usually changes:
 - **The donation and its goods:** `PP DON Donation` and its child table `PP DON Goods` in `doctypes` in `manifest.json` (kinds of goods, conditions, units).
 - **The steps:** the three states of the workflow in `workflows`.
 - **The lock:** the save rule in `save_rules`, which holds the donor, store, day and goods once the receipt is given.
-- **The receipt:** the print format `PP DON Donor receipt` in `print_formats`, including its thank-you sentence. It states no value.
+- **The receipt:** the print format `PP DON Donor receipt` in `print_formats`, including its thank-you sentence, and the donation's default print format in `property_setters`. It states no value.
 - **The report:** *Donations* in `reports`.
 - **The naming series:** `DON-` in the donation's `autoname`.
 - **A tax scheme or a till key:** a partner's version on top; the app holds no money field.
 
 More: the [recipe](../../recipes/donation_intake.md).
 
-**The customer sets:** the charity's name, registration number and address on the **Letter Head** the store prints with, who gets **Sales User** at the donation door, and a **Stock Entry Type** named *Material Receipt* if its site has none.
+**The customer sets:** the charity's name, registration number and address on the **Letter Head** the store prints with (chosen in the print window), who gets **Sales User** at the donation door, and a **Stock Entry Type** named *Material Receipt* if its site has none.
 
 ## Run it
 
@@ -38,6 +38,10 @@ ivn try
 ```
 
 ## Versions
+
+### 0.1.1
+
+- *Print* opens the donor receipt, not the plain layout (the donation's default print format).
 
 ### 0.1.0
 
