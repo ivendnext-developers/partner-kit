@@ -2,7 +2,7 @@
 
 A customer's sale reaches the retailer's threshold. Within the next minute the app gives them the retailer's own gift card, of the value the retailer chose, from the retailer's own gift card item. The card is spendable once the hold has passed (24 hours by default), at the till, like any other gift card. Nothing changes at the till: the cashier rings the sale as before. Staff read each card under the customer or the sale in Desk, *Gift cards*.
 
-**Industries:** Pharmacy
+**Industries:** Fashion and footwear, Pharmacy
 
 ## Start from it
 

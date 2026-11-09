@@ -6,7 +6,7 @@ After each booked sale, this sample records every line charged below its price-l
 
 **What is in it:** runs on its own server and keeps one list (deviation).
 
-**Industries:** Fashion, Thrift and resale
+**Industries:** Fashion and footwear, Thrift and resale
 
 **When to use it:** you want an after-the-sale check on prices, discounts or anything else a booked sale carries.
 

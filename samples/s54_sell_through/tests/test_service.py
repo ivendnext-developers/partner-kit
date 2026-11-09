@@ -60,7 +60,9 @@ def _match(row, filters):
         x = row.get(f)
         if op == "=" and x != v or op == "is" and (v == "set") != bool(x):
             return False
-        if op not in ("=", "is"):
+        if op == ">=" and not x >= v or op == "<=" and not x <= v or op == "in" and x not in v:
+            return False
+        if op not in ("=", "is", ">=", "<=", "in"):
             raise AssertionError(f"the stand-in does not know the operator {op}")
     return True
 
@@ -73,6 +75,7 @@ class FakeTenant:
         self.items = [dict(r, item_group="Dresses", disabled=0) for r in item_rows()]
         self.attributes = {"Size": SIZE, "Colour": COLOUR}
         self.sold, self.stock = copy.deepcopy(SOLD), copy.deepcopy(STOCK)
+        self.deliveries = []        # deliveries made against an order: {"name", "posting_date", "lines": [(item, qty, store)]}
         self.calls, self.writes, self.refuse = [], [], None
 
     def _check(self, kind):
@@ -87,8 +90,18 @@ class FakeTenant:
             raise app.TenantError("not found", 404)
         return copy.deepcopy(src[name])
 
-    def rows(self, doctype, fields, filters, timeout=None, limit=0):
+    def rows(self, doctype, fields, filters, timeout=None, limit=0, start=0):
         self._check(("rows", doctype, json.dumps(filters), limit))
+        if doctype == "POS Invoice":
+            assert fields == app.DELIVERY_FIELDS
+            flat = {f: v for f, op, v in filters if op == "="}
+            assert flat == {"transaction_mode": "Delivery", "docstatus": 1, "is_return": 0}, filters
+            out = []
+            for d in self.deliveries:
+                doc = {"posting_date": d["posting_date"], "custom_deliver_against": d.get("against", "SO-1")}
+                if _match(doc, [f for f in filters if f[1] != "="]):
+                    out += [{"name": d["name"], "item_code": i, "qty": q, "warehouse": w} for i, q, w in d["lines"]]
+            return out[start: start + limit] if limit else out[start:]
         assert doctype == "Item" and fields == app.ITEM_FIELDS
         return [{k: r.get(k) for k in ("name", "variant_of", "attribute", "attribute_value")}
                 for r in self.items if _match(r, filters)][: limit or None]
@@ -167,7 +180,7 @@ class ServiceTest(unittest.TestCase):
             [(sst.POS_SALE_REPORT, json.dumps(dict(pos, warehouse=s), sort_keys=True)) for s in ("Mall - DR", "High Street - DR")]
             + [(sst.STOCK_REPORT, json.dumps({"warehouse": s, "item_group": "Dresses"}, sort_keys=True))
                for s in ("Mall - DR", "High Street - DR")]))
-        (items,) = [c for c in self.shop.calls if c[0] == "rows"]
+        (items,) = [c for c in self.shop.calls if c[:2] == ("rows", "Item")]
         self.assertEqual(json.loads(items[2]), [["item_group", "=", "Dresses"], ["variant_of", "is", "set"],
                                                 ["disabled", "=", 0]])
         self.assertEqual(items[3], sst.ITEMS_MAX)
@@ -176,7 +189,7 @@ class ServiceTest(unittest.TestCase):
     def test_s3_a_named_style_reads_that_style_only(self):
         self.shop.runs["SST-00001"]["style"] = "DRESS-B"
         self.press()
-        (items,) = [c for c in self.shop.calls if c[0] == "rows"]
+        (items,) = [c for c in self.shop.calls if c[:2] == ("rows", "Item")]
         self.assertIn(["variant_of", "=", "DRESS-B"], json.loads(items[2]))
         self.assertEqual({r["style"] for r in self.shop.writes[0][2]["rows"]}, {"DRESS-B"})
 
@@ -300,7 +313,7 @@ class ServiceTest(unittest.TestCase):
 
     def test_s14_a_group_larger_than_one_run_reads_is_said(self):
         real = self.shop.rows
-        self.shop.rows = lambda *a, **k: (real(*a, **k) * 1000)[: sst.ITEMS_MAX]
+        self.shop.rows = lambda dt, *a, **k: (real(dt, *a, **k) * 1000)[: sst.ITEMS_MAX] if dt == "Item" else real(dt, *a, **k)
         code, out = self.press()
         self.assertIn("more items than one run reads", out["message"]["body"])
         self.assertEqual(self.shop.writes, [])
@@ -315,6 +328,48 @@ class ServiceTest(unittest.TestCase):
         self.shop.report = report
         code, out = self.press()
         self.assertEqual((code, out["message"]["level"]), (200, "success"))
+
+    def test_s15b_an_order_and_its_delivery_are_one_sale(self):
+        # one unit of DRESS-A-RED-L ordered at the Mall and sent from High Street: the report counts the order at the Mall
+        # and the delivery at High Street; the sale is the order, so High Street's count loses the delivery's unit
+        self.shop.sold["High Street - DR"].append(["High Street - DR", "P", "DRESS-A-RED-L", "x", 0, 0, 0, 0, 1, 0, 0])
+        self.shop.deliveries = [{"name": "POS-D1", "posting_date": "2026-10-20", "lines": [("DRESS-A-RED-L", 1.0, "High Street - DR"),
+                                                                                          ("SCARF", 2.0, "High Street - DR")]},
+                                {"name": "POS-D0", "posting_date": "2026-09-01", "lines": [("DRESS-A-RED-S", 1.0, "Mall - DR")]}]
+        code, out = self.press()
+        self.assertEqual((code, out["message"]["level"]), (200, "success"))
+        rows = {(r["size"], r["store"]): (r["sold"], r["in_stock"]) for r in self.shop.writes[0][2]["rows"] if r["colour"] == "Red"}
+        self.assertEqual(rows[("L", "Mall - DR")], (1, 4))
+        self.assertNotIn(("L", "High Street - DR"), rows)           # nothing left to show: 1 sold less 1 delivered
+        self.assertEqual(rows[("S", "Mall - DR")], (3, 0))            # a delivery before Sold since is not read
+        (read,) = [c for c in self.shop.calls if c[:2] == ("rows", "POS Invoice")]
+        self.assertEqual(read[3], sst.DELIVERY_PAGE)             # one page read, in the first round
+
+    def test_s15c_a_delivery_with_no_order_is_a_sale_of_its_own(self):
+        self.shop.deliveries = [{"name": "POS-D2", "posting_date": "2026-10-20", "against": "",
+                                 "lines": [("DRESS-A-RED-S", 1.0, "Mall - DR")]}]
+        self.press()
+        rows = {(r["size"], r["store"]): r["sold"] for r in self.shop.writes[0][2]["rows"] if r["colour"] == "Red"}
+        self.assertEqual(rows[("S", "Mall - DR")], 3)
+
+    def test_s15d_a_season_of_deliveries_is_read_a_page_at_a_time_and_a_flood_is_said(self):
+        was = (sst.DELIVERY_PAGE, sst.DELIVERY_PAGES)
+        sst.DELIVERY_PAGE, sst.DELIVERY_PAGES = 2, 3
+        try:
+            self.shop.deliveries = [{"name": f"POS-D{n}", "posting_date": "2026-10-20",
+                                     "lines": [("DRESS-A-RED-S", 1.0, "High Street - DR")]} for n in range(5)]
+            self.shop.sold["High Street - DR"][0][8] = 5
+            code, out = self.press()
+            rows = {(r["size"], r["store"]): r["sold"] for r in self.shop.writes[0][2]["rows"] if r["colour"] == "Red"}
+            self.assertEqual(rows.get(("S", "High Street - DR"), 0), 0)       # all five deliveries came off, over three pages
+            self.assertEqual(len([c for c in self.shop.calls if c[:2] == ("rows", "POS Invoice")]), 3)
+            self.shop.writes = []
+            self.shop.deliveries += [{"name": "POS-D9", "posting_date": "2026-10-20", "lines": [("SCARF", 1.0, "Mall - DR")]}]
+            code, out = self.press()
+            self.assertIn("more deliveries than one run reads", out["message"]["body"])
+            self.assertEqual(self.shop.writes, [])
+        finally:
+            sst.DELIVERY_PAGE, sst.DELIVERY_PAGES = was
 
     def test_s16_nothing_sold_and_nothing_held_writes_an_empty_run_and_says_so(self):
         self.shop.sold, self.shop.stock = {}, {}

@@ -10,7 +10,8 @@ On a press it reads, with the app's own integration user's key (that user's righ
 pressed run; its size and colour attributes' own order of values; the group's items with their attributes; and, for
 each store side by side, two of the retailer's own reports through ``run_report`` (the kit's ``recipes/shop_reports.md``):
 *POS Sale Report* (the till's units sold per item, returns taken off, since the run's date) and *Stock Projected Quantity*
-(the stock per item, less the till's sales whose stock has not left yet). It writes the rows and the summary on
+(the stock per item, less the till's sales whose stock has not left yet), and the deliveries made against orders (POS Invoice
+and its lines), whose units come off the sold count: an order and its delivery are one sale. It writes the rows and the summary on
 the run in one save, before it answers. A press that runs out of time before its save writes nothing.
 
 ONE RETAILER (env or an env file):
@@ -64,6 +65,7 @@ SAVE_FROM = 1.0                      # seconds the save needs left: less, and no
 READERS = 8                          # reads at once
 RUN_REPORT = "ivendnext_mpos.api.v1.run_report"
 ITEM_FIELDS = ["name", "variant_of", "attributes.attribute", "attributes.attribute_value"]
+DELIVERY_FIELDS = ["name", "items.item_code", "items.qty", "items.warehouse"]
 NOT_SET_UP = ("Sell-through is not set up yet: no key from this site has reached it. Ask your manager to check that the "
               "app's user has its key and, if the site could not reach the app, or a key was lost or changed, to press "
               "Connect again on the app.")
@@ -146,9 +148,12 @@ class Tenant:
     def doc(self, doctype: str, name: str, timeout: float | None = None) -> dict:
         return self._data("GET", f"{doctype}/{name}", timeout=timeout)
 
-    def rows(self, doctype: str, fields: list, filters: list, timeout: float | None = None, limit: int = 0) -> list:
-        return self._data("GET", doctype, query={"fields": fields, "filters": filters, "limit_page_length": limit},
-                          kind=list, timeout=timeout)
+    def rows(self, doctype: str, fields: list, filters: list, timeout: float | None = None, limit: int = 0,
+             start: int = 0) -> list:
+        query = {"fields": fields, "filters": filters, "limit_page_length": limit}
+        if start:
+            query["limit_start"] = start
+        return self._data("GET", doctype, query=query, kind=list, timeout=timeout)
 
     def update(self, doctype: str, name: str, body: dict, timeout: float | None = None) -> dict:
         return self._data("PUT", f"{doctype}/{name}", body, timeout=timeout)
@@ -237,18 +242,22 @@ class Service:
         # to UTC's tomorrow: a store east of UTC dates its sales up to a day ahead of UTC's date, and none is later
         attrs = [run.size_attribute] + ([run.colour_attribute] if run.colour_attribute else [])
         n = len(run.stores)
+        # the deliveries made against an order: POS Sale Report counts them again beside the order itself
+        deliveries = [["transaction_mode", "=", "Delivery"], ["custom_deliver_against", "is", "set"], ["docstatus", "=", 1],
+                      ["is_return", "=", 0], ["posting_date", ">=", pos["from_date"]], ["posting_date", "<=", pos["to_date"]]]
         # every read side by side: a far retailer pays one round of waits, not one per read
         got = self.together(
             [lambda: door.rows("Item", ITEM_FIELDS, item_filters, timeout=self.left(t0), limit=sst.ITEMS_MAX)]
             + [lambda a=a: door.doc("Item Attribute", a, timeout=self.left(t0)) for a in attrs]
+            + [lambda: door.rows("POS Invoice", DELIVERY_FIELDS, deliveries, timeout=self.left(t0), limit=sst.DELIVERY_PAGE)]
             + [lambda s=s: door.report(sst.POS_SALE_REPORT, dict(pos, warehouse=s), timeout=self.left(t0))
                for s in run.stores]
             + [lambda s=s: door.report(sst.STOCK_REPORT, {"warehouse": s, "item_group": run.item_group},
                                        timeout=self.left(t0))   # no company: the store decides it, and a store of
                                                                 # another company would read as no stock
                for s in run.stores])
-        item_rows, orders = got[0], [sst.order_of(a) for a in got[1:1 + len(attrs)]]
-        sold_answers, stock_answers = got[1 + len(attrs):1 + len(attrs) + n], got[1 + len(attrs) + n:]
+        item_rows, orders, lines = got[0], [sst.order_of(a) for a in got[1:1 + len(attrs)]], got[1 + len(attrs)]
+        sold_answers, stock_answers = got[2 + len(attrs):2 + len(attrs) + n], got[2 + len(attrs) + n:]
         if len(item_rows) >= sst.ITEMS_MAX:
             return sst.message(f"{name}: the group has more items than one run reads. Name one style, then press again.",
                                "warning")
@@ -257,8 +266,17 @@ class Service:
             what = f"the style {run.style}" if run.style else f"the group {run.item_group}"
             return sst.message(f"{name}: {what} has no variants with a {run.size_attribute}. Check the group, the style "
                                "and the size attribute, then press again.", "warning")
+        for page in range(1, sst.DELIVERY_PAGES):       # the first page came with the other reads; more only when it was full
+            if len(lines) < page * sst.DELIVERY_PAGE:
+                break
+            lines += door.rows("POS Invoice", DELIVERY_FIELDS, deliveries, timeout=self.left(t0), limit=sst.DELIVERY_PAGE,
+                               start=page * sst.DELIVERY_PAGE)
+        if len(lines) >= sst.DELIVERY_PAGES * sst.DELIVERY_PAGE:
+            return sst.message(f"{name}: more deliveries than one run reads. Move Sold since later, then press again.",
+                               "warning")
         try:
-            sold = {s: sst.sold_of(a, items) for s, a in zip(run.stores, sold_answers)}
+            sold = sst.less_deliveries({s: sst.sold_of(a, items) for s, a in zip(run.stores, sold_answers)},
+                                       sst.delivered_of(lines, items))
             stock = {s: sst.stock_of(a, items, s) for s, a in zip(run.stores, stock_answers)}
         except ValueError as e:
             return sst.message(f"{name}: {e}. Nothing was written.", "warning")

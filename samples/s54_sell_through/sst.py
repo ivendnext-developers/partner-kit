@@ -32,6 +32,7 @@ SKEW_S = 300                 # a press stamped further than this from our clock 
 STORES_MAX = 20              # stores a run reads: two reports each, side by side, inside the press's 10 seconds
 ROWS_MAX = 1000              # rows a press writes on the run in one save
 ITEMS_MAX = 5000             # item-attribute rows read for the group (a variant has one per attribute)
+DELIVERY_PAGE, DELIVERY_PAGES = 1000, 10   # lines of deliveries made against orders, read a page at a time (``delivered_of``)
 DAYS_MAX = 730               # Sold since at most two years back
 POS_SALE_REPORT, STOCK_REPORT = "POS Sale Report", "Stock Projected Quantity"
 
@@ -178,6 +179,26 @@ def sold_of(answer, items: dict) -> dict:
         if isinstance(item, str) and item in items:
             out[item] = out.get(item, 0.0) + _num(r.get("unit_solds"))
     return out
+
+
+def delivered_of(rows: list, items: dict) -> dict:
+    """{store: {item: units}} the lines of the deliveries made against an order (POS Invoice Item rows: ``item_code``,
+    ``qty``, ``warehouse``), for the run's items only. POS Sale Report counts an order's lines and, again, the lines of
+    each delivery made against it, so one unit sent to a customer reads as two sold; the service takes the deliveries'
+    units off, and the order stays the sale (an order still to deliver counts as sold, as the card says)."""
+    out: dict = {}
+    for r in rows:
+        item, store = (r.get("item_code"), r.get("warehouse")) if isinstance(r, dict) else (None, None)
+        if isinstance(item, str) and item in items and isinstance(store, str):
+            by = out.setdefault(store, {})
+            by[item] = by.get(item, 0.0) + _num(r.get("qty"))
+    return out
+
+
+def less_deliveries(sold: dict, delivered: dict) -> dict:
+    """``sold`` ({store: {item: units}}) with each store's deliveries of orders taken off."""
+    return {store: {item: max(0.0, q - delivered.get(store, {}).get(item, 0.0)) for item, q in by.items()}
+            for store, by in sold.items()}
 
 
 def stock_of(answer, items: dict, store: str) -> dict:

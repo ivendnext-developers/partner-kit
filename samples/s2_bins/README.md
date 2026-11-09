@@ -4,7 +4,7 @@ S2 records only **where** items sit inside a store (locations such as the back r
 
 ![The bin locations workspace, the bins and what is in each](screenshots/01_workspace.png)
 
-**Industries:** Electronics and phones, Fashion, Grocery, Hardware and DIY, Distribution and warehousing
+**Industries:** Electronics and phones, Fashion and footwear, Grocery, Hardware and DIY, Distribution and warehousing
 
 **When to use it:** your product keeps its own data beside the retailer's (here, bins) and staff should see it in Desk and at the till.
 

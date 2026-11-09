@@ -4,7 +4,7 @@ A fashion store's ticket for each alteration and each made-to-measure piece, kep
 
 ![What installing it changes, read before the install](screenshots/01_install.png)
 
-**Industries:** Fashion
+**Industries:** Fashion and footwear
 
 **When to use it:** a store alters what it sells (a hem, a waist, a sleeve) or makes to measure (a suit, a dress), and its tickets are on paper today.
 
@@ -39,6 +39,10 @@ ivn try
 ```
 
 ## Versions
+
+### 0.1.1
+
+- The *Ready to collect* field's help text reads as a sentence, not a code condition.
 
 ### 0.1.0
 

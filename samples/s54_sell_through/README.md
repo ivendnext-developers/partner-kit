@@ -4,7 +4,7 @@ A fashion retailer's buyer wants to know which sizes and colours of each style s
 
 ![What the install will change, read before you consent](screenshots/01_install.png)
 
-**Industries:** Fashion
+**Industries:** Fashion and footwear
 
 **When to use it:** the retailer sells styles in sizes and colours (clothing, footwear, sportswear) and wants sell-through per size in each store, from its own till sales and stock.
 
@@ -42,6 +42,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.0.2
+
+- An order and the delivery made against it count as one sale: the delivery's units come off, and the order stays the sale. Deliveries made against orders (POS Invoice and its lines) are read with the Read the role already has.
 
 ### 1.0.1
 
