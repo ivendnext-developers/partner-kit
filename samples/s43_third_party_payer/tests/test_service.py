@@ -15,12 +15,14 @@ import os
 import sys
 import time
 import unittest
+from decimal import Decimal
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SAMPLE = os.path.dirname(HERE)
 sys.path[:0] = [os.path.join(SAMPLE, "service"), SAMPLE, HERE]
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(SAMPLE)), "contracts"))
 import app  # noqa: E402
+import copay  # noqa: E402
 try:
     import extension_contract_check as contract  # noqa: E402
 except ModuleNotFoundError:  # an app folder carries no contracts: these checks run in the kit
@@ -314,6 +316,131 @@ class Door(Base):
                 "conversion_factor": 1, "rate_minor": 10000, "discount_minor": 5000, "amount_minor": 5500}
         out = self.coverage(lines=[line], tax_included=False)[1]
         self.assertEqual(out["totals"]["patient_share_minor"], 2100)
+
+    # --- a discount on the whole sale on prices without tax: the line's own net (``net_minor``, asked for in the
+    # manifest) puts it on the amount's basis exactly. The till's measured sale (Sandton, 15% tax on prices without tax,
+    # 20% off the whole sale, a 20% co-pay taken before the discount): two lines at 25.00 and 30.00.
+    def whole_sale_discount_plan(self):
+        plan = self.shop.find("PP ICP Plan", "Generic Silver")
+        plan.update(copay_percent=20, copay_order="Before the discount", invoice_upper_limit=0, max_patient_amount=0)
+        self.shop.find("PP ICP Formulary", plan["formulary"])["rows"] = [
+            {"covered": 1, "item_group": "Prescription Medicines"}, {"covered": 1, "item_group": "Over-the-Counter Medicines"}]
+        for r in self.shop.tables["Item Price"]:
+            r["price_list_rate"] = {"PHD-AMOX-500": 25, "PHD-PARA-500": 30}.get(r["item_code"], r["price_list_rate"])
+
+    @staticmethod
+    def sale_line(line_id, code, rate, discount, amount, net=None, qty=1):
+        out = {"line_id": line_id, "item_code": code, "item_group": "", "gtin": None, "qty": qty, "uom": "Nos",
+               "conversion_factor": 1, "rate_minor": rate, "discount_minor": discount, "amount_minor": amount}
+        if net is not None:
+            out["net_minor"] = net
+        return out
+
+    def measured_sale(self, with_net):
+        return [self.sale_line("r1", "PHD-AMOX-500", 2500, 500, 2300, 2000 if with_net else None),
+                self.sale_line("r2", "PHD-PARA-500", 3000, 600, 2760, 2400 if with_net else None)]
+
+    def test_a_whole_sale_discount_bills_the_plan_to_the_cent_when_the_line_carries_its_net(self):
+        self.whole_sale_discount_plan()
+        # 50.60 paid; before the discount the lines cost 63.25; the customer's 20% co-pay is 12.65, the plan's 37.95
+        out = self.coverage(lines=self.measured_sale(True), tax_included=False)[1]
+        self.assertEqual(out["totals"], {"payer_share_minor": 3795, "patient_share_minor": 1265, "total_minor": 5060})
+        # a till that does not send the net: the old answer, 0.33 too much to the plan (co-pay 20% x 11.00 x 15%)
+        old = self.coverage(lines=self.measured_sale(False), tax_included=False)[1]
+        self.assertEqual(old["totals"]["payer_share_minor"], 3828)
+        self.assertEqual(contract_errors("coverage_answer", out), [])      # last: an app's copy has no contracts folder
+
+    def test_a_tax_included_price_list_is_read_as_before_whatever_the_line_carries(self):
+        self.whole_sale_discount_plan()
+        lines = [self.sale_line("r1", "PHD-AMOX-500", 2500, 500, 2000, 1740),     # the price holds its tax: net < amount
+                 self.sale_line("r2", "PHD-PARA-500", 3000, 600, 2400, 2087)]
+        with_net = self.coverage(lines=lines, tax_included=True)[1]
+        without = self.coverage(lines=[{k: v for k, v in l.items() if k != "net_minor"} for l in lines],
+                                tax_included=True)[1]
+        self.assertEqual(with_net, without)
+        self.assertEqual(with_net["totals"]["patient_share_minor"], round(0.2 * (4400 + 1100)))
+
+    def test_a_free_line_is_never_divided_by_and_a_sale_with_one_is_split_to_the_cent(self):
+        self.whole_sale_discount_plan()
+        free = self.sale_line("r1", "PHD-AMOX-500", 2500, 2500, 0, 0)               # net 0: 25.00 off 25.00
+        paid = self.sale_line("r2", "PHD-PARA-500", 3000, 0, 3450, 3000)
+        out = self.coverage(lines=[free, paid], tax_included=False, total_minor=3450)[1]
+        self.assertEqual(out["answer"], "cover")
+        by = {l["line_id"]: l for l in out["lines"]}
+        self.assertEqual((by["r1"]["payer_share_minor"], by["r1"]["patient_share_minor"]), (0, 0))
+        self.assertEqual((by["r2"]["payer_share_minor"], by["r2"]["patient_share_minor"]), (2760, 690))
+        self.assertEqual(out["totals"]["total_minor"], 3450)
+
+    def test_each_case_puts_the_discount_on_the_amounts_basis_the_way_its_line_allows(self):
+        seen = []
+        real = copay.coverage
+        copay.coverage = lambda request, *a, **k: (seen.append([l["discount"] for l in request["lines"]]),
+                                                   real(request, *a, **k))[1]
+        try:
+            self.whole_sale_discount_plan()
+            line = self.sale_line("r1", "PHD-AMOX-500", 2500, 500, 2300, 2000)
+            cases = [("net 2000", dict(line), False, Decimal("5.75")),                # 5.00 x 23.00 / 20.00
+                     ("free line, as sent", dict(line, net_minor=0, amount_minor=0), False, Decimal("5.00")),
+                     ("free line with a charge, as sent", dict(line, net_minor=0, amount_minor=100), False, Decimal("5.00")),
+                     ("no net: the floor", {k: v for k, v in line.items() if k != "net_minor"}, False, Decimal("5.00")),
+                     ("tax in the price: untouched", dict(line), True, Decimal("5.00"))]
+            for name, l, included, want in cases:
+                seen.clear()
+                self.coverage(lines=[l], tax_included=included, total_minor=l["amount_minor"])
+                self.assertEqual(seen[0], [want], name)
+        finally:
+            copay.coverage = real
+
+    def test_a_net_that_is_not_a_whole_number_is_refused_like_any_other_money(self):
+        line = self.sale_line("r1", "PHD-AMOX-500", 2500, 500, 2300, 20.5)
+        self.assertEqual(self.coverage(lines=[line], tax_included=False)[0], 400)
+
+    def test_a_whole_sale_discount_is_within_a_cent_a_line_of_what_the_till_booked_across_sales(self):
+        """The till's own spread, run for a sweep of taxes and discounts: the plan's share is what the sale paid less
+        the co-pay on what the lines cost before the discount, to within one minor unit a line; the old reading
+        was off by up to the co-pay on the discount's tax."""
+        self.whole_sale_discount_plan()
+        worst_new = worst_old = 0
+        for tax in (5, 8, 15, 20):
+            for off in (5, 10, 20, 35):
+                gross = [2500, 3000]
+                net = [round(g * (100 - off) / 100) for g in gross]
+                amount = [n + round(n * tax / 100) for n in net]
+                full = [g + round(g * tax / 100) for g in gross]
+                truth = sum(amount) - round(0.2 * sum(full))
+                for with_net in (True, False):
+                    lines = [self.sale_line("r1", "PHD-AMOX-500", 2500, 2500 - net[0], amount[0], net[0] if with_net else None),
+                             self.sale_line("r2", "PHD-PARA-500", 3000, 3000 - net[1], amount[1], net[1] if with_net else None)]
+                    got = self.coverage(lines=lines, tax_included=False, total_minor=sum(amount))[1]["totals"]
+                    err = abs(got["payer_share_minor"] - truth)
+                    if with_net:
+                        worst_new = max(worst_new, err)
+                        self.assertEqual(got["payer_share_minor"] + got["patient_share_minor"], sum(amount))
+                    else:
+                        worst_old = max(worst_old, err)
+        self.assertLessEqual(worst_new, 2)
+        self.assertGreater(worst_old, worst_new)
+
+    def test_a_return_after_a_whole_sale_discount_gives_back_exactly_what_was_paid(self):
+        self.whole_sale_discount_plan()
+        lines = [self.sale_line("r1", "PHD-AMOX-500", 2500, 500, 2300, 2000, qty=1),
+                 self.sale_line("r2", "PHD-PARA-500", 1000, 600, 2760, 2400, qty=3)]      # three at 10.00, 6.00 off
+        out = self.coverage(lines=lines, tax_included=False, total_minor=5060)[1]
+        self.assertEqual(out["totals"]["total_minor"], 5060)
+        claim = [{"line_id": l["line_id"], "qty": q, "amount": f"{(l['payer_share_minor'] + l['patient_share_minor']) / 100:.2f}",
+                  "payer_share": f"{l['payer_share_minor'] / 100:.2f}"} for l, q in zip(out["lines"], (1, 3))]
+        first = copay.return_split(claim, [{"line_id": "r2", "qty": 1}])
+        second = copay.return_split(claim, [{"line_id": "r2", "qty": 2}], earlier=[
+            {"line_id": "r2", "qty": 1, "payer_back": first["lines"][0]["payer_back"],
+             "amount_back": first["lines"][0]["amount_back"]}])
+        rest = copay.return_split(claim, [{"line_id": "r1", "qty": 1}])
+        for r in (first, second, rest):
+            for l in r["lines"]:
+                self.assertEqual(Decimal(l["payer_back"]) + Decimal(l["patient_back"]), Decimal(l["amount_back"]))
+        back = sum(Decimal(r["totals"]["payer_back"]) + Decimal(r["totals"]["patient_back"]) for r in (first, second, rest))
+        self.assertEqual(back, Decimal("50.60"))                                    # every line back: what was paid
+        self.assertEqual(sum(Decimal(r["totals"]["payer_back"]) for r in (first, second, rest)),
+                         Decimal(out["totals"]["payer_share_minor"]) / 100)
 
     def test_an_ask_naming_no_list_on_a_plan_with_one_is_no_cover(self):
         self.assertEqual(self.coverage(price_list="")[1]["code"], "plan_list")

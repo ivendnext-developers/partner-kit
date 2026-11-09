@@ -27,8 +27,8 @@ Two departures from that add-on, on purpose:
    added a surcharge so the patient paid the excess over the limit undiscounted. Here the shop's own pricing (the
    plan's price list, its pricing rules) prices the sale; these rules only split its total. So the excess carries the
    sale's own discount, and the payer's share plus the patient's always equals the sale's total, to the cent.
-3. **The shop's own promotions are the plan's choice.** The add-on cleared every promotion on an insured line and gave
-   only the insurer's own discount. Here a plan's tick *The shop's own promotions apply on this plan* says whether the
+3. **The store's own promotions are the plan's choice.** The add-on cleared every promotion on an insured line and gave
+   only the insurer's own discount. Here a plan's tick *The store's own promotions apply on this plan* says whether the
    shop's promotions price a sale on it (the payer door switches them off when it is clear; a coupon, a staff discount
    and an old-style pricing rule still apply); whatever discount the sale then carries is split by the rules below.
 2. **A return is never re-calculated.** The add-on ran the split again on negative amounts, and its 2024 generic version
@@ -273,11 +273,17 @@ def door_coverage(context: dict, plan: dict | None, member: dict | None, custome
     units of the sale's currency (``currency_exponent`` digits), quantities in each line's own unit, only the keys the
     contract carries. The split is ``coverage``'s, on the same amounts in decimals.
 
-    ``amount_minor`` is what a line costs, tax included; ``discount_minor`` is on the price's basis. Where the prices
-    exclude tax (``tax_included`` false) the discount is put on the amount's basis by ``amount / (rate x qty)``, never
-    by less than 1: exact for a line's own discount when the sale has none and its prices are at the currency's places; with a discount on the whole sale the ratio cannot be known from
-    what the door sends, and the discount is then read with less of its tax, at worst none (a bound: the rules that read
-    the amount before the discount, a co-pay taken before it or a limit after it, see a little less than it was).
+    ``amount_minor`` is what a line costs, tax and charges included; ``discount_minor`` is on the price's basis.
+    Where the prices exclude tax (``tax_included`` false) the discount is put on the amount's basis. A line that
+    carries ``net_minor`` (this service asks for it: ``line_net`` in its manifest) gets
+    ``discount_minor x amount_minor / net_minor``, the line's own ratio, exact for a discount on the whole sale as
+    well as a line's own, when every tax on the line is a percentage of its net; a fixed charge's share over-states
+    the discount's tax. A line whose ``net_minor`` is 0 (a free line) has no ratio: its discount is read as sent.
+    A line without ``net_minor`` (a till that does not send it) gets ``amount / (rate x qty)``, never by less than 1:
+    exact for a line's own discount when the sale has none and its prices are at the currency's places; with a
+    discount on the whole sale that ratio cannot be known from what the door sends, and the discount is then read with
+    less of its tax, at worst none (a bound: the rules that read the amount before the discount, a co-pay taken before
+    it or a limit after it, see a little less than it was).
     The payer's share is never more than the sale's rounded total (``rounding_minor`` is the patient's).
     An answer that would pay nothing is ``no_cover``: the door refuses a cover that pays nothing."""
     exp = int(context["currency_exponent"])
@@ -293,8 +299,13 @@ def door_coverage(context: dict, plan: dict | None, member: dict | None, custome
     for l in asked:
         amount, discount, rate = major(l["amount_minor"]), major(l["discount_minor"]), major(l["rate_minor"])
         paid = rate * D(l.get("qty"))
-        if not context.get("tax_included") and paid > 0:
-            discount = _q(discount * max(amount / paid, Decimal(1)), exp)
+        if not context.get("tax_included"):
+            if l.get("net_minor") is not None:           # the line's own ratio; a free line (net 0) keeps its discount
+                net = major(l["net_minor"])
+                if net > 0:
+                    discount = _q(discount * amount / net, exp)
+            elif paid > 0:
+                discount = _q(discount * max(amount / paid, Decimal(1)), exp)
         lines.append(dict(l, amount=amount, discount=discount, rate=rate))
     total = major(context["total_minor"])
     request = {"sale_ref": context.get("sale_ref"), "customer": context.get("customer"), "date": context.get("date"),
