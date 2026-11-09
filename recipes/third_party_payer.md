@@ -52,14 +52,18 @@ use the till's own *On Account* tender instead: there is nothing to split.
     "down_answer": "no_cover",
     "settings": {"prescription": {"reference": "ACME RXC Rx Number", "prescriber": "ACME RXC Prescriber",
                                   "prescriber_licence": "ACME RXC Prescriber Licence"},
-                 "bill_back_role": "ACME ICP Integration"}}
+                 "bill_back_role": "ACME ICP Integration", "line_net": true}}
    ```
 
    - list the address in `allowed_urls`; `timeout_seconds` is at most 5 (3 when left out); the only down answer is
      `no_cover`.
    - `prescription` names up to three of the sale's own details, sent with `coverage`; each must exist on the site
      (a pharmacy counter app's sale details, for example), so leave it out where none is installed. Changing it
-     changes the consent text, and the calls stop until the administrator ticks consent again.
+     changes the consent text: the calls stop until the administrator ticks consent again when the settings are edited
+     by hand in Desk, and an update from the App library carries the consent over.
+   - `line_net: true` asks for each line's net (`net_minor`) with every `coverage` ask. Ask for it: on prices without
+     tax it lets the service put a discount on the whole sale on the amount's basis, so the payer is billed to the
+     cent (S43 does: `door_coverage`). Without it the service can only guess the discount's tax.
    - `bill_back_role` is the role that may bill a claim back (empty: the shop's accounts role).
    - ⛔ **No `clearing_mode`.** It is the customer's own. The service stays off until the customer names it; the kit's checker refuses it in a manifest
      (*"the clearing mode is the shop's to pick"*).
