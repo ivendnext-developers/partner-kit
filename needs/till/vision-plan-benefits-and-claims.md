@@ -17,7 +17,7 @@ related: insurance-co-payment
 A payer service for the *payer* extension point (`payer/1`), one for each plan, built by a partner on sample S43. The service holds the plan's rules: a frame allowance, a fixed co-pay for the exam or the lenses, what each line may be paid on. At the till the cashier presses **Payer**, your service answers which covers the member holds and what the plan pays on each line, and the customer pays the rest with the till's other tenders. Your service asks the plan whether the member is covered, and sends the claim to the plan by the plan's own electronic connection.
 
 ## Limits
-- iVendNext keeps no plan's rules, and no plan is built in: each plan has its own integration team, rules and certification, and the partner works with it.
+- iVendNext keeps no plan's rules, and no plan is built in: each plan has its own technical team, rules and certification, and the partner works with it.
 - The eligibility check and the claim run in your service, so a plan's outage is your service's to answer (the till can refuse the payer line in your words).
 - Online only: the Payer tile is not offered offline, and a payer's sale is never queued. One payer per sale.
 - A rejected claim is billed back to the customer with `ivendnext_mpos.api.v1.payer_bill_back`; a claim paid later is your service's to book.
