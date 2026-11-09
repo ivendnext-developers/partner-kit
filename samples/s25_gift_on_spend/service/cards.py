@@ -82,10 +82,12 @@ def _balances(t, number: str) -> list[dict]:
 
 
 def net_spend(t, sale: dict):
-    """The sale's spend less every return booked against it."""
+    """The sale's spend less every return booked against it, at the currency's precision: a gift card line's tax is
+    stored unrounded, and the issue and the release must judge the same figure."""
     rets = t.list(SALE, [["return_against", "=", sale["name"]], ["is_return", "=", 1], ["docstatus", "=", 1]],
                   fields=["name"])
-    return gcs.spend(sale) - sum((gcs.return_spend(t.get(SALE, r["name"]) or {}) for r in rets), D(0))
+    net = gcs.spend(sale) - sum((gcs.return_spend(t.get(SALE, r["name"]) or {}) for r in rets), D(0))
+    return gcs.rnd(net, load_settings(t).places)
 
 
 # ---------- 1-2 · issue ----------------------------------------------------------------------------------------------

@@ -1,10 +1,11 @@
 """S25 — the rules of *Gift card on spend*, stated once and tested (tests/test_rules.py). Pure: no network, no clock.
 
 - **Spend** is what the customer paid for a sale, tax included (its grand total), less its gift card lines (a card sold,
-  recharged or paid out on it), less anything paid on it with a gift card, store credit, a partner's wallet, loyalty
-  points or on account,
-  less a tender discount (booked as a write-off; the grand total keeps it) and less anything still outstanding — so
-  stored value and credit never earn a gift card, and a card is earned on money paid.
+  recharged or paid out on it) at what each added to the grand total (after a sale discount, with the tax the till put
+  on it), less anything paid on it with a gift card, store credit, a partner's wallet, loyalty points or on account,
+  less the goods' share of a tender discount (booked as a write-off; the grand total keeps it; the card lines' own share
+  is already out with them) and less anything still outstanding — so stored value and credit never earn a gift card,
+  and a card is earned on money paid.
   Every other line counts with its own sign: an *Item Return* line in an exchange is negative, so the customer earns on
   the net they paid. A return takes off the sale's spend what it refunded (its grand total, less its own gift card
   lines and its share of a tender discount; its lines are *Sale Return*), whatever it was refunded to.
@@ -19,6 +20,7 @@ card's value is the shop's figure, as typed.
 
 from __future__ import annotations
 
+import json
 from decimal import ROUND_HALF_UP, Decimal
 
 PLAIN_SALE = "Sale"                                   # POS Invoice.transaction_mode: the engine's default for a sale
@@ -74,9 +76,34 @@ class Settings:
         return ""
 
 
-def _gift_card_lines(doc: dict) -> Decimal:
-    return sum((D(i.get("amount")) for i in doc.get("items") or [] if i.get("transaction_mode") in GIFT_CARD_LINES),
+# What a gift card line added to a sale: copied from S22's goods value (samples/s22_customer_loyalty/service/money.py,
+# ``_gift_card_lines`` and ``_gift_card_tax``, kit #126), so the two apps value a card line alike. A defect there is a
+# defect here.
+def _gift_card_lines(doc: dict, field: str = "net_amount") -> Decimal:
+    return sum((D(i.get(field)) for i in doc.get("items") or [] if i.get("transaction_mode") in GIFT_CARD_LINES),
                Decimal(0))
+
+
+def _gift_card_tax(doc: dict) -> Decimal:
+    """The tax the sale's tax rows put on its gift card lines, in the sale's currency: each row's ``item_wise_tax_detail``
+    is ``{item code: [rate, amount]}`` (or ``{item code: {"tax_amount": …}}``) in the COMPANY's currency, and a gift
+    card item is never a goods item, so its code names gift card lines only."""
+    codes = {i.get("item_code") for i in doc.get("items") or [] if i.get("transaction_mode") in GIFT_CARD_LINES}
+    if not codes:                                     # a sale with no gift card line counts exactly as before
+        return Decimal(0)
+    tax = Decimal(0)
+    for row in doc.get("taxes") or []:
+        detail = row.get("item_wise_tax_detail") or {}
+        detail = json.loads(detail) if isinstance(detail, str) else detail
+        for v in (detail.get(c) for c in codes):
+            tax += D(v[1] if isinstance(v, list) else (v or {}).get("tax_amount") if isinstance(v, dict) else 0)
+    rate = D(doc.get("conversion_rate") or 1)
+    return tax / (rate if rate > 0 else 1)
+
+
+def _goods(doc: dict) -> Decimal:
+    """A sale's or a return's grand total less its gift card lines, each at what it added to it (S22's goods value)."""
+    return D(doc.get("grand_total")) - _gift_card_lines(doc) - _gift_card_tax(doc)
 
 
 def spend(sale: dict) -> Decimal:
@@ -84,15 +111,16 @@ def spend(sale: dict) -> Decimal:
     stored_value = sum((max(D(p.get("amount")), Decimal(0)) for p in sale.get("payments") or []
                         if p.get("type") in NO_EARN_TENDERS), Decimal(0)) + D(sale.get("loyalty_amount"))
     owed = max(D(sale.get("outstanding_amount")), Decimal(0))
-    tender_discount = max(D(sale.get("custom_tender_discount_amount")), Decimal(0))
-    return max(D(sale.get("grand_total")) - _gift_card_lines(sale) - stored_value - owed - tender_discount, Decimal(0))
+    tender_discount = (max(D(sale.get("custom_tender_discount_amount")), Decimal(0))
+                       - _gift_card_lines(sale, "custom_tender_discount_apportioned"))     # the goods' share
+    return max(_goods(sale) - stored_value - owed - tender_discount, Decimal(0))
 
 
 def return_spend(ret: dict) -> Decimal:
     """What a return takes off its sale's spend (a positive number): its whole value, whatever it was refunded to, less
     its share of the sale's tender discount (the engine reverses it on the return as a negative discount)."""
     reversed_discount = min(D(ret.get("custom_tender_discount_amount")), Decimal(0))
-    return max(-(D(ret.get("grand_total")) - _gift_card_lines(ret)) + reversed_discount, Decimal(0))
+    return max(-_goods(ret) + reversed_discount, Decimal(0))
 
 
 def kept(net, threshold, issued: int) -> int:
