@@ -23,6 +23,7 @@
       {
         "line_no": 1,
         "item_code": "CABLE-USBC",
+        "item_name": "Cable Usbc item",
         "item_group": "Accessories",
         "qty_milli": 11000,
         "uom": "Nos",

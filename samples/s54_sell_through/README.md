@@ -19,14 +19,16 @@ ivn new acme_sellthrough --from s54
 What a partner usually changes:
 
 - the figures: stock turn or weeks of cover beside the sell-through, or a size curve the buyer planned, in `sst.py` (`rows_of`, `sell_through`);
-- the sales: the online store's or wholesale orders as well as the till's (read *Item-wise Sales Register* too, and give the role its report), in `service/app.py`;
+- the sales: the online store's or wholesale orders as well as the till's (read *Item-wise Sales Register* too, and add its `report` entry and the reads it needs to `role_rights`), in `service/app.py`;
 - what follows: a transfer request for a size sold out in one store and held in another, or a markdown list for sizes that sit;
 - the service's address: `allowed_urls` and the endpoint in `manifest.json` name the sample's test address; write your own;
 - the record types' prefix: the `SST_PREFIX` setting of the service (default `PP SST`).
 
 More: the [recipe](../../recipes/shop_reports.md).
 
-**The customer sets:** the buyers (Stock Managers and Sales Managers) and their *Select* on Item Attribute and Warehouse, and the reports' rights for the role **PP SST Integration**: the role added to *POS Sale Report* and *Stock Projected Quantity*, Read and Report on POS Invoice, Read on Item, Item Attribute, Warehouse and UOM, and Select only on POS Profile, Item Group, Customer and Customer Group. With these rights the app's user reads every store's figures in the two reports.
+**The install gives the role its rights.** The manifest's `role_rights` give the role **PP SST Integration** the two reports (*POS Sale Report* and *Stock Projected Quantity*, a `report` entry each), Read and Report on POS Invoice, Read on Item, Item Attribute, Warehouse and UOM, and Select only on POS Profile, Item Group, Customer and Customer Group, so the app's user reads every store's figures in the two reports and the retailer's administrator grants none of them by hand. This needs POS build `2.1.0.697` or later, the first that takes a Report in `role_rights`.
+
+**The customer sets:** the buyers (Stock Managers and Sales Managers) and their *Select* on Item Attribute and Warehouse: a role of the retailer's is the retailer's to grant, so the manifest cannot.
 
 ## Run it
 
@@ -42,6 +44,10 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.0.3
+
+- The install gives the app's role its two reports and every read and lookup they ask for (`role_rights`, with a `report` entry for each report), so the retailer grants none by hand. A refused report's message no longer sends the retailer to *Role Permission for Page and Report*. Needs POS build `2.1.0.697`.
 
 ### 1.0.2
 

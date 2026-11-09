@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/tests/test_manifest_check.py,
-# at development 01a282e1286c1aaff66c629fda839c4a304a2a1a; changed: the import, the fixture folder and the ids in comments. A defect here is a defect there:
+# at development b13203dcf85e43e4cbdc9a8300ce94514b6bc56e; changed: the import, the fixture folder and the ids in comments. A defect here is a defect there:
 # report it with the Kit defect form (feedback/README.md).
 """Validator tests: stdlib only, no bench. Every fixture passes; each kept gate, planted into a good
 manifest, is refused with its own reason and nothing else; what Desk allows the shop's administrator

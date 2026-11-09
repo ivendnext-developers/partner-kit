@@ -19,7 +19,7 @@ What it shows a builder:
 - **A report can count one thing twice.** *POS Sale Report* counts a till order and, again, each delivery made against it, so S54 also reads the deliveries (*POS Invoice* with its lines, paged) and takes their units off.
 - **Read the figure where the retailer keeps it.** Both numbers come from the retailer's reports, so they match what the retailer's own staff see in Desk.
 - **Read the columns by name**, never by position, and say so in words if a report answers without them.
-- **Give the app's role the reports, and what they check.** Both reports belong to other roles (accounting, stock): the retailer adds the app's role to each in *Role Permission for Page and Report*. A report also checks its reader's right on every record type its filters name, blank or not (Read or Select), and on what its own code lists (Read): measure the least set one right at a time, and put it on the card.
+- **Give the app's role the reports, and what they check, in the manifest.** Both reports belong to other roles (accounting, stock): a `report` entry for each in `role_rights` adds the app's own role to it at install (POS build `2.1.0.697` or later; the retailer would otherwise add it in *Role Permission for Page and Report*). A report also checks its reader's right on every record type its filters name, blank or not (Read or Select), and on what its own code lists (Read): measure the least set one right at a time, and give each as a `role_rights` entry with its `rights`. S54's are the reference.
 - **A sale whose stock has not left yet:** *Stock Projected Quantity* names the till's sales whose stock has not left yet (*Reserved for POS*): take them off the actual stock, and a plain till sale counts once, before and after its day closes.
 
 ---

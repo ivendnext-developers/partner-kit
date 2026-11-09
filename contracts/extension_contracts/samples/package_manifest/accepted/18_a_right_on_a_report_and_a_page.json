@@ -1,0 +1,41 @@
+{
+  "extension_point": "package_manifest",
+  "contract": "manifest",
+  "about": "An app whose own Clerk role may open a Report and a Page, beside the record rights it already has: the install adds the role to the Report's and the Page's roles without taking any role off.",
+  "payload": {
+    "manifest_version": 2,
+    "app": "pp_rpt",
+    "prefix": "PP RPT",
+    "version": "1.0.0",
+    "doctypes": [
+      {
+        "name": "PP RPT Settings",
+        "issingle": 1,
+        "fields": [
+          {
+            "fieldname": "plan_days",
+            "fieldtype": "Int",
+            "label": "Plan length (days)"
+          }
+        ]
+      }
+    ],
+    "role_rights": [
+      {
+        "doctype": "POS Invoice",
+        "role": "PP RPT Clerk",
+        "rights": [
+          "read"
+        ]
+      },
+      {
+        "report": "Stock Projected Qty",
+        "role": "PP RPT Clerk"
+      },
+      {
+        "page": "stock-balance",
+        "role": "PP RPT Clerk"
+      }
+    ]
+  }
+}

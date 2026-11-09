@@ -280,6 +280,11 @@
     "service_mode": {
      "type": "string",
      "maxLength": 140
+    },
+    "call_number": {
+     "type": "string",
+     "maxLength": 140,
+     "description": "The code the expo reads on the ticket, e.g. a courier's pickup code. Left out, the code already on the order's kitchen order stays, else the order's name."
     }
    }
   },

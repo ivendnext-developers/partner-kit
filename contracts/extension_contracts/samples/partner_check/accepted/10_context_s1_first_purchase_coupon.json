@@ -25,6 +25,7 @@
       {
         "line_no": 1,
         "item_code": "CASE-IP15",
+        "item_name": "Case Ip15 item",
         "item_group": "Accessories",
         "qty_milli": 1000,
         "uom": "Nos",

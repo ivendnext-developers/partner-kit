@@ -73,8 +73,8 @@ REFUSED = ("Sell-through may not read the run, the items or the two reports, or 
            "check the app's user, its role and the setup's report rights.")
 CONNECT_AGAIN = " Then press Connect again on the app."    # many retailers: a new key reaches the service only that way
 LATE = ("Your reports took the press's time, so nothing was written. Name fewer stores and press again.")
-REPORT_REFUSED = ("Sell-through could not run {0}: check that the app's role is on it (Role Permission for Page and "
-                  "Report), that the role has every right the setup names, that the report is switched on, and that each store still exists.")
+REPORT_REFUSED = ("Sell-through could not run {0}: check that the app's role is on it (the install adds it; see Role "
+                  "Permission for Page and Report), that the report is switched on, and that each store still exists.")
 
 
 class TenantError(Exception):

@@ -41,7 +41,7 @@ SETTINGS = {"airports": "DXB, dwc", "direction": "departing", "hours_from_utc": 
 
 
 def context(lines=None, pass_text=PASS, stage="sale", prefix="PP DFA"):
-    lines = [{"line_no": 1, "item_code": "WHISKY-1L", "item_group": "Whisky", "qty_milli": 1000, "uom": "Nos",
+    lines = [{"line_no": 1, "item_code": "WHISKY-1L", "item_name": "WHISKY-1L", "item_group": "Whisky", "qty_milli": 1000, "uom": "Nos",
               "rate_minor": 5000, "amount_minor": 5000, "discount_minor": 0, "line_attributes": []}] if lines is None else lines
     attrs = [{"name": f"{prefix} Boarding Pass", "value": pass_text}] if pass_text else []
     return {"v": 1, "point": "check", "stage": stage, "currency_exponent": 2, "sale_ref": "sale-1", "store": "Stores - DXB",
@@ -53,7 +53,7 @@ def context(lines=None, pass_text=PASS, stage="sale", prefix="PP DFA"):
 
 
 def line(code, group, qty=1, uom="Nos"):
-    return {"line_no": 1, "item_code": code, "item_group": group, "qty_milli": int(qty * 1000), "uom": uom,
+    return {"line_no": 1, "item_code": code, "item_name": code, "item_group": group, "qty_milli": int(qty * 1000), "uom": uom,
             "rate_minor": 100, "amount_minor": 100, "discount_minor": 0, "line_attributes": []}
 
 

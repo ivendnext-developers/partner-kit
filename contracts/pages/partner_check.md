@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/partner_check.md @ b13203dcf85e, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Partner check
 
 **Contract:** [`partner_check.v1.schema.json`](../extension_contracts/partner_check.v1.schema.json)
@@ -61,7 +61,7 @@ tick the consent (section 5).
  "currency":"AED","lang":"en","operator":"cashier@shop.example","customer":"CUST-0001",
  "customer_group":"Retail","price_list":"Standard Selling","coupon_codes":["WELCOME10"],
  "sale_attributes":[{"name":"Prescription No","value":"RX-551"}],
- "lines":[{"line_no":1,"item_code":"PARA-500","item_group":"Pharmacy","qty_milli":2000,"uom":"Nos",
+ "lines":[{"line_no":1,"item_code":"PARA-500","item_name":"Paracetamol 500 mg","item_group":"Pharmacy","qty_milli":2000,"uom":"Nos",
            "rate_minor":1250,"amount_minor":2500,"discount_minor":0,"is_free_item":0,"promo_qty_milli":0,
            "line_attributes":[]}],
  "totals":{"net_minor":2500,"tax_minor":125,"discount_minor":0,"grand_minor":2625},
@@ -251,7 +251,7 @@ The System Manager's tick records who ticked it, when, for which address and for
 > currency and its currency_exponent · lang (the till's language) · operator (the signed-in cashier's user
 > id, personal data) · customer and customer_group (personal data) · price_list · coupon_codes ·
 > sale_attributes (the details the cashier captured, which may hold health data such as a prescription) ·
-> each line's row number, item_code, item_group, quantity, unit, price, amount, discount and captured
+> each line's row number, item_code, item_name, item_group, quantity, unit, price, amount, discount and captured
 > values · the sale's net, tax, discount and grand totals · the tenders offered · on a return, the original
 > sale (none for a return without its sale; the plan's order for a layaway plan's refund), whether it was
 > an order or a layaway plan, and its tender types. No card data, serial or batch is sent.

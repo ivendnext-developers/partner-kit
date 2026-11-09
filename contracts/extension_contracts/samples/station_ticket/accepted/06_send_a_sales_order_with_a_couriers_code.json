@@ -1,0 +1,10 @@
+{
+  "extension_point": "station_ticket",
+  "contract": "send_order_request",
+  "about": "A delivery order goes to the kitchen with the courier's pickup code.",
+  "payload": {
+    "sales_order": "SAL-ORD-2026-00043",
+    "service_mode": "Delivery",
+    "call_number": "A-4471"
+  }
+}

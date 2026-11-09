@@ -30,9 +30,9 @@ defect in one is a defect in its source: report it through the feedback forms ([
 
 ## The contracts: copies of the product's published files
 
-The folder [`contracts/`](contracts/README.md) holds 394 files copied from the iVendNext POS app's repository
+The folder [`contracts/`](contracts/README.md) holds 396 files copied from the iVendNext POS app's repository
 (`ivendnext/iVendNext_PWA`) at one commit, so a check runs with this repository alone. POS app commit
-`01a282e1286c1aaff66c629fda839c4a304a2a1a` (the merge of the POS app's train T37 into `development`, 2026-11-07, build 2.1.0.691: the install gives an app's own user read on every record type its event feed follows, and a manifest may carry `role_rights` and `records`). The checker copy `tools/manifest/validate.py` is taken at the same commit, and so are its two copied tests, `tools/manifest/tests/test_manifest_check.py` and `test_allowbydefault.py`, with their fixtures.
+`b13203dcf85e43e4cbdc9a8300ce94514b6bc56e` (the merge of the POS app's train T42 into `development`, 2026-11-10, build 2.1.0.697: a manifest gives its own role a Report or a Page in `role_rights`, besides the train T37 changes: the install gives an app's own user read on every record type its event feed follows, and a manifest may carry `role_rights` and `records`). The checker copy `tools/manifest/validate.py` is taken at the same commit, and so are its two copied tests, `tools/manifest/tests/test_manifest_check.py` and `test_allowbydefault.py`, with their fixtures.
 Our kit check
 compares every file below with its source at that commit on each change; the only edits are the links inside the
 pages, which point at the files here, and, in the samples, the framework's name in two refused print formats (by train T21 the product's pages word the framework's calls, its customers, bugs and decisions themselves, so the copies no longer reword them). Both print formats read through the framework's own value reader: the Company in one, a package's own patient record in the other. The shop refuses each only when it is called by the framework's name: without the name, this copy of each sample is warned, not refused, so read its `expect_refusal` as the shop's answer. A defect in one is a defect there: report it through the feedback forms ([feedback/README.md](feedback/README.md)).

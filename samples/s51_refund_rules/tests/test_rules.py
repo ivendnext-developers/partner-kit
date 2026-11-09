@@ -31,7 +31,7 @@ def settings(**kw):
 
 
 def line(n=1, qty=-1, rate=4990):
-    return {"line_no": n, "item_code": "CASE", "item_group": "Accessories", "qty_milli": round(qty * 1000), "uom": "Nos",
+    return {"line_no": n, "item_code": "CASE", "item_name": "CASE", "item_group": "Accessories", "qty_milli": round(qty * 1000), "uom": "Nos",
             "rate_minor": rate, "amount_minor": round(rate * qty), "discount_minor": 0, "line_attributes": []}
 
 
