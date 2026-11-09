@@ -43,6 +43,12 @@ ivn try
 
 ## Versions
 
+### 1.1.3
+
+- Manifest 0.2.3.
+- The lab job sheet says *Collect at* with the store's own name (a read-only *Store name* field on the lab order), not the warehouse's record name with the company suffix. A lab order saved before the update prints the old name until it is saved again.
+- The two eye rows read *Right eye* and *Left eye*: the shared language files translate a bare *Right* and *Left* as general words (a right, to leave), which a lab reads wrong.
+
 ### 1.1.2
 
 - Manifest 0.2.2.
