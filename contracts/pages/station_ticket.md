@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/station_ticket.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/station_ticket.md @ b13203dcf85e, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Station ticket — the kitchen's tickets on a kitchen screen (`station_ticket/1`)
 
 **Who this is for:** a partner building a kitchen display (a screen per station, an expo screen, a
@@ -58,8 +58,8 @@ last 30 minutes (so a cook can recall one), oldest first.
   Order sent to the kitchen, §3b). ⚠ `sales_order` was added after version 1 first shipped: a screen that
   validates the board against an older copy of `station_ticket.v1.schema.json` refuses the WHOLE board answer
   while any Sales Order ticket is on it (the screen goes blank), so take this copy before the shop sends orders.
-- `call_number` — a sale's call number, a check's place or tab name, or the Sales Order's name, as the order's
-  last send named it: a check moved to another table shows its new place from its next send, on every ticket of
+- `call_number` — a sale's call number, a check's place or tab name, the Sales Order's name or the courier's code sent with it, as the
+  order's last send named it: a check moved to another table shows its new place from its next send, on every ticket of
   that order.
 - `till` — the till that sent it; empty on a Sales Order's ticket.
 - `under` — a choice's dish, by its position in this ticket's `lines`; `null` for a dish.
@@ -93,7 +93,7 @@ A call centre or an online shop records an order as a Sales Order in iVendNext. 
 till's *Send* does — each station's ticket on its printer and on the board, `source` `sales_order` — and stays what
 it is: priced, settled and delivered as Sales Orders are today, never a till's sale or a table's check.
 
-**`sales_order_to_kitchen(sales_order, service_mode?)`** (`POST`) sends the order's lines the kitchen does not have
+**`sales_order_to_kitchen(sales_order, service_mode?, call_number?)`** (`POST`) sends the order's lines the kitchen does not have
 yet. In iVendNext Desk the same call is the **Send to kitchen** button on a submitted Sales Order, shown only where
 the order's store has a kitchen (a register there with Kitchen Printers) and the user holds the right.
 
@@ -110,13 +110,27 @@ the order's store has a kitchen (a register there with Kitchen Printers) and the
   store, from the store's one running register with Kitchen Printers (a store with several asks for a store
   row: the button does not show there for such a user). Each item goes to its kitchen as at a till. A station whose printer is cabled to a till never prints it
   (there is no till): give it a network printer, or no printer for a kitchen screen only.
-- **Never twice.** A second call sends only what is new: lines added since (amend the order — an amended order keeps
-  its kitchen order), and a station whose printer failed. Nothing new is refused. An order a till took in Order mode
+- **Never twice.** A second call sends only what is new: lines added since with *Update Items*, and a station whose printer failed. Nothing new is refused. An order a till took in Order mode
   and sent to the kitchen is refused: its lines went from the till (one the till never sent may be sent here). A till
   that later delivers the order sends nothing. Two calls at once send it once.
 - **Each line** prints as a dish with its quantity in its unit and the line's *Additional Notes* as its note. A
   choice sold as its own line prints as its own dish.
 - **`service_mode`** (optional) is printed when the register lists that mode; otherwise the ticket has none.
+- **`call_number`** (optional) is the code the expo reads on every ticket of the order and on its voids, for
+  example a courier's pickup code. Sent again without one, the code already on the order's kitchen order stays
+  (a second send or the Desk button never turns it back into the order's name); none ever sent, the ticket reads
+  the order's name. A courier assigned after the order reached the kitchen: call again with the code alone; it
+  is kept, every ticket of the order on the board reads it from then on, nothing prints again (paper already
+  printed keeps the old code), and the answer has no `results`. The same code again, or none, is *Nothing new*.
+- **A cancel or a cut tells the kitchen.** Cancelling the order, or an *Update Items* that lowers or removes a
+  line, writes a *VOID: STOP MAKING* ticket (`kind` `void`) for what the kitchen has and the order no longer
+  holds, on the printer and the board, with the same call number. Nobody presses anything and no right is asked:
+  whoever may cancel the order may. A station whose printer failed, or is cabled to a till, records the void as a
+  till's void does; it never stops the cancel. A hold, a close or an edit that leaves the dishes as they are
+  sends no void. **Cancel and amend** voids everything the kitchen had, and the amended order is sent whole by the
+  next *Send to kitchen*; to add or cut a dish, use *Update Items*, which sends only what is new or voids only
+  what is cut. The void prints while the cancel or *Update Items* is being saved, so a kitchen printer that does not
+  answer holds the cancel up to 5 seconds a station before it stands.
 - **Answers.** Each kitchen's `state` is `handed` (with its `ticket`) or `failed` with the till's own reason — *"no
   printer is set for it on this till"* and *"… cabled to a till …"* mean the register that prints the order. A line
   whose item has no kitchen fails each time (*"no kitchen is set for …"*) until one is set.
@@ -125,10 +139,9 @@ the order's store has a kitchen (a register there with Kitchen Printers) and the
   (*"This order was just changed. Send it again."*). A till's order whose kitchen order holds only voided lines is
   refused as one the till sent. A sale paid offline whose printed tickets could not be handed over when it synced
   carries no kitchen order, so its order could be sent here a second time: check the kitchen before re-sending
-  such an order. An amended order with less, or a cancelled one, sends no
-  void: tell the kitchen. An amendment
-  that moves the order to another store sends it whole to the new store's kitchen and leaves the first store's
-  tickets: tell that kitchen too. The register's
+  such an order. An amendment
+  that moves the order to another store is voided at the first store when the order is cancelled and sent whole
+  to the new store's kitchen. The register's
   item groups are not asked: the order is already priced.
 
 ## 4. Refusals
@@ -213,8 +226,10 @@ number off.
 notice and every few seconds while the socket is down. Move a ticket with `station_ticket_move` one step
 at a time (new, started, ready, bumped), naming `kitchen_order` and `ticket`; `already: true` is not an
 error. Never send a price. To send a call-centre or online order, call
-`ivendnext_mpos.api.v1.sales_order_to_kitchen(sales_order)` after the Sales Order is submitted; call it again
-after the order is amended — it sends only what is new. Validate against `station_ticket.v1.schema.json`."
+`ivendnext_mpos.api.v1.sales_order_to_kitchen(sales_order, call_number="…")` after the Sales Order is submitted,
+passing the courier's pickup code as `call_number` when there is one; call it again after *Update Items* adds a
+dish — it sends only what is new. Cancelling the order, or cutting a dish with *Update Items*, stops it in the
+kitchen by itself. Validate against `station_ticket.v1.schema.json`."
 
 Contract: [`station_ticket.v1.schema.json`](../extension_contracts/station_ticket.v1.schema.json) ·
 samples under `tests/extension_contracts/samples/station_ticket/` · code `business_logic/station_ticket.py`.

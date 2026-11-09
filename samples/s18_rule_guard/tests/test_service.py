@@ -49,7 +49,7 @@ def context(lines=(("BREAD", "Bakery"),), group="Retail", grand=1250, stage="sal
             "pos_profile": "Mall", "company": "Shop", "currency": currency, "lang": "en", "operator": "c@shop.example",
             "customer": "CUST-1", "customer_group": group, "price_list": "Standard Selling", "coupon_codes": [],
             "sale_attributes": [],
-            "lines": [{"line_no": i + 1, "item_code": c, "item_group": g, "qty_milli": 1000, "uom": "Nos",
+            "lines": [{"line_no": i + 1, "item_code": c, "item_name": c, "item_group": g, "qty_milli": 1000, "uom": "Nos",
                        "rate_minor": grand, "amount_minor": grand, "discount_minor": 0, "line_attributes": []}
                       for i, (c, g) in enumerate(lines)],
             "totals": {"net_minor": grand, "tax_minor": 0, "discount_minor": 0, "grand_minor": grand},

@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/open_check.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/open_check.md @ b13203dcf85e, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Open check — a table's running order, paid once (`open_check/1`)
 
 **Who this is for:** a partner building a front-of-house app (reservations, a waiting list) or a guest
@@ -97,6 +97,14 @@ its open checks: *free*, *seated*, *ordered*, *paying*) and its tabs. Each check
 that last write (*"Updated 20:41 at Till 3"*), `servers` (the store's operators a check can be handed to) and
 `realtime` (the live wiring it listens on); to your app those are absent or null.
 
+A place also carries `held_from` and `held_to` while a booking on it is live: from the start of the booking's
+day until `held_to`, when the hold lapses by itself. A hold does not change `status`, and the table still opens.
+A bookings app writes the table's next booking with `PUT /api/resource/Retail Floor Place/<place>`, where
+`<place>` is the place's `place` in this answer, after a `role_rights` entry in its manifest gives
+`<PREFIX> Integration`, the role its own user holds, `read` and `write` on *Retail Floor Place*. Both fields are
+`YYYY-MM-DD HH:MM:SS` in the site's time, with no offset. Clear the hold by writing both empty. Never write a guest's
+name, party or phone there: every app at the store reads this answer.
+
 **`item_names(lang, items)`** answers the names of the items you list (1 to 500 item codes, a JSON list) in
 the language you name, for a guest who reads another language than your integration user:
 `{lang, items: [{item_code, item_name, display_name, translated}]}`. `display_name` is the store's translation of
@@ -110,6 +118,16 @@ call answers item names only; a translation the store scoped to a context is not
 a permission error. GET or POST (use POST for a long list: a GET address has a length limit). Cache the answer per
 language, and refresh it when the menu or the store's translations change. Schema: `item_names_request` and
 `item_names_answer`.
+
+**`item_prices(pos_profile, items)`** answers the list prices of the items you list (1 to 500 item codes, a JSON
+list) in one read, for a guest page that prices a whole menu:
+`{pos_profile, price_list, currency, items: [{item_code, price_list_rate}]}`. The price list and currency are the
+register's POS Profile's, and the price is the rate for the item's default selling unit for the store's walk-in customer, the same as
+`get_item_details` answers without a pricing rule. No pricing rule, lot or quantity break applies and no price
+row is written. An item the list holds no price for answers `price_list_rate` 0 (read 0 as *no price*). It needs
+Item read. The answer keeps your order, lists each item once under its own code, and leaves out an item that does
+not exist or that your user may not read. Refusals: *"Name 1 to 500 item codes."* (the same words as `item_names`) · *"Outlet profile … not found."* · no Item read →
+a permission error. GET or POST (use POST for a long list). Schema: `item_prices_request` and `item_prices_answer`.
 
 ## 2a. The kitchen
 

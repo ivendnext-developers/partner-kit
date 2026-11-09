@@ -17,7 +17,7 @@ SETTINGS = {"name": "Default", "lowest_unit_price": 0.01, "max_qty_per_line": 50
 
 
 def line(n, code="BREAD", qty=1, rate=1250, group="Bakery"):
-    return {"line_no": n, "item_code": code, "item_group": group, "qty_milli": round(qty * 1000), "uom": "Nos",
+    return {"line_no": n, "item_code": code, "item_name": code, "item_group": group, "qty_milli": round(qty * 1000), "uom": "Nos",
             "rate_minor": rate, "amount_minor": round(rate * qty), "discount_minor": 0, "line_attributes": []}
 
 

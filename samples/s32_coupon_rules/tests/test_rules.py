@@ -22,7 +22,7 @@ RECORDS = [{"name": "WELCOME10", "coupon": "WELCOME10", "enabled": 1, "first_pur
 
 
 def line(n=1, code="BREAD", qty=1, rate=1250):
-    return {"line_no": n, "item_code": code, "item_group": "Bakery", "qty_milli": round(qty * 1000), "uom": "Nos",
+    return {"line_no": n, "item_code": code, "item_name": code, "item_group": "Bakery", "qty_milli": round(qty * 1000), "uom": "Nos",
             "rate_minor": rate, "amount_minor": round(rate * qty), "discount_minor": 0, "line_attributes": []}
 
 

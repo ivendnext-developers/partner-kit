@@ -128,7 +128,7 @@
           }
         },
         "workspaces": {
-          "description": "The workspaces the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py). A workspace is the app's page, opened from the App library; it is never added to the menu: it installs out of the Desk's menu, limited to the app's roles and System Manager.",
+          "description": "The workspaces the manifest installs: each element is checked by the installer's checker inside the site (business_logic/manifest_check.py). A workspace is the app's page, opened from the App library; it is never added to the menu: it installs out of the Desk's menu, limited to the app's roles and System Manager. A workspace may carry number_cards, rows of number_card_name for the cards its blocks show (Desk finds a card by its name, so a label is not needed).",
           "type": "array",
           "items": {
             "type": "object"
@@ -381,18 +381,24 @@
           }
         },
         "role_rights": {
-          "description": "Rights for one of the app's OWN roles (named with its prefix) on any record type, the retailer's included (since 2.1.0, X109): the install writes one level-0 permission row per entry, with exactly these rights on, and never touches a row the retailer already gave that role; an update rewrites the row unless the retailer changed it; the uninstall removes it. A right for a role that is not the app's own is refused: the retailer gives their own roles rights in Role Permissions Manager. Page: docs/extending/package_install.md.",
+          "description": "Rights for one of the app's OWN roles (named with its prefix), the retailer's record types included (since 2.1.0). An entry with a doctype: the install writes one level-0 permission row with exactly these rights on, and never touches a row the retailer already gave that role; an update rewrites the row unless the retailer changed it; the uninstall removes it. An entry with a report or a page: the role may open that Report or Page; the install adds the role to the one the site holds (keeping every role it already had) and the uninstall takes only that role off. A right for a role that is not the app's own is refused: the retailer gives their own roles rights in Role Permissions Manager. Page: docs/extending/package_install.md.",
           "type": "array",
           "items": {
             "type": "object",
             "required": [
-              "doctype",
-              "role",
-              "rights"
+              "role"
             ],
             "additionalProperties": false,
             "properties": {
               "doctype": {
+                "type": "string",
+                "minLength": 1
+              },
+              "report": {
+                "type": "string",
+                "minLength": 1
+              },
+              "page": {
                 "type": "string",
                 "minLength": 1
               },
@@ -423,11 +429,81 @@
                   ]
                 }
               }
-            }
+            },
+            "oneOf": [
+              {
+                "required": [
+                  "doctype",
+                  "rights"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "report"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "page"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "report"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "doctype"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "page"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rights"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "page"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "doctype"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "report"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rights"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
           }
         },
         "records": {
-          "description": "Default records made at install if missing, as the administrator would in Desk (since 2.1.0, X109): by name, else by the plain values given; never written over, never a document that posts (the retailer's to make) nor one of the till's own records (the till writes them as it sells); on the app's own settings record, values are set where the field is empty. An update rewrites the values unless the retailer changed them; the uninstall removes a row that is unchanged and unlinked, and names what it kept. Page: docs/extending/package_install.md.",
+          "description": "Default records made at install if missing, as the administrator would in Desk (since 2.1.0): by name, else by the plain values given; never written over, never a document that posts (the retailer's to make) nor one of the till's own records (the till writes them as it sells); on the app's own settings record, values are set where the field is empty. An update rewrites the values unless the retailer changed them; the uninstall removes a row that is unchanged and unlinked, and names what it kept. Page: docs/extending/package_install.md.",
           "type": "array",
           "items": {
             "type": "object",

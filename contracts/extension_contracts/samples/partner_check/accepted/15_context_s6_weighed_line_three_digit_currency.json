@@ -23,6 +23,7 @@
       {
         "line_no": 1,
         "item_code": "DATES-MEDJOOL",
+        "item_name": "Dates Medjool item",
         "item_group": "Food",
         "qty_milli": 1250,
         "uom": "Kg",

@@ -55,7 +55,8 @@
   "item_availability": "A store's items that carry a sold-out or hours rule (or the one you name), available now or not and why.",
   "set_item_availability": "Mark an item sold out at one store (until a time or until cleared), clear it, or set the hours it is sold; not fenced to your user's stores.",
   "sales_order_to_kitchen": "Sends a submitted Sales Order's lines to the kitchen's stations: only what the kitchen does not have yet.",
-  "item_names": "Each item's name in a language you name: a guest-ordering page shows the guest's language."
+  "item_names": "Each item's name in a language you name: a guest-ordering page shows the guest's language.",
+  "item_prices": "Many items' list prices at one store in one read: a guest-ordering page prices a whole menu in one call."
  },
  "other_calls": [
   {

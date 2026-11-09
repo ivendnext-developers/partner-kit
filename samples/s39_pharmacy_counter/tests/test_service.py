@@ -41,7 +41,7 @@ def till_body(lines, customer="Ann", rx=None, sale_ref="sale-1", operator="ph@sh
            "pos_profile": "Dispensary", "company": "Shop", "currency": "KES", "lang": "en", "operator": operator,
            "customer": customer, "customer_group": "Individual", "price_list": "Standard Selling", "coupon_codes": [],
            "pos_opening": opening, "pos_terminal": "T1", "sale_attributes": attrs,
-           "lines": [{"line_no": i + 1, "item_code": c, "item_group": g, "qty_milli": int(q * 1000), "uom": "Nos",
+           "lines": [{"line_no": i + 1, "item_code": c, "item_name": c, "item_group": g, "qty_milli": int(q * 1000), "uom": "Nos",
                       "rate_minor": 100, "amount_minor": int(q * 100), "discount_minor": 0, "line_attributes": []}
                      for i, (c, g, q) in enumerate(lines)],
            "totals": {"net_minor": 0, "tax_minor": 0, "discount_minor": 0, "grand_minor": 0}, "offered_tenders": ["Cash"]}

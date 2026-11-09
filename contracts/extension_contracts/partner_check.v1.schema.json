@@ -130,6 +130,7 @@
             "required": [
               "line_no",
               "item_code",
+              "item_name",
               "item_group",
               "qty_milli",
               "uom",
@@ -145,6 +146,9 @@
                 "minimum": 1
               },
               "item_code": {
+                "type": "string"
+              },
+              "item_name": {
                 "type": "string"
               },
               "item_group": {

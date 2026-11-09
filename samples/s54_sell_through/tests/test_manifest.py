@@ -15,6 +15,9 @@ MANIFEST = os.path.join(SAMPLE, "manifest.json")
 sys.path[:0] = [SAMPLE, os.path.join(SAMPLE, "service")]
 import sst  # noqa: E402
 
+sys.path.insert(0, os.path.join(SAMPLE, "..", "..", "tools", "manifest"))
+from validate import validate  # noqa: E402
+
 FEED = {"name": "PP SST Sell-through feed",
         "description": "the sell-through service reads the two reports and the items and writes the rows as this user",
         "events": ["PP SST Sell-through"]}
@@ -72,6 +75,19 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(r["ref_doctype"], sst.RUN)
         self.assertEqual({c.split(".")[0] for c in r["columns"] if "." in c}, {"rows"})
         self.assertTrue({c.split(".")[1] for c in r["columns"] if "." in c} <= set(self.row))
+
+    def test_the_install_gives_the_role_the_two_reports_and_the_rights_they_ask_for(self):
+        role = "PP SST Integration"
+        rights = {e["doctype"]: e["rights"] for e in self.m["role_rights"] if "doctype" in e}
+        reports = [e["report"] for e in self.m["role_rights"] if "report" in e]
+        self.assertTrue(all(e["role"] == role for e in self.m["role_rights"]))
+        self.assertEqual(sorted(reports), sorted([sst.POS_SALE_REPORT, sst.STOCK_REPORT]))   # the two the service runs, by the names it runs
+        self.assertTrue(all(set(e) == {"report", "role"} for e in self.m["role_rights"] if "report" in e))   # a report entry takes no rights
+        self.assertEqual(rights["POS Invoice"], ["read", "report"])
+        self.assertEqual([d for d, r in rights.items() if r == ["read"]], ["Item", "Item Attribute", "Warehouse", "UOM"])
+        self.assertEqual([d for d, r in rights.items() if r == ["select"]], ["POS Profile", "Item Group", "Customer", "Customer Group"])
+        self.assertEqual(len(rights), 9)                    # one entry per record type, as the install refuses two
+        self.assertEqual(validate(self.m), [])              # and the kit's copy of the shop's own checker takes the whole manifest
 
     def test_the_feed_registration_is_frozen(self):
         (f,) = self.m["registered_applications"]

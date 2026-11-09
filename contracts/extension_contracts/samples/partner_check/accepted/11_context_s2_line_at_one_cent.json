@@ -23,6 +23,7 @@
       {
         "line_no": 1,
         "item_code": "CABLE-USBC",
+        "item_name": "Cable Usbc item",
         "item_group": "Accessories",
         "qty_milli": 2000,
         "uom": "Nos",
@@ -34,6 +35,7 @@
       {
         "line_no": 2,
         "item_code": "CASE-IP15",
+        "item_name": "Case Ip15 item",
         "item_group": "Accessories",
         "qty_milli": 1000,
         "uom": "Nos",

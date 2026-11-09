@@ -247,8 +247,8 @@ def identity(section: str, item) -> str:
         return f"{item.get('doc_type')}.{item.get('field_name') or ''}.{item.get('property')}"
     if section == "links":
         return f"{item.get('doctype')}.{item.get('link_doctype')}.{item.get('link_fieldname')}"
-    if section == "role_rights":                 # one row per record type and role: two samples' rights on it are one entry
-        return f"{item.get('doctype')}.{item.get('role')}"
+    if section == "role_rights":                 # one row per record type, report or page and role: two samples' rights on it are one entry
+        return f"{item.get('doctype') or item.get('report') or item.get('page')}.{item.get('role')}"
     if section == "records":                     # a default row is its record type and name (no name: its plain values)
         return f"{item.get('doctype')}.{item['name']}" if isinstance(item.get("name"), str) else f"{item.get('doctype')}.{sha(item)[:16]}"
     where = item.get("doctype") or item.get("ref_doctype") or item.get("dt") or item.get("doc_type")

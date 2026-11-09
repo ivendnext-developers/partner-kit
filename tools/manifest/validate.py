@@ -1,5 +1,5 @@
 # COPY — source: repo ivendnext/iVendNext_PWA, path apps/ivendnext_mpos/ivendnext_mpos/business_logic/manifest_check.py,
-# at development 01a282e1286c1aaff66c629fda839c4a304a2a1a. The shop's own checker (the install screen runs it) is the source;
+# at development b13203dcf85e43e4cbdc9a8300ce94514b6bc56e. The shop's own checker (the install screen runs it) is the source;
 # this copy lets you check a manifest before you send it, and refuses the same manifests in the same words. Everything
 # below this header equals the source. A defect here is a defect there: report it with the Kit defect form (feedback/README.md).
 """The companion manifest — the VALIDATOR. Pure Python: no framework import, no network.
@@ -271,7 +271,7 @@ KEYED = {
     "list_marks": ("record_type", "label"),
     "register_books": ("book",),
     "translations": ("language",),
-    "role_rights": ("doctype", "role", "rights"),
+    "role_rights": ("role",),
     "records": ("doctype", "values"),
 }
 NUMBERING = {"autoname", "naming_rule"}  # a record type's own numbering, set by a property setter
@@ -1219,19 +1219,36 @@ def _app_user_rights(v: _V):
 def _role_rights(v: _V):
     """X109 (b): rights for the app's OWN roles (named with its prefix) on any record type, the
     retailer's included — an app may do what an administrator does in Desk (2026-11-03). A
-    retailer's role is the retailer's to grant."""
+    retailer's role is the retailer's to grant. ``rolerightspages`` (2026-11-09): an entry may name
+    a ``report`` or a ``page`` instead of a ``doctype``, to give the role that Report or Page (the
+    administrator's *Role Permission for Page and Report*); it has no ``rights``."""
     seen = set()
     for i, r in enumerate(v.list_of("role_rights")):
-        w, role, dt = f"role_rights[{i}]", r.get("role"), r.get("doctype")
-        if (dt, role) in seen:
+        w, role = f"role_rights[{i}]", r.get("role")
+        target = [k for k in ("doctype", "report", "page") if k in r]
+        kind = target[0] if len(target) == 1 else "doctype"
+        name = r.get(kind)
+        if (kind, name, role) in seen:
             v.refuse(
                 w,
                 role if isinstance(role, str) else None,
-                "one entry per record type and role: put every right of the pair in it",
+                "one entry per record type and role: put every right of the pair in it"
+                if kind == "doctype"
+                else f"one entry per {kind} and role",
             )
-        seen.add((dt, role))
-        if not isinstance(dt, str) or not dt:
-            v.refuse(w, None, "doctype names the record type the role gets rights on")
+        seen.add((kind, name, role))
+        if (
+            len(target) != 1
+            or not isinstance(name, str)
+            or not name
+            or (kind != "doctype" and "rights" in r)
+        ):
+            v.refuse(
+                w,
+                None,
+                "an entry names exactly one of doctype (the record type the role gets rights on, "
+                "with its rights), report or page (the one the role may open; it takes no rights)",
+            )
         if not isinstance(role, str) or not role.startswith(f"{v.prefix} ") or _odd(role):
             v.refuse(
                 w,
@@ -1239,6 +1256,8 @@ def _role_rights(v: _V):
                 f"Name a role of your own (it starts with {v.prefix}); the retailer gives their "
                 "own roles rights in Role Permissions Manager.",
             )
+        if kind != "doctype":
+            continue
         rights = r.get("rights")
         if (
             not isinstance(rights, list)

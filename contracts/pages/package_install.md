@@ -1,4 +1,4 @@
-<!-- Source: ivendnext/iVendNext_PWA docs/extending/package_install.md @ 01a282e1286c, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
+<!-- Source: ivendnext/iVendNext_PWA docs/extending/package_install.md @ b13203dcf85e, copied unchanged except the links: its one home is there; a defect here is a defect there: report it through the feedback forms (feedback/README.md in this repository), and we take it to the product's board. -->
 # Installing a manifest (self-service install)
 
 **Contract:** [`package_manifest.v1.schema.json`](../extension_contracts/package_manifest.v1.schema.json)
@@ -253,9 +253,25 @@ left exactly as it is and never recorded, so it is never removed; one entry per 
 your own user's role on a record type its feed follows adds to the read the feed gives it). **A right for a role that
 is not your own is refused** (a prefix is not enough: a role the site already holds under another spelling, or with
 the engine's own permission rows, is the retailer's): *Name a role of your own (it starts with ⟨PREFIX⟩); the retailer gives their own roles rights in Role
-Permissions Manager.* An update rewrites a row with the new version's rights, unless the shop changed the row since
+Permissions Manager.* A role your own app made stays yours across versions, though your own record types give it standard permission rows: an update that keeps `role_rights` for it is not refused. An update rewrites a row with the new version's rights, unless the shop changed the row since
 (then it is the shop's and stays); a version that drops an entry switches every right on its row off at once, and
 the row goes at uninstall with the role.
+
+**A Report or a Page** takes `report` or `page` in place of `doctype`, and no `rights`: the entry only lets your own
+role open it, as an administrator does in *Role Permission for Page and Report*.
+
+```json
+"role_rights": [
+  {"report": "Stock Projected Qty", "role": "PP HKD Pharmacist"},
+  {"page": "stock-balance", "role": "PP HKD Pharmacist"}
+]
+```
+
+Name exactly one of `doctype`, `report` and `page` in an entry, and one entry per Report or Page and role. The install adds your
+role to the Report or Page and keeps every role it already had; the consent names it, *Its role … may open the report …*, and an update that adds one asks again, as one that adds a record right does.
+A Report or Page that no role is set on is open to everyone already, so nothing is written. A role the
+Report or Page already lists is the chain's and is left as it is. A version that drops an entry leaves the role on the Report or Page until uninstall. The uninstall takes only your role off. A Report's rows
+are still read through the role's right on the Report's record type, so give the role *read* there too.
 
 ### Default records
 
@@ -324,6 +340,7 @@ and skips a page the shop deleted (the update's list of changes still names it).
 the search bar, never added to the menu*. A manifest has no way to add a page to the menu. Pages an earlier version of
 the installer put in the menu are taken out by a patch at the update (a page the shop made, roles the shop set on a page,
 and a page the shop hid, stay); a page of an app with no installed package record keeps no roles, so the shop limits it.
+A page may carry `number_cards`, rows of `number_card_name` (a `label` is not needed: Desk finds a card by its name) for the cards its blocks show, so the cards are on the page when it opens; an update writes the rows of the new version, one that names none leaves the page's rows as they are, and the uninstall removes them with the page.
 A shortcut may open a report the same manifest adds: the install writes your pages after your reports, and an
 update adding a page with its report does the same.
 On the page, a user sees the shortcuts to the record types their roles read (a System Manager, who gets a row on each
@@ -751,7 +768,7 @@ library** on the Extension Packages list and on a new package. Code: `business_l
 `app-library` · the drawing `public/js/app_library_desk.js`. The library's own format is the library's; it is not copied here.
 
 **The door.** Each app is a card in a grid: what it does, what it adds, and one facts line (whether it needs a Desk
-user, one Desk licence each; the outside addresses it names, or *No outside address named*; who uses it). A card never
+user, one Desk licence each; the outside addresses it names, or *Names no address that receives your data*; who uses it). A card never
 says an app sends nothing outside: any print layout can reach an outside address (§3). (The longer explanation is
 the library's own text; the library owns its words.) A card's longer explanation
 opens under *What it does and what you set up first*. The page reads in the order a customer does, an empty group left out: **Waiting for your OK** (a maker's app waiting

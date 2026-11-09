@@ -41,7 +41,7 @@ RX_CL = {"kind": "Contact lenses", "test_date": "2026-10-01", "valid_until": "20
 
 
 def line(code, group, qty=1, n=1):
-    return {"line_no": n, "item_code": code, "item_group": group, "qty_milli": int(qty * 1000), "uom": "Nos",
+    return {"line_no": n, "item_code": code, "item_name": code, "item_group": group, "qty_milli": int(qty * 1000), "uom": "Nos",
             "rate_minor": 100, "amount_minor": 100, "discount_minor": 0, "line_attributes": []}
 
 
