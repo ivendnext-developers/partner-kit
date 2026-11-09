@@ -90,18 +90,18 @@ class FakeTenant:
             raise app.TenantError("not found", 404)
         return copy.deepcopy(src[name])
 
-    def rows(self, doctype, fields, filters, timeout=None, limit=0, parent=""):
+    def rows(self, doctype, fields, filters, timeout=None, limit=0, start=0):
         self._check(("rows", doctype, json.dumps(filters), limit))
         if doctype == "POS Invoice":
-            assert fields == ["name"]
+            assert fields == app.DELIVERY_FIELDS
             flat = {f: v for f, op, v in filters if op == "="}
             assert flat == {"transaction_mode": "Delivery", "docstatus": 1, "is_return": 0}, filters
-            return [{"name": d["name"]} for d in self.deliveries
-                    if _match({"posting_date": d["posting_date"], "custom_deliver_against": "SO-1"}, [f for f in filters if f[1] != "="])]
-        if doctype == "POS Invoice Item":
-            assert fields == app.DELIVERY_FIELDS and parent == "POS Invoice" and filters[0][:2] == ["parent", "in"]
-            return [{"parent": d["name"], "item_code": i, "qty": q, "warehouse": w}
-                    for d in self.deliveries if d["name"] in filters[0][2] for i, q, w in d["lines"]]
+            out = []
+            for d in self.deliveries:
+                doc = {"posting_date": d["posting_date"], "custom_deliver_against": d.get("against", "SO-1")}
+                if _match(doc, [f for f in filters if f[1] != "="]):
+                    out += [{"name": d["name"], "item_code": i, "qty": q, "warehouse": w} for i, q, w in d["lines"]]
+            return out[start: start + limit] if limit else out[start:]
         assert doctype == "Item" and fields == app.ITEM_FIELDS
         return [{k: r.get(k) for k in ("name", "variant_of", "attribute", "attribute_value")}
                 for r in self.items if _match(r, filters)][: limit or None]
@@ -342,12 +342,34 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(rows[("L", "Mall - DR")], (1, 4))
         self.assertNotIn(("L", "High Street - DR"), rows)           # nothing left to show: 1 sold less 1 delivered
         self.assertEqual(rows[("S", "Mall - DR")], (3, 0))            # a delivery before Sold since is not read
-        lines = [c for c in self.shop.calls if c[:2] == ("rows", "POS Invoice Item")]
-        self.assertEqual(json.loads(lines[0][2]), [["parent", "in", ["POS-D1"]]])
+        (read,) = [c for c in self.shop.calls if c[:2] == ("rows", "POS Invoice")]
+        self.assertEqual(read[3], sst.DELIVERY_PAGE)             # one page read, in the first round
 
-    def test_s15c_no_delivery_reads_no_lines(self):
+    def test_s15c_a_delivery_with_no_order_is_a_sale_of_its_own(self):
+        self.shop.deliveries = [{"name": "POS-D2", "posting_date": "2026-10-20", "against": "",
+                                 "lines": [("DRESS-A-RED-S", 1.0, "Mall - DR")]}]
         self.press()
-        self.assertEqual([c for c in self.shop.calls if c[:2] == ("rows", "POS Invoice Item")], [])
+        rows = {(r["size"], r["store"]): r["sold"] for r in self.shop.writes[0][2]["rows"] if r["colour"] == "Red"}
+        self.assertEqual(rows[("S", "Mall - DR")], 3)
+
+    def test_s15d_a_season_of_deliveries_is_read_a_page_at_a_time_and_a_flood_is_said(self):
+        was = (sst.DELIVERY_PAGE, sst.DELIVERY_PAGES)
+        sst.DELIVERY_PAGE, sst.DELIVERY_PAGES = 2, 3
+        try:
+            self.shop.deliveries = [{"name": f"POS-D{n}", "posting_date": "2026-10-20",
+                                     "lines": [("DRESS-A-RED-S", 1.0, "High Street - DR")]} for n in range(5)]
+            self.shop.sold["High Street - DR"][0][8] = 5
+            code, out = self.press()
+            rows = {(r["size"], r["store"]): r["sold"] for r in self.shop.writes[0][2]["rows"] if r["colour"] == "Red"}
+            self.assertEqual(rows.get(("S", "High Street - DR"), 0), 0)       # all five deliveries came off, over three pages
+            self.assertEqual(len([c for c in self.shop.calls if c[:2] == ("rows", "POS Invoice")]), 3)
+            self.shop.writes = []
+            self.shop.deliveries += [{"name": "POS-D9", "posting_date": "2026-10-20", "lines": [("SCARF", 1.0, "Mall - DR")]}]
+            code, out = self.press()
+            self.assertIn("more deliveries than one run reads", out["message"]["body"])
+            self.assertEqual(self.shop.writes, [])
+        finally:
+            sst.DELIVERY_PAGE, sst.DELIVERY_PAGES = was
 
     def test_s16_nothing_sold_and_nothing_held_writes_an_empty_run_and_says_so(self):
         self.shop.sold, self.shop.stock = {}, {}

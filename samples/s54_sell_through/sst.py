@@ -32,7 +32,7 @@ SKEW_S = 300                 # a press stamped further than this from our clock 
 STORES_MAX = 20              # stores a run reads: two reports each, side by side, inside the press's 10 seconds
 ROWS_MAX = 1000              # rows a press writes on the run in one save
 ITEMS_MAX = 5000             # item-attribute rows read for the group (a variant has one per attribute)
-DELIVERIES_MAX = 1000        # deliveries of orders read for a run (see ``delivered_of``)
+DELIVERY_PAGE, DELIVERY_PAGES = 1000, 10   # lines of deliveries made against orders, read a page at a time (``delivered_of``)
 DAYS_MAX = 730               # Sold since at most two years back
 POS_SALE_REPORT, STOCK_REPORT = "POS Sale Report", "Stock Projected Quantity"
 
@@ -197,7 +197,7 @@ def delivered_of(rows: list, items: dict) -> dict:
 
 def less_deliveries(sold: dict, delivered: dict) -> dict:
     """``sold`` ({store: {item: units}}) with each store's deliveries of orders taken off."""
-    return {store: {item: q - delivered.get(store, {}).get(item, 0.0) for item, q in by.items()}
+    return {store: {item: max(0.0, q - delivered.get(store, {}).get(item, 0.0)) for item, q in by.items()}
             for store, by in sold.items()}
 
 

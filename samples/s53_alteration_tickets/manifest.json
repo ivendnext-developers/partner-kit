@@ -282,7 +282,7 @@
      "fieldtype": "Check",
      "label": "Ready to collect",
      "read_only": 1,
-     "description": "Ticked when the ticket is marked Ready, unticked by Back to tailor. To tell the customer it is ready, add your own Notification on a change of this field."
+     "description": "Ticked when the ticket is marked Ready, unticked by Back to tailor. To tell the customer it is ready, add your own Notification on a change of this field that sends only while it is ticked."
     },
     {
      "fieldname": "closed",

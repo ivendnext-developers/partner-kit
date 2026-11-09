@@ -45,7 +45,7 @@ ivn try
 
 ### 1.0.2
 
-- An order and the delivery made against it count as one sale: the delivery's units come off, and the order stays the sale. The service now also reads the run's deliveries (POS Invoice and its lines), under the Read the setup already gives.
+- An order and the delivery made against it count as one sale: the delivery's units come off, and the order stays the sale. Deliveries made against orders (POS Invoice and its lines) are read with the Read the role already has.
 
 ### 1.0.1
 
