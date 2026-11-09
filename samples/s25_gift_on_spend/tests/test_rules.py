@@ -27,7 +27,8 @@ class Spend(unittest.TestCase):
         self.assertEqual(gcs.spend(sale(grand_total=1150.5)), Decimal("1150.5"))
 
     def test_a_gift_card_sold_on_the_sale_does_not_count(self):
-        items = [{"amount": 900, "transaction_mode": "Sale"}, {"amount": 300, "transaction_mode": "Gift Certificate"}]
+        items = [{"amount": 900, "net_amount": 900, "transaction_mode": "Sale"},
+                 {"amount": 300, "net_amount": 300, "transaction_mode": "Gift Certificate"}]
         self.assertEqual(gcs.spend(sale(grand_total=1200, items=items)), Decimal(900))
 
     def test_what_a_gift_card_or_store_credit_paid_does_not_count(self):
@@ -44,12 +45,14 @@ class Spend(unittest.TestCase):
         self.assertEqual(gcs.return_spend(ret), Decimal(460))          # the till's return lines, tax included
 
     def test_an_item_return_line_in_a_sale_counts_with_its_own_sign(self):
-        items = [{"amount": -1200, "transaction_mode": "Item Return"}, {"amount": 1250, "transaction_mode": "Sale"}]
+        items = [{"amount": -1200, "net_amount": -1200, "transaction_mode": "Item Return"},
+                 {"amount": 1250, "net_amount": 1250, "transaction_mode": "Sale"}]
         self.assertEqual(gcs.spend(sale(grand_total=50, items=items)), Decimal(50))
 
     def test_a_gift_card_paid_out_or_recharged_on_the_sale_does_not_count(self):
-        items = [{"amount": 900, "transaction_mode": "Sale"}, {"amount": 200, "transaction_mode": "Gift Certificate Recharge"},
-                 {"amount": -100, "transaction_mode": "Gift Certificate Cashback"}]
+        items = [{"amount": 900, "net_amount": 900, "transaction_mode": "Sale"},
+                 {"amount": 200, "net_amount": 200, "transaction_mode": "Gift Certificate Recharge"},
+                 {"amount": -100, "net_amount": -100, "transaction_mode": "Gift Certificate Cashback"}]
         self.assertEqual(gcs.spend(sale(grand_total=1000, items=items)), Decimal(900))
 
     def test_loyalty_points_and_what_is_owed_do_not_count(self):
@@ -75,6 +78,61 @@ class Spend(unittest.TestCase):
 
     def test_kept_is_what_the_net_still_earns_never_more_than_issued(self):
         self.assertEqual([gcs.kept(n, 1000, 2) for n in (-5, 999, 1000, 2500, 9000)], [0, 0, 1, 2, 2])
+
+
+class CardLineValue(unittest.TestCase):
+    """A gift card line on a sale comes off at what it added to the grand total (S22's ``goods_value``): after a sale
+    discount, with the tax the till put on it, and with its own share of a tender discount."""
+
+    # Goods 100 and a card 50, a 10% sale discount (90 and 45), 10% tax on both (9 and 4.5): grand total 148.5. A tender
+    # discount of 7.43, of which 2.48 is the card's line. Then every goods line comes back: 99, its tender share 4.95.
+    TAX = {"account_head": "VAT", "item_wise_tax_detail": '{"GOODS": [10, 9], "CARD": [10, 4.5]}'}
+
+    def bench_sale(self, **kw):
+        items = [{"item_code": "GOODS", "amount": 100, "net_amount": 90, "transaction_mode": "Sale",
+                  "custom_tender_discount_apportioned": 4.95},
+                 {"item_code": "CARD", "amount": 50, "net_amount": 45, "transaction_mode": "Gift Certificate",
+                  "custom_tender_discount_apportioned": 2.48}]
+        return sale(**dict(dict(grand_total=148.5, items=items, taxes=[self.TAX], conversion_rate=1,
+                                custom_tender_discount_amount=7.43), **kw))
+
+    RETURN = {"grand_total": -99, "custom_tender_discount_amount": -4.95,
+              "items": [{"item_code": "GOODS", "amount": -100, "net_amount": -90, "transaction_mode": "Sale Return"}],
+              "taxes": [{"account_head": "VAT", "item_wise_tax_detail": '{"GOODS": [10, -9]}'}]}
+
+    def test_the_rows_bench_sale_a_taxed_card_counts_112_and_its_return_takes_off_108(self):
+        # goods 100 + 8 tax, a card 40 + 4 tax: grand total 152. Before the fix: 152 - 40 = 112 counted, 108 taken off.
+        items = [{"item_code": "GOODS", "amount": 100, "net_amount": 100, "transaction_mode": "Sale"},
+                 {"item_code": "CARD", "amount": 40, "net_amount": 40, "transaction_mode": "Gift Certificate"}]
+        tax = {"item_wise_tax_detail": '{"GOODS": [8, 8], "CARD": [10, 4]}'}
+        ret = {"grand_total": -108, "items": [{"item_code": "GOODS", "amount": -100, "net_amount": -100,
+                                               "transaction_mode": "Sale Return"}]}
+        self.assertEqual(gcs.spend(sale(grand_total=152, items=items, taxes=[tax])), Decimal(108))
+        self.assertEqual(gcs.return_spend(ret), Decimal(108))
+
+    def test_the_goods_count_and_their_return_takes_off_the_same(self):
+        self.assertEqual(gcs.spend(self.bench_sale()), Decimal("94.05"))         # 148.5 - 45 - 4.5 - (7.43 - 2.48)
+        self.assertEqual(gcs.return_spend(self.RETURN), Decimal("94.05"))
+        self.assertEqual(gcs.spend(self.bench_sale()) - gcs.return_spend(self.RETURN), 0)
+
+    def test_an_untaxed_card_comes_off_at_its_discounted_value(self):
+        no_card_tax = {"account_head": "VAT", "item_wise_tax_detail": '{"GOODS": [10, 9]}'}
+        self.assertEqual(gcs.spend(self.bench_sale(grand_total=144, taxes=[no_card_tax])), Decimal("94.05"))
+
+    def test_the_card_tax_is_read_in_the_sales_currency(self):
+        company = {"account_head": "VAT", "item_wise_tax_detail": '{"GOODS": [10, 18], "CARD": [10, 9]}'}
+        self.assertEqual(gcs.spend(self.bench_sale(taxes=[company], conversion_rate=2)), Decimal("94.05"))
+
+    def test_a_taxed_sale_with_no_card_line_counts_its_grand_total(self):
+        items = [{"item_code": "GOODS", "amount": 100, "net_amount": 100, "transaction_mode": "Sale"}]
+        for detail in ('{"GOODS": [8, 8]}', "not json"):
+            self.assertEqual(gcs.spend(sale(grand_total=108, items=items, taxes=[{"item_wise_tax_detail": detail}])),
+                             Decimal(108))
+
+    def test_a_card_on_a_sale_with_no_discount_comes_off_as_before(self):
+        items = [{"item_code": "GOODS", "amount": 900, "net_amount": 900, "transaction_mode": "Sale"},
+                 {"item_code": "CARD", "amount": 300, "net_amount": 300, "transaction_mode": "Gift Certificate"}]
+        self.assertEqual(gcs.spend(sale(grand_total=1200, items=items)), Decimal(900))
 
 
 class Cards(unittest.TestCase):

@@ -208,6 +208,16 @@ class Void(unittest.TestCase):
         sale(t, "R2", grand_total=-100, is_return=1, return_against="S1")
         self.assertEqual(cards.on_return(t, "R2")["cards"], [("S1:1", "Voided")])  # 950 left: voided
 
+    def test_a_card_lines_unrounded_tax_never_voids_the_card_it_earned(self):
+        # threshold 100: goods 92.38 and a card 25, both at 8.25% (the card's tax stored unrounded, 2.0625), grand total
+        # 127.06: a spend of 99.9975 is 100.00 at the currency's precision, at the issue and at the release alike
+        t = shop(threshold=100)
+        items = [{"item_code": "G", "amount": 92.38, "net_amount": 92.38, "transaction_mode": "Sale"},
+                 {"item_code": "GC", "amount": 25, "net_amount": 25, "transaction_mode": "Gift Certificate"}]
+        tax = {"item_wise_tax_detail": '{"G": [8.25, 7.62], "GC": [8.25, 2.0625]}'}
+        self.assertEqual(book(t, grand_total=127.06, items=items, taxes=[tax])["cards"], ["Held"])
+        self.assertEqual(cards._still_earned(t, t.card("S1:1")), "")
+
     def test_a_return_voids_the_last_cards_first(self):
         t = shop(max_cards_per_sale=3)
         book(t, grand_total=3200)

@@ -34,6 +34,10 @@ ivn try
 
 ## Versions
 
+### 1.2.1
+
+- A gift card sold on a sale comes off its spend at what it added to the sale: after a sale discount, with the tax on its line, and with its own share of a tender discount (the same value of the goods as S22's cash back). Before, a taxed card's tax counted towards the threshold and stayed after the goods came back.
+
 ### 1.2.0
 
 - The role's rights beyond the feed's read move into the manifest (`role_rights`): the install gives the feed's user its reads, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
