@@ -29,6 +29,8 @@ More: the [recipe](../../recipes/room_charge.md).
 
 ## Run it
 
+Needs POS build `2.1.0.696` or later for the three counts on the *Room charges* workspace.
+
 ```bash
 ivn check
 ivn try
@@ -49,6 +51,10 @@ HOTEL_SIM_URL=http://127.0.0.1:8161 python3 service/app.py
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.1.2
+
+- The three counts, Posted, Waiting and Refused, sit on the *Room charges* workspace itself, so the night auditor reads them on one page. The *Charges a day* chart is gone; an update leaves the old dashboard listed until the app is uninstalled. **Needs POS build `2.1.0.696` or later:** on an earlier site the page shows no counts.
 
 ### 0.1.1
 

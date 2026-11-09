@@ -555,6 +555,16 @@ class TheManifest(unittest.TestCase):
         sub = self.m["extension_subscriptions"][0]
         self.assertEqual((sub["settings"], sub["down_answer"]), ({"fill_attributes": ["Folio"]}, "allow_and_flag"))
 
+    def test_the_three_cards_are_on_the_workspace_and_an_update_names_them_all(self):
+        cards = sorted(c["name"] for c in self.m["number_cards"])
+        ws = self.m["workspaces"][0]
+        self.assertEqual(sorted(r["number_card_name"] for r in ws["number_cards"]), cards)
+        self.assertEqual(sorted(b["data"]["number_card_name"] for b in ws["blocks"] if b["type"] == "number_card"), cards)
+        self.assertEqual(len(cards), 3)
+        self.assertNotIn("dashboards", self.m)
+        self.assertNotIn("dashboard_charts", self.m)
+        self.assertNotIn("Dashboard", [s["type"] for s in ws["shortcuts"]])
+
     def test_the_post_row_is_named_by_its_sale(self):
         post = [d for d in self.m["doctypes"] if d["name"] == POST][0]
         self.assertEqual(post["autoname"], "field:sale")

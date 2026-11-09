@@ -37,7 +37,7 @@ An **exchange** of a Room Charge sale is refused at the till: the check dims eve
 ## Steps
 
 1. Make the tile, its account and the register's row: the [restaurant docs](https://docs.ivendnext.com/docs/hospitality/charge-a-meal-to-a-room) walk the hotel's accounts person through it.
-2. Install the manifest. It adds the details *Room*, *Guest*, *Folio* and *Tip*, the check, the feed, the records and the *Room charges* workspace.
+2. Install the manifest. It adds the details *Room*, *Guest*, *Folio* and *Tip*, the check, the feed, the records and the *Room charges* workspace with its three counts (POS build `2.1.0.696` or later).
 3. On **PP RMC Settings**, one row per store: the hotel system, its connection, the charge code, the tip code and the mode's name (*Room Charge* unless you named yours differently).
 4. Hide the details on themes that are not the hotel's: POS Studio, *Fields*, *Sale details*, *Hide*.
 
