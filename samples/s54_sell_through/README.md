@@ -47,7 +47,7 @@ ivn try
 
 ### 1.0.3
 
-- The install gives the app's role its two reports and every read and lookup they ask for (`role_rights`, with a `report` entry for each report), so the retailer grants none by hand. A refused report's message no longer sends the retailer to *Role Permission for Page and Report*. Needs POS build `2.1.0.697`.
+- The install gives the app's role its two reports and every read and lookup they ask for (`role_rights`, with a `report` entry for each report), so the retailer grants none by hand. A refused report's message no longer asks the retailer to check the rights the setup names. Needs POS build `2.1.0.697`.
 
 ### 1.0.2
 
