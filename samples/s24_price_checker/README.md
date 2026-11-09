@@ -2,7 +2,7 @@
 
 A tablet or screen stands on the store floor. A customer scans an item and reads its name, its picture and its price: the store's price list price for one unit, in the scanned unit, found by iVendNext itself. Nobody signs in on the tablet, and the retailer switches each kiosk on and off in Desk. An item with no price says so and is never shown as free. Offers are not shown: the kiosk says *Any offer is worked out at the till.*
 
-**Industries:** Grocery
+**Industries:** Grocery, Hardware and DIY
 
 ## Start from it
 
