@@ -39,11 +39,12 @@ class ManifestTest(unittest.TestCase):
         for s in subs.values():
             self.assertEqual(app.ROUTES[s["endpoint_url"].split("8142", 1)[1]][0], s["key"])
             self.assertIn(s["endpoint_url"], MANIFEST["allowed_urls"])
-        self.assertEqual(MANIFEST["version"], "0.4.0")
+        self.assertEqual(MANIFEST["version"], "0.5.0")
 
     def test_the_payer_service_carries_only_settings_the_door_takes_and_never_a_clearing_mode(self):
         payer = next(s for s in MANIFEST["extension_subscriptions"] if s["point"] == "payer")
-        self.assertEqual(set(payer.get("settings") or {}) - {"prescription", "bill_back_role"}, set())
+        self.assertEqual(set(payer.get("settings") or {}) - {"prescription", "bill_back_role", "line_net"}, set())
+        self.assertIs(payer["settings"]["line_net"], True)    # each line's net, so a whole-sale discount bills right
         self.assertNotIn("clearing_mode", payer.get("settings") or {})
         self.assertLessEqual(payer["timeout_seconds"], 5)
         bill = next(a for a in MANIFEST["desk_actions"] if a["service"] == "billback")

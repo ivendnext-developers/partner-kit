@@ -285,6 +285,8 @@ class Service:
             if not isinstance(l, dict) or not all(isinstance(l.get(k), int) and not isinstance(l.get(k), bool)
                                                   for k in ("amount_minor", "discount_minor", "rate_minor")):
                 raise ValueError("each line's money is whole minor units")
+            if "net_minor" in l and (not isinstance(l["net_minor"], int) or isinstance(l["net_minor"], bool)):
+                raise ValueError("each line's money is whole minor units")
         if len({l.get("line_id") for l in lines}) != len(lines):
             raise ValueError("each line has its own line_id")
         if sum(l["amount_minor"] for l in lines) != body["total_minor"]:

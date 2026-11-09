@@ -25,7 +25,9 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/third_party_payer.md).
 
-**The customer sets:** the clearing mode (its own mode of payment of type Custom, named in the payer service's settings as `clearing_mode`, and on each payer till's POS Profile), *May Sell on a Payer* on the cashiers' Retail Permission, and the payers and members. The role **PP ICP Integration** needs no read from the retailer's administrator: the install gives it read on POS Invoice and Sales Invoice, the two record types the feed follows, and the manifest's `role_rights` give read on Retail Payer Record, Item, Item Price, Price List and Customer. **Needs POS build `2.1.0.691` or later:** on an earlier site the install warns `role_rights` as unknown and skips it, and gives the feed's user no read, so the events wait; the service's log says which record type was refused (`ivn logs`). Members and claims are health data for a pharmacy: run the service where the retailer's country's law lets that data go.
+**The customer sets:** the clearing mode (its own mode of payment of type Custom, named in the payer service's settings as `clearing_mode`, and on each payer till's POS Profile), *May Sell on a Payer* on the cashiers' Retail Permission, and the payers and members. The role **PP ICP Integration** needs no read from the retailer's administrator: the install gives it read on POS Invoice and Sales Invoice, the two record types the feed follows, and the manifest's `role_rights` give read on Retail Payer Record, Item, Item Price, Price List and Customer. **Needs POS build `2.1.0.691` or later:** on an earlier site the install warns `role_rights` as unknown and skips it, and gives the feed's user no read, so the events wait (a build older still stops the install at the payer service, whose `line_net` it does not know); the service's log says which record type was refused (`ivn logs`). Members and claims are health data for a pharmacy: run the service where the retailer's country's law lets that data go.
+
+**A discount on the whole sale:** on prices without tax the service asks the till for each line's net (`line_net` in `manifest.json`) and puts the discount on the amount's basis with the line's own ratio, so the plan is billed to the cent. This is exact when every tax on the line is a percentage of its net; a fixed charge's share over-states the discount's tax. A till that does not send the net gets the older reading, which under-reads the discount's tax by up to the co-pay on it.
 
 ## Run it
 
@@ -41,6 +43,12 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 0.5.0
+
+- Asks the till for each line's net (`line_net`), so a discount on the whole sale bills the plan to the cent: on a 50.60 sale at a 20% co-pay, 15% tax and 20% off, the plan was billed 0.33 too much before and nothing too much now.
+- **The consent text changes.** It now also says *each line's amount before tax and charges*: the service gets each line's net, which the price, discount and amount it already had imply. Updating from the App library keeps the payer service on, and its consent carries over with the new words recorded. Only a store whose administrator edits the payer service's settings by hand in Desk has its consent cleared and ticks it again.
+- *Store* where the manifest said *shop*.
 
 ### 0.4.0
 
