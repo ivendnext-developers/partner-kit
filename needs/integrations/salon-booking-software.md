@@ -19,7 +19,7 @@ Your outside app, on the API and the event feed, between the chain's booking sof
 - The booking itself lives in the booking software: iVendNext holds no calendar, no chair or room, and no reminder to the customer.
 - The feed reports a sale after it is saved, so the booking software is told after the fact, not before the customer pays.
 - A deposit taken at booking is the booking software's, and reaches iVendNext only as a payment your app records.
-- A salon software vendor's own integration programme may have its own terms for connecting.
+- A salon software vendor's own partner programme may have terms for connecting.
 
 ## Tell the customer
 The service is sold at the till as usual; the booking software marks the appointment paid within minutes of the sale.
