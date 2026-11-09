@@ -35,6 +35,7 @@ The record type `PP RPR Repair`, numbered `format:RPR-{#####}`, tracked (its his
 | `customer` | the customer whose unit it is; optional |
 | `customer_name`, `customer_phone`, `customer_mobile` | read only, `fetch_from` the customer's `customer_name`, `custom_phone_no` (the *Phone Number* the till's new-customer sheet and customer edit write) and `mobile_no` (the *Mobile No* of a customer made in Desk, which has no Phone Number; Desk hides an empty read-only field) |
 | `store` | **Taken in at**, a Warehouse; required |
+| `store_name` | **Store name**, read only: the store's own name, filled when the repair is saved; the slip prints it |
 | `received_on`, `ready_by` | **Received on** (today by default; required) and **Ready by** |
 | `fault`, `condition` | **Fault reported** (required) and **Condition and accessories**, text |
 | `tests` | child table `PP RPR Test`: `test`, `result` (blank, Passed, Failed, Not run), `reading` |

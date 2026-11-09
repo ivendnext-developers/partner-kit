@@ -109,6 +109,7 @@ class ManifestTest(unittest.TestCase):
             - {"get_formatted", "name", "workflow_state"}
         self.assertLessEqual(printed - set(FETCHED), set(LOCK["locked_fields"]))
         self.assertFalse(set(FETCHED) & set(LOCK["locked_fields"]))
+        self.assertIn("doc.store_name or doc.store", PF["html"])
         # the history the slip does not print is locked too (the kind, the technician); the sale is not: a till sale
         # cancelled later would leave a link the framework refuses to save, and a locked one could then never change
         self.assertEqual(set(LOCK["locked_fields"]), {"serial_no", "kind", "customer", "store", "received_on", "ready_by",

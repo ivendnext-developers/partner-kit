@@ -40,7 +40,7 @@ ivn try
 
 ### 0.1.2
 
-- The repair slip says *Taken in at* with the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix.
+- The repair slip says *Taken in at* with the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix. A slip saved before the update prints the old name until it is saved again.
 
 ### 0.1.1
 

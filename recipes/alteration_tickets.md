@@ -32,6 +32,7 @@ The record type `PP ALT Ticket`, numbered `format:ALT-{#####}`, tracked (its his
 | `customer`, `customer_name` | the customer; its name, read only |
 | `customer_phone`, `customer_email` | read only, `fetch_from` the customer's `custom_phone_no` and `custom_email`: the fields the till's new-customer sheet and customer edit write |
 | `store` | **Collect at**, a Warehouse |
+| `store_name` | **Store name**, read only: the store's own name, filled when the ticket is saved; the slip prints it |
 | `taken_on`, `due_date`, `next_fitting` | **Taken on** (today), **Ready by**, **Next fitting** (date and time) |
 | `tailor` | the tailor or workroom, as text |
 | `sale`, `order` | a POS Invoice and a Sales Order, each optional |

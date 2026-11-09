@@ -38,7 +38,7 @@ ivn try
 
 ### 0.1.1
 
-- The project sheet shows the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix.
+- The project sheet shows the store's own name (a read-only *Store name* field), not the warehouse's record name with the company suffix. A sheet saved before the update prints the old name until it is saved again.
 
 ### 0.1.0
 
