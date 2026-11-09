@@ -66,7 +66,7 @@ KEPT_TTL, READ_TIMEOUT = 60, 0.9         # four steps of reads at most (settings
                                          # earlier sale at once; the rest of the items), each read 0.9 s per wait on its
                                          # connection, inside the check's 5 s; a slower shop gets the down answer
 EARLIER_MAX = 20                         # a passenger's earlier sales on one pass read at most
-KEY_REFUSED = ("Duty-free allowance cannot read your shop: it refused the app's user. "
+KEY_REFUSED = ("Duty-free allowance cannot read your store: it refused the app's user. "
                "Ask your administrator to check the app's setup.")
 
 

@@ -41,6 +41,10 @@ ivn try
 
 ## Versions
 
+### 1.1.2
+
+- The manifest, its Registered Application line and the refusal *…cannot read your store…* say store where they said shop. Manifest 0.2.2.
+
 ### 1.1.1
 
 - The settings fields read *This store's airports* and *This store sells to passengers*. The refusals say *This store sells to passengers…* and, for a sale with no boarding pass, *…then try again* (the till's button is *Checkout*, not *Pay*). Manifest 0.2.1.
