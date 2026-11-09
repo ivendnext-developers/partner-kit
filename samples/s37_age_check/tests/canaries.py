@@ -118,10 +118,10 @@ CANARIES = [
      "    code, out = (200, {'verdict': 'notice'}) if path != '/health' else svc.handle(method, path, headers, raw)\n",
      S + "AsAFunction.test_health_a_signed_scan_and_check_either_body_form_and_a_refusal"),
     # the manifest
-    ("the integration role carries the prefix", "manifest.json", '"role": "PP AGE Integration"', '"role": "PP Integration"',
+    ("the integration role carries the prefix", "manifest.json", '{"doctype": "Item Group", "role": "PP AGE Integration"', '{"doctype": "Item Group", "role": "PP Integration"',
      M + "test_the_integration_role_only_reads_the_settings"),
     ("the check lets the sale go on when down", "manifest.json",
-     '"timeout_seconds": 3, "down_answer": "allow_and_flag"', '"timeout_seconds": 3, "down_answer": "refuse"',
+     '"timeout_seconds": 4, "down_answer": "allow_and_flag"', '"timeout_seconds": 4, "down_answer": "refuse"',
      M + "test_two_services_switched_off_that_let_the_sale_go_on_when_down"),
     ("the scan filters on the app's age field", "manifest.json", '"item_field": "pp_age_min_age"', '"item_field": "stock_uom"',
      M + "test_the_scan_asks_about_the_items_the_app_gives_an_age"),
