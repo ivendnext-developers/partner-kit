@@ -41,7 +41,7 @@ PASS_KEY = 60         # a pass's first 60 characters (its first leg) name the pa
 LEG = 37              # each leg's fixed part, from its booking reference to its variable-size field
 SETTINGS_FIELDS = ("airports", "direction", "hours_from_utc", "count_earlier_sales")
 
-NO_PASS = "Scan the customer's boarding pass into Sale details, then press Pay again."
+NO_PASS = "Scan the customer's boarding pass into Sale details, then try again."
 UNREADABLE = "The boarding pass could not be read. Scan it again into Sale details."
 OTHER_DAY = "This boarding pass is for a flight on another day. Ask for the pass for today's flight."
 OTHER_DAY_ARRIVING = "This boarding pass is for a flight on another day. Ask for the pass of the flight the customer just arrived on."
@@ -169,9 +169,9 @@ def pass_problem(text: str, settings: dict, today: datetime.date) -> str:
     here = [x for x in found if not airports or x[side] in airports]
     if not here:
         where = ", ".join(airports)
-        return plain(f"This boarding pass is for a flight to {found[-1]['to']}. This shop sells to passengers arriving at {where}."
+        return plain(f"This boarding pass is for a flight to {found[-1]['to']}. This store sells to passengers arriving at {where}."
                      if settings["arriving"] else
-                     f"This boarding pass is for a flight from {found[0]['from']}. This shop sells to passengers departing {where}.")
+                     f"This boarding pass is for a flight from {found[0]['from']}. This store sells to passengers departing {where}.")
     steps = (0, -1, -2) if settings["arriving"] else (0, 1)
     days = {(today + datetime.timedelta(days=n)).timetuple().tm_yday for n in steps}
     if any(x["day"] in days for x in here):

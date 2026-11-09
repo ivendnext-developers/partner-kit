@@ -54,7 +54,6 @@
       "s22_customer_loyalty",
       "s37_age_check",
       "s38_expiry_markdown",
-      "s41_regulated_register",
       "s62_liquor_excise_returns"
     ],
     "Optical": [
@@ -83,7 +82,7 @@
     ],
     "Travel retail": [
       "s36_duty_free",
-      "s41_regulated_register"
+      "s37_age_check"
     ],
     "Distribution and warehousing": [
       "s2_bins",

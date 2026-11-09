@@ -4,7 +4,9 @@ A retailer selling regulated stock keeps a legal register an inspector can ask f
 
 The first data set is Kenya's three pharmacy books: the Poisons Book, the Prescription Book and the NPP Ledger Book, with the routing Kenya's law asks for. Seven more markets follow as data sets: Jordan, Nigeria, the UAE's Abu Dhabi, Saudi Arabia, Egypt, Ghana and Mexico. Every layout is a starting point, not certified for the country: a partner certifies it for a market, changes it, or adds a market.
 
-**Industries:** Liquor and wine, Pharmacy, Travel retail
+No liquor or customs book ships with it: a state's liquor register or an airport's customs ledger is a partner's data set, made the same way.
+
+**Industries:** Pharmacy
 
 **When to use it:** the retailer's law names a book and its columns, and the book must hold every sale or receipt of certain stock, in order, never edited.
 

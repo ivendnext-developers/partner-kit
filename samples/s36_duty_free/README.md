@@ -36,10 +36,14 @@ ivn try
 ## Try it at the till
 
 - Sell a bottle of spirits with no boarding pass; the till stops it at Pay.
-- Scan the boarding pass into Sale details and press Pay again.
+- Scan the boarding pass into Sale details and try again.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.1
+
+- The settings fields read *This store's airports* and *This store sells to passengers*. The refusals say *This store sells to passengers…* and, for a sale with no boarding pass, *…then try again* (the till's button is *Checkout*, not *Pay*). Manifest 0.2.1.
 
 ### 1.1.0
 

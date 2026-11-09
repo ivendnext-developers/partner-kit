@@ -91,7 +91,7 @@ class Judge(unittest.TestCase):
 
     def test_a_flight_from_another_airport_is_refused_naming_both(self):
         out = dutyfree.pass_problem(bcbp(leg("LHR", "DXB")), self.S, TODAY)
-        self.assertEqual(out, "This boarding pass is for a flight from LHR. This shop sells to passengers departing DWC, DXB.")
+        self.assertEqual(out, "This boarding pass is for a flight from LHR. This store sells to passengers departing DWC, DXB.")
 
     def test_a_connecting_passenger_passes_on_the_leg_that_leaves_here(self):
         text = bcbp(leg("LHR", "DXB", day=294), leg("DXB", "BOM", day=295))
@@ -115,7 +115,7 @@ class Judge(unittest.TestCase):
             self.assertEqual(dutyfree.pass_problem(bcbp(leg("LHR", "DXB", day=day)), arriving, TODAY),
                              dutyfree.OTHER_DAY_ARRIVING, day)
         self.assertEqual(dutyfree.pass_problem(bcbp(leg("DXB", "LHR", day=294)), arriving, TODAY),
-                         "This boarding pass is for a flight to LHR. This shop sells to passengers arriving at DWC, DXB.")
+                         "This boarding pass is for a flight to LHR. This store sells to passengers arriving at DWC, DXB.")
 
     def test_no_airports_set_takes_any_airport(self):
         s = dutyfree.settings_of(dict(SETTINGS, airports=""))
@@ -184,7 +184,7 @@ class Settings(unittest.TestCase):
         s = dutyfree.settings_of({"airports": "OMDB"})
         self.assertEqual(s["airports"], ["OMDB"])
         self.assertEqual(dutyfree.pass_problem(bcbp(leg("DXB", "LHR")), s, TODAY),
-                         "This boarding pass is for a flight from DXB. This shop sells to passengers departing OMDB.")
+                         "This boarding pass is for a flight from DXB. This store sells to passengers departing OMDB.")
 
 
 class Context(unittest.TestCase):
