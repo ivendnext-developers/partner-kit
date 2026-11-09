@@ -4,7 +4,7 @@ a given receipt is cancelled by a manager only; the receipt, the report and the 
 step, never a tick box (a read-only box is a screen rule, and Duplicate copies a box but never the step); the save rule
 locks every field the receipt prints once it is given, the customer's own name excepted; a customer's name and e-mail are read-only copies, a donor who is not
 one is typed; the report lists donations not cancelled, newest first; the receipt reads only fields that exist, skips a
-blank row and states no value; the rights and the help page. Data only: no service.
+blank row and states no value; the rights, the help page and the receipt as the print default. Data only: no service.
 
     python3 -m unittest discover -s samples/s57_donation_intake/tests -p 'test_*.py'
 """
@@ -145,9 +145,15 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(rights("Stock User"), {"read"})   # to name a donation on a Material Receipt
 
     def test_the_donation_opens_its_help(self):
-        (ps,) = MANIFEST["property_setters"]
-        self.assertEqual((ps["doc_type"], ps["property"]), (DONATION, "documentation"))
-        self.assertTrue(ps["value"].endswith("donation_intake.html#donations"))
+        ps = {x["property"]: x for x in MANIFEST["property_setters"]}
+        self.assertEqual(set(ps), {"documentation", "default_print_format"})
+        self.assertTrue(all(x["doc_type"] == DONATION for x in ps.values()))
+        self.assertTrue(ps["documentation"]["value"].endswith("donation_intake.html#donations"))
+
+    def test_print_opens_the_donor_receipt_by_default(self):
+        ps = next(x for x in MANIFEST["property_setters"] if x["property"] == "default_print_format")
+        self.assertEqual(ps["value"], PF["name"])
+        self.assertEqual(PF["doc_type"], DONATION)
 
 
 if __name__ == "__main__":
