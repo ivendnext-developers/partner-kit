@@ -4,6 +4,7 @@ Versions will follow our product releases once the kit is versioned; until then 
 
 ## Unreleased
 
+- **2026-11-09 — S19 0.1.1: the install text says a chain, not a shop.** S19's description reads *A chain's own unit codes* and *nothing leaves your site*, as the listed `unc` card already says. Words only: no service, rule or field changes, so no `unc` re-copy.
 - **2026-11-09 — S42 1.1.3 (manifest 0.2.3): the job sheet prints the store's own name and says *Right eye* and *Left eye*.** The lab order takes a read-only *Store name* field and the sheet prints it; the eye rows no longer use the bare words *Right* and *Left*, which the shared language files translate as a right and to leave. Re-copy `ivendnext_opt`.
 - **2026-11-09 — S42 1.1.2 (manifest 0.2.2).** S42's lab job sheet prints every word through `_()` and takes its direction from the text (`dir="auto"`), as S53's slip does; its *Ready to collect* field reads as a sentence, not a code condition (the recipe keeps the condition); *your* where S42's manifest said *the shop's*. No logic changes. Re-copy `ivendnext_opt`.
 - **2026-11-09 — S16 says what it does: lines ordered by warehouse, then item.** The pick task's lines are ordered by warehouse and then item; S16's code comment and the *Desk action* recipe no longer call that a *walking order* (the sample gives no route through a warehouse, and orders by no bin). No behaviour changed.

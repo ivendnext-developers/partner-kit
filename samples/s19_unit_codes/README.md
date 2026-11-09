@@ -39,6 +39,10 @@ ivn try
 
 ## Versions
 
+### 0.1.1
+
+- The description a chain reads at install says *a chain's own unit codes* and *nothing leaves your site*; no behaviour changes.
+
 ### 0.1.0
 
 - First version in the kit: unit codes read at the scan, as a scan source.
