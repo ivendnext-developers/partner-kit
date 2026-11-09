@@ -5,7 +5,7 @@ area: documents
 topic: receipts
 asks: A gift receipt with no prices
 status: ready-with-limits
-door: receipt
+door: configure
 blocked-by: -
 recipe: none
 sample: none
