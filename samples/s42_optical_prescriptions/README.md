@@ -43,6 +43,13 @@ ivn try
 
 ## Versions
 
+### 1.1.2
+
+- Manifest 0.2.2.
+- The lab job sheet prints through the language files (`_()`) and takes its direction from the text (`dir="auto"`), so it reads right in a right-to-left language; the lens values still print in their fields' own format.
+- The *Ready to collect* field's help text reads as a sentence, not a code condition. The condition for your own Notification is in the [recipe](../../recipes/optical_prescriptions.md).
+- *Store* where the text said *shop* (the description and the Registered Application's description).
+
 ### 1.1.1
 
 - Manifest 0.2.1.
