@@ -118,7 +118,7 @@ CANARIES = [
      "    code, out = (200, {'verdict': 'notice'}) if path != '/health' else svc.handle(method, path, headers, raw)\n",
      S + "AsAFunction.test_health_a_signed_scan_and_check_either_body_form_and_a_refusal"),
     # the manifest
-    ("the integration role carries the prefix", "manifest.json", '"role": "PP AGE Integration"', '"role": "PP Integration"',
+    ("the integration role carries the prefix", "manifest.json", '{"doctype": "Item Group", "role": "PP AGE Integration"', '{"doctype": "Item Group", "role": "PP Integration"',
      M + "test_the_integration_role_only_reads_the_settings"),
     ("the check lets the sale go on when down", "manifest.json",
      '"timeout_seconds": 4, "down_answer": "allow_and_flag"', '"timeout_seconds": 4, "down_answer": "refuse"',
