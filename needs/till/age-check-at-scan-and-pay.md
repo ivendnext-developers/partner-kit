@@ -22,7 +22,7 @@ An age on each restricted item group (or item), and a service that answers two e
 - Offline, or with the service down, the item goes on and the sale is paid, flagged; a retailer can make the scan refuse a scanned restricted item, but an item picked from a list still goes on, flagged.
 - More than one app may answer the scan on one POS Profile: each whose items include this one is asked in turn, and the first that does not allow the item answers (6 seconds at most for all). 10 seconds at most for one pass of a POS Profile's checks.
 - One time zone and one age per item group for the whole site.
-- No manager's override, no restricted selling hours, no ID scanner.
+- No manager's override, no restricted selling hours, no counter ID scanner (the till's camera reads a licence's age: the card *id-scanner-reader-at-the-counter*).
 - A group under a restricted group cannot be made free of age; an age set on a template reaches its variants at Pay, but the scan asks about a variant by its own age or its group.
 - The check does not run on a park to a till, a layaway deposit, an account collection or the Desk's own POS screen.
 
