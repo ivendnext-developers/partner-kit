@@ -38,10 +38,17 @@ ivn try
 ## Try it at the till
 
 - Sell a prescription lens to a customer with no valid prescription; the till stops it at Pay.
-- In Desk, enter the customer's prescription, then press Pay again.
+- In Desk, enter the customer's prescription, then try again.
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.1
+
+- Manifest 0.2.1.
+- The refusal at Pay names the item, not its code, and ends *try again* (it reads the same on an order, where there is no Pay): *Line 2: Single vision lens needs a spectacle prescription for this customer. Attach the customer or enter it in Desk, then try again.* The service reads the item's name once, at a refusal.
+- *Print* on a lab order opens the job sheet (the lab order's default print format), so it is in the print picker.
+- The settings field reads *Hours from UTC at your store*.
 
 ### 1.1.0
 

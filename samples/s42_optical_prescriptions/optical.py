@@ -161,22 +161,24 @@ def in_date(rx: tuple, kind: str, today: datetime.date) -> bool:
     return k == kind and until is not None and today <= until
 
 
-def on_check(ctx: dict, needs: list, rxs: list, today: datetime.date) -> dict:
+def on_check(ctx: dict, needs: list, rxs: list, today: datetime.date, name_of=None) -> dict:
     """``needs`` is each line's kind (or ``""``), in the order of ``ctx["lines"]``; ``rxs`` the customer's prescriptions.
     The first sold line whose kind has no prescription in date is refused, saying when the customer's last one of that
-    kind ran out if it has one; otherwise allow."""
+    kind ran out if it has one; otherwise allow. ``name_of(item_code)`` is asked only for the refused line: the cashier reads
+    the item's name, not its code (its code is the fallback)."""
     for i, (line, kind) in enumerate(zip(ctx["lines"], needs)):
         if line["qty_milli"] <= 0 or not kind or any(in_date(rx, kind, today) for rx in rxs):
             continue
         # 20: the whole sentence fits the till's 140 on line 500
-        n, item, word = line.get("line_no") or i + 1, plain(line["item_code"], 20), WORDS[kind]
+        shown = (name_of(line["item_code"]) if name_of else None) or line["item_code"]
+        n, item, word = line.get("line_no") or i + 1, plain(shown, 20), WORDS[kind]
         ended = [u for k, u in rxs if k == kind and u is not None and u < today]
         if ended:
             d = max(ended)
             text = (f"Line {n}: {item}: the customer's {word} prescription ran out on {d.day} {d:%b %Y}. "
-                    f"Enter the new one in Desk, then Pay again.")
+                    f"Enter the new one in Desk, then try again.")
         else:
             text = (f"Line {n}: {item} needs a {word} prescription for this customer. "
-                    f"Add the customer, or enter it in Desk, then Pay again.")
+                    f"Attach the customer or enter it in Desk, then try again.")
         return {"verdict": "refuse", "reason": plain(text)}
     return {"verdict": "allow"}
