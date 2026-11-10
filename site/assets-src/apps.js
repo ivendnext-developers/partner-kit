@@ -154,6 +154,7 @@
     blank: "Start blank", blankHint: "No sample matches the need? Start with an empty app: its README lists each kind you can add, " +
       "with an example and its recipe. You can add a sample to it later.", blankTitle: "My app",
     blankCovers: "A blank app: no sample in it yet. Its README.md lists what you can add.",
+    blankCarries: "Started blank. It carries: {kinds}.", backToApps: "Back to My apps",
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
       "settings in their Desk.",
     addresses: "Outside addresses", secrets: "Secrets your own service needs",
@@ -177,7 +178,12 @@
     openDesk: "Open Desk", openTill: "Open the till", appAddress: "Your app's address: "
   };
   // the Try button names its site before the press; with none on the list, it opens the list to add one
-  function tryLabel(site) { return site ? G.tryOn.replace("{site}", site) : G.addSite; }
+  function tryLabel(site) { return site ? G.tryOn.replace("{site}", siteName(site)) : G.addSite; }
+  // a site by the label the developer gave it, where it has one (J6f F8: Try on Acme test, not its address)
+  function siteName(site) {
+    var hit = (((data && data.sites) || {}).company || []).filter(function (x) { return x.site === site; })[0];
+    return hit && hit.label ? hit.label : site;
+  }
   // MYSITES (J2, KK 11-10): the developer's own list of sites: add any site they administer (with a key made there on
   // their own user, Try installs in one press), label it by customer, test or live, make one their default, remove one;
   // and a sandbox of their own in one press. The words a door answers are the hosting's, shown as given (§0b rule 8).
@@ -185,7 +191,7 @@
     title: "My sites", open: "My sites",
     why: "The sites you try your apps on, and your customers' sites. Add any iVendNext site you administer, and label it with the customer's name and test or live.",
     add: "Add a site", address: "Its address", key: "API key", secret: "API secret", addBtn: "Add",
-    keyHint: "Optional. Make the key on that site under your own user, one with System Manager: User, API Access, Generate Keys (not on Administrator: making keys there replaces its secret). With a key, Try installs there in one press; without one, its administrator installs from the shelf key Try shows.",
+    keyHint: "Make the key on that site under your own user, one with System Manager: open your User record, its Settings tab, API Access, Generate Keys (not on Administrator: making keys there replaces its secret). With the key and its secret, Try installs there in one press. Leave both empty and its administrator installs from the shelf key Try shows.",
     label: "Label", labelHint: "A customer's name and test or live, like Acme test. A label with live, prod or production puts the site on Publish's list, not Try's.",
     save: "Save", makeDefault: "Make default", isDefault: "your default", remove: "Remove from my list",
     how: { ours: "Try installs in one press, with our key", own: "Try installs in one press, with your key",
@@ -442,6 +448,22 @@
   var THREE_WORDS = /^[A-Z][A-Z0-9]*( [A-Z][A-Z0-9]*){0,2}$/;     // the kit's rule (rename.py), said as an expert types
   function recordsStart(prefix) { return "In Desk its records start with " + prefix + "."; }
 
+  // J6f F7: what a blank app carries now, by the manifest's kinds (custom_fields → custom fields)
+  function blankCarries(kinds) { return G.blankCarries.replace("{kinds}", kinds.map(function (k) { return k.replace(/_/g, " "); }).join(", ")); }
+  // J6f F5: a link to this page itself (the header's and footer's My apps, `apps.html`, while the address reads `/apps` after
+  // the sign-in) goes home without a reload, which would sign the person out; an in-page `#` link is its own handler's
+  function toThisPage(href, here) {
+    if (!href || href.charAt(0) === "#") return false;
+    var u = new URL(href, here), h = new URL(here), bare = function (x) { return x.replace(/\.html$/, ""); };
+    return u.origin === h.origin && bare(u.pathname) === bare(h.pathname) && !u.hash && !u.search;
+  }
+  // J6f F3: the messages to forward to a customer's administrator: none for a site Install now installed (on this
+  // screen or earlier), matched by the site's key address, which the message names
+  function handOff(s, inst) {
+    var gone = (s.install_now || []).filter(function (x) { return x.installed || (inst[instKey(x.site, s.version)] || {}).done; })
+      .map(function (x) { return x.key_address || x.site; });
+    return (s.send || []).filter(function (m) { return m.message && gone.indexOf(m.site) < 0; });
+  }
   function making(name, n) { return n ? "Making " + name + " from " + n + " sample" + (n === 1 ? "" : "s") + "…" : "Making " + name + ", a blank app…"; }
 
   // J2-09: an outside address or a secret, by the setting's name or its purpose
@@ -495,7 +517,7 @@
               needKind: needKind, KIND_WORDS: KIND_WORDS, instead: instead, askUrl: askUrl, sampleNumber: sampleNumber,
               sampleTitle: sampleTitle, sampleLabel: sampleLabel, needSamples: needSamples, search: search,
               fromNeeds: fromNeeds, readStart: readStart, barText: barText, appFor: appFor, recordsStart: recordsStart, tickable: tickable,
-              making: making, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
+              making: making, blankCarries: blankCarries, toThisPage: toThisPage, handOff: handOff, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
               covers: covers, coversText: coversText, ASK_PAGE: ASK_PAGE, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
@@ -980,8 +1002,7 @@
   }
 
   function vMade() {
-    var box = card(data.made.title || appTitle(data.appId));
-    box.appendChild(p(data.made.making));
+    var box = card(data.made.title || appTitle(data.appId));   // J6f F6: Making… goes once Made shows
     var w = data.made.words || [];
     if (w[0]) box.appendChild(el("p", { "class": "hosting-ok", text: w[0] }));
     w.slice(1).forEach(function (x) { box.appendChild(p(x)); });
@@ -991,6 +1012,8 @@
     var def = (data.sites || {}).default;
     box.appendChild(none ? button(data.sites ? tryLabel(def) : G.tryIt, function () { data.made = null; if (def) openTry(data.appId, def); else { data.pick = data.appId; go("app"); } })
       : button(G.nextSettings, function () { data.made = null; go("settings"); }));
+    box.appendChild(root.document.createTextNode(" "));
+    box.appendChild(button(G.backToApps, function () { data.made = null; go("home"); }, true));   // J6f F5: a way back
     return box;
   }
 
@@ -1096,7 +1119,8 @@
     var fill = function () {
       var cv = covers(a, site.catalogue), made = day((vs[0] || {}).at);
       if (!cv.built.length && !cv.tobuild.length && !cv.desk.length && !cv.cannot.length) {
-        cb.appendChild(p((a.samples || []).length ? "Built in this app: " + a.samples.map(function (n) { var s = byName(n); return s ? sampleLabel(s) : n; }).join(", ") + "." : G.blankCovers));
+        cb.appendChild(p((a.samples || []).length ? "Built in this app: " + a.samples.map(function (n) { var s = byName(n); return s ? sampleLabel(s) : n; }).join(", ") + "."
+          : (a.kinds || []).length ? blankCarries(a.kinds) : G.blankCovers));
         return;
       }
       cv.built.forEach(function (c) {
@@ -1426,8 +1450,7 @@
     }
     if (s.public_words) box.appendChild(el("p", { "class": "hosting-ok", text: s.public_words }));
     if (s.card_url) box.appendChild(el("p", {}, el("a", { href: s.card_url, target: "_blank", rel: "noopener", text: s.card_url })));
-    (s.send || []).forEach(function (m) {
-      if (!m.message) return;
+    (handOff(s, data.inst || {}) || []).forEach(function (m) {
       var sb = card(s.send_head);
       sb.appendChild(el("p", { "class": "hint", text: m.site }));
       sb.appendChild(el("pre", { text: m.message, "class": "apps-msg" }));
@@ -1852,6 +1875,12 @@
       });
       t.appendChild(tb); lg.appendChild(t); box.appendChild(lg);
     }
+    var offer = sandboxOffer(sites, function (ev) {
+      ev.target.disabled = true;   // one press, one sandbox
+      call("POST", "/sandbox/get", {}).then(function (r) { if (r.logins) data.shownLogins = r; done(r); },
+                                         function (e) { ev.target.disabled = false; fail(e); });
+    });
+    if (sites.sandbox === "get") box.appendChild(offer);   // J6 F15: one of our developers sees it first, above the demo boxes
     (sites.company || []).forEach(function (x) {
       var row = el("div", { "class": "hosting-step" });
       row.appendChild(el("h3", { text: x.label ? x.label + " \u00b7 " + x.site : x.site }));
@@ -1885,11 +1914,7 @@
       var parts = noSandboxParts(sites.words);
       box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
     }
-    box.appendChild(sandboxOffer(sites, function (ev) {
-      ev.target.disabled = true;   // one press, one sandbox
-      call("POST", "/sandbox/get", {}).then(function (r) { if (r.logins) data.shownLogins = r; done(r); },
-                                         function (e) { ev.target.disabled = false; fail(e); });
-    }));
+    if (sites.sandbox !== "get") box.appendChild(offer);
     var add = card(S.add);
     var form = data.addForm = data.addForm || { site: "", key: "", secret: "", label: "" };   // kept through a refusal's redraw
     var addr = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "shop.ivendnext.com", "aria-label": S.address });
@@ -2009,6 +2034,13 @@
     if (st && session && who && who.company) { root.sessionStorage.removeItem(START); startGallery("new", st); return true; }
     return false;
   }
+
+  root.document.addEventListener("click", function (ev) {
+    var a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+    if (!a || !session || ev.defaultPrevented || ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || a.target) return;
+    if (!toThisPage(a.getAttribute("href"), root.location.href)) return;
+    ev.preventDefault(); data.made = null; data.pick = null; go("home");   // J6f F5: My apps, still signed in
+  });
 
   var brought = readStart(root.location.search);
   if (brought) root.sessionStorage.setItem(START, JSON.stringify(brought));   // kept through the sign-in (J1-02, J1-14)

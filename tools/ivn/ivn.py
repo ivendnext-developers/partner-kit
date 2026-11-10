@@ -83,6 +83,8 @@ WORDS = {
     "login_done": "Signed in as {login} for {name} ({company}).",  # J2-11
     "folder": "Folder: apps/{app}/ ({parts}). Read its README.md: what is in it and what you can change.",  # J2-12
     "next_try": "Next: ivn try",  # J2-12
+    "get_sandbox_first": "Get a sandbox of your own, in one press: My sites on My apps. Until then, try on a site by name: "
+                         "ivn try --site.",
     "blank_folder": "Folder: apps/{app}/ (manifest.json, app.json, tests/). Read its README.md: what you can add, each kind "
                     "with an example. Then: ivn check, ivn try",  # J1 DEVSTART: the blank start's last line
     "downloaded": "{version} ({state}made by {who} {how}) into apps/{app}/.",  # J11-01
@@ -127,12 +129,15 @@ WORDS = {
     "how_live": "a customer's live site: ivn publish sends it the production copy",
     "site_key": "API key (Enter for none: its administrator then installs from the shelf key):",
     "site_secret": "API secret:",
-    "key_where": "Make the key on that site under your own user: User, API Access, Generate Keys (not on Administrator).",
+    "key_where": "Make the key on that site under your own user: your User record, its Settings tab, API Access, Generate Keys (not on Administrator).",
     "sites_usage": "ivn sites [add <address> | use <address or label> | label <address> \"<label>\" | remove <address>]",
     "removed_mine": "{site} is off your list, with the key you added for it. (ivn remove-site stops an app reaching a site.)",
     "still_listed": "{site} is still on your list: it is one of our sandboxes, given to you or your company.",
     "installing_on": "Installing {version} on {site}…",
     "no_key_install": "{site}: we hold no key there, so its administrator installs it from the message above.",
+    "install_hint": "{name}: your company holds its key, so nothing goes to its administrator. Press Install now on "
+                    "My apps (the app's Publish screen) to install it in one press; next time, ivn publish --to \"{to}\" "
+                    "--install publishes and installs in one go.",
     "sign_in": "Sign in first: ivn login (a build server: a token from My apps > Tokens, in IVN_TOKEN).",
     "bad_token": "This token is not one My apps made. Run ivn login again, or make a new token on My apps > Tokens.",
     "no_reach": "Could not reach iVendNext: no connection. Nothing was changed. Try again.",
@@ -1313,9 +1318,12 @@ def cmd_publish(a) -> int:
         print(lead + WORDS["published"].format(version=shipped, sites=", ".join(shown)))
     else:
         print(lead + WORDS["published_n"].format(version=shipped, n=n, s="" if n == 1 else "s"))
+    keyed = {x.get("key_address") or x["site"]: x for x in done.get("install_now") or [] if not x.get("installed")}  # J6f F2
     if sites and done.get("send"):  # the message, line by line, the key on its own line and unindented, so it copies clean
-        ready = [x for x in done["send"] if "1. " in (x.get("message") or "")]
+        ready = [x for x in done["send"] if "1. " in (x.get("message") or "") and x.get("site") not in keyed]
         for x in done["send"]:
+            if x.get("site") in keyed:  # the company holds its key: Install now, never a message to forward
+                continue
             if x not in ready:  # no key yet, or one we withdrew: the library's words are for the developer, not to forward
                 print(f"{x.get('site')}: {x.get('message')}")
         if ready:
@@ -1326,6 +1334,10 @@ def cmd_publish(a) -> int:
             print(x.get("message") or "")
     if a.install:
         install_now(app, done, sites)
+    else:
+        for x in keyed.values():
+            name = x.get("label") or x["site"]
+            print(WORDS["install_hint"].format(name=f"{x['label']} ({x['site']})" if x.get("label") else x["site"], to=name))
     if behind:
         print(WORDS["behind"].format(version=shipped))
     return 0
@@ -1491,6 +1503,8 @@ def cmd_sites(a) -> int:
         out = online(door, "/v1/sites", {})
     if out.get("words") and act:
         print(out["words"])
+    if out.get("sandbox") == "get" and not act:  # J6 F15: one of our developers with no sandbox of their own: first
+        print(WORDS["get_sandbox_first"])
     if not out.get("company") and not act:
         print(out.get("words") or WORDS["m31"])
     for x in out.get("company") or []:
@@ -1589,6 +1603,14 @@ def _who() -> dict:
     return read_json(WHO_FILE)
 
 
+def _company_apps() -> list:
+    """The company's apps on our server (the command's own list), or none when it cannot be read."""
+    try:
+        return [r["app"] for r in door("/v1/apps", method="GET").get("apps") or [] if r.get("app")]
+    except (Offline, Refused):
+        return []
+
+
 def cmd_doctor(a) -> int:
     """One screen: the Python and git found, the kit, the sign-in, the sites, and the one command to run next."""
     need = ".".join(map(str, MIN_PYTHON))
@@ -1632,10 +1654,15 @@ def cmd_doctor(a) -> int:
         print(WORDS["dr_signed_out"])
     if said:
         print(said)
+    here = sorted(p.parent.name for p in (pathlib.Path.cwd() / "apps").glob("*/app.json"))
     if not signed:
         nxt = "ivn login"
-    elif (pathlib.Path.cwd() / "app.json").is_file() or len(list((pathlib.Path.cwd() / "apps").glob("*/app.json"))) == 1:
+    elif (pathlib.Path.cwd() / "app.json").is_file() or len(here) == 1:
         nxt = "ivn check, then ivn try"
+    elif here:  # J6f F10: apps made already: work on one of them, never a new one
+        nxt = f"ivn check, then ivn try, in apps/{here[0]}" + (f" (your apps here: {', '.join(here)})" if len(here) > 1 else "")
+    elif theirs := _company_apps():
+        nxt = f"ivn download {theirs[0]}" + (f" (your company's apps: {', '.join(theirs)})" if len(theirs) > 1 else "")
     else:
         word = (_who().get("company") or "<yourword>").lower()   # the company's first word, once ivn login has said it
         nxt = f"ivn new {word}_first_app (a blank app), or ivn new {word}_first_app --from s11 (from a sample)"

@@ -30,6 +30,8 @@ class Stub(B.Stub):
         out["company"].append({"site": ACME_LIVE, "key_address": ACME_LIVE, "press": True, "route": "own",
                                "label": "Acme live", "live": True})
         out["company"][0]["route"] = "ours"
+        if getattr(self, "sandbox", None):
+            out["sandbox"] = self.sandbox
         if getattr(self, "back", None):
             out["company"][0]["back_words"] = self.back
         if self.default:
@@ -56,7 +58,8 @@ class Stub(B.Stub):
     def publish_status(self, b):
         out = super().publish_status(b)
         if out.get("done"):
-            out["install_now"] = [{"site": ACME_LIVE, "label": "Acme live",
+            out["send"] = [*(out.get("send") or []), {"site": ACME_LIVE, "message": "shelf message for " + ACME_LIVE}]
+            out["install_now"] = [{"site": ACME_LIVE, "key_address": ACME_LIVE, "label": "Acme live",
                                    "installed": bool(getattr(self, "publish_status_installed", False))}]
         return out
 
@@ -96,6 +99,11 @@ class MySites(B.Base):
             "acme.sandbox.ivend.co  one press, with our key · ivn try uses it",
             "Acme test · shop.acme.example  its administrator installs it from the shelf key ivn try prints",
             "Acme live · retail.acme.example  a customer's live site: ivn publish sends it the production copy"]))
+
+    def test_one_of_our_developers_with_no_sandbox_reads_get_a_sandbox_first(self):  # J6 F15
+        self.stub.sandbox = "get"
+        rc, out = self.run_ivn("sites")
+        self.assertEqual(out.splitlines()[0], B.ivn.WORDS["get_sandbox_first"])
 
     def test_a_pool_sandbox_names_its_owner_and_the_date_it_goes_back(self):  # the page's words, as the hosting says
         self.stub.labels["acme.sandbox.ivend.co"] = "nw-dev's sandbox"
@@ -141,12 +149,15 @@ class MySites(B.Base):
     def test_publish_without_install_installs_nothing_and_a_done_site_is_skipped(self):
         folder, _ = self.made()
         self.in_app(folder)
-        self.assertEqual(self.run_ivn("publish", "--to", "Acme live", "--plan", "starter", stdin="1\n")[0], 0)
-        self.assertEqual(self.stub.installs, 0)
+        rc, out = self.run_ivn("publish", "--to", "Acme live", "--plan", "starter", stdin="1\n")
+        self.assertEqual((rc, self.stub.installs), (0, 0))
+        self.assertIn(B.ivn.WORDS["install_hint"].format(name=f"Acme live ({ACME_LIVE})", to="Acme live"), out)  # J6f F2
+        self.assertNotIn("shelf message for " + ACME_LIVE, out)  # nothing to forward to its administrator
         self.stub.publish_status_installed = True
         rc, out = self.run_ivn("publish", "--to", "Acme live", "--plan", "starter", "--install", stdin="1\n")
         self.assertEqual((rc, self.stub.installs), (0, 0))
         self.assertNotIn("Installing", out)
+        self.assertNotIn("your company holds its key", out)  # --install installs: no hint
 
     def test_a_subcommand_without_its_site_says_how(self):
         rc, out = self.run_ivn("sites", "label", "shop.acme.example")

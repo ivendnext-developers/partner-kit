@@ -359,8 +359,29 @@ check("MYSITES: Try's list leaves out a customer's live site", a.trySites({ comp
 check("MYSITES: ticking a live site on Publish fills the first empty box, unticking takes it out",
   a.tickLive([""], "shop.acme.example", true).join() === "shop.acme.example" && a.tickLive(["x.example", "shop.acme.example"], "shop.acme.example", false).join() === "x.example" &&
   a.tickLive(["shop.acme.example"], "shop.acme.example", false).join() === "");
-check("MYSITES: the key's line says where it is made, never on Administrator, and that a key is optional",
-  /User, API Access, Generate Keys/.test(a.S.keyHint) && /not on Administrator/.test(a.S.keyHint) && a.S.keyHint.startsWith("Optional."));
+check("MYSITES: the key's line says where it is made (the Settings tab), never on Administrator, and that both may be left empty",
+  /User record, its Settings tab, API Access, Generate Keys/.test(a.S.keyHint) && /not on Administrator/.test(a.S.keyHint) && /its Settings tab/.test(a.S.keyHint) && !/Optional/.test(a.S.keyHint) &&
+  /Leave both empty/.test(a.S.keyHint));   // J6f F9: never reads as if the secret were optional
+check("J6f F3: a site Install now installed, earlier or on this screen, gets no hand-off message; others keep theirs",
+  (() => {
+    const st = { version: "1.0.1", send: [{ site: "k.acme.example", message: "m1" }, { site: "other.example", message: "m2" }],
+                 install_now: [{ site: "shop.acme.example", key_address: "k.acme.example", installed: false }] };
+    const before = a.handOff(st, {}).map((m) => m.site).join();
+    const after = a.handOff(st, { [a.instKey("shop.acme.example", "1.0.1")]: { done: true } }).map((m) => m.site).join();
+    st.install_now[0].installed = true;
+    return before === "k.acme.example,other.example" && after === "other.example" && a.handOff(st, {}).map((m) => m.site).join() === "other.example";
+  })());
+check("J6f F5: the header's My apps (apps.html while the address reads /apps) goes home without a reload; # links and other pages do not",
+  a.toThisPage("apps.html", "https://developer.ivendnext.com/apps") && a.toThisPage("/apps.html", "https://developer.ivendnext.com/apps.html") &&
+  !a.toThisPage("#", "https://developer.ivendnext.com/apps") && !a.toThisPage("first_app.html", "https://developer.ivendnext.com/apps") &&
+  !a.toThisPage("apps.html#x", "https://developer.ivendnext.com/apps") && !a.toThisPage("https://www.ivendnext.com/apps", "https://developer.ivendnext.com/apps") &&
+  src.includes("ev.defaultPrevented") && src.includes('button(G.backToApps, function () { data.made = null; go("home"); }, true)'));
+check("J6f F6: Making… is not drawn on Made", !/function vMade\(\) \{[\s\S]{0,200}data\.made\.making/.test(src));
+check("J6f F7: a blank app that carries entries says what it carries",
+  a.blankCarries(["custom_fields", "workflows"]) === "Started blank. It carries: custom fields, workflows." &&
+  src.includes(": (a.kinds || []).length ? blankCarries(a.kinds) : G.blankCovers"));
+check("J6f F8: Try on names the site by its label", src.includes('G.tryOn.replace("{site}", siteName(site))') &&
+  src.includes("return hit && hit.label ? hit.label : site;"));
 check("MYSITES: the page's doors, a secret box that does not echo, one press for a sandbox, and logins kept on this screen only",
   ["/sites/add", "/sites/label", "/sites/default", "/sandbox/get", "/sandbox/logins", "/publish/install"].every((d) => src.includes('"' + d + '"')) &&
   src.includes('el("input", { type: "password", autocomplete: "off", "aria-label": S.secret })') && src.includes("ev.target.disabled = true;   // one press, one sandbox") &&
@@ -377,7 +398,8 @@ check("MYSITES: a refused Install now brings its button back, and a refused Add 
 check("SANDBOXPOLICY: Get a sandbox for one of our developers with none; Ask for another sandbox opens the request form with the hosting's words; a newcomer is offered the form",
   src.includes('if (sites.sandbox === "get") out.appendChild(el("p", {}, button(S.getSandbox, get)));') &&
   src.includes('if (sites.sandbox === "ask") {') && src.includes('el("a", { href: FORM, target: "_blank", rel: "noopener", "class": "site-btn", text: S.askSandbox })') &&
-  src.includes('var FORM = "https://www.ivendnext.com/developers/sandbox/";') && src.includes("box.appendChild(sandboxOffer(sites, function (ev) {") &&
+  src.includes('var FORM = "https://www.ivendnext.com/developers/sandbox/";') && src.includes("var offer = sandboxOffer(sites, function (ev) {") && src.includes('if (sites.sandbox === "get") box.appendChild(offer);') &&
+  src.indexOf('if (sites.sandbox === "get") box.appendChild(offer);') < src.indexOf("(sites.company || []).forEach(function (x) {", src.indexOf("var offer")) &&
   a.S.askSandbox === "Ask for another sandbox" && src.includes('sites.sandbox === "request" && (sites.company || []).length && !sites.words') &&
   !src.includes("sites.get_sandbox"));
 check("SANDBOXPOLICY: each pool sandbox says the date it goes back to the pool, in the hosting's words", src.includes("if (x.back_words) row.appendChild(p(x.back_words));"));

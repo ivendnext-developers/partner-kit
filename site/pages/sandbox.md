@@ -28,7 +28,7 @@ A sandbox we hand out goes back to us if nobody signs in to it for 60 days, and 
 
 ## Your own sites and your customers'
 
-**My sites** lists every site your company tries on and publishes to, and adds any iVendNext site you administer: a customer's test site or their live site. Type its address and paste an API key you make on that site, on your own user, one with System Manager: *User*, *API Access*, *Generate Keys*. Never make it on Administrator: making keys there replaces its secret. Without a key, the site's administrator installs from the shelf key Try shows, in **App library**.
+**My sites** lists every site your company tries on and publishes to, and adds any iVendNext site you administer: a customer's test site or their live site. Type its address and paste an API key you make on that site, on your own user, one with System Manager: your *User* record, its *Settings* tab, *API Access*, *Generate Keys*. Never make it on Administrator: making keys there replaces its secret. Without a key, the site's administrator installs from the shelf key Try shows, in **App library**.
 
 Label each site with the customer's name and *test* or *live*. A *test* site gets what you try: with its key, Try installs there in one press. A *live* site (*live*, *prod* or *production* in its label; never one of our sandboxes) gets what you publish, and Try never goes there: label a customer's live site *live* in the same step you add it (**Label** on *Add a site*, or `ivn sites add --label`). On a live site you added with its key, **Install now** shows what installing a published version changes and installs it in one press. In a terminal: `ivn sites add`, `ivn sites label`, `ivn sites use` and `ivn sites remove`.
 

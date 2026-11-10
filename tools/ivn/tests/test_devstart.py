@@ -106,6 +106,18 @@ class Doctor(Base):
         self.assertIn("Next: ivn new acme_first_app (a blank app)", out)
         self.assertEqual(json.loads((self.tmp / "home" / "who.json").read_text("utf-8"))["login"], "acme-dev")
 
+    def test_next_is_never_a_new_app_where_apps_are_made_already(self):  # J6f F10
+        for name in ("acme_gift_wrap", "acme_rules"):
+            (self.tmp / "apps" / name).mkdir(parents=True, exist_ok=True)
+            (self.tmp / "apps" / name / "app.json").write_text("{}", "utf-8")
+        with unittest.mock.patch("pathlib.Path.cwd", return_value=self.tmp):
+            rc, out = self.run_ivn("doctor")
+        self.assertEqual(out.strip().splitlines()[-1],
+                         "Next: ivn check, then ivn try, in apps/acme_gift_wrap (your apps here: acme_gift_wrap, acme_rules)")
+        with unittest.mock.patch.object(ivn, "_company_apps", return_value=["acme_rules"]):
+            rc, out = self.run_ivn("doctor")  # none on this computer, one on our server
+        self.assertEqual(out.strip().splitlines()[-1], "Next: ivn download acme_rules")
+
     def test_not_signed_in_says_so_and_next_is_login(self):
         with unittest.mock.patch.dict(os.environ, {"IVN_TOKEN": ""}):
             rc, out = self.run_ivn("doctor")
