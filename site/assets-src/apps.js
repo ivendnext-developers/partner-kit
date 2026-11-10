@@ -191,10 +191,27 @@
     how: { ours: "Try installs in one press, with our key", own: "Try installs in one press, with your key",
            shelf: "its administrator installs from the shelf key", live: "a customer's live site: Publish sends it the production copy" },
     getSandbox: "Get a sandbox", logins: "Show its logins", loginsNote: "Shown once: keep them now.",
+    // one free sandbox per partner company, more by the request form; our own developers take their own
+    askSandbox: "Ask for another sandbox", requestSandbox: "Request a sandbox",
     liveTick: "Your customers' live sites", installNow: "Install now", installOn: "Install now on {site}",
     removed: "{site} is off your list, with the key you added for it.",
     stays: "{site} stays on your list: it is one of our sandboxes, given to you or your company. The key you added for it is deleted."
   };
+  // what My sites offers for a sandbox, as the hosting says (`sandbox`): Get a sandbox for one of our developers with
+  // none of their own; Ask for another sandbox, with the hosting's words, for a partner company that holds its free one;
+  // Request a sandbox for a newcomer with sites of its own (with none, the empty list's words already link the page)
+  var FORM = "https://www.ivendnext.com/developers/sandbox/";   // the sandbox request form, as it is (K184)
+  function sandboxOffer(sites, get) {
+    var out = el("div", {});
+    if (sites.sandbox === "get") out.appendChild(el("p", {}, button(S.getSandbox, get)));
+    if (sites.sandbox === "ask") {
+      out.appendChild(p((sites.sandbox_words || "").replace(/\s*https:\S+$/, "")));
+      out.appendChild(el("p", {}, el("a", { href: FORM, target: "_blank", rel: "noopener", "class": "site-btn", text: S.askSandbox })));
+    }
+    if (sites.sandbox === "request" && (sites.company || []).length && !sites.words)
+      out.appendChild(el("p", {}, el("a", { href: "/sandbox.html", "class": "site-btn", text: S.requestSandbox })));
+    return out;
+  }
   // what Remove from my list did: off the list, or (one of ours, given by its grant) still on it without the added key
   function removedWords(site, r) {
     var kept = ((r && r.company) || []).some(function (x) { return x.site === site; });
@@ -1839,6 +1856,7 @@
       var row = el("div", { "class": "hosting-step" });
       row.appendChild(el("h3", { text: x.label ? x.label + " \u00b7 " + x.site : x.site }));
       row.appendChild(p(siteHow(x) + (x.site === sites["default"] ? " \u00b7 " + S.isDefault : "")));
+      if (x.back_words) row.appendChild(p(x.back_words));   // a pool sandbox nobody signs in to goes back on this date
       var lab = el("input", { type: "text", maxlength: "60", spellcheck: "false", "aria-label": S.label + ": " + x.site });
       lab.value = x.own_label || "";
       var acts = el("p", {}, lab, " ", button(S.save, function (ev) {
@@ -1867,12 +1885,11 @@
       var parts = noSandboxParts(sites.words);
       box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
     }
-    var hasOwn = (sites.company || []).some(function (x) { return x.yours; });
-    if (sites.get_sandbox && !hasOwn) box.appendChild(el("p", {}, button(S.getSandbox, function (ev) {
+    box.appendChild(sandboxOffer(sites, function (ev) {
       ev.target.disabled = true;   // one press, one sandbox
       call("POST", "/sandbox/get", {}).then(function (r) { if (r.logins) data.shownLogins = r; done(r); },
                                          function (e) { ev.target.disabled = false; fail(e); });
-    })));
+    }));
     var add = card(S.add);
     var form = data.addForm = data.addForm || { site: "", key: "", secret: "", label: "" };   // kept through a refusal's redraw
     var addr = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "shop.ivendnext.com", "aria-label": S.address });
