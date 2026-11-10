@@ -42,6 +42,13 @@ ivn try
 
 ## Versions
 
+### 1.1.1
+
+Manifest 0.2.1.
+
+- The *Seat key* help says what the service does: set when Seat opens the table's check and kept with it, so a second press returns that check; cleared when Seat is refused.
+- `role_rights` give **PP FOH Host** *Read* on *Retail Floor Place* and *Select* on *Warehouse*, *POS Invoice* and *Customer*, so a host needs no Role Permissions step.
+
 ### 1.1.0
 
 - The set-up words say the install switches the feed on and gives the role its reads (POS build `2.1.0.691` or later). The app does what it did.

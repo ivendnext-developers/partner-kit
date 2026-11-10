@@ -387,7 +387,9 @@ class Service:
             return gor.message(" ".join(problems) or "No code was made.", "warning")
         made = (f"{done[0][0]}'s code is made (number {done[0][1]})" if len(done) == 1
                 else f"{len(done)} codes are made")
-        return gor.message(made + ". Print its card from the form's Print menu (Table card). Any earlier code of the "
+        printed = ("Print its card from the form's Print menu (Table card)" if len(done) == 1
+                   else "Print each card from its form's Print menu (Table card)")
+        return gor.message(made + ". " + printed + ". Any earlier code of the "
                            "same record no longer works." + (" " + " ".join(problems) if problems else ""),
                            "warning" if problems else "success")
 

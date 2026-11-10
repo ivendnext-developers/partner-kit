@@ -86,6 +86,14 @@ class ServiceTest(unittest.TestCase):
         self.assertTrue(c["qr"].startswith("data:image/svg+xml;base64,"))
         self.assertEqual(c["made_for"], "Table|Bistro - BC|FP-T12")
 
+    def test_c2b_one_code_says_print_its_card_and_several_say_print_each_card(self):
+        code, out = answer(press(self.svc, ["GOR-CODE-00001"]))
+        self.assertIn("Print its card", out["message"]["body"])
+        code, out = answer(press(self.svc, ["GOR-CODE-00001", "GOR-CODE-00002"]))
+        self.assertIn("2 codes are made", out["message"]["body"])
+        self.assertIn("Print each card", out["message"]["body"])
+        self.assertNotIn("Print its card", out["message"]["body"])
+
     def test_c3_make_code_again_stops_the_old_card(self):
         old = made(self.shop, self.svc)
         self.assertEqual(guest(self.svc, "/gor/menu", old)[1]["state"], "open")

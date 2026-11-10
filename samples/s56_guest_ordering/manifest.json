@@ -3,9 +3,9 @@
  "app": "pp_gor",
  "prefix": "PP GOR",
  "title": "Guest ordering",
- "version": "0.2.0",
+ "version": "0.2.1",
  "publisher": "Partner Programme sample",
- "description": "Guests order for themselves: a QR code at each table, and a self-order kiosk for counter service. The guest reads the register's own menu on their phone (its item groups, the dishes' choices and the price list's prices, before any offer) and sends an order; it lands as lines on the table's check through the till's open-check door, unsent, under the store's course word (Guest order), so a server reads it and presses Send at the till; the table pays at a till as usual. A kiosk order opens a tab named by a five-character code the guest is shown, paid at the counter. The app never sends to the kitchen and the guest never pays in the app. Make code, on a PP GOR Code record, writes the table's or kiosk's signed link and its QR picture, printed by the print format PP GOR Table card; pressing it again replaces a code that leaked (the old card stops working). No guest data: the page asks no name, phone or e-mail. The install makes the roles PP GOR Manager and PP GOR Integration and the app's own user and, from role_rights, gives PP GOR Integration read on Item, POS Profile and Retail Option Group; the retailer gives that user its store, register and the Open Checks rights open a check, add to a check and see the checks; the feed PP GOR Guest ordering feed is on from the install. allowed_urls is the programme bench's address; a partner writes their own service's address.",
+ "description": "Guests order for themselves: a QR code at each table, and a self-order kiosk for counter service. The guest reads the register's own menu on their phone (its item groups, the dishes' choices and the price list's prices, before any offer) and sends an order; it lands as lines on the table's check through the till's open-check door, unsent, under the store's course word (Guest order), so a server reads it and presses Send at the till; the table pays at a till as usual. A kiosk order opens a tab named by a five-character code the guest is shown, paid at the counter. The app never sends to the kitchen and the guest never pays in the app. Make code, on a PP GOR Code record, writes the table's or kiosk's signed link and its QR picture, printed by the print format PP GOR Table card; pressing it again replaces a code that leaked (the old card stops working). No guest data: the page asks no name, phone or e-mail. The install makes the roles PP GOR Manager and PP GOR Integration and the app's own user and, from role_rights, gives PP GOR Integration read on Item, POS Profile and Retail Option Group and PP GOR Manager read and select on Retail Floor Place and select on Warehouse; the retailer gives that user its store, register and the Open Checks rights open a check, add to a check and see the checks; the feed PP GOR Guest ordering feed is on from the install. allowed_urls is the programme bench's address; a partner writes their own service's address.",
  "allowed_urls": [
   "https://host.docker.internal:8157/gor/code"
  ],
@@ -342,6 +342,8 @@
  "role_rights": [
   {"doctype": "Item", "role": "PP GOR Integration", "rights": ["read"]},
   {"doctype": "POS Profile", "role": "PP GOR Integration", "rights": ["read"]},
-  {"doctype": "Retail Option Group", "role": "PP GOR Integration", "rights": ["read"]}
+  {"doctype": "Retail Option Group", "role": "PP GOR Integration", "rights": ["read"]},
+  {"doctype": "Retail Floor Place", "role": "PP GOR Manager", "rights": ["read", "select"]},
+  {"doctype": "Warehouse", "role": "PP GOR Manager", "rights": ["select"]}
  ]
 }

@@ -67,6 +67,16 @@ class ManifestTest(unittest.TestCase):
         self.assertNotIn("default", f)
         self.assertIn("only the screen's own store", f["description"])
 
+    def test_r1_the_install_gives_the_human_roles_and_the_services_user_their_rights(self):  # HOSP-KIT1: no Role Permissions step
+        have = {(r["doctype"], r["role"], tuple(r["rights"])) for r in self.m["role_rights"]}
+        for doctype, role, rights in [
+            ('POS Profile', 'PP KSC Integration', ['read']),
+            ('Item', 'PP KSC Integration', ['read']),
+            ('Warehouse', 'PP KSC Manager', ['select']),
+            ('Retail Kitchen Station', 'PP KSC Manager', ['select']),
+        ]:
+            self.assertIn((doctype, role, tuple(rights)), have)
+
 
 if __name__ == "__main__":
     unittest.main()
