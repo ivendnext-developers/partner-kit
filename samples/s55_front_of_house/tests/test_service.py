@@ -422,6 +422,74 @@ class ServiceTest(unittest.TestCase):
         self.press(s, "/press/book", RES, "R3")
         self.assertEqual(shop.res["R3"]["status"], "Booked")                     # a cancelled booking holds nothing
 
+    # ── the till's floor: each press writes the table's next booking on its place ──
+    def hold(self, shop, place=fs.T12):
+        return shop.places[place]["held_from"], shop.places[place]["held_to"]
+
+    def test_f1_book_writes_the_tables_hold(self):
+        shop = fs.FakeTenant([fs.booking("R1", "20:00:00", status="Requested")])
+        out = self.press(self.svc(shop), "/press/book", RES, "R1")
+        self.assertEqual(self.hold(shop), ("2026-10-29 20:00:00", "2026-10-29 21:30:00"))
+        self.assertEqual(out[1]["message"]["level"], "success")
+        floor = shop.call("floor_status", query={"store": fs.STORE})
+        self.assertEqual([p.get("held_from") for p in floor["places"]], ["2026-10-29 20:00:00", None])
+        put = [b for b in shop.sent if b and "held_from" in b]
+        self.assertEqual(put, [{"held_from": "2026-10-29 20:00:00", "held_to": "2026-10-29 21:30:00"}])   # times only
+
+    def test_f2_seat_moves_the_hold_to_the_tables_next_booking_or_clears_it(self):
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00"), fs.booking("R2", "21:00:00")])
+        s = self.svc(shop)
+        self.press(s, "/press/seat", RES, "R1")
+        self.assertEqual(self.hold(shop), ("2026-10-29 21:00:00", "2026-10-29 22:30:00"))   # the next party's
+        self.press(s, "/press/cancel", RES, "R2")
+        self.assertEqual(self.hold(shop), (None, None))                                   # nothing more tonight
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00")])
+        self.press(self.svc(shop), "/press/seat", RES, "R1")
+        self.assertEqual((shop.res["R1"]["status"], self.hold(shop)), ("Seated", (None, None)))
+
+    def test_f3_no_show_cancel_and_change_clear_the_hold(self):
+        for path, status in (("/press/noshow", "No-show"), ("/press/cancel", "Cancelled"), ("/press/change", "Requested")):
+            shop = fs.FakeTenant([fs.booking("R1", "19:30:00")])
+            shop.places[fs.T12].update(held_from="2026-10-29 19:30:00", held_to="2026-10-29 21:00:00")
+            self.press(self.svc(shop), path, RES, "R1")
+            self.assertEqual((shop.res["R1"]["status"], self.hold(shop)), (status, (None, None)), path)
+
+    def test_f4_a_walk_in_seated_keeps_the_tables_later_booking(self):
+        shop = fs.FakeTenant([fs.booking("R1", "22:00:00", place=fs.T14)], [fs.waiting("W1", place=fs.T14)])
+        self.press(self.svc(shop), "/press/seat", WAIT, "W1")
+        self.assertEqual(shop.wait["W1"]["status"], "Seated")
+        self.assertEqual(self.hold(shop, fs.T14), ("2026-10-29 22:00:00", "2026-10-29 23:30:00"))
+
+    def test_f5_a_floor_the_app_may_not_write_leaves_the_booking_and_says_so(self):
+        for path, status in (("/press/book", "Booked"), ("/press/seat", "Seated"), ("/press/noshow", "No-show"),
+                             ("/press/cancel", "Cancelled"), ("/press/change", "Requested")):
+            first = "Requested" if path == "/press/book" else "Booked"
+            shop = fs.FakeTenant([fs.booking("R1", "19:30:00", status=first, deposit_sale="ACC-PSINV-2026-00063",
+                                             deposit_amount=50)], place_right=False)
+            out = self.press(self.svc(shop), path, RES, "R1")
+            self.assertEqual((out[0], shop.res["R1"]["status"], out[1]["message"]["level"]), (200, status, "warning"), path)
+            self.assertTrue(self.said(out).endswith(app.FLOOR_REFUSED.strip()), (path, self.said(out)))   # never cut off
+        shop = fs.FakeTenant([fs.booking("R1", "20:00:00", status="Requested")], refuse=("PUT " + app.PLACE, None))
+        out = self.press(self.svc(shop), "/press/book", RES, "R1")                  # the place write timed out
+        self.assertEqual((shop.res["R1"]["status"], out[1]["message"]["level"]), ("Booked", "warning"))
+        self.assertTrue(self.said(out).endswith(app.FLOOR_LOST.strip()))
+
+    def test_f7_after_midnight_a_booking_from_yesterday_still_running_is_the_hold(self):
+        shop = fs.FakeTenant([fs.booking("R1", "23:30:00"), fs.booking("R2", "02:00:00", date="2026-10-30")],
+                             clock="2026-10-30 00:30:00")
+        self.press(self.svc(shop), "/press/cancel", RES, "R2")
+        self.assertEqual(self.hold(shop), ("2026-10-29 23:30:00", "2026-10-30 01:00:00"))
+
+    def test_f8_a_book_refused_by_a_clash_leaves_the_table_on_the_booking_that_holds_it(self):
+        shop = fs.FakeTenant([fs.booking("R0", "20:00:00"), fs.booking("R1", "19:00:00", status="Booked")])
+        self.press(self.svc(shop), "/press/book", RES, "R1")
+        self.assertEqual((shop.res["R1"]["status"], self.hold(shop)), ("Requested", ("2026-10-29 20:00:00", "2026-10-29 21:30:00")))
+
+    def test_f6_a_booking_with_no_table_writes_no_place(self):
+        shop = fs.FakeTenant([fs.booking("R1", "20:00:00", status="Requested", place=None)])
+        self.press(self.svc(shop), "/press/book", RES, "R1")
+        self.assertFalse([c for c in shop.calls if c.startswith("PUT " + app.PLACE)])
+
 
 class TestCall(unittest.TestCase):
     """The test call (``X-iVendNext-Test: 1``, tools/app_template/service/testcall.py) at each signed point route: checked

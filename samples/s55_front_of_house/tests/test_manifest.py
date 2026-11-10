@@ -116,6 +116,7 @@ class ManifestTest(unittest.TestCase):
             ('Warehouse', 'PP FOH Host', ['select']),
             ('POS Invoice', 'PP FOH Host', ['select']),
             ('Customer', 'PP FOH Host', ['select']),
+            ('Retail Floor Place', 'PP FOH Integration', ['read', 'write']),    # HOSP-K2d: the table's next booking
         ]:
             self.assertIn((doctype, role, tuple(rights)), have)
 

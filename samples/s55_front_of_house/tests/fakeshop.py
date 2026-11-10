@@ -1,7 +1,8 @@
 """A stand-in for the shop as S55's service reads it, as the app's own user: the settings with their store rows and the
 shop's ``modified`` check, reservations and waiting parties (the guest's fields kept apart and never answered, as the
 shop leaves out a field the app's user may not read), and the till's open-check door (``check_open`` keeping its
-first answer for a key, refusing the same key with other arguments; ``floor_status``). It is the shop as S55 reads it,
+first answer for a key, refusing the same key with other arguments; ``floor_status``), and the till's tables (*Retail
+Floor Place*, whose ``held_from`` and ``held_to`` the app writes and the floor answers). It is the shop as S55 reads it,
 never the shop's own rules beyond these."""
 
 import copy
@@ -42,7 +43,7 @@ def waiting(name, place=T14, party=2, status="Waiting", **kw):
 
 class FakeTenant:
     def __init__(self, reservations=(), waitlist=(), settings_=None, clock="2026-10-29 19:00:00", refuse=None,
-                 door_refuse=None, lose_open=0, stale_seat=0, open_checks=(), floor_refuse=None):
+                 door_refuse=None, lose_open=0, stale_seat=0, open_checks=(), floor_refuse=None, place_right=True):
         self.settings = {CO: settings_ or settings()}
         self.other_store_saves = None
         self.res = {r["name"]: copy.deepcopy(r) for r in reservations}
@@ -52,6 +53,9 @@ class FakeTenant:
         self.floor_refuse = floor_refuse     # the floor read's own refusal (the till asks it first: is the caller assigned?)
         self.keys = {}                   # the door's memory: key → (arguments, check)
         self.checks = [dict(c) for c in open_checks]     # {"check", "place"} already open on the floor
+        self.places = {p: {"name": p, "label": LABELS[p], "store": STORE, "held_from": None, "held_to": None}
+                       for p in LABELS}
+        self.place_right = place_right   # False: the app's user has no write on the tables (a site not yet updated)
         self.n = itertools.count(1)
         self.calls, self.sent = [], []
 
@@ -73,6 +77,10 @@ class FakeTenant:
             return self.settings
         if doctype.endswith(" Store"):
             return {r["name"]: r for s in self.settings.values() for r in s["stores"]}
+        if doctype == app.PLACE:
+            if not self.place_right:
+                raise app.TenantError("403", 403, "PermissionError")
+            return self.places
         raise app.TenantError("404", 404)
 
     @staticmethod
@@ -98,7 +106,8 @@ class FakeTenant:
         for r in src:
             ok = True
             for f, op, v in filters:
-                if op == "=" and r.get(f) != v or op == "in" and r.get(f) not in v:
+                if op == "=" and r.get(f) != v or op == "in" and r.get(f) not in v or \
+                        op == ">=" and str(r.get(f) or "") < v:
                     ok = False
             if ok:
                 out.append({k: r.get(k) for k in fields if k not in GUEST})
@@ -120,6 +129,8 @@ class FakeTenant:
                 raise app.TenantError("PUT -> HTTP 417", 417, app.STALE)
             if body["modified"] != rec.get("modified"):
                 raise app.TenantError("PUT -> HTTP 417", 417, app.STALE)
+        if doctype == app.PLACE:                                # the site stores an empty time as none
+            body = {k: (v or None) for k, v in body.items()}
         rec.update({k: v for k, v in body.items() if k != "modified"})
         rec["modified"] = self._tick()
         if doctype.endswith(" Store"):                          # a row's save saves its settings: every row is re-stamped
@@ -138,8 +149,11 @@ class FakeTenant:
             places = []
             for p in LABELS:
                 cs = [c for c in self.checks if c["place"] == p]
-                places.append({"place": p, "label": LABELS[p], "status": "seated" if cs else "free",
-                               "checks": [{"check": c["check"]} for c in cs]})
+                place = {"place": p, "label": LABELS[p], "status": "seated" if cs else "free",
+                         "checks": [{"check": c["check"]} for c in cs]}
+                if self.places[p]["held_to"]:                   # the till answers a hold only while one is set
+                    place.update(held_from=self.places[p]["held_from"], held_to=self.places[p]["held_to"])
+                places.append(place)
             return {"store": query["store"], "sections": [], "places": places, "tabs": []}
         if verb != "check_open":
             raise app.TenantError("404", 404)

@@ -1,6 +1,6 @@
 # S55 — Front of house (reservations, a waiting list, seating that opens a check)
 
-A restaurant's host keeps the evening in iVendNext Desk: a **reservation** for each booking (the store, the date and time, the party size, the guest, a table if chosen) and a **waiting list** of walk-ins. **Book** holds the table for the party's stay and refuses an overlapping booking, naming the other one. **Seat** opens the party's check on the till at its table, once, never twice. **No-show** and **Cancel booking** free the table, and a waiting party set to *Table ready* can text the guest. A guest's details are seen only by the host role, and the service never reads them.
+A restaurant's host keeps the evening in iVendNext Desk: a **reservation** for each booking (the store, the date and time, the party size, the guest, a table if chosen) and a **waiting list** of walk-ins. **Book** holds the table for the party's stay and refuses an overlapping booking, naming the other one. **Seat** opens the party's check on the till at its table, once, never twice. **No-show** and **Cancel booking** free the table, and a waiting party set to *Table ready* can text the guest. Each press writes the table's next booking on the till's own table, so the till's floor shows it *Booked* with its time and a server does not seat a walk-in there. A guest's details are seen only by the host role, and the service never reads them.
 
 ![The diary: the evening's reservations by time](screenshots/01_list.png)
 
@@ -41,6 +41,14 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.2.0
+
+Manifest 0.3.0. Needs POS build `2.1.0.697` or later (the till's tables carry a booking's times).
+
+- A booked table reads *Booked* with its time on the till's floor. *Book*, *Seat*, *No-show*, *Cancel booking* and *Change booking* each write the table's next booking (its start and end, never the guest) on its *Retail Floor Place*, or clear them when it has none. The floor shows it from the start of the booking's day until it ends, and the table still opens.
+- Press *Seat* or *No-show* on each booking as the evening goes, so the floor moves on to the table's next booking; one that ends without a press lapses by itself. On the day you update, press *Book* again on the day's booked reservations so the floor shows them.
+- `role_rights` give the app's own role **PP FOH Integration** *Read* and *Write* on *Retail Floor Place*. On a site that has not updated the app yet, the press still books, seats or frees as before and says the floor was not told.
 
 ### 1.1.2
 

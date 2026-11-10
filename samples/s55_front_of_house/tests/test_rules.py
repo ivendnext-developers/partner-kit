@@ -78,6 +78,31 @@ class Rules(unittest.TestCase):
         self.assertLessEqual(len(out["message"]["body"]), 280)
         self.assertNotIn("refresh", out)
 
+    def test_r9_the_tables_next_booking_is_its_hold(self):
+        rows = {"S": {"minutes": 90}}
+        now = D(2026, 10, 29, 19, 15)
+
+        def b(name, t, status="Booked", date="2026-10-29", **kw):
+            return dict({"name": name, "status": status, "store": "S", "booking_date": date, "booking_time": t}, **kw)
+
+        none = {"held_from": "", "held_to": ""}
+        self.assertEqual(foh.next_hold([], rows, now), none)
+        self.assertEqual(foh.next_hold([b("R1", "21:00:00")], rows, now),
+                         {"held_from": "2026-10-29 21:00:00", "held_to": "2026-10-29 22:30:00"})
+        self.assertEqual(foh.next_hold([b("R2", "22:00:00"), b("R1", "20:00:00", minutes=60)], rows, now)["held_from"],
+                         "2026-10-29 20:00:00")                                   # the earliest of two
+        self.assertEqual(foh.next_hold([b("R1", "20:00:00"), b("R2", "22:00:00")], rows, now)["held_from"],
+                         "2026-10-29 20:00:00")                                   # in either order
+        self.assertEqual(foh.next_hold([b("R1", "17:00:00"), b("R2", "18:00:00")], rows, now),
+                         {"held_from": "2026-10-29 18:00:00", "held_to": "2026-10-29 19:30:00"})   # one over, one not yet
+        self.assertEqual(foh.next_hold([b("R1", "16:00:00")], rows, now), none)    # over at 17:30: nothing holds
+        self.assertEqual(foh.next_hold([b("R1", "23:30:00", date="2026-10-28")], rows, D(2026, 10, 29, 0, 30)),
+                         {"held_from": "2026-10-28 23:30:00", "held_to": "2026-10-29 01:00:00"})   # past midnight
+        self.assertEqual(foh.next_hold([b("R1", "20:00:00", "Requested"), b("R2", "20:00:00", "Seated"),
+                                        b("R3", "20:00:00", "Cancelled"), b("R4", "20:00:00", "No-show")], rows, now), none)
+        self.assertEqual(foh.next_hold([b("R1", "20:00:00", date="2026-10-30")], rows, now)["held_to"],
+                         "2026-10-30 21:30:00")                                   # tomorrow's: the till shows it tomorrow
+
 
 if __name__ == "__main__":
     unittest.main()
