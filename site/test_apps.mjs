@@ -398,7 +398,8 @@ check("MYSITES: a refused Install now brings its button back, and a refused Add 
 check("SANDBOXPOLICY: Get a sandbox for one of our developers with none; Ask for another sandbox opens the request form with the hosting's words; a newcomer is offered the form",
   src.includes('if (sites.sandbox === "get") out.appendChild(el("p", {}, button(S.getSandbox, get)));') &&
   src.includes('if (sites.sandbox === "ask") {') && src.includes('el("a", { href: FORM, target: "_blank", rel: "noopener", "class": "site-btn", text: S.askSandbox })') &&
-  src.includes('var FORM = "https://www.ivendnext.com/developers/sandbox/";') && src.includes("box.appendChild(sandboxOffer(sites, function (ev) {") &&
+  src.includes('var FORM = "https://www.ivendnext.com/developers/sandbox/";') && src.includes("var offer = sandboxOffer(sites, function (ev) {") && src.includes('if (sites.sandbox === "get") box.appendChild(offer);') &&
+  src.indexOf('if (sites.sandbox === "get") box.appendChild(offer);') < src.indexOf("(sites.company || []).forEach(function (x) {", src.indexOf("var offer")) &&
   a.S.askSandbox === "Ask for another sandbox" && src.includes('sites.sandbox === "request" && (sites.company || []).length && !sites.words') &&
   !src.includes("sites.get_sandbox"));
 check("SANDBOXPOLICY: each pool sandbox says the date it goes back to the pool, in the hosting's words", src.includes("if (x.back_words) row.appendChild(p(x.back_words));"));

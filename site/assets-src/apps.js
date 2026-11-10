@@ -1875,6 +1875,12 @@
       });
       t.appendChild(tb); lg.appendChild(t); box.appendChild(lg);
     }
+    var offer = sandboxOffer(sites, function (ev) {
+      ev.target.disabled = true;   // one press, one sandbox
+      call("POST", "/sandbox/get", {}).then(function (r) { if (r.logins) data.shownLogins = r; done(r); },
+                                         function (e) { ev.target.disabled = false; fail(e); });
+    });
+    if (sites.sandbox === "get") box.appendChild(offer);   // J6 F15: one of our developers sees it first, above the demo boxes
     (sites.company || []).forEach(function (x) {
       var row = el("div", { "class": "hosting-step" });
       row.appendChild(el("h3", { text: x.label ? x.label + " \u00b7 " + x.site : x.site }));
@@ -1908,11 +1914,7 @@
       var parts = noSandboxParts(sites.words);
       box.appendChild(el("p", {}, parts[0], parts[1] ? el("a", { href: "/sandbox.html", text: parts[1] }) : null, parts[2] || null));
     }
-    box.appendChild(sandboxOffer(sites, function (ev) {
-      ev.target.disabled = true;   // one press, one sandbox
-      call("POST", "/sandbox/get", {}).then(function (r) { if (r.logins) data.shownLogins = r; done(r); },
-                                         function (e) { ev.target.disabled = false; fail(e); });
-    }));
+    if (sites.sandbox !== "get") box.appendChild(offer);
     var add = card(S.add);
     var form = data.addForm = data.addForm || { site: "", key: "", secret: "", label: "" };   // kept through a refusal's redraw
     var addr = el("input", { type: "text", spellcheck: "false", autocomplete: "off", placeholder: "shop.ivendnext.com", "aria-label": S.address });
