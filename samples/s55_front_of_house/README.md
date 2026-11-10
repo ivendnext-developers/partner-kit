@@ -24,7 +24,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/front_of_house.md).
 
-**The customer sets:** the tables as the till's own floor (*Retail Floor Section* and its *Retail Floor Place* records, with **Table Service** ticked on the store's register), one `PP FOH Settings` record for the company with a row per store, the role **PP FOH Host** for hosts and managers, and an SMS provider if guests are texted. The app's user needs a Retail Permission with only *open a check* and *see the checks*, and a row for the store and its register.
+**The customer sets:** the tables as the till's own floor (*Retail Floor Section* and its *Retail Floor Place* records, with **Table Service** ticked on the store's register), one `PP FOH Settings` record for the company with a row per store, the role **PP FOH Host** for hosts and managers, and an SMS provider if guests are texted. Nothing for the app's user: the install makes it (the manifest's `app_user_rights`): its own Retail Permission with only *open a check* and *see the checks*, **Is POS User**, a row for every store (on its Table Service register if it has one), and a Shift Profile.
 
 ## Run it
 
@@ -41,6 +41,12 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.1.2
+
+Needs POS build 2.1.0.682 or later. Manifest 0.2.2.
+
+- The manifest's `app_user_rights` make the app's own user at the install: its own Retail Permission with only *open a check* and *see the checks*, **Is POS User**, a row for every store (on its Table Service register if it has one), and a Shift Profile, so the administrator sets nothing up by hand (a user already set up by hand stays as it is).
 
 ### 1.1.1
 

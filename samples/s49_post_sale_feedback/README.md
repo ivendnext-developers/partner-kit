@@ -44,6 +44,12 @@ ivn try
 
 ## Versions
 
+### 1.1.2
+
+Manifest 0.2.1 (unchanged: the page is served by the hosted service).
+
+- The page puts the retailer's words (its name, the question, each answer) in a `<bdi>` inside a block of the page's own direction, as the kitchen screen does, so each reads in its own order and keeps one edge on an Arabic page; the guest's own comment keeps `dir="auto"`.
+
 ### 1.1.1
 
 Manifest 0.2.1.

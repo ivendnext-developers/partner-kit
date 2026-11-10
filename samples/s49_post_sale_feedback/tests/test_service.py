@@ -503,9 +503,16 @@ class ServiceTest(unittest.TestCase):
     def test_s25b_the_retailers_words_keep_their_own_direction_on_an_arabic_page(self):
         # walked on the demo site: an English question on an Arabic phone read "?How was your visit today"
         page = self.svc.handle("GET", "/", {}, b"")[1].decode()
-        for el in ('<p id="name" class="name" dir="auto">', '<h1 id="question" dir="auto">', 'id="comment" maxlength="280" rows="3" dir="auto"'):
+        # the retailer's words sit in a <bdi> inside a block of the page's own direction (S59's rule), never dir="auto" on the
+        # block; the guest's own typed comment keeps dir="auto"
+        for el in ('<p id="name" class="name"></p>', '<h1 id="question"></h1>', 'id="comment" maxlength="280" rows="3" dir="auto"'):
             self.assertIn(el, page)
-        self.assertIn('b.dir = "auto";', self.svc.handle("GET", "/page.js", {}, b"")[1].decode())
+        js = self.svc.handle("GET", "/page.js", {}, b"")[1].decode()
+        self.assertIn('document.createElement("bdi")', js)
+        for call in ('put($("name"), v.name);', 'put($("question"), v.question);', "put(b, text);"):
+            self.assertIn(call, js)
+        self.assertIn("el.appendChild(b)", js)   # put() really writes the words, inside the <bdi>
+        self.assertNotIn('.dir = "auto"', js)
         # and each aligns by its own direction: a rule that pushes the page right would set an English question apart
         # from its English answers on that phone (the walk's review)
         self.assertNotIn("text-align: right", self.svc.handle("GET", "/page.css", {}, b"")[1].decode())

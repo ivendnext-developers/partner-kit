@@ -17,7 +17,7 @@ related: own-online-shop
 An app that calls the *open check* door (`open_check/1`, POS version 2.1.0.667 and later) through `ivendnext_mpos.api.v1`: `floor_status` reads the store's tables, `check_open` opens a table's check (or a tab or pre-order by its label), `check_add_lines` adds what the guest ordered, and `check_preview` shows the shop's price of the open lines. The check holds what was ordered, never a price: the till prices it and takes the payment when the table pays. Every write carries a fresh random `key`; a retry sends the same key and the same request. The calls, rights and refusals are on the open check page (`contracts/pages/open_check.md`).
 
 ## Limits
-- The retailer switches on **Table Service** on the POS Profile, sets up the floor (Floor Sections and Floor Places) in iVendNext Desk, and gives your app's user the store and one register there, first.
+- The retailer switches on **Table Service** on the POS Profile, sets up the floor (Floor Sections and Floor Places) in iVendNext Desk, and gives your app's user the store and one register there, first (or your manifest declares the rights in `app_user_rights` and the install makes the user, its rights and its store rows).
 - Your app never pays, claims or prints a check: those calls are a till's only and refuse your app whatever it is granted.
 - Ask only for *open a check*, *add to a check* and *see the checks*: sending to the kitchen, moving, merging, closing, voiding and comping are a person's decisions at the till.
 - A line never carries a price, a discount or a server's note.
