@@ -30,6 +30,8 @@ SITE = {
          "fieldtype": "Data", "is_system_generated": 0},  # an installed app's: its install record names it
     ],
     "Property Setter": [
+        {"name": "Purchase Order-main-field_order", "owner": ME, "doc_type": "Purchase Order", "field_name": "",
+         "property": "field_order", "property_type": "Data", "value": "[\"supplier\"]", "is_system_generated": 0},
         {"name": "Purchase Order-custom_approval_note-bold", "owner": ME, "doc_type": "Purchase Order",
          "field_name": "custom_approval_note", "property": "bold", "property_type": "Check", "value": "1",
          "is_system_generated": 0},
@@ -40,21 +42,24 @@ SITE = {
                     {"state": "Approved", "doc_status": "1", "allow_edit": "Store Approver", "idx": 2}],
          "transitions": [{"state": "Draft", "action": "Approve", "next_state": "Approved", "allowed": "Store Approver",
                           "condition": "doc.custom_needs_approval == 1", "allow_self_approval": 0}]},
+        {"name": "PO draft flow", "owner": ME, "document_type": "Purchase Order", "is_active": 0, "states": [], "transitions": []},
     ],
     "Notification": [
-        {"name": "PO waiting", "owner": ME, "is_standard": 0, "document_type": "Purchase Order", "event": "New",
+        {"name": "PO waiting", "owner": ME, "is_standard": 0, "enabled": 1, "document_type": "Purchase Order", "event": "New",
          "channel": "System Notification", "subject": "{{ doc.name }} needs approval",
          "message": "<p>{{ doc.custom_approval_note }}</p>", "recipients": [{"receiver_by_role": "Store Approver"}]},
+        {"name": "PO old alert", "owner": ME, "is_standard": 0, "enabled": 0, "document_type": "Purchase Order", "event": "New",
+         "channel": "System Notification", "subject": "x", "recipients": []},
     ],
     "Print Format": [
-        {"name": "PO with note", "owner": ME, "standard": "No", "doc_type": "Purchase Order", "custom_format": 1,
+        {"name": "PO with note", "owner": ME, "standard": "No", "module": "Buying", "doc_type": "Purchase Order", "custom_format": 1,
          "print_format_type": "Jinja", "html": "<h2>{{ doc.name }}</h2><p>{{ doc.custom_approval_note }}</p>"},
-        {"name": "PO built", "owner": ME, "standard": "No", "doc_type": "Purchase Order", "print_format_builder": 1,
-         "format_data": "[]"},
+        {"name": "PO built", "owner": ME, "standard": "No", "module": "Buying", "doc_type": "Purchase Order",
+         "print_format_builder_beta": 1, "format_data": "[]"},
         {"name": "PO with a script", "owner": ME, "standard": "No", "doc_type": "Purchase Order", "custom_format": 1,
          "print_format_type": "Jinja", "html": "<p>{{ doc.name }}</p><script>alert(1)</script>"},
     ],
-    "Role": [{"name": "Store Approver", "owner": ME, "is_custom": 1}],
+    "Role": [{"name": "Store Approver", "owner": ME, "is_custom": 0}],  # Desk leaves is_custom at 0
     "Custom DocPerm": [
         {"name": "x1", "owner": ME, "parent": "Purchase Order", "role": "Store Approver", "read": 1, "write": 1},
         {"name": "x2", "owner": ME, "parent": "Purchase Order", "role": "Purchase User", "read": 1, "submit": 1},
@@ -62,9 +67,11 @@ SITE = {
     "List View Settings": [{"name": "Purchase Order", "owner": ME, "fields": json.dumps(
         [{"fieldname": "supplier", "label": "Supplier"}, {"fieldname": "custom_needs_approval", "label": "Needs approval"}])}],
     "Report": [
-        {"name": "POs waiting", "owner": ME, "is_standard": "No", "report_type": "Report Builder", "ref_doctype": "Purchase Order",
-         "json": json.dumps({"columns": [["name", "Purchase Order"], ["custom_needs_approval", "Purchase Order"]],
-                             "order_by": "`tabPurchase Order`.`modified` desc"}), "roles": [{"role": "Store Approver"}]},
+        {"name": "POs waiting", "owner": ME, "is_standard": "No", "module": "Buying", "report_type": "Report Builder",
+         "ref_doctype": "Purchase Order", "json": json.dumps({  # as Report View saves it
+             "fields": [["name", "Purchase Order"], ["custom_needs_approval", "Purchase Order"]],
+             "filters": [["Purchase Order", "status", "=", "Draft", False]],
+             "order_by": "`tabPurchase Order`.`modified` desc"}), "roles": [{"role": "Store Approver"}]},
         {"name": "PO sums", "owner": ME, "is_standard": "No", "report_type": "Query Report", "ref_doctype": "Purchase Order"},
     ],
     "Client Script": [{"name": "PO colour", "owner": ME, "dt": "Purchase Order", "script": "// colours the form"}],
@@ -93,6 +100,8 @@ class Capture(unittest.TestCase):
         self.assertEqual(e["property_setters"][0]["field_name"], "acme_rules_approval_note")
         self.assertEqual(e["list_settings"][0]["fields"], ["supplier", "acme_rules_needs_approval"])
         self.assertEqual(e["reports"][0]["columns"], ["name", "acme_rules_needs_approval"])
+        self.assertEqual(e["reports"][0]["filters"], [["status", "=", "Draft"]])
+        self.assertEqual(e["reports"][0]["order_by"], "modified desc")
         self.assertIn("Purchase Order: custom_approval_note is acme_rules_approval_note", self.r["renamed"])
 
     def test_a_role_made_in_desk_takes_the_prefix_everywhere(self):
@@ -103,6 +112,22 @@ class Capture(unittest.TestCase):
         self.assertEqual(e["workflows"][0]["states"][0]["allow_edit"], "Purchase User")  # the customer's own role stays
         self.assertEqual(e["notifications"][0]["recipients"], [{"receiver_by_role": "ACME RULES Store Approver"}])
         self.assertEqual(e["reports"][0]["roles"], ["ACME RULES Store Approver"])
+
+    def test_a_two_person_step_stays_two_person_and_what_is_off_is_left_out(self):
+        self.assertEqual(self.r["entries"]["workflows"][0]["transitions"][0]["allow_self_approval"], 0)
+        left = {(x["type"], x["name"]): x["reason"] for x in self.r["left_out"]}
+        self.assertIn("switched off", left[("Workflow", "PO draft flow")])
+        self.assertIn("switched off", left[("Notification", "PO old alert")])
+        self.assertEqual(left[("Property Setter", "Purchase Order-main-field_order")], C.WORDS["field_order"])
+
+    def test_desk_sets_a_module_on_a_persons_print_format_and_report_and_they_are_still_taken(self):
+        self.assertIn("Print Format/PO with note", [i["id"] for i in self.r["items"]])
+        self.assertIn("Report/POs waiting", [i["id"] for i in self.r["items"]])
+
+    def test_a_second_capture_replaces_its_own_entries_and_leaves_none_out(self):
+        m, _ = C.write(BASE, self.r)
+        again = C.capture(SITE, INSTALLS, m, "acme-test.example.com")
+        self.assertEqual(sorted(x["name"] for x in again["left_out"]), sorted(x["name"] for x in self.r["left_out"]))
 
     def test_what_cannot_be_carried_is_left_out_in_the_checkers_words(self):  # ⭐
         left = {(x["type"], x["name"]): x["reason"] for x in self.r["left_out"]}

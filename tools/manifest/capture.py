@@ -53,7 +53,7 @@ READ_TYPES = {
     "Document Naming Rule": [],
     "List View Settings": [],
     "DocType": [["custom", "=", 1]],
-    "Role": [["is_custom", "=", 1]],
+    "Role": [],
     "Custom DocPerm": [],
     "Workspace": [],
     "Report": [["is_standard", "=", "No"]],
@@ -67,6 +67,12 @@ READ_TYPES = {
     "Web Page": [],
     "Web Template": [],
 }
+# the types whose records come one by one, with their child rows; the rest come whole from the list
+WITH_CHILDREN = {"Workflow", "Notification", "DocType", "Report", "Workspace", "Dashboard", "Document Naming Rule"}
+# the types whose `module` marks an app's record: Desk itself sets the module of a person's print format, report and record
+# type (from the record type it is for), so those are judged by their standard mark and the install records alone
+MODULE_MARKS = {"Custom Field", "Property Setter", "Notification", "Workspace", "Number Card", "Dashboard Chart",
+                "Dashboard", "List View Settings", "Document Naming Rule", "Webhook", "Translation", "Role"}
 # a person's own records only: the hosting asks the site for these alone (`owner` set and not Administrator)
 PERSON_FILTER = [["owner", "is", "set"], ["owner", "!=", "Administrator"]]
 INSTALL = "Retail Extension Install"  # each installed app's record: `items`, every record it made, by kind and name
@@ -86,7 +92,11 @@ WORDS = {
                      "format (Custom Format) and capture again",
     "their_role": "a right for {role}, one of the customer's own roles: the customer gives it in Role Permissions Manager",
     "nothing": "Nothing made in Desk to capture on {site}: a record counts when a person signed in as themselves made it, "
-               "not as Administrator.",
+               "not as Administrator. Made it as Administrator? Make your own user with System Manager in Desk, sign in as "
+               "it, make the set-up again, then capture.",
+    "off": "it is switched off on {site}: switch it on there to capture it",
+    "field_order": "the whole order of the form's fields on that site: it would fix the customer's form to this layout. "
+                   "Each captured field keeps its place by its Insert After",
 }
 
 KEEP = {  # the fields each kind carries, in the recipe's terms (the rest of a site's record is the site's own bookkeeping)
@@ -146,7 +156,8 @@ def made_by_person(records: dict, installs: list) -> dict:
     for dt, rows in (records or {}).items():
         keep = []
         for r in rows or []:
-            if not isinstance(r, dict) or r.get("owner") in (None, "", "Administrator") or r.get("module"):
+            if not isinstance(r, dict) or r.get("owner") in (None, "", "Administrator") \
+                    or (dt in MODULE_MARKS and r.get("module")):
                 continue
             if (dt, r.get("name")) in by_apps:
                 continue
@@ -160,11 +171,13 @@ def made_by_person(records: dict, installs: list) -> dict:
 
 def _report(r: dict) -> dict:
     spec = _json(r.get("json"), {})
-    columns = [c[0] if isinstance(c, list) else c for c in spec.get("columns") or []
+    # Report View keeps its columns as `fields` ([field, record type]); an older report as `columns`
+    columns = [c[0] if isinstance(c, list) else c for c in spec.get("fields") or spec.get("columns") or []
                if not isinstance(c, list) or len(c) < 2 or c[1] == r.get("ref_doctype")]
     out = {"name": r["name"], "ref_doctype": r.get("ref_doctype"), "columns": columns}
-    if spec.get("filters"):
-        out["filters"] = spec["filters"]
+    filters = [f[1:4] if isinstance(f, list) and len(f) >= 4 else f for f in spec.get("filters") or []]
+    if filters:  # Desk's [record type, field, op, value, flag] rows, as the manifest's [field, op, value]
+        out["filters"] = filters
     if spec.get("order_by"):  # Desk keeps it as the query writes it (`tabPurchase Order`.`modified` desc): one field
         out["order_by"] = re.sub(r"`tab[^`]+`\.`([^`]+)`", r"\1", str(spec["order_by"])).strip()
     if spec.get("add_totals_row") or r.get("add_total_row"):
@@ -201,18 +214,30 @@ def to_entries(records: dict, site: str = "") -> tuple[dict, list]:
     for r in records.get("Custom Field", []):
         add("custom_fields", _kept(r, KEEP["custom_fields"]), ("Custom Field", r["name"]))
     for r in records.get("Property Setter", []):
+        if r.get("property") == "field_order":
+            out.append({"type": "Property Setter", "name": r["name"], "reason": WORDS["field_order"]})
+            continue
         add("property_setters", _kept(r, KEEP["property_setters"]) | {"value": r.get("value")}, ("Property Setter", r["name"]))
     for r in records.get("Workflow", []):
+        if not r.get("is_active"):
+            out.append({"type": "Workflow", "name": r["name"], "reason": WORDS["off"].format(site=site or "the site")})
+            continue
         add("workflows", {"name": r["name"], "document_type": r.get("document_type"),
                           **({"send_email_alert": 1} if r.get("send_email_alert") else {}),
-                          "states": _rows(r, "states", "states"), "transitions": _rows(r, "transitions", "transitions")},
+                          "states": _rows(r, "states", "states"),
+                          # every step says whether its raiser may take it: a silent one takes Desk's own default (1)
+                          "transitions": [{**t, "allow_self_approval": 1 if src.get("allow_self_approval") else 0}
+                                          for t, src in zip(_rows(r, "transitions", "transitions"), r.get("transitions") or [])]},
             ("Workflow", r["name"]))
     for r in records.get("Notification", []):
+        if not r.get("enabled"):
+            out.append({"type": "Notification", "name": r["name"], "reason": WORDS["off"].format(site=site or "the site")})
+            continue
         n = _kept(r, KEEP["notifications"])
         n["recipients"] = _rows(r, "recipients", "recipients")
         add("notifications", n, ("Notification", r["name"]))
     for r in records.get("Print Format", []):
-        if not r.get("html") and r.get("print_format_builder"):
+        if not r.get("html"):  # made in the Print Format Builder (its layout, no HTML)
             out.append({"type": "Print Format", "name": r["name"], "reason": WORDS["builder_print"]})
             continue
         add("print_formats", _kept(r, KEEP["print_formats"]), ("Print Format", r["name"]))
@@ -311,9 +336,13 @@ _WHERE = re.compile(r"^([a-z_]+)\[(\d+)\]")
 
 
 def _manifest(base: dict, entries: dict) -> dict:
+    """``base`` with the entries in, each replacing an entry of the same key already there (a second capture)."""
     m = copy.deepcopy(base)
     for kind, rows in entries.items():
-        m[kind] = [*(m.get(kind) or []), *[{k: v for k, v in r.items() if k != "_from"} for r in rows]]
+        key = _key_of(kind)
+        mine = {tuple(r.get(x) for x in key) for r in rows}
+        m[kind] = [r for r in m.get(kind) or [] if tuple(r.get(x) for x in key) not in mine] \
+            + [{k: v for k, v in r.items() if k != "_from"} for r in rows]
     return m
 
 
@@ -331,7 +360,8 @@ def capture(records: dict, installs: list, base: dict, site: str = "") -> dict:
             hit = _WHERE.match(b.get("where") or "")
             if not hit or hit.group(1) not in entries:
                 continue
-            i = int(hit.group(2)) - len(base.get(hit.group(1)) or [])
+            kept = len(m.get(hit.group(1)) or []) - len(entries[hit.group(1)])  # the app's own entries come first
+            i = int(hit.group(2)) - kept
             if 0 <= i < len(entries[hit.group(1)]):
                 drop.setdefault((hit.group(1), i), b["reason"])
         if not drop:
