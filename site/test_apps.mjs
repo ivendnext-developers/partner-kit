@@ -144,6 +144,8 @@ check("J2-06: the name and its line", G.name === "Name your app" && G.appName ==
 // J1 DEVSTART: Start blank, the first tile of New app; the same Name, Made and Try a sample's app gets
 check("Start blank: its words", G.blank === "Start blank" && G.blankTitle === "My app" && !INSIDE_WORDS.test(G.blankHint) &&
   G.blankHint === "No sample matches the need? Start with an empty app: its README lists each kind you can add, with an example and its recipe. You can add a sample to it later.");
+check("a blank app's What it covers says so, never an empty list", G.blankCovers === "A blank app: no sample in it yet. Its README.md lists what you can add." &&
+  src.includes('(a.samples || []).length ? "Built in this app: "') && src.includes(": G.blankCovers));"));
 check("Start blank: Making says a blank app", a.making("My app", 0) === "Making My app, a blank app…");
 check("Start blank is the first tile of New app, before the search and every sample card",
   /if \(g\.mode === "new"\) wrap\.appendChild\(blankTile\(\)\);[^\n]*\n\s*if \(!site\.index\)/.test(src) &&
