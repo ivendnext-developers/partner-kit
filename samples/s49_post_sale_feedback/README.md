@@ -44,6 +44,10 @@ ivn try
 
 ## Versions
 
+### 1.1.1 (manifest 0.2.1)
+
+- `role_rights` give **PP PSF Manager** *Select* on *POS Profile*, so a manager picks a rule's POS Profiles with no Role Permissions step.
+
 ### 1.1.0
 
 - The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
