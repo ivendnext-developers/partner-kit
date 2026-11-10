@@ -43,7 +43,9 @@ ivn try
 
 ## Versions
 
-### 1.2.1 (manifest 0.2.1)
+### 1.2.1
+
+Manifest 0.2.1.
 
 - *Make code* on several records says *Print each card from its form's Print menu*, not *Print its card*.
 - `role_rights` give **PP GOR Manager** *Read* and *Select* on *Retail Floor Place* and *Select* on *Warehouse*, so the people who make the codes need no Role Permissions step.

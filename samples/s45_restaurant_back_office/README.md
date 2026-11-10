@@ -42,7 +42,9 @@ ivn try
 
 ## Versions
 
-### 1.2.1 (manifest 0.3.1)
+### 1.2.1
+
+Manifest 0.3.1.
 
 - The description says *the retailer's own* recipe, Material Issue and word list where it said *the shop's*. An update over 1.1.0 works from POS build `2.1.0.696`.
 

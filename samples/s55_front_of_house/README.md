@@ -42,7 +42,9 @@ ivn try
 
 ## Versions
 
-### 1.1.1 (manifest 0.2.1)
+### 1.1.1
+
+Manifest 0.2.1.
 
 - The *Seat key* help says what the service does: set when Seat opens the table's check and kept with it, so a second press returns that check; cleared when Seat is refused.
 - `role_rights` give **PP FOH Host** *Read* on *Retail Floor Place* and *Select* on *Warehouse*, *POS Invoice* and *Customer*, so a host needs no Role Permissions step.

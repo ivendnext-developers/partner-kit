@@ -41,7 +41,9 @@ ivn try
 
 ## Versions
 
-### 1.3.2 (manifest 0.3.1)
+### 1.3.2
+
+Manifest 0.3.1.
 
 - `role_rights` give **PP KSC Integration** *Read* on *POS Profile* and on *Item*: the install does what the retailer's administrator did by hand. The write on *Retail Item Availability* stays the retailer's choice.
 - The words say a station with no printer is a kitchen screen: list it on the sending register's *Kitchen Printers* with no printer; offline, its tickets print on the till's paper and are not on the screens.

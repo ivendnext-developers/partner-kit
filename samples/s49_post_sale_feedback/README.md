@@ -44,7 +44,9 @@ ivn try
 
 ## Versions
 
-### 1.1.1 (manifest 0.2.1)
+### 1.1.1
+
+Manifest 0.2.1.
 
 - `role_rights` give **PP PSF Manager** *Select* on *POS Profile*, so a manager picks a rule's POS Profiles with no Role Permissions step.
 
