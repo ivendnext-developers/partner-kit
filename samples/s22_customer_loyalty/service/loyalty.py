@@ -130,6 +130,8 @@ def on_sale(t, s: Settings, invoice: str, today: str) -> dict:
         return {"result": "not booked"}
     if inv.get("is_return"):
         return on_return(t, s, inv)
+    if _nothing_paid(inv):                      # an order placed for another store takes no payment at the till: its own
+        return {"result": "not paid yet"}       # sale record earns when the money lands (the feed hands it over then)
     m = member(t, s, inv.get("customer"), today)
     if m is None:
         return {"result": "no member"}
@@ -149,6 +151,11 @@ def on_sale(t, s: Settings, invoice: str, today: str) -> dict:
         "posting_date": posted, "credit_on": day(posted, s.return_days + 1)})
     tell_outside(s, inv["customer"], invoice, value, amount, key("POS Invoice", invoice, "earn"))
     return {"result": "earned" if amount > 0 else "nothing to earn", "earned": str(amount), "row_made": made}
+
+
+def _nothing_paid(inv: dict) -> bool:
+    """A booked sale with a total and nothing received on it: cash back is earned on money the customer paid."""
+    return "paid_amount" in inv and money.D(inv.get("paid_amount")) <= 0 < money.D(inv.get("grand_total"))
 
 
 def tell_outside(s: Settings, customer: str, ref: str, value, earned, idem: str):
