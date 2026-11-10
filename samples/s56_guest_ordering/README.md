@@ -41,6 +41,8 @@ ivn try
 - Send an order from the phone; it waits on the table's check on the till.
 - Close the till day when you are done.
 
+The hosted service reserves 10 of the account's concurrent copies, shared by every store that installs it; a menu read is kept two minutes per copy, so a busy evening's guests read the store once a copy rather than once a guest.
+
 ## Versions
 
 ### 1.2.1
@@ -49,7 +51,6 @@ Manifest 0.2.1.
 
 - *Make code* on several records says *Print each card from its form's Print menu*, not *Print its card*.
 - `role_rights` give **PP GOR Manager** *Read* and *Select* on *Retail Floor Place* and *Select* on *Warehouse*, so the people who make the codes need no Role Permissions step.
-- The hosted service reserves 10 of the account's concurrent copies; a chain's guests on a busy evening share them (a menu read is kept two minutes per copy).
 
 ### 1.2.0
 

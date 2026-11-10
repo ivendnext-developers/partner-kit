@@ -24,7 +24,7 @@ What a partner usually changes:
 
 More: the [recipe](../../recipes/kitchen_screen.md).
 
-**The customer sets:** the stations as the till's own *Kitchen Stations*, each station listed on the register that sends (under *Kitchen Printers*, with its printer, or with none for a screen only), one `PP KSC Settings` record for the company with a row per store, the role **PP KSC Manager** for whoever makes the screens, and one `PP KSC Screen` for each screen, with **Make link** pressed and the link opened full screen on its browser. The manifest's `role_rights` give **PP KSC Integration** *Read* on *POS Profile* and *Item* (a ticket in the store's usual service mode shows no pill; a cook finds any dish by name). Only for sold out, give it *Read*, *Write* and *Create* on *Retail Item Availability*. The app's user needs a Retail Permission with only **May Work a Kitchen Screen**.
+**The customer sets:** the stations as the till's own *Kitchen Stations*, each station listed on the register that sends (under *Kitchen Printers*, with its printer, or with none for a screen only), one `PP KSC Settings` record for the company with a row per store, the role **PP KSC Manager** (the install gives it *Select* on *Warehouse* and *Kitchen Station*) for whoever makes the screens, and one `PP KSC Screen` for each screen, with **Make link** pressed and the link opened full screen on its browser. The manifest's `role_rights` give **PP KSC Integration** *Read* on *POS Profile* and *Item* (a ticket in the store's usual service mode shows no pill; a cook finds any dish by name). Only for sold out, give it *Read*, *Write* and *Create* on *Retail Item Availability*. The app's user needs a Retail Permission with only **May Work a Kitchen Screen**.
 
 ## Run it
 
@@ -45,7 +45,7 @@ ivn try
 
 Manifest 0.3.1.
 
-- `role_rights` give **PP KSC Integration** *Read* on *POS Profile* and on *Item*: the install does what the retailer's administrator did by hand. The write on *Retail Item Availability* stays the retailer's choice.
+- `role_rights` give **PP KSC Integration** *Read* on *POS Profile* and on *Item*, and **PP KSC Manager** *Select* on *Warehouse* and *Retail Kitchen Station*: the install does what the retailer's administrator did by hand. The write on *Retail Item Availability* stays the retailer's choice.
 - The words say a station with no printer is a kitchen screen: list it on the sending register's *Kitchen Printers* with no printer; offline, its tickets print on the till's paper and are not on the screens.
 
 ### 1.3.1

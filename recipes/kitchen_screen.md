@@ -4,7 +4,7 @@ Every restaurant past the first one runs its kitchen from screens. The till alre
 
 **Reference implementation:** `samples/s59_kitchen_screen/`.
 
-**When to use it.** Quick service, full service, a bar, a café, a cloud kitchen, a hotel's restaurant: any store whose till sends to kitchen stations. The stations are the till's own *Kitchen Stations*; each dish reaches its station by the station on the item, its item group or the register; the register that sends has a printer row for each station.
+**When to use it.** Quick service, full service, a bar, a café, a cloud kitchen, a hotel's restaurant: any store whose till sends to kitchen stations. The stations are the till's own *Kitchen Stations*; each dish reaches its station by the station on the item, its item group or the register; the register that sends lists each station under *Kitchen Printers*, with its printer or with none for a station that has a screen only.
 
 **The four rules, here.** No code runs inside the retailer's iVendNext. One address is called, your service: by the *Make link* button, and by each screen's page. The service reads and moves tickets only through the till's station-ticket door (`station_tickets`, `station_ticket_move`), as the app's own user, with one right: *May Work a Kitchen Screen*. Sold out goes through the till's own item availability (`item_availability`, `set_item_availability`), at the screen's own store only. The service never voids, comps or changes a line, and never sends a price.
 
@@ -27,7 +27,7 @@ Every restaurant past the first one runs its kitchen from screens. The till alre
 
 ### Screens
 
-5. The manager makes a **PP KSC Screen** for each screen (a manager of one store gets a **User Permission** on *Warehouse* for that store, so their screens reach that store alone; it scopes every store-linked record they open, as for any store-scoped user): its name, its kind (*Station*, *Expo* or *Board*), its store and, for a station screen, its stations (one, or a few on a small kitchen's screen). **Make link** (on one record, or on many ticked in the list) writes the screen's number and its link. The manager opens the link on the screen's browser, full screen.
+5. **PP KSC Manager** is given to whoever sets up the screens; the manifest's `role_rights` already give it **Select** on *Warehouse* and *Retail Kitchen Station*. The manager makes a **PP KSC Screen** for each screen (a manager of one store gets a **User Permission** on *Warehouse* for that store, so their screens reach that store alone; it scopes every store-linked record they open, as for any store-scoped user): its name, its kind (*Station*, *Expo* or *Board*), its store and, for a station screen, its stations (one, or a few on a small kitchen's screen). **Make link** (on one record, or on many ticked in the list) writes the screen's number and its link. The manager opens the link on the screen's browser, full screen.
 6. A link that leaked is replaced by pressing **Make link** again on that record: its number goes up by one and a screen open with the old link stops within 15 seconds. Changing a screen's kind, store or stations stops its link until *Make link* is pressed again.
 
 ### A service
@@ -44,7 +44,7 @@ Day to day the tills send as before; the kitchen taps tickets on its screens; th
 
 ## Limits
 
-- A ticket is on the board only when its station's printer took it from the till: a station with no printer on the sending register, or a printer that refused, has no ticket.
+- A ticket is on the board only when the till sent it to its station: a station the sending register does not list under *Kitchen Printers*, or one whose printer refused it, has no ticket (a station listed with no printer is a kitchen screen and has one).
 - A screen needs the internet. Tickets a till printed while the store was offline are on paper only and never reach the board.
 - A ticket the till's print agent later reports unprinted leaves the board without a bump; its dishes come back on the next *Send*.
 - A screen reads every 3 seconds: a new ticket shows within about 4 seconds. Its corner shows *Last read* in amber when its last good read is older than 15 seconds.

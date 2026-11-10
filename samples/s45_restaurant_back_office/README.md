@@ -47,6 +47,7 @@ ivn try
 Manifest 0.3.1.
 
 - The description says *the retailer's own* recipe, Material Issue and word list where it said *the shop's*. An update over 1.1.0 works from POS build `2.1.0.696`.
+- A site that has not yet been updated to the version that gives the app *Read* on *Retail Open Check* and *Retail Floor Place* still books its issues: the covers, turn and server of its sales stay blank until it is updated.
 
 ### 1.2.0
 

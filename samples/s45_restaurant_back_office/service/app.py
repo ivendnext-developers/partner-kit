@@ -398,10 +398,16 @@ class Service:
             lines = door.rows_in("POS Invoice Item", ["parent", "name", "item_code", "qty", "stock_qty", "net_amount",
                                                       "warehouse", bo.UNDER], "parent", names, parent="POS Invoice")
             paid = sorted({x["custom_mpos_check"] for x in sales if x.get("custom_mpos_check")})
-            checks = {r["name"]: r for r in door.rows_in(CHECK, ["name", "place", "label", "covers", "server", "opened_at",
-                                                                 "service_mode"], "name", paid)} if paid else {}
-            places = sorted({c["place"] for c in checks.values() if c.get("place")})
-            tables = {r["name"]: r.get("label") for r in door.rows_in(PLACE, ["name", "label"], "name", places)} if places else {}
+            try:
+                checks = {r["name"]: r for r in door.rows_in(CHECK, ["name", "place", "label", "covers", "server", "opened_at",
+                                                                     "service_mode"], "name", paid)} if paid else {}
+                places = sorted({c["place"] for c in checks.values() if c.get("place")})
+                tables = {r["name"]: r.get("label") for r in door.rows_in(PLACE, ["name", "label"], "name", places)} if places else {}
+            except TenantError as e:
+                if e.code not in (401, 403):
+                    raise
+                checks, tables = {}, {}     # a site not yet updated to the version that gives the app these reads: the issue books
+                                            # as before, and the covers, turn and server of its sales are left blank
             for c in checks.values():           # the table's own name (Table 12), as the till shows it
                 c["place_label"] = tables.get(c.get("place")) or ""
             profiles = sorted({x["pos_profile"] for x in sales if x.get("pos_profile")})

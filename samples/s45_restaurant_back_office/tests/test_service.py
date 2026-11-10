@@ -130,6 +130,16 @@ class ServiceTest(unittest.TestCase):
                          [("S1", "Table 3", "sam@x", 4, 1, 12.5), ("S2", "", "ben@x", 0, 0, 1.0)])
         self.assertEqual({ln["sale"]: ln["server"] for ln in iss["lines"]}, {"S1": "sam@x", "S2": "ben@x"})
 
+    def test_i20b_a_site_that_has_not_given_the_check_reads_still_books_its_issue(self):
+        shop = fs.FakeTenant(refuse=("LIST Retail Open Check", 403))   # 1.0.x's rights: no read on the till's checks yet
+        shop.sales[0].update(custom_mpos_check="CHK1")
+        shop.open_checks = {"CHK1": {"place": "a1b2c3", "label": "", "covers": 4, "server": "sam@x",
+                                     "opened_at": "2026-10-22 11:40:00", "service_mode": "Eat in"}}
+        self.assertEqual(self.issue(shop)[0], 200)
+        (iss,) = shop.issues.values()
+        self.assertEqual(iss["status"], "Issued")
+        self.assertEqual(len(shop.entries), 1)
+
     def test_i1_one_issue_per_store_and_day_and_its_material_issue(self):
         shop = fs.FakeTenant()
         code, out = self.issue(shop)

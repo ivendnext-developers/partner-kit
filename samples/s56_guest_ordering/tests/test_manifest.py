@@ -102,6 +102,14 @@ class ManifestTest(unittest.TestCase):
         place = {x["fieldname"]: x for x in self.dt[CODE]["fields"]}["place"]
         self.assertEqual(place["options"], "Retail Floor Place")
 
+    def test_r1_the_install_gives_the_human_roles_and_the_services_user_their_rights(self):  # HOSP-KIT1: no Role Permissions step
+        have = {(r["doctype"], r["role"], tuple(r["rights"])) for r in self.m["role_rights"]}
+        for doctype, role, rights in [
+            ('Retail Floor Place', 'PP GOR Manager', ['read', 'select']),
+            ('Warehouse', 'PP GOR Manager', ['select']),
+        ]:
+            self.assertIn((doctype, role, tuple(rights)), have)
+
 
 if __name__ == "__main__":
     unittest.main()
