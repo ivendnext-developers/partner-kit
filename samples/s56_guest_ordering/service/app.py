@@ -35,7 +35,6 @@ GOR_PREFIX (default PP GOR; IVENDNEXT GOR for the library's app)
 
 from __future__ import annotations
 
-import concurrent.futures
 import html
 import http.client
 import json
@@ -67,7 +66,7 @@ DOOR = "/api/method/ivendnext_mpos.api.v1."     # the till's partner API (its op
 STALE = "TimestampMismatchError"     # the shop's refusal of a write whose ``modified`` is not the row's own
 BUDGET_S = 7.0                       # a press, or a guest's call: the shop waits 10 seconds for a press
 READ_S = 4.0                         # one read, within the budget
-PRICERS = 16                         # prices asked at once
+PRICE_BATCH = 500                    # item codes in one item_prices call: the most the till answers
 MENU_KEEP_S = 120                    # a store's menu is read again after this
 MENU_CACHE_MAX = 200                 # stores whose menu one copy keeps
 MENU_SHORT_S = 2                     # a menu some of whose prices the pricer did not give in time is kept only this long
@@ -289,7 +288,7 @@ class Service:
         if not (kept and any(p is LATE for p in kept[3].values())):
             known = {}                                    # a full read prices every item again
         prices = {**{c: known[c] for c in need if c in known},
-                  **self.prices(door, reg, [c for c in need if c not in known], t0)}
+                  **self.prices(door, register, [c for c in need if c not in known], t0)}
         late = any(v is LATE for v in prices.values())    # kept briefly: what the budget skipped is priced next read
         menu = gor.menu_of(items, rows, meta, {c: (None if p is LATE else p) for c, p in prices.items()}, groups,
                            door.base, templates, sizes)
@@ -317,27 +316,28 @@ class Service:
             return {}, {}
         return {t["name"]: t for t in templates if isinstance(t.get("name"), str)}, gor.size_labels(labels)
 
-    def prices(self, door, reg: dict, codes: list[str], t0: float) -> dict:
-        """One unit's list price of each item at the register (its price list, company, currency and walk-in customer,
-        no price rule), side by side. A price the pricer refuses stays blank on the menu; one the time budget skipped is
-        ``LATE``.
-        ⛔ Never a ``rate``: given one, the shop's pricer may write a price row."""
-        def one(code):
+    def prices(self, door, register: str, codes: list[str], t0: float) -> dict:
+        """One unit's list price of each item at the register (its price list, the store's walk-in, no price rule),
+        read with the till's ``item_prices``, 500 codes a call (POS build 2.1.0.697 or later). An item the answer
+        leaves out, or a refusal, stays blank on the menu; a busy or slow shop (429, a timeout, a fault of its own) or
+        a spent time budget leaves the batch ``LATE``: it is asked again at the next read.
+        ⛔ Never a ``rate``: the call takes none, so no price row is written."""
+        prices: dict = {}
+        for i in range(0, len(codes), PRICE_BATCH):
+            chunk = codes[i:i + PRICE_BATCH]
             if self.clock() - t0 > BUDGET_S - 2:
-                return code, LATE
-            args = {"item_code": code, "qty": 1, "doctype": "Sales Invoice", "company": reg.get("company"),
-                    "selling_price_list": reg.get("selling_price_list"), "currency": reg.get("currency"),
-                    "conversion_rate": 1, "plc_conversion_rate": 1, "ignore_pricing_rule": 1,
-                    "customer": reg.get("customer"), "warehouse": reg.get("warehouse")}
+                prices.update({c: LATE for c in chunk})
+                continue
             try:
-                got = door.call("get_item_details", {"args": {k: v for k, v in args.items() if v not in (None, "")}})
-            except TenantError as e:                  # a busy or slow shop (429, a timeout, a fault of its own) is asked
-                return (code, None) if e.refused and e.code != 429 else (code, LATE)    # again at the next read; a refusal is blank
-            return code, (got or {}).get("price_list_rate") if isinstance(got, dict) else None
-        if not codes:
-            return {}
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(PRICERS, len(codes))) as pool:
-            return dict(pool.map(one, codes))
+                got = door.call("item_prices", {"pos_profile": register, "items": chunk})
+            except TenantError as e:
+                late = not e.refused or e.code == 429
+                prices.update({c: LATE if late else None for c in chunk})
+                continue
+            rows = (got or {}).get("items") if isinstance(got, dict) else None
+            asked = {r.get("item_code"): r.get("price_list_rate") for r in rows or [] if isinstance(r, dict)}
+            prices.update({c: asked.get(c) for c in chunk})
+        return prices
 
     # ── the press: Make code ──
     def make_codes(self, door, names: list[str], site: str, secret: bytes) -> dict:

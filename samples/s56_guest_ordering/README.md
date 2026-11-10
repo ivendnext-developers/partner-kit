@@ -45,6 +45,12 @@ The hosted service reserves 10 of the account's concurrent copies, shared by eve
 
 ## Versions
 
+### 1.2.3
+
+Manifest 0.2.3. Needs POS build `2.1.0.697` or later.
+
+- The menu's prices are read with the till's `item_prices`: one call for up to 500 items (was one call for each item), so a guest's menu loads faster. A dish the answer leaves out shows no price, a price of 0 shows 0.00 as before, and a busy store leaves the prices to the next read. A till older than build `2.1.0.697` does not know the call: the menu loads with no prices until the retailer updates.
+
 ### 1.2.2
 
 Needs POS build 2.1.0.682 or later. Manifest 0.2.2.
@@ -61,7 +67,7 @@ Manifest 0.2.1.
 ### 1.2.0
 
 - The guest page reads like a menu: each dish has its picture (a plain tile where it has none), a dish sold in sizes shows once with its sizes together, prices carry the store's plain currency sign, and a running total sits beside *Send order* while the order stays in view.
-- A menu priced more slowly than the read allows no longer stays blank: the service reads 16 prices at once (was 8) and keeps a late menu only 2 seconds, and the page asks again after 3 seconds, up to three times, taking the prices into the menu the guest holds. A store that answers *busy* or slowly gets those prices asked at the next read.
+- A menu priced more slowly than the read allows no longer stays blank: the service reads prices in as few calls as it can (1.2.3: one call for up to 500 items) and keeps a late menu only 2 seconds, and the page asks again after 3 seconds, up to three times, taking the prices into the menu the guest holds. A store that answers *busy* or slowly gets those prices asked at the next read.
 - A dish the till refuses at the add (sold out, or not sold now) is said to the guest in the till's own words, naming the dish (*Not available now: Latte (sold out). Take it off to carry on.*).
 - Sizes show cheapest first and the cheapest is picked; a size's line on the order reads *Dish · Size*; an answer to *Send order* is scrolled into view above the sticky panel.
 - The retailer's words sit in `<bdi>` inside a block of the page's own direction, never a guessed one (as S59).

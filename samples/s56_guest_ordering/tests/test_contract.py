@@ -21,6 +21,14 @@ class ContractTest(unittest.TestCase):
         for value in (gor.message("GOR-CODE-00001's code is made (number 1)."), gor.message("x " * 400, "warning")):
             self.assertEqual(check.errors("desk_action", "answer", value), [])
 
+    def test_the_price_read_holds(self):
+        shop = F.FakeTenant(codes=[F.code("GOR-CODE-00001")])
+        svc = service(shop, Clock())
+        guest(svc, "/gor/menu", made(shop, svc))
+        self.assertTrue(shop.priced)
+        for req in shop.priced:
+            self.assertEqual(check.errors("open_check", "item_prices_request", req), [])
+
     def test_the_calls_to_the_door_hold(self):
         for kind, code in (("Table", "GOR-CODE-00001"), ("Kiosk", "GOR-CODE-00002")):
             shop = F.FakeTenant(codes=[F.code(code, kind=kind, kiosk_name="By the door")])

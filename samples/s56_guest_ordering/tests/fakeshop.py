@@ -83,6 +83,8 @@ class FakeTenant:
         self.clock = datetime.datetime(2026, 10, 29, 19, 0, 0)
         self.calls, self.sent = [], []
         self.slow, self.tick = set(), None
+        self.lose_price = False
+        self.priced = []                 # the item_prices requests
 
     def _gate(self, what):
         self.calls.append(what)
@@ -147,12 +149,19 @@ class FakeTenant:
     def call(self, verb, body=None, query=None):
         self._gate(f"CALL {verb}")
         self.sent.append(copy.deepcopy(body or query))
-        if verb == "get_item_details":
-            args = body["args"]
-            assert "rate" not in args and "price_list_rate" not in args
-            if args["item_code"] in self.slow and self.tick is not None:
+        if verb == "item_prices":
+            self.priced.append(self.sent.pop())                     # a price read is not an order: kept apart
+            if self.lose_price:
+                raise app.TenantError("item_prices -> no answer")      # a timeout or a fault of the store's own: no status
+            assert set(body) == {"pos_profile", "items"} and body["pos_profile"] == REG, body    # never a rate
+            codes = body["items"]
+            if not 1 <= len(codes) <= 500:
+                raise app.TenantError("item_prices -> HTTP 417", 417, "ValidationError", "Name 1 to 500 item codes.")
+            if self.slow & set(codes) and self.tick is not None:
                 self.tick.t += 6                                    # a slow answer: the service's time budget runs out
-            return {"item_code": args["item_code"], "price_list_rate": PRICES.get(args["item_code"], 0.0)}   # no row: 0.0
+            return {"pos_profile": REG, "price_list": "Standard Selling", "currency": "USD",
+                    "items": [{"item_code": c, "price_list_rate": PRICES.get(c, 0.0)}   # no row: 0.0
+                              for c in dict.fromkeys(codes) if not c.startswith("GHOST")]}   # an item it cannot read is left out
         if verb == "floor_status":
             places = []
             for p in LABELS:
