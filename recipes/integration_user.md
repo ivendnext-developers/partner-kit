@@ -8,7 +8,7 @@ A connected app signs in to a retailer's iVendNext **from outside**, with an API
 
 ## Steps (an app with no event feed)
 
-The retailer's administrator does these in iVendNext Desk. An app with an event feed does not make its user by hand (step 2): the install makes its user and role (below), and the install gives the role read on every record type the feed follows, your manifest's `role_rights` hold any further right, and the retailer, for a service the retailer hosts or the maker hosts, presses **Generate Keys** (step 3).
+The retailer's administrator does these in iVendNext Desk. An app with an event feed does not make its user by hand (step 2): the install makes its user and role (below), and an app that lists `app_user_rights` also gets the user's Retail Permission, *Is POS User*, store rows and Shift Profile (step 2 is then done for you), and the install gives the role read on every record type the feed follows, your manifest's `role_rights` hold any further right, and the retailer, for a service the retailer hosts or the maker hosts, presses **Generate Keys** (step 3).
 
 1. **Give a role for this app alone the rights it needs** (Desk → Role Permissions Manager; Desk → Role → New only if no role of that name exists). A role your manifest names anywhere (a permission row, a workflow, a report or a button) is made at install, empty, so nobody makes it first; a role with your prefix goes at uninstall, and any other name stays the retailer's. Give it only what the app reads and writes. The bin-location sample's role, for example:
 
