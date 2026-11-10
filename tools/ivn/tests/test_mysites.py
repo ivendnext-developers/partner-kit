@@ -56,7 +56,8 @@ class Stub(B.Stub):
     def publish_status(self, b):
         out = super().publish_status(b)
         if out.get("done"):
-            out["install_now"] = [{"site": ACME_LIVE, "label": "Acme live",
+            out["send"] = [*(out.get("send") or []), {"site": ACME_LIVE, "message": "shelf message for " + ACME_LIVE}]
+            out["install_now"] = [{"site": ACME_LIVE, "key_address": ACME_LIVE, "label": "Acme live",
                                    "installed": bool(getattr(self, "publish_status_installed", False))}]
         return out
 
@@ -141,12 +142,15 @@ class MySites(B.Base):
     def test_publish_without_install_installs_nothing_and_a_done_site_is_skipped(self):
         folder, _ = self.made()
         self.in_app(folder)
-        self.assertEqual(self.run_ivn("publish", "--to", "Acme live", "--plan", "starter", stdin="1\n")[0], 0)
-        self.assertEqual(self.stub.installs, 0)
+        rc, out = self.run_ivn("publish", "--to", "Acme live", "--plan", "starter", stdin="1\n")
+        self.assertEqual((rc, self.stub.installs), (0, 0))
+        self.assertIn(B.ivn.WORDS["install_hint"].format(name=f"Acme live ({ACME_LIVE})", to="Acme live"), out)  # J6f F2
+        self.assertNotIn("shelf message for " + ACME_LIVE, out)  # nothing to forward to its administrator
         self.stub.publish_status_installed = True
         rc, out = self.run_ivn("publish", "--to", "Acme live", "--plan", "starter", "--install", stdin="1\n")
         self.assertEqual((rc, self.stub.installs), (0, 0))
         self.assertNotIn("Installing", out)
+        self.assertNotIn("your company holds its key", out)  # --install installs: no hint
 
     def test_a_subcommand_without_its_site_says_how(self):
         rc, out = self.run_ivn("sites", "label", "shop.acme.example")

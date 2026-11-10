@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """sandbox_check — is my sandbox site ready to build on?
 
-Run it with your site's address and an API key of your site's administrator (Desk → your user → API Access →
-Generate Keys). Python 3 standard library only; the last check also needs bash, curl and jq, as the request
-collection does.
+Run it with your site's address and an API key of your site's administrator (Desk → your user → its Settings tab →
+API Access → Generate Keys). Python 3 standard library only; the last check also needs bash, curl and jq, as the
+request collection does.
 
     BASE=https://<your-sandbox-site> KEY=<api key> SECRET=<api secret> python3 tools/sandbox_check/check.py
 
