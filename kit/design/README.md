@@ -1,8 +1,8 @@
 # iVendNext partner design kit — `ivn-kit` 0.1.0
 
-Your page opens inside iVendNext: as a sheet on the till, as a page under the Desk header, or as a customer portal. This kit makes it look like our own screens. It is one CSS file and one optional JavaScript file. Plain CSS, small plain JavaScript, no framework, no build step, no npm package, no licensed UI library.
+Your page opens inside iVendNext: as a sheet on the till, as a page under the Desk header, or as a customer portal; or it is a page a guest reads on a phone (a QR menu), or a screen on a wall. This kit makes it look like our own screens. It is one CSS file and one optional JavaScript file. Plain CSS, small plain JavaScript, no framework, no build step, no npm package, no licensed UI library.
 
-**When to use it:** any page of yours that a cashier, a back-office user or a retailer's customer sees inside iVendNext.
+**When to use it:** any page of yours that a cashier, a back-office user or a retailer's customer sees inside iVendNext, and any guest page or wall screen of a retailer's.
 
 ## 1. Include it
 
@@ -12,6 +12,13 @@ Copy `ivn-kit.css` (and `ivn-kit.js` if you want its behaviour) next to your pag
 <link rel="stylesheet" href="ivn-kit.css">
 <script src="ivn-kit.js"></script>        <!-- optional -->
 <body class="ivn"> … </body>
+```
+
+Two more files, each for one kind of page (copy it beside the page and load it after `ivn-kit.css`; they use only the tokens below):
+
+```html
+<link rel="stylesheet" href="guest.css">   <!-- a page a guest reads on a phone: <body class="ivn ivn-guest"> -->
+<link rel="stylesheet" href="wall.css">    <!-- a screen read from a metre: <body class="ivn ivn-wall" data-size="standard"> -->
 ```
 
 ## 2. Take the tenant's theme and language from your context
@@ -59,7 +66,7 @@ The values are in `ivn-kit.css` §1–2. Fonts are not themeable and the kit shi
 
 ## 5. Tokens only
 
-A partner page uses no colour or font of its own: no `#hex`, `rgb()`, `hsl()` or named colour, no `font-family`. Use the classes, or `var(--ivn-…)` in your own layout CSS. Icons are inline SVG with `stroke="currentColor"` or `fill="currentColor"`. Run the check on your page before you send it: `tools/check_kit.sh your-page.html`. Besides tokens only, it checks the kit version your page loads (your own copy, at this kit's version), contrast on the colours your page sets itself, and the page drawn right-to-left.
+A partner page uses no colour or font of its own: no `#hex`, `rgb()`, `hsl()` or named colour, no `font-family`. Use the classes, or `var(--ivn-…)` in your own layout CSS. Icons are inline SVG with `stroke="currentColor"` or `fill="currentColor"`. Run the check on your page before you send it: `tools/check_kit.sh your-page.html`. It reads the stylesheets your page links as well (not the kit's `ivn-kit*.css`), so your own `page.css` is held to tokens only too. Besides tokens only, it checks the kit version your page loads (your own copy, at this kit's version), contrast on the colours your page sets itself, and the page drawn right-to-left.
 
 ## 6. Components (class names)
 
@@ -77,8 +84,10 @@ A partner page uses no colour or font of its own: no `#hex`, `rgb()`, `hsl()` or
 | Dialog | `<dialog class="ivn-dialog">` with `ivn-dialog-head` · `-title` · `-body` · `-foot`; open with `data-ivn-open="id"` or `ivnKit.openDialog(el)`, close with `data-ivn-close="value"`, Esc or a click outside |
 | Toast | `ivnKit.toast("Saved", {kind: "success" \| "error", timeout: 4000})` — text only |
 | Till sheet | `ivn-sheet` · `ivn-sheet-grab` · `ivn-sheet-head` · `ivn-sheet-body` · `ivn-sheet-foot` (≤ 480px) |
+| Guest page (`guest.css`, phone first) | `ivn-guest` on `<body>` · `ivn-guest-col` (the 36rem column) · `ivn-guest-top` · `-where` · `-hint` · `ivn-guest-menu` · `-section` · `ivn-guest-dish` · `-dish-row` · `-photo` · `-tile` · `-dish-body` · `-dish-head` · `-dish-name` · `-price` · `-sizes` (size buttons are `ivn-chip`) · `ivn-guest-choose` · `-group` · `-rule` · `-choice` · `ivn-guest-basket` (a bar that sticks to the foot) · `-basket-title` · `-lines` · `-line` · `-qty` · `-foot` · `-total` · `ivn-guest-note` (+ `is-done`). Buttons are the kit's `ivn-btn`, at least 44px. A public guest page has no signed context: it takes its language from the device and its look from the device's light or dark setting; a service that holds a retailer's look applies it with `ivnKit.applyTheme` |
+| Wall screen (`wall.css`, landscape) | `ivn-wall` on `<body>` with `data-size` = `compact` · `standard` · `large` · `xlarge` (one unit, `--u`, grows with the screen and the step) · `ivn-wall-head` · `-title` · `-sub` · `-tools` · `-tool` · `-dir` · `-more` · `-read` · `ivn-wall-strip` · `ivn-wall-board` (whole cards in a grid, never scrolled) · `ivn-wall-card` (`is-warn` · `is-late` · `is-ready`) · `-card-head` · `-card-title` · `-card-body` · `ivn-wall-state` (a chip: always an icon, a word and a colour; `is-info` · `is-ok` · `is-warn` · `is-late`) · `ivn-wall-icon` · `ivn-wall-empty` · `ivn-wall-note`. Your script shows only the cards that fit and pages the rest (the kitchen screen, S59, does) |
 
-`templates/` holds one working page per placement: `desk_page.html`, `till_sheet.html`, `portal.html` (open each with `?theme=dark` or `?dir=rtl`). `templates/sample-theme.js` stands in for the context's `theme` field.
+`templates/` holds one working page per placement: `desk_page.html`, `till_sheet.html`, `portal.html`, `guest_page.html`, `wall_screen.html` (open each with `?theme=dark` or `?dir=rtl`). `templates/sample-theme.js` stands in for the context's `theme` field.
 
 ## 7. What the kit does not do
 
@@ -90,10 +99,10 @@ A partner page uses no colour or font of its own: no `#hex`, `rgb()`, `hsl()` or
 
 ## 8. Files
 
-`ivn-kit.css` · `ivn-kit.js` · `templates/` · `tools/check_kit.sh` (the exit check) · `tools/check_page.py` (the page checks it runs) · `tools/test_page_checks.sh` (proves each page check can fail) · `tools/contrast.py` · `tools/test_kit_js.html` (behaviour test) · `tools/render_templates.sh` + `tools/frame.html` (screenshots).
+`ivn-kit.css` · `ivn-kit.js` · `guest.css` · `wall.css` (the guest-page and wall-screen frames: tokens only, kit version 0.1.0, no bump of their own) · `templates/` · `tools/check_kit.sh` (the exit check) · `tools/check_page.py` (the page checks it runs) · `tools/test_page_checks.sh` (proves each page check can fail) · `tools/contrast.py` · `tools/test_kit_js.html` (behaviour test) · `tools/render_templates.sh` + `tools/frame.html` (screenshots).
 
 ## Technical notes
 
 > **Source of the token values** (a copy that must stay current with its source): design-system repo `iVendNext_PWA`, path `design_system/foundations/` (`00-tokens-desk.html` for light, `00-tokens-pos-dark.html` for dark, `00-tokens-pos.html` for the sample till theme), SHA `05bb4dab92f294edac7b9d5bbac697d3072a4978`. **A defect here is a defect there — send it with the [Kit defect](../../feedback/kit_defect.md) form; we pass it on to the design system's owners.** Values the design system does not hold are marked `kit` in `ivn-kit.css`.
 
-> **The page checks** (`tools/check_page.py`, run by `check_kit.sh` on every page it is given; the default is the three templates). *Proven:* `tools/test_page_checks.sh` builds three pages that are right (one with a dark-only look, a primary button styled in two rules, a part kept left-to-right on purpose) and fourteen planted ones — a stale copy of the kit, no kit stylesheet, a link to a missing file, a remote address, a commented-out link, a text colour under 4.5:1 in light and one only in dark, the same in a single-quoted `style`, a token that does not exist, a margin and a float set to the left, an icon margin set to the right on an inline element, text pinned right, content wider than the window — and requires each right page to pass and each planted one to fail with its own reason (a crash does not count as a refusal). *Not proven or not covered:* contrast reads only a text colour and a background set together in one rule or one `style`, so the pairs inside the kit's classes (`contrast.py` reads those), a colour set alone, a colour reached through another variable of your own, and a tenant's theme overrides are not read, and the three templates set no colour of their own, so their pass on contrast reads no pair; the right-to-left check compares block boxes and every element's margins and paddings between the two drawings and skips the insides of an icon and anything under `dir="ltr"`; it reads one window size (set `IVN_PAGE_SIZE`); a screen review by eye is not done by the script.
+> **The page checks** (`tools/check_page.py`, run by `check_kit.sh` on every page it is given; the default is the five templates). *Proven:* `tools/test_page_checks.sh` builds four pages that are right (one with a dark-only look, a primary button styled in two rules, a part kept left-to-right on purpose, one linking a stylesheet of its own that keeps to the tokens) and fifteen planted ones — a stale copy of the kit, no kit stylesheet, a link to a missing file, a remote address, a commented-out link, a text colour under 4.5:1 in light and one only in dark, the same in a single-quoted `style`, a hex colour in a stylesheet the page links (refused by `check_kit.sh`'s tokens-only section), a token that does not exist, a margin and a float set to the left, an icon margin set to the right on an inline element, text pinned right, content wider than the window — and requires each right page to pass and each planted one to fail with its own reason (a crash does not count as a refusal). *Not proven or not covered:* contrast reads only a text colour and a background set together in one rule or one `style`, so the pairs inside the kit's classes (`contrast.py` reads those), a colour set alone, a colour reached through another variable of your own, and a tenant's theme overrides are not read, and the five templates set no colour of their own, so their pass on contrast reads no pair; the right-to-left check compares block boxes and every element's margins and paddings between the two drawings and skips the insides of an icon and anything under `dir="ltr"`; it reads one window size (set `IVN_PAGE_SIZE`); a screen review by eye is not done by the script.

@@ -29,6 +29,15 @@ class ContractTest(unittest.TestCase):
         for req in shop.priced:
             self.assertEqual(check.errors("open_check", "item_prices_request", req), [])
 
+    def test_the_name_read_holds(self):
+        shop = F.FakeTenant(codes=[F.code("GOR-CODE-00001")])
+        svc = service(shop, Clock())
+        guest(svc, "/gor/menu", made(shop, svc), lang="es")
+        self.assertTrue(shop.named)
+        for req in list(shop.named):
+            self.assertEqual(check.errors("open_check", "item_names_request", req), [])
+            self.assertEqual(check.errors("open_check", "item_names_answer", shop.call("item_names", req)), [])
+
     def test_the_calls_to_the_door_hold(self):
         for kind, code in (("Table", "GOR-CODE-00001"), ("Kiosk", "GOR-CODE-00002")):
             shop = F.FakeTenant(codes=[F.code(code, kind=kind, kiosk_name="By the door")])

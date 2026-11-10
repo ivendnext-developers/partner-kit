@@ -1,9 +1,9 @@
 #!/bin/bash
 # ivn-kit 0.1.0 · the kit's exit check. Run from anywhere:
-#   tools/check_kit.sh                 checks the kit and its three templates
+#   tools/check_kit.sh                 checks the kit and its five templates
 #   tools/check_kit.sh page.html ...   runs checks (b), (b2), (b3) and (e) on those partner pages instead
 # (a) no licensed or third-party UI library, and nothing loaded from a CDN or remote URL
-# (b) tokens only: no colour literal or font in a page — colours come from --ivn-* variables
+# (b) tokens only: no colour literal or font in a page or in a stylesheet it links (but the kit's own ivn-kit*.css) — colours come from --ivn-* variables
 # (b2) the kit version a page loads: its own copy, the same version as this kit (tools/check_page.py)
 # (b3) contrast on the page's own text/background pairs, light and dark (tools/check_page.py)
 # (c) contrast numbers for both themes (tools/contrast.py)
@@ -35,7 +35,7 @@ if [ -n "$NET" ]; then echo "FAIL ivn-kit.js makes network calls:"; echo "$NET";
 echo; echo "== (b) tokens only (no colour literal or font outside the kit) =="
 PAGES=(${ARGS[@]+"${ARGS[@]}"}); [ ${#PAGES[@]} -eq 0 ] && PAGES=(templates/*.html)
 python3 - "${PAGES[@]}" <<'PY' || FAILS=$((FAILS+1))
-import re, sys
+import os, re, sys
 COLOUR_PROPS = r"(?<![\w-])(color|background|background-color|border|border-[a-z-]*color|border-(?:top|bottom|left|right|block|inline)(?:-start|-end)?|outline|outline-color|fill|stroke|box-shadow|text-shadow|caret-color|accent-color)\s*:\s*([^;\"'}]+)"
 OK_VALUE = re.compile(r"^(var\(--ivn-[a-z0-9-]+\)|currentcolor|transparent|inherit|none|0)$", re.I)
 rules = [
@@ -45,7 +45,16 @@ rules = [
     ("svg colour attribute", re.compile(r"\b(?:fill|stroke|color|stop-color)\s*=\s*[\"'](?!none[\"']|currentColor[\"'])", re.I)),
 ]
 bad = 0
-for path in sys.argv[1:]:
+pages = sys.argv[1:]
+files = list(pages)
+for page in pages:   # a page's own local stylesheets are read too (not the kit's ivn-kit*.css): its look must be tokens only as well
+    markup = re.sub(r"<!--.*?-->", "", open(page, encoding="utf-8").read(), flags=re.S)
+    for ref in re.findall(r"<link\b[^>]*\bhref\s*=\s*[\"']([^\"']+\.css)(?:\?[^\"']*)?[\"']", markup, re.I):
+        css = os.path.normpath(os.path.join(os.path.dirname(page), ref))
+        if not re.match(r"^(?:[a-z][a-z0-9+.-]*:)?//", ref, re.I) and not os.path.basename(css).startswith("ivn-kit") \
+                and os.path.isfile(css) and css not in files:
+            files.append(css)
+for path in files:
     for n, line in enumerate(open(path, encoding="utf-8"), 1):
         for name, rx in rules:
             if rx.search(line):
@@ -54,7 +63,7 @@ for path in sys.argv[1:]:
             for part in value.split():
                 if re.match(r"^[a-z]+$", part, re.I) and not OK_VALUE.match(part) and part.lower() not in ("solid", "dashed", "dotted", "double", "inset"):
                     bad += 1; print("FAIL %s:%d named colour in %s: %s" % (path, n, prop, part))
-print(("PASS" if not bad else "FAIL") + " tokens only — %d page(s): %s" % (len(sys.argv) - 1, ", ".join(sys.argv[1:])))
+print(("PASS" if not bad else "FAIL") + " tokens only — %d page(s), %d stylesheet(s) of their own: %s" % (len(pages), len(files) - len(pages), ", ".join(pages)))
 sys.exit(1 if bad else 0)
 PY
 

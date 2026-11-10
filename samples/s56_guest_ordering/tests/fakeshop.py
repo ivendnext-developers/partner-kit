@@ -50,6 +50,7 @@ ROWS = [   # the dishes' Cross Selling Product Detail rows
 GROUPS = {"Milk": {"name": "Milk", "display_name": "Milk", "min_picks": 1, "max_picks": 1, "enabled": 1},
           "Extras": {"name": "Extras", "display_name": "Extras", "min_picks": 0, "max_picks": 2, "enabled": 1},
           "Toppings": {"name": "Toppings", "display_name": "Toppings", "min_picks": 0, "max_picks": 2, "enabled": 1}}
+NAMES = {"es": {"LATTE": "Café con leche", "BURGER": "Hamburguesa", "COW": "Leche entera", "COLD": "Café frío"}}   # the store's own translations
 PRICES = {"LATTE": 3.2, "BURGER": 11.0, "SALAD": 7.5, "COW": 0.0, "SHOT": 0.8, "COLD-R": 4.0, "COLD-L": 4.5}
 
 
@@ -84,6 +85,7 @@ class FakeTenant:
         self.calls, self.sent = [], []
         self.slow, self.tick = set(), None
         self.lose_price = False
+        self.named = []                  # the item_names requests
         self.priced = []                 # the item_prices requests
 
     def _gate(self, what):
@@ -162,6 +164,17 @@ class FakeTenant:
             return {"pos_profile": REG, "price_list": "Standard Selling", "currency": "USD",
                     "items": [{"item_code": c, "price_list_rate": PRICES.get(c, 0.0)}   # no row: 0.0
                               for c in dict.fromkeys(codes) if not c.startswith("GHOST")]}   # an item it cannot read is left out
+        if verb == "item_names":
+            self.named.append(self.sent.pop())                      # a name read is not an order either
+            assert set(body) == {"lang", "items"}, body
+            codes = body["items"]
+            if not 1 <= len(codes) <= 500:
+                raise app.TenantError("item_names -> HTTP 417", 417, "ValidationError", "Name 1 to 500 item codes.")
+            words = NAMES.get(body["lang"].lower()[:2], {})
+            written = {i["name"]: i["item_name"] for i in ITEMS}
+            return {"lang": body["lang"],
+                    "items": [{"item_code": c, "item_name": written.get(c, c), "display_name": words.get(c, written.get(c, c)),
+                               "translated": c in words} for c in dict.fromkeys(codes) if not c.startswith("GHOST")]}
         if verb == "floor_status":
             places = []
             for p in LABELS:

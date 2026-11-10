@@ -80,7 +80,7 @@ async function main(opts) {
       img: (d.querySelector(".photo").children[0] || {}).tagName === "IMG" ? d.querySelector(".photo").children[0].src : "",
       tile: !!d.querySelector(".tile"), button: d.querySelector(".add").textContent })),
     bdiWrapped: own.every((e) => e.children[0] && e.children[0].tagName === "BDI"),
-    dirs, htmlDirs, steps, calls: calls.map((c) => c.path), timers: pending.map((t) => t.ms),
+    dirs, htmlDirs, steps, calls: calls.map((c) => c.path), langs: calls.map((c) => c.lang || ""), timers: pending.map((t) => t.ms),
     scrolled: byId.note.scrolled || 0, picks: byId.menu.querySelectorAll(".size").map((b) => b.className),
   };
 }

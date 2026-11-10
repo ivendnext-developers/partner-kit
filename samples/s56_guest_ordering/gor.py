@@ -217,6 +217,25 @@ def menu_of(items: list[dict], rows: list[dict], groups: dict, prices: dict, ord
     return [{"group": g, "dishes": sorted(sections[g], key=lambda d: d["name"].lower())} for g in names]
 
 
+def translated(menu: list[dict], names: dict) -> list[dict]:
+    """A copy of the menu with each name the store translated (``names`` by item code): a dish, the dish a size belongs to,
+    and a choice. Anything it holds no translation for keeps its name as written; the codes, prices and sizes stay."""
+    if not names:
+        return menu
+    out = []
+    for sec in menu:
+        dishes = []
+        for d in sec["dishes"]:
+            d2 = dict(d, name=names.get(d["code"], d["name"]))
+            if "base" in d:
+                d2["base"] = names.get(d.get("family"), d["base"])
+            d2["groups"] = [dict(g, choices=[dict(c, name=names.get(c["code"], c["name"])) for c in g["choices"]])
+                            for g in d["groups"]]
+            dishes.append(d2)
+        out.append(dict(sec, dishes=dishes))
+    return out
+
+
 def dishes_of(menu: list[dict]) -> dict[str, dict]:
     return {d["code"]: d for s in menu for d in s["dishes"]}
 

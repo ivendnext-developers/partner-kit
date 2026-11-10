@@ -6,23 +6,25 @@
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex">
 <title>Order</title>
+<link rel="stylesheet" href="ivn-kit.css">
+<link rel="stylesheet" href="guest.css">
 <link rel="stylesheet" href="page.css">
 </head>
-<body>
-<header class="top">
-  <p id="where" class="where"></p>
-  <p id="hint" class="hint"></p>
+<body class="ivn ivn-guest">
+<header class="ivn-guest-top ivn-guest-col">
+  <p id="where" class="ivn-guest-where"></p>
+  <p id="hint" class="ivn-guest-hint"></p>
 </header>
-<main id="menu" class="menu" aria-live="polite"></main>
-<section id="basket" class="basket" hidden>
-  <h2 id="basket-title"></h2>
-  <ul id="lines" class="lines"></ul>
-  <div class="foot">
-    <p id="total" class="total"></p>
-    <button id="send" type="button" class="send"></button>
+<main id="menu" class="ivn-guest-menu ivn-guest-col" aria-live="polite"></main>
+<section id="basket" class="ivn-guest-basket ivn-guest-col" hidden>
+  <h2 id="basket-title" class="ivn-guest-basket-title"></h2>
+  <ul id="lines" class="ivn-guest-lines"></ul>
+  <div class="ivn-guest-foot">
+    <p id="total" class="ivn-guest-total"></p>
+    <button id="send" type="button" class="ivn-btn ivn-btn-primary"></button>
   </div>
 </section>
-<p id="note" class="note" role="status" aria-live="polite"></p>
+<p id="note" class="ivn-guest-note ivn-guest-col" role="status" aria-live="polite"></p>
 <script src="page.js"></script>
 </body>
 </html>

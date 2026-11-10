@@ -1,0 +1,65 @@
+/* ivn-kit 0.1.0 · wall screen — the frame of a page read from a metre away (a kitchen board, an order-ready screen, a queue
+ * display). Load it after ivn-kit.css and put class="ivn ivn-wall" on <body>. Tokens only: no colour or font of its own.
+ * Lifted from the kitchen screen sample (S59, samples/s59_kitchen_screen/service/page.css); a defect here is a defect there.
+ *
+ * Every size is a multiple of one unit, --u, that grows with the screen and with a size step set as data-size on <body>
+ * ("compact", "standard", "large", "xlarge"): about 4 cards across a 10" tablet, 5 on a 1080p TV, 2 on a tablet held
+ * upright, 1 on a phone. The page never scrolls: your script shows whole cards and pages the rest (see templates/wall_screen.html).
+ * A state is never colour alone: an icon, a word and a colour, together (ivn-wall-state). Controls are never under 44px. */
+body.ivn-wall { --k: 1; --u: calc((8px + 0.45vw + 0.35vh) * var(--k)); margin: 0; block-size: 100vh; block-size: 100dvh;
+  display: flex; flex-direction: column; overflow: hidden; font-size: var(--u); line-height: 1.3; }
+body.ivn-wall[data-size="compact"] { --k: 0.85; }
+body.ivn-wall[data-size="large"] { --k: 1.2; }
+body.ivn-wall[data-size="xlarge"] { --k: 1.45; }
+
+/* head: a title, a line under it, and the tools (page back and forth, a size step) */
+.ivn-wall-head { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: calc(0.4 * var(--u)) calc(0.8 * var(--u));
+  padding: calc(0.5 * var(--u)) calc(1 * var(--u)); border-block-end: 1px solid var(--ivn-border); background: var(--ivn-surface); }
+.ivn-wall-title { margin: 0; font-size: calc(1.5 * var(--u)); font-weight: 700; overflow-wrap: anywhere; }
+.ivn-wall-sub { margin: 0; color: var(--ivn-text-muted); font-size: calc(1.05 * var(--u)); overflow-wrap: anywhere; }
+.ivn-wall-tools { display: flex; flex-wrap: wrap; align-items: center; gap: calc(0.4 * var(--u)); margin-inline-start: auto; }
+.ivn-wall-tool { display: inline-flex; align-items: center; justify-content: center; gap: calc(0.3 * var(--u));
+  min-block-size: max(44px, calc(2.5 * var(--u))); min-inline-size: max(44px, calc(2.5 * var(--u)));
+  padding: 0 calc(0.7 * var(--u)); font-size: calc(1.05 * var(--u)); }
+.ivn-wall-tool[aria-pressed="true"] { background: var(--ivn-primary-tint); border-color: var(--ivn-primary); }
+.ivn-wall-tool.is-late, .ivn-wall-more.is-late { color: var(--ivn-pill-red-ink); border-color: var(--ivn-pill-red-ink); font-weight: 800; }
+html[dir="rtl"] .ivn-wall-dir .ivn-wall-icon { transform: scaleX(-1); }   /* earlier and later point the reading way */
+.ivn-wall-more { margin: 0; font-size: calc(1.05 * var(--u)); font-weight: 700; white-space: nowrap; }
+.ivn-wall-read { margin: 0; color: var(--ivn-text-muted); font-size: max(12px, calc(0.9 * var(--u))); }
+.ivn-wall-read.is-late { color: var(--ivn-pill-orange-ink); background: var(--ivn-pill-orange-bg); padding: 2px calc(0.4 * var(--u));
+  border-radius: var(--ivn-radius); font-weight: 700; }
+.ivn-wall-strip { flex: none; display: flex; flex-wrap: wrap; gap: calc(0.3 * var(--u)) calc(1 * var(--u));
+  padding: calc(0.5 * var(--u)) calc(1 * var(--u)); background: var(--ivn-surface-2); font-size: calc(1.25 * var(--u)); font-weight: 700; }
+
+/* board: whole cards in a grid, never scrolled */
+.ivn-wall-board { flex: 1 1 auto; min-block-size: 0; overflow: hidden; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(17 * var(--u), 100%), 1fr));
+  grid-auto-rows: max-content;   /* a row is as tall as its tallest card, never squeezed by the board's height */
+  gap: calc(0.75 * var(--u)); padding: calc(0.75 * var(--u)) calc(1 * var(--u)); align-items: start; align-content: start; }
+.ivn-wall-empty { grid-column: 1 / -1; margin: 0; padding: calc(1.5 * var(--u)); text-align: center; color: var(--ivn-text-muted);
+  font-size: calc(1.4 * var(--u)); }
+.ivn-wall-note { flex: none; margin: calc(0.5 * var(--u)) calc(1 * var(--u)) 0; font-size: calc(1.15 * var(--u)); }
+
+/* a card: one thing on the wall (an order, a call number, a queue place) */
+.ivn-wall-card { display: flex; flex-direction: column; min-inline-size: 0; background: var(--ivn-surface);
+  border: 3px solid var(--ivn-border-strong); border-radius: var(--ivn-radius-lg); box-shadow: var(--ivn-shadow-sm); overflow: hidden; }
+.ivn-wall-card.is-warn { border-color: var(--ivn-pill-orange-ink); }
+.ivn-wall-card.is-late { border-color: var(--ivn-pill-red-ink); }
+.ivn-wall-card.is-ready { border-color: var(--ivn-pill-green-ink); }
+.ivn-wall-card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: calc(0.3 * var(--u));
+  padding: calc(0.35 * var(--u)) calc(0.6 * var(--u)); background: var(--ivn-surface-2); }
+.ivn-wall-card-title { margin: 0; font-size: calc(1.5 * var(--u)); font-weight: 800; overflow-wrap: anywhere; }
+.ivn-wall-card-body { margin: 0; padding: calc(0.3 * var(--u)) calc(0.6 * var(--u)); font-size: calc(1.35 * var(--u)); font-weight: 700;
+  overflow-wrap: anywhere; }
+
+/* a state chip: icon, word and colour together. Grey is the default; give it a state class. */
+.ivn-wall-state { display: inline-flex; align-items: center; gap: calc(0.3 * var(--u)); padding: 2px calc(0.4 * var(--u));
+  border-radius: var(--ivn-radius-pill); font-size: calc(1 * var(--u)); font-weight: 700; white-space: nowrap;
+  background: var(--ivn-pill-grey-bg); color: var(--ivn-pill-grey-ink); }
+.ivn-wall-state.is-info { background: var(--ivn-pill-blue-bg); color: var(--ivn-pill-blue-ink); }
+.ivn-wall-state.is-ok { background: var(--ivn-pill-green-bg); color: var(--ivn-pill-green-ink); }
+.ivn-wall-state.is-warn { background: var(--ivn-pill-orange-bg); color: var(--ivn-pill-orange-ink); }
+.ivn-wall-state.is-late { background: var(--ivn-pill-red-bg); color: var(--ivn-pill-red-ink); }
+.ivn-wall-icon { inline-size: 1em; block-size: 1em; flex: none; }
+
+.ivn-wall-note[hidden], .ivn-wall-tool[hidden], .ivn-wall-strip[hidden], .ivn-wall-more[hidden] { display: none; }   /* the kit's classes set display */

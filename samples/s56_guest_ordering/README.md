@@ -16,7 +16,7 @@ ivn new acme_guest --from s56
 
 What a partner usually changes:
 
-- **The page:** the look and the languages, in `service/page.css` and the `WORDS` table in `service/page.js`.
+- **The page:** its look is the kit's guest-page template (`service/ivn-kit.css` and `service/guest.css`, copied beside the page: the tokens, dark mode by the device's setting, right to left); your own touches go in `service/page.css`, in the kit's tokens. The languages are the `WORDS` table in `service/page.js`; the dishes' names in a guest's language are the store's own translations (the till's `item_names`).
 - **The menu:** allergens from the retailer's own records, in the service's menu read. A dish's picture (its public file on the retailer's site) and its sizes (an Item for each size, named by its template) already reach the page: the page shows the picture or a plain tile, and a dish's sizes together under the dish.
 - **The limits:** the course word, and the most lines an order and the most of one dish (no limit of their own unless set), on each row of `PP GOR Store` in `manifest.json`.
 - **A new channel:** payment at the kiosk through the retailer's gateway, or a delivery or collection channel.
@@ -44,6 +44,13 @@ ivn try
 The hosted service reserves 10 of the account's concurrent copies, shared by every store that installs it; a menu read is kept two minutes per copy, so a busy evening's guests read the store once a copy rather than once a guest.
 
 ## Versions
+
+### 1.3.0
+
+Manifest 0.2.4. Needs POS build `2.1.0.697` or later.
+
+- The page wears the kit's guest-page look (`guest.css` on `ivn-kit.css`): the kit's buttons, size chips and tokens in place of the page's own colours, so it follows the device's light or dark setting and reads right to left, and every control is at least 44px. Nothing the guest does changes.
+- A guest whose phone is set to a language the page has words for (not English) sees the dishes', sizes' and choices' names in that language where the store has translated them, read with the till's `item_names` (one call for up to 500 items, kept 2 minutes per store and language). A name the store has not translated, or a till that does not answer, shows the name as written. The till, the kitchen ticket and the receipt show the name as written, so a translated dish reads differently on the guest's phone.
 
 ### 1.2.3
 

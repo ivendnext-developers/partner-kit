@@ -1,0 +1,81 @@
+<!doctype html>
+<!-- ivn-kit 0.1.0 template · a wall screen: a page read from a metre away (a kitchen board, an order-ready screen, a queue
+     display). Landscape, big type that scales with the screen, a state shown by icon + word + colour together, whole cards
+     only (never a scrolling page). Try ?theme=light, ?dir=rtl and ?size=large. A real page takes the retailer's look and
+     language from its own service (the kitchen screen sample, S59, does) and applies them with ivnKit.applyTheme and applyDir. -->
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orders in the kitchen</title>
+<link rel="stylesheet" href="../ivn-kit.css">
+<link rel="stylesheet" href="../wall.css">
+<script src="../ivn-kit.js"></script>
+<script>
+  var q = new URLSearchParams(location.search);
+  ivnKit.applyTheme({ mode: q.get("theme") === "light" ? "light" : "dark" });
+  if (q.get("dir") === "rtl") ivnKit.applyDir("ar");
+  document.addEventListener("DOMContentLoaded", function () {
+    if (/^(compact|large|xlarge)$/.test(q.get("size") || "")) document.body.setAttribute("data-size", q.get("size"));
+  });
+</script>
+</head>
+<body class="ivn ivn-wall" data-size="standard">
+<header class="ivn-wall-head">
+  <h1 class="ivn-wall-title">Kitchen</h1>
+  <p class="ivn-wall-sub">Grill · Cold</p>
+  <div class="ivn-wall-tools">
+    <button class="ivn-btn ivn-wall-tool ivn-wall-dir" type="button" aria-label="Earlier orders">
+      <svg class="ivn-wall-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <p class="ivn-wall-more">2 more orders</p>
+    <button class="ivn-btn ivn-wall-tool ivn-wall-dir" type="button" aria-label="Later orders">
+      <svg class="ivn-wall-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button class="ivn-btn ivn-wall-tool" type="button" dir="ltr">A-</button>
+    <button class="ivn-btn ivn-wall-tool" type="button" dir="ltr">A+</button>
+    <p class="ivn-wall-read">Updated 12:41:07</p>
+  </div>
+</header>
+<section class="ivn-wall-strip" aria-label="Waiting to be made"><span>6× Margherita</span><span>3× Caesar salad</span></section>
+<main class="ivn-wall-board">
+  <article class="ivn-wall-card is-late">
+    <div class="ivn-wall-card-head">
+      <p class="ivn-wall-card-title">A-104</p>
+      <span class="ivn-wall-state is-late"><svg class="ivn-wall-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/></svg>14 min · Late</span>
+    </div>
+    <p class="ivn-wall-card-body">2× Margherita</p>
+    <p class="ivn-wall-card-body">1× Caesar salad</p>
+  </article>
+  <article class="ivn-wall-card is-warn">
+    <div class="ivn-wall-card-head">
+      <p class="ivn-wall-card-title">A-105</p>
+      <span class="ivn-wall-state is-warn"><svg class="ivn-wall-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>8 min · Slow</span>
+    </div>
+    <p class="ivn-wall-card-body">1× Burger</p>
+    <p class="ivn-wall-card-body">2× Fries</p>
+  </article>
+  <article class="ivn-wall-card">
+    <div class="ivn-wall-card-head">
+      <p class="ivn-wall-card-title">A-106</p>
+      <span class="ivn-wall-state"><svg class="ivn-wall-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>2 min · On time</span>
+    </div>
+    <p class="ivn-wall-card-body">3× Lemonade</p>
+  </article>
+  <article class="ivn-wall-card is-ready">
+    <div class="ivn-wall-card-head">
+      <p class="ivn-wall-card-title">A-103</p>
+      <span class="ivn-wall-state is-ok"><svg class="ivn-wall-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Ready</span>
+    </div>
+    <p class="ivn-wall-card-body">1× Pasta</p>
+  </article>
+  <article class="ivn-wall-card">
+    <div class="ivn-wall-card-head">
+      <p class="ivn-wall-card-title">A-107</p>
+      <span class="ivn-wall-state is-info"><svg class="ivn-wall-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>Started</span>
+    </div>
+    <p class="ivn-wall-card-body">2× Soup of the day</p>
+  </article>
+</main>
+</body>
+</html>

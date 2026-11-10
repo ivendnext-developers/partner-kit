@@ -232,7 +232,7 @@
   };
   function icon(name) {
     var NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg");
-    svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("class", "ksc-icon"); svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("class", "ivn-wall-icon ksc-icon"); svg.setAttribute("aria-hidden", "true");
     svg.setAttribute("fill", "none"); svg.setAttribute("stroke", "currentColor"); svg.setAttribute("stroke-width", "2.2");
     svg.setAttribute("stroke-linecap", "round"); svg.setAttribute("stroke-linejoin", "round");
     ICONS[name].forEach(function (d) { var p = document.createElementNS(NS, "path"); p.setAttribute("d", d); svg.appendChild(p); });
@@ -255,7 +255,7 @@
   }
   function timerOf(from, look) {
     var m = ageMin(from), cls = m >= look.late ? "is-late" : m >= look.warn ? "is-warn" : "";
-    var t = withIcon("span", "ksc-timer " + cls, cls === "is-late" ? "flame" : cls ? "warn" : "clock",
+    var t = withIcon("span", "ivn-wall-state ksc-timer " + cls, cls === "is-late" ? "flame" : cls ? "warn" : "clock",
       w("min", { n: m }) + " · " + (cls === "is-late" ? w("late") : cls ? w("warn") : w("onTime")));
     t.setAttribute("data-from", from || "");
     return { node: t, cls: cls };
@@ -397,7 +397,7 @@
   }
   function stale() {
     var r = $("read"), late = goodAt && (Date.now() - goodAt) / 1000 > LATE_READ_S;
-    r.className = "ksc-read" + (late ? " is-late" : "");
+    r.className = "ivn-wall-read" + (late ? " is-late" : "");
     r.textContent = goodAt ? w("lastRead", { t: new Date(goodAt).toLocaleTimeString(lang) }) : w("loading");
   }
 
@@ -443,10 +443,10 @@
 
   function ticketCard(t, look, readOnly) {
     var tm = timerOf(t.sent_at, look);
-    var card = el("article", "ksc-ticket ksc-slip " + (t.kind === "void" ? "is-void " : "") + (t.state === "bumped" ? "" : tm.cls));
+    var card = el("article", "ivn-wall-card ksc-ticket ksc-slip " + (t.kind === "void" ? "is-void " : "") + (t.state === "bumped" ? "" : tm.cls));
     card.setAttribute("data-key", t.kitchen_order + "." + t.ticket);
-    var head = el("div", "ksc-ticket-head");
-    head.appendChild(el("p", "ksc-call", t.call_number || "#" + t.ticket, true));
+    var head = el("div", "ivn-wall-card-head ksc-ticket-head");
+    head.appendChild(el("p", "ivn-wall-card-title ksc-call", t.call_number || "#" + t.ticket, true));
     if (t.service_mode) head.appendChild(el("span", "ivn-pill ksc-mode", t.service_mode, true));   // To go, as the till names it
     head.appendChild(tm.node);
     card.appendChild(head);
@@ -477,13 +477,13 @@
 
   function drawStation(main, v, look) {
     var list = showRecall ? v.recall : v.tickets;
-    if (showRecall) main.appendChild(el("p", "ksc-empty", w("recallNote")));
-    if (!list.length && !showRecall) main.appendChild(el("p", "ksc-empty", w("empty")));
+    if (showRecall) main.appendChild(el("p", "ivn-wall-empty ksc-empty", w("recallNote")));
+    if (!list.length && !showRecall) main.appendChild(el("p", "ivn-wall-empty ksc-empty", w("empty")));
     list.forEach(function (t) { main.appendChild(ticketCard(t, look, showRecall)); });
   }
 
   function part(t) {                 // one station's share of an order, on the expo
-    var sec = el("section", "ksc-part" + (t.kind === "void" ? " ksc-ticket is-void" : ""));
+    var sec = el("section", "ksc-part" + (t.kind === "void" ? " ivn-wall-card ksc-ticket is-void" : ""));
     var ph = el("div", "ksc-part-head");
     ph.appendChild(el("span", "", t.station, true));
     ph.appendChild(withIcon("span", "ksc-state", t.kind === "void" ? "cross" : STATE_ICON[t.state],
@@ -502,12 +502,12 @@
       var sp = el("span", "ksc-wait", d.qty + "× "); sp.appendChild(bdi(d.item_name)); strip.appendChild(sp);
     });
     var rest = el("span", "ksc-wait-more"); rest.hidden = true; strip.appendChild(rest);
-    if (!v.orders.length) main.appendChild(el("p", "ksc-empty", w("empty")));
+    if (!v.orders.length) main.appendChild(el("p", "ivn-wall-empty ksc-empty", w("empty")));
     v.orders.forEach(function (o) {
-      var card = el("article", "ksc-order ksc-slip" + (o.bump ? " is-ready" : ""));
+      var card = el("article", "ivn-wall-card ksc-order ksc-slip" + (o.bump ? " is-ready" : ""));
       card.setAttribute("data-key", o.kitchen_order);
-      var head = el("div", "ksc-ticket-head"), tm = timerOf(o.sent_at, look);
-      head.appendChild(el("p", "ksc-call", o.call_number || o.kitchen_order, true));
+      var head = el("div", "ivn-wall-card-head ksc-ticket-head"), tm = timerOf(o.sent_at, look);
+      head.appendChild(el("p", "ivn-wall-card-title ksc-call", o.call_number || o.kitchen_order, true));
       if (o.service_mode) head.appendChild(el("span", "ivn-pill ksc-mode", o.service_mode, true));
       head.appendChild(tm.node);
       card.appendChild(head);
@@ -570,7 +570,7 @@
     if (!so) return;
     var out = {}; so.out.forEach(function (d) { out[d.item_code] = true; });
     var rows = found ? found.slice() : so.dishes.slice();
-    if (found && !found.length) list.appendChild(el("li", "ivn-list-row ksc-empty", w("findNone")));
+    if (found && !found.length) list.appendChild(el("li", "ivn-list-row ivn-wall-empty ksc-empty", w("findNone")));
     if (!found) so.out.forEach(function (d) { if (!rows.some(function (r) { return r.item_code === d.item_code; })) rows.push({ item_code: d.item_code, item_name: d.item_name || d.item_code }); });
     Object.keys(still).forEach(function (c) {   // a dish the till kept unsold stays on the list with its note, listed or not
       if (!rows.some(function (r) { return r.item_code === c; })) rows.push({ item_code: c, item_name: still[c].item_name });
@@ -590,7 +590,7 @@
 
   function draw() {
     var a = last, main = $("board");
-    main.className = "ksc-board";
+    main.className = "ivn-wall-board ksc-board";
     clear(main);
     clear($("title")); $("title").appendChild(bdi(a.title));
     clear($("stations"));
