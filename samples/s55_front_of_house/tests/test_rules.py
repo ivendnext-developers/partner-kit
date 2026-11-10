@@ -104,5 +104,33 @@ class Rules(unittest.TestCase):
                          "2026-10-30 21:30:00")                                   # tomorrow's: the till shows it tomorrow
 
 
+    def test_r10_a_stores_clock_against_its_sites(self):
+        ny_now, utc_now = D(2026, 10, 29, 19, 0, 3), D(2026, 10, 29, 23, 0, tzinfo=datetime.timezone.utc)
+        self.assertEqual(foh.site_offset(ny_now, utc_now), datetime.timedelta(hours=-4))     # to the quarter hour
+        self.assertEqual(foh.site_offset(D(2026, 10, 30, 4, 29), utc_now), datetime.timedelta(hours=5, minutes=30))
+        portland = foh.Clock(foh.zone_of("America/Los_Angeles"), datetime.timedelta(hours=-4))
+        self.assertEqual(portland.site(D(2026, 10, 29, 19, 0)), D(2026, 10, 29, 22, 0))     # 19:00 there is 22:00 here
+        self.assertEqual(portland.store(D(2026, 10, 29, 19, 0)), D(2026, 10, 29, 16, 0))
+        self.assertEqual(portland.site(D(2026, 10, 29, 21, 30)), D(2026, 10, 30, 0, 30))    # past the site's midnight
+        for name in ("", None, "Mars/Olympus", "../etc", 7):
+            self.assertIsNone(foh.zone_of(name), name)                  # the site's time, as the till's receipts do
+        self.assertEqual(foh.SITE.site(D(2026, 10, 29, 19, 0)), D(2026, 10, 29, 19, 0))
+        b = {"name": "R1", "status": "Booked", "store": "S", "booking_date": "2026-10-29", "booking_time": "19:00:00"}
+        self.assertEqual(foh.next_hold([b], {"S": {"minutes": 90}}, D(2026, 10, 29, 16, 0), portland),
+                         {"held_from": "2026-10-29 22:00:00", "held_to": "2026-10-29 23:30:00"})
+
+    def test_r11_only_the_tables_that_differ_are_told(self):
+        rows = {"S": {"minutes": 90}}
+        b = {"name": "R1", "status": "Booked", "store": "S", "booking_date": "2026-10-29", "booking_time": "20:00:00",
+             "place": "T1"}
+        places = [{"name": "T1", "held_from": "2026-10-29 20:00:00.000000", "held_to": "2026-10-29 21:30:00"},
+                  {"name": "T2", "held_from": "2026-10-29 12:00:00", "held_to": "2026-10-29 13:30:00"},
+                  {"name": "T3", "held_from": None, "held_to": None}]
+        self.assertEqual(foh.floor_holds(places, [b], rows, D(2026, 10, 29, 19, 0)),
+                         {"T2": {"held_from": "", "held_to": ""}})                # T1 already true, T3 already free
+        self.assertEqual(foh.floor_holds(places[2:], [dict(b, place="T3")], rows, D(2026, 10, 29, 19, 0)),
+                         {"T3": {"held_from": "2026-10-29 20:00:00", "held_to": "2026-10-29 21:30:00"}})
+
+
 if __name__ == "__main__":
     unittest.main()

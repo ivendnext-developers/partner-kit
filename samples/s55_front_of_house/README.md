@@ -1,6 +1,6 @@
 # S55 — Front of house (reservations, a waiting list, seating that opens a check)
 
-A restaurant's host keeps the evening in iVendNext Desk: a **reservation** for each booking (the store, the date and time, the party size, the guest, a table if chosen) and a **waiting list** of walk-ins. **Book** holds the table for the party's stay and refuses an overlapping booking, naming the other one. **Seat** opens the party's check on the till at its table, once, never twice. **No-show** and **Cancel booking** free the table, and a waiting party set to *Table ready* can text the guest. Each press writes the table's next booking on the till's own table, so the till's floor shows it *Booked* with its time and a server does not seat a walk-in there. A guest's details are seen only by the host role, and the service never reads them.
+A restaurant's host keeps the evening in iVendNext Desk: a **reservation** for each booking (the store, the date and time, the party size, the guest, a table if chosen) and a **waiting list** of walk-ins. **Book** holds the table for the party's stay and refuses an overlapping booking, naming the other one. **Seat** opens the party's check on the till at its table, once, never twice. **No-show** and **Cancel booking** free the table, and a waiting party set to *Table ready* can text the guest. Each press writes the next booking of every table at the store on the till's own tables, so the till's floor shows each booked table *Booked* with its time and a server does not seat a walk-in there. A guest's details are seen only by the host role, and the service never reads them.
 
 ![The diary: the evening's reservations by time](screenshots/01_list.png)
 
@@ -41,6 +41,16 @@ ivn try
 - Close the till day when you are done.
 
 ## Versions
+
+### 1.3.0
+
+Manifest 0.4.0. Needs POS build `2.1.0.697` or later.
+
+- Each press tells the whole store's floor: the service reads the store's tables and its booked reservations once, and writes each table whose next booking changed, usually none or one or two. A booking that ended with no press, one moved to another table in the list, and the day you update all show right at the next press anywhere in the store; there is nothing to press again.
+- A booking's time is the store's own. Where the store's Warehouse has a *Time Zone* (the one its receipts print in), the service reads the booking in that zone and writes the floor in the site's time, so a Portland store on a New York site reads a 7pm booking at 7pm. *Seat* checks a booking due within the party's stay on the store's clock too. A store with no zone keeps the site's time, as before.
+- `role_rights` give **PP FOH Integration** *Read* on *Warehouse*. On a site that has not updated the app yet, the store keeps the site's time.
+- At a store that uses the app, hold a table with a reservation: each press sets every table's *Held From* and *Held To* from the store's reservations, so a hold typed on the table by hand, or written by another app, is cleared at the next press.
+- The till shows a booking from the start of its day on the site's calendar. At a store west of its site, a booking late in the evening can fall after the site's midnight (21:30 in Portland is 00:30 in New York): the floor shows it from that midnight.
 
 ### 1.2.0
 

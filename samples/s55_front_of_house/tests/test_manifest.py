@@ -117,6 +117,7 @@ class ManifestTest(unittest.TestCase):
             ('POS Invoice', 'PP FOH Host', ['select']),
             ('Customer', 'PP FOH Host', ['select']),
             ('Retail Floor Place', 'PP FOH Integration', ['read', 'write']),    # HOSP-K2d: the table's next booking
+            ('Warehouse', 'PP FOH Integration', ['read']),                     # HOSP-K2g: the store's time zone
         ]:
             self.assertIn((doctype, role, tuple(rights)), have)
 

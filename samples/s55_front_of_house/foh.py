@@ -11,7 +11,8 @@ Five Desk buttons send one signed POST per press each (the Desk action extension
 
 ``verify`` checks the signature the shop puts on every call; ``records_of`` takes a press's record; ``span`` and
 ``clashes`` are the double-booking guard; ``seat_request`` builds the one call that opens a check; ``place_busy`` reads
-the floor; ``next_hold`` is what the floor shows on a booked table. ⛔ No answer writes anything: the service writes through its own API key and its own rights, BEFORE it
+the floor; ``next_hold`` is what the floor shows on a booked table, ``floor_holds`` the store's tables that need telling,
+``Clock`` a store's wall clock against its site's. ⛔ No answer writes anything: the service writes through its own API key and its own rights, BEFORE it
 answers. ⛔ The guest's name, phone, customer and notes are never read here: the app's user cannot read them.
 """
 
@@ -140,8 +141,51 @@ def clashes(mine: tuple, others: list[dict], rows_by_store: dict, exclude: str =
     return sorted(out, key=lambda o: (o["_start"], o.get("name") or ""))
 
 
-def next_hold(bookings: list[dict], rows_by_store: dict, now: datetime.datetime | None) -> dict:
-    """What the till's floor shows on a table: its next *Booked* booking not yet over at ``now`` (the site's clock), as
+class Clock:
+    """A store's wall clock against its site's. A booking's date and time are the store's (what the host typed); the
+    till's floor and a record's ``modified`` are the site's. ``zone`` is the store's own zone (its Warehouse's *Time
+    Zone*, the one the till's receipts print in), ``offset`` the site's offset from UTC now. No zone: the store keeps the
+    site's time, as the till does."""
+
+    def __init__(self, zone: datetime.tzinfo | None = None, offset: datetime.timedelta | None = None):
+        self.zone, self.offset = zone, offset or datetime.timedelta(0)
+
+    def site(self, local: datetime.datetime) -> datetime.datetime:
+        if self.zone is None:
+            return local
+        utc = local.replace(tzinfo=self.zone).astimezone(datetime.timezone.utc)
+        return (utc + self.offset).replace(tzinfo=None)
+
+    def store(self, site: datetime.datetime) -> datetime.datetime:
+        if self.zone is None:
+            return site
+        utc = (site - self.offset).replace(tzinfo=datetime.timezone.utc)
+        return utc.astimezone(self.zone).replace(tzinfo=None)
+
+
+SITE = Clock()
+
+
+def zone_of(name) -> datetime.tzinfo | None:
+    """The store's zone by its name, or None (empty, or a name this clock does not know: the site's time)."""
+    if not isinstance(name, str) or not name.strip():
+        return None
+    try:
+        from zoneinfo import ZoneInfo
+        return ZoneInfo(name.strip())
+    except (KeyError, ValueError, OSError, ImportError):     # an unknown zone is a KeyError
+        return None
+
+
+def site_offset(site_now: datetime.datetime, utc_now: datetime.datetime) -> datetime.timedelta:
+    """The site's offset from UTC: its clock now (a write's ``modified``) less ours, to the quarter hour."""
+    q = 15 * 60
+    gap = (site_now - utc_now.replace(tzinfo=None)).total_seconds()
+    return datetime.timedelta(seconds=round(gap / q) * q)
+
+
+def next_hold(bookings: list[dict], rows_by_store: dict, now: datetime.datetime | None, clock: Clock = SITE) -> dict:
+    """What the till's floor shows on a table: its next *Booked* booking not yet over at ``now`` (the store's clock), as
     the place's ``held_from`` and ``held_to`` (``YYYY-MM-DD HH:MM:SS``, the site's time), or both empty when it has none.
     The till reads the table booked from the start of ``held_from``'s day until ``held_to``, when the hold lapses by
     itself. Only times: every app at the store reads the place, so never a guest or a party."""
@@ -159,7 +203,23 @@ def next_hold(bookings: list[dict], rows_by_store: dict, now: datetime.datetime 
             best = (s, o.get("name") or "", e)
     if best is None:
         return {"held_from": "", "held_to": ""}
-    return {"held_from": f"{best[0]:%Y-%m-%d %H:%M:%S}", "held_to": f"{best[2]:%Y-%m-%d %H:%M:%S}"}
+    return {"held_from": f"{clock.site(best[0]):%Y-%m-%d %H:%M:%S}", "held_to": f"{clock.site(best[2]):%Y-%m-%d %H:%M:%S}"}
+
+
+def floor_holds(places: list[dict], bookings: list[dict], rows_by_store: dict, now: datetime.datetime | None,
+                clock: Clock = SITE) -> dict:
+    """The store's whole floor: ``{place: {held_from, held_to}}`` for each table whose hold on the till is not its next
+    booking (a booking that ended with no press, one moved to another table, the day the app is updated)."""
+    by_place: dict = {}
+    for o in bookings:
+        by_place.setdefault(o.get("place"), []).append(o)
+    out = {}
+    for p in places:
+        want = next_hold(by_place.get(p.get("name"), []), rows_by_store, now, clock)
+        have = {k: (f"{stamp(p.get(k)):%Y-%m-%d %H:%M:%S}" if stamp(p.get(k)) else "") for k in want}
+        if want != have:
+            out[p["name"]] = want
+    return out
 
 
 def clash_words(o: dict, place_label: str) -> str:
