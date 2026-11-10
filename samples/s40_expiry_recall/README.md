@@ -46,6 +46,10 @@ ivn try
 
 ## Versions
 
+### 1.1.1
+
+- Words only, manifest 0.2.1: the manifest says store or site where it said shop. The service is unchanged.
+
 ### 1.1.0
 
 - The role's rights beyond the feed's reads move into the manifest (`role_rights`): the install gives the feed's user its reads and the manifest the rest, so the retailer's administrator grants none. Needs POS build `2.1.0.691` or later.
