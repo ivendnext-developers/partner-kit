@@ -3,7 +3,7 @@
  "app": "pp_rmc",
  "prefix": "PP RMC",
  "title": "Room charge",
- "version": "0.1.2",
+ "version": "0.1.3",
  "publisher": "Partner Programme sample",
  "description": "A hotel's restaurant or bar charges a meal to a guest's room. The server types the room and surname on the check's Sale details; at Pay the check asks the hotel system, fills the reservation as Folio, and dims the Room Charge tile with its reason for a room it cannot confirm. Within about a minute of the sale booking the service reads the event feed and posts the charge to the guest's folio, one post per sale, keeping the hotel's reference. A night auditor reads the Room charges workspace: posted, waiting and refused. The till books first and the folio follows. allowed_urls is the programme bench's address; a partner writes its own.",
  "allowed_urls": [
@@ -50,7 +50,7 @@
      "fieldtype": "Data",
      "label": "Tip code",
      "in_list_view": 1,
-     "description": "The hotel system's code for a tip. Blank: a tip typed on the sale is not posted."
+     "description": "The hotel system's code for a tip. Blank: no tip is posted to the folio, though a tip rung on the till's tip chip is still booked in iVendNext."
     },
     {
      "fieldname": "mode_of_payment",
@@ -225,6 +225,14 @@
      "read_only": 1
     },
     {
+     "fieldname": "clearing",
+     "fieldtype": "Currency",
+     "options": "currency",
+     "label": "Clearing",
+     "read_only": 1,
+     "description": "What this charge put on the Room charges clearing account: the charge plus a tip rung on the till's tip chip. The day's clearing entry is the total of this column."
+    },
+    {
      "fieldname": "charge_reference",
      "fieldtype": "Data",
      "label": "Hotel's reference for the charge",
@@ -315,6 +323,15 @@
    ]
   }
  ],
+ "role_rights": [
+  {
+   "doctype": "Journal Entry",
+   "role": "PP RMC Integration",
+   "rights": [
+    "read"
+   ]
+  }
+ ],
  "extension_subscriptions": [
   {
    "key": "room",
@@ -391,6 +408,7 @@
     "folio",
     "amount",
     "tip",
+    "clearing",
     "status",
     "charge_reference",
     "done",
@@ -439,7 +457,7 @@
     {
      "type": "paragraph",
      "data": {
-      "text": "Posted counts everything posted; Waiting and Refused count what is open now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Posted on and Status Posted.",
+      "text": "Posted counts everything posted; Waiting and Refused count what is open now. Waiting charges go again every minute. Refused: read the hotel system's words, check the folio, settle it another way, then tick Done on its record with a note. For the day's clearing entry, filter the report by Posted on and Status Posted, and use the total of Clearing.",
       "col": 12
      }
     },

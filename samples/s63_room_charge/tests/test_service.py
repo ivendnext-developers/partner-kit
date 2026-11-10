@@ -315,6 +315,90 @@ class ThePost(Base):
         self.assertEqual([(p["kind"], p["code"], p["amount"]) for p in self.hotel.posted], [("charge", "FNB", 120.0), ("tip", "TIP", 12.5)])
         self.assertTrue(self.row("S1")["tip_reference"].startswith("L-"))
 
+    def test_a_tip_rung_on_the_chip_reaches_the_folio(self):
+        sale(self.t, "S1", chip=((MODE, 20.0),))
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 120.0), ("tip", 20.0)])
+
+    def test_a_tip_on_the_chip_and_the_detail_is_posted_once(self):
+        sale(self.t, "S1", chip=((MODE, 20.0),), tip="7.50")
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 120.0), ("tip", 20.0)])
+        self.assertEqual((self.row("S1")["tip"], self.row("S1")["clearing"]), (20.0, 140.0))
+
+    def test_a_typed_tip_beside_a_card_payers_chip_tip_is_not_the_guests(self):
+        sale(self.t, "S1", paid=(("Credit Card", 50.0), (MODE, 70.0)), chip=(("Credit Card", 9.0),), tip="9")
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 70.0)])
+        self.assertEqual(self.row("S1")["clearing"], 70.0)
+
+    def test_a_typed_detail_tip_is_on_the_folio_but_not_in_clearing(self):
+        sale(self.t, "S1", tip="7.50")
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual((self.row("S1")["tip"], self.row("S1")["clearing"]), (7.5, 120.0))
+
+    def test_a_chip_tip_waits_with_its_charge_and_goes_once_when_the_hotel_answers(self):
+        sale(self.t, "S1", chip=((MODE, 20.0),))
+        self.hotel.mode = "down"
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual(self.row("S1")["status"], "Waiting")
+        self.hotel.mode = "up"
+        self.run_pass()
+        self.run_pass()
+        self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 120.0), ("tip", 20.0)])
+
+    def test_a_return_of_a_chip_tipped_sale_takes_off_only_its_charge(self):
+        sale(self.t, "S1", paid=((MODE, 70.0),), chip=((MODE, 10.0),))
+        self.run_pass(("sale.booked", "S1"))
+        sale(self.t, "R1", paid=((MODE, -70.0),), is_return=1, against="S1")
+        self.run_pass(("return.booked", "R1"))
+        self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 70.0), ("tip", 10.0), ("charge", -70.0)])
+        self.assertEqual(self.row("R1")["clearing"], -70.0)
+
+    def test_a_cancelled_chip_tipped_sale_says_its_tip_stays(self):
+        sale(self.t, "S1", chip=((MODE, 20.0),))
+        self.run_pass(("sale.cancelled", "S1"))
+        self.assertEqual((self.row("S1")["status"], self.row("S1")["clearing"]), ("Refused", 140.0))
+        self.assertIn("stays booked", self.row("S1")["message"])
+
+    def test_the_detail_tip_still_posts_when_no_chip_tip_was_rung(self):
+        sale(self.t, "S1", tip="7.50")
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 120.0), ("tip", 7.5)])
+
+    def test_a_split_posts_only_the_room_charge_legs_own_tip(self):
+        # the till lane's walk: card 10.00 with a 1.00 tip, Room Charge 11.78 with a 2.36 tip (sale tip 3.36)
+        sale(self.t, "S1", paid=(("Credit Card", 10.0), (MODE, 11.78)), chip=(("Credit Card", 1.0), (MODE, 2.36)))
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 11.78), ("tip", 2.36)])
+
+    def test_a_card_payers_chip_tip_never_reaches_the_folio(self):
+        sale(self.t, "S1", paid=(("Credit Card", 50.0), (MODE, 70.0)), chip=(("Credit Card", 9.0),))
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 70.0)])
+
+    def test_only_the_legs_live_tip_journal_counts(self):
+        sale(self.t, "S1", chip=((MODE, 20.0),))
+        self.t.put("Journal Entry", "JV-cancelled", docstatus=2, custom_reference_1="S1", custom_reference_2="Tip",
+                   custom_reference_3=MODE, total_debit=20.0)
+        self.t.put("Journal Entry", "JV-other", docstatus=1, custom_reference_1="S1", custom_reference_2="Payer",
+                   custom_reference_3=MODE, total_debit=99.0)
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 120.0), ("tip", 20.0)])
+
+    def test_a_site_not_yet_updated_posts_the_detail_tip(self):
+        sale(self.t, "S1", chip=((MODE, 20.0),), tip="20")
+        real = self.t.list
+
+        def refuse(dt, *a, **k):
+            if dt == "Journal Entry":
+                raise worker.ShopError(403, "not permitted")
+            return real(dt, *a, **k)
+        self.t.list = refuse
+        self.run_pass(("sale.booked", "S1"))
+        self.assertEqual([(p["kind"], p["amount"]) for p in self.hotel.posted], [("charge", 120.0), ("tip", 20.0)])
+        self.assertEqual(self.row("S1")["status"], "Posted")
+
     def test_no_tip_code_posts_no_tip(self):
         self.t.db[SET][SET]["stores"][0]["tip_code"] = ""
         sale(self.t, "S1", tip="5")
