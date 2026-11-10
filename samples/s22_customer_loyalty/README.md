@@ -4,7 +4,7 @@ A retailer that runs its own loyalty programme, with its own tiers, cash back an
 
 **What is in it:** members, cash back, a till key, a wallet.
 
-**Industries:** Liquor and wine
+**Industries:** Hospitality, Liquor and wine
 
 **When to use it:** the customer owns the rules (you write them in your own service), but staff should see the members, tiers and cash back on iVendNext's own screens, and the till should show a member's status.
 
