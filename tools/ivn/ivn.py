@@ -85,6 +85,11 @@ WORDS = {
     "next_try": "Next: ivn try",  # J2-12
     "get_sandbox_first": "Get a sandbox of your own, in one press: My sites on My apps. Until then, try on a site by name: "
                          "ivn try --site.",
+    "capture_none": "Nothing is left to write: --only and --skip left out everything the site had.",
+    "captured": "Captured {n} from {site} into {folder}/manifest.json:",
+    "capture_red": "Nothing written, the folder is as it was: {verdict}",
+    "capture_nothing": "Nothing written to {folder}.",
+    "capture_next": "Next: ivn try --site <another site> installs it there, and it behaves the same.",
     "blank_folder": "Folder: apps/{app}/ (manifest.json, app.json, tests/). Read its README.md: what you can add, each kind "
                     "with an example. Then: ivn check, ivn try",  # J1 DEVSTART: the blank start's last line
     "downloaded": "{version} ({state}made by {who} {how}) into apps/{app}/.",  # J11-01
@@ -644,6 +649,41 @@ def cmd_new(a) -> int:
         print(line)
     print(folder_line(target, app) + " " + WORDS["next_try"] if samples else WORDS["blank_folder"].format(app=app))
     return 0
+
+
+def cmd_capture(a) -> int:
+    """J3: what a person made in Desk on a site (`--site`, an address or a label on My sites), written into the app in this
+    folder, or into a new blank app (`--new <name>`). The site is read with the key our hosting keeps for it; nothing is
+    written there. `--only` and `--skip` take record types, kinds or `Type/name` ids, as the list prints them."""
+    import capture  # noqa: PLC0415
+    read = online(door, "/v1/capture/read", {"site": a.site})
+    if a.new:
+        prefix = a.new.replace("_", " ").replace("-", " ").strip().upper()
+        made = online(door, "/v1/new", {"samples": [], "name": prefix})
+        folder = bring_down(made["app"], made.get("version"))
+    else:
+        folder = app_folder(a)
+    manifest = read_json(folder / "manifest.json")
+    res = capture.capture(read.get("records") or {}, read.get("installs") or [], manifest, read["site"])
+    for line in capture.lines(res, read["site"]):
+        print(line)
+    if not res["items"]:
+        print(WORDS["capture_nothing"].format(folder=f"apps/{folder.name}" if a.new else "this app"))
+        return 0
+    m, ids = capture.write(manifest, res, skip=a.skip or [], only=a.only or [])
+    if not ids:
+        raise Stop(WORDS["capture_none"])
+    before = (folder / "manifest.json").read_text("utf-8")
+    (folder / "manifest.json").write_text(json.dumps(m, indent=1, ensure_ascii=False) + "\n", "utf-8")
+    ok, verdict = check_folder(folder)
+    if not ok:  # the folder stays as it was: nothing half-written
+        (folder / "manifest.json").write_text(before, "utf-8")
+        raise Stop(WORDS["capture_red"].format(verdict=verdict))
+    where = f"apps/{folder.name}" if folder.parent.name == "apps" else str(folder)
+    print(WORDS["captured"].format(n=len(ids), site=read["site"], folder=where) + " " + verdict)
+    if ok:
+        print(WORDS["capture_next"])
+    return 0 if ok else 1
 
 
 def cmd_download(a) -> int:
@@ -1753,6 +1793,11 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("name", help="the app's name, like acme_member_till: your first word, then your words")
     p.add_argument("--from", dest="from_samples", action="append", metavar="SAMPLE",
                    help="a sample, like s23; once per sample (none: a blank app)")
+    p = cmd("capture", cmd_capture, "write what was made in Desk on a site into this app, or a new one")
+    p.add_argument("--site", required=True, help="the site's address, or its label on My sites")
+    p.add_argument("--new", metavar="NAME", help="make a new blank app for it, like acme_po_rules")
+    p.add_argument("--only", action="append", metavar="WHAT", help="only these: a record type, a kind or a Type/name")
+    p.add_argument("--skip", action="append", metavar="WHAT", help="leave these out: a record type, a kind or a Type/name")
     p = cmd("download", cmd_download, "write the server's copy into apps/<app>/", in_app=False)
     p.add_argument("name")
     p.add_argument("--version")

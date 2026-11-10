@@ -155,6 +155,15 @@
       "with an example and its recipe. You can add a sample to it later.", blankTitle: "My app",
     blankCovers: "A blank app: no sample in it yet. Its README.md lists what you can add.",
     blankCarries: "Started blank. It carries: {kinds}.", backToApps: "Back to My apps",
+    // J3 CAPTURE: what a person made in Desk on a site, into this app (the kit's capture.py on our side)
+    capture: "Capture from a site", fromSite: "From a site",
+    fromSiteHint: "Made fields, a workflow, a notification or a print format in Desk on a test site? Capture them into an " +
+      "app, and it installs them on the customer's site the same way.",
+    captureLede: "What a person made in Desk on that site, signed in as themselves (not as Administrator). Untick what to leave " +
+      "out. Nothing is written to the site.",
+    captureRead: "Read the site", captureTake: "Capture", reading: "Reading the site\u2026",
+    renamed: "Renamed to your app", leftOut: "Left out",
+    captureNoSite: "Add the site you built it on to My sites first: its address, and a key you make there.",
     settingsLede: "Your app's own values, the same for every site. A customer's own account (their wallet) goes in the app's " +
       "settings in their Desk.",
     addresses: "Outside addresses", secrets: "Secrets your own service needs",
@@ -517,7 +526,7 @@
               needKind: needKind, KIND_WORDS: KIND_WORDS, instead: instead, askUrl: askUrl, sampleNumber: sampleNumber,
               sampleTitle: sampleTitle, sampleLabel: sampleLabel, needSamples: needSamples, search: search,
               fromNeeds: fromNeeds, readStart: readStart, barText: barText, appFor: appFor, recordsStart: recordsStart, tickable: tickable,
-              making: making, blankCarries: blankCarries, toThisPage: toThisPage, handOff: handOff, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
+              making: making, blankCarries: blankCarries, captureGroups: captureGroups, toThisPage: toThisPage, handOff: handOff, isAddress: isAddress, settingNote: settingNote, versionLine: versionLine, whereWent: whereWent,
               covers: covers, coversText: coversText, ASK_PAGE: ASK_PAGE, CLAIM_FORM: CLAIM_FORM, T: T,
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
@@ -738,6 +747,14 @@
     return c;
   }
   function startBlank() { g.ticks = []; g.blank = true; g.refused = ""; g.checking = false; screen = "name"; say(""); render(); }
+  // J3: From a site: a blank app named as Start blank names one, then Capture from a site opens on it
+  function siteTile() {
+    var c = el("div", { "class": "hosting-step gallery-card gallery-blank" });
+    c.appendChild(el("h3", { text: G.fromSite }));
+    c.appendChild(el("p", { "class": "hint", text: G.fromSiteHint }));
+    c.appendChild(el("p", {}, button(G.fromSite, function () { startBlank(); g.fromSite = true; render(); })));
+    return c;
+  }
 
   // the bar's refusals before Next (M01 to M03, M34, M35): the hosting's dry run, its words as given (spec rule 8)
   function dry() {
@@ -835,7 +852,7 @@
     wrap.appendChild(crumbs);
     wrap.appendChild(el("h2", { text: g.mode === "add" ? G.addSample : G.newApp }));
     wrap.appendChild(p(g.mode === "add" ? G.addLede : g.fromNeeds && !g.every ? G.ledeNeeds : G.lede));
-    if (g.mode === "new") wrap.appendChild(blankTile());   // the first tile: a need no sample matches (J1 DEVSTART)
+    if (g.mode === "new") { wrap.appendChild(blankTile()); wrap.appendChild(siteTile()); }   // J1's first tile, J3's
     if (!site.index) { wrap.appendChild(p("Reading the samples…")); return wrap; }
     var q = el("input", { type: "search", value: g.q, placeholder: "S23, till guard, or no more than 50 of one item", spellcheck: "false" });
     var timer = null;
@@ -979,7 +996,7 @@
       box.appendChild(field(G.yourName, own, G.yourNameHint));
     }
     box.appendChild(bad);   // a refusal stands under the field it is about
-    box.appendChild(button("Back", function () { screen = "gallery"; g.blank = false; data.nameBad = ""; say(""); render(); }, true));
+    box.appendChild(button("Back", function () { screen = "gallery"; g.blank = false; g.fromSite = false; data.nameBad = ""; say(""); render(); }, true));
     box.appendChild(root.document.createTextNode(" "));
     var make = button(G.make, function (ev) {
       ev.target.disabled = true; clearTimeout(timer); asked++;
@@ -990,7 +1007,9 @@
       if (own) body.name = own.value.trim().toUpperCase();
       call("POST", "/new", body)
         .then(function (r) {
+          var fromSite = g && g.fromSite;
           data.made = { making: data.made.making, title: r.title || title, words: r.words }; data.appId = r.app; data.app = null; g = null;
+          if (fromSite) { data.made = null; data.capture = { app: r.app }; screen = "app"; render(); openApp(r.app); return; }
           screen = "made"; render(); openApp(r.app);
         }, function (e) { data.made = null; screen = "name"; data.nameBad = e.message; render(); });
     });
@@ -1077,11 +1096,14 @@
     var file = el("input", { type: "file", accept: ".zip,application/zip", hidden: "", "aria-label": G.upload });
     file.addEventListener("change", function () { if (file.files[0]) upload(file.files[0]); });
     [tryB, changeB, pubB, button(G.download, download, true), uploadButton(file),
-     button(G.addSample, function () { startGallery("add"); }, true), button(U.logs, function () { data.logs = null; go("logs"); loadLogs(); }, true),
+     button(G.addSample, function () { startGallery("add"); }, true),
+     button(G.capture, function () { data.capture = data.capture && data.capture.app === a.app ? null : { app: a.app }; render(); }, true),
+     button(U.logs, function () { data.logs = null; go("logs"); loadLogs(); }, true),
      (a.settings || []).length ? button("Settings", function () { go("settings"); }, true) : null]
       .forEach(function (b) { if (b) { acts.appendChild(b); acts.appendChild(root.document.createTextNode(" ")); } });
     box.appendChild(acts);
     if (data.pick === a.app) box.appendChild(vPick(a.app));   // one list: where it is, the company's other sites, another
+    if (data.capture && data.capture.app === a.app) box.appendChild(vCapture(a.app));
     box.appendChild(file);
     // J6-08: the newer-version notice
     (a.newer || []).forEach(function (n) {
@@ -1230,6 +1252,61 @@
 
   // Change, one list (any site, any number, read from records). Where this app is now, each with its
   // version; the company's other sites; Another site…, any iVendNext site's address, which joins the list
+  // J3: Capture from a site: pick a site, read it, untick what to leave out, capture into the app's next version
+  function vCapture(app) {
+    var c = data.capture, box = card(G.capture), sites = ((data.sites || {}).company || []);
+    box.appendChild(p(G.captureLede));
+    var sel = el("select", { "aria-label": "Site" });
+    sites.forEach(function (x) { sel.appendChild(el("option", { value: x.site, text: x.label ? x.label + " \u00b7 " + x.site : x.site })); });
+    if (c.site) sel.value = c.site;
+    box.appendChild(el("p", {}, sel, " ", button(G.captureRead, function (ev) {
+      ev.target.disabled = true; c.site = sel.value; c.list = null; c.reading = true; render();
+      call("POST", "/capture/list", { app: app, site: c.site }).then(function (r) {
+        c.reading = false; c.list = r; c.off = {}; render();
+      }, function (e) { c.reading = false; fail(e); });
+    }, !!c.list || !sites.length)));
+    if (!sites.length) box.appendChild(el("p", {}, G.captureNoSite + " ", button(S.open, function () { go("sites"); }, true)));
+    if (c.reading) box.appendChild(p(G.reading));
+    var l = c.list;
+    if (!l) return box;
+    if (l.words) box.appendChild(p(l.words));
+    captureGroups(l.items).forEach(function (grp) {
+      var gb = el("div", { "class": "hosting-step" }, el("h3", { text: grp.type }));
+      grp.items.forEach(function (it) {
+        var cb = el("input", { type: "checkbox" });
+        cb.checked = !c.off[it.id];
+        cb.addEventListener("change", function () { c.off[it.id] = !cb.checked; });
+        gb.appendChild(el("p", {}, el("label", {}, cb, " " + it.name)));
+      });
+      box.appendChild(gb);
+    });
+    if ((l.renamed || []).length) {
+      box.appendChild(el("h3", { text: G.renamed }));
+      l.renamed.forEach(function (x) { box.appendChild(el("p", { "class": "hint", text: x })); });
+    }
+    if ((l.left_out || []).length) {
+      box.appendChild(el("h3", { text: G.leftOut }));
+      l.left_out.forEach(function (x) { box.appendChild(el("p", { "class": "hint", text: x.type + " " + x.name + ": " + x.reason })); });
+    }
+    if ((l.items || []).length) box.appendChild(el("p", {}, button(G.captureTake, function (ev) {
+      ev.target.disabled = true;
+      var skip = Object.keys(c.off).filter(function (k) { return c.off[k]; });
+      call("POST", "/capture/take", { app: app, site: c.site, skip: skip }).then(function (r) {
+        data.capture = null; say((r.words || []).join(" ")); openApp(app);
+      }, function (e) { ev.target.disabled = false; fail(e); });
+    })));
+    return box;
+  }
+  // the capture list, one group per record type, in the order the site answered
+  function captureGroups(items) {
+    var out = [];
+    (items || []).forEach(function (it) {
+      var gr = out.filter(function (x) { return x.type === it.type; })[0];
+      if (!gr) { gr = { type: it.type, items: [] }; out.push(gr); }
+      gr.items.push(it);
+    });
+    return out;
+  }
   function vPick(app) {
     var box = el("div", { "class": "hosting-step" }), sites = data.sites || {}, w = data.where && data.where.app === app ? data.where : null;
     var tryOn = function (site) { return function () { data.pick = null; openTry(app, site); }; };

@@ -80,7 +80,17 @@ class Stub(B.Stub):
         return {"version": "1.0.0", "site": b["site"], "step": "done" if done else "installing", "done": done,
                 "words": f"Installed 1.0.0 on {b['site']}." if done else f"Installing on {b['site']}…"}
 
-    ROUTES = {**B.Stub.ROUTES, "/v1/sites": sites, "/v1/sites/add": sites_add, "/v1/sites/label": sites_label,
+    def capture_read(self, b):  # J3: the site's records a person made, as the hosting answers them
+        self.captured_from = b["site"]
+        return {"site": "acme.sandbox.ivend.co", "installs": [], "records": {
+            "Custom Field": [{"name": "Purchase Order-custom_gift_note", "owner": "c@acme.example", "dt": "Purchase Order",
+                              "fieldname": "custom_gift_note", "fieldtype": "Data", "label": "Gift note"}],
+            "Notification": [{"name": "Gift note set", "owner": "c@acme.example", "enabled": 1, "document_type": "Purchase Order",
+                              "event": "Save", "channel": "System Notification", "subject": "Gift note",
+                              "message": "{{ doc.custom_gift_note }}", "recipients": [{"receiver_by_role": "Purchase User"}]}],
+            "Client Script": [{"name": "PO colour", "owner": "c@acme.example"}]}}
+
+    ROUTES = {**B.Stub.ROUTES, "/v1/capture/read": capture_read, "/v1/sites": sites, "/v1/sites/add": sites_add, "/v1/sites/label": sites_label,
               "/v1/sites/default": sites_default, "/v1/sites/remove": sites_remove, "/v1/publish/status": publish_status, "/v1/try": try_start,
               "/v1/publish/install": publish_install}
 
@@ -158,6 +168,22 @@ class MySites(B.Base):
         self.assertEqual((rc, self.stub.installs), (0, 0))
         self.assertNotIn("Installing", out)
         self.assertNotIn("your company holds its key", out)  # --install installs: no hint
+
+    def test_capture_writes_what_was_made_in_desk_renamed_and_says_what_it_left_out(self):  # ⭐ J3
+        folder, _ = self.made()
+        self.in_app(folder)
+        rc, out = self.run_ivn("capture", "--site", "Acme test")
+        self.assertEqual((rc, self.stub.captured_from), (0, "Acme test"), out)
+        self.assertIn("Custom Field: Purchase Order-custom_gift_note", out)
+        self.assertIn("Left out: Client Script PO colour:", out)
+        m = B.json.loads((folder / "manifest.json").read_text("utf-8"))
+        fp = m["prefix"].lower().replace(" ", "_") + "_"
+        self.assertIn(fp + "gift_note", [c["fieldname"] for c in m["custom_fields"]])
+        self.assertIn("{{ doc." + fp + "gift_note }}", [n["message"] for n in m["notifications"]])
+        self.assertIn("CHECK GREEN", out)
+        rc, out = self.run_ivn("capture", "--site", "Acme test", "--skip", "Notification", "--skip", "Custom Field")
+        self.assertEqual(rc, 1)
+        self.assertIn(B.ivn.WORDS["capture_none"], out)
 
     def test_a_subcommand_without_its_site_says_how(self):
         rc, out = self.run_ivn("sites", "label", "shop.acme.example")

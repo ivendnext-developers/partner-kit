@@ -54,14 +54,17 @@ It opens your browser. The first time only, set up your company: press **Set up 
 
 ### 2. Make the app: blank, or from a sample
 
-There are two ways to start, side by side:
+There are three ways to start, side by side:
 
 | | On My apps | In a terminal |
 |---|---|---|
 | **Blank**, when no sample matches the need | **New app**, **Start blank**, **Make the app** | `ivn new acme_store_rules` |
 | **From a sample**, the nearest to the need | **New app**, tick the sample, **Next**, **Make the app** | `ivn new acme_po_approval --from s11` |
+| **From what you built in Desk** on a test site: fields, a workflow, a notification, a print format | **New app**, **From a site**, **Make the app**, pick the site, **Read the site**, **Capture** | `ivn capture --site "Acme test" --new acme_po_rules` |
 
-A blank app is a folder with a `manifest.json` that has your app's name and no entries yet, its `app.json`, one test that runs the kit's checker, and a `README.md`. The README lists everything you can add (fields, notifications, workflows, print formats and the rest), each with a line to copy in your app's own names, or the sample that brings it, and where to read more. It shows a field and a notification first. Copy what you need into `manifest.json`, then go on at step 4; `ivn add s11` adds a sample into it later. The rest of this page builds from a sample.
+A blank app is a folder with a `manifest.json` that has your app's name and no entries yet, its `app.json`, one test that runs the kit's checker, and a `README.md`. The README lists everything you can add (fields, notifications, workflows, print formats and the rest), each with a line to copy in your app's own names, or the sample that brings it, and where to read more. It shows a field and a notification first. Copy what you need into `manifest.json`, then go on at step 4; `ivn add s11` adds a sample into it later.
+
+*From a site* reads what a person made in Desk on that site, signed in as themselves (make your own user with System Manager there; not Administrator, the product's own): fields, workflows, notifications, print formats, record types, roles, reports and the rest. Nothing is written to the site. Each field made in Desk (`custom_…`) and each role takes your app's prefix wherever it is named. What the checker refuses, such as a client script, is left out with its reason. An app's page has **Capture from a site** too. Then try it on another site: it behaves the same there. The rest of this page builds from a sample.
 
 Start from the [sample](../../samples/) nearest your customer's need. Here it is [S11](../../samples/s11_approvals/README.md), the Purchase Order approval. In a terminal, from any folder:
 

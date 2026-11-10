@@ -150,7 +150,7 @@ check("Made shows no next button until the app's row is read (never Next: its se
   /var loaded = data\.app && data\.app\.app === data\.appId;[^\n]*\n\s*if \(!loaded\) \{ box\.appendChild\(p\("Reading the app…"\)\); return box; \}/.test(src));
 check("Start blank: Making says a blank app", a.making("My app", 0) === "Making My app, a blank app…");
 check("Start blank is the first tile of New app, before the search and every sample card",
-  /if \(g\.mode === "new"\) wrap\.appendChild\(blankTile\(\)\);[^\n]*\n\s*if \(!site\.index\)/.test(src) &&
+  /if \(g\.mode === "new"\) \{ wrap\.appendChild\(blankTile\(\)\); wrap\.appendChild\(siteTile\(\)\); \}[^\n]*\n\s*if \(!site\.index\)/.test(src) &&
   src.indexOf("wrap.appendChild(blankTile())") < src.indexOf("wrap.appendChild(sf)") &&
   src.indexOf("wrap.appendChild(blankTile())") < src.indexOf("wrap.appendChild(sampleCard("));
 check("Start blank goes to Name your app with no sample ticked, and Make sends the empty list the hosting makes blank from",
@@ -402,6 +402,14 @@ check("SANDBOXPOLICY: Get a sandbox for one of our developers with none; Ask for
   src.indexOf('if (sites.sandbox === "get") box.appendChild(offer);') < src.indexOf("(sites.company || []).forEach(function (x) {", src.indexOf("var offer")) &&
   a.S.askSandbox === "Ask for another sandbox" && src.includes('sites.sandbox === "request" && (sites.company || []).length && !sites.words') &&
   !src.includes("sites.get_sandbox"));
+check("J3: New app's tiles are Start blank, then From a site, which opens Capture from a site on the new blank app",
+  src.indexOf("wrap.appendChild(blankTile())") < src.indexOf("wrap.appendChild(siteTile())") &&
+  src.includes("if (fromSite) { data.made = null; data.capture = { app: r.app }; screen = \"app\"; render(); openApp(r.app); return; }"));
+check("J3: Capture from a site reads, lists by record type with every item ticked, and captures what stays ticked",
+  ["/capture/list", "/capture/take"].every((d) => src.includes('"' + d + '"')) && src.includes("cb.checked = !c.off[it.id];") &&
+  src.includes("var skip = Object.keys(c.off).filter(function (k) { return c.off[k]; });") &&
+  a.captureGroups([{ id: "a", type: "Workflow", name: "w" }, { id: "b", type: "Custom Field", name: "f" }, { id: "c", type: "Workflow", name: "v" }])
+    .map((x) => x.type + ":" + x.items.length).join() === "Workflow:2,Custom Field:1");
 check("SANDBOXPOLICY: each pool sandbox says the date it goes back to the pool, in the hosting's words", src.includes("if (x.back_words) row.appendChild(p(x.back_words));"));
 check("MYSITES: Add a site takes a label, so a customer's live site is labelled live as it is added",
   src.includes('label: lab.value.trim() })') && src.includes("add.appendChild(field(S.label, lab, S.labelHint))"));
