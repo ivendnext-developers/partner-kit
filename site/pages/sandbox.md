@@ -6,7 +6,7 @@ A sandbox site is an iVendNext site of your company's, hosted by us and full of 
 - **Your customer's own test site for customer work.** Add it on **My sites** with a key you make there, and Try installs there in one press.
 - **A sandbox we hand out goes back if nobody signs in to it for 60 days.** **My sites** shows the date under it, and anyone at work on the site moves it on.
 
-Your site's address looks like `yourcompany.sandbox.ivend.co`. We tell you the address when the site is ready.
+Your site's address looks like `partner-01.sandbox.ivend.co`. We tell you the address when the site is ready.
 
 ## How to ask
 
