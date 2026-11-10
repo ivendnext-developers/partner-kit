@@ -34,9 +34,9 @@ ivn try
 
 ## Versions
 
-### 1.2.2 (manifest 0.2.1)
+### 1.2.2
 
-- The *Spendable from* field says *your site's time*, not *the shop's*. Words only.
+- Manifest 0.2.1: the *Spendable from* field says *your site's time*, not *the shop's*. Words only.
 
 ### 1.2.1
 
