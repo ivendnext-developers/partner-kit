@@ -23,9 +23,11 @@ check unless the store allows a second), THEN writes a fresh key and the exact c
 writes nothing twice. A first send the till refuses opened nothing, so its key is cleared; a refused retry keeps its key
 (the first send may have opened the check).
 
-**The till's floor.** After each press has written its booking, the service writes the table's next *Booked* booking
-on the till's own table (*Retail Floor Place* ``held_from`` and ``held_to``, the site's time) or clears them, so the
-floor shows the table booked. Times only: every app at the store reads the place. A site that refuses the write (the
+**The till's floor.** After each press has written its booking, the service reads the store's tables and its booked
+reservations once, and writes each table's next *Booked* booking on the till's own table (*Retail Floor Place*
+``held_from`` and ``held_to``, the site's time) where it differs, or clears it, so the floor shows every booked table.
+A booking's time is the store's: read in its Warehouse's *Time Zone* where it has one. Times only: every app at the store
+reads the place. A site that refuses the write (the
 app not updated there yet) keeps the booking; the host reads that the floor was not told.
 
 ONE SHOP (an env file):
@@ -84,7 +86,8 @@ RES_FIELDS = ["name", "status", "store", "booking_date", "booking_time", "minute
 WAIT_FIELDS = ["name", "status", "store", "party", "place", "place_label", "check_name", "seat_key", "seat_request",
                "modified"]
 ROW_FIELDS = ["name", "store", "register", "minutes", "second_check", "no_show_deposit"]
-HOLD_FIELDS = ["name", "status", "store", "booking_date", "booking_time", "minutes"]
+HOLD_FIELDS = ["name", "status", "store", "booking_date", "booking_time", "minutes", "place"]
+ZONE = "custom_mpos_time_zone"   # the store's own zone on its Warehouse (the till's receipts print in it); empty: the site's
 UNASSIGNED = ("ProfileNotAssignedError", "AssignedProfileDisabledError", "DuplicateStoreAssignmentError",
               "StoreAssignmentIncompleteError")
 # the refusals the till raises BEFORE it looks the key up: a retry refused by one of these may follow a first send that
@@ -167,10 +170,12 @@ class Tenant:
     def doc(self, doctype: str, name: str) -> dict:
         return self._data("GET", f"{doctype}/{name}")
 
-    def rows(self, doctype: str, fields: list, filters: list, parent: str | None = None) -> list:
+    def rows(self, doctype: str, fields: list, filters: list, parent: str | None = None, order_by: str = "") -> list:
         q = {"fields": fields, "filters": filters, "limit_page_length": 500}
         if parent:
             q["parent"] = parent
+        if order_by:
+            q["order_by"] = order_by
         return [r for r in self._data("GET", doctype, query=q, kind=list) if isinstance(r, dict)]
 
     def update(self, doctype: str, name: str, body: dict) -> dict:
@@ -289,24 +294,42 @@ class Service:
         found = foh.clashes(foh.span(start, foh.minutes_of(r, row)), others, {r["store"]: row}, exclude=exclude)
         return foh.clash_words(found[0], r.get("place_label") or r["place"]) if found else ""
 
-    def _floor(self, door, store: str, places, row: dict | None, written: dict) -> str:
-        """Each table's next booking written on its place for the till's floor, or the place cleared when it has none.
-        ``written`` is the press's last write (its ``modified`` is the site's clock: the till compares the hold in the
-        site's time). ``""``, or words for the host when the floor could not be told: the booking itself stands."""
-        now = foh.stamp((written or {}).get("modified"))
-        if now is None:
+    def _clock(self, door, store: str, site_now: datetime.datetime) -> foh.Clock:
+        """The store's wall clock against the site's: the store's zone from its Warehouse, the site's offset from its own
+        clock (``site_now``, a write's ``modified``) against ours. A site that does not let the app read the store (the
+        app not updated there yet) keeps the site's time."""
+        try:
+            zone = foh.zone_of(door.doc("Warehouse", store).get(ZONE))
+        except TenantError as e:
+            if not e.refused:
+                raise
+            zone = None
+        return foh.Clock(zone, foh.site_offset(site_now, _now_utc(self.now)))
+
+    def _floor(self, door, store: str, row: dict | None, written: dict) -> str:
+        """The store's whole floor told: each table whose place does not hold its next booking is written, or cleared
+        when it has none, so a booking that ended with no press, one moved to another table and the day the app is
+        updated are all put right by the next press at the store. ``written`` is the press's last write (its
+        ``modified`` is the site's clock). ``""``, or words for the host when the floor could not be told: the booking
+        itself stands."""
+        site_now = foh.stamp((written or {}).get("modified"))
+        if site_now is None or not store:
             return ""
-        for place in dict.fromkeys(p for p in places if p):
-            try:
-                if row is None:
-                    found = door.rows(foh.dt("Store"), ROW_FIELDS, [["store", "=", store]], parent=foh.dt("Settings"))
-                    row = found[0] if found else {}
-                bookings = door.rows(foh.dt("Reservation"), HOLD_FIELDS,
-                                     [["store", "=", store], ["place", "=", place], ["status", "in", list(foh.HOLDING)],
-                                      ["booking_date", ">=", foh.days_around(now)[0]]])
-                door.update(PLACE, place, foh.next_hold(bookings, {store: row}, now))
-            except TenantError as e:
-                return FLOOR_REFUSED if e.refused else FLOOR_LOST
+        try:
+            if row is None:
+                found = door.rows(foh.dt("Store"), ROW_FIELDS, [["store", "=", store]], parent=foh.dt("Settings"))
+                row = found[0] if found else {}
+            clock = self._clock(door, store, site_now)
+            now = clock.store(site_now)
+            places = door.rows(PLACE, ["name", "held_from", "held_to"], [["store", "=", store]])
+            bookings = door.rows(foh.dt("Reservation"), HOLD_FIELDS,
+                                 [["store", "=", store], ["status", "in", list(foh.HOLDING)],
+                                  ["booking_date", ">=", foh.days_around(now)[0]]],
+                                 order_by="booking_date asc, booking_time asc")
+            for place, hold in foh.floor_holds(places, bookings, {store: row}, now, clock).items():
+                door.update(PLACE, place, hold)
+        except TenantError as e:
+            return FLOOR_REFUSED if e.refused else FLOOR_LOST
         return ""
 
     # ── Book ──
@@ -328,11 +351,11 @@ class Service:
             if clash:
                 w = door.update(foh.dt("Reservation"), name, {"status": "Requested",
                                                              "app_note": ("Not booked: " + clash)[:500]})
-                floor = self._floor(door, r["store"], [r["place"]], row, w)
+                floor = self._floor(door, r["store"], row, w)
                 return _warning(f"Not booked: {clash} Choose another table or time, save, then press Book again."
                                 + floor, refresh=True)
             w = door.update(foh.dt("Reservation"), name, {"status": "Booked", "app_note": ""})
-            floor = self._floor(door, r["store"], [r["place"]], row, w)
+            floor = self._floor(door, r["store"], row, w)
         finally:
             self._unlock(door, row["name"], mine)
         end = foh.span(start, foh.minutes_of(r, row))[1]
@@ -360,8 +383,9 @@ class Service:
             if isinstance(req, dict):
                 return self._open(door, doctype, r, row, req, retry=True)
         mine, now = self._lock(door, row["name"])
-        try:
-            now = now or foh.moment(r.get("booking_date"), r.get("booking_time"))
+        try:     # the party sits down now, on the store's clock (the bookings' times are the store's)
+            now = self._clock(door, r["store"], now).store(now) if now else \
+                foh.moment(r.get("booking_date"), r.get("booking_time"))
             where = r.get("place_label") or r["place"]
             clash = self._clash(door, r, row, now, exclude=name)
             if clash:
@@ -405,7 +429,7 @@ class Service:
         place = req.get("place") or r["place"]
         w = door.update(doctype, name, {"status": "Seated", "check_name": check.get("check") or "", "place": place,
                                         "app_note": ""})
-        floor = self._floor(door, r["store"], [r["place"], place], row, w)
+        floor = self._floor(door, r["store"], row, w)
         where = (r.get("place_label") or place) if place == r.get("place") else place
         return foh.message(APP_NAME, f"{name} is seated at {where}: its check {check.get('check')} is open on the "
                            f"till for {foh.num(req.get('covers'))} guests." + floor, "warning" if floor else "success")
@@ -446,7 +470,7 @@ class Service:
         rule = row.get("no_show_deposit") or "Keep it"
         note = foh.deposit_note(rule, r.get("deposit_sale"), r.get("deposit_amount"), cancelled=status == "Cancelled")
         w = door.update(foh.dt("Reservation"), name, {"status": status, "app_note": note[:500]})
-        floor = self._floor(door, r.get("store"), [r.get("place")], row, w)
+        floor = self._floor(door, r.get("store"), row, w)
         return foh.message(APP_NAME, f"{name} is {'a no-show' if status == 'No-show' else 'cancelled'}"
                            + (f"; its table is free again." if r.get("place") else ".") + (f" {note}" if note else "")
                            + floor, "warning" if floor else "success")
@@ -459,7 +483,7 @@ class Service:
             raise Refusal(f"{name} is {r.get('status')}: only a booked reservation that is not being seated is changed.")
         w = door.update(foh.dt("Reservation"), name, {"status": "Requested",
                                                       "app_note": "Changed: its table is no longer held. Press Book again."})
-        floor = self._floor(door, r.get("store"), [r.get("place")], None, w)
+        floor = self._floor(door, r.get("store"), None, w)
         return foh.message(APP_NAME, f"{name} is Requested again and its table is no longer held. Change the time, the "
                            "length or the table, save, then press Book." + floor, "warning" if floor else "success")
 

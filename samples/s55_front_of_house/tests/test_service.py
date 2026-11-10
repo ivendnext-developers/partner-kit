@@ -485,6 +485,65 @@ class ServiceTest(unittest.TestCase):
         self.press(self.svc(shop), "/press/book", RES, "R1")
         self.assertEqual((shop.res["R1"]["status"], self.hold(shop)), ("Requested", ("2026-10-29 20:00:00", "2026-10-29 21:30:00")))
 
+    def test_f9_a_booking_that_ended_with_no_press_moves_on_at_the_next_press_anywhere_in_the_store(self):
+        shop = fs.FakeTenant([fs.booking("R1", "12:00:00", place=fs.T14), fs.booking("R2", "20:00:00", place=fs.T14),
+                              fs.booking("R3", "21:00:00", status="Requested")])
+        shop.places[fs.T14].update(held_from="2026-10-29 12:00:00", held_to="2026-10-29 13:30:00")   # lunch, never pressed
+        self.press(self.svc(shop), "/press/book", RES, "R3")                               # at another table
+        self.assertEqual(self.hold(shop, fs.T14), ("2026-10-29 20:00:00", "2026-10-29 21:30:00"))
+        self.assertEqual(self.hold(shop), ("2026-10-29 21:00:00", "2026-10-29 22:30:00"))
+
+    def test_f10_on_update_day_one_press_tells_every_booked_table(self):
+        shop = fs.FakeTenant([fs.booking("R1", "20:00:00"), fs.booking("R2", "21:00:00", place=fs.T14),
+                              fs.booking("R3", "22:00:00", place=fs.T14, status="Requested")])
+        self.press(self.svc(shop), "/press/cancel", RES, "R3")
+        self.assertEqual((self.hold(shop)[0], self.hold(shop, fs.T14)[0]), ("2026-10-29 20:00:00", "2026-10-29 21:00:00"))
+
+    def test_f11_a_booking_moved_in_the_list_frees_its_old_table_at_the_next_press(self):
+        shop = fs.FakeTenant([fs.booking("R1", "20:00:00", place=fs.T14), fs.booking("R2", "21:00:00", status="Requested",
+                                                                                       place=fs.T14)])
+        shop.places[fs.T12].update(held_from="2026-10-29 20:00:00", held_to="2026-10-29 21:30:00")   # R1 was on T12
+        self.press(self.svc(shop), "/press/noshow", RES, "R2")
+        self.assertEqual((self.hold(shop), self.hold(shop, fs.T14)[0]), ((None, None), "2026-10-29 20:00:00"))
+
+    def test_f13_another_stores_tables_are_never_touched(self):
+        shop = fs.FakeTenant([fs.booking("R1", "20:00:00", status="Requested")])
+        self.press(self.svc(shop), "/press/book", RES, "R1")
+        self.assertEqual(self.hold(shop, fs.OTHER_PLACE), ("2026-10-29 21:00:00", "2026-10-29 22:30:00"))
+
+    def test_f12_only_the_tables_that_differ_are_written(self):
+        shop = fs.FakeTenant([fs.booking("R1", "20:00:00", status="Requested"), fs.booking("R2", "21:00:00", place=fs.T14)])
+        shop.places[fs.T14].update(held_from="2026-10-29 21:00:00", held_to="2026-10-29 22:30:00")
+        self.press(self.svc(shop), "/press/book", RES, "R1")
+        self.assertEqual([b for b in shop.sent if b and "held_from" in b],
+                         [{"held_from": "2026-10-29 20:00:00", "held_to": "2026-10-29 21:30:00"}])   # T12 only
+
+    # ── the store's own clock: a store in another zone from its site (the site New York, 19:00 there at 23:00 UTC) ──
+    NY = datetime.datetime(2026, 10, 29, 23, 0, tzinfo=datetime.timezone.utc).timestamp()
+
+    def test_z1_a_bookings_time_is_the_stores_and_the_floor_gets_the_sites(self):
+        shop = fs.FakeTenant([fs.booking("R1", "19:00:00", status="Requested")], zone="America/Los_Angeles")
+        out = self.press(self.svc(shop, now=self.NY), "/press/book", RES, "R1")
+        self.assertIn("from 19:00 to 20:30", self.said(out))                     # the host's own time, in the answer
+        self.assertEqual(self.hold(shop), ("2026-10-29 22:00:00", "2026-10-29 23:30:00"))   # 19:00 Portland, as New York
+        # 17:00 in Portland is still to come at 16:00 there, though 17:00 is past on the site's clock
+        shop = fs.FakeTenant([fs.booking("R1", "17:00:00", status="Requested")], zone="America/Los_Angeles")
+        self.press(self.svc(shop, now=self.NY), "/press/book", RES, "R1")
+        self.assertEqual(self.hold(shop), ("2026-10-29 20:00:00", "2026-10-29 21:30:00"))
+
+    def test_z2_seat_reads_now_on_the_stores_clock(self):
+        # 19:00 in New York is 16:00 in Portland: a booking at 17:00 there is due within a walk-in's stay
+        shop = fs.FakeTenant([fs.booking("R0", "17:00:00")], [fs.waiting("W1", place=fs.T12)], zone="America/Los_Angeles")
+        out = self.press(self.svc(shop, now=self.NY), "/press/seat", WAIT, "W1")
+        self.assertIn("Not seated: Table 12 is booked from 17:00 to 18:30", self.said(out))
+        self.assertEqual(shop.wait["W1"]["status"], "Waiting")
+
+    def test_z3_a_site_that_keeps_the_store_from_the_app_or_an_unknown_zone_keeps_the_sites_time(self):
+        for kw in ({"zone": "America/Los_Angeles", "store_right": False}, {"zone": "Not/AZone"}, {"zone": ""}):
+            shop = fs.FakeTenant([fs.booking("R1", "19:30:00", status="Requested")], **kw)
+            out = self.press(self.svc(shop, now=self.NY), "/press/book", RES, "R1")
+            self.assertEqual((out[1]["message"]["level"], self.hold(shop)[0]), ("success", "2026-10-29 19:30:00"), kw)
+
     def test_f6_a_booking_with_no_table_writes_no_place(self):
         shop = fs.FakeTenant([fs.booking("R1", "20:00:00", status="Requested", place=None)])
         self.press(self.svc(shop), "/press/book", RES, "R1")

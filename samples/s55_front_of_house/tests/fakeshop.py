@@ -2,7 +2,8 @@
 shop's ``modified`` check, reservations and waiting parties (the guest's fields kept apart and never answered, as the
 shop leaves out a field the app's user may not read), and the till's open-check door (``check_open`` keeping its
 first answer for a key, refusing the same key with other arguments; ``floor_status``), and the till's tables (*Retail
-Floor Place*, whose ``held_from`` and ``held_to`` the app writes and the floor answers). It is the shop as S55 reads it,
+Floor Place*, whose ``held_from`` and ``held_to`` the app writes and the floor answers), and the store's Warehouse with
+its *Time Zone*. It is the shop as S55 reads it,
 never the shop's own rules beyond these."""
 
 import copy
@@ -16,6 +17,7 @@ STORE = "Bistro - BC"
 REG = "Bistro R1"
 T12, T14 = "FP-T12", "FP-T14"
 LABELS = {T12: "Table 12", T14: "Table 14"}
+OTHER_STORE, OTHER_PLACE = "Harbour - BC", "FP-H1"     # another store of the chain, with a booked table of its own
 GUEST = {"guest_name", "phone", "customer", "notes"}       # the fields only the host role reads
 
 
@@ -43,7 +45,8 @@ def waiting(name, place=T14, party=2, status="Waiting", **kw):
 
 class FakeTenant:
     def __init__(self, reservations=(), waitlist=(), settings_=None, clock="2026-10-29 19:00:00", refuse=None,
-                 door_refuse=None, lose_open=0, stale_seat=0, open_checks=(), floor_refuse=None, place_right=True):
+                 door_refuse=None, lose_open=0, stale_seat=0, open_checks=(), floor_refuse=None, place_right=True,
+                 zone="", store_right=True):
         self.settings = {CO: settings_ or settings()}
         self.other_store_saves = None
         self.res = {r["name"]: copy.deepcopy(r) for r in reservations}
@@ -55,7 +58,11 @@ class FakeTenant:
         self.checks = [dict(c) for c in open_checks]     # {"check", "place"} already open on the floor
         self.places = {p: {"name": p, "label": LABELS[p], "store": STORE, "held_from": None, "held_to": None}
                        for p in LABELS}
+        self.places[OTHER_PLACE] = {"name": OTHER_PLACE, "label": "Table 1", "store": OTHER_STORE,   # another store's
+                                    "held_from": "2026-10-29 21:00:00", "held_to": "2026-10-29 22:30:00"}
         self.place_right = place_right   # False: the app's user has no write on the tables (a site not yet updated)
+        self.stores = {STORE: {"name": STORE, "warehouse_name": "Bistro", "custom_mpos_time_zone": zone}}
+        self.store_right = store_right   # False: the app's user may not read the store (a site on manifest 0.3.0)
         self.n = itertools.count(1)
         self.calls, self.sent = [], []
 
@@ -81,6 +88,10 @@ class FakeTenant:
             if not self.place_right:
                 raise app.TenantError("403", 403, "PermissionError")
             return self.places
+        if doctype == "Warehouse":
+            if not self.store_right:
+                raise app.TenantError("403", 403, "PermissionError")
+            return self.stores
         raise app.TenantError("404", 404)
 
     @staticmethod
@@ -96,7 +107,7 @@ class FakeTenant:
             raise app.TenantError("404", 404)
         return self._as_app(t[name])
 
-    def rows(self, doctype, fields, filters, parent=None):
+    def rows(self, doctype, fields, filters, parent=None, order_by=""):
         self._gate(f"LIST {doctype}")
         if doctype.endswith(" Store"):
             src = [dict(r) for s in self.settings.values() for r in s["stores"]]
@@ -111,6 +122,8 @@ class FakeTenant:
                     ok = False
             if ok:
                 out.append({k: r.get(k) for k in fields if k not in GUEST})
+        if order_by:                                            # the one order the app asks: by date, then time
+            out.sort(key=lambda r: (str(r.get("booking_date")), str(r.get("booking_time"))))
         return out
 
     def update(self, doctype, name, body):
