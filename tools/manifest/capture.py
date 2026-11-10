@@ -55,7 +55,7 @@ READ_TYPES = {
     "DocType": [["custom", "=", 1]],
     "Role": [],
     "Custom DocPerm": [],
-    "Workspace": [],
+    "Workspace": [["public", "=", 1]],  # a person's private workspace is theirs, never an app's
     "Report": [["is_standard", "=", "No"]],
     "Number Card": [["is_standard", "=", 0]],
     "Dashboard Chart": [["is_standard", "=", 0]],
@@ -82,7 +82,7 @@ ITEM_TYPES = {"custom_field": "Custom Field", "property_setter": "Property Sette
               "notification": "Notification", "print_format": "Print Format", "naming_rule": "Document Naming Rule",
               "list_settings": "List View Settings", "doctype": "DocType", "workspace": "Workspace", "report": "Report",
               "number_card": "Number Card", "dashboard_chart": "Dashboard Chart", "dashboard": "Dashboard",
-              "webhook": "Webhook", "role": "Role"}
+              "webhook": "Webhook", "role": "Role", "docperm": "Custom DocPerm", "translation": "Translation"}
 
 # the words for what the manifest cannot carry (the rest are the checker's own)
 WORDS = {
@@ -90,7 +90,9 @@ WORDS = {
     "report_kind": "a {kind} runs code on the site; the manifest takes a Report Builder report",
     "builder_print": "made in the Print Format Builder, which the manifest does not carry: make it as an HTML print "
                      "format (Custom Format) and capture again",
-    "their_role": "a right for {role}, one of the customer's own roles: the customer gives it in Role Permissions Manager",
+    "their_role": "rights for the site's own roles ({roles}): the customer gives them in Role Permissions Manager",
+    "role_level": "a right for {role} at level {level} or only on records its user made: the customer gives it in Role "
+                  "Permissions Manager",
     "nothing": "Nothing made in Desk to capture on {site}: a record counts when a person signed in as themselves made it, "
                "not as Administrator. Made it as Administrator? Make your own user with System Manager in Desk, sign in as "
                "it, make the set-up again, then capture.",
@@ -112,11 +114,9 @@ KEEP = {  # the fields each kind carries, in the recipe's terms (the rest of a s
     "doctypes": ("name", "description", "autoname", "naming_rule", "istable", "issingle", "is_submittable",
                  "title_field", "search_fields", "show_title_field_in_link", "sort_field", "sort_order",
                  "track_changes", "editable_grid", "quick_entry"),
-    "number_cards": ("name", "document_type", "function", "aggregate_function_based_on", "filters_json", "color",
-                     "is_public"),
+    "number_cards": ("name", "document_type", "function", "aggregate_function_based_on", "color", "is_public"),
     "dashboard_charts": ("name", "document_type", "chart_type", "based_on", "value_based_on", "group_by_type",
-                         "group_by_based_on", "timespan", "time_interval", "type", "filters_json", "color",
-                         "is_public"),
+                         "group_by_based_on", "timespan", "time_interval", "type", "color", "is_public"),
 }
 FIELD_KEEP = KEEP["custom_fields"][1:] + ("permlevel", "columns", "in_global_search", "search_index", "no_copy")
 CHILD_KEEP = {
@@ -148,10 +148,22 @@ def _json(v, default):
 
 # ── 1. only what a person made ──
 
+def installed(installs: list) -> set:
+    """{(record type, name)} of every record an installed app made, by its install record's items (a translation item
+    names its rows)."""
+    out = set()
+    for inst in installs or []:
+        for i in _json(inst.get("items"), []):
+            if not isinstance(i, dict):
+                continue
+            t = ITEM_TYPES.get(i.get("kind"))
+            out |= {(t, n) for n in [i.get("name"), *(i.get("rows") or [])] if n}
+    return out
+
+
 def made_by_person(records: dict, installs: list) -> dict:
     """``records`` ({record type: [records]}) less everything the product or an installed app made."""
-    by_apps = {(ITEM_TYPES.get(i.get("kind")), i.get("name")) for inst in installs or [] for i in _json(inst.get("items"), [])
-               if isinstance(i, dict)}
+    by_apps = installed(installs)
     out = {}
     for dt, rows in (records or {}).items():
         keep = []
@@ -211,7 +223,12 @@ def to_entries(records: dict, site: str = "") -> tuple[dict, list]:
         entry["_from"] = source  # the record it came from, for the list a person unticks (dropped before writing)
         e.setdefault(kind, []).append(entry)
 
+    # the state field Desk makes for a workflow (`workflow_state`): the target's own workflow makes it again, under its own
+    # name, so it is never taken (nor renamed where a notification or a print names the state)
+    states = {(w.get("document_type"), w.get("workflow_state_field") or "workflow_state") for w in records.get("Workflow", [])}
     for r in records.get("Custom Field", []):
+        if (r.get("dt"), r.get("fieldname")) in states and r.get("options") == "Workflow State":
+            continue
         add("custom_fields", _kept(r, KEEP["custom_fields"]), ("Custom Field", r["name"]))
     for r in records.get("Property Setter", []):
         if r.get("property") == "field_order":
@@ -252,14 +269,18 @@ def to_entries(records: dict, site: str = "") -> tuple[dict, list]:
             ("List View Settings", r["name"]))
     for r in records.get("DocType", []):
         add("doctypes", _doctype(r), ("DocType", r["name"]))
-    roles = {r["name"] for r in records.get("Role", [])}
+    roles, theirs = {r["name"] for r in records.get("Role", [])}, {}
     for p in records.get("Custom DocPerm", []):
-        rights = [k for k in RIGHTS if p.get(k)]
-        if p.get("role") in roles:
-            add("role_rights", {"doctype": p.get("parent"), "role": p["role"], "rights": rights}, ("Role", p["role"]))
-        elif rights:
+        rights = [k for k in DOCPERM_RIGHTS if p.get(k)]
+        if p.get("role") in roles and (p.get("permlevel") or p.get("if_owner")):
             out.append({"type": "Custom DocPerm", "name": f"{p.get('parent')}: {p.get('role')}",
-                        "reason": WORDS["their_role"].format(role=p.get("role"))})
+                        "reason": WORDS["role_level"].format(role=p.get("role"), level=p.get("permlevel") or 0)})
+        elif p.get("role") in roles:
+            add("role_rights", {"doctype": p.get("parent"), "role": p["role"], "rights": rights}, ("Role", p["role"]))
+        elif rights:  # Role Permissions Manager copies every standard row the first time: one line per record type
+            theirs.setdefault(p.get("parent"), []).append(p.get("role"))
+    for dt, rs in theirs.items():
+        out.append({"type": "Custom DocPerm", "name": dt, "reason": WORDS["their_role"].format(roles=", ".join(sorted(set(rs))))})
     for r in records.get("Workspace", []):
         add("workspaces", _workspace(r), ("Workspace", r["name"]))
     for r in records.get("Report", []):
@@ -268,10 +289,10 @@ def to_entries(records: dict, site: str = "") -> tuple[dict, list]:
                 kind=str(r.get("report_type") or "report").lower())})
             continue
         add("reports", _report(r), ("Report", r["name"]))
-    for r in records.get("Number Card", []):
-        add("number_cards", _kept(r, KEEP["number_cards"]), ("Number Card", r["name"]))
-    for r in records.get("Dashboard Chart", []):
-        add("dashboard_charts", _kept(r, KEEP["dashboard_charts"]), ("Dashboard Chart", r["name"]))
+    for dt, kind in (("Number Card", "number_cards"), ("Dashboard Chart", "dashboard_charts")):
+        for r in records.get(dt, []):  # Desk's filters_json rows, as the manifest's [field, op, value]
+            f = [x[1:4] if isinstance(x, list) and len(x) >= 4 else x for x in _json(r.get("filters_json"), [])]
+            add(kind, {**_kept(r, KEEP[kind]), **({"filters": f} if f else {})}, (dt, r["name"]))
     for r in records.get("Dashboard", []):
         add("dashboards", {"name": r["name"], "charts": [c.get("chart") for c in r.get("charts") or [] if c.get("chart")],
                            "cards": [c.get("card") for c in r.get("cards") or [] if c.get("card")]}, ("Dashboard", r["name"]))

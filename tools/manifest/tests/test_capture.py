@@ -19,6 +19,8 @@ BASE = blank("ACME RULES", "acme_rules")
 # the site's answers, as `/api/resource/<type>` and `/api/resource/<type>/<name>` give them (one record each, whole)
 SITE = {
     "Custom Field": [
+        {"name": "Purchase Order-workflow_state", "owner": ME, "dt": "Purchase Order", "fieldname": "workflow_state",
+         "fieldtype": "Link", "options": "Workflow State", "hidden": 1, "is_system_generated": 0},  # Desk's, for the workflow
         {"name": "Purchase Order-custom_approval_note", "owner": ME, "dt": "Purchase Order", "fieldname": "custom_approval_note",
          "fieldtype": "Small Text", "label": "Approval note", "insert_after": "supplier", "reqd": 0, "hidden": 0,
          "is_system_generated": 0, "module": None, "idx": 4, "creation": "2026-11-11 09:00:00"},
@@ -61,7 +63,9 @@ SITE = {
     ],
     "Role": [{"name": "Store Approver", "owner": ME, "is_custom": 0}],  # Desk leaves is_custom at 0
     "Custom DocPerm": [
-        {"name": "x1", "owner": ME, "parent": "Purchase Order", "role": "Store Approver", "read": 1, "write": 1},
+        {"name": "x1", "owner": ME, "parent": "Purchase Order", "role": "Store Approver", "read": 1, "write": 1, "submit": 1,
+         "permlevel": 0},
+        {"name": "x3", "owner": ME, "parent": "Purchase Order", "role": "Store Approver", "write": 1, "permlevel": 1},
         {"name": "x2", "owner": ME, "parent": "Purchase Order", "role": "Purchase User", "read": 1, "submit": 1},
     ],
     "List View Settings": [{"name": "Purchase Order", "owner": ME, "fields": json.dumps(
@@ -74,10 +78,18 @@ SITE = {
              "order_by": "`tabPurchase Order`.`modified` desc"}), "roles": [{"role": "Store Approver"}]},
         {"name": "PO sums", "owner": ME, "is_standard": "No", "report_type": "Query Report", "ref_doctype": "Purchase Order"},
     ],
+    "Number Card": [{"name": "POs to approve", "owner": ME, "is_standard": 0, "document_type": "Purchase Order",
+                     "function": "Count", "filters_json": json.dumps([["Purchase Order", "status", "=", "Draft", False]])}],
+    "Workspace": [{"name": "Buying desk", "owner": ME, "public": 1, "content": json.dumps(
+        [{"id": "a1", "type": "shortcut", "data": {"shortcut_name": "Purchase Order", "col": 4}}]),
+        "shortcuts": [{"type": "DocType", "link_to": "Purchase Order", "label": "Purchase Order"}]}],
+    "Translation": [{"name": "t1", "owner": ME, "language": "fr", "source_text": "Gift note", "translated_text": "Mot cadeau"},
+                    {"name": "t2", "owner": ME, "language": "fr", "source_text": "Old app", "translated_text": "Vieille"}],
     "Client Script": [{"name": "PO colour", "owner": ME, "dt": "Purchase Order", "script": "// colours the form"}],
 }
 INSTALLS = [{"name": "acme_old", "status": "installed", "items": json.dumps(
-    [{"kind": "custom_field", "name": "Stock Entry-acme_old_app_field"}])}]
+    [{"kind": "custom_field", "name": "Stock Entry-acme_old_app_field"}, {"kind": "translation", "language": "fr",
+                                                                           "rows": ["t2"]}])}]
 
 
 class Capture(unittest.TestCase):
@@ -107,7 +119,9 @@ class Capture(unittest.TestCase):
     def test_a_role_made_in_desk_takes_the_prefix_everywhere(self):
         e = self.r["entries"]
         self.assertEqual(e["role_rights"], [{"doctype": "Purchase Order", "role": "ACME RULES Store Approver",
-                                             "rights": ["read", "write"], "_from": ("Role", "Store Approver")}])
+                                             "rights": ["read", "write", "submit"], "_from": ("Role", "Store Approver")}])
+        left = {(x["type"], x["name"]): x["reason"] for x in self.r["left_out"]}
+        self.assertIn("level 1", left[("Custom DocPerm", "Purchase Order: Store Approver")])
         self.assertEqual(e["workflows"][0]["states"][1]["allow_edit"], "ACME RULES Store Approver")
         self.assertEqual(e["workflows"][0]["states"][0]["allow_edit"], "Purchase User")  # the customer's own role stays
         self.assertEqual(e["notifications"][0]["recipients"], [{"receiver_by_role": "ACME RULES Store Approver"}])
@@ -119,6 +133,19 @@ class Capture(unittest.TestCase):
         self.assertIn("switched off", left[("Workflow", "PO draft flow")])
         self.assertIn("switched off", left[("Notification", "PO old alert")])
         self.assertEqual(left[("Property Setter", "Purchase Order-main-field_order")], C.WORDS["field_order"])
+
+    def test_the_workflow_state_field_desk_makes_is_never_taken_nor_renamed(self):
+        e = self.r["entries"]
+        self.assertNotIn("workflow_state", [c["fieldname"] for c in e["custom_fields"]])
+        self.assertNotIn("acme_rules_workflow_state", json.dumps(e))
+
+    def test_a_card_keeps_its_filters_a_workspace_its_shortcut_and_an_apps_translations_stay_its(self):
+        e = self.r["entries"]
+        self.assertEqual(e["number_cards"][0]["filters"], [["status", "=", "Draft"]])
+        self.assertNotIn("filters_json", json.dumps(e["number_cards"]))
+        self.assertEqual(e["workspaces"][0]["blocks"], [{"type": "shortcut", "data": {"shortcut_name": "Purchase Order", "col": 4}}])
+        self.assertEqual(e["translations"], [{"language": "fr", "words": {"Gift note": "Mot cadeau"},
+                                              "_from": ("Translation", "fr")}])
 
     def test_desk_sets_a_module_on_a_persons_print_format_and_report_and_they_are_still_taken(self):
         self.assertIn("Print Format/PO with note", [i["id"] for i in self.r["items"]])
@@ -134,7 +161,7 @@ class Capture(unittest.TestCase):
         self.assertEqual(left[("Client Script", "PO colour")], C.REFUSED_KINDS["client_scripts"])
         self.assertIn("runs code on the site", left[("Report", "PO sums")])
         self.assertEqual(left[("Print Format", "PO built")], C.WORDS["builder_print"])
-        self.assertIn("Role Permissions Manager", left[("Custom DocPerm", "Purchase Order: Purchase User")])
+        self.assertEqual(left[("Custom DocPerm", "Purchase Order")], C.WORDS["their_role"].format(roles="Purchase User"))
         self.assertIn(("Print Format", "PO with a script"), left)  # the checker's own refusal, in its words
         refused = [b["reason"] for b in validate(dict(BASE, print_formats=[{"name": "q", "doc_type": "Purchase Order",
                                                                               "html": "<p>{{ doc.name }}</p><script>alert(1)</script>"}]))]
@@ -156,7 +183,7 @@ class Capture(unittest.TestCase):
         self.assertEqual(len(again["property_setters"]), 1)
 
     def test_a_site_with_nothing_made_in_desk_says_so(self):
-        r = C.capture({"Custom Field": [SITE["Custom Field"][2]]}, [], BASE, "x.example")
+        r = C.capture({"Custom Field": [c for c in SITE["Custom Field"] if c["owner"] == "Administrator"]}, [], BASE, "x.example")
         self.assertEqual(C.lines(r, "x.example"), [C.WORDS["nothing"].format(site="x.example")])
 
     def test_the_lines_group_by_record_type(self):
