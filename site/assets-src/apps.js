@@ -191,8 +191,15 @@
     how: { ours: "Try installs in one press, with our key", own: "Try installs in one press, with your key",
            shelf: "its administrator installs from the shelf key", live: "a customer's live site: Publish sends it the production copy" },
     getSandbox: "Get a sandbox", logins: "Show its logins", loginsNote: "Shown once: keep them now.",
-    liveTick: "Your customers' live sites", installNow: "Install now", installOn: "Install now on {site}"
+    liveTick: "Your customers' live sites", installNow: "Install now", installOn: "Install now on {site}",
+    removed: "{site} is off your list, with the key you added for it.",
+    stays: "{site} stays on your list: it is one of our sandboxes, given to you or your company. The key you added for it is deleted."
   };
+  // what Remove from my list did: off the list, or (one of ours, given by its grant) still on it without the added key
+  function removedWords(site, r) {
+    var kept = ((r && r.company) || []).some(function (x) { return x.site === site; });
+    return (kept ? S.stays : S.removed).replace("{site}", site);
+  }
   // how Try installs on one of the company's sites, in a line
   function siteHow(x) { return x.stale ? x.stale : x.live ? S.how.live : S.how[x.route] || S.how.shelf; }
   // Try's sites: every company site but its customers' live sites (Publish's)
@@ -476,7 +483,8 @@
               SECTIONS: SECTIONS, consentSections: consentSections, tryRunning: tryRunning, offerAgain: offerAgain,
               noSandboxParts: noSandboxParts, U: U, industryWords: industryWords, tryLabel: tryLabel,
               canGoBack: canGoBack, defaultTitle: defaultTitle, versionsShown: versionsShown, logFile: logFile, payWords: payWords, payLabel: payLabel, pubPlan: pubPlan, pubOpensOn: pubOpensOn, pictureType: pictureType, b64: b64, cardBody: cardBody,
-              S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState };
+              S: S, siteHow: siteHow, trySites: trySites, tickLive: tickLive, instKey: instKey, installState: installState,
+              removedWords: removedWords };
   if (typeof module === "object" && module.exports) {
     module.exports = api;
     return;
@@ -1841,7 +1849,9 @@
       }, true)));
       if (!x.ours || x.route === "own") acts.appendChild(el("span", {}, " ", button(S.remove, function (ev) {
         ev.target.disabled = true;
-        call("POST", "/sites/remove", { site: x.site, mine: true }).then(done, function (e) { ev.target.disabled = false; fail(e); });
+        call("POST", "/sites/remove", { site: x.site, mine: true }).then(function (r) {   // walk W1: say what happened
+          r.words = removedWords(x.site, r); done(r);
+        }, function (e) { ev.target.disabled = false; fail(e); });
       }, true)));
       if (x.logins) acts.appendChild(el("span", {}, " ", button(S.logins, function (ev) {
         ev.target.disabled = true;
